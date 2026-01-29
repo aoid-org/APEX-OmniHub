@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build:site && npm run build:dashboard && mkdir -p public/app && cp -r apps/omnihub-site/dist/* public/ && cp -r apps/omnihub-dashboard/dist/* public/app/",
+  "buildCommand": "npm run build:dashboard && npm run build:site && mkdir -p public/app && cp -r dist/* public/app/ && cp -r apps/omnihub-site/dist/* public/",
   "outputDirectory": "public",
   "installCommand": "npm install",
   "framework": "vite",

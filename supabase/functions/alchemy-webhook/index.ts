@@ -231,6 +231,7 @@ async function processNFTTransfer(
  * Main request handler
  */
 Deno.serve(async (req) => {
+  const MAX_WEBHOOK_AGE_MS = 5 * 60 * 1000;
   // Only allow POST requests
   if (req.method !== 'POST') {
     return new Response(
@@ -301,6 +302,21 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'invalid_payload', message: 'Invalid JSON payload' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Enforce signature freshness to prevent replay
+    const createdAtTs = Date.parse(payload.createdAt);
+    if (!createdAtTs || Number.isNaN(createdAtTs)) {
+      return new Response(
+        JSON.stringify({ error: 'unauthorized', message: 'Missing or invalid createdAt timestamp' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (Date.now() - createdAtTs > MAX_WEBHOOK_AGE_MS) {
+      return new Response(
+        JSON.stringify({ error: 'unauthorized', message: 'Webhook signature expired' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 

@@ -7,6 +7,7 @@ from .prompt_sanitizer import (
     sanitize_context,
     sanitize_for_prompt,
 )
+from .payload_codec import build_encrypted_data_converter
 
 __all__ = [
     "PromptInjectionError",
@@ -14,4 +15,5 @@ __all__ = [
     "detect_injection",
     "sanitize_context",
     "sanitize_for_prompt",
+    "build_encrypted_data_converter",
 ]

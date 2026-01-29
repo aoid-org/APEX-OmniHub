@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     temporal_task_queue: str = Field(
         default="apex-orchestrator", description="Temporal task queue name"
     )
+    temporal_payload_key: str | None = Field(
+        default=None,
+        description="Fernet key for Temporal payload encryption (TEMPORAL_PAYLOAD_KEY)",
+    )
 
     # Redis Configuration
     redis_url: str = Field(default="redis://localhost:6379", description="Redis connection URL")

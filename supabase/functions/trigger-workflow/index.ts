@@ -307,8 +307,7 @@ serve(
         return jsonResponse(
           {
             error: 'internal_error',
-            message:
-              error instanceof Error ? error.message : 'Unknown error',
+            message: 'Internal server error',
           },
           500,
           ctx.corsHeaders

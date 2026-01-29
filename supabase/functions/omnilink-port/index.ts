@@ -324,7 +324,8 @@ async function processRequestItem(
   });
 
   if (error) {
-    return { status: 'error', index, error: error.message };
+    console.error('OmniLink ingest RPC error:', error);
+    return { status: 'error', index, error: 'ingest_failed' };
   }
 
   return { status: data.status, record_id: data.record_id, index, retry_after_seconds: data.retry_after_seconds };
@@ -482,9 +483,21 @@ Deno.serve(async (req) => {
   try {
     const results = [];
 
-    const normalizedItems = isOmniPort
-      ? items.map((item) => omniPortEnvelope(item as SOmniPortInput))
-      : items;
+    let normalizedItems: unknown[];
+    if (isOmniPort) {
+      try {
+        normalizedItems = items.map((item) => omniPortEnvelope(item as SOmniPortInput));
+      } catch (error) {
+        console.error('OmniPort normalization failed:', error);
+        return jsonResponse(
+          { error: 'invalid_payload', message: 'Invalid OmniPort payload (transcript/message too long or missing).' },
+          400,
+          corsHeaders
+        );
+      }
+    } else {
+      normalizedItems = items;
+    }
 
     for (const [index, item] of normalizedItems.entries()) {
       const result = await processRequestItem(item, index, {
@@ -505,6 +518,13 @@ Deno.serve(async (req) => {
         results,
       },
       statusCode,
+      corsHeaders
+    );
+  } catch (error) {
+    console.error('OmniLink port error:', error);
+    return jsonResponse(
+      { error: 'internal_error', request_id: requestId },
+      500,
       corsHeaders
     );
   } finally {

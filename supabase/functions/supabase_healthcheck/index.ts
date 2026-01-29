@@ -1,41 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
-import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
-
-// Enhanced rate limiting with cleanup
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT = { maxRequests: 10, windowMs: 60000 }; // 10 requests per minute
-
-function cleanupRateLimitStore(): void {
-  const now = Date.now();
-  for (const [key, record] of rateLimitStore.entries()) {
-    if (now > record.resetTime) {
-      rateLimitStore.delete(key);
-    }
-  }
-}
-
-setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
-
-function checkRateLimit(identifier: string): { allowed: boolean; remaining: number; resetAt: number } {
-  const now = Date.now();
-  let record = rateLimitStore.get(identifier);
-
-  if (!record || now > record.resetTime) {
-    record = { count: 0, resetTime: now + RATE_LIMIT.windowMs };
-  }
-
-  if (record.count >= RATE_LIMIT.maxRequests) {
-    return { allowed: false, remaining: 0, resetAt: record.resetTime };
-  }
-
-  record.count++;
-  rateLimitStore.set(identifier, record);
-  return {
-    allowed: true,
-    remaining: RATE_LIMIT.maxRequests - record.count,
-    resetAt: record.resetTime
-  };
-}
+import { buildCorsHeaders, handlePreflight, isOriginAllowed, corsErrorResponse } from "../_shared/cors.ts";
+import { checkRateLimit, rateLimitExceededResponse, RATE_LIMIT_CONFIGS } from "../_shared/rate-limit.ts";
 
 function generateRequestId(): string {
   return `hc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -75,12 +40,17 @@ async function checkOrchestratorConnection(requestId: string, orchestratorUrl?: 
 Deno.serve(async (req: Request) => {
   const requestId = generateRequestId();
   const startTime = Date.now();
-  const corsHeaders = buildCorsHeaders(req.headers.get('origin'));
+  const requestOrigin = req.headers.get('origin')?.replace(/\/$/, '') ?? null;
+  const corsHeaders = buildCorsHeaders(requestOrigin);
 
   console.log(`[${requestId}] Health check started`);
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return handlePreflight(req);
+  }
+
+  if (!isOriginAllowed(requestOrigin)) {
+    return corsErrorResponse('origin_not_allowed', 'CORS policy: Origin not allowed', 403, requestOrigin);
   }
 
   try {
@@ -96,29 +66,10 @@ Deno.serve(async (req: Request) => {
     const userId = authData?.user?.id;
 
     // Rate limiting check
-    const rateCheck = checkRateLimit(userId ?? 'anonymous');
+    const rateCheck = await checkRateLimit(userId ?? 'anonymous', RATE_LIMIT_CONFIGS.healthcheck);
     if (!rateCheck.allowed) {
-      const retryAfter = Math.ceil((rateCheck.resetAt - Date.now()) / 1000);
       console.warn(`[${requestId}] Rate limit exceeded for user ${userId ?? 'anonymous'}`);
-
-      return new Response(
-        JSON.stringify({
-          error: 'Rate limit exceeded. Try again later.',
-          retryAfter
-        }),
-        {
-          status: 429,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-            'X-RateLimit-Limit': RATE_LIMIT.maxRequests.toString(),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': new Date(rateCheck.resetAt).toISOString(),
-            'Retry-After': retryAfter.toString(),
-            'X-Request-ID': requestId
-          }
-        }
-      );
+      return rateLimitExceededResponse(requestOrigin, rateCheck);
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey, {
