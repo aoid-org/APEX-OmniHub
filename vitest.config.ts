@@ -11,7 +11,9 @@ export default defineConfig({
       'tests/**/*.test.ts',
       'tests/**/*.test.tsx',
       'sim/tests/**/*.test.ts',
-      'sim/tests/**/*.spec.ts'
+      'sim/tests/**/*.spec.ts',
+      'apex-resilience/tests/**/*.spec.ts',
+      'apex-resilience/tests/**/*.test.ts'
     ],
     exclude: [
       'tests/e2e-playwright/**',
