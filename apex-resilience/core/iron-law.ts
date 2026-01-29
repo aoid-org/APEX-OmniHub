@@ -23,6 +23,30 @@ export class IronLawVerifier {
     const rejectionReasons: string[] = [];
 
     // LAYER 1: Deductive Reasoning (TDD Enforcement)
+    await this.collectTestEvidence(task, evidence, rejectionReasons);
+
+    // LAYER 2: Visual Truth (UI Verification)
+    if (task.touchesUI) {
+      await this.collectVisualEvidence(task, evidence, rejectionReasons);
+    }
+
+    // LAYER 3: Security (Shadow-Prompt Defense)
+    if (task.touchesSecurity || this.isCriticalFile(task.modifiedFiles)) {
+      await this.collectSecurityEvidence(task, evidence, rejectionReasons);
+    }
+
+    // Determine final status and create result
+    const result = this.createVerificationResult(task, evidence, rejectionReasons);
+
+    // Validate result against schema (runtime type safety)
+    return VerificationResultSchema.parse(result);
+  }
+
+  private async collectTestEvidence(
+    task: AgentTask,
+    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>,
+    rejectionReasons: string[]
+  ): Promise<void> {
     const testEvidence = await this.verifyTests(task);
     evidence.push(testEvidence);
 
@@ -35,71 +59,69 @@ export class IronLawVerifier {
         `Test coverage ${testEvidence.coverage}% below threshold ${VERIFICATION_THRESHOLDS.TEST_COVERAGE_MIN}%`
       );
     }
+  }
 
-    // LAYER 2: Visual Truth (UI Verification)
-    if (task.touchesUI) {
-      const visualEvidence = await this.verifyVisual(task);
-      evidence.push(visualEvidence);
+  private async collectVisualEvidence(
+    task: AgentTask,
+    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>,
+    rejectionReasons: string[]
+  ): Promise<void> {
+    const visualEvidence = await this.verifyVisual(task);
+    evidence.push(visualEvidence);
 
-      if (visualEvidence.pixelDiffScore > VERIFICATION_THRESHOLDS.PIXEL_DIFF_THRESHOLD) {
-        rejectionReasons.push(
-          `Visual drift detected: ${visualEvidence.pixelDiffScore}% pixel difference`
-        );
-      }
-
-      if (
-        visualEvidence.accessibilityScore < VERIFICATION_THRESHOLDS.ACCESSIBILITY_SCORE_MIN
-      ) {
-        rejectionReasons.push(
-          `Accessibility regression: score ${visualEvidence.accessibilityScore}`
-        );
-      }
-    }
-
-    // LAYER 3: Security (Shadow-Prompt Defense)
-    if (task.touchesSecurity || this.isCriticalFile(task.modifiedFiles)) {
-      const securityEvidence = await this.verifySecurity(task);
-      evidence.push(securityEvidence);
-
-      if (
-        securityEvidence.vulnerabilities.critical >
-        VERIFICATION_THRESHOLDS.CRITICAL_VULN_TOLERANCE
-      ) {
-        rejectionReasons.push(
-          `Critical vulnerabilities found: ${securityEvidence.vulnerabilities.critical}`
-        );
-      }
-
-      if (securityEvidence.shadowPromptAttempts > 0) {
-        rejectionReasons.push(
-          `Shadow prompt attack detected: ${securityEvidence.shadowPromptAttempts} attempts`
-        );
-      }
-    }
-
-    // Determine final status
-    const verificationLatencyMs = Date.now() - this.startTime;
-
-    let status: 'APPROVED' | 'REJECTED' | 'REQUIRES_HUMAN_REVIEW';
-
-    if (rejectionReasons.length > 0) {
-      status = 'REJECTED';
-    } else if (this.requiresHumanReview(task, evidence)) {
-      status = 'REQUIRES_HUMAN_REVIEW';
-    } else {
-      status = 'APPROVED';
-    }
-
-    // Enforce latency threshold
-    if (
-      verificationLatencyMs > VERIFICATION_THRESHOLDS.TOTAL_VERIFICATION_LATENCY_MAX_MS
-    ) {
-      console.warn(
-        `⚠️  Verification latency ${verificationLatencyMs}ms exceeds ${VERIFICATION_THRESHOLDS.TOTAL_VERIFICATION_LATENCY_MAX_MS}ms threshold`
+    if (visualEvidence.pixelDiffScore > VERIFICATION_THRESHOLDS.PIXEL_DIFF_THRESHOLD) {
+      rejectionReasons.push(
+        `Visual drift detected: ${visualEvidence.pixelDiffScore}% pixel difference`
       );
     }
 
-    const result: VerificationResult = {
+    if (
+      visualEvidence.accessibilityScore < VERIFICATION_THRESHOLDS.ACCESSIBILITY_SCORE_MIN
+    ) {
+      rejectionReasons.push(
+        `Accessibility regression: score ${visualEvidence.accessibilityScore}`
+      );
+    }
+  }
+
+  private async collectSecurityEvidence(
+    task: AgentTask,
+    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>,
+    rejectionReasons: string[]
+  ): Promise<void> {
+    const securityEvidence = await this.verifySecurity(task);
+    evidence.push(securityEvidence);
+
+    if (
+      securityEvidence.vulnerabilities.critical >
+      VERIFICATION_THRESHOLDS.CRITICAL_VULN_TOLERANCE
+    ) {
+      rejectionReasons.push(
+        `Critical vulnerabilities found: ${securityEvidence.vulnerabilities.critical}`
+      );
+    }
+
+    if (securityEvidence.shadowPromptAttempts > 0) {
+      rejectionReasons.push(
+        `Shadow prompt attack detected: ${securityEvidence.shadowPromptAttempts} attempts`
+      );
+    }
+  }
+
+  private createVerificationResult(
+    task: AgentTask,
+    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>,
+    rejectionReasons: string[]
+  ): VerificationResult {
+    const verificationLatencyMs = Date.now() - this.startTime;
+
+    // Determine final status
+    const status = this.determineVerificationStatus(task, evidence, rejectionReasons);
+
+    // Enforce latency threshold
+    this.checkLatencyThreshold(verificationLatencyMs);
+
+    return {
       taskId: task.id,
       status,
       evidence,
@@ -107,14 +129,37 @@ export class IronLawVerifier {
       timestamp: new Date().toISOString(),
       verificationLatencyMs,
     };
+  }
 
-    // Validate result against schema (runtime type safety)
-    return VerificationResultSchema.parse(result);
+  private determineVerificationStatus(
+    task: AgentTask,
+    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>,
+    rejectionReasons: string[]
+  ): 'APPROVED' | 'REJECTED' | 'REQUIRES_HUMAN_REVIEW' {
+    if (rejectionReasons.length > 0) {
+      return 'REJECTED';
+    }
+
+    if (this.requiresHumanReview(task, evidence)) {
+      return 'REQUIRES_HUMAN_REVIEW';
+    }
+
+    return 'APPROVED';
+  }
+
+  private checkLatencyThreshold(verificationLatencyMs: number): void {
+    if (
+      verificationLatencyMs > VERIFICATION_THRESHOLDS.TOTAL_VERIFICATION_LATENCY_MAX_MS
+    ) {
+      console.warn(
+        `⚠️  Verification latency ${verificationLatencyMs}ms exceeds ${VERIFICATION_THRESHOLDS.TOTAL_VERIFICATION_LATENCY_MAX_MS}ms threshold`
+      );
+    }
   }
 
   private async verifyTests(task: AgentTask): Promise<TestEvidence> {
     // Execute test suite and collect evidence
-    const { execSync } = await import('child_process');
+    const { execSync } = await import('node:child_process');
 
     try {
       const output = execSync('npm run test -- --coverage', {
@@ -126,9 +171,8 @@ export class IronLawVerifier {
       const logPath = await writeSecureEvidence(`${task.id}-tests`, output, 'log');
 
       // Parse coverage from vitest output
-      // Look for coverage percentage in vitest output format
       const coverageMatch = output.match(/All files\s+\|\s+([\d.]+)/);
-      const coverage = coverageMatch ? parseFloat(coverageMatch[1]) : 80;
+      const coverage = coverageMatch ? Number.parseFloat(coverageMatch[1]) : 80;
 
       return {
         type: 'test_result',
@@ -140,17 +184,8 @@ export class IronLawVerifier {
       };
     } catch (error) {
       // Test failed - still record evidence
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : typeof error === 'object' && error !== null && 'stdout' in error
-            ? String((error as { stdout?: unknown }).stdout)
-            : 'Unknown error';
-
-      const exitCode =
-        typeof error === 'object' && error !== null && 'status' in error
-          ? Number((error as { status?: unknown }).status) || 1
-          : 1;
+      const errorMessage = this.extractErrorMessage(error);
+      const exitCode = this.extractExitCode(error);
 
       // Securely write error output to evidence storage
       const logPath = await writeSecureEvidence(`${task.id}-tests`, errorMessage, 'log');
@@ -164,6 +199,26 @@ export class IronLawVerifier {
         modifiedFiles: task.modifiedFiles,
       };
     }
+  }
+
+  private extractErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    if (typeof error === 'object' && error !== null && 'stdout' in error) {
+      return String((error as { stdout?: unknown }).stdout);
+    }
+
+    return 'Unknown error';
+  }
+
+  private extractExitCode(error: unknown): number {
+    if (typeof error === 'object' && error !== null && 'status' in error) {
+      return Number((error as { status?: unknown }).status) || 1;
+    }
+
+    return 1;
   }
 
   private async verifyVisual(task: AgentTask): Promise<VisualEvidence> {
@@ -189,42 +244,23 @@ export class IronLawVerifier {
 
   private async verifySecurity(task: AgentTask): Promise<SecurityEvidence> {
     // Check for shadow-prompt patterns in modified files
-    const fs = await import('fs');
-    let shadowPromptAttempts = 0;
+    const fs = await import('node:fs');
     const detectedPatterns: string[] = [];
+    let shadowPromptAttempts = 0;
 
     for (const filePath of task.modifiedFiles) {
-      try {
-        const content = fs.readFileSync(filePath, 'utf-8');
-
-        for (const pattern of VERIFICATION_THRESHOLDS.SHADOW_PROMPT_PATTERNS) {
-          if (pattern.test(content)) {
-            shadowPromptAttempts++;
-            detectedPatterns.push(`${filePath}: ${pattern.toString()}`);
-            console.warn(
-              `🚨 Shadow prompt pattern detected in ${filePath}: ${pattern}`
-            );
-          }
-        }
-      } catch {
-        // File might not exist yet (new file) - skip
-      }
+      shadowPromptAttempts += this.scanFileForShadowPrompts(
+        fs,
+        filePath,
+        detectedPatterns
+      );
     }
 
     // Create security report with findings
-    const securityReport = {
-      taskId: task.id,
-      timestamp: new Date().toISOString(),
+    const reportPath = await this.createSecurityReport(
+      task,
       shadowPromptAttempts,
-      detectedPatterns,
-      modifiedFiles: task.modifiedFiles,
-    };
-
-    // Securely write security report to evidence storage
-    const reportPath = await writeSecureEvidence(
-      `${task.id}-security`,
-      JSON.stringify(securityReport, null, 2),
-      'json'
+      detectedPatterns
     );
 
     return {
@@ -239,6 +275,50 @@ export class IronLawVerifier {
       shadowPromptAttempts,
       reportPath,
     };
+  }
+
+  private scanFileForShadowPrompts(
+    fs: typeof import('node:fs'),
+    filePath: string,
+    detectedPatterns: string[]
+  ): number {
+    let attempts = 0;
+
+    try {
+      const content = fs.readFileSync(filePath, 'utf-8');
+
+      for (const pattern of VERIFICATION_THRESHOLDS.SHADOW_PROMPT_PATTERNS) {
+        if (pattern.test(content)) {
+          attempts++;
+          detectedPatterns.push(`${filePath}: ${pattern.toString()}`);
+          console.warn(`🚨 Shadow prompt pattern detected in ${filePath}: ${pattern}`);
+        }
+      }
+    } catch {
+      // File might not exist yet (new file) - skip
+    }
+
+    return attempts;
+  }
+
+  private async createSecurityReport(
+    task: AgentTask,
+    shadowPromptAttempts: number,
+    detectedPatterns: string[]
+  ): Promise<string> {
+    const securityReport = {
+      taskId: task.id,
+      timestamp: new Date().toISOString(),
+      shadowPromptAttempts,
+      detectedPatterns,
+      modifiedFiles: task.modifiedFiles,
+    };
+
+    return writeSecureEvidence(
+      `${task.id}-security`,
+      JSON.stringify(securityReport, null, 2),
+      'json'
+    );
   }
 
   private isCriticalFile(filePaths: string[]): boolean {
@@ -257,29 +337,51 @@ export class IronLawVerifier {
     }
 
     // Check evidence-based triggers
+    return this.checkEvidenceBasedEscalation(evidence);
+  }
+
+  private checkEvidenceBasedEscalation(
+    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>
+  ): boolean {
     for (const item of evidence) {
-      if (item.type === 'visual_verification') {
-        if (
-          item.pixelDiffScore > 0 &&
-          ESCALATION_RULES.requireHumanReview.visualDiffAboveThreshold
-        ) {
-          return true;
-        }
-      }
-
-      if (item.type === 'security_scan') {
-        if (item.vulnerabilities.critical > 0 || item.vulnerabilities.high > 0) {
-          return true;
-        }
-      }
-
-      if (item.type === 'test_result') {
-        if (item.coverage < VERIFICATION_THRESHOLDS.TEST_COVERAGE_MIN) {
-          return true;
-        }
+      if (this.shouldEscalateEvidence(item)) {
+        return true;
       }
     }
 
     return false;
+  }
+
+  private shouldEscalateEvidence(
+    item: TestEvidence | VisualEvidence | SecurityEvidence
+  ): boolean {
+    if (item.type === 'visual_verification') {
+      return this.shouldEscalateVisualEvidence(item);
+    }
+
+    if (item.type === 'security_scan') {
+      return this.shouldEscalateSecurityEvidence(item);
+    }
+
+    if (item.type === 'test_result') {
+      return this.shouldEscalateTestEvidence(item);
+    }
+
+    return false;
+  }
+
+  private shouldEscalateVisualEvidence(item: VisualEvidence): boolean {
+    return (
+      item.pixelDiffScore > 0 &&
+      ESCALATION_RULES.requireHumanReview.visualDiffAboveThreshold
+    );
+  }
+
+  private shouldEscalateSecurityEvidence(item: SecurityEvidence): boolean {
+    return item.vulnerabilities.critical > 0 || item.vulnerabilities.high > 0;
+  }
+
+  private shouldEscalateTestEvidence(item: TestEvidence): boolean {
+    return item.coverage < VERIFICATION_THRESHOLDS.TEST_COVERAGE_MIN;
   }
 }

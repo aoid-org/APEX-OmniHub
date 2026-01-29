@@ -15,13 +15,13 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # Step 1: Pre-deployment validation
 echo "📋 Step 1: Pre-deployment validation..."
 
-if [ ! -f "package.json" ]; then
-  echo "❌ Error: package.json not found. Run from project root."
+if [[ ! -f "package.json" ]]; then
+  echo "❌ Error: package.json not found. Run from project root." >&2
   exit 1
 fi
 
-if [ ! -d "apex-resilience" ]; then
-  echo "❌ Error: apex-resilience/ directory not found."
+if [[ ! -d "apex-resilience" ]]; then
+  echo "❌ Error: apex-resilience/ directory not found." >&2
   exit 1
 fi
 
@@ -40,9 +40,8 @@ echo "✅ Dependencies verified"
 # Step 3: Compile TypeScript
 echo "📋 Step 3: Compiling TypeScript..."
 
-npm run typecheck
-if [ $? -ne 0 ]; then
-  echo "❌ TypeScript compilation failed"
+if ! npm run typecheck; then
+  echo "❌ TypeScript compilation failed" >&2
   exit 1
 fi
 
@@ -57,14 +56,14 @@ echo "✅ Test check completed"
 # Step 5: Security audit
 echo "📋 Step 5: Security audit..."
 
-npm audit --audit-level=high || {
-  echo "⚠️  Security vulnerabilities found. Review before proceeding."
+if ! npm audit --audit-level=high; then
+  echo "⚠️  Security vulnerabilities found. Review before proceeding." >&2
   read -p "Continue anyway? (y/N) " -n 1 -r
   echo
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 1
   fi
-}
+fi
 
 echo "✅ Security audit completed"
 
@@ -95,7 +94,7 @@ case $ENVIRONMENT in
     export APEX_EVIDENCE_STORAGE="/tmp/apex-evidence"
     ;;
   *)
-    echo "❌ Unknown environment: ${ENVIRONMENT}"
+    echo "❌ Unknown environment: ${ENVIRONMENT}" >&2
     exit 1
     ;;
 esac
