@@ -382,29 +382,15 @@ APEX-OmniHub/
 ├── orchestrator/           # Python Temporal.io worker
 
 │   ├── workflows/          # Workflow definitions
-
-│   ├── activities/         # Tool execution
-
-│   ├── models/             # Pydantic models
-
-│   ├── infrastructure/     # Cache, Redis
-
-│   └── policies/           # MAN Mode policies
-
-├── supabase/
-
-│   ├── functions/          # 15 Edge Functions
-
-│   └── migrations/         # 18 database migrations
-
-├── terraform/              # Infrastructure modules
-
-├── tests/                  # Comprehensive test suite
-
-├── docs/                   # Documentation (50+ files)
-
-└── .github/workflows/      # 7 CI/CD pipelines
-
+├── apps/
+│   ├── omnihub-dashboard/  # Core Operations Dashboard (React SPA)
+│   └── omnihub-site/       # Marketing & Documentation (Static Multi-page)
+├── docs/                   # Unified Knowledge Base (70+ files)
+├── supabase/               # Backend Logic (Auth, Db, Edge Functions)
+├── orchestrator/           # Temporal.io Workflows (Python)
+├── contracts/              # Smart Contracts (Hardhat)
+├── tests/                  # Cross-app Integration & Stress Battery
+└── .github/workflows/      # 7 CI/CD Pipelines
 ```
 
 ---

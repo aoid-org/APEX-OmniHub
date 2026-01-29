@@ -1,50 +1,26 @@
 {
-  "buildCommand": "cd apps/omnihub-site && npm install && npm run build",
-  "outputDirectory": "apps/omnihub-site/dist",
+  "buildCommand": "npm run build:site && npm run build:dashboard && mkdir -p public/app && cp -r apps/omnihub-site/dist/* public/ && cp -r apps/omnihub-dashboard/dist/* public/app/",
+  "outputDirectory": "public",
   "installCommand": "npm install",
   "framework": "vite",
   "rewrites": [
+    { "source": "/app", "destination": "/app/index.html" },
+    { "source": "/app/(.*)", "destination": "/app/index.html" },
     { "source": "/demo", "destination": "/demo.html" },
-    { "source": "/demo/", "destination": "/demo.html" },
     { "source": "/tech-specs", "destination": "/tech-specs.html" },
-    { "source": "/tech-specs/", "destination": "/tech-specs.html" },
     { "source": "/request-access", "destination": "/request-access.html" },
-    { "source": "/request-access/", "destination": "/request-access.html" },
     { "source": "/login", "destination": "/login.html" },
-    { "source": "/login/", "destination": "/login.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/privacy/", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },
-    { "source": "/terms/", "destination": "/terms.html" }
+    { "source": "/(.*)", "destination": "/$1" }
   ],
   "headers": [
     {
-      "source": "/manifest.webmanifest",
+      "source": "/app/(.*)",
       "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/manifest+json"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=86400"
-        }
-      ]
-    },
-    {
-      "source": "/sw.js",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/javascript"
-        },
         {
           "key": "Cache-Control",
           "value": "public, max-age=0, must-revalidate"
-        },
-        {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
         }
       ]
     },
