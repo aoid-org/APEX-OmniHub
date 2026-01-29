@@ -278,7 +278,7 @@ export class OmniConnect {
 
   private generateState(correlationId: string): string {
     // State includes correlation ID for tracing and CSRF protection
-    const nonce = Math.random().toString(36).substring(2, 15);
+    const nonce = crypto.randomUUID().replace(/-/g, '').substring(0, 13);
     return `${correlationId}.${Date.now()}.${nonce}`;
   }
 

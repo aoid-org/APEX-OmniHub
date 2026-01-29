@@ -1,12 +1,18 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "apex-omnihub",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
     "dev": "vite",
+    "dev:site": "npm run dev --workspace=omnihub-site",
     "typecheck": "npx tsc -p tsconfig.json --noEmit",
     "build": "npx vite build",
+    "build:site": "npm run build --workspace=omnihub-site",
+    "build:all": "npm run build && npm run build:site",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",

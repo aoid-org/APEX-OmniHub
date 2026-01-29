@@ -37,10 +37,8 @@ let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let flushInFlight = false;
 let consecutiveFlushFailures = 0;
 
-function generateId() {
-  return typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2);
+function generateId(): string {
+  return crypto.randomUUID();
 }
 
 async function loadQueue(): Promise<QueuedAuditEvent[]> {

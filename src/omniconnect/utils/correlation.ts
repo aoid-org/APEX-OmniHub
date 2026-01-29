@@ -13,12 +13,8 @@ export function generateCorrelationId(): string {
 }
 
 function generateFallbackUUID(): string {
-  // Simple UUID v4 implementation for fallback
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+  // crypto.randomUUID() is available in all modern runtimes (Node 19+, all browsers)
+  return crypto.randomUUID();
 }
 
 export function isValidCorrelationId(id: string): boolean {
