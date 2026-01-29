@@ -69,7 +69,11 @@ export function buildCorsHeaders(origin: string | null): Record<string, string> 
  * @returns Response for OPTIONS requests
  */
 export function handlePreflight(req: Request): Response {
-  const origin = req.headers.get('origin');
+  const origin = req.headers.get('origin')?.replace(/\/$/, '') ?? null;
+  if (!isOriginAllowed(origin)) {
+    return corsErrorResponse('origin_not_allowed', 'CORS policy: Origin not allowed', 403, origin);
+  }
+
   const headers = buildCorsHeaders(origin);
 
   return new Response(null, {
@@ -115,9 +119,16 @@ export function corsErrorResponse(
  * @returns Response for OPTIONS requests, null for other methods
  */
 export function handleCors(req: Request): Response | null {
+  const origin = req.headers.get('origin')?.replace(/\/$/, '') ?? null;
+
   if (req.method === 'OPTIONS') {
     return handlePreflight(req);
   }
+
+  if (!isOriginAllowed(origin)) {
+    return corsErrorResponse('origin_not_allowed', 'CORS policy: Origin not allowed', 403, origin);
+  }
+
   return null;
 }
 

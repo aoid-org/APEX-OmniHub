@@ -61,6 +61,21 @@ const FALLBACK_MODEL = 'gpt-4o-mini';
 const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_MAX_TOKENS = 4096;
 
+function getOpenAIKeys(): string[] {
+  const primary = Deno.env.get('OPENAI_API_KEY')?.trim();
+  const rotationList = (Deno.env.get('OPENAI_API_KEYS') ?? '')
+    .split(',')
+    .map((k) => k.trim())
+    .filter(Boolean);
+
+  const keys = [...rotationList, primary].filter(Boolean) as string[];
+  if (!keys.length) {
+    throw new Error('OPENAI_API_KEY not configured');
+  }
+
+  return Array.from(new Set(keys));
+}
+
 /**
  * Make a completion request to the OpenAI API
  */
@@ -68,11 +83,7 @@ export async function callLLM(
   messages: LLMMessage[],
   options: LLMOptions = {}
 ): Promise<LLMResponse> {
-  const openAIKey = Deno.env.get('OPENAI_API_KEY');
-
-  if (!openAIKey) {
-    throw new Error('OPENAI_API_KEY not configured');
-  }
+  const keys = getOpenAIKeys();
 
   const {
     model = DEFAULT_MODEL,
@@ -108,46 +119,61 @@ export async function callLLM(
   const timeout = setTimeout(() => controller.abort(), timeout_ms);
 
   try {
-    let response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-      signal: controller.signal,
-    });
+    let lastError: unknown = null;
 
-    // Handle model fallback on 404
-    if (!response.ok && response.status === 404 && model !== FALLBACK_MODEL) {
-      console.warn(`[LLM] Model ${model} not found, falling back to ${FALLBACK_MODEL}`);
-      requestBody.model = FALLBACK_MODEL;
-      response = await fetch('https://api.openai.com/v1/chat/completions', {
+    for (const key of keys) {
+      let response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openAIKey}`,
+          'Authorization': `Bearer ${key}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
         signal: controller.signal,
       });
+
+      // Handle model fallback on 404
+      if (!response.ok && response.status === 404 && model !== FALLBACK_MODEL) {
+        console.warn(`[LLM] Model ${model} not found, falling back to ${FALLBACK_MODEL}`);
+        requestBody.model = FALLBACK_MODEL;
+        response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        });
+      }
+
+      if (!response.ok) {
+        // Capture error text but avoid leaking to caller
+        lastError = await response.text().catch(() => response.statusText);
+        const rotate = [401, 403, 429].includes(response.status) && keys.length > 1;
+        if (rotate) {
+          console.warn(`[LLM] Key rotation triggered (status ${response.status})`);
+          continue;
+        }
+        throw new Error(`OpenAI API error (${response.status})`);
+      }
+
+      const data = await response.json();
+      const choice = data.choices[0];
+
+      return {
+        content: choice.message.content || '',
+        tool_calls: choice.message.tool_calls,
+        finish_reason: choice.finish_reason,
+        usage: data.usage,
+      };
     }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[LLM] API error:', errorText);
-      throw new Error(`OpenAI API error (${response.status}): ${errorText}`);
-    }
-
-    const data = await response.json();
-    const choice = data.choices[0];
-
-    return {
-      content: choice.message.content || '',
-      tool_calls: choice.message.tool_calls,
-      finish_reason: choice.finish_reason,
-      usage: data.usage,
-    };
+    throw new Error(
+      typeof lastError === 'string'
+        ? lastError
+        : 'OpenAI API error after exhausting rotation keys'
+    );
 
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {

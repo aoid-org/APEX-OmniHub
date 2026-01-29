@@ -42,6 +42,28 @@ import { createSupabaseClient, authenticateUser, createAuthErrorResponse, create
 const NFT_VERIFICATION_CACHE_MS = 5 * 60 * 1000; // 5 minutes
 const verificationCache = new Map<string, { hasPremiumNFT: boolean; balance: number; cachedAt: number }>();
 
+// Circuit breaker for Alchemy RPC
+const ALCHEMY_FAILURE_THRESHOLD = 3;
+const ALCHEMY_RESET_MS = 60_000;
+let alchemyFailures = 0;
+let alchemyOpenedAt = 0;
+
+function alchemyCircuitOpen(): boolean {
+  if (alchemyFailures >= ALCHEMY_FAILURE_THRESHOLD) {
+    const since = Date.now() - alchemyOpenedAt;
+    if (since < ALCHEMY_RESET_MS) return true;
+    alchemyFailures = 0;
+  }
+  return false;
+}
+
+function recordAlchemyFailure() {
+  alchemyFailures += 1;
+  if (alchemyFailures === ALCHEMY_FAILURE_THRESHOLD) {
+    alchemyOpenedAt = Date.now();
+  }
+}
+
 // ERC721 balanceOf ABI
 const ERC721_BALANCE_OF_ABI = [
   {
@@ -222,15 +244,28 @@ Deno.serve(async (req) => {
     let balance = 0;
     let hasPremiumNFT = false;
 
+    if (alchemyCircuitOpen()) {
+      return corsJsonResponse({
+        hasPremiumNFT: false,
+        wallet_address: walletAddress,
+        nft_balance: 0,
+        verified_at: new Date().toISOString(),
+        cached: false,
+        error: 'upstream_unavailable',
+      }, 503);
+    }
+
     try {
       const result = await verifyNFTOwnership(walletAddress);
       balance = result.balance;
       hasPremiumNFT = result.hasPremiumNFT;
+      alchemyFailures = 0; // reset circuit on success
 
       // Cache the result
       cacheVerification(walletAddress, hasPremiumNFT, balance);
     } catch (error) {
       console.error('NFT verification failed:', error);
+      recordAlchemyFailure();
       // Fail-safe: return false on verification errors
       return corsJsonResponse({
         hasPremiumNFT: false,

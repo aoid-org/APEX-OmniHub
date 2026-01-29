@@ -36,6 +36,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "httpx>=0.26.0",
     "tenacity>=8.2.0",
+    "cryptography>=42.0.0",
 
     # Embeddings for semantic cache
     "sentence-transformers>=2.3.0",

@@ -16,7 +16,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createSupabaseClient, authenticateUser } from '../_shared/auth.ts';
-import { handleCors, corsJsonResponse } from '../_shared/cors.ts';
+import { handleCors, corsJsonResponse, isOriginAllowed, buildCorsHeaders } from '../_shared/cors.ts';
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // ============================================================================
@@ -78,6 +78,29 @@ interface Automation {
   action_type: 'send_email' | 'create_record' | 'webhook' | 'notification';
   config: AutomationConfig;
   is_active: boolean;
+}
+
+const MAX_BODY_BYTES = 64 * 1024; // 64KB per request
+const SUPABASE_FAILURE_THRESHOLD = 3;
+const SUPABASE_RESET_MS = 60_000;
+
+let supabaseFailures = 0;
+let supabaseOpenedAt = 0;
+
+function supabaseCircuitOpen(): boolean {
+  if (supabaseFailures >= SUPABASE_FAILURE_THRESHOLD) {
+    const since = Date.now() - supabaseOpenedAt;
+    if (since < SUPABASE_RESET_MS) return true;
+    supabaseFailures = 0;
+  }
+  return false;
+}
+
+function recordSupabaseFailure() {
+  supabaseFailures += 1;
+  if (supabaseFailures === SUPABASE_FAILURE_THRESHOLD) {
+    supabaseOpenedAt = Date.now();
+  }
 }
 
 // ============================================================================
@@ -301,6 +324,13 @@ serve(async (req) => {
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
 
+  const origin = req.headers.get('origin')?.replace(/\/$/, '') ?? null;
+  const corsHeaders = buildCorsHeaders(origin);
+
+  if (!isOriginAllowed(origin)) {
+    return corsJsonResponse({ error: 'origin_not_allowed' }, 403, origin);
+  }
+
   // Only accept POST
   if (req.method !== 'POST') {
     return corsJsonResponse(
@@ -309,7 +339,24 @@ serve(async (req) => {
     );
   }
 
+  const contentLength = Number(req.headers.get('content-length') || '0');
+  if (contentLength > MAX_BODY_BYTES) {
+    return corsJsonResponse(
+      { error: 'payload_too_large', max_bytes: MAX_BODY_BYTES },
+      413,
+      origin
+    );
+  }
+
   try {
+    if (supabaseCircuitOpen()) {
+      return corsJsonResponse(
+        { error: 'service_unavailable', message: 'Supabase temporarily unavailable (circuit open)' },
+        503,
+        origin
+      );
+    }
+
     const supabase = createSupabaseClient();
 
     // Authenticate user
@@ -323,7 +370,26 @@ serve(async (req) => {
       );
     }
 
-    const body = await req.json();
+    const rawBody = await req.text();
+    const rawSize = new TextEncoder().encode(rawBody).length;
+    if (rawSize > MAX_BODY_BYTES) {
+      return corsJsonResponse(
+        { error: 'payload_too_large', max_bytes: MAX_BODY_BYTES },
+        413,
+        origin
+      );
+    }
+
+    let body: any;
+    try {
+      body = JSON.parse(rawBody || '{}');
+    } catch {
+      return corsJsonResponse(
+        { error: 'invalid_json', message: 'Request body must be valid JSON' },
+        400,
+        origin
+      );
+    }
     const { automationId } = body;
 
     // Validate automationId presence and type
@@ -404,6 +470,9 @@ serve(async (req) => {
       .update({ updated_at: new Date().toISOString() })
       .eq('id', automationId);
 
+    // Reset failure counter on successful round-trip
+    supabaseFailures = 0;
+
     return corsJsonResponse({
       success: true,
       action_type: typedAutomation.action_type,
@@ -412,11 +481,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Automation execution error:', error);
 
-    const message =
-      error instanceof Error ? error.message : 'Unknown error occurred';
+    recordSupabaseFailure();
 
     return corsJsonResponse(
-      { error: 'execution_error', message },
+      { error: 'execution_error', message: 'Automation failed to execute safely. Please retry.' },
       500
     );
   }

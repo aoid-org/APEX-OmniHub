@@ -54,6 +54,9 @@ from activities.tools import (
 )
 from config import settings
 from workflows.agent_saga import AgentWorkflow
+from security import build_encrypted_data_converter
+
+DATA_CONVERTER = build_encrypted_data_converter()
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -100,6 +103,7 @@ async def create_goal(request: GoalRequest):
         client = await Client.connect(
             os.getenv("TEMPORAL_HOST", "localhost:7233"),
             namespace=os.getenv("TEMPORAL_NAMESPACE", "default"),
+            data_converter=DATA_CONVERTER,
         )
 
         # Start workflow with unique ID
@@ -168,6 +172,7 @@ async def start_worker() -> None:
     client = await Client.connect(
         settings.temporal_host,
         namespace=settings.temporal_namespace,
+        data_converter=DATA_CONVERTER,
     )
     logger.info("✓ Connected to Temporal")
 
@@ -202,6 +207,7 @@ async def start_worker() -> None:
         ],
         max_concurrent_workflow_tasks=10,
         max_concurrent_activities=20,
+        data_converter=DATA_CONVERTER,
     )
 
     logger.info("✅ Worker started - polling for tasks...")
@@ -227,6 +233,7 @@ async def submit_workflow(goal: str, user_id: str = "test-user") -> None:
     client = await Client.connect(
         settings.temporal_host,
         namespace=settings.temporal_namespace,
+        data_converter=DATA_CONVERTER,
     )
 
     # Start workflow

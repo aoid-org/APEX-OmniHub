@@ -95,6 +95,10 @@ serve(async (req) => {
       return errorResponse("Filename is required", 400, corsHeaders);
     }
 
+    if (filename.includes('/') || filename.includes('\\') || filename.includes('\0')) {
+      return errorResponse("Invalid filename", 400, corsHeaders);
+    }
+
     // Enhanced filename sanitization (path traversal prevention)
     const safe = filename
       .replace(/[^\w.-]+/g, "_")

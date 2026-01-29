@@ -53,7 +53,7 @@ export const OmniDashLayout = () => {
             <CardDescription>OmniDash is limited to admin users.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>Request admin access or add your email to VITE_OMNIDASH_ADMIN_EMAILS.</p>
+            <p>Request admin access from an existing administrator; access is role-based (user_roles.role = 'admin').</p>
           </CardContent>
         </Card>
       </div>

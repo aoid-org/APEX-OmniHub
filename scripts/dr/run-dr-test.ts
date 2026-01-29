@@ -1,6 +1,7 @@
 import { simulateFailure } from './simulate_failure';
 import { verifyRecovery } from './verify_recovery';
 import { recordAuditEvent } from '../../src/security/auditLog';
+import { restoreValidate } from './restore-validate';
 
 function isDryRun(): boolean {
   return process.argv.includes('--dry-run');
@@ -26,12 +27,15 @@ async function main() {
   const verify = await verifyRecovery();
   console.log('DR Verify:', verify);
 
-  const ok = simulate.ok && verify.ok;
+  const restore = await restoreValidate();
+  console.log('DR Restore:', restore);
+
+  const ok = simulate.ok && verify.ok && restore.ok;
   recordAuditEvent({
     actionType: 'dr_test_completed',
     resourceType: 'dr',
     resourceId: dryRun ? 'dry-run' : 'live',
-    metadata: { ok, checks: verify.checks },
+    metadata: { ok, checks: verify.checks, restore },
   });
 
   if (!ok) {

@@ -1,10 +1,10 @@
-import fs from 'fs';
-import crypto from 'crypto';
-import path from 'path';
+import fs from 'node:fs';
+import { createHash } from 'node:crypto';
+import path from 'node:path';
 import { recordAuditEvent } from '../../src/security/auditLog';
 
 function checksum(filePath: string): string {
-  const hash = crypto.createHash('sha256');
+  const hash = createHash('sha256');
   const data = fs.readFileSync(filePath);
   hash.update(data);
   return hash.digest('hex');

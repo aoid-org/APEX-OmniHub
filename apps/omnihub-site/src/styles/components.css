@@ -178,7 +178,7 @@
 
 .btn--primary {
   background-color: var(--color-navy);
-  color: #ffffff; /* FORCE WHITE TEXT FOR CONTRAST */
+  color: #ffffff !important; /* FORCE WHITE TEXT FOR CONTRAST */
   border-color: var(--color-navy);
 }
 
@@ -261,6 +261,12 @@
 
 .cta-group--center {
   justify-content: center;
+}
+
+/* Safeguard against black-on-black buttons */
+.cta-group .btn--primary {
+  color: white !important;
+  -webkit-text-fill-color: white !important;
 }
 
 /* === CARDS === */
@@ -828,6 +834,7 @@
   text-align: left;
 }
 
+
 .hero__eyebrow {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
@@ -843,6 +850,23 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.hero__tagline {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
+  font-style: italic;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.hero__proof {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wider);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  margin-bottom: var(--space-6);
 }
 
 .hero__subtitle {

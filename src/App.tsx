@@ -5,11 +5,8 @@ import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@ta
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { Web3Provider } from "./providers/Web3Provider";
-import { DashboardLayout } from "./components/DashboardLayout";
 import { ConsentBanner } from "./components/ConsentBanner";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { PaidAccessRoute } from "./components/PaidAccessRoute";
-import { MobileOnlyGate } from "./components/MobileOnlyGate";
 import { useOfflineSupport } from "./hooks/useOfflineSupport";
 import { useEffect, lazy, Suspense } from 'react';
 import { initializeMonitoring } from './lib/monitoring';
@@ -20,6 +17,15 @@ import { Loader2 } from 'lucide-react';
 import { OMNIDASH_FLAG } from './omnidash/types';
 
 // Lazy load pages for better code splitting
+const DashboardLayout = lazy(() =>
+  import("./components/DashboardLayout").then((m) => ({ default: m.DashboardLayout }))
+);
+const PaidAccessRoute = lazy(() =>
+  import("./components/PaidAccessRoute").then((m) => ({ default: m.PaidAccessRoute ?? m.default }))
+);
+const MobileOnlyGate = lazy(() =>
+  import("./components/MobileOnlyGate").then((m) => ({ default: m.MobileOnlyGate }))
+);
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));

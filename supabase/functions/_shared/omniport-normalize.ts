@@ -42,6 +42,23 @@ export interface CanonicalOmniPortIntent {
 
 const cleanText = (str: string): string => str.trim().replaceAll(/\s+/g, ' ');
 
+const MAX_TRANSCRIPT_LENGTH = 800;
+const MAX_TEXT_LENGTH = 800;
+
+function validateText(field: string, value: unknown, max: number): string {
+  if (typeof value !== 'string') {
+    throw new Error(`${field}_invalid`);
+  }
+  const cleaned = cleanText(value);
+  if (!cleaned) {
+    throw new Error(`${field}_empty`);
+  }
+  if (cleaned.length > max) {
+    throw new Error(`${field}_too_long`);
+  }
+  return cleaned;
+}
+
 function generateTraceId(existing?: string): string {
   if (existing) return existing;
   
@@ -74,11 +91,12 @@ export function normalizeOmniPortIntent(input: SOmniPortInput): CanonicalOmniPor
 
   switch (input.channel) {
     case 'voice':
+      const sanitizedTranscript = validateText('transcript', input.transcript, MAX_TRANSCRIPT_LENGTH);
       return {
         channel: 'voice',
         type: input.intentType ?? 'voice.intent',
         payload: {
-          message: cleanText(input.transcript),
+          message: sanitizedTranscript,
           modality: 'voice',
           language: input.language ?? 'en',
         },
@@ -87,11 +105,12 @@ export function normalizeOmniPortIntent(input: SOmniPortInput): CanonicalOmniPor
       };
 
     case 'text':
+      const sanitizedMessage = validateText('message', input.message, MAX_TEXT_LENGTH);
       return {
         channel: 'text',
         type: input.intentType ?? 'text.intent',
         payload: {
-          message: cleanText(input.message),
+          message: sanitizedMessage,
           modality: 'text',
           locale: input.locale ?? 'en',
         },
