@@ -108,7 +108,10 @@ function hashError(error: Error, context?: Record<string, unknown>): string {
  */
 function sleep(attempt: number): Promise<void> {
   const delay = Math.min(config.retryBaseMs * Math.pow(2, attempt), 30_000);
-  const jitter = delay * 0.2 * Math.random();
+  // Use crypto.getRandomValues for cryptographically secure jitter (Sonar S2245)
+  const randomArray = new Uint32Array(1);
+  crypto.getRandomValues(randomArray);
+  const jitter = delay * 0.2 * (randomArray[0] / 0xFFFFFFFF);
   return new Promise(resolve => setTimeout(resolve, delay + jitter));
 }
 

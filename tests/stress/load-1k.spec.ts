@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
+import { randomInt } from 'node:crypto';
 
 /**
  * 1K USER LOAD TEST
- * 
+ *
  * Verifies the system can handle 1,000 concurrent operations.
  * This satisfies the "Load Testing (1,000 concurrent users)" launch requirement.
  */
@@ -45,11 +46,11 @@ describe('Launch Readiness - 1K Concurrent Users', () => {
         const broadcast = async (message: string) => {
             const promises = clients.map(client => {
                 return new Promise<void>(resolve => {
-                    // Random network jitter 0-50ms
+                    // Random network jitter 0-50ms using crypto.randomInt (Sonar S2245)
                     setTimeout(() => {
                         client.receive(message);
                         resolve();
-                    }, Math.random() * 50);
+                    }, randomInt(0, 51));
                 });
             });
             await Promise.all(promises);

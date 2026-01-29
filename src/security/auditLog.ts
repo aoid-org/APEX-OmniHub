@@ -38,9 +38,13 @@ let flushInFlight = false;
 let consecutiveFlushFailures = 0;
 
 function generateId() {
-  return typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2);
+  if (typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // Strong crypto fallback using getRandomValues (Sonar S2245)
+  const randomArray = new Uint32Array(4);
+  crypto.getRandomValues(randomArray);
+  return Array.from(randomArray, num => num.toString(36)).join('');
 }
 
 async function loadQueue(): Promise<QueuedAuditEvent[]> {

@@ -24,8 +24,8 @@ The APEX OmniHub has passed all "Heart Transplant" verification gates. The OMEGA
 
 ### Deployment Topology (C6)
 
-- **Vercel Target**: `apps/omnihub-site` (Marketing Site)
-- **Core App**: Local / Docker (Orchestrator + UI) - _Not configured for Vercel auto-deploy_
+- **Vercel Target**: Root directory (Main Application + UI)
+- **Core App**: Local / Docker (Orchestrator + Temporal) - _Self-hosted deployment_
 
 ---
 
