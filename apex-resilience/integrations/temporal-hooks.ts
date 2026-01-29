@@ -1,5 +1,6 @@
 import { IronLawVerifier } from '../core/iron-law';
 import type { AgentTask, VerificationResult } from '../core/types';
+import { writeSecureEvidence, generateEvidenceHash } from '../core/evidence-storage';
 
 /**
  * Temporal.io Activity for APEX Resilience Verification
@@ -26,15 +27,34 @@ export async function verifyAgentTaskActivity(task: AgentTask): Promise<void> {
   await logVerificationEvidence(result);
 }
 
+/**
+ * Securely logs verification evidence with integrity checking
+ * Addresses SonarQube S5443: Using publicly writable directories safely
+ *
+ * Security measures:
+ * - Path traversal prevention via ID validation
+ * - Restrictive file permissions (0600)
+ * - User-specific secure directory
+ * - Content integrity hashing
+ */
 async function logVerificationEvidence(result: VerificationResult): Promise<void> {
-  const fs = await import('fs/promises');
-  const evidencePath = `/tmp/apex-evidence/${result.taskId}.json`;
+  const evidenceContent = JSON.stringify(result, null, 2);
+  const contentHash = generateEvidenceHash(evidenceContent);
 
-  await fs.mkdir('/tmp/apex-evidence', { recursive: true });
-  await fs.writeFile(evidencePath, JSON.stringify(result, null, 2));
+  try {
+    // Use secure evidence storage with automatic path validation
+    const evidencePath = await writeSecureEvidence(result.taskId, evidenceContent, 'json');
 
-  // eslint-disable-next-line no-console -- Audit trail logging
-  console.log(`✅ Evidence logged: ${evidencePath}`);
+    // eslint-disable-next-line no-console -- Audit trail logging
+    console.log(`✅ Evidence logged: ${evidencePath}`);
+    console.log(`📋 Integrity hash: ${contentHash}`);
+  } catch (error) {
+    console.error(
+      `❌ Failed to log evidence for task ${result.taskId}:`,
+      error instanceof Error ? error.message : String(error)
+    );
+    throw error;
+  }
 }
 
 /**

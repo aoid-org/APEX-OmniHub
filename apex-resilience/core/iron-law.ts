@@ -7,6 +7,7 @@ import type {
 } from './types';
 import { VerificationResultSchema } from './types';
 import { VERIFICATION_THRESHOLDS, ESCALATION_RULES } from '../config/thresholds';
+import { writeSecureEvidence } from './evidence-storage';
 
 /**
  * IRON LAW ENFORCEMENT ENGINE
@@ -114,9 +115,6 @@ export class IronLawVerifier {
   private async verifyTests(task: AgentTask): Promise<TestEvidence> {
     // Execute test suite and collect evidence
     const { execSync } = await import('child_process');
-    const fs = await import('fs');
-
-    const logPath = `/tmp/apex-verification-${task.id}-tests.log`;
 
     try {
       const output = execSync('npm run test -- --coverage', {
@@ -124,7 +122,8 @@ export class IronLawVerifier {
         encoding: 'utf-8',
       });
 
-      fs.writeFileSync(logPath, output);
+      // Securely write test output to evidence storage
+      const logPath = await writeSecureEvidence(`${task.id}-tests`, output, 'log');
 
       // Parse coverage from vitest output
       // Look for coverage percentage in vitest output format
@@ -153,7 +152,8 @@ export class IronLawVerifier {
           ? Number((error as { status?: unknown }).status) || 1
           : 1;
 
-      fs.writeFileSync(logPath, errorMessage);
+      // Securely write error output to evidence storage
+      const logPath = await writeSecureEvidence(`${task.id}-tests`, errorMessage, 'log');
 
       return {
         type: 'test_result',
@@ -169,10 +169,18 @@ export class IronLawVerifier {
   private async verifyVisual(task: AgentTask): Promise<VisualEvidence> {
     // Placeholder - will be implemented in Phase 3 with Playwright
     // For now, return passing evidence to unblock development
+
+    // Generate secure screenshot path (placeholder - actual file will be created by Playwright)
+    const screenshotPath = await writeSecureEvidence(
+      `${task.id}-visual`,
+      'Placeholder for visual verification',
+      'txt'
+    );
+
     return {
       type: 'visual_verification',
       timestamp: new Date().toISOString(),
-      screenshotPath: `/tmp/apex-visual-${task.id}.png`,
+      screenshotPath: screenshotPath.replace('.txt', '.png'), // Will be actual PNG when implemented
       pixelDiffScore: 0,
       accessibilityScore: 100,
       viewports: ['desktop'],
@@ -183,6 +191,7 @@ export class IronLawVerifier {
     // Check for shadow-prompt patterns in modified files
     const fs = await import('fs');
     let shadowPromptAttempts = 0;
+    const detectedPatterns: string[] = [];
 
     for (const filePath of task.modifiedFiles) {
       try {
@@ -191,6 +200,7 @@ export class IronLawVerifier {
         for (const pattern of VERIFICATION_THRESHOLDS.SHADOW_PROMPT_PATTERNS) {
           if (pattern.test(content)) {
             shadowPromptAttempts++;
+            detectedPatterns.push(`${filePath}: ${pattern.toString()}`);
             console.warn(
               `🚨 Shadow prompt pattern detected in ${filePath}: ${pattern}`
             );
@@ -200,6 +210,22 @@ export class IronLawVerifier {
         // File might not exist yet (new file) - skip
       }
     }
+
+    // Create security report with findings
+    const securityReport = {
+      taskId: task.id,
+      timestamp: new Date().toISOString(),
+      shadowPromptAttempts,
+      detectedPatterns,
+      modifiedFiles: task.modifiedFiles,
+    };
+
+    // Securely write security report to evidence storage
+    const reportPath = await writeSecureEvidence(
+      `${task.id}-security`,
+      JSON.stringify(securityReport, null, 2),
+      'json'
+    );
 
     return {
       type: 'security_scan',
@@ -211,7 +237,7 @@ export class IronLawVerifier {
         low: 0,
       },
       shadowPromptAttempts,
-      reportPath: `/tmp/apex-security-${task.id}.json`,
+      reportPath,
     };
   }
 

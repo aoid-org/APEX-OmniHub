@@ -6,6 +6,13 @@
 export { IronLawVerifier } from './core/iron-law';
 export { verifyAgentTaskActivity } from './integrations/temporal-hooks';
 export { VERIFICATION_THRESHOLDS, ESCALATION_RULES } from './config/thresholds';
+export {
+  writeSecureEvidence,
+  getSecureEvidenceDir,
+  createSecureEvidenceDir,
+  generateEvidenceHash,
+  cleanupEvidenceDir,
+} from './core/evidence-storage';
 export type {
   AgentTask,
   VerificationResult,
