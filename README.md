@@ -191,33 +191,59 @@ Purpose-built interface for operations management:
 ### Installation
 
 ```bash
-
 # Clone repository
-
 git clone https://github.com/apexbusiness-systems/APEX-OmniHub.git
-
 cd APEX-OmniHub
 
-
-
-# Install frontend dependencies
-
+# Install dependencies (includes workspaces)
 npm install
 
-
-
 # Configure environment
-
 cp .env.example .env.local
-
 # Edit .env.local with your credentials
 
-
-
 # Start development server
+npm run dev                 # Main dashboard
+npm run dev:site           # Marketing site (workspace)
+```
 
-npm run dev
+### Monorepo Structure
 
+APEX OmniHub uses npm workspaces for managing multiple applications:
+
+```
+APEX-OmniHub/
+├── src/                   # Main OmniHub dashboard
+├── apps/
+│   └── omnihub-site/      # Marketing site (workspace)
+├── orchestrator/          # Temporal Python workers
+├── supabase/              # Edge functions + migrations
+├── contracts/             # Solidity Web3 contracts
+├── android/               # Mobile app scaffolding
+├── ios/                   # Mobile app scaffolding
+└── e2e/                   # End-to-end tests
+```
+
+### Build Commands
+
+```bash
+# Build main dashboard
+npm run build
+
+# Build marketing site
+npm run build:site
+
+# Build everything
+npm run build:all
+
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+
+# Tests
+npm test
 ```
 
 ### Environment Configuration
