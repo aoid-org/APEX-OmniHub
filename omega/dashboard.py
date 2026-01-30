@@ -37,20 +37,25 @@ def escape_html(text: str) -> str:
     return html.escape(text, quote=True)
 
 
-def sanitize_json_output(data: Any) -> str:
+def sanitize_data_recursive(data: Any) -> Any:
     """
-    Sanitize JSON output to prevent injection attacks.
+    Recursively sanitize data structure to prevent XSS attacks.
 
     Args:
-        data: Data to convert to JSON
+        data: Data to sanitize (dict, list, str, or primitive)
 
     Returns:
-        Safe JSON string with escaped HTML
+        Sanitized data with all strings HTML-escaped
     """
-    # Convert to JSON first
-    json_str = json.dumps(data, indent=2)
-    # Escape HTML entities in the JSON output
-    return escape_html(json_str)
+    if isinstance(data, dict):
+        return {key: sanitize_data_recursive(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [sanitize_data_recursive(item) for item in data]
+    elif isinstance(data, str):
+        return escape_html(data)
+    else:
+        # Numbers, booleans, None - return as-is
+        return data
 
 
 class OmegaDashboardHandler(BaseHTTPRequestHandler):
@@ -356,12 +361,16 @@ class OmegaDashboardHandler(BaseHTTPRequestHandler):
         self._send_json(result)
 
     def _send_json(self, data: Any) -> None:
-        """Send JSON response"""
+        """
+        Send JSON response with sanitized data
+        SECURITY: All data is recursively sanitized to prevent XSS (S5131)
+        """
         self.send_response(200)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.end_headers()
-        # Use safe JSON serialization
-        json_data = json.dumps(data, indent=2)
+        # Sanitize all user-controlled data before sending
+        safe_data = sanitize_data_recursive(data)
+        json_data = json.dumps(safe_data, indent=2)
         self.wfile.write(json_data.encode('utf-8'))
 
     def _send_error(self, code: int, message: str) -> None:
@@ -375,7 +384,15 @@ class OmegaDashboardHandler(BaseHTTPRequestHandler):
 
 
 def main():
-    """Start the dashboard server"""
+    """
+    Start the dashboard server
+
+    SECURITY (S5332): HTTP is acceptable here because:
+    1. Server binds to localhost (127.0.0.1) only - not accessible externally
+    2. Used for local development and internal approval workflows
+    3. No sensitive data transmitted over network (local IPC only)
+    4. Production deployments should use reverse proxy with HTTPS
+    """
     port = 8080
     server_address = ('127.0.0.1', port)
 
