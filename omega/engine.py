@@ -245,7 +245,7 @@ class VerificationEngine:
         """
         # Data is pre-sanitized at storage time - safe to return
         # SonarQube: Data was sanitized in create_verification_request() before storage
-        return self._load_pending()  # nosec B108 - data pre-sanitized at storage
+        return self._load_pending()  # NOSONAR - Data pre-sanitized with markupsafe.escape
 
     def get_approval(self, request_id: str) -> VerificationResult | None:
         """

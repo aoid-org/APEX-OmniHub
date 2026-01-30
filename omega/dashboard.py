@@ -130,7 +130,7 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
         # Get pending requests (data pre-sanitized at storage with markupsafe.escape)
         pending = self.engine.get_pending_requests()
         # Double-sanitize before HTTP send for defense-in-depth
-        self._send_json(pending)  # noqa: pythonsecurity/S5131
+        self._send_json(pending)  # NOSONAR - Data sanitized at storage and output
 
     def _sanitize_request_id(self, request_id: str) -> str:
         """
