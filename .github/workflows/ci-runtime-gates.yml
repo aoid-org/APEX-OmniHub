@@ -80,8 +80,13 @@ jobs:
           restore-keys: |
             playwright-${{ runner.os }}-
 
-      - name: Install Playwright browsers
+      - name: Install Playwright browsers (with system deps)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install chromium --with-deps
+
+      - name: Install Playwright browsers (from cache)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install chromium
 
       - name: Start preview server
         run: |
@@ -160,8 +165,13 @@ jobs:
           restore-keys: |
             playwright-${{ runner.os }}-
 
-      - name: Install Playwright browsers
+      - name: Install Playwright browsers (with system deps)
+        if: steps.playwright-cache-preview.outputs.cache-hit != 'true'
         run: npx playwright install chromium --with-deps
+
+      - name: Install Playwright browsers (from cache)
+        if: steps.playwright-cache-preview.outputs.cache-hit == 'true'
+        run: npx playwright install chromium
 
       - name: Wait for Vercel Preview
         uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
