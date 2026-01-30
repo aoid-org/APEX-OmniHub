@@ -235,28 +235,28 @@ function CapabilityShowcase() {
       title: 'Tri-Force Protocol',
       description: 'Connect, Translate, Execute',
       icon: <IconTriForceProtocol size={28} />,
-      href: '#tri-force',
+      href: '/tri-force.html',
     },
     {
       id: 'orchestrator',
       title: 'Orchestrator',
       description: 'Central command for all workflows',
       icon: <IconOrchestrator size={28} />,
-      href: '#orchestrator',
+      href: '/orchestrator.html',
     },
     {
       id: 'fortress',
       title: 'Fortress Protocol',
       description: 'Zero-trust security by default',
       icon: <IconFortressProtocol size={28} />,
-      href: '#fortress',
+      href: '/fortress.html',
     },
     {
       id: 'man-mode',
       title: 'MAN Mode',
       description: 'Manual Authorization Needed',
       icon: <IconManMode size={28} />,
-      href: '#man-mode',
+      href: '/man-mode.html',
     },
 
     {
@@ -264,14 +264,14 @@ function CapabilityShowcase() {
       title: 'OmniPort',
       description: 'Single ingress/egress gateway for simplified security and total observability.',
       icon: <IconIntegrations size={28} />,
-      href: '#tri-force',
+      href: '/omniport.html',
     },
     {
       id: 'maestro',
       title: 'Maestro',
       description: 'Turns intent into monitored, reversible workflows.',
       icon: <IconAutomation size={28} />,
-      href: '#orchestrator',
+      href: '/maestro.html',
     },
   ];
 
