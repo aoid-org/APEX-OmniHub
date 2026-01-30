@@ -189,7 +189,7 @@ export default function Agent() {
             <div className="space-y-2">
               {commands.map((cmd, idx) => (
                 <div
-                  key={idx}
+                  key={cmd.description}
                   className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/40"
                 >
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
@@ -198,7 +198,7 @@ export default function Agent() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium mb-1">{cmd.description}</p>
                     <p className="text-xs text-muted-foreground font-mono truncate">
-                      {cmd.pattern.source.replace(/\\b|\\/g, '').replace(/\|/g, ' or ')}
+                      {cmd.pattern.source.replaceAll(/\\b|\\/g, '').replaceAll(/\|/g, ' or ')}
                     </p>
                   </div>
                 </div>
