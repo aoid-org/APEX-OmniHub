@@ -4,6 +4,7 @@ import type {
   TestEvidence,
   VisualEvidence,
   SecurityEvidence,
+  Evidence,
 } from './types';
 import { VerificationResultSchema } from './types';
 import { VERIFICATION_THRESHOLDS, ESCALATION_RULES } from '../config/thresholds';
@@ -19,7 +20,7 @@ export class IronLawVerifier {
   async verify(task: AgentTask): Promise<VerificationResult> {
     this.startTime = Date.now();
 
-    const evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence> = [];
+    const evidence: Evidence[] = [];
     const rejectionReasons: string[] = [];
 
     // LAYER 1: Deductive Reasoning (TDD Enforcement)
@@ -44,7 +45,7 @@ export class IronLawVerifier {
 
   private async collectTestEvidence(
     task: AgentTask,
-    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>,
+    evidence: Evidence[],
     rejectionReasons: string[]
   ): Promise<void> {
     const testEvidence = await this.verifyTests(task);
@@ -63,7 +64,7 @@ export class IronLawVerifier {
 
   private async collectVisualEvidence(
     task: AgentTask,
-    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>,
+    evidence: Evidence[],
     rejectionReasons: string[]
   ): Promise<void> {
     const visualEvidence = await this.verifyVisual(task);
@@ -86,7 +87,7 @@ export class IronLawVerifier {
 
   private async collectSecurityEvidence(
     task: AgentTask,
-    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>,
+    evidence: Evidence[],
     rejectionReasons: string[]
   ): Promise<void> {
     const securityEvidence = await this.verifySecurity(task);
@@ -110,7 +111,7 @@ export class IronLawVerifier {
 
   private createVerificationResult(
     task: AgentTask,
-    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>,
+    evidence: Evidence[],
     rejectionReasons: string[]
   ): VerificationResult {
     const verificationLatencyMs = Date.now() - this.startTime;
@@ -133,7 +134,7 @@ export class IronLawVerifier {
 
   private determineVerificationStatus(
     task: AgentTask,
-    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>,
+    evidence: Evidence[],
     rejectionReasons: string[]
   ): 'APPROVED' | 'REJECTED' | 'REQUIRES_HUMAN_REVIEW' {
     if (rejectionReasons.length > 0) {
@@ -329,7 +330,7 @@ export class IronLawVerifier {
 
   private requiresHumanReview(
     task: AgentTask,
-    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>
+    evidence: Evidence[]
   ): boolean {
     // Check escalation rules
     if (this.isCriticalFile(task.modifiedFiles)) {
@@ -341,7 +342,7 @@ export class IronLawVerifier {
   }
 
   private checkEvidenceBasedEscalation(
-    evidence: Array<TestEvidence | VisualEvidence | SecurityEvidence>
+    evidence: Evidence[]
   ): boolean {
     for (const item of evidence) {
       if (this.shouldEscalateEvidence(item)) {
@@ -352,9 +353,7 @@ export class IronLawVerifier {
     return false;
   }
 
-  private shouldEscalateEvidence(
-    item: TestEvidence | VisualEvidence | SecurityEvidence
-  ): boolean {
+  private shouldEscalateEvidence(item: Evidence): boolean {
     if (item.type === 'visual_verification') {
       return this.shouldEscalateVisualEvidence(item);
     }

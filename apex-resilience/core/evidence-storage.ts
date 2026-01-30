@@ -85,7 +85,7 @@ export function getSecureEvidenceDir(): string {
  * @returns Absolute path to created directory
  */
 export async function createSecureEvidenceDir(baseDir: string): Promise<string> {
-  const fs = await import('fs/promises');
+  const fs = await import('node:fs/promises');
 
   try {
     // Create directory with restrictive permissions (0700 - owner only)
@@ -119,7 +119,7 @@ export async function writeSecureEvidence(
   content: string,
   extension = 'json'
 ): Promise<string> {
-  const fs = await import('fs/promises');
+  const fs = await import('node:fs/promises');
 
   // Validate task ID to prevent path traversal
   const sanitizedId = validateTaskId(taskId);
@@ -177,7 +177,7 @@ export async function cleanupEvidenceDir(): Promise<void> {
   // Only cleanup if using process-specific directory (not production storage)
   if (!process.env.APEX_EVIDENCE_STORAGE && baseDir.includes(`-${process.pid}`)) {
     try {
-      const fs = await import('fs/promises');
+      const fs = await import('node:fs/promises');
       await fs.rm(baseDir, { recursive: true, force: true });
     } catch {
       // Ignore cleanup errors - directory might not exist

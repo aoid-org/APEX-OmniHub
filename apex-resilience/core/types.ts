@@ -49,6 +49,9 @@ export type VisualEvidence = z.infer<typeof VisualEvidenceSchema>;
 export type SecurityEvidence = z.infer<typeof SecurityEvidenceSchema>;
 export type VerificationResult = z.infer<typeof VerificationResultSchema>;
 
+// Union type for all evidence types
+export type Evidence = TestEvidence | VisualEvidence | SecurityEvidence;
+
 // Agent task interface
 export interface AgentTask {
   id: string;

@@ -19,6 +19,7 @@ export type {
   TestEvidence,
   VisualEvidence,
   SecurityEvidence,
+  Evidence,
 } from './core/types';
 export {
   TestEvidenceSchema,
