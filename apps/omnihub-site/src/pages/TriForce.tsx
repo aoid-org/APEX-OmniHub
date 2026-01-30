@@ -14,7 +14,7 @@ const pillars = [
     icon: <IconConnect size={32} />,
     title: '1. Connect',
     description: 'Modular adapters plug into any system with an interface: API, webhook, or events.',
-    details: 'OmniHub's Connect layer uses a flexible adapter architecture that enables integration with virtually any platform. Each adapter is standalone and modular, preventing cascading failures.',
+    details: 'OmniHub\'s Connect layer uses a flexible adapter architecture that enables integration with virtually any platform. Each adapter is standalone and modular, preventing cascading failures.',
     bulletPoints: [
       'Enterprise Systems (CRMs, ERPs, ticketing, storage)',
       'AI Applications (model providers, agent frameworks, RAG pipelines)',
