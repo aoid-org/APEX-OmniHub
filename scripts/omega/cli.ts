@@ -13,10 +13,9 @@
  * - No unused imports
  */
 
-import { execSync, spawn, type SpawnOptions } from 'node:child_process';
-import { existsSync, mkdirSync } from 'node:fs';
+import { execFileSync, spawn, type SpawnOptions } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import * as path from 'node:path';
-import * as os from 'node:os';
 
 // Constants
 const OMEGA_DIR = path.join(process.cwd(), 'omega');
@@ -24,23 +23,19 @@ const ENGINE_PATH = path.join(OMEGA_DIR, 'engine.py');
 const DASHBOARD_PATH = path.join(OMEGA_DIR, 'dashboard.py');
 
 /**
- * Sanitize and validate command arguments to prevent injection attacks
+ * Validate command arguments to prevent injection attacks
+ * Does not modify args - only validates them for safety
  */
-function sanitizeArgs(args: string[]): string[] {
-  return args.map((arg) => {
-    // Remove any shell metacharacters that could cause injection
-    // Only allow alphanumeric, dash, underscore, dot, and space
-    const sanitized = arg.replace(/[;&|`$()<>]/g, '');
-
-    // Validate that the sanitized version is not suspiciously different
-    if (sanitized !== arg) {
+function validateArgs(args: string[]): void {
+  for (const arg of args) {
+    // Check for shell metacharacters that could cause injection
+    const dangerousChars = /[;&|`$()<>]/;
+    if (dangerousChars.test(arg)) {
       throw new Error(
         `Argument contains potentially dangerous characters: "${arg}"`
       );
     }
-
-    return sanitized;
-  });
+  }
 }
 
 /**
@@ -110,21 +105,18 @@ class ProtocolOmegaCLI {
 
   /**
    * Execute Python engine command with security controls
-   * SECURITY: All arguments are validated before execution (SonarQube S4721)
+   * SECURITY: Uses execFileSync to prevent command injection (SonarQube S4721)
    */
   private execEngine(args: string[]): unknown {
     try {
-      // Validate and sanitize all arguments
-      const safeArgs = sanitizeArgs(args);
+      // Validate all arguments before execution
+      validateArgs(args);
 
-      // Use array form of spawn arguments (safer than string interpolation)
-      // Quote the engine path to handle spaces safely
-      const pythonArgs = [this.enginePath, ...safeArgs];
-
-      const result = execSync(`python3 "${this.enginePath}" ${safeArgs.join(' ')}`, {
+      // Use execFileSync which does NOT use shell - prevents command injection
+      // This is safer than execSync as it doesn't interpret shell metacharacters
+      const result = execFileSync('python3', [this.enginePath, ...args], {
         encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-        env: getSecureEnv(), // Use restricted environment
+        env: getSecureEnv(), // Use restricted environment (S4036)
         timeout: 10000, // 10 second timeout
         maxBuffer: 1024 * 1024, // 1MB max buffer
       });
@@ -206,9 +198,11 @@ class ProtocolOmegaCLI {
   async startDashboard(): Promise<void> {
     console.log('🚀 Starting Protocol Omega Dashboard...\n');
 
+    // SECURITY (S4036): PATH is restricted to system directories in getSecureEnv()
+    // Only trusted, read-only system paths are included to prevent PATH injection
     const spawnOptions: SpawnOptions = {
       stdio: 'inherit',
-      env: getSecureEnv(), // Use restricted PATH
+      env: getSecureEnv(), // Restricted PATH: /usr/bin, /bin, etc.
     };
 
     const dashboard = spawn('python3', [this.dashboardPath], spawnOptions);
@@ -270,7 +264,68 @@ Security:
 }
 
 /**
+ * Handle assess command
+ */
+async function handleAssess(cli: ProtocolOmegaCLI, args: string[]): Promise<void> {
+  const cmd = args[1];
+  if (!cmd) {
+    throw new Error('Missing command argument');
+  }
+  const result = await cli.assessRisk(cmd);
+  console.log(JSON.stringify(result, null, 2));
+}
+
+/**
+ * Handle create command
+ */
+async function handleCreate(cli: ProtocolOmegaCLI, args: string[]): Promise<void> {
+  const [, cmd, desc, user] = args;
+  if (!cmd || !desc || !user) {
+    throw new Error('Missing required arguments: <command> <desc> <user>');
+  }
+  const result = await cli.createRequest(cmd, desc, user);
+  console.log(JSON.stringify(result, null, 2));
+}
+
+/**
+ * Handle status command
+ */
+async function handleStatus(cli: ProtocolOmegaCLI, args: string[]): Promise<void> {
+  const requestId = args[1];
+  if (!requestId) {
+    throw new Error('Missing request ID argument');
+  }
+  const result = await cli.getRequestStatus(requestId);
+  console.log(JSON.stringify(result, null, 2));
+}
+
+/**
+ * Handle approve command
+ */
+async function handleApprove(cli: ProtocolOmegaCLI, args: string[]): Promise<void> {
+  const [, requestId, approver] = args;
+  if (!requestId || !approver) {
+    throw new Error('Missing required arguments: <request-id> <approver>');
+  }
+  const result = await cli.approveRequest(requestId, approver);
+  console.log(JSON.stringify(result, null, 2));
+}
+
+/**
+ * Handle reject command
+ */
+async function handleReject(cli: ProtocolOmegaCLI, args: string[]): Promise<void> {
+  const [, requestId, rejector, reason] = args;
+  if (!requestId || !rejector || !reason) {
+    throw new Error('Missing required arguments: <request-id> <rejector> <reason>');
+  }
+  const result = await cli.rejectRequest(requestId, rejector, reason);
+  console.log(JSON.stringify(result, null, 2));
+}
+
+/**
  * Main CLI entry point with top-level await
+ * Reduced cognitive complexity by extracting command handlers
  */
 async function main() {
   const args = process.argv.slice(2);
@@ -287,90 +342,46 @@ async function main() {
 
   try {
     switch (command) {
-      case 'assess': {
-        // Scoped declaration (SonarQube compliance)
-        const cmd = args[1];
-        if (!cmd) {
-          throw new Error('Missing command argument');
-        }
-        const result = await cli.assessRisk(cmd);
-        console.log(JSON.stringify(result, null, 2));
+      case 'assess':
+        await handleAssess(cli, args);
         break;
-      }
 
-      case 'create': {
-        // Scoped declarations (SonarQube compliance)
-        const [, cmd, desc, user] = args;
-        if (!cmd || !desc || !user) {
-          throw new Error('Missing required arguments: <command> <desc> <user>');
-        }
-        const result = await cli.createRequest(cmd, desc, user);
-        console.log(JSON.stringify(result, null, 2));
+      case 'create':
+        await handleCreate(cli, args);
         break;
-      }
 
       case 'pending': {
-        // Scoped declaration (SonarQube compliance)
         const result = await cli.getPendingRequests();
         console.log(JSON.stringify(result, null, 2));
         break;
       }
 
-      case 'status': {
-        // Scoped declarations (SonarQube compliance)
-        const requestId = args[1];
-        if (!requestId) {
-          throw new Error('Missing request ID argument');
-        }
-        const result = await cli.getRequestStatus(requestId);
-        console.log(JSON.stringify(result, null, 2));
+      case 'status':
+        await handleStatus(cli, args);
         break;
-      }
 
-      case 'approve': {
-        // Scoped declarations (SonarQube compliance)
-        const [, requestId, approver] = args;
-        if (!requestId || !approver) {
-          throw new Error('Missing required arguments: <request-id> <approver>');
-        }
-        const result = await cli.approveRequest(requestId, approver);
-        console.log(JSON.stringify(result, null, 2));
+      case 'approve':
+        await handleApprove(cli, args);
         break;
-      }
 
-      case 'reject': {
-        // Scoped declarations (SonarQube compliance)
-        const [, requestId, rejector, reason] = args;
-        if (!requestId || !rejector || !reason) {
-          throw new Error(
-            'Missing required arguments: <request-id> <rejector> <reason>'
-          );
-        }
-        const result = await cli.rejectRequest(requestId, rejector, reason);
-        console.log(JSON.stringify(result, null, 2));
+      case 'reject':
+        await handleReject(cli, args);
         break;
-      }
 
-      case 'dashboard': {
-        // Scoped (SonarQube compliance)
+      case 'dashboard':
         await cli.startDashboard();
         break;
-      }
 
       case 'help':
       case '--help':
-      case '-h': {
-        // Scoped (SonarQube compliance)
+      case '-h':
         cli.printHelp();
         break;
-      }
 
-      default: {
-        // Scoped (SonarQube compliance)
+      default:
         console.error(`Unknown command: ${command}\n`);
         cli.printHelp();
         process.exit(1);
-      }
     }
   } catch (error) {
     if (error instanceof Error) {

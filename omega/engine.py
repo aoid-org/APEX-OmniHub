@@ -301,8 +301,79 @@ class ProtocolOmegaEngine:
             return json.load(f)
 
 
+def handle_assess(engine: ProtocolOmegaEngine, args: List[str]) -> None:
+    """Handle assess command"""
+    import sys
+    if len(args) < 3:
+        print("Usage: python3 engine.py assess <command>")
+        sys.exit(1)
+    risk = engine.assess_risk(args[2])
+    print(json.dumps({'risk_level': risk}))
+
+
+def handle_create(engine: ProtocolOmegaEngine, args: List[str]) -> None:
+    """Handle create command"""
+    import sys
+    if len(args) < 5:
+        print("Usage: python3 engine.py create <command> <description> <user>")
+        sys.exit(1)
+    request_id = engine.create_request(args[2], args[3], args[4])
+    print(json.dumps({'request_id': request_id}))
+
+
+def handle_pending(engine: ProtocolOmegaEngine) -> None:
+    """Handle pending command"""
+    pending = engine.get_pending_requests()
+    print(json.dumps(pending, indent=2))
+
+
+def handle_status(engine: ProtocolOmegaEngine, args: List[str]) -> None:
+    """Handle status command"""
+    import sys
+    if len(args) < 3:
+        print("Usage: python3 engine.py status <request_id>")
+        sys.exit(1)
+    try:
+        status = engine.get_request_status(args[2])
+        print(json.dumps(status, indent=2))
+    except ValueError as e:
+        print(json.dumps({'error': str(e)}))
+        sys.exit(1)
+
+
+def handle_approve(engine: ProtocolOmegaEngine, args: List[str]) -> None:
+    """Handle approve command"""
+    import sys
+    if len(args) < 4:
+        print("Usage: python3 engine.py approve <request_id> <approver>")
+        sys.exit(1)
+    try:
+        result = engine.approve_request(args[2], args[3])
+        print(json.dumps(result, indent=2))
+    except ValueError as e:
+        print(json.dumps({'error': str(e)}))
+        sys.exit(1)
+
+
+def handle_reject(engine: ProtocolOmegaEngine, args: List[str]) -> None:
+    """Handle reject command"""
+    import sys
+    if len(args) < 5:
+        print("Usage: python3 engine.py reject <request_id> <rejector> <reason>")
+        sys.exit(1)
+    try:
+        result = engine.reject_request(args[2], args[3], args[4])
+        print(json.dumps(result, indent=2))
+    except ValueError as e:
+        print(json.dumps({'error': str(e)}))
+        sys.exit(1)
+
+
 def main():
-    """CLI entry point for the engine"""
+    """
+    CLI entry point for the engine
+    Reduced cognitive complexity by extracting command handlers
+    """
     import sys
 
     if len(sys.argv) < 2:
@@ -312,57 +383,19 @@ def main():
     engine = ProtocolOmegaEngine()
     command = sys.argv[1]
 
+    # Dispatch to appropriate handler
     if command == 'assess':
-        if len(sys.argv) < 3:
-            print("Usage: python3 engine.py assess <command>")
-            sys.exit(1)
-        risk = engine.assess_risk(sys.argv[2])
-        print(json.dumps({'risk_level': risk}))
-
+        handle_assess(engine, sys.argv)
     elif command == 'create':
-        if len(sys.argv) < 5:
-            print("Usage: python3 engine.py create <command> <description> <user>")
-            sys.exit(1)
-        request_id = engine.create_request(sys.argv[2], sys.argv[3], sys.argv[4])
-        print(json.dumps({'request_id': request_id}))
-
+        handle_create(engine, sys.argv)
     elif command == 'pending':
-        pending = engine.get_pending_requests()
-        print(json.dumps(pending, indent=2))
-
+        handle_pending(engine)
     elif command == 'status':
-        if len(sys.argv) < 3:
-            print("Usage: python3 engine.py status <request_id>")
-            sys.exit(1)
-        try:
-            status = engine.get_request_status(sys.argv[2])
-            print(json.dumps(status, indent=2))
-        except ValueError as e:
-            print(json.dumps({'error': str(e)}))
-            sys.exit(1)
-
+        handle_status(engine, sys.argv)
     elif command == 'approve':
-        if len(sys.argv) < 4:
-            print("Usage: python3 engine.py approve <request_id> <approver>")
-            sys.exit(1)
-        try:
-            result = engine.approve_request(sys.argv[2], sys.argv[3])
-            print(json.dumps(result, indent=2))
-        except ValueError as e:
-            print(json.dumps({'error': str(e)}))
-            sys.exit(1)
-
+        handle_approve(engine, sys.argv)
     elif command == 'reject':
-        if len(sys.argv) < 5:
-            print("Usage: python3 engine.py reject <request_id> <rejector> <reason>")
-            sys.exit(1)
-        try:
-            result = engine.reject_request(sys.argv[2], sys.argv[3], sys.argv[4])
-            print(json.dumps(result, indent=2))
-        except ValueError as e:
-            print(json.dumps({'error': str(e)}))
-            sys.exit(1)
-
+        handle_reject(engine, sys.argv)
     else:
         print(f"Unknown command: {command}")
         sys.exit(1)
