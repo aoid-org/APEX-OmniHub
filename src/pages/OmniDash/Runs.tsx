@@ -37,7 +37,7 @@ function formatPayload(data: Record<string, unknown> | null, maxLength: number =
   return str.slice(0, maxLength) + '\n... (truncated)';
 }
 
-function RunDetailPanel({ workflowId }: { workflowId: string }) {
+function RunDetailPanel({ workflowId }: { readonly workflowId: string }) {
   const [replayIndex, setReplayIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -284,7 +284,7 @@ function RunDetailPanel({ workflowId }: { workflowId: string }) {
   );
 }
 
-function RunCard({ run }: { run: OmniTraceRun }) {
+function RunCard({ run }: { readonly run: OmniTraceRun }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (

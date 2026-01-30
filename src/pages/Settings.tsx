@@ -116,15 +116,23 @@ export default function Settings() {
     }
   };
 
+  const handleEnableAnalytics = () => {
+    optInToAnalytics();
+    setAnalyticsOptedOut(false);
+    toast.success('Analytics enabled');
+  };
+
+  const handleDisableAnalytics = () => {
+    optOutOfAnalytics();
+    setAnalyticsOptedOut(true);
+    toast.success('Analytics disabled');
+  };
+
   const handleToggleAnalytics = (enabled: boolean) => {
     if (enabled) {
-      optInToAnalytics();
-      setAnalyticsOptedOut(false);
-      toast.success('Analytics enabled');
+      handleEnableAnalytics();
     } else {
-      optOutOfAnalytics();
-      setAnalyticsOptedOut(true);
-      toast.success('Analytics disabled');
+      handleDisableAnalytics();
     }
   };
 
@@ -205,8 +213,11 @@ export default function Settings() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">
-                      {biometricInfo?.type === 'face' ? 'Face ID' :
-                       biometricInfo?.type === 'fingerprint' ? 'Touch ID' : 'Biometric'}
+                      {(() => {
+                        if (biometricInfo?.type === 'face') return 'Face ID';
+                        if (biometricInfo?.type === 'fingerprint') return 'Touch ID';
+                        return 'Biometric';
+                      })()}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Platform: {biometricInfo?.platform}
@@ -247,26 +258,24 @@ export default function Settings() {
           </CardHeader>
           <CardContent className="space-y-4">
             {pushAvailable ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Desktop & Mobile Notifications</p>
-                    <p className="text-sm text-muted-foreground">
-                      Get notified about workflows, integrations, and alerts
-                    </p>
-                  </div>
-                  <Switch
-                    checked={pushEnabled}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        handleEnablePush();
-                      } else {
-                        handleDisablePush();
-                      }
-                    }}
-                  />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Desktop & Mobile Notifications</p>
+                  <p className="text-sm text-muted-foreground">
+                    Get notified about workflows, integrations, and alerts
+                  </p>
                 </div>
-              </>
+                <Switch
+                  checked={pushEnabled}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      handleEnablePush();
+                    } else {
+                      handleDisablePush();
+                    }
+                  }}
+                />
+              </div>
             ) : (
               <p className="text-sm text-muted-foreground">
                 Push notifications not supported in this browser
@@ -317,11 +326,11 @@ export default function Settings() {
             <div className="flex items-center justify-between">
               <span className="text-sm">Installed as App</span>
               <Badge variant={
-                window.matchMedia('(display-mode: standalone)').matches
+                globalThis.matchMedia('(display-mode: standalone)').matches
                   ? 'default'
                   : 'secondary'
               }>
-                {window.matchMedia('(display-mode: standalone)').matches
+                {globalThis.matchMedia('(display-mode: standalone)').matches
                   ? 'Yes'
                   : 'No'}
               </Badge>
