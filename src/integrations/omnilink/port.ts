@@ -114,7 +114,10 @@ function cleanupDedupe(ttlMs: number) {
 function getIdempotencyKey(options: OmniLinkRequestOptions): string {
   if (options.idempotencyKey) return options.idempotencyKey;
   if (typeof crypto?.randomUUID === 'function') return crypto.randomUUID();
-  return `omnilink_${Math.random().toString(36).slice(2)}`;
+  // Secure fallback using getRandomValues if randomUUID is missing
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return `omnilink_${Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('')}`;
 }
 
 async function requestWithRetries<T>(options: OmniLinkRequestOptions): Promise<T> {
