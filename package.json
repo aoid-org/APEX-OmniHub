@@ -168,7 +168,7 @@
     "pixelmatch": "^5.3.0",
     "pngjs": "^7.0.0",
     "postcss": "^8.5.6",
-    "snyk": "^1.1275.0",
+    "snyk": "^1.1297.3",
     "solidity-coverage": "^0.8.14",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.2",
