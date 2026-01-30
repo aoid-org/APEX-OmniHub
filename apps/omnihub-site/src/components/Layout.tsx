@@ -104,7 +104,7 @@ function Nav() {
               width="182"
               height="26"
               style={{
-                height: '26.4px',
+                height: '29.04px',
                 width: 'auto',
                 aspectRatio: '1012.5 / 147'
               }}
@@ -123,6 +123,9 @@ function Nav() {
         </ul>
 
         <div className="nav__actions">
+          <a href={siteConfig.nav.loginLink.href} className="nav__link nav__link--action">
+            {siteConfig.nav.loginLink.label}
+          </a>
           <ThemeToggle />
 
           <div className="nav__burger" ref={menuRef}>
@@ -176,6 +179,15 @@ function Nav() {
                       </a>
                     </li>
                   ))}
+                  <li key={siteConfig.nav.loginLink.href}>
+                    <a
+                      href={siteConfig.nav.loginLink.href}
+                      className="nav__mobile-link"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {siteConfig.nav.loginLink.label}
+                    </a>
+                  </li>
                 </ul>
               </dialog>
             )}
