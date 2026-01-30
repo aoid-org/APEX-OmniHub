@@ -45,12 +45,15 @@
 
 /* Fix button contrast in navy sections */
 .section--navy .btn--secondary {
+  background-color: transparent;
   color: var(--color-white);
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: var(--color-white);
+  border-width: 2px;
 }
 
 .section--navy .btn--secondary:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--color-white);
+  color: var(--color-navy);
   border-color: var(--color-white);
 }
 
@@ -199,23 +202,28 @@
 }
 
 .btn--secondary {
-  background-color: transparent;
+  background-color: var(--color-white);
   color: var(--color-navy);
-  border-color: var(--color-border);
+  border-color: var(--color-navy);
+  border-width: 2px;
 }
 
 .btn--secondary:hover {
-  background-color: var(--color-surface);
+  background-color: var(--color-navy);
+  color: var(--color-white);
   border-color: var(--color-navy);
 }
 
 [data-theme="dark"] .btn--secondary {
+  background-color: transparent;
   color: var(--color-white);
-  border-color: var(--color-border);
+  border-color: var(--color-white);
+  border-width: 2px;
 }
 
 [data-theme="dark"] .btn--secondary:hover {
-  background-color: var(--color-surface-elevated);
+  background-color: var(--color-white);
+  color: var(--color-navy);
   border-color: var(--color-white);
 }
 
@@ -778,7 +786,7 @@
 
 /* === HERO === */
 .hero {
-  padding: var(--space-24) 0;
+  padding: var(--space-16) 0;
   text-align: center;
 }
 
@@ -838,23 +846,36 @@
 }
 
 .hero__title {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
   background: linear-gradient(90deg, var(--color-text-primary), var(--color-accent));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-.hero__subtitle {
-  font-size: var(--font-size-xl);
+.hero__tagline {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
   color: var(--color-text-secondary);
   margin-bottom: var(--space-6);
+}
+
+.hero__subtitle {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-4);
+  line-height: var(--line-height-tight);
 }
 
 .hero__description {
   max-width: 720px;
   margin: 0 0 var(--space-8);
+  font-size: var(--font-size-base);
   color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
 }
 
 .hero__actions {

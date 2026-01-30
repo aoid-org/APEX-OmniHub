@@ -101,10 +101,10 @@ function Nav() {
               src="/apex-omnihub-wordmark.svg"
               alt="APEX OmniHub"
               className="nav__logo-wordmark"
-              width="165"
-              height="24"
+              width="182"
+              height="26"
               style={{
-                height: '24px',
+                height: '26.4px',
                 width: 'auto',
                 aspectRatio: '1012.5 / 147'
               }}
