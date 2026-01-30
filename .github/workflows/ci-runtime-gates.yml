@@ -152,8 +152,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache-preview
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
       - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
+        timeout-minutes: 5
+        run: |
+          # Install browsers without system dependencies
+          # GitHub Actions runners already have most required libraries
+          npx playwright install chromium
+
+          # Verify installation
+          npx playwright --version
 
       - name: Wait for Vercel Preview
         uses: patrickedqvist/wait-for-vercel-preview@v1.3.2

@@ -103,6 +103,30 @@ export const VERIFICATION_THRESHOLDS = {
 };
 ```
 
+## Human-in-the-Loop Verification (Omega Module)
+
+For tasks requiring human approval, use the **Omega** module:
+
+```python
+from omega import VerificationEngine
+
+engine = VerificationEngine()
+
+# Create verification request for human review
+request = engine.create_verification_request(
+    request_id='task-123',
+    task_description='Critical security change',
+    modified_files=['src/auth/oauth.ts'],
+    evidence_path='/tmp/apex-evidence/task-123.json'
+)
+
+# Human reviewer approves via dashboard (http://localhost:8080)
+# Or programmatically:
+result = engine.approve_request('task-123', 'admin@apex.local')
+```
+
+See [omega/README.md](../omega/README.md) for complete documentation.
+
 ## Integration with Temporal.io Workflows
 
 ```typescript
@@ -263,6 +287,12 @@ apex-resilience/
 │   └── iron-law.spec.ts           # Verification framework tests
 ├── index.ts                       # Public API exports
 └── README.md                      # This file
+
+omega/                             # Human-in-the-loop verification
+├── dashboard.py                   # HTTP API server (XSS-safe)
+├── engine.py                      # Approval/rejection engine
+├── __init__.py                    # Python module exports
+└── README.md                      # Omega documentation
 ```
 
 ## Version History

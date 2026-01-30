@@ -85,16 +85,14 @@ const DEFAULT_CONFIG: VoiceCommandConfig = {
 class VoiceCommandHandler {
   private static instance: VoiceCommandHandler | null = null;
   private config: VoiceCommandConfig;
-  private sessions: Map<string, VoiceSession> = new Map();
+  private readonly sessions: Map<string, VoiceSession> = new Map();
 
   private constructor(config: Partial<VoiceCommandConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
   public static getInstance(config?: Partial<VoiceCommandConfig>): VoiceCommandHandler {
-    if (!VoiceCommandHandler.instance) {
-      VoiceCommandHandler.instance = new VoiceCommandHandler(config);
-    }
+    VoiceCommandHandler.instance ??= new VoiceCommandHandler(config);
     return VoiceCommandHandler.instance;
   }
 
@@ -284,7 +282,7 @@ class VoiceCommandHandler {
     let normalized = transcript;
     if (this.config.wakeWords) {
       for (const word of this.config.wakeWords) {
-        const regex = new RegExp(`^${word}[,.]?\\s*`, 'i');
+        const regex = new RegExp(String.raw`^${word}[,.]?\s*`, 'i');
         normalized = normalized.replace(regex, '');
       }
     }
@@ -293,7 +291,7 @@ class VoiceCommandHandler {
 
   private updateSession(userId: string): void {
     const session = this.sessions.get(userId);
-    if (session && session.isActive) {
+    if (session?.isActive) {
       session.lastActivityAt = new Date();
       session.commandCount++;
     }
@@ -324,7 +322,7 @@ class VoiceCommandHandler {
     };
   }
 
-  private createDurationExceededResult(
+  private createBlockedResult(
     transcript: string,
     confidence: number,
     startTime: number
@@ -342,22 +340,20 @@ class VoiceCommandHandler {
     };
   }
 
+  private createDurationExceededResult(
+    transcript: string,
+    confidence: number,
+    startTime: number
+  ): VoiceCommandResult {
+    return this.createBlockedResult(transcript, confidence, startTime);
+  }
+
   private createNoWakeWordResult(
     transcript: string,
     confidence: number,
     startTime: number
   ): VoiceCommandResult {
-    return {
-      correlationId: uuidv4(),
-      status: 'blocked',
-      latencyMs: Date.now() - startTime,
-      riskLane: 'GREEN',
-      transcript,
-      confidence,
-      detectedIntents: [],
-      manModeTriggered: false,
-      processingMs: Date.now() - startTime,
-    };
+    return this.createBlockedResult(transcript, confidence, startTime);
   }
 }
 

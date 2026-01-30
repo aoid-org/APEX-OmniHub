@@ -24,6 +24,7 @@ asyncpg>=0.29.0
 python-dotenv>=1.0.0
 httpx>=0.26.0
 tenacity>=8.2.0
+markupsafe>=2.1.0  # XSS-safe HTML escaping (SonarQube S5131)
 
 # FastAPI and Rate Limiting
 fastapi>=0.109.0
