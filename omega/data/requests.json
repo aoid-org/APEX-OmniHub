@@ -1,0 +1,9 @@
+{
+  "c7b76f4723cee875": {
+    "command": "SELECT * FROM users",
+    "description": "Test query",
+    "risk_level": "low",
+    "requested_by": "test-user",
+    "timestamp": "2026-01-30T01:18:28.665371+00:00"
+  }
+}
