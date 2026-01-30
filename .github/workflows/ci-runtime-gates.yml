@@ -78,7 +78,7 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            playwright-${{ runner.os }}-
+            ${{ runner.os }}-playwright-
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -157,19 +157,17 @@ jobs:
         id: playwright-cache-preview
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            playwright-${{ runner.os }}-
+            ${{ runner.os }}-playwright-
 
       - name: Install Playwright browsers
-        timeout-minutes: 5
-        run: |
-          # Install browsers without system dependencies
-          # GitHub Actions runners already have most required libraries
-          npx playwright install chromium
+        if: steps.playwright-cache-preview.outputs.cache-hit != 'true'
+        run: npx playwright install chromium --with-deps
 
-          # Verify installation
-          npx playwright --version
+      - name: Install Playwright browser dependencies only (if cached)
+        if: steps.playwright-cache-preview.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Wait for Vercel Preview
         uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
