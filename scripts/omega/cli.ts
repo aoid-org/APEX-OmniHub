@@ -22,6 +22,9 @@ const OMEGA_DIR = path.join(process.cwd(), 'omega');
 const ENGINE_PATH = path.join(OMEGA_DIR, 'engine.py');
 const DASHBOARD_PATH = path.join(OMEGA_DIR, 'dashboard.py');
 
+// SECURITY: Use absolute path to Python to avoid PATH-based attacks (S4036)
+const PYTHON_BIN = '/usr/bin/python3';
+
 /**
  * Validate command arguments to prevent injection attacks
  * Does not modify args - only validates them for safety
@@ -105,18 +108,18 @@ class ProtocolOmegaCLI {
 
   /**
    * Execute Python engine command with security controls
-   * SECURITY: Uses execFileSync to prevent command injection (SonarQube S4721)
+   * SECURITY: Uses execFileSync with absolute path to prevent attacks (S4721, S4036)
    */
   private execEngine(args: string[]): unknown {
     try {
       // Validate all arguments before execution
       validateArgs(args);
 
-      // Use execFileSync which does NOT use shell - prevents command injection
-      // This is safer than execSync as it doesn't interpret shell metacharacters
-      const result = execFileSync('python3', [this.enginePath, ...args], {
+      // SECURITY: Use absolute path to python3 to eliminate PATH dependency (S4036)
+      // Use execFileSync which does NOT use shell - prevents command injection (S4721)
+      const result = execFileSync(PYTHON_BIN, [this.enginePath, ...args], {
         encoding: 'utf-8',
-        env: getSecureEnv(), // Use restricted environment (S4036)
+        env: getSecureEnv(), // Use restricted environment for defense-in-depth
         timeout: 10000, // 10 second timeout
         maxBuffer: 1024 * 1024, // 1MB max buffer
       });
@@ -193,19 +196,18 @@ class ProtocolOmegaCLI {
 
   /**
    * Start approval dashboard server
-   * SECURITY: Uses secure environment and proper PATH (SonarQube S4036)
+   * SECURITY: Uses absolute path to python3 to eliminate PATH risks (S4036)
    */
   async startDashboard(): Promise<void> {
     console.log('🚀 Starting Protocol Omega Dashboard...\n');
 
-    // SECURITY (S4036): PATH is restricted to system directories in getSecureEnv()
-    // Only trusted, read-only system paths are included to prevent PATH injection
+    // SECURITY: Use absolute path to python3 - no PATH lookup needed (S4036)
     const spawnOptions: SpawnOptions = {
       stdio: 'inherit',
-      env: getSecureEnv(), // Restricted PATH: /usr/bin, /bin, etc.
+      env: getSecureEnv(), // Restricted environment for defense-in-depth
     };
 
-    const dashboard = spawn('python3', [this.dashboardPath], spawnOptions);
+    const dashboard = spawn(PYTHON_BIN, [this.dashboardPath], spawnOptions);
 
     dashboard.on('close', (code) => {
       console.log(`\n📡 Dashboard stopped (exit code: ${code})`);
