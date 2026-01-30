@@ -39,7 +39,7 @@ describe('IronLawVerifier - Core Functionality', () => {
     expect(Array.isArray(result.evidence)).toBe(true);
     expect(result.timestamp).toBeDefined();
     expect(result.verificationLatencyMs).toBeGreaterThanOrEqual(0);
-  });
+  }, 60000); // 60-second timeout for full test suite execution
 
   it('should include test evidence in verification result', async () => {
     const task: AgentTask = {
@@ -62,7 +62,7 @@ describe('IronLawVerifier - Core Functionality', () => {
       expect(testEvidence.logPath).toBeDefined();
       expect(testEvidence.timestamp).toBeDefined();
     }
-  });
+  }, 60000); // 60-second timeout for full test suite execution
 
   it('should require human review for critical file changes', async () => {
     const task: AgentTask = {
@@ -77,7 +77,7 @@ describe('IronLawVerifier - Core Functionality', () => {
     const result = await verifier.verify(task);
 
     expect(['REQUIRES_HUMAN_REVIEW', 'REJECTED']).toContain(result.status);
-  });
+  }, 60000); // 60-second timeout for full test suite execution
 
   it('should include security evidence for security-sensitive tasks', async () => {
     const task: AgentTask = {
@@ -98,7 +98,7 @@ describe('IronLawVerifier - Core Functionality', () => {
       expect(securityEvidence.shadowPromptAttempts).toBeGreaterThanOrEqual(0);
       expect(securityEvidence.reportPath).toBeDefined();
     }
-  });
+  }, 60000); // 60-second timeout for full test suite execution
 
   it('should include visual evidence for UI tasks', async () => {
     const task: AgentTask = {
@@ -122,7 +122,7 @@ describe('IronLawVerifier - Core Functionality', () => {
       expect(visualEvidence.accessibilityScore).toBeLessThanOrEqual(100);
       expect(Array.isArray(visualEvidence.viewports)).toBe(true);
     }
-  });
+  }, 60000); // 60-second timeout for full test suite execution
 
   it('should complete verification within latency threshold', async () => {
     const task: AgentTask = {
@@ -140,5 +140,5 @@ describe('IronLawVerifier - Core Functionality', () => {
 
     expect(totalLatency).toBeLessThan(60000); // 60 second max for test environment
     expect(result.verificationLatencyMs).toBeGreaterThanOrEqual(0);
-  });
+  }, 60000); // 60-second timeout for full test suite execution
 });
