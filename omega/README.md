@@ -19,11 +19,12 @@ The Omega module provides human-in-the-loop verification capabilities for the AP
 
 This module implements comprehensive XSS protection (SonarQube S5131 compliant):
 
-- ✅ All user-controlled data is HTML-escaped before reflection
+- ✅ **markupsafe.escape()** - Industry-standard sanitization (Flask/Jinja2)
+- ✅ All user-controlled data HTML-escaped before reflection
 - ✅ Input validation for request IDs and usernames
 - ✅ Recursive data sanitization for JSON responses
 - ✅ Security headers (X-Content-Type-Options, X-Frame-Options, CSP)
-- ✅ No direct user data reflection without sanitization
+- ✅ Defense-in-depth: 3-layer sanitization (storage + retrieval + output)
 
 ## Quick Start
 

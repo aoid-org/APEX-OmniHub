@@ -42,14 +42,19 @@ def sanitize_data_recursive(data: Any) -> Any:
         data: Data to sanitize (dict, list, str, or primitive)
 
     Returns:
-        Sanitized data with all strings HTML-escaped
+        Sanitized data with all strings HTML-escaped using markupsafe
+
+    Security:
+        Uses markupsafe.escape() directly for SonarQube taint tracking.
+        This ensures the static analysis can verify sanitization in the data flow.
     """
     if isinstance(data, dict):
         return {key: sanitize_data_recursive(value) for key, value in data.items()}
     if isinstance(data, list):
         return [sanitize_data_recursive(item) for item in data]
     if isinstance(data, str):
-        return escape_html(data)
+        # Use markupsafe.escape directly for SonarQube recognition
+        return str(escape(data))
     return data
 
 
