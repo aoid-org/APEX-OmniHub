@@ -2,13 +2,17 @@
 APEX Resilience Protocol - Verification Engine
 Core verification logic for human-in-the-loop approvals
 
-Security: Proper data handling for XSS prevention (SonarQube S5131 compliant)
+Security: Defense-in-depth XSS prevention (SonarQube S5131 compliant)
+- All user-controlled data sanitized at storage time
+- HTML escaping applied to task_description and modified_files
+- Safe retrieval via get_pending_requests() for HTTP API responses
 """
 
+import html
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, TypedDict
+from typing import Any, Dict, TypedDict
 
 
 class VerificationRequest(TypedDict):
@@ -28,6 +32,28 @@ class VerificationResult(TypedDict):
     approved_by: str
     approved_at: str
     rejection_reason: str
+
+
+def _sanitize_for_storage(data: Any) -> Any:
+    """
+    Sanitize data for safe storage and retrieval.
+
+    Defense-in-depth: Sanitize at storage time to ensure all persisted
+    data is XSS-safe when retrieved and sent via HTTP API.
+
+    Args:
+        data: Data to sanitize (str, list, dict, or primitive)
+
+    Returns:
+        Sanitized data with HTML-escaped strings
+    """
+    if isinstance(data, dict):
+        return {key: _sanitize_for_storage(value) for key, value in data.items()}
+    if isinstance(data, list):
+        return [_sanitize_for_storage(item) for item in data]
+    if isinstance(data, str):
+        return html.escape(data, quote=True)
+    return data
 
 
 class VerificationEngine:
@@ -77,20 +103,26 @@ class VerificationEngine:
 
         Args:
             request_id: Unique request identifier
-            task_description: Description of the task
-            modified_files: List of files modified
+            task_description: Description of the task (will be sanitized)
+            modified_files: List of files modified (will be sanitized)
             evidence_path: Path to verification evidence
 
         Returns:
-            Created verification request
+            Created verification request (with sanitized fields)
+
+        Security:
+            User-controlled fields (task_description, modified_files) are
+            HTML-escaped at storage time for defense-in-depth XSS protection.
         """
         # Use timezone-aware datetime (SonarQube S6978 compliance)
         submitted_at = datetime.now(timezone.utc).isoformat()
 
+        # SECURITY FIX (S5131): Sanitize user-controlled data at storage time
+        # This ensures data is XSS-safe when retrieved via get_pending_requests()
         request: VerificationRequest = {
             'request_id': request_id,
-            'task_description': task_description,
-            'modified_files': modified_files,
+            'task_description': _sanitize_for_storage(task_description),
+            'modified_files': _sanitize_for_storage(modified_files),
             'evidence_path': evidence_path,
             'submitted_at': submitted_at,
             'status': 'pending'
@@ -195,7 +227,11 @@ class VerificationEngine:
         Get all pending verification requests.
 
         Returns:
-            Dictionary of pending requests
+            Dictionary of pending requests (with sanitized fields)
+
+        Security:
+            All user-controlled data in returned requests is pre-sanitized
+            at storage time, making this safe for HTTP API responses.
         """
         return self._load_pending()
 
