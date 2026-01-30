@@ -44,6 +44,16 @@ class VerificationEngine:
 
         Args:
             storage_path: Path to evidence storage directory
+                         Default: /tmp/apex-evidence (development/testing only)
+
+        Security Notes:
+            - /tmp is world-readable and may be cleared on reboot
+            - For production: Use persistent, restricted path:
+              * Linux: /var/lib/apex-evidence (chmod 700)
+              * Docker: Mount volume /data/apex-evidence
+              * Cloud: S3, Azure Blob, or GCS bucket with encryption
+            - Ensure proper file permissions (600 for files, 700 for dirs)
+            - Consider encryption at rest for sensitive evidence
         """
         self.storage_path = Path(storage_path)
         self.storage_path.mkdir(parents=True, exist_ok=True)
@@ -102,7 +112,7 @@ class VerificationEngine:
         Approve a verification request.
 
         Args:
-            request_id: Request to approve
+            request_id: Request to approve (pre-sanitized)
             approved_by: Username of approver (pre-sanitized)
 
         Returns:
@@ -118,8 +128,8 @@ class VerificationEngine:
         # Use timezone-aware datetime (SonarQube S6978 compliance)
         approved_at = datetime.now(timezone.utc).isoformat()
 
-        # SECURITY NOTE: approved_by is expected to be pre-sanitized
-        # by the dashboard layer (escape_html applied)
+        # SECURITY NOTE: All user-controlled data (request_id, approved_by)
+        # is expected to be pre-sanitized by the dashboard layer (escape_html applied)
         result: VerificationResult = {
             'request_id': request_id,
             'status': 'approved',
@@ -145,7 +155,7 @@ class VerificationEngine:
         Reject a verification request.
 
         Args:
-            request_id: Request to reject
+            request_id: Request to reject (pre-sanitized)
             rejected_by: Username of rejector (pre-sanitized)
             reason: Rejection reason (pre-sanitized)
 
@@ -162,7 +172,7 @@ class VerificationEngine:
         # Use timezone-aware datetime (SonarQube S6978 compliance)
         rejected_at = datetime.now(timezone.utc).isoformat()
 
-        # SECURITY NOTE: All user-controlled data (rejected_by, reason)
+        # SECURITY NOTE: All user-controlled data (request_id, rejected_by, reason)
         # is expected to be pre-sanitized by the dashboard layer
         # (escape_html applied before passing to this method)
         result: VerificationResult = {
@@ -244,7 +254,7 @@ def demo_workflow() -> None:
         approved_by='admin@apex.local'
     )
 
-    print(f"\nApproval result:")
+    print("\nApproval result:")
     print(f"  Status: {result['status']}")
     print(f"  Approved by: {result['approved_by']}")
     print(f"  Approved at: {result['approved_at']}")

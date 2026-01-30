@@ -153,8 +153,8 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
 
     def _handle_approve(self, data: Dict[str, str]) -> None:
         """Handle approval request"""
-        request_id = self._sanitize_request_id(data.get('request_id', ''))
-        # SECURITY FIX (S5131): Escape HTML before passing to engine
+        # SECURITY FIX (S5131): Validate and escape all user-controlled data
+        request_id = escape_html(self._sanitize_request_id(data.get('request_id', '')))
         approved_by = escape_html(self._sanitize_username(data.get('approved_by', '')))
 
         result = self.engine.approve_request(request_id, approved_by)
@@ -162,8 +162,8 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
 
     def _handle_reject(self, data: Dict[str, str]) -> None:
         """Handle rejection request"""
-        request_id = self._sanitize_request_id(data.get('request_id', ''))
-        # SECURITY FIX (S5131): Escape HTML before passing to engine
+        # SECURITY FIX (S5131): Validate and escape all user-controlled data
+        request_id = escape_html(self._sanitize_request_id(data.get('request_id', '')))
         rejected_by = escape_html(self._sanitize_username(data.get('rejected_by', '')))
         reason = escape_html(data.get('reason', ''))
 
@@ -204,9 +204,16 @@ def start_dashboard(port: int = 8080) -> None:
 
     Args:
         port: Port to listen on (default: 8080)
+
+    Security Notes:
+        - This server uses HTTP for local development/testing only
+        - For production: Deploy behind HTTPS reverse proxy (nginx/Apache)
+        - Use TLS certificates from Let's Encrypt or your CA
+        - Configure proper firewall rules to restrict access
     """
     server = HTTPServer(('localhost', port), VerificationDashboardHandler)
     print(f"APEX Verification Dashboard running on http://localhost:{port}")
+    print("SECURITY: For production, deploy behind HTTPS reverse proxy")
     print("Press Ctrl+C to stop")
     try:
         server.serve_forever()
