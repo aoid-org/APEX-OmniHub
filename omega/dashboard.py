@@ -223,6 +223,13 @@ class OmegaDashboardHandler(BaseHTTPRequestHandler):
     <div id="requests-container"></div>
 
     <script>
+        // HTML escape function to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         async function loadRequests() {
             const response = await fetch('/api/pending');
             const requests = await response.json();
@@ -237,19 +244,57 @@ class OmegaDashboardHandler(BaseHTTPRequestHandler):
 
             for (const [requestId, request] of Object.entries(requests)) {
                 const card = document.createElement('div');
-                card.className = `request-card risk-${request.risk_level}`;
-                card.innerHTML = `
-                    <h3>Request ID: ${requestId}</h3>
-                    <p><strong>Command:</strong> <code>${request.command}</code></p>
-                    <p><strong>Description:</strong> ${request.description}</p>
-                    <p><strong>Risk Level:</strong> <span style="color: ${getRiskColor(request.risk_level)}">${request.risk_level.toUpperCase()}</span></p>
-                    <p><strong>Requested by:</strong> ${request.requested_by}</p>
-                    <p><strong>Timestamp:</strong> ${request.timestamp}</p>
-                    <div>
-                        <button class="approve-btn" onclick="approveRequest('${requestId}')">✓ Approve</button>
-                        <button class="reject-btn" onclick="rejectRequest('${requestId}')">✗ Reject</button>
-                    </div>
-                `;
+                card.className = `request-card risk-${escapeHtml(request.risk_level)}`;
+
+                // SECURITY: Use textContent for user-controlled data to prevent XSS
+                const h3 = document.createElement('h3');
+                h3.textContent = `Request ID: ${requestId}`;
+
+                const pCommand = document.createElement('p');
+                pCommand.innerHTML = '<strong>Command:</strong> <code></code>';
+                pCommand.querySelector('code').textContent = request.command;
+
+                const pDesc = document.createElement('p');
+                pDesc.innerHTML = '<strong>Description:</strong> ';
+                pDesc.appendChild(document.createTextNode(request.description));
+
+                const pRisk = document.createElement('p');
+                pRisk.innerHTML = '<strong>Risk Level:</strong> ';
+                const riskSpan = document.createElement('span');
+                riskSpan.style.color = getRiskColor(request.risk_level);
+                riskSpan.textContent = request.risk_level.toUpperCase();
+                pRisk.appendChild(riskSpan);
+
+                const pUser = document.createElement('p');
+                pUser.innerHTML = '<strong>Requested by:</strong> ';
+                pUser.appendChild(document.createTextNode(request.requested_by));
+
+                const pTime = document.createElement('p');
+                pTime.innerHTML = '<strong>Timestamp:</strong> ';
+                pTime.appendChild(document.createTextNode(request.timestamp));
+
+                const btnDiv = document.createElement('div');
+                const approveBtn = document.createElement('button');
+                approveBtn.className = 'approve-btn';
+                approveBtn.textContent = '✓ Approve';
+                approveBtn.onclick = () => approveRequest(requestId);
+
+                const rejectBtn = document.createElement('button');
+                rejectBtn.className = 'reject-btn';
+                rejectBtn.textContent = '✗ Reject';
+                rejectBtn.onclick = () => rejectRequest(requestId);
+
+                btnDiv.appendChild(approveBtn);
+                btnDiv.appendChild(rejectBtn);
+
+                card.appendChild(h3);
+                card.appendChild(pCommand);
+                card.appendChild(pDesc);
+                card.appendChild(pRisk);
+                card.appendChild(pUser);
+                card.appendChild(pTime);
+                card.appendChild(btnDiv);
+
                 container.appendChild(card);
             }
         }
