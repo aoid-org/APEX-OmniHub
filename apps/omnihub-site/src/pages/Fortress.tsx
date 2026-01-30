@@ -23,7 +23,7 @@ export function FortressPage() {
             <h2 className="heading-2 mb-8">Core Principles</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
               {siteConfig.fortress.items.map((item, idx) => (
-                <div key={idx} className="card" style={{ padding: 'var(--space-6)', display: 'flex', alignItems: 'flex-start', gap: 'var(--space-4)' }}>
+                <div key={`fortress-item-${idx}-${item.slice(0, 30)}`} className="card" style={{ padding: 'var(--space-6)', display: 'flex', alignItems: 'flex-start', gap: 'var(--space-4)' }}>
                   <div style={{
                     width: '32px',
                     height: '32px',

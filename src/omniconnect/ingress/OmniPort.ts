@@ -320,7 +320,7 @@ class OmniPortEngine {
     const baseEvent: OmniPortCanonicalEvent = {
       eventId,
       correlationId: ctx.correlationId,
-      tenantId: 'default', // FIXME: Extract tenantId from auth context (JWT claims or session)
+      tenantId: ctx.tenantId || 'default', // TODO: Implement multi-tenancy - extract tenantId from JWT claims or session context
       userId: ctx.userId,
       source: `omniport.${input.type}`,
       provider: 'omniport',

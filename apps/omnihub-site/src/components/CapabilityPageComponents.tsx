@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
  */
 
 interface IconContainerProps {
-  children: ReactNode;
+  readonly children: ReactNode;
 }
 
 export function IconContainer({ children }: IconContainerProps) {
@@ -14,9 +14,9 @@ export function IconContainer({ children }: IconContainerProps) {
 }
 
 interface BulletListProps {
-  items: string[];
-  variant?: 'square' | 'circle';
-  className?: string;
+  readonly items: readonly string[];
+  readonly variant?: 'square' | 'circle';
+  readonly className?: string;
 }
 
 export function BulletList({ items, variant = 'square', className = '' }: BulletListProps) {
@@ -26,8 +26,8 @@ export function BulletList({ items, variant = 'square', className = '' }: Bullet
 
   return (
     <ul className={`bullet-list ${className}`}>
-      {items.map((item, index) => (
-        <li key={index} className={itemClass}>
+      {items.map((item) => (
+        <li key={item} className={itemClass}>
           {item}
         </li>
       ))}
@@ -36,11 +36,11 @@ export function BulletList({ items, variant = 'square', className = '' }: Bullet
 }
 
 interface FeatureCardProps {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  details?: string;
-  bulletPoints?: string[];
+  readonly icon: ReactNode;
+  readonly title: string;
+  readonly description: string;
+  readonly details?: string;
+  readonly bulletPoints?: readonly string[];
 }
 
 export function FeatureCard({ icon, title, description, details, bulletPoints }: FeatureCardProps) {
@@ -66,10 +66,10 @@ export function FeatureCard({ icon, title, description, details, bulletPoints }:
 }
 
 interface CTASectionProps {
-  title: string;
-  description: string;
-  buttonText: string;
-  buttonHref: string;
+  readonly title: string;
+  readonly description: string;
+  readonly buttonText: string;
+  readonly buttonHref: string;
 }
 
 export function CTASection({ title, description, buttonText, buttonHref }: CTASectionProps) {
@@ -85,15 +85,15 @@ export function CTASection({ title, description, buttonText, buttonHref }: CTASe
 }
 
 interface SpecTableProps {
-  specs: Array<{ label: string; value: string }>;
+  readonly specs: ReadonlyArray<{ readonly label: string; readonly value: string }>;
 }
 
 export function SpecTable({ specs }: SpecTableProps) {
   return (
     <div className="card" style={{ padding: 'var(--space-6)', backgroundColor: 'var(--color-surface-elevated)' }}>
       <ul className="spec-table text-secondary">
-        {specs.map((spec, index) => (
-          <li key={index} className="spec-table__row">
+        {specs.map((spec) => (
+          <li key={spec.label} className="spec-table__row">
             <span className="spec-table__label">{spec.label}</span>
             <span>{spec.value}</span>
           </li>
@@ -104,8 +104,8 @@ export function SpecTable({ specs }: SpecTableProps) {
 }
 
 interface UseCaseCardProps {
-  title: string;
-  description: string;
+  readonly title: string;
+  readonly description: string;
 }
 
 export function UseCaseCard({ title, description }: UseCaseCardProps) {
@@ -118,9 +118,9 @@ export function UseCaseCard({ title, description }: UseCaseCardProps) {
 }
 
 interface InfoCardProps {
-  title: string;
-  description: string;
-  bulletPoints?: string[];
+  readonly title: string;
+  readonly description: string;
+  readonly bulletPoints?: readonly string[];
 }
 
 export function InfoCard({ title, description, bulletPoints }: InfoCardProps) {
@@ -136,8 +136,8 @@ export function InfoCard({ title, description, bulletPoints }: InfoCardProps) {
 }
 
 interface StatProps {
-  value: string;
-  label: string;
+  readonly value: string;
+  readonly label: string;
 }
 
 export function Stat({ value, label }: StatProps) {
@@ -150,15 +150,15 @@ export function Stat({ value, label }: StatProps) {
 }
 
 interface StatsGridProps {
-  stats: Array<{ value: string; label: string }>;
-  className?: string;
+  readonly stats: ReadonlyArray<{ readonly value: string; readonly label: string }>;
+  readonly className?: string;
 }
 
 export function StatsGrid({ stats, className = '' }: StatsGridProps) {
   return (
     <div className={`stats-grid ${className}`}>
-      {stats.map((stat, index) => (
-        <Stat key={index} value={stat.value} label={stat.label} />
+      {stats.map((stat) => (
+        <Stat key={stat.label} value={stat.value} label={stat.label} />
       ))}
     </div>
   );

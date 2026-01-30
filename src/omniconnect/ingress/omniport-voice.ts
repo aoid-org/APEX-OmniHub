@@ -125,7 +125,7 @@ class VoiceCommandHandler {
 
     // Validate confidence threshold
     if (confidence < this.config.minConfidence) {
-      return this.createLowConfidenceResult(transcript, confidence, startTime);
+      return this.createBlockedVoiceResult(transcript, confidence, startTime);
     }
 
     // Validate duration
@@ -304,25 +304,7 @@ class VoiceCommandHandler {
     return Math.round(blob.size / bytesPerMs);
   }
 
-  private createLowConfidenceResult(
-    transcript: string,
-    confidence: number,
-    startTime: number
-  ): VoiceCommandResult {
-    return {
-      correlationId: uuidv4(),
-      status: 'blocked',
-      latencyMs: Date.now() - startTime,
-      riskLane: 'GREEN',
-      transcript,
-      confidence,
-      detectedIntents: [],
-      manModeTriggered: false,
-      processingMs: Date.now() - startTime,
-    };
-  }
-
-  private createBlockedResult(
+  private createBlockedVoiceResult(
     transcript: string,
     confidence: number,
     startTime: number
@@ -345,7 +327,7 @@ class VoiceCommandHandler {
     confidence: number,
     startTime: number
   ): VoiceCommandResult {
-    return this.createBlockedResult(transcript, confidence, startTime);
+    return this.createBlockedVoiceResult(transcript, confidence, startTime);
   }
 
   private createNoWakeWordResult(
@@ -353,7 +335,7 @@ class VoiceCommandHandler {
     confidence: number,
     startTime: number
   ): VoiceCommandResult {
-    return this.createBlockedResult(transcript, confidence, startTime);
+    return this.createBlockedVoiceResult(transcript, confidence, startTime);
   }
 }
 
