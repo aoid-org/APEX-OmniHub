@@ -198,7 +198,7 @@ export default function Agent() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium mb-1">{cmd.description}</p>
                     <p className="text-xs text-muted-foreground font-mono truncate">
-                      {cmd.pattern.source.replace(/\\b|\\/g, '').replaceAll('|', ' or ')}
+                      {cmd.pattern.source.replaceAll(/\\b|\\/g, '').replaceAll('|', ' or ')}
                     </p>
                   </div>
                 </div>
