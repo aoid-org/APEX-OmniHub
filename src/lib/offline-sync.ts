@@ -355,7 +355,7 @@ export async function initializeOfflineSync(
   setupBackgroundSyncListener();
 
   // Auto-sync when coming online
-  window.addEventListener('online', async () => {
+  globalThis.addEventListener('online', async () => {
     console.log('[OfflineSync] Network online, processing sync queue');
 
     const token = await getUserToken();

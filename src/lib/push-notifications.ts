@@ -145,7 +145,7 @@ export function setupNotificationClickHandler() {
   if (!('serviceWorker' in navigator)) return;
 
   navigator.serviceWorker.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'notification-click') {
+    if (event.data?.type === 'notification-click') {
       const { action, data } = event.data;
 
       void logAnalyticsEvent('push.notification.clicked', {

@@ -1,0 +1,137 @@
+/* === CAPABILITY PAGE COMPONENTS === */
+
+/* Icon Container for capability features */
+.capability-icon-container {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: var(--border-radius-md);
+  background:
+    radial-gradient(circle at 30% 30%, rgba(14, 165, 233, 0.18), transparent 55%),
+    radial-gradient(circle at 70% 70%, rgba(196, 87, 28, 0.14), transparent 55%),
+    var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+}
+
+/* Bullet list with accent color bullets */
+.bullet-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.bullet-list__item {
+  padding-left: var(--space-6);
+  position: relative;
+}
+
+.bullet-list__item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-accent);
+  border-radius: 2px;
+}
+
+.bullet-list__item--circle::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Page content container */
+.page-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Feature card with icon and content */
+.feature-card-with-icon {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+
+.feature-card-with-icon__content {
+  flex: 1;
+}
+
+/* CTA Section */
+.cta-section {
+  margin-top: var(--space-16);
+  text-align: center;
+  padding: var(--space-12);
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+}
+
+/* Spec table */
+.spec-table {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.spec-table__row {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.spec-table__row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.spec-table__label {
+  font-weight: 500;
+}
+
+/* Stats grid for performance metrics */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-8);
+  text-align: center;
+}
+
+.stat__value {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-orange);
+  margin-bottom: var(--space-2);
+}
+
+.stat__label {
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Feature grid */
+.feature-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+}
+
+/* Section spacing utilities */
+.section-spacing {
+  margin-top: var(--space-16);
+}
+
+.section-spacing--lg {
+  margin-top: var(--space-12);
+}

@@ -45,8 +45,8 @@ export const siteConfig = {
       buildLink('Demo', '/demo.html'),
       buildLink('Tech Specs', '/tech-specs.html'),
       buildLink('Request Access', '/request-access.html'),
-      buildLink('Login', '/login.html'),
     ],
+    loginLink: buildLink('Login', '/login.html'),
     primaryCta: buildLink('Get Started', '/request-access.html'),
   },
 

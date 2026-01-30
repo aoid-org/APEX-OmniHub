@@ -181,24 +181,26 @@
 
 .btn--primary {
   background-color: var(--color-navy);
-  color: #ffffff; /* FORCE WHITE TEXT FOR CONTRAST */
+  color: #ffffff !important; /* FORCE WHITE TEXT FOR CONTRAST */
   border-color: var(--color-navy);
 }
 
 .btn--primary:hover {
   background-color: var(--color-navy-light);
   border-color: var(--color-navy-light);
+  color: #ffffff !important;
 }
 
 [data-theme="dark"] .btn--primary {
   background-color: var(--color-white);
-  color: var(--color-navy);
+  color: var(--color-navy) !important;
   border-color: var(--color-white);
 }
 
 [data-theme="dark"] .btn--primary:hover {
   background-color: var(--color-surface);
   border-color: var(--color-surface);
+  color: var(--color-navy) !important;
 }
 
 .btn--secondary {

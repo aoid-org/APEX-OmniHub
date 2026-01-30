@@ -98,7 +98,7 @@ interface PipelineContext {
  */
 class OmniPortEngine {
   private static instance: OmniPortEngine | null = null;
-  private delivery: OmniLinkDelivery;
+  private readonly delivery: OmniLinkDelivery;
   private isInitialized = false;
 
   private constructor() {
@@ -109,9 +109,7 @@ class OmniPortEngine {
    * Get singleton instance
    */
   public static getInstance(): OmniPortEngine {
-    if (!OmniPortEngine.instance) {
-      OmniPortEngine.instance = new OmniPortEngine();
-    }
+    OmniPortEngine.instance ??= new OmniPortEngine();
     return OmniPortEngine.instance;
   }
 
@@ -322,7 +320,7 @@ class OmniPortEngine {
     const baseEvent: OmniPortCanonicalEvent = {
       eventId,
       correlationId: ctx.correlationId,
-      tenantId: 'default', // TODO: Extract from auth context
+      tenantId: 'default', // FIXME: Extract tenantId from auth context (JWT claims or session)
       userId: ctx.userId,
       source: `omniport.${input.type}`,
       provider: 'omniport',

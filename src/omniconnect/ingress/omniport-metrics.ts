@@ -111,7 +111,7 @@ class MetricsCollector {
   private static instance: MetricsCollector | null = null;
 
   private events: IngestEvent[] = [];
-  private startTime: Date = new Date();
+  private readonly startTime: Date = new Date();
   private lastSuccessAt: Date | null = null;
   private lastError: string | null = null;
   private dlqDepth = 0;
@@ -123,9 +123,7 @@ class MetricsCollector {
   private constructor() { }
 
   public static getInstance(): MetricsCollector {
-    if (!MetricsCollector.instance) {
-      MetricsCollector.instance = new MetricsCollector();
-    }
+    MetricsCollector.instance ??= new MetricsCollector();
     return MetricsCollector.instance;
   }
 
