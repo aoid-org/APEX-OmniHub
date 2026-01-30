@@ -56,37 +56,72 @@ const Index = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="px-4 py-16 md:py-20 lg:py-24 pt-20 md:pt-24 lg:pt-28">
+      {/* Hero Section */}
+      <section className="px-4 py-12 md:py-16 lg:py-20 pt-16 md:pt-20 lg:pt-24 relative overflow-hidden">
+        {/* Grid Background Effect (Simulated) */}
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
             {/* Left Column - Content */}
-            <div className="max-w-[560px] space-y-6 lg:space-y-8">
-              {/* H1 */}
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-[hsl(var(--navy))]">
-                APEX OmniHub
-              </h1>
+            <div className="max-w-[600px] space-y-6 lg:space-y-8">
+              {/* Move Up Fix: Negative margin or reduced padding applied to container above */}
+              <div className="space-y-2 -mt-8 md:-mt-12">
+                <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[0.9] tracking-tight text-[hsl(var(--navy))]">
+                  Intelligence<br />
+                  <span className="text-[hsl(var(--navy-600))]">Designed</span>
+                </h1>
+              </div>
 
-              {/* Support Copy */}
-              <p className="text-lg text-muted-foreground">
-                Unified tools for work and life.
-              </p>
+              {/* Visual Hierarchy Section */}
+              <div className="space-y-4 border-l-2 border-primary/20 pl-6 py-2">
+                <p className="text-sm font-serif italic text-muted-foreground">
+                  It Sees You
+                </p>
+                <p className="text-sm font-bold tracking-[0.2em] text-primary/80">
+                  DIRECTABLE • ACCOUNTABLE • DEPENDABLE
+                </p>
+                <p className="text-xl md:text-2xl font-light leading-relaxed text-foreground">
+                  Welcome to the future of <span className="font-medium text-primary">workflow automation</span> and <span className="font-medium text-primary">business intelligence</span>.
+                </p>
+              </div>
 
-              {/* CTA */}
-              <div className="pt-2">
-                <Button
-                  size="lg"
-                  onClick={scrollToApps}
-                  className="w-full md:w-auto bg-[hsl(var(--navy))] hover:bg-[hsl(var(--navy-600))] text-white px-8"
-                >
-                  Explore Apps
-                </Button>
+              <div className="space-y-4">
+                <p className="text-base text-muted-foreground leading-relaxed max-w-md">
+                  Understand Everything. Communicate Anything, to Every Platform.
+                  OmniHub is your universal translator and orchestrator, connecting AI,
+                  enterprise systems, and Web3 through a single controlled port.
+                </p>
+
+                {/* CTA Buttons - Fix Contrast */}
+                <div className="flex flex-wrap items-center gap-4 pt-4">
+                  <Button
+                    size="lg"
+                    onClick={scrollToApps}
+                    className="bg-[hsl(var(--navy))] text-white hover:bg-[hsl(var(--navy-600))] h-12 px-8 shadow-lg transition-all hover:scale-105"
+                  >
+                    Get Started
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    className="h-12 px-6 hover:bg-transparent hover:underline"
+                    onClick={() => handleNavigate('/demo')}
+                  >
+                    Watch Demo
+                  </Button>
+                </div>
               </div>
             </div>
 
             {/* Right Column - App Icon Grid */}
-            <div className="relative">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-[500px] mx-auto">
+            <div className="relative isolate">
+               {/* Central "Eye" Glow Effect */}
+               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-blue-500/20 rounded-full blur-3xl -z-10"></div>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-[500px] mx-auto filter drop-shadow-xl transform perspective-1000">
                 {apps.map((app, index) => (
                   <AppTile
                     key={index}
