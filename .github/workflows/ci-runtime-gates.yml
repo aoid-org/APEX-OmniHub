@@ -10,7 +10,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20  # Increased from 15 to 20 minutes to accommodate Playwright installation
 
     steps:
       - name: Checkout code
@@ -71,8 +71,22 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       # PHASE 4: Runtime Smoke Tests
       # ─────────────────────────────────────────────────────────────
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install chromium --with-deps
+
+      - name: Install Playwright browser dependencies only (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Start preview server
         run: |
@@ -142,8 +156,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache-preview
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache-preview.outputs.cache-hit != 'true'
         run: npx playwright install chromium --with-deps
+
+      - name: Install Playwright browser dependencies only (if cached)
+        if: steps.playwright-cache-preview.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Wait for Vercel Preview
         uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
