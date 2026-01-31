@@ -110,6 +110,7 @@ function Nav() {
               }}
             />
           </a>
+          <ThemeToggle />
         </div>
 
         <ul className="nav__links" aria-label="Primary navigation">

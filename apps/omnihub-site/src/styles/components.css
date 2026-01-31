@@ -516,7 +516,7 @@
 .nav__left {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-6);
 }
 
 /* === BURGER MENU (Mobile Override) === */
@@ -527,7 +527,9 @@
   }
 
   .nav__links,
-  .nav__cta-desktop {
+  .nav__cta-desktop,
+  .nav__left .theme-toggle-segmented,
+  .nav__actions .btn {
     display: none;
   }
 

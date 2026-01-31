@@ -101,7 +101,7 @@ export function normalizeOmniPortIntent(input: SOmniPortInput): CanonicalOmniPor
 
     case 'api':
     default: {
-      const apiInput = input as SOmniPortApiInput;
+      const apiInput = input;
       return {
         channel: 'api',
         type: (apiInput.payload?.type as string) ?? (apiInput.intentType ?? 'api.intent'),
