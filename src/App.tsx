@@ -52,6 +52,7 @@ const OmniDashEvents = lazy(() => import("./pages/OmniDash/Events"));
 const OmniDashEntities = lazy(() => import("./pages/OmniDash/Entities"));
 const OmniDashRuns = lazy(() => import("./pages/OmniDash/Runs"));
 const OmniDashApprovals = lazy(() => import("./pages/OmniDash/Approvals"));
+const OmniDashTasks = lazy(() => import("./pages/OmniDash/Tasks"));
 const Translation = lazy(() => import("./pages/Translation"));
 const Agent = lazy(() => import("./pages/Agent"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -238,6 +239,7 @@ const App = () => (
                   <Route path="entities" element={<OmniDashEntities />} />
                   <Route path="runs" element={<OmniDashRuns />} />
                   <Route path="approvals" element={<OmniDashApprovals />} />
+                  <Route path="tasks" element={<OmniDashTasks />} />
                 </Route>
               )}
 

@@ -38,8 +38,13 @@ export const Approvals = () => {
           <div key={request.id} className="border rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold">{request.type}</p>
-                <p className="text-sm text-muted-foreground">{request.request_type}</p>
+                <div className="flex items-center gap-2">
+                   <p className="font-semibold">{request.type}</p>
+                   {request.type === 'apex.task' && <Badge variant="secondary">Task</Badge>}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {request.type === 'apex.task' ? request.params?.task?.title : request.request_type}
+                </p>
               </div>
               <Badge variant="outline">{request.status}</Badge>
             </div>

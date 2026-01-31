@@ -200,6 +200,7 @@ export const OMNIDASH_NAV_ITEMS = [
   { key: "entities", label: "Entities", to: "/omnidash/entities", icon: "N" },
   { key: "runs", label: "Runs", to: "/omnidash/runs", icon: "R" },
   { key: "approvals", label: "Approvals", to: "/omnidash/approvals", icon: "A" },
+  { key: "tasks", label: "Tasks", to: "/omnidash/tasks", icon: "T" },
 ];
 
 export const OMNIDASH_SAFE_ENABLE_NOTE =

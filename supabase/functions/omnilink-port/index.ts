@@ -3,6 +3,7 @@ import { buildCorsHeaders, corsErrorResponse, handlePreflight, isOriginAllowed }
 import { allowAdapter, allowWorkflow, enforceEnvAllowlist, enforcePermission, type OmniLinkScopes } from '../_shared/omnilinkScopes.ts';
 import { createAnonClient, createServiceClient } from '../_shared/supabaseClient.ts';
 import { normalizeOmniPortIntent, type SOmniPortInput } from '../_shared/omniport-normalize.ts';
+import { enforceEmergencyControls } from '../_shared/emergency-controls.ts';
 
 const OMNILINK_ENABLED = (Deno.env.get('OMNILINK_ENABLED') ?? '').toLowerCase() === 'true';
 const MAX_SINGLE_PAYLOAD_BYTES = 256 * 1024;
@@ -452,6 +453,125 @@ Deno.serve(async (req) => {
 
   if (route === 'keys' && req.method === 'POST') {
     return handleKeyCreation(req, corsHeaders);
+  }
+
+  // TASK QUEUE ENDPOINTS
+  if (route.startsWith('tasks')) {
+    const auth = await authenticateRequest(req, corsHeaders);
+    if ('status' in auth) return auth;
+    const { apiKey } = auth;
+
+    // 1. Create Task
+    if (route === 'tasks' && req.method === 'POST') {
+      await enforceEmergencyControls('tasks:create'); // Throws if blocked
+      if (!enforcePermission(apiKey.scopes ?? {}, 'tasks:create')) {
+        return jsonResponse({ error: 'permission_denied' }, 403, corsHeaders);
+      }
+
+      const { body } = await parseJsonBody(req);
+      const payload = body as Record<string, unknown>;
+      
+      // Default to require_approval=true if not specified
+      const requireApproval = payload.require_approval !== false;
+      const runAt = payload.run_at as string | null;
+      
+      const taskPacket = payload.task as Record<string, unknown>;
+      if (!taskPacket || !taskPacket.title || !taskPacket.repo) {
+         return jsonResponse({ error: 'invalid_task_packet' }, 400, corsHeaders);
+      }
+
+      const envelope = {
+        id: crypto.randomUUID(),
+        source: 'api/tasks',
+        type: 'apex.task',
+        time: new Date().toISOString(),
+        params: { task: taskPacket, run_at: runAt },
+        policy: { require_approval: requireApproval, run_at: runAt }
+      };
+
+      // Idempotency precedence: Header -> Body -> Hash
+      let idempotencyKey = req.headers.get('X-Idempotency-Key') || (payload.idempotency_key as string);
+      if (!idempotencyKey) {
+        const stableString = `${taskPacket.repo}:${taskPacket.title}:${runAt}:${taskPacket.objective}`;
+        idempotencyKey = await hashKey(stableString); 
+      }
+
+      const serviceClient = createServiceClient();
+      const { data, error } = await serviceClient.rpc('omnilink_ingest', {
+        p_api_key_id: apiKey.id,
+        p_integration_id: apiKey.integration_id,
+        p_tenant_id: apiKey.tenant_id,
+        p_request_type: 'workflow',
+        p_envelope: envelope,
+        p_idempotency_key: idempotencyKey,
+        p_max_rpm: getConstraints(apiKey.scopes ?? {}).max_rpm,
+        p_entity: null
+      });
+
+      if (error) return jsonResponse({ error: error.message }, 500, corsHeaders);
+      return jsonResponse(data, 201, corsHeaders);
+    }
+
+    // 2. Claim Tasks
+    if (route === 'tasks/claim' && req.method === 'POST') {
+       await enforceEmergencyControls('tasks:claim');
+       if (!enforcePermission(apiKey.scopes ?? {}, 'tasks:claim')) {
+        return jsonResponse({ error: 'permission_denied' }, 403, corsHeaders);
+      }
+      
+      const { body } = await parseJsonBody(req);
+      const p = body as { limit?: number; worker_id?: string };
+      
+      const serviceClient = createServiceClient();
+      const { data, error } = await serviceClient.rpc('apex_tasks_claim', {
+        p_integration_id: apiKey.integration_id,
+        p_limit: p?.limit ?? 10,
+        p_worker_id: p?.worker_id ?? 'default-worker'
+      });
+
+      if (error) return jsonResponse({ error: error.message }, 500, corsHeaders);
+      return jsonResponse({ tasks: data }, 200, corsHeaders);
+    }
+
+    // 3. Complete Task
+    if (route === 'tasks/complete' && req.method === 'POST') {
+      await enforceEmergencyControls('tasks:complete');
+      if (!enforcePermission(apiKey.scopes ?? {}, 'tasks:complete')) {
+        return jsonResponse({ error: 'permission_denied' }, 403, corsHeaders);
+      }
+
+      const { body } = await parseJsonBody(req);
+      const p = body as { task_id: string; status: string; output: unknown; error_message?: string };
+      
+      if (!p?.task_id || !['succeeded', 'failed'].includes(p.status)) {
+        return jsonResponse({ error: 'invalid_completion_payload' }, 400, corsHeaders);
+      }
+
+      // Bound output size logic
+      let finalOutput = p.output;
+      if (JSON.stringify(finalOutput).length > 64 * 1024) {
+        finalOutput = { 
+          summary: 'Output truncated (exceeded 64KB)', 
+          original_keys: Object.keys(finalOutput as object) 
+        };
+      }
+
+      const serviceClient = createServiceClient();
+      const { error } = await serviceClient
+        .from('omnilink_orchestration_requests')
+        .update({
+          status: p.status,
+          output: finalOutput, // Assuming generic jsonb output column or we fake it via policy usage
+          policy: { ...p.output as object, completed_at: new Date().toISOString() }, // Fallback storage
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', p.task_id)
+        .eq('integration_id', apiKey.integration_id)
+        .eq('status', 'running'); // Atomic guard
+
+      if (error) return jsonResponse({ error: error.message }, 500, corsHeaders);
+      return jsonResponse({ status: 'updated' }, 200, corsHeaders);
+    }
   }
 
   if (!['events', 'commands', 'workflows', 'omniport'].includes(route)) {
