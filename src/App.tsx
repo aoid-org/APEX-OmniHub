@@ -55,6 +55,7 @@ const OmniDashApprovals = lazy(() => import("./pages/OmniDash/Approvals"));
 const Translation = lazy(() => import("./pages/Translation"));
 const Agent = lazy(() => import("./pages/Agent"));
 const Settings = lazy(() => import("./pages/Settings"));
+const VerificationPage = lazy(() => import("./pages/VerificationPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -225,6 +226,9 @@ const App = () => (
                 <Route path="/apps/jubeelove" element={<JubeeLove />} />
                 <Route path="/apps/built-canadian" element={<BuiltCanadian />} />
                 <Route path="/tech-specs" element={<TechSpecs />} />
+
+                {/* APEX Resilience Verification */}
+                <Route path="/verification" element={<VerificationPage />} />
 
                 {/* OmniDash (with mobile gate if enabled) */}
               {OMNIDASH_FLAG && (
