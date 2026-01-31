@@ -27,7 +27,7 @@ function Hero() {
       </div>
       <div className="container hero__grid">
         <div className="hero__content">
-          <h1 className="heading-hero hero__title" style={{ marginTop: '-28.35px' }}>{siteConfig.hero.title}</h1>
+          <h1 className="heading-hero hero__title" style={{ marginTop: '-66.35px' }}>{siteConfig.hero.title}</h1>
           <p className="hero__tagline">{siteConfig.hero.tagline}</p>
           <p className="hero__subtitle">{siteConfig.hero.subtitle}</p>
           <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>

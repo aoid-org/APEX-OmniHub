@@ -531,13 +531,10 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean;
   }
 >(({ className, showIcon = false, ...props }, ref) => {
-  // Random width between 50 to 90%.
-  // Random width between 50 to 90% using crypto for enterprise compliance
+  // Random width between 50 to 90% for skeleton loader (cosmetic UI only - no security implications)
+  // sonar-disable-next-line typescript:S2245
   const width = React.useMemo(() => {
-    const array = new Uint32Array(1);
-    crypto.getRandomValues(array);
-    const random = array[0] / (0xffffffff + 1);
-    return `${Math.floor(random * 40) + 50}%`;
+    return `${Math.floor(Math.random() * 40) + 50}%`;
   }, []);
 
   return (

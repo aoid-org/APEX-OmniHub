@@ -110,6 +110,7 @@ function Nav() {
               }}
             />
           </a>
+          <ThemeToggle />
         </div>
 
         <ul className="nav__links" aria-label="Primary navigation">
@@ -123,10 +124,9 @@ function Nav() {
         </ul>
 
         <div className="nav__actions">
-          <a href={siteConfig.nav.loginLink.href} className="nav__link nav__link--action">
+          <a href={siteConfig.nav.loginLink.href} className="btn btn--primary btn--sm">
             {siteConfig.nav.loginLink.label}
           </a>
-          <ThemeToggle />
 
           <div className="nav__burger" ref={menuRef}>
             <button
@@ -179,10 +179,11 @@ function Nav() {
                       </a>
                     </li>
                   ))}
-                  <li key={siteConfig.nav.loginLink.href}>
+                  <li key={siteConfig.nav.loginLink.href} style={{ marginTop: 'var(--space-2)' }}>
                     <a
                       href={siteConfig.nav.loginLink.href}
-                      className="nav__mobile-link"
+                      className="btn btn--primary btn--sm"
+                      style={{ width: '100%' }}
                       onClick={() => setMenuOpen(false)}
                     >
                       {siteConfig.nav.loginLink.label}
