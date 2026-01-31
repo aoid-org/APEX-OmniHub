@@ -1,23 +1,44 @@
-/* === CAPABILITY PAGE COMPONENTS === */
+/* apps/omnihub-site/src/styles/capability-pages.css */
 
-/* Icon Container for capability features */
+.page-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.section-spacing {
+  margin-top: var(--space-16);
+}
+
+.heading-2 {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+}
+
+/* Feature Card */
+.feature-card-with-icon {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+
+.feature-card-with-icon__content {
+  flex: 1;
+}
+
 .capability-icon-container {
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
   border-radius: var(--border-radius-md);
-  background:
-    radial-gradient(circle at 30% 30%, rgba(14, 165, 233, 0.18), transparent 55%),
-    radial-gradient(circle at 70% 70%, rgba(196, 87, 28, 0.14), transparent 55%),
-    var(--color-surface);
-  border: 1px solid var(--color-border);
+  background-color: var(--color-navy);
+  color: var(--color-white);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-accent);
 }
 
-/* Bullet list with accent color bullets */
+/* Bullet List */
 .bullet-list {
   list-style: none;
   padding: 0;
@@ -35,34 +56,48 @@
   content: '';
   position: absolute;
   left: 0;
-  top: 0.5em;
-  width: 8px;
-  height: 8px;
-  background-color: var(--color-accent);
-  border-radius: 2px;
-}
-
-.bullet-list__item--circle::before {
+  top: 0.6em; /* Optical center alignment */
   width: 6px;
   height: 6px;
+  background-color: var(--color-accent);
+  border-radius: 50%; /* Default square becomes circle via CSS if needed, but here we override */
+}
+
+/* Square variant default */
+.bullet-list__item:not(.bullet-list__item--circle)::before {
+  border-radius: 0;
+}
+
+/* Circle variant */
+.bullet-list__item--circle::before {
   border-radius: 50%;
 }
 
-/* Page content container */
-.page-content {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-/* Feature card with icon and content */
-.feature-card-with-icon {
+/* Spec Table */
+.spec-table {
+  list-style: none;
+  padding: 0;
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-6);
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
-.feature-card-with-icon__content {
-  flex: 1;
+.spec-table__row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.spec-table__row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.spec-table__label {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
 }
 
 /* CTA Section */
@@ -74,64 +109,16 @@
   border-radius: var(--border-radius-lg);
 }
 
-/* Spec table */
-.spec-table {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+/* Utilities */
+.text-secondary {
+  color: var(--color-text-secondary);
 }
 
-.spec-table__row {
-  display: flex;
-  justify-content: space-between;
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.spec-table__row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.spec-table__label {
-  font-weight: 500;
-}
-
-/* Stats grid for performance metrics */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-8);
-  text-align: center;
-}
-
-.stat__value {
-  font-size: var(--font-size-4xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-orange);
-  margin-bottom: var(--space-2);
-}
-
-.stat__label {
+.text-sm {
   font-size: var(--font-size-sm);
-  color: rgba(255, 255, 255, 0.8);
 }
 
-/* Feature grid */
-.feature-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: var(--space-8);
-  margin-top: var(--space-12);
-}
-
-/* Section spacing utilities */
-.section-spacing {
-  margin-top: var(--space-16);
-}
-
-.section-spacing--lg {
-  margin-top: var(--space-12);
-}
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-3 { margin-bottom: var(--space-3); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-8 { margin-bottom: var(--space-8); }
