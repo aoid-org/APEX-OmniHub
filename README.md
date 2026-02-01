@@ -96,6 +96,15 @@ APEX OmniHub is a production-ready platform combining AI agent orchestration, bl
 
 ## Core Capabilities
 
+### Physical AI Orchestration Fabric
+
+APEX OmniHub now treats physical systems as first-class orchestration targets:
+
+- **Canonical Device Ingress**: Zigbee, Matter, and ROS 2 DDS payloads are normalized into `CanonicalDevice` (no vendor JSON leakage).
+- **Iron Law Gate**: Deductive-path verification runs before any physical action; high logic-delta routes to MAN Mode.
+- **Temporal-Linked Authorization**: Actuator commands are RLS-gated by workflow execution grants and signature-bound JWT claims.
+- **Web3 Entitlement Gate**: AgentKey signatures are validated against Membership-NFT wallets before registration and action-time.
+
 ### Tri-Force AI Agent Architecture
 
 A three-tier security model that separates concerns and prevents AI hallucinations from reaching production:
@@ -600,6 +609,12 @@ docker compose -f docker-compose.prod.yml up -d
 | --------------------------------------------------------- | ------------- |
 | [Chaos Simulation](docs/sim/CHAOS_SIMULATION_DELIVERY.md) | Chaos testing |
 | [E2E Test Results](docs/testing/E2E_TEST_RESULTS.md)      | Test status   |
+
+#### Armageddon Level 7 (offline-friendly)
+- Preferred: run against a live Temporal instance at `TEMPORAL_ADDRESS` (default `localhost:7233`) with valid Supabase credentials (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`).
+- If Temporal is unreachable or port 7233 is occupied, the runner auto-falls back to an in-process Temporal test environment (`@temporalio/testing`) and forces `SIM_MODE=true`; Supabase writes are stubbed in this mode.
+- You can explicitly remap ports, e.g., `TEMPORAL_ADDRESS=localhost:7234`.
+- Command: `TEMPORAL_ADDRESS=localhost:7233 SIM_MODE=true npm run armageddon`
 
 ---
 

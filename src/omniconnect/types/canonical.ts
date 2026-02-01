@@ -82,6 +82,46 @@ export interface CanonicalEvent {
   payload: Record<string, unknown>;
 }
 
+/**
+ * Canonical representation for any physical device entering OmniHub.
+ * No vendor-specific fields are allowed beyond the mapped canonical keys.
+ */
+export enum DeviceProtocol {
+  ZIGBEE = 'zigbee',
+  MATTER = 'matter',
+  ROS2_DDS = 'ros2_dds',
+}
+
+export interface CanonicalCapability {
+  id: string; // e.g., "onoff", "temperature", "lock"
+  readable: boolean;
+  writable: boolean;
+  unit?: string;
+  range?: { min: number; max: number };
+}
+
+export interface CanonicalDeviceState {
+  power?: 'on' | 'off';
+  temperatureC?: number;
+  humidity?: number;
+  lock?: 'locked' | 'unlocked';
+  position?: { x: number; y: number; z?: number };
+  velocity?: { x: number; y: number; z?: number };
+  rawSensor?: Record<string, number>; // sanitized numeric readings only
+}
+
+export interface CanonicalDevice {
+  deviceId: string;
+  protocol: DeviceProtocol;
+  vendor: string;
+  model: string;
+  firmwareVersion?: string;
+  lastSeen: string; // ISO timestamp
+  capabilities: CanonicalCapability[];
+  state: CanonicalDeviceState;
+  location?: string;
+}
+
 export interface EventEnvelope {
   eventId: string;
   correlationId: string;

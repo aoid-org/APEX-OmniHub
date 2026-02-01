@@ -10,6 +10,7 @@
 ## Key Modules
 - **OmniDash v2 Navigation UI**: Revolutionary icon-based navigation (`src/components/OmniDashNavIconButton.tsx`, `src/pages/OmniDash/OmniDashLayout.tsx`) with zero-overlap flexbox layout, mobile bottom tabs, and tooltip integration.
 - **OmniPort Ingress Engine**: Proprietary fortified ingress gateway (`src/omniconnect/ingress/`) with Zero-Trust gate, idempotency, MAN Mode governance, and circuit breaker. Supports text, voice, and webhook inputs. See dedicated section below.
+- **Physical AI Orchestration Fabric**: Canonical device ingress (Zigbee/Matter/ROS2), Iron Law gate, Temporal-linked RLS, and NFT entitlement enforcement for actuator actions.
 - Auth/session: `src/contexts/AuthContext.tsx` (supabase session, device registration, audit logging on login/logout).
 - Guardian heartbeats: `src/guardian/heartbeat.ts`, loops in `src/guardian/loops.ts`, CLI `npm run guardian:status`.
 - Prompt defense: Config `src/security/promptDefenseConfig.ts`, evaluator `src/security/promptDefense.ts`, tests `tests/prompt-defense`.
@@ -55,6 +56,12 @@ Agent Step → risk_triage() → Lane?
    BLOCKED → Reject with ApplicationError
 ```
 
+### Physical AI Action Gate
+All physical actuator actions must pass three gates before execution:
+1. **Iron Law Deductive Verification** (`verify_deductive_path`) for logical consistency.
+2. **Temporal-linked Authorization** (RLS bound to workflow execution grants).
+3. **Web3 Entitlement** (AgentKey signature verified against Membership NFT).
+
 **Non-blocking Design:** RED lane actions return `{status: "isolated", awaiting_approval: true}` and the workflow proceeds to the next step. Approved actions can be re-executed via a separate workflow or manual trigger.
 
 **Performance:** Policy engine uses cached `frozenset` for O(1) tool lookups. Database schema includes partial indexes and GIN index for JSONB queries. 38 unit tests validate models, policy, and edge cases.
@@ -84,6 +91,10 @@ RawInput → Zero-Trust Gate → Idempotency Wrapper → Semantic Normalization 
   Validate   Check Device      Compute Hash         Map to Canonical      Deliver or DLQ
              (blocked/suspect)  (FNV-1a)            + MAN Mode Analysis
 ```
+
+**Physical Device Ingress:**
+- Zigbee, Matter, and ROS 2 DDS payloads are normalized into `CanonicalDevice`.
+- Raw vendor payloads never reach the state engine (`payload.device` only).
 
 **Risk Classification (OmniPort-level):**
 | Lane | Trigger | Behavior |

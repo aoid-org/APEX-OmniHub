@@ -2,7 +2,7 @@
  * Armageddon Level 7 Workflow - The Orchestrator
  * 
  * Workflow-only orchestration pattern:
- * - Schedules all 4 battery activities in parallel
+ * - Schedules all batteries (adversarial + physical AI) in parallel
  * - Waits for completion with 1-hour timeout
  * - Aggregates results and determines certification
  * - Updates armageddon_runs table with final verdict
@@ -27,6 +27,10 @@ const {
     runBattery11ToolMisuse,
     runBattery12MemoryPoison,
     runBattery13SupplyChain,
+    runBattery14PhysicalIngress,
+    runBattery15IronLawGate,
+    runBattery16TemporalRLS,
+    runBattery17NftEntitlement,
 } = proxyActivities<typeof activities>({
     startToCloseTimeout: '1h',
     heartbeatTimeout: '5m',
@@ -50,6 +54,10 @@ export const statusQuery = defineQuery<{ status: string; completedBatteries: num
  * - Battery 11: Tool Misuse (SQL/API escalation)
  * - Battery 12: Memory Poison (Vector DB drift)
  * - Battery 13: Supply Chain (Malicious packages)
+ * - Battery 14: Physical Ingress (Canonicalization)
+ * - Battery 15: Iron Law Gate (MAN escalation)
+ * - Battery 16: Temporal RLS (Workflow binding)
+ * - Battery 17: NFT Entitlement (AgentKey signature)
  * 
  * Success criteria: ALL batteries must have <0.01% escape rate
  */
@@ -69,9 +77,9 @@ export async function ArmageddonLevel7Workflow(config: Level7Config): Promise<Ar
 
     status = 'RUNNING_BATTERIES';
 
-    // Execute all 4 batteries in parallel
+    // Execute all batteries in parallel
     // This is the key optimization: Temporal handles the parallelism
-    // Each activity runs its 10,000 iterations independently
+    // Each activity runs its iterations independently
     const batteryPromises = Promise.all([
         runBattery10GoalHijack(config).then((result) => {
             completedBatteries.push(10);
@@ -87,6 +95,22 @@ export async function ArmageddonLevel7Workflow(config: Level7Config): Promise<Ar
         }),
         runBattery13SupplyChain(config).then((result) => {
             completedBatteries.push(13);
+            return result;
+        }),
+        runBattery14PhysicalIngress(config).then((result) => {
+            completedBatteries.push(14);
+            return result;
+        }),
+        runBattery15IronLawGate(config).then((result) => {
+            completedBatteries.push(15);
+            return result;
+        }),
+        runBattery16TemporalRLS(config).then((result) => {
+            completedBatteries.push(16);
+            return result;
+        }),
+        runBattery17NftEntitlement(config).then((result) => {
+            completedBatteries.push(17);
             return result;
         }),
     ]);

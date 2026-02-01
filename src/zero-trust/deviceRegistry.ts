@@ -3,7 +3,8 @@ import { logAnalyticsEvent, logError } from '@/lib/monitoring';
 import { persistentGet, persistentSet } from '@/libs/persistence';
 import { supabase } from '@/integrations/supabase/client';
 
-
+const env =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env) || process.env;
 
 export type DeviceStatus = 'trusted' | 'suspect' | 'blocked';
 
@@ -24,12 +25,16 @@ type QueuedUpsert = {
 
 const REGISTRY_KEY = 'device_registry_v1'; // Updated key name (no longer Lovable-specific)
 const UPSERT_QUEUE_KEY = 'device_upserts_v1'; // Updated key name
-const MAX_ATTEMPTS = Number(import.meta.env.VITE_DEVICE_MAX_ATTEMPTS ?? 5);
-const BASE_DELAY_MS = Number(import.meta.env.VITE_DEVICE_RETRY_BASE_MS ?? 500);
-const MAX_DELAY_MS = Number(import.meta.env.VITE_DEVICE_RETRY_MAX_MS ?? 10_000);
-const JITTER_MS = Number(import.meta.env.VITE_DEVICE_RETRY_JITTER_MS ?? 250);
-const SYNC_INTERVAL_MS = Number(import.meta.env.VITE_DEVICE_SYNC_INTERVAL_MS ?? 5 * 60_000);
-const DEGRADE_THRESHOLD = Number(import.meta.env.VITE_DEVICE_DEGRADE_THRESHOLD ?? 3);
+const MAX_ATTEMPTS = Number((env as Record<string, string | undefined>)?.VITE_DEVICE_MAX_ATTEMPTS ?? 5);
+const BASE_DELAY_MS = Number((env as Record<string, string | undefined>)?.VITE_DEVICE_RETRY_BASE_MS ?? 500);
+const MAX_DELAY_MS = Number((env as Record<string, string | undefined>)?.VITE_DEVICE_RETRY_MAX_MS ?? 10_000);
+const JITTER_MS = Number((env as Record<string, string | undefined>)?.VITE_DEVICE_RETRY_JITTER_MS ?? 250);
+const SYNC_INTERVAL_MS = Number(
+  (env as Record<string, string | undefined>)?.VITE_DEVICE_SYNC_INTERVAL_MS ?? 5 * 60_000
+);
+const DEGRADE_THRESHOLD = Number(
+  (env as Record<string, string | undefined>)?.VITE_DEVICE_DEGRADE_THRESHOLD ?? 3
+);
 
 const registry = new Map<string, DeviceRecord>();
 let upsertQueue: QueuedUpsert[] = [];
@@ -251,6 +256,20 @@ export async function upsertDevice(
   status: DeviceStatus = 'suspect'
 ): Promise<DeviceRecord> {
   await loadRegistryFromLocal();
+
+  const agentKey = (deviceInfo.agentKey || deviceInfo.agent_key) as string | undefined;
+  const agentSignature = (deviceInfo.agentSignature || deviceInfo.agent_signature) as string | undefined;
+  const walletAddress = (deviceInfo.walletAddress || deviceInfo.wallet_address) as string | undefined;
+
+  if (agentKey && agentSignature && walletAddress) {
+    const { assertEntitledAgent } = await import('@/lib/web3/entitlements');
+    await assertEntitledAgent({
+      walletAddress: walletAddress as `0x${string}`,
+      agentKey,
+      agentSignature,
+    });
+  }
+
   const now = new Date().toISOString();
   const nextRecord: DeviceRecord = {
     deviceId,

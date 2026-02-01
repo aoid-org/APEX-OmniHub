@@ -26,6 +26,9 @@ export const VERIFICATION_THRESHOLDS = {
 
   // Performance
   TOTAL_VERIFICATION_LATENCY_MAX_MS: 10000, // 10 seconds total overhead
+
+  // Physical AI (logic delta gating)
+  LOGIC_DELTA_THRESHOLD: 0.2,
 } as const;
 
 export const ESCALATION_RULES = {

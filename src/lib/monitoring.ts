@@ -14,6 +14,12 @@ export { getHealthStatus, reportError as reportOmniError, withResilience } from 
 let sentry: unknown = null;
 let sentryInitialized = false;
 
+const env =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env) || process.env;
+const isDev =
+  (env as Record<string, string | undefined>)?.DEV === 'true' ||
+  (env as Record<string, string | undefined>)?.NODE_ENV === 'development';
+
 export interface ErrorContext {
   userId?: string;
   route?: string;
@@ -31,7 +37,12 @@ export interface PerformanceEvent {
 async function ensureSentry() {
   if (sentryInitialized || sentry) return sentry;
 
-  const dsn = import.meta.env.VITE_SENTRY_DSN;
+  // Sentry only runs in browser contexts
+  if (typeof window === 'undefined') return null;
+
+  const dsn =
+    (env as Record<string, string | undefined>)?.VITE_SENTRY_DSN ||
+    (env as Record<string, string | undefined>)?.SENTRY_DSN;
   if (!dsn) return null;
 
   try {
@@ -51,7 +62,7 @@ async function ensureSentry() {
       tracesSampleRate: 0.2,
     });
     sentryInitialized = true;
-    if (import.meta.env.DEV) {
+    if (isDev) {
       console.log('✅ Sentry monitoring initialized');
     }
   } catch (error) {
@@ -76,7 +87,7 @@ function persistLog(key: string, entry: unknown, max: number) {
  * Log error to monitoring service
  */
 export async function logError(error: Error, context?: ErrorContext): Promise<void> {
-  if (import.meta.env.DEV) {
+  if (isDev) {
     console.error('🚨 Error:', error.message, context);
   }
 
@@ -98,7 +109,7 @@ export async function logError(error: Error, context?: ErrorContext): Promise<vo
  * Log performance event
  */
 export function logPerformance(event: PerformanceEvent): void {
-  if (import.meta.env.DEV) {
+  if (isDev) {
     console.log('📊 Performance:', event);
   }
   persistLog('perf_logs', event, 100);
@@ -111,7 +122,7 @@ export async function logAnalyticsEvent(
   eventName: string,
   properties?: Record<string, unknown>
 ): Promise<void> {
-  if (import.meta.env.DEV) {
+  if (isDev) {
     console.log('📈 Analytics:', eventName, properties);
   }
 
@@ -133,7 +144,7 @@ export async function logSecurityEvent(
   eventType: 'auth_failed' | 'rate_limit' | 'suspicious_activity' | 'csrf_attempt',
   details?: Record<string, unknown>
 ): Promise<void> {
-  if (import.meta.env.DEV) {
+  if (isDev) {
     console.warn('🔒 Security Event:', eventType, details);
   }
 
@@ -141,7 +152,7 @@ export async function logSecurityEvent(
     type: eventType,
     details,
     timestamp: new Date().toISOString(),
-    userAgent: navigator.userAgent,
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
   };
   persistLog('security_logs', entry, 100);
 

@@ -55,7 +55,8 @@
     "hardhat:mint": "hardhat run scripts/hardhat/mint.ts",
     "apex:demo": "tsx apex-resilience/scripts/demo-verify.ts",
     "apex:deploy": "./apex-resilience/scripts/deploy.sh",
-    "apex:test": "vitest run apex-resilience/tests/"
+    "apex:test": "vitest run apex-resilience/tests/",
+    "armageddon": "tsx src/scripts/certify-armageddon.ts"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.1",
@@ -139,6 +140,7 @@
     "@openzeppelin/contracts": "^5.1.0",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/typography": "^0.5.16",
+    "@temporalio/testing": "^1.14.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.5.2",
@@ -153,7 +155,7 @@
     "axe-core": "^4.8.3",
     "chai": "^4.5.0",
     "dotenv": "^16.4.7",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.27.2",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",

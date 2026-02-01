@@ -21,7 +21,13 @@ import {
 } from '@/zero-trust/deviceRegistry';
 import { withIdempotency } from '../../../sim/idempotency';
 import { OmniLinkDelivery } from '../delivery/omnilink-delivery';
-import { CanonicalEvent, EventType, ConsentFlags } from '../types/canonical';
+import {
+  CanonicalEvent,
+  EventType,
+  ConsentFlags,
+  CanonicalDevice,
+  DeviceProtocol,
+} from '../types/canonical';
 import {
   RawInput,
   IngestResult,
@@ -35,6 +41,7 @@ import {
   detectHighRiskIntents,
 } from '../types/ingress';
 import { TranslatedEvent } from '../translation/translator';
+import { verifyDeviceIntegrity } from '@/zero-trust/baseline';
 
 // =============================================================================
 // UNIVERSAL HASHING (Browser + Node.js compatible)
@@ -61,6 +68,11 @@ function computeHash(data: string): string {
 /**
  * Extended canonical event with MAN Mode metadata
  */
+type OmniPortPayload =
+  | { content: string; source: string }
+  | { transcript: string; confidence: number; audioUrl: string; durationMs: number }
+  | { device: CanonicalDevice };
+
 interface OmniPortCanonicalEvent extends CanonicalEvent {
   metadata: CanonicalEvent['metadata'] & {
     requires_man_approval?: boolean;
@@ -69,6 +81,7 @@ interface OmniPortCanonicalEvent extends CanonicalEvent {
     source_type?: string;
     confidence?: number;
   };
+  payload: OmniPortPayload;
 }
 
 /**
@@ -79,6 +92,7 @@ interface PipelineContext {
   startTime: number;
   riskLane: RiskLane;
   userId: string;
+  tenantId?: string;
   deviceStatus?: DeviceStatus;
 }
 
@@ -211,6 +225,17 @@ class OmniPortEngine {
       // No userId means we can't validate - allow but flag
       this.log(ctx, 'NO_USER_ID', { type: input.type });
       return undefined;
+    }
+
+    // Zero-trust baseline: reject malformed/compromised device identifiers early
+    const deviceIdForBaseline = userId;
+    if (!verifyDeviceIntegrity(deviceIdForBaseline)) {
+      throw new SecurityError(
+        `Device ${deviceIdForBaseline} failed integrity baseline`,
+        'DEVICE_INTEGRITY_FAILED',
+        deviceIdForBaseline,
+        userId
+      );
     }
 
     // Look up device by userId (using userId as deviceId for simplicity)
@@ -490,7 +515,7 @@ class OmniPortEngine {
   /**
    * Build payload from input
    */
-  private buildPayload(input: RawInput): Record<string, unknown> {
+  private buildPayload(input: RawInput): OmniPortPayload {
     if (isTextSource(input)) {
       return {
         content: input.content,
@@ -506,13 +531,11 @@ class OmniPortEngine {
       };
     }
     if (isWebhookSource(input)) {
-      return {
-        payload: input.payload,
-        provider: input.provider,
-        signature: input.signature,
-      };
+      const canonicalDevice = this.normalizeWebhookToCanonical(input);
+      // Enforce invariant: no vendor/raw passthrough
+      return { device: canonicalDevice };
     }
-    return {};
+    return { content: '', source: 'web' };
   }
 
   /**
@@ -551,6 +574,152 @@ class OmniPortEngine {
     console.log(
       `[OmniPort] [${ctx.correlationId}] [${latencyMs}ms] ${event}`,
       data ? JSON.stringify(data) : ''
+    );
+  }
+
+  /**
+   * Normalize webhook vendor payloads (Zigbee/Matter/ROS2) into CanonicalDevice.
+   * Rejects any payload that cannot be deterministically mapped.
+   */
+  private normalizeWebhookToCanonical(input: RawInput & { type: 'webhook' }): CanonicalDevice {
+    const payload = (input.payload ?? {}) as Record<string, unknown>;
+    const protocol = this.detectProtocol(payload, input.provider);
+
+    const deviceId =
+      (payload.deviceId as string) ||
+      (payload.device_id as string) ||
+      (payload.endpoint as string) ||
+      (payload.nodeId as string) ||
+      (payload.node_id as string);
+
+    if (!deviceId || typeof deviceId !== 'string') {
+      throw new SecurityError('Missing deviceId in webhook payload', 'DEVICE_ID_MISSING');
+    }
+
+    if (!verifyDeviceIntegrity(deviceId)) {
+      throw new SecurityError(
+        `Device ${deviceId} failed integrity baseline`,
+        'DEVICE_INTEGRITY_FAILED',
+        deviceId
+      );
+    }
+
+    const vendor = (input.provider || payload.vendor || 'unknown').toString();
+    const model = (payload.model || payload.product || 'unknown').toString();
+    const firmwareVersion =
+      (payload.firmwareVersion as string) ||
+      (payload.firmware as string) ||
+      (payload.fwVersion as string) ||
+      undefined;
+
+    const capabilities: CanonicalDevice['capabilities'] =
+      (Array.isArray(payload.capabilities) ? payload.capabilities : []).map((cap) => {
+        const id = (cap as Record<string, unknown>).id ?? (cap as Record<string, unknown>).name;
+        return {
+          id: String(id ?? 'unknown'),
+          readable: Boolean((cap as Record<string, unknown>).readable ?? true),
+          writable: Boolean((cap as Record<string, unknown>).writable ?? false),
+          unit: (cap as Record<string, unknown>).unit as string | undefined,
+          range: (cap as Record<string, unknown>).range as { min: number; max: number } | undefined,
+        };
+      }) || [
+        { id: 'generic', readable: true, writable: false },
+      ];
+
+    const state: CanonicalDevice['state'] = {};
+
+    // Zigbee common fields
+    if (protocol === DeviceProtocol.ZIGBEE) {
+      const zigbeeState = payload.state as Record<string, unknown>;
+      if (zigbeeState) {
+        if (typeof zigbeeState.on === 'boolean') state.power = zigbeeState.on ? 'on' : 'off';
+        if (typeof zigbeeState.temperature === 'number')
+          state.temperatureC = zigbeeState.temperature;
+        if (typeof zigbeeState.humidity === 'number') state.humidity = zigbeeState.humidity;
+        if (typeof zigbeeState.locked === 'boolean')
+          state.lock = zigbeeState.locked ? 'locked' : 'unlocked';
+      }
+    }
+
+    // Matter generic mapping
+    if (protocol === DeviceProtocol.MATTER) {
+      const matterState = payload.state as Record<string, unknown>;
+      if (matterState) {
+        if (typeof matterState.onOff === 'boolean')
+          state.power = matterState.onOff ? 'on' : 'off';
+        if (typeof matterState.tempCelsius === 'number')
+          state.temperatureC = matterState.tempCelsius;
+        if (typeof matterState.lockState === 'string')
+          state.lock = matterState.lockState === 'locked' ? 'locked' : 'unlocked';
+      }
+    }
+
+    // ROS2 DDS mapping
+    if (protocol === DeviceProtocol.ROS2_DDS) {
+      const rosState = payload.state as Record<string, unknown>;
+      if (rosState) {
+        const pos = rosState.position as Record<string, unknown>;
+        if (pos) {
+          state.position = {
+            x: Number(pos.x ?? 0),
+            y: Number(pos.y ?? 0),
+            z: pos.z !== undefined ? Number(pos.z) : undefined,
+          };
+        }
+        const vel = rosState.velocity as Record<string, unknown>;
+        if (vel) {
+          state.velocity = {
+            x: Number(vel.x ?? 0),
+            y: Number(vel.y ?? 0),
+            z: vel?.z !== undefined ? Number(vel.z) : undefined,
+          };
+        }
+      }
+    }
+
+    // Fallback sanitized raw numeric sensors
+    const sensors = payload.sensors as Record<string, unknown> | undefined;
+    if (sensors) {
+      const numericOnly: Record<string, number> = {};
+      Object.entries(sensors).forEach(([k, v]) => {
+        if (typeof v === 'number') numericOnly[k] = v;
+      });
+      if (Object.keys(numericOnly).length > 0) {
+        state.rawSensor = numericOnly;
+      }
+    }
+
+    return {
+      deviceId,
+      protocol,
+      vendor,
+      model,
+      firmwareVersion,
+      lastSeen: new Date().toISOString(),
+      capabilities,
+      state,
+      location: (payload.room as string) || (payload.location as string) || undefined,
+    };
+  }
+
+  private detectProtocol(
+    payload: Record<string, unknown>,
+    provider?: string
+  ): DeviceProtocol {
+    const protoValue =
+      (payload.protocol as string) ||
+      (payload.proto as string) ||
+      (payload.stack as string) ||
+      provider ||
+      '';
+    const normalized = protoValue.toLowerCase();
+    if (normalized.includes('zigbee')) return DeviceProtocol.ZIGBEE;
+    if (normalized.includes('matter')) return DeviceProtocol.MATTER;
+    if (normalized.includes('ros2') || normalized.includes('dds')) return DeviceProtocol.ROS2_DDS;
+
+    throw new SecurityError(
+      `Unsupported or missing device protocol (${protoValue || 'unknown'})`,
+      'UNSUPPORTED_PROTOCOL'
     );
   }
 }

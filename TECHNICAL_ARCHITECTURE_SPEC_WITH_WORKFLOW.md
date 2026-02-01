@@ -1,7 +1,7 @@
 # APEX-OmniHub Technical Architecture Specification
 
 **Document Owner:** CTO & Chief Platform Architect
-**Last Updated:** 2026-01-30
+**Last Updated:** 2026-02-01
 **Status:** Production
 **Version:** 2.0
 
@@ -14,6 +14,7 @@ APEX-OmniHub is a production-grade, multi-tenant agent orchestration platform bu
 **Core Value Proposition:**
 - **Multi-skill AI orchestration** via Temporal.io workflows
 - **Zero-trust security** with biometric auth, device tracking, and Web3 integration
+- **Physical AI orchestration fabric** with canonical device ingress and iron-law gating
 - **Mobile-first PWA** with offline capabilities and native features
 - **Enterprise-grade reliability** with chaos engineering, semantic caching, and comprehensive testing
 

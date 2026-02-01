@@ -39,6 +39,7 @@ Architecture:
 
 import asyncio
 import time
+import os
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -47,6 +48,7 @@ from typing import Any
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError, ApplicationError
+import hashlib
 
 # Import our models and activities
 with workflow.unsafe.imports_passed_through():
@@ -60,6 +62,56 @@ with workflow.unsafe.imports_passed_through():
         WorkflowFailed,
     )
     from models.man_mode import create_idempotency_key
+    from security.iron_law import verify_deductive_path, hash_intent
+
+# Mirror of apex-resilience/config/thresholds.ts LOGIC_DELTA_THRESHOLD
+IRON_LAW_LOGIC_DELTA_MAX = float(os.getenv("IRON_LAW_LOGIC_DELTA_MAX", "0.2"))
+
+# -----------------------------------------------------------------------------
+# Iron Law (Python parity shim)
+# -----------------------------------------------------------------------------
+
+
+LOGIC_DELTA_THRESHOLD = 0.2  # Matches config/thresholds.ts parity for physical actions
+
+
+def verify_deductive_path(intent: dict[str, Any], target_state: dict[str, Any]) -> dict[str, Any]:
+    """
+    Minimal parity check for Iron Law verification.
+
+    Computes a logic_delta between the requested intent and the target hardware state.
+    If required evidence is missing or mismatched, returns REQUIRES_HUMAN_REVIEW.
+    """
+    required_fields = ["goal", "device_id", "action"]
+    missing = [f for f in required_fields if f not in intent]
+
+    mismatches = 0
+    if target_state:
+        for key, val in target_state.items():
+            if intent.get(key) is None or intent.get(key) != val:
+                mismatches += 1
+
+    evidence_present = intent.get("evidence") or {}
+    evidence_score = 1.0 if evidence_present else 0.3
+
+    logic_delta = min(1.0, (len(missing) * 0.2) + (mismatches * 0.15) + (1 - evidence_score) * 0.25)
+    confidence = max(0.0, 1.0 - logic_delta)
+
+    status: str
+    if missing:
+        status = "REQUIRES_HUMAN_REVIEW"
+    elif logic_delta > LOGIC_DELTA_THRESHOLD:
+        status = "REQUIRES_HUMAN_REVIEW"
+    else:
+        status = "APPROVED"
+
+    return {
+        "status": status,
+        "logic_delta": logic_delta,
+        "confidence": confidence,
+        "missing": missing,
+        "mismatches": mismatches,
+    }
 
 
 # ============================================================================
@@ -777,6 +829,26 @@ class AgentWorkflow:
             f"✓ DAG execution complete: {len(executed)} steps in {level - 1} levels"
         )
 
+    def _is_physical_action(self, step: dict[str, Any], tool_input: dict[str, Any]) -> bool:
+        tool_name = (step.get("tool") or "").lower()
+        if step.get("physical") is True:
+            return True
+
+        physical_keywords = (
+            "actuator",
+            "hardware",
+            "device_command",
+            "unlock",
+            "lock",
+            "move",
+            "robot",
+        )
+        if any(keyword in tool_name for keyword in physical_keywords):
+            return True
+
+        physical_keys = ("device_id", "actuator_id", "agent_key", "robot_id")
+        return any(key in tool_input for key in physical_keys)
+
     async def _execute_single_step(self, step: dict[str, Any], step_id: str) -> dict[str, Any]:
         """
         Execute a single step with event logging and compensation registration.
@@ -989,6 +1061,106 @@ class AgentWorkflow:
             )
 
             return deferred_result
+
+        # =====================================================================
+        # Physical AI gate (Iron Law + Web3 entitlement + Temporal link)
+        # =====================================================================
+        tool_input = dict(step.get("input", {}))
+        if self._is_physical_action(step, tool_input):
+            workflow_execution_id = workflow.info().run_id
+            tool_input.setdefault("workflow_execution_id", workflow_execution_id)
+
+            target_state = (
+                step.get("target_state")
+                or tool_input.get("target_state")
+                or tool_input.get("desired_state")
+                or tool_input.get("state")
+                or {}
+            )
+
+            intent = {
+                "tool_name": step.get("tool"),
+                "params": tool_input,
+            }
+
+            # IronLaw.verifyDeductivePath (Python parity)
+            iron_result = verify_deductive_path(intent, target_state, IRON_LAW_LOGIC_DELTA_MAX)
+            if iron_result.status != "APPROVED":
+                intent_hash = hash_intent(intent)
+                dedupe_key = f"{workflow_execution_id}:{intent_hash}"
+                await workflow.execute_activity(
+                    "notify_man_task",
+                    args=[
+                        {
+                            "task_id": step_id,
+                            "workflow_id": workflow.info().workflow_id,
+                            "step_id": step_id,
+                            "channels": ["realtime"],
+                            "message": iron_result.reason or "Iron Law verification failed",
+                            "metadata": {
+                                "workflow_execution_id": workflow_execution_id,
+                                "intent_hash": intent_hash,
+                                "logic_delta": iron_result.logic_delta,
+                                "tool_name": step.get("tool"),
+                            },
+                            "dedupe_key": dedupe_key,
+                        }
+                    ],
+                    start_to_close_timeout=timedelta(seconds=30),
+                    retry_policy=RetryPolicy(maximum_attempts=3),
+                )
+
+                deferred_result = {
+                    "status": "deferred",
+                    "reason": iron_result.reason or "Iron Law verification failed",
+                    "step_id": step_id,
+                    "tool_name": step.get("tool"),
+                    "awaiting_approval": True,
+                    "iron_law": {
+                        "logic_delta": iron_result.logic_delta,
+                        "threshold": IRON_LAW_LOGIC_DELTA_MAX,
+                    },
+                }
+
+                self.deferred_steps[step_id] = {
+                    "step": step,
+                    "man_task_id": step_id,
+                    "triage_result": {
+                        "lane": "RED",
+                        "reason": iron_result.reason,
+                        "requires_approval": True,
+                    },
+                }
+
+                await self._append_event(
+                    ToolResultReceived(
+                        correlation_id=workflow.info().workflow_id,
+                        tool_name=step["tool"],
+                        step_id=step_id,
+                        success=True,
+                        result=deferred_result,
+                    )
+                )
+                return deferred_result
+
+            await workflow.execute_activity(
+                "verify_nft_entitlement",
+                args=[
+                    {
+                        "workflow_execution_id": workflow_execution_id,
+                        "user_id": self.user_id,
+                        "device_id": tool_input.get("device_id"),
+                        "wallet_address": tool_input.get("wallet_address") or tool_input.get("walletAddress"),
+                        "agent_key": tool_input.get("agent_key") or tool_input.get("agentKey"),
+                        "agent_signature": tool_input.get("agent_signature") or tool_input.get("agentSignature"),
+                    }
+                ],
+                start_to_close_timeout=timedelta(seconds=20),
+                retry_policy=RetryPolicy(maximum_attempts=2),
+            )
+
+            # Ensure downstream DB policies receive the execution ID
+            step["input"] = tool_input
 
         # =====================================================================
         # Execute the tool (GREEN or YELLOW lanes only - RED is isolated above)
@@ -1240,6 +1412,23 @@ class AgentWorkflow:
         # Continue as new with snapshot as context
         workflow.continue_as_new(args=[self.goal, self.user_id, snapshot])
 
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _is_physical_activity(activity_name: str, activity_input: Any) -> bool:
+        """Heuristic: identify actuator / physical side-effecting activities."""
+        keywords = ["unlock", "lock", "move", "motor", "actuator", "servo", "drive", "lift"]
+        name_lower = activity_name.lower()
+        if any(k in name_lower for k in keywords):
+            return True
+        if isinstance(activity_input, dict):
+            target = str(activity_input.get("target") or activity_input.get("intent") or "").lower()
+            if any(k in target for k in keywords):
+                return True
+        return False
+
     async def _execute_activity(
         self,
         activity_name: str,
@@ -1253,6 +1442,59 @@ class AgentWorkflow:
 
         Activities are the ONLY way to perform I/O in workflows (determinism requirement).
         """
+        # Physical actuator guardrail (Iron Law + MAN Mode)
+        if self._is_physical_activity(activity_name, activity_input):
+            # Derive intent and target state hints
+            intent = activity_input.get("intent") if isinstance(activity_input, dict) else {}
+            target_state = (
+                activity_input.get("target_state") if isinstance(activity_input, dict) else {}
+            )
+            verification = verify_deductive_path(
+                intent
+                or {"action": activity_name, "goal": self.goal, "device_id": intent.get("device_id") if isinstance(intent, dict) else None},
+                target_state or {},
+            )
+
+            if (
+                verification["logic_delta"] > LOGIC_DELTA_THRESHOLD
+                or verification["status"] != "APPROVED"
+            ):
+                # Escalate to MAN Mode (idempotent)
+                intent_hash_source = f"{activity_name}:{intent}:{target_state}"
+                intent_hash = hashlib.sha256(str(intent_hash_source).encode("utf-8")).hexdigest()
+                idempotency_key = create_idempotency_key(
+                    workflow.info().workflow_id,
+                    _step_id or activity_name,
+                    tool_name=activity_name,
+                    namespace="ironlaw",
+                )
+                await workflow.execute_activity(
+                    "notify_man_task",
+                    args=[
+                        {
+                            "task_id": intent_hash,
+                            "workflow_id": workflow.info().workflow_id,
+                            "step_id": _step_id or activity_name,
+                            "channels": ["realtime"],
+                            "message": "Iron Law escalation: physical action gated",
+                            "metadata": {
+                                "intent_hash": intent_hash,
+                                "logic_delta": verification["logic_delta"],
+                                "status": verification["status"],
+                            },
+                            "idempotency_key": idempotency_key,
+                        }
+                    ],
+                    start_to_close_timeout=timedelta(seconds=10),
+                    retry_policy=RetryPolicy(
+                        maximum_attempts=2, initial_interval=timedelta(seconds=1)
+                    ),
+                )
+                raise ApplicationError(
+                    f"Iron Law blocked physical activity {activity_name} (logic_delta={verification['logic_delta']:.2f})",
+                    non_retryable=True,
+                )
+
         # Default timeout
         timeout = timedelta(minutes=5)
 

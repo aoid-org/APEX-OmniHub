@@ -1,13 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+// Support both Vite runtime (import.meta.env) and Node/TSX scripts (process.env)
+const env =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env) || process.env;
+
 // User's own Supabase (highest priority)
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_URL =
+  env?.VITE_SUPABASE_URL ?? (env as Record<string, string | undefined>)?.SUPABASE_URL;
 
 // Accept multiple key formats for user-provided keys
 const SUPABASE_KEY =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-  import.meta.env.VITE_SUPABASE_ANON_KEY;
+  env?.VITE_SUPABASE_PUBLISHABLE_KEY ??
+  env?.VITE_SUPABASE_ANON_KEY ??
+  (env as Record<string, string | undefined>)?.SUPABASE_SERVICE_ROLE_KEY;
 
 const missingEnv = !SUPABASE_URL || !SUPABASE_KEY;
 
@@ -49,7 +55,11 @@ if (missingEnv) {
   if (!SUPABASE_URL) missing.push('VITE_SUPABASE_URL');
   if (!SUPABASE_KEY) missing.push('VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY');
 
-  if (import.meta.env.DEV) {
+  const devFlag =
+    (env as Record<string, string | undefined>)?.DEV === 'true' ||
+    (env as Record<string, string | undefined>)?.NODE_ENV === 'development';
+
+  if (devFlag) {
     console.warn(
       `⚠️ Supabase env vars missing (${missing.join(
         ', '
@@ -72,6 +82,11 @@ export const supabase = missingEnv
     });
 
 // Log which Supabase instance is being used (dev only)
-if (import.meta.env.DEV && !missingEnv) {
-  console.log('✅ Using Supabase instance:', SUPABASE_URL);
+if (!missingEnv) {
+  const devFlag =
+    (env as Record<string, string | undefined>)?.DEV === 'true' ||
+    (env as Record<string, string | undefined>)?.NODE_ENV === 'development';
+  if (devFlag) {
+    console.log('✅ Using Supabase instance:', SUPABASE_URL);
+  }
 }

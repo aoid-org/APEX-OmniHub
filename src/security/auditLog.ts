@@ -3,6 +3,9 @@ import { logAnalyticsEvent, logError } from '@/lib/monitoring';
 import { persistentGet, persistentSet } from '@/libs/persistence';
 import { supabase } from '@/integrations/supabase/client';
 
+const env =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env) || process.env;
+
 /**
  * Audit event payload interface
  * Previously used Lovable API, now writes directly to Supabase audit_logs table
@@ -25,11 +28,11 @@ export type QueuedAuditEvent = AuditEventPayload & {
 
 const RECENT_LIMIT = 200;
 const QUEUE_KEY = 'audit_queue_v1'; // Updated key name (no longer Lovable-specific)
-const MAX_ATTEMPTS = Number(import.meta.env.VITE_AUDIT_MAX_ATTEMPTS ?? 5);
-const BASE_DELAY_MS = Number(import.meta.env.VITE_AUDIT_RETRY_BASE_MS ?? 500);
-const MAX_DELAY_MS = Number(import.meta.env.VITE_AUDIT_RETRY_MAX_MS ?? 10_000);
-const JITTER_MS = Number(import.meta.env.VITE_AUDIT_RETRY_JITTER_MS ?? 250);
-const DEGRADE_THRESHOLD = Number(import.meta.env.VITE_AUDIT_DEGRADE_THRESHOLD ?? 3);
+const MAX_ATTEMPTS = Number((env as Record<string, string | undefined>)?.VITE_AUDIT_MAX_ATTEMPTS ?? 5);
+const BASE_DELAY_MS = Number((env as Record<string, string | undefined>)?.VITE_AUDIT_RETRY_BASE_MS ?? 500);
+const MAX_DELAY_MS = Number((env as Record<string, string | undefined>)?.VITE_AUDIT_RETRY_MAX_MS ?? 10_000);
+const JITTER_MS = Number((env as Record<string, string | undefined>)?.VITE_AUDIT_RETRY_JITTER_MS ?? 250);
+const DEGRADE_THRESHOLD = Number((env as Record<string, string | undefined>)?.VITE_AUDIT_DEGRADE_THRESHOLD ?? 3);
 
 const recentEvents: AuditEventPayload[] = [];
 let queue: QueuedAuditEvent[] = [];

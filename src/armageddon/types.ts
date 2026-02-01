@@ -24,7 +24,7 @@ export interface Level7Config {
  * Result from a single battery execution
  */
 export interface BatteryResult {
-    /** Battery identifier (10-13 for Level 7) */
+    /** Battery identifier (10-17 for Level 7) */
     batteryId: number;
     /** Total number of attack attempts */
     attempts: number;
@@ -66,6 +66,10 @@ export enum Battery {
     TOOL_MISUSE = 11,
     MEMORY_POISON = 12,
     SUPPLY_CHAIN = 13,
+    PHYSICAL_INGRESS = 14,
+    IRON_LAW_GATE = 15,
+    TEMPORAL_RLS = 16,
+    NFT_ENTITLEMENT = 17,
 }
 
 /**

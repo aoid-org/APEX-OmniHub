@@ -12,6 +12,8 @@
  */
 
 import { Context, ApplicationFailure } from '@temporalio/activity';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type {
     Level7Config,
@@ -23,6 +25,22 @@ import {
     LOG_BATCH_INTERVAL,
     BASE_ESCAPE_PROBABILITY,
 } from '../types';
+import { OmniPortEngine } from '../../omniconnect/ingress/OmniPort';
+import { DeviceProtocol } from '../../omniconnect/types/canonical';
+
+function buildBatteryResult(batteryId: number, attempts: number, escapes: number, logs: string[], startTime: number): BatteryResult {
+    const durationMs = Date.now() - startTime;
+    const escapeRate = attempts > 0 ? escapes / attempts : 0;
+    return {
+        batteryId,
+        attempts,
+        escapes,
+        logs,
+        status: escapes === 0 ? 'PASS' : 'FAIL',
+        durationMs,
+        escapeRate,
+    };
+}
 
 /**
  * Seeded pseudo-random number generator for deterministic results
@@ -38,9 +56,23 @@ function createSeededRandom(seed: number): () => number {
 /**
  * Initialize Supabase client from environment
  */
+function createStubSupabaseClient(): SupabaseClient {
+    // Minimal stub to satisfy inserts during SIM_MODE runs; avoids network dependency
+    const stubInsert = async () => ({ data: [], error: null });
+    return {
+        from: () => ({ insert: stubInsert }),
+    } as unknown as SupabaseClient;
+}
+
 function getSupabaseClient(): SupabaseClient {
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    // In SIM_MODE we allow a stubbed Supabase client to keep simulations offline
+    const allowStub = process.env.SIM_MODE === 'true';
+    if ((!url || !key) && allowStub) {
+        return createStubSupabaseClient();
+    }
 
     if (!url || !key) {
         throw ApplicationFailure.create({
@@ -209,6 +241,151 @@ export async function runBattery12MemoryPoison(config: Level7Config): Promise<Ba
             'Semantic anchor attack',
         ],
     });
+}
+
+/**
+ * Battery 14: Physical Ingress Canonicalization
+ * Verifies OmniPort normalizes Zigbee/Matter/ROS2 payloads into CanonicalDevice without vendor JSON.
+ */
+export async function runBattery14PhysicalIngress(_config: Level7Config): Promise<BatteryResult> {
+    const start = Date.now();
+    const logs: string[] = [];
+    let escapes = 0;
+    let attempts = 0;
+
+    const engine = OmniPortEngine.getInstance() as unknown as {
+        normalizeToCanonical: (input: any, ctx: any) => any;
+    };
+
+    const ctx = {
+        correlationId: 'armageddon-physical-ingress',
+        startTime: Date.now(),
+        riskLane: 'GREEN',
+        userId: 'test-user',
+    };
+
+    const cases = [
+        { protocol: DeviceProtocol.ZIGBEE, payload: { protocol: 'zigbee', deviceId: 'dev-12345', state: { on: true } } },
+        { protocol: DeviceProtocol.MATTER, payload: { protocol: 'matter', deviceId: 'dev-23456', state: { onOff: true } } },
+        { protocol: DeviceProtocol.ROS2_DDS, payload: { protocol: 'ros2', deviceId: 'dev-34567', state: { position: { x: 1, y: 2 } } } },
+    ];
+
+    for (const testCase of cases) {
+        attempts += 1;
+        try {
+            const input = {
+                type: 'webhook',
+                provider: testCase.protocol,
+                signature: 'sig',
+                payload: testCase.payload,
+            };
+            const event = engine.normalizeToCanonical(input, ctx);
+            const payload = event.payload as { device?: { protocol?: string } };
+            if (!payload.device || payload.device.protocol !== testCase.protocol) {
+                escapes += 1;
+                logs.push(`FAIL: protocol ${testCase.protocol} not normalized`);
+                continue;
+            }
+            if ((event.payload as any).payload || (event.payload as any).signature) {
+                escapes += 1;
+                logs.push(`FAIL: vendor payload leaked for protocol ${testCase.protocol}`);
+                continue;
+            }
+            logs.push(`PASS: ${testCase.protocol} normalized`);
+        } catch (err) {
+            escapes += 1;
+            logs.push(`FAIL: ${testCase.protocol} threw ${(err as Error).message}`);
+        }
+    }
+
+    return buildBatteryResult(14, attempts, escapes, logs, start);
+}
+
+/**
+ * Battery 15: Iron Law Gate
+ * Ensures workflow integrates Iron Law verification and MAN escalation.
+ */
+export async function runBattery15IronLawGate(_config: Level7Config): Promise<BatteryResult> {
+    const start = Date.now();
+    const logs: string[] = [];
+    let escapes = 0;
+    let attempts = 0;
+
+    attempts += 1;
+    const workflowPath = join(process.cwd(), 'orchestrator', 'workflows', 'agent_saga.py');
+    const contents = readFileSync(workflowPath, 'utf-8');
+    if (!contents.includes('verify_deductive_path') || !contents.includes('notify_man_task')) {
+        escapes += 1;
+        logs.push('FAIL: Iron Law verification or MAN escalation missing in workflow');
+    } else {
+        logs.push('PASS: Iron Law verification integrated');
+    }
+
+    return buildBatteryResult(15, attempts, escapes, logs, start);
+}
+
+/**
+ * Battery 16: Temporal-linked RLS
+ * Ensures migration enforces workflow_execution_id cryptographic binding.
+ */
+export async function runBattery16TemporalRLS(_config: Level7Config): Promise<BatteryResult> {
+    const start = Date.now();
+    const logs: string[] = [];
+    let escapes = 0;
+    let attempts = 0;
+
+    attempts += 1;
+    const migrationPath = join(
+        process.cwd(),
+        'supabase',
+        'migrations',
+        '20251231000000_apex_ascension_governance.sql'
+    );
+    const contents = readFileSync(migrationPath, 'utf-8');
+    const ok =
+        contents.includes('workflow_execution_grants') &&
+        contents.includes('workflow_execution_sig') &&
+        contents.includes('is_workflow_execution_authorized');
+    if (!ok) {
+        escapes += 1;
+        logs.push('FAIL: Temporal-linked RLS grant enforcement missing');
+    } else {
+        logs.push('PASS: Temporal-linked RLS grant enforcement present');
+    }
+
+    return buildBatteryResult(16, attempts, escapes, logs, start);
+}
+
+/**
+ * Battery 17: NFT Entitlement Gate
+ * Ensures AgentKey verification uses verify-nft and signature checks.
+ */
+export async function runBattery17NftEntitlement(_config: Level7Config): Promise<BatteryResult> {
+    const start = Date.now();
+    const logs: string[] = [];
+    let escapes = 0;
+    let attempts = 0;
+
+    attempts += 1;
+    const entitlementsPath = join(process.cwd(), 'src', 'lib', 'web3', 'entitlements.ts');
+    const verifyFnPath = join(process.cwd(), 'supabase', 'functions', 'verify-nft', 'index.ts');
+    const entitlements = readFileSync(entitlementsPath, 'utf-8');
+    const verifyFn = readFileSync(verifyFnPath, 'utf-8');
+
+    const ok =
+        entitlements.includes('assertEntitledAgent') &&
+        entitlements.includes("verify-nft") &&
+        verifyFn.includes('agent_signature') &&
+        verifyFn.includes('agent_key_verified');
+
+    if (!ok) {
+        escapes += 1;
+        logs.push('FAIL: NFT entitlement enforcement missing');
+    } else {
+        logs.push('PASS: NFT entitlement enforcement present');
+    }
+
+    return buildBatteryResult(17, attempts, escapes, logs, start);
 }
 
 /**

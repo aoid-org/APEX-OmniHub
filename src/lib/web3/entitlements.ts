@@ -15,8 +15,8 @@
  * Date: 2026-01-01
  */
 
-import { createPublicClient, http, type Address, type PublicClient, type Chain } from 'viem';
-import { mainnet, polygon, optimism, arbitrum } from 'viem/chains';
+import { createPublicClient, http, type Address, type PublicClient, type Chain } from 'viem/_cjs';
+import { mainnet, polygon, optimism, arbitrum } from 'viem/_cjs/chains';
 import { supabase } from '@/integrations/supabase/client';
 import { logError, logAnalyticsEvent } from '@/lib/monitoring';
 
@@ -466,6 +466,38 @@ export async function checkEntitlement(params: EntitlementCheck): Promise<Entitl
  */
 export async function checkEntitlements(checks: EntitlementCheck[]): Promise<EntitlementResult[]> {
   return Promise.all(checks.map((check) => checkEntitlement(check)));
+}
+
+/**
+ * Enforce Membership NFT ownership for an AgentKey prior to physical action.
+ * Relies on Supabase Edge Function verify-nft (server-side verification + signature).
+ */
+export async function assertEntitledAgent(params: {
+  walletAddress: Address;
+  agentKey: string;
+  agentSignature: string;
+}): Promise<void> {
+  const { walletAddress, agentKey, agentSignature } = params;
+  try {
+    const { data, error } = await supabase.functions.invoke('verify-nft', {
+      method: 'POST',
+      body: {
+        wallet_address: walletAddress,
+        agent_key: agentKey,
+        agent_signature: agentSignature,
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data?.hasPremiumNFT || data?.agent_key_verified !== true) {
+      throw new Error('Agent wallet does not hold Membership NFT');
+    }
+  } catch (err) {
+    throw new Error(`NFT entitlement verification failed: ${(err as Error).message}`);
+  }
 }
 
 /**

@@ -29,6 +29,7 @@ async def notify_man_task(params: dict[str, Any]) -> dict[str, Any]:
             - channels: list[str] (e.g., ["email", "slack", "realtime"])
             - message: str (notification message)
             - metadata: dict (optional)
+            - dedupe_key: str (optional, idempotent escalation key)
 
     Returns:
         Dict with keys:
@@ -46,14 +47,16 @@ async def notify_man_task(params: dict[str, Any]) -> dict[str, Any]:
         channels = params.get("channels", ["realtime"])
         message = params.get("message", "Action requires approval")
         metadata = params.get("metadata", {})
+        dedupe_key = params.get("dedupe_key")
 
         db = get_database_provider()
 
         notification_ids = []
 
         for channel in channels:
-            # Create idempotency key per channel
-            idempotency_key = f"man_notify:{task_id}:{channel}"
+            # Create idempotency key per channel (allow override for Iron Law dedupe)
+            base_key = dedupe_key or params.get("idempotency_key") or task_id
+            idempotency_key = f"man_notify:{base_key}:{channel}"
 
             # Upsert notification (idempotent)
             notification = await db.upsert(

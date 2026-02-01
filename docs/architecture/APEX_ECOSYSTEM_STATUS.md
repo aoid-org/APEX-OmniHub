@@ -1,6 +1,6 @@
 # APEX Ecosystem Status
 
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-02-01
 
 ## Core Systems
 
@@ -10,6 +10,7 @@
 - **Security Advisories**: `SECURITY_ADVISORIES.md`, audit script `npm run security:audit`, dependency policy `docs/dependency-scanning.md`.
 - **Compliance**: GDPR (`docs/GDPR_COMPLIANCE.md`), SOC2 (`docs/SOC2_READINESS.md`), audit log helper `src/security/auditLog.ts`.
 - **Zero-Trust**: Baseline metrics `src/zero-trust/baseline.ts` + CLI, registry `src/zero-trust/deviceRegistry.ts`, docs `docs/zero-trust-baseline.md` and `docs/device-registry.md`.
+- **Physical AI Fabric**: Canonical device ingress, Iron Law gate, Temporal-linked RLS, NFT entitlement enforcement.
 
 ## OmniPort Ingress Engine (NEW)
 
@@ -26,6 +27,7 @@ The proprietary fortified ingress gateway for all input sources.
 
 **Features:**
 - Zero-Trust Gate with device validation (trusted/suspect/blocked)
+- Zigbee/Matter/ROS 2 DDS normalized into CanonicalDevice (no raw vendor JSON)
 - MAN Mode governance for high-risk intents (`delete`, `transfer`, `grant_access`)
 - Idempotent execution with FNV-1a hashing (browser + Node.js compatible)
 - Circuit breaker with Dead Letter Queue fallback

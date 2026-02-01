@@ -242,3 +242,96 @@ $$;
 
 -- Grant execute to service role
 GRANT EXECUTE ON FUNCTION public.log_audit_event TO service_role;
+
+-- ============================================================================
+-- PHYSICAL ACTUATOR COMMANDS (Temporal-linked, default deny)
+-- ============================================================================
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Grants table for cryptographic binding of workflow execution IDs
+CREATE TABLE IF NOT EXISTS public.workflow_execution_grants (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    workflow_execution_id uuid NOT NULL,
+    user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    signature_hash text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    expires_at timestamptz,
+    revoked_at timestamptz
+);
+
+ALTER TABLE public.workflow_execution_grants ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "workflow_execution_grants_service_role" ON public.workflow_execution_grants
+FOR ALL TO service_role
+USING (true) WITH CHECK (true);
+
+CREATE POLICY "workflow_execution_grants_owner_select" ON public.workflow_execution_grants
+FOR SELECT TO authenticated
+USING (user_id = auth.uid());
+
+CREATE INDEX IF NOT EXISTS idx_workflow_execution_grants_active
+ON public.workflow_execution_grants(workflow_execution_id, user_id)
+WHERE revoked_at IS NULL;
+
+CREATE OR REPLACE FUNCTION public.is_workflow_execution_authorized(p_workflow_execution_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.workflow_execution_grants g
+    WHERE g.workflow_execution_id = p_workflow_execution_id
+      AND g.user_id = auth.uid()
+      AND g.revoked_at IS NULL
+      AND (g.expires_at IS NULL OR g.expires_at > now())
+      AND current_setting('request.jwt.claims', true)::jsonb ? 'workflow_execution_sig'
+      AND encode(
+            digest((current_setting('request.jwt.claims', true)::jsonb ->> 'workflow_execution_sig')::text, 'sha256'),
+            'hex'
+          ) = g.signature_hash
+  );
+$$;
+
+CREATE TABLE IF NOT EXISTS public.physical_actuator_commands (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    workflow_execution_id uuid NOT NULL,
+    device_id text NOT NULL,
+    command text NOT NULL,
+    parameters jsonb DEFAULT '{}'::jsonb,
+    created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    approved boolean DEFAULT false
+);
+
+ALTER TABLE public.physical_actuator_commands ENABLE ROW LEVEL SECURITY;
+
+-- RLS: allow service role (edge/worker) full access
+CREATE POLICY "physical_commands_service_role" ON public.physical_actuator_commands
+FOR ALL TO service_role
+USING (true) WITH CHECK (true);
+
+-- RLS: Temporal-linked entitlement - JWT must present matching workflow_execution_id
+CREATE POLICY "physical_commands_temporal_link" ON public.physical_actuator_commands
+FOR INSERT TO authenticated
+WITH CHECK (
+    current_setting('request.jwt.claims', true)::jsonb ? 'workflow_execution_id'
+    AND (current_setting('request.jwt.claims', true)::jsonb ->> 'workflow_execution_id')::uuid = workflow_execution_id
+    AND public.is_workflow_execution_authorized(workflow_execution_id)
+);
+
+CREATE POLICY "physical_commands_select_owner" ON public.physical_actuator_commands
+FOR SELECT TO authenticated
+USING (
+    current_setting('request.jwt.claims', true)::jsonb ? 'workflow_execution_id'
+    AND (current_setting('request.jwt.claims', true)::jsonb ->> 'workflow_execution_id')::uuid = workflow_execution_id
+    AND public.is_workflow_execution_authorized(workflow_execution_id)
+);
+
+-- Default deny everything else (RLS enabled)
+
+-- Helpful index
+CREATE INDEX IF NOT EXISTS idx_physical_commands_workflow
+ON public.physical_actuator_commands(workflow_execution_id, created_at DESC);
