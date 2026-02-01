@@ -16,11 +16,9 @@ function bucketAmount(amount: number | null | undefined): string | null {
 }
 
 function stripPii(text: string): string {
-  // Safer email pattern (no catastrophic backtracking)
-  const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-  // Safer phone pattern
+  // ReDoS-resistant email pattern with bounded quantifiers (RFC 5321 compliant)
+  const emailPattern = /[A-Z0-9._%+-]{1,64}@[A-Z0-9.-]{1,253}\.[A-Z]{2,10}/gi;
   const phonePattern = /\+?\d[\d\s().-]{7,}\d/g;
-  // Safer dollar pattern
   const dollarPattern = /\$?\s?\d{1,3}(?:[,\s]\d{3})*(?:\.\d{1,2})?/g;
   return text.replace(emailPattern, '[redacted]').replace(phonePattern, '[redacted]').replace(dollarPattern, '[bucketed]');
 }

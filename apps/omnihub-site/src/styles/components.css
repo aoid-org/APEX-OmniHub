@@ -59,14 +59,15 @@
 
 /* Ensure primary buttons pop on navy */
 .section--navy .btn--primary {
-  background-color: var(--color-white);
-  color: var(--color-navy);
-  border-color: var(--color-white);
+  background-color: var(--color-accent);
+  color: var(--color-white);
+  border-color: var(--color-accent);
 }
 
 .section--navy .btn--primary:hover {
-  background-color: rgba(255, 255, 255, 0.9);
-  border-color: rgba(255, 255, 255, 0.9);
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-white);
 }
 
 /* === TYPOGRAPHY === */
@@ -181,24 +182,26 @@
 
 .btn--primary {
   background-color: var(--color-navy);
-  color: #ffffff; /* FORCE WHITE TEXT FOR CONTRAST */
+  color: #ffffff !important; /* FORCE WHITE TEXT FOR CONTRAST */
   border-color: var(--color-navy);
 }
 
 .btn--primary:hover {
   background-color: var(--color-navy-light);
   border-color: var(--color-navy-light);
+  color: #ffffff !important;
 }
 
 [data-theme="dark"] .btn--primary {
   background-color: var(--color-white);
-  color: var(--color-navy);
+  color: var(--color-navy) !important;
   border-color: var(--color-white);
 }
 
 [data-theme="dark"] .btn--primary:hover {
   background-color: var(--color-surface);
   border-color: var(--color-surface);
+  color: var(--color-navy) !important;
 }
 
 .btn--secondary {
@@ -400,7 +403,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 76.8px;
 }
 
 .nav__logo {
@@ -471,7 +474,7 @@
 }
 
 .nav__logo-wordmark {
-  height: calc(64px * 1.1);
+  height: calc(76.8px * 0.95);
   width: auto;
   display: block;
   filter: drop-shadow(0 0 12px rgba(196, 87, 28, 0.6)) drop-shadow(0 0 24px rgba(196, 87, 28, 0.4));
@@ -514,7 +517,7 @@
 .nav__left {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-6);
 }
 
 /* === BURGER MENU (Mobile Override) === */
@@ -525,7 +528,9 @@
   }
 
   .nav__links,
-  .nav__cta-desktop {
+  .nav__cta-desktop,
+  .nav__left .theme-toggle-segmented,
+  .nav__actions .btn {
     display: none;
   }
 

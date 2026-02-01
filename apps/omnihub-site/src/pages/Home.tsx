@@ -30,7 +30,7 @@ function Hero() {
           <h1 className="heading-hero hero__title">{siteConfig.hero.title}</h1>
           <p className="hero__tagline">{siteConfig.hero.tagline}</p>
           <p className="hero__subtitle">{siteConfig.hero.subtitle}</p>
-          <p className="hero__description">
+          <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
             Understand Everything. Communicate Anything, to Every Platform.
             OmniHub is your universal translator and orchestrator, connecting AI,
             enterprise systems, and Web3 through a single controlled port.
@@ -59,18 +59,21 @@ function HighlightsSection() {
       description:
         'Imagine a platform that anticipates your needs and streamlines your operations effortlessly.',
       icon: <IconAutomation size={22} />,
+      href: '/ai-automation.html',
     },
     {
       title: 'Smart Integrations',
       description:
         'Unify your tools and data into one intelligent system. Say goodbye to silos and productivity bottlenecks.',
       icon: <IconIntegrations size={22} />,
+      href: '/smart-integrations.html',
     },
     {
       title: 'Advanced Analytics',
       description:
         'Gain a 360° view of your organization. Make data-driven decisions with cutting-edge insights.',
       icon: <IconAnalytics size={22} />,
+      href: '/advanced-analytics.html',
     },
   ];
 
@@ -173,8 +176,8 @@ function FortressSection() {
           Security is not an afterthought. It is the foundation.
         </p>
         <div className="fortress__grid">
-          {siteConfig.fortress.items.map((item) => (
-            <div key={item} className="fortress__item">
+          {siteConfig.fortress.items.map((item, idx) => (
+            <div key={`fortress-${idx}-${item.substring(0, 20)}`} className="fortress__item">
               <div className="fortress__bullet" />
               <span>{item}</span>
             </div>
@@ -235,28 +238,28 @@ function CapabilityShowcase() {
       title: 'Tri-Force Protocol',
       description: 'Connect, Translate, Execute',
       icon: <IconTriForceProtocol size={28} />,
-      href: '#tri-force',
+      href: '/tri-force.html',
     },
     {
       id: 'orchestrator',
       title: 'Orchestrator',
       description: 'Central command for all workflows',
       icon: <IconOrchestrator size={28} />,
-      href: '#orchestrator',
+      href: '/orchestrator.html',
     },
     {
       id: 'fortress',
       title: 'Fortress Protocol',
       description: 'Zero-trust security by default',
       icon: <IconFortressProtocol size={28} />,
-      href: '#fortress',
+      href: '/fortress.html',
     },
     {
       id: 'man-mode',
       title: 'MAN Mode',
       description: 'Manual Authorization Needed',
       icon: <IconManMode size={28} />,
-      href: '#man-mode',
+      href: '/man-mode.html',
     },
 
     {
@@ -264,14 +267,14 @@ function CapabilityShowcase() {
       title: 'OmniPort',
       description: 'Single ingress/egress gateway for simplified security and total observability.',
       icon: <IconIntegrations size={28} />,
-      href: '#tri-force',
+      href: '/omniport.html',
     },
     {
       id: 'maestro',
       title: 'Maestro',
       description: 'Turns intent into monitored, reversible workflows.',
       icon: <IconAutomation size={28} />,
-      href: '#orchestrator',
+      href: '/maestro.html',
     },
   ];
 

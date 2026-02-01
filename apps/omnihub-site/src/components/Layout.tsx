@@ -104,12 +104,13 @@ function Nav() {
               width="182"
               height="26"
               style={{
-                height: '26.4px',
+                height: '72.96px',
                 width: 'auto',
                 aspectRatio: '1012.5 / 147'
               }}
             />
           </a>
+          <ThemeToggle />
         </div>
 
         <ul className="nav__links" aria-label="Primary navigation">
@@ -123,7 +124,9 @@ function Nav() {
         </ul>
 
         <div className="nav__actions">
-          <ThemeToggle />
+          <a href={siteConfig.nav.loginLink.href} className="btn btn--primary btn--sm">
+            {siteConfig.nav.loginLink.label}
+          </a>
 
           <div className="nav__burger" ref={menuRef}>
             <button
@@ -176,6 +179,16 @@ function Nav() {
                       </a>
                     </li>
                   ))}
+                  <li key={siteConfig.nav.loginLink.href} style={{ marginTop: 'var(--space-2)' }}>
+                    <a
+                      href={siteConfig.nav.loginLink.href}
+                      className="btn btn--primary btn--sm"
+                      style={{ width: '100%' }}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {siteConfig.nav.loginLink.label}
+                    </a>
+                  </li>
                 </ul>
               </dialog>
             )}

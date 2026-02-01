@@ -4,6 +4,7 @@ interface FeatureItem {
   title: string;
   description: string;
   icon?: ReactNode;
+  href?: string;
 }
 
 type FeatureHighlightGridProps = Readonly<{
@@ -31,15 +32,31 @@ function SparkIcon() {
 export function FeatureHighlightGrid({ items }: FeatureHighlightGridProps) {
   return (
     <ul className="feature-grid">
-      {items.map((item) => (
-        <li key={item.title} className="card feature-card">
-          <div className="feature-card__icon">
-            {item.icon ?? <SparkIcon />}
-          </div>
-          <h3 className="heading-4 feature-card__title">{item.title}</h3>
-          <p className="text-sm text-secondary mt-4">{item.description}</p>
-        </li>
-      ))}
+      {items.map((item) => {
+        const content = (
+          <>
+            <div className="feature-card__icon">
+              {item.icon ?? <SparkIcon />}
+            </div>
+            <h3 className="heading-4 feature-card__title">{item.title}</h3>
+            <p className="text-sm text-secondary mt-4">{item.description}</p>
+          </>
+        );
+
+        return (
+          <li key={item.title}>
+            {item.href ? (
+              <a href={item.href} className="card feature-card" style={{ textDecoration: 'none', display: 'block' }}>
+                {content}
+              </a>
+            ) : (
+              <div className="card feature-card">
+                {content}
+              </div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

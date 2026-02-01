@@ -96,7 +96,7 @@ function hashError(error: Error, context?: Record<string, unknown>): string {
   const key = `${error.name}:${error.message}:${JSON.stringify(context || {})}`;
   let hash = 0;
   for (let i = 0; i < key.length; i++) {
-    const char = key.charCodeAt(i);
+    const char = key.codePointAt(i) ?? 0;
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash;
   }
