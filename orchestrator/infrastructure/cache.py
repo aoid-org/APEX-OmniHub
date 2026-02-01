@@ -44,11 +44,14 @@ try:
 except ImportError:
     try:
         # Try redis-py v5.x alternate path
-        from redis.commands.search.indexDefinition import IndexDefinition, IndexType  # type: ignore
+        from redis.commands.search.indexDefinition import (  # type: ignore
+            IndexDefinition,
+            IndexType,
+        )
     except ImportError:
         # Fallback: define minimal stubs for typing (tests can mock these)
-        IndexDefinition = type('IndexDefinition', (), {})  # type: ignore
-        IndexType = type('IndexType', (), {})  # type: ignore
+        IndexDefinition = type("IndexDefinition", (), {})  # type: ignore
+        IndexType = type("IndexType", (), {})  # type: ignore
 
 # ============================================================================
 # DATA MODELS
