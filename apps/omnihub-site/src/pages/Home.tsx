@@ -59,18 +59,21 @@ function HighlightsSection() {
       description:
         'Imagine a platform that anticipates your needs and streamlines your operations effortlessly.',
       icon: <IconAutomation size={22} />,
+      href: '/ai-automation.html',
     },
     {
       title: 'Smart Integrations',
       description:
         'Unify your tools and data into one intelligent system. Say goodbye to silos and productivity bottlenecks.',
       icon: <IconIntegrations size={22} />,
+      href: '/smart-integrations.html',
     },
     {
       title: 'Advanced Analytics',
       description:
         'Gain a 360° view of your organization. Make data-driven decisions with cutting-edge insights.',
       icon: <IconAnalytics size={22} />,
+      href: '/advanced-analytics.html',
     },
   ];
 

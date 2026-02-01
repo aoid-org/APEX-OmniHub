@@ -1,30 +1,22 @@
-import { Layout } from '@/components/Layout';
-import { Section, SectionHeader } from '@/components/Section';
+import { Layout, Section, SectionHeader, BulletItem, BulletList } from '@/components';
 import { siteConfig } from '@/content/site';
 
 export function ManModePage() {
   return (
     <Layout title="MAN Mode">
       <Section>
-        <SectionHeader
-          title="MAN Mode"
-          subtitle="Manual Authorization Needed"
-        />
+        <SectionHeader title="MAN Mode" subtitle="Manual Authorization Needed" />
 
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <p className="text-lg mb-8" style={{ lineHeight: '1.75' }}>
-            {siteConfig.manMode.description}
-          </p>
+          <p className="text-lg mb-8" style={{ lineHeight: '1.75' }}>{siteConfig.manMode.description}</p>
 
           <div className="card" style={{ padding: 'var(--space-8)', backgroundColor: 'var(--color-orange)', color: 'var(--color-white)', marginBottom: 'var(--space-12)' }}>
             <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-bold)', letterSpacing: '0.1em', marginBottom: 'var(--space-3)' }}>THE PHILOSOPHY</div>
             <p style={{ fontSize: 'var(--font-size-lg)', lineHeight: '1.75', margin: 0 }}>
-              Automation accelerates business, but critical decisions require human judgment.
-              MAN Mode gives you the best of both worlds.
+              Automation accelerates business, but critical decisions require human judgment. MAN Mode gives you the best of both worlds.
             </p>
           </div>
 
-          {/* Key Features */}
           <div style={{ marginTop: 'var(--space-12)' }}>
             <h2 className="heading-2 mb-8">Key Features</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
@@ -48,27 +40,13 @@ export function ManModePage() {
 
               <div className="card" style={{ padding: 'var(--space-6)' }}>
                 <h4 className="heading-4 mb-3">User Notified for Manual Review</h4>
-                <p className="text-secondary text-sm mb-4">
-                  Users are immediately notified through multiple channels when items require their attention:
-                </p>
-                <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  <li className="text-secondary text-sm" style={{ paddingLeft: 'var(--space-6)', position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: 0, top: '0.5em', width: '6px', height: '6px', backgroundColor: 'var(--color-accent)', borderRadius: '50%' }}></span>
-                    In-app notifications with direct action links
-                  </li>
-                  <li className="text-secondary text-sm" style={{ paddingLeft: 'var(--space-6)', position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: 0, top: '0.5em', width: '6px', height: '6px', backgroundColor: 'var(--color-accent)', borderRadius: '50%' }}></span>
-                    Email alerts with item context
-                  </li>
-                  <li className="text-secondary text-sm" style={{ paddingLeft: 'var(--space-6)', position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: 0, top: '0.5em', width: '6px', height: '6px', backgroundColor: 'var(--color-accent)', borderRadius: '50%' }}></span>
-                    Slack/Teams integration
-                  </li>
-                  <li className="text-secondary text-sm" style={{ paddingLeft: 'var(--space-6)', position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: 0, top: '0.5em', width: '6px', height: '6px', backgroundColor: 'var(--color-accent)', borderRadius: '50%' }}></span>
-                    SMS for critical items
-                  </li>
-                </ul>
+                <p className="text-secondary text-sm mb-4">Users are immediately notified through multiple channels when items require their attention:</p>
+                <BulletList>
+                  <BulletItem>In-app notifications with direct action links</BulletItem>
+                  <BulletItem>Email alerts with item context</BulletItem>
+                  <BulletItem>Slack/Teams integration</BulletItem>
+                  <BulletItem>SMS for critical items</BulletItem>
+                </BulletList>
               </div>
 
               <div className="card" style={{ padding: 'var(--space-6)' }}>
@@ -81,7 +59,6 @@ export function ManModePage() {
             </div>
           </div>
 
-          {/* Risk Categories */}
           <div style={{ marginTop: 'var(--space-16)' }}>
             <h2 className="heading-2 mb-8">Risk Categories</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-4)' }}>
@@ -104,14 +81,11 @@ export function ManModePage() {
             </div>
           </div>
 
-          {/* Workflow Example */}
           <div style={{ marginTop: 'var(--space-16)' }}>
             <h2 className="heading-2 mb-8">Example: Customer Onboarding</h2>
             <div className="card" style={{ padding: 'var(--space-8)', backgroundColor: 'var(--color-navy)', color: 'var(--color-white)' }}>
               <div style={{ fontFamily: 'var(--font-family-mono)', fontSize: 'var(--font-size-sm)' }}>
-                <div style={{ marginBottom: 'var(--space-3)' }}>
-                  <span style={{ opacity: 0.6 }}>Workflow: Customer Onboarding</span>
-                </div>
+                <div style={{ marginBottom: 'var(--space-3)' }}><span style={{ opacity: 0.6 }}>Workflow: Customer Onboarding</span></div>
                 <div style={{ paddingLeft: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                   <div>├─ Create customer record <span style={{ color: '#4ade80' }}>✓ (completed)</span></div>
                   <div>├─ Setup billing account <span style={{ color: '#4ade80' }}>✓ (completed)</span></div>
@@ -127,15 +101,10 @@ export function ManModePage() {
             </div>
           </div>
 
-          {/* CTA */}
           <div style={{ marginTop: 'var(--space-16)', textAlign: 'center', padding: 'var(--space-12)', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--border-radius-lg)' }}>
             <h3 className="heading-3 mb-4">Ready to balance automation with oversight?</h3>
-            <p className="text-secondary mb-8">
-              See how MAN Mode enables safe, fast workflows with human judgment where it matters.
-            </p>
-            <a href="/demo.html" className="btn btn--primary">
-              See MAN Mode in Action
-            </a>
+            <p className="text-secondary mb-8">See how MAN Mode enables safe, fast workflows with human judgment where it matters.</p>
+            <a href="/demo.html" className="btn btn--primary">See MAN Mode in Action</a>
           </div>
         </div>
       </Section>

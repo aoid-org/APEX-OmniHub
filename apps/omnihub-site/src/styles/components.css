@@ -59,14 +59,15 @@
 
 /* Ensure primary buttons pop on navy */
 .section--navy .btn--primary {
-  background-color: var(--color-white);
-  color: var(--color-navy);
-  border-color: var(--color-white);
+  background-color: var(--color-accent);
+  color: var(--color-white);
+  border-color: var(--color-accent);
 }
 
 .section--navy .btn--primary:hover {
-  background-color: rgba(255, 255, 255, 0.9);
-  border-color: rgba(255, 255, 255, 0.9);
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-white);
 }
 
 /* === TYPOGRAPHY === */
@@ -402,7 +403,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 76.8px;
 }
 
 .nav__logo {
@@ -473,7 +474,7 @@
 }
 
 .nav__logo-wordmark {
-  height: calc(64px * 1.1);
+  height: calc(76.8px * 0.95);
   width: auto;
   display: block;
   filter: drop-shadow(0 0 12px rgba(196, 87, 28, 0.6)) drop-shadow(0 0 24px rgba(196, 87, 28, 0.4));

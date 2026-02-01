@@ -47,21 +47,47 @@ export default defineConfig(({ mode }) => ({
       },
     } : undefined,
     rollupOptions: {
+      // Suppress warnings for third-party package annotations that Rollup can't interpret
+      onwarn(warning, warn) {
+        // Ignore PURE comment warnings from node_modules (ox, wagmi, etc.)
+        if (warning.code === 'INVALID_ANNOTATION' && warning.id?.includes('node_modules')) {
+          return;
+        }
+        warn(warning);
+      },
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom', 'scheduler'],
-          'web3-core': ['viem', 'wagmi', '@tanstack/react-query'],
-          'ui-components': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tooltip', '@radix-ui/react-accordion', '@radix-ui/react-alert-dialog'],
-          'supabase-vendor': ['@supabase/supabase-js'],
+        // Use function-based manualChunks to avoid empty chunks when modules are tree-shaken
+        manualChunks(id) {
+          // React vendor chunk
+          if (id.includes('node_modules/react/') ||
+              id.includes('node_modules/react-dom/') ||
+              id.includes('node_modules/react-router-dom/') ||
+              id.includes('node_modules/scheduler/')) {
+            return 'react-vendor';
+          }
+          // Web3 core chunk
+          if (id.includes('node_modules/viem/') ||
+              id.includes('node_modules/wagmi/') ||
+              id.includes('node_modules/@tanstack/react-query/')) {
+            return 'web3-core';
+          }
+          // UI components chunk
+          if (id.includes('node_modules/@radix-ui/')) {
+            return 'ui-components';
+          }
+          // Supabase chunk - only create if module is actually included
+          if (id.includes('node_modules/@supabase/')) {
+            return 'supabase-vendor';
+          }
         },
         // Optimize chunk file names with content hash for better caching
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
-      // Tree-shaking optimization
+      // Tree-shaking optimization - less aggressive to prevent empty chunks
       treeshake: {
-        moduleSideEffects: 'no-external',
+        moduleSideEffects: true,
         propertyReadSideEffects: false,
       },
     },
