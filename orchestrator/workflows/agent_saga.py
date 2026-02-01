@@ -38,8 +38,9 @@ Architecture:
 """
 
 import asyncio
-import time
+import hashlib
 import os
+import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -48,7 +49,6 @@ from typing import Any
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError, ApplicationError
-import hashlib
 
 # Import our models and activities
 with workflow.unsafe.imports_passed_through():
@@ -62,7 +62,7 @@ with workflow.unsafe.imports_passed_through():
         WorkflowFailed,
     )
     from models.man_mode import create_idempotency_key
-    from security.iron_law import verify_deductive_path, hash_intent
+    from security.iron_law import hash_intent, verify_deductive_path
 
 # Mirror of apex-resilience/config/thresholds.ts LOGIC_DELTA_THRESHOLD
 IRON_LAW_LOGIC_DELTA_MAX = float(os.getenv("IRON_LAW_LOGIC_DELTA_MAX", "0.2"))
@@ -98,9 +98,7 @@ def verify_deductive_path(intent: dict[str, Any], target_state: dict[str, Any]) 
     confidence = max(0.0, 1.0 - logic_delta)
 
     status: str
-    if missing:
-        status = "REQUIRES_HUMAN_REVIEW"
-    elif logic_delta > LOGIC_DELTA_THRESHOLD:
+    if missing or logic_delta > LOGIC_DELTA_THRESHOLD:
         status = "REQUIRES_HUMAN_REVIEW"
     else:
         status = "APPROVED"
@@ -1150,9 +1148,11 @@ class AgentWorkflow:
                         "workflow_execution_id": workflow_execution_id,
                         "user_id": self.user_id,
                         "device_id": tool_input.get("device_id"),
-                        "wallet_address": tool_input.get("wallet_address") or tool_input.get("walletAddress"),
+                        "wallet_address": tool_input.get("wallet_address")
+                        or tool_input.get("walletAddress"),
                         "agent_key": tool_input.get("agent_key") or tool_input.get("agentKey"),
-                        "agent_signature": tool_input.get("agent_signature") or tool_input.get("agentSignature"),
+                        "agent_signature": tool_input.get("agent_signature")
+                        or tool_input.get("agentSignature"),
                     }
                 ],
                 start_to_close_timeout=timedelta(seconds=20),
@@ -1451,7 +1451,11 @@ class AgentWorkflow:
             )
             verification = verify_deductive_path(
                 intent
-                or {"action": activity_name, "goal": self.goal, "device_id": intent.get("device_id") if isinstance(intent, dict) else None},
+                or {
+                    "action": activity_name,
+                    "goal": self.goal,
+                    "device_id": intent.get("device_id") if isinstance(intent, dict) else None,
+                },
                 target_state or {},
             )
 

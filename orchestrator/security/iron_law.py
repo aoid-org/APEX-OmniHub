@@ -7,9 +7,9 @@ Deterministic, no I/O. Any evidence collection must occur in activities.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import json
+from dataclasses import dataclass
 from typing import Any
 
 
@@ -25,9 +25,7 @@ def _normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
         return json.loads(json.dumps(payload, sort_keys=True))
     except TypeError:
         # Fallback: coerce non-serializable values to string deterministically
-        return json.loads(
-            json.dumps(payload, sort_keys=True, default=lambda v: str(v))
-        )
+        return json.loads(json.dumps(payload, sort_keys=True, default=lambda v: str(v)))
 
 
 def compute_logic_delta(intent: dict[str, Any], target_state: dict[str, Any]) -> float:
@@ -50,7 +48,9 @@ def compute_logic_delta(intent: dict[str, Any], target_state: dict[str, Any]) ->
     return differing / max(len(target_keys), 1)
 
 
-def verify_deductive_path(intent: dict[str, Any], target_state: dict[str, Any], logic_delta_max: float) -> IronLawResult:
+def verify_deductive_path(
+    intent: dict[str, Any], target_state: dict[str, Any], logic_delta_max: float
+) -> IronLawResult:
     delta = compute_logic_delta(intent, target_state)
 
     if delta > logic_delta_max:

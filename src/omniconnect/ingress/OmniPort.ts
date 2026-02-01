@@ -585,12 +585,17 @@ class OmniPortEngine {
     const payload = (input.payload ?? {}) as Record<string, unknown>;
     const protocol = this.detectProtocol(payload, input.provider);
 
-    const deviceId =
-      (payload.deviceId as string) ||
-      (payload.device_id as string) ||
-      (payload.endpoint as string) ||
-      (payload.nodeId as string) ||
-      (payload.node_id as string);
+    const deviceIdCandidates = [
+      payload.deviceId,
+      payload.device_id,
+      payload.endpoint,
+      payload.nodeId,
+      payload.node_id,
+      input.userId,
+    ];
+    const deviceId = deviceIdCandidates.find(
+      (value) => typeof value === 'string' && value.length > 0
+    );
 
     if (!deviceId || typeof deviceId !== 'string') {
       throw new SecurityError('Missing deviceId in webhook payload', 'DEVICE_ID_MISSING');
@@ -716,6 +721,7 @@ class OmniPortEngine {
     if (normalized.includes('zigbee')) return DeviceProtocol.ZIGBEE;
     if (normalized.includes('matter')) return DeviceProtocol.MATTER;
     if (normalized.includes('ros2') || normalized.includes('dds')) return DeviceProtocol.ROS2_DDS;
+    if (normalized) return DeviceProtocol.WEBHOOK; // allow other webhook providers (e.g., stripe)
 
     throw new SecurityError(
       `Unsupported or missing device protocol (${protoValue || 'unknown'})`,

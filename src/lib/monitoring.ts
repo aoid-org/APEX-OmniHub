@@ -14,8 +14,17 @@ export { getHealthStatus, reportError as reportOmniError, withResilience } from 
 let sentry: unknown = null;
 let sentryInitialized = false;
 
-const env =
-  (typeof import.meta !== 'undefined' && (import.meta as any).env) || process.env;
+function getEnv(): Record<string, string | undefined> {
+  if (typeof import.meta !== 'undefined') {
+    const metaEnv = (import.meta as { env?: unknown }).env;
+    if (metaEnv && typeof metaEnv === 'object') {
+      return metaEnv as Record<string, string | undefined>;
+    }
+  }
+  return (typeof process !== 'undefined' ? process.env : {}) as Record<string, string | undefined>;
+}
+
+const env = getEnv();
 const isDev =
   (env as Record<string, string | undefined>)?.DEV === 'true' ||
   (env as Record<string, string | undefined>)?.NODE_ENV === 'development';

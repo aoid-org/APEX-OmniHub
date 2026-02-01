@@ -169,6 +169,11 @@ interface WebhookSource {
 }
 ```
 
+**Webhook Normalization Rules**
+- `payload` is normalized into `CanonicalDevice` before dispatch; raw vendor JSON is never forwarded.
+- `deviceId` is resolved in order from `payload.deviceId`, `payload.device_id`, `payload.endpoint`, `payload.nodeId`, `payload.node_id`, then `userId` (if present).
+- `provider` (for example, `stripe`) is treated as a webhook protocol when it does not match Zigbee/Matter/ROS2.
+
 ### IngestResult
 
 ```typescript

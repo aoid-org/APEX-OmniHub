@@ -3,8 +3,17 @@ import { logAnalyticsEvent, logError } from '@/lib/monitoring';
 import { persistentGet, persistentSet } from '@/libs/persistence';
 import { supabase } from '@/integrations/supabase/client';
 
-const env =
-  (typeof import.meta !== 'undefined' && (import.meta as any).env) || process.env;
+function getEnv(): Record<string, string | undefined> {
+  if (typeof import.meta !== 'undefined') {
+    const metaEnv = (import.meta as { env?: unknown }).env;
+    if (metaEnv && typeof metaEnv === 'object') {
+      return metaEnv as Record<string, string | undefined>;
+    }
+  }
+  return (typeof process !== 'undefined' ? process.env : {}) as Record<string, string | undefined>;
+}
+
+const env = getEnv();
 
 /**
  * Audit event payload interface

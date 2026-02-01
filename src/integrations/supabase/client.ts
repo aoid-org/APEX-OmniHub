@@ -1,9 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Support both Vite runtime (import.meta.env) and Node/TSX scripts (process.env)
-const env =
-  (typeof import.meta !== 'undefined' && (import.meta as any).env) || process.env;
+function getEnv(): Record<string, string | undefined> {
+  if (typeof import.meta !== 'undefined') {
+    const metaEnv = (import.meta as { env?: unknown }).env;
+    if (metaEnv && typeof metaEnv === 'object') {
+      return metaEnv as Record<string, string | undefined>;
+    }
+  }
+  return (typeof process !== 'undefined' ? process.env : {}) as Record<string, string | undefined>;
+}
+
+const env = getEnv();
 
 // User's own Supabase (highest priority)
 const SUPABASE_URL =

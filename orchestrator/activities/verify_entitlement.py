@@ -13,22 +13,23 @@ import time
 from typing import Any
 
 import httpx
+from supabase import create_client
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-from supabase import create_client
-
 
 def _build_service_signature(body: str, timestamp: str, service_key: str) -> str:
-    payload = f"{timestamp}.{body}".encode("utf-8")
-    return hmac.new(service_key.encode("utf-8"), payload, digestmod="sha256").hexdigest()
+    payload = f"{timestamp}.{body}".encode()
+    return hmac.new(service_key.encode(), payload, digestmod="sha256").hexdigest()
 
 
 def _get_supabase_client():
     url = os.getenv("SUPABASE_URL")
     key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not key:
-        raise ApplicationError("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY", non_retryable=True)
+        raise ApplicationError(
+            "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY", non_retryable=True
+        )
     return create_client(url, key)
 
 
@@ -72,11 +73,15 @@ async def verify_nft_entitlement(params: dict[str, Any]) -> dict[str, Any]:
                     or device_info.get("agent_signature")
                 )
                 wallet_address = (
-                    wallet_address or device_info.get("walletAddress") or device_info.get("wallet_address")
+                    wallet_address
+                    or device_info.get("walletAddress")
+                    or device_info.get("wallet_address")
                 )
 
         if not agent_key or not agent_signature or not wallet_address:
-            raise ApplicationError("Missing agent_key, agent_signature, or wallet_address", non_retryable=True)
+            raise ApplicationError(
+                "Missing agent_key, agent_signature, or wallet_address", non_retryable=True
+            )
 
         timestamp = str(int(time.time()))
         body = json.dumps(

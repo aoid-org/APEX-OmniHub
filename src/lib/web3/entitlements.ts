@@ -15,8 +15,8 @@
  * Date: 2026-01-01
  */
 
-import { createPublicClient, http, type Address, type PublicClient, type Chain } from 'viem/_cjs';
-import { mainnet, polygon, optimism, arbitrum } from 'viem/_cjs/chains';
+import { createPublicClient, http, type Address, type PublicClient, type Chain } from 'viem';
+import { mainnet, polygon, optimism, arbitrum } from 'viem/chains';
 import { supabase } from '@/integrations/supabase/client';
 import { logError, logAnalyticsEvent } from '@/lib/monitoring';
 

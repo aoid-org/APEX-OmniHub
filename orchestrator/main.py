@@ -42,7 +42,6 @@ from activities.man_mode import (
 from activities.notify_man_task import notify_man_task
 from activities.omni_policy import evaluate_policy_activity
 from activities.omnitrace_activities import get_omnitrace_activities
-from activities.verify_entitlement import verify_nft_entitlement
 from activities.tools import (
     call_webhook,
     check_semantic_cache,
@@ -53,6 +52,7 @@ from activities.tools import (
     send_email,
     setup_activities,
 )
+from activities.verify_entitlement import verify_nft_entitlement
 from config import settings
 from workflows.agent_saga import AgentWorkflow
 

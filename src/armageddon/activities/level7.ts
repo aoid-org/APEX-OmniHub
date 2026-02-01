@@ -253,8 +253,13 @@ export async function runBattery14PhysicalIngress(_config: Level7Config): Promis
     let escapes = 0;
     let attempts = 0;
 
+    type NormalizeFn = (
+        input: { type: string; provider?: string; signature?: string; payload?: unknown },
+        ctx: Record<string, unknown>
+    ) => { payload: { device?: { protocol?: DeviceProtocol } } };
+
     const engine = OmniPortEngine.getInstance() as unknown as {
-        normalizeToCanonical: (input: any, ctx: any) => any;
+        normalizeToCanonical: NormalizeFn;
     };
 
     const ctx = {
@@ -279,14 +284,15 @@ export async function runBattery14PhysicalIngress(_config: Level7Config): Promis
                 signature: 'sig',
                 payload: testCase.payload,
             };
-            const event = engine.normalizeToCanonical(input, ctx);
-            const payload = event.payload as { device?: { protocol?: string } };
+    const event = engine.normalizeToCanonical(input, ctx);
+            const payload = event.payload as { device?: { protocol?: DeviceProtocol } };
             if (!payload.device || payload.device.protocol !== testCase.protocol) {
                 escapes += 1;
                 logs.push(`FAIL: protocol ${testCase.protocol} not normalized`);
                 continue;
             }
-            if ((event.payload as any).payload || (event.payload as any).signature) {
+            const rawPayload = event.payload as Record<string, unknown>;
+            if ('payload' in rawPayload || 'signature' in rawPayload) {
                 escapes += 1;
                 logs.push(`FAIL: vendor payload leaked for protocol ${testCase.protocol}`);
                 continue;
