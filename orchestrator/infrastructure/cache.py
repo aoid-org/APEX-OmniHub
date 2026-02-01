@@ -33,10 +33,22 @@ from typing import Any
 import numpy as np
 import redis.asyncio as aioredis
 from pydantic import BaseModel, Field
-from redis.commands.search import IndexDefinition, IndexType
 from redis.commands.search.field import NumericField, TextField, VectorField
 from redis.commands.search.query import Query
 from sentence_transformers import SentenceTransformer
+
+# Redis search imports - handle multiple redis-py versions
+try:
+    # Try redis-py v4.x path
+    from redis.commands.search.index import IndexDefinition, IndexType
+except ImportError:
+    try:
+        # Try redis-py v5.x alternate path
+        from redis.commands.search.indexDefinition import IndexDefinition, IndexType  # type: ignore
+    except ImportError:
+        # Fallback: define minimal stubs for typing (tests can mock these)
+        IndexDefinition = type('IndexDefinition', (), {})  # type: ignore
+        IndexType = type('IndexType', (), {})  # type: ignore
 
 # ============================================================================
 # DATA MODELS
