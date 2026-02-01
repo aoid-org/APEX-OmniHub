@@ -127,7 +127,7 @@ async function handleListRuns(
   const url = new URL(req.url);
   const limitParam = url.searchParams.get('limit');
   const limit = Math.min(
-    Math.max(1, parseInt(limitParam ?? String(DEFAULT_RUNS_LIMIT), 10) || DEFAULT_RUNS_LIMIT),
+    Math.max(1, Number.parseInt(limitParam ?? String(DEFAULT_RUNS_LIMIT), 10) || DEFAULT_RUNS_LIMIT),
     MAX_RUNS_LIMIT
   );
 
