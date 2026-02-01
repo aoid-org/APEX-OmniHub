@@ -50,8 +50,7 @@ async def verify_deductive_path(params: dict[str, Any]) -> dict[str, Any]:
         }
 
         # Execute TypeScript Iron Law verifier via Node.js
-        #
- result = subprocess.run(
+        result = subprocess.run(
             [
                 "node",
                 "-e",
