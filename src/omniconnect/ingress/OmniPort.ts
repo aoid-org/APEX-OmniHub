@@ -574,7 +574,7 @@ class OmniPortEngine {
     const baseEvent: OmniPortCanonicalEvent = {
       eventId,
       correlationId: ctx.correlationId,
-      tenantId: ctx.tenantId || 'default', // TODO: Implement multi-tenancy - extract tenantId from JWT claims or session context
+      tenantId: this.extractTenantId(ctx),
       userId: ctx.userId,
       source: `omniport.${input.type}`,
       provider: 'omniport',
@@ -861,6 +861,25 @@ class OmniPortEngine {
       };
     }
     return {};
+  }
+
+  /**
+   * Extract tenant ID from context
+   *
+   * Multi-tenancy implementation:
+   * 1. If ctx.tenantId is set (from authenticated session), use it
+   * 2. Otherwise, default to 'default' tenant for backward compatibility
+   *
+   * Future enhancement: Extract from JWT claims when available
+   * Example: const jwt = parseJWT(ctx.authToken); return jwt.claims.tenantId
+   */
+  private extractTenantId(ctx: PipelineContext): string {
+    if (ctx.tenantId) {
+      return ctx.tenantId;
+    }
+
+    // Default tenant for single-tenant deployments or unauthenticated requests
+    return 'default';
   }
 
   /**
