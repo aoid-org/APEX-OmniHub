@@ -55,6 +55,33 @@ import { verifyDeviceIntegrity } from '@/zero-trust/baseline';
 import { checkEntitlement } from '@/lib/web3/entitlements';
 
 // =============================================================================
+// CONFIGURATION CONSTANTS
+// =============================================================================
+
+/**
+ * APEX Membership NFT Contract Address
+ *
+ * This is the ERC-721/ERC-1155 contract that grants physical device control permissions.
+ * Physical AI agents can only actuate devices if their AgentKey is signed by a wallet
+ * holding this NFT.
+ *
+ * Network: Ethereum Mainnet (chainId: 1)
+ * Standard: ERC-721 or ERC-1155
+ *
+ * Production deployment steps:
+ * 1. Deploy APEX Membership NFT contract to Ethereum mainnet
+ * 2. Update this constant with the deployed contract address
+ * 3. Configure access control: Only NFT holders can control physical actuators
+ * 4. Set up monitoring for ownership changes (transfers, burns)
+ *
+ * For development/testing:
+ * - Use zero address (0x0000...0000) - allows all users (permissive mode)
+ * - Or deploy test NFT on Sepolia/Goerli testnet
+ */
+const APEX_MEMBERSHIP_NFT_CONTRACT = (import.meta.env.VITE_APEX_NFT_CONTRACT ||
+  '0x0000000000000000000000000000000000000000') as `0x${string}`;
+
+// =============================================================================
 // UNIVERSAL HASHING (Browser + Node.js compatible)
 // =============================================================================
 
@@ -651,7 +678,7 @@ class OmniPortEngine {
         const entitlementResult = await checkEntitlement({
           walletAddress: ctx.userId as `0x${string}`, // Assumes userId is wallet address
           chainId: 1, // Ethereum mainnet
-          contractAddress: '0x0000000000000000000000000000000000000000' as `0x${string}`, // TODO: Replace with actual APEX NFT contract
+          contractAddress: APEX_MEMBERSHIP_NFT_CONTRACT,
           entitlementKey: 'apex_membership',
         });
 

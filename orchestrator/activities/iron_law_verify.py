@@ -83,7 +83,7 @@ console.log(JSON.stringify(result));
 
         try:
             stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=10.0)
-        except asyncio.TimeoutError as e:
+        except TimeoutError as e:
             process.kill()
             await process.wait()
             activity.logger.error("Iron Law verification timeout")
