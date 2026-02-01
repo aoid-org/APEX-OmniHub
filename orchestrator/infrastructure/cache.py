@@ -34,7 +34,7 @@ import numpy as np
 import redis.asyncio as aioredis
 from pydantic import BaseModel, Field
 from redis.commands.search.field import NumericField, TextField, VectorField
-from redis.commands.search.indexDefinition import IndexDefinition, IndexType
+from redis.commands.search import IndexDefinition, IndexType
 from redis.commands.search.query import Query
 from sentence_transformers import SentenceTransformer
 
