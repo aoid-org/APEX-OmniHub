@@ -74,6 +74,62 @@ export const WebhookSourceSchema = z.object({
 export type WebhookSource = z.infer<typeof WebhookSourceSchema>;
 
 /**
+ * ZigbeeDeviceSource - Zigbee protocol device events
+ * @example { type: 'zigbee_device', ieeeAddr: '0x00158d0001a2b3c4', endpoint: 1, cluster: 'genOnOff', attribute: 'onOff', value: true }
+ */
+export const ZigbeeDeviceSourceSchema = z.object({
+  type: z.literal('zigbee_device'),
+  ieeeAddr: z.string().min(1, 'IEEE address cannot be empty'),
+  endpoint: z.number().int().positive(),
+  cluster: z.string().min(1, 'Cluster cannot be empty'),
+  attribute: z.string().optional(),
+  command: z.string().optional(),
+  value: z.unknown(),
+  linkQuality: z.number().int().min(0).max(255).optional(),
+  userId: UUIDSchema.optional(),
+});
+
+export type ZigbeeDeviceSource = z.infer<typeof ZigbeeDeviceSourceSchema>;
+
+/**
+ * MatterDeviceSource - Matter protocol device events
+ * @example { type: 'matter_device', nodeId: 'matter-0x1234', endpointId: 1, clusterId: 6, attributeId: 0, value: true }
+ */
+export const MatterDeviceSourceSchema = z.object({
+  type: z.literal('matter_device'),
+  nodeId: z.string().min(1, 'Node ID cannot be empty'),
+  endpointId: z.number().int().nonnegative(),
+  clusterId: z.number().int().nonnegative(),
+  attributeId: z.number().int().nonnegative().optional(),
+  commandId: z.number().int().nonnegative().optional(),
+  value: z.unknown(),
+  userId: UUIDSchema.optional(),
+});
+
+export type MatterDeviceSource = z.infer<typeof MatterDeviceSourceSchema>;
+
+/**
+ * ROS2DeviceSource - ROS 2 DDS protocol device events
+ * @example { type: 'ros2_device', nodeName: '/robot_arm', topic: '/joint_states', messageType: 'sensor_msgs/JointState', data: {...} }
+ */
+export const ROS2DeviceSourceSchema = z.object({
+  type: z.literal('ros2_device'),
+  nodeName: z.string().min(1, 'Node name cannot be empty'),
+  topic: z.string().min(1, 'Topic cannot be empty'),
+  messageType: z.string().min(1, 'Message type cannot be empty'),
+  data: z.record(z.unknown()),
+  qos: z
+    .object({
+      reliability: z.enum(['RELIABLE', 'BEST_EFFORT']).optional(),
+      durability: z.enum(['VOLATILE', 'TRANSIENT_LOCAL']).optional(),
+    })
+    .optional(),
+  userId: UUIDSchema.optional(),
+});
+
+export type ROS2DeviceSource = z.infer<typeof ROS2DeviceSourceSchema>;
+
+/**
  * RawInput - Discriminated union of all input sources
  * Validates at runtime to ensure type-safe processing
  */
@@ -81,6 +137,9 @@ export const RawInputSchema = z.discriminatedUnion('type', [
   TextSourceSchema,
   VoiceSourceSchema,
   WebhookSourceSchema,
+  ZigbeeDeviceSourceSchema,
+  MatterDeviceSourceSchema,
+  ROS2DeviceSourceSchema,
 ]);
 
 export type RawInput = z.infer<typeof RawInputSchema>;
@@ -189,6 +248,40 @@ export function isVoiceSource(input: RawInput): input is VoiceSource {
  */
 export function isWebhookSource(input: RawInput): input is WebhookSource {
   return input.type === 'webhook';
+}
+
+/**
+ * Type guard to check if input is ZigbeeDeviceSource
+ */
+export function isZigbeeDeviceSource(input: RawInput): input is ZigbeeDeviceSource {
+  return input.type === 'zigbee_device';
+}
+
+/**
+ * Type guard to check if input is MatterDeviceSource
+ */
+export function isMatterDeviceSource(input: RawInput): input is MatterDeviceSource {
+  return input.type === 'matter_device';
+}
+
+/**
+ * Type guard to check if input is ROS2DeviceSource
+ */
+export function isROS2DeviceSource(input: RawInput): input is ROS2DeviceSource {
+  return input.type === 'ros2_device';
+}
+
+/**
+ * Type guard to check if input is any device source (Physical AI)
+ */
+export function isDeviceSource(
+  input: RawInput
+): input is ZigbeeDeviceSource | MatterDeviceSource | ROS2DeviceSource {
+  return (
+    input.type === 'zigbee_device' ||
+    input.type === 'matter_device' ||
+    input.type === 'ros2_device'
+  );
 }
 
 // =============================================================================

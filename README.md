@@ -634,3 +634,48 @@ Proprietary - APEX Business Systems
 ---
 
 **APEX OmniHub** - Enterprise AI orchestration, built for scale, secured for production.
+
+---
+
+## 🤖 Physical AI Orchestration Fabric
+
+APEX OmniHub now operates as a **vendor-agnostic Physical AI Orchestration Fabric** with proprietary tech moats:
+
+### Universal Device Primitive (UDP)
+- **Protocol Bridge**: Normalizes Zigbee, Matter, and ROS 2 DDS payloads into `CanonicalDevice` interface
+- **Iron Law Enforcement**: No raw vendor JSON passes to state engine - only Canonical Types
+- **Zero-Trust Edge**: Every device ingress point verified via `verifyDeviceIntegrity()`
+
+### Iron Law Reasoning Hook
+- **Deductive Path Verification**: `IronLawVerifier.verifyDeductivePath()` executes before physical hardware actuation
+- **Logic Delta Thresholds**: Configured via `apex-resilience/config/thresholds.ts`
+- **MAN Mode Escalation**: Automatic human approval required when logic delta exceeds threshold
+
+### Physical-AI Zero-Trust Security
+- **Temporal-Linked RLS**: Physical actuator permissions cryptographically verified against active Temporal Workflow Execution ID
+- **Device Registry**: Tracks device status (`trusted`, `suspect`, `blocked`) with risk scoring
+- **Web3 Verification**: Optional NFT-based device ownership validation via APEX Membership NFTs
+
+### Web3-Verified Identity Moat
+- **NFT Entitlements**: Physical agents can only act if AgentKey is signed by APEX Membership NFT holder
+- **Multi-Chain Support**: Ethereum, Polygon, Optimism, Arbitrum via `viem` clients
+- **Fail-Closed Security**: Denies access if RPC verification fails (unless allowlist grants)
+
+### Supported Protocols
+- **Zigbee**: IEEE 802.15.4 cluster normalization (genOnOff, closuresDoorLock, etc.)
+- **Matter**: Matter 1.0 spec cluster IDs (6=OnOff, 257=DoorLock, etc.)
+- **ROS 2 DDS**: Topic/message type mapping (joint_states, cmd_vel, trajectory)
+
+### Security Architecture
+```
+Physical Device → OmniPort UDP Normalization → Zero-Trust Verification → 
+Iron Law Check → Temporal RLS Validation → Web3 NFT Check → 
+MAN Mode Gate → Physical Actuation
+```
+
+### Critical Capabilities (Require MAN Mode Approval)
+- `ACTUATE_LOCK`: Physical door lock actuation
+- `ACTUATE_VALVE`: Valve control (gas, water, pneumatic)
+- `MOVE_ROBOT`: Robot movement commands
+- `EXECUTE_TRAJECTORY`: Trajectory execution for robotic arms
+

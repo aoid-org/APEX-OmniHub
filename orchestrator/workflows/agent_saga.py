@@ -991,6 +991,95 @@ class AgentWorkflow:
             return deferred_result
 
         # =====================================================================
+        # IRON LAW: Physical AI Verification (before hardware actuation)
+        # =====================================================================
+        physical_actuator_tools = [
+            "actuate_lock",
+            "actuate_valve",
+            "move_robot",
+            "execute_trajectory",
+        ]
+
+        if step["tool"] in physical_actuator_tools:
+            workflow.logger.warning(
+                f"  🔒 Physical actuator detected: {step['tool']} - running Iron Law verification"
+            )
+
+            iron_law_result = await workflow.execute_activity(
+                "verify_deductive_path",
+                args=[
+                    {
+                        "intent": step.get("name", step["tool"]),
+                        "target_state": step.get("input", {}),
+                        "device_id": step.get("input", {}).get("device_id", "unknown"),
+                        "workflow_id": workflow.info().workflow_id,
+                    }
+                ],
+                start_to_close_timeout=timedelta(seconds=15),
+                retry_policy=RetryPolicy(maximum_attempts=2),
+            )
+
+            if not iron_law_result.get("verified", False):
+                workflow.logger.error(
+                    f"  ❌ Iron Law REJECTED: {step['tool']} - {iron_law_result.get('reason')}"
+                )
+
+                # If logic delta exceeds threshold, escalate to MAN Mode
+                if iron_law_result.get("escalateToMan", False):
+                    workflow.logger.warning(f"  🚨 Escalating to MAN Mode: {step['tool']}")
+
+                    man_task_result = await workflow.execute_activity(
+                        "create_man_task",
+                        args=[
+                            {
+                                "workflow_id": workflow.info().workflow_id,
+                                "step_id": step_id,
+                                "intent": {
+                                    "tool_name": step["tool"],
+                                    "params": step.get("input", {}),
+                                    "iron_law_reason": iron_law_result.get("reason"),
+                                },
+                                "triage_result": {
+                                    "lane": "RED",
+                                    "reason": f"Iron Law verification failed: {iron_law_result.get('reason')}",
+                                },
+                                "timeout_hours": 24,
+                            }
+                        ],
+                        start_to_close_timeout=timedelta(seconds=30),
+                        retry_policy=RetryPolicy(maximum_attempts=3),
+                    )
+
+                    deferred_result = {
+                        "status": "deferred",
+                        "reason": iron_law_result.get("reason"),
+                        "man_task_id": man_task_result.get("task_id"),
+                        "iron_law_verified": False,
+                    }
+
+                    await self._append_event(
+                        ToolResultReceived(
+                            correlation_id=workflow.info().workflow_id,
+                            tool_name=step["tool"],
+                            step_id=step_id,
+                            success=True,
+                            result=deferred_result,
+                        )
+                    )
+
+                    return deferred_result
+
+                # Not MAN Mode, but still rejected - hard fail
+                raise ApplicationError(
+                    f"Iron Law verification failed: {iron_law_result.get('reason')}",
+                    non_retryable=True,
+                )
+
+            workflow.logger.info(
+                f"  ✅ Iron Law APPROVED: {step['tool']} - logic delta: {iron_law_result.get('logicDelta', 0):.2f}"
+            )
+
+        # =====================================================================
         # Execute the tool (GREEN or YELLOW lanes only - RED is isolated above)
         # =====================================================================
 

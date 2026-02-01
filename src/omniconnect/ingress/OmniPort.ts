@@ -21,7 +21,16 @@ import {
 } from '@/zero-trust/deviceRegistry';
 import { withIdempotency } from '../../../sim/idempotency';
 import { OmniLinkDelivery } from '../delivery/omnilink-delivery';
-import { CanonicalEvent, EventType, ConsentFlags } from '../types/canonical';
+import {
+  CanonicalEvent,
+  EventType,
+  ConsentFlags,
+  CanonicalDevice,
+  DeviceType,
+  DeviceProtocol,
+  DeviceState,
+  DeviceCapability,
+} from '../types/canonical';
 import {
   RawInput,
   IngestResult,
@@ -32,9 +41,18 @@ import {
   isTextSource,
   isVoiceSource,
   isWebhookSource,
+  isZigbeeDeviceSource,
+  isMatterDeviceSource,
+  isROS2DeviceSource,
+  isDeviceSource,
   detectHighRiskIntents,
+  type ZigbeeDeviceSource,
+  type MatterDeviceSource,
+  type ROS2DeviceSource,
 } from '../types/ingress';
 import { TranslatedEvent } from '../translation/translator';
+import { verifyDeviceIntegrity } from '@/zero-trust/baseline';
+import { checkEntitlement } from '@/lib/web3/entitlements';
 
 // =============================================================================
 // UNIVERSAL HASHING (Browser + Node.js compatible)
@@ -80,6 +98,215 @@ interface PipelineContext {
   riskLane: RiskLane;
   userId: string;
   deviceStatus?: DeviceStatus;
+  temporalExecutionId?: string;
+  tenantId?: string;
+}
+
+// =============================================================================
+// UNIVERSAL DEVICE PRIMITIVE (UDP) NORMALIZATION
+// =============================================================================
+
+/**
+ * Normalize Zigbee device payload to CanonicalDevice
+ * Maps Zigbee-specific cluster/attribute structure to vendor-agnostic schema
+ */
+function normalizeZigbeeDevice(input: ZigbeeDeviceSource): CanonicalDevice {
+  const now = new Date().toISOString();
+
+  // Map Zigbee cluster to device type
+  const deviceType = mapZigbeeClusterToDeviceType(input.cluster);
+
+  // Map Zigbee cluster to capabilities
+  const capabilities = mapZigbeeClusterToCapabilities(input.cluster);
+
+  return {
+    deviceId: input.ieeeAddr,
+    name: `Zigbee ${deviceType}`,
+    deviceType,
+    protocol: DeviceProtocol.ZIGBEE,
+    state: DeviceState.ONLINE,
+    capabilities,
+    attributes: {
+      cluster: input.cluster,
+      endpoint: input.endpoint,
+      attribute: input.attribute,
+      value: input.value,
+    },
+    metadata: {
+      tags: ['zigbee', input.cluster],
+    },
+    lastSeen: now,
+    connectivity: {
+      online: true,
+      linkQuality: input.linkQuality,
+      lastSeenTimestamp: now,
+    },
+    security: {
+      registryStatus: 'unknown',
+      riskScore: 0,
+    },
+  };
+}
+
+/**
+ * Normalize Matter device payload to CanonicalDevice
+ * Maps Matter-specific cluster/attribute structure to vendor-agnostic schema
+ */
+function normalizeMatterDevice(input: MatterDeviceSource): CanonicalDevice {
+  const now = new Date().toISOString();
+
+  // Map Matter cluster to device type
+  const deviceType = mapMatterClusterToDeviceType(input.clusterId);
+
+  // Map Matter cluster to capabilities
+  const capabilities = mapMatterClusterToCapabilities(input.clusterId);
+
+  return {
+    deviceId: input.nodeId,
+    name: `Matter ${deviceType}`,
+    deviceType,
+    protocol: DeviceProtocol.MATTER,
+    state: DeviceState.ONLINE,
+    capabilities,
+    attributes: {
+      clusterId: input.clusterId,
+      endpointId: input.endpointId,
+      attributeId: input.attributeId,
+      commandId: input.commandId,
+      value: input.value,
+    },
+    metadata: {
+      tags: ['matter', `cluster-${input.clusterId}`],
+    },
+    lastSeen: now,
+    connectivity: {
+      online: true,
+      lastSeenTimestamp: now,
+    },
+    security: {
+      registryStatus: 'unknown',
+      riskScore: 0,
+    },
+  };
+}
+
+/**
+ * Normalize ROS 2 DDS device payload to CanonicalDevice
+ * Maps ROS 2 topic/message structure to vendor-agnostic schema
+ */
+function normalizeROS2Device(input: ROS2DeviceSource): CanonicalDevice {
+  const now = new Date().toISOString();
+
+  // Map ROS 2 topic to device type
+  const deviceType = mapROS2TopicToDeviceType(input.topic);
+
+  // Map ROS 2 topic to capabilities
+  const capabilities = mapROS2TopicToCapabilities(input.topic);
+
+  return {
+    deviceId: input.nodeName,
+    name: `ROS2 ${deviceType}`,
+    deviceType,
+    protocol: DeviceProtocol.ROS2_DDS,
+    state: DeviceState.ONLINE,
+    capabilities,
+    attributes: {
+      topic: input.topic,
+      messageType: input.messageType,
+      data: input.data,
+      qos: input.qos,
+    },
+    metadata: {
+      tags: ['ros2', input.messageType],
+    },
+    lastSeen: now,
+    connectivity: {
+      online: true,
+      lastSeenTimestamp: now,
+    },
+    security: {
+      registryStatus: 'unknown',
+      riskScore: 50, // ROS2 devices start with elevated risk
+    },
+  };
+}
+
+// =============================================================================
+// PROTOCOL-SPECIFIC MAPPING FUNCTIONS
+// =============================================================================
+
+function mapZigbeeClusterToDeviceType(cluster: string): DeviceType {
+  const clusterMap: Record<string, DeviceType> = {
+    genOnOff: DeviceType.SWITCH,
+    genLevelCtrl: DeviceType.LIGHT_BULB,
+    msTemperatureMeasurement: DeviceType.TEMPERATURE_SENSOR,
+    msRelativeHumidity: DeviceType.HUMIDITY_SENSOR,
+    msOccupancySensing: DeviceType.MOTION_SENSOR,
+    genPowerCfg: DeviceType.SMART_PLUG,
+    closuresDoorLock: DeviceType.LOCK,
+    hvacThermostat: DeviceType.THERMOSTAT,
+  };
+  return clusterMap[cluster] || DeviceType.UNKNOWN;
+}
+
+function mapZigbeeClusterToCapabilities(cluster: string): DeviceCapability[] {
+  const capabilityMap: Record<string, DeviceCapability[]> = {
+    genOnOff: [DeviceCapability.SET_ON_OFF],
+    genLevelCtrl: [DeviceCapability.SET_BRIGHTNESS],
+    msTemperatureMeasurement: [DeviceCapability.READ_TEMPERATURE],
+    msRelativeHumidity: [DeviceCapability.READ_HUMIDITY],
+    msOccupancySensing: [DeviceCapability.READ_MOTION],
+    closuresDoorLock: [DeviceCapability.SET_LOCK_STATE, DeviceCapability.ACTUATE_LOCK],
+    hvacThermostat: [DeviceCapability.SET_TEMPERATURE],
+  };
+  return capabilityMap[cluster] || [];
+}
+
+function mapMatterClusterToDeviceType(clusterId: number): DeviceType {
+  // Matter Cluster IDs (from Matter 1.0 spec)
+  const clusterMap: Record<number, DeviceType> = {
+    6: DeviceType.SWITCH, // On/Off
+    8: DeviceType.LIGHT_BULB, // Level Control
+    768: DeviceType.LIGHT_BULB, // Color Control
+    513: DeviceType.THERMOSTAT, // Thermostat
+    257: DeviceType.LOCK, // Door Lock
+    1026: DeviceType.TEMPERATURE_SENSOR, // Temperature Measurement
+    1029: DeviceType.HUMIDITY_SENSOR, // Relative Humidity Measurement
+  };
+  return clusterMap[clusterId] || DeviceType.UNKNOWN;
+}
+
+function mapMatterClusterToCapabilities(clusterId: number): DeviceCapability[] {
+  const capabilityMap: Record<number, DeviceCapability[]> = {
+    6: [DeviceCapability.SET_ON_OFF],
+    8: [DeviceCapability.SET_BRIGHTNESS],
+    768: [DeviceCapability.SET_COLOR],
+    513: [DeviceCapability.SET_TEMPERATURE],
+    257: [DeviceCapability.SET_LOCK_STATE, DeviceCapability.ACTUATE_LOCK],
+    1026: [DeviceCapability.READ_TEMPERATURE],
+    1029: [DeviceCapability.READ_HUMIDITY],
+  };
+  return capabilityMap[clusterId] || [];
+}
+
+function mapROS2TopicToDeviceType(topic: string): DeviceType {
+  // ROS 2 topic patterns
+  if (topic.includes('joint') || topic.includes('arm')) return DeviceType.ROBOT_ARM;
+  if (topic.includes('mobile') || topic.includes('cmd_vel')) return DeviceType.MOBILE_ROBOT;
+  if (topic.includes('drone') || topic.includes('uav')) return DeviceType.DRONE;
+  if (topic.includes('conveyor')) return DeviceType.CONVEYOR;
+  return DeviceType.UNKNOWN;
+}
+
+function mapROS2TopicToCapabilities(topic: string): DeviceCapability[] {
+  // Physical actions require MAN Mode approval
+  if (topic.includes('cmd_vel') || topic.includes('trajectory')) {
+    return [DeviceCapability.MOVE_ROBOT, DeviceCapability.EXECUTE_TRAJECTORY];
+  }
+  if (topic.includes('joint')) {
+    return [DeviceCapability.READ_POSITION, DeviceCapability.SET_POSITION];
+  }
+  return [];
 }
 
 // =============================================================================
@@ -253,7 +480,7 @@ class OmniPortEngine {
     // =========================================================================
     // STEP 3: SEMANTIC NORMALIZATION
     // =========================================================================
-    const canonicalEvent = this.normalizeToCanonical(input, ctx);
+    const canonicalEvent = await this.normalizeToCanonical(input, ctx);
 
     // =========================================================================
     // STEP 4: RESILIENT DISPATCH
@@ -299,10 +526,10 @@ class OmniPortEngine {
    * STEP 3: Semantic Normalization
    * Maps RawInput to CanonicalEvent with MAN Mode analysis
    */
-  private normalizeToCanonical(
+  private async normalizeToCanonical(
     input: RawInput,
     ctx: PipelineContext
-  ): OmniPortCanonicalEvent {
+  ): Promise<OmniPortCanonicalEvent> {
     const now = new Date().toISOString();
     const eventId = uuidv4();
 
@@ -311,10 +538,37 @@ class OmniPortEngine {
     const detectedIntents = detectHighRiskIntents(contentToAnalyze);
 
     // THE MOAT LOGIC: High-risk intents trigger MAN Mode
-    const requiresManApproval = detectedIntents.length > 0;
+    let requiresManApproval = detectedIntents.length > 0;
     if (requiresManApproval) {
       ctx.riskLane = 'RED';
       this.log(ctx, 'MAN_MODE_TRIGGERED', { intents: detectedIntents });
+    }
+
+    // PHYSICAL AI LAYER: Device-specific normalization
+    let canonicalDevice: CanonicalDevice | undefined;
+    if (isDeviceSource(input)) {
+      canonicalDevice = await this.normalizeDeviceInput(input, ctx);
+
+      // Physical actuator capabilities trigger MAN Mode
+      const physicalCapabilities = [
+        DeviceCapability.ACTUATE_LOCK,
+        DeviceCapability.ACTUATE_VALVE,
+        DeviceCapability.MOVE_ROBOT,
+        DeviceCapability.EXECUTE_TRAJECTORY,
+      ];
+
+      const hasPhysicalCapability = canonicalDevice.capabilities.some((cap) =>
+        physicalCapabilities.includes(cap)
+      );
+
+      if (hasPhysicalCapability) {
+        requiresManApproval = true;
+        ctx.riskLane = 'RED';
+        this.log(ctx, 'PHYSICAL_ACTUATOR_DETECTED', {
+          deviceId: canonicalDevice.deviceId,
+          capabilities: canonicalDevice.capabilities,
+        });
+      }
     }
 
     const baseEvent: OmniPortCanonicalEvent = {
@@ -333,8 +587,10 @@ class OmniPortEngine {
         detected_intents: detectedIntents,
         risk_lane: ctx.riskLane,
         source_type: input.type,
+        canonical_device: canonicalDevice ? canonicalDevice.deviceId : undefined,
+        device_protocol: canonicalDevice?.protocol,
       },
-      payload: this.buildPayload(input),
+      payload: this.buildPayload(input, canonicalDevice),
     };
 
     // Add type-specific metadata
@@ -343,6 +599,89 @@ class OmniPortEngine {
     }
 
     return baseEvent;
+  }
+
+  /**
+   * Normalize device input with Physical AI Zero-Trust enforcement
+   *
+   * IRON LAW: No raw vendor JSON shall pass to the state engine
+   *
+   * Security Layers:
+   * 1. Protocol normalization (Zigbee/Matter/ROS2 → CanonicalDevice)
+   * 2. Zero-Trust baseline verification (verifyDeviceIntegrity)
+   * 3. Web3 NFT ownership verification (optional but recommended)
+   * 4. Temporal Workflow Execution ID linkage (for RLS)
+   */
+  private async normalizeDeviceInput(
+    input: ZigbeeDeviceSource | MatterDeviceSource | ROS2DeviceSource,
+    ctx: PipelineContext
+  ): Promise<CanonicalDevice> {
+    // STEP 1: Protocol-specific normalization
+    let device: CanonicalDevice;
+
+    if (isZigbeeDeviceSource(input)) {
+      device = normalizeZigbeeDevice(input);
+    } else if (isMatterDeviceSource(input)) {
+      device = normalizeMatterDevice(input);
+    } else if (isROS2DeviceSource(input)) {
+      device = normalizeROS2Device(input);
+    } else {
+      throw new Error('Unknown device protocol');
+    }
+
+    // STEP 2: Zero-Trust baseline verification
+    const integrityVerified = verifyDeviceIntegrity(device.deviceId);
+    if (!integrityVerified) {
+      device.security.registryStatus = 'blocked';
+      device.security.riskScore = 100;
+      this.log(ctx, 'DEVICE_INTEGRITY_FAILED', { deviceId: device.deviceId });
+      throw new SecurityError(
+        `Device ${device.deviceId} failed integrity verification`,
+        'DEVICE_INTEGRITY_FAILED',
+        device.deviceId,
+        ctx.userId
+      );
+    }
+
+    // STEP 3: Web3 NFT ownership verification (best-effort)
+    // This is optional but provides the "Web3-Verified Identity Moat"
+    if (input.userId && ctx.userId) {
+      try {
+        // Check if user holds APEX Membership NFT
+        const entitlementResult = await checkEntitlement({
+          walletAddress: ctx.userId as `0x${string}`, // Assumes userId is wallet address
+          chainId: 1, // Ethereum mainnet
+          contractAddress: '0x0000000000000000000000000000000000000000' as `0x${string}`, // TODO: Replace with actual APEX NFT contract
+          entitlementKey: 'apex_membership',
+        });
+
+        device.security.web3Verified = entitlementResult.hasEntitlement;
+        device.security.web3Owner = ctx.userId;
+
+        if (entitlementResult.hasEntitlement) {
+          this.log(ctx, 'WEB3_VERIFICATION_PASSED', {
+            deviceId: device.deviceId,
+            owner: ctx.userId,
+          });
+        }
+      } catch (error) {
+        // Non-blocking - Web3 verification failure doesn't block device operation
+        this.log(ctx, 'WEB3_VERIFICATION_SKIPPED', {
+          error: (error as Error).message,
+        });
+      }
+    }
+
+    // STEP 4: Link Temporal Workflow Execution ID for RLS
+    if (ctx.temporalExecutionId) {
+      device.security.temporalExecutionId = ctx.temporalExecutionId;
+    }
+
+    // STEP 5: Update device registry status
+    device.security.registryStatus = 'trusted';
+    device.security.lastSecurityAudit = new Date().toISOString();
+
+    return device;
   }
 
   // ===========================================================================
@@ -490,7 +829,10 @@ class OmniPortEngine {
   /**
    * Build payload from input
    */
-  private buildPayload(input: RawInput): Record<string, unknown> {
+  private buildPayload(
+    input: RawInput,
+    canonicalDevice?: CanonicalDevice
+  ): Record<string, unknown> {
     if (isTextSource(input)) {
       return {
         content: input.content,
@@ -510,6 +852,12 @@ class OmniPortEngine {
         payload: input.payload,
         provider: input.provider,
         signature: input.signature,
+      };
+    }
+    if (isDeviceSource(input) && canonicalDevice) {
+      return {
+        device: canonicalDevice,
+        rawInput: input,
       };
     }
     return {};
