@@ -550,15 +550,15 @@ class OmniPortEngine {
       canonicalDevice = await this.normalizeDeviceInput(input, ctx);
 
       // Physical actuator capabilities trigger MAN Mode
-      const physicalCapabilities = [
+      const physicalCapabilities = new Set([
         DeviceCapability.ACTUATE_LOCK,
         DeviceCapability.ACTUATE_VALVE,
         DeviceCapability.MOVE_ROBOT,
         DeviceCapability.EXECUTE_TRAJECTORY,
-      ];
+      ]);
 
       const hasPhysicalCapability = canonicalDevice.capabilities.some((cap) =>
-        physicalCapabilities.includes(cap)
+        physicalCapabilities.has(cap)
       );
 
       if (hasPhysicalCapability) {

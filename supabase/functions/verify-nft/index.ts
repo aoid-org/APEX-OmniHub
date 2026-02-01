@@ -10,9 +10,10 @@ serve(async (req) => {
   }
 
   try {
-    const { walletAddress, chainId, contractAddress } = await req.json();
+    const { walletAddress } = await req.json();
 
     // Placeholder NFT verification (integrate with actual chain in production)
+    // TODO: Implement actual NFT balance check using chainId and contractAddress
     const hasNFT = true; // Always true for demo
 
     const headers = buildCorsHeaders(origin);
