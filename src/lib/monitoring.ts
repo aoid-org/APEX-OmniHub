@@ -38,7 +38,7 @@ async function ensureSentry() {
   if (sentryInitialized || sentry) return sentry;
 
   // Sentry only runs in browser contexts
-  if (typeof window === 'undefined') return null;
+  if (typeof globalThis === 'undefined') return null;
 
   const dsn =
     (env as Record<string, string | undefined>)?.VITE_SENTRY_DSN ||

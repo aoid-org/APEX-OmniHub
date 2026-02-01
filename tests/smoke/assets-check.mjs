@@ -11,8 +11,8 @@
  * @see docs/CI_RUNTIME_GATES.md
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:4173';
 const DIST_DIR = './dist';
@@ -25,9 +25,21 @@ const colors = {
   reset: '\x1b[0m',
 };
 
+function getStatusIcon(status) {
+  if (status === 'pass') return '✓';
+  if (status === 'fail') return '✗';
+  return '⚠';
+}
+
+function getStatusColor(status) {
+  if (status === 'pass') return colors.green;
+  if (status === 'fail') return colors.red;
+  return colors.yellow;
+}
+
 function log(status, message) {
-  const icon = status === 'pass' ? '✓' : status === 'fail' ? '✗' : '⚠';
-  const color = status === 'pass' ? colors.green : status === 'fail' ? colors.red : colors.yellow;
+  const icon = getStatusIcon(status);
+  const color = getStatusColor(status);
   console.log(`${color}${icon}${colors.reset} ${message}`);
 }
 
@@ -154,7 +166,9 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error('Asset check failed:', err);
   process.exit(1);
-});
+}

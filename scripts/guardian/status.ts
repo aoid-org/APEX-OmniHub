@@ -39,8 +39,9 @@ async function main() {
   }
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error('Failed to fetch guardian status', err);
   process.exit(1);
-});
-
+}

@@ -17,8 +17,8 @@ import { DEFAULT_CHAOS_CONFIG, LIGHT_CHAOS_CONFIG, HEAVY_CHAOS_CONFIG, NO_CHAOS_
 import { runEvaluation, saveEvalReport, printEvalSummary } from './eval-runner';
 import type { Beat, SimulationResult } from './runner';
 import type { CallReceivedPayload, AppointmentScheduledPayload, AppName } from './contracts';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 // ============================================================================
 // CLI CONFIGURATION
@@ -47,23 +47,33 @@ function parseArgs(): CLIOptions {
     if (arg === '--mode') {
       options.mode = args[++i] as CLIOptions['mode'];
     } else if (arg === '--seed') {
-      options.seed = parseInt(args[++i]);
+      options.seed = Number.parseInt(args[++i]);
     } else if (arg === '--chaos') {
       options.chaos = args[++i] as CLIOptions['chaos'];
     } else if (arg === '--beats') {
-      options.beats = parseInt(args[++i]);
+      options.beats = Number.parseInt(args[++i]);
     } else if (arg === '--scenario') {
       options.scenario = args[++i];
     } else if (arg === '--rate') {
-      options.rate = parseInt(args[++i]);
+      options.rate = Number.parseInt(args[++i]);
     } else if (arg === '--duration') {
-      options.duration = parseInt(args[++i]);
+      options.duration = Number.parseInt(args[++i]);
     } else if (arg === '--validate') {
       options.validate = true;
     }
   }
 
   return options;
+}
+
+/** Helper to get chaos config - extracted to avoid nested ternaries */
+function getChaosConfig(chaos: CLIOptions['chaos']) {
+  switch (chaos) {
+    case 'light': return LIGHT_CHAOS_CONFIG;
+    case 'heavy': return HEAVY_CHAOS_CONFIG;
+    case 'none': return NO_CHAOS_CONFIG;
+    default: return DEFAULT_CHAOS_CONFIG;
+  }
 }
 
 // ============================================================================
@@ -96,7 +106,7 @@ function getFullStoryBeats(): Beat[] {
         estimateId: 'est-001',
         vehicleInfo: { make: 'Garment', model: 'Designer Jacket', year: 2024 },
         issues: ['Broken zipper', 'Torn lining'],
-        estimatedCost: 75.00,
+        estimatedCost: 75,
         estimatedDuration: '2 days',
       },
       target: 'flowbills',
@@ -131,15 +141,15 @@ function getFullStoryBeats(): Beat[] {
       payload: {
         invoiceId: 'inv-001',
         clientId: 'client-123',
-        amount: 75.00,
+        amount: 75,
         currency: 'USD',
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         lineItems: [
-          { description: 'Zipper repair', quantity: 1, unitPrice: 45.00, total: 45.00 },
-          { description: 'Lining repair', quantity: 1, unitPrice: 30.00, total: 30.00 },
+          { description: 'Zipper repair', quantity: 1, unitPrice: 45, total: 45 },
+          { description: 'Lining repair', quantity: 1, unitPrice: 30, total: 30 },
         ],
         taxRate: 0.08,
-        totalAmount: 81.00,
+        totalAmount: 81,
       },
       target: ['flowc', 'omnihub'],
       expectedOutcome: 'Invoice + compliance check',
@@ -188,10 +198,7 @@ function getFullStoryBeats(): Beat[] {
 async function runChaosMode(options: CLIOptions): Promise<void> {
   console.log('🌀 Starting FULL CHAOS simulation...\n');
 
-  const chaosConfig = options.chaos === 'light' ? LIGHT_CHAOS_CONFIG
-    : options.chaos === 'heavy' ? HEAVY_CHAOS_CONFIG
-      : options.chaos === 'none' ? NO_CHAOS_CONFIG
-        : DEFAULT_CHAOS_CONFIG;
+  const chaosConfig = getChaosConfig(options.chaos);
 
   const allBeats = getFullStoryBeats();
   const beats = options.beats ? allBeats.slice(0, options.beats) : allBeats;
@@ -279,10 +286,7 @@ async function runBurstMode(options: CLIOptions): Promise<void> {
       scenario: `Burst Load Test - ${totalEvents} events`,
       tenantId: process.env.SANDBOX_TENANT || `burst-${Date.now()}`,
       seed: options.seed || 42,
-      chaos: options.chaos === 'none' ? NO_CHAOS_CONFIG :
-        options.chaos === 'light' ? LIGHT_CHAOS_CONFIG :
-          options.chaos === 'heavy' ? HEAVY_CHAOS_CONFIG :
-            DEFAULT_CHAOS_CONFIG,
+      chaos: getChaosConfig(options.chaos),
       beats: burstBeats,
       dryRun: true, // Dry run for load testing (no real backend calls)
     });
@@ -394,13 +398,20 @@ async function saveEvidence(result: SimulationResult): Promise<void> {
 // OUTPUT FORMATTING
 // ============================================================================
 
+function getScoreEmoji(score: number): string {
+  if (score >= 90) return '🌟';
+  if (score >= 70) return '✅';
+  if (score >= 50) return '⚠️';
+  return '❌';
+}
+
 function printFinalSummary(result: SimulationResult): void {
   console.log('\n' + '═'.repeat(64));
   console.log('FINAL SUMMARY');
   console.log('═'.repeat(64));
 
   const score = result.scorecard.overallScore;
-  const emoji = score >= 90 ? '🌟' : score >= 70 ? '✅' : score >= 50 ? '⚠️' : '❌';
+  const emoji = getScoreEmoji(score);
 
   console.log(`\n${emoji} Overall Score: ${score.toFixed(1)}/100`);
   console.log(`   Required Score: ${result.scorecard.requiredScore}/100`);
@@ -478,5 +489,10 @@ async function main() {
 
 // Run if executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
+  try {
+    await main();
+  } catch (error) {
+    console.error('Fatal:', error);
+    process.exit(1);
+  }
 }

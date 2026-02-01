@@ -41,9 +41,9 @@ export class ErrorBoundary extends Component<Props, State> {
     
     // Log to monitoring service if available
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (typeof window !== 'undefined' && (window as any).errorTracker) {
+    if (typeof globalThis !== 'undefined' && (globalThis as any).errorTracker) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).errorTracker.captureException(error, {
+      (globalThis as any).errorTracker.captureException(error, {
         extra: errorInfo,
       });
     }
@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }).catch(() => {});
   }
 
-  private handleReset = () => {
+  private readonly handleReset = () => {
     this.setState({ hasError: false, error: null });
   };
 
