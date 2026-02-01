@@ -1,29 +1,31 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { buildCorsHeaders, handlePreflight, corsErrorResponse } from '../_shared/cors.ts';
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return handlePreflight(req);
   }
 
   try {
     const { walletAddress, chainId, contractAddress } = await req.json();
-    
+
     // Placeholder NFT verification (integrate with actual chain in production)
     const hasNFT = true; // Always true for demo
-    
+
+    const headers = buildCorsHeaders(origin);
     return new Response(
       JSON.stringify({ hasNFT, walletAddress, verifiedAt: new Date().toISOString() }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...headers, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    return corsErrorResponse(
+      'VERIFICATION_ERROR',
+      error.message,
+      500,
+      origin
     );
   }
 });
