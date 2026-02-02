@@ -16,6 +16,7 @@ export default defineConfig({
       'apex-resilience/tests/**/*.test.ts'
     ],
     exclude: [
+      // Playwright E2E tests (run separately with `npm run test:e2e`)
       'tests/e2e-playwright/**',
       '**/playwright/**',
       'tests/e2e/route-sweep.spec.ts',
