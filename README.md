@@ -218,7 +218,7 @@ npm run build      # Production build
 
 ---
 
-## License
+## 📄 Documentation
 
 **Proprietary** — © 2026 APEX Business Systems Ltd.
 
