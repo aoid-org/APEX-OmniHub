@@ -94,14 +94,6 @@ function Nav() {
       }
     };
 
-    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
-      if (!menuRef.current) return;
-      if (menuRef.current.contains(event.target as Node)) return;
-      // Don't close if clicking inside the menu overlay itself
-      if ((event.target as Element).closest('.nav__mobile-menu')) return;
-      setMenuOpen(false);
-    };
-
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
@@ -167,10 +159,9 @@ function Nav() {
             </button>
 
             {menuOpen && (
-              <div 
-                className="nav__mobile-menu" 
-                aria-modal="true" 
-                role="dialog"
+              <dialog 
+                open
+                className="nav__mobile-menu"
               >
                 {/* Mobile Menu Content */}
                 <ul className="nav__mobile-links">
@@ -197,7 +188,7 @@ function Nav() {
                     </a>
                   </li>
                 </ul>
-              </div>
+              </dialog>
             )}
           </div>
         </div>
