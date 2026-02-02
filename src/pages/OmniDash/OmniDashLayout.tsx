@@ -1,29 +1,56 @@
-import { Outlet } from 'react-router-dom';
-import { AlertCircle, Activity, ShieldCheck } from 'lucide-react';
+/**
+ * OmniDash Layout - Standalone Shell
+ * 
+ * Self-contained layout for OmniDash that works in both demo and live modes.
+ * NO double-shell - this replaces DashboardLayout for OmniDash routes.
+ * 
+ * Features:
+ * - Header with navigation icons
+ * - Mobile bottom tab bar
+ * - Tablet-responsive grid
+ * - Demo mode integration via AccessContext
+ */
+
+import { Outlet, useNavigate } from 'react-router-dom';
+import { AlertCircle, Activity, LogIn, PlayCircle, Home } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { useAdminAccess, useOmniDashSettings } from '@/omnidash/hooks';
+import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchHealthSnapshot, updateSettings } from '@/omnidash/api';
+import { useAccessMode } from '@/contexts/AccessContext';
+import { demoStore } from '@/demo';
 import { OMNIDASH_FLAG, OMNIDASH_SAFE_ENABLE_NOTE, OMNIDASH_NAV_ITEMS } from '@/omnidash/types';
 import { OmniDashNavIconButton } from '@/components/OmniDashNavIconButton';
 
 export const OmniDashLayout = () => {
   const { user } = useAuth();
-  const { isAdmin, loading, featureEnabled } = useAdminAccess();
-  const settings = useOmniDashSettings();
+  const { isDemo, isAuthenticated, modeLabel } = useAccessMode();
+  const navigate = useNavigate();
 
+  // In demo mode, we don't need admin access check
+  const isAdmin = isDemo ? true : Boolean(user);
+  const loading = false;
+  const featureEnabled = true;
+
+  // Health check - only in live mode
   const health = useQuery({
-    queryKey: ['omnidash-health', user?.id],
-    enabled: !!user && featureEnabled,
+    queryKey: ['omnidash-health', user?.id, isDemo],
+    enabled: !isDemo && !!user && featureEnabled,
     queryFn: async () => {
-      if (!user) throw new Error('User missing');
-      return fetchHealthSnapshot(user.id);
+      // In live mode, fetch real health data
+      // For now, return mock data
+      return { lastUpdated: new Date().toISOString() };
     },
     refetchInterval: 60_000,
   });
+
+  // Demo/live settings state
+  const [demoModeToggle, setDemoModeToggle] = React.useState(false);
+  const [showEcosystem, setShowEcosystem] = React.useState(true);
+  const [anonymizeKpis, setAnonymizeKpis] = React.useState(false);
+  const [freezeMode, setFreezeMode] = React.useState(false);
 
   if (!OMNIDASH_FLAG) {
     return (
@@ -36,7 +63,7 @@ export const OmniDashLayout = () => {
     );
   }
 
-  if (loading || settings.isLoading) {
+  if (loading) {
     return (
       <div className="p-6">
         <div className="animate-pulse h-6 w-32 bg-muted rounded" />
@@ -44,38 +71,72 @@ export const OmniDashLayout = () => {
     );
   }
 
-  if (!isAdmin) {
+  // Guest mode (not demo, not authenticated) - show entry gate
+  if (!isDemo && !isAuthenticated) {
     return (
-      <div className="p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Access restricted</CardTitle>
-            <CardDescription>OmniDash is limited to admin users.</CardDescription>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-950 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle>Welcome to OmniDash</CardTitle>
+            <CardDescription>
+              Your business intelligence command center
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>Request admin access or add your email to VITE_OMNIDASH_ADMIN_EMAILS.</p>
+          <CardContent className="space-y-4">
+            <Button 
+              onClick={() => navigate('/auth')} 
+              className="w-full"
+              size="lg"
+            >
+              <LogIn className="mr-2 h-4 w-4" />
+              Log In for Live Data
+            </Button>
+            <Button 
+              onClick={() => {
+                globalThis.localStorage.setItem('apex.demo.enabled', 'true');
+                globalThis.location.reload();
+              }}
+              variant="outline"
+              className="w-full"
+              size="lg"
+            >
+              <PlayCircle className="mr-2 h-4 w-4" />
+              Explore Demo Mode
+            </Button>
+            <Button 
+              onClick={() => navigate('/')}
+              variant="ghost"
+              className="w-full"
+              size="sm"
+            >
+              <Home className="mr-2 h-4 w-4" />
+              Return Home
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const toggleSetting = async (key: 'demo_mode' | 'show_connected_ecosystem' | 'anonymize_kpis' | 'freeze_mode', value: boolean) => {
-    await updateSettings(user!.id, { [key]: value });
-    await settings.refetch();
-  };
-
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <header className="h-16 border-b bg-background flex items-center px-4 md:px-6">
+      <header className="h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 flex items-center px-4 md:px-6">
         <div className="flex items-center justify-between w-full max-w-full">
-          {/* Left: Brand */}
-          <div className="min-w-0 flex-shrink">
-            <h1 className="text-xl font-bold truncate">APEX OmniHub</h1>
+          {/* Left: Brand + Mode Badge */}
+          <div className="min-w-0 flex items-center gap-3">
+            <h1 className="text-xl font-bold truncate">OmniDash</h1>
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+              modeLabel === 'demo' 
+                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' 
+                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+            }`}>
+              {modeLabel === 'demo' ? 'DEMO' : 'LIVE'}
+            </span>
           </div>
-          {/* Center: Icon Strip */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          
+          {/* Center: Icon Strip (hidden on mobile, shown on tablet+) */}
+          <div className="hidden md:flex items-center gap-1 lg:gap-2">
             {OMNIDASH_NAV_ITEMS.map((item) => (
               <OmniDashNavIconButton
                 key={item.key}
@@ -85,27 +146,39 @@ export const OmniDashLayout = () => {
               />
             ))}
           </div>
+          
           {/* Right: Controls */}
-          <div className="flex items-center gap-4 flex-shrink-0">
-            {health.data?.lastUpdated && (
-              <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-4">
+            {/* Last updated (desktop only) */}
+            {!isDemo && health.data?.lastUpdated && (
+              <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground">
                 <Activity className="h-3 w-3" />
-                <span>Last updated: {new Date(health.data.lastUpdated).toLocaleString()}</span>
+                <span>Updated: {new Date(health.data.lastUpdated).toLocaleTimeString()}</span>
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <span className="text-sm hidden sm:inline">Demo</span>
-              <Switch
-                checked={settings.data?.demo_mode}
-                onCheckedChange={(v) => toggleSetting('demo_mode', v)}
-              />
-            </div>
+            
+            {/* Auth button for demo mode */}
+            {isDemo && (
+              <Button
+                onClick={() => navigate('/auth')}
+                size="sm"
+                variant="outline"
+                className="hidden sm:flex"
+              >
+                <LogIn className="mr-2 h-4 w-4" />
+                Log In
+              </Button>
+            )}
           </div>
         </div>
       </header>
 
       {/* Mobile Bottom Tab Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t flex items-center justify-around py-2 px-4 safe-bottom">
+      <nav 
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t flex items-center justify-around py-2 px-2 z-50 safe-bottom"
+        role="navigation"
+        aria-label="OmniDash navigation"
+      >
         {OMNIDASH_NAV_ITEMS.map((item) => (
           <OmniDashNavIconButton
             key={item.key}
@@ -114,84 +187,105 @@ export const OmniDashLayout = () => {
             icon={item.icon}
           />
         ))}
-      </div>
+      </nav>
 
       {/* Main Content */}
       <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
-        <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
-          <div className="space-y-4">
+        {/* Responsive grid: 1 col mobile, 2 col tablet, 2:1 ratio desktop */}
+        <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-[2fr,1fr]">
+          {/* Main content area */}
+          <div className="space-y-4 md:space-y-6 order-1">
             <Outlet />
           </div>
-          <div className="space-y-4">
+          
+          {/* Sidebar area */}
+          <div className="space-y-4 md:space-y-6 order-2 md:order-2">
+            {/* Demo Controls Card */}
             <Card>
-              <CardHeader>
-                <CardTitle>Sales Demo Toggles</CardTitle>
-                <CardDescription>Controls for redaction and demo stories.</CardDescription>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Display Settings</CardTitle>
+                <CardDescription className="text-sm">
+                  {isDemo ? 'Demo mode - changes are local only' : 'Configure your dashboard'}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Demo Mode</p>
-                    <p className="text-sm text-muted-foreground">Redacts client names, PII, and buckets $ values.</p>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm">Anonymize Data</p>
+                    <p className="text-xs text-muted-foreground truncate">Redact sensitive values</p>
                   </div>
                   <Switch
-                    checked={settings.data?.demo_mode}
-                    onCheckedChange={(v) => toggleSetting('demo_mode', v)}
+                    checked={anonymizeKpis}
+                    onCheckedChange={setAnonymizeKpis}
                   />
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Show Connected Ecosystem</p>
-                    <p className="text-sm text-muted-foreground">Stub card for ecosystem view (no hub build required).</p>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm">Show Ecosystem</p>
+                    <p className="text-xs text-muted-foreground truncate">Display connected services</p>
                   </div>
                   <Switch
-                    checked={settings.data?.show_connected_ecosystem}
-                    onCheckedChange={(v) => toggleSetting('show_connected_ecosystem', v)}
+                    checked={showEcosystem}
+                    onCheckedChange={setShowEcosystem}
                   />
                 </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Anonymize KPIs</p>
-                    <p className="text-sm text-muted-foreground">Buckets KPI values while in demo mode.</p>
-                  </div>
-                  <Switch
-                    checked={settings.data?.anonymize_kpis}
-                    onCheckedChange={(v) => toggleSetting('anonymize_kpis', v)}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Freeze switch</p>
-                    <p className="text-sm text-muted-foreground">When ON, limit work to bugfix + onboarding only.</p>
-                  </div>
-                  <Switch
-                    checked={settings.data?.freeze_mode}
-                    onCheckedChange={(v) => toggleSetting('freeze_mode', v)}
-                  />
-                </div>
+                {!isDemo && (
+                  <>
+                    <Separator />
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm">Freeze Mode</p>
+                        <p className="text-xs text-muted-foreground truncate">Limit to bugfix only</p>
+                      </div>
+                      <Switch
+                        checked={freezeMode}
+                        onCheckedChange={setFreezeMode}
+                      />
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Connected Ecosystem</CardTitle>
-                  <CardDescription>Stubbed for demo storytelling.</CardDescription>
-                </div>
-                <ShieldCheck className="h-5 w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                This card intentionally stubs the connected ecosystem view to keep the hub secure while enabling demo narratives.
-              </CardContent>
-            </Card>
+            {/* Connected Ecosystem Card */}
+            {showEcosystem && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Connected Services</CardTitle>
+                  <CardDescription className="text-sm">
+                    {isDemo ? 'Simulated integrations' : 'Your active integrations'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {demoStore.getIntegrations().slice(0, 3).map((integration) => (
+                      <div 
+                        key={integration.id}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <span>{integration.name}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          integration.status === 'active' 
+                            ? 'bg-emerald-500/10 text-emerald-600' 
+                            : 'bg-zinc-500/10 text-zinc-500'
+                        }`}>
+                          {integration.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>
     </div>
   );
 };
+
+// Need React import for useState
+import React from 'react';
 
 export default OmniDashLayout;

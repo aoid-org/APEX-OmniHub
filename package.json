@@ -55,7 +55,8 @@
     "hardhat:mint": "hardhat run scripts/hardhat/mint.ts",
     "apex:demo": "tsx apex-resilience/scripts/demo-verify.ts",
     "apex:deploy": "./apex-resilience/scripts/deploy.sh",
-    "apex:test": "vitest run apex-resilience/tests/"
+    "apex:test": "vitest run apex-resilience/tests/",
+    "audit:features": "tsx scripts/audit-features.ts"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.1",

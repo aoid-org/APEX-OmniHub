@@ -16,11 +16,11 @@ license: "Proprietary - APEX Business Systems Ltd. Edmonton, AB, Canada. https:/
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  APEX-POWER = OMNISCIENCE × OMNIPOTENCE × ZERO TOLERANCE FOR FAILURE       │
+│  APEX-POWER = OMNISCIENCE × OMNIPOTENCE × ZERO TOLERANCE FOR FAILURE        │
 │                                                                             │
-│  • OMNISCIENCE: Know exactly what to do before acting                      │
-│  • OMNIPOTENCE: Execute with deterministic precision                       │
-│  • ZERO TOLERANCE: No guessing, no hoping, no "good enough"                │
+│  • OMNISCIENCE: Know exactly what to do before acting                       │
+│  • OMNIPOTENCE: Execute with deterministic precision                        │
+│  • ZERO TOLERANCE: No guessing, no hoping, no "good enough"                 │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
