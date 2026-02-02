@@ -1,8 +1,8 @@
-# Chaotic Client Simulation - OmniLink-APEX
+# Chaotic Client Simulation - APEX-OmniHub
 
 ## 🎯 Purpose
 
-This simulation tests the **entire OmniLink-APEX integrated system** with realistic, non-technical user scenarios that mirror real-world chaos and confusion.
+This simulation tests the **entire APEX-OmniHub integrated system** with realistic, non-technical user scenarios that mirror real-world chaos and confusion.
 
 ## 👤 Meet Sarah Martinez
 
@@ -17,7 +17,7 @@ This simulation tests the **entire OmniLink-APEX integrated system** with realis
   - Doesn't understand technical terminology
   - Everything feels urgent
 
-This client represents the **exact type of user** OmniLink-APEX is designed to help.
+This client represents the **exact type of user** APEX-OmniHub is designed to help.
 
 ## 🧪 Test Scenarios
 
@@ -334,7 +334,7 @@ SCENARIO 1: Morning Chaos - Multiple Urgent Requests
 
 ## 🏆 Why This Matters
 
-This simulation proves that OmniLink-APEX can:
+This simulation proves that APEX-OmniHub can:
 - ✅ Handle real-world chaos
 - ✅ Support non-technical users
 - ✅ Maintain security without false positives

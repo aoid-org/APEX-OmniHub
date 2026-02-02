@@ -315,7 +315,7 @@ Apply APEX-POWER protocol
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                                                                             │
-│  APEX-POWER is not a checklist. It's a MINDSET.                            │
+│  APEX-POWER is not a checklist. It's a MINDSET.                             │
 │                                                                             │
 │  • Never guess. KNOW.                                                       │
 │  • Never hope. VERIFY.                                                      │
