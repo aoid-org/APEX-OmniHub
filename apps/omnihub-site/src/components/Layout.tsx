@@ -68,6 +68,25 @@ function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
+  // Body scroll lock effect
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+      // Prevent iOS bounce
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [menuOpen]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -78,17 +97,15 @@ function Nav() {
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
       if (!menuRef.current) return;
       if (menuRef.current.contains(event.target as Node)) return;
+      // Don't close if clicking inside the menu overlay itself
+      if ((event.target as Element).closest('.nav__mobile-menu')) return;
       setMenuOpen(false);
     };
 
     document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown);
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('touchstart', handlePointerDown);
     };
   }, []);
 
@@ -150,23 +167,12 @@ function Nav() {
             </button>
 
             {menuOpen && (
-              <dialog
-                open
-                className="nav__mobile-menu"
-                aria-label="Mobile navigation"
-                style={{
-                  border: 'none',
-                  padding: 0,
-                  margin: 0,
-                  width: '100%',
-                  height: '100%',
-                  background: 'transparent',
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  zIndex: 100
-                }}
+              <div 
+                className="nav__mobile-menu" 
+                aria-modal="true" 
+                role="dialog"
               >
+                {/* Mobile Menu Content */}
                 <ul className="nav__mobile-links">
                   {siteConfig.nav.links.map((link) => (
                     <li key={link.href}>
@@ -179,18 +185,19 @@ function Nav() {
                       </a>
                     </li>
                   ))}
-                  <li key={siteConfig.nav.loginLink.href} style={{ marginTop: 'var(--space-2)' }}>
-                    <a
+                  
+                  {/* Additional CTA in Mobile Menu */}
+                  <li className="nav__mobile-cta-container">
+                     <a
                       href={siteConfig.nav.loginLink.href}
-                      className="btn btn--primary btn--sm"
-                      style={{ width: '100%' }}
+                      className="btn btn--primary btn--lg nav__mobile-cta"
                       onClick={() => setMenuOpen(false)}
                     >
                       {siteConfig.nav.loginLink.label}
                     </a>
                   </li>
                 </ul>
-              </dialog>
+              </div>
             )}
           </div>
         </div>
