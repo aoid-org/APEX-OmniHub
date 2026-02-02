@@ -137,6 +137,12 @@ jobs:
       - name: TypeScript type check
         run: npx tsc --noEmit
 
+      - name: Clear Vitest cache
+        run: |
+          # Remove any stale Vitest cache that might reference deleted test files
+          rm -rf node_modules/.vitest
+          echo "✅ Vitest cache cleared"
+
       - name: Run tests
         run: npm run test
 

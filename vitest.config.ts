@@ -16,8 +16,10 @@ export default defineConfig({
       'apex-resilience/tests/**/*.test.ts'
     ],
     exclude: [
+      // Playwright E2E tests (run separately with `npm run test:e2e`)
       'tests/e2e-playwright/**',
       '**/playwright/**',
+      'e2e/**',
       'node_modules/**',
       // Skip Hardhat contract tests (run with `npm run hardhat:test`)
       'tests/contracts/**',
