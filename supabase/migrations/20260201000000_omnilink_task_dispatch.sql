@@ -41,6 +41,9 @@ DECLARE
   v_task_record record;
   v_running_status constant public.omnilink_req_status := 'running';
   v_status_key constant text := 'status';
+  c_queued constant public.omnilink_req_status := 'queued';
+  c_approved constant public.omnilink_req_status := 'approved';
+  c_task_type constant text := 'task';
 BEGIN
   -- Atomic claim: find one eligible task and claim it
   UPDATE public.omnilink_orchestration_requests
@@ -53,8 +56,8 @@ BEGIN
     SELECT id
     FROM public.omnilink_orchestration_requests
     WHERE integration_id = p_integration_id
-      AND request_type = 'task'
-      AND status IN ('queued', 'approved')
+      AND request_type = c_task_type
+      AND status IN (c_queued, c_approved)
       AND worker_id IS NULL
       AND (run_at IS NULL OR run_at <= now())
       AND (p_target IS NULL OR params->>'target' = p_target)

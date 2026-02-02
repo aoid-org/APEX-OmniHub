@@ -115,6 +115,8 @@ RETURNS TABLE (
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
+DECLARE
+  c_pending constant dlq_status := 'pending';
 BEGIN
   RETURN QUERY
   SELECT
@@ -126,7 +128,7 @@ BEGIN
     ib.created_at,
     ib.retry_count
   FROM ingress_buffer ib
-  WHERE ib.status = 'pending'
+  WHERE ib.status = c_pending
   ORDER BY ib.risk_score DESC, ib.created_at ASC
   LIMIT p_limit;
 END;
@@ -142,13 +144,15 @@ SECURITY DEFINER
 AS $$
 DECLARE
   v_count INTEGER;
+  c_pending constant dlq_status := 'pending';
+  c_replaying constant dlq_status := 'replaying';
 BEGIN
   UPDATE ingress_buffer
   SET
-    status = 'replaying',
+    status = c_replaying,
     last_retry_at = NOW(),
     retry_count = retry_count + 1
-  WHERE id = ANY(p_ids) AND status = 'pending';
+  WHERE id = ANY(p_ids) AND status = c_pending;
 
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RETURN v_count;
@@ -165,9 +169,10 @@ SECURITY DEFINER
 AS $$
 DECLARE
   v_count INTEGER;
+  c_failed constant dlq_status := 'failed';
 BEGIN
   DELETE FROM ingress_buffer
-  WHERE status = 'failed'
+  WHERE status = c_failed
     AND created_at < NOW() - (p_retention_days || ' days')::INTERVAL;
 
   GET DIAGNOSTICS v_count = ROW_COUNT;

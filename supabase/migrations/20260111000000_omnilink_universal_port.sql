@@ -221,21 +221,27 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  c_approved constant text := 'approved';
+  c_denied constant text := 'denied';
+  c_queued constant public.omnilink_req_status := 'queued';
+  c_denied_status constant public.omnilink_req_status := 'denied';
+  c_waiting constant public.omnilink_req_status := 'waiting_approval';
 BEGIN
   IF NOT public.is_admin(p_user_id) THEN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
-  IF p_decision NOT IN ('approved', 'denied') THEN
+  IF p_decision NOT IN (c_approved, c_denied) THEN
     RAISE EXCEPTION 'Invalid decision';
   END IF;
 
   UPDATE public.omnilink_orchestration_requests
-  SET status = CASE WHEN p_decision = 'approved' THEN 'queued'::public.omnilink_req_status ELSE 'denied'::public.omnilink_req_status END,
+  SET status = CASE WHEN p_decision = c_approved THEN c_queued ELSE c_denied_status END,
       updated_at = now()
   WHERE id = p_request_id
     AND tenant_id = p_user_id
-    AND status = 'waiting_approval';
+    AND status = c_waiting;
 END;
 $$;
 
@@ -398,7 +404,7 @@ BEGIN
     RETURNING id INTO v_record_id;
 
     IF v_record_id IS NULL THEN
-      RETURN jsonb_build_object('status', c_duplicate);
+      RETURN jsonb_build_object(c_status, c_duplicate);
     END IF;
 
     INSERT INTO public.audit_logs(actor_id, action_type, resource_type, resource_id, metadata)
