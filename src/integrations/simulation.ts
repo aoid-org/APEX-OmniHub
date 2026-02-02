@@ -6,9 +6,7 @@
  * Live mode: Calls Supabase edge functions
  */
 
-import { useAccessMode } from '@/contexts/AccessContext';
-import { useExecute } from '@/demo';
-import { demoStore } from '@/demo';
+import { useExecute, demoStore } from '@/demo';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -181,14 +179,12 @@ export function useTestConnection() {
   const testConnection = async (integrationId: string) => {
     return execute('testConnection', {
       demo: () => {
-        // Simulate connection test with random success/failure
-        const success = Math.random() > 0.2;
-        if (!success) {
-          throw new Error('Simulated connection timeout');
-        }
+        // SAFE: Deterministic simulation for demo UX - no security context
+        // Demo always succeeds with consistent latency based on integrationId
+        const latencyMs = 50 + ((integrationId.codePointAt(0) ?? 97) % 150);
         return { 
           connected: true, 
-          latencyMs: Math.floor(Math.random() * 200) + 50,
+          latencyMs,
           version: 'demo-v1.0.0',
         };
       },

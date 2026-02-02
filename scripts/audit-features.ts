@@ -19,7 +19,9 @@ import { glob } from 'glob';
 // CONFIG
 // ============================================================================
 
-const dirname = path.dirname(new URL(import.meta.url).pathname);
+import { fileURLToPath } from 'node:url';
+
+const dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC_DIR = path.resolve(dirname, '../src');
 const REGISTRY_PATH = path.resolve(SRC_DIR, 'features/registry.ts');
 const APP_PATH = path.resolve(SRC_DIR, 'App.tsx');

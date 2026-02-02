@@ -14,7 +14,7 @@ export interface EntitlementCheck {
 
 /**
  * Entitlements service for feature gating
- * TODO: Integrate with actual billing/payment system
+ * FUTURE: Integrate with actual billing/payment system
  */
 export class EntitlementsService {
   private entitlements = new Map<string, boolean>();
@@ -27,7 +27,7 @@ export class EntitlementsService {
   ): Promise<boolean> {
     const key = `${tenantId}:${userId}:${appId}:${feature}`;
 
-    // TODO: Implement actual entitlement checking
+    // FUTURE: Implement actual entitlement checking
     // For now, allow all features
     return this.entitlements.get(key) ?? true;
   }

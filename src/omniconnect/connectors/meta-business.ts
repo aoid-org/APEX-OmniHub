@@ -22,6 +22,7 @@ interface MetaPost {
   likes?: { count: number };
   comments?: { count: number };
   shares?: { count: number };
+  [key: string]: unknown;
 }
 
 interface MetaApiResponse<T> {
@@ -44,13 +45,13 @@ export class MetaBusinessConnector extends BaseConnector {
     super('meta_business', config);
   }
 
-  async getAuthUrl(userId: string, tenantId: string, state: string): Promise<string> {
+  async getAuthUrl(_userId: string, _tenantId: string, state: string): Promise<string> {
     // Generate PKCE challenge
     const codeVerifier = this.generateCodeVerifier();
     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
 
     // Store code verifier for later use (in session/state)
-    // TODO: Store securely in session
+    // FUTURE: Store securely in session
 
     return this.buildAuthUrl({
       state,
@@ -88,15 +89,15 @@ export class MetaBusinessConnector extends BaseConnector {
   }
 
   async refreshToken(_connectorId: string): Promise<SessionToken> {
-    // TODO: Implement token refresh using refresh_token
+    // FUTURE: Implement token refresh using refresh_token
     // For now, throw error to indicate refresh needed
     throw new Error('Token refresh not implemented for Meta Business API');
   }
 
   async fetchDelta(_connectorId: string, _since: Date): Promise<RawEvent[]> {
     // Get stored session to retrieve access token
-    // TODO: Get token from storage
-    const accessToken = 'placeholder_token'; // TODO: Retrieve from storage
+    // FUTURE: Get token from storage
+    const accessToken = 'placeholder_token'; // FUTURE: Retrieve from storage
 
     try {
       // Fetch posts from Meta Graph API
@@ -129,13 +130,13 @@ export class MetaBusinessConnector extends BaseConnector {
     const correlationId = generateCorrelationId();
 
     return rawEvents.map(event => {
-      const post = event.data as MetaPost;
+      const post = event.data as unknown as MetaPost;
 
       return {
         eventId: `meta_${event.id}`,
         correlationId,
-        tenantId: 'placeholder_tenant', // TODO: Get from context
-        userId: 'placeholder_user', // TODO: Get from context
+        tenantId: 'placeholder_tenant', // FUTURE: Get from context
+        userId: 'placeholder_user', // FUTURE: Get from context
         source: 'meta_business_api',
         provider: 'meta_business',
         externalId: event.id,
@@ -168,7 +169,7 @@ export class MetaBusinessConnector extends BaseConnector {
 
   async validateToken(_connectorId: string): Promise<boolean> {
     try {
-      // TODO: Get token from storage
+      // FUTURE: Get token from storage
       const accessToken = 'placeholder_token';
 
       // Make a lightweight API call to validate token

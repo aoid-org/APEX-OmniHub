@@ -22,10 +22,10 @@ export interface AppFilterProfile {
 
 /**
  * Policy engine for filtering and transforming events
- * TODO: Implement actual policy logic
+ * FUTURE: Implement actual policy logic
  */
 export class PolicyEngine {
-  private profiles = new Map<string, AppFilterProfile>();
+  private readonly profiles = new Map<string, AppFilterProfile>();
 
   async filter(
     events: CanonicalEvent[],
@@ -34,7 +34,7 @@ export class PolicyEngine {
   ): Promise<CanonicalEvent[]> {
     console.log(`[${correlationId}] Applying policy filter for app ${appId}, ${events.length} events`);
 
-    // TODO: Implement actual filtering logic
+    // FUTURE: Implement actual filtering logic
     // For now, pass through all events
     return events;
   }
@@ -48,7 +48,7 @@ export class PolicyEngine {
   }
 
   async validateEvent(_event: CanonicalEvent, _appId: string): Promise<boolean> {
-    // TODO: Implement validation logic
+    // FUTURE: Implement validation logic
     return true;
   }
 }

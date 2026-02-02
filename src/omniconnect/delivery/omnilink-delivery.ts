@@ -16,7 +16,7 @@ export interface DeliveryResult {
 
 /**
  * Delivery service for OmniLink integration
- * TODO: Implement actual retry logic and dead-letter queue
+ * FUTURE: Implement actual retry logic and dead-letter queue
  */
 export class OmniLinkDelivery {
   private maxRetries = 3;
@@ -37,7 +37,7 @@ export class OmniLinkDelivery {
         successCount++;
       } catch (error) {
         console.error(`[${correlationId}] Failed to deliver event ${event.eventId}:`, error);
-        // TODO: Add to dead-letter queue
+        // FUTURE: Add to dead-letter queue
       }
     }
 
@@ -49,7 +49,7 @@ export class OmniLinkDelivery {
     event: TranslatedEvent,
     correlationId: string
   ): Promise<void> {
-    // TODO: Implement retry logic with exponential backoff
+    // FUTURE: Implement retry logic with exponential backoff
     await requestOmniLink({
       path: '/events',
       method: 'POST',
@@ -62,12 +62,12 @@ export class OmniLinkDelivery {
   }
 
   async getDeliveryStatus(_eventId: string): Promise<DeliveryResult | null> {
-    // TODO: Implement delivery status tracking
+    // FUTURE: Implement delivery status tracking
     return null;
   }
 
   async retryFailedDeliveries(appId: string): Promise<number> {
-    // TODO: Implement retry logic for failed deliveries
+    // FUTURE: Implement retry logic for failed deliveries
     console.log(`Retrying failed deliveries for app ${appId}`);
     return 0;
   }

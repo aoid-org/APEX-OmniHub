@@ -19,8 +19,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -45,7 +45,6 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           REQUIRE_SUPABASE_INTEGRATION_TESTS: "false"
 
       # ─────────────────────────────────────────────────────────────
@@ -143,7 +142,7 @@ jobs:
     needs: build-and-test
     if: github.event_name == 'pull_request'
     timeout-minutes: 20
-    continue-on-error: true  # Don't block merge if preview isn't ready
+    continue-on-error: true # Don't block merge if preview isn't ready
 
     steps:
       - name: Checkout code
@@ -152,8 +151,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci

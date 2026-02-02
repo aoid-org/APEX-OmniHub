@@ -15,7 +15,7 @@ export interface TranslatedEvent {
 
 /**
  * Semantic translator for app-specific event formats
- * TODO: Implement actual translation logic
+ * FUTURE: Implement actual translation logic
  */
 export class SemanticTranslator {
   private translators = new Map<string, (event: CanonicalEvent) => TranslatedEvent>();

@@ -41,9 +41,21 @@ const AUTH_ONLY_ROUTES = [
 // ============================================================================
 
 async function enableDemoMode(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    globalThis.localStorage.setItem('apex.demo.enabled', 'true');
+  // Use addInitScript to ensure localStorage is set before any script runs
+  await page.addInitScript(() => {
+    window.localStorage.setItem('apex.demo.enabled', 'true');
   });
+  // Also set it immediately if page is already loaded
+  try {
+    const url = page.url();
+    if (url && url !== 'about:blank') {
+      await page.evaluate(() => {
+        globalThis.localStorage.setItem('apex.demo.enabled', 'true');
+      });
+    }
+  } catch (e) {
+    // Ignore errors if context is not ready
+  }
 }
 
 async function disableDemoMode(page: Page): Promise<void> {
@@ -105,7 +117,10 @@ test.describe('Demo Mode Routes', () => {
 // ============================================================================
 
 test.describe('Auth-Only Routes (Guest Mode)', () => {
+
   test.beforeEach(async ({ page }) => {
+    // Set mobile viewport to bypass MobileOnlyGate
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
     await disableDemoMode(page);
   });
@@ -115,6 +130,7 @@ test.describe('Auth-Only Routes (Guest Mode)', () => {
       await page.goto(route.path);
       
       // Should show locked feature panel or redirect to auth
+      // Note: MobileOnlyGate might block if viewport is desktop, but we set mobile above.
       const lockedPanel = page.locator('text=locked').or(page.locator('text=Log In to Access'));
       const authPage = page.locator('text=Sign In').or(page.locator('[data-testid="auth-form"]'));
       
@@ -184,10 +200,13 @@ test.describe('Accessibility', () => {
   test('Entry gate should be keyboard accessible', async ({ page }) => {
     await page.goto('/');
     
+    // Ensure focus is on the page
+    await page.locator('body').click();
+    
     // Tab through focusable elements
     await page.keyboard.press('Tab');
     
-    // Should be able to focus login button
+    // Should be able to focus login button or another interactive element
     const focusedElement = page.locator(':focus');
     await expect(focusedElement).toBeVisible();
   });
@@ -198,6 +217,7 @@ test.describe('Accessibility', () => {
     await page.goto('/omnidash');
     
     const banner = page.getByRole('banner', { name: /demo mode/i });
+
     await expect(banner).toBeVisible();
     await expect(banner).toHaveAttribute('aria-label');
   });
