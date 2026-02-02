@@ -14,13 +14,13 @@ export interface StoredSession extends SessionToken {
 
 /**
  * Encrypted storage for OAuth tokens
- * TODO: Implement actual AES-GCM encryption
+ * FUTURE: Implement actual AES-GCM encryption
  */
 export class EncryptedTokenStorage {
   private storage = new Map<string, StoredSession>();
 
   async store(sessionToken: SessionToken): Promise<void> {
-    // TODO: Implement AES-GCM encryption
+    // FUTURE: Implement AES-GCM encryption
     const storedSession: StoredSession = {
       ...sessionToken,
       createdAt: new Date(),

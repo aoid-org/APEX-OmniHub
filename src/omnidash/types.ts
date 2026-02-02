@@ -179,16 +179,7 @@ export const OMNIDASH_FLAG = (() => {
   return String(raw ?? '').toLowerCase() === 'true' || raw === '1';
 })();
 
-export const OMNIDASH_ADMIN_ALLOWLIST = (() => {
-  const raw =
-    import.meta.env.VITE_OMNIDASH_ADMIN_EMAILS ??
-    import.meta.env.OMNIDASH_ADMIN_EMAILS ??
-    '';
-  return raw
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-})();
+
 
 export const OMNIDASH_NAV_ITEMS = [
   { key: "home", label: "OmniDash", to: "/omnidash", icon: "O" },

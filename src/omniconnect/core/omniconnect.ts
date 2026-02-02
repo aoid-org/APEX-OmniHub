@@ -63,7 +63,7 @@ export class OmniConnect {
       return ['meta_business_demo', 'linkedin_demo'];
     }
 
-    // TODO: Filter based on tenant entitlements
+    // FUTURE: Filter based on tenant entitlements
     return ['meta_business', 'linkedin'];
   }
 

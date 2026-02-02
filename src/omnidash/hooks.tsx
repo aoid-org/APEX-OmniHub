@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchSettings, updateSettings } from './api';
-import { OMNIDASH_ADMIN_ALLOWLIST, OMNIDASH_FLAG, OmniDashSettings } from './types';
+import { OMNIDASH_FLAG, OmniDashSettings } from './types';
 
 export function useAdminAccess() {
   const { user } = useAuth();
@@ -11,16 +11,20 @@ export function useAdminAccess() {
     queryKey: ['omnidash-role', user?.id],
     enabled: !!user,
     queryFn: async () => {
+      // Logic moved to useCapabilities hook to avoid hardcoding
       if (!user) return false;
-      const allowlistHit = OMNIDASH_ADMIN_ALLOWLIST.includes((user.email || '').toLowerCase());
-      if (allowlistHit) return true;
-
+      
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
         .maybeSingle();
-      if (error) throw error;
+      
+      if (error) {
+        console.warn('Failed to check admin role, defaulting to false', error);
+        return false;
+      }
+      
       return data?.role === 'admin';
     },
     staleTime: 5 * 60 * 1000,

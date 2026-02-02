@@ -132,7 +132,7 @@ const Privacy = () => {
                 <li>• Encrypted storage of sensitive information</li>
                 <li>• Row-level security policies ensuring data isolation</li>
                 <li>• Regular security audits and vulnerability assessments</li>
-                <li>• Two-factor authentication support (coming soon)</li>
+                <li>• Two-factor authentication support (planned)</li>
               </ul>
             </CardContent>
           </Card>

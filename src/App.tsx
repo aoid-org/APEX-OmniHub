@@ -18,6 +18,8 @@ import { logConfiguration } from './lib/config';
 import { createDebugLogger } from './lib/debug-logger';
 import { Loader2 } from 'lucide-react';
 import { OMNIDASH_FLAG } from './omnidash/types';
+import { AccessProvider } from './contexts/AccessContext';
+import { DemoModeBanner } from './components/DemoModeBanner';
 
 // Lazy load pages for better code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -192,6 +194,7 @@ const App = () => (
           <ConsentBanner />
           <AuthProvider>
             <Web3Provider>
+            <AccessProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public routes (no mobile gate) */}
@@ -228,9 +231,9 @@ const App = () => (
                 <Route path="/apps/built-canadian" element={<BuiltCanadian />} />
                 <Route path="/tech-specs" element={<TechSpecs />} />
 
-                {/* OmniDash (with mobile gate if enabled) */}
+                {/* OmniDash (standalone layout - no DashboardLayout wrapper) */}
               {OMNIDASH_FLAG && (
-                <Route path="/omnidash" element={<MobileOnlyGate><DashboardLayout><OmniDashLayout /></DashboardLayout></MobileOnlyGate>}>
+                <Route path="/omnidash" element={<OmniDashLayout />}>
                   <Route index element={<OmniDashToday />} />
                   <Route path="pipeline" element={<OmniDashPipeline />} />
                   <Route path="kpis" element={<OmniDashKpis />} />
@@ -248,6 +251,8 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+            <DemoModeBanner />
+            </AccessProvider>
             </Web3Provider>
           </AuthProvider>
         </BrowserRouter>
