@@ -40,6 +40,12 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       # PHASE 2: Unit Tests
       # ─────────────────────────────────────────────────────────────
+      - name: Clear Vitest cache
+        run: |
+          # Remove any stale Vitest cache that might reference deleted test files
+          rm -rf node_modules/.vitest
+          echo "✅ Vitest cache cleared"
+
       - name: Run unit tests
         run: npm test
         env:
