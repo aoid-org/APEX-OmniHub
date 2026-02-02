@@ -18,6 +18,7 @@ export default defineConfig({
     exclude: [
       'tests/e2e-playwright/**',
       '**/playwright/**',
+      'tests/e2e/route-sweep.spec.ts',
       'node_modules/**',
       // Skip Hardhat contract tests (run with `npm run hardhat:test`)
       'tests/contracts/**',
