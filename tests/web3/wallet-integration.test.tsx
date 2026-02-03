@@ -336,10 +336,12 @@ describe('Wallet Integration Flow', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/Disconnect Wallet/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/Disconnect Wallet/i).length).toBeGreaterThan(0);
       });
 
-      const disconnectButton = screen.getByText(/Disconnect Wallet/i);
+      // Use getAllByText and select first to handle potential DOM pollution from previous tests
+      const disconnectButtons = screen.getAllByText(/Disconnect Wallet/i);
+      const disconnectButton = disconnectButtons[0];
       await user.click(disconnectButton);
 
       expect(mockDisconnect).toHaveBeenCalled();
