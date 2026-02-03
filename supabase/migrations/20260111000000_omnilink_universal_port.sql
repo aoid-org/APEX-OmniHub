@@ -294,6 +294,8 @@ DECLARE
   c_denied constant text := 'denied';
   c_rate_limited constant text := 'rate_limited';
   c_duplicate constant text := 'duplicate';
+  c_event constant text := 'event';
+  c_ingested constant text := 'ingested';
 BEGIN
   -- Rate limit check
   INSERT INTO public.omnilink_rate_limits(api_key_id, window_start, request_count)
@@ -310,7 +312,7 @@ BEGIN
     );
   END IF;
 
-  IF p_request_type = 'event' THEN
+  IF p_request_type = c_event THEN
     INSERT INTO public.omnilink_events(
       tenant_id,
       integration_id,
@@ -371,7 +373,7 @@ BEGIN
     INSERT INTO public.audit_logs(actor_id, action_type, resource_type, resource_id, metadata)
     VALUES (NULL, 'omnilink.event.ingested', 'omnilink_event', v_record_id::text, jsonb_build_object('integration_id', p_integration_id));
 
-    v_status := 'ingested';
+    v_status := c_ingested;
   ELSE
     INSERT INTO public.omnilink_orchestration_requests(
       tenant_id,

@@ -101,9 +101,11 @@ DECLARE
   v_succeeded_status constant public.omnilink_req_status := 'succeeded';
   v_failed_status constant public.omnilink_req_status := 'failed';
   v_status_key constant text := 'status';
+  c_succeeded constant text := 'succeeded';
+  c_failed constant text := 'failed';
 BEGIN
   -- Validate status
-  IF p_status NOT IN ('succeeded', 'failed') THEN
+  IF p_status NOT IN (c_succeeded, c_failed) THEN
     RETURN jsonb_build_object(v_status_key, 'invalid_status');
   END IF;
 

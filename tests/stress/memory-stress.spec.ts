@@ -17,8 +17,8 @@ describe('Memory Stress Tests', () => {
 
   afterEach(() => {
     // Force garbage collection hint (if available)
-    if (global.gc) {
-      global.gc();
+    if (globalThis.gc) {
+      globalThis.gc();
     }
   });
 
@@ -61,7 +61,7 @@ describe('Memory Stress Tests', () => {
   describe('Event Listener Memory', () => {
     it('cleans up all event listeners', () => {
       // Skip if window.addEventListener is not available (some jsdom versions)
-      if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') {
+      if (typeof globalThis.window === 'undefined' || typeof globalThis.window.addEventListener !== 'function') {
         expect(true).toBe(true); // Pass the test as environment doesn't support this
         return;
       }
@@ -78,11 +78,11 @@ describe('Memory Stress Tests', () => {
 
       // Remove all
       listeners.forEach(listener => {
-        window.removeEventListener('test-event', listener);
+        globalThis.window.removeEventListener('test-event', listener);
       });
 
       // Trigger - should not increment
-      window.dispatchEvent(new Event('test-event'));
+      globalThis.window.dispatchEvent(new Event('test-event'));
       expect(callCount).toBe(0);
     });
   });

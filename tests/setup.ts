@@ -14,14 +14,13 @@ if (globalThis.crypto === undefined) {
   // @ts-expect-error - webcrypto is compatible with Crypto interface
   globalThis.crypto = webcrypto;
 } else {
-  // Even if crypto exists, ensure subtle is available
-  if (globalThis.crypto.subtle === undefined) {
+  // Even if crypto exists, ensure subtle is available AND fully functional (JSDOM often has stubbed subtle)
+  if (globalThis.crypto.subtle === undefined || typeof globalThis.crypto.subtle.generateKey !== 'function') {
     // @ts-expect-error - webcrypto.subtle is compatible
     globalThis.crypto.subtle = webcrypto.subtle;
   }
   // Ensure randomUUID is available
   if (typeof globalThis.crypto.randomUUID !== 'function') {
-    // @ts-expect-error - adding method
     globalThis.crypto.randomUUID = webcrypto.randomUUID.bind(webcrypto);
   }
   // Ensure getRandomValues is available
@@ -79,8 +78,9 @@ if (globalThis.window !== undefined) {
 // CRITICAL: Clean up React Testing Library between tests to prevent
 // "Should not already be working" errors caused by React concurrent rendering
 afterEach(() => {
-  // Use RTL's cleanup to properly unmount React trees
-  cleanup();
+  // cleanup() is handled automatically by @testing-library/react
+  // We avoid manual cleanup to prevent "Should not already be working" race conditions
+
   
   // Also clear the DOM body as a fallback
   if (typeof document !== 'undefined' && document.body) {
