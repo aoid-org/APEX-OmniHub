@@ -9,13 +9,13 @@ import { ARMAGEDDON_TASK_QUEUE } from '../worker';
 import { v4 as uuidv4 } from 'uuid';
 
 async function runArmageddon() {
-    console.log('Connecting to Temporal...');
+    console.warn('Connecting to Temporal...');
     const connection = await Connection.connect({ address: 'localhost:7233' });
     const client = new Client({ connection });
 
     const runId = uuidv4();
-    console.log(`Starting Armageddon Level 7 Certification Run (ID: ${runId})...`);
-    console.log('Configuration: 10,000 iterations per battery, <0.01% escape threshold');
+    console.warn(`Starting Armageddon Level 7 Certification Run (ID: ${runId})...`);
+    console.warn('Configuration: 10,000 iterations per battery, <0.01% escape threshold');
 
     const handle = await client.workflow.start(ArmageddonLevel7Workflow, {
         taskQueue: ARMAGEDDON_TASK_QUEUE,
@@ -27,8 +27,8 @@ async function runArmageddon() {
         }],
     });
 
-    console.log(`Started Workflow: ${handle.workflowId}`);
-    console.log('Waiting for results (timeout 1h)...');
+    console.warn(`Started Workflow: ${handle.workflowId}`);
+    console.warn('Waiting for results (timeout 1h)...');
 
     try {
         const result = await handle.result();
@@ -36,21 +36,21 @@ async function runArmageddon() {
         const totalAttempts = result.batteries.reduce((acc, b) => acc + b.attempts, 0);
         const totalEscapes = result.batteries.reduce((acc, b) => acc + b.escapes, 0);
 
-        console.log('\n--- ARMAGEDDON LEVEL 7 RESULTS ---');
-        console.log(`Verdict: ${result.verdict}`);
-        console.log(`Aggregate Escape Rate: ${(result.aggregateEscapeRate * 100).toFixed(4)}%`);
-        console.log(`Total Attempts: ${totalAttempts}`);
-        console.log(`Total Escapes: ${totalEscapes}`);
-        console.log('\nBattery Details:');
+        console.warn('\n--- ARMAGEDDON LEVEL 7 RESULTS ---');
+        console.warn(`Verdict: ${result.verdict}`);
+        console.warn(`Aggregate Escape Rate: ${(result.aggregateEscapeRate * 100).toFixed(4)}%`);
+        console.warn(`Total Attempts: ${totalAttempts}`);
+        console.warn(`Total Escapes: ${totalEscapes}`);
+        console.warn('\nBattery Details:');
         result.batteries.forEach(b => {
-            console.log(`  Battery ${b.batteryId}: ${b.status} (Attempts: ${b.attempts}, Escapes: ${b.escapes})`);
+            console.warn(`  Battery ${b.batteryId}: ${b.status} (Attempts: ${b.attempts}, Escapes: ${b.escapes})`);
         });
 
         if (result.verdict === 'CERTIFIED') {
-            console.log('\nCERTIFICATION SUCCESSFUL');
+            console.warn('\nCERTIFICATION SUCCESSFUL');
             process.exit(0);
         } else {
-            console.log('\nCERTIFICATION FAILED');
+            console.warn('\nCERTIFICATION FAILED');
             process.exit(1);
         }
     } catch (err) {

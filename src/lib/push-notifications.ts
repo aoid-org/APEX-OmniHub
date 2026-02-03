@@ -270,11 +270,11 @@ export async function initializePushNotifications(vapidPublicKey?: string): Prom
 
   // If already subscribed, just log status
   if (status.subscribed) {
-    console.log('[Push] Already subscribed to push notifications');
+    console.warn('[Push] Already subscribed to push notifications');
     return;
   }
 
-  console.log('[Push] Push notifications initialized (not subscribed)');
+  console.warn('[Push] Push notifications initialized (not subscribed)');
 }
 
 /**

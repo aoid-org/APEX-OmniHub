@@ -31,6 +31,7 @@ const STORAGE_KEY = 'omni_sentry_enabled';
 /**
  * Check if OmniSentry is enabled via localStorage
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function isOmniSentryEnabled(): boolean {
   try {
     return localStorage.getItem(STORAGE_KEY) === 'true';
@@ -42,6 +43,7 @@ export function isOmniSentryEnabled(): boolean {
 /**
  * Set OmniSentry enabled state
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function setOmniSentryEnabled(enabled: boolean): void {
   try {
     localStorage.setItem(STORAGE_KEY, String(enabled));
@@ -59,6 +61,7 @@ export function setOmniSentryEnabled(enabled: boolean): void {
  * Initialize OmniSentry based on stored preference
  * Call this once at app startup
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function initializeFromPreference(): void {
   if (isOmniSentryEnabled()) {
     initializeOmniSentry();
