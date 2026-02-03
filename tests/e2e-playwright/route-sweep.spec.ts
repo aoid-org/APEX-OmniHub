@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { getAllRoutes, FEATURE_REGISTRY } from '../../src/features/registry';
 
 /**
@@ -12,6 +12,15 @@ import { getAllRoutes, FEATURE_REGISTRY } from '../../src/features/registry';
  * Uses Feature Registry as source of truth.
  */
 
+const APP_SHELL_SELECTOR = '[data-testid="app-shell"]';
+const FATAL_ERROR_PATTERNS = [
+  'createContext',
+  'Cannot read properties of undefined',
+  'ChunkLoadError',
+  'Loading chunk',
+  'Failed to fetch dynamically imported module',
+];
+
 // Get all public routes that don't require auth for unauthenticated sweep
 const PUBLIC_ROUTES = FEATURE_REGISTRY
   .filter((f) => f.isEnabled && f.requiredScopes.includes('public'))
@@ -20,45 +29,52 @@ const PUBLIC_ROUTES = FEATURE_REGISTRY
 // All routes for authenticated sweep
 const ALL_ROUTES = getAllRoutes();
 
+/** Setup console error tracking for page */
+function setupErrorTracking(page: Page, consoleErrors: string[]): void {
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') {
+      consoleErrors.push(msg.text());
+    }
+  });
+
+  page.on('pageerror', (error) => {
+    consoleErrors.push(`PAGE ERROR: ${error.message}`);
+  });
+}
+
+/** Filter fatal errors from console output */
+function getFatalErrors(consoleErrors: string[]): string[] {
+  return consoleErrors.filter((err) =>
+    FATAL_ERROR_PATTERNS.some((pattern) => err.includes(pattern))
+  );
+}
+
+/** Check if app shell is visible on page */
+async function checkAppShell(page: Page, timeout = 5000): Promise<boolean> {
+  return page
+    .locator(APP_SHELL_SELECTOR)
+    .isVisible({ timeout })
+    .catch(() => false);
+}
+
 test.describe('Route Sweep - Public Routes', () => {
   const consoleErrors: string[] = [];
 
   test.beforeEach(async ({ page }) => {
     consoleErrors.length = 0;
-
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') {
-        consoleErrors.push(msg.text());
-      }
-    });
-
-    page.on('pageerror', (error) => {
-      consoleErrors.push(`PAGE ERROR: ${error.message}`);
-    });
+    setupErrorTracking(page, consoleErrors);
   });
 
   for (const route of PUBLIC_ROUTES) {
     test(`${route} - renders without fatal errors`, async ({ page }) => {
-      // Navigate to route
       const response = await page.goto(route, { waitUntil: 'networkidle' });
 
-      // Should not be a 404 or server error
       expect(response?.status()).toBeLessThan(400);
 
-      // Wait for app shell
-      const appShell = page.locator('[data-testid="app-shell"]');
+      const appShell = page.locator(APP_SHELL_SELECTOR);
       await expect(appShell).toBeVisible({ timeout: 15_000 });
 
-      // Check for fatal errors
-      const fatalErrors = consoleErrors.filter(
-        (err) =>
-          err.includes('createContext') ||
-          err.includes('Cannot read properties of undefined') ||
-          err.includes('ChunkLoadError') ||
-          err.includes('Loading chunk') ||
-          err.includes('Failed to fetch dynamically imported module')
-      );
-
+      const fatalErrors = getFatalErrors(consoleErrors);
       expect(
         fatalErrors,
         `Fatal errors on ${route}:\n${fatalErrors.join('\n')}`
@@ -78,10 +94,7 @@ test.describe('Route Sweep - All Routes Summary', () => {
           timeout: 10_000 
         });
 
-        const hasAppShell = await page
-          .locator('[data-testid="app-shell"]')
-          .isVisible({ timeout: 5_000 })
-          .catch(() => false);
+        const hasAppShell = await checkAppShell(page);
 
         results.push({
           route,
@@ -97,16 +110,13 @@ test.describe('Route Sweep - All Routes Summary', () => {
       }
     }
 
-    // Log summary
     const passed = results.filter((r) => r.status && r.status < 400 && r.hasAppShell);
     const failed = results.filter((r) => !r.status || r.status >= 400 || !r.hasAppShell);
 
-    // Report
     if (failed.length > 0) {
       console.error('Failed routes:', failed);
     }
 
-    // At least 80% of routes should render
     const successRate = passed.length / results.length;
     expect(successRate).toBeGreaterThanOrEqual(0.8);
   });

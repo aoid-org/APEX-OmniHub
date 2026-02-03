@@ -576,7 +576,7 @@ export function getAccessibleFeatures(userScopes: readonly AccessScope[]): reado
  */
 export function canAccessFeature(featureId: string, userScopes: readonly AccessScope[]): boolean {
   const feature = getFeatureById(featureId);
-  if (!feature || !feature.isEnabled) return false;
+  if (!feature?.isEnabled) return false;
   return feature.requiredScopes.every(
     (scope) => userScopes.includes(scope) || scope === 'public'
   );

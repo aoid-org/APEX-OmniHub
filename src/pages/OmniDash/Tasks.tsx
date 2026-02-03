@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExecute } from "@/hooks/useExecute";
 import { useDemoStore } from "@/stores/demoStore";
-import { useAccess } from "@/contexts/AccessContext";
 
 type TaskStatus = "queued" | "waiting_approval" | "approved" | "running" | "succeeded" | "failed" | "denied";
 type TaskTarget = "apex-sales" | "lead-gen";

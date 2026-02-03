@@ -18,7 +18,6 @@ import { useDemoStore } from '@/stores/demoStore';
 export const Today = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { toast } = useToast();
   const settings = useOmniDashSettings();
   const queryClient = useQueryClient();
   const { isDemo, execute } = useExecute();
