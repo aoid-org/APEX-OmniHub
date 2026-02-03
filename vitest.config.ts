@@ -27,13 +27,13 @@ export default defineConfig({
       ...(process.env.CI ? ['tests/integration/**'] : [])
     ],
     setupFiles: ['tests/setup.ts'],
-    // Fix coverage race condition in CI
+    // Fix coverage race condition in CI - run tests sequentially for coverage
+    // Vitest 4.x: poolOptions removed, options are now top-level
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    maxWorkers: 1,
+    isolate: false,
+    // Prevent parallel file processing which causes coverage file race conditions
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',

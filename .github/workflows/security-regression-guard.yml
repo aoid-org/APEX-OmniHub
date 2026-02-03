@@ -90,8 +90,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -99,13 +99,21 @@ jobs:
       - name: Run npm audit
         run: |
           echo "Running npm security audit (production dependencies only)..."
-          npm audit --omit=dev --audit-level=high
-          if [ $? -ne 0 ]; then
-            echo "::error::High severity vulnerabilities found in production dependencies. Run 'npm audit fix' to resolve."
+          echo "Note: Dev dependencies (Hardhat/ethers v5) have known low-severity vulnerabilities with no upstream fix"
+
+          # Audit production dependencies only - these are what gets deployed
+          npm audit --omit=dev
+          AUDIT_EXIT=$?
+
+          if [ $AUDIT_EXIT -ne 0 ]; then
+            echo "::error::Vulnerabilities found in production dependencies. Run 'npm audit fix' to resolve."
             exit 1
           fi
-          echo "✅ No high/critical vulnerabilities in production dependencies"
-          echo "Note: Dev dependencies (Hardhat/ethers v5) have known vulnerabilities that are acceptable for development tools"
+
+          echo "✅ Zero vulnerabilities in production dependencies"
+          echo ""
+          echo "Dev dependency audit (informational only, will not fail build):"
+          npm audit || true
 
       - name: Check Python lockfile exists
         run: |
@@ -128,8 +136,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
