@@ -28,7 +28,7 @@ describe('Platform Quality Gates', () => {
     const lint = JSON.parse(result);
     const totalErrors = lint.reduce((acc: number, file: { errorCount: number }) => acc + file.errorCount, 0);
     expect(totalErrors).toBe(0);
-  });
+  }, 30000); // 30 second timeout for full codebase ESLint scan
 
   it('Gate 3: Critical configuration files exist', () => {
     const criticalFiles = [
