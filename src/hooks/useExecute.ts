@@ -6,7 +6,7 @@
  */
 
 import { useCallback } from 'react';
-import { useAccess } from '@/contexts/AccessContext';
+import { useAccess } from '@/contexts/access-hooks';
 import { useDemoStore } from '@/stores/demoStore';
 
 type ActionType =

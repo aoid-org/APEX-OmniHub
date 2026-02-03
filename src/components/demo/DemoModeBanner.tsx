@@ -7,7 +7,7 @@
 
 import { memo } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
-import { useAccess } from '@/contexts/AccessContext';
+import { useAccess } from '@/contexts/access-hooks';
 import { Button } from '@/components/ui/button';
 import { useDemoStore } from '@/stores/demoStore';
 

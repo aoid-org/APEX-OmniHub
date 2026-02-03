@@ -10,7 +10,7 @@
 
 import { type ReactNode, memo } from 'react';
 import type { AccessScope } from '@/features/registry';
-import { useAccess } from '@/contexts/AccessContext';
+import { useAccess } from '@/contexts/access-hooks';
 
 interface AccessGateProps {
   readonly requiredScopes: readonly AccessScope[];

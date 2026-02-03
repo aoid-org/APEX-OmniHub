@@ -1,0 +1,26 @@
+﻿<!-- VALUATION_IMPACT: Maps multi-layer topology for 10k-tenant scaling proof -->
+<!-- Generated: 2026-02-03 -->
+graph TB
+  FE[Frontend: OmniDash + Mobile]
+  EF[Edge Functions: Supabase]
+  OR[Orchestrator: Temporal]
+  DB[(Data Layer: Supabase + pgvector)]
+  SEC[Security: Guardian + Triforce]
+
+  FE -->|API + Auth| EF
+  EF -->|Trigger workflows| OR
+  OR -->|Read/Write| DB
+  OR -->|Audit logs| SEC
+  EF -->|RLS enforcement| SEC
+
+  note1[Horizontal scale: Add Temporal workers]
+  note2[Vertical scale: Increase Supabase compute]
+  note3[Horizontal scale: Add edge concurrency per region]
+  note4[Vertical scale: Expand pgvector compute tier]
+  OR -.-> note1
+  DB -.-> note2
+  EF -.-> note3
+  DB -.-> note4
+
+# Verify:
+mermaid-cli docs/architecture/SYSTEM_TOPOLOGY.mermaid

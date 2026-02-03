@@ -36,7 +36,7 @@ export default tseslint.config(
   },
   // Relaxed rules for CLI scripts, simulation, and sandbox files
   {
-    files: ["sim/**/*.ts", "scripts/**/*.ts", "sandbox/**/*.ts"],
+    files: ["sim/**/*.ts", "scripts/**/*.ts", "src/scripts/**/*.ts", "sandbox/**/*.ts"],
     rules: {
       "no-console": "off",
       "@typescript-eslint/no-explicit-any": "warn",  // Allow any in simulation code

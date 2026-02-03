@@ -1,0 +1,50 @@
+﻿{
+  "_meta": {
+    "valuation_impact": "Demonstrates automotive workflow readiness",
+    "generated": "2026-02-03"
+  },
+  "name": "dealer-service-flow",
+  "version": "1.3.0",
+  "description": "Automotive dealer orchestration linking intake, scheduling, payment, CRM.",
+  "triggers": [
+    {
+      "type": "http",
+      "config": {"path": "/webhooks/dealer-service", "method": "POST"}
+    }
+  ],
+  "steps": [
+    {
+      "id": "vehicle-intake",
+      "name": "Vehicle Intake",
+      "executor": "vehicleIntakeActivity",
+      "inputs": ["vin", "photos"],
+      "outputs": ["intakeId", "conditionReport"]
+    },
+    {
+      "id": "service-scheduling",
+      "name": "Service Scheduling",
+      "executor": "scheduleServiceActivity",
+      "inputs": ["intakeId", "availability"],
+      "outputs": ["appointmentId", "technicianId"]
+    },
+    {
+      "id": "payment-processing",
+      "name": "Payment Processing",
+      "executor": "processPaymentActivity",
+      "inputs": ["appointmentId", "cardToken"],
+      "outputs": ["transactionId", "receipt"]
+    },
+    {
+      "id": "crm-update",
+      "name": "CRM Update",
+      "executor": "crmUpdateActivity",
+      "inputs": ["vehicleId", "serviceSummary"],
+      "outputs": ["historyRecordId"]
+    }
+  ],
+  "outputs": [
+    {"name": "appointmentId", "type": "string"},
+    {"name": "transactionId", "type": "string"},
+    {"name": "historyRecordId", "type": "string"}
+  ]
+}

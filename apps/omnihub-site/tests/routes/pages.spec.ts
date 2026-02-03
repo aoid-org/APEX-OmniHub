@@ -12,6 +12,7 @@ import { test, expect } from '@playwright/test';
 
 // Test configuration
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
+const buildUrl = (route: string) => new URL(route, BASE_URL).toString();
 
 // Page test matrix: [route, expectedContent]
 const PAGE_TESTS = [
@@ -29,7 +30,7 @@ test.describe('Marketing Site Routing', () => {
 
   for (const pageTest of PAGE_TESTS) {
     test(`${pageTest.route} → displays ${pageTest.description}`, async ({ page }) => {
-      await page.goto(pageTest.route);
+      await page.goto(buildUrl(pageTest.route));
 
       // Wait for content to be visible
       await page.waitForSelector('body', { state: 'visible' });
@@ -44,7 +45,7 @@ test.describe('Marketing Site Routing', () => {
     });
 
     test(`${pageTest.htmlRoute} → displays ${pageTest.description}`, async ({ page }) => {
-      await page.goto(pageTest.htmlRoute);
+      await page.goto(buildUrl(pageTest.htmlRoute));
 
       // Wait for content to be visible
       await page.waitForSelector('body', { state: 'visible' });
@@ -61,7 +62,7 @@ test.describe('Marketing Site Routing', () => {
     // Test trailing slash for clean URLs
     if (pageTest.route !== '/') {
       test(`${pageTest.route}/ → displays ${pageTest.description}`, async ({ page }) => {
-        await page.goto(`${pageTest.route}/`);
+        await page.goto(buildUrl(`${pageTest.route}/`));
 
         // Wait for content to be visible
         await page.waitForSelector('body', { state: 'visible' });
@@ -80,21 +81,21 @@ test.describe('Marketing Site Routing', () => {
 
 test.describe('Routing Regression Guards', () => {
   test('restricted page should not exist', async ({ page }) => {
-    const response = await page.goto('/restricted', { waitUntil: 'load' });
+    const response = await page.goto(buildUrl('/restricted'), { waitUntil: 'load' });
 
     // Should 404 or redirect, not return 200 OK
     expect(response?.status()).not.toBe(200);
   });
 
   test('restricted.html should not exist', async ({ page }) => {
-    const response = await page.goto('/restricted.html', { waitUntil: 'load' });
+    const response = await page.goto(buildUrl('/restricted.html'), { waitUntil: 'load' });
 
     // Should 404 or redirect, not return 200 OK
     expect(response?.status()).not.toBe(200);
   });
 
   test('unknown route should 404', async ({ page }) => {
-    const response = await page.goto('/this-page-does-not-exist', { waitUntil: 'load' });
+    const response = await page.goto(buildUrl('/this-page-does-not-exist'), { waitUntil: 'load' });
 
     // Should return 404
     expect(response?.status()).toBe(404);
@@ -103,7 +104,7 @@ test.describe('Routing Regression Guards', () => {
 
 test.describe('Navigation Links', () => {
   test('all nav links are reachable', async ({ page }) => {
-    await page.goto('/');
+    await page.goto(buildUrl('/'));
 
     // Wait for navigation to be visible
     await page.waitForSelector('nav', { state: 'visible' });
@@ -115,18 +116,18 @@ test.describe('Navigation Links', () => {
     for (const link of navLinks) {
       const href = await link.getAttribute('href');
       if (href && !href.startsWith('http') && !href.startsWith('#')) {
-        const response = await page.goto(href, { waitUntil: 'load' });
+        const response = await page.goto(buildUrl(href), { waitUntil: 'load' });
         expect(response?.status()).toBe(200);
 
         // Go back to home
-        await page.goto('/');
+        await page.goto(buildUrl('/'));
         await page.waitForSelector('nav', { state: 'visible' });
       }
     }
   });
 
   test('all footer links are reachable', async ({ page }) => {
-    await page.goto('/');
+    await page.goto(buildUrl('/'));
 
     // Wait for footer to be visible
     await page.waitForSelector('footer', { state: 'visible' });
@@ -138,11 +139,11 @@ test.describe('Navigation Links', () => {
     for (const link of footerLinks) {
       const href = await link.getAttribute('href');
       if (href && !href.startsWith('http') && !href.startsWith('#')) {
-        const response = await page.goto(href, { waitUntil: 'load' });
+        const response = await page.goto(buildUrl(href), { waitUntil: 'load' });
         expect(response?.status()).toBe(200);
 
         // Go back to home
-        await page.goto('/');
+        await page.goto(buildUrl('/'));
         await page.waitForSelector('footer', { state: 'visible' });
       }
     }

@@ -307,11 +307,8 @@ export async function initializeBiometricAuth(): Promise<void> {
   const info = await getBiometricAuthenticatorInfo();
 
   if (!info.available) {
-    console.log('[Biometric] Authenticator not available');
     return;
   }
-
-  console.log('[Biometric] Authenticator available:', info);
 
   void logAnalyticsEvent('biometric.initialized', {
     ...info,
@@ -382,7 +379,6 @@ export async function setupBiometricLogin(
       throw new Error('Failed to register credential on server');
     }
 
-    console.log('[Biometric] Setup complete');
     return true;
   } catch (error) {
     console.error('[Biometric] Setup failed:', error);

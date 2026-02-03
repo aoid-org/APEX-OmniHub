@@ -7,7 +7,7 @@
  * - userScopes: current user's access scopes
  */
 
-import { createContext, useContext, useState, useCallback, useEffect, useMemo, type ReactNode } from 'react';
+import { createContext, useState, useCallback, useEffect, useMemo, type ReactNode } from 'react';
 import type { AccessScope } from '@/features/registry';
 
 interface AccessContextValue {
@@ -18,7 +18,7 @@ interface AccessContextValue {
   readonly isAdmin: boolean;
 }
 
-const AccessContext = createContext<AccessContextValue | null>(null);
+export const AccessContext = createContext<AccessContextValue | null>(null);
 
 const DEMO_MODE_KEY = 'apex-demo-mode';
 
@@ -71,20 +71,4 @@ export function AccessProvider({ children, initialScopes = ['public'] }: AccessP
   );
 }
 
-export function useAccess(): AccessContextValue {
-  const context = useContext(AccessContext);
-  if (!context) {
-    throw new Error('useAccess must be used within AccessProvider');
-  }
-  return context;
-}
-
-/**
- * Hook to check if current user can access a specific scope
- */
-export function useCanAccess(requiredScopes: readonly AccessScope[]): boolean {
-  const { userScopes } = useAccess();
-  return requiredScopes.every(
-    (scope) => userScopes.includes(scope) || scope === 'public'
-  );
-}
+export type { AccessContextValue };

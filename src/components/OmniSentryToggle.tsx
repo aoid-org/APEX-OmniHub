@@ -19,51 +19,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Shield, ShieldCheck, ShieldOff, Activity, Trash2 } from 'lucide-react';
 import {
-  initializeOmniSentry,
-  shutdownOmniSentry,
   getHealthStatus,
   clearAllData,
   type HealthStatus,
 } from '@/lib/omni-sentry';
-
-const STORAGE_KEY = 'omni_sentry_enabled';
-
-/**
- * Check if OmniSentry is enabled via localStorage
- */
-export function isOmniSentryEnabled(): boolean {
-  try {
-    return localStorage.getItem(STORAGE_KEY) === 'true';
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Set OmniSentry enabled state
- */
-export function setOmniSentryEnabled(enabled: boolean): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, String(enabled));
-    if (enabled) {
-      initializeOmniSentry();
-    } else {
-      shutdownOmniSentry();
-    }
-  } catch {
-    // Storage unavailable
-  }
-}
-
-/**
- * Initialize OmniSentry based on stored preference
- * Call this once at app startup
- */
-export function initializeFromPreference(): void {
-  if (isOmniSentryEnabled()) {
-    initializeOmniSentry();
-  }
-}
+import { isOmniSentryEnabled, setOmniSentryEnabled } from '@/lib/omni-sentry-preference';
 
 /**
  * OmniSentry Settings Dropdown

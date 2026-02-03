@@ -88,8 +88,8 @@ class ProtocolOmegaCLI {
   private readonly dashboardPath: string;
 
   constructor() {
-    this.enginePath = ENGINE_PATH;
-    this.dashboardPath = DASHBOARD_PATH;
+    this.enginePath = validatePath(ENGINE_PATH);
+    this.dashboardPath = validatePath(DASHBOARD_PATH);
     this.validateSetup();
   }
 

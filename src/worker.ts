@@ -52,7 +52,7 @@ export async function createArmageddonWorker(): Promise<Worker> {
 const __filename = fileURLToPath(import.meta.url);
 if (process.argv[1] === __filename) {
     try {
-        console.log('Starting Armageddon Level 7 Worker...');
+        console.warn('Starting Armageddon Level 7 Worker...');
         const worker = await createArmageddonWorker();
         await worker.run();
     } catch (err) {

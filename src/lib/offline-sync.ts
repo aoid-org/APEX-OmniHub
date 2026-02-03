@@ -3,6 +3,7 @@
  * Handles offline data queuing and smart conflict resolution when back online
  */
 
+import { createDebugLogger } from './debug-logger';
 import { logAnalyticsEvent } from './monitoring';
 
 export interface SyncQueueItem {
@@ -22,7 +23,7 @@ export interface ConflictResolutionStrategy {
 
 const SYNC_QUEUE_KEY = 'omnilink_sync_queue';
 const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 2000;
+const log = createDebugLogger('offline-sync.ts', 'A');
 
 /**
  * Check if Background Sync API is supported
@@ -228,12 +229,20 @@ async function resolveConflict(
   switch (strategy.type) {
     case 'server-wins':
       // Discard client changes, server data is authoritative
-      console.log('[OfflineSync] Conflict resolved: server wins');
+      log('Conflict resolved', {
+        strategy: 'server-wins',
+        resource: clientItem.resource,
+        id: clientItem.id,
+      });
       return true;
 
     case 'client-wins':
       // Force overwrite server with client data
-      console.log('[OfflineSync] Conflict resolved: client wins (force push)');
+      log('Conflict resolved', {
+        strategy: 'client-wins',
+        resource: clientItem.resource,
+        id: clientItem.id,
+      });
       // Would need to implement force flag in API
       return false; // For now, fail and require manual resolution
 
@@ -243,7 +252,11 @@ async function resolveConflict(
         // MERGE LOGIC PLACEHOLDER: Result unused in current impl
         strategy.mergeFunction(serverData, clientItem.data);
         // Update local data with merged result
-        console.log('[OfflineSync] Conflict resolved: merged');
+        log('Conflict resolved', {
+          strategy: 'merge',
+          resource: clientItem.resource,
+          id: clientItem.id,
+        });
         return true;
       }
       return false;
@@ -251,7 +264,10 @@ async function resolveConflict(
     case 'manual':
       // Store conflict for manual user resolution
       await storeConflictForManualResolution(clientItem, serverData);
-      console.log('[OfflineSync] Conflict stored for manual resolution');
+      log('Conflict stored for manual resolution', {
+        resource: clientItem.resource,
+        id: clientItem.id,
+      });
       return false;
 
     default:
@@ -336,7 +352,7 @@ export function setupBackgroundSyncListener() {
 
   navigator.serviceWorker.ready.then((registration) => {
     if ('sync' in registration) {
-      console.log('[OfflineSync] Background sync supported and ready');
+      log('Background sync supported', { status: 'ready' });
     }
   });
 }
@@ -349,14 +365,14 @@ export async function initializeOfflineSync(
   getUserToken: () => Promise<string | null>
 ): Promise<void> {
   if (!isBackgroundSyncSupported()) {
-    console.log('[OfflineSync] Background sync not supported, using manual sync');
+    console.warn('[OfflineSync] Background sync not supported, using manual sync');
   }
 
   setupBackgroundSyncListener();
 
   // Auto-sync when coming online
   globalThis.addEventListener('online', async () => {
-    console.log('[OfflineSync] Network online, processing sync queue');
+    log('Network online, processing sync queue');
 
     const token = await getUserToken();
     if (token) {
@@ -367,10 +383,10 @@ export async function initializeOfflineSync(
   // Check for pending syncs on init
   const queue = await getSyncQueue();
   if (queue.length > 0) {
-    console.log(`[OfflineSync] Found ${queue.length} items in sync queue`);
+    log('Found items in sync queue', { count: queue.length });
   }
 
-  console.log('[OfflineSync] Initialized');
+  log('Offline sync initialized');
 }
 
 /**

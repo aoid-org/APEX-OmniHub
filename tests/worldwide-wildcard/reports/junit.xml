@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?><testsuite name="WWWCT" tests="5" failures="3" errors="0" skipped="2"><testcase classname="WWWCT" name="Cross-Realm Workflow (EN)" time="0.001"><failure message="failed">{
+  &quot;orchestration_status&quot;: true,
+  &quot;audit_contains&quot;: true,
+  &quot;entities_updated&quot;: false,
+  &quot;nft_verification_recorded&quot;: true,
+  &quot;no_secret_leak&quot;: true
+}</failure></testcase><testcase classname="WWWCT" name="Cross-Realm Workflow (JP)" time="0.001"><failure message="failed">{
+  &quot;orchestration_status&quot;: true,
+  &quot;audit_contains&quot;: true,
+  &quot;entities_updated&quot;: false,
+  &quot;nft_verification_recorded&quot;: true,
+  &quot;no_secret_leak&quot;: true
+}</failure></testcase><testcase classname="WWWCT" name="OmniHub Fanout Report-back (EN)" time="0.001"><failure message="failed">{
+  &quot;orchestration_status&quot;: true,
+  &quot;audit_contains&quot;: true,
+  &quot;entities_updated&quot;: false,
+  &quot;no_secret_leak&quot;: true
+}</failure></testcase><testcase classname="WWWCT" name="Wildcard Injection (EN)" time="0.001"><failure message="blocked">{
+  &quot;orchestration_status&quot;: true,
+  &quot;injection_blocked&quot;: true,
+  &quot;audit_contains&quot;: true,
+  &quot;no_secret_leak&quot;: true
+}</failure></testcase><testcase classname="WWWCT" name="Wildcard Injection (JP)" time="0.001"><failure message="blocked">{
+  &quot;orchestration_status&quot;: true,
+  &quot;injection_blocked&quot;: true,
+  &quot;audit_contains&quot;: true,
+  &quot;no_secret_leak&quot;: true
+}</failure></testcase></testsuite>
