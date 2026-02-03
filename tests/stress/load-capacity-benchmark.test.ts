@@ -30,7 +30,9 @@ async function runLoadTest(
   const userPromises = Array.from({ length: concurrentUsers }, async () => {
     for (let i = 0; i < requestsPerUser; i++) {
       try {
-        const latency = await simulateRequest(avgDelayMs + Math.random() * 20 - 10);
+        // NOSONAR: Math.random() is safe here - used only for non-cryptographic test jitter to simulate realistic latency variance
+        const jitter = Math.random() * 20 - 10;
+        const latency = await simulateRequest(avgDelayMs + jitter);
         allLatencies.push(latency);
         successCount++;
       } catch {

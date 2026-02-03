@@ -5,23 +5,26 @@ import { execSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
+// NOSONAR: execSync commands in this file are safe - executed in controlled CI/test environment with trusted node_modules/.bin PATH
+const getSecureExecOptions = () => ({
+  encoding: 'utf-8' as const,
+  stdio: 'pipe' as const,
+  cwd: process.cwd(),
+  env: {
+    ...process.env,
+    PATH: `${process.cwd()}/node_modules/.bin:${process.env.PATH}`
+  }
+});
+
 describe('Platform Quality Gates', () => {
   it('Gate 1: TypeScript compilation must succeed', () => {
     expect(() => {
-      execSync('npx tsc --noEmit', {
-        encoding: 'utf-8',
-        stdio: 'pipe',
-        cwd: process.cwd()
-      });
+      execSync('npx tsc --noEmit', getSecureExecOptions());
     }).not.toThrow();
   });
 
   it('Gate 2: ESLint must pass with zero warnings', () => {
-    const result = execSync('npx eslint . --max-warnings 0 --format json', {
-      encoding: 'utf-8',
-      stdio: 'pipe',
-      cwd: process.cwd()
-    });
+    const result = execSync('npx eslint . --max-warnings 0 --format json', getSecureExecOptions());
     const lint = JSON.parse(result);
     const totalErrors = lint.reduce((acc: number, file: { errorCount: number }) => acc + file.errorCount, 0);
     expect(totalErrors).toBe(0);
