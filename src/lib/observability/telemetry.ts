@@ -10,7 +10,7 @@ interface TelemetryContext {
 
 export class TelemetryProvider {
   private tracer: Tracer | null = null;
-  private spans = new Map<string, Span>();
+  private readonly spans = new Map<string, Span>();
 
   /** Configure tracer instance prior to logging. */
   public init(): void {

@@ -438,7 +438,8 @@ export function createEvent<T = unknown>(
       return crypto.randomUUID();
     }
     // Fallback for environments without crypto.randomUUID
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    // Fallback for environments without crypto.randomUUID
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replaceAll(/[xy]/g, (c) => {
       const r = Math.trunc(Math.random() * 16);
       const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
@@ -589,7 +590,7 @@ export function validateEvent(event: EventEnvelope): { valid: boolean; errors: s
   if (!event.schemaVersion) errors.push('schemaVersion is required');
 
   // Validate timestamp format
-  if (event.timestamp && isNaN(Date.parse(event.timestamp))) {
+  if (event.timestamp && Number.isNaN(Date.parse(event.timestamp))) {
     errors.push('timestamp must be valid ISO 8601');
   }
 

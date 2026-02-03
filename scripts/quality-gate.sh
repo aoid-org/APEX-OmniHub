@@ -9,6 +9,7 @@ run_check() {
     echo "FAIL: ${cmd[*]}" >&2
     exit 1
   fi
+  return 0
 }
 
 echo "🔒 Running APEX Gate"

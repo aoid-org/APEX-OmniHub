@@ -9,7 +9,10 @@ YELLOW="\033[33m"
 RESET="\033[0m"
 
 print_status() {
-  printf "%b%s%b\n" "$1" "$2" "$RESET"
+  local color="$1"
+  local message="$2"
+  printf "%b%s%b\n" "$color" "$message" "$RESET"
+  return 0
 }
 
 : "${PSQL_CONN:?[NEEDS_CONFIG: supply Supabase psql connection string]}"
@@ -29,7 +32,7 @@ if ! curl -fs "$TEMPORAL_STATUS_URL" >/dev/null; then
 fi
 
 redis_output=$(redis-cli -u "$REDIS_URI" INFO STATS)
-if [ -z "$redis_output" ]; then
+if [[ -z "$redis_output" ]]; then
   print_status "$RED" "Redis unreachable"
   exit 1
 fi
