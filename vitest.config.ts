@@ -27,6 +27,18 @@ export default defineConfig({
       ...(process.env.CI ? ['tests/integration/**'] : [])
     ],
     setupFiles: ['tests/setup.ts'],
+    // Fix coverage race condition in CI
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
+    coverage: {
+      provider: 'v8',
+      reportsDirectory: './coverage',
+      clean: true,
+    },
   },
   resolve: {
     alias: {
