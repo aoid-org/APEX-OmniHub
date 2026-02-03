@@ -154,7 +154,7 @@ const seedApprovals: DemoApproval[] = [
 // ============================================================================
 
 function generateId(): string {
-  return `demo-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  return `demo-${globalThis.crypto.randomUUID()}`;
 }
 
 export const useDemoStore = create<DemoStore>((set) => ({
