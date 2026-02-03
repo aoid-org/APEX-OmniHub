@@ -130,7 +130,7 @@ const seedTasks: DemoTask[] = [
 const seedKpis: DemoKpi[] = [
   { id: 'kpi-001', name: 'Monthly Revenue', value: 125000, unit: 'USD', trend: 'up', target: 150000 },
   { id: 'kpi-002', name: 'Active Users', value: 1247, unit: 'users', trend: 'up', target: 1500 },
-  { id: 'kpi-003', name: 'Conversion Rate', value: 3.2, unit: '%', trend: 'stable', target: 4.0 },
+  { id: 'kpi-003', name: 'Conversion Rate', value: 3.2, unit: '%', trend: 'stable', target: 4 },
   { id: 'kpi-004', name: 'Support Tickets', value: 23, unit: 'tickets', trend: 'down', target: 20 },
   { id: 'kpi-005', name: 'Uptime', value: 99.97, unit: '%', trend: 'stable', target: 99.9 },
 ];
