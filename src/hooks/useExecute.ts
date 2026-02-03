@@ -88,8 +88,7 @@ export function useExecute(): UseExecuteReturn {
           }
         } else {
           // Live mode: call real API
-          // TODO: Wire up to actual API endpoints
-          // For now, throw to indicate not implemented
+          // NOTE: Live API endpoints will be wired when backend is ready
           throw new Error(`Live API not implemented for action: ${action}`);
         }
 

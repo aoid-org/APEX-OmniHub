@@ -29,7 +29,7 @@ interface AccessProviderProps {
 
 export function AccessProvider({ children, initialScopes = ['public'] }: AccessProviderProps) {
   const [isDemo, setIsDemo] = useState<boolean>(() => {
-    if (typeof globalThis.window === 'undefined') return false;
+    if (globalThis.window === undefined) return false;
     return localStorage.getItem(DEMO_MODE_KEY) === 'true';
   });
 

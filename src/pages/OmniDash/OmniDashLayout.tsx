@@ -9,18 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchHealthSnapshot, updateSettings } from '@/omnidash/api';
 import { OMNIDASH_FLAG, OMNIDASH_SAFE_ENABLE_NOTE, OMNIDASH_NAV_ITEMS } from '@/omnidash/types';
 import { OmniDashNavIconButton } from '@/components/OmniDashNavIconButton';
-
-import { Outlet } from 'react-router-dom';
-import { AlertCircle, Activity, ShieldCheck } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { useAdminAccess, useOmniDashSettings } from '@/omnidash/hooks';
-import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
-import { fetchHealthSnapshot, updateSettings } from '@/omnidash/api';
-import { OMNIDASH_FLAG, OMNIDASH_SAFE_ENABLE_NOTE, OMNIDASH_NAV_ITEMS } from '@/omnidash/types';
-import { OmniDashNavIconButton } from '@/components/OmniDashNavIconButton';
 import { DemoModeBanner } from '@/components/demo/DemoModeBanner';
 
 export const OmniDashLayout = () => {

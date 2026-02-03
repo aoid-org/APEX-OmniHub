@@ -13,7 +13,6 @@ import { redactTodayItems } from '@/omnidash/redaction';
 import { TodayItem } from '@/omnidash/types';
 import { useToast } from '@/components/ui/use-toast';
 import { useExecute } from '@/hooks/useExecute';
-import { useAccess } from '@/contexts/AccessContext';
 import { useDemoStore } from '@/stores/demoStore';
 
 export const Today = () => {

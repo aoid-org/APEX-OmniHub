@@ -60,22 +60,30 @@ export default function Tasks() {
 
   const { isDemo, execute } = useExecute();
   const demoStore = useDemoStore();
-  const { isAdmin } = useAccess();
 
   const { data: tasks, isLoading } = useQuery({
-    queryKey: ["omnilink-tasks"],
     queryKey: ["omnilink-tasks", isDemo],
     queryFn: async () => {
       if (isDemo) {
-        return demoStore.tasks.map(t => ({
-          id: t.id,
-          type: 'apex.task',
-          params: { action: t.title, target: 'apex-sales' },
-          status: t.status === 'in_progress' ? 'running' : t.status === 'completed' ? 'succeeded' : t.status as TaskStatus,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          policy: { require_approval: true }
-        })) as Task[];
+        return demoStore.tasks.map(t => {
+          let status: TaskStatus;
+          if (t.status === 'in_progress') {
+            status = 'running';
+          } else if (t.status === 'completed') {
+            status = 'succeeded';
+          } else {
+            status = t.status as TaskStatus;
+          }
+          return {
+            id: t.id,
+            type: 'apex.task',
+            params: { action: t.title, target: 'apex-sales' },
+            status,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            policy: { require_approval: true }
+          };
+        }) as Task[];
       }
       const { data, error } = await supabase
         .from("omnilink_orchestration_requests")
