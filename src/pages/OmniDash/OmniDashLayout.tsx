@@ -10,6 +10,19 @@ import { fetchHealthSnapshot, updateSettings } from '@/omnidash/api';
 import { OMNIDASH_FLAG, OMNIDASH_SAFE_ENABLE_NOTE, OMNIDASH_NAV_ITEMS } from '@/omnidash/types';
 import { OmniDashNavIconButton } from '@/components/OmniDashNavIconButton';
 
+import { Outlet } from 'react-router-dom';
+import { AlertCircle, Activity, ShieldCheck } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { useAdminAccess, useOmniDashSettings } from '@/omnidash/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { fetchHealthSnapshot, updateSettings } from '@/omnidash/api';
+import { OMNIDASH_FLAG, OMNIDASH_SAFE_ENABLE_NOTE, OMNIDASH_NAV_ITEMS } from '@/omnidash/types';
+import { OmniDashNavIconButton } from '@/components/OmniDashNavIconButton';
+import { DemoModeBanner } from '@/components/demo/DemoModeBanner';
+
 export const OmniDashLayout = () => {
   const { user } = useAuth();
   const { isAdmin, loading, featureEnabled } = useAdminAccess();
@@ -67,6 +80,7 @@ export const OmniDashLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <DemoModeBanner />
       {/* Header */}
       <header className="h-16 border-b bg-background flex items-center px-4 md:px-6">
         <div className="flex items-center justify-between w-full max-w-full">
@@ -118,7 +132,7 @@ export const OmniDashLayout = () => {
 
       {/* Main Content */}
       <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
-        <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[2fr,1fr]">
           <div className="space-y-4">
             <Outlet />
           </div>

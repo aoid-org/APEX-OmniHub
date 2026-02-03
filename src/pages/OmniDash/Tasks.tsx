@@ -12,6 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, XCircle, Clock, Play, Plus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useExecute } from "@/hooks/useExecute";
+import { useDemoStore } from "@/stores/demoStore";
+import { useAccess } from "@/contexts/AccessContext";
 
 type TaskStatus = "queued" | "waiting_approval" | "approved" | "running" | "succeeded" | "failed" | "denied";
 type TaskTarget = "apex-sales" | "lead-gen";
@@ -55,9 +58,25 @@ export default function Tasks() {
   const [newTaskPayload, setNewTaskPayload] = useState("{}");
   const [requireApproval, setRequireApproval] = useState(true);
 
+  const { isDemo, execute } = useExecute();
+  const demoStore = useDemoStore();
+  const { isAdmin } = useAccess();
+
   const { data: tasks, isLoading } = useQuery({
     queryKey: ["omnilink-tasks"],
+    queryKey: ["omnilink-tasks", isDemo],
     queryFn: async () => {
+      if (isDemo) {
+        return demoStore.tasks.map(t => ({
+          id: t.id,
+          type: 'apex.task',
+          params: { action: t.title, target: 'apex-sales' },
+          status: t.status === 'in_progress' ? 'running' : t.status === 'completed' ? 'succeeded' : t.status as TaskStatus,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          policy: { require_approval: true }
+        })) as Task[];
+      }
       const { data, error } = await supabase
         .from("omnilink_orchestration_requests")
         .select("*")
@@ -72,6 +91,14 @@ export default function Tasks() {
 
   const createTaskMutation = useMutation({
     mutationFn: async () => {
+      if (isDemo) {
+        await execute('task.create', {
+          title: newTaskAction,
+          priority: 'high',
+          status: requireApproval ? 'pending' : 'queued'
+        });
+        return;
+      }
       let payload: unknown;
       try {
         payload = JSON.parse(newTaskPayload);
@@ -137,6 +164,10 @@ export default function Tasks() {
 
   const approveMutation = useMutation({
     mutationFn: async ({ taskId, decision }: { taskId: string; decision: "approved" | "denied" }) => {
+      if (isDemo) {
+        await execute(decision === 'approved' ? 'approval.approve' : 'approval.reject', { id: taskId });
+        return;
+      }
       const { error } = await supabase.rpc("omnilink_set_approval", {
         p_request_id: taskId,
         p_user_id: session?.user.id,

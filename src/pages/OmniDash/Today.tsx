@@ -12,12 +12,18 @@ import { useOmniDashSettings } from '@/omnidash/hooks';
 import { redactTodayItems } from '@/omnidash/redaction';
 import { TodayItem } from '@/omnidash/types';
 import { useToast } from '@/components/ui/use-toast';
+import { useExecute } from '@/hooks/useExecute';
+import { useAccess } from '@/contexts/AccessContext';
+import { useDemoStore } from '@/stores/demoStore';
 
 export const Today = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { toast } = useToast();
   const settings = useOmniDashSettings();
   const queryClient = useQueryClient();
+  const { isDemo, execute } = useExecute();
+  const demoStore = useDemoStore();
   const [newTitle, setNewTitle] = useState('');
   const [category, setCategory] = useState<'outcome' | 'outreach' | 'metric'>('outcome');
 
@@ -25,6 +31,19 @@ export const Today = () => {
     queryKey: ['omnidash-today', user?.id],
     enabled: !!user,
     queryFn: async () => {
+      if (isDemo) {
+        // Map demo tasks to TodayItems
+        return demoStore.tasks.slice(0, 3).map((t, i) => ({
+          id: t.id,
+          user_id: 'demo',
+          title: t.title,
+          category: ['outcome', 'outreach', 'metric'][i % 3] as 'outcome' | 'outreach' | 'metric',
+          order_index: i,
+          status: t.status === 'completed' ? 'completed' : 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }));
+      }
       if (!user) throw new Error('User required');
       const data = await fetchTodayItems(user.id);
       return settings.data?.demo_mode ? redactTodayItems(data) : data;
@@ -33,8 +52,18 @@ export const Today = () => {
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      if (!user) throw new Error('User missing');
       if (!newTitle.trim()) throw new Error('Title required');
+      
+      if (isDemo) {
+        await execute('task.create', {
+          title: newTitle.trim(),
+          priority: 'medium',
+          status: 'pending'
+        });
+        return;
+      }
+
+      if (!user) throw new Error('User missing');
       const payload: Partial<TodayItem> & { user_id: string; title: string } = {
         user_id: user.id,
         title: newTitle.trim(),
