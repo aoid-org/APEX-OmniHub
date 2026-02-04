@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Offline Sync - Background Sync API + Conflict Resolution
  * Handles offline data queuing and smart conflict resolution when back online

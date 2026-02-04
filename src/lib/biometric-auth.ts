@@ -307,12 +307,10 @@ export async function initializeBiometricAuth(): Promise<void> {
   const info = await getBiometricAuthenticatorInfo();
 
   if (!info.available) {
-    // eslint-disable-next-line no-console
     console.warn('[Biometric] Authenticator not available');
     return;
   }
 
-  // eslint-disable-next-line no-console
   console.warn('[Biometric] Authenticator available:', info);
 
   void logAnalyticsEvent('biometric.initialized', {
@@ -384,7 +382,6 @@ export async function setupBiometricLogin(
       throw new Error('Failed to register credential on server');
     }
 
-    // eslint-disable-next-line no-console
     console.warn('[Biometric] Setup complete');
     return true;
   } catch (error) {
