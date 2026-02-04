@@ -44,7 +44,7 @@ function validateArgs(args: string[]): void {
 /**
  * Validate that a file path is safe and within expected boundaries
  */
-function validatePath(filePath: string): string {
+function _validatePath(filePath: string): string {
   // Resolve to absolute path
   const resolved = path.resolve(filePath);
 

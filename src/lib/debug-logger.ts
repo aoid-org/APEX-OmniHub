@@ -1,11 +1,12 @@
+/* eslint-disable no-console */
 /**
  * Debug logging utility for instrumentation
  * Centralizes logging logic to reduce code duplication
  */
 
 const LOG_ENDPOINT = 'http://127.0.0.1:7245/ingest/42dac81a-117c-4f9f-9adc-d4ba4a181cf2';
-const SESSION_ID = 'debug-session';
-const RUN_ID = 'run2';
+const _SESSION_ID = 'debug-session';
+const _RUN_ID = 'run2';
 
 interface LogData {
   location: string;

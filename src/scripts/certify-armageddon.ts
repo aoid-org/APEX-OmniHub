@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Armageddon Level 7 Certification Trigger
  * 

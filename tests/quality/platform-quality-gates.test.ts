@@ -17,15 +17,27 @@ describe('Platform Quality Gates', () => {
   });
 
   it('Gate 2: ESLint must pass with zero warnings', () => {
+    // APEX-FIX: Increased timeout to 30s for full-repo lint scan
     const result = execSync('npx eslint . --max-warnings 0 --format json', {
       encoding: 'utf-8',
-      stdio: 'pipe',
+      stdio: 'pipe', // Capture output to debug if needed
+      maxBuffer: 20 * 1024 * 1024, // APEX-FIX: prevent JSON output buffer overflow in CI
       cwd: process.cwd()
     });
-    const lint = JSON.parse(result);
-    const totalErrors = lint.reduce((acc: number, file: { errorCount: number }) => acc + file.errorCount, 0);
+
+    // Parse JSON to ensure we are actually getting 0 warnings, not just text output
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const report: Array<{ warningCount: number; errorCount: number }> = JSON.parse(result);
+    const totalWarnings = report.reduce((acc, curr) => acc + curr.warningCount, 0);
+    const totalErrors = report.reduce((acc, curr) => acc + curr.errorCount, 0);
+
+    if (totalWarnings > 0 || totalErrors > 0) {
+      console.error(`FAILURE: Found ${totalWarnings} warnings and ${totalErrors} errors. Run 'npm run lint' to see them.`);
+    }
+
+    expect(totalWarnings).toBe(0);
     expect(totalErrors).toBe(0);
-  });
+  }, 30000); // <--- THIS IS THE KEY FIX
 
   it('Gate 3: Critical configuration files exist', () => {
     const criticalFiles = [
