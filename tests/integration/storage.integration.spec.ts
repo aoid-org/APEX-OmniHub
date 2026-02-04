@@ -20,8 +20,11 @@ const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
   ?? ''
 const requireIntegration = (process.env.REQUIRE_SUPABASE_INTEGRATION_TESTS ?? '')
   .toLowerCase() === 'true'
+const explicitlyDisabled = (process.env.REQUIRE_SUPABASE_INTEGRATION_TESTS ?? '')
+  .toLowerCase() === 'false'
 const hasCreds = Boolean(supabaseUrl && supabaseKey)
-const suite = hasCreds ? describe : describe.skip
+const shouldRun = hasCreds && !explicitlyDisabled
+const suite = shouldRun ? describe : describe.skip
 
 let storage: IStorage
 const testBucket = 'test-integration'
