@@ -26,6 +26,8 @@ export default defineConfig({
       'node_modules/**',
       // Skip Hardhat contract tests (run with `npm run hardhat:test`)
       'tests/contracts/**',
+      '**/tests/contracts/**',
+      'tests/contracts/*.test.ts',
       // Skip integration tests in CI (require real Supabase infrastructure)
       ...(process.env.CI ? ['tests/integration/**'] : [])
     ],
