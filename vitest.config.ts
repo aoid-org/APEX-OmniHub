@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    setupFiles: ['tests/setup/vitest.setup.ts'],
     include: [
       'tests/**/*.spec.ts',
       'tests/**/*.spec.tsx',
@@ -16,28 +17,37 @@ export default defineConfig({
       'apex-resilience/tests/**/*.test.ts'
     ],
     exclude: [
-      // Playwright E2E tests (run separately with `npm run test:e2e`)
-      'tests/e2e-playwright/**',
+      // Explicitly ignore Playwright
       '**/playwright/**',
-      'e2e/**',
-      'node_modules/**',
-      // Skip Hardhat contract tests (run with `npm run hardhat:test`)
+      '**/e2e-playwright/**',
+      'tests/e2e-playwright/**',
+      'tests/worldwide-wildcard/playwright/**',
+      
+      // Explicitly ignore Hardhat
+      '**/contracts/**',
       'tests/contracts/**',
+
+      'node_modules/**',
+      'dist/**',
+      '.idea/**',
+      '.git/**',
+      '.cache/**',
+      
       // Skip integration tests in CI (require real Supabase infrastructure)
       ...(process.env.CI ? ['tests/integration/**'] : [])
     ],
-    setupFiles: ['tests/setup.ts'],
     // Fix coverage race condition in CI
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',
       clean: true,
+    },
+  },
+  // Fix coverage race condition in CI (Vitest 5+ style)
+  poolOptions: {
+    forks: {
+      singleFork: true,
     },
   },
   resolve: {
@@ -46,4 +56,3 @@ export default defineConfig({
     },
   },
 });
-

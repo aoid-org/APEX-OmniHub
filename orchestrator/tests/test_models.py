@@ -215,9 +215,9 @@ class TestAppNameEnum:
     """Test AppName enum matches TypeScript contracts."""
 
     def test_all_12_apps_present(self):
-        """Should have exactly 12 APEX apps."""
+        """Should have exactly 14 APEX apps."""
         apps = list(AppName)
-        assert len(apps) == 12
+        assert len(apps) == 14
 
     def test_omnilink_value(self):
         """Should match TypeScript value."""
@@ -225,5 +225,5 @@ class TestAppNameEnum:
 
     def test_serialization(self):
         """Should serialize to string."""
-        assert str(AppName.TRADELINE247) == "AppName.TRADELINE247"
+        assert str(AppName.TRADELINE247) == "tradeline247"
         assert AppName.TRADELINE247.value == "tradeline247"

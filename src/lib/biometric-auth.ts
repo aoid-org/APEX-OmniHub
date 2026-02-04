@@ -69,13 +69,13 @@ export async function registerBiometricCredential(
   }
 
   const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions = {
-    challenge: options.challenge,
+    challenge: options.challenge as unknown as BufferSource,
     rp: {
       name: options.rpName,
       id: options.rpId,
     },
     user: {
-      id: options.userId,
+      id: options.userId as unknown as BufferSource,
       name: options.userName,
       displayName: options.userName,
     },
@@ -152,7 +152,7 @@ export async function authenticateWithBiometric(
   }
 
   const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions = {
-    challenge,
+    challenge: challenge as unknown as BufferSource,
     allowCredentials: allowedCredentialIds.map((id) => ({
       id: base64ToArrayBuffer(id),
       type: 'public-key',
@@ -229,7 +229,7 @@ export async function getBiometricCredentials(
  * Convert base64 string to ArrayBuffer
  */
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
-  const binary = globalThis.atob(base64.replaceAll('-', '+').replaceAll('_', '/'));
+  const binary = globalThis.atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.codePointAt(i) || 0;
@@ -246,7 +246,7 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCodePoint(bytes[i]);
   }
-  return globalThis.btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+  return globalThis.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 /**
@@ -307,11 +307,11 @@ export async function initializeBiometricAuth(): Promise<void> {
   const info = await getBiometricAuthenticatorInfo();
 
   if (!info.available) {
-    console.log('[Biometric] Authenticator not available');
+    console.warn('[Biometric] Authenticator not available');
     return;
   }
 
-  console.log('[Biometric] Authenticator available:', info);
+  console.warn('[Biometric] Authenticator available:', info);
 
   void logAnalyticsEvent('biometric.initialized', {
     ...info,
@@ -357,7 +357,7 @@ export async function setupBiometricLogin(
       rpId: new URL(apiUrl).hostname,
       userName: userEmail,
       userId: new TextEncoder().encode(userId),
-      challenge: base64ToArrayBuffer(challenge),
+      challenge: new Uint8Array(base64ToArrayBuffer(challenge)),
       authenticatorAttachment: 'platform',
       userVerification: 'required',
     });
@@ -382,7 +382,7 @@ export async function setupBiometricLogin(
       throw new Error('Failed to register credential on server');
     }
 
-    console.log('[Biometric] Setup complete');
+    console.warn('[Biometric] Setup complete');
     return true;
   } catch (error) {
     console.error('[Biometric] Setup failed:', error);
@@ -413,7 +413,7 @@ export async function loginWithBiometric(
 
     // 2. Authenticate with biometric
     const assertion = await authenticateWithBiometric(
-      base64ToArrayBuffer(challenge),
+      new Uint8Array(base64ToArrayBuffer(challenge)),
       allowedCredentials,
       new URL(apiUrl).hostname
     );

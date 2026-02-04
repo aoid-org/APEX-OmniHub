@@ -223,7 +223,7 @@ export function initializePWAAnalytics() {
   // Only track if user hasn't opted out
   const hasOptedOut = localStorage.getItem('omnilink_analytics_optout') === 'true';
   if (hasOptedOut) {
-    console.log('[PWA Analytics] User opted out, skipping initialization');
+    console.warn('[PWA Analytics] User opted out, skipping initialization');
     return;
   }
 
@@ -256,7 +256,7 @@ export function initializePWAAnalytics() {
     });
   });
 
-  console.log('[PWA Analytics] Initialized successfully');
+  console.warn('[PWA Analytics] Initialized successfully');
 }
 
 /**
@@ -264,7 +264,7 @@ export function initializePWAAnalytics() {
  */
 export function optOutOfAnalytics() {
   localStorage.setItem('omnilink_analytics_optout', 'true');
-  console.log('[PWA Analytics] User opted out');
+  console.warn('[PWA Analytics] User opted out');
 }
 
 /**
@@ -272,7 +272,7 @@ export function optOutOfAnalytics() {
  */
 export function optInToAnalytics() {
   localStorage.removeItem('omnilink_analytics_optout');
-  console.log('[PWA Analytics] User opted in');
+  console.warn('[PWA Analytics] User opted in');
 }
 
 /**
