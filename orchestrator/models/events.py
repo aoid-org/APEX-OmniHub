@@ -45,6 +45,10 @@ class AppName(str, Enum):
         """Return the value for string representation."""
         return self.value
 
+    def __str__(self) -> str:
+        """Return the value for string representation."""
+        return self.value
+
 
 class EventType(str, Enum):
     """Canonical event taxonomy - subset for orchestrator-specific events."""
