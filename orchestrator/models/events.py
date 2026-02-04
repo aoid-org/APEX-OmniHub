@@ -1,4 +1,5 @@
 """
+# Force CI sync
 Event Schema Definitions - Canonical Data Model (CDM).
 
 Matches sim/contracts.ts EventEnvelope structure for seamless TypeScript ↔ Python interop.
@@ -45,6 +46,8 @@ class AppName(StrEnum):
     FINANCE_WIZARD = "finance-wizard"
     LEGAL_EAGLE = "legal-eagle"
     OPS_COMMANDER = "ops-commander"
+    OMNILINK = "omnilink"
+    TRADELINE247 = "tradeline247"
 
 
 class EventType(StrEnum):

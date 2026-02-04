@@ -1,4 +1,5 @@
 """MAN Mode (Manual-Authorization-Needed) domain models.
+# Force CI sync
 
 This module defines the core data structures for the human-in-the-loop
 safety system that gates high-risk agent actions.

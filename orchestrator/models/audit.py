@@ -1,4 +1,5 @@
 """
+# Force CI sync
 Enterprise Compliance Audit Logging Schema.
 
 This module defines the strict schema for audit logging to ensure future
@@ -32,6 +33,8 @@ class AuditAction(StrEnum):
     READ = "read"
     WRITE = "write"
     DELETE = "delete"
+    DATA_ACCESS = "data_access"
+    DATA_DELETE = "data_delete"
 
     # System
     CONFIG_CHANGE = "config_change"
