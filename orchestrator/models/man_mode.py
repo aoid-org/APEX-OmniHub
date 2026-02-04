@@ -6,14 +6,14 @@ safety system that gates high-risk agent actions.
 """
 
 from datetime import UTC, datetime
-from enum import StrEnum
+from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
 
-class ManLane(StrEnum):
+class ManLane(str, Enum):
     """Traffic-light lanes for action risk."""
 
     GREEN = "GREEN"
@@ -22,7 +22,7 @@ class ManLane(StrEnum):
     BLOCKED = "BLOCKED"
 
 
-class ManTaskStatus(StrEnum):
+class ManTaskStatus(str, Enum):
     """Lifecycle of a MAN task."""
 
     PENDING = "PENDING"
