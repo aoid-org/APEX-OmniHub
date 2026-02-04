@@ -1,5 +1,4 @@
 """
-# Force CI sync
 Enterprise Compliance Audit Logging Schema.
 
 This module defines the strict schema for audit logging to ensure future
@@ -13,7 +12,7 @@ All audit events must be logged using this schema to maintain:
 """
 
 from datetime import UTC, datetime
-from enum import StrEnum
+from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -21,70 +20,61 @@ from pydantic import BaseModel, Field
 from providers.database.factory import get_database_provider
 
 
-class AuditAction(StrEnum):
+class AuditAction(str, Enum):
     """Standardized audit actions for compliance tracking."""
 
-    # Authentication
+    # Authentication & Authorization
     LOGIN = "login"
     LOGOUT = "logout"
-    MFA_VERIFY = "mfa_verify"
+    AUTH_FAILURE = "auth_failure"
+    TOKEN_REFRESH = "token_refresh"  # noqa: S105
+    PASSWORD_CHANGE = "password_change"  # noqa: S105
 
-    # Data Access
-    READ = "read"
-    WRITE = "write"
-    DELETE = "delete"
+    # Data Operations
     DATA_ACCESS = "data_access"
+    DATA_MODIFY = "data_modify"
     DATA_DELETE = "data_delete"
+    DATA_EXPORT = "data_export"
 
-    # System
-    CONFIG_CHANGE = "config_change"
-    DEPLOY = "deploy"
-
-    # Workflow
+    # Workflow Operations
     WORKFLOW_START = "workflow_start"
     WORKFLOW_COMPLETE = "workflow_complete"
     WORKFLOW_FAIL = "workflow_fail"
+    WORKFLOW_CANCEL = "workflow_cancel"
+    ACTIVITY_EXECUTE = "activity_execute"
+    ACTIVITY_RETRY = "activity_retry"
+    ACTIVITY_TIMEOUT = "activity_timeout"
 
-    # Security
-    POLICY_VIOLATION = "policy_violation"
-    ACCESS_DENIED = "access_denied"
+    # Security Events
+    SECURITY_VIOLATION = "security_violation"
+    RATE_LIMIT_EXCEEDED = "rate_limit_exceeded"
+    SUSPICIOUS_ACTIVITY = "suspicious_activity"
+    CONFIG_CHANGE = "config_change"
 
-
-class AuditActor(BaseModel):
-    """Identity of the actor performing the action."""
-
-    user_id: str
-    role: str
-    ip_address: str | None = None
-    user_agent: str | None = None
-
-
-class AuditResource(BaseModel):
-    """Resource being acted upon."""
-
-    resource_id: str
-    resource_type: str
-    resource_name: str | None = None
+    # Compliance Events
+    COMPLIANCE_CHECK = "compliance_check"
+    COMPLIANCE_VIOLATION = "compliance_violation"
+    AUDIT_LOG_ACCESS = "audit_log_access"
 
 
-class AuditResourceType(StrEnum):
+class AuditResourceType(str, Enum):
     """Resource types for audit logging."""
 
     USER = "user"
     WORKFLOW = "workflow"
-    DOCUMENT = "document"
-    SYSTEM_CONFIG = "system_config"
-    API_KEY = "api_key"
-    POLICY = "policy"
+    ACTIVITY = "activity"
     DATABASE = "database"
+    API_ENDPOINT = "api_endpoint"
+    CONFIGURATION = "configuration"
+    SECURITY_POLICY = "security_policy"
 
 
-class AuditStatus(StrEnum):
+class AuditStatus(str, Enum):
     """Audit event outcome status."""
 
     SUCCESS = "success"
     FAILURE = "failure"
-    WARNING = "warning"
+    DENIED = "denied"
     TIMEOUT = "timeout"
     ERROR = "error"
 

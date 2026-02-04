@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 /**
  * AccessContext - Demo/live mode state management
  * 

@@ -37,8 +37,6 @@ from redis.commands.search.field import NumericField, TextField, VectorField
 from redis.commands.search.query import Query
 from sentence_transformers import SentenceTransformer
 
-from infrastructure.tidb_persistence import get_tidb_store
-
 # Redis search imports - handle multiple redis-py versions
 try:
     # Try redis-py v4.x path
@@ -460,24 +458,6 @@ class SemanticCacheService:
 
         # Embed template
         embedding = self.embedding_model.encode(template_text, convert_to_numpy=True)
-
-        # TiDB PERSISTENCE HOOK (Phase 4)
-        # Idempotent upsert of embedding vector if persistence is enabled
-        try:
-            tidb = get_tidb_store()
-            if tidb.enabled:
-                tidb.put_embedding(
-                    embedding_id=template_id,
-                    embedding=embedding.tolist(),
-                    metadata={
-                        "template_text": template_text,
-                        "slots": list(parameters.keys()),
-                        "created_at": self._iso_now(),
-                    },
-                )
-        except Exception as e:
-            # Fail-safe: don't block caching if persistence fails
-            print(f"⚠️ TiDB persistence failed (non-blocking): {e}")
 
         # Parameterize plan steps (reverse of injection)
         parameterized_steps = self._parameterize_steps(plan_steps, parameters)

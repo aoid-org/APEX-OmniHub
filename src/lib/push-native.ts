@@ -25,7 +25,7 @@ export function isNativeEnvironment(): boolean {
  */
 export async function initializeNativePush(config: PushNotificationConfig): Promise<void> {
     if (!isNativeEnvironment()) {
-        console.warn('[PushNative] Not running in native environment, skipping initialization');
+        console.log('[PushNative] Not running in native environment, skipping initialization');
         return;
     }
 
@@ -51,7 +51,7 @@ export async function initializeNativePush(config: PushNotificationConfig): Prom
 
         // Set up listeners
         await PushNotifications.addListener('registration', async (token: Token) => {
-            console.warn('[PushNative] Push registration success, token:', token.value);
+            console.log('[PushNative] Push registration success, token:', token.value);
 
             void logAnalyticsEvent('push_native.token_received', {
                 platform: Capacitor.getPlatform(),
@@ -83,7 +83,7 @@ export async function initializeNativePush(config: PushNotificationConfig): Prom
         });
 
         await PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
-            console.warn('[PushNative] Push notification received:', notification);
+            console.log('[PushNative] Push notification received:', notification);
 
             void logAnalyticsEvent('push_native.notification_received', {
                 id: notification.id,
@@ -98,7 +98,7 @@ export async function initializeNativePush(config: PushNotificationConfig): Prom
         });
 
         await PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
-            console.warn('[PushNative] Push notification action performed:', action);
+            console.log('[PushNative] Push notification action performed:', action);
 
             void logAnalyticsEvent('push_native.action_performed', {
                 actionId: action.actionId,
@@ -112,7 +112,7 @@ export async function initializeNativePush(config: PushNotificationConfig): Prom
             }
         });
 
-        console.warn('[PushNative] Initialization complete');
+        console.log('[PushNative] Initialization complete');
     } catch (error) {
         console.error('[PushNative] Initialization failed:', error);
         throw error;
@@ -146,8 +146,7 @@ export async function removeDeliveredNotifications(notifications: PushNotificati
 
     try {
         await PushNotifications.removeDeliveredNotifications({
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            notifications: notifications.map(n => ({ id: n.id } as any)),
+            notifications: notifications.map(n => ({ id: n.id })),
         });
     } catch (error) {
         console.error('[PushNative] Failed to remove delivered notifications:', error);

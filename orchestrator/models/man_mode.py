@@ -1,19 +1,18 @@
 """MAN Mode (Manual-Authorization-Needed) domain models.
-# Force CI sync
 
 This module defines the core data structures for the human-in-the-loop
 safety system that gates high-risk agent actions.
 """
 
 from datetime import UTC, datetime
-from enum import StrEnum
+from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
 
-class ManLane(StrEnum):
+class ManLane(str, Enum):
     """Traffic-light lanes for action risk."""
 
     GREEN = "GREEN"
@@ -21,14 +20,22 @@ class ManLane(StrEnum):
     RED = "RED"
     BLOCKED = "BLOCKED"
 
+    def __str__(self) -> str:
+        """Return the value for string representation."""
+        return self.value
 
-class ManTaskStatus(StrEnum):
+
+class ManTaskStatus(str, Enum):
     """Lifecycle of a MAN task."""
 
     PENDING = "PENDING"
     APPROVED = "APPROVED"
     DENIED = "DENIED"
     EXPIRED = "EXPIRED"
+
+    def __str__(self) -> str:
+        """Return the value for string representation."""
+        return self.value
 
 
 class ActionIntent(BaseModel):

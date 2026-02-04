@@ -56,7 +56,7 @@ export async function isBiometricAvailable(): Promise<{ available: boolean; biom
  * Note: This is a placeholder implementation
  * In production, you would use native biometric APIs or a working plugin
  */
-export async function authenticateWithBiometrics(_options?: {
+export async function authenticateWithBiometrics(options?: {
     reason?: string;
     title?: string;
     subtitle?: string;

@@ -1,7 +1,7 @@
 /**
  * Register device token with Supabase backend
  */
-async function _registerTokenWithBackend(token: string, platform: string): Promise<void> {
+async function registerTokenWithBackend(token: string, platform: string): Promise<void> {
     const { createClient } = await import('@/lib/supabase');
     const supabase = createClient();
 
@@ -31,5 +31,5 @@ async function _registerTokenWithBackend(token: string, platform: string): Promi
         throw error;
     }
 
-    console.warn('[PushNative] Token registered with backend successfully');
+    console.log('[PushNative] Token registered with backend successfully');
 }

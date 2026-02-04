@@ -10,8 +10,8 @@ export async function verifyAgentTaskActivity(task: AgentTask): Promise<void> {
   const verifier = new IronLawVerifier();
   const result = await verifier.verify(task);
 
-  // Temporal.io workflow logging
-  console.warn(`📋 Verification Result for ${task.id}:`, result);
+  // eslint-disable-next-line no-console -- Temporal.io workflow logging
+  console.log(`📋 Verification Result for ${task.id}:`, result);
 
   if (result.status === 'REJECTED') {
     throw new Error(`Verification failed: ${result.reason}`);
@@ -45,9 +45,9 @@ async function logVerificationEvidence(result: VerificationResult): Promise<void
     // Use secure evidence storage with automatic path validation
     const evidencePath = await writeSecureEvidence(result.taskId, evidenceContent, 'json');
 
-    // Audit trail logging
-    console.warn(`✅ Evidence logged: ${evidencePath}`);
-    console.warn(`📋 Integrity hash: ${contentHash}`);
+    // eslint-disable-next-line no-console -- Audit trail logging
+    console.log(`✅ Evidence logged: ${evidencePath}`);
+    console.log(`📋 Integrity hash: ${contentHash}`);
   } catch (error) {
     console.error(
       `❌ Failed to log evidence for task ${result.taskId}:`,

@@ -41,7 +41,20 @@ function validateArgs(args: string[]): void {
   }
 }
 
+/**
+ * Validate that a file path is safe and within expected boundaries
+ */
+function validatePath(filePath: string): string {
+  // Resolve to absolute path
+  const resolved = path.resolve(filePath);
 
+  // Ensure it's within the omega directory
+  if (!resolved.startsWith(OMEGA_DIR)) {
+    throw new Error(`Path must be within omega directory: ${filePath}`);
+  }
+
+  return resolved;
+}
 
 /**
  * Get secure environment with restricted PATH

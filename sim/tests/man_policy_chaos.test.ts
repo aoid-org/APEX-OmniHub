@@ -19,7 +19,7 @@ class ManWorkflow {
     /**
      * Simulates the "Evaluate & Execute" loop of the Orchestrator
      */
-    async execute(intent: string, params: Record<string, unknown>): Promise<{ status: string; reason?: string }> {
+    async execute(intent: string, params: Record<string, any>): Promise<{ status: string; reason?: string }> {
         const event = createEvent('orchestrator', 'omnihub:workflow.triggered')
             .correlationId(`chaos-test-${Date.now()}`)
             .idempotencyKey(`idem-${Date.now()}-${crypto.randomUUID()}`)

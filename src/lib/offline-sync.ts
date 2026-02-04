@@ -22,7 +22,7 @@ export interface ConflictResolutionStrategy {
 
 const SYNC_QUEUE_KEY = 'omnilink_sync_queue';
 const MAX_RETRIES = 3;
-
+const RETRY_DELAY_MS = 2000;
 
 /**
  * Check if Background Sync API is supported
@@ -56,8 +56,7 @@ export async function addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp
   // Register background sync if supported
   if (isBackgroundSyncSupported()) {
     const registration = await navigator.serviceWorker.ready;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (registration as any).sync.register('omnilink-sync');
+    await registration.sync.register('omnilink-sync');
   }
 }
 
@@ -229,12 +228,12 @@ async function resolveConflict(
   switch (strategy.type) {
     case 'server-wins':
       // Discard client changes, server data is authoritative
-      console.warn('[OfflineSync] Conflict resolved: server wins');
+      console.log('[OfflineSync] Conflict resolved: server wins');
       return true;
 
     case 'client-wins':
       // Force overwrite server with client data
-      console.warn('[OfflineSync] Conflict resolved: client wins (force push)');
+      console.log('[OfflineSync] Conflict resolved: client wins (force push)');
       // Would need to implement force flag in API
       return false; // For now, fail and require manual resolution
 
@@ -244,7 +243,7 @@ async function resolveConflict(
         // MERGE LOGIC PLACEHOLDER: Result unused in current impl
         strategy.mergeFunction(serverData, clientItem.data);
         // Update local data with merged result
-        console.warn('[OfflineSync] Conflict resolved: merged');
+        console.log('[OfflineSync] Conflict resolved: merged');
         return true;
       }
       return false;
@@ -252,7 +251,7 @@ async function resolveConflict(
     case 'manual':
       // Store conflict for manual user resolution
       await storeConflictForManualResolution(clientItem, serverData);
-      console.warn('[OfflineSync] Conflict stored for manual resolution');
+      console.log('[OfflineSync] Conflict stored for manual resolution');
       return false;
 
     default:
@@ -337,7 +336,7 @@ export function setupBackgroundSyncListener() {
 
   navigator.serviceWorker.ready.then((registration) => {
     if ('sync' in registration) {
-      console.warn('[OfflineSync] Background sync supported and ready');
+      console.log('[OfflineSync] Background sync supported and ready');
     }
   });
 }
@@ -350,14 +349,14 @@ export async function initializeOfflineSync(
   getUserToken: () => Promise<string | null>
 ): Promise<void> {
   if (!isBackgroundSyncSupported()) {
-    console.warn('[OfflineSync] Background sync not supported, using manual sync');
+    console.log('[OfflineSync] Background sync not supported, using manual sync');
   }
 
   setupBackgroundSyncListener();
 
   // Auto-sync when coming online
   globalThis.addEventListener('online', async () => {
-    console.warn('[OfflineSync] Network online, processing sync queue');
+    console.log('[OfflineSync] Network online, processing sync queue');
 
     const token = await getUserToken();
     if (token) {
@@ -368,10 +367,10 @@ export async function initializeOfflineSync(
   // Check for pending syncs on init
   const queue = await getSyncQueue();
   if (queue.length > 0) {
-    console.warn(`[OfflineSync] Found ${queue.length} items in sync queue`);
+    console.log(`[OfflineSync] Found ${queue.length} items in sync queue`);
   }
 
-  console.warn('[OfflineSync] Initialized');
+  console.log('[OfflineSync] Initialized');
 }
 
 /**
