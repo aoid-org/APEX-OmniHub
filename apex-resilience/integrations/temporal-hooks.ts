@@ -10,7 +10,7 @@ export async function verifyAgentTaskActivity(task: AgentTask): Promise<void> {
   const verifier = new IronLawVerifier();
   const result = await verifier.verify(task);
 
-  // eslint-disable-next-line no-console -- Temporal.io workflow logging
+  // Temporal.io workflow logging
   console.warn(`📋 Verification Result for ${task.id}:`, result);
 
   if (result.status === 'REJECTED') {
@@ -45,7 +45,7 @@ async function logVerificationEvidence(result: VerificationResult): Promise<void
     // Use secure evidence storage with automatic path validation
     const evidencePath = await writeSecureEvidence(result.taskId, evidenceContent, 'json');
 
-    // eslint-disable-next-line no-console -- Audit trail logging
+    // Audit trail logging
     console.warn(`✅ Evidence logged: ${evidencePath}`);
     console.warn(`📋 Integrity hash: ${contentHash}`);
   } catch (error) {

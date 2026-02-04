@@ -25,18 +25,22 @@ export default defineConfig({
       '**/.{idea,git,cache,output,temp}/**',
       '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
       
+      
       // Explicitly ignore Playwright (HEAD + Main)
       '**/playwright/**',
       '**/e2e-playwright/**',
+      './tests/e2e-playwright/**',
       'tests/e2e-playwright/**',
+      './tests/worldwide-wildcard/playwright/**',
       'tests/worldwide-wildcard/playwright/**',
       
       // Explicitly ignore Hardhat (HEAD + Main)
       '**/contracts/**',
+      './tests/contracts/**',
       'tests/contracts/**',
 
       // Skip integration tests in CI (redundant with in-test logic but safer)
-      ...(process.env.CI ? ['tests/integration/**'] : [])
+      ...(process.env.CI ? ['tests/integration/**', './tests/integration/**'] : [])
     ],
     coverage: {
       enabled: !isCI, // Disable coverage in CI to prevent ENOENT on coverage/.tmp (PR#410/413)

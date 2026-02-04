@@ -53,10 +53,6 @@ class AppName(str, Enum):  # noqa: UP042
         """Return the value for string representation."""
         return self.value
 
-    def __str__(self) -> str:
-        """Return the value for string representation."""
-        return self.value
-
 
 class EventType(str, Enum):  # noqa: UP042
     """Canonical event taxonomy - subset for orchestrator-specific events."""

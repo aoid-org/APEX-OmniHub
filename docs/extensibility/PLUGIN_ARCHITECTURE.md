@@ -3,44 +3,50 @@
 # Plugin Architecture
 
 ## Executive Summary
+
 APEX OmniHub implements a secure, versioned plugin system enabling third-party extensions without compromising platform stability or security.
 
 ## Plugin Lifecycle
 
 ### Phase 1: Registration
+
 ```typescript
-import { pluginRegistry } from '@/lib/extensibility/pluginRegistry';
+import { pluginRegistry } from "@/lib/extensibility/pluginRegistry";
 
 pluginRegistry.register({
-  id: 'custom-analytics',
-  name: 'Custom Analytics Dashboard',
-  version: '1.0.0',
-  author: 'ACME Corp',
-  permissions: ['data:read', 'ui:render'],
+  id: "custom-analytics",
+  name: "Custom Analytics Dashboard",
+  version: "1.0.0",
+  author: "ACME Corp",
+  permissions: ["data:read", "ui:render"],
   manifest: {
-    entrypoint: '/plugins/custom-analytics/index.js',
-    hooks: ['onDashboardLoad', 'onDataFetch']
-  }
+    entrypoint: "/plugins/custom-analytics/index.js",
+    hooks: ["onDashboardLoad", "onDataFetch"],
+  },
 });
 ```
 
 ### Phase 2: Validation
+
 - **Security Scan:** Static analysis for malicious code patterns
 - **Permission Check:** Verify requested permissions against policy
 - **Version Compatibility:** Ensure API version alignment
 - **Resource Limits:** CPU: 10%, Memory: 50MB, Network: 100 req/min
 
-### Phase 3: Sandboxing
+### Phase 3: Sandboxing (Proposed)
+
 ```typescript
+// Proposed API
 const sandbox = new PluginSandbox({
-  timeout: 5000,        // 5s execution limit
-  memoryLimit: 50,      // 50MB max
+  timeout: 5000, // 5s execution limit
+  memoryLimit: 50, // 50MB max
   networkIsolation: true,
-  fileSystemAccess: false
+  fileSystemAccess: false,
 });
 ```
 
-### Phase 4: Execution
+### Phase 4: Execution (Proposed)
+
 - **Hook Invocation:** Plugins receive events via registered hooks
 - **API Access:** Scoped API client with permission enforcement
 - **Error Handling:** Failures isolated; platform remains operational
@@ -48,28 +54,31 @@ const sandbox = new PluginSandbox({
 ## Plugin API
 
 ### Available Hooks
-| Hook | Event | Parameters | Return |
-|------|-------|------------|--------|
-| `onDashboardLoad` | Dashboard loads | `{ userId, dashboardId }` | `{ customWidgets }` |
-| `onDataFetch` | Data query | `{ query, filters }` | `{ transformedData }` |
-| `onActionExecute` | User action | `{ action, context }` | `{ result, metadata }` |
-| `onAuthSuccess` | Login success | `{ userId, sessionId }` | `void` |
+
+| Hook              | Event           | Parameters                | Return                 |
+| ----------------- | --------------- | ------------------------- | ---------------------- |
+| `onDashboardLoad` | Dashboard loads | `{ userId, dashboardId }` | `{ customWidgets }`    |
+| `onDataFetch`     | Data query      | `{ query, filters }`      | `{ transformedData }`  |
+| `onActionExecute` | User action     | `{ action, context }`     | `{ result, metadata }` |
+| `onAuthSuccess`   | Login success   | `{ userId, sessionId }`   | `void`                 |
 
 ### API Methods
+
 ```typescript
 // Data access (requires 'data:read' permission)
-await plugin.api.query('SELECT * FROM users WHERE id = $1', [userId]);
+await plugin.api.query("SELECT * FROM users WHERE id = $1", [userId]);
 
 // UI rendering (requires 'ui:render' permission)
-await plugin.api.renderWidget({ component: 'CustomChart', props: {} });
+await plugin.api.renderWidget({ component: "CustomChart", props: {} });
 
 // Event emission (requires 'events:emit' permission)
-await plugin.api.emit('custom-event', { payload: data });
+await plugin.api.emit("custom-event", { payload: data });
 ```
 
 ## Permission Model
 
 ### Standard Permissions
+
 - `data:read` - Read access to user-owned data
 - `data:write` - Write access with audit trail
 - `ui:render` - Render custom UI components
@@ -77,6 +86,7 @@ await plugin.api.emit('custom-event', { payload: data });
 - `network:fetch` - External HTTP requests (whitelist-only)
 
 ### Admin Permissions (Requires Approval)
+
 - `admin:users` - User management
 - `admin:billing` - Billing operations
 - `system:config` - System configuration
@@ -84,55 +94,62 @@ await plugin.api.emit('custom-event', { payload: data });
 ## Security Guarantees
 
 ### Isolation
+
 - **Process Isolation:** Plugins run in separate V8 isolates
 - **Memory Isolation:** Heap allocated per plugin, no shared memory
 - **Network Isolation:** Requests proxied through approval gateway
 
 ### Validation
+
 ```typescript
 // All plugin inputs validated with Zod
 const pluginInputSchema = z.object({
   action: z.string().max(100),
   payload: z.record(z.unknown()).optional(),
-  userId: z.string().uuid()
+  userId: z.string().uuid(),
 });
 ```
 
 ### Audit Trail
+
 Every plugin action logged to `securityAuditLogger`:
+
 ```typescript
 securityAuditLogger.log({
   eventType: SecurityEventType.PLUGIN_EXECUTION,
   userId: plugin.userId,
   resource: plugin.id,
   action: hookName,
-  result: 'success',
-  metadata: { executionTimeMs, memoryUsedMb }
+  result: "success",
+  metadata: { executionTimeMs, memoryUsedMb },
 });
 ```
 
 ## Plugin Distribution
 
 ### Marketplace Requirements
+
 1. **Code Review:** Manual security review for all plugins
 2. **Test Coverage:** Minimum 70% test coverage required
 3. **Documentation:** README with setup instructions + examples
 4. **Pricing:** Free, one-time purchase, or subscription
 5. **SLA:** Support response time <24h for paid plugins
 
-### Installation Flow
+### Installation Flow (Proposed CLI)
+
 ```bash
 # Install from marketplace
-npm run plugin:install custom-analytics
+# npm run plugin:install custom-analytics (Coming Soon)
 
 # Enable in admin dashboard
-npm run plugin:enable custom-analytics
+# npm run plugin:enable custom-analytics (Coming Soon)
 
 # Verify installation
-npm run plugin:verify custom-analytics
+# npm run plugin:verify custom-analytics (Coming Soon)
 ```
 
 ## Revenue Model
+
 - **Marketplace Fee:** 30% of plugin sales
 - **Enterprise Licensing:** Custom plugin development (50% margins)
 - **Plugin Hosting:** $0.05 per plugin per user per month
@@ -140,27 +157,31 @@ npm run plugin:verify custom-analytics
 ## Example Plugin
 
 ### Minimal Plugin Structure
+
 ```typescript
 export default {
-  id: 'hello-world',
-  version: '1.0.0',
-  permissions: ['ui:render'],
+  id: "hello-world",
+  version: "1.0.0",
+  permissions: ["ui:render"],
 
   hooks: {
     onDashboardLoad: async (context: HookContext) => {
       return {
-        customWidgets: [{
-          id: 'hello-widget',
-          component: 'HelloWorld',
-          props: { message: 'Hello from plugin!' }
-        }]
+        customWidgets: [
+          {
+            id: "hello-widget",
+            component: "HelloWorld",
+            props: { message: "Hello from plugin!" },
+          },
+        ],
       };
-    }
-  }
+    },
+  },
 };
 ```
 
 **Verification:**
+
 ```bash
 npm run plugin:validator hello-world
 ```

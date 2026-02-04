@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Armageddon Level 7 Worker Registration
  * 
