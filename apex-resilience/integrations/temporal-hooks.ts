@@ -47,6 +47,7 @@ async function logVerificationEvidence(result: VerificationResult): Promise<void
 
     // eslint-disable-next-line no-console -- Audit trail logging
     console.log(`✅ Evidence logged: ${evidencePath}`);
+    // eslint-disable-next-line no-console -- Audit trail logging
     console.log(`📋 Integrity hash: ${contentHash}`);
   } catch (error) {
     console.error(
