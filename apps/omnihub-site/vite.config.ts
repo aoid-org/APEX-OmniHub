@@ -77,12 +77,20 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
-        // APEX-FIX: Implement manualChunks to resolve 'unused-javascript' penalty
-        manualChunks: {
-          // Split React core to allow browser caching
-          'vendor-react': ['react', 'react-dom'],
-          // Split UI library to defer load of unused components
-          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-slot', 'class-variance-authority', 'clsx', 'tailwind-merge'],
+        // APEX-FIX: Function-based manualChunks to avoid 'Could not resolve entry module' errors
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Split React core
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              return 'vendor-react';
+            }
+            // Split UI libraries
+            if (id.includes('@radix-ui') || id.includes('class-variance-authority') || id.includes('clsx') || id.includes('tailwind-merge')) {
+              return 'vendor-ui';
+            }
+            // Everything else in common vendor
+            return 'vendor';
+          }
         },
       },
     },
