@@ -42,9 +42,21 @@ export default defineConfig({
       provider: 'v8',
       reportsDirectory: './coverage',
       clean: true,
+      exclude: [
+        'apex-resilience/**',
+        '**/iron-law.spec.ts',
+        '**/contracts/**',
+        'tests/contracts/**',
+        'node_modules/**',
+        'dist/**',
+        '.idea/**',
+        '.git/**',
+        '.cache/**'
+      ]
     },
   },
   // Fix coverage race condition in CI (Vitest 5+ style)
+  // @ts-ignore
   poolOptions: {
     forks: {
       singleFork: true,

@@ -12,7 +12,7 @@ Design Principles:
 """
 
 from datetime import UTC, datetime
-from enum import StrEnum
+from enum import Enum
 from typing import Any
 from uuid import uuid4
 
@@ -31,7 +31,7 @@ UTC_OFFSET_SUFFIX = "+00:00"
 # -----------------------------------------------------------------------------
 
 
-class AppName(StrEnum):
+class AppName(str, Enum):  # noqa: UP042
     """12 APEX Apps - matches sim/contracts.ts AppName exactly."""
 
     OMNI_DASH = "omni-dash"
@@ -50,7 +50,7 @@ class AppName(StrEnum):
     TRADELINE247 = "tradeline247"
 
 
-class EventType(StrEnum):
+class EventType(str, Enum):  # noqa: UP042
     """Canonical event taxonomy - subset for orchestrator-specific events."""
 
     # 1. Ingestion / OmniPort
@@ -75,7 +75,7 @@ class EventType(StrEnum):
     OMNILINK_EVENT_FAILED = "omnilink:event.failed"
 
 
-class SimulatedFailureType(StrEnum):
+class SimulatedFailureType(str, Enum):  # noqa: UP042
     """Chaos engineering failure types."""
 
     TIMEOUT = "timeout"

@@ -13,7 +13,7 @@ All audit events must be logged using this schema to maintain:
 """
 
 from datetime import UTC, datetime
-from enum import StrEnum
+from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 from providers.database.factory import get_database_provider
 
 
-class AuditAction(StrEnum):
+class AuditAction(str, Enum):  # noqa: UP042
     """Standardized audit actions for compliance tracking."""
 
     # Authentication
@@ -67,7 +67,7 @@ class AuditResource(BaseModel):
     resource_name: str | None = None
 
 
-class AuditResourceType(StrEnum):
+class AuditResourceType(str, Enum):  # noqa: UP042
     """Resource types for audit logging."""
 
     USER = "user"
@@ -79,7 +79,7 @@ class AuditResourceType(StrEnum):
     DATABASE = "database"
 
 
-class AuditStatus(StrEnum):
+class AuditStatus(str, Enum):  # noqa: UP042
     """Audit event outcome status."""
 
     SUCCESS = "success"
