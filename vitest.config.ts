@@ -27,13 +27,11 @@ export default defineConfig({
       ...(process.env.CI ? ['tests/integration/**'] : [])
     ],
     setupFiles: ['tests/setup.ts'],
-    // Fix coverage race condition in CI
+    // Fix coverage race condition in CI (Vitest v4 migration)
+    // Replaces deprecated poolOptions.forks.singleFork
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    maxWorkers: 1,
+    isolate: false,
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',
