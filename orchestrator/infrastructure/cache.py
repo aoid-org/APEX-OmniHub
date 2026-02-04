@@ -461,6 +461,23 @@ class SemanticCacheService:
         # Embed template
         embedding = self.embedding_model.encode(template_text, convert_to_numpy=True)
 
+        # TiDB PERSISTENCE HOOK (Phase 4)
+        try:
+            tidb = get_tidb_store()
+            if tidb.enabled:
+                tidb.put_embedding(
+                    embedding_id=template_id,
+                    embedding=embedding.tolist(),
+                    metadata={
+                        "template_text": template_text,
+                        "slots": list(parameters.keys()),
+                        "created_at": self._iso_now(),
+                    },
+                )
+        except Exception as e:
+            # Fail-safe: don't block caching if persistence fails
+            print(f"⚠️ TiDB persistence failed (non-blocking): {e}")
+
         # Parameterize plan steps (reverse of injection)
         parameterized_steps = self._parameterize_steps(plan_steps, parameters)
 
