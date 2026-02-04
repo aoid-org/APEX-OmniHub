@@ -71,6 +71,7 @@ export function AccessProvider({ children, initialScopes = ['public'] }: AccessP
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAccess(): AccessContextValue {
   const context = useContext(AccessContext);
   if (!context) {
@@ -82,6 +83,7 @@ export function useAccess(): AccessContextValue {
 /**
  * Hook to check if current user can access a specific scope
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCanAccess(requiredScopes: readonly AccessScope[]): boolean {
   const { userScopes } = useAccess();
   return requiredScopes.every(

@@ -4,8 +4,8 @@
  */
 
 const LOG_ENDPOINT = 'http://127.0.0.1:7245/ingest/42dac81a-117c-4f9f-9adc-d4ba4a181cf2';
-const SESSION_ID = 'debug-session';
-const RUN_ID = 'run2';
+const _SESSION_ID = 'debug-session';
+const _RUN_ID = 'run2';
 
 interface LogData {
   location: string;
@@ -40,7 +40,7 @@ export function debugLog({ location, message, data, hypothesisId }: LogData): vo
 
     // Only fetch if we have a valid endpoint
     if (!endpoint || endpoint.includes('localhost')) {
-      if (import.meta.env.DEV) console.log('[DebugLog]', payload);
+      if (import.meta.env.DEV) console.warn('[DebugLog]', payload);
       return;
     }
 
