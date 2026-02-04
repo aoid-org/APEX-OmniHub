@@ -225,5 +225,5 @@ class TestAppNameEnum:
 
     def test_serialization(self):
         """Should serialize to string."""
-        assert str(AppName.TRADELINE247) == "AppName.TRADELINE247"
+        assert str(AppName.TRADELINE247) == "tradeline247"
         assert AppName.TRADELINE247.value == "tradeline247"

@@ -11,7 +11,7 @@ export async function verifyAgentTaskActivity(task: AgentTask): Promise<void> {
   const result = await verifier.verify(task);
 
   // eslint-disable-next-line no-console -- Temporal.io workflow logging
-  console.log(`📋 Verification Result for ${task.id}:`, result);
+  console.warn(`📋 Verification Result for ${task.id}:`, result);
 
   if (result.status === 'REJECTED') {
     throw new Error(`Verification failed: ${result.reason}`);
@@ -46,8 +46,8 @@ async function logVerificationEvidence(result: VerificationResult): Promise<void
     const evidencePath = await writeSecureEvidence(result.taskId, evidenceContent, 'json');
 
     // eslint-disable-next-line no-console -- Audit trail logging
-    console.log(`✅ Evidence logged: ${evidencePath}`);
-    console.log(`📋 Integrity hash: ${contentHash}`);
+    console.warn(`✅ Evidence logged: ${evidencePath}`);
+    console.warn(`📋 Integrity hash: ${contentHash}`);
   } catch (error) {
     console.error(
       `❌ Failed to log evidence for task ${result.taskId}:`,
