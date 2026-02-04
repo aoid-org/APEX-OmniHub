@@ -37,6 +37,8 @@ from redis.commands.search.field import NumericField, TextField, VectorField
 from redis.commands.search.query import Query
 from sentence_transformers import SentenceTransformer
 
+from .tidb_persistence import get_tidb_store
+
 # Redis search imports - handle multiple redis-py versions
 try:
     # Try redis-py v4.x path

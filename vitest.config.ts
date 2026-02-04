@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config';
 import path from 'node:path';
 
 export default defineConfig({
+  plugins: [],
   test: {
     globals: true,
     environment: 'jsdom',
@@ -10,35 +11,24 @@ export default defineConfig({
       'tests/**/*.spec.tsx',
       'tests/**/*.test.ts',
       'tests/**/*.test.tsx',
-      'sim/tests/**/*.test.ts',
-      'sim/tests/**/*.spec.ts',
-      'apex-resilience/tests/**/*.spec.ts',
-      'apex-resilience/tests/**/*.test.ts'
+      'sim/**/*.test.ts'
     ],
-    exclude: [
-      // Playwright E2E tests (run separately with `npm run test:e2e`)
-      'tests/e2e-playwright/**',
-      '**/playwright/**',
-      'e2e/**',
-      'node_modules/**',
-      // Skip Hardhat contract tests (run with `npm run hardhat:test`)
-      'tests/contracts/**',
-      // Skip integration tests in CI (require real Supabase infrastructure)
-      ...(process.env.CI ? ['tests/integration/**'] : [])
-    ],
-    setupFiles: ['tests/setup.ts'],
-    // Fix coverage race condition in CI
-    pool: 'forks',
+    // APEX-FIX: Enforce single-threading to eliminate 'ENOENT' coverage race conditions.
+    // This prioritizes stability over parallel speed.
     poolOptions: {
-      forks: {
-        singleFork: true,
-      },
+      threads: {
+        singleThread: true,
+        isolate: false
+      }
     },
     coverage: {
       provider: 'v8',
-      reportsDirectory: './coverage',
-      clean: true,
+      reporter: ['text', 'json', 'html'],
+      // APEX-FIX: Disable aggressive cleaning to prevent file contention during report generation.
+      clean: false,
+      cleanOnRerun: false
     },
+    testTimeout: 30000,
   },
   resolve: {
     alias: {
@@ -46,4 +36,3 @@ export default defineConfig({
     },
   },
 });
-

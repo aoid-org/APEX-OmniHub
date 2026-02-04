@@ -77,19 +77,12 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
-        // APEX-FIX: Split chunks to reduce 'unused-javascript' penalty in Lighthouse
-        // Use function-based approach to only split modules that are actually imported
-        manualChunks(id) {
-          // Split React vendor bundle (only if actually imported)
-          if (id.includes('node_modules/react/') || 
-              id.includes('node_modules/react-dom/') ||
-              id.includes('node_modules/scheduler/')) {
-            return 'vendor-react';
-          }
-          // All other node_modules go into vendor chunk
-          if (id.includes('node_modules/')) {
-            return 'vendor';
-          }
+        // APEX-FIX: Implement manualChunks to resolve 'unused-javascript' penalty
+        manualChunks: {
+          // Split React core to allow browser caching
+          'vendor-react': ['react', 'react-dom'],
+          // Split UI library to defer load of unused components
+          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-slot', 'class-variance-authority', 'clsx', 'tailwind-merge'],
         },
       },
     },
