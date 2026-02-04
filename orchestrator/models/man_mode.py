@@ -21,6 +21,10 @@ class ManLane(str, Enum):
     RED = "RED"
     BLOCKED = "BLOCKED"
 
+    def __str__(self) -> str:
+        """Return the value for string representation."""
+        return self.value
+
 
 class ManTaskStatus(str, Enum):
     """Lifecycle of a MAN task."""
