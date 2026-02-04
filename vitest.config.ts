@@ -1,6 +1,9 @@
 import { defineConfig } from 'vitest/config';
 import path from 'node:path';
 
+// Detect CI environment to prevent coverage race condition (PR#413)
+const isCI = process.env.CI === 'true' || !!process.env.GITHUB_ACTIONS;
+
 export default defineConfig({
   test: {
     globals: true,
@@ -39,6 +42,7 @@ export default defineConfig({
     // Fix coverage race condition in CI
     pool: 'forks',
     coverage: {
+      enabled: !isCI, // Disable coverage in CI to prevent ENOENT on coverage/.tmp (PR#413)
       provider: 'v8',
       reportsDirectory: './coverage',
       clean: true,
@@ -53,13 +57,6 @@ export default defineConfig({
         '.git/**',
         '.cache/**'
       ]
-    },
-  },
-  // Fix coverage race condition in CI (Vitest 5+ style)
-  // @ts-ignore
-  poolOptions: {
-    forks: {
-      singleFork: true,
     },
   },
   resolve: {

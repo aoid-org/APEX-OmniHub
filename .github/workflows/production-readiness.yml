@@ -25,8 +25,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -40,8 +40,16 @@ jobs:
       - name: React singleton check
         run: npm run check:react
 
-      - name: Run tests with coverage
-        run: npm run test -- --coverage --coverage.lines=80
+      - name: Run tests
+        run: npm run test
+
+      - name: Guardrail - No TS suppression in config files
+        run: |
+          if grep -r "@ts-ignore\|@ts-expect-error" vitest.config.ts vite.config.ts 2>/dev/null; then
+            echo "❌ TS suppression comments found in config files"
+            exit 1
+          fi
+          echo "✅ No TS suppression in config files"
 
   security-gates:
     name: Security Gates
@@ -80,8 +88,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
