@@ -97,7 +97,6 @@ select = [
 ]
 
 ignore = [
-    "E501",  # line-too-long (handled by formatter)
     "S101",  # assert usage (OK in tests)
     "T201",  # print usage (OK for fallback logging)
     "UP042", # (str, Enum) instead of StrEnum (CI Python 3.11.14 compatibility)

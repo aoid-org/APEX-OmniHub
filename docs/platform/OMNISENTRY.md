@@ -111,6 +111,6 @@ Clear all stored errors and reset circuit breaker.
 
 ## Files
 
-- [`src/lib/omni-sentry.ts`](../src/lib/omni-sentry.ts) - Core module
-- [`src/components/OmniSentryToggle.tsx`](../src/components/OmniSentryToggle.tsx) - UI components
-- [`src/lib/monitoring.ts`](../src/lib/monitoring.ts) - Integration & re-exports
+- [`src/lib/omni-sentry.ts`](../../src/lib/omni-sentry.ts) - Core module
+- [`src/components/OmniSentryToggle.tsx`](../../src/components/OmniSentryToggle.tsx) - UI components
+- [`src/lib/monitoring.ts`](../../src/lib/monitoring.ts) - Integration & re-exports

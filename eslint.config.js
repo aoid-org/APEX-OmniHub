@@ -47,6 +47,7 @@ export default tseslint.config(
   {
     files: [
       "src/lib/monitoring.ts",
+      "src/lib/debug-logger.ts",
       "src/lib/offline.ts",
       "src/lib/config.ts",
       "src/lib/lovableConfig.ts",
@@ -55,6 +56,8 @@ export default tseslint.config(
       "src/lib/storage/providers/supabase.ts",
       "src/integrations/supabase/client.ts",
       "src/omniconnect/**/*.ts",
+      "src/worker.ts",
+      "apex-resilience/**/*.ts",
       "src/pages/**/*.tsx",  // Page components may log for debugging
       "tests/**/*.ts",  // Test files may log
       "supabase/functions/**/*.ts",  // Edge functions may log

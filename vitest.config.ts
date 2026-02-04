@@ -20,16 +20,31 @@ export default defineConfig({
       'apex-resilience/tests/**/*.test.ts'
     ],
     exclude: [
+<<<<<<< HEAD
       // Explicitly ignore Playwright
+=======
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/cypress/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
+      
+      
+      // Explicitly ignore Playwright (HEAD + Main)
+>>>>>>> 44fb2513 (chore(ci): enforce python quality, fix docs drift, and add sonar gate)
       '**/playwright/**',
       '**/e2e-playwright/**',
+      './tests/e2e-playwright/**',
       'tests/e2e-playwright/**',
+      './tests/worldwide-wildcard/playwright/**',
       'tests/worldwide-wildcard/playwright/**',
       
       // Explicitly ignore Hardhat
       '**/contracts/**',
+      './tests/contracts/**',
       'tests/contracts/**',
 
+<<<<<<< HEAD
       'node_modules/**',
       'dist/**',
       '.idea/**',
@@ -38,6 +53,10 @@ export default defineConfig({
       
       // Skip integration tests in CI (require real Supabase infrastructure)
       ...(process.env.CI ? ['tests/integration/**'] : [])
+=======
+      // Skip integration tests in CI (redundant with in-test logic but safer)
+      ...(process.env.CI ? ['tests/integration/**', './tests/integration/**'] : [])
+>>>>>>> 44fb2513 (chore(ci): enforce python quality, fix docs drift, and add sonar gate)
     ],
     // Fix coverage race condition in CI
     pool: 'forks',
