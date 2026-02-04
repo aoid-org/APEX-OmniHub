@@ -17,6 +17,16 @@ export default defineConfig({
       'tests/**/*.test.tsx',
       'sim/**/*.test.ts'
     ],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/cypress/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
+      'tests/e2e-playwright/**',
+      'tests/worldwide-wildcard/playwright/**',
+      'tests/contracts/**'
+    ],
     coverage: {
       enabled: !isCI, // Disable coverage in CI to prevent ENOENT on coverage/.tmp (PR#410)
       provider: 'v8',
