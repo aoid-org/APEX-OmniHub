@@ -17,13 +17,6 @@ export default defineConfig({
       'tests/**/*.test.tsx',
       'sim/**/*.test.ts'
     ],
-    pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true,
-        isolate: false,
-      },
-    },
     coverage: {
       enabled: !isCI, // Disable coverage in CI to prevent ENOENT on coverage/.tmp (PR#410)
       provider: 'v8',
