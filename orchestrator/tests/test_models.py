@@ -215,9 +215,9 @@ class TestAppNameEnum:
     """Test AppName enum matches TypeScript contracts."""
 
     def test_all_12_apps_present(self):
-        """Should have exactly 12 APEX apps."""
+        """Should have exactly 14 APEX apps."""
         apps = list(AppName)
-        assert len(apps) == 12
+        assert len(apps) == 14
 
     def test_omnilink_value(self):
         """Should match TypeScript value."""

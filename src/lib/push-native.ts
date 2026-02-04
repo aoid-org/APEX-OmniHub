@@ -146,7 +146,8 @@ export async function removeDeliveredNotifications(notifications: PushNotificati
 
     try {
         await PushNotifications.removeDeliveredNotifications({
-            notifications: notifications.map(n => ({ id: n.id })),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            notifications: notifications.map(n => ({ id: n.id } as any)),
         });
     } catch (error) {
         console.error('[PushNative] Failed to remove delivered notifications:', error);

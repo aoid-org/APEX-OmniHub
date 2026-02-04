@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Debug logging utility for instrumentation
  * Centralizes logging logic to reduce code duplication

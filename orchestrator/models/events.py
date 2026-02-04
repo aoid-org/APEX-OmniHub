@@ -1,4 +1,5 @@
 """
+# Force CI sync
 Event Schema Definitions - Canonical Data Model (CDM).
 
 Matches sim/contracts.ts EventEnvelope structure for seamless TypeScript ↔ Python interop.
@@ -25,30 +26,46 @@ UTC_OFFSET_SUFFIX = "+00:00"
 # ============================================================================
 
 
-class AppName(str, Enum):
+# -----------------------------------------------------------------------------
+# Core Event Taxonomy (Apex Standard)
+# -----------------------------------------------------------------------------
+
+
+class AppName(str, Enum):  # noqa: UP042
     """12 APEX Apps - matches sim/contracts.ts AppName exactly."""
 
-    OMNILINK = "omnilink"  # Event fabric / integration SDK
-    OMNIHUB = "omnihub"  # Dashboard / orchestration UI
-    TRADELINE247 = "tradeline247"  # AI receptionist
-    AUTOREPAI = "autorepai"  # Auto repair AI
-    FLOWBILLS = "flowbills"  # Billing automation
-    FLOWC = "flowc"  # Silent compliance
-    ASPIRAL = "aspiral"  # aSpiral (stub)
-    JUBEELOVE = "jubeelove"  # AI relationship coach
-    TRUTALK = "trutalk"  # TRU Talk (stub)
-    KEEPSAFE = "keepsafe"  # Safety & compliance
-    BRIGHT = "bright"  # Bright Beginnings (stub)
-    CARECONNECT = "careconnect"  # CareConnect (stub)
+    OMNI_DASH = "omni-dash"
+    OMNI_LINK = "omni-link"
+    MAESTRO_EXEC = "maestro-exec"
+    TRIFORCE_KNOWLEDGE = "triforce-knowledge"
+    APEX_SECURITY = "apex-security"
+    CLOSURE_VERIFIER = "closure-verifier"
+    MARKETING_MASTER = "marketing-master"
+    SALES_FORCE = "sales-force"
+    TALENT_SCOUT = "talent-scout"
+    FINANCE_WIZARD = "finance-wizard"
+    LEGAL_EAGLE = "legal-eagle"
+    OPS_COMMANDER = "ops-commander"
+    OMNILINK = "omnilink"
+    TRADELINE247 = "tradeline247"
+
+    def __str__(self) -> str:
+        """Return the value for string representation."""
+        return self.value
 
     def __str__(self) -> str:
         """Return the value for string representation."""
         return self.value
 
 
-class EventType(str, Enum):
+class EventType(str, Enum):  # noqa: UP042
     """Canonical event taxonomy - subset for orchestrator-specific events."""
 
+    # 1. Ingestion / OmniPort
+    INGEST_RECEIVED = "ingest.received"
+    INGEST_VALIDATED = "ingest.validated"
+
+    # 2. Security / Zero-Trust
     # Orchestrator-specific events (not in original contracts.ts)
     ORCHESTRATOR_GOAL_RECEIVED = "orchestrator:agent.goal_received"
     ORCHESTRATOR_PLAN_GENERATED = "orchestrator:agent.plan_generated"
@@ -66,7 +83,7 @@ class EventType(str, Enum):
     OMNILINK_EVENT_FAILED = "omnilink:event.failed"
 
 
-class SimulatedFailureType(str, Enum):
+class SimulatedFailureType(str, Enum):  # noqa: UP042
     """Chaos engineering failure types."""
 
     TIMEOUT = "timeout"

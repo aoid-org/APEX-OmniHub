@@ -121,24 +121,24 @@ class EntityExtractor:
     # Entity patterns (regex-based - simple but fast)
     PATTERNS = {
         "DATE": [
-            r"\b(tomorrow|today|yesterday)\b",
-            r"\b\d{1,2}/\d{1,2}/\d{2,4}\b",  # MM/DD/YYYY
-            r"\b\d{4}-\d{2}-\d{2}\b",  # YYYY-MM-DD
-            r"\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}\b",
+            r"\\b(tomorrow|today|yesterday)\\b",
+            r"\\b\\d{1,2}/\\d{1,2}/\\d{2,4}\\b",  # MM/DD/YYYY
+            r"\\b\\d{4}-\\d{2}-\\d{2}\\b",  # YYYY-MM-DD
+            r"\\b(january|february|march|april|may|june|july|august|september|october|november|december)\\s+\\d{1,2}\\b",
         ],
         "LOCATION": [
-            r"\b(paris|london|new york|nyc|tokyo|sydney|berlin|rome)\b",
-            r"\bto\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b",  # "to Paris"
+            r"\\b(paris|london|new york|nyc|tokyo|sydney|berlin|rome)\\b",
+            r"\\bto\\s+([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)?)\\b",  # "to Paris"
         ],
         "PERSON": [
-            r"\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b",  # "John Doe"
+            r"\\b([A-Z][a-z]+\\s+[A-Z][a-z]+)\\b",  # "John Doe"
         ],
         "AMOUNT": [
-            r"\$\d+(?:,\d{3})*(?:\.\d{2})?",  # $1,000.00
-            r"\b\d+\s*(?:dollars?|euros?|pounds?)\b",
+            r"\\$\\d+(?:,\\d{3})*(?:\\.\\d{2})?",  # $1,000.00
+            r"\\b\\d+\\s*(?:dollars?|euros?|pounds?)\\b",
         ],
         "EMAIL": [
-            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+            r"\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
         ],
     }
 
@@ -352,7 +352,7 @@ class SemanticCacheService:
         5. Else return None (cache miss)
 
         Args:
-            goal: User's goal in natural language
+            goal: User's original goal
 
         Returns:
             CachedPlan if cache hit (similarity >= threshold), else None
@@ -462,6 +462,7 @@ class SemanticCacheService:
         embedding = self.embedding_model.encode(template_text, convert_to_numpy=True)
 
         # TiDB PERSISTENCE HOOK (Phase 4)
+        # Idempotent upsert of embedding vector if persistence is enabled
         try:
             tidb = get_tidb_store()
             if tidb.enabled:

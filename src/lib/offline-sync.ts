@@ -22,7 +22,6 @@ export interface ConflictResolutionStrategy {
 
 const SYNC_QUEUE_KEY = 'omnilink_sync_queue';
 const MAX_RETRIES = 3;
-const _RETRY_DELAY_MS = 2000;
 
 /**
  * Check if Background Sync API is supported
@@ -56,7 +55,8 @@ export async function addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp
   // Register background sync if supported
   if (isBackgroundSyncSupported()) {
     const registration = await navigator.serviceWorker.ready;
-    await registration.sync.register('omnilink-sync');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (registration as any).sync.register('omnilink-sync');
   }
 }
 

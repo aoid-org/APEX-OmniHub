@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
  */
 
 // Test configuration
-const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
+
 
 // Page test matrix: [route, expectedContent]
 const PAGE_TESTS = [
