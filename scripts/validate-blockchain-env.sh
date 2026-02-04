@@ -19,7 +19,7 @@ ERRORS=0
 WARNINGS=0
 
 DEMO_MODE_ACTIVE=false
-if [ "${DEMO_MODE}" = "true" ] || [ "${VITE_DEMO_MODE}" = "true" ]; then
+if [[ "${DEMO_MODE}" = "true" ] || [ "${VITE_DEMO_MODE}" = "true" ]; then
     DEMO_MODE_ACTIVE=true
     echo -e "${YELLOW}⚠${NC} Demo mode enabled: relaxing blockchain env requirements"
     echo ""
@@ -31,8 +31,8 @@ check_var() {
     local required=$2
     local var_value="${!var_name}"
 
-    if [ -z "$var_value" ]; then
-        if [ "$required" = "true" ]; then
+    if [[ -z "$var_value" ]; then
+        if [[ "$required" = "true" ]; then
             echo -e "${RED}✗${NC} $var_name is NOT SET (required)"
             ((ERRORS++))
         else
@@ -50,7 +50,7 @@ validate_address() {
     local var_name=$1
     local var_value="${!var_name}"
 
-    if [ -n "$var_value" ]; then
+    if [[ -n "$var_value" ]; then
         if [[ $var_value =~ ^0x[a-fA-F0-9]{40}$ ]]; then
             echo -e "  ${GREEN}✓${NC} Valid Ethereum address format"
         else
@@ -66,7 +66,7 @@ validate_private_key() {
     local var_name=$1
     local var_value="${!var_name}"
 
-    if [ -n "$var_value" ]; then
+    if [[ -n "$var_value" ]; then
         # Check if it's 64 hex chars (with or without 0x prefix)
         if [[ $var_value =~ ^(0x)?[a-fA-F0-9]{64}$ ]]; then
             echo -e "  ${GREEN}✓${NC} Valid private key format"
@@ -86,14 +86,14 @@ validate_private_key() {
 
 echo "Required Variables:"
 echo "===================="
-if [ "$DEMO_MODE_ACTIVE" = "true" ]; then
+if [[ "$DEMO_MODE_ACTIVE" = "true" ]; then
     check_var "WEB3_PRIVATE_KEY" "false"
 else
     check_var "WEB3_PRIVATE_KEY" "true"
     validate_private_key "WEB3_PRIVATE_KEY"
 fi
 
-if [ "$DEMO_MODE_ACTIVE" = "true" ]; then
+if [[ "$DEMO_MODE_ACTIVE" = "true" ]; then
     check_var "MEMBERSHIP_NFT_ADDRESS" "false"
 else
     check_var "MEMBERSHIP_NFT_ADDRESS" "true"
@@ -107,8 +107,8 @@ check_var "ALCHEMY_API_KEY_ETH" "false"
 check_var "ALCHEMY_API_KEY_POLYGON" "false"
 
 # At least one RPC key should be set
-if [ -z "$ALCHEMY_API_KEY_ETH" ] && [ -z "$ALCHEMY_API_KEY_POLYGON" ]; then
-    if [ "$DEMO_MODE_ACTIVE" = "true" ]; then
+if [[ -z "$ALCHEMY_API_KEY_ETH" ] && [ -z "$ALCHEMY_API_KEY_POLYGON" ]; then
+    if [[ "$DEMO_MODE_ACTIVE" = "true" ]; then
         echo -e "${YELLOW}⚠${NC} Demo mode: RPC API keys are optional"
         ((WARNINGS++))
     else
@@ -122,8 +122,8 @@ echo "Webhook Configuration:"
 echo "======================"
 check_var "ALCHEMY_WEBHOOK_SIGNING_KEY" "false"
 
-if [ -z "$ALCHEMY_WEBHOOK_SIGNING_KEY" ]; then
-    if [ "$DEMO_MODE_ACTIVE" = "true" ]; then
+if [[ -z "$ALCHEMY_WEBHOOK_SIGNING_KEY" ]; then
+    if [[ "$DEMO_MODE_ACTIVE" = "true" ]; then
         echo -e "  ${YELLOW}⚠${NC} Demo mode: webhook signature verification is optional"
         ((WARNINGS++))
     else
@@ -143,10 +143,10 @@ echo "Supabase Configuration:"
 echo "======================="
 check_var "VITE_SUPABASE_URL" "true"
 SUPABASE_KEY_SET=false
-if [ -n "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+if [[ -n "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
     echo -e "${GREEN}✓${NC} VITE_SUPABASE_PUBLISHABLE_KEY is set"
     SUPABASE_KEY_SET=true
-elif [ -n "$VITE_SUPABASE_ANON_KEY" ]; then
+elif [[ -n "$VITE_SUPABASE_ANON_KEY" ]; then
     echo -e "${GREEN}✓${NC} VITE_SUPABASE_ANON_KEY is set"
     SUPABASE_KEY_SET=true
 else
@@ -157,15 +157,15 @@ fi
 echo ""
 echo "Summary:"
 echo "========"
-if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
+if [[ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
     echo -e "${GREEN}✓ All checks passed!${NC} Environment is ready for deployment."
     exit 0
-elif [ $ERRORS -eq 0 ]; then
+elif [[ $ERRORS -eq 0 ]; then
     echo -e "${YELLOW}⚠ $WARNINGS warning(s) found.${NC} Review warnings before deploying to production."
     exit 0
 else
     echo -e "${RED}✗ $ERRORS error(s) found.${NC} Fix errors before deploying." >&2
-    if [ $WARNINGS -gt 0 ]; then
+    if [[ $WARNINGS -gt 0 ]; then
         echo -e "${YELLOW}⚠ $WARNINGS warning(s) also found.${NC}" >&2
     fi
     exit 1
