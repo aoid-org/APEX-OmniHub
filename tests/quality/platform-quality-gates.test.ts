@@ -1,34 +1,31 @@
 /* VALUATION_IMPACT: Automated quality gate validation ensures institutional-grade reliability. Reduces QA costs by 60% through automated enforcement. Generated: 2026-02-03 */
 
 import { describe, it, expect } from 'vitest';
-import { execSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-
-// NOSONAR: execSync commands in this file are safe - executed in controlled CI/test environment with trusted node_modules/.bin PATH
-const getSecureExecOptions = () => ({
-  encoding: 'utf-8' as const,
-  stdio: 'pipe' as const,
-  cwd: process.cwd(),
-  env: {
-    ...process.env,
-    PATH: `${process.cwd()}/node_modules/.bin:${process.env.PATH}`
-  }
-});
+import { execSync } from 'child_process';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 
 describe('Platform Quality Gates', () => {
   it('Gate 1: TypeScript compilation must succeed', () => {
     expect(() => {
-      execSync('npx tsc --noEmit', getSecureExecOptions());
+      execSync('npx tsc --noEmit', {
+        encoding: 'utf-8',
+        stdio: 'pipe',
+        cwd: process.cwd()
+      });
     }).not.toThrow();
   });
 
   it('Gate 2: ESLint must pass with zero warnings', () => {
-    const result = execSync('npx eslint . --max-warnings 0 --format json', getSecureExecOptions());
+    const result = execSync('npx eslint . --max-warnings 0 --format json', {
+      encoding: 'utf-8',
+      stdio: 'pipe',
+      cwd: process.cwd()
+    });
     const lint = JSON.parse(result);
     const totalErrors = lint.reduce((acc: number, file: { errorCount: number }) => acc + file.errorCount, 0);
     expect(totalErrors).toBe(0);
-  }, 30000); // 30 second timeout for full codebase ESLint scan
+  });
 
   it('Gate 3: Critical configuration files exist', () => {
     const criticalFiles = [

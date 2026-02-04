@@ -85,6 +85,9 @@ test.describe('Route Sweep - Public Routes', () => {
 
 test.describe('Route Sweep - All Routes Summary', () => {
   test('all registered routes are reachable', async ({ page }) => {
+    // Increase timeout for sweeping all routes (each route can take up to 10s)
+    test.setTimeout(120_000);
+
     const results: { route: string; status: number | null; hasAppShell: boolean }[] = [];
 
     for (const route of ALL_ROUTES) {

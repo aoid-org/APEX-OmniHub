@@ -1,7 +1,7 @@
 /* VALUATION_IMPACT: Validates 100K+ concurrent user capacity with automated load tests. Provides empirical evidence for enterprise scalability claims in due diligence. Generated: 2026-02-03 */
 
 import { describe, it, expect } from 'vitest';
-import { performance } from 'node:perf_hooks';
+import { performance } from 'perf_hooks';
 
 interface LoadTestResult {
   totalRequests: number;
@@ -30,9 +30,7 @@ async function runLoadTest(
   const userPromises = Array.from({ length: concurrentUsers }, async () => {
     for (let i = 0; i < requestsPerUser; i++) {
       try {
-        // NOSONAR: Math.random() is safe here - used only for non-cryptographic test jitter to simulate realistic latency variance
-        const jitter = Math.random() * 20 - 10;
-        const latency = await simulateRequest(avgDelayMs + jitter);
+        const latency = await simulateRequest(avgDelayMs + Math.random() * 20 - 10);
         allLatencies.push(latency);
         successCount++;
       } catch {
@@ -69,8 +67,8 @@ describe('Platform Scalability Benchmarks', () => {
     const scaled = await runLoadTest(5000, 5, 50);
 
     const scalingFactor = scaled.throughputRps / baseline.throughputRps;
-    expect(scalingFactor).toBeGreaterThan(4);
-    expect(scalingFactor).toBeLessThan(6);
+    expect(scalingFactor).toBeGreaterThan(4.0);
+    expect(scalingFactor).toBeLessThan(6.0);
   }, 120000);
 
   it('connection pool prevents resource exhaustion', () => {
