@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Offline Sync - Background Sync API + Conflict Resolution
  * Handles offline data queuing and smart conflict resolution when back online
@@ -22,7 +23,7 @@ export interface ConflictResolutionStrategy {
 
 const SYNC_QUEUE_KEY = 'omnilink_sync_queue';
 const MAX_RETRIES = 3;
-const _RETRY_DELAY_MS = 2000;
+
 
 /**
  * Check if Background Sync API is supported

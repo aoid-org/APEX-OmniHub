@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Native Push Notifications - Capacitor Wrapper
  * Handles FCM (Android) and APNS (iOS) push notifications

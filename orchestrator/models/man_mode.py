@@ -5,14 +5,14 @@ safety system that gates high-risk agent actions.
 """
 
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
 
-class ManLane(str, Enum):
+class ManLane(StrEnum):
     """Traffic-light lanes for action risk."""
 
     GREEN = "GREEN"
@@ -20,22 +20,14 @@ class ManLane(str, Enum):
     RED = "RED"
     BLOCKED = "BLOCKED"
 
-    def __str__(self) -> str:
-        """Return the value for string representation."""
-        return self.value
 
-
-class ManTaskStatus(str, Enum):
+class ManTaskStatus(StrEnum):
     """Lifecycle of a MAN task."""
 
     PENDING = "PENDING"
     APPROVED = "APPROVED"
     DENIED = "DENIED"
     EXPIRED = "EXPIRED"
-
-    def __str__(self) -> str:
-        """Return the value for string representation."""
-        return self.value
 
 
 class ActionIntent(BaseModel):

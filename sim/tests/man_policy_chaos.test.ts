@@ -29,6 +29,7 @@ class ManWorkflow {
 
         // 1. CHAOS INJECTION: Simulate System Panic (Network/Server/Timeout)
         // We strictly follow the Chaos Engine's decision to crash the system
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const decision = this.chaos.decide(event);
 
         try {

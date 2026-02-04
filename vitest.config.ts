@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['tests/setup/vitest.setup.ts'],
+    setupFiles: ['tests/setup/vitest.setup.ts', 'tests/setup.ts'],
     include: [
       'tests/**/*.spec.ts',
       'tests/**/*.spec.tsx',
@@ -19,15 +19,16 @@ export default defineConfig({
     exclude: [
       // Playwright E2E tests (run separately with `npm run test:e2e`)
       'tests/e2e-playwright/**',
+      '**/tests/e2e-playwright/**',
       '**/playwright/**',
       'e2e/**',
+      'tests/worldwide-wildcard/playwright/**',
       'node_modules/**',
       // Skip Hardhat contract tests (run with `npm run hardhat:test`)
       'tests/contracts/**',
       // Skip integration tests in CI (require real Supabase infrastructure)
       ...(process.env.CI ? ['tests/integration/**'] : [])
     ],
-    setupFiles: ['tests/setup.ts'],
     // Fix coverage race condition in CI
     pool: 'forks',
     poolOptions: {
@@ -47,4 +48,3 @@ export default defineConfig({
     },
   },
 });
-
