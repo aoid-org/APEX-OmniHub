@@ -76,6 +76,7 @@ class AuditResourceType(StrEnum):
     SYSTEM_CONFIG = "system_config"
     API_KEY = "api_key"
     POLICY = "policy"
+    DATABASE = "database"
 
 
 class AuditStatus(StrEnum):
