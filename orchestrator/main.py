@@ -83,6 +83,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Register OmniBoard Router
+from omniboard.router import router as omniboard_router
+
+app.include_router(omniboard_router)
+
 
 class GoalRequest(BaseModel):
     user_id: str

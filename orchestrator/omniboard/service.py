@@ -58,6 +58,7 @@ class OmniBoardService:
         return f"{base_url}?provider={provider}&tenant={tenant_id}&response_type=code"
 
     @classmethod
+<<<<<<< HEAD
     def validate_api_key(cls, _provider: str, api_key: str) -> bool:
         """
         MOCK: Validates an API Key format/validity locally if possible.
@@ -66,6 +67,18 @@ class OmniBoardService:
 
     @classmethod
     def initiate_device_code_flow(cls, _provider: str) -> dict[str, str]:
+=======
+    def validate_api_key(cls, provider: str, api_key: str) -> bool:
+        """
+        MOCK: Validates an API Key format/validity locally if possible.
+        """
+        if not api_key or len(api_key) < 10:
+            return False
+        return True
+
+    @classmethod
+    def initiate_device_code_flow(cls, provider: str) -> dict[str, str]:
+>>>>>>> chore/ci-compliance-clean
         """
         MOCK: Initiates Device Code flow.
         Returns dict with 'user_code', 'verification_uri', 'device_code', etc.
