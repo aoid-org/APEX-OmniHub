@@ -8,20 +8,13 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import { createDatabase } from '@/lib/database'
 import type { IDatabase } from '@/lib/database'
+import { getIntegrationConfig } from './setup-helpers'
 
 // ============================================================================
 // SETUP
 // ============================================================================
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? ''
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
-  ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY
-  ?? process.env.SUPABASE_ANON_KEY
-  ?? ''
-const requireIntegration = (process.env.REQUIRE_SUPABASE_INTEGRATION_TESTS ?? '')
-  .toLowerCase() === 'true'
-const hasCreds = Boolean(supabaseUrl && supabaseKey)
-const suite = hasCreds ? describe : describe.skip
+const { supabaseUrl, supabaseKey, requireIntegration, hasCreds, suite } = getIntegrationConfig()
 
 let db: IDatabase
 let testUserId: string
