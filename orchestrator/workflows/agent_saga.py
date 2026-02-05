@@ -1041,7 +1041,10 @@ class AgentWorkflow:
                                 },
                                 "triage_result": {
                                     "lane": "RED",
-                                    "reason": f"Iron Law verification failed: {iron_law_result.get('reason')}",
+                                    "reason": (
+                                        f"Iron Law verification failed: "
+                                        f"{iron_law_result.get('reason')}"
+                                    ),
                                 },
                                 "timeout_hours": 24,
                             }
@@ -1076,7 +1079,8 @@ class AgentWorkflow:
                 )
 
             workflow.logger.info(
-                f"  ✅ Iron Law APPROVED: {step['tool']} - logic delta: {iron_law_result.get('logicDelta', 0):.2f}"
+                f"  ✅ Iron Law APPROVED: {step['tool']} - logic delta: "
+                f"{iron_law_result.get('logicDelta', 0):.2f}"
             )
 
         # =====================================================================

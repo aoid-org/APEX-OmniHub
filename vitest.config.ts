@@ -28,11 +28,14 @@ export default defineConfig({
       // Explicitly ignore Playwright (HEAD + Main)
       '**/playwright/**',
       '**/e2e-playwright/**',
+      './tests/e2e-playwright/**',
       'tests/e2e-playwright/**',
+      './tests/worldwide-wildcard/playwright/**',
       'tests/worldwide-wildcard/playwright/**',
       
       // Explicitly ignore Hardhat (HEAD + Main)
       '**/contracts/**',
+      './tests/contracts/**',
       'tests/contracts/**',
 
       // Skip integration tests in CI (redundant with in-test logic but safer)

@@ -19,6 +19,7 @@
     "test:e2e:install": "playwright install chromium",
     "test:assets": "node tests/smoke/assets-check.mjs",
     "check:react": "node scripts/check-react-singleton.mjs",
+    "docs:check": "node scripts/ci/check_docs_links.mjs && node scripts/ci/check_doc_code_pointers.mjs",
     "ci:runtime-gates": "npm run check:react && npm run test:assets && npm run test:e2e",
     "smoke-test": "tsx scripts/smoke-test.ts",
     "guardian:status": "tsx scripts/guardian/status.ts",
