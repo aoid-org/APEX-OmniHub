@@ -1,9 +1,11 @@
-import { Outlet } from 'react-router-dom';
-import { AlertCircle, Activity, ShieldCheck } from 'lucide-react';
+import { Outlet, Link } from 'react-router-dom';
+import { AlertCircle, Activity, ShieldCheck, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useAdminAccess, useOmniDashSettings } from '@/omnidash/hooks';
+import { usePaidAccess } from '@/hooks/usePaidAccess';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchHealthSnapshot, updateSettings } from '@/omnidash/api';
@@ -13,12 +15,17 @@ import { DemoModeBanner } from '@/components/demo/DemoModeBanner';
 
 export const OmniDashLayout = () => {
   const { user } = useAuth();
-  const { isAdmin, loading, featureEnabled } = useAdminAccess();
+  const { isAdmin, loading: adminLoading, featureEnabled } = useAdminAccess();
+  const { isPaid, loading: paidLoading } = usePaidAccess();
   const settings = useOmniDashSettings();
+
+  // Determine access: Admin OR Paid user
+  const hasAccess = isAdmin || isPaid;
+  const loading = adminLoading || paidLoading;
 
   const health = useQuery({
     queryKey: ['omnidash-health', user?.id],
-    enabled: !!user && featureEnabled,
+    enabled: !!user && featureEnabled && hasAccess,
     queryFn: async () => {
       if (!user) throw new Error('User missing');
       return fetchHealthSnapshot(user.id);
@@ -39,22 +46,46 @@ export const OmniDashLayout = () => {
 
   if (loading || settings.isLoading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse h-6 w-32 bg-muted rounded" />
+      <div className="flex items-center justify-center p-12">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
-  if (!isAdmin) {
+  if (!hasAccess) {
     return (
-      <div className="p-6">
-        <Card>
+      <div className="flex items-center justify-center p-12">
+        <Card className="max-w-lg">
           <CardHeader>
-            <CardTitle>Access restricted</CardTitle>
-            <CardDescription>OmniDash is limited to admin users.</CardDescription>
+            <CardTitle>Upgrade to access OmniDash</CardTitle>
+            <CardDescription>
+              OmniDash is your command center for managing operations, pipeline, KPIs, and real-time insights.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>Request admin access or add your email to VITE_OMNIDASH_ADMIN_EMAILS.</p>
+          <CardContent className="space-y-4">
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                <strong>Included in all paid plans:</strong>
+              </p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>Real-time operational dashboard</li>
+                <li>Sales pipeline management</li>
+                <li>KPI scoreboard with daily tracking</li>
+                <li>Incident monitoring and resolution</li>
+                <li>Integration health monitoring</li>
+              </ul>
+            </div>
+            <div className="flex gap-2">
+              <Button asChild>
+                <Link to="/pricing">View Plans</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/dashboard">Return to Dashboard</Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
