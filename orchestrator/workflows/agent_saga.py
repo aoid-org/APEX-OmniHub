@@ -1042,7 +1042,8 @@ class AgentWorkflow:
                                 "triage_result": {
                                     "lane": "RED",
                                     "reason": (
-                                        f"Iron Law verification failed: {iron_law_result.get('reason')}"
+                                        f"Iron Law verification failed: "
+                                        f"{iron_law_result.get('reason')}"
                                     ),
                                 },
                                 "timeout_hours": 24,
