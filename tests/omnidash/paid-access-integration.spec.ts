@@ -11,294 +11,114 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/integrations/supabase/types';
+import {
+  hasServiceKey,
+  OmniDashTestContext,
+  setupTestUser,
+  cleanupTestUser,
+  subscriptionDates,
+} from './_test-helpers';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'http://localhost:54321';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-
-const runTests = !!SUPABASE_SERVICE_KEY;
-const describeIf = runTests ? describe : describe.skip;
+const describeIf = hasServiceKey ? describe : describe.skip;
 
 describeIf('Paid Access Integration with OmniDash', () => {
-  let adminClient: ReturnType<typeof createClient<Database>>;
-  let testUserId: string;
-  let testUserEmail: string;
-  let anonClient: ReturnType<typeof createClient<Database>>;
+  let ctx: OmniDashTestContext;
 
   beforeEach(async () => {
-    adminClient = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-      auth: { persistSession: false },
-    });
-
-    testUserEmail = `test-${Date.now()}@paid-access-test.local`;
-    const { data, error } = await adminClient.auth.admin.createUser({
-      email: testUserEmail,
-      password: 'test-password-123456',
-      email_confirm: true,
-    });
-
-    if (error) throw error;
-    if (!data.user) throw new Error('Failed to create test user');
-
-    testUserId = data.user.id;
-
-    const anonKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
-    anonClient = createClient<Database>(SUPABASE_URL, anonKey, {
-      auth: { persistSession: false },
-    });
-
-    await anonClient.auth.signInWithPassword({
-      email: testUserEmail,
-      password: 'test-password-123456',
-    });
+    ctx = await setupTestUser('paid-access-test');
   });
 
   afterEach(async () => {
-    if (testUserId) {
-      await adminClient.from('subscriptions').delete().eq('user_id', testUserId);
-      await adminClient.from('omnidash_settings').delete().eq('user_id', testUserId);
-      await adminClient.auth.admin.deleteUser(testUserId);
-    }
+    await cleanupTestUser(ctx.adminClient, ctx.testUserId, async (client, userId) => {
+      await client.from('subscriptions').delete().eq('user_id', userId);
+      await client.from('omnidash_settings').delete().eq('user_id', userId);
+    });
   });
 
+  // Helper to insert subscription
+  const insertSubscription = (tier: string, status: string, dates?: Record<string, string>) =>
+    ctx.adminClient.from('subscriptions').insert({ user_id: ctx.testUserId, tier, status, ...dates });
+
+  // Helper to query omnidash_settings
+  const querySettings = () =>
+    ctx.anonClient.from('omnidash_settings').select('*').eq('user_id', ctx.testUserId).maybeSingle();
+
   describe('RLS Policies - omnidash_settings table', () => {
-    it('should allow starter tier user to query omnidash_settings', async () => {
-      // RED TEST: Currently only admins can access
-
-      // Grant starter subscription
-      await adminClient.from('subscriptions').insert({
-        user_id: testUserId,
-        tier: 'starter',
-        status: 'active',
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      });
-
-      // Try to query omnidash_settings
-      const { error } = await anonClient
-        .from('omnidash_settings')
-        .select('*')
-        .eq('user_id', testUserId)
-        .maybeSingle();
-
-      expect(error).toBeNull(); // FAILS: RLS denies access
-      // Data may be null if no settings yet, but no RLS error
-    });
-
-    it('should allow pro tier user to query omnidash_settings', async () => {
-      await adminClient.from('subscriptions').insert({
-        user_id: testUserId,
-        tier: 'pro',
-        status: 'active',
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      });
-
-      const { error } = await anonClient
-        .from('omnidash_settings')
-        .select('*')
-        .eq('user_id', testUserId)
-        .maybeSingle();
-
-      expect(error).toBeNull();
-    });
-
-    it('should allow enterprise tier user to query omnidash_settings', async () => {
-      await adminClient.from('subscriptions').insert({
-        user_id: testUserId,
-        tier: 'enterprise',
-        status: 'active',
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-      });
-
-      const { error } = await anonClient
-        .from('omnidash_settings')
-        .select('*')
-        .eq('user_id', testUserId)
-        .maybeSingle();
-
+    it.each([
+      { tier: 'starter', status: 'active', dates: subscriptionDates.active30Days() },
+      { tier: 'pro', status: 'active', dates: subscriptionDates.active30Days() },
+      { tier: 'enterprise', status: 'active', dates: subscriptionDates.active365Days() },
+      { tier: 'pro', status: 'trialing', dates: subscriptionDates.trialing14Days() },
+      { tier: 'pro', status: 'canceled', dates: subscriptionDates.canceledMidPeriod() },
+    ])('should allow $tier tier user with $status status to query omnidash_settings', async ({ tier, status, dates }) => {
+      await insertSubscription(tier, status, dates);
+      const { error } = await querySettings();
       expect(error).toBeNull();
     });
 
     it('should DENY free tier user access to omnidash_settings', async () => {
-      // User has free tier subscription (default)
-      await adminClient.from('subscriptions').insert({
-        user_id: testUserId,
-        tier: 'free',
-        status: 'active',
-      });
-
-      const { error } = await anonClient
-        .from('omnidash_settings')
-        .select('*')
-        .eq('user_id', testUserId)
-        .maybeSingle();
-
-      // Should get RLS error
+      await insertSubscription('free', 'active');
+      const { error } = await querySettings();
       expect(error).not.toBeNull();
       expect(error?.message).toMatch(/policy|permission/i);
     });
 
-    it('should allow paid user with trialing status', async () => {
-      await adminClient.from('subscriptions').insert({
-        user_id: testUserId,
-        tier: 'pro',
-        status: 'trialing',
-        trial_start: new Date().toISOString(),
-        trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-      });
-
-      const { error } = await anonClient
-        .from('omnidash_settings')
-        .select('*')
-        .eq('user_id', testUserId)
-        .maybeSingle();
-
-      expect(error).toBeNull();
-    });
-
-    it('should allow paid user with canceled status (within period)', async () => {
-      await adminClient.from('subscriptions').insert({
-        user_id: testUserId,
-        tier: 'pro',
-        status: 'canceled',
-        current_period_start: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-        current_period_end: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-        canceled_at: new Date().toISOString(),
-      });
-
-      const { error } = await anonClient
-        .from('omnidash_settings')
-        .select('*')
-        .eq('user_id', testUserId)
-        .maybeSingle();
-
-      expect(error).toBeNull();
-    });
-
     it('should DENY user with expired subscription', async () => {
-      await adminClient.from('subscriptions').insert({
-        user_id: testUserId,
-        tier: 'pro',
-        status: 'expired',
-        current_period_start: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-        current_period_end: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      });
-
-      const { error } = await anonClient
-        .from('omnidash_settings')
-        .select('*')
-        .eq('user_id', testUserId)
-        .maybeSingle();
-
+      await insertSubscription('pro', 'expired', subscriptionDates.expired());
+      const { error } = await querySettings();
       expect(error).not.toBeNull();
     });
   });
 
   describe('RLS Policies - other OmniDash tables', () => {
-    const tables = [
-      'omnidash_today_items',
-      'omnidash_pipeline_items',
-      'omnidash_kpi_daily',
-      'omnidash_incidents',
-    ];
+    const tables = ['omnidash_today_items', 'omnidash_pipeline_items', 'omnidash_kpi_daily', 'omnidash_incidents'] as const;
+    type OmniDashTable = typeof tables[number];
 
-    tables.forEach((table) => {
-      it(`should allow paid user to access ${table}`, async () => {
-        await adminClient.from('subscriptions').insert({
-          user_id: testUserId,
-          tier: 'starter',
-          status: 'active',
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        });
+    const queryTable = (table: OmniDashTable) =>
+      ctx.anonClient.from(table).select('*').eq('user_id', ctx.testUserId);
 
-        const { error } = await anonClient
-          .from(table as 'omnidash_today_items' | 'omnidash_pipeline_items' | 'omnidash_kpi_daily' | 'omnidash_incidents')
-          .select('*')
-          .eq('user_id', testUserId);
+    it.each(tables)('should allow paid user to access %s', async (table) => {
+      await insertSubscription('starter', 'active', subscriptionDates.active30Days());
+      const { error } = await queryTable(table);
+      expect(error).toBeNull();
+    });
 
-        expect(error).toBeNull();
-      });
-
-      it(`should DENY free user access to ${table}`, async () => {
-        await adminClient.from('subscriptions').insert({
-          user_id: testUserId,
-          tier: 'free',
-          status: 'active',
-        });
-
-        const { error } = await anonClient
-          .from(table as 'omnidash_today_items' | 'omnidash_pipeline_items' | 'omnidash_kpi_daily' | 'omnidash_incidents')
-          .select('*')
-          .eq('user_id', testUserId);
-
-        expect(error).not.toBeNull();
-      });
+    it.each(tables)('should DENY free user access to %s', async (table) => {
+      await insertSubscription('free', 'active');
+      const { error } = await queryTable(table);
+      expect(error).not.toBeNull();
     });
   });
 
   describe('Admins maintain access (backward compatibility)', () => {
     it('should allow admin user even with free tier', async () => {
-      // Grant admin role
-      await adminClient.from('user_roles').insert({
-        user_id: testUserId,
-        role: 'admin',
-      });
-
-      // Keep free tier
-      await adminClient.from('subscriptions').upsert({
-        user_id: testUserId,
-        tier: 'free',
-        status: 'active',
-      });
-
-      // Admin should still have access
-      const { error } = await anonClient
-        .from('omnidash_settings')
-        .select('*')
-        .eq('user_id', testUserId)
-        .maybeSingle();
-
+      await ctx.adminClient.from('user_roles').insert({ user_id: ctx.testUserId, role: 'admin' });
+      await ctx.adminClient.from('subscriptions').upsert({ user_id: ctx.testUserId, tier: 'free', status: 'active' });
+      const { error } = await querySettings();
       expect(error).toBeNull();
     });
   });
 
   describe('Integration: End-to-end paid access flow', () => {
     it('should grant full OmniDash access to paid user', async () => {
-      // Create subscription
-      await adminClient.from('subscriptions').insert({
-        user_id: testUserId,
-        tier: 'pro',
-        status: 'active',
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      });
+      await insertSubscription('pro', 'active', subscriptionDates.active30Days());
 
-      // Verify is_paid_user() returns true
-      const { data: isPaid } = await adminClient.rpc('is_paid_user', { _user_id: testUserId });
+      const { data: isPaid } = await ctx.adminClient.rpc('is_paid_user', { _user_id: ctx.testUserId });
       expect(isPaid).toBe(true);
 
-      // Verify can create omnidash_settings
-      const { error: insertError } = await anonClient
-        .from('omnidash_settings')
-        .insert({
-          user_id: testUserId,
-          demo_mode: false,
-          show_connected_ecosystem: true,
-          anonymize_kpis: false,
-          freeze_mode: false,
-        });
-
+      const { error: insertError } = await ctx.anonClient.from('omnidash_settings').insert({
+        user_id: ctx.testUserId,
+        demo_mode: false,
+        show_connected_ecosystem: true,
+        anonymize_kpis: false,
+        freeze_mode: false,
+      });
       expect(insertError).toBeNull();
 
-      // Verify can query omnidash_settings
-      const { data: settings, error: selectError } = await anonClient
+      const { data: settings, error: selectError } = await ctx.anonClient
         .from('omnidash_settings')
         .select('*')
-        .eq('user_id', testUserId)
+        .eq('user_id', ctx.testUserId)
         .single();
 
       expect(selectError).toBeNull();
