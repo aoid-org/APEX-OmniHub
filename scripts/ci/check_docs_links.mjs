@@ -1,7 +1,8 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { getAllFiles } from './ci-utils.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
@@ -9,30 +10,14 @@ const DOCS_DIR = path.join(ROOT_DIR, 'docs');
 
 let hasErrors = false;
 
-function getAllFiles(dir, exts = ['.md']) {
-  let results = [];
-  const list = fs.readdirSync(dir);
-  list.forEach(file => {
-    file = path.join(dir, file);
-    const stat = fs.statSync(file);
-    if (stat && stat.isDirectory()) {
-      results = results.concat(getAllFiles(file, exts));
-    } else {
-      if (exts.includes(path.extname(file))) {
-        results.push(file);
-      }
-    }
-  });
-  return results;
-}
 
 function checkLinksInFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
-  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  // Regex modified to prevent ReDoS: exclude newlines and use lazy matching
+  const linkRegex = /\[([^\]\r\n]+)\]\(([^)\r\n]+)\)/g;
   let match;
 
   while ((match = linkRegex.exec(content)) !== null) {
-    const linkText = match[1];
     const linkUrl = match[2];
 
     // Ignore external links, anchors, and mailto
