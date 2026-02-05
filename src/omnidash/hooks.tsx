@@ -12,18 +12,45 @@ export function useAdminAccess() {
     enabled: !!user,
     queryFn: async () => {
       if (!user) return false;
+
+      // PRIORITY 1: Check allowlist (instant, no DB query)
+      // Allowlist bypasses all other checks for designated admin emails
       const allowlistHit = OMNIDASH_ADMIN_ALLOWLIST.includes((user.email || '').toLowerCase());
       if (allowlistHit) return true;
 
-      const { data, error } = await supabase
+      // PRIORITY 2: Check user_roles table (primary source of truth)
+      // This is what RLS policies use, so must be consistent
+      const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
         .maybeSingle();
-      if (error) throw error;
-      return data?.role === 'admin';
+
+      if (roleError) throw roleError;
+      if (roleData?.role === 'admin') return true;
+
+      // PRIORITY 3: Check app_metadata as fallback (edge case recovery)
+      // Handles scenario where trigger failed or user granted admin externally
+      // Note: This should rarely be needed due to trigger auto-sync
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        // If getUser fails, don't throw - just treat as non-admin
+        console.warn('useAdminAccess: Failed to fetch user metadata', authError);
+        return false;
+      }
+
+      const appMetaAdmin = authData.user?.app_metadata?.admin === true;
+      if (appMetaAdmin) {
+        // Log this case - indicates trigger may not have fired
+        console.warn('useAdminAccess: User has app_metadata.admin but no user_roles entry (trigger lag?)');
+        return true;
+      }
+
+      // No admin access found in any system
+      return false;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minute cache (balance freshness vs performance)
+    retry: 1, // Retry once on failure (network flakiness)
   });
 
   return {
