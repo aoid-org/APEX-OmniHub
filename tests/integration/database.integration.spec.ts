@@ -8,6 +8,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import { createDatabase } from '@/lib/database'
 import type { IDatabase } from '@/lib/database'
+import { getIntegrationConfig } from './setup-helpers'
 
 // ============================================================================
 // SETUP

@@ -8,6 +8,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createStorage } from '@/lib/storage'
 import type { IStorage } from '@/lib/storage'
+import { getIntegrationConfig } from './setup-helpers'
 
 // ============================================================================
 // SETUP
