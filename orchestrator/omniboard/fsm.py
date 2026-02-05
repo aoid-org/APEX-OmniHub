@@ -216,6 +216,10 @@ class OmniBoardFSM:
         # Input: Registration success
         connection_id = event.payload.get("connection_id")
 
+        # DEBUG
+        t_ref = f"vault://{context.tenant_id}/{context.provider_name}"
+        print(f"DEBUG: token_ref={t_ref}")
+
         # CREATE FINAL SPEC
         connection = ConnectionDetails(
             connection_id=connection_id or ConnectionDetails.generate_id(),
@@ -223,7 +227,7 @@ class OmniBoardFSM:
             provider_hint=context.provider_hint or "unknown",
             match_confidence=1.0,
             auth_type=context.auth_type or AuthType.API_KEY,  # Default fallback
-            token_ref=f"vault://{context.tenant_id}/{context.provider_name}",
+            token_ref=t_ref,
             verified=True,
             verification_method=VerificationMethod.SAFE_PING,
             connected_at=datetime.now(UTC).isoformat(),

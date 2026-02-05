@@ -25,8 +25,7 @@ export default defineConfig({
       '**/.{idea,git,cache,output,temp}/**',
       '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
       
-      
-      // Explicitly ignore Playwright (HEAD + Main)
+      // Explicitly ignore Playwright
       '**/playwright/**',
       '**/e2e-playwright/**',
       './tests/e2e-playwright/**',
@@ -34,7 +33,7 @@ export default defineConfig({
       './tests/worldwide-wildcard/playwright/**',
       'tests/worldwide-wildcard/playwright/**',
       
-      // Explicitly ignore Hardhat (HEAD + Main)
+      // Explicitly ignore Hardhat
       '**/contracts/**',
       './tests/contracts/**',
       'tests/contracts/**',
