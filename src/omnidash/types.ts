@@ -190,16 +190,26 @@ export const OMNIDASH_ADMIN_ALLOWLIST = (() => {
     .filter(Boolean);
 })();
 
-export const OMNIDASH_NAV_ITEMS = [
-  { key: "home", label: "OmniDash", to: "/omnidash", icon: "O" },
-  { key: "pipeline", label: "Pipeline", to: "/omnidash/pipeline", icon: "P" },
-  { key: "kpis", label: "KPIs", to: "/omnidash/kpis", icon: "K" },
-  { key: "ops", label: "Ops", to: "/omnidash/ops", icon: "!" },
-  { key: "integrations", label: "Integrations", to: "/omnidash/integrations", icon: "I" },
-  { key: "events", label: "Events", to: "/omnidash/events", icon: "E" },
-  { key: "entities", label: "Entities", to: "/omnidash/entities", icon: "N" },
-  { key: "runs", label: "Runs", to: "/omnidash/runs", icon: "R" },
-  { key: "approvals", label: "Approvals", to: "/omnidash/approvals", icon: "A" },
+import { Home, TrendingUp, Target, AlertTriangle, Plug, Activity, Database, PlayCircle, CheckCircle, type LucideIcon } from 'lucide-react';
+
+export interface OmniDashNavItem {
+  key: string;
+  label: string;
+  to: string;
+  icon: LucideIcon;
+  shortcut?: string;
+}
+
+export const OMNIDASH_NAV_ITEMS: OmniDashNavItem[] = [
+  { key: "home", label: "Today", to: "/omnidash", icon: Home, shortcut: "H" },
+  { key: "pipeline", label: "Pipeline", to: "/omnidash/pipeline", icon: TrendingUp, shortcut: "P" },
+  { key: "kpis", label: "KPIs", to: "/omnidash/kpis", icon: Target, shortcut: "K" },
+  { key: "ops", label: "Ops", to: "/omnidash/ops", icon: AlertTriangle, shortcut: "O" },
+  { key: "integrations", label: "Integrations", to: "/omnidash/integrations", icon: Plug, shortcut: "I" },
+  { key: "events", label: "Events", to: "/omnidash/events", icon: Activity, shortcut: "E" },
+  { key: "entities", label: "Entities", to: "/omnidash/entities", icon: Database, shortcut: "N" },
+  { key: "runs", label: "Runs", to: "/omnidash/runs", icon: PlayCircle, shortcut: "R" },
+  { key: "approvals", label: "Approvals", to: "/omnidash/approvals", icon: CheckCircle, shortcut: "A" },
 ];
 
 export const OMNIDASH_SAFE_ENABLE_NOTE =

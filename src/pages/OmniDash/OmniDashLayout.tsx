@@ -12,12 +12,17 @@ import { fetchHealthSnapshot, updateSettings } from '@/omnidash/api';
 import { OMNIDASH_FLAG, OMNIDASH_SAFE_ENABLE_NOTE, OMNIDASH_NAV_ITEMS } from '@/omnidash/types';
 import { OmniDashNavIconButton } from '@/components/OmniDashNavIconButton';
 import { DemoModeBanner } from '@/components/demo/DemoModeBanner';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { useOmniDashKeyboardShortcuts } from '@/omnidash/useOmniDashKeyboardShortcuts';
 
 export const OmniDashLayout = () => {
   const { user } = useAuth();
   const { isAdmin, loading: adminLoading, featureEnabled } = useAdminAccess();
   const { isPaid, loading: paidLoading } = usePaidAccess();
   const settings = useOmniDashSettings();
+
+  // Enable keyboard shortcuts (H, P, K, O, I, E, N, R, A)
+  useOmniDashKeyboardShortcuts();
 
   // Determine access: Admin OR Paid user
   const hasAccess = isAdmin || isPaid;
@@ -108,13 +113,14 @@ export const OmniDashLayout = () => {
             <h1 className="text-xl font-bold truncate">APEX OmniHub</h1>
           </div>
           {/* Center: Icon Strip */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 flex-shrink-0">
             {OMNIDASH_NAV_ITEMS.map((item) => (
               <OmniDashNavIconButton
                 key={item.key}
                 to={item.to}
                 label={item.label}
                 icon={item.icon}
+                shortcut={item.shortcut}
               />
             ))}
           </div>
@@ -126,6 +132,7 @@ export const OmniDashLayout = () => {
                 <span>Last updated: {new Date(health.data.lastUpdated).toLocaleString()}</span>
               </div>
             )}
+            <ThemeToggle />
             <div className="flex items-center gap-2">
               <span className="text-sm hidden sm:inline">Demo</span>
               <Switch
@@ -138,13 +145,14 @@ export const OmniDashLayout = () => {
       </header>
 
       {/* Mobile Bottom Tab Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t flex items-center justify-around py-2 px-4 safe-bottom">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t flex items-center justify-around py-2 px-2 safe-bottom">
         {OMNIDASH_NAV_ITEMS.map((item) => (
           <OmniDashNavIconButton
             key={item.key}
             to={item.to}
             label={item.label}
             icon={item.icon}
+            shortcut={item.shortcut}
           />
         ))}
       </div>
