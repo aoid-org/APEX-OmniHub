@@ -1,17 +1,21 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/auth');
+      // Preserve intended destination for post-login redirect
+      const currentPath = location.pathname + location.search;
+      const redirectUrl = `/auth?redirect=${encodeURIComponent(currentPath)}`;
+      navigate(redirectUrl);
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, location.pathname, location.search]);
 
   if (loading) {
     return (

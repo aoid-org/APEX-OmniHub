@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { useLoginRedirect } from '@/hooks/useLoginRedirect';
 import { Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import apexLogo from '@/assets/apex_emblem_logo.svg';
@@ -27,18 +28,18 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const { redirect: performPostLoginRedirect, loading: redirectLoading } = useLoginRedirect();
 
   const defaultTab = searchParams.get('tab') === 'signin' ? 'signin' : 'signup';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate('/dashboard');
+      if (session && !redirectLoading) {
+        performPostLoginRedirect();
       }
     });
-  }, [navigate]);
+  }, [redirectLoading, performPostLoginRedirect]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,11 +60,17 @@ const Auth = () => {
     try {
       const validated = authSchema.parse({ email, password, fullName });
 
+      // Construct email redirect URL with preserved redirect param
+      const redirectParam = searchParams.get('redirect');
+      const emailRedirectUrl = redirectParam
+        ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(redirectParam)}`
+        : `${globalThis.location.origin}/auth`;
+
       const { error } = await supabase.auth.signUp({
         email: validated.email,
         password: validated.password,
         options: {
-          emailRedirectTo: `${globalThis.location.origin}/dashboard`,
+          emailRedirectTo: emailRedirectUrl,
           data: {
             full_name: validated.fullName,
           },
@@ -138,7 +145,17 @@ const Auth = () => {
       }
 
       recordLoginAttempt(email, true);
-      navigate('/dashboard');
+
+      // Wait for redirect hook to load access data, then route
+      // Note: We can't call performPostLoginRedirect() here directly because
+      // access data (isAdmin, isPaid) may not be loaded yet for brand new session.
+      // The useEffect above will handle routing once session is established.
+
+      // For immediate feedback, navigate to a loading state if needed,
+      // but in practice the useEffect will trigger almost immediately.
+      if (!redirectLoading) {
+        performPostLoginRedirect();
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
