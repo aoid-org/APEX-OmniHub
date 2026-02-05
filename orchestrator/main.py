@@ -53,13 +53,18 @@ from activities.tools import (
     setup_activities,
 )
 from config import settings
+from omniboard.router import router as omniboard_router
 from workflows.agent_saga import AgentWorkflow
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 
+
 # FastAPI app for HTTP API
 app = FastAPI(title="APEX Orchestrator API", version="1.0.0")
+
+# Register OmniBoard Router
+app.include_router(omniboard_router)
 
 # Attach rate limiter to app
 app.state.limiter = limiter
