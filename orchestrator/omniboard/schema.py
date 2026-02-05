@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 from datetime import UTC, datetime
-=======
-from datetime import datetime, timezone
->>>>>>> chore/ci-compliance-clean
 from enum import StrEnum
 from uuid import uuid4
 
@@ -107,8 +103,4 @@ class FSMEvent(BaseModel):
 
     event_type: str  # e.g., 'USER_INPUT', 'SYSTEM_ERROR', 'PROVIDER_SELECTED'
     payload: dict = Field(default_factory=dict)
-<<<<<<< HEAD
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
-=======
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
->>>>>>> chore/ci-compliance-clean

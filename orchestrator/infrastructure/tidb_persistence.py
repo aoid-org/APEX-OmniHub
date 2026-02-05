@@ -46,7 +46,8 @@ class TiDBVectorPersistence:
 
             if not all([self.host, self.user, self.password, self.database]):
                 raise ValueError(
-                    "TiDB config incomplete: TIDB_HOST, TIDB_USER, TIDB_PASSWORD, TIDB_DATABASE required"
+                    "TiDB config incomplete: TIDB_HOST, TIDB_USER, "
+                    "TIDB_PASSWORD, TIDB_DATABASE required"
                 )
 
             # TLS required for enterprise-grade

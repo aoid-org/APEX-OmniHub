@@ -1,6 +1,6 @@
-from datetime import UTC, datetime
 import logging
 import uuid
+from datetime import UTC, datetime
 
 from .schema import (
     AuditContext,
