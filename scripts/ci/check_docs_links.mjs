@@ -13,12 +13,41 @@ let hasErrors = false;
 
 function checkLinksInFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
-  // Regex modified to prevent ReDoS: exclude newlines and use lazy matching
-  const linkRegex = /\[([^\]\r\n]+)\]\(([^)\r\n]+)\)/g;
-  let match;
+  // Manual parsing to avoid ReDoS (S5852)
+  let pos = 0;
+  while (pos < content.length) {
+    const startBracket = content.indexOf('[', pos);
+    if (startBracket === -1) break;
 
-  while ((match = linkRegex.exec(content)) !== null) {
-    const linkUrl = match[2];
+    const endBracket = content.indexOf(']', startBracket);
+    if (endBracket === -1) break; // No more closing brackets
+
+    // Ensure no newlines in text part
+    const linkText = content.slice(startBracket + 1, endBracket);
+    if (linkText.includes('\n') || linkText.includes('\r')) {
+      pos = startBracket + 1; 
+      continue;
+    }
+
+    // Must be followed immediately by '('
+    if (content[endBracket + 1] !== '(') {
+      pos = startBracket + 1;
+      continue;
+    }
+
+    const startParen = endBracket + 1;
+    const endParen = content.indexOf(')', startParen);
+    if (endParen === -1) break; // Open paren but no close
+
+    // Ensure no newlines in url part
+    const linkUrl = content.slice(startParen + 1, endParen);
+    if (linkUrl.includes('\n') || linkUrl.includes('\r')) {
+      pos = startParen + 1;
+      continue;
+    }
+    
+    // Advance position
+    pos = endParen + 1;
 
     // Ignore external links, anchors, and mailto
     if (linkUrl.startsWith('http') || linkUrl.startsWith('#') || linkUrl.startsWith('mailto:')) {
