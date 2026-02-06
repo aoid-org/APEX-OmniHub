@@ -32,7 +32,7 @@ jobs:
       - name: Check for wildcard CORS
         run: |
           echo "Checking for wildcard CORS in edge functions..."
-          if grep -rn "Access-Control-Allow-Origin.*'\*'" supabase/functions/ --include="*.ts" 2>/dev/null | grep -v "_shared/cors.ts"; then
+          if grep -rn "Access-Control-Allow-Origin.*'\*'" infra/supabase/functions/ --include="*.ts" 2>/dev/null | grep -v "_shared/cors.ts"; then
             echo "::error::Wildcard CORS detected in edge functions. Use _shared/cors.ts instead."
             exit 1
           fi
@@ -52,7 +52,7 @@ jobs:
         run: |
           echo "Checking for unsafe in-memory rate limiting..."
           # Check for Map-based rate limiting without distributed fallback
-          UNSAFE_RATELIMIT=$(grep -rn "new Map.*rate" supabase/functions/ --include="*.ts" 2>/dev/null | grep -v "_shared/ratelimit.ts" | wc -l)
+          UNSAFE_RATELIMIT=$(grep -rn "new Map.*rate" infra/supabase/functions/ --include="*.ts" 2>/dev/null | grep -v "_shared/ratelimit.ts" | wc -l)
           if [ "$UNSAFE_RATELIMIT" -gt 0 ]; then
             echo "::warning::In-memory rate limiting detected. Consider using _shared/ratelimit.ts for distributed rate limiting."
           fi
