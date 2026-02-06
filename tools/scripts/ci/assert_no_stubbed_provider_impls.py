@@ -84,12 +84,12 @@ def check_for_stubs(directory: str) -> bool:
 
 if __name__ == "__main__":
     # --- ROBUST PATH RESOLUTION ---
-    # Current: repo/scripts/ci/script.py
+    # Current: repo/tools/scripts/ci/script.py
     script_path = os.path.abspath(__file__)
-    # Go up 3 levels to Repo Root
-    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(script_path)))
+    # Go up 4 levels to Repo Root
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(script_path))))
 
-    target_dir = os.path.join(repo_root, "orchestrator", "providers")
+    target_dir = os.path.join(repo_root, "services", "orchestrator", "providers")
 
     print(f"📂 Repo Root: {repo_root}")
     print(f"🎯 Target: {target_dir}")
