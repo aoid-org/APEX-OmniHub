@@ -1,10 +1,12 @@
 {
-  "files": [],
-  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./apps/dashboard/src/*"],
+      "@apex/ui": ["./packages/ui/src"],
+      "@apex/ui/*": ["./packages/ui/src/*"],
+      "@apex/types": ["./packages/types/src"],
+      "@apex/config": ["./packages/config"]
     },
     "noImplicitAny": true,
     "noUnusedParameters": true,
