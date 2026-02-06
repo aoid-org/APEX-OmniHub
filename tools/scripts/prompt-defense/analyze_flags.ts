@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { evaluatePrompt } from '../../src/security/promptDefense';
+import { evaluatePrompt } from '../../../apps/dashboard/src/security/promptDefense';
 
 interface FlagRecord {
   prompt: string;

@@ -1,5 +1,5 @@
-import { getLoopStatuses, recordLoopHeartbeat } from '../../src/guardian/heartbeat';
-import { startGuardianLoops } from '../../src/guardian/loops';
+import { getLoopStatuses, recordLoopHeartbeat } from '../../../apps/dashboard/src/guardian/heartbeat';
+import { startGuardianLoops } from '../../../apps/dashboard/src/guardian/loops';
 
 async function main() {
   // Ensure loops are active before reporting

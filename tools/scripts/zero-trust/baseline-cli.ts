@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { ActivityLog, computeBaseline, formatBaseline } from '../../src/zero-trust/baseline';
+import { ActivityLog, computeBaseline, formatBaseline } from '../../../apps/dashboard/src/zero-trust/baseline';
 
 function loadLogs(): ActivityLog[] {
   const arg = process.argv.find((a) => a.startsWith('--input='));

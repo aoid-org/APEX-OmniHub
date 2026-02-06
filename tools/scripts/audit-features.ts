@@ -15,9 +15,9 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { FEATURE_REGISTRY } from '../src/features/registry';
+import { FEATURE_REGISTRY } from '../../apps/dashboard/src/features/registry';
 
-const APP_TSX_PATH = path.resolve(__dirname, '../src/App.tsx');
+const APP_TSX_PATH = path.resolve(__dirname, '../../apps/dashboard/src/App.tsx');
 
 interface AuditResult {
   registryPaths: string[];

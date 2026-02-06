@@ -20,7 +20,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { evaluatePrompt, type PromptEvaluation } from '../src/security/promptDefense';
+import { evaluatePrompt, type PromptEvaluation } from '../../apps/dashboard/src/security/promptDefense';
 
 // ============================================================================
 // TYPES

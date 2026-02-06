@@ -1,6 +1,6 @@
 import { simulateFailure } from './simulate_failure';
 import { verifyRecovery } from './verify_recovery';
-import { recordAuditEvent } from '../../src/security/auditLog';
+import { recordAuditEvent } from '../../../apps/dashboard/src/security/auditLog';
 
 function isDryRun(): boolean {
   return process.argv.includes('--dry-run');

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import crypto from 'crypto';
 import path from 'path';
-import { recordAuditEvent } from '../../src/security/auditLog';
+import { recordAuditEvent } from '../../../apps/dashboard/src/security/auditLog';
 
 function checksum(filePath: string): string {
   const hash = crypto.createHash('sha256');
