@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { APEXMembershipNFT } from "../../typechain-types";
+import { APEXMembershipNFT } from "../typechain-types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("APEXMembershipNFT", function () {
