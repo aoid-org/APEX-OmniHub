@@ -44,14 +44,14 @@ export default function Translation() {
       const parsed = JSON.parse(inputJson);
 
       // Convert to CanonicalEvent format
-      const event: CanonicalEvent = {
+      const event = {
         eventId: crypto.randomUUID(),
         eventType: parsed.eventType || 'custom',
         timestamp: new Date().toISOString(),
         source: parsed.source || 'omnilink-ui',
         payload: parsed.payload || parsed,
         metadata: parsed.metadata || {},
-      };
+      } as unknown as CanonicalEvent;
 
       // Create translator instance
       const translator = new SemanticTranslator();

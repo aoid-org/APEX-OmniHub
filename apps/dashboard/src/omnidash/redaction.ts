@@ -2,7 +2,7 @@ import { PipelineItem, TodayItem, KpiDaily } from './types';
 
 const CLIENT_LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-function redactAccountName(name: string, index: number): string {
+function redactAccountName(_name: string, index: number): string {
   const label = CLIENT_LABELS[index % CLIENT_LABELS.length];
   return `Client ${label}`;
 }

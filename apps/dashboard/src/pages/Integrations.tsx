@@ -151,7 +151,7 @@ const Integrations = () => {
         {availableIntegrations.map((integration) => {
           const connected = isConnected(integration.type);
           // Cast icon for rendering
-          const Icon = integration.icon;
+          const Icon = integration.icon as React.ComponentType<{ className?: string }>;
 
           return (
             <Card key={integration.id}>

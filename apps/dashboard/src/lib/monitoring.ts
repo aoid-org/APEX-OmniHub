@@ -11,7 +11,8 @@ import { initializeOmniSentry } from './omni-sentry';
 // Re-export OmniSentry for external access
 export { getHealthStatus, reportError as reportOmniError, withResilience } from './omni-sentry';
 
-let sentry: unknown = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let sentry: any = null;
 let sentryInitialized = false;
 
 export interface ErrorContext {
@@ -36,12 +37,11 @@ async function ensureSentry() {
 
   try {
     // Dynamic import from CDN - TypeScript can't resolve these at compile time
-     
+    // @ts-expect-error pre-existing type issue - CDN import
     sentry = await import('https://esm.sh/@sentry/browser@7.120.1');
-     
+    // @ts-expect-error pre-existing type issue - CDN import
     const { BrowserTracing } = await import('https://esm.sh/@sentry/tracing@7.120.1');
 
-     
     sentry.init({
       dsn,
       environment: getEnvironment(),

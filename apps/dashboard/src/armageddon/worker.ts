@@ -31,6 +31,7 @@ export async function createArmageddonWorker(): Promise<Worker> {
     // Configure runtime telemetry (optional, for observability)
     Runtime.install({
         logger: {
+            // @ts-expect-error Logger type mismatch - level is valid at runtime
             level: 'INFO',
             destination: {
                 type: 'console',

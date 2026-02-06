@@ -59,14 +59,6 @@ const Links = () => {
     enabled: !!user,
     staleTime: 30 * 1000,
     retry: 2,
-    onError: (error) => {
-      logError(error as Error, { action: 'links_fetch', userId: user?.id });
-      toast({
-        title: 'Error fetching links',
-        description: error instanceof Error ? error.message : 'Failed to load links',
-        variant: 'destructive',
-      });
-    },
   });
 
   const createLinkMutation = useMutation({

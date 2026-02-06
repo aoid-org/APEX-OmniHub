@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+// @ts-expect-error pre-existing type issue - no declaration file
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';

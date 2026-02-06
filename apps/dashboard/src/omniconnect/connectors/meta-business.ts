@@ -44,7 +44,7 @@ export class MetaBusinessConnector extends BaseConnector {
     super('meta_business', config);
   }
 
-  async getAuthUrl(userId: string, tenantId: string, state: string): Promise<string> {
+  async getAuthUrl(_userId: string, _tenantId: string, state: string): Promise<string> {
     // Generate PKCE challenge
     const codeVerifier = this.generateCodeVerifier();
     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
@@ -113,7 +113,7 @@ export class MetaBusinessConnector extends BaseConnector {
         id: post.id,
         type: 'post',
         timestamp: post.created_time,
-        data: post,
+        data: post as unknown as Record<string, unknown>,
         metadata: {
           platform: 'facebook',
           postType: post.type
@@ -129,7 +129,7 @@ export class MetaBusinessConnector extends BaseConnector {
     const correlationId = generateCorrelationId();
 
     return rawEvents.map(event => {
-      const post = event.data as MetaPost;
+      const post = event.data as unknown as MetaPost;
 
       return {
         eventId: `meta_${event.id}`,

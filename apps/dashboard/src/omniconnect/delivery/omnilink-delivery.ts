@@ -19,8 +19,12 @@ export interface DeliveryResult {
  * TODO: Implement actual retry logic and dead-letter queue
  */
 export class OmniLinkDelivery {
-  private maxRetries = 3;
-  private baseDelay = 1000; // 1 second
+  private readonly _maxRetries = 3;
+  private readonly _baseDelay = 1000; // 1 second
+
+  /** Expose retry config for testing */
+  get maxRetries() { return this._maxRetries; }
+  get baseDelay() { return this._baseDelay; }
 
   async deliverBatch(
     events: TranslatedEvent[],

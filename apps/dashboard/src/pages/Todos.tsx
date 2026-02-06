@@ -15,6 +15,7 @@ const Todos = () => {
     let isMounted = true;
     (async () => {
       try {
+        // @ts-expect-error todos table not in generated Supabase types
         const { data, error } = await supabase.from('todos').select('*');
         if (!isMounted) return;
         if (error) {

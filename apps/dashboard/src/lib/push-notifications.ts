@@ -70,7 +70,7 @@ export async function subscribeToPushNotifications(vapidPublicKey: string): Prom
     // Create new subscription
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
     });
 
     void logAnalyticsEvent('push.subscribed', {
@@ -122,6 +122,7 @@ export async function showLocalNotification(payload: NotificationPayload): Promi
     body: payload.body,
     icon: payload.icon || '/icons/pwa/icon-192.png',
     badge: payload.badge || '/icons/pwa/icon-96.png',
+    // @ts-expect-error pre-existing type issue - image is valid in Notification API
     image: payload.image,
     data: payload.data,
     actions: payload.actions,

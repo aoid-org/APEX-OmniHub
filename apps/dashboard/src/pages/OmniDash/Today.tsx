@@ -38,9 +38,13 @@ export const Today = () => {
           category: ['outcome', 'outreach', 'metric'][i % 3] as 'outcome' | 'outreach' | 'metric',
           order_index: i,
           status: t.status === 'completed' ? 'completed' : 'pending',
+          next_action: null,
+          is_active: true,
+          power_block_started_at: null,
+          power_block_duration_minutes: 90,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        }));
+        })) as TodayItem[];
       }
       if (!user) throw new Error('User required');
       const data = await fetchTodayItems(user.id);
@@ -167,7 +171,7 @@ export const Today = () => {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
             />
-            <Select value={category} onValueChange={(v) => setCategory(v as unknown)}>
+            <Select value={category} onValueChange={(v) => setCategory(v as 'outcome' | 'outreach' | 'metric')}>
               <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>

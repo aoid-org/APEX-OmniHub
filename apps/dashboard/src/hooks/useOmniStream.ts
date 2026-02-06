@@ -123,7 +123,7 @@ export function useOmniStream(
       }
 
       if (data && Array.isArray(data)) {
-        mergeEvents(data as AgentEvent[]);
+        mergeEvents(data as unknown as AgentEvent[]);
       }
     } catch (err) {
       const error =

@@ -74,7 +74,7 @@ export const Pipeline = () => {
       queryClient.invalidateQueries({ queryKey: ['omnidash-pipeline', user?.id] });
     },
     onError: (err: unknown) => {
-      setError(err?.message || 'Failed to save');
+      setError((err as Error)?.message || 'Failed to save');
     },
   });
 
@@ -203,7 +203,7 @@ export const Pipeline = () => {
                     {item.expected_mrr !== null && (
                       <Badge variant="outline">
                         {settings.data?.demo_mode && settings.data.anonymize_kpis
-                          ? (item as unknown).expected_mrr_bucket || redactAmount(item.expected_mrr) || '—'
+                          ? (item as unknown as Record<string, unknown>).expected_mrr_bucket as string || redactAmount(item.expected_mrr) || '—'
                           : `$${item.expected_mrr}`}
                       </Badge>
                     )}

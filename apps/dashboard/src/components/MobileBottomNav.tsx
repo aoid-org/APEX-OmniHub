@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Plug, Activity, Mic, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCapabilities } from '@/hooks/useCapabilities';
+import { useCapabilities, type Capabilities } from '@/hooks/useCapabilities';
 
 interface NavItem {
   path: string;
   label: string;
   icon: React.ElementType;
-  capability?: keyof typeof capabilities;
+  capability?: keyof Capabilities;
 }
 
 /**

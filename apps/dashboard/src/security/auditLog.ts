@@ -66,13 +66,15 @@ function scheduleFlush(delay = 0) {
  * Replaces Lovable API dependency
  */
 async function writeToSupabase(entry: AuditEventPayload): Promise<void> {
+  // @ts-expect-error audit_logs table not in generated Supabase types
   const { error } = await supabase.from('audit_logs').insert({
     id: entry.id,
     actor_id: entry.actorId || null,
     action_type: entry.actionType,
     resource_type: entry.resourceType || null,
     resource_id: entry.resourceId || null,
-    metadata: entry.metadata || null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    metadata: (entry.metadata || null) as any,
     created_at: entry.timestamp,
   });
 

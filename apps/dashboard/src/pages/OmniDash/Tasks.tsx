@@ -134,8 +134,8 @@ export default function Tasks() {
 
       // Create task directly in DB (simulating OmniLink Port call)
       const taskId = crypto.randomUUID();
-      const { error } = await supabase
-        .from("omnilink_orchestration_requests")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.from("omnilink_orchestration_requests") as any)
         .insert({
           integration_id: integrations[0].id,
           api_key_id: apiKeys[0].id,
@@ -177,7 +177,7 @@ export default function Tasks() {
       }
       const { error } = await supabase.rpc("omnilink_set_approval", {
         p_request_id: taskId,
-        p_user_id: session?.user.id,
+        p_user_id: session?.user.id ?? '',
         p_decision: decision,
       });
       if (error) throw error;
@@ -349,7 +349,7 @@ export default function Tasks() {
                   {task.worker_id && (
                     <p className="text-xs text-muted-foreground">Worker: {task.worker_id}</p>
                   )}
-                  {task.output && (
+                  {task.output != null && (
                     <details className="text-xs">
                       <summary className="cursor-pointer text-muted-foreground">Output</summary>
                       <pre className="mt-2 p-2 bg-muted rounded overflow-x-auto">{JSON.stringify(task.output, null, 2)}</pre>

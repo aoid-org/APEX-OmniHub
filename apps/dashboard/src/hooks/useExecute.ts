@@ -56,7 +56,7 @@ export function useExecute(): UseExecuteReturn {
           // Demo mode: mutate local store
           switch (action) {
             case 'entity.create':
-              demoStore.addEntity(payload as Parameters<typeof demoStore.addEntity>[0]);
+              demoStore.addEntity(payload as unknown as Parameters<typeof demoStore.addEntity>[0]);
               break;
             case 'entity.update':
               demoStore.updateEntity(
@@ -68,7 +68,7 @@ export function useExecute(): UseExecuteReturn {
               demoStore.deleteEntity(payload.id as string);
               break;
             case 'task.create':
-              demoStore.addTask(payload as Parameters<typeof demoStore.addTask>[0]);
+              demoStore.addTask(payload as unknown as Parameters<typeof demoStore.addTask>[0]);
               break;
             case 'task.update':
               demoStore.updateTask(
@@ -83,7 +83,7 @@ export function useExecute(): UseExecuteReturn {
               demoStore.rejectItem(payload.id as string);
               break;
             case 'event.log':
-              demoStore.addEvent(payload as Parameters<typeof demoStore.addEvent>[0]);
+              demoStore.addEvent(payload as unknown as Parameters<typeof demoStore.addEvent>[0]);
               break;
           }
         } else {

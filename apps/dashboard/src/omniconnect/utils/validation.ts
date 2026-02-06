@@ -8,19 +8,21 @@ import { SessionToken } from '../types/connector';
 export function validateCanonicalEvent(event: unknown): event is CanonicalEvent {
   if (!event || typeof event !== 'object') return false;
 
+  const e = event as Record<string, unknown>;
+
   // Required fields
-  if (!event.eventId || typeof event.eventId !== 'string') return false;
-  if (!event.correlationId || typeof event.correlationId !== 'string') return false;
-  if (!event.tenantId || typeof event.tenantId !== 'string') return false;
-  if (!event.userId || typeof event.userId !== 'string') return false;
-  if (!event.source || typeof event.source !== 'string') return false;
-  if (!event.provider || typeof event.provider !== 'string') return false;
-  if (!event.eventType || !Object.values(EventType).includes(event.eventType)) return false;
-  if (!event.timestamp || typeof event.timestamp !== 'string') return false;
+  if (!e.eventId || typeof e.eventId !== 'string') return false;
+  if (!e.correlationId || typeof e.correlationId !== 'string') return false;
+  if (!e.tenantId || typeof e.tenantId !== 'string') return false;
+  if (!e.userId || typeof e.userId !== 'string') return false;
+  if (!e.source || typeof e.source !== 'string') return false;
+  if (!e.provider || typeof e.provider !== 'string') return false;
+  if (!e.eventType || !Object.values(EventType).includes(e.eventType as EventType)) return false;
+  if (!e.timestamp || typeof e.timestamp !== 'string') return false;
 
   // Optional fields with validation
-  if (event.metadata && typeof event.metadata !== 'object') return false;
-  if (event.payload && typeof event.payload !== 'object') return false;
+  if (e.metadata && typeof e.metadata !== 'object') return false;
+  if (e.payload && typeof e.payload !== 'object') return false;
 
   return true;
 }
@@ -28,15 +30,17 @@ export function validateCanonicalEvent(event: unknown): event is CanonicalEvent 
 export function validateSessionToken(token: unknown): token is SessionToken {
   if (!token || typeof token !== 'object') return false;
 
-  if (!token.token || typeof token.token !== 'string') return false;
-  if (!token.connectorId || typeof token.connectorId !== 'string') return false;
-  if (!token.userId || typeof token.userId !== 'string') return false;
-  if (!token.tenantId || typeof token.tenantId !== 'string') return false;
-  if (!token.provider || typeof token.provider !== 'string') return false;
-  if (!Array.isArray(token.scopes)) return false;
+  const t = token as Record<string, unknown>;
+
+  if (!t.token || typeof t.token !== 'string') return false;
+  if (!t.connectorId || typeof t.connectorId !== 'string') return false;
+  if (!t.userId || typeof t.userId !== 'string') return false;
+  if (!t.tenantId || typeof t.tenantId !== 'string') return false;
+  if (!t.provider || typeof t.provider !== 'string') return false;
+  if (!Array.isArray(t.scopes)) return false;
 
   // expiresAt should be a Date or valid date string
-  if (!(token.expiresAt instanceof Date) && typeof token.expiresAt !== 'string') return false;
+  if (!(t.expiresAt instanceof Date) && typeof t.expiresAt !== 'string') return false;
 
   return true;
 }

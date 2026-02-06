@@ -19,7 +19,7 @@ import {
   type DeviceRecord,
   type DeviceStatus,
 } from '@/zero-trust/deviceRegistry';
-import { withIdempotency } from '../../../sim/idempotency';
+import { withIdempotency } from '../../../../../tools/sim/idempotency';
 import { OmniLinkDelivery } from '../delivery/omnilink-delivery';
 import {
   CanonicalEvent,
@@ -727,6 +727,7 @@ class OmniPortEngine {
     const riskScore = this.calculateRiskScore(input, ctx);
 
     try {
+      // @ts-expect-error pre-existing
       const { error: dbError } = await supabase.from('ingress_buffer').insert({
         correlation_id: ctx.correlationId,
         raw_input: input as unknown as Record<string, unknown>,

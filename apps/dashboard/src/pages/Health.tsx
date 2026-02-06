@@ -25,7 +25,7 @@ export default function Health() {
 
   useEffect(() => {
     async function checkHealth() {
-      const _startTime = Date.now();
+      void Date.now(); // startTime removed (unused)
       const checks: HealthStatus['checks'] = {
         supabase: { status: 'error', message: 'Not checked' },
         database: { status: 'error', message: 'Not checked' },

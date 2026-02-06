@@ -16,7 +16,7 @@ function getEnv(name: string): string | undefined {
     return process.env[name];
   }
   // For environments where process.env is shimmed (e.g., serverless bundlers)
-  return (import.meta as unknown)?.env?.[name];
+  return (import.meta as unknown as Record<string, Record<string, string>>)?.env?.[name];
 }
 
 function getConfig(): LovableClientConfig | null {
@@ -129,10 +129,14 @@ export async function upsertDevice(userId: string, device: DeviceInfo, signal?: 
 }
 
 export async function getDeviceRegistry(userId: string, signal?: AbortSignal): Promise<DeviceRegistryResponse> {
-  return requestLovable<DeviceRegistryResponse>({
+  const result = await requestLovable<DeviceRegistryResponse>({
     path: `/device-registry?user_id=${encodeURIComponent(userId)}`,
     method: 'GET',
     signal,
   });
+  if (!result) {
+    throw new Error('Device registry response was undefined');
+  }
+  return result;
 }
 

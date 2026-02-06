@@ -6,9 +6,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { getUploadToken, uploadWithToken, listUserFiles, createDownloadUrl, deleteFile } from '@/lib/files';
 import { useToast } from '@/hooks/use-toast';
 
+interface FileItem {
+  name: string;
+  metadata?: { size?: number };
+  created_at: string;
+}
+
 const Files = () => {
   const [uid, setUid] = useState<string>("");
-  const [items, setItems] = useState<unknown[]>([]);
+  const [items, setItems] = useState<FileItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -64,7 +70,7 @@ const Files = () => {
       // Error logged via toast
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload file",
+        description: (error as Error).message || "Failed to upload file",
         variant: "destructive"
       });
     } finally {
@@ -85,7 +91,7 @@ const Files = () => {
       // Error logged via toast
       toast({
         title: "Download failed",
-        description: error.message || "Failed to download file",
+        description: (error as Error).message || "Failed to download file",
         variant: "destructive"
       });
     }
@@ -110,7 +116,7 @@ const Files = () => {
       // Error logged via toast
       toast({
         title: "Delete failed",
-        description: error.message || "Failed to delete file",
+        description: (error as Error).message || "Failed to delete file",
         variant: "destructive"
       });
     }

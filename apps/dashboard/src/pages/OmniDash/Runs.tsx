@@ -84,6 +84,22 @@ function RunDetailPanel({ workflowId }: { readonly workflowId: string }) {
     );
   }
 
+  if (!detailQuery.data) {
+    return null;
+  }
+
+  const detail = detailQuery.data;
+  const policyEvents = detail.events.filter((e) => e.kind === 'policy');
+  const handleDownloadBundle = () => {
+    const blob = new Blob([JSON.stringify(detail.replay_bundle, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `replay-${workflowId}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const currentEvent = detail.events[replayIndex];
 
   return (

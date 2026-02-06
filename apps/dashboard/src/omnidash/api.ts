@@ -3,10 +3,10 @@ import { logError } from '@/lib/monitoring';
 import { recordAuditEvent } from '@/security/auditLog';
 import { Incident, KpiDaily, PipelineItem, TodayItem, OmniDashSettings } from './types';
 
-async function handleError<T>(promise: Promise<{ data: T | null; error: unknown }>, context: string): Promise<T> {
+async function handleError<T>(promise: PromiseLike<{ data: T | null; error: { message: string } | null }>, context: string): Promise<T> {
   const { data, error } = await promise;
   if (error) {
-    logError(error, { action: `omnidash_${context}` });
+    logError(error as unknown as Error, { action: `omnidash_${context}` });
     throw new Error(error.message || `Failed to ${context}`);
   }
   if (!data) {
@@ -78,7 +78,8 @@ export async function fetchTodayItems(userId: string): Promise<TodayItem[]> {
       .select('*')
       .eq('user_id', userId)
       .eq('is_active', true)
-      .order('order_index', { ascending: true }),
+      .order('order_index', { ascending: true })
+      .then(res => ({ data: res.data as unknown as TodayItem[] | null, error: res.error })),
     'fetch_today_items'
   );
 }
@@ -93,7 +94,7 @@ export async function upsertTodayItem(item: Partial<TodayItem> & { user_id: stri
     logError(result.error, { action: 'omnidash_upsert_today_item' });
     throw result.error;
   }
-  return result.data;
+  return result.data as unknown as TodayItem;
 }
 
 export async function restartRitual(userId: string): Promise<void> {
@@ -126,7 +127,8 @@ export async function fetchPipelineItems(userId: string): Promise<PipelineItem[]
       .from('omnidash_pipeline_items')
       .select('*')
       .eq('user_id', userId)
-      .order('updated_at', { ascending: false }),
+      .order('updated_at', { ascending: false })
+      .then(res => ({ data: res.data as unknown as PipelineItem[] | null, error: res.error })),
     'fetch_pipeline_items'
   );
 }
@@ -155,7 +157,8 @@ export async function fetchKpiDaily(userId: string, days = 7): Promise<KpiDaily[
       .select('*')
       .eq('user_id', userId)
       .order('day', { ascending: false })
-      .limit(days),
+      .limit(days)
+      .then(res => ({ data: res.data as unknown as KpiDaily[] | null, error: res.error })),
     'fetch_kpi_daily'
   );
 }
@@ -180,7 +183,8 @@ export async function fetchIncidents(userId: string, limit = 20): Promise<Incide
       .select('*')
       .eq('user_id', userId)
       .order('occurred_at', { ascending: false })
-      .limit(limit),
+      .limit(limit)
+      .then(res => ({ data: res.data as unknown as Incident[] | null, error: res.error })),
     'fetch_incidents'
   );
 }
@@ -202,8 +206,9 @@ export async function addIncident(incident: Partial<Incident> & { user_id: strin
 }
 
 export async function fetchHealthSnapshot(userId: string): Promise<{ lastUpdated: string | null }> {
+  const tables = ['omnidash_today_items', 'omnidash_pipeline_items', 'omnidash_kpi_daily', 'omnidash_incidents', 'omnidash_settings'] as const;
   const latest = await Promise.all(
-    ['omnidash_today_items', 'omnidash_pipeline_items', 'omnidash_kpi_daily', 'omnidash_incidents', 'omnidash_settings'].map(
+    tables.map(
       async (table) => {
         const res = await supabase
           .from(table)
@@ -211,7 +216,8 @@ export async function fetchHealthSnapshot(userId: string): Promise<{ lastUpdated
           .eq('user_id', userId)
           .order('updated_at', { ascending: false })
           .limit(1);
-        return res.data?.[0]?.updated_at ?? null;
+        const row = res.data?.[0] as Record<string, unknown> | undefined;
+        return (row?.updated_at as string) ?? null;
       }
     )
   );

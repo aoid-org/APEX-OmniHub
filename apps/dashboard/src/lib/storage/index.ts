@@ -107,9 +107,10 @@ export function getStorage(): IStorage {
  * Lazy-loaded on first access
  */
 export const storage = new Proxy({} as IStorage, {
-  get(target, prop) {
+  get(_target, prop) {
     const instance = getStorage()
-    return (instance as unknown)[prop]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (instance as any)[prop]
   },
 })
 

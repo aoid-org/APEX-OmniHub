@@ -35,11 +35,11 @@ const Automations = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAutomations(data || []);
+      setAutomations((data || []) as Automation[]);
     } catch (error: unknown) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: (error as Error).message,
         variant: 'destructive',
       });
     } finally {
@@ -63,7 +63,7 @@ const Automations = () => {
     } catch (error: unknown) {
       toast({
         title: 'Execution Failed',
-        description: error.message,
+        description: (error as Error).message,
         variant: 'destructive',
       });
     } finally {
@@ -91,7 +91,7 @@ const Automations = () => {
     } catch (error: unknown) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: (error as Error).message,
         variant: 'destructive',
       });
     }
@@ -114,7 +114,7 @@ const Automations = () => {
     } catch (error: unknown) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: (error as Error).message,
         variant: 'destructive',
       });
     }

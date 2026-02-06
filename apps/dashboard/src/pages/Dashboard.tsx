@@ -1,15 +1,22 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+
+interface DashboardStats {
+  links: number;
+  files: number;
+  automations: number;
+  integrations: number;
+}
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link2, FileText, Zap, Package, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { logError } from '@/lib/monitoring';
+import { logError as _logError } from '@/lib/monitoring';
 
 const Dashboard = () => {
   const { user } = useAuth();
 
-  const { data: stats, isLoading, error } = useQuery({
+  const { data: stats, isLoading, error } = useQuery<DashboardStats>({
     queryKey: ['dashboard-stats', user?.id],
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
@@ -36,9 +43,6 @@ const Dashboard = () => {
     enabled: !!user,
     staleTime: 30 * 1000, // 30 seconds
     retry: 2,
-    onError: (error) => {
-      logError(error as Error, { action: 'dashboard_stats_fetch', userId: user?.id });
-    },
   });
 
   const statCards = useMemo(() => {

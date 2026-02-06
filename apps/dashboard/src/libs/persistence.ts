@@ -7,7 +7,7 @@ const DB_NAME = 'omnilink-cache';
 const STORE_NAME = 'kv';
 
 const inMemoryStore = new Map<string, unknown>();
-let dbPromise: Promise<IDBDatabase> | null = null;
+let dbPromise: Promise<IDBDatabase | null> | null = null;
 
 function hasIndexedDB(): boolean {
   return typeof indexedDB !== 'undefined';
@@ -17,7 +17,7 @@ async function getDb(): Promise<IDBDatabase | null> {
   if (!hasIndexedDB()) return null;
   if (dbPromise) return dbPromise;
 
-  dbPromise = new Promise((resolve, reject) => {
+  dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
     request.onupgradeneeded = () => {
       request.result.createObjectStore(STORE_NAME);

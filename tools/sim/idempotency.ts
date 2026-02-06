@@ -211,6 +211,20 @@ class IdempotencyStore {
   getAll(): IdempotencyReceipt[] {
     return Array.from(this.receipts.values());
   }
+
+  /**
+   * Get receipt entries for persistence
+   */
+  entries(): IterableIterator<[string, IdempotencyReceipt]> {
+    return this.receipts.entries();
+  }
+
+  /**
+   * Get a raw receipt without modifying stats
+   */
+  getRaw(idempotencyKey: string): IdempotencyReceipt | undefined {
+    return this.receipts.get(idempotencyKey);
+  }
 }
 
 // ============================================================================
@@ -426,7 +440,8 @@ export async function persistToDatabase(): Promise<number> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Convert in-memory receipts to database format
-    const receipts = Array.from(receiptStore.receipts.entries()).map(([key, receipt]) => ({
+    const store = getStore();
+    const receipts = Array.from(store.entries()).map(([key, receipt]) => ({
       idempotency_key: key,
       correlation_id: receipt.correlationId,
       event_type: receipt.eventType,
@@ -515,7 +530,7 @@ export async function loadFromDatabase(tenantId?: string): Promise<number> {
           ttl
         );
         // Update attempt count
-        const receipt = receiptStore.receipts.get(row.idempotency_key);
+        const receipt = getStore().getRaw(row.idempotency_key);
         if (receipt) {
           receipt.attemptCount = row.attempt_count;
         }
