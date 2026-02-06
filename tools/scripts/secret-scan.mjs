@@ -1,4 +1,5 @@
 import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 
 const SECRET_PATTERNS = [
   { name: 'OpenAI key', regex: /sk-[a-z0-9]{20,}/i },
@@ -16,7 +17,12 @@ const files = execSync('git ls-files', { encoding: 'utf-8' })
 let violations = 0;
 
 for (const file of files) {
-  const content = execSync(`cat "${file}"`, { encoding: 'utf-8' });
+  let content;
+  try {
+    content = readFileSync(file, 'utf-8');
+  } catch {
+    continue; // skip binary or inaccessible files
+  }
   for (const pattern of SECRET_PATTERNS) {
     if (pattern.regex.test(content)) {
       violations += 1;
