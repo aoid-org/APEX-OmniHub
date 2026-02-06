@@ -24,88 +24,66 @@ export default function Health() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function checkHealth() {
-      void Date.now(); // startTime removed (unused)
-      const checks: HealthStatus['checks'] = {
-        supabase: { status: 'error', message: 'Not checked' },
-        database: { status: 'error', message: 'Not checked' },
-        omnilink: { status: 'error', message: 'Not checked' },
-      };
-
-      // Check Supabase connection
+    async function checkSupabase(): Promise<HealthStatus['checks']['supabase']> {
       try {
         const supabaseStart = Date.now();
         const { data: { session: _session }, error: sessionError } = await supabase.auth.getSession();
         const supabaseLatency = Date.now() - supabaseStart;
-        
         if (sessionError) {
-          checks.supabase = { status: 'error', message: sessionError.message };
-        } else {
-          checks.supabase = { 
-            status: 'ok', 
-            message: 'Connected',
-            latency: supabaseLatency,
-          };
+          return { status: 'error', message: sessionError.message };
         }
+        return { status: 'ok', message: 'Connected', latency: supabaseLatency };
       } catch (error) {
-        checks.supabase = { 
-          status: 'error', 
-          message: error instanceof Error ? error.message : 'Unknown error',
-        };
+        return { status: 'error', message: error instanceof Error ? error.message : 'Unknown error' };
       }
+    }
 
-      // Check database (simple query to health_checks table)
+    async function checkDatabase(): Promise<HealthStatus['checks']['database']> {
       try {
         const dbStart = Date.now();
-        const { error: dbError } = await supabase
-          .from('health_checks')
-          .select('id')
-          .limit(1);
+        const { error: dbError } = await supabase.from('health_checks').select('id').limit(1);
         const dbLatency = Date.now() - dbStart;
-        
         if (dbError) {
-          checks.database = { status: 'error', message: dbError.message };
-        } else {
-          checks.database = { 
-            status: 'ok', 
-            message: 'Database accessible',
-            latency: dbLatency,
-          };
+          return { status: 'error', message: dbError.message };
         }
+        return { status: 'ok', message: 'Database accessible', latency: dbLatency };
       } catch (error) {
-        checks.database = { 
-          status: 'error', 
-          message: error instanceof Error ? error.message : 'Unknown error',
-        };
+        return { status: 'error', message: error instanceof Error ? error.message : 'Unknown error' };
       }
+    }
 
-      // Check OmniLink port (disabled/ok/error)
+    async function checkOmniLink(): Promise<HealthStatus['checks']['omnilink']> {
       try {
         const omnilink = await getOmniLinkHealth();
-        checks.omnilink = {
-          status: omnilink.status,
-          message: omnilink.lastError ?? 'OmniLink port ok',
-        };
+        return { status: omnilink.status, message: omnilink.lastError ?? 'OmniLink port ok' };
       } catch (error) {
-        checks.omnilink = {
-          status: 'error',
-          message: error instanceof Error ? error.message : 'Unknown error',
-        };
+        return { status: 'error', message: error instanceof Error ? error.message : 'Unknown error' };
       }
+    }
 
-      const overallStatus: HealthStatus['status'] = 
-        checks.supabase.status === 'ok'
-          && checks.database.status === 'ok'
-          && (checks.omnilink.status === 'ok' || checks.omnilink.status === 'disabled')
-          ? 'healthy'
-          : checks.supabase.status === 'ok'
-            || checks.database.status === 'ok'
-            || checks.omnilink.status === 'ok'
-          ? 'degraded'
-          : 'unhealthy';
+    function deriveOverallStatus(checks: HealthStatus['checks']): HealthStatus['status'] {
+      const allOk = checks.supabase.status === 'ok'
+        && checks.database.status === 'ok'
+        && (checks.omnilink.status === 'ok' || checks.omnilink.status === 'disabled');
+      if (allOk) return 'healthy';
+
+      const anyOk = checks.supabase.status === 'ok'
+        || checks.database.status === 'ok'
+        || checks.omnilink.status === 'ok';
+      if (anyOk) return 'degraded';
+
+      return 'unhealthy';
+    }
+
+    async function checkHealth() {
+      const checks: HealthStatus['checks'] = {
+        supabase: await checkSupabase(),
+        database: await checkDatabase(),
+        omnilink: await checkOmniLink(),
+      };
 
       setHealth({
-        status: overallStatus,
+        status: deriveOverallStatus(checks),
         checks,
         timestamp: new Date().toISOString(),
       });

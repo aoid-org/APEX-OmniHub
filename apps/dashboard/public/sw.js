@@ -129,8 +129,12 @@ globalThis.addEventListener('fetch', (event) => {
   );
 });
 
-// Message event - handle client messages
+// Message event - handle client messages (verify origin per SonarCloud S5765)
 globalThis.addEventListener('message', (event) => {
+  // Only accept messages from our own origin
+  if (event.origin && event.origin !== globalThis.location.origin) {
+    return;
+  }
   if (event.data && event.data.type === 'SKIP_WAITING') {
     console.log('[SW] Received SKIP_WAITING message');
     globalThis.skipWaiting();

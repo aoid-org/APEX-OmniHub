@@ -23,7 +23,7 @@ if ! command -v supabase &> /dev/null; then
 fi
 
 # Check if we're in the project root
-if [ ! -f "supabase/config.toml" ]; then
+if [[ ! -f "supabase/config.toml" ]]; then
     echo -e "${YELLOW}⚠${NC} Not in project root. Please run this script from the OmniLink-APEX directory."
     exit 1
 fi
@@ -71,7 +71,7 @@ echo ""
 echo "Deployment Summary:"
 echo "==================="
 
-if [ $FAILED -eq 0 ]; then
+if [[ $FAILED -eq 0 ]]; then
     echo -e "${GREEN}✓ All functions deployed successfully!${NC}"
     echo ""
     echo "Next steps:"

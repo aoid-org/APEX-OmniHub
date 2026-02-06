@@ -40,10 +40,33 @@ function getConfig(): LovableClientConfig | null {
   return { baseUrl, apiKey, serviceRoleKey };
 }
 
+function buildHeaders(apiKey: string, serviceRoleKey?: string): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${apiKey}`,
+  };
+  if (serviceRoleKey) {
+    headers['X-Service-Role'] = serviceRoleKey;
+  }
+  return headers;
+}
+
+function parseResponseBody<T>(response: Response): Promise<T | undefined> {
+  const contentType = response.headers.get('content-type');
+  if (contentType?.includes('application/json')) {
+    return response.json() as Promise<T>;
+  }
+  return Promise.resolve(undefined as T);
+}
+
+async function handleErrorResponse(response: Response): Promise<Error> {
+  const text = await response.text().catch(() => '');
+  return new Error(`Lovable request failed (${response.status}): ${text}`);
+}
+
 async function requestLovable<T>(options: LovableRequestOptions): Promise<T | undefined> {
   const config = getConfig();
   if (!config) {
-    // Graceful degradation: return undefined if not configured (idempotent, non-blocking)
     if (typeof window !== 'undefined' && import.meta.env.DEV) {
       console.warn('⚠️ Lovable request skipped: API not configured');
     }
@@ -68,41 +91,26 @@ async function requestLovable<T>(options: LovableRequestOptions): Promise<T | un
     try {
       const response = await fetch(`${baseUrl}${path}`, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-          ...(serviceRoleKey ? { 'X-Service-Role': serviceRoleKey } : {}),
-        },
+        headers: buildHeaders(apiKey, serviceRoleKey),
         body: body ? JSON.stringify(body) : undefined,
         signal,
       });
 
       if (!response.ok) {
-        const text = await response.text().catch(() => '');
-        lastError = new Error(`Lovable request failed (${response.status}): ${text}`);
+        lastError = await handleErrorResponse(response);
         if (response.status >= 500 && attempt < maxAttempts) {
-          const delay = calculateBackoffDelay(attempt, {
-            baseMs: baseDelayMs,
-            maxMs: maxDelayMs,
-          });
+          const delay = calculateBackoffDelay(attempt, { baseMs: baseDelayMs, maxMs: maxDelayMs });
           await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
         throw lastError;
       }
 
-      const contentType = response.headers.get('content-type');
-      if (contentType?.includes('application/json')) {
-        return (await response.json()) as T;
-      }
-      return undefined as T;
+      return await parseResponseBody<T>(response);
     } catch (error) {
       lastError = error;
       if (attempt >= maxAttempts) break;
-      const delay = calculateBackoffDelay(attempt, {
-        baseMs: baseDelayMs,
-        maxMs: maxDelayMs,
-      });
+      const delay = calculateBackoffDelay(attempt, { baseMs: baseDelayMs, maxMs: maxDelayMs });
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }

@@ -32,7 +32,7 @@ export function isValidSignature(signature: string): boolean {
  * @returns true if valid, false otherwise
  */
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   return emailRegex.test(email);
 }
 

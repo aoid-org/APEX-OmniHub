@@ -4,7 +4,7 @@ export class AudioRecorder {
   private processor: ScriptProcessorNode | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
 
-  constructor(private onAudioData: (audioData: Float32Array) => void) {}
+  constructor(private readonly onAudioData: (audioData: Float32Array) => void) {}
 
   async start() {
     this.stream = await navigator.mediaDevices.getUserMedia({
@@ -117,7 +117,7 @@ const createWavFromPCM = (pcmData: Uint8Array) => {
 class AudioQueue {
   private queue: Uint8Array[] = [];
   private isPlaying = false;
-  private audioContext: AudioContext;
+  private readonly audioContext: AudioContext;
 
   constructor(audioContext: AudioContext) {
     this.audioContext = audioContext;

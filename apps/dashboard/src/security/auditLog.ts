@@ -83,6 +83,49 @@ async function writeToSupabase(entry: AuditEventPayload): Promise<void> {
   }
 }
 
+async function processQueueItem(
+  item: QueuedAuditEvent,
+  updated: QueuedAuditEvent[],
+): Promise<QueuedAuditEvent[]> {
+  try {
+    await writeToSupabase(item);
+    consecutiveFlushFailures = 0;
+    await logAnalyticsEvent('audit.flush.success', { id: item.id });
+    return updated.filter((e) => e.id !== item.id);
+  } catch (error) {
+    const attempts = item.attempts + 1;
+    const isTerminal = attempts >= MAX_ATTEMPTS;
+    const backoffMs = calculateBackoffDelay(attempts, {
+      baseMs: BASE_DELAY_MS,
+      maxMs: MAX_DELAY_MS,
+      jitterMs: JITTER_MS,
+    });
+
+    const mutated = updated.find((e) => e.id === item.id);
+    if (mutated) {
+      mutated.attempts = attempts;
+      mutated.nextAttemptAt = Date.now() + backoffMs;
+      mutated.status = isTerminal ? 'failed' : 'pending';
+    }
+
+    consecutiveFlushFailures += 1;
+
+    if (isTerminal) {
+      await logError(error as Error, {
+        action: 'audit_flush_failed_terminal',
+        metadata: { id: item.id, attempts },
+      });
+    } else {
+      await logAnalyticsEvent('audit.flush.retry', {
+        id: item.id,
+        attempts,
+        backoffMs,
+      });
+    }
+    return updated;
+  }
+}
+
 export async function flushQueue(force = false): Promise<void> {
   if (flushInFlight) return;
   flushInFlight = true;
@@ -98,42 +141,7 @@ export async function flushQueue(force = false): Promise<void> {
       break;
     }
 
-    try {
-      await writeToSupabase(item);
-      updated = updated.filter((e) => e.id !== item.id);
-      consecutiveFlushFailures = 0;
-      await logAnalyticsEvent('audit.flush.success', { id: item.id });
-    } catch (error) {
-      const attempts = item.attempts + 1;
-      const isTerminal = attempts >= MAX_ATTEMPTS;
-      const backoffMs = calculateBackoffDelay(attempts, {
-        baseMs: BASE_DELAY_MS,
-        maxMs: MAX_DELAY_MS,
-        jitterMs: JITTER_MS,
-      });
-
-      const mutated = updated.find((e) => e.id === item.id);
-      if (mutated) {
-        mutated.attempts = attempts;
-        mutated.nextAttemptAt = Date.now() + backoffMs;
-        mutated.status = isTerminal ? 'failed' : 'pending';
-      }
-
-      consecutiveFlushFailures += 1;
-
-      if (isTerminal) {
-        await logError(error as Error, {
-          action: 'audit_flush_failed_terminal',
-          metadata: { id: item.id, attempts },
-        });
-      } else {
-        await logAnalyticsEvent('audit.flush.retry', {
-          id: item.id,
-          attempts,
-          backoffMs,
-        });
-      }
-    }
+    updated = await processQueueItem(item, updated);
   }
 
   await saveQueue(updated);

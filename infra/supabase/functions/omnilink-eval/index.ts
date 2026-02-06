@@ -238,7 +238,7 @@ async function runSingleEvaluation(supabase: SupabaseClient, evalCaseId: string)
     // Store evaluation result
     const evalResultData = {
       eval_case_id: evalCaseId,
-      agent_run_id: agentResult.threadId ? null : null, // Would need to extract from telemetry if available
+      agent_run_id: null, // Would need to extract from telemetry if available
       score: evaluation.score,
       verdict: evaluation.verdict,
       skills_found: skillsFound,

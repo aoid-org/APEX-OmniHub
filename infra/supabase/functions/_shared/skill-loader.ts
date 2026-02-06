@@ -2,15 +2,16 @@ import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SkillDefinition, SkillMatch } from './types.ts';
 
 export class SkillRegistry {
-  private supabase: SupabaseClient;
+  private readonly supabase: SupabaseClient;
   private aiSession: unknown;
+  private aiSessionReady: Promise<void>;
 
   constructor(supabase: SupabaseClient) {
     this.supabase = supabase;
-    this.initializeAISession();
+    this.aiSessionReady = this.initializeAISession();
   }
 
-  private async initializeAISession() {
+  private async initializeAISession(): Promise<void> {
     try {
       // Initialize Supabase AI session for gte-small embeddings
       this.aiSession = await this.supabase.ai.createSession({

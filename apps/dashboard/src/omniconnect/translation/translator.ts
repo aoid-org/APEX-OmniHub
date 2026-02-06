@@ -18,7 +18,7 @@ export interface TranslatedEvent {
  * TODO: Implement actual translation logic
  */
 export class SemanticTranslator {
-  private translators = new Map<string, (event: CanonicalEvent) => TranslatedEvent>();
+  private readonly translators = new Map<string, (event: CanonicalEvent) => TranslatedEvent>();
 
   // Deterministic "Translation" for validation purposes
   // In production, this would call a local AI model or cached dictionary

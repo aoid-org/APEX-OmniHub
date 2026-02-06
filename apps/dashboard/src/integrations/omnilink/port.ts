@@ -121,27 +121,51 @@ function getIdempotencyKey(options: OmniLinkRequestOptions): string {
   return `omnilink_${Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')}`;
 }
 
+function generateTraceId(): string {
+  if (typeof crypto?.randomUUID === 'function') return crypto.randomUUID();
+  return `trace_${Date.now()}`;
+}
+
+function buildOmniLinkHeaders(options: OmniLinkRequestOptions): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'X-Idempotency-Key': getIdempotencyKey(options),
+    'X-OmniLink-Trace-Id': generateTraceId(),
+    ...(options.headers ?? {}),
+  };
+}
+
+async function parseOmniLinkResponse<T>(response: Response): Promise<T> {
+  const contentType = response.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    return (await response.json()) as T;
+  }
+  return (await response.text()) as T;
+}
+
+function toRetryableError(error: unknown, timeoutMs: number): Error {
+  const err = error instanceof Error ? error : new Error(String(error));
+  if (err.name === 'AbortError') {
+    return new Error(`OmniLink request timed out after ${timeoutMs}ms`);
+  }
+  return err;
+}
+
 async function requestWithRetries<T>(options: OmniLinkRequestOptions): Promise<T> {
   const config = readConfig();
-  const attemptLimit = options.method === 'GET' ? config.maxAttempts : config.maxAttempts;
+  const attemptLimit = config.maxAttempts;
   let attempt = 0;
   let lastFailure: Error | null = null;
 
   while (attempt < attemptLimit) {
     attempt += 1;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? config.timeoutMs);
+    const effectiveTimeout = options.timeoutMs ?? config.timeoutMs;
+    const timeout = setTimeout(() => controller.abort(), effectiveTimeout);
     try {
       const response = await fetch(`${config.baseUrl}${options.path}`, {
         method: options.method ?? 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Idempotency-Key': getIdempotencyKey(options),
-          'X-OmniLink-Trace-Id': typeof crypto?.randomUUID === 'function'
-            ? crypto.randomUUID()
-            : `trace_${Date.now()}`,
-          ...(options.headers ?? {}),
-        },
+        headers: buildOmniLinkHeaders(options),
         body: options.body ? JSON.stringify(options.body) : undefined,
         signal: controller.signal,
       });
@@ -151,17 +175,9 @@ async function requestWithRetries<T>(options: OmniLinkRequestOptions): Promise<T
         throw new Error(`OmniLink request failed (${response.status}): ${text}`);
       }
 
-      const contentType = response.headers.get('content-type') ?? '';
-      if (contentType.includes('application/json')) {
-        return (await response.json()) as T;
-      }
-      return (await response.text()) as T;
+      return await parseOmniLinkResponse<T>(response);
     } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      lastFailure = err;
-      if (err.name === 'AbortError') {
-        lastFailure = new Error(`OmniLink request timed out after ${options.timeoutMs ?? config.timeoutMs}ms`);
-      }
+      lastFailure = toRetryableError(error, effectiveTimeout);
       if (attempt >= attemptLimit) break;
       const delay = calculateBackoffDelay(attempt, {
         baseMs: config.baseDelayMs,

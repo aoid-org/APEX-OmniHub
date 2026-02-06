@@ -17,7 +17,7 @@ export interface StoredSession extends SessionToken {
  * TODO: Implement actual AES-GCM encryption
  */
 export class EncryptedTokenStorage {
-  private storage = new Map<string, StoredSession>();
+  private readonly storage = new Map<string, StoredSession>();
 
   async store(sessionToken: SessionToken): Promise<void> {
     // TODO: Implement AES-GCM encryption

@@ -10,13 +10,13 @@ interface BatchItem<T, R> {
 }
 
 export class BatchProcessor<T, R> {
-  private queue: BatchItem<T, R>[] = [];
+  private readonly queue: BatchItem<T, R>[] = [];
   private timer: NodeJS.Timeout | null = null;
   private processing = false;
 
   constructor(
-    private batchHandler: (items: T[]) => Promise<R[]>,
-    private options: {
+    private readonly batchHandler: (items: T[]) => Promise<R[]>,
+    private readonly options: {
       maxBatchSize?: number;
       maxWaitMs?: number;
     } = {}

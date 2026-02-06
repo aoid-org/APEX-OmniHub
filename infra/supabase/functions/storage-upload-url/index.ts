@@ -7,7 +7,10 @@ import { createServiceClient } from "../_shared/supabaseClient.ts";
 const MAX_REQUEST_SIZE = 1024 * 1024;
 
 function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const bytes = new Uint8Array(6);
+  crypto.getRandomValues(bytes);
+  const hex = [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
+  return `req_${Date.now()}_${hex}`;
 }
 
 /**

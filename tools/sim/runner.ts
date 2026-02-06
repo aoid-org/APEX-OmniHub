@@ -377,8 +377,10 @@ export class SimulationRunner {
    * Call app adapter (stub - would call real adapters)
    */
   private async callAppAdapter(app: AppName, event: EventEnvelope): Promise<unknown> {
-    // Simulate network delay
-    const delay = Math.random() * 100 + 50; // 50-150ms
+    // Simulate network delay (non-security: timing simulation only)
+    const buf = new Uint8Array(1);
+    crypto.getRandomValues(buf);
+    const delay = (buf[0] / 255) * 100 + 50; // 50-150ms
     await new Promise(resolve => setTimeout(resolve, delay));
 
     // Return mock response
