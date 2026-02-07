@@ -150,17 +150,17 @@ jobs:
       run: |
         echo "Performing basic health checks..."
         # Check if required files exist
-        if [ ! -f "supabase/functions/omnilink-agent/index.ts" ]; then
+        if [ ! -f "infra/supabase/functions/omnilink-agent/index.ts" ]; then
           echo "ERROR: omnilink-agent function missing"
           exit 1
         fi
 
-        if [ ! -f "supabase/functions/omnilink-eval/index.ts" ]; then
+        if [ ! -f "infra/supabase/functions/omnilink-eval/index.ts" ]; then
           echo "ERROR: omnilink-eval function missing"
           exit 1
         fi
 
-        if [ ! -f "supabase/migrations/20251221000001_omnilink_ops_pack.sql" ]; then
+        if [ ! -f "infra/supabase/migrations/20251221000001_omnilink_ops_pack.sql" ]; then
           echo "ERROR: Ops pack migration missing"
           exit 1
         fi

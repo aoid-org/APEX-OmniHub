@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'supabase/functions/**'
-      - 'supabase/migrations/**'
+      - 'infra/supabase/functions/**'
+      - 'infra/supabase/migrations/**'
   workflow_dispatch:
 
 jobs:

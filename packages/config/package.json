@@ -1,0 +1,10 @@
+{
+  "name": "@apex/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./eslint": "./eslint/index.js",
+    "./tailwind": "./tailwind/index.js"
+  }
+}

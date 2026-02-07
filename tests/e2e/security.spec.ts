@@ -67,7 +67,7 @@ beforeEach(() => {
 describe('Security Module E2E Tests', () => {
   describe('CSRF Protection', () => {
     it('generates cryptographically secure CSRF token', async () => {
-      const { generateCsrfToken } = await import('../../src/lib/security');
+      const { generateCsrfToken } = await import('@/lib/security');
       const token = generateCsrfToken();
 
       expect(token).toBeDefined();
@@ -76,7 +76,7 @@ describe('Security Module E2E Tests', () => {
     });
 
     it('stores and retrieves CSRF token from session', async () => {
-      const { generateCsrfToken, storeCsrfToken, getCsrfToken } = await import('../../src/lib/security');
+      const { generateCsrfToken, storeCsrfToken, getCsrfToken } = await import('@/lib/security');
       const token = generateCsrfToken();
       storeCsrfToken(token);
 
@@ -85,7 +85,7 @@ describe('Security Module E2E Tests', () => {
     });
 
     it('validates correct CSRF token', async () => {
-      const { generateCsrfToken, storeCsrfToken, validateCsrfToken } = await import('../../src/lib/security');
+      const { generateCsrfToken, storeCsrfToken, validateCsrfToken } = await import('@/lib/security');
       const token = generateCsrfToken();
       storeCsrfToken(token);
 
@@ -93,7 +93,7 @@ describe('Security Module E2E Tests', () => {
     });
 
     it('rejects incorrect CSRF token', async () => {
-      const { generateCsrfToken, storeCsrfToken, validateCsrfToken } = await import('../../src/lib/security');
+      const { generateCsrfToken, storeCsrfToken, validateCsrfToken } = await import('@/lib/security');
       const token = generateCsrfToken();
       storeCsrfToken(token);
 
@@ -101,14 +101,14 @@ describe('Security Module E2E Tests', () => {
     });
 
     it('rejects missing CSRF token', async () => {
-      const { validateCsrfToken } = await import('../../src/lib/security');
+      const { validateCsrfToken } = await import('@/lib/security');
       expect(validateCsrfToken('any-token')).toBe(false);
     });
   });
 
   describe('Open Redirect Prevention', () => {
     it('allows same-origin URLs', async () => {
-      const { isValidRedirectUrl } = await import('../../src/lib/security');
+      const { isValidRedirectUrl } = await import('@/lib/security');
 
       expect(isValidRedirectUrl('/dashboard')).toBe(true);
       expect(isValidRedirectUrl('/auth')).toBe(true);
@@ -116,14 +116,14 @@ describe('Security Module E2E Tests', () => {
     });
 
     it('blocks cross-origin URLs', async () => {
-      const { isValidRedirectUrl } = await import('../../src/lib/security');
+      const { isValidRedirectUrl } = await import('@/lib/security');
 
       expect(isValidRedirectUrl('https://evil.com/phish')).toBe(false);
       expect(isValidRedirectUrl('//evil.com/path')).toBe(false);
     });
 
     it('handles malformed URLs gracefully', async () => {
-      const { isValidRedirectUrl } = await import('../../src/lib/security');
+      const { isValidRedirectUrl } = await import('@/lib/security');
 
       expect(isValidRedirectUrl('javascript:alert(1)')).toBe(false);
       expect(isValidRedirectUrl('data:text/html,<script>alert(1)</script>')).toBe(false);
@@ -132,7 +132,7 @@ describe('Security Module E2E Tests', () => {
 
   describe('Account Lockout', () => {
     it('tracks failed login attempts', async () => {
-      const { recordLoginAttempt, checkAccountLockout } = await import('../../src/lib/security');
+      const { recordLoginAttempt, checkAccountLockout } = await import('@/lib/security');
       const identifier = 'test@example.com';
 
       // Record failed attempts
@@ -146,7 +146,7 @@ describe('Security Module E2E Tests', () => {
     });
 
     it('locks account after max attempts', async () => {
-      const { recordLoginAttempt, checkAccountLockout } = await import('../../src/lib/security');
+      const { recordLoginAttempt, checkAccountLockout } = await import('@/lib/security');
       const identifier = 'locked@example.com';
 
       // Record max failed attempts
@@ -160,7 +160,7 @@ describe('Security Module E2E Tests', () => {
     });
 
     it('clears lockout on successful login', async () => {
-      const { recordLoginAttempt, checkAccountLockout } = await import('../../src/lib/security');
+      const { recordLoginAttempt, checkAccountLockout } = await import('@/lib/security');
       const identifier = 'success@example.com';
 
       // Record some failed attempts
@@ -179,7 +179,7 @@ describe('Security Module E2E Tests', () => {
 
   describe('Suspicious Activity Detection', () => {
     it('detects excessive failed attempts', async () => {
-      const { recordFailedAuthAttempt, detectSuspiciousActivity } = await import('../../src/lib/security');
+      const { recordFailedAuthAttempt, detectSuspiciousActivity } = await import('@/lib/security');
 
       // Record excessive failed attempts
       for (let i = 0; i < 6; i++) {
@@ -190,7 +190,7 @@ describe('Security Module E2E Tests', () => {
     });
 
     it('allows normal failed attempt counts', async () => {
-      const { recordFailedAuthAttempt, detectSuspiciousActivity, clearFailedAuthAttempts } = await import('../../src/lib/security');
+      const { recordFailedAuthAttempt, detectSuspiciousActivity, clearFailedAuthAttempts } = await import('@/lib/security');
 
       clearFailedAuthAttempts();
 
