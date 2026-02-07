@@ -1,6 +1,6 @@
 import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@apex/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
 
 export const CloudSetupMessage = () => {
   return (

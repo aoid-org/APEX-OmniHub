@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
+import { Badge } from '@apex/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchOmniLinkEntities } from '@/omnidash/omnilink-api';
 

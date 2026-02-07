@@ -11,9 +11,9 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
+import { Alert, AlertDescription } from '@apex/ui';
+import { Badge } from '@apex/ui';
 import { useWalletVerification } from '@/hooks/useWalletVerification';
 import { checkEntitlement } from '@/lib/web3/entitlements';
 import { Loader2, Lock, Unlock, AlertTriangle, Crown } from 'lucide-react';

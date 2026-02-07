@@ -201,7 +201,7 @@ class MetricsCollector {
       redLaneEvents: windowEvents.filter((e) => e.riskLane === 'RED').length,
       manModeTriggered: windowEvents.filter((e) => e.requiresManApproval).length,
       avgLatencyMs: Math.round(avgLatencyMs * 100) / 100,
-      p95LatencyMs,
+      p95LatencyMs: p95LatencyMs ?? 0,
       bySourceType: {
         text: windowEvents.filter((e) => e.sourceType === 'text').length,
         voice: windowEvents.filter((e) => e.sourceType === 'voice').length,

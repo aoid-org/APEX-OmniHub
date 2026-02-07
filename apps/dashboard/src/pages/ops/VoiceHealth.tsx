@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@apex/ui';
 import { Activity, Mic, Zap, ShieldAlert, LucideIcon } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { supabase } from '@/integrations/supabase/client';

@@ -1,17 +1,17 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
+import { Button } from '@apex/ui';
 import { Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@apex/ui';
 import { WalletConnect } from '@/components/WalletConnect';
-import { Separator } from '@/components/ui/separator';
+import { Separator } from '@apex/ui';
 import { availableIntegrations, IntegrationDef } from '../omniconnect/core/registry';
 import { ConnectorKit } from '@/components/ConnectorKit';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Input } from '@apex/ui';
+import { Label } from '@apex/ui';
 
 import { Json } from '@/integrations/supabase/types';
 

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@apex/ui';
 import type { LucideIcon } from 'lucide-react';
 
 interface OmniDashNavIconButtonProps {

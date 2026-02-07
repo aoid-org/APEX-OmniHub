@@ -15,10 +15,10 @@
 
 import { useConnect, useAccount } from 'wagmi';
 import { useWalletVerification } from '@/hooks/useWalletVerification';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@apex/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
+import { Badge } from '@apex/ui';
+import { Alert, AlertDescription } from '@apex/ui';
 import { Loader2, Wallet, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 
 export function WalletConnect() {

@@ -1,17 +1,17 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Clock, Play, Pause, RefreshCcw } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
+import { Button } from '@apex/ui';
+import { Input } from '@apex/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@apex/ui';
+import { Badge } from '@apex/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchTodayItems, restartRitual, upsertTodayItem, updateSettings } from '@/omnidash/api';
 import { useOmniDashSettings } from '@/omnidash/hooks';
 import { redactTodayItems } from '@/omnidash/redaction';
 import { TodayItem } from '@/omnidash/types';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@apex/ui';
 import { useExecute } from '@/hooks/useExecute';
 import { useDemoStore } from '@/stores/demoStore';
 

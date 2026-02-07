@@ -1,8 +1,8 @@
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@apex/ui';
 import { AppSidebar } from './AppSidebar';
 import { ProtectedRoute } from './ProtectedRoute';
 import { MobileBottomNav } from './MobileBottomNav';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@apex/ui';
 
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useIsMobile();

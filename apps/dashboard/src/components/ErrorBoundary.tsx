@@ -1,7 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@apex/ui';
+import { Alert, AlertDescription, AlertTitle } from '@apex/ui';
 import { createDebugLogger } from '@/lib/debug-logger';
 
 interface Props {

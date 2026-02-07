@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@apex/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
+import { Input } from '@apex/ui';
+import { Label } from '@apex/ui';
+import { Alert, AlertDescription, AlertTitle } from '@apex/ui';
 import { Copy, Key, RefreshCw, Server, AlertTriangle, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { IntegrationDef } from '@/omniconnect/core/registry'; // Use explicit path to avoid ambiguity

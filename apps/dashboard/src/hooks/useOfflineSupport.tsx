@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@apex/ui';
 import { setupOfflineListeners, processQueuedRequests } from '@/lib/offline';
 import { createDebugLogger } from '@/lib/debug-logger';
 

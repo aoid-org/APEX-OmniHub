@@ -11,9 +11,9 @@ import {
   SidebarMenuItem,
   SidebarFooter,
   useSidebar,
-} from '@/components/ui/sidebar';
+} from '@apex/ui';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from './ui/button';
+import { Button } from '@apex/ui';
 import { useAdminAccess } from '@/omnidash/hooks';
 import { OMNIDASH_FLAG } from '@/omnidash/types';
 

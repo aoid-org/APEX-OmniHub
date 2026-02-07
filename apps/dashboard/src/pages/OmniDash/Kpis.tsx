@@ -1,10 +1,10 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@apex/ui';
+import { Input } from '@apex/ui';
+import { Button } from '@apex/ui';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@apex/ui';
 import { fetchKpiDaily, upsertKpiDailyEntry } from '@/omnidash/api';
 import { useOmniDashSettings } from '@/omnidash/hooks';
 import { redactKpiDaily, redactAmount } from '@/omnidash/redaction';

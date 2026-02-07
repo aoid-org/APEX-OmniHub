@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
 import { Shield, Lock, Eye, Database, UserCheck } from 'lucide-react';
 
 const Privacy = () => {

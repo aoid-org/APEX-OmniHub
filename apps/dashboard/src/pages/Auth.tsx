@@ -3,12 +3,12 @@ import { useSearchParams } from 'react-router-dom';
 // @ts-expect-error pre-existing type issue - no declaration file
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from '@apex/ui';
+import { Input } from '@apex/ui';
+import { Label } from '@apex/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@apex/ui';
+import { useToast } from '@apex/ui';
 import { useLoginRedirect } from '@/hooks/useLoginRedirect';
 import { Loader2 } from 'lucide-react';
 import { z } from 'zod';

@@ -8,7 +8,7 @@ interface DashboardStats {
   integrations: number;
 }
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@apex/ui';
 import { Link2, FileText, Zap, Package, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 

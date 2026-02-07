@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Button } from '@apex/ui';
 import { Header } from '@/components/Header';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { toast } from 'sonner';

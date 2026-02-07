@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
+import { Badge } from '@apex/ui';
 import { Mic, MessageSquare, Navigation } from 'lucide-react';
 import VoiceInterface from '@/components/VoiceInterface';
 import { ThemeToggle } from '@/components/ThemeToggle';

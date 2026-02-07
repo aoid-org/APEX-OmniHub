@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@apex/ui';
+import { useToast } from '@apex/ui';
 import { Mic, MicOff, Loader2 } from 'lucide-react';
 import { AudioRecorder, encodeAudioForAPI, playAudioData, clearAudioQueue } from '@/utils/RealtimeAudio';
 import { calculateBackoffDelay } from '@/lib/backoff';

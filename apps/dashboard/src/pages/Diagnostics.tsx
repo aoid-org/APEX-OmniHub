@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
+import { Alert, AlertDescription, AlertTitle } from '@apex/ui';
+import { Badge } from '@apex/ui';
+import { Button } from '@apex/ui';
 import { AlertCircle, CheckCircle2, XCircle, RefreshCw, Copy } from 'lucide-react';
 import { getAuditQueueSnapshot } from '@/security/auditLog';
 import { getUpsertQueueSnapshot } from '@/zero-trust/deviceRegistry';

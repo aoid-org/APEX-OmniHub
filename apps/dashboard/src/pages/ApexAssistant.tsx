@@ -4,12 +4,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+} from '@apex/ui';
+import { Button } from '@apex/ui';
+import { Textarea } from '@apex/ui';
+import { Badge } from '@apex/ui';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@apex/ui';
 import { useOmniStream } from '@/hooks/useOmniStream';
 import { Send, Loader2, ExternalLink, Wifi, WifiOff } from 'lucide-react';
 import VoiceInterface from '@/components/VoiceInterface';

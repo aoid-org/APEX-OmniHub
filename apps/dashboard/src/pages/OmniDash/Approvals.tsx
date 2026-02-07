@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
+import { Button } from '@apex/ui';
+import { Badge } from '@apex/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { decideOmniLinkApproval, fetchOmniLinkApprovals } from '@/omnidash/omnilink-api';
 

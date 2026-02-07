@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
+import { Button } from '@apex/ui';
+import { Switch } from '@apex/ui';
 import { Settings as SettingsIcon, User, Bell, Shield, LogOut, Fingerprint, Smartphone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@apex/ui';
 import { useCapabilities } from '@/hooks/useCapabilities';
 import { toast } from 'sonner';
 import {

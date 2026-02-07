@@ -1,6 +1,6 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@apex/ui";
+import { Badge } from "@apex/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@apex/ui";
 import { Shield, Zap, Database, Cloud, Lock, Code2, GitBranch, Server } from "lucide-react";
 
 export default function TechSpecs() {

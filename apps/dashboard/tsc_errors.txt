@@ -1,0 +1,34 @@
+﻿src/components/AppSidebar.tsx(16,24): error TS2307: Cannot find module './ui/button' or its corresponding type declarations.
+src/omniconnect/ingress/omniport-metrics.ts(204,7): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+../../packages/ui/src/components/ui/alert-dialog.tsx(5,32): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+../../packages/ui/src/components/ui/calendar.tsx(6,32): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+../../packages/ui/src/components/ui/calendar.tsx(45,20): error TS6133: '_props' is declared but its value is never read.
+../../packages/ui/src/components/ui/calendar.tsx(46,21): error TS6133: '_props' is declared but its value is never read.
+../../packages/ui/src/components/ui/carousel.tsx(6,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+../../packages/ui/src/components/ui/command.tsx(7,39): error TS2307: Cannot find module '@/components/ui/dialog' or its corresponding type declarations.
+../../packages/ui/src/components/ui/form.tsx(7,23): error TS2307: Cannot find module '@/components/ui/label' or its corresponding type declarations.
+../../packages/ui/src/components/ui/pagination.tsx(5,45): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+../../packages/ui/src/components/ui/pagination.tsx(50,52): error TS2783: 'size' is specified more than once, so this usage will be overwritten.
+../../packages/ui/src/components/ui/pagination.tsx(58,48): error TS2783: 'size' is specified more than once, so this usage will be overwritten.
+../../packages/ui/src/components/ui/sidebar.tsx(6,29): error TS2307: Cannot find module '@/hooks/use-mobile' or its corresponding type declarations.
+../../packages/ui/src/components/ui/sidebar.tsx(8,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+../../packages/ui/src/components/ui/sidebar.tsx(9,23): error TS2307: Cannot find module '@/components/ui/input' or its corresponding type declarations.
+../../packages/ui/src/components/ui/sidebar.tsx(10,27): error TS2307: Cannot find module '@/components/ui/separator' or its corresponding type declarations.
+../../packages/ui/src/components/ui/sidebar.tsx(11,37): error TS2307: Cannot find module '@/components/ui/sheet' or its corresponding type declarations.
+../../packages/ui/src/components/ui/sidebar.tsx(12,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+../../packages/ui/src/components/ui/sidebar.tsx(13,74): error TS2307: Cannot find module '@/components/ui/tooltip' or its corresponding type declarations.
+../../packages/ui/src/components/ui/sidebar.tsx(230,19): error TS7006: Parameter 'event' implicitly has an 'any' type.
+../../packages/ui/src/components/ui/toaster.tsx(1,26): error TS2307: Cannot find module '@/hooks/use-toast' or its corresponding type declarations.
+../../packages/ui/src/components/ui/toaster.tsx(2,95): error TS2307: Cannot find module '@/components/ui/toast' or its corresponding type declarations.
+../../packages/ui/src/components/ui/toaster.tsx(9,31): error TS7031: Binding element 'id' implicitly has an 'any' type.
+../../packages/ui/src/components/ui/toaster.tsx(9,35): error TS7031: Binding element 'title' implicitly has an 'any' type.
+../../packages/ui/src/components/ui/toaster.tsx(9,42): error TS7031: Binding element 'description' implicitly has an 'any' type.
+../../packages/ui/src/components/ui/toaster.tsx(9,55): error TS7031: Binding element 'action' implicitly has an 'any' type.
+../../packages/ui/src/components/ui/toggle-group.tsx(6,32): error TS2307: Cannot find module '@/components/ui/toggle' or its corresponding type declarations.
+../../packages/ui/src/components/ui/toggle-group.tsx(20,6): error TS2322: Type '{ children: Element; ref: ForwardedRef<HTMLDivElement>; className: string; } | { children: Element; ref: ForwardedRef<HTMLDivElement>; className: string; }' is not assignable to type 'IntrinsicAttributes & ((ToggleGroupSingleProps | ToggleGroupMultipleProps) & RefAttributes<HTMLDivElement>)'.
+  Type '{ children: Element; ref: ForwardedRef<HTMLDivElement>; className: string; }' is not assignable to type 'IntrinsicAttributes & ((ToggleGroupSingleProps | ToggleGroupMultipleProps) & RefAttributes<HTMLDivElement>)'.
+    Property 'type' is missing in type '{ children: Element; ref: ForwardedRef<HTMLDivElement>; className: string; }' but required in type 'ToggleGroupMultipleProps'.
+../../packages/ui/src/components/ui/toggle-group.tsx(35,6): error TS2741: Property 'value' is missing in type '{ children: any; ref: ForwardedRef<HTMLButtonElement>; className: string; }' but required in type 'Omit<ToggleGroupItemImplProps, "pressed">'.
+../../packages/ui/src/hooks/use-toast.ts(3,53): error TS2307: Cannot find module '@/components/ui/toast' or its corresponding type declarations.
+../../packages/ui/src/hooks/use-toast.ts(151,22): error TS7006: Parameter 'open' implicitly has an 'any' type.

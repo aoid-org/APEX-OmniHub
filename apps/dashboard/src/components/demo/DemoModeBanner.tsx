@@ -8,7 +8,7 @@
 import { memo } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { useAccess } from '@/contexts/AccessContext';
-import { Button } from '@/components/ui/button';
+import { Button } from '@apex/ui';
 import { useDemoStore } from '@/stores/demoStore';
 
 export const DemoModeBanner = memo(function DemoModeBanner() {

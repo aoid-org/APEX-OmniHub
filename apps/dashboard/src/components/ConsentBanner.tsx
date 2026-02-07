@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@apex/ui';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@apex/ui';
 import { Shield, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

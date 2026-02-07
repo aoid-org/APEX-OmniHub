@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@apex/ui';
+import { Button } from '@apex/ui';
 import { Upload, Download, Trash2, FileIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getUploadToken, uploadWithToken, listUserFiles, createDownloadUrl, deleteFile } from '@/lib/files';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@apex/ui';
 
 interface FileItem {
   name: string;

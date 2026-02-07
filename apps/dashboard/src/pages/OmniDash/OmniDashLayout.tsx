@@ -1,9 +1,9 @@
 import { Outlet, Link } from 'react-router-dom';
 import { AlertCircle, Activity, ShieldCheck, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
+import { Button } from '@apex/ui';
+import { Switch } from '@apex/ui';
+import { Separator } from '@apex/ui';
 import { useAdminAccess, useOmniDashSettings } from '@/omnidash/hooks';
 import { usePaidAccess } from '@/hooks/usePaidAccess';
 import { useQuery } from '@tanstack/react-query';

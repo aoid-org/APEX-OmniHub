@@ -7,8 +7,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { Switch } from '@apex/ui';
+import { Label } from '@apex/ui';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +16,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+} from '@apex/ui';
+import { Button } from '@apex/ui';
 import { Shield, ShieldCheck, ShieldOff, Activity, Trash2 } from 'lucide-react';
 import {
   initializeOmniSentry,

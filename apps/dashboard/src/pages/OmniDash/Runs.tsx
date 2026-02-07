@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Slider } from '@/components/ui/slider';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@apex/ui';
+import { Badge } from '@apex/ui';
+import { Button } from '@apex/ui';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@apex/ui';
+import { Slider } from '@apex/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchOmniTraceRuns, fetchOmniTraceRunDetail } from '@/omnidash/omnilink-api';
 import type { OmniTraceRun } from '@/omnidash/types';

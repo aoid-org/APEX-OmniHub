@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@apex/ui';
+import { Input } from '@apex/ui';
+import { Textarea } from '@apex/ui';
+import { Button } from '@apex/ui';
+import { Badge } from '@apex/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@apex/ui';
 import { fetchIncidents, addIncident } from '@/omnidash/api';
 import { useOmniDashSettings } from '@/omnidash/hooks';
 import { Incident } from '@/omnidash/types';
