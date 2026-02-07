@@ -29,7 +29,7 @@ const queryClient = new QueryClient({
 });
 
 interface Web3ProviderProps {
-  children: React.ReactNode;
+  readonly children: React.ReactNode;
 }
 
 export function Web3Provider({ children }: Readonly<Web3ProviderProps>) {

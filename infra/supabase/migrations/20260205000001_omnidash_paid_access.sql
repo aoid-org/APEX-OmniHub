@@ -21,121 +21,47 @@
 -- ============================================================================
 
 -- ============================================================================
--- STEP 1: Update RLS Policies for omnidash_settings
+-- STEPS 1-5: Update RLS Policies for all OmniDash tables (admin OR paid user)
 -- ============================================================================
+-- Uses a DO block to apply identical RLS policy across all 5 OmniDash tables,
+-- replacing the previous admin-only policies with admin-or-paid-user policies.
 
--- Drop old admin-only policy
-DROP POLICY IF EXISTS "Admins manage omnidash_settings" ON public.omnidash_settings;
+DO $$
+DECLARE
+  tbl RECORD;
+  old_policies TEXT[] := ARRAY[
+    'Admins manage omnidash_settings',
+    'Admins manage today items',
+    'Admins manage pipeline items',
+    'Admins manage KPI daily',
+    'Admins manage incidents'
+  ];
+  tables TEXT[] := ARRAY[
+    'omnidash_settings',
+    'omnidash_today_items',
+    'omnidash_pipeline_items',
+    'omnidash_kpi_daily',
+    'omnidash_incidents'
+  ];
+  i INT;
+BEGIN
+  FOR i IN 1..array_length(tables, 1) LOOP
+    -- Drop old admin-only policy
+    EXECUTE format(
+      'DROP POLICY IF EXISTS %I ON public.%I',
+      old_policies[i], tables[i]
+    );
 
--- Create new policy: admin OR paid user
-CREATE POLICY "Admins and paid users manage omnidash_settings"
-  ON public.omnidash_settings
-  FOR ALL
-  TO authenticated
-  USING (
-    (public.is_admin(auth.uid()) OR public.is_paid_user(auth.uid()))
-    AND user_id = auth.uid()
-  )
-  WITH CHECK (
-    (public.is_admin(auth.uid()) OR public.is_paid_user(auth.uid()))
-    AND user_id = auth.uid()
-  );
-
-COMMENT ON POLICY "Admins and paid users manage omnidash_settings"
-  ON public.omnidash_settings IS
-  'OmniDash settings accessible to admins and all paid subscription tiers (starter, pro, enterprise)';
-
--- ============================================================================
--- STEP 2: Update RLS Policies for omnidash_today_items
--- ============================================================================
-
-DROP POLICY IF EXISTS "Admins manage today items" ON public.omnidash_today_items;
-
-CREATE POLICY "Admins and paid users manage today items"
-  ON public.omnidash_today_items
-  FOR ALL
-  TO authenticated
-  USING (
-    (public.is_admin(auth.uid()) OR public.is_paid_user(auth.uid()))
-    AND user_id = auth.uid()
-  )
-  WITH CHECK (
-    (public.is_admin(auth.uid()) OR public.is_paid_user(auth.uid()))
-    AND user_id = auth.uid()
-  );
-
-COMMENT ON POLICY "Admins and paid users manage today items"
-  ON public.omnidash_today_items IS
-  'Today items accessible to admins and paid users';
-
--- ============================================================================
--- STEP 3: Update RLS Policies for omnidash_pipeline_items
--- ============================================================================
-
-DROP POLICY IF EXISTS "Admins manage pipeline items" ON public.omnidash_pipeline_items;
-
-CREATE POLICY "Admins and paid users manage pipeline items"
-  ON public.omnidash_pipeline_items
-  FOR ALL
-  TO authenticated
-  USING (
-    (public.is_admin(auth.uid()) OR public.is_paid_user(auth.uid()))
-    AND user_id = auth.uid()
-  )
-  WITH CHECK (
-    (public.is_admin(auth.uid()) OR public.is_paid_user(auth.uid()))
-    AND user_id = auth.uid()
-  );
-
-COMMENT ON POLICY "Admins and paid users manage pipeline items"
-  ON public.omnidash_pipeline_items IS
-  'Pipeline items accessible to admins and paid users';
-
--- ============================================================================
--- STEP 4: Update RLS Policies for omnidash_kpi_daily
--- ============================================================================
-
-DROP POLICY IF EXISTS "Admins manage KPI daily" ON public.omnidash_kpi_daily;
-
-CREATE POLICY "Admins and paid users manage KPI daily"
-  ON public.omnidash_kpi_daily
-  FOR ALL
-  TO authenticated
-  USING (
-    (public.is_admin(auth.uid()) OR public.is_paid_user(auth.uid()))
-    AND user_id = auth.uid()
-  )
-  WITH CHECK (
-    (public.is_admin(auth.uid()) OR public.is_paid_user(auth.uid()))
-    AND user_id = auth.uid()
-  );
-
-COMMENT ON POLICY "Admins and paid users manage KPI daily"
-  ON public.omnidash_kpi_daily IS
-  'KPI daily data accessible to admins and paid users';
-
--- ============================================================================
--- STEP 5: Update RLS Policies for omnidash_incidents
--- ============================================================================
-
-DROP POLICY IF EXISTS "Admins manage incidents" ON public.omnidash_incidents;
-
-CREATE POLICY "Admins and paid users manage incidents"
-  ON public.omnidash_incidents
-  FOR ALL
-  TO authenticated
-  USING (
-    (public.is_admin(auth.uid()) OR public.is_paid_user(auth.uid()))
-    AND user_id = auth.uid()
-  )
-  WITH CHECK (
-    (public.is_admin(auth.uid()) OR public.is_paid_user(auth.uid()))
-    AND user_id = auth.uid()
-  );
-
-COMMENT ON POLICY "Admins and paid users manage incidents"
-  ON public.omnidash_incidents IS
-  'Incidents accessible to admins and paid users';
+    -- Create new policy: admin OR paid user
+    EXECUTE format(
+      'CREATE POLICY %I ON public.%I FOR ALL TO authenticated '
+      || 'USING ((public.is_admin(auth.uid()) OR public.is_paid_user(auth.uid())) AND user_id = auth.uid()) '
+      || 'WITH CHECK ((public.is_admin(auth.uid()) OR public.is_paid_user(auth.uid())) AND user_id = auth.uid())',
+      'Admins and paid users manage ' || replace(tables[i], 'omnidash_', ''),
+      tables[i]
+    );
+  END LOOP;
+END $$;
 
 -- ============================================================================
 -- STEP 6: Verify is_paid_user() function exists
