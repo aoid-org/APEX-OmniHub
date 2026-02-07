@@ -98,7 +98,8 @@ export const OmniDashLayout = () => {
   }
 
   const toggleSetting = async (key: 'demo_mode' | 'show_connected_ecosystem' | 'anonymize_kpis' | 'freeze_mode', value: boolean) => {
-    await updateSettings(user!.id, { [key]: value });
+    if (!user) return;
+    await updateSettings(user.id, { [key]: value });
     await settings.refetch();
   };
 
@@ -170,49 +171,26 @@ export const OmniDashLayout = () => {
                 <CardDescription>Controls for redaction and demo stories.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Demo Mode</p>
-                    <p className="text-sm text-muted-foreground">Redacts client names, PII, and buckets $ values.</p>
+                {([
+                  { key: 'demo_mode', label: 'Demo Mode', desc: 'Redacts client names, PII, and buckets $ values.' },
+                  { key: 'show_connected_ecosystem', label: 'Show Connected Ecosystem', desc: 'Stub card for ecosystem view (no hub build required).' },
+                  { key: 'anonymize_kpis', label: 'Anonymize KPIs', desc: 'Buckets KPI values while in demo mode.' },
+                  { key: 'freeze_mode', label: 'Freeze switch', desc: 'When ON, limit work to bugfix + onboarding only.' },
+                ] as const).map((toggle, idx) => (
+                  <div key={toggle.key}>
+                    {idx > 0 && <Separator className="mb-4" />}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{toggle.label}</p>
+                        <p className="text-sm text-muted-foreground">{toggle.desc}</p>
+                      </div>
+                      <Switch
+                        checked={settings.data?.[toggle.key]}
+                        onCheckedChange={(v) => toggleSetting(toggle.key, v)}
+                      />
+                    </div>
                   </div>
-                  <Switch
-                    checked={settings.data?.demo_mode}
-                    onCheckedChange={(v) => toggleSetting('demo_mode', v)}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Show Connected Ecosystem</p>
-                    <p className="text-sm text-muted-foreground">Stub card for ecosystem view (no hub build required).</p>
-                  </div>
-                  <Switch
-                    checked={settings.data?.show_connected_ecosystem}
-                    onCheckedChange={(v) => toggleSetting('show_connected_ecosystem', v)}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Anonymize KPIs</p>
-                    <p className="text-sm text-muted-foreground">Buckets KPI values while in demo mode.</p>
-                  </div>
-                  <Switch
-                    checked={settings.data?.anonymize_kpis}
-                    onCheckedChange={(v) => toggleSetting('anonymize_kpis', v)}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Freeze switch</p>
-                    <p className="text-sm text-muted-foreground">When ON, limit work to bugfix + onboarding only.</p>
-                  </div>
-                  <Switch
-                    checked={settings.data?.freeze_mode}
-                    onCheckedChange={(v) => toggleSetting('freeze_mode', v)}
-                  />
-                </div>
+                ))}
               </CardContent>
             </Card>
 
