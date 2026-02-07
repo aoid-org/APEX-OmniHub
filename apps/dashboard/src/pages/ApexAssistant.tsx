@@ -572,7 +572,7 @@ const ApexAssistant = () => {
         className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${typeColors[event.type] ?? 'bg-gray-100 text-gray-800'
           }`}
       >
-        {event.type.replace('_', ' ')}
+        {event.type.replaceAll('_', ' ')}
       </span>
     );
   };
