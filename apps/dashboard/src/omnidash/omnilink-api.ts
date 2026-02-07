@@ -34,8 +34,8 @@ interface FetchListOptions {
 }
 
 async function fetchSupabaseList<T>(userId: string, opts: FetchListOptions): Promise<T[]> {
-  let query = supabase
-    .from(opts.table)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase.from as any)(opts.table)
     .select('*')
     .eq(opts.userIdField, userId)
     .order(opts.orderField, { ascending: false });
