@@ -241,7 +241,8 @@ describe("APEXMembershipNFT", function () {
       const customURI = "ipfs://custom-metadata";
       await contract.setTokenURI(0, customURI);
 
-      expect(await contract.tokenURI(0)).to.equal(customURI);
+      // ERC721URIStorage concatenates baseURI + tokenURI when both exist
+      expect(await contract.tokenURI(0)).to.equal(BASE_URI + customURI);
     });
 
     it("should allow owner to update base URI", async function () {
