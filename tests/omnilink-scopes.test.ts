@@ -5,7 +5,7 @@ import {
   enforceEnvAllowlist,
   enforcePermission,
   matchPermission,
-} from '../supabase/functions/_shared/omnilinkScopes.ts';
+} from '../infra/supabase/functions/_shared/omnilinkScopes.ts';
 
 describe('OmniLink scope helpers', () => {
   it('matches permissions with wildcards', () => {
