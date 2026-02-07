@@ -38,7 +38,10 @@ function checkRateLimit(identifier: string): { allowed: boolean; remaining: numb
 }
 
 function generateRequestId(): string {
-  return `hc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const bytes = new Uint8Array(6);
+  crypto.getRandomValues(bytes);
+  const suffix = Array.from(bytes, (b) => b.toString(36).padStart(2, '0')).join('').slice(0, 9);
+  return `hc_${Date.now()}_${suffix}`;
 }
 
 async function checkOrchestratorConnection(requestId: string, orchestratorUrl?: string): Promise<{ status: 'healthy' | 'degraded' | 'unconfigured'; warning?: string }> {

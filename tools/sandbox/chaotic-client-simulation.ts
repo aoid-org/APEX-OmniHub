@@ -222,9 +222,9 @@ interface SimulationResult {
 }
 
 class ChaoticClientSimulator {
-  private supabaseUrl: string;
-  private supabaseKey: string;
-  private results: SimulationResult[] = [];
+  private readonly supabaseUrl: string;
+  private readonly supabaseKey: string;
+  private readonly results: SimulationResult[] = [];
 
   constructor() {
     // These would come from environment in real usage
@@ -629,7 +629,7 @@ Which of these would you like to tackle first?`;
 
   private getOverallVerdict(score: number): string {
     if (score >= 8.5) return '🌟 EXCELLENT - Production Ready!';
-    if (score >= 7.0) return '👍 GOOD - Minor improvements needed';
+    if (score >= 7) return '👍 GOOD - Minor improvements needed';
     if (score >= 5.5) return '😐 FAIR - Needs work before production';
     return '⚠️  POOR - Significant improvements required';
   }

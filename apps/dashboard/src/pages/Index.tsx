@@ -87,9 +87,9 @@ const Index = () => {
             {/* Right Column - App Icon Grid */}
             <div className="relative">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-[500px] mx-auto">
-                {apps.map((app, index) => (
+                {apps.map((app) => (
                   <AppTile
-                    key={index}
+                    key={app.name}
                     app={app}
                     isInstallable={isInstallable}
                     onInstall={handlePWAInstall}
@@ -111,9 +111,9 @@ const Index = () => {
             Our Applications
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {apps.map((app, index) => (
+            {apps.map((app) => (
               <AppTile
-                key={index}
+                key={app.name}
                 app={app}
                 isInstallable={isInstallable}
                 onInstall={handlePWAInstall}

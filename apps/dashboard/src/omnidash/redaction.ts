@@ -20,7 +20,7 @@ function stripPii(text: string): string {
   const emailPattern = /[A-Z0-9._%+-]{1,64}@[A-Z0-9.-]{1,253}\.[A-Z]{2,10}/gi;
   const phonePattern = /\+?\d[\d\s().-]{7,}\d/g;
   const dollarPattern = /\$?\s?\d{1,3}(?:[,\s]\d{3})*(?:\.\d{1,2})?/g;
-  return text.replace(emailPattern, '[redacted]').replace(phonePattern, '[redacted]').replace(dollarPattern, '[bucketed]');
+  return text.replaceAll(emailPattern, '[redacted]').replaceAll(phonePattern, '[redacted]').replaceAll(dollarPattern, '[bucketed]');
 }
 
 export function redactPipeline(items: PipelineItem[]): PipelineItem[] {

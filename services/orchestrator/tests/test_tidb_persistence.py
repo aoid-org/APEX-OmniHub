@@ -15,7 +15,7 @@ from infrastructure.tidb_persistence import (
     get_tidb_store,
 )
 
-# Test-only fake credentials (not real secrets) - NOSONAR
+# Test-only fake credentials (not real secrets)  # NOSONAR
 _FAKE_TIDB_ENV = {
     "VECTOR_PERSISTENCE_MODE": "tidb",
     "TIDB_HOST": "test.tidb.io",

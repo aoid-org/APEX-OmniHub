@@ -29,10 +29,10 @@ const queryClient = new QueryClient({
 });
 
 interface Web3ProviderProps {
-  children: React.ReactNode;
+  readonly children: React.ReactNode;
 }
 
-export function Web3Provider({ children }: Web3ProviderProps) {
+export function Web3Provider({ children }: Readonly<Web3ProviderProps>) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

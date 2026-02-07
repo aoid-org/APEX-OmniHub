@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { evaluatePrompt } from '../../../apps/dashboard/src/security/promptDefense';
 
 interface FlagRecord {
@@ -32,7 +32,7 @@ function readRecords(filePath: string): FlagRecord[] {
         return null;
       }
     })
-    .filter((v): v is FlagRecord => Boolean(v && v.prompt));
+    .filter((v): v is FlagRecord => Boolean(v?.prompt));
 }
 
 function main() {

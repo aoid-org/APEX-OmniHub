@@ -17,7 +17,7 @@ export function calculateBackoffDelay(
   attempt: number,
   { baseMs = 500, maxMs = 10_000, jitterMs = DEFAULT_JITTER_MS }: BackoffOptions = {}
 ): number {
-  const jitter = Math.random() * jitterMs;
+  const jitter = (crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF) * jitterMs;
   const delay = baseMs * 2 ** Math.max(attempt - 1, 0);
   return Math.min(delay + jitter, maxMs);
 }

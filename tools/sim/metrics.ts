@@ -98,7 +98,7 @@ export interface SystemScore {
 
 export class MetricsCollector {
   private latencyMetrics: LatencyMetric[] = [];
-  private appCounts: Map<AppName, { success: number; failure: number; retries: number; dedupes: number }> = new Map();
+  private readonly appCounts: Map<AppName, { success: number; failure: number; retries: number; dedupes: number }> = new Map();
   private startTime: Date;
   private endTime: Date | null = null;
 

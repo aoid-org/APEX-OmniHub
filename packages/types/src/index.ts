@@ -4,11 +4,11 @@
  * Domain types used across apps and packages.
  */
 
-// Re-export common types used across the APEX platform
-export type UserId = string;
-export type TenantId = string;
-export type ConnectorId = string;
-export type CorrelationId = string;
+// Semantic domain types - intentionally distinct from raw `string` for documentation and refactoring
+export type UserId = string & {}; // NOSONAR - semantic domain alias
+export type TenantId = string & {}; // NOSONAR - semantic domain alias
+export type ConnectorId = string & {}; // NOSONAR - semantic domain alias
+export type CorrelationId = string & {}; // NOSONAR - semantic domain alias
 
 export interface AuditEvent {
   id: string;

@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 const SECRET_PATTERNS = [
@@ -9,7 +9,13 @@ const SECRET_PATTERNS = [
   { name: 'Generic secret assignment', regex: /secret\s*[:=]\s*['"][^'"]{12,}['"]/i },
 ];
 
-const files = execSync('git ls-files', { encoding: 'utf-8' })
+// S4721: Use spawnSync with explicit args instead of shell interpreter
+const result = spawnSync('git', ['ls-files'], { encoding: 'utf-8' });
+if (result.status !== 0) {
+  console.error('[secret-scan] Failed to list git files');
+  process.exit(1);
+}
+const files = result.stdout
   .split('\n')
   .filter(Boolean)
   .filter((file) => !file.startsWith('node_modules/'));

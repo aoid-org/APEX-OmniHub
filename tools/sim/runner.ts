@@ -14,8 +14,7 @@ import { ChaosEngine, type ChaosConfig, DEFAULT_CHAOS_CONFIG } from './chaos-eng
 import { getCircuitBreaker, type CircuitBreakerConfig, getAllCircuitStats } from './circuit-breaker';
 import { executeEventIdempotently, clearAllReceipts, getStats as getIdempotencyStats } from './idempotency';
 import { MetricsCollector } from './metrics';
-import type { EventEnvelope, AppName, EventType } from './contracts';
-import { createEvent, type CallCompletedPayload } from './contracts';
+import { createEvent, type EventEnvelope, type AppName, type EventType, type CallCompletedPayload } from './contracts';
 
 // ============================================================================
 // TYPES
@@ -108,10 +107,10 @@ export interface SimulationResult {
 // ============================================================================
 
 export class SimulationRunner {
-  private config: SimulationConfig;
-  private chaos: ChaosEngine;
-  private metrics: MetricsCollector;
-  private logs: string[] = [];
+  private readonly config: SimulationConfig;
+  private readonly chaos: ChaosEngine;
+  private readonly metrics: MetricsCollector;
+  private readonly logs: string[] = [];
   private startTime: Date | null = null;
 
   constructor(config: SimulationConfig) {
@@ -378,7 +377,7 @@ export class SimulationRunner {
    */
   private async callAppAdapter(app: AppName, event: EventEnvelope): Promise<unknown> {
     // Simulate network delay
-    const delay = Math.random() * 100 + 50; // 50-150ms
+    const delay = (crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF) * 100 + 50; // 50-150ms
     await new Promise(resolve => setTimeout(resolve, delay));
 
     // Return mock response

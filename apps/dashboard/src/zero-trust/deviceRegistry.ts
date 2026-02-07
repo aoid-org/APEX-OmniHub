@@ -134,6 +134,75 @@ function scheduleFlush(delay = 0) {
   }, delay);
 }
 
+async function handleUpsertItemError(
+  item: QueuedUpsert,
+  updated: QueuedUpsert[],
+  error: unknown,
+): Promise<void> {
+  const attempts = item.attempts + 1;
+  const isTerminal = attempts >= MAX_ATTEMPTS;
+  const delay = calculateBackoffDelay(attempts, {
+    baseMs: BASE_DELAY_MS,
+    maxMs: MAX_DELAY_MS,
+    jitterMs: JITTER_MS,
+  });
+
+  const found = updated.find((u) => u.record.deviceId === item.record.deviceId);
+  if (found) {
+    found.attempts = attempts;
+    found.nextAttemptAt = Date.now() + delay;
+    found.status = isTerminal ? 'failed' : 'pending';
+  }
+
+  consecutiveFailures += 1;
+
+  if (isTerminal) {
+    await logError(error as Error, {
+      action: 'device_upsert_failed_terminal',
+      metadata: { deviceId: item.record.deviceId, attempts },
+    });
+  } else {
+    await logAnalyticsEvent('device.upsert.retry', {
+      deviceId: item.record.deviceId,
+      attempts,
+      delay,
+    });
+  }
+}
+
+async function upsertToSupabase(item: QueuedUpsert): Promise<void> {
+  const { error } = await supabase
+    .from('device_registry')
+    .upsert({
+      user_id: item.record.userId,
+      device_id: item.record.deviceId,
+      device_fingerprint: JSON.stringify(item.record.deviceInfo),
+      status: item.record.status || 'suspect',
+      last_seen_at: item.record.lastSeen,
+    }, {
+      onConflict: 'user_id,device_id',
+    });
+
+  if (error) {
+    throw new Error(`Device upsert failed: ${error.message}`);
+  }
+}
+
+async function processUpsertItem(
+  item: QueuedUpsert,
+  updated: QueuedUpsert[],
+): Promise<QueuedUpsert[]> {
+  try {
+    await upsertToSupabase(item);
+    updated = updated.filter((u) => u.record.deviceId !== item.record.deviceId);
+    consecutiveFailures = 0;
+    await logAnalyticsEvent('device.upsert.success', { deviceId: item.record.deviceId });
+  } catch (error) {
+    await handleUpsertItemError(item, updated, error);
+  }
+  return updated;
+}
+
 async function flushUpserts(force = false) {
   if (flushInFlight) return;
   flushInFlight = true;
@@ -149,58 +218,7 @@ async function flushUpserts(force = false) {
       break;
     }
 
-    try {
-      // Write directly to Supabase device_registry table
-      const { error } = await supabase
-        .from('device_registry')
-        .upsert({
-          user_id: item.record.userId,
-          device_id: item.record.deviceId,
-          device_fingerprint: JSON.stringify(item.record.deviceInfo),
-          status: item.record.status || 'suspect',
-          last_seen_at: item.record.lastSeen,
-        }, {
-          onConflict: 'user_id,device_id',
-        });
-
-      if (error) {
-        throw new Error(`Device upsert failed: ${error.message}`);
-      }
-
-      updated = updated.filter((u) => u.record.deviceId !== item.record.deviceId);
-      consecutiveFailures = 0;
-      await logAnalyticsEvent('device.upsert.success', { deviceId: item.record.deviceId });
-    } catch (error) {
-      const attempts = item.attempts + 1;
-      const isTerminal = attempts >= MAX_ATTEMPTS;
-      const delay = calculateBackoffDelay(attempts, {
-        baseMs: BASE_DELAY_MS,
-        maxMs: MAX_DELAY_MS,
-        jitterMs: JITTER_MS,
-      });
-
-      const found = updated.find((u) => u.record.deviceId === item.record.deviceId);
-      if (found) {
-        found.attempts = attempts;
-        found.nextAttemptAt = Date.now() + delay;
-        found.status = isTerminal ? 'failed' : 'pending';
-      }
-
-      consecutiveFailures += 1;
-
-      if (isTerminal) {
-        await logError(error as Error, {
-          action: 'device_upsert_failed_terminal',
-          metadata: { deviceId: item.record.deviceId, attempts },
-        });
-      } else {
-        await logAnalyticsEvent('device.upsert.retry', {
-          deviceId: item.record.deviceId,
-          attempts,
-          delay,
-        });
-      }
-    }
+    updated = await processUpsertItem(item, updated);
   }
 
   await saveUpsertQueue(updated);

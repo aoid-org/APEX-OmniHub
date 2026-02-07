@@ -394,7 +394,9 @@ export function generateIdempotencyKey(
   nonce: string = ''
 ): string {
   const ts = timestamp.getTime();
-  const nonceStr = nonce || Math.random().toString(36).substring(2, 10);
+  const bytes = new Uint8Array(5);
+  crypto.getRandomValues(bytes);
+  const nonceStr = nonce || Array.from(bytes, (b) => b.toString(36).padStart(2, '0')).join('').slice(0, 8);
   return `${tenantId}-${eventType}-${ts}-${nonceStr}`;
 }
 

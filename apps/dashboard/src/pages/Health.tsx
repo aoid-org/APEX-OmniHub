@@ -19,13 +19,28 @@ interface HealthStatus {
   timestamp: string;
 }
 
+function determineOverallStatus(checks: HealthStatus['checks']): HealthStatus['status'] {
+  const allCoreOk =
+    checks.supabase.status === 'ok'
+    && checks.database.status === 'ok'
+    && (checks.omnilink.status === 'ok' || checks.omnilink.status === 'disabled');
+  if (allCoreOk) return 'healthy';
+
+  const anyCoreOk =
+    checks.supabase.status === 'ok'
+    || checks.database.status === 'ok'
+    || checks.omnilink.status === 'ok';
+  if (anyCoreOk) return 'degraded';
+
+  return 'unhealthy';
+}
+
 export default function Health() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function checkHealth() {
-      void Date.now(); // startTime removed (unused)
       const checks: HealthStatus['checks'] = {
         supabase: { status: 'error', message: 'Not checked' },
         database: { status: 'error', message: 'Not checked' },
@@ -93,16 +108,7 @@ export default function Health() {
         };
       }
 
-      const overallStatus: HealthStatus['status'] = 
-        checks.supabase.status === 'ok'
-          && checks.database.status === 'ok'
-          && (checks.omnilink.status === 'ok' || checks.omnilink.status === 'disabled')
-          ? 'healthy'
-          : checks.supabase.status === 'ok'
-            || checks.database.status === 'ok'
-            || checks.omnilink.status === 'ok'
-          ? 'degraded'
-          : 'unhealthy';
+      const overallStatus = determineOverallStatus(checks);
 
       setHealth({
         status: overallStatus,

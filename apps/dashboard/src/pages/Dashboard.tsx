@@ -11,7 +11,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link2, FileText, Zap, Package, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { logError as _logError } from '@/lib/monitoring';
 
 const Dashboard = () => {
   const { user } = useAuth();

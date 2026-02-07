@@ -258,7 +258,7 @@ export class OmniConnect {
         // Find the most recent session
         const latestSession = sessions.reduce((latest, current) =>
           current.createdAt > latest.createdAt ? current : latest
-        );
+        , sessions[0]);
 
         status.push({
           provider,

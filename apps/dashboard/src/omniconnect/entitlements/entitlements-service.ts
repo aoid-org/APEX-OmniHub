@@ -17,7 +17,7 @@ export interface EntitlementCheck {
  * TODO: Integrate with actual billing/payment system
  */
 export class EntitlementsService {
-  private entitlements = new Map<string, boolean>();
+  private readonly entitlements = new Map<string, boolean>();
 
   async checkEntitlement(
     tenantId: string,

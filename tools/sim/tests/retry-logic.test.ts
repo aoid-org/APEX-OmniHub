@@ -141,7 +141,8 @@ describe('Retry Logic', () => {
       const _chaosDecision = engine.decide(event, 1);
 
       // Chaos should be applied (first attempt)
-      const shouldApplyChaos0 = 0 === 0;
+      const attempt = 0;
+      const shouldApplyChaos0 = attempt === 0;
       expect(shouldApplyChaos0).toBe(true);
 
       // Chaos should NOT be applied on retries

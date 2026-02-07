@@ -25,7 +25,7 @@ export interface AppFilterProfile {
  * TODO: Implement actual policy logic
  */
 export class PolicyEngine {
-  private profiles = new Map<string, AppFilterProfile>();
+  private readonly profiles = new Map<string, AppFilterProfile>();
 
   async filter(
     events: CanonicalEvent[],

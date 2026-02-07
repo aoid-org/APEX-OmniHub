@@ -16,13 +16,14 @@ echo ""
 safe_move() {
   local src="$1"
   local dest="$2"
-  if [ -e "$src" ] && [ ! -e "$dest" ]; then
+  if [[ -e "$src" ]] && [[ ! -e "$dest" ]]; then
     mkdir -p "$(dirname "$dest")"
     git mv "$src" "$dest" 2>/dev/null || mv "$src" "$dest"
     echo "  Moved: $src -> $dest"
   else
     echo "  Skip:  $src (already migrated or missing)"
   fi
+  return 0
 }
 
 echo "Step 1: Create directory structure"
@@ -64,7 +65,7 @@ safe_move "scripts" "tools/scripts"
 echo ""
 
 echo "Step 7: Copy shared UI components"
-if [ -d "apps/dashboard/src/components/ui" ]; then
+if [[ -d "apps/dashboard/src/components/ui" ]]; then
   cp -r apps/dashboard/src/components/ui/* packages/ui/src/components/ui/ 2>/dev/null || true
   cp apps/dashboard/src/lib/utils.ts packages/ui/src/lib/utils.ts 2>/dev/null || true
   echo "  Copied UI components to packages/ui"

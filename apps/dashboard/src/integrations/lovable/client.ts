@@ -40,6 +40,60 @@ function getConfig(): LovableClientConfig | null {
   return { baseUrl, apiKey, serviceRoleKey };
 }
 
+type AttemptConfig = {
+  baseUrl: string;
+  apiKey: string;
+  serviceRoleKey?: string;
+};
+
+type AttemptOptions = {
+  path: string;
+  body?: unknown;
+  method: string;
+  signal?: AbortSignal;
+  baseDelayMs: number;
+  maxDelayMs: number;
+};
+
+/**
+ * Execute a single request attempt. Returns the parsed response on success.
+ * Throws on non-retryable failure. Returns `{ retry: true, error }` for 5xx.
+ */
+async function attemptRequest<T>(
+  config: AttemptConfig,
+  options: AttemptOptions,
+): Promise<{ ok: true; value: T | undefined } | { ok: false; error: unknown; retryable: boolean }> {
+  const { baseUrl, apiKey, serviceRoleKey } = config;
+  const { path, body, method, signal } = options;
+
+  try {
+    const response = await fetch(`${baseUrl}${path}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        ...(serviceRoleKey ? { 'X-Service-Role': serviceRoleKey } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal,
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      const error = new Error(`Lovable request failed (${response.status}): ${text}`);
+      return { ok: false, error, retryable: response.status >= 500 };
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (contentType?.includes('application/json')) {
+      return { ok: true, value: (await response.json()) as T };
+    }
+    return { ok: true, value: undefined as T };
+  } catch (error) {
+    return { ok: false, error, retryable: true };
+  }
+}
+
 async function requestLovable<T>(options: LovableRequestOptions): Promise<T | undefined> {
   const config = getConfig();
   if (!config) {
@@ -49,7 +103,6 @@ async function requestLovable<T>(options: LovableRequestOptions): Promise<T | un
     }
     return undefined;
   }
-  const { baseUrl, apiKey, serviceRoleKey } = config;
   const {
     path,
     body,
@@ -65,46 +118,21 @@ async function requestLovable<T>(options: LovableRequestOptions): Promise<T | un
 
   while (attempt < maxAttempts) {
     attempt += 1;
-    try {
-      const response = await fetch(`${baseUrl}${path}`, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-          ...(serviceRoleKey ? { 'X-Service-Role': serviceRoleKey } : {}),
-        },
-        body: body ? JSON.stringify(body) : undefined,
-        signal,
-      });
+    const result = await attemptRequest<T>(config, {
+      path, body, method, signal, baseDelayMs, maxDelayMs,
+    });
 
-      if (!response.ok) {
-        const text = await response.text().catch(() => '');
-        lastError = new Error(`Lovable request failed (${response.status}): ${text}`);
-        if (response.status >= 500 && attempt < maxAttempts) {
-          const delay = calculateBackoffDelay(attempt, {
-            baseMs: baseDelayMs,
-            maxMs: maxDelayMs,
-          });
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
-        }
-        throw lastError;
-      }
-
-      const contentType = response.headers.get('content-type');
-      if (contentType?.includes('application/json')) {
-        return (await response.json()) as T;
-      }
-      return undefined as T;
-    } catch (error) {
-      lastError = error;
-      if (attempt >= maxAttempts) break;
-      const delay = calculateBackoffDelay(attempt, {
-        baseMs: baseDelayMs,
-        maxMs: maxDelayMs,
-      });
-      await new Promise((resolve) => setTimeout(resolve, delay));
+    if (result.ok) {
+      return result.value;
     }
+
+    lastError = result.error;
+    if (!result.retryable || attempt >= maxAttempts) break;
+    const delay = calculateBackoffDelay(attempt, {
+      baseMs: baseDelayMs,
+      maxMs: maxDelayMs,
+    });
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
 
   throw lastError instanceof Error ? lastError : new Error('Unknown Lovable client error');

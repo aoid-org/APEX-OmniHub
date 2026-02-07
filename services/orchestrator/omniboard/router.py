@@ -21,7 +21,7 @@ async def start_session(tenant_id: str, trace_id: str):
     return context
 
 
-@router.post("/{session_id}/next", response_model=dict[str, Any])
+@router.post("/{session_id}/next", response_model=dict[str, Any], responses={404: {"description": "Not Found"}})
 async def next_turn(session_id: str, event: FSMEvent):
     """
     Process a user turn and advance the FSM.
@@ -37,7 +37,7 @@ async def next_turn(session_id: str, event: FSMEvent):
     return {"context": next_context.model_dump(), "message": message}
 
 
-@router.get("/{session_id}", response_model=FSMContext)
+@router.get("/{session_id}", response_model=FSMContext, responses={404: {"description": "Not Found"}})
 async def get_status(session_id: str):
     """Get current session status."""
     context = session_store.get(session_id)

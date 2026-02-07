@@ -129,8 +129,9 @@ globalThis.addEventListener('fetch', (event) => {
   );
 });
 
-// Message event - handle client messages
+// Message event - handle client messages (S2819: verify message source)
 globalThis.addEventListener('message', (event) => {
+  if (!event.source) return; // Reject messages without a verified client source
   if (event.data && event.data.type === 'SKIP_WAITING') {
     console.log('[SW] Received SKIP_WAITING message');
     globalThis.skipWaiting();

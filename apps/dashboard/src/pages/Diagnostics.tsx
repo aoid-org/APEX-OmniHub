@@ -182,13 +182,13 @@ export default function Diagnostics() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {status.lovableConfigured && status.lovableReachable ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-              ) : status.lovableConfigured ? (
-                <AlertCircle className="h-5 w-5 text-yellow-500" />
-              ) : (
-                <XCircle className="h-5 w-5 text-red-500" />
-              )}
+              {(() => {
+                if (status.lovableConfigured && status.lovableReachable)
+                  return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+                if (status.lovableConfigured)
+                  return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+                return <XCircle className="h-5 w-5 text-red-500" />;
+              })()}
               Lovable Configuration
             </CardTitle>
             <CardDescription>API credentials and connectivity status</CardDescription>
