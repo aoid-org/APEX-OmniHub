@@ -62,21 +62,21 @@ function HighlightsSection() {
       description:
         'Imagine a platform that anticipates your needs and streamlines your operations effortlessly.',
       icon: <IconAutomation size={22} />,
-      href: '/ai-automation.html',
+      href: '/tech-specs#modular-adapters',
     },
     {
       title: 'Smart Integrations',
       description:
         'Unify your tools and data into one intelligent system. Say goodbye to silos and productivity bottlenecks.',
       icon: <IconIntegrations size={22} />,
-      href: '/smart-integrations.html',
+      href: '/tech-specs#single-port',
     },
     {
       title: 'Advanced Analytics',
       description:
         'Gain a 360° view of your organization. Make data-driven decisions with cutting-edge insights.',
       icon: <IconAnalytics size={22} />,
-      href: '/advanced-analytics.html',
+      href: '/tech-specs#receipts-idempotency',
     },
   ];
 
@@ -125,7 +125,7 @@ function TriForceSection() {
           {triForceCards.map((card) => (
             <a
               key={card.id}
-              href={`/tech-specs.html#${card.id}`}
+              href={`/tech-specs#${card.id}`}
               className="triforce__card"
             >
               <div className="triforce__icon">{card.icon}</div>
@@ -225,7 +225,7 @@ function ManModeSection() {
             <li>User notified for manual review</li>
             <li>Full audit trail maintained</li>
           </ul>
-          <a href="/man-mode.html" className="btn btn--secondary mt-8">
+          <a href="/tech-specs#man-mode" className="btn btn--secondary mt-8">
             Learn More
           </a>
         </div>
@@ -241,28 +241,28 @@ function CapabilityShowcase() {
       title: 'Tri-Force Protocol',
       description: 'Connect, Translate, Execute',
       icon: <IconTriForceProtocol size={28} />,
-      href: '/tri-force.html',
+      href: '/tech-specs.html#tri-force',
     },
     {
       id: 'orchestrator',
       title: 'Orchestrator',
       description: 'Central command for all workflows',
       icon: <IconOrchestrator size={28} />,
-      href: '/orchestrator.html',
+      href: '/tech-specs.html#orchestrator',
     },
     {
       id: 'fortress',
       title: 'Fortress Protocol',
       description: 'Zero-trust security by default',
       icon: <IconFortressProtocol size={28} />,
-      href: '/fortress.html',
+      href: '/tech-specs.html#fortress',
     },
     {
       id: 'man-mode',
       title: 'MAN Mode',
       description: 'Manual Authorization Needed',
       icon: <IconManMode size={28} />,
-      href: '/man-mode.html',
+      href: '/tech-specs.html#man-mode',
     },
 
     {
@@ -270,14 +270,14 @@ function CapabilityShowcase() {
       title: 'OmniPort',
       description: 'Single ingress/egress gateway for simplified security and total observability.',
       icon: <IconIntegrations size={28} />,
-      href: '/omniport.html',
+      href: '/tech-specs.html#single-port',
     },
     {
       id: 'maestro',
       title: 'Maestro',
       description: 'Turns intent into monitored, reversible workflows.',
       icon: <IconAutomation size={28} />,
-      href: '/maestro.html',
+      href: '/tech-specs.html#maestro',
     },
   ];
 

@@ -74,8 +74,9 @@
 .heading-hero {
   font-size: clamp(3rem, 5vw, 4.5rem);
   font-weight: var(--font-weight-bold);
-  line-height: 0.95;
+  line-height: 1.1;
   letter-spacing: var(--letter-spacing-tight);
+  padding-bottom: 0.05em;
 }
 
 .heading-1 {

@@ -1,12 +1,21 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Section } from '@/components/Section';
+import { supabase } from '@/lib/supabase';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        globalThis.window.location.href = '/';
+      }
+    });
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -21,7 +30,6 @@ export function LoginPage() {
     }
 
     // Validate email format using simple checks (avoids regex DoS vulnerabilities)
-    // Max email length per RFC 5321 is 254 characters
     const MAX_EMAIL_LENGTH = 254;
     if (email.length > MAX_EMAIL_LENGTH) {
       setError('Email address is too long');
@@ -29,7 +37,6 @@ export function LoginPage() {
       return;
     }
 
-    // Simple email validation: must have exactly one @, something before and after
     const atIndex = email.indexOf('@');
     const lastAtIndex = email.lastIndexOf('@');
     const dotAfterAt = email.lastIndexOf('.');
@@ -52,18 +59,34 @@ export function LoginPage() {
       return;
     }
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    // Store session and redirect
-    globalThis.localStorage.setItem('omnihub_session', JSON.stringify({
-      email,
-      authenticated: true,
-      timestamp: Date.now(),
-    }));
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
 
-    globalThis.window.location.href = '/';
+      globalThis.window.location.href = '/';
+    } catch {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    globalThis.window.location.reload();
+  };
+
+  // Expose signOut for external use
+  if (typeof globalThis !== 'undefined') {
+    (globalThis as Record<string, unknown>).__omnihubSignOut = handleSignOut;
+  }
 
   return (
     <Layout title="Log In">

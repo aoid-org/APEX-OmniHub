@@ -665,7 +665,7 @@ export async function runChaoticClientSimulation() {
 // If running directly
 if (import.meta.main) {
   runChaoticClientSimulation()
-    .then(_report => {
+    .then(() => {
       console.log('\n📄 Detailed report saved to: simulation-results.json');
       // In real scenario, would save to file
     })

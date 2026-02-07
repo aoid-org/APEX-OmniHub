@@ -21,6 +21,12 @@ export const Header = () => {
         >
           Tech Specs
         </Link>
+        <Link
+          to="/auth"
+          className="text-sm font-medium bg-[hsl(var(--navy))] hover:bg-[hsl(var(--navy-600))] text-white px-4 py-2 rounded-md transition-colors"
+        >
+          Sign In
+        </Link>
       </div>
     </div>
   </header>;

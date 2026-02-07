@@ -208,7 +208,7 @@ const App = () => (
                 <Route path="/omnitrace" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><OmniDashRuns /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
 
                 {/* Legacy routes (with mobile gate) */}
-                <Route path="/dashboard" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Dashboard /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
+                <Route path="/dashboard" element={<PaidAccessRoute><DashboardLayout><Dashboard /></DashboardLayout></PaidAccessRoute>} />
                 <Route path="/links" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Links /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/files" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Files /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/automations" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Automations /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
@@ -230,7 +230,7 @@ const App = () => (
 
                 {/* OmniDash (with mobile gate if enabled) */}
               {OMNIDASH_FLAG && (
-                <Route path="/omnidash" element={<MobileOnlyGate><DashboardLayout><OmniDashLayout /></DashboardLayout></MobileOnlyGate>}>
+                <Route path="/omnidash" element={<DashboardLayout><OmniDashLayout /></DashboardLayout>}>
                   <Route index element={<OmniDashToday />} />
                   <Route path="pipeline" element={<OmniDashPipeline />} />
                   <Route path="kpis" element={<OmniDashKpis />} />
