@@ -39,7 +39,7 @@ vi.mock('@/libs/persistence', () => ({
   persistentSet: vi.fn().mockResolvedValue(undefined),
 }));
 
-const importRegistry = async () => await import('../../src/zero-trust/deviceRegistry');
+const importRegistry = async () => await import('@/zero-trust/deviceRegistry');
 
 describe('device registry with Supabase backend', () => {
   beforeEach(() => {

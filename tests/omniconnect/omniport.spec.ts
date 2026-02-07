@@ -65,7 +65,7 @@ vi.mock('@/zero-trust/deviceRegistry', () => ({
 // Mock OmniLink delivery - use hoisted mock function
 const mockDeliverBatch = vi.hoisted(() => vi.fn().mockResolvedValue(1));
 
-vi.mock('../../src/omniconnect/delivery/omnilink-delivery', () => {
+vi.mock('@/omniconnect/delivery/omnilink-delivery', () => {
   return {
     OmniLinkDelivery: class MockOmniLinkDelivery {
       deliverBatch = mockDeliverBatch;
@@ -74,7 +74,7 @@ vi.mock('../../src/omniconnect/delivery/omnilink-delivery', () => {
 });
 
 // Mock idempotency
-vi.mock('../../sim/idempotency', () => ({
+vi.mock('../../tools/sim/idempotency', () => ({
   withIdempotency: vi.fn(async (
     _key: string,
     _correlationId: string,
@@ -102,13 +102,13 @@ vi.mock('@/libs/persistence', () => ({
 // IMPORTS (after mocks)
 // =============================================================================
 
-import { OmniPortEngine } from '../../src/omniconnect/ingress/OmniPort';
+import { OmniPortEngine } from '@/omniconnect/ingress/OmniPort';
 import {
   TextSource,
   VoiceSource,
   WebhookSource,
   SecurityError,
-} from '../../src/omniconnect/types/ingress';
+} from '@/omniconnect/types/ingress';
 
 // =============================================================================
 // TEST FIXTURES
