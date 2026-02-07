@@ -75,7 +75,7 @@ globalThis.addEventListener('fetch', (event) => {
     fetch(request)
       .then((response) => {
         // Cache successful responses
-        if (response && response.status === 200 && response.type !== 'error') {
+        if (response?.status === 200 && response.type !== 'error') {
           // Clone response before caching
           const responseToCache = response.clone();
 
@@ -135,7 +135,7 @@ globalThis.addEventListener('message', (event) => {
   if (event.origin && event.origin !== globalThis.location.origin) {
     return;
   }
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  if (event.data?.type === 'SKIP_WAITING') {
     console.log('[SW] Received SKIP_WAITING message');
     globalThis.skipWaiting();
   }
@@ -191,7 +191,7 @@ globalThis.addEventListener('notificationclick', (event) => {
     url = '/omnitrace';
   } else if (event.action === 'open-integrations') {
     url = '/integrations';
-  } else if (event.notification.data && event.notification.data.url) {
+  } else if (event.notification.data?.url) {
     url = event.notification.data.url;
   }
 

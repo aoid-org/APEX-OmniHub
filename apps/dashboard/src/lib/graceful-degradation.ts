@@ -12,23 +12,23 @@ export async function retryWithBackoff<T>(
   maxRetries: number = 3,
   baseDelay: number = 1000
 ): Promise<T> {
-  let lastError: Error;
-  
+  let lastError: Error = new Error('All retries failed');
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await fn();
     } catch (error) {
-      lastError = error as Error;
-      
+      lastError = error instanceof Error ? error : new Error(String(error));
+
       if (attempt < maxRetries - 1) {
         const delay = baseDelay * Math.pow(2, attempt);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
   }
-  
-  logError(lastError!, { action: 'retry_exhausted', metadata: { maxRetries } });
-  throw lastError!;
+
+  logError(lastError, { action: 'retry_exhausted', metadata: { maxRetries } });
+  throw lastError;
 }
 
 /**

@@ -27,11 +27,11 @@ function getConfig(): LovableClientConfig | null {
   if (!baseUrl || !apiKey) {
     // Graceful degradation: return null if not configured (enterprise-ready resilience)
     // Log warning in development to help with debugging
-    if (typeof window !== 'undefined' && import.meta.env.DEV) {
+    if (typeof globalThis.window !== 'undefined' && import.meta.env.DEV) {
       console.warn(
         '⚠️ Lovable API not configured. Missing:',
-        !baseUrl ? 'LOVABLE_API_BASE' : '',
-        !apiKey ? 'LOVABLE_API_KEY' : ''
+        baseUrl ? '' : 'LOVABLE_API_BASE',
+        apiKey ? '' : 'LOVABLE_API_KEY'
       );
     }
     return null;
@@ -64,15 +64,48 @@ async function handleErrorResponse(response: Response): Promise<Error> {
   return new Error(`Lovable request failed (${response.status}): ${text}`);
 }
 
+function isConfigMissing(): boolean {
+  return !getConfig();
+}
+
+function waitForBackoff(attempt: number, baseDelayMs: number, maxDelayMs: number): Promise<void> {
+  const delay = calculateBackoffDelay(attempt, { baseMs: baseDelayMs, maxMs: maxDelayMs });
+  return new Promise((resolve) => setTimeout(resolve, delay));
+}
+
+async function attemptFetch(
+  url: string,
+  apiKey: string,
+  serviceRoleKey: string | undefined,
+  body: unknown,
+  method: string,
+  signal?: AbortSignal
+): Promise<{ response?: Response; error?: unknown }> {
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: buildHeaders(apiKey, serviceRoleKey),
+      body: body ? JSON.stringify(body) : undefined,
+      signal,
+    });
+    return { response };
+  } catch (error) {
+    return { error };
+  }
+}
+
+function shouldRetryError(status: number, attempt: number, maxAttempts: number): boolean {
+  return status >= 500 && attempt < maxAttempts;
+}
+
 async function requestLovable<T>(options: LovableRequestOptions): Promise<T | undefined> {
-  const config = getConfig();
-  if (!config) {
-    if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  if (isConfigMissing()) {
+    if (typeof globalThis.window !== 'undefined' && import.meta.env.DEV) {
       console.warn('⚠️ Lovable request skipped: API not configured');
     }
     return undefined;
   }
-  const { baseUrl, apiKey, serviceRoleKey } = config;
+  const { baseUrl, apiKey, serviceRoleKey } = getConfig()!;
   const {
     path,
     body,
@@ -83,36 +116,27 @@ async function requestLovable<T>(options: LovableRequestOptions): Promise<T | un
     maxDelayMs = 10_000,
   } = options;
 
-  let attempt = 0;
   let lastError: unknown;
 
-  while (attempt < maxAttempts) {
-    attempt += 1;
-    try {
-      const response = await fetch(`${baseUrl}${path}`, {
-        method,
-        headers: buildHeaders(apiKey, serviceRoleKey),
-        body: body ? JSON.stringify(body) : undefined,
-        signal,
-      });
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const { response, error } = await attemptFetch(`${baseUrl}${path}`, apiKey, serviceRoleKey, body, method, signal);
 
-      if (!response.ok) {
-        lastError = await handleErrorResponse(response);
-        if (response.status >= 500 && attempt < maxAttempts) {
-          const delay = calculateBackoffDelay(attempt, { baseMs: baseDelayMs, maxMs: maxDelayMs });
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
-        }
-        throw lastError;
-      }
-
-      return await parseResponseBody<T>(response);
-    } catch (error) {
+    if (error) {
       lastError = error;
-      if (attempt >= maxAttempts) break;
-      const delay = calculateBackoffDelay(attempt, { baseMs: baseDelayMs, maxMs: maxDelayMs });
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      if (attempt < maxAttempts) await waitForBackoff(attempt, baseDelayMs, maxDelayMs);
+      continue;
     }
+
+    if (!response!.ok) {
+      lastError = await handleErrorResponse(response!);
+      if (shouldRetryError(response!.status, attempt, maxAttempts)) {
+        await waitForBackoff(attempt, baseDelayMs, maxDelayMs);
+        continue;
+      }
+      throw lastError;
+    }
+
+    return await parseResponseBody<T>(response!);
   }
 
   throw lastError instanceof Error ? lastError : new Error('Unknown Lovable client error');

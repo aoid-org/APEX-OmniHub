@@ -3,24 +3,25 @@ import { SkillDefinition, SkillMatch } from './types.ts';
 
 export class SkillRegistry {
   private readonly supabase: SupabaseClient;
-  private aiSession: unknown;
-  private aiSessionReady: Promise<void>;
+  private readonly aiSession: unknown;
 
-  constructor(supabase: SupabaseClient) {
+  private constructor(supabase: SupabaseClient, aiSession: unknown) {
     this.supabase = supabase;
-    this.aiSessionReady = this.initializeAISession();
+    this.aiSession = aiSession;
   }
 
-  private async initializeAISession(): Promise<void> {
+  static async create(supabase: SupabaseClient): Promise<SkillRegistry> {
+    let aiSession: unknown;
     try {
       // Initialize Supabase AI session for gte-small embeddings
-      this.aiSession = await this.supabase.ai.createSession({
+      aiSession = await supabase.ai.createSession({
         model: 'gte-small'
       });
     } catch (error) {
       console.error('Failed to initialize AI session:', error);
       throw new Error('Supabase AI session unavailable. Ensure AI add-on is enabled and compute credits are available.');
     }
+    return new SkillRegistry(supabase, aiSession);
   }
 
   /**

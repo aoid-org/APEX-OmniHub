@@ -163,7 +163,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
             const binaryString = atob(data.delta);
             const bytes = new Uint8Array(binaryString.length);
             for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
+              bytes[i] = binaryString.codePointAt(i)!
             }
             await playAudioData(audioContextRef.current, bytes);
           } else if (data.type === 'response.audio_transcript.delta') {
@@ -279,8 +279,18 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
         </div>
       )}
       <div className="flex items-center gap-2">
-        {!isConnected ? (
-          <Button 
+        {isConnected ? (
+          <Button
+            onClick={endConversation}
+            variant="destructive"
+            size="lg"
+            className="gap-2"
+          >
+            <MicOff className="h-5 w-5" />
+            End Voice Chat
+          </Button>
+        ) : (
+          <Button
             onClick={startConversation}
             disabled={isConnecting}
             variant="default"
@@ -298,16 +308,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
                 {degradedMode ? 'Retry Voice' : 'Start Voice Chat'}
               </>
             )}
-          </Button>
-        ) : (
-          <Button 
-            onClick={endConversation}
-            variant="destructive"
-            size="lg"
-            className="gap-2"
-          >
-            <MicOff className="h-5 w-5" />
-            End Voice Chat
           </Button>
         )}
       </div>

@@ -23,12 +23,14 @@ import type { EventEnvelope } from './contracts';
 // TYPES
 // ============================================================================
 
+type SpanAttributeValue = string | number | boolean;
+
 export interface Span {
   id: string;
   name: string;
   startTime: number;
   endTime?: number;
-  attributes: Record<string, string | number | boolean>;
+  attributes: Record<string, SpanAttributeValue>;
   events: SpanEvent[];
   status?: 'ok' | 'error';
 }
@@ -36,7 +38,7 @@ export interface Span {
 export interface SpanEvent {
   timestamp: number;
   name: string;
-  attributes?: Record<string, string | number | boolean>;
+  attributes?: Record<string, SpanAttributeValue>;
 }
 
 export interface TraceContext {
@@ -70,7 +72,7 @@ function generateSpanId(): string {
  */
 export function startSpan(
   name: string,
-  attributes: Record<string, string | number | boolean> = {},
+  attributes: Record<string, SpanAttributeValue> = {},
   parentSpanId?: string
 ): Span {
   const span: Span = {
@@ -94,7 +96,7 @@ export function startSpan(
  */
 export function endSpan(
   span: Span,
-  options?: { status?: 'ok' | 'error'; attributes?: Record<string, string | number | boolean> }
+  options?: { status?: 'ok' | 'error'; attributes?: Record<string, SpanAttributeValue> }
 ): void {
   span.endTime = Date.now();
   span.status = options?.status || 'ok';
@@ -124,7 +126,7 @@ export function endSpan(
 export function addSpanEvent(
   span: Span,
   name: string,
-  attributes?: Record<string, string | number | boolean>
+  attributes?: Record<string, SpanAttributeValue>
 ): void {
   span.events.push({
     timestamp: Date.now(),
@@ -154,7 +156,7 @@ export function recordException(span: Span, error: Error | unknown): void {
  */
 export function setSpanAttributes(
   span: Span,
-  attributes: Record<string, string | number | boolean>
+  attributes: Record<string, SpanAttributeValue>
 ): void {
   Object.assign(span.attributes, attributes);
 }

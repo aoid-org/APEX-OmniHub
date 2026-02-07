@@ -66,7 +66,7 @@ export const encodeAudioForAPI = (float32Array: Float32Array): string => {
   
   for (let i = 0; i < uint8Array.length; i += chunkSize) {
     const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
-    binary += String.fromCharCode.apply(null, Array.from(chunk));
+    binary += String.fromCodePoint.apply(null, Array.from(chunk));
   }
   
   return btoa(binary);
@@ -83,7 +83,7 @@ const createWavFromPCM = (pcmData: Uint8Array) => {
   
   const writeString = (view: DataView, offset: number, string: string) => {
     for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
+      view.setUint8(offset + i, string.codePointAt(i)!);
     }
   };
 
@@ -164,9 +164,7 @@ class AudioQueue {
 let audioQueueInstance: AudioQueue | null = null;
 
 export const playAudioData = async (audioContext: AudioContext, audioData: Uint8Array) => {
-  if (!audioQueueInstance) {
-    audioQueueInstance = new AudioQueue(audioContext);
-  }
+  audioQueueInstance ??= new AudioQueue(audioContext);
   await audioQueueInstance.addToQueue(audioData);
 };
 

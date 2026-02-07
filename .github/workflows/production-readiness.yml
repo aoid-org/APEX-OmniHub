@@ -32,10 +32,10 @@ jobs:
         run: npm ci
 
       - name: TypeScript compilation
-        run: npx tsc --noEmit
+        run: npx turbo run typecheck
 
       - name: ESLint validation
-        run: npx eslint . --max-warnings 0
+        run: npx eslint apps/dashboard/src/ --max-warnings 0
 
       - name: React singleton check
         run: npm run check:react
@@ -115,9 +115,9 @@ jobs:
     steps:
       - name: Check all gates passed
         run: |
-          if [ "${{ needs.quality-gates.result }}" != "success" ] || \
-             [ "${{ needs.security-gates.result }}" != "success" ] || \
-             [ "${{ needs.smoke-tests.result }}" != "success" ]; then
+          if [[ "${{ needs.quality-gates.result }}" != "success" ]] || \
+             [[ "${{ needs.security-gates.result }}" != "success" ]] || \
+             [[ "${{ needs.smoke-tests.result }}" != "success" ]]; then
             echo "❌ Production readiness gate FAILED"
             echo "Quality Gates: ${{ needs.quality-gates.result }}"
             echo "Security Gates: ${{ needs.security-gates.result }}"

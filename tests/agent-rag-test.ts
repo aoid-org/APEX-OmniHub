@@ -30,10 +30,10 @@ describe('OmniLink Agentic RAG', () => {
   let mockSupabase: SupabaseClient;
   let skillRegistry: SkillRegistry;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     mockSupabase = createClient('mock-url', 'mock-key');
-    skillRegistry = new SkillRegistry(mockSupabase);
+    skillRegistry = await SkillRegistry.create(mockSupabase);
   });
 
   describe('SkillRegistry', () => {
@@ -221,13 +221,8 @@ describe('OmniLink Agentic RAG', () => {
         new Error('AI session unavailable')
       );
 
-      const newRegistry = new SkillRegistry(mockSupabase);
-
-      await expect(newRegistry.registerSkill({
-        name: 'TestSkill',
-        description: 'Test description',
-        parameters: { type: 'object', properties: {} }
-      })).rejects.toThrow('Supabase AI session unavailable');
+      await expect(SkillRegistry.create(mockSupabase))
+        .rejects.toThrow('Supabase AI session unavailable');
     });
 
     it('should handle embedding generation failure', async () => {
@@ -236,7 +231,7 @@ describe('OmniLink Agentic RAG', () => {
         run: vi.fn(() => Promise.reject(new Error('Embedding failed')))
       });
 
-      const newRegistry = new SkillRegistry(mockSupabase);
+      const newRegistry = await SkillRegistry.create(mockSupabase);
 
       await expect(newRegistry.registerSkill({
         name: 'TestSkill',

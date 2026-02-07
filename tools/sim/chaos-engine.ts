@@ -122,7 +122,7 @@ class SeededRandom {
    * Generate next random number [0, 1)
    */
   next(): number {
-    this.state = (this.state + 0x6d2b79f5) | 0;
+    this.state = Math.trunc(this.state + 0x6d2b79f5);
     let t = Math.imul(this.state ^ (this.state >>> 15), 1 | this.state);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
@@ -155,8 +155,8 @@ class SeededRandom {
 // ============================================================================
 
 export class ChaosEngine {
-  private config: ChaosConfig;
-  private rng: SeededRandom;
+  private readonly config: ChaosConfig;
+  private readonly rng: SeededRandom;
   private stats: ChaosStats;
   private eventSequence: number = 0;
 
@@ -347,7 +347,7 @@ export class ChaosEngine {
 export const DEFAULT_CHAOS_CONFIG: ChaosConfig = {
   seed: 42,
   duplicateRate: 0.15, // 15% duplicate rate
-  outOfOrderRate: 0.10, // 10% out of order
+  outOfOrderRate: 0.1, // 10% out of order
   timeoutRate: 0.05, // 5% timeout rate
   networkFailureRate: 0.03, // 3% network failures
   serverErrorRate: 0.02, // 2% server errors
@@ -372,10 +372,10 @@ export const LIGHT_CHAOS_CONFIG: ChaosConfig = {
 
 export const HEAVY_CHAOS_CONFIG: ChaosConfig = {
   seed: 42,
-  duplicateRate: 0.30, // 30% duplicates
+  duplicateRate: 0.3, // 30% duplicates
   outOfOrderRate: 0.25, // 25% out of order
   timeoutRate: 0.15, // 15% timeouts
-  networkFailureRate: 0.10, // 10% network failures
+  networkFailureRate: 0.1, // 10% network failures
   serverErrorRate: 0.05, // 5% server errors
   maxDelayMs: 10000, // Max 10 second delay
   timeoutMs: 15000, // 15 second timeout

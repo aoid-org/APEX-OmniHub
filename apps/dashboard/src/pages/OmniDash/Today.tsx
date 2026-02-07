@@ -15,6 +15,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { useExecute } from '@/hooks/useExecute';
 import { useDemoStore } from '@/stores/demoStore';
 
+type TodayCategory = 'outcome' | 'outreach' | 'metric';
+
 export const Today = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -23,7 +25,7 @@ export const Today = () => {
   const { isDemo, execute } = useExecute();
   const demoStore = useDemoStore();
   const [newTitle, setNewTitle] = useState('');
-  const [category, setCategory] = useState<'outcome' | 'outreach' | 'metric'>('outcome');
+  const [category, setCategory] = useState<TodayCategory>('outcome');
 
   const itemsQuery = useQuery({
     queryKey: ['omnidash-today', user?.id],
@@ -35,7 +37,7 @@ export const Today = () => {
           id: t.id,
           user_id: 'demo',
           title: t.title,
-          category: ['outcome', 'outreach', 'metric'][i % 3] as 'outcome' | 'outreach' | 'metric',
+          category: ['outcome', 'outreach', 'metric'][i % 3] as TodayCategory,
           order_index: i,
           status: t.status === 'completed' ? 'completed' : 'pending',
           next_action: null,
@@ -171,7 +173,7 @@ export const Today = () => {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
             />
-            <Select value={category} onValueChange={(v) => setCategory(v as 'outcome' | 'outreach' | 'metric')}>
+            <Select value={category} onValueChange={(v) => setCategory(v as TodayCategory)}>
               <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>

@@ -413,7 +413,7 @@ class Simulator {
     console.log('═'.repeat(80));
 
     console.log('\n📝 CLIENT MESSAGE:');
-    console.log('   ' + scenario.message.substring(0, 200).replace(/\n/g, '\n   ') + '...');
+    console.log('   ' + scenario.message.substring(0, 200).replaceAll('\n', '\n   ') + '...');
 
     const startTime = Date.now();
 
@@ -444,7 +444,7 @@ class Simulator {
 
     // Display results
     console.log('\n🤖 AGENT RESPONSE:');
-    console.log('   ' + agentResponse.response.replace(/\n/g, '\n   '));
+    console.log('   ' + agentResponse.response.replaceAll('\n', '\n   '));
 
     console.log('\n📊 ANALYSIS:');
     console.log(`   ⏱️  Response Time: ${responseTime}ms`);

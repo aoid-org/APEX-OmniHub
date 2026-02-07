@@ -32,8 +32,15 @@ export function isValidSignature(signature: string): boolean {
  * @returns true if valid, false otherwise
  */
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  return emailRegex.test(email);
+  // ReDoS-safe: avoids regex backtracking by using indexOf-based validation
+  if (email.length > 320 || /\s/.test(email)) return false;
+  const atIdx = email.indexOf('@');
+  if (atIdx < 1 || atIdx > 64) return false;
+  const domain = email.slice(atIdx + 1);
+  if (domain.length < 4 || domain.length > 253) return false;
+  const dotIdx = domain.lastIndexOf('.');
+  if (dotIdx < 1 || dotIdx >= domain.length - 2) return false;
+  return true;
 }
 
 /**

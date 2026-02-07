@@ -11,53 +11,59 @@ const DOCS_DIR = path.join(ROOT_DIR, 'docs');
 let hasErrors = false;
 
 
-function checkLinksInFile(filePath) {
-  const content = fs.readFileSync(filePath, 'utf-8');
-  // Manual parsing to avoid ReDoS (S5852)
+function hasNewline(str) {
+  return str.includes('\n') || str.includes('\r');
+}
+
+function isExternalLink(url) {
+  return url.startsWith('http') || url.startsWith('#') || url.startsWith('mailto:');
+}
+
+/**
+ * Extract all markdown links from content using manual parsing (avoids ReDoS S5852).
+ * Returns an array of { url, pos } objects for local links only.
+ */
+function extractLocalLinks(content) {
+  const links = [];
   let pos = 0;
   while (pos < content.length) {
     const startBracket = content.indexOf('[', pos);
     if (startBracket === -1) break;
 
     const endBracket = content.indexOf(']', startBracket);
-    if (endBracket === -1) break; // No more closing brackets
+    if (endBracket === -1) break;
 
-    // Ensure no newlines in text part
     const linkText = content.slice(startBracket + 1, endBracket);
-    if (linkText.includes('\n') || linkText.includes('\r')) {
-      pos = startBracket + 1; 
-      continue;
-    }
-
-    // Must be followed immediately by '('
-    if (content[endBracket + 1] !== '(') {
+    if (hasNewline(linkText) || content[endBracket + 1] !== '(') {
       pos = startBracket + 1;
       continue;
     }
 
     const startParen = endBracket + 1;
     const endParen = content.indexOf(')', startParen);
-    if (endParen === -1) break; // Open paren but no close
+    if (endParen === -1) break;
 
-    // Ensure no newlines in url part
     const linkUrl = content.slice(startParen + 1, endParen);
-    if (linkUrl.includes('\n') || linkUrl.includes('\r')) {
+    if (hasNewline(linkUrl)) {
       pos = startParen + 1;
       continue;
     }
-    
-    // Advance position
+
     pos = endParen + 1;
 
-    // Ignore external links, anchors, and mailto
-    if (linkUrl.startsWith('http') || linkUrl.startsWith('#') || linkUrl.startsWith('mailto:')) {
-      continue;
+    if (!isExternalLink(linkUrl)) {
+      links.push(linkUrl);
     }
+  }
+  return links;
+}
 
-    // Resolve path
+function checkLinksInFile(filePath) {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const localLinks = extractLocalLinks(content);
+
+  for (const linkUrl of localLinks) {
     const targetPath = path.resolve(path.dirname(filePath), linkUrl);
-    
-    // Check if it exists
     if (!fs.existsSync(targetPath)) {
       console.error(`❌ Broken link in ${path.relative(ROOT_DIR, filePath)}:`);
       console.error(`   Link: ${linkUrl}`);

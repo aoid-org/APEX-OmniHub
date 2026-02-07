@@ -104,6 +104,37 @@ interface AlchemyWebhookPayload {
   };
 }
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
+/**
+ * Update NFT access for all wallets matching the given address
+ */
+async function updateNFTAccessForWallets(
+  supabase: unknown,
+  walletAddress: string,
+  hasPremiumNft: boolean,
+  direction: string
+): Promise<void> {
+  const { data: wallets } = await supabase
+    .from('wallet_identities')
+    .select('user_id')
+    .eq('wallet_address', walletAddress);
+
+  if (!wallets || wallets.length === 0) return;
+
+  for (const wallet of wallets) {
+    await supabase
+      .from('profiles')
+      .update({
+        has_premium_nft: hasPremiumNft,
+        nft_verified_at: new Date().toISOString(),
+      })
+      .eq('id', wallet.user_id);
+
+    console.log(`${direction} NFT access for user ${wallet.user_id}`);
+  }
+}
+
 /**
  * Process a single NFT transfer event
  */
@@ -114,15 +145,12 @@ async function processNFTTransfer(
 ): Promise<{ success: boolean; reason?: string }> {
   const { fromAddress, toAddress, contractAddress, tokenId, log } = activity;
 
-  // Validate this is for our membership NFT contract
   if (contractAddress.toLowerCase() !== membershipNFTAddress.toLowerCase()) {
     return { success: false, reason: 'contract_mismatch' };
   }
 
-  // Create idempotency key (txHash + logIndex)
   const eventId = `${log.transactionHash}-${log.logIndex}`;
 
-  // Check if event already processed
   const { data: existingEvent } = await supabase
     .from('chain_tx_log')
     .select('id, status')
@@ -133,7 +161,6 @@ async function processNFTTransfer(
     return { success: true, reason: 'already_processed' };
   }
 
-  // Record event as pending
   await supabase
     .from('chain_tx_log')
     .upsert({
@@ -151,70 +178,26 @@ async function processNFTTransfer(
     });
 
   try {
-    const zeroAddress = '0x0000000000000000000000000000000000000000';
     const normalizedFrom = fromAddress.toLowerCase();
     const normalizedTo = toAddress.toLowerCase();
 
-    // Handle NFT transfer OUT (user lost NFT)
-    if (normalizedFrom !== zeroAddress) {
-      // Find users with this wallet
-      const { data: fromWallets } = await supabase
-        .from('wallet_identities')
-        .select('user_id')
-        .eq('wallet_address', normalizedFrom);
-
-      if (fromWallets && fromWallets.length > 0) {
-        for (const wallet of fromWallets) {
-          // Set has_premium_nft to false
-          await supabase
-            .from('profiles')
-            .update({
-              has_premium_nft: false,
-              nft_verified_at: new Date().toISOString(),
-            })
-            .eq('id', wallet.user_id);
-
-          console.log(`Removed NFT access for user ${wallet.user_id} (transfer out)`);
-        }
-      }
+    if (normalizedFrom !== ZERO_ADDRESS) {
+      await updateNFTAccessForWallets(supabase, normalizedFrom, false, 'Removed');
     }
 
-    // Handle NFT transfer IN (user received NFT)
-    if (normalizedTo !== zeroAddress) {
-      // Find users with this wallet
-      const { data: toWallets } = await supabase
-        .from('wallet_identities')
-        .select('user_id')
-        .eq('wallet_address', normalizedTo);
-
-      if (toWallets && toWallets.length > 0) {
-        for (const wallet of toWallets) {
-          // Set has_premium_nft to true
-          await supabase
-            .from('profiles')
-            .update({
-              has_premium_nft: true,
-              nft_verified_at: new Date().toISOString(),
-            })
-            .eq('id', wallet.user_id);
-
-          console.log(`Granted NFT access to user ${wallet.user_id} (transfer in)`);
-        }
-      }
+    if (normalizedTo !== ZERO_ADDRESS) {
+      await updateNFTAccessForWallets(supabase, normalizedTo, true, 'Granted');
     }
 
-    // Mark event as confirmed
     await supabase
       .from('chain_tx_log')
       .update({ status: 'confirmed' })
       .eq('id', eventId);
 
     return { success: true };
-
   } catch (error) {
     console.error('Error processing NFT transfer:', error);
 
-    // Mark event as failed
     await supabase
       .from('chain_tx_log')
       .update({
@@ -227,138 +210,103 @@ async function processNFTTransfer(
   }
 }
 
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+/**
+ * Validate webhook environment configuration and request headers.
+ * Returns either a Response (on failure) or the validated config.
+ */
+async function validateWebhookRequest(req: Request): Promise<
+  | { ok: false; response: Response }
+  | { ok: true; signingKey: string; membershipNFTAddress: string; signature: string }
+> {
+  const signingKey = Deno.env.get('ALCHEMY_WEBHOOK_SIGNING_KEY');
+  if (!signingKey) {
+    console.error('ALCHEMY_WEBHOOK_SIGNING_KEY not configured');
+    return { ok: false, response: jsonResponse({ error: 'configuration_error', message: 'Webhook signing key not configured' }) };
+  }
+
+  const membershipNFTAddress = Deno.env.get('MEMBERSHIP_NFT_ADDRESS');
+  if (!membershipNFTAddress) {
+    console.error('MEMBERSHIP_NFT_ADDRESS not configured');
+    return { ok: false, response: jsonResponse({ error: 'configuration_error', message: 'NFT contract address not configured' }) };
+  }
+
+  const signature = req.headers.get('x-alchemy-signature');
+  if (!signature) {
+    console.error('Missing X-Alchemy-Signature header');
+    return { ok: false, response: jsonResponse({ error: 'unauthorized', message: 'Missing signature header' }, 401) };
+  }
+
+  return { ok: true, signingKey, membershipNFTAddress, signature };
+}
+
+function tallyResult(result: { success: boolean; reason?: string }): 'processed' | 'skipped' {
+  if (result.success && result.reason !== 'already_processed') return 'processed';
+  if (!result.success) console.error(`Failed to process activity: ${result.reason}`);
+  return 'skipped';
+}
+
 /**
  * Main request handler
  */
 Deno.serve(async (req) => {
-  // Only allow POST requests
   if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'method_not_allowed', message: 'Only POST requests are allowed' }),
-      { status: 405, headers: { 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ error: 'method_not_allowed', message: 'Only POST requests are allowed' }, 405);
   }
 
   try {
     const demoMode = Deno.env.get('DEMO_MODE')?.toLowerCase() === 'true';
     if (demoMode) {
-      return new Response(
-        JSON.stringify({ demo: true, ignored: true }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ demo: true, ignored: true });
     }
 
-    // Get webhook signing key
-    const signingKey = Deno.env.get('ALCHEMY_WEBHOOK_SIGNING_KEY');
-    if (!signingKey) {
-      console.error('ALCHEMY_WEBHOOK_SIGNING_KEY not configured');
-      // Return 200 to prevent Alchemy retries for configuration issues
-      return new Response(
-        JSON.stringify({ error: 'configuration_error', message: 'Webhook signing key not configured' }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+    const validation = await validateWebhookRequest(req);
+    if (!validation.ok) return validation.response;
 
-    // Get membership NFT contract address
-    const membershipNFTAddress = Deno.env.get('MEMBERSHIP_NFT_ADDRESS');
-    if (!membershipNFTAddress) {
-      console.error('MEMBERSHIP_NFT_ADDRESS not configured');
-      return new Response(
-        JSON.stringify({ error: 'configuration_error', message: 'NFT contract address not configured' }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get signature from header
-    const signature = req.headers.get('x-alchemy-signature');
-    if (!signature) {
-      console.error('Missing X-Alchemy-Signature header');
-      return new Response(
-        JSON.stringify({ error: 'unauthorized', message: 'Missing signature header' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get raw body for signature verification
+    const { signingKey, membershipNFTAddress, signature } = validation;
     const rawBody = await req.text();
 
-    // Verify signature
     const isValidSignature = await verifyAlchemySignature(rawBody, signature, signingKey);
     if (!isValidSignature) {
       console.error('Invalid webhook signature');
-      return new Response(
-        JSON.stringify({ error: 'unauthorized', message: 'Invalid webhook signature' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'unauthorized', message: 'Invalid webhook signature' }, 401);
     }
 
-    // Parse webhook payload
     let payload: AlchemyWebhookPayload;
     try {
       payload = JSON.parse(rawBody);
     } catch (error) {
       console.error('Invalid JSON payload:', error);
-      return new Response(
-        JSON.stringify({ error: 'invalid_payload', message: 'Invalid JSON payload' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'invalid_payload', message: 'Invalid JSON payload' }, 400);
     }
 
-    // Validate webhook type
     if (payload.type !== 'NFT_ACTIVITY') {
-      console.log(`Ignoring webhook type: ${payload.type}`);
-      return new Response(
-        JSON.stringify({ success: true, processed: 0, skipped: 1, reason: 'unsupported_type' }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: true, processed: 0, skipped: 1, reason: 'unsupported_type' });
     }
 
-    // Initialize Supabase client with service role
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Process each activity in the event
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const activities = payload.event.activity || [];
     let processed = 0;
     let skipped = 0;
 
     for (const activity of activities) {
       const result = await processNFTTransfer(supabase, activity, membershipNFTAddress);
-      if (result.success) {
-        if (result.reason === 'already_processed') {
-          skipped++;
-        } else {
-          processed++;
-        }
+      if (tallyResult(result) === 'processed') {
+        processed++;
       } else {
-        console.error(`Failed to process activity: ${result.reason}`);
         skipped++;
       }
     }
 
-    // Return success response
-    return new Response(
-      JSON.stringify({
-        success: true,
-        webhook_id: payload.webhookId,
-        processed,
-        skipped,
-        total: activities.length,
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-
+    return jsonResponse({ success: true, webhook_id: payload.webhookId, processed, skipped, total: activities.length });
   } catch (error) {
     console.error('Unexpected error in alchemy-webhook function:', error);
-    // Return 200 to prevent Alchemy retries for internal errors
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'internal_error',
-        message: 'An unexpected error occurred',
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ success: false, error: 'internal_error', message: 'An unexpected error occurred' });
   }
 });

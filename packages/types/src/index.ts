@@ -4,16 +4,12 @@
  * Domain types used across apps and packages.
  */
 
-// Re-export common types used across the APEX platform
-export type UserId = string;
-export type TenantId = string;
-export type ConnectorId = string;
-export type CorrelationId = string;
+// Common types used across the APEX platform
 
 export interface AuditEvent {
   id: string;
   timestamp: Date;
-  userId: UserId;
+  userId: string;
   action: string;
   resource: string;
   metadata?: Record<string, unknown>;
@@ -39,7 +35,7 @@ export interface ManModeDecision {
   tool: string;
   params: Record<string, unknown>;
   context: {
-    userId: UserId;
+    userId: string;
     sessionId: string;
   };
   requiresApproval: boolean;

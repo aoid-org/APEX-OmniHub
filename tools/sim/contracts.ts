@@ -561,34 +561,46 @@ export const APPS_STUBBED: readonly AppName[] = [
 // VALIDATION
 // ============================================================================
 
-export function validateEvent(event: EventEnvelope): { valid: boolean; errors: string[] } {
+const REQUIRED_EVENT_FIELDS: readonly (keyof EventEnvelope)[] = [
+  'eventId',
+  'correlationId',
+  'idempotencyKey',
+  'tenantId',
+  'eventType',
+  'source',
+  'payload',
+  'timestamp',
+  'trace',
+  'schemaVersion',
+] as const;
+
+function collectMissingFieldErrors(event: EventEnvelope): string[] {
+  return REQUIRED_EVENT_FIELDS
+    .filter((field) => !event[field])
+    .map((field) => `${field} is required`);
+}
+
+function collectFormatErrors(event: EventEnvelope): string[] {
   const errors: string[] = [];
 
-  if (!event.eventId) errors.push('eventId is required');
-  if (!event.correlationId) errors.push('correlationId is required');
-  if (!event.idempotencyKey) errors.push('idempotencyKey is required');
-  if (!event.tenantId) errors.push('tenantId is required');
-  if (!event.eventType) errors.push('eventType is required');
-  if (!event.source) errors.push('source is required');
-  if (!event.payload) errors.push('payload is required');
-  if (!event.timestamp) errors.push('timestamp is required');
-  if (!event.trace) errors.push('trace is required');
-  if (!event.schemaVersion) errors.push('schemaVersion is required');
-
-  // Validate timestamp format
   if (event.timestamp && isNaN(Date.parse(event.timestamp))) {
     errors.push('timestamp must be valid ISO 8601');
   }
-
-  // Validate app name
   if (event.source && !ALL_APPS.includes(event.source)) {
     errors.push(`source must be one of: ${ALL_APPS.join(', ')}`);
   }
-
-  // Validate idempotency key format
   if (event.idempotencyKey && !event.idempotencyKey.includes('-')) {
     errors.push('idempotencyKey must follow format: {tenantId}-{eventType}-{timestamp}-{nonce}');
   }
+
+  return errors;
+}
+
+export function validateEvent(event: EventEnvelope): { valid: boolean; errors: string[] } {
+  const errors = [
+    ...collectMissingFieldErrors(event),
+    ...collectFormatErrors(event),
+  ];
 
   return { valid: errors.length === 0, errors };
 }

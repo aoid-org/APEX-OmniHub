@@ -35,7 +35,7 @@ interface NFTGatedContentProps {
 /**
  * Component that gates content based on NFT ownership
  */
-export function NFTGatedContent({ config, children, fallback }: NFTGatedContentProps) {
+export function NFTGatedContent({ config, children, fallback }: Readonly<NFTGatedContentProps>) {
   const { walletState } = useWalletVerification();
   const [hasAccess, setHasAccess] = useState(false);
   const [isChecking, setIsChecking] = useState(false);

@@ -59,9 +59,9 @@ export const ConsentBanner = () => {
   if (!showBanner) return null;
 
   return (
-    <div
+    <dialog
+      open
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center p-4 sm:items-center"
-      role="dialog"
       aria-labelledby="consent-title"
       aria-describedby="consent-description"
     >
@@ -123,6 +123,6 @@ export const ConsentBanner = () => {
           </Button>
         </CardFooter>
       </Card>
-    </div>
+    </dialog>
   );
 };

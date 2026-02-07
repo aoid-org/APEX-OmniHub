@@ -8,11 +8,13 @@ interface EvalRequest {
   custom_message?: string;
 }
 
+type EvalVerdict = 'pass' | 'fail' | 'partial' | 'error';
+
 interface EvalResponse {
   eval_case_id: string;
   eval_result_id: string;
   score: number;
-  verdict: 'pass' | 'fail' | 'partial' | 'error';
+  verdict: EvalVerdict;
   skills_found: string[];
   skills_expected: string[];
   response_quality: number;
@@ -28,7 +30,7 @@ function scoreEvaluation(
   expectedSkills: string[],
   skillsFound: string[],
   expectedPattern?: string
-): { score: number; verdict: 'pass' | 'fail' | 'partial' | 'error'; responseQuality: number } {
+): { score: number; verdict: EvalVerdict; responseQuality: number } {
   let score = 0;
   let responseQuality = 50; // Base quality score
 
@@ -47,7 +49,7 @@ function scoreEvaluation(
   score += Math.min(responseQuality, 100) * 0.6; // 60% weight on response quality
 
   // Determine verdict
-  let verdict: 'pass' | 'fail' | 'partial' | 'error' = 'fail';
+  let verdict: EvalVerdict = 'fail';
   if (score >= 80) verdict = 'pass';
   else if (score >= 60) verdict = 'partial';
 

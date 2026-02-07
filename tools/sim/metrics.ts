@@ -98,7 +98,7 @@ export interface SystemScore {
 
 export class MetricsCollector {
   private latencyMetrics: LatencyMetric[] = [];
-  private appCounts: Map<AppName, { success: number; failure: number; retries: number; dedupes: number }> = new Map();
+  private readonly appCounts: Map<AppName, { success: number; failure: number; retries: number; dedupes: number }> = new Map();
   private startTime: Date;
   private endTime: Date | null = null;
 
@@ -185,7 +185,7 @@ export class MetricsCollector {
         min: Math.min(...durations),
         max: Math.max(...durations),
         mean: durations.reduce((a, b) => a + b, 0) / durations.length,
-        p50: this.percentile(durations, 0.50),
+        p50: this.percentile(durations, 0.5),
         p95: this.percentile(durations, 0.95),
         p99: this.percentile(durations, 0.99),
         successRate: successes / metrics.length,
@@ -248,7 +248,7 @@ export class MetricsCollector {
       avgLatencyMs: allDurations.length > 0
         ? allDurations.reduce((a, b) => a + b, 0) / allDurations.length
         : 0,
-      p50LatencyMs: this.percentile(allDurations, 0.50),
+      p50LatencyMs: this.percentile(allDurations, 0.5),
       p95LatencyMs: this.percentile(allDurations, 0.95),
       p99LatencyMs: this.percentile(allDurations, 0.99),
       errorRate: totalEvents > 0 ? totalFailures / totalEvents : 0,
@@ -310,7 +310,7 @@ export class MetricsCollector {
     // Default: 70 for PRs (permissive), 90 for main/scheduled (strict)
     // Can be overridden via CHAOS_THRESHOLD env var or requiredScore param
     const threshold = requiredScore ??
-      (process.env.CHAOS_THRESHOLD ? parseInt(process.env.CHAOS_THRESHOLD) : 70);
+      (process.env.CHAOS_THRESHOLD ? Number.parseInt(process.env.CHAOS_THRESHOLD) : 70);
 
     // Overall pass/fail
     const passed = overallScore >= threshold && systemScore.passed;
@@ -453,9 +453,7 @@ export class MetricsCollector {
 let collector: MetricsCollector | null = null;
 
 export function getMetricsCollector(): MetricsCollector {
-  if (!collector) {
-    collector = new MetricsCollector();
-  }
+  collector ??= new MetricsCollector();
   return collector;
 }
 

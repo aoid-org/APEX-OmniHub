@@ -75,7 +75,7 @@ function isValidSize(payload: RequestPayload): boolean {
   // Depth limits (prevent nested JSON attacks)
   const MAX_DEPTH = 3;
   try {
-    const parsed = JSON.parse(JSON.stringify(payload)); // Deep clone to check
+    const parsed = structuredClone(payload); // Deep clone to check
     if (getJsonDepth(parsed) > MAX_DEPTH) {
       return false;
     }

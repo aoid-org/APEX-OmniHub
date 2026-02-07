@@ -14,8 +14,7 @@ import { ChaosEngine, type ChaosConfig, DEFAULT_CHAOS_CONFIG } from './chaos-eng
 import { getCircuitBreaker, type CircuitBreakerConfig, getAllCircuitStats } from './circuit-breaker';
 import { executeEventIdempotently, clearAllReceipts, getStats as getIdempotencyStats } from './idempotency';
 import { MetricsCollector } from './metrics';
-import type { EventEnvelope, AppName, EventType } from './contracts';
-import { createEvent, type CallCompletedPayload } from './contracts';
+import { createEvent, type CallCompletedPayload, type EventEnvelope, type AppName, type EventType } from './contracts';
 
 // ============================================================================
 // TYPES
@@ -108,10 +107,10 @@ export interface SimulationResult {
 // ============================================================================
 
 export class SimulationRunner {
-  private config: SimulationConfig;
-  private chaos: ChaosEngine;
-  private metrics: MetricsCollector;
-  private logs: string[] = [];
+  private readonly config: SimulationConfig;
+  private readonly chaos: ChaosEngine;
+  private readonly metrics: MetricsCollector;
+  private readonly logs: string[] = [];
   private startTime: Date | null = null;
 
   constructor(config: SimulationConfig) {
