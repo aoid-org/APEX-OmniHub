@@ -24,8 +24,10 @@ function requireSupabaseUrl(): string {
 // Shared fetch helpers (eliminates per-table duplication)
 // =============================================================================
 
+import { Database } from '@/integrations/supabase/types';
+
 interface FetchListOptions {
-  table: string;
+  table: keyof Database['public']['Tables'];
   userIdField: string;
   orderField: string;
   action: string;
