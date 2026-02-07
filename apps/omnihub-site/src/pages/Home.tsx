@@ -62,21 +62,21 @@ function HighlightsSection() {
       description:
         'Imagine a platform that anticipates your needs and streamlines your operations effortlessly.',
       icon: <IconAutomation size={22} />,
-      href: '/tech-specs#modular-adapters',
+      href: '/tech-specs.html#modular-adapters',
     },
     {
       title: 'Smart Integrations',
       description:
         'Unify your tools and data into one intelligent system. Say goodbye to silos and productivity bottlenecks.',
       icon: <IconIntegrations size={22} />,
-      href: '/tech-specs#single-port',
+      href: '/tech-specs.html#single-port',
     },
     {
       title: 'Advanced Analytics',
       description:
         'Gain a 360° view of your organization. Make data-driven decisions with cutting-edge insights.',
       icon: <IconAnalytics size={22} />,
-      href: '/tech-specs#receipts-idempotency',
+      href: '/tech-specs.html#receipts-idempotency',
     },
   ];
 
@@ -125,7 +125,7 @@ function TriForceSection() {
           {triForceCards.map((card) => (
             <a
               key={card.id}
-              href={`/tech-specs#${card.id}`}
+              href={`/tech-specs.html#${card.id}`}
               className="triforce__card"
             >
               <div className="triforce__icon">{card.icon}</div>
@@ -225,7 +225,7 @@ function ManModeSection() {
             <li>User notified for manual review</li>
             <li>Full audit trail maintained</li>
           </ul>
-          <a href="/tech-specs#man-mode" className="btn btn--secondary mt-8">
+          <a href="/tech-specs.html#man-mode" className="btn btn--secondary mt-8">
             Learn More
           </a>
         </div>
