@@ -10,6 +10,7 @@ import type {
   OmniTraceRunsListResponse,
   OmniTraceRunDetailResponse,
 } from './types';
+import type { Database } from '@/integrations/supabase/types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -24,8 +25,11 @@ function requireSupabaseUrl(): string {
 // Shared fetch helpers (eliminates per-table duplication)
 // =============================================================================
 
+
+type TableName = keyof Database['public']['Tables'];
+
 interface FetchListOptions {
-  table: string;
+  table: TableName;
   userIdField: string;
   orderField: string;
   action: string;
