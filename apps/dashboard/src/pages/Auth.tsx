@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FC } from 'react';
 import { useSearchParams } from 'react-router-dom';
 // @ts-expect-error pre-existing type issue - no declaration file
 import { Helmet } from 'react-helmet';
@@ -23,6 +23,47 @@ const authSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters').optional(),
 });
 
+/** Validates redirect parameter is a safe relative path (prevents open redirect) */
+function isValidRedirectPath(path: string): boolean {
+  return path.startsWith('/') && !path.startsWith('//') && !path.includes('://');
+}
+
+/** Shared error handler for auth form catch blocks */
+function handleAuthFormError(
+  error: unknown,
+  toast: ReturnType<typeof useToast>['toast'],
+) {
+  if (error instanceof z.ZodError) {
+    toast({
+      title: 'Validation error',
+      description: error.errors[0].message,
+      variant: 'destructive',
+    });
+  } else if (error instanceof Error) {
+    toast({
+      title: 'Authentication failed',
+      description: 'Invalid credentials or server error. Please try again.',
+      variant: 'destructive',
+    });
+  }
+}
+
+/** Reusable loading button for auth forms */
+const AuthSubmitButton: FC<{ loading: boolean; label: string; loadingLabel: string }> = ({
+  loading, label, loadingLabel,
+}) => (
+  <Button type="submit" className="w-full" disabled={loading}>
+    {loading ? (
+      <>
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        {loadingLabel}
+      </>
+    ) : (
+      label
+    )}
+  </Button>
+);
+
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
@@ -39,14 +80,15 @@ const Auth = () => {
       if (session && !redirectLoading) {
         performPostLoginRedirect();
       }
+    }).catch(() => {
+      // Session check failed silently — user will see the login form
     });
   }, [redirectLoading, performPostLoginRedirect]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Rate limiting check
-    const rateCheck = checkRateLimit('signup', 3, 300000); // 3 attempts per 5 min
+    const rateCheck = checkRateLimit('signup', 3, 300000);
     if (!rateCheck.allowed) {
       toast({
         title: 'Too many attempts',
@@ -61,10 +103,10 @@ const Auth = () => {
     try {
       const validated = authSchema.parse({ email, password, fullName });
 
-      // Construct email redirect URL with preserved redirect param
       const redirectParam = searchParams.get('redirect');
-      const emailRedirectUrl = redirectParam
-        ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(redirectParam)}`
+      const safeRedirect = redirectParam && isValidRedirectPath(redirectParam) ? redirectParam : null;
+      const emailRedirectUrl = safeRedirect
+        ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(safeRedirect)}`
         : `${globalThis.location.origin}/auth`;
 
       const { error } = await supabase.auth.signUp({
@@ -72,9 +114,7 @@ const Auth = () => {
         password: validated.password,
         options: {
           emailRedirectTo: emailRedirectUrl,
-          data: {
-            full_name: validated.fullName,
-          },
+          data: { full_name: validated.fullName },
         },
       });
 
@@ -85,19 +125,7 @@ const Auth = () => {
         description: 'Please check your email to verify your account.',
       });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: 'Validation error',
-          description: error.errors[0].message,
-          variant: 'destructive',
-        });
-      } else if (error instanceof Error) {
-        toast({
-          title: 'Error',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
+      handleAuthFormError(error, toast);
     } finally {
       setLoading(false);
     }
@@ -106,21 +134,20 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check account lockout
     const lockoutStatus = checkAccountLockout(email);
     if (lockoutStatus.isLocked) {
-      const minutes = Math.ceil(lockoutStatus.remainingTime! / 60000);
+      const remaining = lockoutStatus.remainingTime ?? 60000;
+      const minutes = Math.ceil(remaining / 60000);
       toast({
         title: 'Account temporarily locked',
         description: `Too many failed attempts. Try again in ${minutes} minutes.`,
         variant: 'destructive',
       });
-      logSecurityEvent('auth_failed', { reason: 'account_locked', email });
+      logSecurityEvent('auth_failed', { reason: 'account_locked' });
       return;
     }
 
-    // Rate limiting check
-    const rateCheck = checkRateLimit(`signin-${email}`, 5, 300000); // 5 attempts per 5 min
+    const rateCheck = checkRateLimit(`signin-${email}`, 5, 300000);
     if (!rateCheck.allowed) {
       toast({
         title: 'Too many attempts',
@@ -147,30 +174,11 @@ const Auth = () => {
 
       recordLoginAttempt(email, true);
 
-      // Wait for redirect hook to load access data, then route
-      // Note: We can't call performPostLoginRedirect() here directly because
-      // access data (isAdmin, isPaid) may not be loaded yet for brand new session.
-      // The useEffect above will handle routing once session is established.
-
-      // For immediate feedback, navigate to a loading state if needed,
-      // but in practice the useEffect will trigger almost immediately.
       if (!redirectLoading) {
         performPostLoginRedirect();
       }
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: 'Validation error',
-          description: error.errors[0].message,
-          variant: 'destructive',
-        });
-      } else if (error instanceof Error) {
-        toast({
-          title: 'Error',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
+      handleAuthFormError(error, toast);
     } finally {
       setLoading(false);
     }
@@ -225,16 +233,7 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
-                      </>
-                    ) : (
-                      'Sign In'
-                    )}
-                  </Button>
+                  <AuthSubmitButton loading={loading} label="Sign In" loadingLabel="Signing in..." />
                 </form>
               </TabsContent>
 
@@ -272,16 +271,7 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      'Sign Up'
-                    )}
-                  </Button>
+                  <AuthSubmitButton loading={loading} label="Sign Up" loadingLabel="Creating account..." />
                 </form>
               </TabsContent>
             </Tabs>
