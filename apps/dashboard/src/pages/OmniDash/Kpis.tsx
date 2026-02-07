@@ -1,29 +1,20 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { fetchKpiDaily, upsertKpiDailyEntry } from '@/omnidash/api';
-import { useOmniDashSettings } from '@/omnidash/hooks';
+import { useOmniDashSettings, useOmniQuery, useOmniMutation } from '@/omnidash/hooks';
 import { redactKpiDaily, redactAmount } from '@/omnidash/redaction';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
 export const Kpis = () => {
-  const { user } = useAuth();
   const settings = useOmniDashSettings();
-  const queryClient = useQueryClient();
 
-  const kpiQuery = useQuery({
-    queryKey: ['omnidash-kpis', user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      if (!user) throw new Error('User required');
-      const data = await fetchKpiDaily(user.id, 14);
-      return settings.data?.demo_mode && settings.data.anonymize_kpis ? redactKpiDaily(data) : data;
-    },
+  const kpiQuery = useOmniQuery('omnidash-kpis', async (userId) => {
+    const data = await fetchKpiDaily(userId, 14);
+    return settings.data?.demo_mode && settings.data.anonymize_kpis ? redactKpiDaily(data) : data;
   });
 
   const todayRow = useMemo(
@@ -55,19 +46,12 @@ export const Kpis = () => {
     }
   }, [todayRow]);
 
-  const mutation = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error('User missing');
-      await upsertKpiDailyEntry({
-        user_id: user.id,
-        day: today(),
-        ...form,
-      });
+  const mutation = useOmniMutation(
+    'omnidash-kpis',
+    async (userId) => {
+      await upsertKpiDailyEntry({ user_id: userId, day: today(), ...form });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['omnidash-kpis', user?.id] });
-    },
-  });
+  );
 
   return (
     <div className="space-y-4">

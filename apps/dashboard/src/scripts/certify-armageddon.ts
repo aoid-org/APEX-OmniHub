@@ -6,7 +6,7 @@
  */
 import { Client, Connection } from '@temporalio/client';
 import { ArmageddonLevel7Workflow } from '../armageddon/workflows/level7';
-import { ARMAGEDDON_TASK_QUEUE } from '../worker';
+import { ARMAGEDDON_TASK_QUEUE } from '../armageddon/worker';
 import { v4 as uuidv4 } from 'uuid';
 
 async function runArmageddon() {

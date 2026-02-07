@@ -2,20 +2,9 @@ import { calculateBackoffDelay } from '@/lib/backoff';
 import { logAnalyticsEvent, logError } from '@/lib/monitoring';
 import { persistentGet, persistentSet } from '@/libs/persistence';
 import { supabase } from '@/integrations/supabase/client';
+import type { AuditEventPayload } from '@/integrations/lovable/types';
 
-/**
- * Audit event payload interface
- * Previously used Lovable API, now writes directly to Supabase audit_logs table
- */
-export interface AuditEventPayload {
-  id: string;
-  timestamp: string;
-  actorId?: string;
-  actionType: string;
-  resourceType?: string;
-  resourceId?: string;
-  metadata?: Record<string, unknown>;
-}
+export type { AuditEventPayload } from '@/integrations/lovable/types';
 
 export type QueuedAuditEvent = AuditEventPayload & {
   attempts: number;

@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,23 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { fetchIncidents, addIncident } from '@/omnidash/api';
-import { useOmniDashSettings } from '@/omnidash/hooks';
+import { useOmniDashSettings, useOmniQuery, useOmniMutation } from '@/omnidash/hooks';
 import { Incident } from '@/omnidash/types';
 import { format } from 'date-fns';
 
 export const Ops = () => {
-  const { user } = useAuth();
   const settings = useOmniDashSettings();
-  const queryClient = useQueryClient();
 
-  const incidentsQuery = useQuery({
-    queryKey: ['omnidash-incidents', user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      if (!user) throw new Error('User required');
-      return fetchIncidents(user.id, 25);
-    },
-  });
+  const incidentsQuery = useOmniQuery('omnidash-incidents', (userId) => fetchIncidents(userId, 25));
 
   const [form, setForm] = useState<{ title: string; severity: Incident['severity']; description: string }>({
     title: '',
@@ -32,21 +21,18 @@ export const Ops = () => {
     description: '',
   });
 
-  const mutation = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error('User required');
+  const mutation = useOmniMutation(
+    'omnidash-incidents',
+    async (userId) => {
       await addIncident({
-        user_id: user.id,
+        user_id: userId,
         title: form.title,
         severity: form.severity,
         description: form.description,
       });
     },
-    onSuccess: () => {
-      setForm({ title: '', severity: 'sev2', description: '' });
-      queryClient.invalidateQueries({ queryKey: ['omnidash-incidents', user?.id] });
-    },
-  });
+    { onSuccess: () => setForm({ title: '', severity: 'sev2', description: '' }) },
+  );
 
   return (
     <div className="space-y-4">

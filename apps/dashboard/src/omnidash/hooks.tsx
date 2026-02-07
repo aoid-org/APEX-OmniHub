@@ -1,8 +1,49 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchSettings, updateSettings } from './api';
 import { OMNIDASH_ADMIN_ALLOWLIST, OMNIDASH_FLAG, OmniDashSettings } from './types';
+
+/**
+ * Shared hook for authenticated OmniDash queries.
+ * Eliminates duplicated useAuth + enabled + user-guard boilerplate.
+ */
+export function useOmniQuery<T>(
+  keyPrefix: string,
+  queryFn: (userId: string) => Promise<T>,
+) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: [keyPrefix, user?.id] as QueryKey,
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) throw new Error('User required');
+      return queryFn(user.id);
+    },
+  });
+}
+
+/**
+ * Shared hook for authenticated OmniDash mutations with auto-invalidation.
+ */
+export function useOmniMutation<TArgs = void>(
+  invalidateKey: string,
+  mutationFn: (userId: string, args: TArgs) => Promise<void>,
+  opts?: { onSuccess?: () => void },
+) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: TArgs) => {
+      if (!user) throw new Error('User required');
+      return mutationFn(user.id, args);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [invalidateKey, user?.id] });
+      opts?.onSuccess?.();
+    },
+  });
+}
 
 export function useAdminAccess() {
   const { user } = useAuth();

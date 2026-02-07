@@ -1,31 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOmniQuery, useOmniMutation } from '@/omnidash/hooks';
 import { decideOmniLinkApproval, fetchOmniLinkApprovals } from '@/omnidash/omnilink-api';
 
 export const Approvals = () => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const approvalsQuery = useQuery({
-    queryKey: ['omnilink-approvals', user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      if (!user) throw new Error('User required');
-      return fetchOmniLinkApprovals(user.id);
-    },
-  });
+  const approvalsQuery = useOmniQuery('omnilink-approvals', fetchOmniLinkApprovals);
 
-  const approvalMutation = useMutation({
-    mutationFn: async ({ requestId, decision }: { requestId: string; decision: 'approved' | 'denied' }) => {
-      if (!user) throw new Error('User required');
-      await decideOmniLinkApproval(user.id, requestId, decision);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['omnilink-approvals', user?.id] });
-    },
-  });
+  const approvalMutation = useOmniMutation<{ requestId: string; decision: 'approved' | 'denied' }>(
+    'omnilink-approvals',
+    (userId, { requestId, decision }) => decideOmniLinkApproval(userId, requestId, decision),
+  );
 
   return (
     <Card>

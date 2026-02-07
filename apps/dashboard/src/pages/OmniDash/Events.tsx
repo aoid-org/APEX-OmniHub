@@ -1,19 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOmniQuery } from '@/omnidash/hooks';
 import { fetchOmniLinkEvents } from '@/omnidash/omnilink-api';
 
 export const Events = () => {
-  const { user } = useAuth();
-  const eventsQuery = useQuery({
-    queryKey: ['omnilink-events', user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      if (!user) throw new Error('User required');
-      return fetchOmniLinkEvents(user.id);
-    },
-  });
+  const eventsQuery = useOmniQuery('omnilink-events', fetchOmniLinkEvents);
 
   return (
     <Card>

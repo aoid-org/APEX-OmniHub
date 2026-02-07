@@ -56,7 +56,7 @@ export default tseslint.config(
       "apps/dashboard/src/lib/storage/providers/supabase.ts",
       "apps/dashboard/src/integrations/supabase/client.ts",
       "apps/dashboard/src/omniconnect/**/*.ts",
-      "apps/dashboard/src/worker.ts",
+      "apps/dashboard/src/armageddon/worker.ts",
       "apex-resilience/**/*.ts",
       "apps/dashboard/src/pages/**/*.tsx",
       "tests/**/*.ts",

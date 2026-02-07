@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import {
   fetchOmniLinkKeys,
   revokeOmniLinkKey,
 } from '@/omnidash/omnilink-api';
+import { useOmniQuery, useOmniMutation } from '@/omnidash/hooks';
 
 export const Integrations = () => {
   const { user } = useAuth();
@@ -25,23 +26,8 @@ export const Integrations = () => {
   const [keyName, setKeyName] = useState('Primary');
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
 
-  const integrationsQuery = useQuery({
-    queryKey: ['omnilink-integrations', user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      if (!user) throw new Error('User required');
-      return fetchOmniLinkIntegrations(user.id);
-    },
-  });
-
-  const keysQuery = useQuery({
-    queryKey: ['omnilink-keys', user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      if (!user) throw new Error('User required');
-      return fetchOmniLinkKeys(user.id);
-    },
-  });
+  const integrationsQuery = useOmniQuery('omnilink-integrations', fetchOmniLinkIntegrations);
+  const keysQuery = useOmniQuery('omnilink-keys', fetchOmniLinkKeys);
 
   const integrationOptions = useMemo(() => integrationsQuery.data ?? [], [integrationsQuery.data]);
 
@@ -85,16 +71,11 @@ export const Integrations = () => {
     },
   });
 
-  const revokeKeyMutation = useMutation({
-    mutationFn: async (keyId: string) => {
-      if (!user) throw new Error('User required');
-      await revokeOmniLinkKey(user.id, keyId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['omnilink-keys', user?.id] });
-      toast({ title: 'Key revoked' });
-    },
-  });
+  const revokeKeyMutation = useOmniMutation<string>(
+    'omnilink-keys',
+    (userId, keyId) => revokeOmniLinkKey(userId, keyId),
+    { onSuccess: () => toast({ title: 'Key revoked' }) },
+  );
 
   return (
     <div className="space-y-6">

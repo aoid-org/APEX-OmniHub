@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { fetchPipelineItems, upsertPipelineItem } from '@/omnidash/api';
 import { redactPipelineDisplay, redactNotes, redactAmount } from '@/omnidash/redaction';
 import { OMNIDASH_PIPELINE_STAGES, PipelineItem } from '@/omnidash/types';
-import { useOmniDashSettings } from '@/omnidash/hooks';
+import { useOmniDashSettings, useOmniQuery } from '@/omnidash/hooks';
 import { format } from 'date-fns';
 import { AlertTriangle } from 'lucide-react';
 
@@ -35,14 +35,9 @@ export const Pipeline = () => {
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState<string | null>(null);
 
-  const pipelineQuery = useQuery({
-    queryKey: ['omnidash-pipeline', user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      if (!user) throw new Error('User required');
-      const data = await fetchPipelineItems(user.id);
-      return settings.data?.demo_mode ? redactPipelineDisplay(data) : data;
-    },
+  const pipelineQuery = useOmniQuery('omnidash-pipeline', async (userId) => {
+    const data = await fetchPipelineItems(userId);
+    return settings.data?.demo_mode ? redactPipelineDisplay(data) : data;
   });
 
   const mutation = useMutation({

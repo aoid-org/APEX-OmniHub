@@ -66,11 +66,7 @@ export function initializeFromPreference(): void {
   }
 }
 
-/**
- * OmniSentry Settings Dropdown
- * Compact dropdown menu for OmniSentry controls
- */
-export function OmniSentryDropdown() {
+function useOmniSentryState(pollInterval = 10000) {
   const [enabled, setEnabled] = useState(false);
   const [health, setHealth] = useState<HealthStatus | null>(null);
 
@@ -82,12 +78,22 @@ export function OmniSentryDropdown() {
     if (enabled) {
       const updateHealth = () => setHealth(getHealthStatus());
       updateHealth();
-      const interval = setInterval(updateHealth, 10000);
+      const interval = setInterval(updateHealth, pollInterval);
       return () => clearInterval(interval);
     } else {
       setHealth(null);
     }
-  }, [enabled]);
+  }, [enabled, pollInterval]);
+
+  return { enabled, setEnabled, health, setHealth };
+}
+
+/**
+ * OmniSentry Settings Dropdown
+ * Compact dropdown menu for OmniSentry controls
+ */
+export function OmniSentryDropdown() {
+  const { enabled, setEnabled, health, setHealth } = useOmniSentryState(10000);
 
   const handleToggle = (newValue: boolean) => {
     setEnabled(newValue);
@@ -207,21 +213,7 @@ export function OmniSentryDropdown() {
  * Compact status indicator for nav bars
  */
 export function OmniSentryIndicator() {
-  const [enabled, setEnabled] = useState(false);
-  const [health, setHealth] = useState<HealthStatus | null>(null);
-
-  useEffect(() => {
-    setEnabled(isOmniSentryEnabled());
-  }, []);
-
-  useEffect(() => {
-    if (enabled) {
-      const updateHealth = () => setHealth(getHealthStatus());
-      updateHealth();
-      const interval = setInterval(updateHealth, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [enabled]);
+  const { enabled, health } = useOmniSentryState(30000);
 
   if (!enabled) return null;
 

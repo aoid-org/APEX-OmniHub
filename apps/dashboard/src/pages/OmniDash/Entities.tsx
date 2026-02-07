@@ -1,19 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOmniQuery } from '@/omnidash/hooks';
 import { fetchOmniLinkEntities } from '@/omnidash/omnilink-api';
 
 export const Entities = () => {
-  const { user } = useAuth();
-  const entitiesQuery = useQuery({
-    queryKey: ['omnilink-entities', user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      if (!user) throw new Error('User required');
-      return fetchOmniLinkEntities(user.id);
-    },
-  });
+  const entitiesQuery = useOmniQuery('omnilink-entities', fetchOmniLinkEntities);
 
   return (
     <Card>
