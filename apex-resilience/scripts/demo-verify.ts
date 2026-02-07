@@ -71,7 +71,7 @@ async function main() {
   console.log(`Evidence count: ${result3.evidence.length}`);
 
   const visualEvidence = result3.evidence.find((e) => e.type === 'visual_verification');
-  if (visualEvidence && visualEvidence.type === 'visual_verification') {
+  if (visualEvidence?.type === 'visual_verification') {
     console.log(`Visual diff score: ${visualEvidence.pixelDiffScore}%`);
     console.log(`Accessibility score: ${visualEvidence.accessibilityScore}`);
   }

@@ -88,7 +88,7 @@ function recordFailure(reason: string) {
   if (circuitState.failures >= readConfig().circuitBreakerThreshold) {
     circuitState.openedAt = Date.now();
   }
-  if (typeof globalThis.window !== 'undefined') {
+  if (globalThis.window !== undefined) {
     recordAuditEvent({
       actionType: 'omnilink.port.failure',
       resourceType: 'omnilink',
@@ -221,7 +221,7 @@ class HttpOmniLinkAdapter implements OmniLinkAdapter {
       .then((result) => {
         dedupeIndex.set(idempotencyKey, Date.now());
         recordSuccess();
-        if (typeof globalThis.window !== 'undefined') {
+        if (globalThis.window !== undefined) {
           recordAuditEvent({
             actionType: 'omnilink.port.request',
             resourceType: 'omnilink',
@@ -278,7 +278,7 @@ class HttpOmniLinkAdapter implements OmniLinkAdapter {
 class NoopOmniLinkAdapter implements OmniLinkAdapter {
   async request<T = unknown>(): Promise<T> {
     lastError = 'OmniLink disabled';
-    if (typeof globalThis.window !== 'undefined') {
+    if (globalThis.window !== undefined) {
       recordAuditEvent({
         actionType: 'omnilink.port.disabled',
         resourceType: 'omnilink',

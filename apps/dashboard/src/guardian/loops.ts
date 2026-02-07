@@ -23,7 +23,7 @@ export function startGuardianLoops() {
   intervals.push(
     setInterval(async () => {
       try {
-        if (typeof globalThis.window === 'undefined') {
+        if (globalThis.window === undefined) {
           recordLoopHeartbeat('guardian-health-ping');
           return;
         }

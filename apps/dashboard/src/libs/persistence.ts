@@ -22,7 +22,7 @@ async function getDb(): Promise<IDBDatabase | null> {
     request.onupgradeneeded = () => {
       request.result.createObjectStore(STORE_NAME);
     };
-    request.onerror = () => reject(request.error);
+    request.onerror = () => reject(new Error('IndexedDB open failed'));
     request.onsuccess = () => resolve(request.result);
   }).catch(() => null);
 

@@ -222,7 +222,7 @@ export async function fetchHealthSnapshot(userId: string): Promise<{ lastUpdated
     )
   );
 
-  const lastUpdated = latest.filter(Boolean).sort().reverse()[0] ?? null;
+  const lastUpdated = latest.filter(Boolean).sort((a, b) => b!.localeCompare(a!)).at(0) ?? null;
   return { lastUpdated };
 }
 

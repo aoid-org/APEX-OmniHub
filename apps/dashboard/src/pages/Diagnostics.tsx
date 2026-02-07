@@ -68,7 +68,7 @@ export default function Diagnostics() {
         deviceQueueSize: deviceQueue.filter((q) => q.status === 'pending').length,
         auditQueueSize: auditQueue.filter((q) => q.status === 'pending').length,
         errorCount: errors.length,
-        lastError: (errors[errors.length - 1] as { message?: string })?.message,
+        lastError: (errors.at(-1) as { message?: string })?.message,
         deviceProxyUrl,
         auditProxyUrl,
       });

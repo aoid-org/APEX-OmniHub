@@ -28,7 +28,7 @@ function extractVersions(depTree, packageName) {
     if (!node || typeof node !== 'object') return;
 
     // Check if this node is the package we're looking for
-    if (node.version && path[path.length - 1] === packageName) {
+    if (node.version && path.at(-1) === packageName) {
       versions.add(node.version);
     }
 
@@ -50,7 +50,7 @@ function findDuplicatePaths(depTree, packageName, targetVersion) {
   function traverse(node, path = []) {
     if (!node || typeof node !== 'object') return;
 
-    if (node.version && path[path.length - 1] === packageName && node.version !== targetVersion) {
+    if (node.version && path.at(-1) === packageName && node.version !== targetVersion) {
       paths.push({
         path: path.join(' → '),
         version: node.version,

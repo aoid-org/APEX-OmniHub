@@ -434,7 +434,7 @@ function calculateMetrics(results: EvalResult[]): EvalMetrics {
     // Latency P95
     const latencies = results.map(r => r.latencyMs).sort((a, b) => a - b);
     const p95Index = Math.floor(latencies.length * 0.95);
-    const latencyP95 = latencies[p95Index] || latencies[latencies.length - 1] || 0;
+    const latencyP95 = latencies[p95Index] || latencies.at(-1) || 0;
 
     return {
         pass_rate: passedCount / totalFixtures,

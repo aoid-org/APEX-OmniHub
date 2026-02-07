@@ -27,7 +27,7 @@ function getConfig(): LovableClientConfig | null {
   if (!baseUrl || !apiKey) {
     // Graceful degradation: return null if not configured (enterprise-ready resilience)
     // Log warning in development to help with debugging
-    if (typeof globalThis.window !== 'undefined' && import.meta.env.DEV) {
+    if (globalThis.window !== undefined && import.meta.env.DEV) {
       console.warn(
         '⚠️ Lovable API not configured. Missing:',
         baseUrl ? '' : 'LOVABLE_API_BASE',
@@ -100,7 +100,7 @@ function shouldRetryError(status: number, attempt: number, maxAttempts: number):
 
 async function requestLovable<T>(options: LovableRequestOptions): Promise<T | undefined> {
   if (isConfigMissing()) {
-    if (typeof globalThis.window !== 'undefined' && import.meta.env.DEV) {
+    if (globalThis.window !== undefined && import.meta.env.DEV) {
       console.warn('⚠️ Lovable request skipped: API not configured');
     }
     return undefined;
