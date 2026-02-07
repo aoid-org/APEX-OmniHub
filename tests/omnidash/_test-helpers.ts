@@ -89,11 +89,19 @@ export async function cleanupTestUser(
     await additionalCleanup(adminClient, testUserId);
   }
 
-  // Delete from user_roles
-  await adminClient.from('user_roles').delete().eq('user_id', testUserId);
+  // Delete from user_roles (best-effort, continue even if row doesn't exist)
+  try {
+    await adminClient.from('user_roles').delete().eq('user_id', testUserId);
+  } catch {
+    // user_roles row may not exist for this test user
+  }
 
   // Delete user
-  await adminClient.auth.admin.deleteUser(testUserId);
+  try {
+    await adminClient.auth.admin.deleteUser(testUserId);
+  } catch {
+    // User may already have been deleted
+  }
 }
 
 /**

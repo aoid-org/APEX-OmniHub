@@ -77,7 +77,7 @@ jobs:
 
       - name: Security posture check
         run: |
-          bash scripts/security/security-posture-check.sh
+          bash tools/scripts/security/security-posture-check.sh
 
   smoke-tests:
     name: Smoke Tests
