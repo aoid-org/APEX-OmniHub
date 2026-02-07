@@ -10,6 +10,9 @@ import type {
   OmniTraceRunsListResponse,
   OmniTraceRunDetailResponse,
 } from './types';
+import type { Database } from '@/integrations/supabase/types';
+
+type TableName = keyof Database['public']['Tables'];
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
