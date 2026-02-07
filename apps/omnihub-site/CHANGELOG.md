@@ -2,6 +2,21 @@
 
 All notable changes to the APEX OmniHub Marketing Site.
 
+## [1.6.0] - 2026-02-07
+
+### Fixed
+- **P0: Mobile nav overlay** - Sheet z-index raised from 50 to 100; overlay from 50 to 99. Mobile hamburger menu now correctly overlays all page content including hero and sticky headers
+- **P1: Hero text "g" descender clipped** - `heading-hero` line-height changed from 0.95 to 1.1 with 0.05em bottom padding. The lowercase "g" in "Designed" is now fully visible
+- **P1: Feature tile dead links** - HighlightsSection, TriForceSection, CapabilityShowcase, and ManMode links updated from non-existent standalone pages to valid `/tech-specs.html#section` anchors matching MPA entry points
+- **P1: Fake login replaced with Supabase auth** - `LoginPage` no longer stores plaintext session in localStorage; uses `supabase.auth.signInWithPassword` with session check on mount and redirect on success
+- **P1: Desktop dashboard access** - Removed `MobileOnlyGate` wrapper from `/dashboard` and `/omnidash` routes so desktop users can access the dashboard without workarounds
+- **P1: Header login visibility** - Added visible "Sign In" link (`/auth`) in main app Header; users no longer need hidden Alt+Shift+L keyboard shortcut
+- **Lint: Unused variable** - Removed unused `_report` parameter in `chaotic-client-simulation.ts`
+- **Test stability: OmniPort timing** - Relaxed flaky performance assertion from 50ms to 200ms threshold
+
+### Added
+- `apps/omnihub-site/src/lib/supabase.ts` - Supabase client for marketing site auth using `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` environment variables
+
 ## [1.5.0] - 2026-01-22
 
 ### Removed

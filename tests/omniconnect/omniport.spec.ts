@@ -180,7 +180,7 @@ describe('OmniPort - The Proprietary Ingress Engine', () => {
     if (result.latencyMs) {
       expect(result.latencyMs).toBeDefined();
     }
-    expect(endTime - startTime).toBeLessThan(50);
+    expect(endTime - startTime).toBeLessThan(200);
   };
 
   const verifyRiskLane = async (

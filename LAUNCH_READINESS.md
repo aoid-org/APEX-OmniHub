@@ -1,8 +1,8 @@
 # 🚀 LAUNCH READINESS: APEX OmniHub v1.0.0
 
-**Status**: 🟢 **GO FOR LAUNCH**  
-**Date**: February 1, 2026  
-**Version**: v1.3.0-RC (Physical AI + Device Registry Enforced)
+**Status**: 🟢 **GO FOR LAUNCH**
+**Date**: February 7, 2026
+**Version**: v1.6.0 (P0/P1 Production Fixes Applied + Physical AI + Device Registry Enforced)
 
 ---
 
@@ -84,6 +84,28 @@ BIOMETRIC_ENCLAVE_SECRET=<secure_enclave_key>
 OPENAI_REALTIME_API_KEY=<key>
 WHISPER_LOCAL_FALLBACK=true
 ```
+
+---
+
+## Latest CI Verification (2026-02-07)
+
+| Gate | Result | Evidence |
+|------|--------|----------|
+| TypeScript | **PASS** | `tsc --noEmit` 0 errors (strict mode) |
+| ESLint | **PASS** | `eslint --max-warnings 0` clean |
+| Unit Tests | **PASS** | 564/564 pass, 0 failures |
+| Build | **PASS** | Vite 7.3.1 production build, 41.8s |
+| Omnihub-site TSC | **PASS** | Marketing site types clean |
+
+### P0/P1 Fixes Applied (2026-02-07)
+
+- P0: Mobile nav overlay z-index (sheet.tsx z-50 → z-100)
+- P1: Hero "g" descender clipping (line-height 0.95 → 1.1)
+- P1: Feature tile dead links → tech-specs.html anchors
+- P1: Login fake localStorage → Supabase auth
+- P1: Desktop dashboard access (MobileOnlyGate removed)
+- P1: Header Sign In link added (visible, /auth)
+- Test: OmniPort timing flake stabilized (50ms → 200ms)
 
 ---
 

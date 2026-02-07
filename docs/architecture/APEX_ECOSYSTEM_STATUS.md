@@ -1,6 +1,6 @@
 # APEX Ecosystem Status
 
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-02-07
 
 ## Core Systems
 
@@ -22,7 +22,7 @@ The proprietary fortified ingress gateway for all input sources.
 | **Metrics** | `src/omniconnect/ingress/omniport-metrics.ts` | ✅ OmniDash Integration |
 | **Voice** | `src/omniconnect/ingress/omniport-voice.ts` | ✅ Natural Language |
 | **DLQ** | `supabase/migrations/20260124000000_omniport_dlq.sql` | ✅ Risk-prioritized |
-| **Tests** | `tests/omniconnect/omniport.spec.ts` | ✅ 27/27 Passing |
+| **Tests** | `tests/omniconnect/omniport.spec.ts` | ✅ 27/27 Passing (timing stabilized) |
 
 **Features:**
 - Zero-Trust Gate with device validation (trusted/suspect/blocked)
