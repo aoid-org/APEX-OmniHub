@@ -86,7 +86,7 @@ class TestAuditPersistence:
         # Add some metadata that might contain secrets
         # SonarQube: These are TEST credentials used to verify they are NOT logged
         # This is intentional - we're testing the security feature that prevents logging secrets
-        _fake_secret = "fake-credential-for-test"  # NOSONAR - intentional test data
+        _fake_secret = "fake-credential-for-test"  # noqa: S105 - intentional test data
         sample_event.metadata.custom_fields = {
             "api_key": _fake_secret,
             "password": _fake_secret,
