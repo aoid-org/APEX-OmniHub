@@ -5,7 +5,7 @@ vi.mock('@/lib/monitoring', () => ({
   logError: vi.fn(),
 }));
 
-const importAudit = async () => await import('@/security/auditLog');
+const importAudit = async () => await import('../../src/security/auditLog');
 
 describe('audit log queue', () => {
   beforeEach(() => {

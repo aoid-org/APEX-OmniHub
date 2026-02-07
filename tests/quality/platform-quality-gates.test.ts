@@ -8,17 +8,17 @@ import { join } from 'path';
 describe('Platform Quality Gates', () => {
   it('Gate 1: TypeScript compilation must succeed', () => {
     expect(() => {
-      execSync('npx tsc --noEmit -p apps/dashboard/tsconfig.json', {
+      execSync('npx tsc --noEmit', {
         encoding: 'utf-8',
         stdio: 'pipe',
         cwd: process.cwd()
       });
     }).not.toThrow();
-  }, 120000);
+  });
 
   it('Gate 2: ESLint must pass with zero warnings', () => {
     // APEX-FIX: Increased timeout to 30s for full-repo lint scan
-    const result = execSync('npx eslint apps/dashboard/src --max-warnings 0 --format json', {
+    const result = execSync('npx eslint . --max-warnings 0 --format json', {
       encoding: 'utf-8',
       stdio: 'pipe', // Capture output to debug if needed
       maxBuffer: 20 * 1024 * 1024, // APEX-FIX: prevent JSON output buffer overflow in CI
@@ -42,7 +42,7 @@ describe('Platform Quality Gates', () => {
     const criticalFiles = [
       'tsconfig.json',
       'package.json',
-      'apps/dashboard/vite.config.ts',
+      'vite.config.ts',
       '.github/workflows/ci-runtime-gates.yml',
       'playwright.config.ts'
     ];

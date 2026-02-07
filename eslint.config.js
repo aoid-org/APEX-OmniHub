@@ -5,7 +5,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "coverage", ".turbo", "node_modules"] },
+  { ignores: ["dist"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -36,34 +36,34 @@ export default tseslint.config(
   },
   // Relaxed rules for CLI scripts, simulation, and sandbox files
   {
-    files: ["tools/sim/**/*.ts", "tools/scripts/**/*.ts", "tools/sandbox/**/*.ts"],
+    files: ["sim/**/*.ts", "scripts/**/*.ts", "sandbox/**/*.ts"],
     rules: {
       "no-console": "off",
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",  // Allow any in simulation code
     },
   },
   // Allow console.log in monitoring/debugging infrastructure (legacy code)
   // BACKLOG: Migrate to structured logging (tracked in project board)
   {
     files: [
-      "apps/dashboard/src/lib/monitoring.ts",
-      "apps/dashboard/src/lib/debug-logger.ts",
-      "apps/dashboard/src/lib/offline.ts",
-      "apps/dashboard/src/lib/config.ts",
-      "apps/dashboard/src/lib/lovableConfig.ts",
-      "apps/dashboard/src/lib/security.ts",
-      "apps/dashboard/src/lib/database/providers/supabase.ts",
-      "apps/dashboard/src/lib/storage/providers/supabase.ts",
-      "apps/dashboard/src/integrations/supabase/client.ts",
-      "apps/dashboard/src/omniconnect/**/*.ts",
-      "apps/dashboard/src/armageddon/worker.ts",
+      "src/lib/monitoring.ts",
+      "src/lib/debug-logger.ts",
+      "src/lib/offline.ts",
+      "src/lib/config.ts",
+      "src/lib/lovableConfig.ts",
+      "src/lib/security.ts",
+      "src/lib/database/providers/supabase.ts",
+      "src/lib/storage/providers/supabase.ts",
+      "src/integrations/supabase/client.ts",
+      "src/omniconnect/**/*.ts",
+      "src/worker.ts",
       "apex-resilience/**/*.ts",
-      "apps/dashboard/src/pages/**/*.tsx",
-      "tests/**/*.ts",
-      "infra/supabase/functions/**/*.ts",
+      "src/pages/**/*.tsx",  // Page components may log for debugging
+      "tests/**/*.ts",  // Test files may log
+      "supabase/functions/**/*.ts",  // Edge functions may log
     ],
     rules: {
-      "no-console": "off",
+      "no-console": "off",  // Legacy: uses console for debugging
     },
   },
 );

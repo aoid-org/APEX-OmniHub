@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { getLoopStatuses, recordLoopHeartbeat, resetHeartbeats } from '@/guardian/heartbeat';
+import { getLoopStatuses, recordLoopHeartbeat, resetHeartbeats } from '../../src/guardian/heartbeat';
 
 describe('guardian heartbeat', () => {
   beforeEach(() => {

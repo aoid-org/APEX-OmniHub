@@ -48,7 +48,7 @@ jobs:
 
       - name: Guardrail - No TS suppression in config files
         run: |
-          if grep -r "@ts-ignore\|@ts-expect-error" apps/dashboard/vitest.config.ts apps/dashboard/vite.config.ts apps/omnihub-site/vite.config.ts 2>/dev/null; then
+          if grep -r "@ts-ignore\|@ts-expect-error" vitest.config.ts vite.config.ts 2>/dev/null; then
             echo "❌ TS suppression comments found in config files"
             exit 1
           fi
@@ -77,7 +77,7 @@ jobs:
 
       - name: Security posture check
         run: |
-          bash tools/scripts/security/security-posture-check.sh
+          bash scripts/security/security-posture-check.sh
 
   smoke-tests:
     name: Smoke Tests

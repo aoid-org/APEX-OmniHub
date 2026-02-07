@@ -1,5 +1,5 @@
 {
-  "name": "@apex/site",
+  "name": "omnihub-site",
   "private": true,
   "version": "1.0.0",
   "type": "module",

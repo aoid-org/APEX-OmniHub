@@ -4,14 +4,14 @@ on:
   push:
     branches: [main, develop, 'claude/**']
     paths:
-      - 'tools/sim/**'
-      - 'docs/tools/sim/**'
+      - 'sim/**'
+      - 'docs/sim/**'
       - '.github/workflows/chaos-simulation-ci.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'tools/sim/**'
-      - 'docs/tools/sim/**'
+      - 'sim/**'
+      - 'docs/sim/**'
   schedule:
     # Run chaos tests daily at 2 AM UTC
     - cron: '0 2 * * *'

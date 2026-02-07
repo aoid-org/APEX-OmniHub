@@ -1,4 +1,4 @@
-import { assertGuardRails, checkGuardRailsFromEnv } from '../../../../tools/sim/guard-rails';
+import { assertGuardRails, checkGuardRailsFromEnv } from '../../../../sim/guard-rails';
 
 export function enforceSandboxGuardrails(omnilinkPortUrl?: string): void {
   assertGuardRails({

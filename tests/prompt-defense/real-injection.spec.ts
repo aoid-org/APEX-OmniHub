@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { evaluatePrompt } from '@/security/promptDefense';
+import { evaluatePrompt } from '../../src/security/promptDefense';
 
 interface FixtureRecord {
   prompt: string;

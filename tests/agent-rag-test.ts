@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { SkillRegistry } from '../infra/supabase/functions/_shared/skill-loader';
-import { SkillDefinition } from '../infra/supabase/functions/_shared/types';
+import { SkillRegistry } from '../supabase/functions/_shared/skill-loader';
+import { SkillDefinition } from '../supabase/functions/_shared/types';
 
 // Mock Supabase client
 vi.mock('@supabase/supabase-js', () => ({

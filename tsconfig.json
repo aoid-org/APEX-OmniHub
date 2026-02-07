@@ -1,38 +1,17 @@
 {
+  "files": [],
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "lib": ["ES2021", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./apps/dashboard/src/*"],
-      "@apex/ui": ["./packages/ui/src"],
-      "@apex/ui/*": ["./packages/ui/src/*"],
-      "@apex/types": ["./packages/types/src"],
-      "@apex/config": ["./packages/config"]
+      "@/*": ["./src/*"]
     },
-    "allowImportingTsExtensions": true,
-    "moduleDetection": "force",
-    "isolatedModules": true,
-    "noEmit": true,
-    "strict": true,
     "noImplicitAny": true,
     "noUnusedParameters": true,
     "skipLibCheck": true,
     "allowJs": true,
     "noUnusedLocals": true,
     "strictNullChecks": true,
-    "noFallthroughCasesInSwitch": true,
-    "useDefineForClassFields": true
-  },
-  "references": [
-    { "path": "./apps/dashboard" },
-    { "path": "./apps/omnihub-site" },
-    { "path": "./packages/ui" }
-  ],
-  "include": [],
-  "exclude": ["node_modules", "dist", "coverage", "apex-resilience"]
+    "strict": true
+  }
 }

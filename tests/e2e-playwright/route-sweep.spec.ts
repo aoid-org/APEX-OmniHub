@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { getAllRoutes, FEATURE_REGISTRY } from '../../apps/dashboard/src/features/registry';
+import { getAllRoutes, FEATURE_REGISTRY } from '../../src/features/registry';
 
 /**
  * Route Sweep E2E Tests

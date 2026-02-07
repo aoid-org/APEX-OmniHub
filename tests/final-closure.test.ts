@@ -1,7 +1,7 @@
 
 import { describe, it, expect } from 'vitest';
-import { SemanticTranslator } from '@/omniconnect/translation/translator';
-import { CanonicalEvent } from '@/omniconnect/types/canonical';
+import { SemanticTranslator } from '../src/omniconnect/translation/translator';
+import { CanonicalEvent } from '../src/omniconnect/types/canonical';
 
 
 
