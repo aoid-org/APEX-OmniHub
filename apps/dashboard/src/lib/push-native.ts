@@ -3,7 +3,9 @@
  * Handles FCM (Android) and APNS (iOS) push notifications
  */
 
+// @ts-ignore - Capacitor types issue
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
+// @ts-ignore - Capacitor types issue
 import { Capacitor } from '@capacitor/core';
 import { logAnalyticsEvent } from './monitoring';
 
