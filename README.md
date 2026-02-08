@@ -192,6 +192,7 @@ npm run build      # Production build
 
 | Document                                                                      | Description          |
 | ----------------------------------------------------------------------------- | -------------------- |
+| [CHANGELOG](./CHANGELOG.md)                                                   | Release history      |
 | [TECHNICAL_ARCHITECTURE_SPEC](./TECHNICAL_ARCHITECTURE_SPEC_WITH_WORKFLOW.md) | System design        |
 | [LAUNCH_READINESS](./LAUNCH_READINESS.md)                                     | Deployment checklist |
 | [orchestrator/README](./orchestrator/README.md)                               | Temporal setup       |

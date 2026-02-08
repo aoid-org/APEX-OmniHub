@@ -7,14 +7,14 @@ import { Connector, ConnectorRegistry } from '../types/connector';
 import { BarChart3, MessageCircle, Facebook, Mail, Youtube, Instagram, Music, Zap, Server, Globe, Smartphone, Bot } from 'lucide-react';
 
 export interface IntegrationDef {
-  id: string;
-  name: string;
-  type: string;
-  description: string;
-  icon: unknown;
-  requiresApiKey: boolean;
-  requiresUsername?: boolean;
-  scopes?: string[];
+  readonly id: string;
+  readonly name: string;
+  readonly type: string;
+  readonly description: string;
+  readonly icon: unknown;
+  readonly requiresApiKey: boolean;
+  readonly requiresUsername?: boolean;
+  readonly scopes?: string[];
 }
 
 export const availableIntegrations: IntegrationDef[] = [
@@ -37,7 +37,7 @@ export const availableIntegrations: IntegrationDef[] = [
 ];
 
 class ConnectorRegistryImpl implements ConnectorRegistry {
-  private connectors = new Map<string, Connector>();
+  private readonly connectors = new Map<string, Connector>();
 
   register(provider: string, connector: Connector): void {
     if (this.connectors.has(provider)) {

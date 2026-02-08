@@ -1,0 +1,479 @@
+Found 69 files with issues.
+
+## orchestrator/main.py
+- 1 month ago
+- Document this HTTPException with status code 500 in the "responses" parameter.
+- Not assigned
+- documentation
+
+## orchestrator/omniboard/router.py
+- Document this HTTPException with status code 404 in the "responses" parameter.
+- Not assigned
+- documentation
+
+## orchestrator/tests/omniboard/test_fsm.py
+- Not assigned
+- Remove this commented out code.
+- Replace the unused local variable "msg" with "_".
+
+## orchestrator/workflows/agent_saga.py
+- 1 month ago
+- Complete the task associated to this "TODO" comment.
+
+## public/offline.html
+- 1 month ago
+- 4 months ago
+- Don't use a zero fraction in the number.
+- Prefer top-level await over using a promise chain.
+- Text does not meet the minimal contrast requirement with its background.
+- accessibility
+- consistency
+- sandbox/chaotic-client-simulation.ts
+
+## scripts/backup/verify_backup.ts
+- 1 month ago
+- Prefer `node:crypto` over `crypto`.
+- Prefer `node:fs` over `fs`.
+- Prefer `node:path` over `path`.
+
+## scripts/check-react-singleton.mjs
+- 1 month ago
+- Prefer `node:child_process` over `child_process`.
+- Prefer top-level await over using a promise chain.
+
+## scripts/ci/check_docs_links.mjs
+- Adaptability
+- Not assigned
+- Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed.
+- `linkText` should be a `Set`, and use `linkText.has()` to check existence or non-existence.
+- brain-overload
+- optimization
+- performance
+
+## scripts/dr/run-dr-test.ts
+- 1 month ago
+- Prefer top-level await over an async function `main` call.
+
+## scripts/extensibility/plugin-validator.sh
+- Add an explicit return statement at the end of the function.
+- Assign this positional parameter to a local variable.
+- Not assigned
+- Use '[[' instead of '[' for conditional tests. The '[[' construct is safer and more feature-rich.
+- best-practice
+- best-practices
+
+## scripts/guardian/status.ts
+- 1 month ago
+- Prefer top-level await over using a promise chain.
+
+## scripts/omnilink/health.ts
+- 1 month ago
+- Prefer top-level await over using a promise chain.
+
+## scripts/ops/health-check-monitor.sh
+- Adaptability
+- Add an explicit return statement at the end of the function.
+- Define a constant instead of using the literal 'healthy' 7 times.
+- Define a constant instead of using the literal 'warning' 6 times.
+- Not assigned
+- Use '[[' instead of '[' for conditional tests. The '[[' construct is safer and more feature-rich.
+- best-practice
+- best-practices
+
+## scripts/prompt-defense/analyze_flags.ts
+- 1 month ago
+- Prefer `node:fs` over `fs`.
+- Prefer `node:path` over `path`.
+
+## scripts/quality/code-quality-report.sh
+- Use '[[' instead of '[' for conditional tests. The '[[' construct is safer and more feature-rich.
+- best-practices
+
+## scripts/scalability/capacity-analyzer.sh
+- Use '[[' instead of '[' for conditional tests. The '[[' construct is safer and more feature-rich.
+- best-practices
+
+## scripts/security/security-posture-check.sh
+- Add an explicit return statement at the end of the function.
+- Assign this positional parameter to a local variable.
+- Not assigned
+- Use '[[' instead of '[' for conditional tests. The '[[' construct is safer and more feature-rich.
+- best-practice
+- best-practices
+
+## scripts/smoke-test.ts
+- 1 month ago
+- Prefer top-level await over using a promise chain.
+
+## scripts/zero-trust/baseline-cli.ts
+- './contracts' imported multiple times.
+- 1 month ago
+- Adaptability
+- Do not call `Array#push()` multiple times.
+- Don't use a zero fraction in the number.
+- Extract this nested ternary operation into an independent statement.
+- Prefer `node:fs` over `fs`.
+- Prefer `node:path` over `path`.
+- Prefer top-level await over an async function `main` call.
+- Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.
+- Replace this union type with a type alias.
+- SELECT * should not be used.
+- brain-overload
+- consistency
+- performance
+- proficiency
+- sim/chaos-engine.ts
+- sim/contracts.ts
+- sim/evidence.ts
+- sim/guard-rails.ts
+- sim/metrics.ts
+- sim/migrations/001_create_idempotency_receipts.sql
+- sim/runner.ts
+- sim/telemetry.ts
+- sim/tests/chaos-engine.test.ts
+
+## src/components/ConsentBanner.tsx
+- 4 months ago
+- Use <dialog> instead of the "dialog" role to ensure accessibility across all devices.
+- accessibility
+
+## src/components/ErrorBoundary.tsx
+- 4 months ago
+- Member 'handleReset' is never reassigned; mark it as `readonly`.
+- type-dependent
+
+## src/components/NFTGatedContent.tsx
+- 1 month ago
+- Mark the props of the component as read-only.
+- type-dependent
+
+## src/components/OmniDashNavIconButton.tsx
+- Not assigned
+- Prefer `String#replaceAll()` over `String#replace()`.
+
+## src/components/VoiceInterface.tsx
+- 3 months ago
+- Unexpected negated condition.
+
+## src/components/ui/breadcrumb.tsx
+- 4 months ago
+- Use <a href=...>, or <area href=...> instead of the "link" role to ensure accessibility across all devices.
+- Use <img alt=...> instead of the "presentation" role to ensure accessibility across all devices.
+- accessibility
+
+## src/components/ui/calendar.tsx
+- 4 months ago
+- Move this component definition out of the parent component and pass data as props.
+- performance
+
+## src/components/ui/sonner.tsx
+- 4 months ago
+- Use `export…from` to re-export `toast`.
+
+## src/components/ui/use-toast.ts
+- 4 months ago
+- Use `export…from` to re-export `toast`.
+- Use `export…from` to re-export `useToast`.
+
+## src/guardian/loops.ts
+- 1 month ago
+- Do not call `Array#push()` multiple times.
+- Prefer `globalThis.window` over `window`.
+- performance
+- portability
+
+## src/integrations/lovable/client.ts
+- 1 month ago
+- Adaptability
+- Prefer `globalThis.window` over `window`.
+- Refactor this function to reduce its Cognitive Complexity from 23 to the 15 allowed.
+- Unexpected negated condition.
+- brain-overload
+- portability
+
+## src/integrations/omnilink/port.ts
+- 1 month ago
+- Adaptability
+- Prefer `globalThis.window` over `window`.
+- Refactor this function to reduce its Cognitive Complexity from 21 to the 15 allowed.
+- The empty object is useless.
+- brain-overload
+- portability
+- spread-operator
+- unnecessary
+
+## src/integrations/supabase/client.ts
+- 1 month ago
+- This assertion is unnecessary since the receiver accepts the original type of the expression.
+- type-dependent
+
+## src/integrations/supabase/types.ts
+- 'never' is overridden by other types in this union type.
+- 4 months ago
+- type-dependent
+
+## src/lib/batch-processor.ts
+- 4 months ago
+- Member 'batchHandler: (items: T[]) => Promise<R[]>' is never reassigned; mark it as `readonly`.
+- Member 'options: { maxBatchSize?: number; maxWaitMs?: number; }' is never reassigned; mark it as `readonly`.
+- Member 'queue' is never reassigned; mark it as `readonly`.
+- type-dependent
+
+## src/lib/biometric-auth.ts
+- .cursor/superpowers/hooks/session-start.sh
+- 1 month ago
+- Not assigned
+- Prefer `String#replaceAll()` over `String#replace()`.
+- Redirect this error message to stderr (>&2).
+
+## src/lib/connection-pool.ts
+- 4 months ago
+- Member 'connections' is never reassigned; mark it as `readonly`.
+- Member 'idleTimeout' is never reassigned; mark it as `readonly`.
+- Member 'maxConnections' is never reassigned; mark it as `readonly`.
+- type-dependent
+
+## src/lib/database/providers/supabase.ts
+- 1 month ago
+- Member 'client' is never reassigned; mark it as `readonly`.
+- Member 'debug' is never reassigned; mark it as `readonly`.
+- type-dependent
+
+## src/lib/extensibility/pluginRegistry.ts
+- Adaptability
+- Define a constant instead of duplicating this literal 3 times.
+- Define a constant instead of duplicating this literal 4 times.
+- Define a constant instead of duplicating this literal 5 times.
+- Define a constant instead of duplicating this literal 6 times.
+- Define a constant instead of duplicating this literal 9 times.
+- Member 'metrics' is never reassigned; mark it as `readonly`.
+- Member 'plugins' is never reassigned; mark it as `readonly`.
+- Not assigned
+- Remove this commented out code.
+- supabase/migrations/20260111000000_omnilink_universal_port.sql
+- supabase/migrations/20260124000000_omniport_dlq.sql
+- supabase/migrations/20260201000000_omnilink_task_dispatch.sql
+- supabase/migrations/20260205000000_unify_admin_system.sql
+- supabase/migrations/20260205000001_omnidash_paid_access.sql
+- type-dependent
+
+## src/lib/graceful-degradation.ts
+- 4 months ago
+- Expected an error object to be thrown.
+- Member 'services' is never reassigned; mark it as `readonly`.
+- Member 'threshold: number' is never reassigned; mark it as `readonly`.
+- Member 'timeout: number' is never reassigned; mark it as `readonly`.
+- error-handling
+- type-dependent
+
+## src/lib/storage/providers/supabase.ts
+- 1 month ago
+- Member 'client' is never reassigned; mark it as `readonly`.
+- Member 'debug' is never reassigned; mark it as `readonly`.
+- type-dependent
+
+## src/omniconnect/connectors/meta-business.ts
+- 1 month ago
+- Complete the task associated to this "TODO" comment.
+
+## src/omniconnect/core/omniconnect.ts
+- 1 month ago
+- Complete the task associated to this "TODO" comment.
+- Member 'config' is never reassigned; mark it as `readonly`.
+- Member 'delivery' is never reassigned; mark it as `readonly`.
+- Member 'entitlements' is never reassigned; mark it as `readonly`.
+- Member 'policyEngine' is never reassigned; mark it as `readonly`.
+- Member 'tokenStorage' is never reassigned; mark it as `readonly`.
+- Member 'translator' is never reassigned; mark it as `readonly`.
+- type-dependent
+
+## src/omniconnect/core/registry.ts
+- 1 month ago
+- Member 'connectors' is never reassigned; mark it as `readonly`.
+- type-dependent
+
+## src/omniconnect/delivery/omnilink-delivery.ts
+- 1 month ago
+- Complete the task associated to this "TODO" comment.
+- Member 'baseDelay' is never reassigned; mark it as `readonly`.
+- Member 'maxRetries' is never reassigned; mark it as `readonly`.
+- type-dependent
+
+## src/omniconnect/entitlements/entitlements-service.ts
+- 1 month ago
+- Complete the task associated to this "TODO" comment.
+- Member 'entitlements' is never reassigned; mark it as `readonly`.
+- type-dependent
+
+## src/omniconnect/policy/policy-engine.ts
+- 1 month ago
+- Complete the task associated to this "TODO" comment.
+- Member 'profiles' is never reassigned; mark it as `readonly`.
+- type-dependent
+
+## src/omniconnect/storage/encrypted-storage.ts
+- 1 month ago
+- Complete the task associated to this "TODO" comment.
+- Member 'storage' is never reassigned; mark it as `readonly`.
+- type-dependent
+
+## src/omniconnect/translation/translator.ts
+- 1 month ago
+- Complete the task associated to this "TODO" comment.
+- Member 'translators' is never reassigned; mark it as `readonly`.
+- type-dependent
+
+## src/omniconnect/utils/validation.ts
+- 1 month ago
+- Complete the task associated to this "TODO" comment.
+
+## src/pages/Diagnostics.tsx
+- 1 month ago
+- Extract this nested ternary operation into an independent statement.
+
+## src/pages/Files.tsx
+- 4 months ago
+- Move function 'formatFileSize' to the outer scope.
+- optimization
+
+## src/pages/Health.tsx
+- 1 month ago
+- Adaptability
+- Extract this nested ternary operation into an independent statement.
+- Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed.
+- brain-overload
+
+## src/pages/Index.tsx
+- 4 months ago
+- Do not use Array index in keys
+- performance
+
+## src/providers/Web3Provider.tsx
+- 1 month ago
+- Mark the props of the component as read-only.
+- type-dependent
+
+## src/security/auditLog.ts
+- 1 month ago
+- Adaptability
+- Refactor this function to reduce its Cognitive Complexity from 25 to the 15 allowed.
+- brain-overload
+
+## src/utils/RealtimeAudio.ts
+- '(bufferSize?: number | undefined, numberOfInputChannels?: number | undefined, numberOfOutputChannels?: number | undefined): ScriptProcessorNode' is deprecated.
+- 'ScriptProcessorNode' is deprecated.
+- 'inputBuffer' is deprecated.
+- 'onaudioprocess' is deprecated.
+- 3 months ago
+- Member 'audioContext' is never reassigned; mark it as `readonly`.
+- Member 'onAudioData: (audioData: Float32Array) => void' is never reassigned; mark it as `readonly`.
+- Prefer using nullish coalescing operator (`??=`) instead of an assignment expression, as it is simpler to read.
+- nullish-coalescing
+- type-dependent
+
+## src/zero-trust/deviceRegistry.ts
+- 1 month ago
+- 4 months ago
+- Adaptability
+- Define a constant instead of duplicating this literal 3 times.
+- Define a constant instead of duplicating this literal 4 times.
+- Define a constant instead of duplicating this literal 5 times.
+- Define a constant instead of duplicating this literal 6 times.
+- Define a constant instead of duplicating this literal 7 times.
+- Define a constant instead of duplicating this literal 9 times.
+- Not assigned
+- Prefer `structuredClone(…)` over `JSON.parse(JSON.stringify(…))` to create a deep clone.
+- Prefer top-level await over an async function `loadRegistryFromLocal` call.
+- Prefer top-level await over an async function `loadUpsertQueue` call.
+- Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed.
+- Refactor this function to reduce its Cognitive Complexity from 27 to the 15 allowed.
+- Refactor this function to reduce its Cognitive Complexity from 32 to the 15 allowed.
+- Remove this commented out code.
+- Remove this useless assignment to variable "userId".
+- Replace this union type with a type alias.
+- brain-overload
+- proficiency
+- supabase/functions/alchemy-webhook/index.ts
+- supabase/functions/lovable-audit/index.ts
+- supabase/functions/lovable-device/index.ts
+- supabase/functions/omnilink-agent/guardian.ts
+- supabase/functions/omnilink-eval/index.ts
+- supabase/functions/web3-verify/index.ts
+- supabase/migrations/20251003094610_9ce8947e-f3b6-46cc-8bfa-b93d2677bdd9.sql
+- supabase/migrations/20251004072520_8fcd5084-a6fc-4a13-a994-3cb1d7e12125.sql
+- supabase/migrations/20251221000001_omnilink_ops_pack.sql
+- supabase/migrations/20251231000000_apex_ascension_governance.sql
+- supabase/migrations/20260101000000_create_web3_verification.sql
+- supabase/migrations/20260103000000_create_emergency_controls.sql
+- supabase/migrations/20260107000000_create_paid_access_system.sql
+- supabase/migrations/20260108120000_man_mode.sql
+- supabase/migrations/20260111000000_omnilink_universal_port.sql
+- supabase/migrations/20260124000000_omniport_dlq.sql
+- supabase/migrations/20260201000000_omnilink_task_dispatch.sql
+- supabase/migrations/20260205000000_unify_admin_system.sql
+- supabase/migrations/20260205000001_omnidash_paid_access.sql
+
+## tests/agent-rag-test.ts
+- 1 month ago
+- Adaptability
+- Refactor this code to not nest functions more than 4 levels deep.
+- brain-overload
+
+## tests/components/voiceBackoff.spec.tsx
+- 1 month ago
+- Adaptability
+- Make this public static property readonly.
+- Prefer `globalThis` over `global`.
+- Unexpected empty method 'send'.
+- portability
+
+## tests/lib/database/database.spec.ts
+- 1 month ago
+- Prefer `.some(…)` over `.find(…)`.
+- performance
+
+## tests/omnidash/keyboard-shortcuts.spec.ts
+- Not assigned
+- Prefer `childNode.remove()` over `parentNode.removeChild(childNode)`.
+
+## tests/prompt-defense/real-injection.spec.ts
+- 1 month ago
+- Prefer `node:fs` over `fs`.
+- Prefer `node:path` over `path`.
+
+## tests/quality/platform-quality-gates.test.ts
+- Prefer `node:child_process` over `child_process`.
+- Prefer `node:fs` over `fs`.
+- Prefer `node:path` over `path`.
+
+## tests/smoke/assets-check.mjs
+- 1 month ago
+- Extract this nested ternary operation into an independent statement.
+- Prefer `node:fs` over `fs`.
+- Prefer `node:path` over `path`.
+- Prefer top-level await over using a promise chain.
+
+## tests/stress/battery.spec.ts
+- 1 month ago
+- Prefer `globalThis` over `window`.
+- portability
+
+## tests/stress/load-capacity-benchmark.test.ts
+- Don't use a zero fraction in the number.
+- Prefer `node:perf_hooks` over `perf_hooks`.
+- consistency
+
+## tests/stress/memory-stress.spec.ts
+- 1 month ago
+- Prefer `globalThis` over `global`.
+- Prefer `globalThis` over `window`.
+- portability
+
+## tests/triforce/guardian.spec.ts
+- 1 month ago
+- `String.raw` should be used to avoid escaping `\`.
+
+## tests/web3/wallet-integration.test.tsx
+- 1 month ago
+- Prefer `globalThis` over `global`.
+- portability

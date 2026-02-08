@@ -21,8 +21,8 @@ import type {
 // ============================================================================
 
 export class SupabaseDatabase implements IDatabase {
-  private client: SupabaseClient<Database>
-  private debug: boolean
+  private readonly client: SupabaseClient<Database>
+  private readonly debug: boolean
 
   constructor(options: {
     url: string

@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }).catch(() => {});
   }
 
-  private handleReset = () => {
+  private readonly handleReset = () => {
     this.setState({ hasError: false, error: null });
   };
 

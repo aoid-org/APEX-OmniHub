@@ -19,14 +19,14 @@
     }
     .container {
       max-width: 500px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.3);
       backdrop-filter: blur(10px);
       border-radius: 20px;
       padding: 40px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     }
-    h1 { font-size: 2.5em; margin-bottom: 0.5em; }
-    p { font-size: 1.1em; margin-bottom: 2em; opacity: 0.9; }
+    h1 { font-size: 2.5em; margin-bottom: 0.5em; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    p { font-size: 1.1em; margin-bottom: 2em; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
     button {
       background: white;
       color: #667eea;
@@ -40,13 +40,19 @@
     }
     button:hover { transform: scale(1.05); }
     button:active { transform: scale(0.95); }
+    button:focus { outline: 3px solid rgba(255,255,255,0.5); outline-offset: 2px; }
   </style>
 </head>
 <body>
-  <div class="container">
+  <main class="container" role="alert" aria-live="polite">
     <h1>📡 You're Offline</h1>
     <p>OmniLink requires an internet connection. Please check your network and try again.</p>
-    <button onclick="window.location.reload()">Try Again</button>
-  </div>
+    <button id="retry-btn" type="button" aria-label="Retry loading the page">Try Again</button>
+  </main>
+  <script>
+    document.getElementById('retry-btn').addEventListener('click', function() {
+      window.location.reload();
+    });
+  </script>
 </body>
 </html>

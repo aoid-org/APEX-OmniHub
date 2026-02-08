@@ -4,16 +4,16 @@
 import { recordLoopHeartbeat } from '@/guardian/heartbeat';
 
 interface PooledConnection {
-  id: string;
+  readonly id: string;
   inUse: boolean;
   lastUsed: number;
-  cleanup?: () => void;
+  readonly cleanup?: () => void;
 }
 
 class ConnectionPool {
-  private connections: Map<string, PooledConnection> = new Map();
-  private maxConnections: number;
-  private idleTimeout: number;
+  private readonly connections: Map<string, PooledConnection> = new Map();
+  private readonly maxConnections: number;
+  private readonly idleTimeout: number;
   private cleanupInterval: NodeJS.Timeout | null = null;
 
   constructor(maxConnections = 10, idleTimeout = 60000) {

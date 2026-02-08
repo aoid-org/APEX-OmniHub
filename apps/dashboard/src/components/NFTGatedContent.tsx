@@ -19,17 +19,17 @@ import { checkEntitlement } from '@/lib/web3/entitlements';
 import { Loader2, Lock, Unlock, AlertTriangle, Crown } from 'lucide-react';
 
 interface NFTGateConfig {
-  contractAddress: string;
-  chainId: number;
-  entitlementKey: string;
-  title: string;
-  description: string;
+  readonly contractAddress: string;
+  readonly chainId: number;
+  readonly entitlementKey: string;
+  readonly title: string;
+  readonly description: string;
 }
 
 interface NFTGatedContentProps {
-  config: NFTGateConfig;
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  readonly config: NFTGateConfig;
+  readonly children: React.ReactNode;
+  readonly fallback?: React.ReactNode;
 }
 
 /**
