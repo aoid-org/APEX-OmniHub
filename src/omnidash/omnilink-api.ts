@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logError } from '@/lib/debug-logger';
+import type { Database } from '@/integrations/supabase/types';
 import type {
   OmniLinkApiKey,
   OmniLinkEntity,
@@ -13,6 +14,8 @@ import type {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
+type TableName = keyof Database['public']['Tables'];
+
 function requireSupabaseUrl(): string {
   if (!SUPABASE_URL) {
     throw new Error('Supabase URL is not configured');
@@ -20,34 +23,95 @@ function requireSupabaseUrl(): string {
   return SUPABASE_URL;
 }
 
-export async function fetchOmniLinkIntegrations(userId: string): Promise<OmniLinkIntegration[]> {
-  const { data, error } = await supabase
-    .from('integrations')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+// ---------------------------------------------------------------------------
+// Generic list fetcher — eliminates per-table fetch duplication
+// ---------------------------------------------------------------------------
 
-  if (error) {
-    logError(error, { action: 'omnilink_fetch_integrations' });
-    throw error;
-  }
-
-  return (data ?? []) as OmniLinkIntegration[];
+interface FetchListOptions {
+  table: TableName;
+  userColumn: string;
+  orderBy: string;
+  action: string;
+  limit?: number;
+  extraFilters?: Record<string, string>;
 }
 
-export async function fetchOmniLinkKeys(userId: string): Promise<OmniLinkApiKey[]> {
-  const { data, error } = await supabase
-    .from('omnilink_api_keys')
+async function fetchList<T>(userId: string, opts: FetchListOptions): Promise<T[]> {
+  let query = supabase
+    .from(opts.table)
     .select('*')
-    .eq('tenant_id', userId)
-    .order('created_at', { ascending: false });
+    .eq(opts.userColumn, userId)
+    .order(opts.orderBy, { ascending: false });
+
+  if (opts.extraFilters) {
+    for (const [col, val] of Object.entries(opts.extraFilters)) {
+      query = query.eq(col, val);
+    }
+  }
+
+  if (opts.limit) {
+    query = query.limit(opts.limit);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
-    logError(error, { action: 'omnilink_fetch_keys' });
+    logError(error, { action: opts.action });
     throw error;
   }
 
-  return (data ?? []) as OmniLinkApiKey[];
+  return (data ?? []) as T[];
+}
+
+// ---------------------------------------------------------------------------
+// Authenticated edge-function caller — eliminates per-endpoint duplication
+// ---------------------------------------------------------------------------
+
+async function callEdgeFunction<T>(path: string, action: string): Promise<T> {
+  const { data: session } = await supabase.auth.getSession();
+  const token = session.session?.access_token;
+  if (!token) {
+    throw new Error('No authenticated session found');
+  }
+
+  const url = `${requireSupabaseUrl()}/functions/v1/${path}`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    logError(new Error(`${action} failed: ${text}`), { action });
+    throw new Error(`${action} failed (${response.status}): ${text}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+// ---------------------------------------------------------------------------
+// Public API — thin wrappers over generic helpers
+// ---------------------------------------------------------------------------
+
+export function fetchOmniLinkIntegrations(userId: string): Promise<OmniLinkIntegration[]> {
+  return fetchList<OmniLinkIntegration>(userId, {
+    table: 'integrations',
+    userColumn: 'user_id',
+    orderBy: 'created_at',
+    action: 'omnilink_fetch_integrations',
+  });
+}
+
+export function fetchOmniLinkKeys(userId: string): Promise<OmniLinkApiKey[]> {
+  return fetchList<OmniLinkApiKey>(userId, {
+    table: 'omnilink_api_keys',
+    userColumn: 'tenant_id',
+    orderBy: 'created_at',
+    action: 'omnilink_fetch_keys',
+  });
 }
 
 export async function createOmniLinkIntegration(userId: string, name: string, type: string): Promise<OmniLinkIntegration> {
@@ -106,68 +170,44 @@ export async function revokeOmniLinkKey(userId: string, keyId: string): Promise<
   }
 }
 
-export async function fetchOmniLinkEvents(userId: string): Promise<OmniLinkEvent[]> {
-  const { data, error } = await supabase
-    .from('omnilink_events')
-    .select('*')
-    .eq('tenant_id', userId)
-    .order('received_at', { ascending: false })
-    .limit(50);
-
-  if (error) {
-    logError(error, { action: 'omnilink_fetch_events' });
-    throw error;
-  }
-
-  return (data ?? []) as OmniLinkEvent[];
+export function fetchOmniLinkEvents(userId: string): Promise<OmniLinkEvent[]> {
+  return fetchList<OmniLinkEvent>(userId, {
+    table: 'omnilink_events',
+    userColumn: 'tenant_id',
+    orderBy: 'received_at',
+    action: 'omnilink_fetch_events',
+    limit: 50,
+  });
 }
 
-export async function fetchOmniLinkEntities(userId: string): Promise<OmniLinkEntity[]> {
-  const { data, error } = await supabase
-    .from('omnilink_entities')
-    .select('*')
-    .eq('tenant_id', userId)
-    .order('updated_at', { ascending: false })
-    .limit(50);
-
-  if (error) {
-    logError(error, { action: 'omnilink_fetch_entities' });
-    throw error;
-  }
-
-  return (data ?? []) as OmniLinkEntity[];
+export function fetchOmniLinkEntities(userId: string): Promise<OmniLinkEntity[]> {
+  return fetchList<OmniLinkEntity>(userId, {
+    table: 'omnilink_entities',
+    userColumn: 'tenant_id',
+    orderBy: 'updated_at',
+    action: 'omnilink_fetch_entities',
+    limit: 50,
+  });
 }
 
-export async function fetchOmniLinkRuns(userId: string): Promise<OmniLinkRun[]> {
-  const { data, error } = await supabase
-    .from('omnilink_runs')
-    .select('*')
-    .eq('tenant_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(50);
-
-  if (error) {
-    logError(error, { action: 'omnilink_fetch_runs' });
-    throw error;
-  }
-
-  return (data ?? []) as OmniLinkRun[];
+export function fetchOmniLinkRuns(userId: string): Promise<OmniLinkRun[]> {
+  return fetchList<OmniLinkRun>(userId, {
+    table: 'omnilink_runs',
+    userColumn: 'tenant_id',
+    orderBy: 'created_at',
+    action: 'omnilink_fetch_runs',
+    limit: 50,
+  });
 }
 
-export async function fetchOmniLinkApprovals(userId: string): Promise<OmniLinkOrchestrationRequest[]> {
-  const { data, error } = await supabase
-    .from('omnilink_orchestration_requests')
-    .select('*')
-    .eq('tenant_id', userId)
-    .eq('status', 'waiting_approval')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    logError(error, { action: 'omnilink_fetch_approvals' });
-    throw error;
-  }
-
-  return (data ?? []) as OmniLinkOrchestrationRequest[];
+export function fetchOmniLinkApprovals(userId: string): Promise<OmniLinkOrchestrationRequest[]> {
+  return fetchList<OmniLinkOrchestrationRequest>(userId, {
+    table: 'omnilink_orchestration_requests',
+    userColumn: 'tenant_id',
+    orderBy: 'created_at',
+    action: 'omnilink_fetch_approvals',
+    extraFilters: { status: 'waiting_approval' },
+  });
 }
 
 export async function decideOmniLinkApproval(
@@ -191,59 +231,16 @@ export async function decideOmniLinkApproval(
 // OmniTrace API - Workflow Run Observability
 // =============================================================================
 
-/**
- * Fetch OmniTrace runs for the current user via Edge function.
- * Uses authenticated session token for RLS-enforced access.
- */
-export async function fetchOmniTraceRuns(limit: number = 50): Promise<OmniTraceRunsListResponse> {
-  const { data: session } = await supabase.auth.getSession();
-  const token = session.session?.access_token;
-  if (!token) {
-    throw new Error('No authenticated session found');
-  }
-
-  const url = `${requireSupabaseUrl()}/functions/v1/omni-runs?limit=${limit}`;
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    logError(new Error(`Failed to fetch runs: ${text}`), { action: 'omnitrace_fetch_runs' });
-    throw new Error(`Failed to fetch runs (${response.status}): ${text}`);
-  }
-
-  return (await response.json()) as OmniTraceRunsListResponse;
+export function fetchOmniTraceRuns(limit: number = 50): Promise<OmniTraceRunsListResponse> {
+  return callEdgeFunction<OmniTraceRunsListResponse>(
+    `omni-runs?limit=${limit}`,
+    'omnitrace_fetch_runs',
+  );
 }
 
-/**
- * Fetch OmniTrace run detail with events via Edge function.
- */
-export async function fetchOmniTraceRunDetail(workflowId: string): Promise<OmniTraceRunDetailResponse> {
-  const { data: session } = await supabase.auth.getSession();
-  const token = session.session?.access_token;
-  if (!token) {
-    throw new Error('No authenticated session found');
-  }
-
-  const url = `${requireSupabaseUrl()}/functions/v1/omni-runs/${encodeURIComponent(workflowId)}`;
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    logError(new Error(`Failed to fetch run detail: ${text}`), { action: 'omnitrace_fetch_run_detail' });
-    throw new Error(`Failed to fetch run detail (${response.status}): ${text}`);
-  }
-
-  return (await response.json()) as OmniTraceRunDetailResponse;
+export function fetchOmniTraceRunDetail(workflowId: string): Promise<OmniTraceRunDetailResponse> {
+  return callEdgeFunction<OmniTraceRunDetailResponse>(
+    `omni-runs/${encodeURIComponent(workflowId)}`,
+    'omnitrace_fetch_run_detail',
+  );
 }

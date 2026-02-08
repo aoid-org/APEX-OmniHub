@@ -98,9 +98,9 @@ export function getDatabase(): IDatabase {
  * Lazy-loaded on first access
  */
 export const db = new Proxy({} as IDatabase, {
-  get(target, prop) {
+  get(_target, prop) {
     const instance = getDatabase()
-    return (instance as unknown)[prop]
+    return (instance as Record<string | symbol, unknown>)[prop]
   },
 })
 

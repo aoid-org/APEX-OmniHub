@@ -16,13 +16,15 @@ import type {
   DatabaseListResult,
 } from '../interface'
 
+type TableName = keyof Database['public']['Tables']
+
 // ============================================================================
 // SUPABASE PROVIDER
 // ============================================================================
 
 export class SupabaseDatabase implements IDatabase {
   private client: SupabaseClient<Database>
-  private userContext: string | null = null
+  private _userContext: string | null = null
   private debug: boolean
 
   constructor(options: {
@@ -45,85 +47,79 @@ export class SupabaseDatabase implements IDatabase {
   // HELPER: Apply filters to query
   // -------------------------------------------------------------------------
 
-  private applyFilters<_T>(query: unknown, filters?: QueryFilter[]) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private applyFilters(query: any, filters?: QueryFilter[]) {
     if (!filters || filters.length === 0) return query
 
-    let modifiedQuery = query
+    let q = query
 
     for (const filter of filters) {
       switch (filter.operator) {
         case '=':
-          modifiedQuery = modifiedQuery.eq(filter.column, filter.value)
+          q = q.eq(filter.column, filter.value)
           break
         case '!=':
-          modifiedQuery = modifiedQuery.neq(filter.column, filter.value)
+          q = q.neq(filter.column, filter.value)
           break
         case '>':
-          modifiedQuery = modifiedQuery.gt(filter.column, filter.value)
+          q = q.gt(filter.column, filter.value)
           break
         case '>=':
-          modifiedQuery = modifiedQuery.gte(filter.column, filter.value)
+          q = q.gte(filter.column, filter.value)
           break
         case '<':
-          modifiedQuery = modifiedQuery.lt(filter.column, filter.value)
+          q = q.lt(filter.column, filter.value)
           break
         case '<=':
-          modifiedQuery = modifiedQuery.lte(filter.column, filter.value)
+          q = q.lte(filter.column, filter.value)
           break
         case 'in':
-          modifiedQuery = modifiedQuery.in(
+          q = q.in(
             filter.column,
             Array.isArray(filter.value) ? filter.value : [filter.value]
           )
           break
         case 'like':
-          modifiedQuery = modifiedQuery.like(filter.column, filter.value as string)
+          q = q.like(filter.column, filter.value as string)
           break
         case 'ilike':
-          modifiedQuery = modifiedQuery.ilike(filter.column, filter.value as string)
+          q = q.ilike(filter.column, filter.value as string)
           break
         default:
           console.warn(`[SupabaseDatabase] Unknown operator: ${filter.operator}`)
       }
     }
 
-    return modifiedQuery
+    return q
   }
 
   // -------------------------------------------------------------------------
   // HELPER: Apply query options
   // -------------------------------------------------------------------------
 
-  private applyOptions<_T>(query: unknown, options?: QueryOptions) {
-    let modifiedQuery = query
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private applyOptions(query: any, options?: QueryOptions) {
+    let q = query
 
-    // Apply filters
     if (options?.filters) {
-      modifiedQuery = this.applyFilters(modifiedQuery, options.filters)
+      q = this.applyFilters(q, options.filters)
     }
 
-    // Apply ordering
     if (options?.orderBy) {
-      modifiedQuery = modifiedQuery.order(
+      q = q.order(
         options.orderBy.column,
         { ascending: options.orderBy.ascending ?? true }
       )
     }
 
-    // Apply select (specific columns)
-    // Note: In Supabase, select should be applied first, so this is a limitation
-    // For now, we'll document that select should be handled differently
-
-    // Apply limit/offset
     if (options?.limit !== undefined) {
       const offset = options?.offset || 0
-      modifiedQuery = modifiedQuery.range(offset, offset + options.limit - 1)
+      q = q.range(offset, offset + options.limit - 1)
     } else if (options?.offset !== undefined) {
-      // Offset without limit - use large limit as workaround
-      modifiedQuery = modifiedQuery.range(options.offset, options.offset + 999)
+      q = q.range(options.offset, options.offset + 999)
     }
 
-    return modifiedQuery
+    return q
   }
 
   // -------------------------------------------------------------------------
@@ -149,7 +145,7 @@ export class SupabaseDatabase implements IDatabase {
     try {
       const select = this.formatSelect(options?.select)
       const { data, error } = await this.client
-        .from(table)
+        .from(table as TableName)
         .select(select)
         .eq('id', id)
         .single()
@@ -173,7 +169,7 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseListResult<T>> {
     try {
       const select = this.formatSelect(options?.select)
-      let query = this.client.from(table).select(select, { count: 'exact' })
+      let query = this.client.from(table as TableName).select(select, { count: 'exact' })
 
       query = this.applyOptions(query, options)
 
@@ -199,7 +195,7 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseResult<T>> {
     try {
       const select = this.formatSelect(options?.select)
-      let query = this.client.from(table).select(select)
+      let query = this.client.from(table as TableName).select(select)
 
       query = this.applyOptions(query, options)
 
@@ -228,7 +224,7 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseResult<number>> {
     try {
       let query = this.client
-        .from(table)
+        .from(table as TableName)
         .select('*', { count: 'exact', head: true })
 
       if (options?.filters) {
@@ -260,8 +256,9 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseResult<T>> {
     try {
       const { data: result, error } = await this.client
-        .from(table)
-        .insert(data as unknown)
+        .from(table as TableName)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .insert(data as any)
         .select()
         .single()
 
@@ -284,8 +281,9 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseListResult<T>> {
     try {
       const { data: result, error } = await this.client
-        .from(table)
-        .insert(data as unknown[])
+        .from(table as TableName)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .insert(data as any)
         .select()
 
       if (error) {
@@ -307,7 +305,8 @@ export class SupabaseDatabase implements IDatabase {
     options?: { filters?: QueryFilter[] }
   ): Promise<DatabaseListResult<T>> {
     try {
-      let query = this.client.from(table).update(data as unknown)
+      let query = this.client.from(table as TableName)// eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .update(data as any)
 
       if (options?.filters) {
         query = this.applyFilters(query, options.filters)
@@ -335,8 +334,9 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseResult<T>> {
     try {
       const { data: result, error } = await this.client
-        .from(table)
-        .update(data as unknown)
+        .from(table as TableName)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .update(data as any)
         .eq('id', id)
         .select()
         .single()
@@ -359,7 +359,7 @@ export class SupabaseDatabase implements IDatabase {
     options?: { filters?: QueryFilter[] }
   ): Promise<DatabaseResult<boolean>> {
     try {
-      let query = this.client.from(table).delete()
+      let query = this.client.from(table as TableName).delete()
 
       if (options?.filters) {
         query = this.applyFilters(query, options.filters)
@@ -392,7 +392,7 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseResult<boolean>> {
     try {
       const { error } = await this.client
-        .from(table)
+        .from(table as TableName)
         .delete()
         .eq('id', id)
 
@@ -420,7 +420,8 @@ export class SupabaseDatabase implements IDatabase {
     try {
       // Supabase doesn't have direct raw SQL API in client library
       // Use RPC function as workaround
-      const { data, error } = await this.client.rpc('execute_sql' as unknown, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await this.client.rpc('execute_sql' as any, {
         query_text: query,
         query_params: params || [],
       })
@@ -486,7 +487,7 @@ export class SupabaseDatabase implements IDatabase {
   }
 
   setUserContext(userId: string): void {
-    this.userContext = userId
+    this._userContext = userId
     // In Supabase, RLS is handled automatically via JWT
     // This method is for compatibility with other providers
   }
@@ -606,7 +607,7 @@ export class SupabaseDatabase implements IDatabase {
             // Apply filters client-side (limitation of Supabase realtime)
             if (options?.filters && options.filters.length > 0) {
               const matches = options.filters.every(filter => {
-                const value = (record as unknown)[filter.column]
+                const value = (record as Record<string, unknown>)[filter.column]
                 switch (filter.operator) {
                   case '=':
                     return value === filter.value

@@ -1,9 +1,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logError } from '@/lib/monitoring';
 import { recordAuditEvent } from '@/security/auditLog';
+import type { Database } from '@/integrations/supabase/types';
 import { Incident, KpiDaily, PipelineItem, TodayItem, OmniDashSettings } from './types';
 
-async function handleError<T>(promise: Promise<{ data: T | null; error: unknown }>, context: string): Promise<T> {
+type TableName = keyof Database['public']['Tables'];
+
+async function handleError<T>(promise: Promise<{ data: T | null; error: { message: string } | null }>, context: string): Promise<T> {
   const { data, error } = await promise;
   if (error) {
     logError(error, { action: `omnidash_${context}` });
@@ -202,8 +205,9 @@ export async function addIncident(incident: Partial<Incident> & { user_id: strin
 }
 
 export async function fetchHealthSnapshot(userId: string): Promise<{ lastUpdated: string | null }> {
+  const healthTables: TableName[] = ['omnidash_today_items', 'omnidash_pipeline_items', 'omnidash_kpi_daily', 'omnidash_incidents', 'omnidash_settings'];
   const latest = await Promise.all(
-    ['omnidash_today_items', 'omnidash_pipeline_items', 'omnidash_kpi_daily', 'omnidash_incidents', 'omnidash_settings'].map(
+    healthTables.map(
       async (table) => {
         const res = await supabase
           .from(table)
