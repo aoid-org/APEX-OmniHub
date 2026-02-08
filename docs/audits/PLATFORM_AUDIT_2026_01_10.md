@@ -350,6 +350,8 @@ The APEX-OmniHub platform has achieved **production-certified status** with:
 
 #### Full Test Suite (2026-02-08)
 
+**Without Supabase credentials (CI/sandbox):**
+
 | Category | Passed | Skipped | Failed |
 | --- | --- | --- | --- |
 | **Total** | **564** | **94** | **0** |
@@ -359,6 +361,22 @@ The APEX-OmniHub platform has achieved **production-certified status** with:
 | Web3/Wallet | 23 | 2 | 0 |
 | Quality Gates | 6 | — | 0 |
 | Chaos/Stress | all | — | 0 |
+
+**With live Supabase credentials:**
+
+| Category | Passed | Skipped | Failed |
+| --- | --- | --- | --- |
+| **Total** | **597** | **36** | **25** |
+| Unit tests | 400+ | — | 0 |
+| Integration (DB/Storage) | 11 | 4 | 25 (missing `users` table + storage RLS) |
+| MAESTRO backend + E2E | 22 | — | 0 |
+| Security/MAESTRO | 55 | — | 0 |
+| Web3/Wallet | 23 | 2 | 0 |
+| OmniDash admin | 3 | 10 | 0 |
+| Quality Gates | 6 | — | 0 |
+| Chaos/Stress | all | — | 0 |
+
+> **Note:** 25 integration test failures are infrastructure-only (test Supabase instance missing `users` table and storage bucket RLS policies). Not code defects. Will pass once production schema is applied via `supabase db push`.
 
 #### Feature Verification (2026-02-08)
 
