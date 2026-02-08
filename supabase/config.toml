@@ -33,15 +33,6 @@ verify_jwt = true
 [functions.apex-voice]
 verify_jwt = false
 
-[functions.lovable-device]
-verify_jwt = false
-
-[functions.lovable-audit]
-verify_jwt = false
-
-[functions.lovable-healthcheck]
-verify_jwt = false
-
 # Web3 Authentication Functions
 [functions.web3-nonce]
 verify_jwt = false  # Public endpoint to generate nonce for wallet signature
