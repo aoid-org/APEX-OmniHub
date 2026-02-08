@@ -85,6 +85,27 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_customer ON public.subscript
 CREATE INDEX IF NOT EXISTS idx_subscriptions_period_end ON public.subscriptions(current_period_end) WHERE status IN ('active', 'trialing', 'canceled');
 
 -- ========================================
+-- Function: is_subscription_valid_period
+-- Purpose: Helper to check if subscription status and dates are valid for access
+-- ========================================
+CREATE OR REPLACE FUNCTION public.is_subscription_valid_period(
+  status public.subscription_status,
+  current_period_end timestamptz,
+  trial_end timestamptz
+)
+RETURNS boolean
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT
+    (status = 'active' AND (current_period_end IS NULL OR current_period_end > now()))
+    OR
+    (status = 'trialing' AND trial_end > now())
+    OR
+    (status = 'canceled' AND current_period_end > now());
+$$;
+
+-- ========================================
 -- Function: is_paid_user
 -- Purpose: Check if a user has an active paid subscription
 -- Used in RLS policies for dashboard access control
@@ -99,17 +120,7 @@ AS $$
     SELECT 1 FROM public.subscriptions
     WHERE user_id = _user_id
       AND tier IN ('starter', 'pro', 'enterprise')
-      AND status IN ('active', 'trialing', 'canceled')
-      AND (
-        -- Active subscription within billing period
-        (status = 'active' AND (current_period_end IS NULL OR current_period_end > now()))
-        OR
-        -- In trial period
-        (status = 'trialing' AND trial_end > now())
-        OR
-        -- Canceled but still within paid period
-        (status = 'canceled' AND current_period_end > now())
-      )
+      AND public.is_subscription_valid_period(status, current_period_end, trial_end)
   );
 $$;
 
@@ -132,12 +143,7 @@ AS $$
     (
       SELECT tier FROM public.subscriptions
       WHERE user_id = _user_id
-        AND status IN ('active', 'trialing', 'canceled')
-        AND (
-          (status = 'active' AND (current_period_end IS NULL OR current_period_end > now()))
-          OR (status = 'trialing' AND trial_end > now())
-          OR (status = 'canceled' AND current_period_end > now())
-        )
+        AND public.is_subscription_valid_period(status, current_period_end, trial_end)
       LIMIT 1
     ),
     'free'::public.subscription_tier

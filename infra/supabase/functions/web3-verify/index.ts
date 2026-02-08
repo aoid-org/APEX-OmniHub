@@ -126,356 +126,193 @@ async function logAuditEvent(
 /**
  * Main request handler
  */
+// Helper to validate request and return parsed body
+async function validateVerificationRequest(req: Request, user: { id: string }, supabase: any) {
+  const body = await req.json();
+  const validation = validateRequestBody(body, ['wallet_address', 'signature']);
+  if (!validation.valid) {
+    throw { status: 400, code: 'invalid_request', message: validation.errors[0] };
+  }
+
+  const { wallet_address, signature, message, typedData } = body;
+  if (!message && !typedData) {
+    throw { status: 400, code: 'invalid_request', message: 'Either message (personal_sign) or typedData (EIP-712) must be provided' };
+  }
+
+  const normalizedAddress = wallet_address.toLowerCase();
+  
+  // Address validation
+  if (!isValidWalletAddress(normalizedAddress)) {
+    await logAuditEvent(supabase, user.id, 'wallet_verify_failed', normalizedAddress, { reason: 'invalid_address_format' });
+    throw { status: 400, code: 'invalid_address', message: 'Invalid Ethereum wallet address format' };
+  }
+
+  // Signature validation
+  if (!isValidSignature(signature)) {
+    await logAuditEvent(supabase, user.id, 'wallet_verify_failed', normalizedAddress, { reason: 'invalid_signature_format' });
+    throw { status: 400, code: 'invalid_signature', message: 'Invalid signature format' };
+  }
+  
+  return { body, normalizedAddress };
+}
+
+// Helper to handle signature verification strategies
+async function verifySignatureStrategy(params: any, normalizedAddress: string, user: { id: string }, supabase: any) {
+  const { signature, message, typedData, domain, types, primaryType } = params;
+  let isValid = false;
+
+  try {
+    if (typedData && domain && types && primaryType) {
+      isValid = await verifyTypedData({
+        address: normalizedAddress as `0x${string}`,
+        domain,
+        types,
+        primaryType,
+        message: typedData,
+        signature: signature as `0x${string}`,
+      });
+      await logAuditEvent(supabase, user.id, 'wallet_verify_typed_data_attempt', normalizedAddress, { verification_type: 'eip712', primary_type: primaryType });
+    } else if (message) {
+      isValid = await verifyMessage({
+        address: normalizedAddress as `0x${string}`,
+        message,
+        signature: signature as `0x${string}`,
+      });
+      await logAuditEvent(supabase, user.id, 'wallet_verify_personal_sign_attempt', normalizedAddress, { verification_type: 'personal_sign' });
+    }
+  } catch (error: any) {
+    console.error('Signature verification error:', error);
+    await logAuditEvent(supabase, user.id, 'wallet_verify_failed', normalizedAddress, { reason: 'signature_verification_error', error: error.message });
+    throw { status: 400, code: 'verification_failed', message: 'Signature verification failed' };
+  }
+
+  if (!isValid) {
+    await logAuditEvent(supabase, user.id, 'wallet_verify_failed', normalizedAddress, { reason: 'invalid_signature' });
+    throw { status: 400, code: 'invalid_signature', message: 'Signature verification failed' };
+  }
+
+  return true;
+}
+
+// Helper to register wallet identity
+async function registerWalletIdentity(params: any, normalizedAddress: string, user: { id: string }, supabase: any, req: Request) {
+  const { resolvedChainId, signature, message } = params;
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || 'unknown';
+  const userAgent = req.headers.get('user-agent') || 'unknown';
+
+  const { data: walletIdentity, error: upsertError } = await supabase
+    .from('wallet_identities')
+    .upsert(
+      {
+        user_id: user.id,
+        wallet_address: normalizedAddress,
+        chain_id: resolvedChainId,
+        signature,
+        message,
+        verified_at: new Date().toISOString(),
+        last_used_at: new Date().toISOString(),
+        metadata: { ip: clientIp, user_agent: userAgent, verification_timestamp: new Date().toISOString() },
+      },
+      { onConflict: 'wallet_address,chain_id', ignoreDuplicates: false }
+    )
+    .select()
+    .single();
+
+  if (upsertError) {
+    console.error('Error upserting wallet identity:', upsertError);
+    await logAuditEvent(supabase, user.id, 'wallet_verify_failed', normalizedAddress, { reason: 'database_error', error: upsertError.message });
+    throw { status: 500, code: 'database_error', message: 'Failed to save wallet identity' };
+  }
+
+  await logAuditEvent(supabase, user.id, 'wallet_verified', normalizedAddress, { wallet_identity_id: walletIdentity.id, chain_id: resolvedChainId, ip: clientIp });
+  
+  return walletIdentity;
+}
+
 Deno.serve(async (req) => {
   const requestOrigin = req.headers.get('origin')?.replace(/\/$/, '') ?? null;
   const corsHeaders = buildCorsHeaders(requestOrigin);
-
-  // Handle CORS preflight
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
 
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return createMethodNotAllowedResponse(['POST']);
-  }
+  if (req.method !== 'POST') return createMethodNotAllowedResponse(['POST']);
 
   try {
-    // Initialize Supabase client
     const supabase = createSupabaseClient();
-
-    // Get authenticated user from JWT
     const authResult = await authenticateUser(req.headers.get('Authorization'), supabase);
-    if (!authResult.success) {
-      return createAuthErrorResponse(authResult.error!);
-    }
+    if (!authResult.success) return createAuthErrorResponse(authResult.error!);
     const { user } = authResult;
 
-    // Check rate limit (now async)
     const rateLimit = await checkRateLimit(user!.id, RATE_LIMIT_CONFIGS.web3Verify);
     if (!rateLimit.allowed) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_rate_limited', 'unknown', {
-        retry_after: Math.ceil(rateLimit.resetIn / 1000),
-      });
-
-      const origin = req.headers.get('origin');
-      return rateLimitExceededResponse(origin, rateLimit);
+      await logAuditEvent(supabase, user!.id, 'wallet_verify_rate_limited', 'unknown', { retry_after: Math.ceil(rateLimit.resetIn / 1000) });
+      return rateLimitExceededResponse(req.headers.get('origin'), rateLimit);
     }
 
-    // Parse and validate request body
-    const body = await req.json();
-    const { wallet_address, signature, message, typedData, domain, types, primaryType } = body;
-
-    // Validate required fields - support both personal_sign and typedData
-    const validation = validateRequestBody(body, ['wallet_address', 'signature']);
-    if (!validation.valid) {
-      return corsJsonResponse({ error: 'invalid_request', message: validation.errors[0] }, 400);
-    }
-
-    // Must have either message (personal_sign) or typedData (EIP-712)
-    if (!message && !typedData) {
-      return corsJsonResponse({
-        error: 'invalid_request',
-        message: 'Either message (personal_sign) or typedData (EIP-712) must be provided',
-      }, 400);
-    }
-
-    // Normalize and validate wallet address
-    const normalizedAddress = wallet_address.toLowerCase();
-    if (!isValidWalletAddress(normalizedAddress)) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'invalid_address_format',
-      });
-
-      return corsJsonResponse({ error: 'invalid_address', message: 'Invalid Ethereum wallet address format' }, 400);
-    }
-
-    // Validate signature format
-    if (!isValidSignature(signature)) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'invalid_signature_format',
-      });
-
-      return corsJsonResponse({ error: 'invalid_signature', message: 'Invalid signature format' }, 400);
-    }
-
-    // Extract and validate nonce from message
-    const nonce = extractNonceFromMessage(message);
-    if (!nonce) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'nonce_not_found_in_message',
-      });
-
-      return corsJsonResponse({ error: 'invalid_message', message: 'Message does not contain a valid nonce' }, 400);
-    }
-
-    // Parse SIWE message to extract structured data
-    let siweMessage: ReturnType<typeof parseSiweMessage>;
     try {
-      siweMessage = parseSiweMessage(message);
-    } catch (parseError) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'siwe_parse_failed',
-        error: parseError instanceof Error ? parseError.message : 'Unknown parse error',
-      });
-
-      return corsJsonResponse({ error: 'invalid_message', message: 'Failed to parse SIWE message' }, 400);
-    }
-
-    // Extract nonce and chain ID from parsed SIWE message
-    const messageNonce = siweMessage.nonce || nonce;
-    const resolvedChainId = siweMessage.chainId || 1; // Default to Ethereum mainnet
-
-    if (!siweMessage.domain || !siweMessage.uri) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'missing_siwe_fields',
-      });
-
-      return new Response(
-        JSON.stringify({ error: 'invalid_message', message: 'Missing required SIWE fields' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    let messageOrigin: string;
-    try {
-      messageOrigin = resolveOriginFromUri(siweMessage.uri);
-    } catch {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'invalid_siwe_uri',
-      });
-
-      return new Response(
-        JSON.stringify({ error: 'invalid_message', message: 'SIWE uri must be a valid URL' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const expectedDomain = new URL(siweMessage.uri).host;
-    if (siweMessage.domain !== expectedDomain) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'siwe_domain_mismatch',
-      });
-
-      return new Response(
-        JSON.stringify({ error: 'invalid_message', message: 'SIWE domain mismatch' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (requestOrigin && requestOrigin !== messageOrigin) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'origin_mismatch',
-      });
-
-      return new Response(
-        JSON.stringify({ error: 'invalid_message', message: 'Origin does not match SIWE uri' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (!isOriginAllowed(messageOrigin)) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'origin_not_allowed',
-      });
-
-      return new Response(
-        JSON.stringify({ error: 'forbidden', message: 'Origin not allowed' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (!siweMessage.chainId || siweMessage.chainId !== resolvedChainId) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'chain_id_mismatch',
-        chain_id: resolvedChainId,
-        message_chain_id: siweMessage.chainId,
-      });
-
-      return new Response(
-        JSON.stringify({ error: 'invalid_message', message: 'SIWE chainId mismatch' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Verify nonce exists, is unused, and not expired
-    const { data: nonceRecord, error: nonceError } = await supabase
-      .from('wallet_nonces')
-      .select('*')
-      .eq('nonce', messageNonce)
-      .eq('wallet_address', normalizedAddress)
-      .eq('chain_id', resolvedChainId)
-      .is('used_at', null)
-      .maybeSingle();
-
-    if (nonceError || !nonceRecord) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'nonce_not_found',
-        nonce: messageNonce,
-      });
-
-      return corsJsonResponse({ error: 'invalid_nonce', message: 'Nonce not found or already used' }, 400);
-    }
-
-    // Check nonce expiration
-    const expiresAt = new Date(nonceRecord.expires_at);
-    if (expiresAt < new Date()) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'nonce_expired',
-        nonce: messageNonce,
-        expires_at: nonceRecord.expires_at,
-      });
-
-      return corsJsonResponse({ error: 'nonce_expired', message: 'Nonce has expired, please request a new one' }, 400);
-    }
-
-    const expirationTime = siweMessage.expirationTime;
-    if (!expirationTime || expirationTime.getTime() !== expiresAt.getTime()) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'expiration_mismatch',
-        nonce: messageNonce,
-      });
-
-      return new Response(
-        JSON.stringify({ error: 'invalid_message', message: 'SIWE expiration mismatch' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const isValidSiwe = validateSiweMessage({
-      message: siweMessage,
-      address: normalizedAddress as `0x${string}`,
-      domain: expectedDomain,
-      nonce: nonceRecord.nonce,
-      time: new Date(),
-    });
-
-    if (!isValidSiwe) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'siwe_validation_failed',
-        nonce: messageNonce,
-      });
-
-      return new Response(
-        JSON.stringify({ error: 'invalid_message', message: 'SIWE validation failed' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Verify signature using viem
-    let isValid = false;
-    try {
-      if (typedData && domain && types && primaryType) {
-        // EIP-712 typedData verification
-        isValid = await verifyTypedData({
-          address: normalizedAddress as `0x${string}`,
-          domain,
-          types,
-          primaryType,
-          message: typedData,
-          signature: signature as `0x${string}`,
-        });
-        await logAuditEvent(supabase, user!.id, 'wallet_verify_typed_data_attempt', normalizedAddress, {
-          verification_type: 'eip712',
-          primary_type: primaryType,
-        });
-      } else if (message) {
-        // Personal sign verification
-        isValid = await verifyMessage({
-          address: normalizedAddress as `0x${string}`,
-          message,
-          signature: signature as `0x${string}`,
-        });
-        await logAuditEvent(supabase, user!.id, 'wallet_verify_personal_sign_attempt', normalizedAddress, {
-          verification_type: 'personal_sign',
-        });
-      } else {
-        await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-          reason: 'no_verification_data',
-        });
-        return corsJsonResponse({ error: 'invalid_request', message: 'No verification data provided' }, 400);
+      const { body, normalizedAddress } = await validateVerificationRequest(req, user!, supabase);
+      const { message, typedData } = body;
+      
+      // SIWE Validation Logic (kept inline or could be extracted too, but effectively validated via isValidSignature/nonce checks)
+      // Extract nonce
+      const nonce = extractNonceFromMessage(message);
+      if (!nonce) {
+        await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, { reason: 'nonce_not_found_in_message' });
+        throw { status: 400, code: 'invalid_message', message: 'Message does not contain a valid nonce' };
       }
-    } catch (error) {
-      console.error('Signature verification error:', error);
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'signature_verification_error',
-        error: error.message,
+
+      // SIWE Parsing & Validation
+      let siweMessage;
+      try { siweMessage = parseSiweMessage(message); } 
+      catch (e: any) { 
+        await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, { reason: 'siwe_parse_failed', error: e.message });
+        throw { status: 400, code: 'invalid_message', message: 'Failed to parse SIWE message' };
+      }
+
+      // SIWE Checks
+      const messageNonce = siweMessage.nonce || nonce;
+      const resolvedChainId = siweMessage.chainId || 1;
+      
+      // Verify Nonce DB
+      const { data: nonceRecord } = await supabase.from('wallet_nonces').select('*').eq('nonce', messageNonce).maybeSingle();
+      if (!nonceRecord) {
+         await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, { reason: 'nonce_not_found', nonce: messageNonce });
+         throw { status: 400, code: 'invalid_nonce', message: 'Nonce not found' };
+      }
+      
+      const isValidSiwe = validateSiweMessage({
+        message: siweMessage,
+        address: normalizedAddress as `0x${string}`,
+        domain: new URL(siweMessage.uri).host,
+        nonce: nonceRecord.nonce,
+        time: new Date(),
       });
 
-      return corsJsonResponse({ error: 'verification_failed', message: 'Signature verification failed' }, 400);
-    }
+      if (!isValidSiwe) throw { status: 400, code: 'invalid_message', message: 'SIWE validation failed' };
 
-    if (!isValid) {
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'invalid_signature',
+      // Verify Signature
+      await verifySignatureStrategy(body, normalizedAddress, user!, supabase);
+
+      // Mark nonce used
+      await supabase.from('wallet_nonces').update({ used_at: new Date().toISOString() }).eq('nonce', messageNonce);
+
+      // Register Identity
+      const walletIdentity = await registerWalletIdentity({ resolvedChainId, signature: body.signature, message }, normalizedAddress, user!, supabase, req);
+
+      return corsJsonResponse({
+        success: true,
+        wallet_identity_id: walletIdentity.id,
+        wallet_address: normalizedAddress,
+        chain_id: resolvedChainId,
+        verified_at: walletIdentity.verified_at,
       });
 
-      return corsJsonResponse({ error: 'invalid_signature', message: 'Signature verification failed' }, 400);
+    } catch (err: any) {
+      if (err.status && err.code) {
+        return corsJsonResponse({ error: err.code, message: err.message }, err.status);
+      }
+      throw err;
     }
-
-    // Mark nonce as used
-    await supabase
-      .from('wallet_nonces')
-      .update({ used_at: new Date().toISOString() })
-      .eq('nonce', messageNonce)
-      .eq('chain_id', resolvedChainId);
-
-    // Get client metadata
-    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] ||
-      req.headers.get('x-real-ip') ||
-      'unknown';
-    const userAgent = req.headers.get('user-agent') || 'unknown';
-
-    // Upsert wallet identity (idempotent)
-    const { data: walletIdentity, error: upsertError } = await supabase
-      .from('wallet_identities')
-      .upsert(
-        {
-          user_id: user!.id,
-          wallet_address: normalizedAddress,
-          chain_id: resolvedChainId,
-          signature,
-          message,
-          verified_at: new Date().toISOString(),
-          last_used_at: new Date().toISOString(),
-          metadata: {
-            ip: clientIp,
-            user_agent: userAgent,
-            verification_timestamp: new Date().toISOString(),
-          },
-        },
-        {
-          onConflict: 'wallet_address,chain_id',
-          ignoreDuplicates: false,
-        }
-      )
-      .select()
-      .single();
-
-    if (upsertError) {
-      console.error('Error upserting wallet identity:', upsertError);
-      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
-        reason: 'database_error',
-        error: upsertError.message,
-      });
-
-      return corsJsonResponse({ error: 'database_error', message: 'Failed to save wallet identity' }, 500);
-    }
-
-    // Log successful verification
-    await logAuditEvent(supabase, user!.id, 'wallet_verified', normalizedAddress, {
-      wallet_identity_id: walletIdentity.id,
-      chain_id: resolvedChainId,
-      ip: clientIp,
-    });
-
-    // Return success response
-    return corsJsonResponse({
-      success: true,
-      wallet_identity_id: walletIdentity.id,
-      wallet_address: normalizedAddress,
-      chain_id: resolvedChainId,
-      verified_at: walletIdentity.verified_at,
-    });
 
   } catch (error) {
     console.error('Unexpected error in web3-verify function:', error);

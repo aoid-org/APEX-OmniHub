@@ -36,29 +36,30 @@ AS $$
 DECLARE
   admin_flag boolean;
   role_exists boolean;
+  admin_role CONSTANT text := 'admin';
 BEGIN
   -- Extract admin flag from new app_metadata
   -- Handles both admin: true/false and missing admin key
-  admin_flag := COALESCE((NEW.raw_app_meta_data->>'admin')::boolean, false);
+  admin_flag := COALESCE((NEW.raw_app_meta_data->>admin_role)::boolean, false);
 
   -- Check if user already has admin role
   SELECT EXISTS (
     SELECT 1 FROM public.user_roles
-    WHERE user_id = NEW.id AND role = 'admin'
+    WHERE user_id = NEW.id AND role = admin_role
   ) INTO role_exists;
 
   -- Sync logic: Add if admin=true and not exists, Remove if admin=false and exists
   IF admin_flag = true AND role_exists = false THEN
     -- Grant admin role
     INSERT INTO public.user_roles (user_id, role)
-    VALUES (NEW.id, 'admin')
+    VALUES (NEW.id, admin_role)
     ON CONFLICT (user_id, role) DO NOTHING;
 
     RAISE LOG 'Admin role granted to user % via app_metadata sync', NEW.id;
   ELSIF admin_flag = false AND role_exists = true THEN
     -- Revoke admin role
     DELETE FROM public.user_roles
-    WHERE user_id = NEW.id AND role = 'admin';
+    WHERE user_id = NEW.id AND role = admin_role;
 
     RAISE LOG 'Admin role revoked from user % via app_metadata sync', NEW.id;
   END IF;

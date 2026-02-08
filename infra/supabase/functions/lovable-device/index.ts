@@ -74,86 +74,59 @@ function unauthorized(corsHeaders: HeadersInit): Response {
   return json({ error: 'unauthorized' }, corsHeaders, 401);
 }
 
+async function getUserId(req: Request, supabaseAnon: any): Promise<string | null> {
+  // Get userId from header or query params
+  let userId = req.headers.get('x-user-id') ?? new URL(req.url).searchParams.get('user_id');
+  if (userId) return userId;
+
+  // If no userId in header, try to get from Supabase auth
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return null;
+
+  const { data: { user } } = await supabaseAnon.auth.getUser();
+  return user?.id || null;
+}
+
+async function handleGet(userId: string, corsHeaders: HeadersInit): Promise<Response> {
+  try {
+    const registry = await getDeviceRegistry(userId);
+    return json(registry, corsHeaders, 200);
+  } catch (error) {
+    console.error('Device registry fetch failed:', error);
+    return json({ error: 'registry_fetch_failed', message: error instanceof Error ? error.message : 'Unknown error' }, corsHeaders, 500);
+  }
+}
+
+async function handlePost(req: Request, userId: string, corsHeaders: HeadersInit): Promise<Response> {
+  try {
+    const body = (await req.json()) as { device: DeviceInfo };
+    if (!body?.device?.device_id) {
+      return json({ error: 'invalid_payload', message: 'Missing device_id' }, corsHeaders, 400);
+    }
+    await upsertDevice(userId, body.device);
+    return json({ status: 'ok' }, corsHeaders, 200);
+  } catch (error) {
+    console.error('Device upsert failed:', error);
+    return json({ error: 'upsert_failed', message: error instanceof Error ? error.message : 'Unknown error' }, corsHeaders, 500);
+  }
+}
+
 Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req.headers.get('origin'));
-
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return handlePreflight(req);
-  }
+  if (req.method === 'OPTIONS') return handlePreflight(req);
 
   try {
-    // Get userId from header or query params
-    let userId = req.headers.get('x-user-id') ?? new URL(req.url).searchParams.get('user_id');
+    const supabaseAnon = createAnonClient(req.headers.get('Authorization') ?? undefined);
+    const userId = await getUserId(req, supabaseAnon);
+
+    if (!userId) return unauthorized(corsHeaders);
     
-    // If no userId in header, try to get from Supabase auth
-    if (!userId) {
-      const authHeader = req.headers.get('Authorization');
-      if (authHeader) {
-        const supabase = createAnonClient(authHeader);
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id) {
-          userId = user.id;
-        } else {
-          return unauthorized(corsHeaders);
-        }
-      } else {
-        return unauthorized(corsHeaders);
-      }
-    }
-
-    if (!userId) {
-      return unauthorized(corsHeaders);
-    }
-
-    if (req.method === 'GET') {
-      try {
-        const registry = await getDeviceRegistry(userId);
-        return json(registry, corsHeaders, 200);
-      } catch (error) {
-        console.error('Device registry fetch failed:', error);
-        return json(
-          {
-            error: 'registry_fetch_failed',
-            message: error instanceof Error ? error.message : 'Unknown error',
-          },
-          corsHeaders,
-          500
-        );
-      }
-    }
-
-    if (req.method === 'POST') {
-      try {
-        const body = (await req.json()) as { device: DeviceInfo };
-        if (!body?.device?.device_id) {
-          return json({ error: 'invalid_payload', message: 'Missing device_id' }, corsHeaders, 400);
-        }
-        await upsertDevice(userId, body.device);
-        return json({ status: 'ok' }, corsHeaders, 200);
-      } catch (error) {
-        console.error('Device upsert failed:', error);
-        return json(
-          {
-            error: 'upsert_failed',
-            message: error instanceof Error ? error.message : 'Unknown error',
-          },
-          corsHeaders,
-          500
-        );
-      }
-    }
+    if (req.method === 'GET') return await handleGet(userId, corsHeaders);
+    if (req.method === 'POST') return await handlePost(req, userId, corsHeaders);
 
     return new Response('Method Not Allowed', { status: 405, headers: corsHeaders });
   } catch (error) {
     console.error('Lovable device function error:', error);
-    return json(
-      {
-        error: 'server_error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      corsHeaders,
-      500
-    );
+    return json({ error: 'server_error', message: error instanceof Error ? error.message : 'Unknown error' }, corsHeaders, 500);
   }
 });

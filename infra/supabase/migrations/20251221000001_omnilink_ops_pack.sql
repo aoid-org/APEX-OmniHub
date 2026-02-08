@@ -307,14 +307,15 @@ AS $$
             COALESCE(s.semantic_score, 0) as semantic_score,
             COALESCE(k.keyword_score, 0) as keyword_score,
             -- Balanced RRF score calculation (70% semantic, 30% keyword)
+            -- Refined RRF Calculation for Ops Pack (70/30 split)
             CASE
                 WHEN s.id IS NOT NULL AND k.id IS NOT NULL THEN
-                    0.7 / (60 + ROW_NUMBER() OVER (ORDER BY s.semantic_score DESC)) +
-                    0.3 / (60 + ROW_NUMBER() OVER (ORDER BY k.keyword_score DESC))
+                    (0.70 / (60.0 + ROW_NUMBER() OVER (ORDER BY s.semantic_score DESC))) +
+                    (0.30 / (60.0 + ROW_NUMBER() OVER (ORDER BY k.keyword_score DESC)))
                 WHEN s.id IS NOT NULL THEN
-                    0.7 / (60 + ROW_NUMBER() OVER (ORDER BY s.semantic_score DESC))
+                    0.70 / (60.0 + ROW_NUMBER() OVER (ORDER BY s.semantic_score DESC))
                 ELSE
-                    0.3 / (60 + ROW_NUMBER() OVER (ORDER BY k.keyword_score DESC))
+                    0.30 / (60.0 + ROW_NUMBER() OVER (ORDER BY k.keyword_score DESC))
             END as rrf_score
         FROM semantic_search s
         FULL OUTER JOIN keyword_search k ON s.id = k.id

@@ -230,135 +230,96 @@ async function processNFTTransfer(
 /**
  * Main request handler
  */
-Deno.serve(async (req) => {
-  // Only allow POST requests
+// Helper to validate request and config
+async function validateWebhookRequest(req: Request) {
   if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'method_not_allowed', message: 'Only POST requests are allowed' }),
-      { status: 405, headers: { 'Content-Type': 'application/json' } }
-    );
+    return { error: { status: 405, body: { error: 'method_not_allowed', message: 'Only POST requests are allowed' } } };
   }
 
+  const demoMode = Deno.env.get('DEMO_MODE')?.toLowerCase() === 'true';
+  if (demoMode) {
+    return { error: { status: 200, body: { demo: true, ignored: true } } };
+  }
+
+  const signingKey = Deno.env.get('ALCHEMY_WEBHOOK_SIGNING_KEY');
+  const membershipNFTAddress = Deno.env.get('MEMBERSHIP_NFT_ADDRESS');
+
+  if (!signingKey) return { error: { status: 200, body: { error: 'configuration_error', message: 'Webhook signing key not configured' } } };
+  if (!membershipNFTAddress) return { error: { status: 200, body: { error: 'configuration_error', message: 'NFT contract address not configured' } } };
+
+  const signature = req.headers.get('x-alchemy-signature');
+  if (!signature) return { error: { status: 401, body: { error: 'unauthorized', message: 'Missing signature header' } } };
+
+  const rawBody = await req.text();
+  const isValidSignature = await verifyAlchemySignature(rawBody, signature, signingKey);
+  
+  if (!isValidSignature) {
+    console.error('Invalid webhook signature');
+    return { error: { status: 401, body: { error: 'unauthorized', message: 'Invalid webhook signature' } } };
+  }
+
+  return { rawBody, membershipNFTAddress };
+}
+
+// Helper to process activities
+async function processActivities(
+  activities: AlchemyNFTActivity[], 
+  membershipNFTAddress: string, 
+  supabase: any
+): Promise<{ processed: number, skipped: number }> {
+  let processed = 0;
+  let skipped = 0;
+
+  for (const activity of activities) {
+    const result = await processNFTTransfer(supabase, activity, membershipNFTAddress);
+    if (result.success) {
+      if (result.reason === 'already_processed') {
+        skipped++;
+      } else {
+        processed++;
+      }
+    } else {
+      console.error(`Failed to process activity: ${result.reason}`);
+      skipped++;
+    }
+  }
+  return { processed, skipped };
+}
+
+Deno.serve(async (req) => {
   try {
-    const demoMode = Deno.env.get('DEMO_MODE')?.toLowerCase() === 'true';
-    if (demoMode) {
-      return new Response(
-        JSON.stringify({ demo: true, ignored: true }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+    const validation = await validateWebhookRequest(req);
+    if (validation.error) {
+      return new Response(JSON.stringify(validation.error.body), { status: validation.error.status, headers: { 'Content-Type': 'application/json' } });
     }
 
-    // Get webhook signing key
-    const signingKey = Deno.env.get('ALCHEMY_WEBHOOK_SIGNING_KEY');
-    if (!signingKey) {
-      console.error('ALCHEMY_WEBHOOK_SIGNING_KEY not configured');
-      // Return 200 to prevent Alchemy retries for configuration issues
-      return new Response(
-        JSON.stringify({ error: 'configuration_error', message: 'Webhook signing key not configured' }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get membership NFT contract address
-    const membershipNFTAddress = Deno.env.get('MEMBERSHIP_NFT_ADDRESS');
-    if (!membershipNFTAddress) {
-      console.error('MEMBERSHIP_NFT_ADDRESS not configured');
-      return new Response(
-        JSON.stringify({ error: 'configuration_error', message: 'NFT contract address not configured' }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get signature from header
-    const signature = req.headers.get('x-alchemy-signature');
-    if (!signature) {
-      console.error('Missing X-Alchemy-Signature header');
-      return new Response(
-        JSON.stringify({ error: 'unauthorized', message: 'Missing signature header' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get raw body for signature verification
-    const rawBody = await req.text();
-
-    // Verify signature
-    const isValidSignature = await verifyAlchemySignature(rawBody, signature, signingKey);
-    if (!isValidSignature) {
-      console.error('Invalid webhook signature');
-      return new Response(
-        JSON.stringify({ error: 'unauthorized', message: 'Invalid webhook signature' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Parse webhook payload
+    const { rawBody, membershipNFTAddress } = validation;
     let payload: AlchemyWebhookPayload;
     try {
-      payload = JSON.parse(rawBody);
+      payload = JSON.parse(rawBody!);
     } catch (error) {
       console.error('Invalid JSON payload:', error);
-      return new Response(
-        JSON.stringify({ error: 'invalid_payload', message: 'Invalid JSON payload' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'invalid_payload', message: 'Invalid JSON payload' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
-    // Validate webhook type
     if (payload.type !== 'NFT_ACTIVITY') {
       console.log(`Ignoring webhook type: ${payload.type}`);
-      return new Response(
-        JSON.stringify({ success: true, processed: 0, skipped: 1, reason: 'unsupported_type' }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ success: true, processed: 0, skipped: 1, reason: 'unsupported_type' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
-    // Initialize Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Process each activity in the event
-    const activities = payload.event.activity || [];
-    let processed = 0;
-    let skipped = 0;
+    const { processed, skipped } = await processActivities(payload.event.activity || [], membershipNFTAddress!, supabase);
 
-    for (const activity of activities) {
-      const result = await processNFTTransfer(supabase, activity, membershipNFTAddress);
-      if (result.success) {
-        if (result.reason === 'already_processed') {
-          skipped++;
-        } else {
-          processed++;
-        }
-      } else {
-        console.error(`Failed to process activity: ${result.reason}`);
-        skipped++;
-      }
-    }
-
-    // Return success response
     return new Response(
-      JSON.stringify({
-        success: true,
-        webhook_id: payload.webhookId,
-        processed,
-        skipped,
-        total: activities.length,
-      }),
+      JSON.stringify({ success: true, webhook_id: payload.webhookId, processed, skipped, total: (payload.event.activity || []).length }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Unexpected error in alchemy-webhook function:', error);
-    // Return 200 to prevent Alchemy retries for internal errors
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'internal_error',
-        message: 'An unexpected error occurred',
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ success: false, error: 'internal_error', message: 'An unexpected error occurred' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
 });
