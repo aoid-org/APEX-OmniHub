@@ -27,5 +27,6 @@
       "@apex/config": ["../../packages/config"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/armageddon", "src/scripts"]
 }
