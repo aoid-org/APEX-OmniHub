@@ -14,6 +14,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { withHttp, jsonResponse } from '../_shared/http.ts';
 import { authenticateUser } from '../_shared/auth.ts';
+import { buildSignedHeaders } from '../_shared/requestSigning.ts';
 
 /** Workflow request payload structure */
 interface WorkflowRequestPayload {
@@ -223,24 +224,33 @@ serve(
         // Resolve orchestrator URL
         const orchestratorUrl = resolveOrchestratorUrl();
 
-        // Forward to orchestrator with idempotency headers
-        // FIXED: Call canonical /api/v1/goals endpoint with GoalRequest schema
+        // Forward to orchestrator with signed + idempotency headers
+        const requestPath = '/api/v1/goals';
+        const bodyRaw = JSON.stringify({
+          user_id: authResult.user.id,
+          user_intent: payload.query,
+          trace_id: payload.trace_id,
+        });
+
+        const signedHeaders = await buildSignedHeaders(
+          'POST',
+          requestPath,
+          bodyRaw,
+          payload.trace_id,
+        );
+
         const orchestratorResponse = await fetch(
-          `${orchestratorUrl}/api/v1/goals`,
+          `${orchestratorUrl}${requestPath}`,
           {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
+              ...signedHeaders,
               'X-Idempotency-Key': payload.idempotency_key,
               'X-Request-Signature': requestHash,
               'X-User-Id': authResult.user.id,
               'X-Session-Id': payload.session_id,
             },
-            body: JSON.stringify({
-              user_id: authResult.user.id,
-              user_intent: payload.query,
-              trace_id: payload.trace_id,
-            }),
+            body: bodyRaw,
           }
         );
 

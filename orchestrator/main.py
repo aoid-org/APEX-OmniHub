@@ -54,6 +54,7 @@ from activities.tools import (
 )
 from config import settings
 from omniboard.router import router as omniboard_router
+from security.request_signing import SignatureVerificationMiddleware
 from workflows.agent_saga import AgentWorkflow
 
 # Initialize rate limiter
@@ -82,6 +83,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# HMAC Signature Verification Middleware (after CORS so preflight works)
+app.add_middleware(SignatureVerificationMiddleware)
 
 
 class GoalRequest(BaseModel):

@@ -40,6 +40,21 @@ from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_
 from providers.database.factory import get_database_provider
 from security.prompt_sanitizer import PromptInjectionError, create_safe_user_message
 
+# Canonical set of allowed tools (must match registered Temporal activities)
+ALLOWED_TOOLS = frozenset({
+    "search_database",
+    "create_record",
+    "delete_record",
+    "send_email",
+    "call_webhook",
+    "search_youtube",
+})
+
+# Compatibility aliases: map common shorthand → canonical name
+_TOOL_ALIASES: dict[str, str] = {
+    "webhook": "call_webhook",
+}
+
 # Global service instances (initialized in setup_activities())
 _semantic_cache = None  # SemanticCacheService instance
 _redis_client = None
@@ -169,20 +184,19 @@ Rules:
 1. Break goal into sequential steps (each step = one tool call)
 2. Define dependencies (steps that must complete before this one)
 3. Assign compensation activities for reversible actions
-4. Use available tools:
+4. Use ONLY the available tools listed below:
    - search_database
-   - send_email
-   - book_flight
    - create_record
-   - webhook
+   - delete_record
+   - send_email
+   - call_webhook
    - search_youtube
 
 Example:
-Goal: "Book flight to Paris tomorrow and send confirmation to john@example.com"
+Goal: "Create a new integration and notify the team"
 Plan:
-- Step 1: search_flights (to=Paris, date=tomorrow)
-- Step 2: book_flight (flight_id={step1.flight_id}), compensation=cancel_flight
-- Step 3: send_email (to=john@example.com, body=confirmation)
+- Step 1: create_record (table=integrations, data={...}), compensation=delete_record
+- Step 2: send_email (to=team@example.com, body=notification)
 
 Output valid JSON matching the PlanStep schema."""
 
@@ -214,6 +228,19 @@ Output valid JSON matching the PlanStep schema."""
         )
 
         activity.logger.info(f"✓ Plan generated: {len(plan.steps)} steps")
+
+        # Resolve aliases and validate tools
+        for step in plan.steps:
+            step.tool = _TOOL_ALIASES.get(step.tool, step.tool)
+
+        invalid_tools = [s.tool for s in plan.steps if s.tool not in ALLOWED_TOOLS]
+        if invalid_tools:
+            from temporalio.exceptions import ApplicationError
+
+            raise ApplicationError(
+                f"Plan contains unknown tools: {invalid_tools}",
+                non_retryable=True,
+            )
 
         # Store in semantic cache for future hits
         if _semantic_cache:

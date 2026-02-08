@@ -10,35 +10,31 @@ interface ValidationResult {
   reason?: string;
 }
 
-interface RequestPayload {
-  query: string;
-  traceId: string;
-}
-
 /**
- * Main guardian check - orchestrates all validation layers
+ * Main guardian check - validates query content before orchestrator handoff.
+ *
+ * @param query - The user's query string
+ * @param _authHeader - Auth header (reserved for future per-user rate limits)
  */
-export async function checkRequest(request: Request, payload: RequestPayload): Promise<ValidationResult> {
+export async function checkRequest(
+  query: string,
+  _authHeader: string,
+): Promise<ValidationResult> {
   try {
-    // 1. Content-Type validation (fast)
-    if (!isValidContentType(request)) {
+    // 1. Size limits (fast)
+    if (!isValidQuerySize(query)) {
       return { allowed: false, reason: "invalid_request" };
     }
 
-    // 2. Size limits (fast)
-    if (!isValidSize(payload)) {
-      return { allowed: false, reason: "invalid_request" };
-    }
-
-    // 3. Moderation check (cheap API call)
-    const moderationResult = await checkModeration(payload.query);
+    // 2. Moderation check (cheap API call)
+    const moderationResult = await checkModeration(query);
     if (!moderationResult.allowed) {
       return { allowed: false, reason: "moderation_flagged" };
     }
 
-    // 4. Intent sanity check (optional, low-cost LLM call)
+    // 3. Intent sanity check (optional, low-cost LLM call)
     if (shouldCheckIntent()) {
-      const intentResult = await checkIntentSanity(payload.query);
+      const intentResult = await checkIntentSanity(query);
       if (!intentResult.allowed) {
         return { allowed: false, reason: "failed_intent_check" };
       }
@@ -46,44 +42,18 @@ export async function checkRequest(request: Request, payload: RequestPayload): P
 
     return { allowed: true };
   } catch (error) {
-    console.error("Guardian check failed:", error);
+    console.error("Guardian check failed:", error instanceof Error ? error.message : error);
     // Fail-safe: allow on error to avoid blocking legitimate requests
     return { allowed: true };
   }
 }
 
 /**
- * Validate Content-Type header
+ * Validate query size limits
  */
-function isValidContentType(request: Request): boolean {
-  const contentType = request.headers.get("content-type");
-  return contentType?.includes("application/json") ?? false;
-}
-
-/**
- * Validate request size limits
- */
-function isValidSize(payload: RequestPayload): boolean {
-  const { query } = payload;
-
-  // Character limits
+function isValidQuerySize(query: string): boolean {
   const MAX_QUERY_LENGTH = 2000;
-  if (query.length > MAX_QUERY_LENGTH) {
-    return false;
-  }
-
-  // Depth limits (prevent nested JSON attacks)
-  const MAX_DEPTH = 3;
-  try {
-    const parsed = JSON.parse(JSON.stringify(payload)); // Deep clone to check
-    if (getJsonDepth(parsed) > MAX_DEPTH) {
-      return false;
-    }
-  } catch {
-    return false; // Invalid JSON
-  }
-
-  return true;
+  return query.length <= MAX_QUERY_LENGTH;
 }
 
 /**
@@ -118,7 +88,7 @@ async function checkModeration(content: string): Promise<ValidationResult> {
 
     return { allowed: !flagged };
   } catch (error) {
-    console.error("Moderation check error:", error);
+    console.error("Moderation check error:", error instanceof Error ? error.message : error);
     // Fail-safe: allow on error
     return { allowed: true };
   }
@@ -141,16 +111,18 @@ async function checkIntentSanity(query: string): Promise<ValidationResult> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini", // Cheap and fast
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
-            content: "You are a validator. Respond with only 'VALID' or 'INVALID'. Check if this appears to be a coherent request that an AI assistant could help with."
+            content:
+              "You are a validator. Respond with only 'VALID' or 'INVALID'. " +
+              "Check if this appears to be a coherent request that an AI assistant could help with.",
           },
           {
             role: "user",
-            content: query.substring(0, 500) // Limit input
-          }
+            content: query.substring(0, 500),
+          },
         ],
         max_tokens: 10,
         temperature: 0,
@@ -166,7 +138,7 @@ async function checkIntentSanity(query: string): Promise<ValidationResult> {
 
     return { allowed: responseText === "VALID" };
   } catch (error) {
-    console.error("Intent check error:", error);
+    console.error("Intent check error:", error instanceof Error ? error.message : error);
     return { allowed: true };
   }
 }
@@ -176,20 +148,4 @@ async function checkIntentSanity(query: string): Promise<ValidationResult> {
  */
 function shouldCheckIntent(): boolean {
   return Deno.env.get("GUARDIAN_INTENT_CHECK_ENABLED") === "true";
-}
-
-/**
- * Calculate JSON depth (prevents nested object attacks)
- */
-function getJsonDepth(obj: unknown, currentDepth = 0): number {
-  if (obj === null || typeof obj !== "object") {
-    return currentDepth;
-  }
-
-  let maxDepth = currentDepth;
-  for (const value of Object.values(obj)) {
-    maxDepth = Math.max(maxDepth, getJsonDepth(value, currentDepth + 1));
-  }
-
-  return maxDepth;
 }

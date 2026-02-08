@@ -1,6 +1,23 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
+import { createAnonClient } from "../_shared/supabaseClient.ts";
+import { buildSignedHeaders } from "../_shared/requestSigning.ts";
+import { checkRequest } from "./guardian.ts";
+
+/** Build a JSON response with CORS headers. */
+function jsonResponse(
+  body: Record<string, unknown>,
+  status: number,
+  origin: string | null,
+): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...buildCorsHeaders(origin),
+      "Content-Type": "application/json",
+    },
+  });
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests with origin validation
@@ -8,92 +25,117 @@ serve(async (req) => {
     return handlePreflight(req);
   }
 
-  const origin = req.headers.get('origin');
+  const origin = req.headers.get("origin");
 
   try {
-    // Auth validation
-    const authHeader = req.headers.get('Authorization');
+    // 1. Auth validation — missing auth must return 401, not 500
+    const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error('Missing Auth');
+      return jsonResponse({ error: "unauthorized" }, 401, origin);
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!
-    );
+    const supabase = createAnonClient(authHeader);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    const { data: { user }, error } = await supabase.auth.getUser(authHeader);
-
-    if (error || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: {
-          ...buildCorsHeaders(origin),
-          "Content-Type": "application/json",
-        },
-      });
+    if (authError || !user) {
+      return jsonResponse({ error: "unauthorized" }, 401, origin);
     }
 
-    // Parse request
-    const { query, traceId } = await req.json();
+    // 2. Content-Type validation
+    const contentType = req.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      return jsonResponse({ error: "unsupported_media_type" }, 415, origin);
+    }
 
-    // Update agent_runs status to 'running' and set workflow_id
+    // 3. Safe JSON parse
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return jsonResponse({ error: "bad_request" }, 400, origin);
+    }
+
+    // 4. Validate required fields
+    if (typeof body.query !== "string" || typeof body.traceId !== "string") {
+      return jsonResponse({ error: "bad_request" }, 400, origin);
+    }
+
+    const query = body.query as string;
+    const traceId = body.traceId as string;
+
+    // 5. Guardian enforcement (toggled via OMNI_GUARDIAN_ENABLED, default true)
+    const guardianEnabled = Deno.env.get("OMNI_GUARDIAN_ENABLED") !== "false";
+    if (guardianEnabled) {
+      const guardianResult = await checkRequest(query, authHeader);
+      if (!guardianResult.allowed) {
+        return jsonResponse({ error: "request_blocked" }, 429, origin);
+      }
+    }
+
+    // 6. Update agent_runs status to 'running'
     const { error: updateError } = await supabase
-      .from('agent_runs')
+      .from("agent_runs")
       .update({
-        status: 'running',
-        start_time: new Date().toISOString()
+        status: "running",
+        start_time: new Date().toISOString(),
       })
-      .eq('id', traceId);
+      .eq("id", traceId);
 
     if (updateError) {
-      console.error('Failed to update agent_run status:', updateError);
+      console.error("Failed to update agent_run status:", updateError.message);
     }
 
-    // Handoff to orchestrator
-    const orchestratorUrl = Deno.env.get('ORCHESTRATOR_URL');
+    // 7. Handoff to orchestrator with signed request
+    const orchestratorUrl = Deno.env.get("ORCHESTRATOR_URL");
     if (!orchestratorUrl) {
-      throw new Error('System Misconfiguration: ORCHESTRATOR_URL missing');
+      console.error("ORCHESTRATOR_URL not configured");
+      return jsonResponse({ error: "server_error" }, 500, origin);
     }
 
-    const response = await fetch(`${orchestratorUrl}/api/v1/goals`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: user.id,
-        user_intent: query,
-        trace_id: traceId
-      })
+    const requestPath = "/api/v1/goals";
+    const bodyRaw = JSON.stringify({
+      user_id: user.id,
+      user_intent: query,
+      trace_id: traceId,
     });
+
+    const signedHeaders = await buildSignedHeaders(
+      "POST",
+      requestPath,
+      bodyRaw,
+      traceId,
+    );
+
+    const response = await fetch(`${orchestratorUrl}${requestPath}`, {
+      method: "POST",
+      headers: signedHeaders,
+      body: bodyRaw,
+    });
+
+    if (!response.ok) {
+      console.error(
+        `Orchestrator returned ${response.status}`,
+      );
+      return jsonResponse({ error: "upstream_error" }, 502, origin);
+    }
 
     const data = await response.json();
 
     // If orchestrator returned workflowId, update it
     if (data.workflowId) {
       await supabase
-        .from('agent_runs')
-        .update({
-          workflow_id: data.workflowId
-        })
-        .eq('id', traceId);
+        .from("agent_runs")
+        .update({ workflow_id: data.workflowId })
+        .eq("id", traceId);
     }
 
-    // Return orchestrator response directly
-    return new Response(JSON.stringify(data), {
-      headers: {
-        ...buildCorsHeaders(origin),
-        "Content-Type": "application/json",
-      },
-    });
-
+    // Return orchestrator response
+    return jsonResponse(data, 200, origin);
   } catch (err) {
-    console.error('Router error:', err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: {
-        ...buildCorsHeaders(origin),
-        "Content-Type": "application/json",
-      },
-    });
+    console.error("Router error:", err instanceof Error ? err.message : err);
+    return jsonResponse({ error: "server_error" }, 500, origin);
   }
 });
