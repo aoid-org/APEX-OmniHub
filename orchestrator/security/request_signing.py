@@ -136,9 +136,7 @@ def verify_request(
 class SignatureVerificationMiddleware(BaseHTTPMiddleware):
     """FastAPI middleware for HMAC signature verification."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         # Only verify signed paths with POST
         if request.method != "POST" or request.url.path not in _SIGNED_PATHS:
             return await call_next(request)

@@ -41,14 +41,16 @@ from providers.database.factory import get_database_provider
 from security.prompt_sanitizer import PromptInjectionError, create_safe_user_message
 
 # Canonical set of allowed tools (must match registered Temporal activities)
-ALLOWED_TOOLS = frozenset({
-    "search_database",
-    "create_record",
-    "delete_record",
-    "send_email",
-    "call_webhook",
-    "search_youtube",
-})
+ALLOWED_TOOLS = frozenset(
+    {
+        "search_database",
+        "create_record",
+        "delete_record",
+        "send_email",
+        "call_webhook",
+        "search_youtube",
+    }
+)
 
 # Compatibility aliases: map common shorthand → canonical name
 _TOOL_ALIASES: dict[str, str] = {
