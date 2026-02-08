@@ -34,5 +34,5 @@
     { "path": "./packages/ui" }
   ],
   "include": [],
-  "exclude": ["node_modules", "dist", "coverage", "apex-resilience"]
+  "exclude": ["node_modules", "dist", "coverage", "apex-resilience", "services/contracts"]
 }
