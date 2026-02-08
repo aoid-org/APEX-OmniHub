@@ -5,25 +5,20 @@ const intervals: ReturnType<typeof setInterval>[] = [];
 export function startGuardianLoops() {
   if (intervals.length > 0) return;
 
-  // Lightweight session watchdog
+  // Start all loops in a single push
   intervals.push(
+    // Lightweight session watchdog
     setInterval(() => {
       recordLoopHeartbeat('guardian-session-watchdog');
-    }, 60000)
-  );
-
-  // Offline sync monitor placeholder
-  intervals.push(
+    }, 60000),
+    // Offline sync monitor placeholder
     setInterval(() => {
       recordLoopHeartbeat('guardian-offline-sync');
-    }, 90000)
-  );
-
-  // Periodic health ping to backend
-  intervals.push(
+    }, 90000),
+    // Periodic health ping to backend
     setInterval(async () => {
       try {
-        if (typeof window === 'undefined') {
+        if (typeof globalThis.window === 'undefined') {
           recordLoopHeartbeat('guardian-health-ping');
           return;
         }

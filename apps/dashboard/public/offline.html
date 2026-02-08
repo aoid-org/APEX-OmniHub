@@ -47,11 +47,11 @@
   <main class="container" role="alert" aria-live="polite">
     <h1>📡 You're Offline</h1>
     <p>OmniLink requires an internet connection. Please check your network and try again.</p>
-    <button id="retry-btn" type="button" aria-label="Retry loading the page">Try Again</button>
+    <button id="retry-btn" type="button">Try Again</button>
   </main>
   <script>
     document.getElementById('retry-btn').addEventListener('click', function() {
-      window.location.reload();
+      globalThis.location.reload();
     });
   </script>
 </body>
