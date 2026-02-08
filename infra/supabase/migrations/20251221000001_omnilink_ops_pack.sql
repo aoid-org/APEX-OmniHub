@@ -199,33 +199,21 @@ CREATE INDEX IF NOT EXISTS eval_results_score_idx ON public.eval_results (score)
 -- RLS for eval_results
 ALTER TABLE public.eval_results ENABLE ROW LEVEL SECURITY;
 
-DO $$
-DECLARE
-  table_name text;
-  policy_name text;
-BEGIN
-  FOREACH table_name IN ARRAY ARRAY[
-    'agent_runs',
-    'skill_matches',
-    'tool_invocations',
-    'eval_cases',
-    'eval_results'
-  ] LOOP
-    policy_name := format('%s_all_service_role', table_name);
-    IF NOT EXISTS (
-      SELECT 1 FROM pg_policies
-      WHERE schemaname = 'public'
-        AND tablename = table_name
-        AND policyname = policy_name
-    ) THEN
-      EXECUTE format(
-        'CREATE POLICY "%s" ON public.%I FOR ALL TO service_role USING (true) WITH CHECK (true);',
-        policy_name,
-        table_name
-      );
-    END IF;
-  END LOOP;
-END $$;
+-- Service role full access policies for telemetry and eval tables
+CREATE POLICY IF NOT EXISTS "agent_runs_all_service_role" ON public.agent_runs
+FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE POLICY IF NOT EXISTS "skill_matches_all_service_role" ON public.skill_matches
+FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE POLICY IF NOT EXISTS "tool_invocations_all_service_role" ON public.tool_invocations
+FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE POLICY IF NOT EXISTS "eval_cases_all_service_role" ON public.eval_cases
+FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE POLICY IF NOT EXISTS "eval_results_all_service_role" ON public.eval_results
+FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 CREATE POLICY "eval_results_select_via_case" ON public.eval_results
 FOR SELECT TO authenticated
