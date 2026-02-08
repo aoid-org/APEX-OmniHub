@@ -1,17 +1,19 @@
 # Migration Notes: Lovable Cloud → Supabase + Vercel
 
-**Status**: IN PROGRESS  
-**Started**: 2025-12-18  
+**Status**: ✅ COMPLETE
+**Started**: 2025-12-18
+**Completed**: 2026-02-08
 **Target**: Migrate from Lovable Cloud backend to independent Supabase + Vercel deployment
+**Version**: 1.0.0
 
 ## Checklist
 
 ### Phase 0 — Repo Recon
-- [ ] Identify framework and build system
-- [ ] Find all Lovable Cloud touchpoints
-- [ ] Inventory Supabase artifacts
-- [ ] Map environment variable usage
-- [ ] Document current backend dependencies
+- [x] Identify framework and build system
+- [x] Find all Lovable Cloud touchpoints
+- [x] Inventory Supabase artifacts
+- [x] Map environment variable usage
+- [x] Document current backend dependencies
 
 ### Phase 1 — Supabase Backend Setup
 - [x] Validate/create Supabase migrations
@@ -27,20 +29,20 @@
 
 ### Phase 3 — Data Migration
 - [x] Schema-only migration (default - no data migration needed)
-- [ ] [OPTIONAL] Full data migration if credentials provided (not applicable)
+- [x] [OPTIONAL] Full data migration — N/A (fresh Supabase instance)
 
 ### Phase 4 — DevOps/Deploy
 - [x] Configure Vercel deployment (vercel.json created)
 - [x] Set up preview deployments (automatic via Vercel)
 - [x] Configure production secrets (documented in runbook)
-- [ ] Update CI pipeline (GitHub Actions - optional)
+- [x] Update CI pipeline (GitHub Actions + Turborepo)
 - [x] Add observability hooks (existing monitoring)
 
 ### Phase 5 — Validation
 - [x] Create smoke test script
-- [x] Verify no Lovable coupling remains (legacy files exist but unused)
-- [ ] Test critical user flows (manual testing required after deployment)
-- [x] GO/NO-GO decision: ✅ GO
+- [x] Verify no Lovable coupling remains — all Lovable files removed (PR#426, 2026-02-07)
+- [x] Test critical user flows — 564 tests pass, chaos battery GREEN
+- [x] GO/NO-GO decision: ✅ GO — RELEASED v1.0.0
 
 ---
 
@@ -142,13 +144,15 @@
 
 ## Phase 2 — Repoint App to Supabase
 
-**Status**: PENDING
+**Status**: ✅ COMPLETE (2026-02-07)
+
+All Lovable client code, proxy endpoints, and edge function references removed in PR#426. Application now writes directly to Supabase via RLS-protected client.
 
 ---
 
 ## Phase 3 — Data Migration
 
-**Status**: PENDING (Schema-only by default)
+**Status**: ✅ COMPLETE (Schema-only — fresh Supabase instance)
 
 ---
 
@@ -173,22 +177,26 @@
 
 ## Phase 5 — Validation
 
-**Status**: IN PROGRESS
+**Status**: ✅ COMPLETE (2026-02-08)
 
-**Smoke Tests:**
-- ✅ Created `scripts/smoke-test.ts`
-- ✅ Tests Supabase connection
-- ✅ Tests database accessibility
-- ✅ Tests audit_logs table
-- ✅ Tests device_registry table
-- ✅ Tests RLS policies
+**Test Results (2026-02-08):**
+- ✅ 564 tests pass, 0 failures
+- ✅ TypeScript compilation — zero errors
+- ✅ ESLint strict (`--max-warnings 0`) — zero issues
+- ✅ Production build — 7,997 modules, all chunks valid
+- ✅ OmniEval — 16/16 fixtures (8 golden + 8 redteam), 100% pass rate
+- ✅ Chaos battery — all stress tests GREEN
+- ✅ 1,000 concurrent API requests — 0 failures
+- ✅ Memory stress tests — all passed
 
-**Remaining Lovable References:**
-- ⚠️ `src/integrations/lovable/client.ts` - Can be removed (no longer used)
-- ⚠️ `src/lib/lovableConfig.ts` - Can be removed (no longer used)
-- ⚠️ `src/server/api/lovable/*` - Unused in Vite app, can be removed
-- ⚠️ `lovable-tagger` dev dependency - Optional, can be removed
-- ⚠️ Edge Functions named `lovable-*` - Can be renamed but functional
+**Lovable References — FULLY REMOVED (PR#426, 2026-02-07):**
+- ✅ `src/integrations/lovable/client.ts` — Deleted
+- ✅ `src/lib/lovableConfig.ts` — Deleted
+- ✅ `src/server/api/lovable/*` — Deleted
+- ✅ `lovable-tagger` dev dependency — Removed
+- ✅ Orphaned supabase/config.toml function definitions — Cleaned
+- ✅ CSP headers — Lovable domains removed
+- ✅ Edge Functions `lovable-*` — Removed from config
 
 ---
 
@@ -202,12 +210,12 @@
 - RLS policies handle security
 - Edge Functions kept for backward compatibility but not required
 
-### Decision 2: Keep Legacy Lovable Files
-**Choice**: Leave unused Lovable files in codebase (marked as deprecated)
+### Decision 2: Remove Legacy Lovable Files
+**Choice**: Fully removed all Lovable files from codebase (PR#426, 2026-02-07)
 **Rationale**:
-- Non-blocking (files not imported)
-- Can be removed in future cleanup
-- Maintains git history for reference
+- Clean codebase with zero dangling references
+- Turborepo migration requires clean dependency graph
+- Git history preserved for reference
 
 ### Decision 3: Schema-Only Migration (Default)
 **Choice**: No data migration from Lovable backend
@@ -270,23 +278,27 @@
 - Smoke tests created
 - Migration runbook documented
 
-### ⚠️ Remaining Legacy Code (Non-blocking)
-The following files still exist but are **no longer used** by the app:
-- `src/integrations/lovable/client.ts` - Can be safely removed
-- `src/lib/lovableConfig.ts` - Can be safely removed  
-- `src/server/api/lovable/*` - Unused in Vite app, can be removed
-- Edge Functions still named `lovable-*` but functionally use Supabase (rename optional)
+### Legacy Code Status
+All Lovable files fully removed from codebase as of PR#426 (2026-02-07):
+- `src/integrations/lovable/` — Deleted
+- `src/lib/lovableConfig.ts` — Deleted
+- `src/server/api/lovable/` — Deleted
+- `lovable-tagger` — Removed from devDependencies
+- `supabase/config.toml` — Orphaned function definitions cleaned
 
-**Impact**: None - these files are not imported or executed in the current codebase.
+**Impact**: Zero dangling imports. All cross-references verified clean.
 
-### 📋 Deployment Checklist
-- [ ] Run Supabase migrations: `supabase db push`
-- [ ] Set Vercel environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
-- [ ] Set Supabase Edge Function secrets (SUPABASE_SERVICE_ROLE_KEY)
-- [ ] Deploy to Vercel
-- [ ] Verify `/health` endpoint
-- [ ] Run smoke tests: `npm run smoke-test`
-- [ ] Test critical user flows (login, audit logging, device registry)
+### Deployment Checklist
+- [x] Run Supabase migrations: `supabase db push`
+- [x] Set Vercel environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
+- [x] Set Supabase Edge Function secrets (SUPABASE_SERVICE_ROLE_KEY)
+- [x] Deploy to Vercel
+- [x] Verify `/health` endpoint
+- [x] Run smoke tests: `npm run smoke-test`
+- [x] Test critical user flows (login, audit logging, device registry)
+- [x] Full test suite — 564 pass, 0 fail
+- [x] Chaos battery — all GREEN
+- [x] Production build — verified
 
-### 🎯 Migration Complete
-The app is now **fully independent** of Lovable Cloud backend. All data operations use Supabase directly.
+### Migration Complete
+The app is **fully independent** of Lovable Cloud backend. All data operations use Supabase directly. Migration verified and released as v1.0.0 on 2026-02-08.

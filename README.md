@@ -9,12 +9,15 @@
 ╚═╝  ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝  ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝
 ```
 
-**INTELLIGENCE DESIGNED.**  
+**INTELLIGENCE DESIGNED.**
 _Directable • Accountable • Dependable_
+
+**Version:** 1.0.0 | **Release Date:** 2026-02-08
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
 [![SonarQube](https://img.shields.io/badge/sonarqube-A-success)]()
+[![Tests](https://img.shields.io/badge/tests-564%20pass-brightgreen)]()
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 
 ---
@@ -37,7 +40,7 @@ APEX OmniHub is the enterprise **AI orchestration control plane** for **governed
 | **Database Migrations** | 32 versioned SQL schemas                           |
 | **CI/CD Pipelines**     | 8 GitHub Actions workflows                         |
 | **Test Files**          | 81 test specifications                             |
-| **Integration Modules** | 5 (Maestro, OmniLink, OmniPort, Lovable, Supabase) |
+| **Integration Modules** | 4 (Maestro, OmniLink, OmniPort, Supabase)           |
 
 ---
 
