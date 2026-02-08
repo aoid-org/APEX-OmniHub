@@ -13,7 +13,6 @@
  * Date: 2026-01-01
  */
 
-import React from 'react';
 import { useConnect, useAccount } from 'wagmi';
 import { useWalletVerification } from '@/hooks/useWalletVerification';
 import { Button } from '@/components/ui/button';

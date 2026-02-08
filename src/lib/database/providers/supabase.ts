@@ -305,7 +305,8 @@ export class SupabaseDatabase implements IDatabase {
     options?: { filters?: QueryFilter[] }
   ): Promise<DatabaseListResult<T>> {
     try {
-      let query = this.client.from(table as TableName)// eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query = this.client.from(table as TableName)
         .update(data as any)
 
       if (options?.filters) {

@@ -1,7 +1,7 @@
 /**
  * Register device token with Supabase backend
  */
-async function _registerTokenWithBackend(token: string, platform: string): Promise<void> {
+export async function registerTokenWithBackend(token: string, platform: string): Promise<void> {
     const { createClient } = await import('@/lib/supabase');
     const supabase = createClient();
 
@@ -11,10 +11,10 @@ async function _registerTokenWithBackend(token: string, platform: string): Promi
         throw new Error('User not authenticated');
     }
 
-    // Get device info
+    // Get device info with type assertions
     const { Device } = await import('@capacitor/device');
-    const deviceInfo = await Device.getInfo();
-    const deviceId = await Device.getId();
+    const deviceInfo = await Device.getInfo() as { appVersion: string; osVersion: string; model: string };
+    const deviceId = await Device.getId() as { identifier: string };
 
     // Upsert token
     const { error } = await supabase.rpc('upsert_push_device_token', {

@@ -40,7 +40,7 @@ export const OmniDashNavIconButton = ({ to, label, icon: Icon, shortcut }: OmniD
           `.trim().replace(/\s+/g, ' ')
           }
         >
-          <Icon className="h-5 w-5" strokeWidth={isActive => isActive ? 2.5 : 2} />
+          <Icon className="h-5 w-5" strokeWidth={2} />
           <span className="text-xs font-medium hidden md:block">{label}</span>
           <span className="sr-only md:not-sr-only">{label}</span>
         </NavLink>

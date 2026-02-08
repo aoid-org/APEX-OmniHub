@@ -22,8 +22,8 @@ type QueuedUpsert = {
   status: 'pending' | 'failed';
 };
 
-const REGISTRY_KEY = 'device_registry_v1'; // Updated key name (no longer Lovable-specific)
-const UPSERT_QUEUE_KEY = 'device_upserts_v1'; // Updated key name
+const REGISTRY_KEY = 'device_registry_v1';
+const UPSERT_QUEUE_KEY = 'device_upserts_v1';
 const MAX_ATTEMPTS = Number(import.meta.env.VITE_DEVICE_MAX_ATTEMPTS ?? 5);
 const BASE_DELAY_MS = Number(import.meta.env.VITE_DEVICE_RETRY_BASE_MS ?? 500);
 const MAX_DELAY_MS = Number(import.meta.env.VITE_DEVICE_RETRY_MAX_MS ?? 10_000);
@@ -95,8 +95,7 @@ function mergeByLastSeen(local: DeviceRecord[], remote: DeviceRecord[]): DeviceR
 }
 
 /**
- * Fetch device registry directly from Supabase device_registry table
- * Replaces Lovable API dependency
+ * Fetch device registry from Supabase device_registry table
  */
 async function fetchRemoteRegistry(userId: string): Promise<DeviceRecord[]> {
   try {

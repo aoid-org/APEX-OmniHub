@@ -10,28 +10,20 @@ import { getErrorLogs } from '@/lib/monitoring';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DiagnosticStatus {
-  lovableConfigured: boolean;
-  lovableReachable: boolean;
   supabaseConnected: boolean;
   deviceQueueSize: number;
   auditQueueSize: number;
   errorCount: number;
   lastError?: string;
-  deviceProxyUrl: string;
-  auditProxyUrl: string;
 }
 
 export default function Diagnostics() {
   const [status, setStatus] = useState<DiagnosticStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [testing, setTesting] = useState(false);
 
   const loadDiagnostics = async () => {
     setLoading(true);
     try {
-      // Lovable configuration check removed - app now uses Supabase directly
-      const lovableConfigured = false; // Legacy flag, no longer used
-
       // Check Supabase connection
       let supabaseConnected = false;
       try {
@@ -41,36 +33,17 @@ export default function Diagnostics() {
         supabaseConnected = false;
       }
 
-      // Check Lovable healthcheck if available
-      let lovableReachable = false;
-      try {
-        const { data: healthData, error: healthError } = await supabase.functions.invoke(
-          'lovable-healthcheck'
-        );
-        lovableReachable = !healthError && healthData?.lovable?.reachable === true;
-      } catch {
-        lovableReachable = false;
-      }
-
       // Get queue sizes
       const deviceQueue = await getUpsertQueueSnapshot();
       const auditQueue = await getAuditQueueSnapshot();
       const errors = getErrorLogs();
 
-      // Proxy URLs removed - app now writes directly to Supabase tables
-      const deviceProxyUrl = 'Direct to Supabase device_registry table';
-      const auditProxyUrl = 'Direct to Supabase audit_logs table';
-
       setStatus({
-        lovableConfigured,
-        lovableReachable,
         supabaseConnected,
         deviceQueueSize: deviceQueue.filter((q) => q.status === 'pending').length,
         auditQueueSize: auditQueue.filter((q) => q.status === 'pending').length,
         errorCount: errors.length,
         lastError: errors[errors.length - 1]?.message,
-        deviceProxyUrl,
-        auditProxyUrl,
       });
     } catch (error) {
       console.error('Failed to load diagnostics:', error);
@@ -83,51 +56,10 @@ export default function Diagnostics() {
     loadDiagnostics();
   }, []);
 
-  const testLovableConnection = async () => {
-    setTesting(true);
-    try {
-      // Test device endpoint
-      const deviceUrl = status?.deviceProxyUrl || '/api/lovable/device';
-      const deviceTest = await fetch(`${deviceUrl}?user_id=test`, {
-        method: 'GET',
-        headers: {
-          'X-User-Id': 'test',
-        },
-      });
-
-      // Test audit endpoint
-      const auditUrl = status?.auditProxyUrl || '/api/lovable/audit';
-      const auditTest = await fetch(auditUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': 'test',
-        },
-        body: JSON.stringify({
-          event: {
-            id: 'test',
-            timestamp: new Date().toISOString(),
-            actionType: 'test',
-          },
-        }),
-      });
-
-      alert(
-        `Device endpoint: ${deviceTest.status} ${deviceTest.statusText}\n` +
-          `Audit endpoint: ${auditTest.status} ${auditTest.statusText}`
-      );
-    } catch (error) {
-      alert(`Connection test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setTesting(false);
-    }
-  };
-
   const copyDiagnostics = () => {
     if (!status) return;
     const text = JSON.stringify(status, null, 2);
     navigator.clipboard.writeText(text);
-    alert('Diagnostics copied to clipboard');
   };
 
   if (loading) {
@@ -158,9 +90,9 @@ export default function Diagnostics() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Lovable Connection Diagnostics</h1>
+          <h1 className="text-3xl font-bold">System Diagnostics</h1>
           <p className="text-muted-foreground mt-2">
-            Monitor and troubleshoot Lovable integration status
+            Monitor system health and queue status
           </p>
         </div>
         <div className="flex gap-2">
@@ -172,42 +104,10 @@ export default function Diagnostics() {
             <Copy className="h-4 w-4 mr-2" />
             Copy
           </Button>
-          <Button onClick={testLovableConnection} variant="outline" size="sm" disabled={testing}>
-            {testing ? 'Testing...' : 'Test Connection'}
-          </Button>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {status.lovableConfigured && status.lovableReachable ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-              ) : status.lovableConfigured ? (
-                <AlertCircle className="h-5 w-5 text-yellow-500" />
-              ) : (
-                <XCircle className="h-5 w-5 text-red-500" />
-              )}
-              Lovable Configuration
-            </CardTitle>
-            <CardDescription>API credentials and connectivity status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Status:</span>
-                <Badge variant="secondary">
-                  Migrated to Supabase
-                </Badge>
-              </div>
-              <div className="text-xs text-muted-foreground mt-2">
-                Audit logs and device registry now use Supabase directly (no Lovable API required)
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -218,7 +118,7 @@ export default function Diagnostics() {
               )}
               Supabase Connection
             </CardTitle>
-            <CardDescription>Edge function connectivity</CardDescription>
+            <CardDescription>Database and edge function connectivity</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -281,25 +181,6 @@ export default function Diagnostics() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Proxy URLs</CardTitle>
-          <CardDescription>Current endpoint configuration</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div>
-              <span className="text-sm font-medium">Device Proxy:</span>
-              <p className="text-xs font-mono bg-muted p-2 rounded mt-1">{status.deviceProxyUrl}</p>
-            </div>
-            <div>
-              <span className="text-sm font-medium">Audit Proxy:</span>
-              <p className="text-xs font-mono bg-muted p-2 rounded mt-1">{status.auditProxyUrl}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {status.errorCount > 0 && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
@@ -313,4 +194,3 @@ export default function Diagnostics() {
     </div>
   );
 }
-

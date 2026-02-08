@@ -1,6 +1,6 @@
 import { recordLoopHeartbeat } from './heartbeat';
 
-const intervals: NodeJS.Timer[] = [];
+const intervals: ReturnType<typeof setInterval>[] = [];
 
 export function startGuardianLoops() {
   if (intervals.length > 0) return;

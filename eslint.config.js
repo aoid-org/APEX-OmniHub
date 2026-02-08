@@ -50,7 +50,6 @@ export default tseslint.config(
       "src/lib/debug-logger.ts",
       "src/lib/offline.ts",
       "src/lib/config.ts",
-      "src/lib/lovableConfig.ts",
       "src/lib/security.ts",
       "src/lib/database/providers/supabase.ts",
       "src/lib/storage/providers/supabase.ts",

@@ -197,7 +197,6 @@ export function logConfiguration(): void {
     });
   }
 
-  // Lovable config logging removed - app now uses Supabase directly
 
   // #region agent log
   log('logConfiguration complete');
