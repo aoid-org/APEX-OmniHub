@@ -127,7 +127,7 @@ BEGIN
   -- Step 1: Update app_metadata (will trigger sync_admin_metadata_to_user_roles)
   UPDATE auth.users
   SET raw_app_meta_data =
-    COALESCE(raw_app_meta_data, '{}'::jsonb) || jsonb_build_object('role', public.app_role_admin(), 'admin', true)
+    COALESCE(raw_app_meta_data, '{}'::jsonb) || jsonb_build_object('role', public.app_role_admin(), public.app_role_admin(), true)
   WHERE id = _user_id;
 
   -- Step 2: Explicit insert into user_roles (belt-and-suspenders redundancy)
@@ -159,7 +159,7 @@ SELECT
   public.app_role_admin()
 FROM auth.users u
 WHERE
-  (u.raw_app_meta_data->>'admin')::boolean = true
+  (u.raw_app_meta_data->>(public.app_role_admin()))::boolean = true
   AND NOT EXISTS (
     SELECT 1 FROM public.user_roles ur
     WHERE ur.user_id = u.id AND ur.role = public.app_role_admin()
@@ -173,7 +173,7 @@ DECLARE
 BEGIN
   SELECT COUNT(*) INTO backfill_count
   FROM auth.users u
-  WHERE (u.raw_app_meta_data->>'admin')::boolean = true;
+  WHERE (u.raw_app_meta_data->>(public.app_role_admin()))::boolean = true;
 
   IF backfill_count > 0 THEN
     RAISE LOG 'Backfilled % existing admin users to user_roles table', backfill_count;

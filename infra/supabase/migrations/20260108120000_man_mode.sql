@@ -16,6 +16,13 @@
 
 -- UP Migration
 
+-- Create man_task_status enum
+DO $$ BEGIN
+    CREATE TYPE man_task_status AS ENUM ('PENDING', 'APPROVED', 'DENIED', 'EXPIRED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 -- Create man_tasks table
 CREATE TABLE IF NOT EXISTS man_tasks (
     -- Primary key
@@ -31,9 +38,8 @@ CREATE TABLE IF NOT EXISTS man_tasks (
     -- Step ID within the workflow plan
     step_id TEXT NOT NULL DEFAULT '',
 
-    -- Task status with CHECK constraint
-    status TEXT NOT NULL DEFAULT 'PENDING'
-        CHECK (status IN ('PENDING', 'APPROVED', 'DENIED', 'EXPIRED')),
+    -- Task status with ENUM
+    status man_task_status NOT NULL DEFAULT 'PENDING',
 
     -- The action requiring approval (ActionIntent as JSONB)
     -- Contains: tool_name, params, irreversible, context

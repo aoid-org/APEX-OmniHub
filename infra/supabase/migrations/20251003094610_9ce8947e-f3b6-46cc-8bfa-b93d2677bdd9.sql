@@ -160,14 +160,21 @@ values ('user-files', 'user-files', false)
 on conflict (id) do nothing;
 
 -- Storage RLS policies
+-- Helper function to check file ownership in user-files bucket
+create or replace function public.is_user_file_owner(_bucket_id text, _name text)
+returns boolean language sql security definer stable as $$
+  select _bucket_id = 'user-files' and auth.uid()::text = (storage.foldername(_name))[1];
+$$;
+
+-- Storage RLS policies
 create policy "Users can view own files" on storage.objects
-  for select using (bucket_id = 'user-files' and auth.uid()::text = (storage.foldername(name))[1]);
+  for select using (public.is_user_file_owner(bucket_id, name));
 
 create policy "Users can upload own files" on storage.objects
-  for insert with check (bucket_id = 'user-files' and auth.uid()::text = (storage.foldername(name))[1]);
+  for insert with check (public.is_user_file_owner(bucket_id, name));
 
 create policy "Users can delete own files" on storage.objects
-  for delete using (bucket_id = 'user-files' and auth.uid()::text = (storage.foldername(name))[1]);
+  for delete using (public.is_user_file_owner(bucket_id, name));
 
 -- Function to auto-create profile and role on signup
 create or replace function public.handle_new_user()

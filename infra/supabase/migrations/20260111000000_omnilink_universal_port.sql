@@ -17,6 +17,12 @@ CREATE OR REPLACE FUNCTION omnilink_type_command() RETURNS text LANGUAGE sql IMM
 CREATE OR REPLACE FUNCTION omnilink_type_workflow() RETURNS text LANGUAGE sql IMMUTABLE AS $$ SELECT 'workflow' $$;
 CREATE OR REPLACE FUNCTION omnilink_type_event() RETURNS text LANGUAGE sql IMMUTABLE AS $$ SELECT 'event' $$;
 
+-- Helper function for policy logic
+CREATE OR REPLACE FUNCTION public.is_admin_and_owner(_user_id uuid, _tenant_id uuid)
+RETURNS boolean LANGUAGE sql IMMUTABLE SECURITY DEFINER AS $$
+  SELECT public.is_admin(_user_id) AND _tenant_id = _user_id;
+$$;
+
 CREATE TABLE IF NOT EXISTS public.omnilink_api_keys (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
@@ -39,7 +45,7 @@ ALTER TABLE public.omnilink_api_keys ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins view own OmniLink keys" ON public.omnilink_api_keys
   FOR SELECT TO authenticated
-  USING (public.is_admin(auth.uid()) AND tenant_id = auth.uid());
+  USING (public.is_admin_and_owner(auth.uid(), tenant_id));
 
 CREATE POLICY "Service role manages OmniLink keys" ON public.omnilink_api_keys
   FOR ALL TO service_role
@@ -74,7 +80,7 @@ ALTER TABLE public.omnilink_events ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins view own OmniLink events" ON public.omnilink_events
   FOR SELECT TO authenticated
-  USING (public.is_admin(auth.uid()) AND tenant_id = auth.uid());
+  USING (public.is_admin_and_owner(auth.uid(), tenant_id));
 
 CREATE POLICY "Service role inserts OmniLink events" ON public.omnilink_events
   FOR INSERT TO service_role
@@ -100,7 +106,7 @@ ALTER TABLE public.omnilink_entities ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins view own OmniLink entities" ON public.omnilink_entities
   FOR SELECT TO authenticated
-  USING (public.is_admin(auth.uid()) AND tenant_id = auth.uid());
+  USING (public.is_admin_and_owner(auth.uid(), tenant_id));
 
 CREATE POLICY "Service role upserts OmniLink entities" ON public.omnilink_entities
   FOR ALL TO service_role
@@ -135,7 +141,7 @@ ALTER TABLE public.omnilink_orchestration_requests ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins view own OmniLink orchestration requests" ON public.omnilink_orchestration_requests
   FOR SELECT TO authenticated
-  USING (public.is_admin(auth.uid()) AND tenant_id = auth.uid());
+  USING (public.is_admin_and_owner(auth.uid(), tenant_id));
 
 CREATE POLICY "Service role inserts OmniLink orchestration requests" ON public.omnilink_orchestration_requests
   FOR INSERT TO service_role
@@ -169,7 +175,7 @@ ALTER TABLE public.omnilink_runs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins view own OmniLink runs" ON public.omnilink_runs
   FOR SELECT TO authenticated
-  USING (public.is_admin(auth.uid()) AND tenant_id = auth.uid());
+  USING (public.is_admin_and_owner(auth.uid(), tenant_id));
 
 CREATE POLICY "Service role manages OmniLink runs" ON public.omnilink_runs
   FOR ALL TO service_role

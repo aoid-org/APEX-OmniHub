@@ -371,7 +371,9 @@ export async function executeEventIdempotently<T>(
  * Mark event as processed (without executing)
  * Useful for stubbed apps
  */
-export function markEventProcessed(event: EventEnvelope, response: unknown = { status: 'ok' }): void {
+const DEFAULT_PROCESSED_RESPONSE = { status: 'ok' };
+
+export function markEventProcessed(event: EventEnvelope, response: unknown = DEFAULT_PROCESSED_RESPONSE): void {
   storeReceipt(
     event.idempotencyKey,
     event.correlationId,

@@ -108,7 +108,7 @@ interface AlchemyWebhookPayload {
  * Process a single NFT transfer event
  */
 async function processNFTTransfer(
-  supabase: unknown,
+  supabase: ReturnType<typeof createClient>,
   activity: AlchemyNFTActivity,
   membershipNFTAddress: string
 ): Promise<{ success: boolean; reason?: string }> {
@@ -157,50 +157,12 @@ async function processNFTTransfer(
 
     // Handle NFT transfer OUT (user lost NFT)
     if (normalizedFrom !== zeroAddress) {
-      // Find users with this wallet
-      const { data: fromWallets } = await supabase
-        .from('wallet_identities')
-        .select('user_id')
-        .eq('wallet_address', normalizedFrom);
-
-      if (fromWallets && fromWallets.length > 0) {
-        for (const wallet of fromWallets) {
-          // Set has_premium_nft to false
-          await supabase
-            .from('profiles')
-            .update({
-              has_premium_nft: false,
-              nft_verified_at: new Date().toISOString(),
-            })
-            .eq('id', wallet.user_id);
-
-          console.log(`Removed NFT access for user ${wallet.user_id} (transfer out)`);
-        }
-      }
+      await handleTransferOut(supabase, normalizedFrom);
     }
 
     // Handle NFT transfer IN (user received NFT)
     if (normalizedTo !== zeroAddress) {
-      // Find users with this wallet
-      const { data: toWallets } = await supabase
-        .from('wallet_identities')
-        .select('user_id')
-        .eq('wallet_address', normalizedTo);
-
-      if (toWallets && toWallets.length > 0) {
-        for (const wallet of toWallets) {
-          // Set has_premium_nft to true
-          await supabase
-            .from('profiles')
-            .update({
-              has_premium_nft: true,
-              nft_verified_at: new Date().toISOString(),
-            })
-            .eq('id', wallet.user_id);
-
-          console.log(`Granted NFT access to user ${wallet.user_id} (transfer in)`);
-        }
-      }
+      await handleTransferIn(supabase, normalizedTo);
     }
 
     // Mark event as confirmed
@@ -211,7 +173,7 @@ async function processNFTTransfer(
 
     return { success: true };
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error processing NFT transfer:', error);
 
     // Mark event as failed
@@ -219,11 +181,57 @@ async function processNFTTransfer(
       .from('chain_tx_log')
       .update({
         status: 'failed',
-        metadata: { error: error.message },
+        metadata: { error: error.message || String(error) },
       })
       .eq('id', eventId);
 
     return { success: false, reason: 'processing_error' };
+  }
+}
+
+async function handleTransferOut(supabase: ReturnType<typeof createClient>, walletAddress: string) {
+  // Find users with this wallet
+  const { data: fromWallets } = await supabase
+    .from('wallet_identities')
+    .select('user_id')
+    .eq('wallet_address', walletAddress);
+
+  if (fromWallets && fromWallets.length > 0) {
+    for (const wallet of fromWallets) {
+      // Set has_premium_nft to false
+      await supabase
+        .from('profiles')
+        .update({
+          has_premium_nft: false,
+          nft_verified_at: new Date().toISOString(),
+        })
+        .eq('id', wallet.user_id);
+
+      console.log(`Removed NFT access for user ${wallet.user_id} (transfer out)`);
+    }
+  }
+}
+
+async function handleTransferIn(supabase: ReturnType<typeof createClient>, walletAddress: string) {
+  // Find users with this wallet
+  const { data: toWallets } = await supabase
+    .from('wallet_identities')
+    .select('user_id')
+    .eq('wallet_address', walletAddress);
+
+  if (toWallets && toWallets.length > 0) {
+    for (const wallet of toWallets) {
+      // Set has_premium_nft to true
+      await supabase
+        .from('profiles')
+        .update({
+          has_premium_nft: true,
+          nft_verified_at: new Date().toISOString(),
+        })
+        .eq('id', wallet.user_id);
+
+      console.log(`Granted NFT access to user ${wallet.user_id} (transfer in)`);
+    }
   }
 }
 

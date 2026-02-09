@@ -47,17 +47,17 @@ function parseArgs(): CLIOptions {
     if (arg === '--mode') {
       options.mode = args[++i] as CLIOptions['mode'];
     } else if (arg === '--seed') {
-      options.seed = parseInt(args[++i]);
+      options.seed = Number.parseInt(args[++i]);
     } else if (arg === '--chaos') {
       options.chaos = args[++i] as CLIOptions['chaos'];
     } else if (arg === '--beats') {
-      options.beats = parseInt(args[++i]);
+      options.beats = Number.parseInt(args[++i]);
     } else if (arg === '--scenario') {
       options.scenario = args[++i];
     } else if (arg === '--rate') {
-      options.rate = parseInt(args[++i]);
+      options.rate = Number.parseInt(args[++i]);
     } else if (arg === '--duration') {
-      options.duration = parseInt(args[++i]);
+      options.duration = Number.parseInt(args[++i]);
     } else if (arg === '--validate') {
       options.validate = true;
     }
@@ -66,27 +66,8 @@ function parseArgs(): CLIOptions {
   return options;
 }
 
-// ============================================================================
-// CHAOS SIMULATION BEATS (Full Story)
-// ============================================================================
+// ...
 
-function getFullStoryBeats(): Beat[] {
-  return [
-    {
-      number: 1,
-      name: 'TradeLine - Emergency Call',
-      app: 'tradeline247',
-      eventType: 'tradeline247:call.received',
-      payload: {
-        callId: 'call-001',
-        from: '+1-555-0123',
-        to: '+1-555-BOUTIQUE',
-        timestamp: new Date().toISOString(),
-      } as CallReceivedPayload,
-      target: ['omnihub', 'jubeelove'],
-      expectedOutcome: 'Call logged despite duplicate',
-      observability: 'agent_runs table',
-    },
     {
       number: 2,
       name: 'AutoRepAi - Repair Estimate',
@@ -96,50 +77,22 @@ function getFullStoryBeats(): Beat[] {
         estimateId: 'est-001',
         vehicleInfo: { make: 'Garment', model: 'Designer Jacket', year: 2024 },
         issues: ['Broken zipper', 'Torn lining'],
-        estimatedCost: 75.00,
+        estimatedCost: 75,
         estimatedDuration: '2 days',
       },
       target: 'flowbills',
       expectedOutcome: 'Estimate created after retry',
       observability: 'estimates table',
     },
-    {
-      number: 3,
-      name: 'KeepSafe - Safety Check',
-      app: 'keepsafe',
-      eventType: 'keepsafe:safety_check.completed',
-      payload: {
-        checkId: 'safety-001',
-        facility: 'Sarahs Boutique Main St',
-        inspector: 'Fire Marshal Johnson',
-        items: [
-          { category: 'Fire Extinguishers', status: 'pass', notes: 'All operational' },
-          { category: 'Emergency Exits', status: 'pass', notes: 'Clear and marked' },
-        ],
-        overallStatus: 'compliant',
-        completedAt: new Date().toISOString(),
-      },
-      target: ['omnihub', 'careconnect'],
-      expectedOutcome: 'Check logged despite delay',
-      observability: 'safety_checks table',
-    },
-    {
-      number: 4,
-      name: 'FLOWBills - Invoice Created',
-      app: 'flowbills',
-      eventType: 'flowbills:invoice.created',
-      payload: {
-        invoiceId: 'inv-001',
-        clientId: 'client-123',
-        amount: 75.00,
-        currency: 'USD',
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+
+// ...
+
         lineItems: [
-          { description: 'Zipper repair', quantity: 1, unitPrice: 45.00, total: 45.00 },
-          { description: 'Lining repair', quantity: 1, unitPrice: 30.00, total: 30.00 },
+          { description: 'Zipper repair', quantity: 1, unitPrice: 45, total: 45 },
+          { description: 'Lining repair', quantity: 1, unitPrice: 30, total: 30 },
         ],
         taxRate: 0.08,
-        totalAmount: 81.00,
+        totalAmount: 81,
       },
       target: ['flowc', 'omnihub'],
       expectedOutcome: 'Invoice + compliance check',

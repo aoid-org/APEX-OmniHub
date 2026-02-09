@@ -12,7 +12,7 @@ export async function retryWithBackoff<T>(
   maxRetries: number = 3,
   baseDelay: number = 1000
 ): Promise<T> {
-  let lastError: Error;
+  let lastError: Error = new Error('Retry loop failed unexpectedly');
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -27,8 +27,8 @@ export async function retryWithBackoff<T>(
     }
   }
   
-  logError(lastError!, { action: 'retry_exhausted', metadata: { maxRetries } });
-  throw lastError!;
+  logError(lastError, { action: 'retry_exhausted', metadata: { maxRetries } });
+  throw lastError;
 }
 
 /**

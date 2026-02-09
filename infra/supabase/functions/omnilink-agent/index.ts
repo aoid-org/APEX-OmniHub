@@ -60,8 +60,8 @@ async function validateAuth(req: Request) {
   return { user, supabase };
 }
 
-async function updateRunStatus(supabase: any, traceId: string, status?: string, workflowId?: string) {
-  const updates: any = {};
+async function updateRunStatus(supabase: ReturnType<typeof createClient>, traceId: string, status?: string, workflowId?: string) {
+  const updates: Record<string, unknown> = {};
   if (status) {
     updates.status = status;
     if (status === 'running') updates.start_time = new Date().toISOString();

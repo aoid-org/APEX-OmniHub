@@ -10,16 +10,21 @@ REPORT_FILE="${REPORT_DIR}/health_check_${TIMESTAMP}.json"
 
 mkdir -p "${REPORT_DIR}"
 
+STATUS_HEALTHY="healthy"
+STATUS_WARNING="warning"
+STATUS_CRITICAL="critical"
+STATUS_DEGRADED="degraded"
+
 check_database() {
-  local status="healthy"
+  local status="${STATUS_HEALTHY}"
   local connections=45
   local max_connections=100
   local utilization=$((connections * 100 / max_connections))
 
   if [[ "${utilization}" -gt 90 ]]; then
-    status="critical"
+    status="${STATUS_CRITICAL}"
   elif [[ "${utilization}" -gt 75 ]]; then
-    status="warning"
+    status="${STATUS_WARNING}"
   fi
 
   echo "{\"component\":\"database\",\"status\":\"${status}\",\"connections\":${connections},\"max\":${max_connections},\"utilization\":${utilization}}"
@@ -27,12 +32,12 @@ check_database() {
 }
 
 check_api() {
-  local status="healthy"
+  local status="${STATUS_HEALTHY}"
   local p95_latency=145
   local threshold=200
 
   if [[ "${p95_latency}" -gt "${threshold}" ]]; then
-    status="degraded"
+    status="${STATUS_DEGRADED}"
   fi
 
   echo "{\"component\":\"api\",\"status\":\"${status}\",\"p95_latency_ms\":${p95_latency},\"threshold_ms\":${threshold}}"
@@ -40,12 +45,12 @@ check_api() {
 }
 
 check_memory() {
-  local status="healthy"
+  local status="${STATUS_HEALTHY}"
   local used_percent=65
   local threshold=80
 
   if [[ "${used_percent}" -gt "${threshold}" ]]; then
-    status="warning"
+    status="${STATUS_WARNING}"
   fi
 
   echo "{\"component\":\"memory\",\"status\":\"${status}\",\"used_percent\":${used_percent},\"threshold\":${threshold}}"
@@ -53,12 +58,12 @@ check_memory() {
 }
 
 check_cpu() {
-  local status="healthy"
+  local status="${STATUS_HEALTHY}"
   local used_percent=55
   local threshold=70
 
   if [[ "${used_percent}" -gt "${threshold}" ]]; then
-    status="warning"
+    status="${STATUS_WARNING}"
   fi
 
   echo "{\"component\":\"cpu\",\"status\":\"${status}\",\"used_percent\":${used_percent},\"threshold\":${threshold}}"
@@ -66,12 +71,12 @@ check_cpu() {
 }
 
 check_disk() {
-  local status="healthy"
+  local status="${STATUS_HEALTHY}"
   local used_percent=42
   local threshold=75
 
   if [[ "${used_percent}" -gt "${threshold}" ]]; then
-    status="warning"
+    status="${STATUS_WARNING}"
   fi
 
   echo "{\"component\":\"disk\",\"status\":\"${status}\",\"used_percent\":${used_percent},\"threshold\":${threshold}}"
@@ -79,7 +84,7 @@ check_disk() {
 }
 
 check_websocket() {
-  local status="healthy"
+  local status="${STATUS_HEALTHY}"
   local active_connections=3200
   local max_connections=10000
   local utilization=$((active_connections * 100 / max_connections))
@@ -112,18 +117,18 @@ done
 
 echo "  ]," >> "${REPORT_FILE}"
 
-CRITICAL_COUNT=$(echo "${CHECKS[@]}" | grep -o '"status":"critical"' | wc -l || echo "0")
-WARNING_COUNT=$(echo "${CHECKS[@]}" | grep -o '"status":"warning"' | wc -l || echo "0")
-DEGRADED_COUNT=$(echo "${CHECKS[@]}" | grep -o '"status":"degraded"' | wc -l || echo "0")
+CRITICAL_COUNT=$(echo "${CHECKS[@]}" | grep -o "\"status\":\"${STATUS_CRITICAL}\"" | wc -l || echo "0")
+WARNING_COUNT=$(echo "${CHECKS[@]}" | grep -o "\"status\":\"${STATUS_WARNING}\"" | wc -l || echo "0")
+DEGRADED_COUNT=$(echo "${CHECKS[@]}" | grep -o "\"status\":\"${STATUS_DEGRADED}\"" | wc -l || echo "0")
 
 if [[ "${CRITICAL_COUNT}" -gt 0 ]]; then
-  OVERALL_STATUS="critical"
+  OVERALL_STATUS="${STATUS_CRITICAL}"
 elif [[ "${WARNING_COUNT}" -gt 0 ]]; then
-  OVERALL_STATUS="warning"
+  OVERALL_STATUS="${STATUS_WARNING}"
 elif [[ "${DEGRADED_COUNT}" -gt 0 ]]; then
-  OVERALL_STATUS="degraded"
+  OVERALL_STATUS="${STATUS_DEGRADED}"
 else
-  OVERALL_STATUS="healthy"
+  OVERALL_STATUS="${STATUS_HEALTHY}"
 fi
 
 echo "  \"overall_status\": \"${OVERALL_STATUS}\"," >> "${REPORT_FILE}"
@@ -136,10 +141,10 @@ echo "}" >> "${REPORT_FILE}"
 
 cat "${REPORT_FILE}" | jq .
 
-if [[ "${OVERALL_STATUS}" = "critical" ]]; then
+if [[ "${OVERALL_STATUS}" = "${STATUS_CRITICAL}" ]]; then
   echo "🚨 CRITICAL: Platform health requires immediate attention"
   exit 2
-elif [[ "${OVERALL_STATUS}" = "warning" ]]; then
+elif [[ "${OVERALL_STATUS}" = "${STATUS_WARNING}" ]]; then
   echo "⚠️  WARNING: Platform health degraded"
   exit 1
 else

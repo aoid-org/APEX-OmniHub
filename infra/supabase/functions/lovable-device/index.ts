@@ -74,9 +74,9 @@ function unauthorized(corsHeaders: HeadersInit): Response {
   return json({ error: 'unauthorized' }, corsHeaders, 401);
 }
 
-async function getUserId(req: Request, supabaseAnon: any): Promise<string | null> {
+async function getUserId(req: Request, supabaseAnon: ReturnType<typeof createAnonClient>): Promise<string | null> {
   // Get userId from header or query params
-  let userId = req.headers.get('x-user-id') ?? new URL(req.url).searchParams.get('user_id');
+  const userId = req.headers.get('x-user-id') ?? new URL(req.url).searchParams.get('user_id');
   if (userId) return userId;
 
   // If no userId in header, try to get from Supabase auth
