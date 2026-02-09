@@ -1212,7 +1212,7 @@ class AgentWorkflow:
                 correlation_id=workflow.info().workflow_id,
                 plan_id=self.plan_id,
                 total_steps=len(self.plan_steps),
-                duration_seconds=0.0,  # TODO: Calculate from start time
+                duration_seconds=time.time() - self.start_time if self.start_time else 0.0,
             )
         )
 

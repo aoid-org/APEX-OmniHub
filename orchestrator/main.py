@@ -76,6 +76,7 @@ CORS_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS", "https://apexomnihub.icu,https://www.apexomnihub.icu"
 ).split(",")
 
+# Add CORSMiddleware first so it runs outermost (handles preflight before auth)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
@@ -94,7 +95,7 @@ class GoalRequest(BaseModel):
     trace_id: str
 
 
-@app.post("/api/v1/goals")
+@app.post("/api/v1/goals", responses={500: {"description": "Internal Server Error"}})
 async def create_goal(request: GoalRequest):
     """
     Create and start a new agent workflow.
