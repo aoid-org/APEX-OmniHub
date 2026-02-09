@@ -6,7 +6,7 @@
  * 1. Intended destination (deep-link preservation)
  * 2. Admin status → /omnidash
  * 3. Paid user → /dashboard
- * 4. Free user → /pricing
+ * 4. Free user → /omnidash (demo)
  *
  * ENTERPRISE-GRADE PRINCIPLES:
  * - Predictable: Same input always produces same output
@@ -26,7 +26,6 @@ export interface PostLoginDestinationOptions {
  * Protected routes that require specific access levels
  */
 const ROUTE_ACCESS: Record<string, (opts: PostLoginDestinationOptions) => boolean> = {
-  '/omnidash': ({ isAdmin, isPaid }) => isAdmin || isPaid,
   '/dashboard': ({ isPaid }) => isPaid,
   '/links': ({ isPaid }) => isPaid,
   '/files': ({ isPaid }) => isPaid,
@@ -38,6 +37,14 @@ const ROUTE_ACCESS: Record<string, (opts: PostLoginDestinationOptions) => boolea
  * Validate if user can access a specific route
  */
 function canAccessRoute(route: string, options: PostLoginDestinationOptions): boolean {
+  if (route === '/omnidash') {
+    return true;
+  }
+
+  if (route.startsWith('/omnidash/')) {
+    return options.isAdmin || options.isPaid;
+  }
+
   // Find matching route pattern (exact or prefix match)
   for (const [pattern, checkAccess] of Object.entries(ROUTE_ACCESS)) {
     if (route === pattern || route.startsWith(pattern + '/')) {
@@ -92,7 +99,7 @@ function getUpgradeReason(route: string): string {
  *   tier: 'free',
  *   intendedDestination: '/dashboard'
  * })
- * // Returns: '/pricing?reason=premium' (blocked, upgrade required)
+ * // Returns: '/pricing?reason=premium' (blocked sub-feature, upgrade required)
  * ```
  */
 export function getPostLoginDestination(options: PostLoginDestinationOptions): string {
@@ -124,8 +131,8 @@ export function getPostLoginDestination(options: PostLoginDestinationOptions): s
     return '/dashboard';
   }
 
-  // PRIORITY 3: Free users go to pricing
-  return '/pricing';
+  // PRIORITY 3: Free users get OmniDash demo experience
+  return '/omnidash';
 }
 
 /**

@@ -1,5 +1,5 @@
 import { Outlet, Link } from 'react-router-dom';
-import { AlertCircle, Activity, ShieldCheck, Loader2 } from 'lucide-react';
+import { AlertCircle, Activity, ShieldCheck, Loader2, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -24,13 +24,13 @@ export const OmniDashLayout = () => {
   // Enable keyboard shortcuts (H, P, K, O, I, E, N, R, A)
   useOmniDashKeyboardShortcuts();
 
-  // Determine access: Admin OR Paid user
-  const hasAccess = isAdmin || isPaid;
+  // Determine full access: Admin OR Paid user
+  const hasFullAccess = isAdmin || isPaid;
   const loading = adminLoading || paidLoading;
 
   const health = useQuery({
     queryKey: ['omnidash-health', user?.id],
-    enabled: !!user && featureEnabled && hasAccess,
+    enabled: !!user && featureEnabled && hasFullAccess,
     queryFn: async () => {
       if (!user) throw new Error('User missing');
       return fetchHealthSnapshot(user.id);
@@ -60,59 +60,127 @@ export const OmniDashLayout = () => {
     );
   }
 
-  if (!hasAccess) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center p-12">
         <Card className="max-w-lg">
           <CardHeader>
-            <CardTitle>Upgrade to access OmniDash</CardTitle>
+            <CardTitle>Sign in to access OmniDash</CardTitle>
             <CardDescription>
-              OmniDash is your command center for managing operations, pipeline, KPIs, and real-time insights.
+              Authenticate to access the live command center or demo mode.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>
-                <strong>Included in all paid plans:</strong>
-              </p>
-              <ul className="list-disc list-inside space-y-1 ml-2">
-                <li>Real-time operational dashboard</li>
-                <li>Sales pipeline management</li>
-                <li>KPI scoreboard with daily tracking</li>
-                <li>Incident monitoring and resolution</li>
-                <li>Integration health monitoring</li>
-              </ul>
-            </div>
-            <div className="flex gap-2">
-              <Button asChild>
-                <Link to="/pricing">View Plans</Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/dashboard">Return to Dashboard</Link>
-              </Button>
-            </div>
+          <CardContent>
+            <Button asChild>
+              <Link to="/login">Sign In</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const toggleSetting = async (key: 'demo_mode' | 'show_connected_ecosystem' | 'anonymize_kpis' | 'freeze_mode', value: boolean) => {
-    await updateSettings(user!.id, { [key]: value });
+  if (!hasFullAccess) {
+    return (
+      <div className="p-6 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" /> OmniDash Demo Mode
+            </CardTitle>
+            <CardDescription>
+              You&apos;re in guided demo mode. Explore live-style metrics and workflows, then upgrade to unlock execution.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3">
+            <Button asChild>
+              <Link to="/pricing">Unlock Full OmniDash</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/dashboard">Open Standard Dashboard</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Conversion Opportunities</CardDescription>
+              <CardTitle className="text-2xl">24</CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs text-muted-foreground">
+              Potential automations identified from your current usage patterns.
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Time Saved / Week</CardDescription>
+              <CardTitle className="text-2xl">11.8h</CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs text-muted-foreground">
+              Projected with tri-force workflow orchestration enabled.
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Revenue Lift Potential</CardDescription>
+              <CardTitle className="text-2xl">+18%</CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs text-muted-foreground">
+              Modeled from similar teams after activating KPI + Pipeline modules.
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" /> Demo Pipeline Snapshot
+              </CardTitle>
+              <CardDescription>Read-only sample based on production patterns.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between"><span>Discovery</span><span className="font-medium">9 deals</span></div>
+              <div className="flex justify-between"><span>Proposal</span><span className="font-medium">6 deals</span></div>
+              <div className="flex justify-between"><span>Negotiation</span><span className="font-medium">4 deals</span></div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-4 w-4" /> Next Unlocks
+              </CardTitle>
+              <CardDescription>Upgrade to activate write actions and integrations.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>• One-click workflow execution</p>
+              <p>• Real-time incident console + alerts</p>
+              <p>• Bi-directional CRM + ERP sync</p>
+              <p>• KPI anomaly detection with AI recommendations</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const toggleSetting = async (
+    key: 'demo_mode' | 'show_connected_ecosystem' | 'anonymize_kpis' | 'freeze_mode',
+    value: boolean
+  ) => {
+    await updateSettings(user.id, { [key]: value });
     await settings.refetch();
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <DemoModeBanner />
-      {/* Header */}
       <header className="h-16 border-b bg-background flex items-center px-4 md:px-6">
         <div className="flex items-center justify-between w-full max-w-full">
-          {/* Left: Brand */}
           <div className="min-w-0 flex-shrink">
             <h1 className="text-xl font-bold truncate">APEX OmniHub</h1>
           </div>
-          {/* Center: Icon Strip */}
           <div className="flex items-center gap-1 flex-shrink-0">
             {OMNIDASH_NAV_ITEMS.map((item) => (
               <OmniDashNavIconButton
@@ -124,7 +192,6 @@ export const OmniDashLayout = () => {
               />
             ))}
           </div>
-          {/* Right: Controls */}
           <div className="flex items-center gap-4 flex-shrink-0">
             {health.data?.lastUpdated && (
               <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
@@ -144,7 +211,6 @@ export const OmniDashLayout = () => {
         </div>
       </header>
 
-      {/* Mobile Bottom Tab Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t flex items-center justify-around py-2 px-2 safe-bottom">
         {OMNIDASH_NAV_ITEMS.map((item) => (
           <OmniDashNavIconButton
@@ -157,7 +223,6 @@ export const OmniDashLayout = () => {
         ))}
       </div>
 
-      {/* Main Content */}
       <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[2fr,1fr]">
           <div className="space-y-4">

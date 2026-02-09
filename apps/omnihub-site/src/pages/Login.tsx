@@ -1,7 +1,9 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Section } from '@/components/Section';
-import { supabase } from '@/lib/supabase';
+import { hasSupabaseConfig, supabase } from '@/lib/supabase';
+
+const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL ?? '/omnidash';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -10,9 +12,13 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    if (!hasSupabaseConfig) {
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        globalThis.window.location.href = '/';
+        globalThis.window.location.href = dashboardUrl;
       }
     });
   }, []);
@@ -20,6 +26,12 @@ export function LoginPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!hasSupabaseConfig) {
+      setError('Login is temporarily unavailable. Please contact support.');
+      return;
+    }
+
     setIsLoading(true);
 
     // Basic validation
@@ -70,7 +82,7 @@ export function LoginPage() {
         return;
       }
 
-      globalThis.window.location.href = '/';
+      globalThis.window.location.href = dashboardUrl;
     } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {

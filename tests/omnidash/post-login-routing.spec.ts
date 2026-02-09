@@ -3,7 +3,7 @@
  *
  * Tests intelligent routing after authentication:
  * - Deep-link preservation
- * - Role-based routing (admin → /omnidash, paid → /dashboard, free → /pricing)
+ * - Role-based routing (admin → /omnidash, paid → /dashboard, free → /omnidash demo)
  * - Access validation
  */
 
@@ -32,14 +32,14 @@ describe('getPostLoginDestination', () => {
       expect(destination).toBe('/dashboard');
     });
 
-    it('should route free user to /pricing', () => {
+    it('should route free user to /omnidash demo', () => {
       const destination = getPostLoginDestination({
         isAdmin: false,
         isPaid: false,
         tier: 'free',
       });
 
-      expect(destination).toBe('/pricing');
+      expect(destination).toBe('/omnidash');
     });
 
     it('should prefer admin routing even if user is also paid', () => {
@@ -99,7 +99,7 @@ describe('getPostLoginDestination', () => {
       expect(destination).toContain('return=%2Fdashboard');
     });
 
-    it('should redirect to /pricing if free user tries to access OmniDash', () => {
+    it('should allow free user to access OmniDash demo root', () => {
       const destination = getPostLoginDestination({
         isAdmin: false,
         isPaid: false,
@@ -107,8 +107,7 @@ describe('getPostLoginDestination', () => {
         intendedDestination: '/omnidash',
       });
 
-      expect(destination).toMatch(/^\/pricing\?reason=omnidash/);
-      expect(destination).toContain('return=%2Fomnidash');
+      expect(destination).toBe('/omnidash');
     });
 
     it('should allow paid user to access OmniDash (not admin-only)', () => {
@@ -175,7 +174,7 @@ describe('requiresPaidAccess', () => {
   });
 
   it('should return true for /omnidash', () => {
-    expect(requiresPaidAccess('/omnidash')).toBe(true);
+    expect(requiresPaidAccess('/omnidash')).toBe(false);
   });
 
   it('should return false for /pricing', () => {
@@ -247,7 +246,7 @@ describe('Comprehensive routing scenarios', () => {
     {
       name: 'Free user, no intent',
       options: { isAdmin: false, isPaid: false, tier: 'free' as const },
-      expected: '/pricing',
+      expected: '/omnidash',
     },
     {
       name: 'Free user, wants /dashboard (blocked)',
@@ -255,8 +254,13 @@ describe('Comprehensive routing scenarios', () => {
       expectedPattern: /^\/pricing\?reason=premium/,
     },
     {
-      name: 'Free user, wants /omnidash (blocked)',
+      name: 'Free user, wants /omnidash (allowed demo)',
       options: { isAdmin: false, isPaid: false, tier: 'free' as const, intendedDestination: '/omnidash' },
+      expected: '/omnidash',
+    },
+    {
+      name: 'Free user, wants /omnidash/pipeline (blocked)',
+      options: { isAdmin: false, isPaid: false, tier: 'free' as const, intendedDestination: '/omnidash/pipeline' },
       expectedPattern: /^\/pricing\?reason=omnidash/,
     },
     {
