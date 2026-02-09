@@ -1,10 +1,9 @@
 # SECRETS INVENTORY & ROTATION GUIDE
 **OmniHub/TradeLine/APEX - Comprehensive Secrets Management**
 
-**Last Updated:** 2026-02-08
+**Last Updated:** 2026-01-03
 **Owner:** DevOps Team
 **Review Cycle:** Quarterly
-**Version:** 1.0.0
 
 ---
 
@@ -213,12 +212,12 @@ curl -X POST https://wwajmaohwcbooljdureo.supabase.co/functions/v1/alchemy-webho
 vercel env add VITE_SENTRY_DSN production
 ```
 
-#### 3.2 ~~Lovable API Credentials~~ — DECOMMISSIONED
+#### 3.2 Lovable API Credentials
 **Variable:** `LOVABLE_API_KEY`, `LOVABLE_SERVICE_ROLE_KEY`
-**Status:** REMOVED (2026-02-07) — Lovable integration fully decommissioned in PR#426
-**Action Required:** Revoke any existing Lovable API keys in provider dashboard
-**Sensitivity:** N/A
-**Location:** N/A — removed from all environments
+**Current Value:** UNKNOWN (optional integration)
+**Sensitivity:** 🟡 MEDIUM
+**Location:** Supabase Edge Functions secrets
+**Rotation Frequency:** 90 days
 
 #### 3.3 OpenAI API Key
 **Variable:** `OPENAI_API_KEY`
@@ -284,12 +283,11 @@ npm run test:ai-agent
 
 ### Quarterly Rotation (Every 90 Days)
 
-**Q1 2026 (January):**
-- [x] Supabase Anon Key — reviewed 2026-02-08
-- [x] Alchemy API Keys — reviewed 2026-02-08
-- [x] OpenAI API Key — reviewed 2026-02-08
-- [x] Alchemy Webhook Signing Key — reviewed 2026-02-08
-- [x] Lovable API Keys — DECOMMISSIONED (2026-02-07)
+**Q1 (January):**
+- [ ] Supabase Anon Key
+- [ ] Alchemy API Keys
+- [ ] OpenAI API Key
+- [ ] Alchemy Webhook Signing Key
 
 **Q2 (April):**
 - [ ] Supabase Service Role Key (if not using Vault auto-rotation)
@@ -372,6 +370,5 @@ npm run test:ai-agent
 ---
 
 **Document Status:** ✅ COMPLETE
-**Last Reviewed:** 2026-02-08 (Release v1.0.0)
-**Next Review:** 2026-05-08 (Quarterly)
+**Next Review:** 2026-04-03 (Quarterly)
 **Owner:** DevOps Team

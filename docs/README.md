@@ -195,5 +195,4 @@ docs/
 
 ---
 
-**Last Updated:** February 8, 2026
-**Release:** v1.0.0
+**Last Updated:** January 25, 2026

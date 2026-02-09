@@ -1,0 +1,44 @@
+import { recordLoopHeartbeat } from './heartbeat';
+
+const intervals: ReturnType<typeof setInterval>[] = [];
+
+export function startGuardianLoops() {
+  if (intervals.length > 0) return;
+
+  // Start all loops in a single push
+  intervals.push(
+    // Lightweight session watchdog
+    setInterval(() => {
+      recordLoopHeartbeat('guardian-session-watchdog');
+    }, 60000),
+    // Offline sync monitor placeholder
+    setInterval(() => {
+      recordLoopHeartbeat('guardian-offline-sync');
+    }, 90000),
+    // Periodic health ping to backend
+    setInterval(async () => {
+      try {
+        if (typeof globalThis.window === 'undefined') {
+          recordLoopHeartbeat('guardian-health-ping');
+          return;
+        }
+        const { runHealthCheck } = await import('@/lib/healthcheck');
+        const result = await runHealthCheck().catch((error) => {
+          console.error('Health check failed:', error);
+          return null;
+        });
+        if (result?.status === 'OK') {
+          recordLoopHeartbeat('guardian-health-ping');
+        }
+      } catch (error) {
+        console.error('Error in guardian health ping:', error);
+      }
+    }, 120000)
+  );
+}
+
+export function stopGuardianLoops() {
+  intervals.forEach((i) => clearInterval(i));
+  intervals.length = 0;
+}
+

@@ -1,7 +1,7 @@
 # Incident Response Playbook
 
 **Version:** 1.0.0
-**Last Updated:** 2026-01-28
+**Last Updated:** 2026-02-07
 
 ## 1. Severity Levels
 
