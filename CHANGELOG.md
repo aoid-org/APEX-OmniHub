@@ -5,6 +5,33 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-02-09
+
+### Added — Realtime Brokering & Device Classification Core
+- **Nexus (ApexRealtimeGateway)** — WebSocket proxy for OpenAI Realtime API with device auth, idempotency, and orchestrator-routed tool calls (`src/core/gateway/ApexRealtimeGateway.ts`)
+- **Spectre (SpectreHandshake)** — Device authentication and TrustTier classification from connection headers (`src/core/security/SpectreHandshake.ts`)
+- **AegisKernel** — Stateless authorization kernel; per-tool access control based on TrustTier hierarchy (`src/core/security/AegisKernel.ts`)
+- **ChronosLock** — Idempotency state machine (PENDING/COMPLETED) with deterministic duplicate detection and rollback (`src/core/orchestrator/ChronosLock.ts`)
+- **Veritas** — Tool output validation engine; validates results against per-tool contracts before commit (`src/core/orchestrator/Veritas.ts`)
+- **ApexOrchestrator** — Tool execution coordinator integrating Aegis + Chronos + Veritas (`src/core/orchestrator/ApexOrchestrator.ts`)
+- **Universal Tool Manifest** — Filtered per-device tool list in OpenAI function-tool JSON Schema format (`src/api/tools/manifest.ts`)
+- **Core Type System** — TrustTier enum, DeviceProfile, ToolFunctionSchema, IdempotencyState, ParsedToolCall, SafeErrorPayload contracts (`src/core/types/index.ts`)
+- **WebRTC Bridge Interface** — Extension point for future WebRTC bridging without speculative implementation
+- **64 new tests** — Full coverage for Spectre, Aegis, Chronos, Veritas, Orchestrator, Manifest, and Gateway (91.7% statement coverage)
+
+### Security
+- Bearer token prefix validation (`apex_sk_`) — fail-closed on invalid auth
+- No Math.random in security paths — crypto.randomUUID and SHA-256 hashing only
+- No stack traces or secrets leaked to clients — SafeErrorPayload contract enforced
+- TrustTier hierarchy: GOD_MODE > OPERATOR > PERIPHERAL > PUBLIC with deterministic tool filtering
+- Idempotency enforcement on all tool calls — deterministic keys from deviceId + callId
+
+### Quality Gates
+- ESLint: 0 warnings, 0 errors
+- TypeScript strict mode: 0 errors
+- Vitest: 64/64 tests passing
+- No new dependencies added — uses `node:crypto` built-in only
+
 ## [1.0.0] - 2026-02-08
 
 ### Production Release
