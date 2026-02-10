@@ -1,7 +1,9 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Section } from '@/components/Section';
-import { supabase } from '@/lib/supabase';
+import { hasSupabaseConfig, supabase } from '@/lib/supabase';
+
+const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL ?? '/omnidash';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,23 +13,27 @@ export function LoginPage() {
 
 
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) console.error('Session check error:', error);
-        if (session) {
-          window.location.replace('/');
-        }
-      } catch (err) {
-        console.error('Unexpected session check error:', err);
+    if (!hasSupabaseConfig) {
+      return;
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        globalThis.window.location.href = dashboardUrl;
       }
-    };
-    checkSession();
+    });
+
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!hasSupabaseConfig) {
+      setError('Login is temporarily unavailable. Please contact support.');
+      return;
+    }
+
     setIsLoading(true);
 
     // Basic validation
@@ -78,7 +84,7 @@ export function LoginPage() {
         return;
       }
 
-      window.location.replace('/');
+      globalThis.window.location.href = dashboardUrl;
     } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {

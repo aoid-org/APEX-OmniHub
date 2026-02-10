@@ -23,7 +23,7 @@ async def start_session(tenant_id: str, trace_id: str):
     return context
 
 
-_404_RESPONSE = {404: {"description": "Not Found"}}
+_404_RESPONSE = {404: {"description": SESSION_NOT_FOUND}}
 
 
 @router.post(

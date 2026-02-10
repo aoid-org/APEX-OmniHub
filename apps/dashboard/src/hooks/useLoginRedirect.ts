@@ -38,7 +38,7 @@ export interface UseLoginRedirectReturn {
  * 1. Intended destination (if accessible)
  * 2. /omnidash (if admin)
  * 3. /dashboard (if paid)
- * 4. /pricing (if free)
+ * 4. /omnidash (demo for free users)
  */
 export function useLoginRedirect(): UseLoginRedirectReturn {
   const navigate = useNavigate();
