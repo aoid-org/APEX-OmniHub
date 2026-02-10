@@ -50,7 +50,6 @@ test.describe('Feature Links', () => {
     // Check highlight links via text content inside them or near them
     // Assuming feature-highlight-grid structure
     // Let's use a selector that targets the link based on the title text inside
-    const automationLink = page.locator('a', { hasText: 'AI-Powered Automation' });
     // Note: The structure might be <a href...> <h3>Title</h3> </a> or similar.
     // Inspecting Home.tsx: <FeatureHighlightGrid items={...} />
     // FeatureHighlightGrid likely renders <a> around the content or button.
