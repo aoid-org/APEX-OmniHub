@@ -13,7 +13,9 @@ let hasErrors = false;
 
 function checkLinksInFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
-  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  // Hardened regex: limit length to prevent ReDoS (max 500 chars for text, 2000 for URL)
+  // Using {1,N} instead of + to bound backtracking
+  const linkRegex = /\[([^\]]{1,500})\]\(([^)]{1,2000})\)/g;
   let match;
 
   while ((match = linkRegex.exec(content)) !== null) {
