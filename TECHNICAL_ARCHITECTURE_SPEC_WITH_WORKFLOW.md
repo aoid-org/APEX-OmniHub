@@ -96,6 +96,18 @@ graph TD
 
 ---
 
+### 2.1 The Iron Law of Determinism
+
+> **"If it is not deterministic, it is a bug."**
+
+1.  **No Side Effects**: All external actions must be captured in `Activity` wrappers.
+2.  **No System Time**: Use `workflow.now()` instead of `datetime.now()`.
+3.  **No Global State**: Workflows are stateless functions of their history.
+4.  **No Threading**: Temporal handles concurrency; threads break replay.
+5.  **No Randomness**: Use `workflow.random()` if needed, never `random.random()`.
+
+---
+
 ## 3. Directory Structure (Key Components)
 
 ```plaintext

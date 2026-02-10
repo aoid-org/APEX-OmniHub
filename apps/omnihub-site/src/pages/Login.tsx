@@ -17,12 +17,17 @@ export function LoginPage() {
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
-        globalThis.window.location.href = dashboardUrl;
+        // Use window location to ensure a full refresh and state reset
+        window.location.replace(dashboardUrl);
       }
-    });
+    };
 
+    checkSession();
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -36,43 +41,6 @@ export function LoginPage() {
 
     setIsLoading(true);
 
-    // Basic validation
-    if (!email || !password) {
-      setError('Please enter both email and password');
-      setIsLoading(false);
-      return;
-    }
-
-    // Validate email format using simple checks (avoids regex DoS vulnerabilities)
-    const MAX_EMAIL_LENGTH = 254;
-    if (email.length > MAX_EMAIL_LENGTH) {
-      setError('Email address is too long');
-      setIsLoading(false);
-      return;
-    }
-
-    const atIndex = email.indexOf('@');
-    const lastAtIndex = email.lastIndexOf('@');
-    const dotAfterAt = email.lastIndexOf('.');
-    const isValidEmail =
-      atIndex > 0 &&
-      atIndex === lastAtIndex &&
-      dotAfterAt > atIndex + 1 &&
-      dotAfterAt < email.length - 1 &&
-      !email.includes(' ');
-
-    if (!isValidEmail) {
-      setError('Please enter a valid email address');
-      setIsLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const { error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -80,13 +48,20 @@ export function LoginPage() {
       });
 
       if (authError) {
-        setError(authError.message);
+        // Human-readable error mapping
+        if (authError.message === 'Invalid login credentials') {
+          setError('Invalid email or password. Please try again.');
+        } else {
+          setError(authError.message);
+        }
         return;
       }
 
-      globalThis.window.location.href = dashboardUrl;
-    } catch {
-      setError('An unexpected error occurred. Please try again.');
+      // Successful login - redirect
+      window.location.replace(dashboardUrl);
+    } catch (err) {
+      setError('An unexpected network error occurred.');
+      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }

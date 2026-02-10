@@ -23,7 +23,11 @@ async def start_session(tenant_id: str, trace_id: str):
     return context
 
 
+<<<<<<< HEAD:services/orchestrator/omniboard/router.py
 _404_RESPONSE = {404: {"description": SESSION_NOT_FOUND}}
+=======
+_404_RESPONSE = {404: {"description": "Session not found"}}
+>>>>>>> origin/main:orchestrator/omniboard/router.py
 
 
 @router.post(
@@ -46,11 +50,15 @@ async def next_turn(session_id: str, event: FSMEvent):
     return {"context": next_context.model_dump(), "message": message}
 
 
+<<<<<<< HEAD:services/orchestrator/omniboard/router.py
 @router.get(
     "/{session_id}",
     response_model=FSMContext,
     responses=_404_RESPONSE,
 )
+=======
+@router.get("/{session_id}", response_model=FSMContext, responses=_404_RESPONSE)
+>>>>>>> origin/main:orchestrator/omniboard/router.py
 async def get_status(session_id: str):
     """Get current session status."""
     context = session_store.get(session_id)

@@ -15,12 +15,21 @@ from infrastructure.tidb_persistence import (
     get_tidb_store,
 )
 
+<<<<<<< HEAD:services/orchestrator/tests/test_tidb_persistence.py
 # Test-only fake credentials (not real secrets)  # NOSONAR
 _FAKE_TIDB_ENV = {
     "VECTOR_PERSISTENCE_MODE": "tidb",
     "TIDB_HOST": "test.tidb.io",
     "TIDB_USER": "test",
     "TIDB_PASSWORD": "fake-test-credential",  # NOSONAR
+=======
+# Shared fake TiDB env config for tests (test credentials only)
+_FAKE_TIDB_ENV = {
+    "VECTOR_PERSISTENCE_MODE": "tidb",
+    "TIDB_HOST": "test.tidb.io",
+    "TIDB_USER": "test",  # noqa: S105
+    "TIDB_PASSWORD": "test",  # noqa: S105
+>>>>>>> origin/main:orchestrator/tests/test_tidb_persistence.py
     "TIDB_DATABASE": "test",
 }
 

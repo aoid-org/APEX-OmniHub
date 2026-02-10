@@ -24,6 +24,9 @@ The APEX OmniHub has passed all "Heart Transplant" verification gates and has su
 | **Aegis Defense Grid**      |   🟢   | SecOps   | Antigravity |
 | **Chronos Replay**          |   🟢   | Backend  | Antigravity |
 | **Nexus Knowledge Graph**   |   🟢   | AI Team  | Antigravity |
+| **Aegis Defense Grid**      |   🟢   | SecOps   | Antigravity |
+| **Chronos Replay**          |   🟢   | Backend  | Antigravity |
+| **Nexus Knowledge Graph**   |   🟢   | AI Team  | Antigravity |
 | **Self-Healing Monitoring** |   🟢   | SRE      | OmniSentry  |
 
 ### Deployment Topology (Hybrid C6)

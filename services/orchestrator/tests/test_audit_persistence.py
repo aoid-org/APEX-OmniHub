@@ -83,6 +83,7 @@ class TestAuditPersistence:
     @pytest.mark.asyncio
     async def test_fallback_does_not_log_secrets(self, audit_logger, sample_event):
         """Fallback should not log sensitive data."""
+<<<<<<< HEAD:services/orchestrator/tests/test_audit_persistence.py
         # Add some metadata that might contain secrets
         # SonarQube: These are TEST credentials used to verify they are NOT logged
         # This is intentional - we're testing the security feature that prevents logging secrets
@@ -92,6 +93,14 @@ class TestAuditPersistence:
         sample_event.metadata.custom_fields = {
             "api_key": _test_secret_val,
             _credential_key: _test_secret_val,
+=======
+        # Test credentials intentionally used to verify they are NOT leaked in fallback logs
+        _fake_api_key = "secret-key-123"  # noqa: S105
+        _fake_password = "hunter2"  # noqa: S105
+        sample_event.metadata.custom_fields = {
+            "api_key": _fake_api_key,
+            "password": _fake_password,
+>>>>>>> origin/main:orchestrator/tests/test_audit_persistence.py
         }
 
         mock_db = AsyncMock()
