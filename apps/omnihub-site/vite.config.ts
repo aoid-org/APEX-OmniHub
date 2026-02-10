@@ -8,6 +8,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // Multi-page static site configuration
 export default defineConfig({
+  // Point to monorepo root where .env lives (contains VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
+  envDir: resolve(__dirname, '../..'),
   plugins: [
     react(),
     VitePWA({

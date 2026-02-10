@@ -589,21 +589,14 @@
     inset: 0; /* Full screen */
     width: 100vw;
     height: 100vh;
-    background-color: rgba(255, 255, 255, 0.85); /* Light mode base */
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background-color: var(--color-background); /* Solid background for legibility */
     z-index: 10000; /* High z-index to cover everything */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: var(--space-8);
-    opacity: 0;
-    animation: navEntry 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
-  [data-theme="dark"] .nav__mobile-menu {
-    background-color: rgba(10, 10, 10, 0.85); /* Dark mode base */
+    opacity: 1; /* Force visible */
   }
 
   .nav__mobile-links {
@@ -618,22 +611,13 @@
 
   .nav__mobile-link {
     display: block;
-    font-size: 2rem; /* Large, legible type */
+    font-size: 2rem;
     font-weight: 600;
     color: var(--color-text-primary);
     text-decoration: none;
     letter-spacing: -0.02em;
-    opacity: 0;
-    transform: translateY(10px);
-    animation: navItemEntry 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    /* Removed animation for reliability */
   }
-
-  /* Staggered animation delays for items */
-  .nav__mobile-links li:nth-child(1) .nav__mobile-link { animation-delay: 0.1s; }
-  .nav__mobile-links li:nth-child(2) .nav__mobile-link { animation-delay: 0.15s; }
-  .nav__mobile-links li:nth-child(3) .nav__mobile-link { animation-delay: 0.2s; }
-  .nav__mobile-links li:nth-child(4) .nav__mobile-link { animation-delay: 0.25s; }
-  .nav__mobile-links li:nth-child(5) .nav__mobile-link { animation-delay: 0.3s; }
 
   .nav__mobile-link:hover {
     color: var(--color-accent);
@@ -643,11 +627,10 @@
 
   .nav__mobile-cta-container {
     margin-top: var(--space-8);
-    opacity: 0;
-    transform: translateY(10px);
-    animation: navItemEntry 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.35s;
     width: 100%;
     max-width: 300px;
+    display: flex;
+    justify-content: center;
   }
 
   .nav__mobile-cta {
@@ -656,6 +639,10 @@
     padding: 16px 24px;
     font-size: 1.1rem;
     border-radius: 9999px; /* Pill shape */
+    background-color: var(--color-accent); /* Force accent color */
+    color: #ffffff !important; /* Force white text */
+    opacity: 1 !important; /* Force visibility */
+    visibility: visible !important;
   }
 }
 
