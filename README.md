@@ -190,14 +190,15 @@ npm run build      # Production build
 
 ## Documentation
 
-| Document                                                                      | Description          |
-| ----------------------------------------------------------------------------- | -------------------- |
-| [CHANGELOG](./CHANGELOG.md)                                                   | Release history      |
-| [TECHNICAL_ARCHITECTURE_SPEC](./TECHNICAL_ARCHITECTURE_SPEC_WITH_WORKFLOW.md) | System design        |
-| [LAUNCH_READINESS](./LAUNCH_READINESS.md)                                     | Deployment checklist |
-| [orchestrator/README](./orchestrator/README.md)                               | Temporal setup       |
-| [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                           | Human-in-the-loop    |
-| [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                   | Backend design       |
+| Document                                                                        | Description          |
+| ------------------------------------------------------------------------------- | -------------------- |
+| [CHANGELOG](./CHANGELOG.md)                                                     | Release history      |
+| [TECHNICAL_ARCHITECTURE_SPEC](./TECHNICAL_ARCHITECTURE_SPEC_WITH_WORKFLOW.md)   | System design        |
+| [LAUNCH_READINESS](./LAUNCH_READINESS.md)                                       | Deployment checklist |
+| [orchestrator/README](./orchestrator/README.md)                                 | Temporal setup       |
+| [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                             | Human-in-the-loop    |
+| [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                     | Backend design       |
+| [docs/architecture/PRODUCTION_STATUS](./docs/architecture/PRODUCTION_STATUS.md) | Live system status   |
 
 ---
 

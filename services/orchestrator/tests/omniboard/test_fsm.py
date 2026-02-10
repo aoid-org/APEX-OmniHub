@@ -40,13 +40,13 @@ def test_fsm_golden_path():
     assert context.state == OmniBoardState.VERIFY_CONNECTION
 
     # 5. System Verifies (Simulated)
-    context, msg = OmniBoardFSM.transition(
+    context, _ = OmniBoardFSM.transition(
         context, FSMEvent(event_type="VERIFICATION_RESULT", payload={"verified": True})
     )
     assert context.state == OmniBoardState.REGISTER_CONNECTION
 
     # 6. System Registers (Simulated)
-    context, msg = OmniBoardFSM.transition(
+    context, _ = OmniBoardFSM.transition(
         context, FSMEvent(event_type="REGISTRATION_SUCCESS", payload={})
     )
     assert context.state == OmniBoardState.COMPLETION

@@ -8,6 +8,8 @@ from .service import OmniBoardService
 
 router = APIRouter(prefix="/omniboard", tags=["omniboard"])
 
+SESSION_NOT_FOUND = "Session not found"
+
 # In-memory session store for demo purposes (replace with Redis in prod)
 # session_id -> FSMContext
 session_store: dict[str, FSMContext] = {}
@@ -36,7 +38,7 @@ async def next_turn(session_id: str, event: FSMEvent):
     """
     context = session_store.get(session_id)
     if not context:
-        raise HTTPException(status_code=404, detail="Session not found")
+        raise HTTPException(status_code=404, detail=SESSION_NOT_FOUND)
 
     next_context, message = OmniBoardFSM.transition(context, event)
     session_store[session_id] = next_context
@@ -53,7 +55,7 @@ async def get_status(session_id: str):
     """Get current session status."""
     context = session_store.get(session_id)
     if not context:
-        raise HTTPException(status_code=404, detail="Session not found")
+        raise HTTPException(status_code=404, detail=SESSION_NOT_FOUND)
     return context
 
 

@@ -3,13 +3,13 @@
 **Document Owner:** CTO & Chief Platform Architect  
 **Last Updated:** 2026-02-01  
 **Status:** Production  
-**Version:** 2.1 (Cyber-Physical Update)
+**Version:** 2.2 (Nexus/Spectre/Aegis/Chronos/Veritas + Iron Law)
 
 ---
 
 ## Executive Summary
 
-APEX-OmniHub is a production-grade, **Hybrid-Cloud AI Operating System**. It converges Web3 (Token-gating), Generative AI (Maestro), and **Physical Hardware Identity** into a unified control plane. This document reflects the "Unicorn-Class" architecture verified in the Feb 2026 audit.
+APEX-OmniHub is a production-grade, **Hybrid-Cloud AI Operating System**. It converges Web3 (Token-gating), Generative AI (Maestro), and **Physical Hardware Identity** into a unified control plane. This document reflects the "Unicorn-Class" architecture verified in the Feb 2026 audit, incorporating the **Iron Law of Determinism**.
 
 **Core Value Proposition:**
 
@@ -41,7 +41,17 @@ APEX-OmniHub is a production-grade, **Hybrid-Cloud AI Operating System**. It con
 | **Identity**        | `src/lib/biometric-native.ts`      | Hardware Enclave Signing     |
 | **Eyes (Vision)**   | `src/integrations/omniport`        | Multimodal Input Analysis    |
 
-### 1.3 Backend Stack (The Brain)
+### 1.3 Intelligence Stack (The Spirit)
+
+| Module      | Purpose                          | Implementation          |
+| ----------- | -------------------------------- | ----------------------- |
+| **Nexus**   | Knowledge Graph & Context        | `orchestrator/nexus/`   |
+| **Spectre** | Shadow Simulation & Prediction   | `orchestrator/spectre/` |
+| **Aegis**   | Automated Defense & Security     | `orchestrator/aegis/`   |
+| **Chronos** | Time-Travel Debugging & Replay   | `orchestrator/chronos/` |
+| **Veritas** | Truth Source & Fact Verification | `orchestrator/veritas/` |
+
+### 1.4 Backend Stack (The Brain)
 
 | Layer            | Technology        | Purpose                          |
 | ---------------- | ----------------- | -------------------------------- |
@@ -71,6 +81,18 @@ graph TD
         Maestro -->|Action| SaaS[External Tools/APIs]
     end
 ```
+
+---
+
+### 2.1 The Iron Law of Determinism
+
+> **"If it is not deterministic, it is a bug."**
+
+1.  **No Side Effects**: All external actions must be captured in `Activity` wrappers.
+2.  **No System Time**: Use `workflow.now()` instead of `datetime.now()`.
+3.  **No Global State**: Workflows are stateless functions of their history.
+4.  **No Threading**: Temporal handles concurrency; threads break replay.
+5.  **No Randomness**: Use `workflow.random()` if needed, never `random.random()`.
 
 ---
 

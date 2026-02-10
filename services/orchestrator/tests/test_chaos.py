@@ -357,8 +357,7 @@ class TestChaosWorkflowResilience:
 # ============================================================================
 
 
-@pytest.mark.asyncio
-async def test_chaos_suite_summary():
+def test_chaos_suite_summary():
     """
     Run full chaos test suite and report success rate.
 

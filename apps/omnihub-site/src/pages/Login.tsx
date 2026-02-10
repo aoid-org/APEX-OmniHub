@@ -9,12 +9,20 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        globalThis.window.location.href = '/';
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) console.error('Session check error:', error);
+        if (session) {
+          window.location.replace('/');
+        }
+      } catch (err) {
+        console.error('Unexpected session check error:', err);
       }
-    });
+    };
+    checkSession();
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -70,7 +78,7 @@ export function LoginPage() {
         return;
       }
 
-      globalThis.window.location.href = '/';
+      window.location.replace('/');
     } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
@@ -85,12 +93,12 @@ export function LoginPage() {
 
   // Expose signOut for external use
   if (typeof globalThis !== 'undefined') {
-    (globalThis as Record<string, unknown>).__omnihubSignOut = handleSignOut;
+    (window as any).__omnihubSignOut = handleSignOut;
   }
 
   return (
     <Layout title="Log In">
-      <Section>
+      <Section variant="surface">
         <div style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto' }}>
           <div
             style={{

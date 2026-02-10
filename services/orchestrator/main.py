@@ -71,11 +71,11 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS Middleware - Configure allowed origins from environment
+# Add CORSMiddleware last so it runs first (outermost) to handle OPTIONS requests correctly
 CORS_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS", "https://apexomnihub.icu,https://www.apexomnihub.icu"
 ).split(",")
 
-# Add CORSMiddleware last so it runs first (outermost)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,

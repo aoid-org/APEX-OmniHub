@@ -3,7 +3,7 @@
  * Handles FaceID (iOS) and Fingerprint/BiometricPrompt (Android)
  */
 
-// @ts-expect-error - Capacitor types issue
+
 import { Capacitor } from '@capacitor/core';
 import { logAnalyticsEvent } from './monitoring';
 

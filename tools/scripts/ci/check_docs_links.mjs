@@ -11,48 +11,13 @@ const DOCS_DIR = path.join(ROOT_DIR, 'docs');
 let hasErrors = false;
 
 
-function findNextLink(content, fromPos) {
-  const startBracket = content.indexOf('[', fromPos);
-  if (startBracket === -1) return null;
-
-  const endBracket = content.indexOf(']', startBracket);
-  if (endBracket === -1) return null;
-
-  const linkText = content.slice(startBracket + 1, endBracket);
-  if (linkText.includes('\n') || linkText.includes('\r')) {
-    return { pos: startBracket + 1, valid: false };
-  }
-
-  if (content[endBracket + 1] !== '(') {
-    return { pos: startBracket + 1, valid: false };
-  }
-
-  const startParen = endBracket + 1;
-  const endParen = content.indexOf(')', startParen);
-  if (endParen === -1) return null;
-
-  const linkUrl = content.slice(startParen + 1, endParen);
-  if (linkUrl.includes('\n') || linkUrl.includes('\r')) {
-    return { pos: startParen + 1, valid: false };
-  }
-
-  return { pos: endParen + 1, valid: true, linkUrl, targetPos: endParen + 1 };
-}
-
 function checkLinksInFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
-  let pos = 0;
-  while (pos < content.length) {
-    const result = findNextLink(content, pos);
-    if (!result) break;
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  let match;
 
-    if (!result.valid) {
-      pos = result.pos;
-      continue;
-    }
-
-    pos = result.targetPos;
-    const { linkUrl } = result;
+  while ((match = linkRegex.exec(content)) !== null) {
+    const linkUrl = match[2];
 
     // Ignore external links, anchors, and mailto
     if (linkUrl.startsWith('http') || linkUrl.startsWith('#') || linkUrl.startsWith('mailto:')) {
@@ -61,7 +26,7 @@ function checkLinksInFile(filePath) {
 
     // Resolve path
     const targetPath = path.resolve(path.dirname(filePath), linkUrl);
-    
+
     // Check if it exists
     if (!fs.existsSync(targetPath)) {
       console.error(`❌ Broken link in ${path.relative(ROOT_DIR, filePath)}:`);

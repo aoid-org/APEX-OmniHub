@@ -3,7 +3,6 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2021", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
@@ -28,5 +27,5 @@
     }
   },
   "include": ["src"],
-  "exclude": ["src/armageddon", "src/scripts"]
+  "exclude": ["src/armageddon", "src/scripts", "src/lib/push-native-backend.ts"]
 }

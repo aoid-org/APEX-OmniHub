@@ -12,6 +12,7 @@
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "typecheck:scripts": "tsc -p tsconfig.node.json --noEmit",
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {

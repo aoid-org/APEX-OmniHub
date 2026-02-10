@@ -40,15 +40,15 @@ const Index = () => {
   };
 
   const apps: AppData[] = [
-    { name: 'TradeLine 24/7', icon: placeholderIcon, alt: 'TradeLine 24/7 app icon', url: 'https://tradeline247ai.com' },
+    { name: 'TradeLine 24/7', icon: placeholderIcon, alt: 'TradeLine 24/7 app icon', path: '/apps/tradeline247' },
     { name: 'Built Canadian', icon: placeholderIcon, alt: 'Built Canadian app icon', path: '/apps/built-canadian' },
-    { name: 'AutoRepAi', icon: placeholderIcon, alt: 'AutoRepAi app icon', url: 'https://autorepai.ca' },
-    { name: 'FLOWBills', icon: placeholderIcon, alt: 'FLOWBills app icon', url: 'https://flowbills.ca' },
-    { name: 'RobuxMinerPro', icon: placeholderIcon, alt: 'RobuxMinerPro app icon', url: 'https://robuxminer.pro' },
+    { name: 'AutoRepAi', icon: placeholderIcon, alt: 'AutoRepAi app icon', path: '/apps/autorepai' },
+    { name: 'FLOWBills', icon: placeholderIcon, alt: 'FLOWBills app icon', path: '/apps/flowbills' },
+    { name: 'RobuxMinerPro', icon: placeholderIcon, alt: 'RobuxMinerPro app icon', path: '/apps/robuxminerpro' },
     { name: 'APEX', icon: placeholderIcon, alt: 'APEX app icon', path: '/dashboard' },
-    { name: 'StrideGuide', icon: placeholderIcon, alt: 'StrideGuide app icon', url: 'https://strideguide.cam' },
-    { name: 'KeepSafe', icon: placeholderIcon, alt: 'KeepSafe icon', url: 'https://keepsafe.icu' },
-    { name: 'JubeeLove', icon: placeholderIcon, alt: 'JubeeLove icon', url: 'https://jubee.love' },
+    { name: 'StrideGuide', icon: placeholderIcon, alt: 'StrideGuide app icon', path: '/apps/strideguide' },
+    { name: 'KeepSafe', icon: placeholderIcon, alt: 'KeepSafe icon', path: '/apps/keepsafe' },
+    { name: 'JubeeLove', icon: placeholderIcon, alt: 'JubeeLove icon', path: '/apps/jubeelove' },
   ];
 
   return (

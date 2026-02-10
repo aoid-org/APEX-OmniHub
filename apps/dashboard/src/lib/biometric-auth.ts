@@ -229,7 +229,7 @@ export async function getBiometricCredentials(
  * Convert base64 string to ArrayBuffer
  */
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
-  const binary = globalThis.atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
+  const binary = globalThis.atob(base64.replaceAll('-', '+').replaceAll('_', '/'));
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.codePointAt(i) || 0;
@@ -246,7 +246,7 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCodePoint(bytes[i]);
   }
-  return globalThis.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  return globalThis.btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
 }
 
 /**

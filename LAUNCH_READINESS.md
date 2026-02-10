@@ -1,8 +1,8 @@
 # 🚀 LAUNCH READINESS: APEX OmniHub v1.0.0
 
 **Status**: 🟢 **GO FOR LAUNCH**
-**Date**: February 7, 2026
-**Version**: v1.6.0 (P0/P1 Production Fixes Applied + Physical AI + Device Registry Enforced)
+**Date**: February 9, 2026
+**Version**: v2.0.0 (Nexus/Spectre/Aegis Integration + Iron Law Compliance)
 
 ---
 
@@ -21,6 +21,9 @@ The APEX OmniHub has passed all "Heart Transplant" verification gates and has su
 | **Security Posture**        |   🟢   | SecOps   | Antigravity |
 | **E2E Testing**             |   🟢   | QA       | Playwright  |
 | **Disaster Recovery**       |   🟢   | SRE      | Antigravity |
+| **Aegis Defense Grid**      |   🟢   | SecOps   | Antigravity |
+| **Chronos Replay**          |   🟢   | Backend  | Antigravity |
+| **Nexus Knowledge Graph**   |   🟢   | AI Team  | Antigravity |
 | **Self-Healing Monitoring** |   🟢   | SRE      | OmniSentry  |
 
 ### Deployment Topology (Hybrid C6)
@@ -89,13 +92,13 @@ WHISPER_LOCAL_FALLBACK=true
 
 ## Latest CI Verification (2026-02-07)
 
-| Gate | Result | Evidence |
-|------|--------|----------|
-| TypeScript | **PASS** | `tsc --noEmit` 0 errors (strict mode) |
-| ESLint | **PASS** | `eslint --max-warnings 0` clean |
-| Unit Tests | **PASS** | 564/564 pass, 0 failures |
-| Build | **PASS** | Vite 7.3.1 production build, 41.8s |
-| Omnihub-site TSC | **PASS** | Marketing site types clean |
+| Gate             | Result   | Evidence                              |
+| ---------------- | -------- | ------------------------------------- |
+| TypeScript       | **PASS** | `tsc --noEmit` 0 errors (strict mode) |
+| ESLint           | **PASS** | `eslint --max-warnings 0` clean       |
+| Unit Tests       | **PASS** | 564/564 pass, 0 failures              |
+| Build            | **PASS** | Vite 7.3.1 production build, 41.8s    |
+| Omnihub-site TSC | **PASS** | Marketing site types clean            |
 
 ### P0/P1 Fixes Applied (2026-02-07)
 

@@ -71,6 +71,15 @@ export default defineConfig({
         login: resolve(__dirname, 'login.html'),
         privacy: resolve(__dirname, 'privacy.html'),
         terms: resolve(__dirname, 'terms.html'),
+        orchestrator: resolve(__dirname, 'orchestrator.html'),
+        fortress: resolve(__dirname, 'fortress.html'),
+        'tri-force': resolve(__dirname, 'tri-force.html'),
+        'man-mode': resolve(__dirname, 'man-mode.html'),
+        omniport: resolve(__dirname, 'omniport.html'),
+        maestro: resolve(__dirname, 'maestro.html'),
+        'advanced-analytics': resolve(__dirname, 'advanced-analytics.html'),
+        'ai-automation': resolve(__dirname, 'ai-automation.html'),
+        'smart-integrations': resolve(__dirname, 'smart-integrations.html'),
       },
       output: {
         // Consistent asset naming for caching
