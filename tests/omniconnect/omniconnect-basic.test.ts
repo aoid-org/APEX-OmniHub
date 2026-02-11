@@ -2,7 +2,7 @@
  * Basic OmniConnect functionality tests
  */
 
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { OmniConnect } from '@/omniconnect/core/omniconnect';
 import { MetaBusinessConnector } from '@/omniconnect/connectors/meta-business';
 import { registerConnector, connectorRegistry } from '@/omniconnect/core/registry';
@@ -126,7 +126,7 @@ describe('OmniConnect Basic Functionality', () => {
     const omniconnect = new OmniConnect(config);
 
     // Mock storage
-    const storage = (omniconnect as unknown as { tokenStorage: any }).tokenStorage;
+    const storage = (omniconnect as unknown as { tokenStorage: Record<string, unknown> }).tokenStorage;
     vi.spyOn(storage, 'listActive').mockResolvedValue([{ connectorId: 'mock-conn-1', provider: 'mock-provider', createdAt: new Date(), lastSyncAt: new Date() }]);
     vi.spyOn(storage, 'get').mockResolvedValue({
       provider: 'mock-provider',
@@ -215,4 +215,3 @@ describe('OmniConnect Basic Functionality', () => {
     });
   });
 });
-
