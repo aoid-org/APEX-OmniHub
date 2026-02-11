@@ -123,35 +123,45 @@ export class PolicyEngine {
     const piiFields = ['email', 'phone', 'ssn', 'address', 'name', 'user_email', 'phoneNumber'];
     const replacement = handling === 'redact' ? '[REDACTED]' : '***';
 
-    const processObject = (obj: Record<string, any>) => {
-      for (const key in obj) {
-        if (piiFields.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
-          obj[key] = replacement;
-        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-          processObject(obj[key]);
-        }
-      }
-    };
+    const shouldRedact = (key: string) => piiFields.some(field => key.toLowerCase().includes(field.toLowerCase()));
 
-    processObject(event.payload);
-    processObject(event.metadata);
+    this.recursiveTransform(event.payload as Record<string, unknown>, shouldRedact, (obj, key) => {
+      obj[key] = replacement;
+    });
+    this.recursiveTransform(event.metadata as Record<string, unknown>, shouldRedact, (obj, key) => {
+      obj[key] = replacement;
+    });
   }
 
   private stripEmotionalData(event: CanonicalEvent): void {
     const emotionalFields = ['sentiment', 'emotion', 'mood', 'emotional', 'score', 'mood_score'];
+    const shouldStrip = (key: string) => emotionalFields.some(field => key.toLowerCase().includes(field.toLowerCase()));
 
-    const processObject = (obj: Record<string, any>) => {
-      for (const key in obj) {
-        if (emotionalFields.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
-          delete obj[key];
-        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-          processObject(obj[key]);
+    this.recursiveTransform(event.payload as Record<string, unknown>, shouldStrip, (obj, key) => {
+      delete obj[key];
+    });
+    this.recursiveTransform(event.metadata as Record<string, unknown>, shouldStrip, (obj, key) => {
+      delete obj[key];
+    });
+  }
+
+  private recursiveTransform(
+    obj: Record<string, unknown>,
+    shouldTransform: (key: string) => boolean,
+    transform: (obj: Record<string, unknown>, key: string) => void
+  ): void {
+    if (!obj || typeof obj !== 'object') return;
+
+    for (const key in obj) {
+      if (shouldTransform(key)) {
+        transform(obj, key);
+      } else {
+        const value = obj[key];
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          this.recursiveTransform(value as Record<string, unknown>, shouldTransform, transform);
         }
       }
-    };
-
-    processObject(event.payload);
-    processObject(event.metadata);
+    }
   }
 
   private getEventContentString(event: CanonicalEvent): string {
