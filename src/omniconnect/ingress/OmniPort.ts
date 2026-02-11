@@ -942,10 +942,20 @@ class OmniPortEngine {
    */
   private log(ctx: PipelineContext, event: string, data?: Record<string, unknown>): void {
     const latencyMs = Date.now() - ctx.startTime;
-    console.log(
-      `[OmniPort] [${ctx.correlationId}] [${latencyMs}ms] ${event}`,
-      data ? JSON.stringify(data) : ''
-    );
+    const correlationId = ctx.correlationId;
+
+    // Async logging to avoid blocking the main thread with JSON.stringify and I/O
+    Promise.resolve().then(() => {
+      try {
+        console.log(
+          `[OmniPort] [${correlationId}] [${latencyMs}ms] ${event}`,
+          data ? JSON.stringify(data) : ''
+        );
+      } catch (err) {
+        // Prevent unhandled rejections from logging failures (e.g. circular refs)
+        console.error('[OmniPort] Async logging failed:', err);
+      }
+    });
   }
 }
 
