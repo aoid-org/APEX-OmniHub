@@ -92,7 +92,7 @@ export const supabase = (!SUPABASE_URL || !SUPABASE_KEY) && isTestEnv
   : createClient<Database>(SUPABASE_URL!, SUPABASE_KEY!, {
       auth: {
         // Safer access to localStorage for SSR/non-browser environments
-        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        storage: typeof globalThis.window === 'undefined' ? undefined : globalThis.window.localStorage,
         persistSession: true,
         autoRefreshToken: true,
       },
