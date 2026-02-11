@@ -31,7 +31,13 @@ class TransitionRequest(BaseModel):
 
 
 # ENDPOINTS
-@router.post("/session/start")
+@router.post(
+    "/session/start",
+    responses={
+        200: {"description": "Session started successfully"},
+        500: {"description": "Internal server error during session initialization"},
+    },
+)
 async def start_session_handler(request: Request, body: StartSessionRequest) -> dict:
     """
     Injects Reality (Randomness) -> Calls Pure Logic.
@@ -42,6 +48,9 @@ async def start_session_handler(request: Request, body: StartSessionRequest) -> 
 
     Returns:
         Success response with session data
+
+    Raises:
+        HTTPException: 500 if session initialization fails
     """
     # INJECTION POINT 1: UUID
     generated_session_id = str(uuid.uuid4())
@@ -58,7 +67,13 @@ async def start_session_handler(request: Request, body: StartSessionRequest) -> 
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.post("/workflow/next")
+@router.post(
+    "/workflow/next",
+    responses={
+        200: {"description": "State transition completed successfully"},
+        400: {"description": "Invalid state transition or illegal event"},
+    },
+)
 async def transition_handler(body: TransitionRequest) -> dict:
     """
     Injects Reality (Time) -> Calls Pure Logic.
@@ -68,6 +83,9 @@ async def transition_handler(body: TransitionRequest) -> dict:
 
     Returns:
         Success response with new state
+
+    Raises:
+        HTTPException: 400 if state transition is illegal
     """
     # INJECTION POINT 2: TIME
     current_time_utc = datetime.now(UTC)
