@@ -118,7 +118,7 @@ class LeadGenAgent:
 
 
 # Task handlers
-async def handle_echo(task: Dict[str, Any]) -> Dict[str, Any]:
+def handle_echo(task: Dict[str, Any]) -> Dict[str, Any]:
     """Echo task handler - returns the payload."""
     params = task.get('params', {})
     payload = params.get('payload', {})
@@ -130,7 +130,7 @@ async def handle_echo(task: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-async def handle_refresh_queue(task: Dict[str, Any]) -> Dict[str, Any]:
+def handle_refresh_queue(task: Dict[str, Any]) -> Dict[str, Any]:
     """Refresh queue task handler - simulates queue refresh."""
     logger.info("Refreshing lead queue")
     # In real implementation, this would refresh from actual data source

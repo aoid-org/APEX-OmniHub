@@ -65,7 +65,7 @@ class OmniHubConnector:
             'Content-Type': 'application/json',
         }
 
-    async def get_session(self) -> aiohttp.ClientSession:
+    def get_session(self) -> aiohttp.ClientSession:
         """Get or create the aiohttp session."""
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession(headers=self._headers)
@@ -128,12 +128,11 @@ class OmniHubConnector:
             "target": self.target,
         }
 
-        session = await self.get_session()
+        session = self.get_session()
         try:
             async with session.post(
                 f"{self.base_url}/omnilink-port/tasks/claim",
                 json=payload,
-                # timeout=10, # Removed timeout to rely on default or higher level timeout
             ) as response:
                 response.raise_for_status()
                 result = await response.json()
@@ -181,7 +180,7 @@ class OmniHubConnector:
         if error_message is not None:
             payload["error_message"] = error_message
 
-        session = await self.get_session()
+        session = self.get_session()
         async with session.post(
             f"{self.base_url}/omnilink-port/tasks/complete",
             json=payload,
@@ -221,7 +220,7 @@ class OmniHubConnector:
     ) -> Dict[str, Any]:
         """Post with exponential backoff retry logic."""
         headers = {'X-Idempotency-Key': idempotency_key}
-        session = await self.get_session()
+        session = self.get_session()
 
         for attempt in range(max_retries):
             try:
@@ -294,7 +293,7 @@ class TaskWorker:
             except asyncio.CancelledError:
                 logger.info("Worker cancelled")
                 self.running = False
-                break
+                raise
             except Exception as e:
                 logger.error(f"Worker loop error: {e}", exc_info=True)
                 await asyncio.sleep(poll_interval)

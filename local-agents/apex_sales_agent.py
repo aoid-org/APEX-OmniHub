@@ -151,7 +151,7 @@ class ApexSalesAgent:
 
 
 # Task handlers
-async def handle_echo(task: Dict[str, Any]) -> Dict[str, Any]:
+def handle_echo(task: Dict[str, Any]) -> Dict[str, Any]:
     """Echo task handler."""
     params = task.get('params', {})
     payload = params.get('payload', {})
@@ -163,7 +163,7 @@ async def handle_echo(task: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-async def handle_call_lead(task: Dict[str, Any]) -> Dict[str, Any]:
+def handle_call_lead(task: Dict[str, Any]) -> Dict[str, Any]:
     """Call lead task handler."""
     params = task.get('params', {})
     payload = params.get('payload', {})
