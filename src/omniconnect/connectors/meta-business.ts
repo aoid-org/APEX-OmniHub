@@ -6,7 +6,6 @@
 import { BaseConnector } from './base';
 import { ConnectorConfig, SessionToken, RawEvent, NormalizationContext } from '../types/connector';
 import { CanonicalEvent, EventType } from '../types/canonical';
-import { generateCorrelationId } from '../utils/correlation';
 
 interface MetaTokenResponse {
   access_token: string;

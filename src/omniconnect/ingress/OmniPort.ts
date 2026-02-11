@@ -932,6 +932,7 @@ class OmniPortEngine {
       eventId: event.eventId,
       correlationId: ctx.correlationId,
       appId: 'omniport',
+      userId: ctx.userId,
       payload: event.payload,
       metadata: event.metadata,
     };

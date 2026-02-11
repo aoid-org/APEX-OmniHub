@@ -3,7 +3,7 @@
  * Main orchestration layer for all connector operations
  */
 
-import { SessionToken } from '../types/connector';
+import { SessionToken, NormalizationContext } from '../types/connector';
 import { getConnector } from './registry';
 import { generateCorrelationId } from '../utils/correlation';
 import { EncryptedTokenStorage } from '../storage/encrypted-storage';
@@ -57,7 +57,7 @@ export class OmniConnect {
   }
 
   /**
-   * Get available connectors for this tenant/user
+   * Retrieves the list of connectors available to the current tenant based on entitlements.
    */
   async getAvailableConnectors(): Promise<string[]> {
     // In demo mode, return mock connectors
@@ -211,7 +211,14 @@ export class OmniConnect {
     }
 
     // Normalize to canonical events
-    const canonicalEvents = await connector.normalizeToCanonical(rawEvents);
+    const context: NormalizationContext = {
+      userId: this.config.userId,
+      tenantId: this.config.tenantId,
+      correlationId: correlationId,
+      origin: 'omniconnect.sync'
+    };
+
+    const canonicalEvents = await connector.normalizeToCanonical(rawEvents, context);
 
     // Apply policy filtering
     const filteredEvents = await this.policyEngine.filter(
