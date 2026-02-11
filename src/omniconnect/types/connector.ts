@@ -7,6 +7,7 @@ import { CanonicalEvent } from './canonical';
 
 export interface SessionToken {
   token: string;
+  refreshToken?: string;
   expiresAt: Date;
   connectorId: string;
   userId: string;
@@ -36,6 +37,7 @@ export interface NormalizationContext {
   userId: string;
   tenantId: string;
   correlationId: string;
+  origin?: string;
 }
 
 /**
@@ -71,8 +73,9 @@ export interface Connector {
 
   /**
    * Refresh expired session token
+   * Takes the current session (which contains the old token) and returns a new session
    */
-  refreshToken(connectorId: string): Promise<SessionToken>;
+  refreshToken(session: SessionToken): Promise<SessionToken>;
 
   /**
    * Fetch new data since last sync
@@ -84,7 +87,10 @@ export interface Connector {
    * Normalize raw provider events to canonical schema
    * This is the key translation step
    */
-  normalizeToCanonical(rawEvents: RawEvent[], context: NormalizationContext): Promise<CanonicalEvent[]>;
+  normalizeToCanonical(
+    rawEvents: RawEvent[],
+    context?: NormalizationContext
+  ): Promise<CanonicalEvent[]>;
 
   /**
    * Validate provider token is still active
