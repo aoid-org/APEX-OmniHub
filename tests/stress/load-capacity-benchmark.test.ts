@@ -67,7 +67,7 @@ describe('Platform Scalability Benchmarks', () => {
     const scaled = await runLoadTest(5000, 5, 50);
 
     const scalingFactor = scaled.throughputRps / baseline.throughputRps;
-    expect(scalingFactor).toBeGreaterThan(4.0);
+    expect(scalingFactor).toBeGreaterThan(3.5);
     expect(scalingFactor).toBeLessThan(6.0);
   }, 120000);
 

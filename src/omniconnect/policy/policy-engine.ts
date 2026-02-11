@@ -3,14 +3,17 @@
  * Filters events based on app-specific policies
  */
 
-import { CanonicalEvent } from '../types/canonical';
+import { CanonicalEvent, DataClassification, EventType } from '../types/canonical';
 import { AppFilterProfile } from '../types/policy';
+import { ValidationResult } from '../types/validation';
+import { SchemaValidator } from './schema-validator';
 
 /**
  * Policy engine for filtering and transforming events
  */
 export class PolicyEngine {
   private profiles = new Map<string, AppFilterProfile>();
+  private schemaValidator = new SchemaValidator();
 
   async filter(
     events: CanonicalEvent[],
@@ -44,9 +47,57 @@ export class PolicyEngine {
     this.profiles.set(profile.appId, profile);
   }
 
-  async validateEvent(event: CanonicalEvent, appId: string): Promise<boolean> {
+  async validateEvent(event: CanonicalEvent, appId: string): Promise<ValidationResult> {
+    const errors: string[] = [];
+    const correlationId = event.correlationId || 'unknown';
+
+    // 1. Schema Validation
+    const schemaResult = this.schemaValidator.validate(event.eventType, event.payload);
+    if (!schemaResult.valid) {
+      errors.push(...schemaResult.errors);
+    }
+
+    // 2. Consent & Privacy (Critical Compliance)
+    if (
+      (event.classification === DataClassification.SENSITIVE ||
+        event.classification === DataClassification.CRITICAL) &&
+      !event.consentFlags.explicit_opt_in
+    ) {
+      errors.push("Consent missing: Sensitive/Critical data requires 'explicit_opt_in'");
+    }
+
+    // 3. Temporal Sanity
+    const now = Date.now();
+    const eventTime = new Date(event.timestamp).getTime();
+
+    // Future check (5000ms buffer)
+    if (eventTime > now + 5000) {
+      errors.push(`Temporal drift: Timestamp is in the future (${event.timestamp})`);
+    }
+
+    // Stale check (24h) - skipped for HISTORICAL_IMPORT
+    if (
+      event.eventType !== EventType.HISTORICAL_IMPORT &&
+      eventTime < now - 24 * 60 * 60 * 1000
+    ) {
+      errors.push(`Temporal drift: Event is too old (${event.timestamp})`);
+    }
+
+    // 4. App Policy Profile Check
     const profile = await this.getProfile(appId);
-    return !profile || this.shouldInclude(event, profile);
+    if (profile && !this.shouldInclude(event, profile)) {
+      errors.push('Policy violation: Event denied by app profile configuration');
+    }
+
+    if (errors.length > 0) {
+      console.warn(`[${correlationId}] Event validation failed for app ${appId}:`, errors);
+    }
+
+    return {
+      valid: errors.length === 0,
+      reasons: errors,
+      code: errors.length > 0 ? 'VALIDATION_FAILED' : undefined,
+    };
   }
 
   private shouldInclude(event: CanonicalEvent, profile: AppFilterProfile): boolean {
