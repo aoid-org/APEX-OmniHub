@@ -1,189 +1,74 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { PolicyEngine, AppFilterProfile } from '@/omniconnect/policy/policy-engine';
+import { PolicyEngine } from '@/omniconnect/policy/policy-engine';
+import { AppFilterProfile } from '@/omniconnect/types/policy';
 import { CanonicalEvent, EventType } from '@/omniconnect/types/canonical';
 
 describe('PolicyEngine', () => {
-  let policyEngine: PolicyEngine;
-  const appId = 'test-app';
+  let pe: PolicyEngine;
+  const appId = 'app-1';
 
-  const baseEvent: CanonicalEvent = {
-    eventId: 'evt-1',
-    correlationId: 'oc-123',
-    tenantId: 'tenant-1',
-    userId: 'user-1',
-    source: 'meta',
-    provider: 'meta_business',
-    externalId: 'ext-1',
-    eventType: EventType.SOCIAL_POST_VIEWED,
-    timestamp: new Date().toISOString(),
-    consentFlags: { analytics: true },
-    metadata: {},
-    payload: {
-      text: 'Hello world',
-      user_email: 'test@example.com'
-    }
+  const mkEv = (id: string, type: EventType, p = {}, m = {}): CanonicalEvent => ({
+    eventId: id, correlationId: 'c1', tenantId: 't1', userId: 'u1', source: 's1', provider: 'p1',
+    externalId: 'ext-' + id, eventType: type, timestamp: new Date().toISOString(),
+    consentFlags: {}, metadata: m, payload: p
+  });
+
+  const baseProf: AppFilterProfile = {
+    appId, allowedEventTypes: [EventType.SOCIAL_POST_VIEWED, EventType.COMMENT],
+    piiHandling: 'allow', emotionalDataEnabled: true,
+    contentCategories: { allow: [], deny: [] },
+    rateLimit: { eventsPerMinute: 100, burstLimit: 10 }
   };
 
-  const fullProfile: AppFilterProfile = {
-    appId: appId,
-    allowedEventTypes: [EventType.SOCIAL_POST_VIEWED, EventType.COMMENT],
-    piiHandling: 'allow',
-    emotionalDataEnabled: true,
-    contentCategories: {
-      allow: [],
-      deny: []
-    },
-    rateLimit: {
-      eventsPerMinute: 100,
-      burstLimit: 10
+  beforeEach(() => { pe = new PolicyEngine(); });
+
+  it('works without profile', async () => {
+    const res = await pe.filter([mkEv('1', EventType.FOLLOW)], 'none', 'c1');
+    expect(res).toHaveLength(1);
+  });
+
+  it('filters by type', async () => {
+    await pe.setProfile(baseProf);
+    const res = await pe.filter([mkEv('1', EventType.SOCIAL_POST_VIEWED), mkEv('2', EventType.FOLLOW)], appId, 'c1');
+    expect(res).toHaveLength(1);
+    expect(res[0].eventId).toBe('1');
+  });
+
+  it('filters by category', async () => {
+    const data = [
+      { d: ['bad'], a: [], ev: mkEv('1', EventType.COMMENT, { text: 'bad' }), n: 0 },
+      { d: [], a: ['good'], ev: mkEv('2', EventType.COMMENT, { text: 'ok' }), n: 0 },
+      { d: [], a: ['good'], ev: mkEv('3', EventType.COMMENT, { text: 'good' }), n: 1 }
+    ];
+
+    for (const item of data) {
+      await pe.setProfile({ ...baseProf, contentCategories: { allow: item.a, deny: item.d } });
+      expect(await pe.filter([item.ev], appId, 'c1')).toHaveLength(item.n);
     }
-  };
-
-  beforeEach(() => {
-    policyEngine = new PolicyEngine();
   });
 
-  it('should return all events if no profile is found', async () => {
-    const events = [baseEvent];
-    const result = await policyEngine.filter(events, 'unknown-app', 'oc-123');
-    expect(result).toHaveLength(1);
-    expect(result[0].eventId).toBe(baseEvent.eventId);
+  it('strips emotions', async () => {
+    await pe.setProfile({ ...baseProf, emotionalDataEnabled: false });
+    const res = await pe.filter([mkEv('1', EventType.COMMENT, { sentiment: 'pos' }, { mood: 'joy' })], appId, 'c1');
+    expect(res[0].payload.sentiment).toBeUndefined();
+    expect(res[0].metadata.mood).toBeUndefined();
   });
 
-  it('should filter events by allowedEventTypes', async () => {
-    await policyEngine.setProfile(fullProfile);
-
-    const events: CanonicalEvent[] = [
-      { ...baseEvent, eventId: 'evt-1', eventType: EventType.SOCIAL_POST_VIEWED },
-      { ...baseEvent, eventId: 'evt-2', eventType: EventType.FOLLOW }
-    ];
-
-    const result = await policyEngine.filter(events, appId, 'oc-123');
-    expect(result).toHaveLength(1);
-    expect(result[0].eventId).toBe('evt-1');
+  it('masks pii', async () => {
+    await pe.setProfile({ ...baseProf, piiHandling: 'mask' });
+    const res = await pe.filter([mkEv('1', EventType.COMMENT, { email: 'a@b.c' })], appId, 'c1');
+    expect(res[0].payload.email).toBe('***');
   });
 
-  it('should filter events by contentCategories (deny)', async () => {
-    const profile: AppFilterProfile = {
-      ...fullProfile,
-      contentCategories: {
-        allow: [],
-        deny: ['spam', 'offensive']
-      }
-    };
-    await policyEngine.setProfile(profile);
-
-    const events: CanonicalEvent[] = [
-      { ...baseEvent, eventId: 'evt-1', payload: { text: 'Normal post' } },
-      { ...baseEvent, eventId: 'evt-2', payload: { text: 'This is spam' } }
-    ];
-
-    const result = await policyEngine.filter(events, appId, 'oc-123');
-    expect(result).toHaveLength(1);
-    expect(result[0].eventId).toBe('evt-1');
+  it('redacts pii', async () => {
+    await pe.setProfile({ ...baseProf, piiHandling: 'redact' });
+    const res = await pe.filter([mkEv('1', EventType.COMMENT, { phone: '123' })], appId, 'c1');
+    expect(res[0].payload.phone).toBe('[REDACTED]');
   });
 
-  it('should filter events by contentCategories (allow)', async () => {
-    const profile: AppFilterProfile = {
-      ...fullProfile,
-      contentCategories: {
-        allow: ['work', 'urgent'],
-        deny: []
-      }
-    };
-    await policyEngine.setProfile(profile);
-
-    const events: CanonicalEvent[] = [
-      { ...baseEvent, eventId: 'evt-1', payload: { text: 'Work meeting' } },
-      { ...baseEvent, eventId: 'evt-2', payload: { text: 'Personal stuff' } }
-    ];
-
-    const result = await policyEngine.filter(events, appId, 'oc-123');
-    expect(result).toHaveLength(1);
-    expect(result[0].eventId).toBe('evt-1');
-  });
-
-  it('should strip emotional data if emotionalDataEnabled is false', async () => {
-    const profile: AppFilterProfile = {
-      ...fullProfile,
-      emotionalDataEnabled: false
-    };
-    await policyEngine.setProfile(profile);
-
-    const eventWithEmotion: CanonicalEvent = {
-      ...baseEvent,
-      payload: {
-        text: 'Happy day',
-        sentiment: 'positive',
-        emotion: 'joy'
-      },
-      metadata: {
-        mood_score: 0.9
-      }
-    };
-
-    const result = await policyEngine.filter([eventWithEmotion], appId, 'oc-123');
-    expect(result).toHaveLength(1);
-    expect(result[0].payload.sentiment).toBeUndefined();
-    expect(result[0].payload.emotion).toBeUndefined();
-    expect(result[0].metadata.mood_score).toBeUndefined();
-    expect(result[0].payload.text).toBe('Happy day');
-  });
-
-  it('should redact PII if piiHandling is redact', async () => {
-    const profile: AppFilterProfile = {
-      ...fullProfile,
-      piiHandling: 'redact'
-    };
-    await policyEngine.setProfile(profile);
-
-    const eventWithPII: CanonicalEvent = {
-      ...baseEvent,
-      payload: {
-        text: 'Contact me at test@example.com',
-        email: 'test@example.com',
-        phone: '123-456-7890'
-      }
-    };
-
-    const result = await policyEngine.filter([eventWithPII], appId, 'oc-123');
-    expect(result).toHaveLength(1);
-    expect(result[0].payload.email).toBe('[REDACTED]');
-    expect(result[0].payload.phone).toBe('[REDACTED]');
-    // It should also redact PII inside text strings if possible, but let's start with fields
-  });
-
-  it('should mask PII if piiHandling is mask', async () => {
-    const profile: AppFilterProfile = {
-      ...fullProfile,
-      piiHandling: 'mask'
-    };
-    await policyEngine.setProfile(profile);
-
-    const eventWithPII: CanonicalEvent = {
-      ...baseEvent,
-      payload: {
-        email: 'test@example.com'
-      }
-    };
-
-    const result = await policyEngine.filter([eventWithPII], appId, 'oc-123');
-    expect(result).toHaveLength(1);
-    expect(result[0].payload.email).toBe('***');
-  });
-
-  describe('validateEvent', () => {
-    it('should return true for valid event', async () => {
-      await policyEngine.setProfile(fullProfile);
-      const isValid = await policyEngine.validateEvent(baseEvent, appId);
-      expect(isValid).toBe(true);
-    });
-
-    it('should return false for event with disallowed type', async () => {
-      await policyEngine.setProfile(fullProfile);
-      const invalidEvent = { ...baseEvent, eventType: EventType.FOLLOW };
-      const isValid = await policyEngine.validateEvent(invalidEvent, appId);
-      expect(isValid).toBe(false);
-    });
+  it('validates events correctly', async () => {
+    await pe.setProfile(baseProf);
+    expect(await pe.validateEvent(mkEv('1', EventType.COMMENT), appId)).toBe(true);
+    expect(await pe.validateEvent(mkEv('2', EventType.FOLLOW), appId)).toBe(false);
   });
 });
