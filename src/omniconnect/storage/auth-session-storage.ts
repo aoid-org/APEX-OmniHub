@@ -2,14 +2,15 @@
  * Auth Session Storage
  * Temporary storage for OAuth2/PKCE state and code verifiers.
  *
- * TODO: Replace in-memory storage with Redis or a persistent database for production.
+ * NOTE: This implementation uses in-memory storage suitable for single-instance deployments.
+ * For horizontally scaled environments, this should be replaced with a distributed cache like Redis.
  */
 
 export class AuthSessionStorage {
   // Using a Map for in-memory storage.
-  // In production, this should be replaced with Redis or a database table.
-  private storage = new Map<string, string>();
-  private timeouts = new Map<string, NodeJS.Timeout>();
+  // Marked as readonly as the reference never changes.
+  private readonly storage = new Map<string, string>();
+  private readonly timeouts = new Map<string, NodeJS.Timeout>();
 
   // 15 minutes TTL for auth sessions
   private readonly TTL_MS = 15 * 60 * 1000;
