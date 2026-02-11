@@ -181,7 +181,8 @@ export class OmniConnect {
     const isValid = await connector.validateToken(connectorId);
     if (!isValid) {
       // Try to refresh token
-      await connector.refreshToken(connectorId);
+      const newSession = await connector.refreshToken(session);
+      await this.tokenStorage.store(newSession);
     }
 
     // Fetch new data since last sync

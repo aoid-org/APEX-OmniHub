@@ -87,10 +87,28 @@ export class MetaBusinessConnector extends BaseConnector {
     console.log(`Disconnecting Meta Business connector: ${connectorId}`);
   }
 
-  async refreshToken(_connectorId: string): Promise<SessionToken> {
-    // TODO: Implement token refresh using refresh_token
-    // For now, throw error to indicate refresh needed
-    throw new Error('Token refresh not implemented for Meta Business API');
+  async refreshToken(session: SessionToken): Promise<SessionToken> {
+    if (!this.config.clientSecret) {
+      throw new Error('Client secret is required for token refresh');
+    }
+
+    const params = new URLSearchParams({
+      grant_type: 'fb_exchange_token',
+      client_id: this.config.clientId,
+      client_secret: this.config.clientSecret,
+      fb_exchange_token: session.token
+    });
+
+    const response = await this.makeRequest(`/oauth/access_token?${params.toString()}`) as MetaTokenResponse;
+
+    return this.createSessionToken(
+      session.connectorId,
+      session.userId,
+      session.tenantId,
+      response.access_token,
+      session.scopes,
+      response.expires_in
+    );
   }
 
   async fetchDelta(_connectorId: string, _since: Date): Promise<RawEvent[]> {

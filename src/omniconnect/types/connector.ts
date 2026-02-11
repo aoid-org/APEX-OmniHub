@@ -7,6 +7,7 @@ import { CanonicalEvent } from './canonical';
 
 export interface SessionToken {
   token: string;
+  refreshToken?: string;
   expiresAt: Date;
   connectorId: string;
   userId: string;
@@ -65,8 +66,9 @@ export interface Connector {
 
   /**
    * Refresh expired session token
+   * Takes the current session (which contains the old token) and returns a new session
    */
-  refreshToken(connectorId: string): Promise<SessionToken>;
+  refreshToken(session: SessionToken): Promise<SessionToken>;
 
   /**
    * Fetch new data since last sync
