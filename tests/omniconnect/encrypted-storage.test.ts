@@ -6,7 +6,6 @@ import { randomBytes } from 'node:crypto';
 describe('EncryptedTokenStorage', () => {
   const TEST_KEY = randomBytes(32).toString('hex');
   const INVALID_KEY_SHORT = randomBytes(16).toString('hex');
-  const INVALID_KEY_LONG = randomBytes(33).toString('hex');
 
   let storage: EncryptedTokenStorage;
 
@@ -45,8 +44,8 @@ describe('EncryptedTokenStorage', () => {
   it('should encrypt token on store and decrypt on get', async () => {
     await storage.store(sampleToken);
 
-    // Verify storage has encrypted data by accessing private map (casting to any)
-    const internalStorage = (storage as any).storage as Map<string, StoredSession>;
+    // Verify storage has encrypted data by accessing private map (casting to unknown then StoredSession map)
+    const internalStorage = (storage as unknown as { storage: Map<string, StoredSession> }).storage;
     const stored = internalStorage.get(sampleToken.connectorId);
 
     expect(stored).toBeDefined();
@@ -83,13 +82,15 @@ describe('EncryptedTokenStorage', () => {
     await storage.store(sampleToken);
 
     // Tamper with the stored data
-    const internalStorage = (storage as any).storage as Map<string, StoredSession>;
-    const stored = internalStorage.get(sampleToken.connectorId)!;
+    const internalStorage = (storage as unknown as { storage: Map<string, StoredSession> }).storage;
+    const stored = internalStorage.get(sampleToken.connectorId);
 
-    // Modify ciphertext part of the blob
-    const parts = stored.token.split(':');
-    parts[2] = 'deadbeef'; // Corrupt ciphertext
-    stored.token = parts.join(':');
+    if (stored) {
+      // Modify ciphertext part of the blob
+      const parts = stored.token.split(':');
+      parts[2] = 'deadbeef'; // Corrupt ciphertext
+      stored.token = parts.join(':');
+    }
 
     // Spy on console.error to verify logging
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -119,7 +120,7 @@ describe('EncryptedTokenStorage', () => {
     expect(await storage.getLastSync('non-existent')).toEqual(new Date(0));
 
     // Test getLastSync existing
-    const stored = await storage.get(sampleToken.connectorId);
+    await storage.get(sampleToken.connectorId);
     // storage.store sets createdAt, but lastSyncAt is undefined initially
     expect(await storage.getLastSync(sampleToken.connectorId)).toEqual(new Date(0));
 
