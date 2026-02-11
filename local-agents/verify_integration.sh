@@ -25,11 +25,11 @@ if ! command -v python3 &> /dev/null; then
 fi
 echo -e "${GREEN}✓ python3 found${NC}"
 
-if ! python3 -c "import requests" 2>/dev/null; then
-    echo -e "${YELLOW}! requests library not found, installing...${NC}"
-    pip install requests
+if ! python3 -c "import aiohttp" 2>/dev/null; then
+    echo -e "${YELLOW}! aiohttp library not found, installing...${NC}"
+    pip install aiohttp
 fi
-echo -e "${GREEN}✓ requests library available${NC}"
+echo -e "${GREEN}✓ aiohttp library available${NC}"
 
 # Check environment
 echo ""

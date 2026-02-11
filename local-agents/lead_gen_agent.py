@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import logging
+import asyncio
 from datetime import datetime, timezone
 from typing import Dict, Any, List
 
@@ -25,7 +26,7 @@ class LeadGenAgent:
         self.connector = connector
         self.qualified_queue: List[Dict[str, Any]] = []
 
-    def ingest_lead(self, lead_id: str, url: str, role: str, score: float):
+    async def ingest_lead(self, lead_id: str, url: str, role: str, score: float):
         """
         Ingest a new lead and emit telemetry.
 
@@ -37,7 +38,7 @@ class LeadGenAgent:
         """
         logger.info(f"Ingesting lead {lead_id}: {url} (role={role}, score={score:.2f})")
 
-        self.connector.emit_event(
+        await self.connector.emit_event(
             event_type="lead_ingested",
             data={
                 "lead_id": lead_id,
@@ -51,13 +52,13 @@ class LeadGenAgent:
 
         # Qualify if score above threshold
         if score >= 0.7:
-            self.qualify_lead(lead_id, url, role, score)
+            await self.qualify_lead(lead_id, url, role, score)
 
-    def qualify_lead(self, lead_id: str, url: str, role: str, score: float):
+    async def qualify_lead(self, lead_id: str, url: str, role: str, score: float):
         """Mark lead as qualified and add to queue."""
         logger.info(f"Qualifying lead {lead_id} (score={score:.2f})")
 
-        self.connector.emit_event(
+        await self.connector.emit_event(
             event_type="lead_qualified",
             data={
                 "lead_id": lead_id,
@@ -76,12 +77,12 @@ class LeadGenAgent:
             "score": score,
         })
 
-    def seed_queue(self):
+    async def seed_queue(self):
         """Emit queue seeding event with current queue size."""
         queue_size = len(self.qualified_queue)
         logger.info(f"Seeding queue with {queue_size} qualified leads")
 
-        self.connector.emit_event(
+        await self.connector.emit_event(
             event_type="queue_seeded",
             data={
                 "queue_size": queue_size,
@@ -91,7 +92,7 @@ class LeadGenAgent:
             idempotency_key=f"queue_seeded_{int(time.time())}",
         )
 
-    def simulate_ingestion(self, count: int = 14):
+    async def simulate_ingestion(self, count: int = 14):
         """Simulate lead ingestion for demo purposes."""
         logger.info(f"Simulating ingestion of {count} leads")
 
@@ -99,20 +100,25 @@ class LeadGenAgent:
         roles = ["HVAC owner", "Plumber", "Electrician", "Contractor", "Roofer"]
         urls = [f"https://example{i}.com" for i in range(count)]
 
+        tasks = []
         for i in range(count):
             lead_id = f"lead_{int(time.time())}_{i}"
             url = urls[i]
             role = roles[i % len(roles)]
             score = 0.5 + (i % 5) * 0.1  # Scores from 0.5 to 0.9
 
-            self.ingest_lead(lead_id, url, role, score)
-            time.sleep(0.1)  # Small delay to avoid overwhelming
+            tasks.append(asyncio.create_task(self.ingest_lead(lead_id, url, role, score)))
+            await asyncio.sleep(0.1)  # Small delay to avoid overwhelming
 
-        self.seed_queue()
+        # Wait for all ingestion tasks
+        if tasks:
+            await asyncio.gather(*tasks)
+
+        await self.seed_queue()
 
 
 # Task handlers
-def handle_echo(task: Dict[str, Any]) -> Dict[str, Any]:
+async def handle_echo(task: Dict[str, Any]) -> Dict[str, Any]:
     """Echo task handler - returns the payload."""
     params = task.get('params', {})
     payload = params.get('payload', {})
@@ -124,7 +130,7 @@ def handle_echo(task: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def handle_refresh_queue(task: Dict[str, Any]) -> Dict[str, Any]:
+async def handle_refresh_queue(task: Dict[str, Any]) -> Dict[str, Any]:
     """Refresh queue task handler - simulates queue refresh."""
     logger.info("Refreshing lead queue")
     # In real implementation, this would refresh from actual data source
@@ -135,7 +141,7 @@ def handle_refresh_queue(task: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def main():
+async def main():
     """Main entry point for Lead-Gen agent."""
     print("Lead-Gen Agent - OmniHub Integration")
     print("=" * 50)
@@ -167,52 +173,55 @@ def main():
     # Run mode selection
     mode = os.getenv('LEAD_GEN_MODE', 'simulate')
 
-    if mode == 'simulate':
-        print("\nMode: SIMULATE - Running one-time ingestion simulation")
-        agent.simulate_ingestion(count=14)
-        print("\nSimulation complete. Check OmniDash at /omnidash/local-agents")
+    try:
+        if mode == 'simulate':
+            print("\nMode: SIMULATE - Running one-time ingestion simulation")
+            await agent.simulate_ingestion(count=14)
+            print("\nSimulation complete. Check OmniDash at /omnidash/local-agents")
 
-    elif mode == 'worker':
-        print("\nMode: WORKER - Starting task worker loop")
-        print("Press Ctrl+C to stop")
+        elif mode == 'worker':
+            print("\nMode: WORKER - Starting task worker loop")
+            print("Press Ctrl+C to stop")
 
-        # Register task handlers
-        handlers = {
-            'echo': handle_echo,
-            'refresh_queue': handle_refresh_queue,
-        }
+            # Register task handlers
+            handlers = {
+                'echo': handle_echo,
+                'refresh_queue': handle_refresh_queue,
+            }
 
-        worker = TaskWorker(connector, handlers)
+            worker = TaskWorker(connector, handlers)
+            await worker.run(poll_interval=5)
 
-        try:
-            worker.run(poll_interval=5)
-        except KeyboardInterrupt:
-            print("\nStopping worker...")
-            worker.stop()
+        elif mode == 'hybrid':
+            print("\nMode: HYBRID - Running simulation + worker loop")
 
-    elif mode == 'hybrid':
-        print("\nMode: HYBRID - Running simulation + worker loop")
-        agent.simulate_ingestion(count=14)
+            sim_task = asyncio.create_task(agent.simulate_ingestion(count=14))
 
-        print("\nStarting task worker loop (press Ctrl+C to stop)")
-        handlers = {
-            'echo': handle_echo,
-            'refresh_queue': handle_refresh_queue,
-        }
+            print("\nStarting task worker loop (press Ctrl+C to stop)")
+            handlers = {
+                'echo': handle_echo,
+                'refresh_queue': handle_refresh_queue,
+            }
 
-        worker = TaskWorker(connector, handlers)
+            worker = TaskWorker(connector, handlers)
 
-        try:
-            worker.run(poll_interval=5, max_iterations=12)  # Run for 1 minute
-        except KeyboardInterrupt:
-            print("\nStopping worker...")
-            worker.stop()
+            worker_task = asyncio.create_task(worker.run(poll_interval=5, max_iterations=12))
 
-    else:
-        print(f"Unknown mode: {mode}")
-        print("Valid modes: simulate, worker, hybrid")
-        sys.exit(1)
+            await asyncio.gather(sim_task, worker_task)
+
+        else:
+            print(f"Unknown mode: {mode}")
+            print("Valid modes: simulate, worker, hybrid")
+            sys.exit(1)
+
+    except KeyboardInterrupt:
+        print("\nStopping...")
+    finally:
+        await connector.close()
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass

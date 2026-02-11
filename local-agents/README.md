@@ -41,7 +41,7 @@ This directory contains Python connector modules for integrating local machines 
 ### 1. Install Dependencies
 
 ```bash
-pip install requests
+pip install aiohttp
 ```
 
 ### 2. Configure Environment
