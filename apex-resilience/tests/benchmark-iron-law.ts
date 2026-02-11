@@ -56,7 +56,8 @@ async function cleanup() {
   }
 }
 
-async function runBenchmark() {
+// Top-level await execution block
+try {
   const files = await setup();
   const verifier = new BenchmarkVerifier();
 
@@ -75,8 +76,9 @@ async function runBenchmark() {
   const end = performance.now();
 
   console.log(`Benchmark completed in ${(end - start).toFixed(2)}ms`);
-
+} catch (error) {
+  console.error('Benchmark failed:', error);
+  process.exit(1);
+} finally {
   await cleanup();
 }
-
-runBenchmark().catch(console.error);
