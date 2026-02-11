@@ -9,29 +9,96 @@ const SUPABASE_KEY =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
   import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Check for test environment - robust detection for CI/Test runners
+// 1. Vitest sets import.meta.env.MODE to 'test'
+// 2. Node test runners set process.env.NODE_ENV to 'test'
+// 3. CI pipelines typically set process.env.CI to 'true'
+const isTestEnv =
+  import.meta.env.MODE === 'test' ||
+  (typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || (process.env.CI === 'true' && process.env.NODE_ENV !== 'production')));
+
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   const missing: string[] = [];
   if (!SUPABASE_URL) missing.push('VITE_SUPABASE_URL');
   if (!SUPABASE_KEY) missing.push('VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY');
 
   const errorMessage = `APEX Critical Failure: Supabase env vars missing (${missing.join(', ')}). Aborting Launch.`;
-  console.error(errorMessage);
-  throw new Error(errorMessage);
+
+  if (isTestEnv) {
+    // Soft failure for tests - log warning but don't crash
+    console.warn(`[TEST MODE] ${errorMessage} - Proceeding with unavailable client stub.`);
+  } else {
+    // Hard crash for production/dev
+    console.error(errorMessage);
+    throw new Error(errorMessage);
+  }
+}
+
+// Helper to create a stub client that throws helpful errors when methods are called
+function createUnavailableClient() {
+  const err = new Error(
+    'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.'
+  );
+
+  const reject = async () => {
+    throw err;
+  };
+
+  const noopSubscription = { unsubscribe: () => {} };
+
+  return {
+    auth: {
+      getSession: reject,
+      getUser: reject,
+      signOut: reject,
+      onAuthStateChange: () => ({ data: { subscription: noopSubscription } }),
+    },
+    functions: {
+      invoke: reject,
+    },
+    from: () => ({
+      select: reject,
+      insert: reject,
+      update: reject,
+      delete: reject,
+      eq: reject,
+    }),
+    storage: {
+      from: () => ({
+        upload: reject,
+        download: reject,
+        list: reject,
+        getPublicUrl: () => ({ data: { publicUrl: '' } }),
+      }),
+      listBuckets: reject,
+      createBucket: reject,
+      deleteBucket: reject,
+    },
+    channel: () => ({
+      on: () => ({ subscribe: () => {} }),
+      subscribe: () => {},
+      unsubscribe: () => {},
+    }),
+    removeChannel: () => {},
+    rpc: reject,
+  } as unknown as ReturnType<typeof createClient<Database>>;
 }
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    // Safer access to localStorage for SSR/non-browser environments
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-});
+export const supabase = (!SUPABASE_URL || !SUPABASE_KEY) && isTestEnv
+  ? createUnavailableClient()
+  : createClient<Database>(SUPABASE_URL!, SUPABASE_KEY!, {
+      auth: {
+        // Safer access to localStorage for SSR/non-browser environments
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    });
 
 // Log which Supabase instance is being used (dev only)
-if (import.meta.env.DEV) {
+if (import.meta.env.DEV && SUPABASE_URL) {
   console.log('✅ Using Supabase instance:', SUPABASE_URL);
 }
