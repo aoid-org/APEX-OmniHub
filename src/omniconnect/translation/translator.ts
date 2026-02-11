@@ -9,6 +9,7 @@ export interface TranslatedEvent {
   eventId: string;
   correlationId: string;
   appId: string;
+  userId?: string;
   payload: Record<string, unknown>;
   metadata: Record<string, unknown>;
 }
@@ -73,6 +74,7 @@ export class SemanticTranslator {
           eventId: event.eventId,
           correlationId,
           appId,
+          userId: event.userId,
           payload: { ...event.payload, _translation_status: 'FAILED', _error: 'Verification failed' },
           metadata: { ...event.metadata, risk_lane: 'RED', audit_reason: 'translation_verification_failed' }
         };
@@ -82,6 +84,7 @@ export class SemanticTranslator {
         eventId: event.eventId,
         correlationId,
         appId,
+        userId: event.userId,
         payload: translatedPayload,
         metadata: { ...event.metadata, locale: targetLocale, verified: true }
       };

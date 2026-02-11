@@ -3,6 +3,9 @@
  * Handles delivery of events to OmniLink with retry/backoff
  */
 
+import { supabase } from '@/integrations/supabase/client';
+import { waitWithBackoff } from '@/lib/backoff';
+import { IngressBufferEntry } from '../types/dlq';
 import { TranslatedEvent } from '../translation/translator';
 import { requestOmniLink } from '../../integrations/omnilink';
 
@@ -37,7 +40,27 @@ export class OmniLinkDelivery {
         successCount++;
       } catch (error) {
         console.error(`[${correlationId}] Failed to deliver event ${event.eventId}:`, error);
-        // TODO: Add to dead-letter queue
+
+        // Add to dead-letter queue
+        const entry: IngressBufferEntry = {
+          correlation_id: correlationId,
+          raw_input: JSON.stringify(event),
+          error_reason: error instanceof Error ? error.message : String(error),
+          status: 'pending',
+          risk_score: (event.metadata?.risk_lane as string) === 'RED' ? 100 : 0,
+          source_type: 'omnilink_delivery_failure',
+          user_id: event.userId,
+        };
+
+        // cast supabase to any because ingress_buffer table is not in generated types yet
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: dlqError } = await (supabase as any).from('ingress_buffer').insert(entry);
+
+        if (dlqError) {
+          console.error(`[${correlationId}] Failed to write to DLQ for event ${event.eventId}:`, dlqError);
+        } else {
+          console.log(`[${correlationId}] Event ${event.eventId} written to DLQ`);
+        }
       }
     }
 
@@ -49,16 +72,33 @@ export class OmniLinkDelivery {
     event: TranslatedEvent,
     correlationId: string
   ): Promise<void> {
-    // TODO: Implement retry logic with exponential backoff
-    await requestOmniLink({
-      path: '/events',
-      method: 'POST',
-      body: event,
-      headers: {
-        'X-Correlation-ID': correlationId,
-        'X-App-ID': event.appId
+    let lastError: Error | undefined;
+    // Ensure at least one attempt is made
+    const maxAttempts = Math.max(1, this.maxRetries);
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await requestOmniLink({
+          path: '/events',
+          method: 'POST',
+          body: event,
+          headers: {
+            'X-Correlation-ID': correlationId,
+            'X-App-ID': event.appId
+          }
+        });
+        return;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.warn(`[${correlationId}] Delivery attempt ${attempt} failed: ${lastError.message}`);
+
+        if (attempt < maxAttempts) {
+          await waitWithBackoff(attempt, { baseMs: this.baseDelay });
+        }
       }
-    });
+    }
+
+    throw lastError || new Error('Delivery failed with unknown error');
   }
 
   async getDeliveryStatus(_eventId: string): Promise<DeliveryResult | null> {

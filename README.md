@@ -26,6 +26,11 @@ _Directable • Accountable • Dependable_
 
 APEX OmniHub is the enterprise **AI orchestration control plane** for **governed execution** across ALL modern stacks, AI apps, legacy enterprise systems, and Web3 infrastructure. Think "control tower": one place to connect, translate, enforce policy, and produce an audit trail you can defend.
 
+The platform relies on a "Holy Trinity" architecture:
+1.  **OmniHub**: The Central Control Plane (Logic & Policy).
+2.  **OmniLink**: The Secure Gateway (Connectivity).
+3.  **OmniPort**: The Multimodal Normalizer (Input/Output).
+
 > OmniHub's job is simple: **translate intent into deterministic execution**, without lock-in, without chaos, and without silent failure.
 
 ---
@@ -34,12 +39,12 @@ APEX OmniHub is the enterprise **AI orchestration control plane** for **governed
 
 | Metric                  | Value                                              |
 | ----------------------- | -------------------------------------------------- |
-| **Source Files**        | 228+ TypeScript/React files                        |
-| **React Components**    | 67 production components                           |
-| **Edge Functions**      | 21 Supabase serverless functions                   |
-| **Database Migrations** | 32 versioned SQL schemas                           |
-| **CI/CD Pipelines**     | 8 GitHub Actions workflows                         |
-| **Test Files**          | 81 test specifications                             |
+| **Source Files**        | 234+ TypeScript/React files                        |
+| **React Components**    | 28+ production components                          |
+| **Edge Functions**      | 18 Supabase serverless functions                   |
+| **Database Migrations** | 35 versioned SQL schemas                           |
+| **CI/CD Pipelines**     | 10 GitHub Actions workflows                        |
+| **Test Files**          | 59 test specifications                             |
 | **Integration Modules** | 4 (Maestro, OmniLink, OmniPort, Supabase)           |
 
 ---
@@ -77,19 +82,19 @@ A three-tier agent architecture designed to keep unsafe reasoning from reaching 
 
 Security is not "a feature." OmniHub enforces:
 
+- **Armageddon Test Suite**: Continuous chaos engineering and red-teaming engine.
 - **Zero-trust device registry** (`20251218000001_create_device_registry_table.sql`)
 - **Audit logging** (`20251218000000_create_audit_logs_table.sql`)
 - **Emergency controls** (`20260103000000_create_emergency_controls.sql`)
 - **OMEGA security hardening** (`20260125000001_enable_omega_security.sql`)
 
-### 4) OmniLink Universal Port (Integration Without Lock-in)
+### 4) OmniLink & OmniPort (Connectivity & Normalization)
 
-All integration logic constrained behind a **single-port** model:
+The "Trinity" connectivity layer:
 
-- Universal port schema (`20260111000000_omnilink_universal_port.sql` — 14KB)
-- Dead letter queue (`20260124000000_omniport_dlq.sql`)
-- Replay & tracing (`20260125000000_omnitrace_replay.sql`)
-- Task dispatch (`20260201000000_omnilink_task_dispatch.sql`)
+- **OmniLink**: The Secure Gateway for universal connectivity (`20260111000000_omnilink_universal_port.sql`).
+- **OmniPort**: The Multimodal Normalizer for standardized I/O and DLQ (`20260124000000_omniport_dlq.sql`).
+- **OmniTrace**: Full replay & tracing capability (`20260125000000_omnitrace_replay.sql`).
 
 ### 5) Web3-Native Identity (Optional)
 
@@ -100,7 +105,7 @@ All integration logic constrained behind a **single-port** model:
 
 ---
 
-## Edge Functions (21 Deployed)
+## Edge Functions (18 Deployed)
 
 | Function                 | Purpose                    |
 | ------------------------ | -------------------------- |
@@ -120,13 +125,13 @@ All integration logic constrained behind a **single-port** model:
 ## Repository Layout
 
 ```
-/src                 — OmniDash UI (228 files, 67 components)
-/supabase/migrations — Database schema (32 versioned migrations)
-/supabase/functions  — Edge functions (21 serverless endpoints)
-/orchestrator        — Temporal workers (Python, 35 files)
+/src                 — OmniDash UI (234 files, 28 components)
+/supabase/migrations — Database schema (35 versioned migrations)
+/supabase/functions  — Edge functions (18 serverless endpoints)
+/orchestrator        — Temporal workers (Python, 55 files)
 /apps/omnihub-site   — Marketing site (Vite)
-/tests               — Test suite (81 specifications)
-/.github/workflows   — CI/CD pipelines (8 workflows)
+/tests               — Test suite (59 specifications)
+/.github/workflows   — CI/CD pipelines (10 workflows)
 ```
 
 ---

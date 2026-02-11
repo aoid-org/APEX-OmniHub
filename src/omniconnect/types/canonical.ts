@@ -28,6 +28,16 @@ export enum EventType {
   CONTENT_PUBLISHED = 'content_published',
   CONTENT_UPDATED = 'content_updated',
   CONTENT_DELETED = 'content_deleted',
+
+  // System Events
+  HISTORICAL_IMPORT = 'historical_import',
+}
+
+export enum DataClassification {
+  PUBLIC = 'public',
+  INTERNAL = 'internal',
+  SENSITIVE = 'sensitive', // PII, Financial
+  CRITICAL = 'critical',   // Secrets, Auth Tokens
 }
 
 export enum ConsentType {
@@ -42,6 +52,7 @@ export interface ConsentFlags {
   [ConsentType.MARKETING]?: boolean;
   [ConsentType.PERSONALIZATION]?: boolean;
   [ConsentType.THIRD_PARTY_SHARING]?: boolean;
+  explicit_opt_in?: boolean;
 }
 
 export interface CanonicalEvent {
@@ -68,6 +79,9 @@ export interface CanonicalEvent {
 
   /** Standardized event type */
   eventType: EventType;
+
+  /** Data classification level */
+  classification: DataClassification;
 
   /** ISO 8601 timestamp */
   timestamp: string;
