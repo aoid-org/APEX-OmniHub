@@ -50,7 +50,7 @@ export class MetaBusinessConnector extends BaseConnector {
     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
 
     // Store code verifier for later use (in session/state)
-    // TODO: Store securely in session
+    await authSessionStorage.storeSession(state, codeVerifier);
 
     return this.buildAuthUrl({
       state,
@@ -64,10 +64,23 @@ export class MetaBusinessConnector extends BaseConnector {
     tenantId: string,
     code: string,
     codeVerifier: string,
-    _state: string
+    state: string
   ): Promise<SessionToken> {
+    // Retrieve verifier from session storage
+    const storedVerifier = await authSessionStorage.retrieveSession(state);
+    const verifierToUse = storedVerifier || codeVerifier;
+
+    if (!verifierToUse) {
+      throw new Error('Code verifier not found in session and not provided');
+    }
+
     // Exchange authorization code for access token
-    const tokenResponse = await this.exchangeCodeForToken(code, codeVerifier) as MetaTokenResponse;
+    const tokenResponse = await this.exchangeCodeForToken(code, verifierToUse) as MetaTokenResponse;
+
+    // Clean up session
+    if (storedVerifier) {
+      await authSessionStorage.clearSession(state);
+    }
 
     const connectorId = this.generateConnectorId(userId, tenantId);
 
