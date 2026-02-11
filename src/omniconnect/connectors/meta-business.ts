@@ -4,9 +4,8 @@
  */
 
 import { BaseConnector } from './base';
-import { ConnectorConfig, SessionToken, RawEvent } from '../types/connector';
+import { ConnectorConfig, SessionToken, RawEvent, NormalizationContext } from '../types/connector';
 import { CanonicalEvent, EventType } from '../types/canonical';
-import { generateCorrelationId } from '../utils/correlation';
 
 interface MetaTokenResponse {
   access_token: string;
@@ -125,17 +124,15 @@ export class MetaBusinessConnector extends BaseConnector {
     }
   }
 
-  async normalizeToCanonical(rawEvents: RawEvent[]): Promise<CanonicalEvent[]> {
-    const correlationId = generateCorrelationId();
-
+  async normalizeToCanonical(rawEvents: RawEvent[], context: NormalizationContext): Promise<CanonicalEvent[]> {
     return rawEvents.map(event => {
       const post = event.data as MetaPost;
 
       return {
         eventId: `meta_${event.id}`,
-        correlationId,
-        tenantId: 'placeholder_tenant', // TODO: Get from context
-        userId: 'placeholder_user', // TODO: Get from context
+        correlationId: context.correlationId,
+        tenantId: context.tenantId,
+        userId: context.userId,
         source: 'meta_business_api',
         provider: 'meta_business',
         externalId: event.id,

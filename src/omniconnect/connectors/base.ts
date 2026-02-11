@@ -3,7 +3,7 @@
  * Provides common functionality for all connector implementations
  */
 
-import { Connector, ConnectorConfig, SessionToken, RawEvent } from '../types/connector';
+import { Connector, ConnectorConfig, SessionToken, RawEvent, NormalizationContext } from '../types/connector';
 import { CanonicalEvent } from '../types/canonical';
 
 export abstract class BaseConnector implements Connector {
@@ -26,7 +26,7 @@ export abstract class BaseConnector implements Connector {
   abstract disconnect(connectorId: string): Promise<void>;
   abstract refreshToken(connectorId: string): Promise<SessionToken>;
   abstract fetchDelta(connectorId: string, since: Date): Promise<RawEvent[]>;
-  abstract normalizeToCanonical(rawEvents: RawEvent[]): Promise<CanonicalEvent[]>;
+  abstract normalizeToCanonical(rawEvents: RawEvent[], context: NormalizationContext): Promise<CanonicalEvent[]>;
   abstract validateToken(connectorId: string): Promise<boolean>;
 
   protected generateConnectorId(userId: string, tenantId: string): string {
