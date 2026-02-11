@@ -8,7 +8,7 @@ import { EventType } from '../types/canonical';
 
 export class SchemaValidator {
   // Define schemas for known event types
-  private schemas: Partial<Record<EventType, z.ZodType<unknown>>> = {
+  private readonly schemas: Partial<Record<EventType, z.ZodType<unknown>>> = {
     [EventType.MESSAGE]: z.object({
       content: z.string().min(1, "Message content is required"),
       senderId: z.string().min(1, "Sender ID is required"),
