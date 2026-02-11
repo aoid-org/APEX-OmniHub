@@ -115,7 +115,7 @@ describe('PolicyEngine', () => {
 
       const ev = mkEv('1', EventType.COMMENT);
       // Manually break it
-      delete (ev.payload as any).text;
+      delete (ev.payload as Record<string, unknown>).text;
 
       const res = await pe.validateEvent(ev, appId);
       expect(res.valid).toBe(false);
