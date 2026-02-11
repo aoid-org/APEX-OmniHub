@@ -193,7 +193,11 @@ export class OmniConnect {
     }
 
     // Normalize to canonical events
-    const canonicalEvents = await connector.normalizeToCanonical(rawEvents);
+    const canonicalEvents = await connector.normalizeToCanonical(rawEvents, {
+      userId: this.config.userId,
+      tenantId: this.config.tenantId,
+      correlationId
+    });
 
     // Apply policy filtering
     const filteredEvents = await this.policyEngine.filter(

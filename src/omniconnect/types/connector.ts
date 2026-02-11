@@ -32,6 +32,12 @@ export interface RawEvent {
   metadata?: Record<string, unknown>;
 }
 
+export interface NormalizationContext {
+  userId: string;
+  tenantId: string;
+  correlationId: string;
+}
+
 /**
  * Universal Connector Interface
  * All provider integrations must implement this interface
@@ -78,7 +84,7 @@ export interface Connector {
    * Normalize raw provider events to canonical schema
    * This is the key translation step
    */
-  normalizeToCanonical(rawEvents: RawEvent[]): Promise<CanonicalEvent[]>;
+  normalizeToCanonical(rawEvents: RawEvent[], context: NormalizationContext): Promise<CanonicalEvent[]>;
 
   /**
    * Validate provider token is still active
