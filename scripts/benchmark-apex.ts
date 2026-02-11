@@ -39,11 +39,12 @@ async function main() {
   try {
     await contractZero.batchMintMembership([]);
     console.error("Zero Event: Failed (did not revert)");
-  } catch (error: any) {
-    if (error.message.includes("APEXMembershipNFT: empty recipients array")) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("APEXMembershipNFT: empty recipients array")) {
       console.log("Zero Event: Passed (reverted correctly)");
     } else {
-      console.error(`Zero Event: Failed (unexpected error: ${error.message})`);
+      console.error(`Zero Event: Failed (unexpected error: ${message})`);
     }
   }
 
@@ -59,11 +60,12 @@ async function main() {
   try {
     await contractBoundary.batchMintMembership(recipientsBoundary);
     console.error("Boundary Breach: Failed (did not revert)");
-  } catch (error: any) {
-    if (error.message.includes("APEXMembershipNFT: would exceed max supply")) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("APEXMembershipNFT: would exceed max supply")) {
         console.log("Boundary Breach: Passed (reverted correctly)");
     } else {
-        console.error(`Boundary Breach: Failed (unexpected error: ${error.message})`);
+        console.error(`Boundary Breach: Failed (unexpected error: ${message})`);
     }
   }
 }
