@@ -198,13 +198,15 @@ npm run build      # Production build
 
 ## Documentation
 
-| Document                                                                      | Description          |
-| ----------------------------------------------------------------------------- | -------------------- |
-| [TECHNICAL_ARCHITECTURE_SPEC](./TECHNICAL_ARCHITECTURE_SPEC_WITH_WORKFLOW.md) | System design        |
-| [LAUNCH_READINESS](./LAUNCH_READINESS.md)                                     | Deployment checklist |
-| [orchestrator/README](./orchestrator/README.md)                               | Temporal setup       |
-| [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                           | Human-in-the-loop    |
-| [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                   | Backend design       |
+Full documentation is available in the [`docs/`](./docs/) directory.
+
+| Document                                                                                 | Description          |
+| ---------------------------------------------------------------------------------------- | -------------------- |
+| [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md)  | System design        |
+| [Launch Readiness](./docs/project-status/LAUNCH_READINESS_v1.0.0.md)                     | Deployment checklist |
+| [orchestrator/README](./orchestrator/README.md)                                          | Temporal setup       |
+| [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                                      | Human-in-the-loop    |
+| [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                              | Backend design       |
 
 ---
 

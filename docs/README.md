@@ -10,10 +10,12 @@
 | ------------------------------------- | ------------------------------------------ |
 | [Platform Modules](#platform-modules) | Core Omni-\* module documentation          |
 | [Architecture](#architecture)         | System design and technical specifications |
+| [Project Status](#project-status)     | Current status and readiness reports       |
 | [Infrastructure](#infrastructure)     | Deployment, cloud, and DevOps              |
 | [Operations](#operations)             | Runbooks and operational procedures        |
 | [Security](#security)                 | Security controls and policies             |
 | [Compliance](#compliance)             | SOC2, GDPR, audit readiness                |
+| [Knowledge](#knowledge)               | Developer guides and manifestos            |
 | [Testing](#testing)                   | Test results and simulation                |
 | [Audits](#audits)                     | Audit reports and remediation              |
 
@@ -31,6 +33,8 @@ Core platform components with dedicated documentation:
 | **OmniPort**      | Ingress engine & API            | [OMNIPORT_API_REFERENCE.md](platform/OMNIPORT_API_REFERENCE.md)   |
 | **OmniDash**      | Executive dashboard             | [OMNIDASH.md](platform/OMNIDASH.md)                               |
 | **OmniLink**      | Integration bus                 | [OMNILINK_MANIFESTO_LITE.md](platform/OMNILINK_MANIFESTO_LITE.md) |
+| **OmniBoard**     | Onboarding engine               | [OMNIBOARD.md](platform/OMNIBOARD.md)                             |
+| **OmniLink PWA**  | Mobile PWA capabilities         | [OMNILINK_MOBILE_PWA.md](platform/OMNILINK_MOBILE_PWA.md)         |
 | **Connector Kit** | Integration adapters            | [CONNECTOR_KIT.md](platform/CONNECTOR_KIT.md)                     |
 
 ---
@@ -39,15 +43,25 @@ Core platform components with dedicated documentation:
 
 System design and technical specifications:
 
-| Document                                                                     | Description              |
-| ---------------------------------------------------------------------------- | ------------------------ |
-| [Technical Architecture](architecture/TECH_SPEC_ARCHITECTURE.md)             | Complete system design   |
-| [Architecture Convergence](architecture/ARCHITECTURAL_CONVERGENCE_REPORT.md) | Architecture decisions   |
-| [MAN Mode Workflows](architecture/MAN_MODE_WORKFLOW_DIAGRAMS.md)             | Human-in-the-loop flows  |
-| [OmniLink Architecture](architecture/OMNILINK_ARCHITECTURE_OUTPUT.md)        | Integration bus design   |
-| [Technical Enhancements](architecture/TECHNICAL_ENHANCEMENTS.md)             | Recent improvements      |
-| [Production Status](architecture/PRODUCTION_STATUS.md)                       | Current deployment state |
-| [Ecosystem Status](architecture/APEX_ECOSYSTEM_STATUS.md)                    | Platform overview        |
+| Document                                                                                 | Description                    |
+| ---------------------------------------------------------------------------------------- | ------------------------------ |
+| [Executive Architecture Summary](architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md)         | High-level technical specs     |
+| [General Tech Specs](architecture/GENERAL_TECH_SPECS.md)                                 | Platform specifications        |
+| [Detailed System Design](architecture/DETAILED_SYSTEM_DESIGN.md)                         | Complete system design         |
+| [OmniLink Portability & SRE](architecture/OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md)      | Integration bus strategy       |
+| [MAN Mode Workflows](architecture/MAN_MODE_WORKFLOW_DIAGRAMS.md)                         | Human-in-the-loop flows        |
+
+---
+
+## Project Status
+
+Current deployment state and ecosystem overview:
+
+| Document                                                                 | Description              |
+| ------------------------------------------------------------------------ | ------------------------ |
+| [Launch Readiness v1.0.0](project-status/LAUNCH_READINESS_v1.0.0.md)     | Release checklist        |
+| [Production Status](project-status/PRODUCTION_STATUS.md)                 | Current deployment state |
+| [Ecosystem Status](project-status/APEX_ECOSYSTEM_STATUS.md)              | Platform overview        |
 
 ---
 
@@ -91,6 +105,7 @@ Operational runbooks and procedures:
 | ----------------------------------------------------- | ------------------------- |
 | [Operations Runbook](ops/OPS_RUNBOOK.md)              | Master ops runbook (v2.0) |
 | [Ops Audit](ops/OPS_AUDIT.md)                         | Operations audit          |
+| [Incident Response](ops/INCIDENT_RESPONSE.md)         | Incident handling         |
 | [Adaptive Nightly Eval](ops/adaptive-nightly-eval.md) | Automated evaluation      |
 
 ### Recovery Guides
@@ -99,6 +114,7 @@ Operational runbooks and procedures:
 | -------------------------------------------------------- | ----------------------- |
 | [DR Runbook](guides/DR_RUNBOOK.md)                       | Disaster recovery       |
 | [Web3 Verification](guides/WEB3_VERIFICATION_RUNBOOK.md) | Blockchain verification |
+| [Native Push Setup](guides/NATIVE_PUSH_SETUP.md)         | Push notification setup |
 
 ---
 
@@ -123,11 +139,26 @@ Security controls, policies, and hardening:
 
 Regulatory compliance and audit readiness:
 
-| Document                                               | Description     |
-| ------------------------------------------------------ | --------------- |
-| [SOC2 Readiness](compliance/SOC2_READINESS.md)         | SOC2 compliance |
-| [GDPR Compliance](compliance/GDPR_COMPLIANCE.md)       | Data protection |
-| [Evidence Checklist](compliance/EVIDENCE_CHECKLIST.md) | Audit evidence  |
+| Document                                                                     | Description                 |
+| ---------------------------------------------------------------------------- | --------------------------- |
+| [SOC2 Readiness](compliance/SOC2_READINESS.md)                               | SOC2 compliance             |
+| [GDPR Compliance](compliance/GDPR_COMPLIANCE.md)                             | Data protection             |
+| [GDPR Workflows](compliance/GDPR_WORKFLOWS.md)                               | Data deletion workflows     |
+| [Evidence Checklist](compliance/EVIDENCE_CHECKLIST.md)                       | Audit evidence              |
+| [OmniLink Hybrid Certification](compliance/OMNILINK_HYBRID_CERTIFICATION.md) | Mobile/Hybrid certification |
+| [Privacy Policy](compliance/PRIVACY_POLICY.md)                               | Privacy policy template     |
+| [Terms of Service](compliance/TERMS_OF_SERVICE.md)                           | Terms of service template   |
+
+---
+
+## Knowledge
+
+Developer resources and engineering principles:
+
+| Document                                           | Description              |
+| -------------------------------------------------- | ------------------------ |
+| [OmniDev Manifesto](knowledge/OMNIDEV_MANIFESTO.md)| Engineering principles   |
+| [System Knowledge Base](knowledge/SYSTEM_KNOWLEDGE_BASE.md) | General knowledge |
 
 ---
 
@@ -157,15 +188,18 @@ Test results, simulation, and quality assurance:
 
 Audit reports, remediation, and historical records:
 
-| Document                                                         | Description         |
-| ---------------------------------------------------------------- | ------------------- |
-| [Platform Audit 2026-01-10](audits/PLATFORM_AUDIT_2026_01_10.md) | Full platform audit |
-| [Remediation Tracker](audits/REMEDIATION_TRACKER.md)             | Issue tracking      |
-| [Remediation Evidence](audits/REMEDIATION_EVIDENCE.md)           | Fix evidence        |
-| [Battery Test Report](audits/BATTERY_TEST_REPORT.md)             | Stress test results |
-| [Armageddon Test](audits/ARMAGEDDON_TEST_SUITE_REPORT.md)        | Extreme testing     |
-| [Web3 Integration](audits/WEB3_INTEGRATION_COMPLETE.md)          | Blockchain audit    |
-| [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md) | Voice security      |
+| Document                                                         | Description            |
+| ---------------------------------------------------------------- | ---------------------- |
+| [Platform Audit 2026-01-10](audits/PLATFORM_AUDIT_2026_01_10.md) | Full platform audit    |
+| [Architectural Convergence](audits/ARCHITECTURAL_CONVERGENCE_REPORT_2026_01.md) | Convergence report |
+| [Technical Enhancements](audits/TECHNICAL_ENHANCEMENTS_REPORT_2026_01.md) | Enhancements report |
+| [System Performance Optimization](audits/SYSTEM_PERFORMANCE_OPTIMIZATION_2026-01-30.md) | Performance audit |
+| [Remediation Tracker](audits/REMEDIATION_TRACKER.md)             | Issue tracking         |
+| [Remediation Evidence](audits/REMEDIATION_EVIDENCE.md)           | Fix evidence           |
+| [Battery Test Report](audits/BATTERY_TEST_REPORT.md)             | Stress test results    |
+| [Armageddon Test](audits/ARMAGEDDON_TEST_SUITE_REPORT.md)        | Extreme testing        |
+| [Web3 Integration](audits/WEB3_INTEGRATION_COMPLETE.md)          | Blockchain audit       |
+| [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md) | Voice security         |
 
 ---
 
@@ -183,10 +217,12 @@ docs/
 ├── README.md                 # This index
 ├── platform/                 # Core Omni-* modules
 ├── architecture/             # System design
+├── project-status/           # Status and readiness
 ├── infrastructure/           # DevOps & cloud
 ├── ops/                      # Operations
 ├── security/                 # Security controls
 ├── compliance/               # Regulatory
+├── knowledge/                # Developer guides
 ├── testing/                  # QA & testing
 ├── sim/                      # Chaos simulation
 ├── audits/                   # Audit reports
