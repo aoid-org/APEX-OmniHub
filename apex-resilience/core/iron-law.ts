@@ -9,6 +9,33 @@ import type {
 import { VerificationResultSchema } from './types';
 import { VERIFICATION_THRESHOLDS, ESCALATION_RULES } from '../config/thresholds';
 import { writeSecureEvidence } from './evidence-storage';
+import { readFile } from 'node:fs/promises';
+
+// Architectural Reference Pattern: Semaphore-based Batch Processor
+async function processWithConcurrency<T>(
+  items: string[],
+  limit: number,
+  fn: (item: string) => Promise<T>
+): Promise<T[]> {
+  const results: Promise<T>[] = [];
+  const executing = new Set<Promise<T>>();
+
+  for (const item of items) {
+    const p = fn(item).then((res) => {
+      executing.delete(p);
+      return res;
+    });
+
+    results.push(p);
+    executing.add(p);
+
+    if (executing.size >= limit) {
+      await Promise.race(executing);
+    }
+  }
+
+  return Promise.all(results);
+}
 
 /**
  * IRON LAW ENFORCEMENT ENGINE
@@ -245,17 +272,16 @@ export class IronLawVerifier {
 
   private async verifySecurity(task: AgentTask): Promise<SecurityEvidence> {
     // Check for shadow-prompt patterns in modified files
-    const fs = await import('node:fs');
     const detectedPatterns: string[] = [];
-    let shadowPromptAttempts = 0;
 
-    for (const filePath of task.modifiedFiles) {
-      shadowPromptAttempts += this.scanFileForShadowPrompts(
-        fs,
-        filePath,
-        detectedPatterns
-      );
-    }
+    // Use semaphore-based concurrency to prevent EMFILE on large tasks
+    const results = await processWithConcurrency(
+      task.modifiedFiles,
+      50, // Batch limit as per architectural decision
+      (filePath) => this.scanFileForShadowPrompts(filePath, detectedPatterns)
+    );
+
+    const shadowPromptAttempts = results.reduce((a, b) => a + b, 0);
 
     // Create security report with findings
     const reportPath = await this.createSecurityReport(
@@ -278,15 +304,14 @@ export class IronLawVerifier {
     };
   }
 
-  private scanFileForShadowPrompts(
-    fs: typeof import('node:fs'),
+  private async scanFileForShadowPrompts(
     filePath: string,
     detectedPatterns: string[]
-  ): number {
+  ): Promise<number> {
     let attempts = 0;
 
     try {
-      const content = fs.readFileSync(filePath, 'utf-8');
+      const content = await readFile(filePath, 'utf-8');
 
       for (const pattern of VERIFICATION_THRESHOLDS.SHADOW_PROMPT_PATTERNS) {
         if (pattern.test(content)) {

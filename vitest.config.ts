@@ -16,7 +16,8 @@ export default defineConfig({
       'tests/**/*.spec.tsx',
       'tests/**/*.test.ts',
       'tests/**/*.test.tsx',
-      'sim/**/*.test.ts'
+      'sim/**/*.test.ts',
+      'apex-resilience/tests/**/*.spec.ts'
     ],
     exclude: [
       '**/node_modules/**',
