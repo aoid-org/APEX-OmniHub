@@ -84,7 +84,6 @@ serve(async (req) => {
     if (skills.length === 0) {
       // Basic heuristic generation based on keywords
       const isTech = description.toLowerCase().includes('tech') || description.toLowerCase().includes('software');
-      const isService = description.toLowerCase().includes('service') || description.toLowerCase().includes('repair');
 
       skills = [
         {
