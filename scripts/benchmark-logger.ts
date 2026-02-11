@@ -1,5 +1,5 @@
 
-import { performance } from 'perf_hooks';
+import { performance } from 'node:perf_hooks';
 
 // Mock Context
 const ctx = {
@@ -13,7 +13,7 @@ const ctx = {
 const largePayload = {
   foo: 'bar',
   nested: {
-    array: Array(100).fill('test-data'),
+    array: new Array(100).fill('test-data'),
     data: 'some-random-string'.repeat(100),
   },
   meta: {
@@ -47,35 +47,31 @@ function logAsync(ctx: any, event: string, data?: Record<string, unknown>): void
 
 const ITERATIONS = 10000;
 
-async function runBenchmark() {
-  console.log('Starting Benchmark...');
+console.log('Starting Benchmark...');
 
-  // Measure Sync
-  const startSync = performance.now();
-  for (let i = 0; i < ITERATIONS; i++) {
-    logSync(ctx, 'TEST_EVENT', largePayload);
-  }
-  const endSync = performance.now();
-  const timeSync = endSync - startSync;
-  console.log(`Sync Logging (Baseline): ${timeSync.toFixed(2)}ms for ${ITERATIONS} ops`);
-  console.log(`Avg per op: ${(timeSync / ITERATIONS).toFixed(4)}ms`);
-
-  // Measure Async (Main Thread Blocking Time)
-  const startAsync = performance.now();
-  for (let i = 0; i < ITERATIONS; i++) {
-    logAsync(ctx, 'TEST_EVENT', largePayload);
-  }
-  const endAsync = performance.now();
-  const timeAsync = endAsync - startAsync;
-
-  console.log(`Async Logging (Main Thread): ${timeAsync.toFixed(2)}ms for ${ITERATIONS} ops`);
-  console.log(`Avg per op: ${(timeAsync / ITERATIONS).toFixed(4)}ms`);
-
-  // Wait for async tasks to clear (just to be clean)
-  await new Promise(resolve => setTimeout(resolve, 100));
-
-  const improvement = timeSync / timeAsync;
-  console.log(`\nSpeedup Factor (Main Thread Unblocking): ${improvement.toFixed(2)}x`);
+// Measure Sync
+const startSync = performance.now();
+for (let i = 0; i < ITERATIONS; i++) {
+  logSync(ctx, 'TEST_EVENT', largePayload);
 }
+const endSync = performance.now();
+const timeSync = endSync - startSync;
+console.log(`Sync Logging (Baseline): ${timeSync.toFixed(2)}ms for ${ITERATIONS} ops`);
+console.log(`Avg per op: ${(timeSync / ITERATIONS).toFixed(4)}ms`);
 
-runBenchmark();
+// Measure Async (Main Thread Blocking Time)
+const startAsync = performance.now();
+for (let i = 0; i < ITERATIONS; i++) {
+  logAsync(ctx, 'TEST_EVENT', largePayload);
+}
+const endAsync = performance.now();
+const timeAsync = endAsync - startAsync;
+
+console.log(`Async Logging (Main Thread): ${timeAsync.toFixed(2)}ms for ${ITERATIONS} ops`);
+console.log(`Avg per op: ${(timeAsync / ITERATIONS).toFixed(4)}ms`);
+
+// Wait for async tasks to clear (just to be clean)
+await new Promise(resolve => setTimeout(resolve, 100));
+
+const improvement = timeSync / timeAsync;
+console.log(`\nSpeedup Factor (Main Thread Unblocking): ${improvement.toFixed(2)}x`);
