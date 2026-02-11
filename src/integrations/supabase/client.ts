@@ -47,11 +47,14 @@ function createUnavailableClient() {
 
   const noopSubscription = { unsubscribe: () => {} };
 
+  // Return a safe "logged out" state for auth to prevent app crashes on startup
+  const resolveNull = async () => ({ data: { session: null, user: null }, error: null });
+
   return {
     auth: {
-      getSession: reject,
-      getUser: reject,
-      signOut: reject,
+      getSession: resolveNull,
+      getUser: resolveNull,
+      signOut: resolveNull,
       onAuthStateChange: () => ({ data: { subscription: noopSubscription } }),
     },
     functions: {
