@@ -12,6 +12,8 @@ import { SemanticTranslator } from '../translation/translator';
 import { EntitlementsService } from '../entitlements/entitlements-service';
 import { OmniLinkDelivery } from '../delivery/omnilink-delivery';
 
+const SUPPORTED_CONNECTORS = ['meta_business', 'linkedin'];
+
 export interface OmniConnectConfig {
   tenantId: string;
   userId: string;
@@ -57,14 +59,29 @@ export class OmniConnect {
   /**
    * Get available connectors for this tenant/user
    */
-  getAvailableConnectors(): string[] {
+  async getAvailableConnectors(): Promise<string[]> {
     // In demo mode, return mock connectors
     if (this.config.enableDemoMode) {
       return ['meta_business_demo', 'linkedin_demo'];
     }
 
-    // TODO: Filter based on tenant entitlements
-    return ['meta_business', 'linkedin'];
+    // Filter based on tenant entitlements
+    // We check the "universe" of supported connectors against the entitlement service
+    const entitlementChecks = await Promise.all(
+      SUPPORTED_CONNECTORS.map(async (connectorId) => {
+        // Namespace the feature check with "connector:"
+        const isEntitled = await this.entitlements.checkEntitlement(
+          this.config.tenantId,
+          this.config.userId,
+          this.config.appId,
+          `connector:${connectorId}`
+        );
+        return isEntitled ? connectorId : null;
+      })
+    );
+
+    // Return only the enabled connectors
+    return entitlementChecks.filter((id): id is string => id !== null);
   }
 
   /**
@@ -257,7 +274,7 @@ export class OmniConnect {
     connected: boolean;
     lastSync?: Date;
   }>> {
-    const connectors = this.getAvailableConnectors();
+    const connectors = await this.getAvailableConnectors();
 
     // Optimize with Promise.all for concurrent provider status checks
     return Promise.all(connectors.map(async (provider) => {

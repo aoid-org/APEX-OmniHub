@@ -35,7 +35,7 @@ describe('MetaBusinessConnector', () => {
       expires_in: 5184000 // 60 days
     };
 
-    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockResponse)
     } as Response);
