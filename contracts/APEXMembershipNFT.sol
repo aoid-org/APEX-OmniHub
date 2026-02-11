@@ -93,21 +93,29 @@ contract APEXMembershipNFT is
         require(length > 0, "APEXMembershipNFT: empty recipients array");
         require(length <= 100, "APEXMembershipNFT: batch size exceeds limit");
 
+        uint256 nextId = _nextTokenId;
+
         if (maxSupply > 0) {
-            require(_nextTokenId + length <= maxSupply, "APEXMembershipNFT: would exceed max supply");
+            require(nextId + length <= maxSupply, "APEXMembershipNFT: would exceed max supply");
         }
 
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < length; ) {
             address to = recipients[i];
             require(to != address(0), "APEXMembershipNFT: mint to zero address");
 
             if (!hasMinted[to]) {
-                uint256 tokenId = _nextTokenId++;
                 hasMinted[to] = true;
-                _safeMint(to, tokenId);
-                emit MembershipMinted(to, tokenId);
+                _safeMint(to, nextId);
+                emit MembershipMinted(to, nextId);
+                unchecked {
+                    nextId++;
+                }
+            }
+            unchecked {
+                i++;
             }
         }
+        _nextTokenId = nextId;
     }
 
     /**
