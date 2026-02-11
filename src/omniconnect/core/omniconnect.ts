@@ -133,15 +133,26 @@ export class OmniConnect {
     // Get all active connectors for this user
     const activeConnectors = await this.tokenStorage.listActive(this.config.userId);
 
-    for (const connector of activeConnectors) {
-      try {
-        const result = await this.syncConnector(connector.connectorId, correlationId);
-        totalProcessed += result.eventsProcessed;
-        totalDelivered += result.eventsDelivered;
-      } catch (error) {
-        console.error(`[${correlationId}] Failed to sync connector ${connector.connectorId}:`, error);
-        // Continue with other connectors
-      }
+    // Enterprise-grade concurrency management: process in batches to prevent resource exhaustion
+    const CONCURRENCY_LIMIT = 5;
+    for (let i = 0; i < activeConnectors.length; i += CONCURRENCY_LIMIT) {
+      const batch = activeConnectors.slice(i, i + CONCURRENCY_LIMIT);
+
+      // Use allSettled to ensure one connector failure doesn't block others
+      const results = await Promise.allSettled(
+        batch.map(connector => this.syncConnector(connector.connectorId, correlationId))
+      );
+
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          totalProcessed += result.value.eventsProcessed;
+          totalDelivered += result.value.eventsDelivered;
+        } else {
+          const connectorId = batch[index].connectorId;
+          console.error(`[${correlationId}] Failed to sync connector ${connectorId}:`, result.reason);
+          // Isolated error handling: other connectors in the batch/next batches continue
+        }
+      });
     }
 
     console.log(`[${correlationId}] Sync completed: ${totalProcessed} processed, ${totalDelivered} delivered`);
@@ -246,9 +257,9 @@ export class OmniConnect {
     lastSync?: Date;
   }>> {
     const connectors = this.getAvailableConnectors();
-    const status = [];
 
-    for (const provider of connectors) {
+    // Optimize with Promise.all for concurrent provider status checks
+    return Promise.all(connectors.map(async (provider) => {
       const sessions = await this.tokenStorage.listByProvider(
         this.config.userId,
         provider
@@ -260,20 +271,18 @@ export class OmniConnect {
           current.createdAt > latest.createdAt ? current : latest
         );
 
-        status.push({
+        return {
           provider,
           connected: true,
           lastSync: latestSession.lastSyncAt
-        });
+        };
       } else {
-        status.push({
+        return {
           provider,
           connected: false
-        });
+        };
       }
-    }
-
-    return status;
+    }));
   }
 
   private generateState(correlationId: string): string {
