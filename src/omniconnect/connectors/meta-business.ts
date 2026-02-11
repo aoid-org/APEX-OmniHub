@@ -86,10 +86,28 @@ export class MetaBusinessConnector extends BaseConnector {
     console.log(`Disconnecting Meta Business connector: ${connectorId}`);
   }
 
-  async refreshToken(_connectorId: string): Promise<SessionToken> {
-    // TODO: Implement token refresh using refresh_token
-    // For now, throw error to indicate refresh needed
-    throw new Error('Token refresh not implemented for Meta Business API');
+  async refreshToken(session: SessionToken): Promise<SessionToken> {
+    if (!this.config.clientSecret) {
+      throw new Error('Client secret is required for token refresh');
+    }
+
+    const params = new URLSearchParams({
+      grant_type: 'fb_exchange_token',
+      client_id: this.config.clientId,
+      client_secret: this.config.clientSecret,
+      fb_exchange_token: session.token
+    });
+
+    const response = await this.makeRequest(`/oauth/access_token?${params.toString()}`) as MetaTokenResponse;
+
+    return this.createSessionToken(
+      session.connectorId,
+      session.userId,
+      session.tenantId,
+      response.access_token,
+      session.scopes,
+      response.expires_in
+    );
   }
 
   async fetchDelta(_connectorId: string, _since: Date): Promise<RawEvent[]> {
@@ -124,15 +142,21 @@ export class MetaBusinessConnector extends BaseConnector {
     }
   }
 
-  async normalizeToCanonical(rawEvents: RawEvent[], context: NormalizationContext): Promise<CanonicalEvent[]> {
+  async normalizeToCanonical(
+    rawEvents: RawEvent[],
+    context?: NormalizationContext
+  ): Promise<CanonicalEvent[]> {
+    const correlationId = context?.correlationId || generateCorrelationId();
+
     return rawEvents.map(event => {
       const post = event.data as MetaPost;
 
       return {
         eventId: `meta_${event.id}`,
-        correlationId: context.correlationId,
-        tenantId: context.tenantId,
-        userId: context.userId,
+        correlationId,
+        // Explicitly mapping identity from the Sovereign Context
+        tenantId: context?.tenantId || 'unknown_tenant',
+        userId: context?.userId || 'unknown_user',
         source: 'meta_business_api',
         provider: 'meta_business',
         externalId: event.id,

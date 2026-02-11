@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { waitWithBackoff } from '@/lib/backoff';
 import { IngressBufferEntry } from '../types/dlq';
 import { TranslatedEvent } from '../translation/translator';
 import { requestOmniLink } from '../../integrations/omnilink';
@@ -71,16 +72,33 @@ export class OmniLinkDelivery {
     event: TranslatedEvent,
     correlationId: string
   ): Promise<void> {
-    // TODO: Implement retry logic with exponential backoff
-    await requestOmniLink({
-      path: '/events',
-      method: 'POST',
-      body: event,
-      headers: {
-        'X-Correlation-ID': correlationId,
-        'X-App-ID': event.appId
+    let lastError: Error | undefined;
+    // Ensure at least one attempt is made
+    const maxAttempts = Math.max(1, this.maxRetries);
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await requestOmniLink({
+          path: '/events',
+          method: 'POST',
+          body: event,
+          headers: {
+            'X-Correlation-ID': correlationId,
+            'X-App-ID': event.appId
+          }
+        });
+        return;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.warn(`[${correlationId}] Delivery attempt ${attempt} failed: ${lastError.message}`);
+
+        if (attempt < maxAttempts) {
+          await waitWithBackoff(attempt, { baseMs: this.baseDelay });
+        }
       }
-    });
+    }
+
+    throw lastError || new Error('Delivery failed with unknown error');
   }
 
   async getDeliveryStatus(_eventId: string): Promise<DeliveryResult | null> {

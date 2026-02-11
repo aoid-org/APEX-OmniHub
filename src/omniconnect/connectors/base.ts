@@ -24,9 +24,12 @@ export abstract class BaseConnector implements Connector {
     state: string
   ): Promise<SessionToken>;
   abstract disconnect(connectorId: string): Promise<void>;
-  abstract refreshToken(connectorId: string): Promise<SessionToken>;
+  abstract refreshToken(session: SessionToken): Promise<SessionToken>;
   abstract fetchDelta(connectorId: string, since: Date): Promise<RawEvent[]>;
-  abstract normalizeToCanonical(rawEvents: RawEvent[], context: NormalizationContext): Promise<CanonicalEvent[]>;
+  abstract normalizeToCanonical(
+    rawEvents: RawEvent[],
+    context?: NormalizationContext
+  ): Promise<CanonicalEvent[]>;
   abstract validateToken(connectorId: string): Promise<boolean>;
 
   protected generateConnectorId(userId: string, tenantId: string): string {
@@ -40,7 +43,8 @@ export abstract class BaseConnector implements Connector {
     tenantId: string,
     token: string,
     scopes: string[],
-    expiresIn?: number
+    expiresIn?: number,
+    refreshToken?: string
   ): SessionToken {
     const expiresAt = expiresIn
       ? new Date(Date.now() + expiresIn * 1000)
@@ -48,6 +52,7 @@ export abstract class BaseConnector implements Connector {
 
     return {
       token,
+      refreshToken,
       expiresAt,
       connectorId,
       userId,

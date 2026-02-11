@@ -13,7 +13,7 @@ import { SchemaValidator } from './schema-validator';
  */
 export class PolicyEngine {
   private profiles = new Map<string, AppFilterProfile>();
-  private schemaValidator = new SchemaValidator();
+  private readonly schemaValidator = new SchemaValidator();
 
   async filter(
     events: CanonicalEvent[],

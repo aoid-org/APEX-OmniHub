@@ -60,29 +60,27 @@ export class OmniConnect {
    * Retrieves the list of connectors available to the current tenant based on entitlements.
    */
   async getAvailableConnectors(): Promise<string[]> {
-    const { tenantId, userId, appId, enableDemoMode } = this.config;
-
-    // 1. Handle Demo Mode (Static Override)
-    if (enableDemoMode) {
+    // In demo mode, return mock connectors
+    if (this.config.enableDemoMode) {
       return ['meta_business_demo', 'linkedin_demo'];
     }
 
-    // 2. Filter based on tenant entitlements
+    // Filter based on tenant entitlements
     // We check the "universe" of supported connectors against the entitlement service
     const entitlementChecks = await Promise.all(
       SUPPORTED_CONNECTORS.map(async (connectorId) => {
-        // Use 'connector:' prefix to namespace the feature check
+        // Namespace the feature check with "connector:"
         const isEntitled = await this.entitlements.checkEntitlement(
-          tenantId,
-          userId,
-          appId,
+          this.config.tenantId,
+          this.config.userId,
+          this.config.appId,
           `connector:${connectorId}`
         );
         return isEntitled ? connectorId : null;
       })
     );
 
-    // 3. Return only the enabled connectors (filtering out nulls)
+    // Return only the enabled connectors
     return entitlementChecks.filter((id): id is string => id !== null);
   }
 
@@ -200,7 +198,8 @@ export class OmniConnect {
     const isValid = await connector.validateToken(connectorId);
     if (!isValid) {
       // Try to refresh token
-      await connector.refreshToken(connectorId);
+      const newSession = await connector.refreshToken(session);
+      await this.tokenStorage.store(newSession);
     }
 
     // Fetch new data since last sync
