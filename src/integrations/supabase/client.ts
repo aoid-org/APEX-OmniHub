@@ -12,9 +12,10 @@ const SUPABASE_KEY =
 // Check for test environment - robust detection for CI/Test runners
 // 1. Vitest sets import.meta.env.MODE to 'test'
 // 2. Node test runners set process.env.NODE_ENV to 'test'
-// 3. CI pipelines typically set process.env.CI to 'true'
+// 3. CI pipelines detected via VITE_IS_CI injected define
 const isTestEnv =
   import.meta.env.MODE === 'test' ||
+  import.meta.env.VITE_IS_CI === 'true' ||
   (typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || (process.env.CI === 'true' && process.env.NODE_ENV !== 'production')));
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
