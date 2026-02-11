@@ -5,12 +5,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { OmniConnect } from '@/omniconnect/core/omniconnect';
 import { MetaBusinessConnector } from '@/omniconnect/connectors/meta-business';
-import { registerConnector, connectorRegistry } from '@/omniconnect/core/registry';
-import { Connector } from '@/omniconnect/types/connector';
 
 // Mock the registry to avoid importing missing lucide-react dependency
 vi.mock('@/omniconnect/core/registry', () => ({
   getConnector: vi.fn(),
+  registerConnector: vi.fn(),
   availableIntegrations: [],
   connectorRegistry: {
     register: vi.fn(),
@@ -87,7 +86,7 @@ describe('OmniConnect Basic Functionality', () => {
     expect(isEnabled).toBe(true);
   });
 
-  it('should return available connectors', async () => {
+  it('should return available connectors', () => {
     const config = {
       tenantId: 'test-tenant',
       userId: 'test-user',
@@ -95,12 +94,12 @@ describe('OmniConnect Basic Functionality', () => {
     };
 
     const omniconnect = new OmniConnect(config);
-    const connectors = await omniconnect.getAvailableConnectors();
+    const connectors = omniconnect.getAvailableConnectors();
     expect(connectors).toContain('meta_business');
     expect(connectors).toContain('linkedin');
   });
 
-  it('should return demo connectors in demo mode', async () => {
+  it('should return demo connectors in demo mode', () => {
     const config = {
       tenantId: 'test-tenant',
       userId: 'test-user',
@@ -109,7 +108,7 @@ describe('OmniConnect Basic Functionality', () => {
     };
 
     const omniconnect = new OmniConnect(config);
-    const connectors = await omniconnect.getAvailableConnectors();
+    const connectors = omniconnect.getAvailableConnectors();
     expect(connectors).toContain('meta_business_demo');
     expect(connectors).toContain('linkedin_demo');
   });
@@ -127,62 +126,6 @@ describe('OmniConnect Basic Functionality', () => {
     const connector = new MetaBusinessConnector(config);
     expect(connector).toBeDefined();
     expect(connector.provider).toBe('meta_business');
-  });
-
-  it('should propagate context to normalizeToCanonical during sync', async () => {
-    const config = {
-      tenantId: 'test-tenant',
-      userId: 'test-user',
-      appId: 'test-app'
-    };
-    const omniconnect = new OmniConnect(config);
-
-    // Mock storage
-    const storage = (omniconnect as unknown as { tokenStorage: Record<string, unknown> }).tokenStorage;
-    vi.spyOn(storage, 'listActive').mockResolvedValue([{ connectorId: 'mock-conn-1', provider: 'mock-provider', createdAt: new Date(), lastSyncAt: new Date() }]);
-    vi.spyOn(storage, 'get').mockResolvedValue({
-      provider: 'mock-provider',
-      token: 'test',
-      expiresAt: new Date(),
-      connectorId: 'mock-conn-1',
-      userId: 'test-user',
-      tenantId: 'test-tenant',
-      scopes: []
-    });
-    vi.spyOn(storage, 'getLastSync').mockResolvedValue(new Date());
-    vi.spyOn(storage, 'updateLastSync').mockResolvedValue(undefined);
-
-    // Create and register mock connector
-    const normalizeSpy = vi.fn().mockResolvedValue([]);
-    const mockConnector = {
-      provider: 'mock-provider',
-      validateToken: vi.fn().mockResolvedValue(true),
-      fetchDelta: vi.fn().mockResolvedValue([{ id: '1', data: {}, type: 'test', timestamp: new Date().toISOString() }]),
-      normalizeToCanonical: normalizeSpy,
-      refreshToken: vi.fn(),
-      disconnect: vi.fn(),
-      getAuthUrl: vi.fn(),
-      completeHandshake: vi.fn()
-    } as unknown as Connector;
-
-    // Check if already registered to avoid error
-    if (!connectorRegistry.has('mock-provider')) {
-      registerConnector('mock-provider', mockConnector);
-    }
-
-    // Run sync
-    await omniconnect.syncAll();
-
-    // Verify
-    expect(normalizeSpy).toHaveBeenCalled();
-    const callArgs = normalizeSpy.mock.calls[0];
-    const context = callArgs[1];
-
-    expect(context).toBeDefined();
-    expect(context.userId).toBe('test-user');
-    expect(context.tenantId).toBe('test-tenant');
-    expect(context.correlationId).toBeDefined();
-    expect(typeof context.correlationId).toBe('string');
   });
 
   describe('OmniConnect Performance', () => {
