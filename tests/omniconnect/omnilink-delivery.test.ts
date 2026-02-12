@@ -111,19 +111,14 @@ describe('OmniLinkDelivery', () => {
   });
 
   describe('retryFailedDeliveries', () => {
-    it('should retry pending events and mark as processed on success', async () => {
-      const mockDLQEntry = {
-        id: 'dlq-1',
-        raw_input: JSON.stringify(mockEvent),
-        status: 'pending',
-        retry_count: 0
-      };
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockSupabaseDLQ = (failedEvents: any[], error: any = null) => {
       const mockUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
+      const mockEq = vi.fn().mockReturnThis();
       const mockSelectChain = {
-        eq: vi.fn().mockReturnThis(),
+        eq: mockEq,
         order: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue({ data: [mockDLQEntry], error: null })
+        limit: vi.fn().mockResolvedValue({ data: failedEvents, error })
       };
 
       const mockFrom = vi.fn().mockImplementation((table) => {
@@ -139,6 +134,19 @@ describe('OmniLinkDelivery', () => {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase.from as any).mockImplementation(mockFrom);
+
+      return { mockUpdate, mockEq };
+    };
+
+    it('should retry pending events and mark as processed on success', async () => {
+      const mockDLQEntry = {
+        id: 'dlq-1',
+        raw_input: JSON.stringify(mockEvent),
+        status: 'pending',
+        retry_count: 0
+      };
+
+      const { mockUpdate } = mockSupabaseDLQ([mockDLQEntry]);
 
       // Mock successful delivery
       vi.mocked(requestOmniLink).mockResolvedValue({ success: true });
@@ -161,34 +169,13 @@ describe('OmniLinkDelivery', () => {
         retry_count: 1
       };
 
-      const mockUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
-      const mockSelectChain = {
-        eq: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue({ data: [mockDLQEntry], error: null })
-      };
-
-      const mockFrom = vi.fn().mockImplementation((table) => {
-        if (table === 'ingress_buffer') {
-          return {
-            select: vi.fn().mockReturnValue(mockSelectChain),
-            update: mockUpdate
-          };
-        }
-        return {};
-      });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.from as any).mockImplementation(mockFrom);
+      const { mockUpdate } = mockSupabaseDLQ([mockDLQEntry]);
 
       // Mock failed delivery
       vi.mocked(requestOmniLink).mockRejectedValue(new Error('Retry failed'));
 
       const count = await delivery.retryFailedDeliveries('test-app');
 
-      // Count is 0 because 0 were *successfully* retried (based on implementation returning success count? Or total attempted?)
-      // Implementation returns `retriedCount` which is incremented only inside `try` block AFTER delivery.
-      // So if delivery fails, catch block runs, retriedCount is NOT incremented.
       expect(count).toBe(0);
 
       // Verify update retry count
@@ -206,19 +193,7 @@ describe('OmniLinkDelivery', () => {
         retry_count: 0
       };
 
-      const mockUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
-      const mockSelectChain = {
-        eq: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue({ data: [mockDLQEntry], error: null })
-      };
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.from as any).mockImplementation(() => ({
-        select: vi.fn().mockReturnValue(mockSelectChain),
-        update: mockUpdate
-      }));
-
+      mockSupabaseDLQ([mockDLQEntry]);
       vi.mocked(requestOmniLink).mockResolvedValue({ success: true });
 
       const count = await delivery.retryFailedDeliveries('test-app');
@@ -237,20 +212,7 @@ describe('OmniLinkDelivery', () => {
         retry_count: 0
       };
 
-      const mockUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
-      const mockEq = vi.fn().mockReturnThis();
-      const mockSelectChain = {
-        eq: mockEq,
-        order: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue({ data: [mockDLQEntry], error: null })
-      };
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.from as any).mockImplementation(() => ({
-        select: vi.fn().mockReturnValue(mockSelectChain),
-        update: mockUpdate
-      }));
-
+      const { mockEq } = mockSupabaseDLQ([mockDLQEntry]);
       vi.mocked(requestOmniLink).mockResolvedValue({ success: true });
 
       const count = await delivery.retryFailedDeliveries('test-app');
