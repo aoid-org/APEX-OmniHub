@@ -107,8 +107,65 @@ export class OmniLinkDelivery {
   }
 
   async retryFailedDeliveries(appId: string): Promise<number> {
-    // TODO: Implement retry logic for failed deliveries
-    console.log(`Retrying failed deliveries for app ${appId}`);
-    return 0;
+    const correlationId = `retry-${Date.now()}`;
+    console.log(`[${correlationId}] Retrying failed deliveries for app ${appId}`);
+
+    // Query failed events from ingress_buffer
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: failedEvents, error } = await (supabase as any)
+      .from('ingress_buffer')
+      .select('*')
+      .eq('source_type', 'omnilink_delivery_failure')
+      .eq('status', 'pending')
+      .eq('raw_input->>appId', appId)
+      .order('created_at', { ascending: true })
+      .limit(100); // Batch size
+
+    if (error) {
+      console.error(`[${correlationId}] Failed to fetch from DLQ:`, error);
+      throw error;
+    }
+
+    if (!failedEvents?.length) return 0;
+
+    let retriedCount = 0;
+
+    for (const entry of failedEvents) {
+      try {
+        const rawInput = entry.raw_input;
+        const event: TranslatedEvent = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
+
+        // Retry with original deliverEvent logic
+        await this.deliverEvent(event, correlationId);
+
+        // Mark as processed in DLQ
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+          .from('ingress_buffer')
+          .update({
+            status: 'processed',
+            processed_at: new Date().toISOString()
+          })
+          .eq('id', entry.id);
+
+        retriedCount++;
+      } catch (error) {
+        console.warn(`[${correlationId}] Retry failed for event ${entry.id}:`, error);
+
+        // Update retry count and last error
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+          .from('ingress_buffer')
+          .update({
+            retry_count: (entry.retry_count || 0) + 1,
+            error_reason: error instanceof Error ? error.message : String(error),
+            last_retry_at: new Date().toISOString()
+          })
+          .eq('id', entry.id);
+      }
+    }
+
+    console.log(`[${correlationId}] Successfully retried ${retriedCount} events`);
+    return retriedCount;
   }
 }
