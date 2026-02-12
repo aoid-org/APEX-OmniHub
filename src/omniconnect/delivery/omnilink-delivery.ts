@@ -19,7 +19,6 @@ export interface DeliveryResult {
 
 /**
  * Delivery service for OmniLink integration
- * TODO: Implement actual retry logic and dead-letter queue
  */
 export class OmniLinkDelivery {
   private maxRetries = 3;
@@ -40,27 +39,7 @@ export class OmniLinkDelivery {
         successCount++;
       } catch (error) {
         console.error(`[${correlationId}] Failed to deliver event ${event.eventId}:`, error);
-
-        // Add to dead-letter queue
-        const entry: IngressBufferEntry = {
-          correlation_id: correlationId,
-          raw_input: JSON.stringify(event),
-          error_reason: error instanceof Error ? error.message : String(error),
-          status: 'pending',
-          risk_score: (event.metadata?.risk_lane as string) === 'RED' ? 100 : 0,
-          source_type: 'omnilink_delivery_failure',
-          user_id: event.userId,
-        };
-
-        // cast supabase to any because ingress_buffer table is not in generated types yet
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: dlqError } = await (supabase as any).from('ingress_buffer').insert(entry);
-
-        if (dlqError) {
-          console.error(`[${correlationId}] Failed to write to DLQ for event ${event.eventId}:`, dlqError);
-        } else {
-          console.log(`[${correlationId}] Event ${event.eventId} written to DLQ`);
-        }
+        await this.addToDLQ(event, correlationId, error);
       }
     }
 
@@ -73,7 +52,6 @@ export class OmniLinkDelivery {
     correlationId: string
   ): Promise<void> {
     let lastError: Error | undefined;
-    // Ensure at least one attempt is made
     const maxAttempts = Math.max(1, this.maxRetries);
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -102,7 +80,6 @@ export class OmniLinkDelivery {
   }
 
   async getDeliveryStatus(_eventId: string): Promise<DeliveryResult | null> {
-    // TODO: Implement delivery status tracking
     return null;
   }
 
@@ -110,21 +87,7 @@ export class OmniLinkDelivery {
     const correlationId = `retry-${Date.now()}`;
     console.log(`[${correlationId}] Retrying failed deliveries for app ${appId}`);
 
-    // Query failed events from ingress_buffer
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: failedEvents, error } = await (supabase as any)
-      .from('ingress_buffer')
-      .select('*')
-      .eq('source_type', 'omnilink_delivery_failure')
-      .eq('status', 'pending')
-      .eq('raw_input->>appId', appId)
-      .order('created_at', { ascending: true })
-      .limit(100); // Batch size
-
-    if (error) {
-      console.error(`[${correlationId}] Failed to fetch from DLQ:`, error);
-      throw error;
-    }
+    const failedEvents = await this.fetchPendingDLQEvents(appId);
 
     if (!failedEvents?.length) return 0;
 
@@ -135,37 +98,80 @@ export class OmniLinkDelivery {
         const rawInput = entry.raw_input;
         const event: TranslatedEvent = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
 
-        // Retry with original deliverEvent logic
         await this.deliverEvent(event, correlationId);
-
-        // Mark as processed in DLQ
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any)
-          .from('ingress_buffer')
-          .update({
-            status: 'processed',
-            processed_at: new Date().toISOString()
-          })
-          .eq('id', entry.id);
+        await this.markDLQEntryProcessed(entry.id);
 
         retriedCount++;
       } catch (error) {
         console.warn(`[${correlationId}] Retry failed for event ${entry.id}:`, error);
-
-        // Update retry count and last error
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any)
-          .from('ingress_buffer')
-          .update({
-            retry_count: (entry.retry_count || 0) + 1,
-            error_reason: error instanceof Error ? error.message : String(error),
-            last_retry_at: new Date().toISOString()
-          })
-          .eq('id', entry.id);
+        await this.updateDLQRetryCount(entry.id, entry.retry_count || 0, error);
       }
     }
 
     console.log(`[${correlationId}] Successfully retried ${retriedCount} events`);
     return retriedCount;
+  }
+
+  private async addToDLQ(event: TranslatedEvent, correlationId: string, error: unknown): Promise<void> {
+    const entry: IngressBufferEntry = {
+      correlation_id: correlationId,
+      raw_input: JSON.stringify(event),
+      error_reason: error instanceof Error ? error.message : String(error),
+      status: 'pending',
+      risk_score: (event.metadata?.risk_lane as string) === 'RED' ? 100 : 0,
+      source_type: 'omnilink_delivery_failure',
+      user_id: event.userId,
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: dlqError } = await (supabase as any).from('ingress_buffer').insert(entry);
+
+    if (dlqError) {
+      console.error(`[${correlationId}] Failed to write to DLQ for event ${event.eventId}:`, dlqError);
+    } else {
+      console.log(`[${correlationId}] Event ${event.eventId} written to DLQ`);
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async fetchPendingDLQEvents(appId: string): Promise<any[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: failedEvents, error } = await (supabase as any)
+      .from('ingress_buffer')
+      .select('*')
+      .eq('source_type', 'omnilink_delivery_failure')
+      .eq('status', 'pending')
+      .eq('raw_input->>appId', appId)
+      .order('created_at', { ascending: true })
+      .limit(100);
+
+    if (error) {
+      console.error('Failed to fetch from DLQ:', error);
+      throw error;
+    }
+    return failedEvents || [];
+  }
+
+  private async markDLQEntryProcessed(id: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from('ingress_buffer')
+      .update({
+        status: 'processed',
+        processed_at: new Date().toISOString()
+      })
+      .eq('id', id);
+  }
+
+  private async updateDLQRetryCount(id: string, currentRetryCount: number, error: unknown): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from('ingress_buffer')
+      .update({
+        retry_count: currentRetryCount + 1,
+        error_reason: error instanceof Error ? error.message : String(error),
+        last_retry_at: new Date().toISOString()
+      })
+      .eq('id', id);
   }
 }
