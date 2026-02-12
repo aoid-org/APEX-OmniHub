@@ -29,19 +29,16 @@ export class OmniLinkDelivery {
     appId: string,
     correlationId: string
   ): Promise<number> {
-    console.log(`[${correlationId}] Delivering ${events.length} events to OmniLink for app ${appId}`);
-
-    const successCount = await this.processEvents(
+    return this.executeBatchDelivery(
       events,
+      correlationId,
+      `Delivering ${events.length} events to OmniLink for app ${appId}`,
       async (event) => await this.deliverEvent(event, correlationId),
       async (event, error) => {
         console.error(`[${correlationId}] Failed to deliver event ${event.eventId}:`, error);
         await this.addToDLQ(event, correlationId, error);
       }
     );
-
-    console.log(`[${correlationId}] Delivered ${successCount}/${events.length} events`);
-    return successCount;
   }
 
   private async deliverEvent(
@@ -82,14 +79,20 @@ export class OmniLinkDelivery {
 
   async retryFailedDeliveries(appId: string): Promise<number> {
     const correlationId = `retry-${Date.now()}`;
-    console.log(`[${correlationId}] Retrying failed deliveries for app ${appId}`);
 
+    // Fetch failed events
     const failedEvents = await this.fetchPendingDLQEvents(appId);
 
-    if (!failedEvents?.length) return 0;
+    if (!failedEvents?.length) {
+      console.log(`[${correlationId}] Retrying failed deliveries for app ${appId}`);
+      return 0;
+    }
 
-    const retriedCount = await this.processEvents(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return this.executeBatchDelivery<any>(
       failedEvents,
+      correlationId,
+      `Retrying failed deliveries for app ${appId}`,
       async (entry) => {
         const rawInput = entry.raw_input;
         const event: TranslatedEvent = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
@@ -101,9 +104,25 @@ export class OmniLinkDelivery {
         await this.updateDLQRetryCount(entry.id, entry.retry_count || 0, error);
       }
     );
+  }
 
-    console.log(`[${correlationId}] Successfully retried ${retriedCount} events`);
-    return retriedCount;
+  private async executeBatchDelivery<T>(
+    items: T[],
+    correlationId: string,
+    startLogMessage: string,
+    processor: (item: T) => Promise<void>,
+    errorHandler: (item: T, error: unknown) => Promise<void>
+  ): Promise<number> {
+    console.log(`[${correlationId}] ${startLogMessage}`);
+
+    const successCount = await this.processEvents(
+      items,
+      processor,
+      errorHandler
+    );
+
+    console.log(`[${correlationId}] Processed ${successCount}/${items.length} events successfully`);
+    return successCount;
   }
 
   private async processEvents<T>(
