@@ -132,5 +132,7 @@ export default defineConfig(({ mode }) => ({
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '0.0.0'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    // Expose CI flag to client-side code for robust test detection
+    'import.meta.env.VITE_IS_CI': JSON.stringify(process.env.CI || 'false'),
   },
 }));

@@ -5,8 +5,21 @@
 import { describe, it, expect, vi } from 'vitest';
 import { OmniConnect } from '@/omniconnect/core/omniconnect';
 import { MetaBusinessConnector } from '@/omniconnect/connectors/meta-business';
-import { registerConnector, connectorRegistry } from '@/omniconnect/core/registry';
+import { getConnector, registerConnector, connectorRegistry } from '@/omniconnect/core/registry';
 import { Connector } from '@/omniconnect/types/connector';
+
+// Mock the registry to avoid importing missing lucide-react dependency
+vi.mock('@/omniconnect/core/registry', () => ({
+  getConnector: vi.fn(),
+  registerConnector: vi.fn(),
+  availableIntegrations: [],
+  connectorRegistry: {
+    register: vi.fn(),
+    get: vi.fn(),
+    list: vi.fn(),
+    has: vi.fn()
+  }
+}));
 
 // Mock the storage and other services using function constructors
 // Note: Vitest requires function (not arrow) syntax for constructors to work with `new`
@@ -158,6 +171,9 @@ describe('OmniConnect Basic Functionality', () => {
       registerConnector('mock-provider', mockConnector);
     }
 
+    // Mock getConnector to return our mock connector
+    vi.mocked(getConnector).mockReturnValue(mockConnector);
+
     // Run sync
     await omniconnect.syncAll();
 
@@ -212,6 +228,54 @@ describe('OmniConnect Basic Functionality', () => {
 
       // Since it's concurrent, duration should be close to 100ms, definitely less than 500ms
       expect(duration).toBeLessThan(450);
+    });
+  });
+
+  describe('MetaBusinessConnector Normalization', () => {
+    it('should use context values in normalizeToCanonical', async () => {
+      const config = {
+        provider: 'meta_business',
+        clientId: 'test-client-id',
+        clientSecret: 'test-secret',
+        redirectUri: 'https://example.com/callback',
+        scopes: ['pages_read_engagement', 'pages_show_list'],
+        baseUrl: 'https://graph.facebook.com/v18.0'
+      };
+      const connector = new MetaBusinessConnector(config);
+
+      const rawEvents = [{
+        id: 'evt-123',
+        type: 'post',
+        timestamp: new Date().toISOString(),
+        data: {
+          id: 'post-123',
+          message: 'Hello World',
+          created_time: new Date().toISOString(),
+          type: 'status',
+          likes: { count: 10 },
+          comments: { count: 5 },
+          shares: { count: 2 }
+        },
+        metadata: {
+          platform: 'facebook',
+          postType: 'status'
+        }
+      }];
+
+      const context = {
+        userId: 'real-user-id',
+        tenantId: 'real-tenant-id',
+        correlationId: 'real-correlation-id'
+      };
+
+      const canonicalEvents = await connector.normalizeToCanonical(rawEvents, context);
+
+      expect(canonicalEvents).toHaveLength(1);
+      expect(canonicalEvents[0].userId).toBe('real-user-id');
+      expect(canonicalEvents[0].tenantId).toBe('real-tenant-id');
+      expect(canonicalEvents[0].correlationId).toBe('real-correlation-id');
+      expect(canonicalEvents[0].eventId).toBe('meta_evt-123');
+      expect(canonicalEvents[0].source).toBe('meta_business_api');
     });
   });
 });

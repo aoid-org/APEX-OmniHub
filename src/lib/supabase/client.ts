@@ -1,5 +1,8 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
+import { supabase } from '@/integrations/supabase/client';
+
+export { supabase };
 
 type SupabaseClientOptions = {
   url: string;
@@ -8,26 +11,20 @@ type SupabaseClientOptions = {
   debug?: boolean;
 };
 
-export function createSupabaseClient(options: SupabaseClientOptions): SupabaseClient<Database> {
-  const key = options.serviceRoleKey || options.apiKey;
-  // H2: Security Guard - Prevent Service Role Key in Browser
-  if (globalThis.window && options.serviceRoleKey) {
-    const error = 'CRITICAL SECURITY VIOLATION: Service Role Key exposed in browser environment.';
-    console.error(error);
-    throw new Error(error);
+// Phase 2: Database Client Convergence
+// This factory now returns the singleton instance from integrations/supabase/client.ts
+// to eliminate "Split Brain" architecture and enforce a Single Source of Truth.
+// Options are intentionally ignored to prevent configuration drift.
+export function createSupabaseClient(options?: SupabaseClientOptions): SupabaseClient<Database> {
+  if (options?.debug) {
+    console.warn('[SupabaseClient] createSupabaseClient called with options, but returning singleton instance to enforce Source of Truth.');
   }
 
-  const client = createClient<Database>(options.url, key, {
-    auth: {
-      storage: globalThis.window ? globalThis.localStorage : undefined,
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  });
-
-  if (options.debug) {
-    console.warn('[SupabaseClient] Initialized with URL:', options.url);
+  // Security Guard: Still warn if someone tries to pass service role key in browser,
+  // even though we are ignoring it, to alert developer of bad practice.
+  if (typeof globalThis.window !== 'undefined' && options?.serviceRoleKey) {
+     console.error('CRITICAL SECURITY WARNING: Service Role Key passed to client factory in browser environment. It is ignored, but this is a security risk.');
   }
 
-  return client;
+  return supabase;
 }
