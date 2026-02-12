@@ -31,17 +31,14 @@ export class OmniLinkDelivery {
   ): Promise<number> {
     console.log(`[${correlationId}] Delivering ${events.length} events to OmniLink for app ${appId}`);
 
-    let successCount = 0;
-
-    for (const event of events) {
-      try {
-        await this.deliverEvent(event, correlationId);
-        successCount++;
-      } catch (error) {
+    const successCount = await this.processEvents(
+      events,
+      async (event) => await this.deliverEvent(event, correlationId),
+      async (event, error) => {
         console.error(`[${correlationId}] Failed to deliver event ${event.eventId}:`, error);
         await this.addToDLQ(event, correlationId, error);
       }
-    }
+    );
 
     console.log(`[${correlationId}] Delivered ${successCount}/${events.length} events`);
     return successCount;
@@ -91,25 +88,39 @@ export class OmniLinkDelivery {
 
     if (!failedEvents?.length) return 0;
 
-    let retriedCount = 0;
-
-    for (const entry of failedEvents) {
-      try {
+    const retriedCount = await this.processEvents(
+      failedEvents,
+      async (entry) => {
         const rawInput = entry.raw_input;
         const event: TranslatedEvent = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
-
         await this.deliverEvent(event, correlationId);
         await this.markDLQEntryProcessed(entry.id);
-
-        retriedCount++;
-      } catch (error) {
+      },
+      async (entry, error) => {
         console.warn(`[${correlationId}] Retry failed for event ${entry.id}:`, error);
         await this.updateDLQRetryCount(entry.id, entry.retry_count || 0, error);
       }
-    }
+    );
 
     console.log(`[${correlationId}] Successfully retried ${retriedCount} events`);
     return retriedCount;
+  }
+
+  private async processEvents<T>(
+    items: T[],
+    processor: (item: T) => Promise<void>,
+    errorHandler: (item: T, error: unknown) => Promise<void>
+  ): Promise<number> {
+    let successCount = 0;
+    for (const item of items) {
+      try {
+        await processor(item);
+        successCount++;
+      } catch (error) {
+        await errorHandler(item, error);
+      }
+    }
+    return successCount;
   }
 
   private async addToDLQ(event: TranslatedEvent, correlationId: string, error: unknown): Promise<void> {
