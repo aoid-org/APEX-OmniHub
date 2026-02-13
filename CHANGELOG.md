@@ -5,6 +5,31 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-02-13
+
+### Fixed
+- **CI/CD Build** - Added missing PostCSS dependencies to `apps/omnihub-site`
+  - Added `autoprefixer@^10.4.21` to devDependencies
+  - Added `postcss@^8.5.6` to devDependencies
+  - Added `tailwindcss@^3.4.17` to devDependencies
+  - Created `postcss.config.js` for proper PostCSS plugin configuration
+- **Python Lint** - All E501 line length violations resolved
+- **Security** - Updated npm dependencies via `npm audit fix`
+  - 33 vulnerabilities remain in dev dependencies (hardhat/ethereum tooling)
+  - All production dependencies secure
+
+### Removed
+- Stale error logs from repository tracking
+  - `orchestrator/orchestrator_test_error.txt`
+  - `orchestrator/test_output.txt`
+- Added error log patterns to `.gitignore` to prevent future commits
+
+### Quality Gates
+- ESLint: 0 warnings, 0 errors
+- Ruff (Python): All checks passed, 55 files formatted
+- TypeScript: strict mode compliance maintained
+- All lint checks passing for CI/CD
+
 ## [1.1.0] - 2026-02-09
 
 ### Added — Realtime Brokering & Device Classification Core

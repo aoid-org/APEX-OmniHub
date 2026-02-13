@@ -109,4 +109,117 @@ describe('OmniLinkDelivery', () => {
       }));
     });
   });
+
+  describe('retryFailedDeliveries', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockSupabaseDLQ = (failedEvents: any[], error: any = null) => {
+      const mockUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
+      const mockEq = vi.fn().mockReturnThis();
+      const mockSelectChain = {
+        eq: mockEq,
+        order: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue({ data: failedEvents, error })
+      };
+
+      const mockFrom = vi.fn().mockImplementation((table) => {
+        if (table === 'ingress_buffer') {
+          return {
+            select: vi.fn().mockReturnValue(mockSelectChain),
+            update: mockUpdate,
+            insert: vi.fn().mockResolvedValue({ error: null })
+          };
+        }
+        return {};
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.from as any).mockImplementation(mockFrom);
+
+      return { mockUpdate, mockEq };
+    };
+
+    it('should retry pending events and mark as processed on success', async () => {
+      const mockDLQEntry = {
+        id: 'dlq-1',
+        raw_input: JSON.stringify(mockEvent),
+        status: 'pending',
+        retry_count: 0
+      };
+
+      const { mockUpdate } = mockSupabaseDLQ([mockDLQEntry]);
+
+      // Mock successful delivery
+      vi.mocked(requestOmniLink).mockResolvedValue({ success: true });
+
+      const count = await delivery.retryFailedDeliveries('test-app');
+
+      expect(count).toBe(1);
+      expect(requestOmniLink).toHaveBeenCalled();
+      // Verify update status to processed
+      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'processed'
+      }));
+    });
+
+    it('should increment retry_count on failure', async () => {
+      const mockDLQEntry = {
+        id: 'dlq-2',
+        raw_input: JSON.stringify(mockEvent),
+        status: 'pending',
+        retry_count: 1
+      };
+
+      const { mockUpdate } = mockSupabaseDLQ([mockDLQEntry]);
+
+      // Mock failed delivery
+      vi.mocked(requestOmniLink).mockRejectedValue(new Error('Retry failed'));
+
+      const count = await delivery.retryFailedDeliveries('test-app');
+
+      expect(count).toBe(0);
+
+      // Verify update retry count
+      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
+        retry_count: 2,
+        error_reason: 'Retry failed'
+      }));
+    });
+
+    it('should handle raw_input as object (JSONB)', async () => {
+      const mockDLQEntry = {
+        id: 'dlq-3',
+        raw_input: mockEvent, // Already an object
+        status: 'pending',
+        retry_count: 0
+      };
+
+      mockSupabaseDLQ([mockDLQEntry]);
+      vi.mocked(requestOmniLink).mockResolvedValue({ success: true });
+
+      const count = await delivery.retryFailedDeliveries('test-app');
+
+      expect(count).toBe(1);
+      expect(requestOmniLink).toHaveBeenCalledWith(expect.objectContaining({
+        body: mockEvent
+      }));
+    });
+
+    it('should filter by appId in DB query', async () => {
+      const mockDLQEntry = {
+        id: 'dlq-1',
+        raw_input: JSON.stringify(mockEvent),
+        status: 'pending',
+        retry_count: 0
+      };
+
+      const { mockEq } = mockSupabaseDLQ([mockDLQEntry]);
+      vi.mocked(requestOmniLink).mockResolvedValue({ success: true });
+
+      const count = await delivery.retryFailedDeliveries('test-app');
+
+      expect(count).toBe(1);
+      // Verify DB filtering
+      expect(mockEq).toHaveBeenCalledWith('raw_input->>appId', 'test-app');
+    });
+  });
 });

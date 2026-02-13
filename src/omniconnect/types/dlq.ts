@@ -9,7 +9,7 @@
 /**
  * DLQ Entry Status
  */
-export type DLQStatus = 'pending' | 'replaying' | 'failed';
+export type DLQStatus = 'pending' | 'replaying' | 'failed' | 'processed';
 
 /**
  * Ingress Buffer Entry (Database Row)
@@ -39,6 +39,15 @@ export interface IngressBufferEntry {
 
   /** User ID for RLS */
   user_id?: string | null;
+
+  /** Retry count for delivery attempts */
+  retry_count?: number;
+
+  /** Timestamp of the last retry attempt */
+  last_retry_at?: string;
+
+  /** Timestamp when the entry was successfully processed */
+  processed_at?: string;
 
   /** Optional: External reference ID (e.g. event ID) - if supported by schema, otherwise in raw_input */
   // external_ref_id?: string; // Not in current migration
