@@ -56,6 +56,10 @@ dmypy.json
 # Logs
 *.log
 logs/
+*_error.txt
+*_output.txt
+test_output.txt
+orchestrator_test_error.txt
 
 # OS
 .DS_Store

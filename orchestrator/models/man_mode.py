@@ -60,8 +60,11 @@ class RiskTriageResult(BaseModel):
     """
     MASTER SCHEMA: Aligns Frontend Brochure (Class A-D) with Backend Logic.
     """
+
     lane: ManLane = Field(..., description="Action: RED (Block), YELLOW (Review), GREEN (Pass)")
-    risk_class: Literal["A", "B", "C", "D"] = Field(..., description="Marketing Tier: A=Critical, D=Safe")
+    risk_class: Literal["A", "B", "C", "D"] = Field(
+        ..., description="Marketing Tier: A=Critical, D=Safe"
+    )
     reasoning: str = Field(...)
     confidence_score: float = Field(..., ge=0.0, le=1.0)
     # CRITICAL: Demo flag to bypass DB in presentation mode
