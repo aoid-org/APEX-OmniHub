@@ -21,13 +21,16 @@ import asyncio
 import logging
 import os
 import sys
+import uuid
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+from starlette.middleware.base import BaseHTTPMiddleware
 from temporalio.client import Client
 from temporalio.worker import Worker
 from uvicorn import Config, Server
@@ -57,6 +60,14 @@ from omniboard.router import router as omniboard_router
 from security.request_signing import SignatureVerificationMiddleware
 from workflows.agent_saga import AgentWorkflow
 
+# Configure logging early so middleware can use it
+logging.basicConfig(
+    level=getattr(logging, os.environ.get("LOG_LEVEL", "INFO")),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 
@@ -70,6 +81,38 @@ app.include_router(omniboard_router)
 # Attach rate limiter to app
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+# ---------------------------------------------------------------------------
+# Request-ID middleware — attaches a unique ID to every request/response
+# ---------------------------------------------------------------------------
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):  # type: ignore[override]
+        request_id = str(uuid.uuid4())
+        request.state.request_id = request_id
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+
+
+app.add_middleware(RequestIDMiddleware)
+
+
+# ---------------------------------------------------------------------------
+# Global exception handler — sanitise error responses (no stack traces)
+# ---------------------------------------------------------------------------
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    request_id = getattr(getattr(request, "state", None), "request_id", "unknown")
+    logger.error("Request %s failed: %s", request_id, exc, exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "INTERNAL_SERVER_ERROR",
+            "message": "An unexpected error occurred",
+            "request_id": request_id,
+        },
+    )
 
 # CORS Middleware - Configure allowed origins from environment
 CORS_ORIGINS = os.environ.get(
@@ -127,8 +170,11 @@ async def create_goal(request: GoalRequest):
         return {"workflowId": handle.id, "status": "started"}
 
     except Exception as e:
-        logger.error(f"Failed to create goal workflow: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        logger.error(f"Failed to create goal workflow: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to start workflow. Check server logs for details.",
+        ) from e
 
 
 @app.get("/health")
@@ -137,12 +183,8 @@ async def health_check():
     return {"status": "ok"}
 
 
-# Configure logging
-logging.basicConfig(
-    level=getattr(logging, settings.log_level),
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
-logger = logging.getLogger(__name__)
+# Re-apply log level from settings (may override env default above)
+logging.getLogger().setLevel(getattr(logging, settings.log_level))
 
 
 async def start_worker() -> None:

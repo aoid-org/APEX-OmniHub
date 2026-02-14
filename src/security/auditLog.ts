@@ -68,7 +68,7 @@ function scheduleFlush(delay = 0) {
 async function writeToSupabase(entry: AuditEventPayload): Promise<void> {
   const { error } = await supabase.from('audit_logs').insert({
     id: entry.id,
-    actor_id: entry.actorId || null,
+    // actor_id intentionally omitted — enforced server-side by trigger
     action_type: entry.actionType,
     resource_type: entry.resourceType || null,
     resource_id: entry.resourceId || null,

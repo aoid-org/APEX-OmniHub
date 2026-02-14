@@ -67,7 +67,7 @@ jobs:
       - name: Run type checker
         working-directory: orchestrator
         run: |
-          mypy --strict models/ infrastructure/ workflows/ activities/ config.py main.py || true
+          mypy --strict models/ infrastructure/ workflows/ activities/ config.py main.py
 
       - name: Run tests with coverage
         working-directory: orchestrator

@@ -250,10 +250,17 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
 }
 
 /**
- * Generate random challenge for authentication
- * Should be called server-side in production
+ * Generate random challenge for authentication.
+ * In production, challenges MUST come from the server. This helper is
+ * restricted to development/test environments only.
  */
 export function generateChallenge(): Uint8Array {
+  if (import.meta.env.PROD) {
+    throw new Error(
+      'Client-side challenge generation is forbidden in production. ' +
+      'Use a server-provided challenge instead.',
+    );
+  }
   const challenge = new Uint8Array(32);
   globalThis.crypto.getRandomValues(challenge);
   return challenge;

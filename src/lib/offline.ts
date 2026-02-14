@@ -1,6 +1,33 @@
 /**
- * Offline support and data persistence utilities
+ * Offline support and data persistence utilities.
+ *
+ * Uses serializable operation envelopes instead of raw functions so the
+ * queue survives page reloads (localStorage round-trip safe).
  */
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
+export interface SerializableOp {
+  id: string;
+  createdAt: number;
+  attempt: number;
+  kind: string;
+  payload: JsonValue;
+}
+
+// ---------------------------------------------------------------------------
+// Network helpers
+// ---------------------------------------------------------------------------
 
 export function isOnline(): boolean {
   return navigator.onLine;
@@ -8,15 +35,14 @@ export function isOnline(): boolean {
 
 export function setupOfflineListeners(
   onOnline?: () => void,
-  onOffline?: () => void
+  onOffline?: () => void,
 ): () => void {
   const handleOnline = () => {
-    console.log('🟢 Connection restored');
+    console.log('[Offline] Connection restored');
     onOnline?.();
   };
-
   const handleOffline = () => {
-    console.log('🔴 Connection lost');
+    console.log('[Offline] Connection lost');
     onOffline?.();
   };
 
@@ -29,112 +55,134 @@ export function setupOfflineListeners(
   };
 }
 
-/**
- * Queue failed requests for retry when online
- */
-interface QueuedRequest {
-  id: string;
-  timestamp: number;
-  request: () => Promise<unknown>;
-  retries: number;
+// ---------------------------------------------------------------------------
+// Executor registry — callers register handlers at import time
+// ---------------------------------------------------------------------------
+
+const executors = new Map<string, (payload: JsonValue) => Promise<void>>();
+
+export function registerExecutor(kind: string, fn: (p: JsonValue) => Promise<void>): void {
+  executors.set(kind, fn);
 }
 
-const STORAGE_KEY = 'offline_request_queue';
-const requestQueue: QueuedRequest[] = [];
-const MAX_RETRIES = 3;
-const MAX_QUEUE_SIZE = 50;
+// ---------------------------------------------------------------------------
+// Queue — localStorage backed, corruption-resistant
+// ---------------------------------------------------------------------------
 
-function persistQueue() {
+const STORAGE_KEY = 'offline_queue';
+const QUARANTINE_KEY = 'offline_queue_corrupted';
+const MAX_QUEUE_SIZE = 50;
+const MAX_ATTEMPTS = 3;
+
+function safeGetQueue(): SerializableOp[] {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(requestQueue));
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as SerializableOp[];
+  } catch {
+    // Quarantine corrupted data rather than crashing
+    try {
+      localStorage.setItem(QUARANTINE_KEY, localStorage.getItem(STORAGE_KEY) || '');
+    } catch { /* best effort */ }
+    localStorage.removeItem(STORAGE_KEY);
+    return [];
+  }
+}
+
+function safeSetQueue(queue: SerializableOp[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
   } catch {
     // Non-fatal: continue in-memory
   }
 }
 
-function loadQueue() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const parsed = JSON.parse(raw) as QueuedRequest[];
-    requestQueue.push(...parsed);
-  } catch {
-    // ignore parse errors
-  }
+function removeFromQueue(id: string): void {
+  const queue = safeGetQueue().filter((op) => op.id !== id);
+  safeSetQueue(queue);
 }
 
-loadQueue();
+function quarantine(op: SerializableOp): void {
+  try {
+    const existing = JSON.parse(localStorage.getItem(QUARANTINE_KEY) || '[]');
+    existing.push(op);
+    localStorage.setItem(QUARANTINE_KEY, JSON.stringify(existing));
+  } catch { /* best effort */ }
+}
 
-export function queueOfflineRequest(request: () => Promise<unknown>): string {
-  if (requestQueue.length >= MAX_QUEUE_SIZE) {
-    console.warn('Request queue is full, removing oldest request');
-    requestQueue.shift();
-  }
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
 
+export function enqueue(op: Omit<SerializableOp, 'id' | 'createdAt' | 'attempt'>): string {
   const id = crypto.randomUUID();
-  requestQueue.push({
+  const fullOp: SerializableOp = {
+    ...op,
     id,
-    timestamp: Date.now(),
-    request,
-    retries: 0,
-  });
-
-  persistQueue();
+    createdAt: Date.now(),
+    attempt: 0,
+  };
+  const queue = safeGetQueue();
+  if (queue.length >= MAX_QUEUE_SIZE) {
+    queue.shift(); // Drop oldest when full
+  }
+  queue.push(fullOp);
+  safeSetQueue(queue);
   return id;
 }
 
-export async function processQueuedRequests(): Promise<void> {
-  if (!isOnline() || requestQueue.length === 0) return;
-
-  console.log(`Processing ${requestQueue.length} queued requests...`);
-
-  const requests = [...requestQueue];
-  requestQueue.length = 0;
-  persistQueue();
-
-  // Process requests with concurrency limit for better performance
-  const CONCURRENCY_LIMIT = 3;
-
-  for (let i = 0; i < requests.length; i += CONCURRENCY_LIMIT) {
-    const batch = requests.slice(i, i + CONCURRENCY_LIMIT);
-    const results = await Promise.allSettled(
-      batch.map(item => item.request())
-    );
-
-    results.forEach((result, index) => {
-      const item = batch[index];
-      if (result.status === 'fulfilled') {
-        console.log(`✅ Successfully processed queued request ${item.id}`);
-      } else {
-        console.error(`❌ Failed to process request ${item.id}:`, result.reason);
-
-        if (item.retries < MAX_RETRIES) {
-          item.retries++;
-          requestQueue.push(item);
-        }
-      }
-    });
-  }
-  persistQueue();
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * Local storage with quota management
- */
+export async function replay(): Promise<void> {
+  if (!isOnline()) return;
+
+  const queue = safeGetQueue();
+  if (queue.length === 0) return;
+
+  for (const op of queue) {
+    const executor = executors.get(op.kind);
+    if (!executor) {
+      // No handler registered — keep in queue for next reload
+      continue;
+    }
+
+    try {
+      await executor(op.payload);
+      removeFromQueue(op.id);
+    } catch {
+      op.attempt += 1;
+      if (op.attempt >= MAX_ATTEMPTS) {
+        quarantine(op);
+        removeFromQueue(op.id);
+      } else {
+        // Exponential backoff + jitter
+        const backoff = Math.pow(2, op.attempt) * 1000 + Math.random() * 1000;
+        // Persist updated attempt count
+        const updated = safeGetQueue().map((q) => (q.id === op.id ? { ...q, attempt: op.attempt } : q));
+        safeSetQueue(updated);
+        await sleep(backoff);
+      }
+    }
+  }
+}
+
+/** Alias kept for backward compat with useOfflineSupport */
+export const processQueuedRequests = replay;
+
+// ---------------------------------------------------------------------------
+// Local storage with quota management
+// ---------------------------------------------------------------------------
+
 export function saveToLocalStorage<T>(key: string, data: T): boolean {
   try {
-    const serialized = JSON.stringify({
-      data,
-      timestamp: Date.now(),
-    });
+    const serialized = JSON.stringify({ data, timestamp: Date.now() });
     localStorage.setItem(key, serialized);
     return true;
   } catch (error) {
     if (error instanceof Error && error.name === 'QuotaExceededError') {
-      console.error('LocalStorage quota exceeded');
-      // Clear old data
       clearOldLocalStorageData();
-      // Try again
       try {
         localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
         return true;
@@ -150,14 +198,11 @@ export function loadFromLocalStorage<T>(key: string, maxAge?: number): T | null 
   try {
     const item = localStorage.getItem(key);
     if (!item) return null;
-
     const { data, timestamp } = JSON.parse(item);
-
     if (maxAge && Date.now() - timestamp > maxAge) {
       localStorage.removeItem(key);
       return null;
     }
-
     return data as T;
   } catch {
     return null;
@@ -167,38 +212,22 @@ export function loadFromLocalStorage<T>(key: string, maxAge?: number): T | null 
 function clearOldLocalStorageData(): void {
   try {
     const keys = Object.keys(localStorage);
-    const items = keys.map(key => {
-      try {
-        return {
-          key,
-          data: localStorage.getItem(key),
-        };
-      } catch {
-        return { key, data: null };
-      }
-    }).filter(item => item.data !== null);
-
-    // Sort by timestamp and remove oldest 25%
-    const itemsWithTimestamp = items
-      .map(item => {
+    const items = keys
+      .map((key) => {
         try {
-          const { timestamp } = JSON.parse(item.data!);
-          return { key: item.key, timestamp };
+          const { timestamp } = JSON.parse(localStorage.getItem(key)!);
+          return { key, timestamp: timestamp ?? 0 };
         } catch {
-          return { key: item.key, timestamp: 0 };
+          return { key, timestamp: 0 };
         }
       })
       .sort((a, b) => a.timestamp - b.timestamp);
 
-    const removeCount = Math.ceil(itemsWithTimestamp.length * 0.25);
-    itemsWithTimestamp.slice(0, removeCount).forEach(item => {
-      try {
-        localStorage.removeItem(item.key);
-      } catch {
-        // Ignore errors when removing items
-      }
+    const removeCount = Math.ceil(items.length * 0.25);
+    items.slice(0, removeCount).forEach((item) => {
+      try { localStorage.removeItem(item.key); } catch { /* ignore */ }
     });
-  } catch (error) {
-    console.error('Error clearing old localStorage data:', error);
+  } catch {
+    // non-fatal
   }
 }

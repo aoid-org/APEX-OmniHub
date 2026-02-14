@@ -3,7 +3,14 @@ import { logAnalyticsEvent, logError } from '@/lib/monitoring';
 import { persistentGet, persistentSet } from '@/libs/persistence';
 import { supabase } from '@/integrations/supabase/client';
 
-
+function safeJsonParse(str: unknown, fallback: Record<string, unknown>): Record<string, unknown> {
+  if (typeof str !== 'string') return fallback;
+  try {
+    return JSON.parse(str);
+  } catch {
+    return fallback;
+  }
+}
 
 export type DeviceStatus = 'trusted' | 'suspect' | 'blocked';
 
@@ -113,7 +120,7 @@ async function fetchRemoteRegistry(userId: string): Promise<DeviceRecord[]> {
       deviceId: d.device_id,
       userId: d.user_id,
       lastSeen: d.last_seen_at,
-      deviceInfo: d.device_fingerprint ? JSON.parse(d.device_fingerprint) : {},
+      deviceInfo: safeJsonParse(d.device_fingerprint, {}),
       status: d.status as DeviceStatus,
     }));
   } catch (error) {
@@ -150,13 +157,13 @@ async function flushUpserts(force = false) {
 
     try {
       // Write directly to Supabase device_registry table
+      // user_id intentionally omitted — enforced server-side by trigger
       const { error } = await supabase
         .from('device_registry')
         .upsert({
-          user_id: item.record.userId,
           device_id: item.record.deviceId,
           device_fingerprint: JSON.stringify(item.record.deviceInfo),
-          status: item.record.status || 'suspect',
+          status: item.record.status === 'trusted' ? 'suspect' : (item.record.status || 'suspect'),
           last_seen_at: item.record.lastSeen,
         }, {
           onConflict: 'user_id,device_id',

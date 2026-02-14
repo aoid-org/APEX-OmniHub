@@ -4,6 +4,7 @@
  * Includes OmniSentry for client-side self-healing monitoring.
  */
 
+import * as Sentry from '@sentry/browser';
 import { appConfig, getEnvironment } from './config';
 import { createDebugLogger } from './debug-logger';
 import { initializeOmniSentry } from './omni-sentry';
@@ -11,7 +12,6 @@ import { initializeOmniSentry } from './omni-sentry';
 // Re-export OmniSentry for external access
 export { getHealthStatus, reportError as reportOmniError, withResilience } from './omni-sentry';
 
-let sentry: unknown = null;
 let sentryInitialized = false;
 
 export interface ErrorContext {
@@ -28,37 +28,28 @@ export interface PerformanceEvent {
   metadata?: Record<string, unknown>;
 }
 
-async function ensureSentry() {
-  if (sentryInitialized || sentry) return sentry;
+function ensureSentry(): typeof Sentry | null {
+  if (sentryInitialized) return Sentry;
 
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   if (!dsn) return null;
 
   try {
-    // Dynamic import from CDN - TypeScript can't resolve these at compile time
-     
-    sentry = await import('https://esm.sh/@sentry/browser@7.120.1');
-     
-    const { BrowserTracing } = await import('https://esm.sh/@sentry/tracing@7.120.1');
-
-     
-    sentry.init({
+    Sentry.init({
       dsn,
       environment: getEnvironment(),
       release: `${appConfig.name}@${appConfig.version}`,
-       
-      integrations: [new BrowserTracing()],
       tracesSampleRate: 0.2,
     });
     sentryInitialized = true;
     if (import.meta.env.DEV) {
-      console.log('✅ Sentry monitoring initialized');
+      console.log('[Monitoring] Sentry initialized');
     }
   } catch (error) {
     console.warn('Sentry initialization failed; continuing without Sentry', error);
   }
 
-  return sentry;
+  return sentryInitialized ? Sentry : null;
 }
 
 function persistLog(key: string, entry: unknown, max: number) {
@@ -75,9 +66,9 @@ function persistLog(key: string, entry: unknown, max: number) {
 /**
  * Log error to monitoring service
  */
-export async function logError(error: Error, context?: ErrorContext): Promise<void> {
+export function logError(error: Error, context?: ErrorContext): void {
   if (import.meta.env.DEV) {
-    console.error('🚨 Error:', error.message, context);
+    console.error('[Monitoring] Error:', error.message, context);
   }
 
   const entry = {
@@ -88,7 +79,7 @@ export async function logError(error: Error, context?: ErrorContext): Promise<vo
   };
   persistLog('error_logs', entry, 50);
 
-  const s = await ensureSentry();
+  const s = ensureSentry();
   if (s?.captureException) {
     s.captureException(error, { extra: context });
   }
@@ -107,15 +98,15 @@ export function logPerformance(event: PerformanceEvent): void {
 /**
  * Log analytics event
  */
-export async function logAnalyticsEvent(
+export function logAnalyticsEvent(
   eventName: string,
   properties?: Record<string, unknown>
-): Promise<void> {
+): void {
   if (import.meta.env.DEV) {
-    console.log('📈 Analytics:', eventName, properties);
+    console.log('[Monitoring] Analytics:', eventName, properties);
   }
 
-  const s = await ensureSentry();
+  const s = ensureSentry();
   if (s?.addBreadcrumb) {
     s.addBreadcrumb({
       category: 'analytics',
@@ -129,12 +120,12 @@ export async function logAnalyticsEvent(
 /**
  * Log security event
  */
-export async function logSecurityEvent(
+export function logSecurityEvent(
   eventType: 'auth_failed' | 'rate_limit' | 'suspicious_activity' | 'csrf_attempt',
   details?: Record<string, unknown>
-): Promise<void> {
+): void {
   if (import.meta.env.DEV) {
-    console.warn('🔒 Security Event:', eventType, details);
+    console.warn('[Monitoring] Security Event:', eventType, details);
   }
 
   const entry = {
@@ -145,7 +136,7 @@ export async function logSecurityEvent(
   };
   persistLog('security_logs', entry, 100);
 
-  const s = await ensureSentry();
+  const s = ensureSentry();
   if (s?.addBreadcrumb) {
     s.addBreadcrumb({
       category: 'security',

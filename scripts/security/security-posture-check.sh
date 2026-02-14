@@ -92,6 +92,20 @@ if [ -f ".github/workflows/security-regression-guard.yml" ]; then
 else
   check_failed "Security regression guard missing"
 fi
+
+if [ -f "scripts/security/check-remote-imports.sh" ]; then
+  check_passed "Remote import guard script present"
+else
+  check_failed "Remote import guard script missing"
+fi
+
+if [ -f "scripts/security/verify-secret-scanners.sh" ]; then
+  check_passed "Secret scanner self-test script present"
+else
+  check_failed "Secret scanner self-test script missing"
+fi
+
+# Note: Full git history scanning runs in CI via secret-scanning.yml workflow
 echo "" >> "${REPORT_FILE}"
 
 echo "## Summary" >> "${REPORT_FILE}"
