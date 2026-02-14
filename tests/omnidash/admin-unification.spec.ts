@@ -198,10 +198,10 @@ describe('useAdminAccess() hook (unit) — tamper resistance', () => {
       const hooksSource = await import('@/omnidash/hooks?nocache=' + Date.now());
       expect(typeof hooksSource.useAdminAccess).toBe('function');
     } finally {
-      if (originalEnv !== undefined) {
-        import.meta.env.VITE_OMNIDASH_ADMIN_EMAILS = originalEnv;
-      } else {
+      if (originalEnv === undefined) {
         delete import.meta.env.VITE_OMNIDASH_ADMIN_EMAILS;
+      } else {
+        import.meta.env.VITE_OMNIDASH_ADMIN_EMAILS = originalEnv;
       }
     }
   });

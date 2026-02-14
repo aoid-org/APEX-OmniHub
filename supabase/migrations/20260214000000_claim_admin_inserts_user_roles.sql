@@ -20,6 +20,7 @@ AS $$
 DECLARE
   _user_id uuid;
   _stored_hash text;
+  _admin_role constant text := 'admin';
 BEGIN
   _user_id := auth.uid();
   IF _user_id IS NULL THEN
@@ -41,12 +42,12 @@ BEGIN
     -- Step 1: Set app_metadata (triggers sync_admin_metadata_to_user_roles if present)
     UPDATE auth.users
     SET raw_app_meta_data =
-      COALESCE(raw_app_meta_data, '{}'::jsonb) || '{"role": "admin", "admin": true}'::jsonb
+      COALESCE(raw_app_meta_data, '{}'::jsonb) || jsonb_build_object('role', _admin_role, 'admin', true)
     WHERE id = _user_id;
 
     -- Step 2: Explicit insert into user_roles (source of truth for RLS is_admin())
     INSERT INTO public.user_roles (user_id, role)
-    VALUES (_user_id, 'admin')
+    VALUES (_user_id, _admin_role)
     ON CONFLICT (user_id, role) DO NOTHING;
 
     RAISE LOG 'Admin role granted to user % via claim_admin_access (bcrypt)', _user_id;
@@ -82,22 +83,23 @@ AS $$
 DECLARE
   admin_flag boolean;
   role_exists boolean;
+  _admin_role constant text := 'admin';
 BEGIN
   admin_flag := COALESCE((NEW.raw_app_meta_data->>'admin')::boolean, false);
 
   SELECT EXISTS (
     SELECT 1 FROM public.user_roles
-    WHERE user_id = NEW.id AND role = 'admin'
+    WHERE user_id = NEW.id AND role = _admin_role
   ) INTO role_exists;
 
   IF admin_flag = true AND role_exists = false THEN
     INSERT INTO public.user_roles (user_id, role)
-    VALUES (NEW.id, 'admin')
+    VALUES (NEW.id, _admin_role)
     ON CONFLICT (user_id, role) DO NOTHING;
     RAISE LOG 'Admin role granted to user % via app_metadata sync', NEW.id;
   ELSIF admin_flag = false AND role_exists = true THEN
     DELETE FROM public.user_roles
-    WHERE user_id = NEW.id AND role = 'admin';
+    WHERE user_id = NEW.id AND role = _admin_role;
     RAISE LOG 'Admin role revoked from user % via app_metadata sync', NEW.id;
   END IF;
 
