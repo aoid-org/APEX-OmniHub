@@ -64,3 +64,46 @@ REVOKE EXECUTE ON FUNCTION public.claim_admin_access(text) FROM anon;
 
 COMMENT ON FUNCTION public.claim_admin_access(text) IS
 '[v3.0] Bcrypt-verified admin claim. Atomically sets app_metadata AND inserts user_roles. See migration 20260214000000.';
+
+-- ============================================================================
+-- Fix: sync_admin_metadata_to_user_roles() trigger search_path hardening
+-- ============================================================================
+-- The 20260205 migration used SET search_path = public which is too permissive
+-- for a SECURITY DEFINER function. Harden to search_path = '' with explicit
+-- schema qualification (already present in the function body).
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.sync_admin_metadata_to_user_roles()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  admin_flag boolean;
+  role_exists boolean;
+BEGIN
+  admin_flag := COALESCE((NEW.raw_app_meta_data->>'admin')::boolean, false);
+
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = NEW.id AND role = 'admin'
+  ) INTO role_exists;
+
+  IF admin_flag = true AND role_exists = false THEN
+    INSERT INTO public.user_roles (user_id, role)
+    VALUES (NEW.id, 'admin')
+    ON CONFLICT (user_id, role) DO NOTHING;
+    RAISE LOG 'Admin role granted to user % via app_metadata sync', NEW.id;
+  ELSIF admin_flag = false AND role_exists = true THEN
+    DELETE FROM public.user_roles
+    WHERE user_id = NEW.id AND role = 'admin';
+    RAISE LOG 'Admin role revoked from user % via app_metadata sync', NEW.id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+COMMENT ON FUNCTION public.sync_admin_metadata_to_user_roles() IS
+'[v2.0] Auto-sync trigger: Keeps user_roles.admin in sync with auth.users.raw_app_meta_data.admin. search_path hardened.';
