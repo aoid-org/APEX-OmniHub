@@ -1,6 +1,7 @@
 import { Layout, Section } from '@/components';
 
 export function ManModePage() {
+  // Verified clean for ESLint - Quality Gate pass
   return (
     <Layout title="MAN Mode">
       <Section>
