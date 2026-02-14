@@ -1,15 +1,17 @@
 /**
  * HTTP Utilities for Edge Functions
- * 
+ *
  * Provides a withHttp wrapper that handles:
  * - CORS preflight
  * - Origin validation
  * - JSON parsing
+ * - JWT authentication (when requireAuth is true)
  * - Error handling with consistent responses
  * - Request size limits
  */
 
 import { buildCorsHeaders, corsErrorResponse, handlePreflight, isOriginAllowed } from './cors.ts';
+import { authenticateUser, createSupabaseClient } from './auth.ts';
 
 export interface HttpHandlerContext {
     origin: string | null;
@@ -17,6 +19,8 @@ export interface HttpHandlerContext {
     body: unknown;
     rawBody: string;
     bodySize: number;
+    /** Authenticated user (only set when requireAuth is true) */
+    user?: { id: string; email?: string };
 }
 
 export type HttpHandler = (
@@ -32,13 +36,18 @@ export interface HttpOptions {
 
 /**
  * Wrap an edge function handler with HTTP boilerplate.
- * 
+ *
+ * When requireAuth is true, the JWT bearer token is validated via
+ * Supabase Auth (supabase.auth.getUser). The handler will only
+ * execute if the token resolves to a valid user. The authenticated
+ * user is available on ctx.user.
+ *
  * Usage:
  * ```ts
  * Deno.serve(withHttp(async (req, ctx) => {
- *   const { data } = ctx.body;
- *   return jsonResponse({ result: data }, 200, ctx.corsHeaders);
- * }));
+ *   const userId = ctx.user!.id; // guaranteed when requireAuth: true
+ *   return jsonResponse({ result: userId }, 200, ctx.corsHeaders);
+ * }, { requireAuth: true }));
  * ```
  */
 export function withHttp(
@@ -66,11 +75,29 @@ export function withHttp(
         try {
             const { body, rawBody, bodySize } = await parseRequestBody(req, maxBodySizeBytes);
 
+            let authenticatedUser: { id: string; email?: string } | undefined;
+
             if (requireAuth) {
                 const authHeader = req.headers.get('Authorization');
-                if (!authHeader) {
-                    return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+                if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                    return jsonResponse(
+                        { error: 'unauthorized', message: 'Missing or malformed Authorization header' },
+                        401,
+                        corsHeaders
+                    );
                 }
+
+                const supabase = createSupabaseClient();
+                const authResult = await authenticateUser(authHeader, supabase);
+                if (!authResult.success || !authResult.user) {
+                    return jsonResponse(
+                        { error: 'unauthorized', message: authResult.error || 'Invalid or expired token' },
+                        401,
+                        corsHeaders
+                    );
+                }
+
+                authenticatedUser = { id: authResult.user.id, email: authResult.user.email };
             }
 
             const context: HttpHandlerContext = {
@@ -79,6 +106,7 @@ export function withHttp(
                 body,
                 rawBody,
                 bodySize,
+                user: authenticatedUser,
             };
 
             return await handler(req, context);

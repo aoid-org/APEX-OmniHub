@@ -1,6 +1,26 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Session } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { Layout, Section } from '@/components';
 
 export function ManModePage() {
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <Layout title="MAN Mode">
       <Section>

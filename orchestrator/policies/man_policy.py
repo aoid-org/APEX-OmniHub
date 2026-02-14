@@ -156,7 +156,9 @@ class ManPolicy:
         if tool_name in self._blocked_lower:
             return RiskTriageResult(
                 lane=ManLane.BLOCKED,
-                reason=f"Tool '{intent.tool_name}' is prohibited",
+                risk_class="D",  # Not executed, so technically "safe" from execution risk
+                reasoning=f"Tool '{intent.tool_name}' is prohibited",
+                confidence_score=1.0,  # High confidence - explicit policy
                 requires_approval=False,  # Never execute, no point in approval
                 risk_factors=["blocked_tool"],
             )
@@ -166,7 +168,9 @@ class ManPolicy:
             risk_factors.append("sensitive_tool")
             return RiskTriageResult(
                 lane=ManLane.RED,
-                reason=f"Tool '{intent.tool_name}' requires human approval",
+                risk_class="A",  # Critical - requires human approval
+                reasoning=f"Tool '{intent.tool_name}' requires human approval",
+                confidence_score=1.0,  # High confidence - explicit policy match
                 requires_approval=True,
                 risk_factors=risk_factors,
                 suggested_timeout_hours=24,
@@ -177,7 +181,9 @@ class ManPolicy:
             risk_factors.append("marked_irreversible")
             return RiskTriageResult(
                 lane=ManLane.RED,
-                reason="Action is marked as irreversible",
+                risk_class="A",  # Critical - irreversible action
+                reasoning="Action is marked as irreversible",
+                confidence_score=0.9,  # High confidence - based on explicit user flag
                 requires_approval=True,
                 risk_factors=risk_factors,
                 suggested_timeout_hours=24,
@@ -191,7 +197,9 @@ class ManPolicy:
             # Multiple high-risk params → RED
             return RiskTriageResult(
                 lane=ManLane.RED,
-                reason="Multiple high-risk parameters detected",
+                risk_class="A",  # Critical - multiple risk indicators
+                reasoning="Multiple high-risk parameters detected",
+                confidence_score=0.85,  # Good confidence - heuristic-based
                 requires_approval=True,
                 risk_factors=risk_factors,
                 suggested_timeout_hours=24,
@@ -200,7 +208,9 @@ class ManPolicy:
             # Single high-risk param → YELLOW (logged but auto-execute)
             return RiskTriageResult(
                 lane=ManLane.YELLOW,
-                reason=f"High-risk parameter detected: {param_risk[0]}",
+                risk_class="B",  # Moderate risk - single indicator
+                reasoning=f"High-risk parameter detected: {param_risk[0]}",
+                confidence_score=0.7,  # Moderate confidence - single heuristic match
                 requires_approval=False,
                 risk_factors=risk_factors,
             )
@@ -209,7 +219,9 @@ class ManPolicy:
         if tool_name in self._safe_lower:
             return RiskTriageResult(
                 lane=ManLane.GREEN,
-                reason="Tool is classified as safe",
+                risk_class="D",  # Safe - explicitly whitelisted
+                reasoning="Tool is classified as safe",
+                confidence_score=1.0,  # High confidence - explicit policy match
                 requires_approval=False,
                 risk_factors=[],
             )
@@ -217,7 +229,9 @@ class ManPolicy:
         # 6. Default: YELLOW (unknown tools - log but execute)
         return RiskTriageResult(
             lane=ManLane.YELLOW,
-            reason="Unknown tool - executing with audit logging",
+            risk_class="C",  # Moderate-low risk - unknown but logged
+            reasoning="Unknown tool - executing with audit logging",
+            confidence_score=0.5,  # Low confidence - no prior knowledge of tool
             requires_approval=False,
             risk_factors=["unknown_tool"],
         )

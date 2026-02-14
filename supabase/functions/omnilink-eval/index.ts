@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { requireAuth, isAdmin } from '../_shared/auth.ts';
+import { authenticateUser, createSupabaseClient } from '../_shared/auth.ts';
 import { buildCorsHeaders, handlePreflight } from '../_shared/cors.ts';
 
 interface EvalRequest {
@@ -70,6 +70,62 @@ function performSecurityCheck(agentResponse: string): boolean {
   return !securityPatterns.some(pattern => pattern.test(agentResponse));
 }
 
+// Authentication and authorization check (reduces cognitive complexity)
+async function verifyAdminAccess(
+  authHeader: string | null,
+  corsHeaders: Record<string, string>
+): Promise<{ success: true; userId: string } | { success: false; response: Response }> {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return {
+      success: false,
+      response: new Response(JSON.stringify({
+        error: 'unauthorized',
+        message: 'Missing or malformed Authorization header'
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    };
+  }
+
+  const supabaseAuth = createSupabaseClient();
+  const authResult = await authenticateUser(authHeader, supabaseAuth);
+  if (!authResult.success || !authResult.user) {
+    return {
+      success: false,
+      response: new Response(JSON.stringify({
+        error: 'unauthorized',
+        message: authResult.error || 'Invalid or expired token'
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    };
+  }
+
+  const { data: roleData } = await supabaseAuth
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', authResult.user.id)
+    .eq('role', 'admin')
+    .maybeSingle();
+
+  if (!roleData) {
+    return {
+      success: false,
+      response: new Response(JSON.stringify({
+        error: 'forbidden',
+        message: 'Admin access required for evaluation endpoint'
+      }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    };
+  }
+
+  return { success: true, userId: authResult.user.id };
+}
+
 export default async function handler(req: Request): Promise<Response> {
   const origin = req.headers.get('origin');
   const corsHeaders = buildCorsHeaders(origin);
@@ -81,23 +137,12 @@ export default async function handler(req: Request): Promise<Response> {
 
   try {
     // Require authentication - evaluation endpoint is sensitive
-    const authResult = await requireAuth(req);
-    if (authResult instanceof Response) {
-      return authResult; // Return 401 response
+    const authCheck = await verifyAdminAccess(req.headers.get('Authorization'), corsHeaders);
+    if (!authCheck.success) {
+      return authCheck.response;
     }
 
-    // Only admins can run evaluations
-    if (!isAdmin(authResult.user)) {
-      return new Response(JSON.stringify({
-        error: 'forbidden',
-        message: 'Admin access required for evaluation endpoint'
-      }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    console.log(`[omnilink-eval] Evaluation triggered by user ${authResult.user.id}`);
+    console.log(`[omnilink-eval] Evaluation triggered by user ${authCheck.userId}`);
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

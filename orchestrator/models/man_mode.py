@@ -1,5 +1,4 @@
 """MAN Mode (Manual-Authorization-Needed) domain models.
-# Force CI sync
 
 This module defines the core data structures for the human-in-the-loop
 safety system that gates high-risk agent actions.
@@ -7,7 +6,7 @@ safety system that gates high-risk agent actions.
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -58,19 +57,21 @@ class ActionIntent(BaseModel):
 
 
 class RiskTriageResult(BaseModel):
-    """Output from risk policy evaluation.
-
-    Attributes:
-        lane: Risk classification (GREEN/YELLOW/RED/BLOCKED)
-        reason: Human-readable explanation of classification
-        requires_approval: Whether human gate is needed
-        risk_factors: List of factors that contributed to classification
-        suggested_timeout_hours: Suggested timeout for approval in hours
+    """
+    MASTER SCHEMA: Aligns Frontend Brochure (Class A-D) with Backend Logic.
     """
 
-    lane: ManLane = Field(..., description="Risk classification lane")
-    reason: str = Field(..., description="Classification rationale")
-    requires_approval: bool = Field(..., description="Human approval required")
+    lane: ManLane = Field(..., description="Action: RED (Block), YELLOW (Review), GREEN (Pass)")
+    risk_class: Literal["A", "B", "C", "D"] = Field(
+        ..., description="Marketing Tier: A=Critical, D=Safe"
+    )
+    reasoning: str = Field(...)
+    confidence_score: float = Field(..., ge=0.0, le=1.0)
+    # CRITICAL: Demo flag to bypass DB in presentation mode
+    is_demo: bool = Field(default=False)
+
+    # Optional fields for backward compatibility or future use
+    requires_approval: bool = Field(default=True, description="Human approval required")
     risk_factors: list[str] = Field(default_factory=list, description="Contributing risk factors")
     suggested_timeout_hours: int = Field(default=24, description="Approval timeout in hours")
 

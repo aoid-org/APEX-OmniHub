@@ -1,7 +1,22 @@
 # Admin Secret Setup (Post-Deploy)
 
-After deploying the `20260208000000_secure_admin_bcrypt.sql` migration,
-you must configure the admin claim secret via the Supabase service role.
+After deploying migrations, you must configure the admin claim secret via the
+Supabase service role. Admin access is determined **exclusively** by the
+`public.user_roles` table (checked by `is_admin(auth.uid())` in RLS policies).
+
+> **Never** rely on `VITE_OMNIDASH_ADMIN_EMAILS` for auth — it is a
+> deprecated UI hint only.
+
+## How it works
+
+1. `claim_admin_access(secret)` verifies the secret against a bcrypt hash in
+   `admin_claim_secrets`.
+2. On success it **atomically** sets `app_metadata.admin = true` AND inserts
+   a row into `public.user_roles (user_id, role='admin')`.
+3. RLS policies call `is_admin(auth.uid())` which reads `user_roles` — the
+   single source of truth.
+4. The `sync_admin_metadata_to_user_roles` trigger keeps `user_roles` in sync
+   if `app_metadata` is changed externally (belt-and-suspenders).
 
 ## Steps
 
@@ -22,12 +37,25 @@ INSERT INTO public.admin_claim_secrets (secret_hash)
 VALUES ('PASTE_HASH_HERE');
 ```
 
-### 3. Verify
+### 3. Claim admin as an authenticated user
 
-As an authenticated user, call:
+From the app or via Supabase client:
 
 ```sql
 SELECT public.claim_admin_access('YOUR_CHOSEN_SECRET');
+-- Should return: true
+```
+
+This sets `app_metadata.admin = true` **and** inserts into `user_roles`.
+
+### 4. Verify
+
+```sql
+-- Check user_roles
+SELECT * FROM public.user_roles WHERE role = 'admin';
+
+-- Check RLS function
+SELECT public.is_admin('YOUR_USER_ID_HERE');
 -- Should return: true
 ```
 
