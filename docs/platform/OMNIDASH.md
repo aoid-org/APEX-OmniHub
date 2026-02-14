@@ -4,10 +4,10 @@
 - Ensure Supabase env vars are configured (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
 - Apply migrations: `supabase db push` (or deploy via your CI pipeline).
 - Set feature flag to enable internally: `OMNIDASH_ENABLED=1` (or `VITE_OMNIDASH_ENABLED=1`). Keep it OFF by default.
-- Optionally allow specific admins via `VITE_OMNIDASH_ADMIN_EMAILS=admin@example.com,founder@example.com`.
+- Bootstrap admin via `claim_admin_access(secret)` — see `docs/guides/admin-secret-setup.md`.
 
 ## Enabling
-- Turn on `OMNIDASH_ENABLED` only for internal admins until stability is confirmed. Access is additionally role-gated to `admin` (or allowlist fallback).
+- Turn on `OMNIDASH_ENABLED` only for internal admins until stability is confirmed. Access is role-gated to `admin` via `public.user_roles` (DB-only, no env allowlist).
 
 ## Acceptance Criteria (v1)
 - With `OMNIDASH_ENABLED=1` and admin user:
