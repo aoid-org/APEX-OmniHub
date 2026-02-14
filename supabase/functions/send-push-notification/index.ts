@@ -1,6 +1,9 @@
 // Supabase Edge Function: Send Push Notification
 // Dispatches push notifications to iOS (APNS) and Android (FCM) devices
 // No Firebase SDK required - uses native HTTP APIs
+//
+// SECURITY: Requires valid JWT. Users can only send to their own devices.
+// Admins (user_roles.role='admin') may target other users.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -9,11 +12,11 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 // APNS Configuration (iOS)
-const APNS_KEY_ID = Deno.env.get('APNS_KEY_ID'); // e.g., "ABC123DEFG"
-const APNS_TEAM_ID = Deno.env.get('APNS_TEAM_ID'); // e.g., "DEF123GHIJ"
+const APNS_KEY_ID = Deno.env.get('APNS_KEY_ID');
+const APNS_TEAM_ID = Deno.env.get('APNS_TEAM_ID');
 const APNS_BUNDLE_ID = Deno.env.get('APNS_BUNDLE_ID') || 'com.apexbusiness.omnilink';
-const APNS_PRIVATE_KEY = Deno.env.get('APNS_PRIVATE_KEY'); // .p8 file content
-const APNS_ENVIRONMENT = Deno.env.get('APNS_ENVIRONMENT') || 'development'; // 'development' or 'production'
+const APNS_PRIVATE_KEY = Deno.env.get('APNS_PRIVATE_KEY');
+const APNS_ENVIRONMENT = Deno.env.get('APNS_ENVIRONMENT') || 'development';
 
 // FCM Configuration (Android)
 const FCM_PROJECT_ID = Deno.env.get('FCM_PROJECT_ID');
@@ -32,39 +35,75 @@ interface PushNotificationPayload {
 
 serve(async (req) => {
     try {
-        // Verify authorization
+        // ── JWT Authentication ──────────────────────────────────────
         const authHeader = req.headers.get('Authorization');
-        if (!authHeader) {
-            return new Response(JSON.stringify({ error: 'Missing authorization' }), {
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return new Response(JSON.stringify({ error: 'Missing or malformed Authorization header' }), {
                 status: 401,
                 headers: { 'Content-Type': 'application/json' },
             });
         }
 
+        const token = authHeader.replace('Bearer ', '');
+
+        // Validate JWT via Supabase Auth
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+        if (authError || !user) {
+            return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
+                status: 401,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
 
         // Parse request body
         const payload: PushNotificationPayload = await req.json();
         const { user_id, device_tokens, title, body, data, badge, sound } = payload;
 
-        // Get device tokens from database if user_id provided
+        // ── Tenant / Ownership check ────────────────────────────────
+        const targetUserId = user_id || user.id;
+
+        if (targetUserId !== user.id) {
+            // Only admins can target other users
+            const { data: roleData } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', user.id)
+                .eq('role', 'admin')
+                .maybeSingle();
+
+            if (!roleData) {
+                return new Response(JSON.stringify({ error: 'Forbidden: can only send notifications to yourself' }), {
+                    status: 403,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            }
+        }
+
+        // Get device tokens from database
         let tokens: Array<{ token: string; platform: string }> = [];
 
-        if (user_id) {
+        if (device_tokens && device_tokens.length > 0) {
+            // Verify provided tokens belong to the target user
+            const { data: verifiedTokens, error: verifyError } = await supabase
+                .from('push_device_tokens')
+                .select('token, platform')
+                .eq('user_id', targetUserId)
+                .eq('is_active', true)
+                .in('token', device_tokens);
+
+            if (verifyError) throw verifyError;
+            tokens = verifiedTokens || [];
+        } else {
             const { data: deviceData, error } = await supabase
                 .from('push_device_tokens')
                 .select('token, platform')
-                .eq('user_id', user_id)
+                .eq('user_id', targetUserId)
                 .eq('is_active', true);
 
             if (error) throw error;
             tokens = deviceData || [];
-        } else if (device_tokens) {
-            // Use provided tokens (need to determine platform from token format)
-            tokens = device_tokens.map(token => ({
-                token,
-                platform: token.length > 100 ? 'ios' : 'android', // Heuristic
-            }));
         }
 
         if (tokens.length === 0) {
@@ -103,7 +142,7 @@ serve(async (req) => {
     } catch (error) {
         console.error('Push notification error:', error);
         return new Response(
-            JSON.stringify({ error: error.message }),
+            JSON.stringify({ error: 'Internal server error' }),
             {
                 status: 500,
                 headers: { 'Content-Type': 'application/json' },
@@ -114,7 +153,6 @@ serve(async (req) => {
 
 /**
  * Send push notification via APNS (iOS)
- * Uses HTTP/2 API - no Firebase required
  */
 async function sendAPNS(
     deviceToken: string,
@@ -124,7 +162,6 @@ async function sendAPNS(
         throw new Error('APNS credentials not configured');
     }
 
-    // Generate JWT for APNS authentication
     const jwt = await generateAPNSJWT();
 
     const apnsPayload = {
@@ -162,7 +199,6 @@ async function sendAPNS(
 
 /**
  * Send push notification via FCM HTTP v1 API (Android)
- * No Firebase SDK required - uses Google Cloud service account
  */
 async function sendFCM(
     deviceToken: string,
@@ -172,7 +208,6 @@ async function sendFCM(
         throw new Error('FCM credentials not configured');
     }
 
-    // Get OAuth2 access token
     const accessToken = await getFCMAccessToken();
 
     const fcmPayload = {
@@ -207,20 +242,10 @@ async function sendFCM(
     }
 }
 
-/**
- * Generate JWT for APNS authentication
- * NOTE: Requires djwt library for ES256 signing
- * See docs/NATIVE_PUSH_SETUP.md for implementation
- */
 async function generateAPNSJWT(): Promise<string> {
     throw new Error('APNS JWT generation requires djwt library - see setup guide');
 }
 
-/**
- * Get OAuth2 access token for FCM
- * NOTE: Requires jose library for RS256 signing
- * See docs/NATIVE_PUSH_SETUP.md for implementation
- */
 async function getFCMAccessToken(): Promise<string> {
     throw new Error('FCM OAuth2 token generation requires jose library - see setup guide');
 }

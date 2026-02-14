@@ -179,14 +179,18 @@ export const OMNIDASH_FLAG = (() => {
   return String(raw ?? '').toLowerCase() === 'true' || raw === '1';
 })();
 
-export const OMNIDASH_ADMIN_ALLOWLIST = (() => {
+/**
+ * @deprecated Never use for auth decisions. UI hints only (e.g. pre-filling email fields).
+ * Admin authority comes exclusively from public.user_roles via is_admin(auth.uid()).
+ */
+export const OMNIDASH_ADMIN_EMAIL_HINTS = (() => {
   const raw =
     import.meta.env.VITE_OMNIDASH_ADMIN_EMAILS ??
     import.meta.env.OMNIDASH_ADMIN_EMAILS ??
     '';
   return raw
     .split(',')
-    .map((e) => e.trim().toLowerCase())
+    .map((e: string) => e.trim().toLowerCase())
     .filter(Boolean);
 })();
 
