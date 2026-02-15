@@ -361,7 +361,7 @@ def load_env_config() -> Dict[str, str]:
 
 if __name__ == '__main__':
     # Example usage
-    async def main():
+    def main():
         print("OmniHub Connector - Shared Module")
         print("Import this module from your local agent scripts.")
         print("\nExample:")
@@ -372,7 +372,7 @@ if __name__ == '__main__':
         print("  await connector.close()")
 
     try:
-        asyncio.run(main())
-    except Exception as e:
+        main()
+    except Exception:
         # Ignore error if env vars missing
         pass
