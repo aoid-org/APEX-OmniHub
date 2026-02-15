@@ -16,6 +16,31 @@ interface LogData {
 }
 
 /**
+ * Redact sensitive information from logs
+ */
+export function redact(data: unknown): unknown {
+  if (!data || typeof data !== 'object') return data;
+
+  if (Array.isArray(data)) {
+    return data.map(redact);
+  }
+
+  const SENSITIVE_KEYS = /password|token|secret|key|bearer|auth/i;
+
+  return Object.fromEntries(
+    Object.entries(data as Record<string, unknown>).map(([key, value]) => {
+      if (SENSITIVE_KEYS.test(key)) {
+        return [key, '[REDACTED]'];
+      }
+      if (typeof value === 'object' && value !== null) {
+        return [key, redact(value)];
+      }
+      return [key, value];
+    })
+  );
+}
+
+/**
  * Send a debug log entry
  * Silently fails if logging server is unavailable
  */
@@ -29,7 +54,7 @@ export function debugLog({ location, message, data, hypothesisId }: LogData): vo
     const payload = {
       location,
       message,
-      data: { ...data, timestamp: Date.now() },
+      data: { ...redact(data), timestamp: Date.now() },
       timestamp: Date.now(),
       // Use ephemeral IDs if not provided, don't leak hardcoded session
       sessionId: globalThis.crypto?.randomUUID() || 'ephemeral-session',

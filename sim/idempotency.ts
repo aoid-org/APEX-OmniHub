@@ -424,17 +424,18 @@ export async function persistToDatabase(): Promise<number> {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const store = getStore();
 
     // Convert in-memory receipts to database format
-    const receipts = Array.from(receiptStore.receipts.entries()).map(([key, receipt]) => ({
-      idempotency_key: key,
+    const receipts = store.getAll().map((receipt) => ({
+      idempotency_key: receipt.idempotencyKey,
       correlation_id: receipt.correlationId,
       event_type: receipt.eventType,
       request_payload: receipt.request,
       response_payload: receipt.response,
       attempt_count: receipt.attemptCount,
       created_at: receipt.createdAt.toISOString(),
-      expires_at: new Date(receipt.expiresAt).toISOString(),
+      expires_at: receipt.expiresAt.toISOString(),
       tenant_id: process.env.SANDBOX_TENANT || 'default'
     }));
 
@@ -515,7 +516,7 @@ export async function loadFromDatabase(tenantId?: string): Promise<number> {
           ttl
         );
         // Update attempt count
-        const receipt = receiptStore.receipts.get(row.idempotency_key);
+        const receipt = getStore().get(row.idempotency_key);
         if (receipt) {
           receipt.attemptCount = row.attempt_count;
         }

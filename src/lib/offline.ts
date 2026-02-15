@@ -37,6 +37,7 @@ interface QueuedRequest {
   timestamp: number;
   request: () => Promise<unknown>;
   retries: number;
+  nextRetryTime?: number;
 }
 
 const STORAGE_KEY = 'offline_request_queue';
@@ -88,8 +89,15 @@ export async function processQueuedRequests(): Promise<void> {
 
   console.log(`Processing ${requestQueue.length} queued requests...`);
 
-  const requests = [...requestQueue];
+  const now = Date.now();
+  const requests = requestQueue.filter(req => !req.nextRetryTime || req.nextRetryTime <= now);
+  
+  if (requests.length === 0) return;
+
+  // Remove processed requests from queue, keep future retries
+  const futureRequests = requestQueue.filter(req => req.nextRetryTime && req.nextRetryTime > now);
   requestQueue.length = 0;
+  requestQueue.push(...futureRequests);
   persistQueue();
 
   // Process requests with concurrency limit for better performance
@@ -110,6 +118,14 @@ export async function processQueuedRequests(): Promise<void> {
 
         if (item.retries < MAX_RETRIES) {
           item.retries++;
+          
+          // Exponential backoff + secure jitter
+          const randomBuffer = new Uint32Array(1);
+          crypto.getRandomValues(randomBuffer);
+          const jitter = (randomBuffer[0] / 0xffffffff) * 1000;
+          const backoff = Math.pow(2, item.retries) * 1000 + jitter;
+          
+          item.nextRetryTime = Date.now() + backoff;
           requestQueue.push(item);
         }
       }

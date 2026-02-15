@@ -1,5 +1,6 @@
 /**
  * Wallet Connect Component
+ * // forcing refresh
  *
  * Purpose: UI for wallet connection and verification
  *
