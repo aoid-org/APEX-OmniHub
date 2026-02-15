@@ -32,7 +32,7 @@ echo "" >> "${REPORT_FILE}"
 
 echo "## Test Coverage" >> "${REPORT_FILE}"
 npm run test -- --run --coverage --reporter=json > /tmp/test-results.json 2>&1 || true
-if [ -f coverage/coverage-summary.json ]; then
+if [[ -f coverage/coverage-summary.json ]]; then
   COVERAGE=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
   echo "- Line Coverage: ${COVERAGE}%" >> "${REPORT_FILE}"
 else
@@ -49,7 +49,7 @@ echo "- High: ${HIGH}" >> "${REPORT_FILE}"
 echo "" >> "${REPORT_FILE}"
 
 echo "## Summary" >> "${REPORT_FILE}"
-if [ "${TOTAL_ERRORS}" -eq 0 ] && [ "${CRITICAL}" -eq 0 ]; then
+if [[ "${TOTAL_ERRORS}" -eq 0 && "${CRITICAL}" -eq 0 ]]; then
   echo "✅ Platform passes all quality gates" >> "${REPORT_FILE}"
 else
   echo "⚠️  Platform has quality issues requiring remediation" >> "${REPORT_FILE}"
