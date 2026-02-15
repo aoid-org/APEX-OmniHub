@@ -1,3 +1,5 @@
+⚠️ **HISTORICAL RECORD** — Performance snapshot from January 30, 2026 | Test count: 504/571 → Current: 564/564
+
 # APEX OMNIHUB - SYSTEM PERFORMANCE OPTIMIZATION REPORT
 ## Elite CTO-Level Platform Optimization & Performance Tuning
 

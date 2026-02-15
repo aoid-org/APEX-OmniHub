@@ -1,3 +1,5 @@
+⚠️ **HISTORICAL RECORD** — Feature snapshot from January 2026 | Test count: 221 → Current: 564
+
 # APEX-OmniHub Technical Enhancements Documentation
 
 **Date:** January 4, 2026

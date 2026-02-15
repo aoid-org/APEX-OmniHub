@@ -272,5 +272,5 @@ docs/
 
 ---
 
-**Last Updated:** February 13, 2026
+**Last Updated:** February 15, 2026
 **Release:** v1.0.0

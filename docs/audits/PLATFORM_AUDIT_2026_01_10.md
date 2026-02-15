@@ -1,3 +1,5 @@
+⚠️ **HISTORICAL RECORD** — Superseded by [PRODUCTION_AUDIT_2026_02_14.md](./PRODUCTION_AUDIT_2026_02_14.md)
+
 # APEX-OmniHub Platform Audit Report
 
 **Comprehensive Code Audit & Quality Analysis — Updated 2026-02-01**
