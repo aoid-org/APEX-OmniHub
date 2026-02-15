@@ -64,8 +64,8 @@ Comprehensive audit of three critical infrastructure components requested:
 
 ### Implementation Location
 - **Engine:** `sim/idempotency.ts`
-- **Migration (Sim):** `sim/migrations/001_create_idempotency_receipts.sql`
-- **Migration (Main):** `supabase/migrations/20260215000000_create_idempotency_receipts.sql` ⭐ NEW
+- **Migration (Production):** `supabase/migrations/20260215000000_create_idempotency_receipts.sql` ✅ CANONICAL
+- **Migration (Sim):** ~~`sim/migrations/001_create_idempotency_receipts.sql`~~ ⭐ REMOVED (duplicate eliminated)
 
 ### Features Implemented
 - ✅ In-memory receipt store with TTL
@@ -127,7 +127,8 @@ TABLE idempotency_receipts (
 3. **Migration deployment** - Missing from main Supabase
    - **Before:** Only in `sim/migrations/`
    - **After:** Copied to `supabase/migrations/20260215000000_create_idempotency_receipts.sql`
-   - **Impact:** Production database lacked idempotency table
+   - **Cleanup:** Original sim duplicate removed (Feb 15, 2026)
+   - **Impact:** Production database lacked idempotency table → RESOLVED
 
 ### Production Readiness: ✅ VERIFIED
 - Persistence functions check `SIM_MODE` and skip in simulation
