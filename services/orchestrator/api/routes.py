@@ -31,7 +31,7 @@ class TransitionRequest(BaseModel):
 
 
 # ENDPOINTS
-@router.post("/session/start")
+@router.post("/session/start", responses={500: {"description": "Internal server error"}})
 async def start_session_handler(request: Request, body: StartSessionRequest) -> dict:
     """
     Injects Reality (Randomness) -> Calls Pure Logic.
@@ -58,7 +58,7 @@ async def start_session_handler(request: Request, body: StartSessionRequest) -> 
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.post("/workflow/next")
+@router.post("/workflow/next", responses={400: {"description": "Invalid transition payload"}})
 async def transition_handler(body: TransitionRequest) -> dict:
     """
     Injects Reality (Time) -> Calls Pure Logic.

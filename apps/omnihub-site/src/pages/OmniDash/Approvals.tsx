@@ -105,7 +105,7 @@ export function ApprovalsPage() {
 
 // Sub-components
 
-function RiskBadge({ riskClass }: { riskClass: ApprovalTask['risk_class'] }) {
+function RiskBadge({ riskClass }: Readonly<{ riskClass: ApprovalTask['risk_class'] }>) {
   const colorClass = RISK_COLORS[riskClass] || 'bg-gray-800 text-gray-400 border-gray-700';
 
   return (
@@ -120,12 +120,12 @@ function ActionButtons({
   onApprove,
   onDeny,
   fullWidth = false
-}: {
+}: Readonly<{
   task: ApprovalTask;
   onApprove: (id: string) => void;
   onDeny: (id: string) => void;
   fullWidth?: boolean;
-}) {
+}>) {
   if (task.status !== 'PENDING') {
     return (
       <span className={`font-mono text-xs font-bold ${

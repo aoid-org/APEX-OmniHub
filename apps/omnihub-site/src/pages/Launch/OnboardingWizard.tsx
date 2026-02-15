@@ -38,7 +38,7 @@ export function OnboardingWizard() {
         return;
     }
 
-    if (data && data.skills) {
+    if (data?.skills) {
       setProposedSkills(data.skills);
       setStep(2);
     }

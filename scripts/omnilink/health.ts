@@ -14,8 +14,9 @@ async function run() {
   }
 }
 
-run().catch((error) => {
-   
+try {
+  await run();
+} catch (error) {
   console.error('OmniLink health check failed', error instanceof Error ? error.message : error);
   process.exitCode = 1;
-});
+}

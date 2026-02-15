@@ -17,8 +17,8 @@ import { DEFAULT_CHAOS_CONFIG, LIGHT_CHAOS_CONFIG, HEAVY_CHAOS_CONFIG, NO_CHAOS_
 import { runEvaluation, saveEvalReport, printEvalSummary } from './eval-runner';
 import type { Beat, SimulationResult } from './runner';
 import type { CallReceivedPayload, AppointmentScheduledPayload, AppName } from './contracts';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 // ============================================================================
 // CLI CONFIGURATION

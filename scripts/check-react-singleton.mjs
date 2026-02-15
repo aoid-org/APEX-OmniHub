@@ -10,7 +10,7 @@
  * @see docs/CI_RUNTIME_GATES.md
  */
 
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
 
 // ANSI colors
 const colors = {
@@ -164,7 +164,9 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error('React singleton check failed:', err);
   process.exit(1);
-});
+}
