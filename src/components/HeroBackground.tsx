@@ -37,14 +37,16 @@ export const HeroBackground = () => {
     const nodeCount = 12;
     const connectionDistance = 250;
 
-    // Initialize nodes
+    // Initialize nodes with random positions/velocities
+    // SECURITY: Math.random() is safe here - used for visual animation only, not cryptography
+    // sonar-disable-next-line typescript:S2245
     for (let i = 0; i < nodeCount; i++) {
       nodes.push({
-        x: Math.random() * canvas.offsetWidth,
-        y: Math.random() * canvas.offsetHeight,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        radius: Math.random() * 3 + 2,
+        x: Math.random() * canvas.offsetWidth, // Visual position - non-sensitive
+        y: Math.random() * canvas.offsetHeight, // Visual position - non-sensitive
+        vx: (Math.random() - 0.5) * 0.3, // Animation velocity - non-sensitive
+        vy: (Math.random() - 0.5) * 0.3, // Animation velocity - non-sensitive
+        radius: Math.random() * 3 + 2, // Visual size - non-sensitive
         connections: [],
       });
     }
