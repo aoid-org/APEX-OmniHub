@@ -25,8 +25,7 @@ function readRequiredFile(relativePath) {
 
 async function ghFetch(apiPath, { method = 'GET', body } = {}) {
   const token = requireEnv('GITHUB_TOKEN');
-  const url = `https://api.github.com${apiPath}`;
-  const response = await fetch(url, {
+  const response = await fetch(`https://api.github.com${apiPath}`, {
     method,
     headers: {
       Accept: 'application/vnd.github+json',
@@ -43,24 +42,61 @@ async function ghFetch(apiPath, { method = 'GET', body } = {}) {
     throw new Error(`GitHub API ${method} ${apiPath} failed (${response.status}): ${text}`);
   }
 
-  if (response.status === 204) {
-    return null;
-  }
-
+  if (response.status === 204) return null;
   return response.json();
+}
+
+function stripGitSuffix(value) {
+  return value.endsWith('.git') ? value.slice(0, -4) : value;
 }
 
 function parseRemoteToRepo(remoteUrl) {
   if (!remoteUrl) return null;
+  const cleaned = remoteUrl.trim().replace('git+', '');
 
-  const httpsMatch = remoteUrl.match(/github\.com[:/]([^/]+)\/([^/]+?)(?:\.git)?$/i);
-  if (httpsMatch) {
-    return { owner: httpsMatch[1], repo: httpsMatch[2] };
+  if (cleaned.startsWith('git@github.com:')) {
+    const remainder = stripGitSuffix(cleaned.slice('git@github.com:'.length));
+    const parts = remainder.split('/');
+    if (parts.length === 2 && parts[0] && parts[1]) {
+      return { owner: parts[0], repo: parts[1] };
+    }
+    return null;
   }
 
-  const sshMatch = remoteUrl.match(/git@github\.com:([^/]+)\/([^/]+?)(?:\.git)?$/i);
-  if (sshMatch) {
-    return { owner: sshMatch[1], repo: sshMatch[2] };
+  const githubMarker = 'github.com/';
+  const markerIndex = cleaned.indexOf(githubMarker);
+  if (markerIndex !== -1) {
+    const remainder = stripGitSuffix(cleaned.slice(markerIndex + githubMarker.length));
+    const parts = remainder.split('/');
+    if (parts.length >= 2 && parts[0] && parts[1]) {
+      return { owner: parts[0], repo: parts[1] };
+    }
+  }
+
+  return null;
+}
+
+function discoverRepoFromGitConfig(gitConfigText) {
+  const lines = gitConfigText.split(/\r?\n/);
+  let inOrigin = false;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (line.startsWith('[') && line.endsWith(']')) {
+      inOrigin = line === '[remote "origin"]';
+      continue;
+    }
+
+    if (!inOrigin) continue;
+    if (!line.startsWith('url')) continue;
+
+    const eqIndex = line.indexOf('=');
+    if (eqIndex === -1) continue;
+
+    const urlValue = line.slice(eqIndex + 1).trim();
+    const parsed = parseRemoteToRepo(urlValue);
+    if (parsed) return parsed;
   }
 
   return null;
@@ -69,81 +105,80 @@ function parseRemoteToRepo(remoteUrl) {
 function discoverRepo() {
   const gitConfigPath = path.join(REPO_ROOT, '.git', 'config');
   if (fs.existsSync(gitConfigPath)) {
-    const gitConfig = fs.readFileSync(gitConfigPath, 'utf8');
-    const originBlockMatch = gitConfig.match(/\[remote "origin"\]([\s\S]*?)(?:\n\[|$)/);
-    if (originBlockMatch) {
-      const urlMatch = originBlockMatch[1].match(/\n\s*url\s*=\s*(.+)\s*/);
-      if (urlMatch) {
-        const parsed = parseRemoteToRepo(urlMatch[1].trim());
-        if (parsed) return parsed;
-      }
-    }
+    const parsed = discoverRepoFromGitConfig(fs.readFileSync(gitConfigPath, 'utf8'));
+    if (parsed) return parsed;
   }
 
   const packageJsonPath = path.join(REPO_ROOT, 'package.json');
   if (fs.existsSync(packageJsonPath)) {
     try {
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-      const repositoryValue = packageJson?.repository;
+      const repository = packageJson?.repository;
       const repositoryUrl =
-        typeof repositoryValue === 'string'
-          ? repositoryValue
-          : typeof repositoryValue?.url === 'string'
-            ? repositoryValue.url
+        typeof repository === 'string'
+          ? repository
+          : typeof repository?.url === 'string'
+            ? repository.url
             : null;
-      if (repositoryUrl) {
-        const cleaned = repositoryUrl.replace(/^git\+/, '');
-        const parsed = parseRemoteToRepo(cleaned);
-        if (parsed) return parsed;
-      }
+      const parsed = parseRemoteToRepo(repositoryUrl);
+      if (parsed) return parsed;
     } catch {
-      // Continue to next fallback.
+      // Continue to env fallback.
     }
   }
 
-  const fromEnv = process.env.GITHUB_REPOSITORY;
-  if (fromEnv && /^[^/]+\/[^/]+$/.test(fromEnv)) {
-    const [owner, repo] = fromEnv.split('/');
-    return { owner, repo };
+  const envRepo = process.env.GITHUB_REPOSITORY;
+  if (envRepo) {
+    const parts = envRepo.split('/');
+    if (parts.length === 2 && parts[0] && parts[1]) {
+      return { owner: parts[0], repo: parts[1] };
+    }
   }
 
   throw new Error('Unable to discover repository. Set GITHUB_REPOSITORY=owner/repo.');
 }
 
 function extractWorkflowName(workflowText, filename) {
-  const nameMatch = workflowText.match(/^name:\s*(.+)$/m);
-  if (nameMatch) return nameMatch[1].trim();
+  const lines = workflowText.split(/\r?\n/);
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line.startsWith('name:')) continue;
+    const value = line.slice('name:'.length).trim();
+    if (value) return value;
+  }
   return path.basename(filename, path.extname(filename));
 }
 
 function extractJobs(workflowText) {
   const lines = workflowText.split(/\r?\n/);
-  const jobsStart = lines.findIndex((line) => /^jobs:\s*$/.test(line));
+  const jobsStart = lines.findIndex((line) => line.trim() === 'jobs:');
   if (jobsStart === -1) return [];
 
   const jobs = [];
-  let current = null;
+  let currentJob = null;
 
   for (let i = jobsStart + 1; i < lines.length; i += 1) {
     const line = lines[i];
-    if (!line.trim() || line.trim().startsWith('#')) continue;
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
 
-    const indent = line.match(/^\s*/)?.[0].length ?? 0;
+    const leadingSpaces = line.length - line.trimStart().length;
+    if (leadingSpaces === 0) break;
 
-    if (indent === 0) break;
-
-    const jobHeaderMatch = line.match(/^\s{2}([A-Za-z0-9_-]+):\s*$/);
-    if (jobHeaderMatch) {
-      current = { id: jobHeaderMatch[1], name: null };
-      jobs.push(current);
+    if (leadingSpaces === 2 && trimmed.endsWith(':')) {
+      const id = trimmed.slice(0, -1).trim();
+      if (id) {
+        currentJob = { id, name: null };
+        jobs.push(currentJob);
+      }
       continue;
     }
 
-    if (!current) continue;
+    if (!currentJob) continue;
 
-    const jobNameMatch = line.match(/^\s{4}name:\s*(.+)$/);
-    if (jobNameMatch && current.name === null) {
-      current.name = jobNameMatch[1].trim();
+    if (leadingSpaces === 4 && trimmed.startsWith('name:') && currentJob.name === null) {
+      const nameValue = trimmed.slice('name:'.length).trim();
+      if (nameValue) currentJob.name = nameValue;
     }
   }
 
@@ -151,18 +186,18 @@ function extractJobs(workflowText) {
 }
 
 function hasSmokeInvocation(...workflowTexts) {
-  const smokePattern = /(node|tsx|ts-node|pnpm\s+tsx|npm\s+run\s+smoke-test)[^\n]*scripts\/smoke-test\.ts|npm\s+run\s+smoke-test/;
-  return workflowTexts.some((text) => smokePattern.test(text));
+  const smokeNeedles = ['scripts/smoke-test.ts', 'npm run smoke-test'];
+  return workflowTexts.some((text) => smokeNeedles.some((needle) => text.includes(needle)));
 }
 
-function selectPrimaryJob(workflowPath, jobs, selectorLabel, preferencePatterns) {
+function selectPrimaryJob(workflowPath, jobs, preferenceChecks) {
   if (jobs.length === 0) {
     console.error(`UNCERTAIN: Multiple candidate jobs found in ${workflowPath}; refusing to guess.`);
     process.exit(1);
   }
 
-  for (const pattern of preferencePatterns) {
-    const matches = jobs.filter((job) => pattern.test(job.id) || pattern.test(job.displayName));
+  for (const check of preferenceChecks) {
+    const matches = jobs.filter((job) => check(job.id, job.displayName));
     if (matches.length === 1) return matches[0];
     if (matches.length > 1) {
       console.error(`UNCERTAIN: Multiple candidate jobs found in ${workflowPath}; refusing to guess.`);
@@ -191,11 +226,20 @@ async function extractContextsFromWorkflows(owner, repo) {
   const ciJobs = extractJobs(ciText);
   const secJobs = extractJobs(secText);
 
-  const ciJob = selectPrimaryJob(ciPath, ciJobs, 'primary test', [/build-and-test/i, /test/i, /runtime/i]);
-  const secJob = selectPrimaryJob(secPath, secJobs, 'security scan', [/security-invariants/i, /security invariant/i, /security/i, /audit/i]);
+  const ciJob = selectPrimaryJob(ciPath, ciJobs, [
+    (id, name) => id === 'build-and-test' || name.toLowerCase().includes('build'),
+    (id, name) => id.toLowerCase().includes('test') || name.toLowerCase().includes('test'),
+    (id, name) => id.toLowerCase().includes('runtime') || name.toLowerCase().includes('runtime'),
+  ]);
 
-  const smokeInvoked = hasSmokeInvocation(ciText, secText);
-  if (!smokeInvoked) {
+  const secJob = selectPrimaryJob(secPath, secJobs, [
+    (id) => id === 'security-invariants',
+    (_, name) => name.toLowerCase().includes('security invariant'),
+    (id, name) => id.toLowerCase().includes('security') || name.toLowerCase().includes('security'),
+    (id, name) => id.toLowerCase().includes('audit') || name.toLowerCase().includes('audit'),
+  ]);
+
+  if (!hasSmokeInvocation(ciText, secText)) {
     console.log('🛡️ smoke-test.ts not invoked by target workflows; excluded from required checks');
   }
 
@@ -227,8 +271,8 @@ async function extractContextsFromWorkflows(owner, repo) {
     process.exit(1);
   }
 
-  const checkRunsResp = await ghFetch(`/repos/${owner}/${repo}/commits/${sha}/check-runs`);
-  const checkRunNames = new Set((checkRunsResp?.check_runs || []).map((c) => c.name));
+  const checkRunsResponse = await ghFetch(`/repos/${owner}/${repo}/commits/${sha}/check-runs`);
+  const checkRunNames = new Set((checkRunsResponse?.check_runs || []).map((run) => run.name));
 
   const contexts = [];
   for (const group of candidateGroups) {
@@ -245,10 +289,7 @@ async function extractContextsFromWorkflows(owner, repo) {
     process.exit(1);
   }
 
-  return {
-    candidates: candidateGroups,
-    contexts,
-  };
+  return { candidates: candidateGroups, contexts };
 }
 
 async function main() {
@@ -284,19 +325,13 @@ async function main() {
       required_linear_history: true,
     };
 
-    try {
-      const response = await ghFetch(`/repos/${owner}/${repo}/branches/main/protection`, {
-        method: 'PUT',
-        body: payload,
-      });
-      console.log('🟢 Protection applied to main');
-      console.log(JSON.stringify(response, null, 2));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error('🔴 Failed to apply branch protection');
-      console.error(message);
-      process.exit(1);
-    }
+    const response = await ghFetch(`/repos/${owner}/${repo}/branches/main/protection`, {
+      method: 'PUT',
+      body: payload,
+    });
+
+    console.log('🟢 Protection applied to main');
+    console.log(JSON.stringify(response, null, 2));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error('🔴 Fatal error');
