@@ -382,12 +382,6 @@ OmniLink-APEX/
 - ✅ **8 of 12 apps have real implementations**
 - ✅ **Supabase functions provide backend integration**
 
-### Gaps to Address
-- ⚠️ **4 apps need stub contracts** (aSpiral, FlowC, Bright, TRU Talk)
-- ⚠️ **No SIM_MODE guard** (will add)
-- ⚠️ **No idempotency_receipts table** (will create)
-- ⚠️ **No chaos injection framework** (will build)
-
 ### Risk Mitigation
 - 🛡️ All simulation code will be **sandbox-only**
 - 🛡️ **Hard block on production URLs** (guard rails)

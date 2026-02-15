@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>APEX RECON ENGINE V2</title>
+    <style>
+      :root {
+        --easing: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        --bg-body: #050505;
+        --col-unverified: #ff4444;
+        --col-verified: #00e5ff;
+        --bg-unverified: rgba(255, 68, 68, 0.05);
+        --bg-verified: rgba(0, 229, 255, 0.08);
+        --font-main: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Helvetica, Arial, sans-serif;
+        --font-mono: "Courier New", Courier, monospace;
+      }
+
+      body {
+        background-color: var(--bg-body);
+        color: #888;
+        font-family: var(--font-main);
+        margin: 0;
+        padding: 20px;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .dashboard-container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #222;
+        padding-bottom: 20px;
+      }
+
+      h1 {
+        color: #fff;
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: -1px;
+        font-size: 24px;
+      }
+
+      #control-panel button {
+        background: transparent;
+        border: 1px solid var(--col-verified);
+        color: var(--col-verified);
+        padding: 10px 24px;
+        font-family: var(--font-mono);
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      #control-panel button:hover {
+        background: rgba(0, 229, 255, 0.1);
+        box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+      }
+
+      .kpi-display {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px;
+        background: #0a0a0a;
+        border: 1px solid #111;
+      }
+
+      .kpi-label {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        letter-spacing: 2px;
+        color: #555;
+        margin-bottom: 10px;
+        display: block;
+      }
+
+      #liquidity-counter {
+        font-size: 64px;
+        color: #fff;
+        font-weight: 300;
+        letter-spacing: -2px;
+        font-family: var(--font-mono);
+      }
+
+      #grid {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .transaction-row {
+        display: grid;
+        grid-template-columns: 1.5fr 1.5fr 1fr 1fr;
+        padding: 12px 20px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        background: var(--bg-unverified);
+        border-left: 3px solid var(--col-unverified);
+        color: #aaa;
+        position: relative;
+
+        /* Physics Constraints: Only transition background, border, box-shadow */
+        transition: background-color 0.4s var(--easing),
+          border-left-color 0.4s var(--easing), box-shadow 0.4s var(--easing);
+
+        /* Stagger Delay */
+        transition-delay: calc(var(--row-index) * 35ms);
+      }
+
+      .transaction-row.reconciled {
+        background: var(--bg-verified);
+        border-left-color: var(--col-verified);
+        box-shadow: 0 0 15px rgba(0, 229, 255, 0.15); /* Slightly boosted for visibility */
+        color: #fff;
+      }
+
+      /* Hover effect ONLY on reconciled rows */
+      .transaction-row.reconciled:hover {
+        transform: scale(1.02);
+        transition: transform 0.2s ease-out; /* Immediate response on hover */
+        z-index: 10;
+        background: rgba(0, 229, 255, 0.15);
+      }
+
+      .col-id {
+        color: #fff;
+      }
+      .col-date {
+        letter-spacing: 1px;
+      }
+
+      .status-badge {
+        font-weight: bold;
+        text-align: right;
+        position: relative;
+        min-width: 100px;
+      }
+
+      /* Text Swap Physics - Cross-fade with delay matching the row */
+      .status-badge::before,
+      .status-badge::after {
+        position: absolute;
+        right: 0;
+        top: 0;
+        transition: opacity 0.4s var(--easing);
+        transition-delay: calc(var(--row-index) * 35ms);
+      }
+
+      .status-badge::before {
+        content: "UNVERIFIED";
+        color: var(--col-unverified);
+        opacity: 1;
+      }
+
+      .status-badge::after {
+        content: "VERIFIED";
+        color: var(--col-verified);
+        opacity: 0;
+        text-shadow: 0 0 8px var(--col-verified);
+      }
+
+      .transaction-row.reconciled .status-badge::before {
+        opacity: 0;
+      }
+
+      .transaction-row.reconciled .status-badge::after {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <header>
+        <h1>APEX RECOVERY CONSOLE</h1>
+        <div id="control-panel">
+          <button onclick="runProtocol()">INITIATE PROTOCOL</button>
+        </div>
+      </header>
+
+      <div class="kpi-display">
+        <span class="kpi-label" id="kpi-label">PENDING LIQUIDITY</span>
+        <div id="liquidity-counter">$0</div>
+      </div>
+
+      <div id="grid">
+        <!-- Rows injected via JS -->
+      </div>
+    </div>
+
+    <script>
+      // Configuration Constants
+      const TARGET_AMOUNT = 4235000;
+      const ANIMATION_DURATION_MS = 1750; // Sync with CSS (50 rows * 35ms)
+      const TICK_RATE_MS = 10;
+      const TOTAL_FRAMES = ANIMATION_DURATION_MS / TICK_RATE_MS; // 175 frames
+      const INCREMENT = TARGET_AMOUNT / TOTAL_FRAMES; // 24200
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const grid = document.getElementById("grid");
+
+        // 1. INITIALIZE GRID DATA
+        for (let i = 0; i < 50; i++) {
+          const row = document.createElement("div");
+          row.classList.add("transaction-row");
+          // Inject row index for CSS stagger calculation
+          row.style.setProperty("--row-index", i);
+
+          // Format ID: TXN-8840...
+          const id = `TXN-884${i}`;
+          const ent = `ENT-${100 + i}`;
+
+          // Structure
+          row.innerHTML = `
+                <div class="col-id">${id}</div>
+                <div class="col-date">2024-02-14</div>
+                <div class="col-ent">${ent}</div>
+                <div class="status-badge"></div> 
+            `;
+          // Note: Content for status-badge is handled by CSS pseudo-elements for sync
+
+          grid.appendChild(row);
+        }
+      });
+
+      function runProtocol() {
+        const rows = document.querySelectorAll(".transaction-row");
+        const counterEl = document.getElementById("liquidity-counter");
+        const labelEl = document.getElementById("kpi-label");
+
+        // 2. WIRE PHYSICS ENGINE
+        // Attach class immediately; CSS transition-delay handles the stagger
+        rows.forEach((row) => {
+          row.classList.add("reconciled");
+        });
+
+        // 3. SYNCHRONIZE COUNTER ANIMATION
+        let currentAmount = 0;
+
+        // Reset if re-running (optional, but good for robustness)
+        counterEl.innerText = "$0";
+        labelEl.innerText = "RECOVERING...";
+
+        const intervalId = setInterval(() => {
+          currentAmount += INCREMENT;
+
+          // Logic: IF current >= target THEN set current = target, clearInterval
+          if (currentAmount >= TARGET_AMOUNT) {
+            currentAmount = TARGET_AMOUNT;
+            clearInterval(intervalId);
+            labelEl.innerText = "TOTAL LIQUIDITY RECOVERED";
+
+            // Final validation check for drift
+            // In a real engine we might log this, here we just ensure UI is correct
+          }
+
+          // Display formatting
+          counterEl.innerText =
+            "$" + Math.floor(currentAmount).toLocaleString();
+        }, TICK_RATE_MS);
+      }
+    </script>
+  </body>
+</html>

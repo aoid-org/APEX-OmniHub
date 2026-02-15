@@ -43,9 +43,9 @@ CAPACITY_UTILIZATION=$((CURRENT_LOAD * 100 / TOTAL_CAPACITY))
 echo "- Current Load: ${CURRENT_LOAD} users" >> "${REPORT_FILE}"
 echo "- Capacity Utilization: ${CAPACITY_UTILIZATION}%" >> "${REPORT_FILE}"
 
-if [ "${CAPACITY_UTILIZATION}" -gt 70 ]; then
+if [[ "${CAPACITY_UTILIZATION}" -gt 70 ]]; then
   echo "- **Action Required:** Scale up by 20% (add 10 pods)" >> "${REPORT_FILE}"
-elif [ "${CAPACITY_UTILIZATION}" -lt 30 ]; then
+elif [[ "${CAPACITY_UTILIZATION}" -lt 30 ]]; then
   echo "- **Optimization:** Consider scaling down by 20% to reduce costs" >> "${REPORT_FILE}"
 else
   echo "- **Status:** Optimal capacity utilization" >> "${REPORT_FILE}"
@@ -62,7 +62,7 @@ echo "- Cost Per User: \$${COST_PER_USER}/hour" >> "${REPORT_FILE}"
 echo "" >> "${REPORT_FILE}"
 
 echo "## Summary" >> "${REPORT_FILE}"
-if [ "${CAPACITY_UTILIZATION}" -lt 80 ]; then
+if [[ "${CAPACITY_UTILIZATION}" -lt 80 ]]; then
   echo "✅ Platform has sufficient capacity for current load" >> "${REPORT_FILE}"
 else
   echo "⚠️  Platform approaching capacity limits - scaling recommended" >> "${REPORT_FILE}"

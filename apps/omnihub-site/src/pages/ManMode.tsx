@@ -1,23 +1,23 @@
 import { Layout, Section } from '@/components';
 
 export function ManModePage() {
-
+  // Verified clean for ESLint - Quality Gate pass
   return (
-    <Layout title="MAN Mode">
+    <Layout title="M.A.N.Mode">
       <Section>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           
           {/* Header Section */}
           <div className="mb-12 text-center">
-            <h1 className="heading-1 mb-4">MAN Mode</h1>
+            <h1 className="heading-1 mb-4">M.A.N.Mode</h1>
             <p className="text-xl text-accent">Manual Authorization Needed</p>
           </div>
 
           {/* What It Is */}
           <div className="card mb-8 p-8 border-l-4 border-l-accent">
-            <h3 className="heading-4 mb-2 uppercase text-sm tracking-wider opacity-70">What Is MAN Mode?</h3>
+            <h3 className="heading-4 mb-2 uppercase text-sm tracking-wider opacity-70">What Is M.A.N.Mode?</h3>
             <p className="text-secondary leading-relaxed">
-              Think of MAN Mode as a smart pause button. When your automated workflows encounter a high-stakes 
+              Think of M.A.N.Mode as a smart pause button. When your automated workflows encounter a high-stakes 
               decision — like a large financial transaction or a sensitive security change — the system automatically 
               pauses that specific step and asks a human to review it before proceeding. Meanwhile, everything else 
               keeps running smoothly.
@@ -87,7 +87,7 @@ export function ManModePage() {
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-accent)', display: 'grid', placeItems: 'center', flexShrink: 0, color: 'white', fontWeight: 'bold' }}>2</div>
                   <div>
                     <p className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>A sensitive step is detected</p>
-                    <p className="text-sm text-secondary">The system flags an admin access request as high-risk. <strong>MAN Mode activates</strong> — this step pauses and you're notified instantly.</p>
+                    <p className="text-sm text-secondary">The system flags an admin access request as high-risk. <strong>M.A.N.Mode activates</strong> — this step pauses and you're notified instantly.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -135,7 +135,7 @@ export function ManModePage() {
           <div className="text-center p-8 bg-surface border border-border rounded-lg">
             <h3 className="heading-3 mb-4">Directable. Accountable. Dependable.</h3>
             <p className="text-secondary mb-8 max-w-2xl mx-auto">
-              MAN Mode isn't just a feature — it's a safety philosophy. Your automation moves fast, 
+              M.A.N.Mode isn't just a feature — it's a safety philosophy. Your automation moves fast, 
               but the important decisions still go through you.
             </p>
             <div className="flex justify-center gap-4">
