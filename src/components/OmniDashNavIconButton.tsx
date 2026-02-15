@@ -25,7 +25,7 @@ export const OmniDashNavIconButton = ({ to, label, icon: Icon, shortcut }: OmniD
       <TooltipTrigger asChild>
         <NavLink
           to={to}
-          data-testid={`omnidash-nav-${label.toLowerCase().replace(/\s/g, '-')}`}
+          data-testid={`omnidash-nav-${label.toLowerCase().replaceAll(/\s/g, '-')}`}
           aria-label={shortcut ? `${label} (Shortcut: ${shortcut})` : label}
           className={({ isActive }) =>
             `
@@ -37,7 +37,7 @@ export const OmniDashNavIconButton = ({ to, label, icon: Icon, shortcut }: OmniD
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground hover:bg-accent'
             }
-          `.trim().replace(/\s+/g, ' ')
+          `.trim().replaceAll(/\s+/g, ' ')
           }
         >
           <Icon className="h-5 w-5" strokeWidth={2} />

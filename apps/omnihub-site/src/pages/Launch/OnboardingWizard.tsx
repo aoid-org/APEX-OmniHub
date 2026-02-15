@@ -97,8 +97,9 @@ export function OnboardingWizard() {
 
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Business Description</label>
+              <label htmlFor="business-description" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Business Description</label>
               <textarea
+                id="business-description"
                 className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl p-4 mt-2 h-32 focus:ring-2 focus:ring-blue-500 outline-none transition text-lg"
                 placeholder="e.g., I operate a fleet of 10 drone repair technicians in Seattle serving commercial clients..."
                 value={input.description}
@@ -106,8 +107,9 @@ export function OnboardingWizard() {
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Primary Objective</label>
+              <label htmlFor="primary-objective" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Primary Objective</label>
               <input
+                id="primary-objective"
                 type="text"
                 className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl p-4 mt-2 focus:ring-2 focus:ring-blue-500 outline-none text-lg"
                 placeholder="e.g., Automate dispatch and upsell maintenance contracts."
