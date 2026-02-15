@@ -1,7 +1,7 @@
 /* VALUATION_IMPACT: Validates 100K+ concurrent user capacity with automated load tests. Provides empirical evidence for enterprise scalability claims in due diligence. Generated: 2026-02-03 */
 
 import { describe, it, expect } from 'vitest';
-import { performance } from 'perf_hooks';
+import { performance } from 'node:perf_hooks';
 
 interface LoadTestResult {
   totalRequests: number;
@@ -68,7 +68,7 @@ describe('Platform Scalability Benchmarks', () => {
 
     const scalingFactor = scaled.throughputRps / baseline.throughputRps;
     expect(scalingFactor).toBeGreaterThan(3.5);
-    expect(scalingFactor).toBeLessThan(6.0);
+    expect(scalingFactor).toBeLessThan(6);
   }, 120000);
 
   it('connection pool prevents resource exhaustion', () => {

@@ -1,9 +1,9 @@
 /* VALUATION_IMPACT: Automated quality gate validation ensures institutional-grade reliability. Reduces QA costs by 60% through automated enforcement. Generated: 2026-02-03 */
 
 import { describe, it, expect } from 'vitest';
-import { execSync } from 'child_process';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { execSync } from 'node:child_process';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 describe('Platform Quality Gates', () => {
   it('Gate 1: TypeScript compilation must succeed', () => {

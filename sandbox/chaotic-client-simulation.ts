@@ -629,7 +629,7 @@ Which of these would you like to tackle first?`;
 
   private getOverallVerdict(score: number): string {
     if (score >= 8.5) return '🌟 EXCELLENT - Production Ready!';
-    if (score >= 7.0) return '👍 GOOD - Minor improvements needed';
+    if (score >= 7) return '👍 GOOD - Minor improvements needed';
     if (score >= 5.5) return '😐 FAIR - Needs work before production';
     return '⚠️  POOR - Significant improvements required';
   }
@@ -664,13 +664,12 @@ export async function runChaoticClientSimulation() {
 
 // If running directly
 if (import.meta.main) {
-  runChaoticClientSimulation()
-    .then(() => {
-      console.log('\n📄 Detailed report saved to: simulation-results.json');
-      // In real scenario, would save to file
-    })
-    .catch(error => {
-      console.error('Simulation failed:', error);
-      process.exit(1);
-    });
+  try {
+    await runChaoticClientSimulation();
+    console.log('\n📄 Detailed report saved to: simulation-results.json');
+    // In real scenario, would save to file
+  } catch (error) {
+    console.error('Simulation failed:', error);
+    process.exit(1);
+  }
 }

@@ -34,19 +34,19 @@ def test_fsm_golden_path():
     assert context.state == OmniBoardState.AUTH_COMPLETE  # Immediate transition in Mock/FSM logic
 
     # 4b. Auth Callback Received (Transition to VERIFY)
-    context, msg = OmniBoardFSM.transition(
+    context, _ = OmniBoardFSM.transition(
         context, FSMEvent(event_type="AUTH_CALLBACK", payload={"code": "123"})
     )
     assert context.state == OmniBoardState.VERIFY_CONNECTION
 
     # 5. System Verifies (Simulated)
-    context, msg = OmniBoardFSM.transition(
+    context, _ = OmniBoardFSM.transition(
         context, FSMEvent(event_type="VERIFICATION_RESULT", payload={"verified": True})
     )
     assert context.state == OmniBoardState.REGISTER_CONNECTION
 
     # 6. System Registers (Simulated)
-    context, msg = OmniBoardFSM.transition(
+    context, _ = OmniBoardFSM.transition(
         context, FSMEvent(event_type="REGISTRATION_SUCCESS", payload={})
     )
     assert context.state == OmniBoardState.COMPLETION

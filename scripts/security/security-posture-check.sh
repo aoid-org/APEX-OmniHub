@@ -18,14 +18,18 @@ TOTAL_CHECKS=0
 PASSED_CHECKS=0
 
 check_passed() {
+  local message="$1"
   TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
   PASSED_CHECKS=$((PASSED_CHECKS + 1))
-  echo "✅ $1" >> "${REPORT_FILE}"
+  echo "✅ ${message}" >> "${REPORT_FILE}"
+  return 0
 }
 
 check_failed() {
+  local message="$1"
   TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
-  echo "❌ $1" >> "${REPORT_FILE}"
+  echo "❌ ${message}" >> "${REPORT_FILE}"
+  return 0
 }
 
 echo "## Secret Scanning" >> "${REPORT_FILE}"

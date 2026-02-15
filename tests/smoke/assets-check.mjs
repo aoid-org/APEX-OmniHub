@@ -11,8 +11,8 @@
  * @see docs/CI_RUNTIME_GATES.md
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:4173';
 const DIST_DIR = './dist';

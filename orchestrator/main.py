@@ -76,7 +76,10 @@ CORS_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS", "https://apexomnihub.icu,https://www.apexomnihub.icu"
 ).split(",")
 
-# Add CORSMiddleware first so it runs outermost (handles preflight before auth)
+# HMAC Signature Verification Middleware
+app.add_middleware(SignatureVerificationMiddleware)
+
+# Add CORSMiddleware last so it runs outermost (handles preflight before auth)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
@@ -84,9 +87,6 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
-
-# HMAC Signature Verification Middleware (after CORS so preflight works)
-app.add_middleware(SignatureVerificationMiddleware)
 
 
 class GoalRequest(BaseModel):
