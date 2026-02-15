@@ -54,18 +54,16 @@ export const HeroBackground = () => {
     let animationFrame: number;
     let time = 0;
 
-    // Extract connection drawing to reduce nesting depth
+    // Helper: Draw connection line between nodes
     const drawConnection = (
       node: Node,
       otherNode: Node,
       distance: number
     ) => {
       const opacity = (1 - distance / connectionDistance) * 0.3;
-
-      // Gradient connection line
       const lineGradient = ctx.createLinearGradient(node.x, node.y, otherNode.x, otherNode.y);
-      lineGradient.addColorStop(0, `hsla(195, 100%, 65%, ${opacity})`);  // Cyan
-      lineGradient.addColorStop(1, `hsla(216, 65%, 45%, ${opacity})`);   // Blue
+      lineGradient.addColorStop(0, `hsla(195, 100%, 65%, ${opacity})`);
+      lineGradient.addColorStop(1, `hsla(216, 65%, 45%, ${opacity})`);
 
       ctx.strokeStyle = lineGradient;
       ctx.lineWidth = 1;
@@ -75,19 +73,64 @@ export const HeroBackground = () => {
       ctx.stroke();
     };
 
+    // Helper: Find and draw connections for a node
+    const processConnections = (node: Node, nodeIndex: number) => {
+      node.connections = [];
+      for (let j = 0; j < nodes.length; j++) {
+        if (nodeIndex === j) continue;
+
+        const otherNode = nodes[j];
+        const dx = otherNode.x - node.x;
+        const dy = otherNode.y - node.y;
+        const distance = Math.hypot(dx, dy);
+
+        if (distance < connectionDistance) {
+          node.connections.push(j);
+          drawConnection(node, otherNode, distance);
+        }
+      }
+    };
+
+    // Helper: Render a single node with glow effects
+    const renderNode = (node: Node, nodeIndex: number) => {
+      const pulse = Math.sin(time + nodeIndex) * 0.3 + 0.7;
+
+      // Glow halo
+      const glowGradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, node.radius * 4);
+      glowGradient.addColorStop(0, `hsla(195, 100%, 75%, ${0.4 * pulse})`);
+      glowGradient.addColorStop(1, 'hsla(195, 100%, 75%, 0)');
+      ctx.fillStyle = glowGradient;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.radius * 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Core node
+      ctx.fillStyle = `hsl(195, 100%, ${65 + pulse * 10}%)`;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Ring accent
+      ctx.strokeStyle = `hsla(195, 100%, 85%, ${0.6 * pulse})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.radius * 2, 0, Math.PI * 2);
+      ctx.stroke();
+    };
+
     const animate = () => {
       time += 0.01;
 
       // Clear with gradient background
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.offsetHeight);
-      gradient.addColorStop(0, 'hsl(216, 65%, 8%)');   // Deep navy
-      gradient.addColorStop(1, 'hsl(216, 65%, 14%)');  // Navy
+      gradient.addColorStop(0, 'hsl(216, 65%, 8%)');
+      gradient.addColorStop(1, 'hsl(216, 65%, 14%)');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
 
-      // Update and draw nodes
+      // Update and render nodes
       nodes.forEach((node, i) => {
-        // Gentle movement
+        // Update position
         node.x += node.vx;
         node.y += node.vy;
 
@@ -95,43 +138,13 @@ export const HeroBackground = () => {
         if (node.x < 0 || node.x > canvas.offsetWidth) node.vx *= -1;
         if (node.y < 0 || node.y > canvas.offsetHeight) node.vy *= -1;
 
-        // Draw connections first (behind nodes)
-        node.connections = [];
-        nodes.forEach((otherNode, j) => {
-          if (i === j) return;
-          const dx = otherNode.x - node.x;
-          const dy = otherNode.y - node.y;
-          const distance = Math.hypot(dx, dy);
+        // Draw connections (behind nodes)
+        processConnections(node, i);
+      });
 
-          if (distance < connectionDistance) {
-            node.connections.push(j);
-            drawConnection(node, otherNode, distance);
-          }
-        });
-
-        // Draw node with glow
-        const pulse = Math.sin(time + i) * 0.3 + 0.7;
-        const glowGradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, node.radius * 4);
-        glowGradient.addColorStop(0, `hsla(195, 100%, 75%, ${0.4 * pulse})`);
-        glowGradient.addColorStop(1, 'hsla(195, 100%, 75%, 0)');
-
-        ctx.fillStyle = glowGradient;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.radius * 4, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Core node
-        ctx.fillStyle = `hsl(195, 100%, ${65 + pulse * 10}%)`;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Ring accent
-        ctx.strokeStyle = `hsla(195, 100%, 85%, ${0.6 * pulse})`;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.radius * 2, 0, Math.PI * 2);
-        ctx.stroke();
+      // Render all nodes on top of connections
+      nodes.forEach((node, i) => {
+        renderNode(node, i);
       });
 
       animationFrame = requestAnimationFrame(animate);
