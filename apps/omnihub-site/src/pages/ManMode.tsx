@@ -18,7 +18,7 @@ export function ManModePage() {
             <h3 className="heading-4 mb-2 uppercase text-sm tracking-wider opacity-70">What Is M.A.N.Mode?</h3>
             <p className="text-secondary leading-relaxed">
               Think of M.A.N.Mode as a smart pause button. When your automated workflows encounter a high-stakes 
-              decision — like a large financial transaction or a sensitive security change — the system automatically 
+              decision (like a large financial transaction or a sensitive security change) the system automatically 
               pauses that specific step and asks a human to review it before proceeding. Meanwhile, everything else 
               keeps running smoothly.
             </p>
@@ -31,19 +31,19 @@ export function ManModePage() {
               <ul className="space-y-3 text-secondary text-sm">
                 <li className="flex gap-2">
                   <span className="text-accent font-bold">✓</span>
-                  <span><strong>Only pauses what matters</strong> — the rest of your workflow keeps running</span>
+                  <span><strong>Only pauses what matters</strong>. The rest of your workflow keeps running</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-accent font-bold">✓</span>
-                  <span><strong>Review on your time</strong> — approve from your phone, email, or dashboard</span>
+                  <span><strong>Review on your time</strong>. Approve from your phone, email, or dashboard</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-accent font-bold">✓</span>
-                  <span><strong>Complete paper trail</strong> — every decision is logged and auditable</span>
+                  <span><strong>Complete paper trail</strong>. Every decision is logged and auditable</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-accent font-bold">✓</span>
-                  <span><strong>Trust nothing, verify everything</strong> — built on zero-trust principles</span>
+                  <span><strong>Trust nothing, verify everything</strong>. Built on zero-trust principles</span>
                 </li>
               </ul>
             </div>
@@ -135,7 +135,7 @@ export function ManModePage() {
           <div className="text-center p-8 bg-surface border border-border rounded-lg">
             <h3 className="heading-3 mb-4">Directable. Accountable. Dependable.</h3>
             <p className="text-secondary mb-8 max-w-2xl mx-auto">
-              M.A.N.Mode isn't just a feature — it's a safety philosophy. Your automation moves fast, 
+              M.A.N.Mode isn't just a feature. It's a safety philosophy. Your automation moves fast, 
               but the important decisions still go through you.
             </p>
             <div className="flex justify-center gap-4">

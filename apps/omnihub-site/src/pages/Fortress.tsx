@@ -15,7 +15,7 @@ export function FortressPage() {
           <p className="text-lg mb-8" style={{ lineHeight: '1.75' }}>
             The Fortress Protocol is APEX OmniHub's comprehensive security framework built on zero-trust principles.
             Unlike traditional perimeter-based security, Fortress assumes breach by default and implements defense-in-depth
-            at every layer. Security is not an afterthought—it is the foundation.
+            at every layer. Security is not an afterthought. It is the foundation.
           </p>
 
           {/* Core Principles */}

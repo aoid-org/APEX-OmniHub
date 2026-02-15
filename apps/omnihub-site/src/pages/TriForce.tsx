@@ -59,6 +59,10 @@ const useCases = [
     title: 'Legacy System Modernization',
     description: 'Integrate legacy systems with modern platforms through adapters without modifying existing infrastructure.',
   },
+  {
+    title: 'Strategic Decision Support',
+    description: 'Empower leadership with AI-driven insights and real-time data visualization to make high-impact strategic decisions with confidence.',
+  },
 ];
 
 const technicalSpecs = [
