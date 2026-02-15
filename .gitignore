@@ -64,3 +64,6 @@ __pycache__/
 venv/
 ENV/
 test-results/
+
+# Test artifacts
+concurrency_test_temp/
