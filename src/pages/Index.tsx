@@ -61,20 +61,39 @@ const Index = () => {
         <HeroBackground />
         <div className="relative z-10 max-w-7xl mx-auto">
           <div className="max-w-3xl mx-auto text-center space-y-8">
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-white drop-shadow-lg">
-              Universal Synchronized Orchestrator
+            {/* Gradient H1 - White to Salmon to Orange */}
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight drop-shadow-lg">
+              <span className="bg-gradient-to-r from-white via-[#FF9B7A] to-[#FF6B35] bg-clip-text text-transparent">
+                Universal Synchronized Orchestrator
+              </span>
             </h1>
-            <div className="space-y-4 text-lg md:text-xl text-gray-200">
-              <p className="font-semibold text-xl md:text-2xl text-cyan-300">Your systems. Your rules.</p>
-              <p>Build your systems so you can change them.</p>
-              <p>Connect anything. Change anything. Stay in control.</p>
-              <p className="text-base pt-2 text-cyan-200/90">Intelligence Designed. Freedom with structure.</p>
+
+            {/* Primary Tagline - All Caps */}
+            <div className="space-y-3">
+              <p className="text-2xl md:text-3xl font-bold tracking-wide text-white drop-shadow-md">
+                YOUR SYSTEMS. YOUR RULES.
+              </p>
+              <p className="text-lg md:text-xl font-semibold tracking-wider text-[#FF9B7A] drop-shadow-md">
+                DIRECTABLE • ACCOUNTABLE • DEPENDABLE
+              </p>
             </div>
+
+            {/* Body Copy - Cyan Accents */}
+            <div className="space-y-4 text-lg md:text-xl text-gray-100 pt-4">
+              <p className="text-gray-200">
+                Connect anything. Change anything. Stay in control.
+              </p>
+              <p className="text-base pt-2 text-[#81E6D9]">
+                Intelligence Designed. Freedom with structure.
+              </p>
+            </div>
+
+            {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
               <Button
                 size="lg"
                 onClick={scrollToApps}
-                className="bg-cyan-500 hover:bg-cyan-400 text-navy-900 font-semibold px-8 py-6 text-lg shadow-lg shadow-cyan-500/50 transition-all hover:shadow-xl hover:shadow-cyan-400/50 hover:scale-105"
+                className="bg-[#4FD1C5] hover:bg-[#38B2AC] text-[hsl(216,65%,14%)] font-bold px-8 py-6 text-lg shadow-lg shadow-[#4FD1C5]/40 transition-all hover:shadow-xl hover:shadow-[#4FD1C5]/60 hover:scale-105"
               >
                 Request Access
               </Button>
@@ -82,9 +101,9 @@ const Index = () => {
                 size="lg"
                 variant="outline"
                 onClick={() => document.getElementById('product')?.scrollIntoView({ behavior: 'smooth' })}
-                className="border-2 border-cyan-400/50 text-white hover:bg-cyan-400/10 hover:border-cyan-300 backdrop-blur-sm px-8 py-6 text-lg transition-all hover:scale-105"
+                className="border-2 border-white/60 text-white hover:bg-white/10 hover:border-white backdrop-blur-sm px-8 py-6 text-lg font-semibold transition-all hover:scale-105"
               >
-                View Product
+                Watch Demo
               </Button>
             </div>
           </div>
