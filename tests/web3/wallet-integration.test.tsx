@@ -15,15 +15,15 @@ import { WalletConnect } from '@/components/WalletConnect';
 import { Web3Provider } from '@/providers/Web3Provider';
 
 // Mock wagmi hooks
-vi.mock('wagmi', async () => {
-  const actual = await vi.importActual('wagmi');
+vi.mock('wagmi', () => {
   return {
-    ...actual,
     useConnect: vi.fn(),
     useAccount: vi.fn(),
     useSignMessage: vi.fn(),
     useDisconnect: vi.fn(),
     WagmiProvider: ({ children }: { children: React.ReactNode }) => React.createElement('div', null, children),
+    createConfig: vi.fn(),
+    http: vi.fn(),
   };
 });
 
@@ -42,6 +42,20 @@ vi.mock('@/integrations/supabase/client', () => ({
 vi.mock('@/lib/monitoring', () => ({
   logError: vi.fn(),
   logAnalyticsEvent: vi.fn(),
+}));
+
+// Mock web3 config to avoid importing wagmi/connectors (which triggers eventemitter3 error)
+vi.mock('@/lib/web3/config', () => ({
+  wagmiConfig: {
+    chains: [],
+    connectors: [],
+    transports: {},
+  },
+  supportedChains: [],
+  WEB3_API: {
+    nonce: '/web3-nonce',
+    verify: '/web3-verify',
+  },
 }));
 
 import { useConnect, useAccount, useSignMessage, useDisconnect } from 'wagmi';
