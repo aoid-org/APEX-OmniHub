@@ -54,6 +54,27 @@ export const HeroBackground = () => {
     let animationFrame: number;
     let time = 0;
 
+    // Extract connection drawing to reduce nesting depth
+    const drawConnection = (
+      node: Node,
+      otherNode: Node,
+      distance: number
+    ) => {
+      const opacity = (1 - distance / connectionDistance) * 0.3;
+
+      // Gradient connection line
+      const lineGradient = ctx.createLinearGradient(node.x, node.y, otherNode.x, otherNode.y);
+      lineGradient.addColorStop(0, `hsla(195, 100%, 65%, ${opacity})`);  // Cyan
+      lineGradient.addColorStop(1, `hsla(216, 65%, 45%, ${opacity})`);   // Blue
+
+      ctx.strokeStyle = lineGradient;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(node.x, node.y);
+      ctx.lineTo(otherNode.x, otherNode.y);
+      ctx.stroke();
+    };
+
     const animate = () => {
       time += 0.01;
 
@@ -80,23 +101,11 @@ export const HeroBackground = () => {
           if (i === j) return;
           const dx = otherNode.x - node.x;
           const dy = otherNode.y - node.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+          const distance = Math.hypot(dx, dy);
 
           if (distance < connectionDistance) {
             node.connections.push(j);
-            const opacity = (1 - distance / connectionDistance) * 0.3;
-
-            // Gradient connection line
-            const lineGradient = ctx.createLinearGradient(node.x, node.y, otherNode.x, otherNode.y);
-            lineGradient.addColorStop(0, `hsla(195, 100%, 65%, ${opacity})`);  // Cyan
-            lineGradient.addColorStop(1, `hsla(216, 65%, 45%, ${opacity})`);   // Blue
-
-            ctx.strokeStyle = lineGradient;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(node.x, node.y);
-            ctx.lineTo(otherNode.x, otherNode.y);
-            ctx.stroke();
+            drawConnection(node, otherNode, distance);
           }
         });
 
