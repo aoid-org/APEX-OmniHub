@@ -34,9 +34,9 @@ function Hero() {
           </p>
           <p className="hero__subtitle">{siteConfig.hero.subtitle}</p>
           <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
-            Understand Everything. Communicate Anything, to Every Platform.
-            OmniHub is your universal translator and orchestrator, connecting AI,
-            enterprise systems, and Web3 through a single controlled port.
+            Synchronize everything. Translate between any platforms.
+            OmniHub coordinates AI, enterprise systems, and Web3 through
+            a single controlled port. You own the data. You control the flow.
           </p>
           <div className="hero__actions">
             <CTAGroup
@@ -58,23 +58,23 @@ function Hero() {
 function HighlightsSection() {
   const highlightItems = [
     {
-      title: 'AI-Powered Automation',
+      title: 'Portable Automation',
       description:
-        'Imagine a platform that anticipates your needs and streamlines your operations effortlessly.',
+        'You define what happens. The system runs it. You can change it anytime.',
       icon: <IconAutomation size={22} />,
       href: '/ai-automation#modular-adapters',
     },
     {
       title: 'Smart Integrations',
       description:
-        'Unify your tools and data into one intelligent system. Say goodbye to silos and productivity bottlenecks.',
+        'Connect your systems. Keep your rules. Switch tools without rebuilding.',
       icon: <IconIntegrations size={22} />,
       href: '/smart-integrations#single-port',
     },
     {
-      title: 'Advanced Analytics',
+      title: 'Clear Visibility',
       description:
-        'Gain a 360° view of your organization. Make data-driven decisions with cutting-edge insights.',
+        'See what runs. Know what changed. Decide what happens next.',
       icon: <IconAnalytics size={22} />,
       href: '/advanced-analytics#receipts-idempotency',
     },
@@ -316,8 +316,8 @@ function CTASection() {
         </p>
         <div className="mt-8">
           <CTAGroup
-            primary={{ label: 'Get Started for Free', href: '/request-access' }}
-            secondary={{ label: 'Schedule a Demo', href: '/demo' }}
+            primary={{ label: 'Request Access', href: '/request-access' }}
+            secondary={{ label: 'Watch Demo', href: '/demo' }}
             centered
           />
         </div>

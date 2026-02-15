@@ -1,0 +1,20 @@
+# TruffleHog exclude paths (regex patterns, one per line)
+# See: https://github.com/trufflesecurity/trufflehog#exclude-paths
+
+# Documentation and example files
+.*PRODUCTION_BLOCKERS_ANALYSIS\.md$
+.*\.example$
+.*/docs/.*
+.*/examples/.*
+.*\.env\.example$
+.*MIGRATION_.*\.md$
+
+# Dependencies and build artifacts
+.*/node_modules/.*
+.*/.git/.*
+.*/dist/.*
+.*/build/.*
+
+# Test fixtures
+.*__fixtures__/.*
+.*__mocks__/.*

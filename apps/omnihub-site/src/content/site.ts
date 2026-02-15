@@ -45,23 +45,23 @@ export const siteConfig = {
       buildLink('Tech Specs', '/tech-specs'),
     ],
     loginLink: buildLink('Login', '/login'),
-    primaryCta: buildLink('Get Started', '/request-access'),
+    primaryCta: buildLink('Request Access', '/request-access'),
   },
 
   hero: {
     eyebrow: 'APEX OMNIHUB',
-    title: 'Intelligence Designed',
-    tagline: 'It Sees You',
+    title: 'Universal Synchronized Orchestrator',
+    tagline: 'Your systems. Your rules.',
     subtitle:
-      'Welcome to the future of workflow automation and business intelligence.',
+      'Connect anything. Change anything. Stay in control.',
   },
 
   highlights: {
     title: '',
     items: [
-      buildItem('AI-Powered Automation', 'Imagine a platform that anticipates your needs and streamlines your operations effortlessly.'),
-      buildItem('Smart Integrations', 'Unify your tools and data into one intelligent system. Say goodbye to silos and productivity bottlenecks.'),
-      buildItem('Advanced Analytics', 'Gain a 360° view of your organization. Make data-driven decisions with cutting-edge insights.'),
+      buildItem('Portable Automation', 'You define what happens. The system runs it. You can change it anytime.'),
+      buildItem('Smart Integrations', 'Connect your systems. Keep your rules. Switch tools without rebuilding.'),
+      buildItem('Clear Visibility', 'See what runs. Know what changed. Decide what happens next.'),
     ],
   },
 
@@ -83,7 +83,7 @@ export const siteConfig = {
       buildShowcaseItem('Project Management', '/placeholder-project.png'),
       buildShowcaseItem('Team Collaboration', '/placeholder-team.png'),
       buildShowcaseItem('Personal Dashboard', '/placeholder-dashboard.png'),
-      buildShowcaseItem('Workflow Automation', '/placeholder-workflow.png'),
+      buildShowcaseItem('Process Orchestration', '/placeholder-workflow.png'),
     ],
   },
 
@@ -93,7 +93,7 @@ export const siteConfig = {
   },
 
   ctas: {
-    primary: buildLink('Get Started', '/request-access'),
+    primary: buildLink('Request Access', '/request-access'),
     secondary: buildLink('Watch Demo', '/demo'),
     link: buildLink('Read Tech Specs', '/tech-specs'),
   },

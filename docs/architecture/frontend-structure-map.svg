@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title desc">
+  <title id="title">APEX OmniHub Frontend Structure Map</title>
+  <desc id="desc">Diagram of frontend architecture including app shell, routing, feature domains, shared infrastructure, and test/config layers.</desc>
+  <defs>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 500 16px Arial, sans-serif; fill: #334155; }
+      .h { font: 700 18px Arial, sans-serif; fill: #0f172a; }
+      .t { font: 500 14px Arial, sans-serif; fill: #1f2937; }
+      .small { font: 500 12px Arial, sans-serif; fill: #475569; }
+      .box { rx: 16; ry: 16; stroke-width: 2; }
+      .arrow { stroke: #64748b; stroke-width: 2.5; fill: none; marker-end: url(#m); }
+      .dashed { stroke-dasharray: 8 8; }
+    </style>
+    <marker id="m" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b" />
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="980" fill="#f8fafc"/>
+
+  <text x="40" y="56" class="title">APEX OmniHub – Frontend Structure Map</text>
+  <text x="40" y="84" class="subtitle">Entry + shell + route domains + shared platform modules + quality/tooling</text>
+
+  <!-- Entry -->
+  <rect class="box" x="40" y="130" width="320" height="140" fill="#dbeafe" stroke="#3b82f6"/>
+  <text x="60" y="162" class="h">Entry Layer</text>
+  <text x="60" y="190" class="t">src/main.tsx</text>
+  <text x="60" y="214" class="small">• Bootstraps React root</text>
+  <text x="60" y="234" class="small">• ThemeProvider wrapper</text>
+  <text x="60" y="254" class="small">• App shell mount</text>
+
+  <!-- App Shell -->
+  <rect class="box" x="420" y="130" width="390" height="240" fill="#e0f2fe" stroke="#0891b2"/>
+  <text x="440" y="162" class="h">Application Shell</text>
+  <text x="440" y="190" class="t">src/App.tsx</text>
+  <text x="440" y="214" class="small">• ErrorBoundary, QueryClientProvider</text>
+  <text x="440" y="234" class="small">• Tooltip/Toaster providers</text>
+  <text x="440" y="254" class="small">• BrowserRouter + lazy routes</text>
+  <text x="440" y="274" class="small">• AuthProvider + Web3Provider</text>
+  <text x="440" y="294" class="small">• MobileOnlyGate / PaidAccessRoute</text>
+  <text x="440" y="314" class="small">• Monitoring + security init hooks</text>
+
+  <!-- Routes -->
+  <rect class="box" x="860" y="130" width="700" height="320" fill="#f0fdf4" stroke="#16a34a"/>
+  <text x="880" y="162" class="h">Route &amp; Page Domains (src/pages/*)</text>
+
+  <rect x="890" y="185" width="200" height="100" rx="12" ry="12" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="905" y="212" class="t">Public</text>
+  <text x="905" y="234" class="small">/, /auth, /privacy</text>
+  <text x="905" y="254" class="small">/health</text>
+
+  <rect x="1110" y="185" width="200" height="100" rx="12" ry="12" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="1125" y="212" class="t">Protected Core</text>
+  <text x="1125" y="234" class="small">/dashboard, /apex</text>
+  <text x="1125" y="254" class="small">/links, /files, /todos</text>
+
+  <rect x="1330" y="185" width="200" height="100" rx="12" ry="12" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="1345" y="212" class="t">Mobile Flow</text>
+  <text x="1345" y="234" class="small">/translation, /agent</text>
+  <text x="1345" y="254" class="small">/settings, /omnitrace</text>
+
+  <rect x="890" y="305" width="310" height="120" rx="12" ry="12" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="905" y="332" class="t">OmniDash Nested Routes</text>
+  <text x="905" y="354" class="small">/omnidash/*</text>
+  <text x="905" y="374" class="small">today, pipeline, kpis, ops,</text>
+  <text x="905" y="394" class="small">events, runs, approvals, tasks</text>
+
+  <rect x="1220" y="305" width="310" height="120" rx="12" ry="12" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="1235" y="332" class="t">Standalone App Pages</text>
+  <text x="1235" y="354" class="small">/apps/tradeline247</text>
+  <text x="1235" y="374" class="small">/apps/autorepai ...</text>
+  <text x="1235" y="394" class="small">/tech-specs</text>
+
+  <!-- Feature Domains -->
+  <rect class="box" x="40" y="320" width="770" height="330" fill="#fefce8" stroke="#ca8a04"/>
+  <text x="60" y="352" class="h">Frontend Feature Domains (src/*)</text>
+
+  <rect x="70" y="378" width="220" height="110" rx="12" ry="12" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+  <text x="84" y="405" class="t">UI &amp; Composition</text>
+  <text x="84" y="427" class="small">components/, contexts/,</text>
+  <text x="84" y="447" class="small">providers/, hooks/</text>
+
+  <rect x="310" y="378" width="220" height="110" rx="12" ry="12" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+  <text x="324" y="405" class="t">OmniConnect</text>
+  <text x="324" y="427" class="small">ingress/, policy/, delivery/,</text>
+  <text x="324" y="447" class="small">translation/, storage/</text>
+
+  <rect x="550" y="378" width="220" height="110" rx="12" ry="12" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+  <text x="564" y="405" class="t">Integration Adapters</text>
+  <text x="564" y="427" class="small">integrations/omnilink,</text>
+  <text x="564" y="447" class="small">omniport, supabase, maestro</text>
+
+  <rect x="70" y="510" width="220" height="110" rx="12" ry="12" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+  <text x="84" y="537" class="t">Security &amp; Identity</text>
+  <text x="84" y="559" class="small">security/, zero-trust/,</text>
+  <text x="84" y="579" class="small">guardian/, lib/web3/</text>
+
+  <rect x="310" y="510" width="220" height="110" rx="12" ry="12" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+  <text x="324" y="537" class="t">Core Platform</text>
+  <text x="324" y="559" class="small">core/, api/, armageddon/,</text>
+  <text x="324" y="579" class="small">stores/, utils/</text>
+
+  <rect x="550" y="510" width="220" height="110" rx="12" ry="12" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+  <text x="564" y="537" class="t">Shared Libraries</text>
+  <text x="564" y="559" class="small">lib/database, lib/storage,</text>
+  <text x="564" y="579" class="small">lib/realtime, lib/extensibility</text>
+
+  <!-- Test + config -->
+  <rect class="box" x="860" y="490" width="700" height="160" fill="#f5f3ff" stroke="#7c3aed"/>
+  <text x="880" y="522" class="h">Quality &amp; Tooling Layer</text>
+  <text x="880" y="548" class="small">vitest.config.ts → unit/integration/sim/apex-resilience test selection</text>
+  <text x="880" y="570" class="small">playwright.config.ts → e2e runtime smoke + preview server startup</text>
+  <text x="880" y="592" class="small">eslint.config.js + tsconfig* + package.json scripts drive CI gates</text>
+  <text x="880" y="614" class="small">tests/ folders: components, integration, omniconnect, security, web3, stress</text>
+
+  <!-- Docs -->
+  <rect class="box" x="40" y="700" width="1520" height="220" fill="#ecfeff" stroke="#0e7490"/>
+  <text x="60" y="734" class="h">Documentation &amp; Learning Paths</text>
+  <text x="60" y="760" class="small">docs/README.md (navigation hub) • docs/onboarding/DEVELOPER_ONBOARDING.md (3-day onboarding)</text>
+  <text x="60" y="782" class="small">docs/architecture/* (executive summary, detailed design, MAN mode diagrams, SRE strategy)</text>
+  <text x="60" y="804" class="small">Key orientation sequence: README → App shell/routes → OmniConnect/OmniPort → orchestrator docs → test configs</text>
+
+  <!-- Arrows -->
+  <path class="arrow" d="M360 200 L420 200"/>
+  <path class="arrow" d="M810 250 L860 250"/>
+  <path class="arrow" d="M620 370 L620 320"/>
+  <path class="arrow" d="M620 650 L620 700"/>
+  <path class="arrow" d="M1210 450 L1210 490"/>
+  <path class="arrow dashed" d="M1220 650 L1220 700"/>
+
+</svg>

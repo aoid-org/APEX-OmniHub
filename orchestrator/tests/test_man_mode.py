@@ -90,7 +90,9 @@ class TestRiskTriageResult:
         """Should create valid triage result."""
         result = RiskTriageResult(
             lane=ManLane.RED,
-            reason="Sensitive tool",
+            risk_class="A",
+            reasoning="Sensitive tool",
+            confidence_score=0.95,
             requires_approval=True,
             risk_factors=["sensitive_tool"],
         )
@@ -102,7 +104,9 @@ class TestRiskTriageResult:
         """Should default to 24 hour timeout."""
         result = RiskTriageResult(
             lane=ManLane.GREEN,
-            reason="Safe",
+            risk_class="D",
+            reasoning="Safe",
+            confidence_score=0.99,
             requires_approval=False,
         )
         assert result.suggested_timeout_hours == 24
@@ -140,7 +144,9 @@ class TestManTask:
         intent = ActionIntent(tool_name="delete_user", workflow_id="wf-1")
         triage = RiskTriageResult(
             lane=ManLane.RED,
-            reason="Sensitive",
+            risk_class="A",
+            reasoning="Sensitive",
+            confidence_score=0.95,
             requires_approval=True,
         )
         task = ManTask(
@@ -327,7 +333,7 @@ class TestManPolicyPerformance:
         result1 = policy.triage(intent)
         result2 = policy.triage(intent)
         assert result1.lane == result2.lane
-        assert result1.reason == result2.reason
+        assert result1.reasoning == result2.reasoning
 
 
 class TestEdgeCases:

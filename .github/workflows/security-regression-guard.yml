@@ -107,13 +107,18 @@ jobs:
           echo "✅ No high/critical vulnerabilities in production dependencies"
           echo "Note: Dev dependencies (Hardhat/ethers v5) have known vulnerabilities that are acceptable for development tools"
 
-      - name: Check Python lockfile exists
+      - name: Check Python lockfile exists and is valid
         run: |
           if [ ! -f orchestrator/requirements.lock ]; then
-            echo "::error::Python lockfile missing. Run 'pip freeze > requirements.lock' in orchestrator/"
+            echo "::error::Python lockfile missing. Run 'pip-compile -o requirements.lock requirements.in' in orchestrator/"
             exit 1
           fi
-          echo "✅ Python lockfile exists"
+          echo "Lockfile exists. Checking for denylisted distro packages..."
+          if grep -iE "dbus-python|python-apt|PyGObject|launchpadlib" orchestrator/requirements.lock; then
+            echo "::error::Lockfile contains OS distro packages. Regenerate with: cd orchestrator && pip-compile -o requirements.lock requirements.in"
+            exit 1
+          fi
+          echo "Lockfile is clean."
 
   code-quality:
     name: Code Quality Gates

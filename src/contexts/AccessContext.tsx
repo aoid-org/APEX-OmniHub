@@ -55,6 +55,10 @@ export function AccessProvider({ children, initialScopes = ['public'] }: AccessP
   }, []);
 
   const isAuthenticated = userScopes.includes('authenticated') || userScopes.includes('demo');
+  // NOTE: isAdmin here is for UI scope gating only (demo/feature registry).
+  // It is NOT the source of truth for admin privileges — that comes from
+  // useAdminAccess() / useCapabilities() which query public.user_roles (DB-only).
+  // The 'admin' scope is never injected into userScopes from client-side storage.
   const isAdmin = userScopes.includes('admin');
 
   const value = useMemo<AccessContextValue>(() => ({

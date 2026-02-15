@@ -1,7 +1,9 @@
 import { Routes, Route } from 'react-router-dom';
 import { HomePage } from '@/pages/Home';
 import { OnboardingWizard } from '@/pages/Launch/OnboardingWizard';
-import { OmniDashPage } from '@/pages/OmniDash';
+import { DashboardOverview } from '@/pages/DashboardOverview';
+import { ApprovalsPage } from '@/pages/OmniDash/Approvals';
+import { OmniDashLayout } from '@/layouts/OmniDashLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 // Legacy/Existing Pages
@@ -27,14 +29,19 @@ function App() {
       {/* Core Application Routes */}
       <Route path="/" element={<HomePage />} />
       <Route path="/launch" element={<OnboardingWizard />} />
+
+      {/* OmniDash Console Routes */}
       <Route
         path="/omnidash"
         element={
           <ProtectedRoute>
-            <OmniDashPage />
+            <OmniDashLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<DashboardOverview />} />
+        <Route path="approvals" element={<ApprovalsPage />} />
+      </Route>
 
       {/* Existing Content Pages - Mapping to clean URLs */}
       <Route path="/login" element={<LoginPage />} />
