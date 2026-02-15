@@ -310,7 +310,9 @@
 ### Production Deployment
 **STATUS: APPROVED**
 
-The APEX-OmniHub platform has successfully passed the ARMAGEDDON Test Suite with a 100% success rate across 259 tests.
+The APEX-OmniHub platform has successfully passed the ARMAGEDDON Test Suite with a 100% success rate across 485 executed tests (67 additional tests skipped by design).
+
+Browser E2E and static-asset smoke checks remain infrastructure-dependent and should be executed in CI/CD with the required web server runtime.
 
 ### Monitoring Recommendations
 1. Monitor p95 latency (target: <500ms)
