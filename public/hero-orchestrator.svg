@@ -1,0 +1,119 @@
+<svg width="1200" height="600" viewBox="0 0 1200 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Premium "Orchestrator" visualization -->
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:hsl(216, 65%, 8%);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:hsl(216, 65%, 14%);stop-opacity:1" />
+    </linearGradient>
+
+    <linearGradient id="accentGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:hsl(195, 100%, 65%);stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:hsl(216, 65%, 45%);stop-opacity:0.4" />
+    </linearGradient>
+
+    <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:hsl(195, 100%, 75%);stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:hsl(195, 100%, 75%);stop-opacity:0" />
+    </radialGradient>
+
+    <!-- Filters -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="600" fill="url(#bgGradient)"/>
+
+  <!-- Grid pattern (subtle) -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="hsl(216, 65%, 20%)" stroke-width="0.5" opacity="0.2"/>
+  </pattern>
+  <rect width="1200" height="600" fill="url(#grid)"/>
+
+  <!-- Node network visualization -->
+  <!-- Central hub -->
+  <g id="centralHub" filter="url(#glow)">
+    <circle cx="600" cy="300" r="40" fill="url(#nodeGlow)" opacity="0.3"/>
+    <circle cx="600" cy="300" r="12" fill="hsl(195, 100%, 75%)" stroke="hsl(195, 100%, 85%)" stroke-width="2"/>
+    <circle cx="600" cy="300" r="20" fill="none" stroke="hsl(195, 100%, 65%)" stroke-width="1.5" opacity="0.6"/>
+  </g>
+
+  <!-- Orbital nodes -->
+  <g id="orbitNodes">
+    <!-- Node 1 - Top -->
+    <line x1="600" y1="300" x2="600" y2="150" stroke="url(#accentGlow)" stroke-width="1.5" opacity="0.3"/>
+    <circle cx="600" cy="150" r="25" fill="url(#nodeGlow)" opacity="0.2"/>
+    <circle cx="600" cy="150" r="8" fill="hsl(195, 100%, 70%)" filter="url(#glow)"/>
+    <circle cx="600" cy="150" r="14" fill="none" stroke="hsl(195, 100%, 75%)" stroke-width="1" opacity="0.5"/>
+
+    <!-- Node 2 - Top Right -->
+    <line x1="600" y1="300" x2="780" y2="200" stroke="url(#accentGlow)" stroke-width="1.5" opacity="0.3"/>
+    <circle cx="780" cy="200" r="25" fill="url(#nodeGlow)" opacity="0.2"/>
+    <circle cx="780" cy="200" r="8" fill="hsl(195, 100%, 70%)" filter="url(#glow)"/>
+    <circle cx="780" cy="200" r="14" fill="none" stroke="hsl(195, 100%, 75%)" stroke-width="1" opacity="0.5"/>
+
+    <!-- Node 3 - Right -->
+    <line x1="600" y1="300" x2="850" y2="300" stroke="url(#accentGlow)" stroke-width="1.5" opacity="0.3"/>
+    <circle cx="850" cy="300" r="25" fill="url(#nodeGlow)" opacity="0.2"/>
+    <circle cx="850" cy="300" r="8" fill="hsl(195, 100%, 70%)" filter="url(#glow)"/>
+    <circle cx="850" cy="300" r="14" fill="none" stroke="hsl(195, 100%, 75%)" stroke-width="1" opacity="0.5"/>
+
+    <!-- Node 4 - Bottom Right -->
+    <line x1="600" y1="300" x2="780" y2="400" stroke="url(#accentGlow)" stroke-width="1.5" opacity="0.3"/>
+    <circle cx="780" cy="400" r="25" fill="url(#nodeGlow)" opacity="0.2"/>
+    <circle cx="780" cy="400" r="8" fill="hsl(195, 100%, 70%)" filter="url(#glow)"/>
+    <circle cx="780" cy="400" r="14" fill="none" stroke="hsl(195, 100%, 75%)" stroke-width="1" opacity="0.5"/>
+
+    <!-- Node 5 - Bottom -->
+    <line x1="600" y1="300" x2="600" y2="450" stroke="url(#accentGlow)" stroke-width="1.5" opacity="0.3"/>
+    <circle cx="600" cy="450" r="25" fill="url(#nodeGlow)" opacity="0.2"/>
+    <circle cx="600" cy="450" r="8" fill="hsl(195, 100%, 70%)" filter="url(#glow)"/>
+    <circle cx="600" cy="450" r="14" fill="none" stroke="hsl(195, 100%, 75%)" stroke-width="1" opacity="0.5"/>
+
+    <!-- Node 6 - Bottom Left -->
+    <line x1="600" y1="300" x2="420" y2="400" stroke="url(#accentGlow)" stroke-width="1.5" opacity="0.3"/>
+    <circle cx="420" cy="400" r="25" fill="url(#nodeGlow)" opacity="0.2"/>
+    <circle cx="420" cy="400" r="8" fill="hsl(195, 100%, 70%)" filter="url(#glow)"/>
+    <circle cx="420" cy="400" r="14" fill="none" stroke="hsl(195, 100%, 75%)" stroke-width="1" opacity="0.5"/>
+
+    <!-- Node 7 - Left -->
+    <line x1="600" y1="300" x2="350" y2="300" stroke="url(#accentGlow)" stroke-width="1.5" opacity="0.3"/>
+    <circle cx="350" cy="300" r="25" fill="url(#nodeGlow)" opacity="0.2"/>
+    <circle cx="350" cy="300" r="8" fill="hsl(195, 100%, 70%)" filter="url(#glow)"/>
+    <circle cx="350" cy="300" r="14" fill="none" stroke="hsl(195, 100%, 75%)" stroke-width="1" opacity="0.5"/>
+
+    <!-- Node 8 - Top Left -->
+    <line x1="600" y1="300" x2="420" y2="200" stroke="url(#accentGlow)" stroke-width="1.5" opacity="0.3"/>
+    <circle cx="420" cy="200" r="25" fill="url(#nodeGlow)" opacity="0.2"/>
+    <circle cx="420" cy="200" r="8" fill="hsl(195, 100%, 70%)" filter="url(#glow)"/>
+    <circle cx="420" cy="200" r="14" fill="none" stroke="hsl(195, 100%, 75%)" stroke-width="1" opacity="0.5"/>
+  </g>
+
+  <!-- Outer ring connections (faint) -->
+  <g opacity="0.15">
+    <line x1="600" y1="150" x2="780" y2="200" stroke="hsl(195, 100%, 60%)" stroke-width="1"/>
+    <line x1="780" y1="200" x2="850" y2="300" stroke="hsl(195, 100%, 60%)" stroke-width="1"/>
+    <line x1="850" y1="300" x2="780" y2="400" stroke="hsl(195, 100%, 60%)" stroke-width="1"/>
+    <line x1="780" y1="400" x2="600" y2="450" stroke="hsl(195, 100%, 60%)" stroke-width="1"/>
+    <line x1="600" y1="450" x2="420" y2="400" stroke="hsl(195, 100%, 60%)" stroke-width="1"/>
+    <line x1="420" y1="400" x2="350" y2="300" stroke="hsl(195, 100%, 60%)" stroke-width="1"/>
+    <line x1="350" y1="300" x2="420" y2="200" stroke="hsl(195, 100%, 60%)" stroke-width="1"/>
+    <line x1="420" y1="200" x2="600" y2="150" stroke="hsl(195, 100%, 60%)" stroke-width="1"/>
+  </g>
+
+  <!-- Floating particles (decorative) -->
+  <g opacity="0.4">
+    <circle cx="200" cy="150" r="2" fill="hsl(195, 100%, 80%)"/>
+    <circle cx="950" cy="200" r="2" fill="hsl(195, 100%, 80%)"/>
+    <circle cx="150" cy="400" r="2" fill="hsl(195, 100%, 80%)"/>
+    <circle cx="1000" cy="450" r="2" fill="hsl(195, 100%, 80%)"/>
+    <circle cx="300" cy="100" r="1.5" fill="hsl(195, 100%, 75%)"/>
+    <circle cx="900" cy="500" r="1.5" fill="hsl(195, 100%, 75%)"/>
+  </g>
+</svg>

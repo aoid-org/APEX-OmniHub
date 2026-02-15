@@ -5,6 +5,7 @@ import { Header } from '@/components/Header';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { toast } from 'sonner';
 import { AppTile, AppData } from '@/components/AppTile';
+import { HeroBackground } from '@/components/HeroBackground';
 const placeholderIcon = '/placeholder.svg';
 
 const Index = () => {
@@ -56,23 +57,24 @@ const Index = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="px-4 py-16 md:py-20 lg:py-24 pt-20 md:pt-24 lg:pt-28">
-        <div className="max-w-7xl mx-auto">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-[hsl(var(--navy))]">
+      <section className="relative px-4 py-24 md:py-32 lg:py-40 pt-20 md:pt-24 lg:pt-28 overflow-hidden bg-gradient-to-b from-[hsl(216,65%,8%)] to-[hsl(216,65%,14%)]">
+        <HeroBackground />
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <div className="max-w-3xl mx-auto text-center space-y-8">
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-white drop-shadow-lg">
               Universal Synchronized Orchestrator
             </h1>
-            <div className="space-y-3 text-lg md:text-xl text-muted-foreground">
-              <p className="font-medium">Your systems. Your rules.</p>
+            <div className="space-y-4 text-lg md:text-xl text-gray-200">
+              <p className="font-semibold text-xl md:text-2xl text-cyan-300">Your systems. Your rules.</p>
               <p>Build your systems so you can change them.</p>
               <p>Connect anything. Change anything. Stay in control.</p>
-              <p className="text-sm pt-2">Intelligence Designed. Freedom with structure.</p>
+              <p className="text-base pt-2 text-cyan-200/90">Intelligence Designed. Freedom with structure.</p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
               <Button
                 size="lg"
                 onClick={scrollToApps}
-                className="bg-[hsl(var(--navy))] hover:bg-[hsl(var(--navy-600))] text-white px-8"
+                className="bg-cyan-500 hover:bg-cyan-400 text-navy-900 font-semibold px-8 py-6 text-lg shadow-lg shadow-cyan-500/50 transition-all hover:shadow-xl hover:shadow-cyan-400/50 hover:scale-105"
               >
                 Request Access
               </Button>
@@ -80,13 +82,16 @@ const Index = () => {
                 size="lg"
                 variant="outline"
                 onClick={() => document.getElementById('product')?.scrollIntoView({ behavior: 'smooth' })}
-                className="border-[hsl(var(--navy))] text-[hsl(var(--navy))] hover:bg-[hsl(var(--navy))] hover:text-white px-8"
+                className="border-2 border-cyan-400/50 text-white hover:bg-cyan-400/10 hover:border-cyan-300 backdrop-blur-sm px-8 py-6 text-lg transition-all hover:scale-105"
               >
                 View Product
               </Button>
             </div>
           </div>
         </div>
+
+        {/* Bottom gradient fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
       </section>
 
       {/* Freedom Without Fear Section */}
