@@ -253,19 +253,16 @@ audit_logs (
 
 ### To Create
 ```sql
--- Idempotency receipts (NEW)
-CREATE TABLE IF NOT EXISTS idempotency_receipts (
-  idempotency_key TEXT PRIMARY KEY,
-  correlation_id UUID NOT NULL,
-  event_type TEXT NOT NULL,
-  payload JSONB NOT NULL,
-  response JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '24 hours'
-);
-
-CREATE INDEX idx_receipts_correlation ON idempotency_receipts(correlation_id);
-CREATE INDEX idx_receipts_expires ON idempotency_receipts(expires_at);
+-- Idempotency receipts ✅ IMPLEMENTED
+-- See: supabase/migrations/20260215000000_create_idempotency_receipts.sql
+-- Schema includes:
+--   - UUID primary key, unique idempotency_key
+--   - Multi-tenant isolation (tenant_id)
+--   - Request/response payload tracking
+--   - Attempt counting, TTL expiration
+--   - RLS policies for tenant isolation
+--   - Automatic cleanup function
+-- Documentation: docs/INFRASTRUCTURE_GAPS_AUDIT_REPORT.md
 
 -- Simulation runs (NEW)
 CREATE TABLE IF NOT EXISTS sim_runs (
