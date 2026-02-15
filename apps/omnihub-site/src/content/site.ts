@@ -103,7 +103,7 @@ export const siteConfig = {
     steps: [
       buildItem('Connect', 'Modular adapters plug into any system with an interface (API, webhook, events).'),
       buildItem('Translate', 'Canonical, typed semantic events so platforms actually understand each other.'),
-      buildItem('Execute', 'Deterministic workflows with receipts, retries, rollback paths, and MAN Mode gates.'),
+      buildItem('Execute', 'Deterministic workflows with receipts, retries, rollback paths, and M.A.N.Mode gates.'),
     ],
   },
 
@@ -114,14 +114,14 @@ export const siteConfig = {
       'Verify explicitly (identity, origin, policy, intent)',
       'Least privilege (scoped + time-boxed access)',
       'Idempotency keys + receipts',
-      'MAN Mode for high-risk decision items (workflow continues)',
+      'M.A.N.Mode for high-risk decision items (workflow continues)',
       'Observability by default (correlation IDs)',
       'Reversible execution (compensation/rollback paths)',
     ],
   },
 
   manMode: {
-    title: 'MAN Mode',
+    title: 'M.A.N.Mode',
     subtitle: 'Manual Authorization Needed',
     description: 'High-risk decision items are skipped, the workflow continues with zero blocks, and the user is notified to action the item.',
   },
@@ -155,7 +155,7 @@ export const proofConfig = {
 const techSpecSections = [
   buildTechSpecSection('single-port', 'Single-Port Protocol', 'All communication flows through a single controlled port. This simplifies firewall configuration, reduces attack surface, and enables comprehensive audit logging of all data in transit.', ['One ingress/egress point for all adapter traffic', 'Protocol-agnostic envelope format', 'Built-in rate limiting and throttling', 'Automatic TLS termination']),
   buildTechSpecSection('modular-adapters', 'Modular Adapters', 'No vendor lock-in by design. Adapters are standalone modules that translate between external systems and the canonical event format.', ['Hot-swappable adapter architecture', 'Typed contracts for each adapter', 'Isolated failure domains', 'Community and enterprise adapter ecosystem']),
-  buildTechSpecSection('man-mode', 'MAN Mode (Manual Authorization Needed)', 'High-risk operations pause for human approval without blocking the entire workflow. Items requiring authorization are skipped, queued, and the user is notified.', ['Configurable risk thresholds', 'Async approval queue with notifications', 'Audit trail for all approval decisions', 'Timeout policies with safe defaults']),
+  buildTechSpecSection('man-mode', 'M.A.N.Mode (Manual Authorization Needed)', 'High-risk operations pause for human approval without blocking the entire workflow. Items requiring authorization are skipped, queued, and the user is notified.', ['Configurable risk thresholds', 'Async approval queue with notifications', 'Audit trail for all approval decisions', 'Timeout policies with safe defaults']),
   buildTechSpecSection('receipts-idempotency', 'Receipts & Idempotency', 'Every operation generates a receipt. Idempotency keys ensure safe retries and deterministic replay.', ['Unique operation IDs for every request', 'Cryptographic receipts for audit', 'Automatic deduplication', 'Replay capability for debugging']),
   buildTechSpecSection('security-posture', 'Security Posture', 'Defense-in-depth with zero-trust principles. Every request is authenticated, authorized, and logged.', ['mTLS for service-to-service communication', 'RBAC with attribute-based extensions', 'Comprehensive security headers', 'Regular third-party security audits']),
   buildTechSpecSection('rollback-portability', 'Rollback & Portability', 'Migrate between hosts and vendors with confidence. All state is exportable, all operations are reversible.', ['Database-agnostic data layer', 'Configuration as code', 'Compensation transactions for rollback', 'Documented migration runbooks']),
