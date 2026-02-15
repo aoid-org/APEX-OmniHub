@@ -18,18 +18,22 @@ TOTAL_CHECKS=0
 PASSED_CHECKS=0
 
 check_passed() {
+  local message="$1"
   TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
   PASSED_CHECKS=$((PASSED_CHECKS + 1))
-  echo "✅ $1" >> "${REPORT_FILE}"
+  echo "✅ ${message}" >> "${REPORT_FILE}"
+  return 0
 }
 
 check_failed() {
+  local message="$1"
   TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
-  echo "❌ $1" >> "${REPORT_FILE}"
+  echo "❌ ${message}" >> "${REPORT_FILE}"
+  return 0
 }
 
 echo "## Secret Scanning" >> "${REPORT_FILE}"
-if [ -f ".gitleaks.toml" ] && [ -f ".trufflehog.yaml" ]; then
+if [[ -f ".gitleaks.toml" && -f ".trufflehog.yaml" ]]; then
   check_passed "Secret scanning configuration present"
 else
   check_failed "Secret scanning configuration missing"
@@ -47,13 +51,13 @@ AUDIT_OUTPUT=$(npm audit --json 2>/dev/null || echo '{"metadata":{"vulnerabiliti
 CRITICAL=$(echo "${AUDIT_OUTPUT}" | jq -r '.metadata.vulnerabilities.critical // 0')
 HIGH=$(echo "${AUDIT_OUTPUT}" | jq -r '.metadata.vulnerabilities.high // 0')
 
-if [ "${CRITICAL}" -eq 0 ]; then
+if [[ "${CRITICAL}" -eq 0 ]]; then
   check_passed "Zero critical vulnerabilities"
 else
   check_failed "${CRITICAL} critical vulnerabilities detected"
 fi
 
-if [ "${HIGH}" -eq 0 ]; then
+if [[ "${HIGH}" -eq 0 ]]; then
   check_passed "Zero high vulnerabilities"
 else
   check_failed "${HIGH} high vulnerabilities detected"
@@ -67,13 +71,13 @@ else
   check_failed "TypeScript strict mode not enabled"
 fi
 
-if [ -f "src/security/securityAuditLogger.ts" ]; then
+if [[ -f "src/security/securityAuditLogger.ts" ]]; then
   check_passed "Security audit logger implemented"
 else
   check_failed "Security audit logger missing"
 fi
 
-if [ -f "src/security/promptDefense.ts" ]; then
+if [[ -f "src/security/promptDefense.ts" ]]; then
   check_passed "Prompt injection defense implemented"
 else
   check_failed "Prompt injection defense missing"
@@ -81,13 +85,13 @@ fi
 echo "" >> "${REPORT_FILE}"
 
 echo "## CI/CD Security" >> "${REPORT_FILE}"
-if [ -f ".github/workflows/secret-scanning.yml" ]; then
+if [[ -f ".github/workflows/secret-scanning.yml" ]]; then
   check_passed "Automated secret scanning in CI"
 else
   check_failed "Secret scanning workflow missing"
 fi
 
-if [ -f ".github/workflows/security-regression-guard.yml" ]; then
+if [[ -f ".github/workflows/security-regression-guard.yml" ]]; then
   check_passed "Security regression guard enabled"
 else
   check_failed "Security regression guard missing"
@@ -100,9 +104,9 @@ echo "- Checks Passed: ${PASSED_CHECKS}/${TOTAL_CHECKS}" >> "${REPORT_FILE}"
 echo "- Security Score: ${PASS_RATE}%" >> "${REPORT_FILE}"
 echo "" >> "${REPORT_FILE}"
 
-if [ "${PASS_RATE}" -ge 90 ]; then
+if [[ "${PASS_RATE}" -ge 90 ]]; then
   echo "✅ **Security Posture: EXCELLENT**" >> "${REPORT_FILE}"
-elif [ "${PASS_RATE}" -ge 75 ]; then
+elif [[ "${PASS_RATE}" -ge 75 ]]; then
   echo "⚠️  **Security Posture: GOOD** (Remediation recommended)" >> "${REPORT_FILE}"
 else
   echo "❌ **Security Posture: NEEDS IMPROVEMENT**" >> "${REPORT_FILE}"
