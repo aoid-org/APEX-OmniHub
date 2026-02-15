@@ -39,7 +39,7 @@ const MOCK_APPROVALS: ApprovalTask[] = [
     id: 'auth-req-004',
     agent: 'Deployment_Script',
     risk_class: 'D',
-    confidence_score: 0.60,
+    confidence_score: 0.6,
     reasoning: 'Production deployment triggered outside window',
     status: 'PENDING',
   },

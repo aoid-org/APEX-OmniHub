@@ -19,7 +19,7 @@ ALTER TABLE public.omnilink_orchestration_requests
 -- Index for claimable tasks (atomic claim query)
 CREATE INDEX IF NOT EXISTS idx_omnilink_orchestration_claimable ON public.omnilink_orchestration_requests(
   integration_id, status, run_at
-) WHERE status IN ('queued', 'approved') AND worker_id IS NULL;
+) WHERE status::text IN ('queued', 'approved') AND worker_id IS NULL;
 
 -- Index for telemetry queries (events table already has most needed indexes)
 CREATE INDEX IF NOT EXISTS idx_omnilink_events_source_type_time ON public.omnilink_events(
@@ -41,8 +41,8 @@ DECLARE
   v_task_record record;
   v_running_status constant public.omnilink_req_status := 'running';
   v_status_key constant text := 'status';
-  c_queued constant public.omnilink_req_status := 'queued';
-  c_approved constant public.omnilink_req_status := 'approved';
+  c_queued_text constant text := 'queued';
+  c_approved_text constant text := 'approved';
   c_task_type constant text := 'task';
 BEGIN
   -- Atomic claim: find one eligible task and claim it
@@ -57,7 +57,7 @@ BEGIN
     FROM public.omnilink_orchestration_requests
     WHERE integration_id = p_integration_id
       AND request_type = c_task_type
-      AND status IN (c_queued, c_approved)
+      AND status::text IN (c_queued_text, c_approved_text)
       AND worker_id IS NULL
       AND (run_at IS NULL OR run_at <= now())
       AND (p_target IS NULL OR params->>'target' = p_target)

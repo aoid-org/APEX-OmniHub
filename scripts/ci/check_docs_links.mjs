@@ -11,43 +11,39 @@ const DOCS_DIR = path.join(ROOT_DIR, 'docs');
 let hasErrors = false;
 
 
+const INVALID_LINK_TEXT = new Set(["", "\n", "\r"]);
+
+function hasInvalidLinkText(linkText) {
+  return INVALID_LINK_TEXT.has(linkText) || linkText.includes("\n") || linkText.includes("\r");
+}
+
+function parseNextLink(content, startPos) {
+  const startBracket = content.indexOf("[", startPos);
+  if (startBracket === -1) return null;
+  const endBracket = content.indexOf("]", startBracket);
+  if (endBracket === -1 || content[endBracket + 1] !== "(") return { nextPos: startBracket + 1 };
+  const endParen = content.indexOf(")", endBracket + 1);
+  if (endParen === -1) return null;
+  return {
+    nextPos: endParen + 1,
+    linkText: content.slice(startBracket + 1, endBracket),
+    linkUrl: content.slice(endBracket + 2, endParen),
+  };
+}
+
 function checkLinksInFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   // Manual parsing to avoid ReDoS (S5852)
   let pos = 0;
   while (pos < content.length) {
-    const startBracket = content.indexOf('[', pos);
-    if (startBracket === -1) break;
+    const parsedLink = parseNextLink(content, pos);
+    if (!parsedLink) break;
+    pos = parsedLink.nextPos;
+    if (!parsedLink.linkText || !parsedLink.linkUrl) continue;
 
-    const endBracket = content.indexOf(']', startBracket);
-    if (endBracket === -1) break; // No more closing brackets
-
-    // Ensure no newlines in text part
-    const linkText = content.slice(startBracket + 1, endBracket);
-    if (linkText.includes('\n') || linkText.includes('\r')) {
-      pos = startBracket + 1; 
-      continue;
-    }
-
-    // Must be followed immediately by '('
-    if (content[endBracket + 1] !== '(') {
-      pos = startBracket + 1;
-      continue;
-    }
-
-    const startParen = endBracket + 1;
-    const endParen = content.indexOf(')', startParen);
-    if (endParen === -1) break; // Open paren but no close
-
-    // Ensure no newlines in url part
-    const linkUrl = content.slice(startParen + 1, endParen);
-    if (linkUrl.includes('\n') || linkUrl.includes('\r')) {
-      pos = startParen + 1;
-      continue;
-    }
-    
-    // Advance position
-    pos = endParen + 1;
+    const { linkText, linkUrl } = parsedLink;
+    if (hasInvalidLinkText(linkText)) continue;
+    if (linkUrl.includes("\n") || linkUrl.includes("\r")) continue;
 
     // Ignore external links, anchors, and mailto
     if (linkUrl.startsWith('http') || linkUrl.startsWith('#') || linkUrl.startsWith('mailto:')) {

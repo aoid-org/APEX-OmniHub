@@ -246,7 +246,7 @@ class TestChaosSemanticCache:
 
         # Should have >50% success rate even with 50% failure injection
         success_rate = success_count / total_count
-        assert success_rate >= 0.50, f"Success rate too low: {success_rate:.2%}"
+        assert success_rate >= 0.5, f"Success rate too low: {success_rate:.2%}"
 
     async def test_cache_concurrent_writes(self, mock_cache):
         """Should handle concurrent cache writes without corruption."""

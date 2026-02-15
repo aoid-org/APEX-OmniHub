@@ -64,12 +64,36 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Secret scanning with TruffleHog
+      - name: Determine TruffleHog scan range
+        id: trufflehog-range
+        shell: bash
+        run: |
+          BASE_REF="${{ github.event.pull_request.base.sha }}"
+          HEAD_REF="${{ github.event.pull_request.head.sha }}"
+
+          if [[ -z "${BASE_REF}" || "${BASE_REF}" == "0000000000000000000000000000000000000000" || "${BASE_REF}" == "${HEAD_REF}" ]]; then
+            echo "use_range=false" >> "${GITHUB_OUTPUT}"
+            echo "Using full repository secret scan (no valid commit range available)."
+          else
+            echo "use_range=true" >> "${GITHUB_OUTPUT}"
+            echo "base_ref=${BASE_REF}" >> "${GITHUB_OUTPUT}"
+            echo "head_ref=${HEAD_REF}" >> "${GITHUB_OUTPUT}"
+            echo "Using incremental secret scan from ${BASE_REF} to ${HEAD_REF}."
+          fi
+
+      - name: Secret scanning with TruffleHog (commit range)
+        if: steps.trufflehog-range.outputs.use_range == 'true'
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: main
-          head: HEAD
+          base: ${{ steps.trufflehog-range.outputs.base_ref }}
+          head: ${{ steps.trufflehog-range.outputs.head_ref }}
+
+      - name: Secret scanning with TruffleHog (full repository fallback)
+        if: steps.trufflehog-range.outputs.use_range == 'false'
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
 
       - name: npm audit for critical vulnerabilities
         run: |
