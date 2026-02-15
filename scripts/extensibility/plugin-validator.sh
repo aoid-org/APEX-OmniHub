@@ -20,18 +20,22 @@ TOTAL_CHECKS=0
 PASSED_CHECKS=0
 
 check_passed() {
+  local message="$1"
   TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
   PASSED_CHECKS=$((PASSED_CHECKS + 1))
-  echo "✅ $1" >> "${REPORT_FILE}"
+  echo "✅ ${message}" >> "${REPORT_FILE}"
+  return 0
 }
 
 check_failed() {
+  local message="$1"
   TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
-  echo "❌ $1" >> "${REPORT_FILE}"
+  echo "❌ ${message}" >> "${REPORT_FILE}"
+  return 0
 }
 
 echo "## Manifest Validation" >> "${REPORT_FILE}"
-if [ -f "${PLUGIN_DIR}/manifest.json" ]; then
+if [[-f "${PLUGIN_DIR}/manifest.json" ]; then
   check_passed "manifest.json exists"
 
   if jq -e '.id' "${PLUGIN_DIR}/manifest.json" >/dev/null 2>&1; then
@@ -82,13 +86,13 @@ fi
 echo "" >> "${REPORT_FILE}"
 
 echo "## Code Quality" >> "${REPORT_FILE}"
-if [ -f "${PLUGIN_DIR}/tsconfig.json" ]; then
+if [[-f "${PLUGIN_DIR}/tsconfig.json" ]; then
   check_passed "TypeScript configuration present"
 else
   check_failed "TypeScript configuration missing"
 fi
 
-if [ -f "${PLUGIN_DIR}/package.json" ]; then
+if [[-f "${PLUGIN_DIR}/package.json" ]; then
   check_passed "package.json present"
 
   if jq -e '.scripts.test' "${PLUGIN_DIR}/package.json" >/dev/null 2>&1; then
@@ -100,7 +104,7 @@ else
   check_failed "package.json missing"
 fi
 
-if [ -f "${PLUGIN_DIR}/README.md" ]; then
+if [[-f "${PLUGIN_DIR}/README.md" ]; then
   check_passed "README.md present"
 else
   check_failed "README.md missing"
@@ -114,7 +118,7 @@ echo "- Plugin Size: ${TOTAL_SIZE}" >> "${REPORT_FILE}"
 FILE_COUNT=$(find "${PLUGIN_DIR}" -type f | wc -l)
 echo "- File Count: ${FILE_COUNT}" >> "${REPORT_FILE}"
 
-if [ "${FILE_COUNT}" -lt 100 ]; then
+if [["${FILE_COUNT}" -lt 100 ]; then
   check_passed "File count within limits (<100)"
 else
   check_failed "Too many files (${FILE_COUNT} >= 100)"
@@ -127,10 +131,10 @@ echo "- Checks Passed: ${PASSED_CHECKS}/${TOTAL_CHECKS}" >> "${REPORT_FILE}"
 echo "- Validation Score: ${PASS_RATE}%" >> "${REPORT_FILE}"
 echo "" >> "${REPORT_FILE}"
 
-if [ "${PASS_RATE}" -eq 100 ]; then
+if [["${PASS_RATE}" -eq 100 ]; then
   echo "✅ **Plugin Validation: PASSED**" >> "${REPORT_FILE}"
   echo "Plugin is ready for marketplace submission" >> "${REPORT_FILE}"
-elif [ "${PASS_RATE}" -ge 80 ]; then
+elif [["${PASS_RATE}" -ge 80 ]; then
   echo "⚠️  **Plugin Validation: CONDITIONAL PASS**" >> "${REPORT_FILE}"
   echo "Address failing checks before submission" >> "${REPORT_FILE}"
 else
@@ -142,6 +146,6 @@ echo "" >> "${REPORT_FILE}"
 echo "Report saved: ${REPORT_FILE}"
 cat "${REPORT_FILE}"
 
-if [ "${PASS_RATE}" -lt 80 ]; then
+if [["${PASS_RATE}" -lt 80 ]; then
   exit 1
 fi

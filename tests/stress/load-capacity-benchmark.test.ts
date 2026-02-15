@@ -1,7 +1,7 @@
 /* VALUATION_IMPACT: Validates 100K+ concurrent user capacity with automated load tests. Provides empirical evidence for enterprise scalability claims in due diligence. Generated: 2026-02-03 */
 
 import { describe, it, expect } from 'vitest';
-import { performance } from 'perf_hooks';
+import { performance } from 'node:perf_hooks';
 
 interface LoadTestResult {
   totalRequests: number;
