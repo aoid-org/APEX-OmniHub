@@ -2,7 +2,7 @@
 export GITHUB_TOKEN="ghp_YOUR_TOKEN_HERE"
 
 # Ensure we are on main
-if [ "$(git rev-parse --abbrev-ref HEAD)" != "main" ]; then
+if [[ "$(git rev-parse --abbrev-ref HEAD)" != "main" ]]; then
   echo "BRANCH_MISMATCH: Must be on main branch to initiate deployment. Current: $(git rev-parse --abbrev-ref HEAD). Run: git checkout main"
   exit 1
 fi
