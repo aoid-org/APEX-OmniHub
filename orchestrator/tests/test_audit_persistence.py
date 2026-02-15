@@ -18,6 +18,13 @@ from models.audit import (
     AuditStatus,
 )
 
+# Test fixtures for security validation - intentionally fake credentials
+# used to verify they are NOT leaked in audit fallback logs
+TEST_CREDENTIALS = {
+    "api_key": "secret-key-123",
+    "password": "hunter2",
+}
+
 
 class TestAuditPersistence:
     """Test audit log persistence with fallback."""
@@ -83,13 +90,7 @@ class TestAuditPersistence:
     @pytest.mark.asyncio
     async def test_fallback_does_not_log_secrets(self, audit_logger, sample_event):
         """Fallback should not log sensitive data."""
-        # Test credentials intentionally used to verify they are NOT leaked in fallback logs
-        _fake_api_key = "secret-key-123"  # noqa: S105
-        _fake_password = "hunter2"  # noqa: S105
-        sample_event.metadata.custom_fields = {
-            "api_key": _fake_api_key,
-            "password": _fake_password,
-        }
+        sample_event.metadata.custom_fields = TEST_CREDENTIALS.copy()
 
         mock_db = AsyncMock()
         mock_db.insert = AsyncMock(side_effect=Exception("DB error"))
@@ -107,8 +108,8 @@ class TestAuditPersistence:
             stderr_output = captured_stderr.getvalue()
 
             # Fallback should NOT contain secret values
-            assert "secret-key-123" not in stderr_output
-            assert "hunter2" not in stderr_output
+            assert TEST_CREDENTIALS["api_key"] not in stderr_output
+            assert TEST_CREDENTIALS["password"] not in stderr_output
 
             # Should only contain essential audit fields
             assert sample_event.id in stderr_output
