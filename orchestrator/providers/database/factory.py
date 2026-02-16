@@ -7,7 +7,7 @@ This enables runtime switching between different database backends.
 
 import os
 
-from orchestrator.infrastructure.tidb_persistence import TiDBVectorPersistence
+from infrastructure.tidb_persistence import TiDBVectorPersistence
 
 from .base import DatabaseProvider
 from .supabase_provider import SupabaseDatabaseProvider
@@ -34,7 +34,8 @@ class DatabaseFactory:
             return TiDBVectorPersistence()  # type: ignore # APEX-DEV G2: Portability
 
         raise ValueError(
-            f"CRITICAL: Unknown DATABASE_PROVIDER '{provider_type}'. Must be 'supabase' or 'tidb'."
+            f"CRITICAL: Unknown DATABASE_PROVIDER '{provider_type}'. "
+            f"Must be 'supabase' or 'tidb'."
         )
 
 
