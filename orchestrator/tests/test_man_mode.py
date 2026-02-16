@@ -1,15 +1,16 @@
 """Unit tests for MAN Mode models and policy engine."""
 
+from uuid import uuid4
+
 import pytest
 from pydantic import ValidationError
-from uuid import uuid4
 
 from models.man_mode import (
     ActionIntent,
-    RiskLane,
     ManTask,
     ManTaskDecision,
     ManTaskStatus,
+    RiskLane,
     RiskTriageResult,
     create_idempotency_key,
 )
@@ -195,7 +196,7 @@ class TestManPolicy:
         assert result.risk_lane == RiskLane.RED
         assert result.requires_approval is True
         # reasoning should contain risk factor
-        # assert "sensitive_tool" in result.reasoning
+        assert "requires human approval" in result.reasoning
 
     def test_blocked_tool_blocked_lane(self):
         """Blocked tools should return BLOCKED lane."""
@@ -278,7 +279,7 @@ class TestManPolicy:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        # assert "large_amount" in result.reasoning
+        assert "large_amount" in result.reasoning
 
     def test_case_insensitive_tool_matching(self):
         """Tool matching should be case-insensitive."""
@@ -369,7 +370,7 @@ class TestEdgeCases:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        # assert "high_risk_param" in result.reasoning
+        assert "high_risk_param" in result.reasoning
 
     def test_near_threshold_amount(self):
         """Should not trigger for amounts just below threshold."""
@@ -380,7 +381,7 @@ class TestEdgeCases:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        # assert "large_amount" not in result.reasoning
+        assert "large_amount" not in result.reasoning
 
     def test_negative_amount_safe(self):
         """Negative amounts should not trigger risk."""
@@ -391,7 +392,7 @@ class TestEdgeCases:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        # assert "large_amount" not in result.reasoning
+        assert "large_amount" not in result.reasoning
 
 
 class TestToolConfiguration:
