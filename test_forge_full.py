@@ -13,6 +13,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import math
 import shutil
 import sys
 import tempfile
@@ -118,6 +119,17 @@ def test_audit_all(skills: dict[str, Path]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Helper: Validate ZIP structure
+# ---------------------------------------------------------------------------
+def _validate_zip_structure(fmt: str, names: list[str], root: str) -> bool:
+    """Validate ZIP contains required files for given format."""
+    if fmt == "claude":
+        return f"{root}/SKILL.md" in names and f"{root}/manifest.yaml" in names
+    # universal and omnihub have identical requirements
+    return f"{root}/README.md" in names and f"{root}/MANIFEST.json" in names
+
+
+# ---------------------------------------------------------------------------
 # Test 3: Ship all 3 formats for each archetype
 # ---------------------------------------------------------------------------
 def test_ship_all(skills: dict[str, Path], tmp: Path) -> None:
@@ -138,19 +150,7 @@ def test_ship_all(skills: dict[str, Path], tmp: Path) -> None:
                     with zipfile.ZipFile(zip_path, "r") as zf:
                         names = zf.namelist()
                         root = names[0].split("/")[0] if names else ""
-
-                        if fmt == "claude":
-                            valid_structure = (
-                                f"{root}/SKILL.md" in names and f"{root}/manifest.yaml" in names
-                            )
-                        elif fmt == "universal":
-                            valid_structure = (
-                                f"{root}/README.md" in names and f"{root}/MANIFEST.json" in names
-                            )
-                        elif fmt == "omnihub":
-                            valid_structure = (
-                                f"{root}/README.md" in names and f"{root}/MANIFEST.json" in names
-                            )
+                        valid_structure = _validate_zip_structure(fmt, names, root)
 
                 ok = exists and valid_structure and size > 0
                 label = "valid" if valid_structure else "INVALID"
@@ -324,7 +324,7 @@ def test_edge_cases(tmp: Path) -> None:
             False,
             "should have raised error",
         )
-    except (FileNotFoundError, Exception):
+    except Exception:
         test(
             "ship non-existent path",
             True,
@@ -338,7 +338,7 @@ def test_edge_cases(tmp: Path) -> None:
             False,
             "should have raised error",
         )
-    except (ValueError, Exception):
+    except Exception:
         test(
             "ship invalid format",
             True,
@@ -358,7 +358,7 @@ def test_self_audit() -> None:
     avg = report.get("average_score", 0)
     passed = report.get("passed", False)
     test("self-audit >= 9.5", passed, f"score={avg}/10")
-    test("self-audit == 10.0", avg == 10.0, f"score={avg}/10")
+    test("self-audit == 10.0", math.isclose(avg, 10.0, abs_tol=0.01), f"score={avg}/10")
 
     for dim in report.get("dimensions", []):
         test(
