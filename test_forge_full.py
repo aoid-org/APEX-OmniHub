@@ -129,6 +129,36 @@ def _validate_zip_structure(fmt: str, names: list[str], root: str) -> bool:
     return f"{root}/README.md" in names and f"{root}/MANIFEST.json" in names
 
 
+def _test_single_package(arch: str, skill_path: Path, fmt: str, tmp: Path) -> None:
+    """Test shipping a single archetype in a single format."""
+    try:
+        output_dir = tmp / "packages" / arch
+        zip_path = package_skill(skill_path, fmt, output_dir)
+        exists = zip_path.exists()
+        size = zip_path.stat().st_size if exists else 0
+
+        valid_structure = False
+        if exists:
+            with zipfile.ZipFile(zip_path, "r") as zf:
+                names = zf.namelist()
+                root = names[0].split("/")[0] if names else ""
+                valid_structure = _validate_zip_structure(fmt, names, root)
+
+        ok = exists and valid_structure and size > 0
+        label = "valid" if valid_structure else "INVALID"
+        test(
+            f"ship {arch} -> {fmt}",
+            ok,
+            f"size={size:,}B structure={label}",
+        )
+    except Exception as e:
+        test(
+            f"ship {arch} -> {fmt}",
+            False,
+            f"Exception: {e}",
+        )
+
+
 # ---------------------------------------------------------------------------
 # Test 3: Ship all 3 formats for each archetype
 # ---------------------------------------------------------------------------
@@ -139,32 +169,7 @@ def test_ship_all(skills: dict[str, Path], tmp: Path) -> None:
 
     for arch, skill_path in skills.items():
         for fmt in ["claude", "universal", "omnihub"]:
-            try:
-                output_dir = tmp / "packages" / arch
-                zip_path = package_skill(skill_path, fmt, output_dir)
-                exists = zip_path.exists()
-                size = zip_path.stat().st_size if exists else 0
-
-                valid_structure = False
-                if exists:
-                    with zipfile.ZipFile(zip_path, "r") as zf:
-                        names = zf.namelist()
-                        root = names[0].split("/")[0] if names else ""
-                        valid_structure = _validate_zip_structure(fmt, names, root)
-
-                ok = exists and valid_structure and size > 0
-                label = "valid" if valid_structure else "INVALID"
-                test(
-                    f"ship {arch} -> {fmt}",
-                    ok,
-                    f"size={size:,}B structure={label}",
-                )
-            except Exception as e:
-                test(
-                    f"ship {arch} -> {fmt}",
-                    False,
-                    f"Exception: {e}",
-                )
+            _test_single_package(arch, skill_path, fmt, tmp)
 
 
 # ---------------------------------------------------------------------------
