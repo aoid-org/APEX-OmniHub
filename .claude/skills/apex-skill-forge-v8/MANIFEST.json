@@ -1,0 +1,30 @@
+{
+  "name": "apex-skill-forge",
+  "version": "8.0.0",
+  "archetype": "orchestrator",
+  "description": "Triggers: forge skill, create skill, build skill, scaffold skill, package skill, audit skill, ship skill. Actions: scaffold 6 archetypes, DAG-compatible execution, 12-dimension audit, tri-format packaging. Produces: production-grade skill packages for Claude, Universal LLM, and APEX OmniHub.",
+  "platform": "universal",
+  "license": "Proprietary - APEX Business Systems Ltd.",
+  "dag": {
+    "_comment_node_type": "processor=general compute, orchestrator=multi-step coordinator, validator=input checker, transformer=data converter",
+    "node_type": "orchestrator",
+    "_comment_accepts": "MIME types this node can consume as input",
+    "accepts": ["application/json", "text/plain"],
+    "_comment_emits": "Events this node publishes on completion or failure",
+    "emits": ["event:completion", "event:failure"],
+    "timeout_ms": 30000,
+    "retry_policy": {
+      "max": 3,
+      "backoff": "exponential",
+      "_comment": "Delay = backoff_base_ms * 2^(attempt-1). Default base: 500ms"
+    },
+    "idempotent": true,
+    "side_effects": false,
+    "_comment_omnihub": "omnihub_compatible must be true for automatic registration in OmniHub skill catalog",
+    "omnihub_compatible": true,
+    "health_check_endpoint": "/health",
+    "metrics_enabled": true
+  },
+  "created_at": "2026-02-15T00:00:00Z",
+  "created_by": "apex-skill-forge v8.0.0"
+}
