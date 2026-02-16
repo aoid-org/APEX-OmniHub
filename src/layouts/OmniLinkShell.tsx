@@ -6,7 +6,7 @@ interface OmniLinkShellProps {
   children: ReactNode;
 }
 
-export function OmniLinkShell({ children }: OmniLinkShellProps) {
+export function OmniLinkShell({ children }: Readonly<OmniLinkShellProps>) {
   return (
     <div data-testid="omnilink-shell">
       <DashboardLayout>

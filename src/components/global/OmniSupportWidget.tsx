@@ -20,7 +20,7 @@ export function OmniSupportWidget(): JSX.Element {
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     const mailtoLink = `mailto:info-outreach@apexomnihub.icu?subject=Support Request from ${encodeURIComponent(name)}&body=${encodeURIComponent(message)}%0D%0A%0D%0AFrom: ${encodeURIComponent(email)}`;
-    window.location.href = mailtoLink;
+    globalThis.location.href = mailtoLink;
   };
 
   return (
