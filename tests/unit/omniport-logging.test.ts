@@ -42,10 +42,6 @@ vi.mock('@/lib/web3/entitlements', () => ({
 describe('OmniPort Logging Performance', () => {
   let omniPort: OmniPortEngine;
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
-  // consoleErrorSpy is used implicitly by the implementation (we expect it NOT to be called or to be called if we test error case)
-  // To avoid unused var warning, we can remove it if not used in assertions,
-  // OR use it in an assertion.
-  // let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Access private constructor via getInstance (singleton)
