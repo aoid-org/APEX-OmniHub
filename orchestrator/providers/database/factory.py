@@ -34,8 +34,7 @@ class DatabaseFactory:
             return TiDBVectorPersistence()  # type: ignore # APEX-DEV G2: Portability
 
         raise ValueError(
-            f"CRITICAL: Unknown DATABASE_PROVIDER '{provider_type}'. "
-            f"Must be 'supabase' or 'tidb'."
+            f"CRITICAL: Unknown DATABASE_PROVIDER '{provider_type}'. Must be 'supabase' or 'tidb'."
         )
 
 

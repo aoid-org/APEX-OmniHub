@@ -15,9 +15,9 @@ from pydantic import BaseModel, Field
 class RiskLane(str, Enum):
     """APEX-DEV D2: MAN Mode Risk Lanes | Source: apex-dev.md"""
 
-    GREEN = "GREEN"      # Auto-execute (Standard ops)
-    YELLOW = "YELLOW"    # Execute + Audit (Unknowns)
-    RED = "RED"          # Isolate + Human Approval (High stakes)
+    GREEN = "GREEN"  # Auto-execute (Standard ops)
+    YELLOW = "YELLOW"  # Execute + Audit (Unknowns)
+    RED = "RED"  # Isolate + Human Approval (High stakes)
     BLOCKED = "BLOCKED"  # Never Execute (Safety/Security)
 
 
