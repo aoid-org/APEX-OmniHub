@@ -57,11 +57,11 @@ async def risk_triage(intent_data: dict[str, Any]) -> dict[str, Any]:
 
     Returns:
         RiskTriageResult as dict with keys:
-            - lane: "GREEN"|"YELLOW"|"RED"|"BLOCKED"
-            - reason: str
+            - task_id: str
+            - risk_lane: "GREEN"|"YELLOW"|"RED"|"BLOCKED"
+            - reasoning: str
+            - is_demo: bool
             - requires_approval: bool
-            - risk_factors: list[str]
-            - suggested_timeout_hours: int
 
     Raises:
         ApplicationError: If intent validation fails (non-retryable)
@@ -75,7 +75,7 @@ async def risk_triage(intent_data: dict[str, Any]) -> dict[str, Any]:
         result = policy.triage(intent)
 
         activity.logger.info(
-            f"Risk triage for '{intent.tool_name}': {result.lane.value} ({result.reason})"
+            f"Risk triage for '{intent.tool_name}': {result.risk_lane.value} ({result.reasoning})"
         )
 
         return result.model_dump()

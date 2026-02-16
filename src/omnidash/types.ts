@@ -263,3 +263,22 @@ export interface OmniTraceRunDetailResponse {
     events_truncated: boolean;
   };
 }
+
+// =============================================================================
+// Man Mode Types
+// =============================================================================
+
+export enum RiskLane {
+  GREEN = 'GREEN',
+  YELLOW = 'YELLOW',
+  RED = 'RED',
+  BLOCKED = 'BLOCKED'
+}
+
+export interface RiskTriageResult {
+  task_id: string;
+  risk_lane: RiskLane;
+  reasoning: string;
+  is_demo: boolean;
+  requires_approval: boolean;
+}

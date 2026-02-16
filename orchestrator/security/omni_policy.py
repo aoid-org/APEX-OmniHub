@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event
-from models.man_mode import ManLane
+from models.man_mode import RiskLane
 from providers.database.factory import get_database_provider
 
 logger = logging.getLogger(__name__)
@@ -145,7 +145,7 @@ class OmniPolicyEvaluator:
         # Default allow if no policy matched
         return {
             "decision": "ALLOW",
-            "lane": ManLane.GREEN.value,
+            "lane": RiskLane.GREEN.value,
             "reason": "No matching policy",
             "policy_name": "default_allow",
             "policy_version": 1,
