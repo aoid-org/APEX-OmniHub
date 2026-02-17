@@ -81,7 +81,7 @@ export interface Connector {
    * Fetch new data since last sync
    * Returns raw provider events
    */
-  fetchDelta(connectorId: string, since: Date): Promise<RawEvent[]>;
+  fetchDelta(session: SessionToken, since: Date): Promise<RawEvent[]>;
 
   /**
    * Normalize raw provider events to canonical schema
@@ -95,7 +95,7 @@ export interface Connector {
   /**
    * Validate provider token is still active
    */
-  validateToken(connectorId: string): Promise<boolean>;
+  validateToken(session: SessionToken): Promise<boolean>;
 }
 
 /**
