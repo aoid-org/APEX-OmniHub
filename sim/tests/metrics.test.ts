@@ -208,14 +208,6 @@ describe('MetricsCollector', () => {
     it('should respect CHAOS_THRESHOLD env var', () => {
       vi.stubEnv('CHAOS_THRESHOLD', '50');
 
-      // Create a scenario that scores around 60 (would fail default 70, but pass 50)
-      const app: AppName = 'omnilink';
-
-      // 60% success rate -> 40 * 0.4 = 16 points penalty -> 84 score (wait, calculation is (1-success)*40)
-      // If success rate is 0.6, penalty is (1-0.6)*40 = 0.4*40 = 16. Score = 84.
-      // Let's try lower success rate. 0.5 -> penalty 20 -> score 80.
-
-      // Let's just manually check the threshold value in the scorecard
       const scorecard = collector.generateScorecard('run-1', 'custom-threshold', 'tenant-1', 123);
       expect(scorecard.requiredScore).toBe(50);
     });
