@@ -1,10 +1,10 @@
-import { bench, describe, vi } from 'vitest';
+import { bench, describe } from 'vitest';
 import { logPerformance, clearLogs, logError } from '../../src/lib/monitoring';
 
 describe('monitoring performance', () => {
   // Suppress console.log and console.error globally for this suite
-  const originalLog = console.log;
-  const originalError = console.error;
+  // Note: we don't restore them because benchmark runs in isolation/teardown isn't strictly necessary for CI benchmark
+  // But cleaner to just suppress and let process exit.
   console.log = () => {};
   console.error = () => {};
 

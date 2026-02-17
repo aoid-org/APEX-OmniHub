@@ -64,7 +64,6 @@ function getCachedLogs(key: string): unknown[] {
   initCacheSync();
 
   if (logCache.has(key)) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return logCache.get(key)!;
   }
 

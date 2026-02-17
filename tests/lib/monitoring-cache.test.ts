@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { logError, logPerformance, clearLogs, getErrorLogs, _testing } from '../../src/lib/monitoring';
+import { logError, clearLogs, _testing } from '../../src/lib/monitoring';
 
 describe('monitoring - in-memory cache', () => {
   beforeEach(() => {
