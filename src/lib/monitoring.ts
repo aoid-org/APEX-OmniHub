@@ -159,6 +159,7 @@ function clearFlushHandle() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (globalThis as any).cancelIdleCallback(flushHandle);
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       clearTimeout(flushHandle as any);
     }
     flushHandle = null;
