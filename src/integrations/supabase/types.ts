@@ -796,6 +796,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ingress_buffer: {
+        Row: {
+          id: string
+          correlation_id: string
+          raw_input: Json
+          error_reason: string
+          status: Database["public"]["Enums"]["dlq_status"]
+          risk_score: number
+          created_at: string
+          retry_count: number
+          last_retry_at: string | null
+          source_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          correlation_id: string
+          raw_input: Json
+          error_reason: string
+          status?: Database["public"]["Enums"]["dlq_status"]
+          risk_score?: number
+          created_at?: string
+          retry_count?: number
+          last_retry_at?: string | null
+          source_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          correlation_id?: string
+          raw_input?: Json
+          error_reason?: string
+          status?: Database["public"]["Enums"]["dlq_status"]
+          risk_score?: number
+          created_at?: string
+          retry_count?: number
+          last_retry_at?: string | null
+          source_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           id: string
@@ -947,6 +989,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      dlq_status: "pending" | "replaying" | "failed"
       omnidash_incident_severity: "sev1" | "sev2" | "sev3"
       omnidash_incident_status: "open" | "monitoring" | "resolved"
       subscription_tier: "free" | "starter" | "pro" | "enterprise"
@@ -1088,6 +1131,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      dlq_status: ["pending", "replaying", "failed"],
       omnidash_incident_severity: ["sev1", "sev2", "sev3"],
       omnidash_incident_status: ["open", "monitoring", "resolved"],
       subscription_tier: ["free", "starter", "pro", "enterprise"],
