@@ -286,14 +286,6 @@ async function exportSpan(span: Span): Promise<void> {
   }
 
   try {
-    // In a real implementation, you would use @opentelemetry/sdk-trace-base
-    // and @opentelemetry/exporter-trace-otlp-http
-    //
-    // Example:
-    // const { OTLPTraceExporter } = await import('@opentelemetry/exporter-trace-otlp-http');
-    // const exporter = new OTLPTraceExporter({ url: otelEndpoint });
-    // await exporter.export([convertToOTelSpan(span)]);
-
     console.log(`[Telemetry] Would export span ${span.id} to ${otelEndpoint}`);
   } catch (error) {
     console.error('[Telemetry] Export failed:', error);
