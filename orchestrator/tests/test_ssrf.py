@@ -57,7 +57,7 @@ class TestValidateUrl:
         with patch("socket.getaddrinfo") as mock_getaddrinfo:
             # Mock resolution to localhost
             mock_getaddrinfo.return_value = [
-                (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 80))
+                (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 80))  # NOSONAR
             ]
             with pytest.raises(ValueError, match="Loopback address"):
                 validate_url("http://localhost")  # NOSONAR
@@ -68,7 +68,7 @@ class TestValidateUrl:
             # Returns one public and one private IP (DNS rebinding scenario or split horizon)
             mock_getaddrinfo.return_value = [
                 (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 80)),
-                (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("10.0.0.1", 80)),
+                (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("10.0.0.1", 80)),  # NOSONAR
             ]
             with pytest.raises(ValueError, match="Private address"):
                 validate_url("http://example.com")  # NOSONAR
@@ -78,7 +78,7 @@ class TestValidateUrl:
         with patch("socket.getaddrinfo") as mock_getaddrinfo:
             # IPv6 Loopback
             mock_getaddrinfo.return_value = [
-                (socket.AF_INET6, socket.SOCK_STREAM, 6, "", ("::1", 80, 0, 0))
+                (socket.AF_INET6, socket.SOCK_STREAM, 6, "", ("::1", 80, 0, 0))  # NOSONAR
             ]
             with pytest.raises(ValueError, match="Loopback address"):
                 validate_url("http://ipv6-localhost")  # NOSONAR
