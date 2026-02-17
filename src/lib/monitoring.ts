@@ -106,12 +106,17 @@ function persistLog(key: string, entry: unknown, max: number) {
   }
 }
 
+// Interface to type-safe access optional global APIs
+interface GlobalWithIdle {
+  requestIdleCallback: (cb: () => void, options?: { timeout: number }) => unknown;
+  cancelIdleCallback: (handle: unknown) => void;
+}
+
 function scheduleFlush() {
   if (flushHandle) return;
 
   if ('requestIdleCallback' in globalThis) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    flushHandle = (globalThis as any).requestIdleCallback(() => flushQueue(), { timeout: FLUSH_INTERVAL });
+    flushHandle = (globalThis as unknown as GlobalWithIdle).requestIdleCallback(() => flushQueue(), { timeout: FLUSH_INTERVAL });
     isIdleCallback = true;
   } else {
     flushHandle = setTimeout(() => {
@@ -126,11 +131,6 @@ function scheduleFlush() {
 function flushQueue() {
   const items = queue.flush();
   if (items.length === 0) {
-    // Even if empty, ensure we clear handle if we were called
-    // But if called from callback, flushHandle might still be set?
-    // If called manually, we want to cancel pending.
-    // If called by callback, handle is "done".
-    // Let's just always clear handle if we are running.
     clearFlushHandle();
     return;
   }
@@ -156,11 +156,10 @@ function flushQueue() {
 function clearFlushHandle() {
   if (flushHandle) {
     if (isIdleCallback && 'cancelIdleCallback' in globalThis) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (globalThis as any).cancelIdleCallback(flushHandle);
+      (globalThis as unknown as GlobalWithIdle).cancelIdleCallback(flushHandle);
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      clearTimeout(flushHandle as any);
+      // Safe cast: if isIdleCallback is false, it must be from setTimeout
+      clearTimeout(flushHandle as ReturnType<typeof setTimeout>);
     }
     flushHandle = null;
     isIdleCallback = false;
