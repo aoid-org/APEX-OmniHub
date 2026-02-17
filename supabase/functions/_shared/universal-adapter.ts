@@ -46,12 +46,13 @@ export class OpenAICompatibleAdapter implements UniversalAdapter {
     };
   }
 
-  public parseResponse(raw: any): LLMResponse {
-    const content = raw.choices?.[0]?.message?.content ?? "";
-    const usage = raw.usage ? {
-      prompt_tokens: raw.usage.prompt_tokens,
-      completion_tokens: raw.usage.completion_tokens,
-      total_tokens: raw.usage.total_tokens,
+  public parseResponse(raw: unknown): LLMResponse {
+    const data = raw as { choices?: { message?: { content?: string }, finish_reason?: string }[], usage?: { prompt_tokens: number, completion_tokens: number, total_tokens: number } };
+    const content = data.choices?.[0]?.message?.content ?? "";
+    const usage = data.usage ? {
+      prompt_tokens: data.usage.prompt_tokens,
+      completion_tokens: data.usage.completion_tokens,
+      total_tokens: data.usage.total_tokens,
     } : undefined;
 
     return {
@@ -101,22 +102,28 @@ export class OpenAICompatibleAdapter implements UniversalAdapter {
         buffer = lines.pop() || "";
 
         for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed === "data: [DONE]") continue;
-          if (trimmed.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(trimmed.slice(6));
-              const delta = data.choices?.[0]?.delta?.content;
-              if (delta) yield delta;
-            } catch (e) {
-              // Ignore parse errors on partial chunks
-            }
-          }
+          const content = this.parseStreamLine(line);
+          if (content) yield content;
         }
       }
     } finally {
       reader.releaseLock();
     }
+  }
+
+  private parseStreamLine(line: string): string | null {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed === "data: [DONE]") return null;
+    if (trimmed.startsWith("data: ")) {
+      try {
+        const data = JSON.parse(trimmed.slice(6));
+        return data.choices?.[0]?.delta?.content || null;
+      } catch (_e) {
+        // Ignore parse errors on partial chunks
+        return null;
+      }
+    }
+    return null;
   }
 }
 
@@ -144,16 +151,17 @@ export class AnthropicAdapter implements UniversalAdapter {
     };
   }
 
-  public parseResponse(raw: any): LLMResponse {
+  public parseResponse(raw: unknown): LLMResponse {
+    const data = raw as { content?: { text?: string }[], stop_reason?: string, usage?: { input_tokens: number, output_tokens: number } };
     // Anthropic non-streaming response structure
-    const content = raw.content?.[0]?.text ?? "";
+    const content = data.content?.[0]?.text ?? "";
     return {
-      finish_reason: raw.stop_reason ?? "unknown",
+      finish_reason: data.stop_reason ?? "unknown",
       content,
       usage: {
-        prompt_tokens: raw.usage?.input_tokens ?? 0,
-        completion_tokens: raw.usage?.output_tokens ?? 0,
-        total_tokens: (raw.usage?.input_tokens ?? 0) + (raw.usage?.output_tokens ?? 0)
+        prompt_tokens: data.usage?.input_tokens ?? 0,
+        completion_tokens: data.usage?.output_tokens ?? 0,
+        total_tokens: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0)
       }
     };
   }
@@ -199,24 +207,30 @@ export class AnthropicAdapter implements UniversalAdapter {
         buffer = lines.pop() || "";
 
         for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed === "event: ping") continue;
-          
-          if (trimmed.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(trimmed.slice(6));
-              if (data.type === "content_block_delta" && data.delta?.text) {
-                yield data.delta.text;
-              }
-            } catch (e) {
-              // Ignore
-            }
-          }
+         const content = this.parseStreamLine(line);
+         if (content) yield content;
         }
       }
     } finally {
       reader.releaseLock();
     }
+  }
+
+  private parseStreamLine(line: string): string | null {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed === "event: ping") return null;
+    
+    if (trimmed.startsWith("data: ")) {
+      try {
+        const data = JSON.parse(trimmed.slice(6));
+        if (data.type === "content_block_delta" && data.delta?.text) {
+          return data.delta.text;
+        }
+      } catch (_e) {
+        // Ignore
+      }
+    }
+    return null;
   }
 }
 
@@ -252,10 +266,11 @@ export class GoogleAdapter implements UniversalAdapter {
     };
   }
 
-  public parseResponse(raw: any): LLMResponse {
-    const content = raw.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  public parseResponse(raw: unknown): LLMResponse {
+    const data = raw as { candidates?: { content?: { parts?: { text?: string }[] }, finishReason?: string }[] };
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     return {
-      finish_reason: raw.candidates?.[0]?.finishReason ?? "unknown",
+      finish_reason: data.candidates?.[0]?.finishReason ?? "unknown",
       content,
     };
   }
