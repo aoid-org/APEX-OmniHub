@@ -229,7 +229,7 @@ function validateIpAddress(
     }
 
     return { allowed: true };
-  } catch (_error) {
+  } catch {
     // Invalid IP format
     return {
       allowed: false,
@@ -380,11 +380,10 @@ export async function validateUrlForSsrf(
 
   // Check if hostname is an IP address (direct IP)
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _ip = ipaddr.process(hostname);
+    ipaddr.process(hostname);
     // Direct IP address - validate immediately
     return validateIpAddress(hostname, options);
-  } catch (_error) {
+  } catch {
     // Not a direct IP - it's a hostname, need DNS resolution
   }
 
