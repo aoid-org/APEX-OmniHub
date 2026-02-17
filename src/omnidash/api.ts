@@ -4,6 +4,29 @@ import { recordAuditEvent } from '@/security/auditLog';
 import type { Database } from '@/integrations/supabase/types';
 import { Incident, KpiDaily, PipelineItem, TodayItem, OmniDashSettings } from './types';
 
+/**
+ * Explicit column selections for OmniDash tables.
+ *
+ * Benefits:
+ * 1. Performance: Reduces network transfer and database I/O
+ * 2. Security: Prevents accidental exposure of sensitive columns
+ * 3. Type Safety: Improves TypeScript inference
+ * 4. Maintainability: Self-documenting and DRY
+ *
+ * IMPORTANT: Keep these in sync with types in src/omnidash/types.ts
+ */
+export const OMNIDASH_COLUMNS = {
+  settings: 'user_id, demo_mode, show_connected_ecosystem, anonymize_kpis, freeze_mode, power_block_started_at, power_block_duration_minutes, updated_at',
+
+  today_items: 'id, user_id, title, next_action, category, order_index, is_active, power_block_started_at, power_block_duration_minutes, created_at, updated_at',
+
+  pipeline_items: 'id, user_id, account_name, product, owner, stage, last_touch_at, next_touch_at, expected_mrr, probability, notes, created_at, updated_at',
+
+  kpi_daily: 'id, user_id, day, tradeline_paid_starts, tradeline_active_pilots, tradeline_churn_risks, flowbills_demos, flowbills_paid_accounts, cash_days_to_cash, ops_sev1_incidents, updated_at',
+
+  incidents: 'id, user_id, severity, status, title, description, resolution_notes, occurred_at, resolved_at, created_at, updated_at',
+} as const;
+
 type TableName = keyof Database['public']['Tables'];
 
 async function handleError<T>(promise: Promise<{ data: T | null; error: { message: string } | null }>, context: string): Promise<T> {
@@ -21,9 +44,7 @@ async function handleError<T>(promise: Promise<{ data: T | null; error: { messag
 export async function fetchSettings(userId: string): Promise<OmniDashSettings> {
   const { data, error } = await supabase
     .from('omnidash_settings')
-    .select(
-      'user_id, demo_mode, show_connected_ecosystem, anonymize_kpis, freeze_mode, power_block_started_at, power_block_duration_minutes, updated_at'
-    )
+    .select(OMNIDASH_COLUMNS.settings)
     .eq('user_id', userId)
     .maybeSingle();
 
@@ -38,7 +59,7 @@ export async function fetchSettings(userId: string): Promise<OmniDashSettings> {
       .insert({
         user_id: userId,
       })
-      .select('*')
+      .select(OMNIDASH_COLUMNS.settings)
       .single();
     if (insert.error) {
       logError(insert.error, { action: 'omnidash_seed_settings' });
@@ -57,7 +78,7 @@ export async function updateSettings(userId: string, patch: Partial<OmniDashSett
       user_id: userId,
       ...patch,
     })
-    .select('*')
+    .select(OMNIDASH_COLUMNS.settings)
     .single();
 
   if (result.error) {
@@ -80,7 +101,7 @@ export async function fetchTodayItems(userId: string): Promise<TodayItem[]> {
   return handleError(
     supabase
       .from('omnidash_today_items')
-      .select('*')
+      .select(OMNIDASH_COLUMNS.today_items)
       .eq('user_id', userId)
       .eq('is_active', true)
       .order('order_index', { ascending: true }),
@@ -92,7 +113,7 @@ export async function upsertTodayItem(item: Partial<TodayItem> & { user_id: stri
   const result = await supabase
     .from('omnidash_today_items')
     .upsert(item)
-    .select('*')
+    .select(OMNIDASH_COLUMNS.today_items)
     .single();
   if (result.error) {
     logError(result.error, { action: 'omnidash_upsert_today_item' });
@@ -104,7 +125,7 @@ export async function upsertTodayItem(item: Partial<TodayItem> & { user_id: stri
 export async function restartRitual(userId: string): Promise<void> {
   const { data, error } = await supabase
     .from('omnidash_today_items')
-    .select('*')
+    .select(OMNIDASH_COLUMNS.today_items)
     .eq('user_id', userId)
     .eq('is_active', true)
     .order('created_at', { ascending: true });
@@ -129,7 +150,7 @@ export async function fetchPipelineItems(userId: string): Promise<PipelineItem[]
   return handleError(
     supabase
       .from('omnidash_pipeline_items')
-      .select('*')
+      .select(OMNIDASH_COLUMNS.pipeline_items)
       .eq('user_id', userId)
       .order('updated_at', { ascending: false }),
     'fetch_pipeline_items'
@@ -144,7 +165,7 @@ export async function upsertPipelineItem(item: Partial<PipelineItem> & { user_id
   const result = await supabase
     .from('omnidash_pipeline_items')
     .upsert(item)
-    .select('*')
+    .select(OMNIDASH_COLUMNS.pipeline_items)
     .single();
   if (result.error) {
     logError(result.error, { action: 'omnidash_upsert_pipeline_item' });
@@ -157,7 +178,7 @@ export async function fetchKpiDaily(userId: string, days = 7): Promise<KpiDaily[
   return handleError(
     supabase
       .from('omnidash_kpi_daily')
-      .select('*')
+      .select(OMNIDASH_COLUMNS.kpi_daily)
       .eq('user_id', userId)
       .order('day', { ascending: false })
       .limit(days),
@@ -169,7 +190,7 @@ export async function upsertKpiDailyEntry(row: Partial<KpiDaily> & { user_id: st
   const result = await supabase
     .from('omnidash_kpi_daily')
     .upsert(row)
-    .select('*')
+    .select(OMNIDASH_COLUMNS.kpi_daily)
     .single();
   if (result.error) {
     logError(result.error, { action: 'omnidash_upsert_kpi_daily' });
@@ -182,7 +203,7 @@ export async function fetchIncidents(userId: string, limit = 20): Promise<Incide
   return handleError(
     supabase
       .from('omnidash_incidents')
-      .select('*')
+      .select(OMNIDASH_COLUMNS.incidents)
       .eq('user_id', userId)
       .order('occurred_at', { ascending: false })
       .limit(limit),
@@ -197,7 +218,7 @@ export async function addIncident(incident: Partial<Incident> & { user_id: strin
       status: 'open',
       ...incident,
     })
-    .select('*')
+    .select(OMNIDASH_COLUMNS.incidents)
     .single();
   if (result.error) {
     logError(result.error, { action: 'omnidash_add_incident' });
@@ -225,4 +246,3 @@ export async function fetchHealthSnapshot(userId: string): Promise<{ lastUpdated
   const lastUpdated = latest.filter(Boolean).sort().reverse()[0] ?? null;
   return { lastUpdated };
 }
-
