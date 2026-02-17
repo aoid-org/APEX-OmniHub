@@ -1,4 +1,4 @@
-import { Home, Link2, FileText, Zap, Package, LogOut, Brain, Gauge } from 'lucide-react';
+import { Home, Link2, FileText, Zap, Package, LogOut, Brain } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
@@ -15,12 +15,11 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from './ui/button';
 import { useAdminAccess } from '@/omnidash/hooks';
-import { OMNIDASH_FLAG } from '@/omnidash/types';
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const { signOut } = useAuth();
-  const { isAdmin } = useAdminAccess();
+  const { isAdmin: _isAdmin } = useAdminAccess();
   const isCollapsed = state === 'collapsed';
 
   const navItems = [

@@ -195,7 +195,7 @@
                 this.borderColor = COL_RED; // Stored as style string for perf, or switch
                 this.bgColor = COL_RED_DIM;
                 this.textColor = COL_RED;
-                this.text = `TXN-${Math.random().toString(16).substr(2, 8).toUpperCase()} | PENDING VERIFICATION`;
+                this.text = `TXN-${Array.from(crypto.getRandomValues(new Uint8Array(4)), b => b.toString(16).padStart(2, '0')).join('').toUpperCase()} | PENDING VERIFICATION`;
                 
                 // Animation triggers
                 this.triggerTime = -1; 

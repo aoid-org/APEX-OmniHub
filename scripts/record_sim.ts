@@ -13,12 +13,12 @@ async function run() {
   try {
     console.log('Attempting to launch Edge...');
     browser = await chromium.launch({ channel: 'msedge' });
-  } catch (e) {
+  } catch {
     // Ignore Edge failure, try Chrome
     console.log('Edge failed, attempting Chrome...');
     try {
       browser = await chromium.launch({ channel: 'chrome' });
-    } catch (error_) {
+    } catch {
       // Ignore Chrome failure, try bundled
       console.log('Chrome failed, attempting bundled Chromium...');
       browser = await chromium.launch();
@@ -83,10 +83,11 @@ async function run() {
 
 try {
   await run();
-} catch (e: any) {
+} catch (e: unknown) {
+  const err = e instanceof Error ? e : new Error(String(e));
   const logPath = path.resolve(__dirname, '../error.log');
-  const errorMsg = `Error: ${e.message}\nStack: ${e.stack}\n`;
+  const errorMsg = `Error: ${err.message}\nStack: ${err.stack}\n`;
   fs.writeFileSync(logPath, errorMsg);
-  console.error(e);
+  console.error(err);
   process.exit(1);
 }
