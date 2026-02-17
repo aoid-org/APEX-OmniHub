@@ -56,7 +56,7 @@ export class OpenAICompatibleAdapter implements UniversalAdapter {
     } : undefined;
 
     return {
-      finish_reason: raw.choices?.[0]?.finish_reason ?? "unknown",
+      finish_reason: data.choices?.[0]?.finish_reason ?? "unknown",
       content,
       usage,
     };
@@ -118,7 +118,7 @@ export class OpenAICompatibleAdapter implements UniversalAdapter {
       try {
         const data = JSON.parse(trimmed.slice(6));
         return data.choices?.[0]?.delta?.content || null;
-      } catch (_e) {
+      } catch {
         // Ignore parse errors on partial chunks
         return null;
       }
@@ -226,7 +226,7 @@ export class AnthropicAdapter implements UniversalAdapter {
         if (data.type === "content_block_delta" && data.delta?.text) {
           return data.delta.text;
         }
-      } catch (_e) {
+      } catch {
         // Ignore
       }
     }
