@@ -55,6 +55,10 @@ verify_jwt = true  # Requires authenticated user to check NFT ownership
 [functions.alchemy-webhook]
 verify_jwt = false  # Webhook endpoint from Alchemy (uses signature verification)
 
+# BYOM Cockpit — Phase 1 Credential Management
+# Version: 1.0.0 | Date: 2026-02-17
+[functions.byom-cockpit]
+verify_jwt = true  # All BYOM credential operations require authenticated user
 # Environment Variables for Edge Functions
 # These blockchain-related secrets must be set in production environment:
 # - WEB3_PRIVATE_KEY: OmniLink EVM private key for transaction signing
