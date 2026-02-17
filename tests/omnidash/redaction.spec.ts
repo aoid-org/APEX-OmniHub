@@ -26,16 +26,16 @@ describe('OmniDash redaction', () => {
 
   it('buckets amounts when demo mode', () => {
     const [item] = redactPipelineDisplay([baseItem]);
-    expect(item.expected_mrr_bucket).toBe('$1k+');
+    expect(item.expected_mrr_bucket).toBe('$1k-$5k');
     expect(item.expected_mrr).toBeNull();
   });
 
   it('buckets explicit amounts and strips notes', () => {
     const amount = redactAmount(400);
-    expect(amount).toBe('$250–$500');
+    expect(amount).toBe('$250-$500');
     const notes = redactNotes('Email me at founder@demo.co about $900');
     expect(notes).not.toContain('demo.co');
-    expect(notes).toContain('[bucketed]');
+    expect(notes).toContain('[BUCKETED]');
   });
 });
 

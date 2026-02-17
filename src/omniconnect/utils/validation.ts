@@ -4,6 +4,7 @@
 
 import { CanonicalEvent, EventType } from '../types/canonical';
 import { SessionToken } from '../types/connector';
+import { sanitizeEventPayload as sanitizePayload } from '@/lib/sanitization';
 
 export function validateCanonicalEvent(event: unknown): event is CanonicalEvent {
   if (!event || typeof event !== 'object') return false;
@@ -42,8 +43,7 @@ export function validateSessionToken(token: unknown): token is SessionToken {
 }
 
 export function sanitizeEventPayload(payload: Record<string, unknown>): Record<string, unknown> {
-  // TODO: Implement PII redaction and content sanitization
-  return payload;
+  return sanitizePayload(payload);
 }
 
 export function validateCorrelationId(id: string): boolean {
