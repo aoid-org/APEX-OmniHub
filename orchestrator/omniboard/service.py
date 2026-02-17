@@ -31,21 +31,56 @@ class OmniBoardService:
     @classmethod
     def fuzzy_match_provider(cls, input_text: str) -> list[str]:
         """
-        Simple case-insensitive substring/equality match.
-        Returns list of candidate provider names.
+        Fuzzy match provider names against query string.
+
+        Matching rules (in priority order):
+        1. Exact match (case-insensitive)
+        2. Starts with query
+        3. Contains query as substring
+        4. Query contains provider name (reverse match)
+
+        Returns matches sorted by relevance:
+        - Exact matches first
+        - Shorter names before longer (more specific)
+        - Alphabetical within same length
+
+        Security: Returns empty list for empty/whitespace input.
         """
-        input_lower = input_text.lower().strip()
+        query_clean = input_text.strip()
+
+        # Early exit for empty queries (Security)
+        if not query_clean:
+            return []
+
+        query_lower = query_clean.lower()
         matches = []
 
         for provider in cls.KNOWN_PROVIDERS:
-            # Exact match
-            if provider.lower() == input_lower:
-                return [provider]
-            # Substring match
-            if input_lower in provider.lower() or provider.lower() in input_lower:
-                matches.append(provider)
+            provider_lower = provider.lower()
+            score = 0
 
-        return sorted(matches, key=len)
+            # Exact match
+            if provider_lower == query_lower:
+                score = 1000
+            # Starts with query
+            elif provider_lower.startswith(query_lower):
+                score = 500
+            # Contains query
+            elif query_lower in provider_lower:
+                score = 250
+            # Reverse: query contains provider
+            elif provider_lower in query_lower:
+                score = 100
+
+            if score > 0:
+                # Penalize longer names (tie-breaker)
+                score -= len(provider) * 0.1
+                matches.append((score, provider))
+
+        # Sort by score (descending), then provider name (ascending)
+        matches.sort(key=lambda x: (-x[0], x[1]))
+
+        return [provider for _, provider in matches]
 
     @classmethod
     def generate_oauth_url(cls, provider: str, tenant_id: str) -> str:
