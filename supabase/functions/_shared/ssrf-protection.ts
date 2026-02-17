@@ -122,79 +122,42 @@ function isBlockedIpRange(
   options: SsrfOptions,
 ): boolean {
   const { allowPrivate = false, allowLoopback = false } = options;
+  const range = ip.range();
 
-  // Check IP type-specific ranges
+  // Unified checks for common range types across IPv4 and IPv6
+  switch (range) {
+    case "loopback":
+      return !allowLoopback;
+    case "private":
+    case "uniqueLocal": // IPv6 private
+      return !allowPrivate;
+    case "linkLocal":
+    case "multicast":
+    case "broadcast":
+      return true;
+  }
+
+  // IPv4-specific checks
   if (ip.kind() === "ipv4") {
     const ipv4 = ip as ipaddr.IPv4;
 
-    // Loopback (127.0.0.0/8)
-    if (ipv4.range() === "loopback") {
-      return !allowLoopback;
-    }
-
-    // Private addresses (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16)
-    if (ipv4.range() === "private") {
-      return !allowPrivate;
-    }
-
-    // Link-local (169.254.0.0/16)
-    if (ipv4.range() === "linkLocal") {
-      return true;
-    }
-
-    // Carrier-grade NAT (100.64.0.0/10) - RFC 6598
+    // Carrier-grade NAT (100.64.0.0/10) - RFC 6598 // NOSONAR
     if (ipv4.match(ipaddr.IPv4.parse("100.64.0.0"), 10)) {
+      // NOSONAR
       return true;
     }
 
-    // Multicast (224.0.0.0/4)
-    if (ipv4.range() === "multicast") {
-      return true;
-    }
-
-    // Broadcast (255.255.255.255)
-    if (ipv4.range() === "broadcast") {
-      return true;
-    }
-
-    // Block 0.0.0.0 (unspecified) explicitly as ipaddr.js treats it separately
+    // Block 0.0.0.0 (unspecified) explicitly as ipaddr.js treats it separately // NOSONAR
     if (ipv4.toString() === "0.0.0.0") {
+      // NOSONAR
       return true;
     }
+  }
 
-    // Cloud metadata endpoints
-    const ipStr = ipv4.toString();
-    if ((CLOUD_METADATA_IPS as readonly string[]).includes(ipStr)) {
-      return true;
-    }
-  } else if (ip.kind() === "ipv6") {
-    const ipv6 = ip as ipaddr.IPv6;
-
-    // Loopback (::1)
-    if (ipv6.range() === "loopback") {
-      return !allowLoopback;
-    }
-
-    // Unique Local Addresses (fc00::/7) - RFC 4193
-    if (ipv6.range() === "uniqueLocal") {
-      return !allowPrivate;
-    }
-
-    // Link-local (fe80::/10)
-    if (ipv6.range() === "linkLocal") {
-      return true;
-    }
-
-    // Multicast (ff00::/8)
-    if (ipv6.range() === "multicast") {
-      return true;
-    }
-
-    // IPv6 cloud metadata
-    const ipStr = ipv6.toString();
-    if ((CLOUD_METADATA_IPS as readonly string[]).includes(ipStr)) {
-      return true;
-    }
+  // Cloud metadata endpoints check (common for both types via string comparison)
+  const ipStr = ip.toString();
+  if ((CLOUD_METADATA_IPS as readonly string[]).includes(ipStr)) {
+    return true;
   }
 
   return false;
@@ -275,8 +238,9 @@ async function validateHostname(
   // This is needed because ipaddr.js might not catch them if passed as non-canonical strings in specific environments
   if (!options.resolveDns) {
     if (
-      lowerHostname === "127.0.0.1" || lowerHostname === "0.0.0.0" ||
-      lowerHostname === "[::1]"
+      lowerHostname === "127.0.0.1" || // NOSONAR
+      lowerHostname === "0.0.0.0" || // NOSONAR
+      lowerHostname === "[::1]" // NOSONAR
     ) {
       if (!options.allowLoopback) {
         return {
@@ -326,7 +290,7 @@ async function validateHostname(
       hostname === "example.com")
   ) {
     // Mock valid resolution for these known public test domains
-    return { allowed: true, resolvedIps: ["93.184.216.34"] }; // Example IP
+    return { allowed: true, resolvedIps: ["93.184.216.34"] }; // Example IP // NOSONAR
   }
 
   // If DNS resolution is disabled, allow (less secure)
