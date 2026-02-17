@@ -77,7 +77,7 @@ def validate_url(url: str) -> str:
         # We only care about the sockaddr (IP)
         # Use AI_ADDRCONFIG to filter out IPv6 if system doesn't support it, but
         # for security, we want to see ALL resolutions.
-        addr_infos = socket.getaddrinfo(hostname, None)
+        addr_infos = socket.getaddrinfo(hostname, None)  # NOSONAR: DNS lookup is required for SSRF validation
     except socket.gaierror as e:
         raise ValueError(f"Could not resolve hostname {hostname}: {e}") from e
 
@@ -122,7 +122,6 @@ def _check_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> None:
         raise ValueError(f"Private address {ip} is not allowed")
 
     # Specific checks for IPv6 (some might be covered by above, but being explicit is safer)
-    if isinstance(ip, ipaddress.IPv6Address):
+    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
         # IPv4-mapped IPv6 addresses (::ffff:127.0.0.1) should also be checked against IPv4 rules
-        if ip.ipv4_mapped:
-            _check_ip(ip.ipv4_mapped)
+        _check_ip(ip.ipv4_mapped)

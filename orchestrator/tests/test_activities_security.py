@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+
 @pytest.fixture
 def mock_dependencies():
     """Mock heavy dependencies using patch.dict to avoid global pollution."""
@@ -37,7 +38,8 @@ def mock_dependencies():
         del sys.modules["activities.tools"]
 
 @pytest.mark.asyncio
-async def test_call_webhook_ssrf_blocked(mock_dependencies):
+@pytest.mark.usefixtures("mock_dependencies")
+async def test_call_webhook_ssrf_blocked():
     """Test that call_webhook blocks SSRF attempts."""
 
     from activities.tools import call_webhook
@@ -45,7 +47,7 @@ async def test_call_webhook_ssrf_blocked(mock_dependencies):
     # We patch httpx.AsyncClient to ensure it's NOT called.
     with patch("httpx.AsyncClient") as mock_client_cls:
         params = {
-            "url": "http://127.0.0.1/sensitive",  # NOSONAR: Test URL
+            "url": "http://127.0.0.1/sensitive",  # NOSONAR
             "method": "GET"
         }
 
@@ -59,7 +61,8 @@ async def test_call_webhook_ssrf_blocked(mock_dependencies):
         mock_client_cls.assert_not_called()
 
 @pytest.mark.asyncio
-async def test_call_webhook_valid_url(mock_dependencies):
+@pytest.mark.usefixtures("mock_dependencies")
+async def test_call_webhook_valid_url():
     """Test that call_webhook allows valid URLs."""
 
     from activities.tools import call_webhook
@@ -75,7 +78,7 @@ async def test_call_webhook_valid_url(mock_dependencies):
             ]
 
             params = {
-                "url": "http://example.com/webhook",  # NOSONAR: Test URL
+                "url": "http://example.com/webhook",  # NOSONAR
                 "method": "POST"
             }
 
