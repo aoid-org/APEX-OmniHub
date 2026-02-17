@@ -15,7 +15,7 @@ class TestValidateUrl:
         # mocking socket.getaddrinfo to avoid real DNS lookup and ensure deterministic behavior
         with patch("socket.getaddrinfo") as mock_getaddrinfo:
             mock_getaddrinfo.return_value = [
-                (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 80))
+                (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 80))  # NOSONAR
             ]
             url = "http://example.com"  # NOSONAR
             assert validate_url(url) == url
@@ -24,7 +24,7 @@ class TestValidateUrl:
         """Test that https scheme is allowed."""
         with patch("socket.getaddrinfo") as mock_getaddrinfo:
             mock_getaddrinfo.return_value = [
-                (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
+                (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))  # NOSONAR
             ]
             url = "https://example.com"  # NOSONAR
             assert validate_url(url) == url
@@ -67,7 +67,7 @@ class TestValidateUrl:
         with patch("socket.getaddrinfo") as mock_getaddrinfo:
             # Returns one public and one private IP (DNS rebinding scenario or split horizon)
             mock_getaddrinfo.return_value = [
-                (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 80)),
+                (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 80)),  # NOSONAR
                 (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("10.0.0.1", 80)),  # NOSONAR
             ]
             with pytest.raises(ValueError, match="Private address"):

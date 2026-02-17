@@ -75,7 +75,9 @@ async def test_call_webhook_valid_url():
 
         # Mock DNS resolution
         with patch("socket.getaddrinfo") as mock_getaddrinfo:
-            mock_getaddrinfo.return_value = [(2, 1, 6, "", ("93.184.216.34", 80))]
+            mock_getaddrinfo.return_value = [
+                (2, 1, 6, "", ("93.184.216.34", 80))  # NOSONAR
+            ]
 
             params = {
                 "url": "http://example.com/webhook",  # NOSONAR
