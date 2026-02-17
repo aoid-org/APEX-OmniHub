@@ -50,7 +50,7 @@ describe('MetricsCollector', () => {
       expect(op2Stats).toBeDefined();
       expect(op2Stats?.count).toBe(1);
       expect(op2Stats?.mean).toBe(300);
-      expect(op2Stats?.successRate).toBe(1.0);
+      expect(op2Stats?.successRate).toBe(1);
     });
 
     it('should filter latency stats by operation', () => {
