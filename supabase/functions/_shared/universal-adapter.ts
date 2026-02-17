@@ -24,6 +24,55 @@ export interface UniversalAdapter {
   ): AsyncIterable<string>; // Returns chunks of text
 }
 
+// ============================================================
+// Shared Helpers (eliminates cross-adapter duplication)
+// ============================================================
+
+/**
+ * Parse a single SSE "data: " line, apply stop-token filtering,
+ * JSON-parse the payload, and extract content via a provider-specific extractor.
+ */
+function parseSSEDataLine(
+  line: string,
+  stopTokens: string[],
+  extractor: (data: unknown) => string | null
+): string | null {
+  const trimmed = line.trim();
+  if (!trimmed || stopTokens.some(t => trimmed === t)) return null;
+  if (trimmed.startsWith("data: ")) {
+    try {
+      const data = JSON.parse(trimmed.slice(6));
+      return extractor(data);
+    } catch {
+      // Partial SSE chunk — safe to skip
+      return null;
+    }
+  }
+  return null;
+}
+
+/** Shared request fields common to all streaming providers. */
+function buildBaseRequestConfig(options: LLMOptions): {
+  temperature: number;
+  max_tokens: number | undefined;
+  stream: boolean;
+} {
+  return {
+    temperature: options.temperature ?? 0.7,
+    max_tokens: options.max_tokens,
+    stream: true,
+  };
+}
+
+/** Construct a normalized LLMResponse from provider-specific fragments. */
+function buildLLMResponse(
+  content: string,
+  finishReason: string,
+  usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number }
+): LLMResponse {
+  return { finish_reason: finishReason, content, usage };
+}
+
 async function* streamSSEResponse(
   endpoint: string,
   headers: HeadersInit,
@@ -78,32 +127,25 @@ export class OpenAICompatibleAdapter implements UniversalAdapter {
   ) {}
 
   public buildRequest(messages: LLMMessage[], options: LLMOptions): unknown {
+    const base = buildBaseRequestConfig(options);
     return {
       model: options.model || (this.provider === "xai" ? "grok-beta" : "gpt-4o"),
       messages: messages.map((m) => ({
         role: m.role,
         content: m.content,
       })),
-      temperature: options.temperature ?? 0.7,
-      max_tokens: options.max_tokens,
-      stream: true,
+      ...base,
     };
   }
 
   public parseResponse(raw: unknown): LLMResponse {
     const data = raw as { choices?: { message?: { content?: string }, finish_reason?: string }[], usage?: { prompt_tokens: number, completion_tokens: number, total_tokens: number } };
     const content = data.choices?.[0]?.message?.content ?? "";
-    const usage = data.usage ? {
-      prompt_tokens: data.usage.prompt_tokens,
-      completion_tokens: data.usage.completion_tokens,
-      total_tokens: data.usage.total_tokens,
-    } : undefined;
-
-    return {
-      finish_reason: data.choices?.[0]?.finish_reason ?? "unknown",
+    return buildLLMResponse(
       content,
-      usage,
-    };
+      data.choices?.[0]?.finish_reason ?? "unknown",
+      data.usage
+    );
   }
 
   public async *stream(
@@ -129,18 +171,11 @@ export class OpenAICompatibleAdapter implements UniversalAdapter {
   }
 
   private parseStreamLine(line: string): string | null {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed === "data: [DONE]") return null;
-    if (trimmed.startsWith("data: ")) {
-      try {
-        const data = JSON.parse(trimmed.slice(6));
-        return data.choices?.[0]?.delta?.content || null;
-      } catch {
-        // Ignore parse errors on partial chunks
-        return null;
-      }
-    }
-    return null;
+    return parseSSEDataLine(
+      line,
+      ["data: [DONE]"],
+      (data) => (data as { choices?: { delta?: { content?: string } }[] }).choices?.[0]?.delta?.content || null
+    );
   }
 }
 
@@ -154,6 +189,7 @@ export class AnthropicAdapter implements UniversalAdapter {
     // Extract system message if present (Anthropic puts it top-level)
     const systemMessage = messages.find(m => m.role === "system");
     const chatMessages = messages.filter(m => m.role !== "system");
+    const base = buildBaseRequestConfig(options);
 
     return {
       model: options.model || "claude-3-opus-20240229",
@@ -162,25 +198,22 @@ export class AnthropicAdapter implements UniversalAdapter {
         role: m.role,
         content: m.content
       })),
-      max_tokens: options.max_tokens ?? 4096,
-      temperature: options.temperature ?? 0.7,
-      stream: true,
+      max_tokens: base.max_tokens ?? 4096,
+      temperature: base.temperature,
+      stream: base.stream,
     };
   }
 
   public parseResponse(raw: unknown): LLMResponse {
     const data = raw as { content?: { text?: string }[], stop_reason?: string, usage?: { input_tokens: number, output_tokens: number } };
-    // Anthropic non-streaming response structure
     const content = data.content?.[0]?.text ?? "";
-    return {
-      finish_reason: data.stop_reason ?? "unknown",
+    const inputTokens = data.usage?.input_tokens ?? 0;
+    const outputTokens = data.usage?.output_tokens ?? 0;
+    return buildLLMResponse(
       content,
-      usage: {
-        prompt_tokens: data.usage?.input_tokens ?? 0,
-        completion_tokens: data.usage?.output_tokens ?? 0,
-        total_tokens: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0)
-      }
-    };
+      data.stop_reason ?? "unknown",
+      { prompt_tokens: inputTokens, completion_tokens: outputTokens, total_tokens: inputTokens + outputTokens }
+    );
   }
 
   public async *stream(
@@ -207,20 +240,14 @@ export class AnthropicAdapter implements UniversalAdapter {
   }
 
   private parseStreamLine(line: string): string | null {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed === "event: ping") return null;
-    
-    if (trimmed.startsWith("data: ")) {
-      try {
-        const data = JSON.parse(trimmed.slice(6));
-        if (data.type === "content_block_delta" && data.delta?.text) {
-          return data.delta.text;
-        }
-      } catch {
-        // Ignore
+    return parseSSEDataLine(
+      line,
+      ["event: ping"],
+      (data) => {
+        const d = data as { type?: string; delta?: { text?: string } };
+        return d.type === "content_block_delta" ? d.delta?.text || null : null;
       }
-    }
-    return null;
+    );
   }
 }
 
@@ -231,10 +258,9 @@ export class GoogleAdapter implements UniversalAdapter {
   public readonly provider = "google";
 
   public buildRequest(messages: LLMMessage[], options: LLMOptions): unknown {
-    // Map roles: system -> user (Gemini Flash doesn't support system well in all versions, 
-    // but v1beta does. We'll map system to top-level if needed, but standard is:
-    // contents: [{ role: "user" | "model", parts: [{ text: ... }] }]
-    
+    const base = buildBaseRequestConfig(options);
+    // Map roles: system -> user (Gemini Flash doesn't support system well in all versions,
+    // but v1beta does. Standard: contents[{ role: "user"|"model", parts }])
     const contents = messages.map(m => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }]
@@ -250,8 +276,8 @@ export class GoogleAdapter implements UniversalAdapter {
     return {
       contents,
       generationConfig: {
-        temperature: options.temperature ?? 0.7,
-        maxOutputTokens: options.max_tokens,
+        temperature: base.temperature,
+        maxOutputTokens: base.max_tokens,
       }
     };
   }
@@ -259,11 +285,10 @@ export class GoogleAdapter implements UniversalAdapter {
   public parseResponse(raw: unknown): LLMResponse {
     const data = raw as { candidates?: { content?: { parts?: { text?: string }[] }, finishReason?: string }[] };
     const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    return {
-      finish_reason: data.candidates?.[0]?.finishReason ?? "unknown",
+    return buildLLMResponse(
       content,
-      usage: undefined, // Google usage data structure varies or requires additional tokens
-    };
+      data.candidates?.[0]?.finishReason ?? "unknown"
+    );
   }
 
   public async *stream(
