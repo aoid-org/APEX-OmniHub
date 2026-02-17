@@ -43,7 +43,7 @@ let cacheSyncInitialized = false;
 function initCacheSync() {
   if (cacheSyncInitialized || typeof window === 'undefined') return;
 
-  window.addEventListener('storage', (event) => {
+  globalThis.window.addEventListener('storage', (event) => {
     // Sync cache when other tabs modify logs
     if (event.key && event.newValue &&
         (event.key.endsWith('_logs') || event.key === 'perf_logs')) {

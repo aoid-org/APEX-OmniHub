@@ -61,7 +61,7 @@ describe('monitoring - in-memory cache', () => {
     localStorage.setItem('error_logs', newValue);
 
     // Trigger storage event (JSDOM does not auto-trigger this on same-window writes, and we need to simulate it)
-    window.dispatchEvent(new StorageEvent('storage', {
+    globalThis.dispatchEvent(new StorageEvent('storage', {
       key: 'error_logs',
       newValue: newValue,
       storageArea: localStorage,
@@ -91,7 +91,7 @@ describe('monitoring - in-memory cache', () => {
     const { logCache } = _testing;
 
     // Trigger storage event with bad JSON
-    window.dispatchEvent(new StorageEvent('storage', {
+    globalThis.dispatchEvent(new StorageEvent('storage', {
       key: 'error_logs',
       newValue: '{bad json',
       storageArea: localStorage,
