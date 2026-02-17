@@ -88,12 +88,14 @@ jobs:
           path: ./
           base: ${{ steps.trufflehog-range.outputs.base_ref }}
           head: ${{ steps.trufflehog-range.outputs.head_ref }}
+          extra_args: --only-verified --exclude-paths .trufflehog-exclude-paths.txt
 
       - name: Secret scanning with TruffleHog (full repository fallback)
         if: steps.trufflehog-range.outputs.use_range == 'false'
         uses: trufflesecurity/trufflehog@6961f2bace57ab32b23b3ba40f8f420f6bc7e004
         with:
           path: ./
+          extra_args: --only-verified --exclude-paths .trufflehog-exclude-paths.txt
 
       - name: npm audit for critical vulnerabilities
         run: |

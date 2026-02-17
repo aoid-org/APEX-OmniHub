@@ -9,6 +9,10 @@
 .*\.env\.example$
 .*MIGRATION_.*\.md$
 
+# Historical Apple Sign-In files (deleted, still in git history)
+.*apple\.js$
+.*apple\.cjs$
+
 # Dependencies and build artifacts
 .*/node_modules/.*
 .*/.git/.*
@@ -18,3 +22,5 @@
 # Test fixtures
 .*__fixtures__/.*
 .*__mocks__/.*
+.*/tests/login-supabase-config\.test\.ts
+.*/tests/setup\.ts

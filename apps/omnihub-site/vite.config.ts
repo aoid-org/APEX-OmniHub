@@ -95,6 +95,7 @@ export default defineConfig({
     // CSS code splitting
     cssCodeSplit: true,
   },
+  envDir: resolve(__dirname, '../../'),
   server: {
     port: 3000,
     strictPort: true,

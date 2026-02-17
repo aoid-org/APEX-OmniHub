@@ -15,6 +15,16 @@ import { useToast } from '@/components/ui/use-toast';
 import { useExecute } from '@/hooks/useExecute';
 import { useDemoStore } from '@/stores/demoStore';
 
+type BadgeCategory = 'outcome' | 'outreach' | 'metric';
+
+const getBadgeStyles = (category: BadgeCategory) => {
+  switch (category) {
+    case 'outcome': return 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400';
+    case 'outreach': return 'border-sky-500/50 text-sky-600 dark:text-sky-400';
+    default: return 'border-amber-500/50 text-amber-600 dark:text-amber-400';
+  }
+};
+
 export const Today = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -137,37 +147,60 @@ export const Today = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <Card>
+    <div className="space-y-6">
+      <Card className="glass-card hover-lift animate-in border-l-4 border-l-accent rounded-2xl">
         <CardHeader>
           <CardTitle>Top 3 Outcomes</CardTitle>
-          <CardDescription>Today’s focus with a single next action each.</CardDescription>
+          <CardDescription>Today's focus with a single next action each.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3">
+        <CardContent className="space-y-6">
+          <div className="grid gap-4">
             {itemsQuery.data?.map((item) => (
-              <div key={item.id} className="border rounded-lg p-3 flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="capitalize">{item.category}</Badge>
-                    <span className="font-semibold">{item.title}</span>
+              <div 
+                key={item.id} 
+                className="border rounded-xl p-4 flex flex-col gap-3 hover:bg-accent/5 transition-colors duration-200"
+              >
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <Badge 
+                      variant="outline" 
+                      className={`capitalize shrink-0 ${getBadgeStyles(item.category)}`}
+                    >
+                      {item.category}
+                    </Badge>
+                    <span className="font-semibold truncate">{item.title}</span>
                   </div>
-                  <Button size="sm" onClick={() => handleNextAction(item)}>Next Action</Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleNextAction(item)}
+                    className="shrink-0"
+                  >
+                    Next Action
+                  </Button>
                 </div>
                 {item.next_action && (
-                  <p className="text-sm text-muted-foreground">{item.next_action}</p>
+                  <p className="text-sm text-muted-foreground pl-2 border-l-2 border-muted">
+                    {item.next_action}
+                  </p>
                 )}
               </div>
             ))}
           </div>
 
-          <div className="flex flex-col md:flex-row gap-2">
+          <div className="flex flex-col md:flex-row gap-3">
             <Input
               placeholder="Add outcome/outreach/metric"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !addMutation.isPending) {
+                  addMutation.mutate();
+                }
+              }}
+              className="flex-1"
             />
-            <Select value={category} onValueChange={(v) => setCategory(v as unknown)}>
+            <Select value={category} onValueChange={(v) => setCategory(v as typeof category)}>
               <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
@@ -177,42 +210,59 @@ export const Today = () => {
                 <SelectItem value="metric">Metric</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={() => addMutation.mutate()} disabled={addMutation.isPending} className="w-full md:w-auto">
+            <Button 
+              onClick={() => addMutation.mutate()} 
+              disabled={addMutation.isPending || !newTitle.trim()}
+              className="btn-accent-gradient w-full md:w-auto px-6 rounded-full"
+            >
               <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => restartMutation.mutate()}
               disabled={restartMutation.isPending}
-              className="w-full md:w-auto"
+              className="w-full md:w-auto opacity-60 hover:opacity-100"
             >
-              <RefreshCcw className="h-4 w-4 mr-1" /> Restart Ritual
+              <RefreshCcw className="h-4 w-4 mr-1" /> Restart
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={`glass-card animate-in-delay-1 border-t-4 border-t-accent rounded-2xl ${powerBlockActive ? 'timer-active' : ''}`}>
         <CardHeader>
-          <CardTitle>Power Block</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-accent" />
+            Power Block
+          </CardTitle>
           <CardDescription>90-minute focus block with start/stop controls.</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Clock className="h-8 w-8 text-primary" />
-            <div>
-              <p className="text-3xl font-bold">{formattedRemaining}</p>
-              <p className="text-sm text-muted-foreground">
+        <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-center gap-6 flex-1">
+            <div className="text-center md:text-left">
+              <p className={`font-bold tabular-nums transition-all ${powerBlockActive ? 'text-6xl text-accent' : 'text-5xl text-muted-foreground'}`}>
+                {formattedRemaining}
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
                 {powerBlockActive ? 'Power block running' : 'Not started'}
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={startPowerBlock} disabled={powerBlockActive}>
-              <Play className="h-4 w-4 mr-1" /> Start
+          <div className="flex gap-3 justify-center md:justify-end">
+            <Button 
+              onClick={startPowerBlock} 
+              disabled={powerBlockActive}
+              className="px-6"
+            >
+              <Play className="h-4 w-4 mr-2" /> Start
             </Button>
-            <Button variant="outline" onClick={stopPowerBlock} disabled={!powerBlockActive}>
-              <Pause className="h-4 w-4 mr-1" /> Stop
+            <Button 
+              variant="outline" 
+              onClick={stopPowerBlock} 
+              disabled={!powerBlockActive}
+              className="px-6"
+            >
+              <Pause className="h-4 w-4 mr-2" /> Stop
             </Button>
           </div>
         </CardContent>

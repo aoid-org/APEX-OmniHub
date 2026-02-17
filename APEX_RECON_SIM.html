@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APEX RECON SIMULATION</title>
+    <style>
+        :root {
+            --color-bg: #050505;
+            --color-red: #ff4444;
+            --color-red-dim: rgba(255, 68, 68, 0.05);
+            --color-cyan: #00e5ff;
+            --color-cyan-dim: rgba(0, 229, 255, 0.1);
+            --font-mono: 'Courier New', Courier, monospace;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--color-bg);
+            color: white;
+            font-family: var(--font-mono);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            user-select: none;
+        }
+
+        #sim-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 
+           PREMIUM BUTTON RECIPE ADAPTED:
+           Neon Cyan border, centered, pulsing opacity.
+           Combined with 'glassmorphism' touches.
+        */
+        #initiate-btn {
+            pointer-events: auto;
+            background: rgba(0, 229, 255, 0.05);
+            border: 1px solid var(--color-cyan);
+            color: var(--color-cyan);
+            font-family: var(--font-mono);
+            font-size: 1.2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            padding: 20px 40px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.2), inset 0 0 10px rgba(0, 229, 255, 0.1);
+            transition: all 0.3s var(--ease-out-expo);
+            opacity: 0.8;
+            animation: pulse 2s infinite ease-in-out;
+            border-radius: 4px; /* Slight rounding for polish */
+        }
+
+        #initiate-btn:hover {
+            opacity: 1;
+            background: rgba(0, 229, 255, 0.15);
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.6), inset 0 0 20px rgba(0, 229, 255, 0.2);
+            transform: scale(1.05);
+            letter-spacing: 3px;
+        }
+
+        #initiate-btn:active {
+            transform: scale(0.98);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; box-shadow: 0 0 10px rgba(0, 229, 255, 0.2); }
+            50% { opacity: 1; box-shadow: 0 0 20px rgba(0, 229, 255, 0.4); }
+            100% { opacity: 0.6; box-shadow: 0 0 10px rgba(0, 229, 255, 0.2); }
+        }
+
+        #liquidity-counter {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            color: var(--color-cyan);
+            text-shadow: 0 0 10px var(--color-cyan);
+            opacity: 0; /* Hidden initially or start at 0? Prompt says 'Start: $0'. Let's show it */
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Utility for hiding */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Scanline effect for extra cyberpunk feel (optional, kept subtle) */
+        .scanline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 20;
+            opacity: 0.15;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="sim-canvas"></canvas>
+    <div class="scanline"></div>
+
+    <div id="ui-layer">
+        <div id="liquidity-counter">$0</div>
+        <button id="initiate-btn">INITIATE PROTOCOL</button>
+    </div>
+
+    <script>
+        /**
+         * APEX_RECON_SIM
+         * High-Performance Physics & Animation Engine
+         * 60fps Guaranteed Loop
+         */
+
+        // --- CONSTANTS ---
+        const PROTOCOL_AMOUNT = 4235000;
+        const ROW_COUNT = 50;
+        const STAGGER_MS = 35;
+        const TOTAL_DURATION_MS = ROW_COUNT * STAGGER_MS; // 1750ms
+        
+        // Colors
+        const COL_BG = '#050505';
+        const COL_RED_DIM = 'rgba(255, 68, 68, 0.05)';
+        const COL_CYAN_DIM = 'rgba(0, 229, 255, 0.1)';
+        const COL_RED = '#ff4444';
+        const COL_CYAN = '#00e5ff';
+
+        // --- STATE ---
+        let canvas, ctx;
+        let width, height;
+        let rows = [];
+        let isRunning = false;
+        let startTime = 0;
+        let lastFrameTime = 0;
+        
+        // --- DOM ELEMENTS ---
+        const btn = document.getElementById('initiate-btn');
+        const counterEl = document.getElementById('liquidity-counter');
+
+        // --- MATH UTILS ---
+        const lerp = (start, end, t) => start * (1 - t) + end * t;
+        const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+        
+        // Custom Easing: Cubic Bezier (0.16, 1, 0.3, 1) approximated
+        // Or simple easeOutExpo for the "Punch"
+        function easeOutExpo(x) {
+            return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+        }
+
+        // --- CLASSES ---
+
+        class Row {
+            constructor(index, y, h) {
+                this.index = index;
+                this.y = y;
+                this.h = h;
+                
+                // State: 'PENDING', 'VERIFIED'
+                this.verified = false;
+                
+                // Visuals
+                this.scale = 1;
+                this.bgAlpha = 0.05;
+                this.borderColor = COL_RED; // Stored as style string for perf, or switch
+                this.bgColor = COL_RED_DIM;
+                this.textColor = COL_RED;
+                this.text = `TXN-${Array.from(crypto.getRandomValues(new Uint8Array(4)), b => b.toString(16).padStart(2, '0')).join('').toUpperCase()} | PENDING VERIFICATION`;
+                
+                // Animation triggers
+                this.triggerTime = -1; 
+            }
+
+            resize(y, h) {
+                this.y = y;
+                this.h = h;
+            }
+
+            activate(time) {
+                this.verified = true;
+                this.triggerTime = time;
+                this.text = this.text.replace('PENDING VERIFICATION', 'VERIFIED');
+                
+                // Update static colors
+                this.borderColor = COL_CYAN;
+                this.textColor = COL_CYAN;
+                // Note: BG Color is handled via draw to allow for potential gradients/flashes, 
+                // but for 60fps simple color swap is best.
+                this.bgColor = COL_CYAN_DIM; 
+            }
+
+            update(now) {
+                if (!this.verified || this.triggerTime < 0) return;
+
+                const elapsed = now - this.triggerTime;
+                
+                // Visceral Pop: 1.0 -> 1.02 -> 1.0
+                // Duration of pop: 200ms
+                const popDur = 200;
+                if (elapsed < popDur) {
+                    const progress = elapsed / popDur;
+                    // Peak at 0.5 (100ms)
+                    if (progress < 0.5) {
+                        // 0 -> 1 (0 -> 1.02)
+                        const t = progress * 2;
+                        this.scale = lerp(1, 1.02, easeOutExpo(t));
+                    } else {
+                        // 1 -> 0 (1.02 -> 1)
+                        const t = (progress - 0.5) * 2;
+                        this.scale = lerp(1.02, 1, easeOutExpo(t));
+                    }
+                } else {
+                    this.scale = 1;
+                }
+            }
+
+            draw(ctx, w) {
+                // Calculate scaled rect
+                const cy = this.y + this.h / 2;
+                const scaledH = this.h * this.scale;
+                const ty = cy - scaledH / 2;
+                
+                // Background
+                ctx.fillStyle = this.verified ? COL_CYAN_DIM : COL_RED_DIM;
+                
+                // Add Glow if verified
+                if (this.verified) {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = COL_CYAN;
+                } else {
+                    ctx.shadowBlur = 0;
+                }
+
+                ctx.fillRect(0, ty, w, scaledH);
+                
+                // Reset shadow for text/border to avoid double glow cost? 
+                // Actually keep it for border.
+                
+                // Left Border (1px)
+                ctx.fillStyle = this.verified ? COL_CYAN : COL_RED;
+                ctx.fillRect(0, ty, 3, scaledH); // Make it 3px for visibility
+
+                // Text
+                ctx.fillStyle = this.verified ? COL_CYAN : COL_RED;
+                ctx.font = '14px "Courier New"';
+                ctx.textBaseline = 'middle';
+                // Remove shadow for text to keep it crisp?
+                ctx.shadowBlur = 0; 
+                ctx.fillText(this.text, 20, cy);
+            }
+        }
+
+        // --- CORE ENGINE ---
+
+        function init() {
+            canvas = document.getElementById('sim-canvas');
+            ctx = canvas.getContext('2d', { alpha: false }); // Optimize
+            
+            globalThis.addEventListener('resize', onResize);
+            onResize(); // Initial setup
+
+            // Init Rows
+            const rowH = height / ROW_COUNT;
+            for (let i = 0; i < ROW_COUNT; i++) {
+                rows.push(new Row(i, i * rowH, rowH));
+            }
+
+            // Start Loop
+            requestAnimationFrame(loop);
+
+            // Bind UI
+            btn.addEventListener('click', startProtocol);
+        }
+
+        function onResize() {
+            width = globalThis.innerWidth;
+            height = globalThis.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            // Update rows
+            const rowH = height / ROW_COUNT;
+            rows.forEach((r, i) => r.resize(i * rowH, rowH));
+        }
+
+        function startProtocol() {
+            if (isRunning) return;
+            isRunning = true;
+            startTime = performance.now();
+            
+            // Hide button
+            btn.style.opacity = '0';
+            btn.style.pointerEvents = 'none';
+
+            // Trigger audio? (No audio requested, strictly visual)
+        }
+
+        function updateCounter(progress) {
+            // progress 0 -> 1
+            const val = Math.floor(progress * PROTOCOL_AMOUNT);
+            // Format currency
+            counterEl.textContent = '$' + val.toLocaleString('en-US');
+            
+            // Keep specific alignment? 'monospace font alignment'
+            // Courier handles this.
+        }
+
+        function loop(now) {
+            requestAnimationFrame(loop);
+
+            // Clear Background
+            ctx.fillStyle = COL_BG;
+            ctx.fillRect(0, 0, width, height);
+
+            if (isRunning) {
+                const elapsed = now - startTime;
+                
+                // Update Counter
+                // Syncs exactly with 1750ms
+                const totalProgress = clamp(elapsed / TOTAL_DURATION_MS, 0, 1);
+                updateCounter(totalProgress);
+
+                // Update Rows
+                // Which row should be active?
+                // Index = floor(elapsed / 35ms)
+                const activeIndex = Math.floor(elapsed / STAGGER_MS);
+                
+                // Mark rows as active if not already
+                for (let i = 0; i < rows.length; i++) {
+                    if (!rows[i].verified && i <= activeIndex) {
+                        rows[i].activate(now);
+                    }
+                    rows[i].update(now);
+                }
+
+                // Check finish
+                if (elapsed > TOTAL_DURATION_MS + 500 && rows[ROW_COUNT-1].scale === 1) {
+                     // Ensure final state
+                     updateCounter(1);
+                }
+            }
+
+            // Draw All
+            for (let r of rows) {
+                r.draw(ctx, width);
+            }
+        }
+
+        // Boot
+        globalThis.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
