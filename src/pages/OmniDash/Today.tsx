@@ -15,6 +15,16 @@ import { useToast } from '@/components/ui/use-toast';
 import { useExecute } from '@/hooks/useExecute';
 import { useDemoStore } from '@/stores/demoStore';
 
+type BadgeCategory = 'outcome' | 'outreach' | 'metric';
+
+const getBadgeStyles = (category: BadgeCategory) => {
+  switch (category) {
+    case 'outcome': return 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400';
+    case 'outreach': return 'border-sky-500/50 text-sky-600 dark:text-sky-400';
+    default: return 'border-amber-500/50 text-amber-600 dark:text-amber-400';
+  }
+};
+
 export const Today = () => {
   const { user } = useAuth();
   const { toast } = useToast();

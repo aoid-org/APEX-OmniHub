@@ -27,6 +27,7 @@ Architecture:
 
 import hashlib
 import json
+import logging
 import re
 from typing import Any
 
@@ -54,6 +55,8 @@ except ImportError:
         # Fallback: define minimal stubs for typing (tests can mock these)
         IndexDefinition = type("IndexDefinition", (), {})  # type: ignore
         IndexType = type("IndexType", (), {})  # type: ignore
+
+logger = logging.getLogger(__name__)
 
 # ============================================================================
 # DATA MODELS
@@ -260,10 +263,10 @@ class SemanticCacheService:
         self.redis: aioredis.Redis | None = None
 
         # Sentence embeddings model (runs locally, no API calls)
-        print(f"Loading embedding model: {embedding_model}...")
+        logger.info(f"Loading embedding model: {embedding_model}...")
         self.embedding_model = SentenceTransformer(embedding_model)
         self.embedding_dim = self.embedding_model.get_sentence_embedding_dimension()
-        print(f"✓ Model loaded ({self.embedding_dim} dimensions)")
+        logger.info(f"Model loaded ({self.embedding_dim} dimensions)")
 
         # Redis index name
         self.index_name = "idx:plan_templates"
@@ -280,7 +283,7 @@ class SemanticCacheService:
             encoding="utf-8",
             decode_responses=True,
         )
-        print(f"✓ Connected to Redis: {self.redis_url}")
+        logger.info(f"Connected to Redis: {self.redis_url}")
 
         # Create vector search index (idempotent)
         await self._create_index()
@@ -307,11 +310,11 @@ class SemanticCacheService:
         try:
             # Check if index exists
             await self.redis.ft(self.index_name).info()
-            print(f"✓ Vector index already exists: {self.index_name}")
+            logger.info(f"Vector index already exists: {self.index_name}")
             return
         except Exception:  # noqa: S110 - Expected: index may not exist yet
             # Index doesn't exist - will be created below
-            print(f"ℹ Vector index not found, creating: {self.index_name}")
+            logger.info(f"Vector index not found, creating: {self.index_name}")
 
         # Define index schema
         schema = [
@@ -338,7 +341,7 @@ class SemanticCacheService:
             fields=schema,
             definition=IndexDefinition(prefix=["plan:"], index_type=IndexType.HASH),
         )
-        print(f"✓ Created vector index: {self.index_name}")
+        logger.info(f"Created vector index: {self.index_name}")
 
     async def get_plan(self, goal: str) -> CachedPlan | None:
         """
@@ -380,7 +383,7 @@ class SemanticCacheService:
                 query, query_params={"vec": embedding_bytes}
             )
         except Exception as e:
-            print(f"Vector search failed: {e}")
+            logger.error(f"Vector search failed: {e}")
             return None
 
         # Step 4: Check similarity threshold
@@ -391,7 +394,7 @@ class SemanticCacheService:
         similarity = 1.0 - float(best_match.score)  # Redis returns distance, we want similarity
 
         if similarity < self.similarity_threshold:
-            print(f"❌ Cache miss (similarity={similarity:.3f} < {self.similarity_threshold})")
+            logger.info(f"Cache miss (similarity={similarity:.3f} < {self.similarity_threshold})")
             return None
 
         # Step 5: Rehydrate plan with actual parameters
@@ -409,7 +412,7 @@ class SemanticCacheService:
         # Increment hit count
         await self.redis.hincrby(f"plan:{template_id}", "hit_count", 1)
 
-        print(f"✓ Cache HIT (similarity={similarity:.3f}, template={template_id})")
+        logger.info(f"Cache HIT (similarity={similarity:.3f}, template={template_id})")
 
         return CachedPlan(
             plan_id=self._generate_plan_id(goal),
@@ -455,7 +458,7 @@ class SemanticCacheService:
         # Check if template already exists
         exists = await self.redis.exists(f"plan:{template_id}")
         if exists:
-            print(f"✓ Template already cached: {template_id}")
+            logger.info(f"Template already cached: {template_id}")
             return template_id
 
         # Embed template
@@ -477,7 +480,7 @@ class SemanticCacheService:
                 )
         except Exception as e:
             # Fail-safe: don't block caching if persistence fails
-            print(f"⚠️ TiDB persistence failed (non-blocking): {e}")
+            logger.warning(f"TiDB persistence failed (non-blocking): {e}")
 
         # Parameterize plan steps (reverse of injection)
         parameterized_steps = self._parameterize_steps(plan_steps, parameters)
@@ -510,7 +513,7 @@ class SemanticCacheService:
         # Set TTL
         await self.redis.expire(f"plan:{template_id}", ttl_seconds or self.ttl_seconds)
 
-        print(f"✓ Cached new template: {template_id} (TTL={ttl_seconds or self.ttl_seconds}s)")
+        logger.info(f"Cached new template: {template_id} (TTL={ttl_seconds or self.ttl_seconds}s)")
         return template_id
 
     def _inject_parameters(
@@ -577,4 +580,4 @@ class SemanticCacheService:
         """Close Redis connection."""
         if self.redis:
             await self.redis.close()
-            print("✓ Redis connection closed")
+            logger.info("Redis connection closed")
