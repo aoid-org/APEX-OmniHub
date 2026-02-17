@@ -165,15 +165,6 @@ async function enforce(owner, repo, token, contexts) {
   }
 }
 
-// BREAK GLASS ONLY: Remove branch protection
-// async function emergencyUnlock(owner, repo, token) {
-//   const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches/main/protection`, {
-//     method: 'DELETE',
-//     headers: { Authorization: `token ${token}` }
-//   });
-//   console.log(response.ok ? '🔓 UNLOCKED' : '🔴 UNLOCK FAILED');
-// }
-
 // --- MAIN EXECUTION ---
 
 async function main() {

@@ -796,6 +796,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ingress_buffer: {
+        Row: {
+          id: string
+          correlation_id: string
+          raw_input: Json
+          error_reason: string
+          status: Database["public"]["Enums"]["dlq_status"]
+          risk_score: number
+          created_at: string
+          retry_count: number
+          last_retry_at: string | null
+          source_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          correlation_id: string
+          raw_input: Json
+          error_reason: string
+          status?: Database["public"]["Enums"]["dlq_status"]
+          risk_score?: number
+          created_at?: string
+          retry_count?: number
+          last_retry_at?: string | null
+          source_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          correlation_id?: string
+          raw_input?: Json
+          error_reason?: string
+          status?: Database["public"]["Enums"]["dlq_status"]
+          risk_score?: number
+          created_at?: string
+          retry_count?: number
+          last_retry_at?: string | null
+          source_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           id: string
@@ -905,6 +947,102 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      },
+      chain_entitlements_cache: {
+        Row: {
+          id: string
+          wallet_address: string
+          chain_id: number
+          query_type: string
+          query_params: Json
+          data: Json
+          refreshed_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          wallet_address: string
+          chain_id: number
+          query_type: string
+          query_params: Json
+          data: Json
+          refreshed_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          wallet_address?: string
+          chain_id?: number
+          query_type?: string
+          query_params?: Json
+          data?: Json
+          refreshed_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      },
+      entitlements: {
+        Row: {
+          id: string
+          subject_type: string
+          subject_id: string
+          entitlement_key: string
+          source: string
+          metadata: Json | null
+          expires_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          subject_type: string
+          subject_id: string
+          entitlement_key: string
+          source: string
+          metadata?: Json | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          subject_type?: string
+          subject_id?: string
+          entitlement_key?: string
+          source?: string
+          metadata?: Json | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      },
+      wallet_nonces: {
+        Row: {
+          id: string
+          nonce: string
+          wallet_address: string
+          expires_at: string
+          used_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          nonce: string
+          wallet_address: string
+          expires_at: string
+          used_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          nonce?: string
+          wallet_address?: string
+          expires_at?: string
+          used_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -947,6 +1085,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      dlq_status: "pending" | "replaying" | "failed"
       omnidash_incident_severity: "sev1" | "sev2" | "sev3"
       omnidash_incident_status: "open" | "monitoring" | "resolved"
       subscription_tier: "free" | "starter" | "pro" | "enterprise"
@@ -1088,6 +1227,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      dlq_status: ["pending", "replaying", "failed"],
       omnidash_incident_severity: ["sev1", "sev2", "sev3"],
       omnidash_incident_status: ["open", "monitoring", "resolved"],
       subscription_tier: ["free", "starter", "pro", "enterprise"],

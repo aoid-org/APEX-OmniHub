@@ -70,26 +70,6 @@ async function verifyNFTOwnership(
 ): Promise<boolean> {
   // Stub implementation - returns true for demo
   // In production, replace with actual RPC call:
-  //
-  // const rpcUrl = getRPCUrl(chainId);
-  // const response = await fetch(rpcUrl, {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({
-  //     jsonrpc: '2.0',
-  //     id: 1,
-  //     method: 'eth_call',
-  //     params: [
-  //       {
-  //         to: contractAddress,
-  //         data: encodeBalanceOfCall(walletAddress, tokenId)
-  //       },
-  //       'latest'
-  //     ]
-  //   })
-  // });
-  // const result = await response.json();
-  // return decodeBalanceOfResult(result.result) > 0;
 
   console.log(
     `NFT verification stub: ${walletAddress} on chain ${chainId} at ${contractAddress} (token: ${tokenId || 'N/A'})`

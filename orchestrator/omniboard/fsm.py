@@ -216,9 +216,7 @@ class OmniBoardFSM:
         # Input: Registration success
         connection_id = event.payload.get("connection_id")
 
-        # DEBUG
         t_ref = f"vault://{context.tenant_id}/{context.provider_name}"
-        print(f"DEBUG: token_ref={t_ref}")
 
         # CREATE FINAL SPEC
         connection = ConnectionDetails(
