@@ -42,10 +42,10 @@ class TestValidateUrl:
         # Split strings to potentially avoid naive grep detection, though NOSONAR is safer
         private_ips = [
             "http://127.0.0.1",  # NOSONAR
-            "http://10.0.0.1",   # NOSONAR
-            "http://192.168.1.1",# NOSONAR
-            "http://172.16.0.1", # NOSONAR
-            "http://[::1]",      # NOSONAR
+            "http://10.0.0.1",  # NOSONAR
+            "http://192.168.1.1",  # NOSONAR
+            "http://172.16.0.1",  # NOSONAR
+            "http://[::1]",  # NOSONAR
             "http://[fc00::1]",  # NOSONAR
         ]
         for url in private_ips:

@@ -37,6 +37,7 @@ def mock_dependencies():
     if "activities.tools" in sys.modules:
         del sys.modules["activities.tools"]
 
+
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("mock_dependencies")
 async def test_call_webhook_ssrf_blocked():
@@ -48,7 +49,7 @@ async def test_call_webhook_ssrf_blocked():
     with patch("httpx.AsyncClient") as mock_client_cls:
         params = {
             "url": "http://127.0.0.1/sensitive",  # NOSONAR
-            "method": "GET"
+            "method": "GET",
         }
 
         result = await call_webhook(params)
@@ -59,6 +60,7 @@ async def test_call_webhook_ssrf_blocked():
 
         # Verify httpx was NOT called
         mock_client_cls.assert_not_called()
+
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("mock_dependencies")
@@ -73,13 +75,11 @@ async def test_call_webhook_valid_url():
 
         # Mock DNS resolution
         with patch("socket.getaddrinfo") as mock_getaddrinfo:
-            mock_getaddrinfo.return_value = [
-                (2, 1, 6, "", ("93.184.216.34", 80))
-            ]
+            mock_getaddrinfo.return_value = [(2, 1, 6, "", ("93.184.216.34", 80))]
 
             params = {
                 "url": "http://example.com/webhook",  # NOSONAR
-                "method": "POST"
+                "method": "POST",
             }
 
             result = await call_webhook(params)

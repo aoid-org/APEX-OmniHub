@@ -77,7 +77,8 @@ def validate_url(url: str) -> str:
         # We only care about the sockaddr (IP)
         # Use AI_ADDRCONFIG to filter out IPv6 if system doesn't support it, but
         # for security, we want to see ALL resolutions.
-        addr_infos = socket.getaddrinfo(hostname, None)  # NOSONAR: DNS lookup is required for SSRF validation
+        # NOSONAR: DNS lookup is required for SSRF validation
+        addr_infos = socket.getaddrinfo(hostname, None)
     except socket.gaierror as e:
         raise ValueError(f"Could not resolve hostname {hostname}: {e}") from e
 
