@@ -8,7 +8,7 @@ describe('sanitizeEventPayload', () => {
 
   describe('Tier 1 - Complete Redaction', () => {
     it('redacts password fields completely', () => {
-      const input = { password: 'secret123', username: 'john' };
+      const input = { password: 'test_password_value', username: 'john' };
       const output = sanitizeEventPayload(input);
 
       expect(output.password).toBe('[REDACTED]');
@@ -17,8 +17,8 @@ describe('sanitizeEventPayload', () => {
 
     it('redacts API keys and tokens', () => {
       const input = {
-        api_key: 'sk-abc123',
-        access_token: 'eyJhbGc...',
+        api_key: 'mock_api_key',
+        access_token: 'mock_access_token',
         user: 'test',
       };
       const output = sanitizeEventPayload(input);
@@ -29,7 +29,7 @@ describe('sanitizeEventPayload', () => {
     });
 
     it('handles case-insensitive key matching', () => {
-      const input = { PASSWORD: 'secret', Password: 'secret2' };
+      const input = { PASSWORD: 'mock_secret_upper', Password: 'mock_secret_camel' };
       const output = sanitizeEventPayload(input);
 
       expect(output.PASSWORD).toBe('[REDACTED]');
@@ -148,7 +148,7 @@ describe('sanitizeEventPayload', () => {
           profile: {
             contact: {
               email: 'test@example.com',
-              password: 'secret123',
+              password: 'test_nested_password',
             },
           },
         },
@@ -156,22 +156,27 @@ describe('sanitizeEventPayload', () => {
 
       const output = sanitizeEventPayload(input);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((output.user as any).profile.contact.email).toMatch(/^te\*\*\*om$/);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((output.user as any).profile.contact.password).toBe('[REDACTED]');
     });
 
     it('sanitizes arrays of objects', () => {
       const input = {
         users: [
-          { email: 'user1@example.com', password: 'pass1' },
-          { email: 'user2@example.com', password: 'pass2' },
+          { email: 'user1@example.com', password: 'mock_pass_1' },
+          { email: 'user2@example.com', password: 'mock_pass_2' },
         ],
       };
 
       const output = sanitizeEventPayload(input);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((output.users as any)[0].password).toBe('[REDACTED]');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((output.users as any)[1].password).toBe('[REDACTED]');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((output.users as any)[0].email).toMatch(/^us\*\*\*om$/);
     });
 
@@ -185,7 +190,9 @@ describe('sanitizeEventPayload', () => {
 
       const output = sanitizeEventPayload(input);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((output.messages as any)[0]).toContain('[EMAIL_REDACTED]');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((output.messages as any)[1]).toContain('[PHONE_REDACTED]');
     });
   });
@@ -197,6 +204,7 @@ describe('sanitizeEventPayload', () => {
   describe('Circuit Breakers', () => {
     it('prevents infinite recursion with max depth limit', () => {
       // Create deeply nested object (15 levels)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let deep: any = { value: 'bottom' };
       for (let i = 0; i < 15; i++) {
         deep = { nested: deep };
@@ -205,6 +213,7 @@ describe('sanitizeEventPayload', () => {
       const output = sanitizeEventPayload(deep);
 
       // Should truncate at max depth and show error
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let current: any = output;
       let depth = 0;
       while (current.nested && depth < 20) {
