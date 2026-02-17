@@ -78,17 +78,7 @@ async function* streamSSEResponse(
   parseLine: (line: string) => string | null,
   providerName: string
 ): AsyncIterable<string> {
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-    signal,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`${providerName.toUpperCase()} API Error ${response.status}: ${errorText}`);
-  }
+  const response = await postJSON(endpoint, headers, body, signal, providerName);
 
   if (!response.body) throw new Error("No response body");
 
@@ -113,6 +103,32 @@ async function* streamSSEResponse(
   } finally {
     reader.releaseLock();
   }
+}
+
+/**
+ * Shared POST + error-handling for all providers.
+ * Single source of truth for fetch, JSON serialization, and error formatting.
+ */
+async function postJSON(
+  endpoint: string,
+  headers: HeadersInit,
+  body: unknown,
+  signal: AbortSignal | undefined,
+  providerName: string
+): Promise<Response> {
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+    signal,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`${providerName.toUpperCase()} API Error ${response.status}: ${errorText}`);
+  }
+
+  return response;
 }
 
 // ============================================================
@@ -290,18 +306,7 @@ export class GoogleAdapter implements UniversalAdapter {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     const body = this.buildRequest(messages, options);
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`GOOGLE API Error ${response.status}: ${errorText}`);
-    }
-
+    const response = await postJSON(url, { "Content-Type": "application/json" }, body, signal, "google");
     const data = await response.json();
     const parsed = this.parseResponse(data);
     if (parsed.content) yield parsed.content;
