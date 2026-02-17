@@ -729,8 +729,7 @@ class OmniPortEngine {
     try {
       const { error: dbError } = await supabase.from('ingress_buffer').insert({
         correlation_id: ctx.correlationId,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        raw_input: input as any,
+        raw_input: input as unknown as Record<string, unknown>,
         error_reason: error.message,
         status: 'pending',
         risk_score: riskScore,

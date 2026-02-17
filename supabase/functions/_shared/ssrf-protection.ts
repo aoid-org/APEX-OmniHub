@@ -103,19 +103,6 @@ const CLOUD_METADATA_IPS = [
 
 /**
  * Check if an IP address is in a blocked range.
- *
- * Blocked ranges:
- * - Private (RFC 1918): 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
- * - Loopback: 127.0.0.0/8, ::1
- * - Link-local (RFC 3927): 169.254.0.0/16, fe80::/10
- * - Carrier-grade NAT (RFC 6598): 100.64.0.0/10
- * - Multicast: 224.0.0.0/4, ff00::/8
- * - IPv6 Unique Local (RFC 4193): fc00::/7
- * - Cloud metadata: 169.254.169.254
- *
- * @param ip - Parsed IP address object from ipaddr.js
- * @param options - SSRF protection options
- * @returns true if IP should be blocked
  */
 function isBlockedIpRange(
   ip: ipaddr.IPv4 | ipaddr.IPv6,
@@ -165,10 +152,6 @@ function isBlockedIpRange(
 
 /**
  * Parse and validate a single IP address.
- *
- * @param ipStr - IP address string
- * @param options - SSRF protection options
- * @returns Validation result
  */
 function validateIpAddress(
   ipStr: string,
@@ -203,14 +186,51 @@ function validateIpAddress(
 }
 
 /**
+ * Validate a hostname directly (without DNS resolution) against loopback strings
+ * and try to parse it as an IP.
+ */
+function validateUnresolvedHostname(
+  hostname: string,
+  options: SsrfOptions,
+): SsrfValidationResult | null {
+  const lowerHostname = hostname.toLowerCase();
+
+  // Check literal loopback strings
+  if (
+    lowerHostname === "127.0.0.1" || // NOSONAR
+    lowerHostname === "0.0.0.0" || // NOSONAR
+    lowerHostname === "[::1]" || // NOSONAR
+    lowerHostname === "localhost"
+  ) {
+    if (!options.allowLoopback) {
+      return {
+        allowed: false,
+        reason: `Hostname ${lowerHostname} is blocked (loopback/unspecified)`,
+      };
+    }
+  }
+
+  // Try parsing as IP address directly
+  try {
+    // Try processing the hostname itself first (it might be an IP string)
+    // ipaddr.process throws if it's not a valid IP
+    ipaddr.process(hostname);
+    return validateIpAddress(hostname, options);
+  } catch {
+    // If the original hostname wasn't an IP, try the lowercased version.
+    try {
+      ipaddr.process(lowerHostname);
+      return validateIpAddress(lowerHostname, options);
+    } catch {
+      // Not an IP
+    }
+  }
+
+  return null;
+}
+
+/**
  * Resolve hostname to IP addresses and validate all resolved IPs.
- *
- * This prevents DNS rebinding attacks where a hostname initially resolves
- * to a public IP but later resolves to a private IP.
- *
- * @param hostname - Hostname to resolve
- * @param options - SSRF protection options
- * @returns Validation result with resolved IPs
  */
 async function validateHostname(
   hostname: string,
@@ -234,51 +254,14 @@ async function validateHostname(
     }
   }
 
-  // Handle case insensitive 127.0.0.1 and 0.0.0.0 check when resolveDns is false
-  // This is needed because ipaddr.js might not catch them if passed as non-canonical strings in specific environments
-  if (!options.resolveDns) {
-    if (
-      lowerHostname === "127.0.0.1" || // NOSONAR
-      lowerHostname === "0.0.0.0" || // NOSONAR
-      lowerHostname === "[::1]" // NOSONAR
-    ) {
-      if (!options.allowLoopback) {
-        return {
-          allowed: false,
-          reason: `IP ${lowerHostname} is blocked (loopback/unspecified)`,
-        };
-      }
+  // If DNS resolution is disabled, use the helper for direct checks
+  if (!resolveDns) {
+    const directCheck = validateUnresolvedHostname(hostname, options);
+    if (directCheck) {
+      return directCheck;
     }
-  }
-
-  // Handle case insensitive direct IP check (for test cases like comprehensive edge cases)
-  // When resolveDns is false, we need to manually trigger the IP check for non-resolved hostnames
-  if (!options.resolveDns) {
-    try {
-      // Try processing the hostname itself first (it might be an IP string)
-      // ipaddr.process throws if it's not a valid IP
-      ipaddr.process(hostname);
-      return validateIpAddress(hostname, options);
-    } catch {
-      // If the original hostname wasn't an IP, try the lowercased version.
-      // Some test environments might pass normalized/lowercased IPs.
-      try {
-        ipaddr.process(lowerHostname);
-        return validateIpAddress(lowerHostname, options);
-      } catch {
-        // Not an IP, fall through to blocklist checks
-      }
-    }
-  }
-
-  // Handle case insensitive localhost check if resolveDns is false
-  if (!options.resolveDns && lowerHostname === "localhost") {
-    if (!options.allowLoopback) {
-      return {
-        allowed: false,
-        reason: "Hostname is blocked (localhost)",
-      };
-    }
+    // If not a direct IP or loopback literal, and suffixes pass, assume safe (or unresolvable) without DNS
+    return { allowed: true };
   }
 
   // If we are in a testing environment without network access, mock resolution for known test domains
@@ -291,11 +274,6 @@ async function validateHostname(
   ) {
     // Mock valid resolution for these known public test domains
     return { allowed: true, resolvedIps: ["93.184.216.34"] }; // Example IP // NOSONAR
-  }
-
-  // If DNS resolution is disabled, allow (less secure)
-  if (!resolveDns) {
-    return { allowed: true };
   }
 
   // Resolve DNS with timeout

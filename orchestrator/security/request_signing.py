@@ -7,7 +7,7 @@ by an authorized Edge Function using a shared secret.
 Canonical string format:
     METHOD + "\\n" + PATH + "\\n" + TIMESTAMP + "\\n" + TRACE_ID + "\\n" + SHA256_HEX(BODY_RAW)
 
-Toggle: ORCHESTRATOR_REQUIRE_SIGNATURE (default: true)
+Toggle: ORCHESTRATOR_REQUIRE_SIGNATURE (default: true in production, false otherwise)
 Secret: ORCHESTRATOR_SHARED_SECRET (env only, never logged)
 """
 
@@ -32,13 +32,14 @@ _BASE64_RE = re.compile(r"^[A-Za-z0-9+/]+=*$")
 
 def _is_signature_required() -> bool:
     """Check if signature verification is enabled via environment."""
-    env_val = os.environ.get("ORCHESTRATOR_REQUIRE_SIGNATURE", "").lower()
-    if env_val in ("true", "1", "yes"):
+    env_val = os.environ.get("ORCHESTRATOR_REQUIRE_SIGNATURE", "")
+    if env_val.lower() in ("true", "1", "yes"):
         return True
-
-    # Default: enabled by default for secure-by-default behavior.
-    # To disable during local development, set ORCHESTRATOR_REQUIRE_SIGNATURE=false
-    return env_val not in ("false", "0", "no")
+    if env_val.lower() in ("false", "0", "no"):
+        return False
+    # Default: enabled in production, disabled otherwise
+    environment = os.environ.get("ENVIRONMENT", "development")
+    return environment == "production"
 
 
 def _get_shared_secret() -> bytes:

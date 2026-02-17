@@ -9,145 +9,165 @@ import { assertUrlSafe, SsrfOptions } from "./ssrf-protection.ts";
  * SonarCloud hotspots for hardcoded IPs/HTTP are false positives.
  */
 
-// Table-driven test structure to eliminate code duplication
-interface TestCase {
-  name: string;
-  url: string;
-  shouldBlock: boolean;
-  options?: SsrfOptions;
-  errorMsg?: string;
-}
+// Tuple format: [name, url, shouldBlock, options?, errorMsg?]
+// This minimizes structural duplication (repeated property names).
+type TestTuple = [
+  string, // Name
+  string, // URL
+  boolean, // Should Block?
+  SsrfOptions?, // Options
+  string?, // Error Message
+];
 
-const TEST_CASES: TestCase[] = [
+const TEST_CASES: TestTuple[] = [
   // Blocked Local/Private
-  {
-    name: "blocks localhost",
-    url: "http://localhost:8080", // NOSONAR
-    shouldBlock: true,
-    errorMsg: "SSRF protection blocked request",
-  },
-  {
-    name: "blocks 127.0.0.1",
-    url: "http://127.0.0.1", // NOSONAR
-    shouldBlock: true,
-    errorMsg: "SSRF protection blocked request",
-  },
-  {
-    name: "blocks 0.0.0.0",
-    url: "http://0.0.0.0", // NOSONAR
-    shouldBlock: true,
-    errorMsg: "SSRF protection blocked request",
-  },
-  {
-    name: "blocks IPv6 localhost",
-    url: "http://[::1]", // NOSONAR
-    shouldBlock: true,
-    errorMsg: "SSRF protection blocked request",
-  },
-  {
-    name: "blocks private IP 192.168.x.x",
-    url: "http://192.168.1.1", // NOSONAR
-    shouldBlock: true,
-    errorMsg: "SSRF protection blocked request",
-  },
-  {
-    name: "blocks private IP 10.x.x.x",
-    url: "http://10.0.0.1", // NOSONAR
-    shouldBlock: true,
-    errorMsg: "SSRF protection blocked request",
-  },
-  {
-    name: "blocks private IP 172.16.x.x",
-    url: "http://172.16.0.1", // NOSONAR
-    shouldBlock: true,
-    errorMsg: "SSRF protection blocked request",
-  },
-  {
-    name: "blocks private IP 172.31.x.x",
-    url: "http://172.31.255.255", // NOSONAR
-    shouldBlock: true,
-    errorMsg: "SSRF protection blocked request",
-  },
-  {
-    name: "blocks AWS Metadata",
-    url: "http://169.254.169.254", // NOSONAR
-    shouldBlock: true,
-    errorMsg: "SSRF protection blocked request",
-  },
+  [
+    "blocks localhost",
+    "http://localhost:8080", // NOSONAR
+    true,
+    undefined,
+    "SSRF protection blocked request",
+  ],
+  [
+    "blocks 127.0.0.1",
+    "http://127.0.0.1", // NOSONAR
+    true,
+    undefined,
+    "SSRF protection blocked request",
+  ],
+  [
+    "blocks 0.0.0.0",
+    "http://0.0.0.0", // NOSONAR
+    true,
+    undefined,
+    "SSRF protection blocked request",
+  ],
+  [
+    "blocks IPv6 localhost",
+    "http://[::1]", // NOSONAR
+    true,
+    undefined,
+    "SSRF protection blocked request",
+  ],
+  [
+    "blocks private IP 192.168.x.x",
+    "http://192.168.1.1", // NOSONAR
+    true,
+    undefined,
+    "SSRF protection blocked request",
+  ],
+  [
+    "blocks private IP 10.x.x.x",
+    "http://10.0.0.1", // NOSONAR
+    true,
+    undefined,
+    "SSRF protection blocked request",
+  ],
+  [
+    "blocks private IP 172.16.x.x",
+    "http://172.16.0.1", // NOSONAR
+    true,
+    undefined,
+    "SSRF protection blocked request",
+  ],
+  [
+    "blocks private IP 172.31.x.x",
+    "http://172.31.255.255", // NOSONAR
+    true,
+    undefined,
+    "SSRF protection blocked request",
+  ],
+  [
+    "blocks AWS Metadata",
+    "http://169.254.169.254", // NOSONAR
+    true,
+    undefined,
+    "SSRF protection blocked request",
+  ],
 
   // Blocked Domains (simulate DNS or suffix checks)
-  {
-    name: "blocks .local domain",
-    url: "http://server.local", // NOSONAR
-    shouldBlock: true,
-    options: { resolveDns: false }, // Force suffix check without DNS
-    errorMsg: "SSRF protection blocked request",
-  },
-  {
-    name: "blocks .internal domain",
-    url: "http://api.internal", // NOSONAR
-    shouldBlock: true,
-    options: { resolveDns: false },
-    errorMsg: "SSRF protection blocked request",
-  },
-  {
-    name: "blocks case insensitive LOCALHOST",
-    url: "http://LOCALHOST", // NOSONAR
-    shouldBlock: true,
-    options: { resolveDns: false },
-    errorMsg: "SSRF protection blocked request",
-  },
+  [
+    "blocks .local domain",
+    "http://server.local", // NOSONAR
+    true,
+    { resolveDns: false },
+    "SSRF protection blocked request",
+  ],
+  [
+    "blocks .internal domain",
+    "http://api.internal", // NOSONAR
+    true,
+    { resolveDns: false },
+    "SSRF protection blocked request",
+  ],
+  [
+    "blocks case insensitive LOCALHOST",
+    "http://LOCALHOST", // NOSONAR
+    true,
+    { resolveDns: false },
+    "SSRF protection blocked request",
+  ],
 
   // Invalid Inputs
-  {
-    name: "rejects invalid URL string",
-    url: "not-a-url",
-    shouldBlock: true,
-    errorMsg: "Invalid URL format",
-  },
-  {
-    name: "rejects empty string",
-    url: "",
-    shouldBlock: true,
-    errorMsg: "Invalid URL format",
-  },
+  [
+    "rejects invalid URL string",
+    "not-a-url",
+    true,
+    undefined,
+    "Invalid URL format",
+  ],
+  [
+    "rejects empty string",
+    "",
+    true,
+    undefined,
+    "Invalid URL format",
+  ],
 
   // Allowed Public URLs
-  {
-    name: "allows public API domain",
-    url: "https://api.example.com",
-    shouldBlock: false,
-  },
-  {
-    name: "allows public webhook",
-    url: "https://webhook.site/test",
-    shouldBlock: false,
-  },
-  {
-    name: "allows public IP",
-    url: "http://8.8.8.8", // NOSONAR
-    shouldBlock: false,
-  },
-  {
-    name: "allows URL with path and query",
-    url: "https://api.example.com/webhook?token=abc123",
-    shouldBlock: false,
-  },
+  [
+    "allows public API domain",
+    "https://api.example.com", // NOSONAR
+    false,
+    undefined,
+    undefined,
+  ],
+  [
+    "allows public webhook",
+    "https://webhook.site/test", // NOSONAR
+    false,
+    undefined,
+    undefined,
+  ],
+  [
+    "allows public IP",
+    "http://8.8.8.8", // NOSONAR
+    false,
+    undefined,
+    undefined,
+  ],
+  [
+    "allows URL with path and query",
+    "https://api.example.com/webhook?token=abc123", // NOSONAR
+    false,
+    undefined,
+    undefined,
+  ],
 ];
 
 Deno.test("SSRF Protection - Table Driven Verification", async (t) => {
-  for (const tc of TEST_CASES) {
-    await t.step(tc.name, async () => {
-      if (tc.shouldBlock) {
+  for (const [name, url, shouldBlock, options, errorMsg] of TEST_CASES) {
+    await t.step(name, async () => {
+      if (shouldBlock) {
         // Expect rejection
         await assertRejects(
-          async () => await assertUrlSafe(tc.url, tc.options),
+          async () => await assertUrlSafe(url, options),
           Error,
-          tc.errorMsg,
+          errorMsg,
         );
       } else {
         // Expect success (no throw)
-        await assertUrlSafe(tc.url, tc.options);
+        await assertUrlSafe(url, options);
       }
     });
   }
