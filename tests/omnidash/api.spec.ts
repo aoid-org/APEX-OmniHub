@@ -10,6 +10,7 @@ vi.mock('../../src/integrations/supabase/client', () => ({
 }));
 
 describe('fetchSettings Performance Optimization', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let queryBuilder: any;
 
   beforeEach(() => {
@@ -23,6 +24,7 @@ describe('fetchSettings Performance Optimization', () => {
       single: vi.fn().mockResolvedValue({ data: { user_id: 'test-user' }, error: null }),
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.from as any).mockReturnValue(queryBuilder);
   });
 
