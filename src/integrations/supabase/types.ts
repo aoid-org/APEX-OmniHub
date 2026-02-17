@@ -905,6 +905,102 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      },
+      chain_entitlements_cache: {
+        Row: {
+          id: string
+          wallet_address: string
+          chain_id: number
+          query_type: string
+          query_params: Json
+          data: Json
+          refreshed_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          wallet_address: string
+          chain_id: number
+          query_type: string
+          query_params: Json
+          data: Json
+          refreshed_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          wallet_address?: string
+          chain_id?: number
+          query_type?: string
+          query_params?: Json
+          data?: Json
+          refreshed_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      },
+      entitlements: {
+        Row: {
+          id: string
+          subject_type: string
+          subject_id: string
+          entitlement_key: string
+          source: string
+          metadata: Json | null
+          expires_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          subject_type: string
+          subject_id: string
+          entitlement_key: string
+          source: string
+          metadata?: Json | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          subject_type?: string
+          subject_id?: string
+          entitlement_key?: string
+          source?: string
+          metadata?: Json | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      },
+      wallet_nonces: {
+        Row: {
+          id: string
+          nonce: string
+          wallet_address: string
+          expires_at: string
+          used_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          nonce: string
+          wallet_address: string
+          expires_at: string
+          used_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          nonce?: string
+          wallet_address?: string
+          expires_at?: string
+          used_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
