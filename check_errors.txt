@@ -1,0 +1,175 @@
+﻿deno : Check supabase
+/functions/byom-proxy
+/index.ts
+At line:1 char:1
++ deno check supabase
+/functions/byom-proxy
+/index.ts 2>&1 | 
+Out-File -En ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Check s   
+ upabase/...-prox    
+y/index.ts:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+TS2551 [ERROR]: 
+Property 'maxTokens' 
+does not exist on 
+type 'LLMOptions'. 
+Did you mean 
+'max_tokens'?
+      max_tokens: 
+options.maxTokens,
+                     
+     ~~~~~~~~~
+    at file:///C:/Use
+rs/sinyo/OMNILINK-APE
+X%20HUB/APEX-OmniLink
+/APEX-OmniHub/APEX-Om
+niHub/supabase/functi
+ons/_shared/universal
+-adapter.ts:44:27
+
+    'max_tokens' is 
+declared here.
+      max_tokens?: 
+number;
+      ~~~~~~~~~~
+        at file:///C:
+/Users/sinyo/OMNILINK
+-APEX%20HUB/APEX-Omni
+Link/APEX-OmniHub/APE
+X-OmniHub/supabase/fu
+nctions/_shared/llm.t
+s:51:3
+
+TS2551 [ERROR]: 
+Property 'maxTokens' 
+does not exist on 
+type 'LLMOptions'. 
+Did you mean 
+'max_tokens'?
+      max_tokens: 
+options.maxTokens ?? 
+4096,
+                     
+     ~~~~~~~~~
+    at file:///C:/Use
+rs/sinyo/OMNILINK-APE
+X%20HUB/APEX-OmniLink
+/APEX-OmniHub/APEX-Om
+niHub/supabase/functi
+ons/_shared/universal
+-adapter.ts:141:27
+
+    'max_tokens' is 
+declared here.
+      max_tokens?: 
+number;
+      ~~~~~~~~~~
+        at file:///C:
+/Users/sinyo/OMNILINK
+-APEX%20HUB/APEX-Omni
+Link/APEX-OmniHub/APE
+X-OmniHub/supabase/fu
+nctions/_shared/llm.t
+s:51:3
+
+TS2551 [ERROR]: 
+Property 'maxTokens' 
+does not exist on 
+type 'LLMOptions'. 
+Did you mean 
+'max_tokens'?
+        
+maxOutputTokens: 
+options.maxTokens,
+                     
+            ~~~~~~~~~
+    at file:///C:/Use
+rs/sinyo/OMNILINK-APE
+X%20HUB/APEX-OmniLink
+/APEX-OmniHub/APEX-Om
+niHub/supabase/functi
+ons/_shared/universal
+-adapter.ts:250:34
+
+    'max_tokens' is 
+declared here.
+      max_tokens?: 
+number;
+      ~~~~~~~~~~
+        at file:///C:
+/Users/sinyo/OMNILINK
+-APEX%20HUB/APEX-Omni
+Link/APEX-OmniHub/APE
+X-OmniHub/supabase/fu
+nctions/_shared/llm.t
+s:51:3
+
+TS2552 [ERROR]: 
+Cannot find name 
+'OpenAIAdapter'. Did 
+you mean 
+'openAIAdapter'?
+const openAIAdapter 
+= new 
+OpenAIAdapter();
+                     
+     ~~~~~~~~~~~~~
+    at file:///C:/Use
+rs/sinyo/OMNILINK-APE
+X%20HUB/APEX-OmniLink
+/APEX-OmniHub/APEX-Om
+niHub/supabase/functi
+ons/byom-proxy/index.
+ts:40:27
+
+    'openAIAdapter' 
+is declared here.
+    const 
+openAIAdapter = new 
+OpenAIAdapter();
+          
+~~~~~~~~~~~~~
+        at file:///C:
+/Users/sinyo/OMNILINK
+-APEX%20HUB/APEX-Omni
+Link/APEX-OmniHub/APE
+X-OmniHub/supabase/fu
+nctions/byom-proxy/in
+dex.ts:40:7
+
+TS2561 [ERROR]: 
+Object literal may 
+only specify known 
+properties, but 
+'maxTokens' does not 
+exist in type 
+'LLMOptions'. Did 
+you mean to write 
+'max_tokens'?
+      { model, 
+maxTokens: 4000 },
+               
+~~~~~~~~~
+    at file:///C:/Use
+rs/sinyo/OMNILINK-APE
+X%20HUB/APEX-OmniLink
+/APEX-OmniHub/APEX-Om
+niHub/supabase/functi
+ons/byom-proxy/index.
+ts:124:16
+
+Found 5 errors.
+
+error: Type checking 
+failed.

@@ -1,0 +1,115 @@
+﻿supabase : 
+Initialising login 
+role...
+At line:1 char:1
++ supabase db push 
+--include-all 2>&1 | 
+Out-File -Encoding 
+utf8 db_push ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Initial   
+ ising login role    
+...:String) [],     
+RemoteException
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+Connecting to remote 
+database...
+Skipping migration 20
+251231000000_apex_asc
+ension_governance.sql
+.bak... (file name 
+must match pattern "<
+timestamp>_name.sql")
+Do you want to push 
+these migrations to 
+the remote database?
+ ΓÇó 20260205000000_u
+nify_admin_system.sql
+ ΓÇó 20260205000001_o
+mnidash_paid_access.s
+ql
+ ΓÇó 20260208000000_s
+ecure_admin_bcrypt.sq
+l
+ ΓÇó 20260211000000_c
+reate_user_entitlemen
+ts.sql
+ ΓÇó 20260212000000_a
+dd_dlq_processed_stat
+us.sql
+ ΓÇó 20260214000000_c
+laim_admin_inserts_us
+er_roles.sql
+ ΓÇó 20260214000001_s
+kill_forge_protocol.s
+ql
+ ΓÇó 20260215000000_c
+reate_idempotency_rec
+eipts.sql
+ ΓÇó 20260215000001_e
+nable_approved_dispat
+ch_claims.sql
+ ΓÇó 20260217120000_p
+hase4_monetization.sq
+l
+
+ [Y/n] Applying 
+migration 20260205000
+000_unify_admin_syste
+m.sql...
+NOTICE (00000): 
+trigger "sync_admin_m
+etadata_trigger" for 
+relation 
+"auth.users" does 
+not exist, skipping
+ERROR: INSERT 
+trigger's WHEN 
+condition cannot 
+reference OLD values 
+(SQLSTATE 42P17)
+At statement: 3      
+                     
+                     
+                    
+CREATE TRIGGER sync_a
+dmin_metadata_trigger
+                     
+                    
+  AFTER INSERT OR 
+UPDATE OF 
+raw_app_meta_data ON 
+auth.users           
+             
+  FOR EACH ROW       
+                     
+                     
+                    
+  WHEN (             
+                     
+                     
+                    
+    -- Only fire if 
+admin flag changed 
+(performance 
+optimization)        
+          
+    OLD.raw_app_meta_
+data IS DISTINCT 
+FROM NEW.raw_app_meta
+_data                
+   
+    ^                
+                     
+                     
+                    
+Try rerunning the 
+command with --debug 
+to troubleshoot the 
+error.
