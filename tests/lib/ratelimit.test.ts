@@ -2,7 +2,9 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { checkRateLimit, clearRateLimit } from '@/lib/ratelimit';
 
 describe('Rate Limiting', () => {
-  const testKey = (name: string) => `test:ratelimit:${name}:${Date.now()}-${Math.random()}`;
+  let counter = 0;
+  // Use a deterministic key generator to avoid security hotspots with Math.random()
+  const testKey = (name: string) => `test:ratelimit:${name}:${Date.now()}-${counter++}`;
   const usedKeys: string[] = [];
 
   afterEach(() => {
@@ -230,7 +232,10 @@ describe('Rate Limiting', () => {
 
       // Small delay to ensure Date.now() advances
       const start = Date.now();
-      while(Date.now() === start) {}
+      while(Date.now() === start) {
+        // Busy-wait loop to ensure system clock advances
+        // This comment prevents 'no-empty' lint error
+      }
 
       const res2 = checkRateLimit(key, 5, -100);
       expect(res2.allowed).toBe(true);
