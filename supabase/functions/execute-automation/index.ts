@@ -17,7 +17,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createSupabaseClient, authenticateUser } from '../_shared/auth.ts';
 import { handleCors, corsJsonResponse } from '../_shared/cors.ts';
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { assertUrlSafe } from '../_shared/ssrf-protection.ts';
 
 // ============================================================================
@@ -404,6 +404,7 @@ serve(async (req) => {
     // Update automation execution timestamp
     await supabase
       .from('automations')
+      // @ts-ignore: Automation table type not fully defined in client
       .update({ updated_at: new Date().toISOString() })
       .eq('id', automationId);
 
