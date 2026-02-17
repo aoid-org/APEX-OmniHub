@@ -45,7 +45,7 @@ async def test_call_webhook_ssrf_blocked(mock_dependencies):
     # We patch httpx.AsyncClient to ensure it's NOT called.
     with patch("httpx.AsyncClient") as mock_client_cls:
         params = {
-            "url": "http://127.0.0.1/sensitive",
+            "url": "http://127.0.0.1/sensitive",  # NOSONAR: Test URL
             "method": "GET"
         }
 
@@ -75,7 +75,7 @@ async def test_call_webhook_valid_url(mock_dependencies):
             ]
 
             params = {
-                "url": "http://example.com/webhook",
+                "url": "http://example.com/webhook",  # NOSONAR: Test URL
                 "method": "POST"
             }
 
