@@ -1,0 +1,22 @@
+﻿deno : Check supabase
+/functions/byom-proxy
+/index.ts
+At line:1 char:1
++ deno check supabase
+/functions/byom-proxy
+/index.ts 2>&1 | 
+Out-File -En ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Check s   
+ upabase/...-prox    
+y/index.ts:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 

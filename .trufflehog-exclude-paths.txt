@@ -18,3 +18,5 @@
 # Test fixtures
 .*__fixtures__/.*
 .*__mocks__/.*
+.*/tests/login-supabase-config\.test\.ts
+.*/tests/setup\.ts
