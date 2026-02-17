@@ -81,4 +81,113 @@ describe('MetaBusinessConnector', () => {
 
     await expect(noSecretConnector.refreshToken(session)).rejects.toThrow('Client secret is required');
   });
+
+  it('fetchDelta should use token from session', async () => {
+    const session: SessionToken = {
+      token: 'valid-access-token',
+      expiresAt: new Date(),
+      connectorId: 'test-conn-id',
+      userId: 'user-1',
+      tenantId: 'tenant-1',
+      provider: 'meta_business',
+      scopes: []
+    };
+
+    const mockPostsResponse = {
+      data: [
+        {
+          id: 'post-1',
+          message: 'Test post',
+          created_time: '2024-01-01T12:00:00Z',
+          type: 'status'
+        }
+      ]
+    };
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockPostsResponse)
+    } as Response);
+
+    await connector.fetchDelta(session, new Date());
+
+    // Check that the fetch call included the Authorization header with the token from the session
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/me/posts'),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'Authorization': 'Bearer valid-access-token'
+        })
+      })
+    );
+  });
+
+  it('validateToken should use token from session', async () => {
+    const session: SessionToken = {
+      token: 'valid-access-token',
+      expiresAt: new Date(),
+      connectorId: 'test-conn-id',
+      userId: 'user-1',
+      tenantId: 'tenant-1',
+      provider: 'meta_business',
+      scopes: []
+    };
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ id: 'user-id' })
+    } as Response);
+
+    const isValid = await connector.validateToken(session);
+
+    expect(isValid).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/me'),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'Authorization': 'Bearer valid-access-token'
+        })
+      })
+    );
+  });
+
+  it('fetchDelta should return mock data in Demo Mode', async () => {
+    const session: SessionToken = {
+      token: 'DEMO_token_123',
+      expiresAt: new Date(),
+      connectorId: 'demo-conn-id',
+      userId: 'user-1',
+      tenantId: 'tenant-1',
+      provider: 'meta_business',
+      scopes: []
+    };
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+    const events = await connector.fetchDelta(session, new Date());
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(events).toHaveLength(1);
+    expect(events[0].metadata?.isDemo).toBe(true);
+    expect(events[0].id).toBe('demo_post_1');
+  });
+
+  it('validateToken should return true immediately in Demo Mode', async () => {
+    const session: SessionToken = {
+      token: 'DEMO_token_123',
+      expiresAt: new Date(),
+      connectorId: 'demo-conn-id',
+      userId: 'user-1',
+      tenantId: 'tenant-1',
+      provider: 'meta_business',
+      scopes: []
+    };
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+    const isValid = await connector.validateToken(session);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(isValid).toBe(true);
+  });
 });

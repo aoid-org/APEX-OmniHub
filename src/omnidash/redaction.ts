@@ -1,4 +1,5 @@
 import { PipelineItem, TodayItem, KpiDaily } from './types';
+import { stripPii, redactAmount as libRedactAmount } from '@/lib/sanitization';
 
 const CLIENT_LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
@@ -9,18 +10,7 @@ function redactAccountName(name: string, index: number): string {
 
 function bucketAmount(amount: number | null | undefined): string | null {
   if (amount === null || amount === undefined || Number.isNaN(amount)) return null;
-  if (amount < 250) return '<$250';
-  if (amount < 500) return '$250–$500';
-  if (amount < 1000) return '$500–$1k';
-  return '$1k+';
-}
-
-function stripPii(text: string): string {
-  // ReDoS-resistant email pattern with bounded quantifiers (RFC 5321 compliant)
-  const emailPattern = /[A-Z0-9._%+-]{1,64}@[A-Z0-9.-]{1,253}\.[A-Z]{2,10}/gi;
-  const phonePattern = /\+?\d[\d\s().-]{7,}\d/g;
-  const dollarPattern = /\$?\s?\d{1,3}(?:[,\s]\d{3})*(?:\.\d{1,2})?/g;
-  return text.replace(emailPattern, '[redacted]').replace(phonePattern, '[redacted]').replace(dollarPattern, '[bucketed]');
+  return libRedactAmount(amount);
 }
 
 export function redactPipeline(items: PipelineItem[]): PipelineItem[] {
@@ -72,4 +62,3 @@ export function redactNotes(notes: string | null | undefined): string | null {
 export function redactAmount(value: number | null | undefined): string | null {
   return bucketAmount(value);
 }
-
