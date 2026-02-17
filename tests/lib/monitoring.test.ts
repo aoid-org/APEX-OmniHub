@@ -10,6 +10,7 @@ describe('monitoring integration', () => {
     vi.useFakeTimers();
     localStorage.clear();
     _testing.queue.clear();
+    if (_testing.logCache) _testing.logCache.clear();
     vi.clearAllMocks();
 
     // Mock getHealthStatus to be healthy by default

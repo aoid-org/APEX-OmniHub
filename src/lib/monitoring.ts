@@ -32,6 +32,64 @@ const queue = new MonitoringQueue<QueuedLog>(MAX_QUEUE_SIZE, (item) =>
   simpleHash(`${item.key}:${JSON.stringify(item.entry)}`)
 );
 
+/**
+ * In-memory cache for localStorage logs to avoid read+parse overhead
+ * Initialized lazily on first access per key
+ * Synced across tabs via storage event listener
+ */
+const logCache = new Map<string, unknown[]>();
+let cacheSyncInitialized = false;
+
+function initCacheSync() {
+  if (cacheSyncInitialized || typeof window === 'undefined') return;
+
+  window.addEventListener('storage', (event) => {
+    // Sync cache when other tabs modify logs
+    if (event.key && event.newValue &&
+        (event.key.endsWith('_logs') || event.key === 'perf_logs')) {
+      try {
+        const logs = JSON.parse(event.newValue);
+        logCache.set(event.key, logs);
+      } catch {
+        // Invalid JSON - clear cache entry
+        logCache.delete(event.key);
+      }
+    }
+  });
+
+  cacheSyncInitialized = true;
+}
+
+function getCachedLogs(key: string): unknown[] {
+  initCacheSync();
+
+  if (logCache.has(key)) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return logCache.get(key)!;
+  }
+
+  // Cache miss - load from storage
+  try {
+    const existingJson = storage.getItem(key) || '[]';
+    const logs = JSON.parse(existingJson);
+    logCache.set(key, logs);
+    return logs;
+  } catch {
+    const emptyLogs: unknown[] = [];
+    logCache.set(key, emptyLogs);
+    return emptyLogs;
+  }
+}
+
+function setCachedLogs(key: string, logs: unknown[]) {
+  logCache.set(key, logs);
+  try {
+    storage.setItem(key, JSON.stringify(logs));
+  } catch {
+    // non-fatal
+  }
+}
+
 let flushHandle: unknown | null = null;
 let isIdleCallback = false;
 
@@ -168,21 +226,23 @@ function clearFlushHandle() {
 
 /**
  * Direct write to storage (bypassing or processing queue)
+ * Uses in-memory cache to avoid read+parse overhead
  */
 function directWrite(key: string, newEntries: unknown[], max: number) {
   try {
-    const existingJson = storage.getItem(key) || '[]';
-    const logs = JSON.parse(existingJson);
+    // ✅ Get from cache (no I/O!)
+    const logs = getCachedLogs(key);
 
+    // Add new entries
     logs.push(...newEntries);
 
     // Truncate if needed
     if (logs.length > max) {
-      // Remove from the beginning (oldest)
       logs.splice(0, logs.length - max);
     }
 
-    storage.setItem(key, JSON.stringify(logs));
+    // ✅ Write back (updates cache + localStorage)
+    setCachedLogs(key, logs);
   } catch {
     // non-fatal
   }
@@ -322,6 +382,9 @@ export function initializeMonitoring(): void {
       window.addEventListener('beforeunload', flushHandler);
     }
 
+    // Initialize cache sync listener
+    initCacheSync();
+
     // #region agent log
     log('Before error handlers');
     // #endregion
@@ -379,32 +442,29 @@ export function initializeMonitoring(): void {
  * Get all error logs (for debugging)
  */
 export function getErrorLogs(): unknown[] {
-  try {
-    return JSON.parse(storage.getItem('error_logs') || '[]');
-  } catch {
-    return [];
-  }
+  return getCachedLogs('error_logs');
 }
 
 /**
  * Get all security logs (for debugging)
  */
 export function getSecurityLogs(): unknown[] {
-  try {
-    return JSON.parse(storage.getItem('security_logs') || '[]');
-  } catch {
-    return [];
-  }
+  return getCachedLogs('security_logs');
 }
 
 /**
  * Clear all logs
  */
 export function clearLogs(): void {
-  storage.removeItem('error_logs');
-  storage.removeItem('security_logs');
-  storage.removeItem('perf_logs');
+  const keys = ['error_logs', 'security_logs', 'perf_logs'];
+
+  for (const key of keys) {
+    logCache.delete(key);
+    storage.removeItem(key);
+  }
+
   queue.clear();
+
   if (import.meta.env.DEV) {
     console.log('🗑️ Logs cleared');
   }
@@ -414,5 +474,7 @@ export function clearLogs(): void {
 export const _testing = {
   flushQueue,
   queue,
-  storage
+  storage,
+  logCache,
+  getCachedLogs,
 };
