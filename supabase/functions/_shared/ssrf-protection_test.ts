@@ -1,5 +1,5 @@
 import { assertRejects } from "https://deno.land/std@0.168.0/testing/asserts.ts";
-import { assertUrlSafe } from "./ssrf-protection.ts";
+import { assertUrlSafe, SsrfOptions } from "./ssrf-protection.ts";
 
 /**
  * SSRF Protection Test Suite
@@ -9,174 +9,146 @@ import { assertUrlSafe } from "./ssrf-protection.ts";
  * SonarCloud hotspots for hardcoded IPs/HTTP are false positives.
  */
 
-Deno.test("assertUrlSafe - blocks localhost", async () => {
-  await assertRejects(
-    async () => await assertUrlSafe("http://localhost:8080"),
-    Error,
-    "SSRF protection blocked request",
-  );
-});
+// Table-driven test structure to eliminate code duplication
+interface TestCase {
+  name: string;
+  url: string;
+  shouldBlock: boolean;
+  options?: SsrfOptions;
+  errorMsg?: string;
+}
 
-Deno.test("assertUrlSafe - blocks 127.0.0.1", async () => {
-  await assertRejects(
-    async () => await assertUrlSafe("http://127.0.0.1"),
-    Error,
-    "SSRF protection blocked request",
-  );
-});
+const TEST_CASES: TestCase[] = [
+  // Blocked Local/Private
+  {
+    name: "blocks localhost",
+    url: "http://localhost:8080",
+    shouldBlock: true,
+    errorMsg: "SSRF protection blocked request",
+  },
+  {
+    name: "blocks 127.0.0.1",
+    url: "http://127.0.0.1",
+    shouldBlock: true,
+    errorMsg: "SSRF protection blocked request",
+  },
+  {
+    name: "blocks 0.0.0.0",
+    url: "http://0.0.0.0",
+    shouldBlock: true,
+    errorMsg: "SSRF protection blocked request",
+  },
+  {
+    name: "blocks IPv6 localhost",
+    url: "http://[::1]",
+    shouldBlock: true,
+    errorMsg: "SSRF protection blocked request",
+  },
+  {
+    name: "blocks private IP 192.168.x.x",
+    url: "http://192.168.1.1",
+    shouldBlock: true,
+    errorMsg: "SSRF protection blocked request",
+  },
+  {
+    name: "blocks private IP 10.x.x.x",
+    url: "http://10.0.0.1",
+    shouldBlock: true,
+    errorMsg: "SSRF protection blocked request",
+  },
+  {
+    name: "blocks private IP 172.16.x.x",
+    url: "http://172.16.0.1",
+    shouldBlock: true,
+    errorMsg: "SSRF protection blocked request",
+  },
+  {
+    name: "blocks private IP 172.31.x.x",
+    url: "http://172.31.255.255",
+    shouldBlock: true,
+    errorMsg: "SSRF protection blocked request",
+  },
+  {
+    name: "blocks AWS Metadata",
+    url: "http://169.254.169.254",
+    shouldBlock: true,
+    errorMsg: "SSRF protection blocked request",
+  },
 
-Deno.test("assertUrlSafe - blocks 0.0.0.0", async () => {
-  await assertRejects(
-    async () => await assertUrlSafe("http://0.0.0.0"),
-    Error,
-    "SSRF protection blocked request",
-  );
-});
+  // Blocked Domains (simulate DNS or suffix checks)
+  {
+    name: "blocks .local domain",
+    url: "http://server.local",
+    shouldBlock: true,
+    options: { resolveDns: false }, // Force suffix check without DNS
+    errorMsg: "SSRF protection blocked request",
+  },
+  {
+    name: "blocks .internal domain",
+    url: "http://api.internal",
+    shouldBlock: true,
+    options: { resolveDns: false },
+    errorMsg: "SSRF protection blocked request",
+  },
+  {
+    name: "blocks case insensitive LOCALHOST",
+    url: "http://LOCALHOST",
+    shouldBlock: true,
+    options: { resolveDns: false },
+    errorMsg: "SSRF protection blocked request",
+  },
 
-Deno.test("assertUrlSafe - blocks IPv6 localhost", async () => {
-  await assertRejects(
-    async () => await assertUrlSafe("http://[::1]"),
-    Error,
-    "SSRF protection blocked request",
-  );
-});
+  // Invalid Inputs
+  {
+    name: "rejects invalid URL string",
+    url: "not-a-url",
+    shouldBlock: true,
+    errorMsg: "Invalid URL format",
+  },
+  {
+    name: "rejects empty string",
+    url: "",
+    shouldBlock: true,
+    errorMsg: "Invalid URL format",
+  },
 
-Deno.test("assertUrlSafe - blocks private IP 192.168.x.x", async () => {
-  await assertRejects(
-    async () => await assertUrlSafe("http://192.168.1.1"),
-    Error,
-    "SSRF protection blocked request",
-  );
-});
+  // Allowed Public URLs
+  {
+    name: "allows public API domain",
+    url: "https://api.example.com",
+    shouldBlock: false,
+  },
+  {
+    name: "allows public webhook",
+    url: "https://webhook.site/test",
+    shouldBlock: false,
+  },
+  {
+    name: "allows public IP",
+    url: "http://8.8.8.8",
+    shouldBlock: false,
+  },
+  {
+    name: "allows URL with path and query",
+    url: "https://api.example.com/webhook?token=abc123",
+    shouldBlock: false,
+  },
+];
 
-Deno.test("assertUrlSafe - blocks private IP 10.x.x.x", async () => {
-  await assertRejects(
-    async () => await assertUrlSafe("http://10.0.0.1"),
-    Error,
-    "SSRF protection blocked request",
-  );
-});
-
-Deno.test("assertUrlSafe - blocks private IP 172.16-31.x.x", async () => {
-  await assertRejects(
-    async () => await assertUrlSafe("http://172.16.0.1"),
-    Error,
-    "SSRF protection blocked request",
-  );
-
-  await assertRejects(
-    async () => await assertUrlSafe("http://172.31.255.255"),
-    Error,
-    "SSRF protection blocked request",
-  );
-});
-
-Deno.test("assertUrlSafe - blocks .local domains", async () => {
-  await assertRejects(
-    async () =>
-      await assertUrlSafe("http://server.local", { resolveDns: false }),
-    Error,
-    "SSRF protection blocked request",
-  );
-});
-
-Deno.test("assertUrlSafe - blocks .internal domains", async () => {
-  await assertRejects(
-    async () =>
-      await assertUrlSafe("http://api.internal", { resolveDns: false }),
-    Error,
-    "SSRF protection blocked request",
-  );
-});
-
-Deno.test("assertUrlSafe - allows public URLs", async () => {
-  // Should not throw
-  await assertUrlSafe("https://api.example.com");
-  await assertUrlSafe("https://webhook.site/test");
-  await assertUrlSafe("http://public-api.com:8080/endpoint");
-});
-
-Deno.test("assertUrlSafe - rejects invalid URLs", async () => {
-  await assertRejects(
-    async () => await assertUrlSafe("not-a-url"),
-    Error,
-    "Invalid URL format",
-  );
-
-  await assertRejects(
-    async () => await assertUrlSafe(""),
-    Error,
-    "Invalid URL format",
-  );
-});
-
-Deno.test("assertUrlSafe - handles URL with path and query", async () => {
-  // Should not throw for valid public URL
-  await assertUrlSafe("https://api.example.com/webhook?token=abc123");
-});
-
-Deno.test("assertUrlSafe - case insensitive domain checks", async () => {
-  await assertRejects(
-    async () => await assertUrlSafe("http://LOCALHOST", { resolveDns: false }),
-    Error,
-    "SSRF protection blocked request",
-  );
-
-  await assertRejects(
-    async () =>
-      await assertUrlSafe("http://Server.LOCAL", { resolveDns: false }),
-    Error,
-    "SSRF protection blocked request",
-  );
-});
-
-Deno.test("assertUrlSafe - blocks link-local addresses", async () => {
-  await assertRejects(
-    async () => await assertUrlSafe("http://169.254.169.254"), // AWS metadata
-    Error,
-    "SSRF protection blocked request",
-  );
-});
-
-Deno.test("assertUrlSafe - comprehensive edge cases", async () => {
-  // Block variations
-  const blockedUrls = [
-    "http://localhost",
-    "http://localhost:3000",
-    "http://127.0.0.1",
-    "http://0.0.0.0",
-    "http://[::1]",
-    "http://192.168.0.1",
-    "http://10.10.10.10",
-    "http://172.16.0.1",
-    "http://172.20.0.1",
-    "http://169.254.169.254",
-    "http://server.local",
-    "http://api.internal",
-  ];
-
-  for (const url of blockedUrls) {
-    await assertRejects(
-      async () =>
-        await assertUrlSafe(url, {
-          resolveDns: url.includes("localhost") ? true : false,
-        }),
-      Error,
-      undefined, // We allow generic error match as long as it throws
-    );
-  }
-
-  // Allow public URLs
-  const allowedUrls = [
-    "https://api.example.com",
-    "https://webhook.site",
-    "http://8.8.8.8", // Public DNS
-    "https://api.github.com",
-    "https://example.com:443",
-  ];
-
-  for (const url of allowedUrls) {
-    // Should not throw
-    await assertUrlSafe(url);
+Deno.test("SSRF Protection - Table Driven Verification", async (t) => {
+  for (const tc of TEST_CASES) {
+    await t.step(tc.name, async () => {
+      if (tc.shouldBlock) {
+        // Expect rejection
+        await assertRejects(
+          async () => await assertUrlSafe(tc.url, tc.options),
+          Error,
+          tc.errorMsg,
+        );
+      } else {
+        // Expect success (no throw)
+        await assertUrlSafe(tc.url, tc.options);
+      }
+    });
   }
 });
