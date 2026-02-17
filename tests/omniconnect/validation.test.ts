@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { sanitizeEventPayload } from '../../src/omniconnect/utils/validation';
+import {
+  TEST_VALID_DATA,
+  TEST_PII_SANITIZATION,
+  TEST_PII_SANITIZED_EXPECTED_CORRECTED,
+  TEST_IP_ADDRESSES
+} from './fixtures/test-data';
 
 describe('sanitizeEventPayload', () => {
   // =========================================================================
@@ -8,28 +14,34 @@ describe('sanitizeEventPayload', () => {
 
   describe('Tier 1 - Complete Redaction', () => {
     it('redacts password fields completely', () => {
-      const input = { password: 'test_password_value', username: 'john' };
+      const input = {
+        password: TEST_PII_SANITIZATION.password,
+        username: TEST_PII_SANITIZATION.username
+      };
       const output = sanitizeEventPayload(input);
 
       expect(output.password).toBe('[REDACTED]');
-      expect(output.username).toBe('john'); // Unaffected
+      expect(output.username).toBe(TEST_PII_SANITIZATION.username); // Unaffected
     });
 
     it('redacts API keys and tokens', () => {
       const input = {
-        api_key: 'mock_api_key',
-        access_token: 'mock_access_token',
-        user: 'test',
+        api_key: TEST_PII_SANITIZATION.api_key,
+        access_token: TEST_PII_SANITIZATION.access_token,
+        user: TEST_PII_SANITIZATION.username,
       };
       const output = sanitizeEventPayload(input);
 
       expect(output.api_key).toBe('[REDACTED]');
       expect(output.access_token).toBe('[REDACTED]');
-      expect(output.user).toBe('test');
+      expect(output.user).toBe(TEST_PII_SANITIZATION.username);
     });
 
     it('handles case-insensitive key matching', () => {
-      const input = { PASSWORD: 'mock_secret_upper', Password: 'mock_secret_camel' };
+      const input = {
+        PASSWORD: TEST_PII_SANITIZATION.password,
+        Password: TEST_PII_SANITIZATION.password
+      };
       const output = sanitizeEventPayload(input);
 
       expect(output.PASSWORD).toBe('[REDACTED]');
@@ -43,24 +55,24 @@ describe('sanitizeEventPayload', () => {
 
   describe('Tier 2 - Partial Masking', () => {
     it('masks email addresses partially', () => {
-      const input = { email: 'test@example.com' };
+      const input = { email: TEST_PII_SANITIZATION.email };
       const output = sanitizeEventPayload(input);
 
-      expect(output.email).toMatch(/^te\*\*\*om$/);
+      expect(output.email).toBe(TEST_PII_SANITIZED_EXPECTED_CORRECTED.email);
     });
 
     it('masks SSN with first/last 2 digits visible', () => {
-      const input = { ssn: '123-45-6789' };
+      const input = { ssn: TEST_PII_SANITIZATION.ssn };
       const output = sanitizeEventPayload(input);
 
-      expect(output.ssn).toMatch(/^12\*\*\*89$/);
+      expect(output.ssn).toBe(TEST_PII_SANITIZED_EXPECTED_CORRECTED.ssn);
     });
 
     it('masks credit card numbers', () => {
-      const input = { credit_card: '1234-5678-9012-3456' };
+      const input = { credit_card: TEST_PII_SANITIZATION.credit_card };
       const output = sanitizeEventPayload(input);
 
-      expect(output.credit_card).toMatch(/^12\*\*\*56$/);
+      expect(output.credit_card).toBe(TEST_PII_SANITIZED_EXPECTED_CORRECTED.credit_card);
     });
 
     it('redacts very short values completely (too short to mask safely)', () => {
@@ -77,10 +89,10 @@ describe('sanitizeEventPayload', () => {
 
   describe('Tier 3 - Contextual Masking', () => {
     it('masks last octet of IP addresses', () => {
-      const input = { ip_address: '192.168.1.42' };
+      const input = { ip_address: TEST_IP_ADDRESSES.TEST_NET_1 };
       const output = sanitizeEventPayload(input);
 
-      expect(output.ip_address).toBe('192.168.1.xxx');
+      expect(output.ip_address).toBe('192.0.2.xxx');
     });
 
     it('masks session IDs with prefix/suffix visible', () => {
@@ -97,43 +109,48 @@ describe('sanitizeEventPayload', () => {
 
   describe('PII Pattern Detection', () => {
     it('detects and redacts email addresses in arbitrary strings', () => {
-      const input = { message: 'Contact me at john.doe@example.com for help' };
+      const input = { message: `Contact me at ${TEST_VALID_DATA.EMAIL} for help` };
       const output = sanitizeEventPayload(input);
 
-      expect(output.message).not.toContain('john.doe@example.com');
+      expect(output.message).not.toContain(TEST_VALID_DATA.EMAIL);
       expect(output.message).toContain('[EMAIL_REDACTED]');
     });
 
     it('detects and redacts phone numbers', () => {
-      const input = { note: 'Call me at 555-123-4567' };
+      // Using a simpler phone number string to ensure regex match in arbitrary string context
+      const phone = '555-123-4567';
+      const input = { note: `Call me at ${phone}` };
       const output = sanitizeEventPayload(input);
 
-      expect(output.note).not.toContain('555-123-4567');
+      expect(output.note).not.toContain(phone);
       expect(output.note).toContain('[PHONE_REDACTED]');
     });
 
     it('detects and redacts credit card patterns', () => {
-      const input = { data: 'Card: 1234 5678 9012 3456' };
+      // Using a standard 16 digit format string
+      const cc = '1234 5678 9012 3456';
+      const input = { data: `Card: ${cc}` };
       const output = sanitizeEventPayload(input);
 
-      expect(output.data).not.toContain('1234 5678 9012 3456');
+      expect(output.data).not.toContain(cc);
       expect(output.data).toContain('[CARD_REDACTED]');
     });
 
     it('detects and redacts SSN patterns', () => {
-      const input = { text: 'SSN is 123-45-6789' };
+      const input = { text: `SSN is ${TEST_VALID_DATA.SSN_FORMAT}` };
       const output = sanitizeEventPayload(input);
 
-      expect(output.text).not.toContain('123-45-6789');
+      expect(output.text).not.toContain(TEST_VALID_DATA.SSN_FORMAT);
       expect(output.text).toContain('[SSN_REDACTED]');
     });
 
     it('partially masks IP addresses in strings', () => {
-      const input = { log: 'Request from 192.168.1.42' };
+      const input = { log: `Request from ${TEST_IP_ADDRESSES.TEST_NET_2}` };
       const output = sanitizeEventPayload(input);
 
-      expect(output.log).toContain('192.168.1.xxx');
-      expect(output.log).not.toContain('192.168.1.42');
+      // 198.51.100.42 -> 198.51.100.xxx
+      expect(output.log).toContain('198.51.100.xxx');
+      expect(output.log).not.toContain(TEST_IP_ADDRESSES.TEST_NET_2);
     });
   });
 
@@ -147,8 +164,8 @@ describe('sanitizeEventPayload', () => {
         user: {
           profile: {
             contact: {
-              email: 'test@example.com',
-              password: 'test_nested_password',
+              email: TEST_PII_SANITIZATION.email,
+              password: TEST_PII_SANITIZATION.password,
             },
           },
         },
@@ -157,7 +174,7 @@ describe('sanitizeEventPayload', () => {
       const output = sanitizeEventPayload(input);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((output.user as any).profile.contact.email).toMatch(/^te\*\*\*om$/);
+      expect((output.user as any).profile.contact.email).toBe(TEST_PII_SANITIZED_EXPECTED_CORRECTED.email);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((output.user as any).profile.contact.password).toBe('[REDACTED]');
     });
@@ -165,7 +182,7 @@ describe('sanitizeEventPayload', () => {
     it('sanitizes arrays of objects', () => {
       const input = {
         users: [
-          { email: 'user1@example.com', password: 'mock_pass_1' },
+          { email: TEST_PII_SANITIZATION.email, password: 'mock_pass_1' },
           { email: 'user2@example.com', password: 'mock_pass_2' },
         ],
       };
@@ -177,13 +194,13 @@ describe('sanitizeEventPayload', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((output.users as any)[1].password).toBe('[REDACTED]');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((output.users as any)[0].email).toMatch(/^us\*\*\*om$/);
+      expect((output.users as any)[0].email).toBe(TEST_PII_SANITIZED_EXPECTED_CORRECTED.email);
     });
 
     it('handles arrays of primitive strings with PII', () => {
       const input = {
         messages: [
-          'Email me at test@example.com',
+          `Email me at ${TEST_VALID_DATA.EMAIL}`,
           'Call 555-123-4567',
         ],
       };
@@ -294,10 +311,10 @@ describe('sanitizeEventPayload', () => {
     });
 
     it('handles special characters in keys', () => {
-      const input = { 'user:email': 'test@example.com' };
+      const input = { 'user:email': TEST_PII_SANITIZATION.email };
       const output = sanitizeEventPayload(input);
 
-      expect(output['user:email']).toMatch(/^te\*\*\*om$/);
+      expect(output['user:email']).toBe(TEST_PII_SANITIZED_EXPECTED_CORRECTED.email);
     });
   });
 
@@ -308,7 +325,7 @@ describe('sanitizeEventPayload', () => {
   describe('Performance', () => {
     it('completes in <5ms for typical payloads', () => {
       const input = {
-        user: { email: 'test@example.com', name: 'John' },
+        user: { email: TEST_PII_SANITIZATION.email, name: TEST_PII_SANITIZATION.username },
         session: { id: 'sess_123' },
         metadata: { timestamp: Date.now() },
       };
