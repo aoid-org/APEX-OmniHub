@@ -18,6 +18,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createSupabaseClient, authenticateUser } from '../_shared/auth.ts';
 import { handleCors, corsJsonResponse } from '../_shared/cors.ts';
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { assertUrlSafe } from '../_shared/ssrf-protection.ts';
 
 // ============================================================================
 // Type Definitions
@@ -205,31 +206,21 @@ async function executeWebhook(
     throw new Error('Invalid webhook configuration: URL is required');
   }
 
-  // Validate URL format
-  let parsedUrl: URL;
+  // SECURITY: Multi-layer SSRF protection
+  // - Validates URL format and protocol (http/https only)
+  // - Resolves DNS to prevent hostname-based bypasses
+  // - Blocks all private/internal/cloud metadata IP ranges
+  // - Handles alternative IP encodings (hex, octal, decimal)
   try {
-    parsedUrl = new URL(config.url);
-  } catch {
-    throw new Error('Invalid webhook URL format');
-  }
-
-  // Block internal/private URLs (SSRF prevention)
-  const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
-  const blockedPrefixes = ['192.168.', '10.', '172.16.', '172.17.', '172.18.'];
-
-  if (
-    blockedHosts.includes(parsedUrl.hostname) ||
-    blockedPrefixes.some((prefix) => parsedUrl.hostname.startsWith(prefix))
-  ) {
-    throw new Error('Internal/private URLs are not allowed for webhooks');
-  }
-
-  // Additional check for localhost aliases
-  if (
-    parsedUrl.hostname.endsWith('.local') ||
-    parsedUrl.hostname.endsWith('.internal')
-  ) {
-    throw new Error('Internal domain URLs are not allowed for webhooks');
+    await assertUrlSafe(config.url, {
+      allowPrivate: false,
+      allowLoopback: false,
+      resolveDns: true,
+      dnsTimeoutMs: 5000,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'URL failed SSRF validation';
+    throw new Error(`Webhook URL blocked by security policy: ${message}`);
   }
 
   const controller = new AbortController();
@@ -249,7 +240,19 @@ async function executeWebhook(
       headers: requestHeaders,
       body: config.data ? JSON.stringify(config.data) : undefined,
       signal: controller.signal,
+      redirect: 'manual', // SECURITY: Prevent automatic redirect following
     });
+
+    // Handle redirects manually to validate redirect targets
+    if (response.status >= 300 && response.status < 400) {
+      const redirectUrl = response.headers.get('location');
+      if (redirectUrl) {
+        throw new Error(
+          'Webhook returned a redirect. Automatic redirects are disabled for security. ' +
+          `If ${redirectUrl} is a trusted destination, update the webhook URL directly.`
+        );
+      }
+    }
 
     if (!response.ok) {
       throw new Error(`Webhook request failed: ${response.status}`);

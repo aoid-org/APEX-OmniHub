@@ -87,6 +87,7 @@ Security is not "a feature." OmniHub enforces:
 - **Audit logging** (`20251218000000_create_audit_logs_table.sql`)
 - **Emergency controls** (`20260103000000_create_emergency_controls.sql`)
 - **OMEGA security hardening** (`20260125000001_enable_omega_security.sql`)
+- **SSRF Defense-in-Depth** (`supabase/functions/_shared/ssrf-protection.ts`): Robust Server-Side Request Forgery protection for all webhooks and external integrations, including DNS rebinding prevention and IPv6 enforcement.
 
 ### 4) OmniLink & OmniPort (Connectivity & Normalization)
 
