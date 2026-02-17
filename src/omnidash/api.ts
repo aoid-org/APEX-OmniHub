@@ -21,7 +21,9 @@ async function handleError<T>(promise: Promise<{ data: T | null; error: { messag
 export async function fetchSettings(userId: string): Promise<OmniDashSettings> {
   const { data, error } = await supabase
     .from('omnidash_settings')
-    .select('*')
+    .select(
+      'user_id, demo_mode, show_connected_ecosystem, anonymize_kpis, freeze_mode, power_block_started_at, power_block_duration_minutes, updated_at'
+    )
     .eq('user_id', userId)
     .maybeSingle();
 
