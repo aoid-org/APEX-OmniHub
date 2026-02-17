@@ -4,7 +4,7 @@
  * Unit tests for the MetricsCollector class.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { MetricsCollector, getMetricsCollector, resetMetrics } from '../../sim/metrics';
 import type { AppName } from '../../sim/contracts';
 
