@@ -124,10 +124,34 @@ export class MetaBusinessConnector extends BaseConnector {
     );
   }
 
-  async fetchDelta(_connectorId: string, _since: Date): Promise<RawEvent[]> {
-    // Get stored session to retrieve access token
-    // TODO: [Blocker] Inject accessToken via executionContext (See Task #Auth-001)
-    const accessToken = 'placeholder_token'; // TODO: Retrieve from storage
+  async fetchDelta(session: SessionToken, _since: Date): Promise<RawEvent[]> {
+    const accessToken = session.token;
+
+    // Handle Demo Mode
+    if (accessToken.startsWith('DEMO_')) {
+      console.log('Demo mode detected in MetaBusinessConnector. Returning mock data.');
+      return [
+        {
+          id: 'demo_post_1',
+          type: 'post',
+          timestamp: new Date().toISOString(),
+          data: {
+            id: 'demo_post_1',
+            message: 'This is a demo post from OmniConnect',
+            created_time: new Date().toISOString(),
+            type: 'status',
+            likes: { count: 42 },
+            comments: { count: 12 },
+            shares: { count: 5 }
+          },
+          metadata: {
+            platform: 'facebook',
+            postType: 'status',
+            isDemo: true
+          }
+        }
+      ];
+    }
 
     try {
       // Fetch posts from Meta Graph API
@@ -201,10 +225,14 @@ export class MetaBusinessConnector extends BaseConnector {
     });
   }
 
-  async validateToken(_connectorId: string): Promise<boolean> {
+  async validateToken(session: SessionToken): Promise<boolean> {
     try {
-      // TODO: Get token from storage
-      const accessToken = 'placeholder_token';
+      const accessToken = session.token;
+
+      // Handle Demo Mode
+      if (accessToken.startsWith('DEMO_')) {
+        return true;
+      }
 
       // Make a lightweight API call to validate token
       await this.makeRequest('/me', {

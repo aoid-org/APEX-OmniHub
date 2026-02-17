@@ -186,8 +186,8 @@ async function checkCache(
       ...(tokenId !== undefined && { tokenId: tokenId.toString() }),
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from('chain_entitlements_cache' as any) as any)
+    const { data, error } = await supabase
+      .from('chain_entitlements_cache')
       .select('*')
       .eq('wallet_address', walletAddress.toLowerCase())
       .eq('chain_id', chainId)
@@ -204,8 +204,10 @@ async function checkCache(
     }
 
     if (data) {
-      const hasEntitlement = data.data?.balance > 0;
-      return { hit: true, hasEntitlement, data: data.data };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cachedData = data.data as any;
+      const hasEntitlement = cachedData?.balance > 0;
+      return { hit: true, hasEntitlement, data: cachedData };
     }
 
     return { hit: false, hasEntitlement: false };
@@ -231,8 +233,7 @@ async function updateCache(
       ...(tokenId !== undefined && { tokenId: tokenId.toString() }),
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from('chain_entitlements_cache' as any) as any).upsert(
+    await supabase.from('chain_entitlements_cache').upsert(
       {
         wallet_address: walletAddress.toLowerCase(),
         chain_id: chainId,
@@ -260,8 +261,8 @@ async function checkAllowlist(
   entitlementKey: string
 ): Promise<{ granted: boolean; metadata?: unknown }> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from('entitlements' as any) as any)
+    const { data, error } = await supabase
+      .from('entitlements')
       .select('*')
       .eq('subject_type', 'wallet')
       .eq('subject_id', walletAddress.toLowerCase())
@@ -479,8 +480,7 @@ export async function grantEntitlement(
   metadata?: Record<string, unknown>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from('entitlements' as any) as any).upsert(
+    const { error } = await supabase.from('entitlements').upsert(
       {
         subject_type: subjectType,
         subject_id: subjectId.toLowerCase(),

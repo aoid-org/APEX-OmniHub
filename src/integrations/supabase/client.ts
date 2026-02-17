@@ -88,9 +88,6 @@ function createUnavailableClient() {
   } as unknown as ReturnType<typeof createClient<Database>>;
 }
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
-
 export const supabase = (!SUPABASE_URL || !SUPABASE_KEY) && isTestEnv
   ? createUnavailableClient()
   : createClient<Database>(SUPABASE_URL!, SUPABASE_KEY!, {
