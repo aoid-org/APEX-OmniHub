@@ -2,8 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Web3Provider } from "./providers/Web3Provider";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { ConsentBanner } from "./components/ConsentBanner";
@@ -18,11 +18,12 @@ import { logConfiguration } from './lib/config';
 import { createDebugLogger } from './lib/debug-logger';
 import { Loader2 } from 'lucide-react';
 import { OMNIDASH_FLAG } from './omnidash/types';
+import { OmniLinkShell } from "./layouts/OmniLinkShell";
 
 // Lazy load pages for better code splitting
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Dashboard = lazy(() => import("./pages/dashboard"));
 const Links = lazy(() => import("./pages/Links"));
 const Files = lazy(() => import("./pages/Files"));
 const Automations = lazy(() => import("./pages/Automations"));
@@ -180,6 +181,21 @@ const AppContent = () => {
   return null;
 };
 
+
+const AuthenticatedRedirect = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (user && location.pathname === '/') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, location, navigate]);
+
+  return <Index />;
+};
+
 const App = () => (
   <div data-testid="app-shell">
   <ErrorBoundary>
@@ -195,7 +211,7 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public routes (no mobile gate) */}
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<AuthenticatedRedirect />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/login" element={<Auth />} />
                 <Route path="/privacy" element={<Privacy />} />
@@ -208,7 +224,7 @@ const App = () => (
                 <Route path="/omnitrace" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><OmniDashRuns /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
 
                 {/* Legacy routes (with mobile gate) */}
-                <Route path="/dashboard" element={<PaidAccessRoute><DashboardLayout><Dashboard /></DashboardLayout></PaidAccessRoute>} />
+                <Route path="/dashboard" element={<PaidAccessRoute><OmniLinkShell><Dashboard /></OmniLinkShell></PaidAccessRoute>} />
                 <Route path="/links" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Links /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/files" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Files /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/automations" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Automations /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />

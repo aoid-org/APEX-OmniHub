@@ -25,12 +25,12 @@ export abstract class BaseConnector implements Connector {
   ): Promise<SessionToken>;
   abstract disconnect(connectorId: string): Promise<void>;
   abstract refreshToken(session: SessionToken): Promise<SessionToken>;
-  abstract fetchDelta(connectorId: string, since: Date): Promise<RawEvent[]>;
+  abstract fetchDelta(session: SessionToken, since: Date): Promise<RawEvent[]>;
   abstract normalizeToCanonical(
     rawEvents: RawEvent[],
     context?: NormalizationContext
   ): Promise<CanonicalEvent[]>;
-  abstract validateToken(connectorId: string): Promise<boolean>;
+  abstract validateToken(session: SessionToken): Promise<boolean>;
 
   protected generateConnectorId(userId: string, tenantId: string): string {
     const uuid = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);

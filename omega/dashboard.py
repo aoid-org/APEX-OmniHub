@@ -8,6 +8,15 @@ Uses markupsafe.escape() for SonarQube-recognized sanitization
 
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
+try:
+    from http.server import ThreadingHTTPServer
+except ImportError:
+    # Fallback for Python < 3.7
+    import socketserver
+
+    class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
+        """Fallback ThreadingHTTPServer for older Python versions"""
+        daemon_threads = True
 from typing import Any, Dict
 from pathlib import Path
 
@@ -234,7 +243,7 @@ def start_dashboard(port: int = 8080) -> None:
         - Use TLS certificates from Let's Encrypt or your CA
         - Configure proper firewall rules to restrict access
     """
-    server = HTTPServer(('localhost', port), VerificationDashboardHandler)
+    server = ThreadingHTTPServer(('localhost', port), VerificationDashboardHandler)
     print(f"APEX Verification Dashboard running on http://localhost:{port}")
     print("SECURITY: For production, deploy behind HTTPS reverse proxy")
     print("Press Ctrl+C to stop")
