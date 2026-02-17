@@ -8,7 +8,7 @@ Performance: Tests verify <100ms response time for typical queries.
 import time
 
 import pytest
-from orchestrator.omniboard.service import OmniBoardService
+from omniboard.service import OmniBoardService
 
 
 class TestFuzzyMatchProvider:
