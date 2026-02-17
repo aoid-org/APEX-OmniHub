@@ -45,7 +45,8 @@ Deno.test('SSRF: allows allowlisted private IP', async () => {
 Deno.test('SSRF: blocks file:// protocol', async () => {
   const result = await validateUrlForSsrf('file:///etc/passwd');
   assertEquals(result.allowed, false);
-  // @ts-ignore: string property
+  // @ts-expect-error: string property
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   assertEquals(result.reason?.includes('Protocol'), true);
 });
 
@@ -66,7 +67,8 @@ Deno.test('SSRF: blocks gopher:// protocol', async () => {
 Deno.test('SSRF: blocks 127.0.0.1 (loopback)', async () => {
   const result = await validateUrlForSsrf('http://127.0.0.1:8080/');
   assertEquals(result.allowed, false);
-  // @ts-ignore: string property
+  // @ts-expect-error: string property
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   assertEquals(result.reason?.includes('blocked range'), true);
 });
 
@@ -114,7 +116,8 @@ Deno.test('SSRF: blocks 100.64.0.0/10 (carrier-grade NAT)', async () => {
 Deno.test('SSRF: blocks AWS metadata endpoint', async () => {
   const result = await validateUrlForSsrf('http://169.254.169.254/latest/meta-data/');
   assertEquals(result.allowed, false);
-  // @ts-ignore: string property
+  // @ts-expect-error: string property
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   assertEquals(result.reason?.includes('blocked range'), true);
 });
 
@@ -185,7 +188,8 @@ Deno.test('SSRF: blocks .local domains', async () => {
     resolveDns: false,
   });
   assertEquals(result.allowed, false);
-  // @ts-ignore: string property
+  // @ts-expect-error: string property
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   assertEquals(result.reason?.includes('blocked suffix'), true);
 });
 
