@@ -534,9 +534,21 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
     """
     import httpx
 
+    from security.ssrf import validate_url_async
+
     url = params.get("url")
     method = params.get("method", "POST")
     payload = params.get("payload", {})
+
+    try:
+        await validate_url_async(url)
+    except ValueError as e:
+        activity.logger.error(f"Blocked SSRF attempt: {e}")
+        return {
+            "success": False,
+            "error": f"Security violation: {str(e)}",
+            "status_code": 403,
+        }
 
     activity.logger.info(f"Calling webhook: {method} {url}")
 
