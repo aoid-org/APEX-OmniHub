@@ -189,6 +189,61 @@ describe('OmniConnect Basic Functionality', () => {
     expect(typeof context.correlationId).toBe('string');
   });
 
+  it('should pass full session to fetchDelta and validateToken', async () => {
+    const config = {
+      tenantId: 'test-tenant',
+      userId: 'test-user',
+      appId: 'test-app'
+    };
+    const omniconnect = new OmniConnect(config);
+
+    const mockSession = {
+      token: 'test-access-token',
+      connectorId: 'mock-conn-1',
+      userId: 'test-user',
+      tenantId: 'test-tenant',
+      provider: 'mock-provider',
+      scopes: ['read'],
+      expiresAt: new Date(Date.now() + 3600000)
+    };
+
+    // Setup mocks
+    const storage = (omniconnect as unknown as { tokenStorage: Record<string, unknown> }).tokenStorage;
+    vi.spyOn(storage, 'listActive').mockResolvedValue([
+      { connectorId: 'mock-conn-1', provider: 'mock-provider' }
+    ]);
+    vi.spyOn(storage, 'get').mockResolvedValue(mockSession);
+    vi.spyOn(storage, 'getLastSync').mockResolvedValue(new Date());
+    vi.spyOn(storage, 'updateLastSync').mockResolvedValue(undefined);
+
+    const validateSpy = vi.fn().mockResolvedValue(true);
+    const fetchSpy = vi.fn().mockResolvedValue([]);
+
+    const mockConnector = {
+      provider: 'mock-provider',
+      validateToken: validateSpy,
+      fetchDelta: fetchSpy,
+      normalizeToCanonical: vi.fn().mockResolvedValue([]),
+      refreshToken: vi.fn(),
+      disconnect: vi.fn(),
+      getAuthUrl: vi.fn(),
+      completeHandshake: vi.fn()
+    } as unknown as Connector;
+
+    // Check if already registered to avoid error
+    if (!connectorRegistry.has('mock-provider')) {
+      registerConnector('mock-provider', mockConnector);
+    }
+
+    vi.mocked(getConnector).mockReturnValue(mockConnector);
+
+    await omniconnect.syncAll();
+
+    // Verify: Full session passed, not just ID
+    expect(validateSpy).toHaveBeenCalledWith(mockSession);
+    expect(fetchSpy).toHaveBeenCalledWith(mockSession, expect.any(Date));
+  });
+
   describe('OmniConnect Performance', () => {
     it('measures syncAll performance with multiple connectors using concurrency', async () => {
       const config = {

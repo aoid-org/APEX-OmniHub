@@ -184,7 +184,22 @@ export class OmniConnect {
     correlationId: string
   ): Promise<{ eventsProcessed: number; eventsDelivered: number }> {
     // Get stored session
-    const session = await this.tokenStorage.get(connectorId);
+    let session: SessionToken | null = await this.tokenStorage.get(connectorId);
+
+    // DEMO MODE: Create synthetic session if demo enabled
+    if (!session && this.config.enableDemoMode) {
+      console.log(`[${correlationId}] Demo mode: Creating synthetic session for ${connectorId}`);
+      session = {
+        token: `DEMO_${connectorId}_${Date.now()}`,
+        connectorId,
+        userId: this.config.userId,
+        tenantId: this.config.tenantId,
+        provider: connectorId.split('_')[0], // e.g., 'meta' from 'meta_business_demo'
+        scopes: ['demo'],
+        expiresAt: new Date(Date.now() + 86400000), // 24h
+      };
+    }
+
     if (!session) {
       throw new Error(`No session found for connector: ${connectorId}`);
     }
@@ -195,16 +210,16 @@ export class OmniConnect {
     }
 
     // Validate token is still active
-    const isValid = await connector.validateToken(connectorId);
+    const isValid = await connector.validateToken(session);
     if (!isValid) {
       // Try to refresh token
-      const newSession = await connector.refreshToken(session);
-      await this.tokenStorage.store(newSession);
+      session = await connector.refreshToken(session);
+      await this.tokenStorage.store(session);
     }
 
     // Fetch new data since last sync
     const lastSync = await this.tokenStorage.getLastSync(connectorId);
-    const rawEvents = await connector.fetchDelta(connectorId, lastSync);
+    const rawEvents = await connector.fetchDelta(session, lastSync);
 
     if (rawEvents.length === 0) {
       return { eventsProcessed: 0, eventsDelivered: 0 };
