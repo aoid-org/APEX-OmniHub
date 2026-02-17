@@ -6,6 +6,7 @@ Performance: Tests verify <100ms response time for typical queries.
 """
 
 import time
+
 import pytest
 from orchestrator.omniboard.service import OmniBoardService
 
@@ -72,7 +73,8 @@ class TestFuzzyMatchProviderEdgeCases:
         # The prompt implies it should find "Gmail"
         result = service.fuzzy_match_provider("Gmail;DROP TABLE--")
         # If the implementation doesn't strip special chars, this might fail to find exact match
-        # but "Gmail" is a substring of "Gmail;DROP TABLE--", so reverse match logic should catch it.
+        # but "Gmail" is a substring of "Gmail;DROP TABLE--", so reverse match logic should catch
+        # it.
         assert "Gmail" in result
 
     def test_unicode_handling(self, service):
@@ -128,7 +130,8 @@ class TestFuzzyMatchProviderEdgeCases:
     def test_duplicate_results_removed(self, service):
         """No duplicate providers in results."""
         # If "Git" matches "GitHub" via 'Starts with' and also via 'Contains' logic?
-        # The implementation iterates providers once, so duplicates shouldn't happen unless logic is flawed.
+        # The implementation iterates providers once, so duplicates shouldn't happen unless logic
+        # is flawed.
         result = service.fuzzy_match_provider("Git")
         assert len(result) == len(set(result))
 
@@ -149,6 +152,7 @@ class TestFuzzyMatchProviderPerformance:
     def test_handles_concurrent_queries(self):
         """Thread-safe for concurrent requests."""
         import threading
+
         service = OmniBoardService()
         results = []
 
