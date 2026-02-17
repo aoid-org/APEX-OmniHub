@@ -6,34 +6,13 @@
 
 import { appConfig, getEnvironment } from './config';
 import { createDebugLogger } from './debug-logger';
-import { initializeOmniSentry, getHealthStatus } from './omni-sentry';
-import { MonitoringQueue, simpleHash } from './monitoring-queue';
-import { LocalStorageAdapter } from './storage-adapter';
+import { initializeOmniSentry } from './omni-sentry';
 
 // Re-export OmniSentry for external access
 export { getHealthStatus, reportError as reportOmniError, withResilience } from './omni-sentry';
 
 let sentry: unknown = null;
 let sentryInitialized = false;
-
-// Batching configuration
-const FLUSH_INTERVAL = 2000;
-const FLUSH_THRESHOLD = 50;
-const MAX_QUEUE_SIZE = 500;
-
-interface QueuedLog {
-  key: string;
-  entry: unknown;
-  max: number;
-}
-
-const storage = new LocalStorageAdapter();
-const queue = new MonitoringQueue<QueuedLog>(MAX_QUEUE_SIZE, (item) =>
-  simpleHash(`${item.key}:${JSON.stringify(item.entry)}`)
-);
-
-let flushHandle: unknown | null = null;
-let isIdleCallback = false;
 
 export interface ErrorContext {
   userId?: string;
@@ -82,107 +61,12 @@ async function ensureSentry() {
   return sentry;
 }
 
-/**
- * Persist log using batching queue
- */
 function persistLog(key: string, entry: unknown, max: number) {
-  // Check criticality - bypass queue for critical errors or security events if system is critical
-  const isCritical = key === 'error_logs' || key === 'security_logs';
-  const health = getHealthStatus();
-
-  if (isCritical || health.status === 'critical') {
-    // Write immediately for critical items
-    directWrite(key, [entry], max);
-    return;
-  }
-
-  queue.push({ key, entry, max });
-
-  // Adaptive flush logic
-  if (queue.size >= FLUSH_THRESHOLD) {
-    flushQueue();
-  } else if (!flushHandle) {
-    scheduleFlush();
-  }
-}
-
-// Interface to type-safe access optional global APIs
-interface GlobalWithIdle {
-  requestIdleCallback: (cb: () => void, options?: { timeout: number }) => unknown;
-  cancelIdleCallback: (handle: unknown) => void;
-}
-
-function scheduleFlush() {
-  if (flushHandle) return;
-
-  if ('requestIdleCallback' in globalThis) {
-    flushHandle = (globalThis as unknown as GlobalWithIdle).requestIdleCallback(() => flushQueue(), { timeout: FLUSH_INTERVAL });
-    isIdleCallback = true;
-  } else {
-    flushHandle = setTimeout(() => {
-      flushHandle = null;
-      isIdleCallback = false;
-      flushQueue();
-    }, FLUSH_INTERVAL);
-    isIdleCallback = false;
-  }
-}
-
-function flushQueue() {
-  const items = queue.flush();
-  if (items.length === 0) {
-    clearFlushHandle();
-    return;
-  }
-
-  clearFlushHandle();
-
-  // Group by key to minimize IO
-  const groups = new Map<string, { entries: unknown[], max: number }>();
-
-  for (const item of items) {
-    const group = groups.get(item.key) || { entries: [], max: item.max };
-    group.entries.push(item.entry);
-    // Use the smallest max found to be safe, or just the last one
-    group.max = item.max;
-    groups.set(item.key, group);
-  }
-
-  for (const [key, group] of groups) {
-    directWrite(key, group.entries, group.max);
-  }
-}
-
-function clearFlushHandle() {
-  if (flushHandle) {
-    if (isIdleCallback && 'cancelIdleCallback' in globalThis) {
-      (globalThis as unknown as GlobalWithIdle).cancelIdleCallback(flushHandle);
-    } else {
-      // Safe cast: if isIdleCallback is false, it must be from setTimeout
-      clearTimeout(flushHandle as ReturnType<typeof setTimeout>);
-    }
-    flushHandle = null;
-    isIdleCallback = false;
-  }
-}
-
-/**
- * Direct write to storage (bypassing or processing queue)
- */
-function directWrite(key: string, newEntries: unknown[], max: number) {
   try {
-    const existingJson = storage.getItem(key) || '[]';
-    const logs = JSON.parse(existingJson);
-
-    logs.push(...newEntries);
-
-    // Truncate if needed
-    if (logs.length > max) {
-      // Remove from the beginning (oldest)
-      logs.splice(0, logs.length - max);
-    }
-
-    storage.setItem(key, JSON.stringify(logs));
+    const logs = JSON.parse(localStorage.getItem(key) || '[]');
+    logs.push(entry);
+    if (logs.length > max) logs.shift();
+    localStorage.setItem(key, JSON.stringify(logs));
   } catch {
     // non-fatal
   }
@@ -308,20 +192,6 @@ export function initializeMonitoring(): void {
     
     void ensureSentry();
 
-    // Register flush handlers
-    if (typeof window !== 'undefined') {
-      const flushHandler = () => flushQueue();
-      // Use pagehide for modern browsers as it is more reliable than beforeunload
-      window.addEventListener('pagehide', flushHandler);
-      window.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-          flushHandler();
-        }
-      });
-      // Fallback
-      window.addEventListener('beforeunload', flushHandler);
-    }
-
     // #region agent log
     log('Before error handlers');
     // #endregion
@@ -380,7 +250,7 @@ export function initializeMonitoring(): void {
  */
 export function getErrorLogs(): unknown[] {
   try {
-    return JSON.parse(storage.getItem('error_logs') || '[]');
+    return JSON.parse(localStorage.getItem('error_logs') || '[]');
   } catch {
     return [];
   }
@@ -391,7 +261,7 @@ export function getErrorLogs(): unknown[] {
  */
 export function getSecurityLogs(): unknown[] {
   try {
-    return JSON.parse(storage.getItem('security_logs') || '[]');
+    return JSON.parse(localStorage.getItem('security_logs') || '[]');
   } catch {
     return [];
   }
@@ -401,18 +271,10 @@ export function getSecurityLogs(): unknown[] {
  * Clear all logs
  */
 export function clearLogs(): void {
-  storage.removeItem('error_logs');
-  storage.removeItem('security_logs');
-  storage.removeItem('perf_logs');
-  queue.clear();
+  localStorage.removeItem('error_logs');
+  localStorage.removeItem('security_logs');
+  localStorage.removeItem('perf_logs');
   if (import.meta.env.DEV) {
     console.log('🗑️ Logs cleared');
   }
 }
-
-// Export for testing
-export const _testing = {
-  flushQueue,
-  queue,
-  storage
-};

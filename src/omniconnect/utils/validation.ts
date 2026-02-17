@@ -4,7 +4,6 @@
 
 import { CanonicalEvent, EventType } from '../types/canonical';
 import { SessionToken } from '../types/connector';
-import { sanitizeEventPayload as sanitizePayload } from '@/lib/sanitization';
 
 export function validateCanonicalEvent(event: unknown): event is CanonicalEvent {
   if (!event || typeof event !== 'object') return false;
