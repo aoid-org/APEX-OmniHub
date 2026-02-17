@@ -176,12 +176,13 @@ export const OmniDashLayout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <DemoModeBanner />
-      <header className="h-16 border-b bg-background flex items-center px-4 md:px-6">
+      <header className="h-16 glass-card border-b-2 border-b-accent/30 flex items-center px-6 md:px-8">
         <div className="flex items-center justify-between w-full max-w-full">
-          <div className="min-w-0 flex-shrink">
-            <h1 className="text-xl font-bold truncate">APEX OmniHub</h1>
+          <div className="min-w-0 flex-shrink flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+            <h1 className="text-lg font-semibold tracking-tight truncate">APEX OmniHub</h1>
           </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-3 flex-shrink-0">
             {OMNIDASH_NAV_ITEMS.map((item) => (
               <OmniDashNavIconButton
                 key={item.key}
@@ -223,13 +224,13 @@ export const OmniDashLayout = () => {
         ))}
       </div>
 
-      <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[2fr,1fr]">
-          <div className="space-y-4">
+      <main className="flex-1 p-6 md:p-8 pb-20 md:pb-8 bg-background/50">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-[2fr,1fr]">
+          <div className="space-y-6">
             <Outlet />
           </div>
-          <div className="space-y-4">
-            <Card>
+          <div className="space-y-6">
+            <Card className="glass-card hover-lift animate-in-delay-1 rounded-2xl">
               <CardHeader>
                 <CardTitle>Sales Demo Toggles</CardTitle>
                 <CardDescription>Controls for redaction and demo stories.</CardDescription>
@@ -281,7 +282,7 @@ export const OmniDashLayout = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card hover-lift animate-in-delay-2 rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Connected Ecosystem</CardTitle>
