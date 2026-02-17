@@ -8,6 +8,7 @@ Performance: Tests verify <100ms response time for typical queries.
 import time
 
 import pytest
+
 from omniboard.service import OmniBoardService
 
 
