@@ -41,9 +41,9 @@ function parseSSEDataLine(
   if (!trimmed || stopTokens.includes(trimmed)) return null;
   if (trimmed.startsWith("data: ")) {
     try {
-      const data = JSON.parse(trimmed.slice(6));
+      const data: unknown = JSON.parse(trimmed.slice(6));
       return extractor(data);
-    } catch {
+    } catch (_e) {
       // Partial SSE chunk — safe to skip
       return null;
     }
@@ -252,8 +252,8 @@ export class AnthropicAdapter extends BaseSSEAdapter {
       stop_reason?: string;
       usage?: { input_tokens: number; output_tokens: number };
     };
-    const inputTokens = data.usage?.input_tokens ?? 0;
-    const outputTokens = data.usage?.output_tokens ?? 0;
+    const inputTokens = (data.usage?.input_tokens as number | undefined) ?? 0;
+    const outputTokens = (data.usage?.output_tokens as number | undefined) ?? 0;
     return buildLLMResponse(
       data.content?.[0]?.text ?? "",
       data.stop_reason ?? "unknown",

@@ -17,7 +17,7 @@ import { useDemoStore } from '@/stores/demoStore';
 
 type BadgeCategory = 'outcome' | 'outreach' | 'metric';
 
-const getBadgeStyles = (category: BadgeCategory) => {
+export const getBadgeStyles = (category: BadgeCategory) => {
   switch (category) {
     case 'outcome': return 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400';
     case 'outreach': return 'border-sky-500/50 text-sky-600 dark:text-sky-400';
