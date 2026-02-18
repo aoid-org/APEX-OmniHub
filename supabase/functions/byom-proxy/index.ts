@@ -25,7 +25,7 @@ import { getCockpitCrypto } from "../_shared/cockpit-crypto.ts";
 import { createAdapter } from "../_shared/universal-adapter.ts";
 import { FlightControl } from "../_shared/flight-control.ts";
 import { RateLimiter } from "../_shared/rate-limiter.ts";
-import type { ByomProvider } from "../_shared/types/byom.ts";
+
 
 // ──────────────────────────────────────────────────────────
 // Configuration

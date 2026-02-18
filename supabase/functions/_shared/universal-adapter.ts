@@ -5,6 +5,74 @@ import type {
   LLMOptions 
 } from "./llm.ts";
 
+// ─── Provider-specific raw response types ───────────────────────────
+
+/** Raw response shape from OpenAI-compatible APIs (OpenAI, xAI). */
+interface OpenAIRawResponse {
+  choices?: { message?: { content?: string }; finish_reason?: string; delta?: { content?: string } }[];
+  usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+}
+
+/** Raw response shape from Anthropic API. */
+interface AnthropicRawResponse {
+  content?: { text?: string }[];
+  stop_reason?: string;
+  usage?: { input_tokens?: number; output_tokens?: number };
+  type?: string;
+  delta?: { text?: string };
+}
+
+/** Raw response shape from Google Gemini API. */
+interface GoogleRawResponse {
+  candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[];
+}
+
+// ─── Shared SSE stream reader ───────────────────────────────────────
+
+/**
+ * Reads an SSE stream from a ReadableStream and yields parsed JSON data lines.
+ * Shared by OpenAI and Anthropic adapters to eliminate code duplication.
+ */
+async function* readSSEStream(
+  body: ReadableStream<Uint8Array>,
+  skipPatterns: string[],
+  extractContent: (parsed: Record<string, unknown>) => string | undefined
+): AsyncGenerator<string> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || skipPatterns.includes(trimmed)) continue;
+
+        if (trimmed.startsWith("data: ")) {
+          try {
+            const data = JSON.parse(trimmed.slice(6)) as Record<string, unknown>;
+            const content = extractContent(data);
+            if (content) yield content;
+          } catch {
+            // Ignore parse errors on partial chunks
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+// ─── Adapter Interface ──────────────────────────────────────────────
+
 /**
  * Universal Adapter Interface
  * Standardizes interaction across different LLM providers.
@@ -21,9 +89,10 @@ export interface UniversalAdapter {
     apiKey: string,
     endpoint: string,
     signal?: AbortSignal
-  ): AsyncIterable<string>; // Returns chunks of text
+  ): AsyncIterable<string>;
 }
 
+// ─── OpenAI-Compatible Adapter ──────────────────────────────────────
 
 /**
  * OpenAI-Compatible Adapter (OpenAI, xAI, etc.)
@@ -46,16 +115,17 @@ export class OpenAICompatibleAdapter implements UniversalAdapter {
     };
   }
 
-  public parseResponse(raw: any): LLMResponse {
-    const content = raw.choices?.[0]?.message?.content ?? "";
-    const usage = raw.usage ? {
-      prompt_tokens: raw.usage.prompt_tokens,
-      completion_tokens: raw.usage.completion_tokens,
-      total_tokens: raw.usage.total_tokens,
+  public parseResponse(raw: unknown): LLMResponse {
+    const data = raw as OpenAIRawResponse;
+    const content = data.choices?.[0]?.message?.content ?? "";
+    const usage = data.usage ? {
+      prompt_tokens: data.usage.prompt_tokens,
+      completion_tokens: data.usage.completion_tokens,
+      total_tokens: data.usage.total_tokens,
     } : undefined;
 
     return {
-      finish_reason: raw.choices?.[0]?.finish_reason ?? "unknown",
+      finish_reason: data.choices?.[0]?.finish_reason ?? "unknown",
       content,
       usage,
     };
@@ -87,47 +157,26 @@ export class OpenAICompatibleAdapter implements UniversalAdapter {
 
     if (!response.body) throw new Error("No response body");
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed === "data: [DONE]") continue;
-          if (trimmed.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(trimmed.slice(6));
-              const delta = data.choices?.[0]?.delta?.content;
-              if (delta) yield delta;
-            } catch (e) {
-              // Ignore parse errors on partial chunks
-            }
-          }
-        }
+    yield* readSSEStream(
+      response.body,
+      ["data: [DONE]"],
+      (parsed) => {
+        const choices = parsed["choices"] as OpenAIRawResponse["choices"];
+        return choices?.[0]?.delta?.content;
       }
-    } finally {
-      reader.releaseLock();
-    }
+    );
   }
 }
+
+// ─── Anthropic Adapter ──────────────────────────────────────────────
 
 /**
  * Anthropic Adapter
  */
 export class AnthropicAdapter implements UniversalAdapter {
-  public readonly provider = "anthropic";
+  public readonly provider = "anthropic" as const;
 
   public buildRequest(messages: LLMMessage[], options: LLMOptions): unknown {
-    // Extract system message if present (Anthropic puts it top-level)
     const systemMessage = messages.find(m => m.role === "system");
     const chatMessages = messages.filter(m => m.role !== "system");
 
@@ -144,16 +193,16 @@ export class AnthropicAdapter implements UniversalAdapter {
     };
   }
 
-  public parseResponse(raw: any): LLMResponse {
-    // Anthropic non-streaming response structure
-    const content = raw.content?.[0]?.text ?? "";
+  public parseResponse(raw: unknown): LLMResponse {
+    const data = raw as AnthropicRawResponse;
+    const content = data.content?.[0]?.text ?? "";
     return {
-      finish_reason: raw.stop_reason ?? "unknown",
+      finish_reason: data.stop_reason ?? "unknown",
       content,
       usage: {
-        prompt_tokens: raw.usage?.input_tokens ?? 0,
-        completion_tokens: raw.usage?.output_tokens ?? 0,
-        total_tokens: (raw.usage?.input_tokens ?? 0) + (raw.usage?.output_tokens ?? 0)
+        prompt_tokens: data.usage?.input_tokens ?? 0,
+        completion_tokens: data.usage?.output_tokens ?? 0,
+        total_tokens: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0)
       }
     };
   }
@@ -185,59 +234,34 @@ export class AnthropicAdapter implements UniversalAdapter {
 
     if (!response.body) throw new Error("No response body");
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed === "event: ping") continue;
-          
-          if (trimmed.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(trimmed.slice(6));
-              if (data.type === "content_block_delta" && data.delta?.text) {
-                yield data.delta.text;
-              }
-            } catch (e) {
-              // Ignore
-            }
-          }
+    yield* readSSEStream(
+      response.body,
+      ["event: ping"],
+      (parsed) => {
+        const event = parsed as unknown as AnthropicRawResponse;
+        if (event.type === "content_block_delta" && event.delta?.text) {
+          return event.delta.text;
         }
+        return undefined;
       }
-    } finally {
-      reader.releaseLock();
-    }
+    );
   }
 }
+
+// ─── Google Gemini Adapter ──────────────────────────────────────────
 
 /**
  * Google Gemini Adapter
  */
 export class GoogleAdapter implements UniversalAdapter {
-  public readonly provider = "google";
+  public readonly provider = "google" as const;
 
   public buildRequest(messages: LLMMessage[], options: LLMOptions): unknown {
-    // Map roles: system -> user (Gemini Flash doesn't support system well in all versions, 
-    // but v1beta does. We'll map system to top-level if needed, but standard is:
-    // contents: [{ role: "user" | "model", parts: [{ text: ... }] }]
-    
     const contents = messages.map(m => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }]
     }));
 
-    // If system prompt exists, we might need to prepend it or use systemInstruction
-    // For simplicity/compatibility, prepending to first user message is robust
     const systemMsg = messages.find(m => m.role === "system");
     if (systemMsg) {
        // logic to merge system prompt not shown for brevity, moving on
@@ -252,10 +276,11 @@ export class GoogleAdapter implements UniversalAdapter {
     };
   }
 
-  public parseResponse(raw: any): LLMResponse {
-    const content = raw.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  public parseResponse(raw: unknown): LLMResponse {
+    const data = raw as GoogleRawResponse;
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     return {
-      finish_reason: raw.candidates?.[0]?.finishReason ?? "unknown",
+      finish_reason: data.candidates?.[0]?.finishReason ?? "unknown",
       content,
     };
   }
@@ -264,12 +289,10 @@ export class GoogleAdapter implements UniversalAdapter {
     messages: LLMMessage[],
     options: LLMOptions,
     apiKey: string,
-    endpoint: string, // Unused for Google (constructs URL with key)
+    _endpoint: string,
     signal?: AbortSignal
   ): AsyncIterable<string> {
     const model = options.model || "gemini-1.5-flash";
-    // Using non-streaming endpoint for robustness in this environment
-    // to guarantee "no ghost features" without complex JSON parsing.
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     
     const body = this.buildRequest(messages, options);
@@ -286,15 +309,16 @@ export class GoogleAdapter implements UniversalAdapter {
       throw new Error(`Google API Error ${response.status}: ${errorText}`);
     }
 
-    const data = await response.json();
-    const parsed = this.parseResponse(data);
+    const json: unknown = await response.json();
+    const parsed = this.parseResponse(json);
     
-    // Yield the full content as a single chunk
     if (parsed.content) {
       yield parsed.content;
     }
   }
 }
+
+// ─── Factory ────────────────────────────────────────────────────────
 
 export function createAdapter(provider: string): UniversalAdapter {
   switch (provider) {

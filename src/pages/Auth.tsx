@@ -5,13 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useLoginRedirect } from '@/hooks/useLoginRedirect';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowRight, ShieldCheck, Lock } from 'lucide-react';
 import { z } from 'zod';
-import apexLogo from '@/assets/apex_emblem_logo.svg';
+import appIcon from '@/assets/app_icon.png';
 import { checkRateLimit } from '@/lib/ratelimit';
 import { checkAccountLockout, recordLoginAttempt } from '@/lib/security';
 import { logSecurityEvent } from '@/lib/monitoring';
@@ -28,10 +26,12 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<'signin' | 'signup'>(
+    searchParams.get('tab') === 'signup' ? 'signup' : 'signin'
+  );
+  
   const { toast } = useToast();
   const { redirect: performPostLoginRedirect, loading: redirectLoading } = useLoginRedirect();
-
-  const defaultTab = searchParams.get('tab') === 'signin' ? 'signin' : 'signup';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -43,8 +43,6 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Rate limiting check
     const rateCheck = checkRateLimit('signup', 3, 300000); // 3 attempts per 5 min
     if (!rateCheck.allowed) {
       toast({
@@ -56,11 +54,8 @@ const Auth = () => {
     }
 
     setLoading(true);
-
     try {
       const validated = authSchema.parse({ email, password, fullName });
-
-      // Construct email redirect URL with preserved redirect param
       const redirectParam = searchParams.get('redirect');
       const emailRedirectUrl = redirectParam
         ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(redirectParam)}`
@@ -71,9 +66,7 @@ const Auth = () => {
         password: validated.password,
         options: {
           emailRedirectTo: emailRedirectUrl,
-          data: {
-            full_name: validated.fullName,
-          },
+          data: { full_name: validated.fullName },
         },
       });
 
@@ -84,19 +77,7 @@ const Auth = () => {
         description: 'Please check your email to verify your account.',
       });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: 'Validation error',
-          description: error.errors[0].message,
-          variant: 'destructive',
-        });
-      } else if (error instanceof Error) {
-        toast({
-          title: 'Error',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
+      handleAuthError(error);
     } finally {
       setLoading(false);
     }
@@ -104,36 +85,30 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Check account lockout
     const lockoutStatus = checkAccountLockout(email);
     if (lockoutStatus.isLocked) {
-      const minutes = Math.ceil(lockoutStatus.remainingTime! / 60000);
       toast({
-        title: 'Account temporarily locked',
-        description: `Too many failed attempts. Try again in ${minutes} minutes.`,
+        title: 'Account locked',
+        description: `Try again in ${Math.ceil(lockoutStatus.remainingTime! / 60000)} minutes.`,
         variant: 'destructive',
       });
       logSecurityEvent('auth_failed', { reason: 'account_locked', email });
       return;
     }
 
-    // Rate limiting check
-    const rateCheck = checkRateLimit(`signin-${email}`, 5, 300000); // 5 attempts per 5 min
+    const rateCheck = checkRateLimit(`signin-${email}`, 5, 300000);
     if (!rateCheck.allowed) {
       toast({
         title: 'Too many attempts',
-        description: `Please wait ${Math.ceil(rateCheck.resetIn / 1000)} seconds before trying again.`,
+        description: `Please wait ${Math.ceil(rateCheck.resetIn / 1000)} seconds.`,
         variant: 'destructive',
       });
       return;
     }
 
     setLoading(true);
-
     try {
       const validated = authSchema.omit({ fullName: true }).parse({ email, password });
-
       const { error } = await supabase.auth.signInWithPassword({
         email: validated.email,
         password: validated.password,
@@ -145,33 +120,27 @@ const Auth = () => {
       }
 
       recordLoginAttempt(email, true);
-
-      // Wait for redirect hook to load access data, then route
-      // Note: We can't call performPostLoginRedirect() here directly because
-      // access data (isAdmin, isPaid) may not be loaded yet for brand new session.
-      // The useEffect above will handle routing once session is established.
-
-      // For immediate feedback, navigate to a loading state if needed,
-      // but in practice the useEffect will trigger almost immediately.
-      if (!redirectLoading) {
-        performPostLoginRedirect();
-      }
+      if (!redirectLoading) performPostLoginRedirect();
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: 'Validation error',
-          description: error.errors[0].message,
-          variant: 'destructive',
-        });
-      } else if (error instanceof Error) {
-        toast({
-          title: 'Error',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
+      handleAuthError(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAuthError = (error: unknown) => {
+    if (error instanceof z.ZodError) {
+      toast({
+        title: 'Validation Error',
+        description: error.errors[0].message,
+        variant: 'destructive',
+      });
+    } else if (error instanceof Error) {
+      toast({
+        title: 'Authentication Error',
+        description: error.message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -179,113 +148,140 @@ const Auth = () => {
     <>
       <Helmet>
         <meta name="robots" content="noindex,nofollow" />
+        <title>Sign In | APEX OmniHub</title>
       </Helmet>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
+      
+      {/* Background with deep navy gradient */}
+      <div className="min-h-screen flex items-center justify-center bg-[hsl(222,47%,11%)] relative overflow-hidden">
+        
+        {/* Ambient background effects */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-cyan-900/10 via-transparent to-blue-900/10 pointer-events-none" />
+        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="w-full max-w-md p-6 relative z-10">
+          <div className="text-center mb-8 space-y-4">
+            <div className="relative inline-block group">
+              <div className="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full group-hover:bg-cyan-400/30 transition-all duration-500" />
               <img
-                src={apexLogo}
-                alt="APEX OmniHub logo"
-                className="h-16 w-16"
-                aria-hidden="true"
+                src={appIcon}
+                alt="APEX OmniHub"
+                className="h-20 w-20 relative z-10 drop-shadow-2xl transition-transform duration-500 group-hover:scale-105"
               />
             </div>
-            <CardTitle className="text-2xl">APEX Admin Login</CardTitle>
-            <CardDescription>Authorized access only</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue={defaultTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
+            
+            <div className="space-y-1">
+              <h1 className="text-3xl font-bold tracking-tight text-white">
+                {mode === 'signin' ? 'Welcome Back' : 'Join APEX'}
+              </h1>
+              <p className="text-cyan-100/60 text-sm">
+                Universal Synchronized Orchestrator
+              </p>
+            </div>
+          </div>
 
-              <TabsContent value="signin">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
-                      </>
-                    ) : (
-                      'Sign In'
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
+          {/* Glassmorphism Card */}
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8 space-y-6">
+            
+            {/* Toggle Switch */}
+            <div className="flex bg-black/20 p-1 rounded-lg">
+              <button
+                onClick={() => setMode('signin')}
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-300 ${
+                  mode === 'signin' 
+                    ? 'bg-cyan-500/20 text-cyan-300 shadow-sm' 
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => setMode('signup')}
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-300 ${
+                  mode === 'signup' 
+                    ? 'bg-cyan-500/20 text-cyan-300 shadow-sm' 
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
 
-              <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
+            <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} className="space-y-4">
+              
+              {mode === 'signup' && (
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="text-cyan-100/80">Full Name</Label>
+                  <div className="relative">
                     <Input
-                      id="signup-name"
-                      type="text"
+                      id="fullName"
                       placeholder="John Doe"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      required
+                      className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      'Sign Up'
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-cyan-100/80">Email</Label>
+                <div className="relative group">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/50 focus:ring-cyan-500/20 pl-10 transition-all"
+                  />
+                  <ShieldCheck className="absolute left-3 top-2.5 h-5 w-5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-cyan-100/80">
+                  Password
+                </Label>
+                <div className="relative group">
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/50 focus:ring-cyan-500/20 pl-10 transition-all"
+                  />
+                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+                </div>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold py-6 shadow-lg shadow-cyan-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                ) : (
+                  <span className="flex items-center">
+                    {mode === 'signin' ? 'Access Console' : 'Create Account'}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </span>
+                )}
+              </Button>
+
+            </form>
+          </div>
+          
+          <div className="mt-8 text-center space-y-2">
+            <p className="text-xs text-gray-500">
+              By accessing this system, you agree to the <a href="/terms" className="text-cyan-400/80 hover:text-cyan-300 hover:underline">Terms of Service</a>.
+            </p>
+            <p className="text-xs text-gray-600">
+              Protected by APEX Security Layer v4.2
+            </p>
+          </div>
+        </div>
       </div>
     </>
   );
