@@ -15,15 +15,9 @@ import { useToast } from '@/components/ui/use-toast';
 import { useExecute } from '@/hooks/useExecute';
 import { useDemoStore } from '@/stores/demoStore';
 
-type BadgeCategory = 'outcome' | 'outreach' | 'metric';
 
-const getBadgeStyles = (category: BadgeCategory) => {
-  switch (category) {
-    case 'outcome': return 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400';
-    case 'outreach': return 'border-sky-500/50 text-sky-600 dark:text-sky-400';
-    default: return 'border-amber-500/50 text-amber-600 dark:text-amber-400';
-  }
-};
+
+
 
 export const Today = () => {
   const { user } = useAuth();
@@ -161,10 +155,14 @@ export const Today = () => {
                 className="border rounded-xl p-4 flex flex-col gap-3 hover:bg-accent/5 transition-colors duration-200"
               >
                 <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <Badge 
                       variant="outline" 
-                      className={`capitalize shrink-0 ${getBadgeStyles(item.category)}`}
+                      className={`capitalize shrink-0 ${
+                        item.category === 'outcome' ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400' :
+                        item.category === 'outreach' ? 'border-sky-500/50 text-sky-600 dark:text-sky-400' :
+                        'border-amber-500/50 text-amber-600 dark:text-amber-400'
+                      }`}
                     >
                       {item.category}
                     </Badge>

@@ -75,6 +75,8 @@ COMMENT ON FUNCTION public.sync_admin_metadata_to_user_roles() IS
 -- ============================================================================
 
 -- Drop existing trigger if present (idempotency)
+DROP TRIGGER IF EXISTS sync_admin_metadata_insert_trigger ON auth.users;
+DROP TRIGGER IF EXISTS sync_admin_metadata_update_trigger ON auth.users;
 DROP TRIGGER IF EXISTS sync_admin_metadata_trigger ON auth.users;
 
 CREATE TRIGGER sync_admin_metadata_trigger
