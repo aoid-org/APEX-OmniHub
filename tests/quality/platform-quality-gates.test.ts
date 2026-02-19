@@ -1,7 +1,7 @@
 /* VALUATION_IMPACT: Automated quality gate validation ensures institutional-grade reliability. Reduces QA costs by 60% through automated enforcement. Generated: 2026-02-03 */
 
 import { describe, it, expect } from 'vitest';
-import { execSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -19,14 +19,19 @@ describe('Platform Quality Gates', () => {
   it('Gate 2: ESLint must pass with zero warnings', () => {
     // APEX-FIX: Increased timeout to 30s for full-repo lint scan
     let eslintJson = '';
+    const eslintPath = join(process.cwd(), 'node_modules', '.bin', 'eslint');
 
     try {
-      eslintJson = execSync('npx eslint . --max-warnings 0 --format json', {
-        encoding: 'utf-8',
-        stdio: 'pipe', // Capture output to debug if needed
-        maxBuffer: 20 * 1024 * 1024, // APEX-FIX: prevent JSON output buffer overflow in CI
-        cwd: process.cwd()
-      });
+      eslintJson = execFileSync(
+        eslintPath,
+        ['.', '--max-warnings', '0', '--format', 'json'],
+        {
+          encoding: 'utf-8',
+          stdio: 'pipe', // Capture output to debug if needed
+          maxBuffer: 20 * 1024 * 1024, // APEX-FIX: prevent JSON output buffer overflow in CI
+          cwd: process.cwd()
+        }
+      );
     } catch (error: unknown) {
       const details = error as { stdout?: string | Buffer; stderr?: string | Buffer };
       eslintJson = String(details.stdout ?? '[]');
