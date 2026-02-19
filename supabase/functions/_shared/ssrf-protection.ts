@@ -16,16 +16,16 @@ export interface SsrfValidationOptions {
 
 const BLOCKED_V4_CIDRS = [
   "0.0.0.0/8",      // this network
-  "10.0.0.0/8",     // RFC1918 private
+  "10.0.0.0/8",     // RFC1918 private (intentional SSRF denylist) // NOSONAR
   "100.64.0.0/10",  // CGNAT
   "127.0.0.0/8",    // loopback
   "169.254.0.0/16", // link-local
-  "172.16.0.0/12",  // RFC1918 private
-  "192.0.0.0/24",   // IETF protocol assignments
-  "192.168.0.0/16", // RFC1918 private
-  "198.18.0.0/15",  // benchmarking
-  "224.0.0.0/4",    // multicast
-  "240.0.0.0/4",    // reserved
+  "172.16.0.0/12",  // RFC1918 private (intentional SSRF denylist) // NOSONAR
+  "192.0.0.0/24",   // IETF protocol assignments (intentional SSRF denylist) // NOSONAR
+  "192.168.0.0/16", // RFC1918 private (intentional SSRF denylist) // NOSONAR
+  "198.18.0.0/15",  // benchmarking (intentional SSRF denylist) // NOSONAR
+  "224.0.0.0/4",    // multicast (intentional SSRF denylist) // NOSONAR
+  "240.0.0.0/4",    // reserved (intentional SSRF denylist) // NOSONAR
 ] as const;
 
 const BLOCKED_V6_PREFIXES = [
@@ -35,7 +35,7 @@ const BLOCKED_V6_PREFIXES = [
   "fe80::/10",       // link-local
   "ff00::/8",        // multicast
   "2001:db8::/32",   // documentation
-  "2001:10::/28",    // ORCHID
+  "2001:10::/28",    // ORCHID (intentional SSRF denylist) // NOSONAR
 ] as const;
 
 function ipv4ToInt(ip: string): number {
