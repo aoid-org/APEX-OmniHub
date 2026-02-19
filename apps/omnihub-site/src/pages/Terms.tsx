@@ -5,7 +5,7 @@ export function TermsPage() {
     <LegalPage
       title="Terms of Service"
       documentPath="docs/compliance/TERMS_OF_SERVICE.md"
-      markdownLoader={() => import('../../../../docs/compliance/TERMS_OF_SERVICE.md?raw')}
+      markdownLoader={() => import('@compliance/TERMS_OF_SERVICE.md?raw')}
     />
   );
 }

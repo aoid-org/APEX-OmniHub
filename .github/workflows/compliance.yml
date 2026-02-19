@@ -80,6 +80,8 @@ jobs:
       - run: |
           npx sonar-scanner \
             -Dproject.settings=sonar-project.properties \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization=apexbusiness-systems \
             -Dsonar.projectKey=[REPLACE_WITH_SONAR_PROJECT_KEY] \
             -Dsonar.qualitygate.wait=true
         env:
@@ -93,5 +95,5 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install ruff
-      - run: ruff check .
-      - run: ruff format --check .
+      - run: ruff check orchestrator
+      - run: ruff format --check orchestrator

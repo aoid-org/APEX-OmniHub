@@ -56,6 +56,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
+      '@compliance': resolve(__dirname, '../../docs/compliance'),
     },
   },
   build: {

@@ -26,10 +26,18 @@ for (const [file, content] of docs) {
 
   const retentionLines = content
     .split('\n')
-    .filter((line) => /retention|logs|backups/i.test(line));
+    .filter((line) => {
+      const lower = line.toLowerCase();
+      return lower.includes('retention') || lower.includes('logs') || lower.includes('backups');
+    });
+
+  const forbiddenPhrases = ['30 day', '30 days', '90 day', '90 days', '180 day', '180 days', '365 day', '365 days'];
 
   for (const line of retentionLines) {
-    if (/\b(30|90|180|365)\s*-?\s*day(s)?\b/i.test(line)) {
+    const normalized = line.toLowerCase().replaceAll('-', ' ');
+    const hasForbiddenNumber = forbiddenPhrases.some((phrase) => normalized.includes(phrase));
+
+    if (hasForbiddenNumber) {
       console.error(`[CONFLICT] Numeric retention value found in ${file}: ${line.trim()}`);
       failed = true;
     }
