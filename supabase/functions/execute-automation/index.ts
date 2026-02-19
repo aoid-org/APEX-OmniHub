@@ -81,6 +81,70 @@ interface Automation {
   is_active: boolean;
 }
 
+
+const MAX_WEBHOOK_REDIRECTS = 3;
+
+function buildWebhookRequestBody(
+  method: NonNullable<WebhookConfig['method']>,
+  data: unknown
+): string | undefined {
+  if (method === 'GET' || method === 'HEAD') {
+    return undefined;
+  }
+
+  if (!data) {
+    return undefined;
+  }
+
+  return JSON.stringify(data);
+}
+
+async function sendWebhookRequest(
+  url: URL,
+  method: NonNullable<WebhookConfig['method']>,
+  headers: Record<string, string>,
+  body: string | undefined,
+  signal: AbortSignal
+): Promise<Response> {
+  return fetch(url.toString(), {
+    method,
+    headers,
+    body,
+    signal,
+    redirect: 'manual',
+  });
+}
+
+async function followValidatedRedirects(
+  response: Response,
+  startUrl: URL,
+  method: NonNullable<WebhookConfig['method']>,
+  headers: Record<string, string>,
+  body: string | undefined,
+  signal: AbortSignal
+): Promise<Response> {
+  let currentResponse = response;
+  let currentUrl = startUrl;
+  let redirectCount = 0;
+
+  while (currentResponse.status >= 300 && currentResponse.status < 400) {
+    if (redirectCount >= MAX_WEBHOOK_REDIRECTS) {
+      throw new Error('Webhook redirect chain exceeded limit');
+    }
+
+    const location = currentResponse.headers.get('location');
+    if (!location) {
+      throw new Error('Webhook redirect missing Location header');
+    }
+
+    currentUrl = await validateRedirectTarget(location, currentUrl);
+    currentResponse = await sendWebhookRequest(currentUrl, method, headers, body, signal);
+    redirectCount += 1;
+  }
+
+  return currentResponse;
+}
+
 // ============================================================================
 // Type Guards
 // ============================================================================

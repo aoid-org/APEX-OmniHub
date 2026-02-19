@@ -13,6 +13,11 @@ RUN apt-get update && apt-get install -y \
 # Copy dependency files
 COPY pyproject.toml ./
 
+# Force CPU-only PyTorch BEFORE main install.
+# Prevents sentence-transformers from pulling ~4GB GPU/CUDA torch.
+# Orchestrator runs on CPU — no NVIDIA drivers needed.
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -e ".[dev]"
