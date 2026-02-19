@@ -1,4 +1,3 @@
-
 /**
  * ============================================================
  * BYOM Proxy API — Phase 2 Edge Function
@@ -26,14 +25,13 @@ import { createAdapter } from "../_shared/universal-adapter.ts";
 import { FlightControl } from "../_shared/flight-control.ts";
 import { RateLimiter } from "../_shared/rate-limiter.ts";
 
-
 // ──────────────────────────────────────────────────────────
 // Configuration
 // ──────────────────────────────────────────────────────────
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
 const cockpitCrypto = getCockpitCrypto();
@@ -58,9 +56,10 @@ serve(async (req: Request) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Missing Authorization");
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
 
     if (authError || !user) throw new Error("Unauthorized");
     const tenantId = user.user_metadata?.tenant_id ?? user.id;
@@ -75,7 +74,6 @@ serve(async (req: Request) => {
     if (!messages || !Array.isArray(messages)) {
       throw new Error("Invalid messages format");
     }
-
 
     // ── 2a. Rate Limiting (Phase 4) ───────────────────────
     await RateLimiter.checkLimit(supabase, user.id);
@@ -98,39 +96,50 @@ serve(async (req: Request) => {
     // ── 3. Pre-Flight Safety ──────────────────────────────
     const preFlight = FlightControl.preFlight(messages);
     if (!preFlight.allowed) {
-      return jsonResponse({
-        error: "Safety Violation",
-        code: preFlight.violation,
-        details: "Input blocked by Flight Control"
-      }, 400);
+      return jsonResponse(
+        {
+          error: "Safety Violation",
+          code: preFlight.violation,
+          details: "Input blocked by Flight Control",
+        },
+        400,
+      );
     }
 
     // ── 4. Inference & Post-Flight (Streaming) ────────────
     const adapter = createAdapter(provider);
-    let endpoint = "";
+    let endpoint: string;
 
     switch (provider) {
-      case "openai": endpoint = "https://api.openai.com/v1/chat/completions"; break;
-      case "xai": endpoint = "https://api.x.ai/v1/chat/completions"; break;
-      case "anthropic": endpoint = "https://api.anthropic.com/v1/messages"; break;
-      case "google": endpoint = ""; // Google adapter constructs its own URL
-         break; 
-      default: throw new Error("Unknown endpoint for provider"); 
+      case "openai":
+        endpoint = "https://api.openai.com/v1/chat/completions";
+        break;
+      case "xai":
+        endpoint = "https://api.x.ai/v1/chat/completions";
+        break;
+      case "anthropic":
+        endpoint = "https://api.anthropic.com/v1/messages";
+        break;
+      case "google":
+        endpoint = ""; // Google adapter constructs its own URL
+        break;
+      default:
+        throw new Error("Unknown endpoint for provider");
     }
 
     const stream = adapter.stream(
       messages,
       { model, max_tokens: 4000 },
       apiKey,
-      endpoint
+      endpoint,
     );
 
     // Create a transformative stream for post-flight checks & metering
     const encoder = new TextEncoder();
     let outputTokens = 0;
-    
+
     // Estimate input tokens (rough heuristic: 4 chars = 1 token)
-    const inputContent = messages.map(m => m.content).join("");
+    const inputContent = messages.map((m) => m.content).join("");
     const inputTokens = Math.ceil(inputContent.length / 4);
 
     const readable = new ReadableStream({
@@ -142,9 +151,9 @@ serve(async (req: Request) => {
             // Post-flight scan on chunk
             const safety = FlightControl.postFlight(chunk);
             const output = safety.redacted ? safety.modifiedContent! : chunk;
-            
+
             const sseData = JSON.stringify({
-              choices: [{ delta: { content: output } }]
+              choices: [{ delta: { content: output } }],
             });
             controller.enqueue(encoder.encode(`data: ${sseData}\n\n`));
           }
@@ -153,7 +162,7 @@ serve(async (req: Request) => {
 
           // ── 5. Async Usage Metering (Phase 4) ────────────
           const region = req.headers.get("x-region") || "us";
-          
+
           await supabase.from("usage_metering").insert({
             tenant_id: tenantId,
             user_id: user.id,
@@ -161,9 +170,8 @@ serve(async (req: Request) => {
             model,
             input_tokens: inputTokens,
             output_tokens: outputTokens,
-            region
+            region,
           });
-
         } catch (e) {
           controller.error(e);
         }
@@ -174,11 +182,10 @@ serve(async (req: Request) => {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
+        Connection: "keep-alive",
         "Access-Control-Allow-Origin": "*",
       },
     });
-
   } catch (error) {
     console.error("[byom-proxy] Error:", error);
     const msg = error instanceof Error ? error.message : "Internal Error";
