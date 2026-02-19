@@ -17,6 +17,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createScopedSupabaseClient, authenticateUser } from '../_shared/auth.ts';
 import { handleCors, corsJsonResponse } from '../_shared/cors.ts';
+import { validateWebhookUrl, validateRedirectTarget } from '../_shared/ssrf-protection.ts';
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // ============================================================================
@@ -205,32 +206,7 @@ async function executeWebhook(
     throw new Error('Invalid webhook configuration: URL is required');
   }
 
-  // Validate URL format
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(config.url);
-  } catch {
-    throw new Error('Invalid webhook URL format');
-  }
-
-  // Block internal/private URLs (SSRF prevention)
-  const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
-  const blockedPrefixes = ['192.168.', '10.', '172.16.', '172.17.', '172.18.'];
-
-  if (
-    blockedHosts.includes(parsedUrl.hostname) ||
-    blockedPrefixes.some((prefix) => parsedUrl.hostname.startsWith(prefix))
-  ) {
-    throw new Error('Internal/private URLs are not allowed for webhooks');
-  }
-
-  // Additional check for localhost aliases
-  if (
-    parsedUrl.hostname.endsWith('.local') ||
-    parsedUrl.hostname.endsWith('.internal')
-  ) {
-    throw new Error('Internal domain URLs are not allowed for webhooks');
-  }
+  const validatedUrl = await validateWebhookUrl(config.url);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000); // 30s timeout
@@ -244,12 +220,30 @@ async function executeWebhook(
   }
 
   try {
-    const response = await fetch(config.url, {
+    let response = await fetch(validatedUrl.toString(), {
       method: config.method ?? 'POST',
       headers: requestHeaders,
       body: config.data ? JSON.stringify(config.data) : undefined,
       signal: controller.signal,
+      redirect: 'manual',
     });
+
+    // Manual redirect handling to prevent open redirect SSRF bypass.
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('location');
+      if (!location) {
+        throw new Error('Webhook redirect missing Location header');
+      }
+
+      const safeRedirect = await validateRedirectTarget(location, validatedUrl);
+      response = await fetch(safeRedirect.toString(), {
+        method: config.method ?? 'POST',
+        headers: requestHeaders,
+        body: config.data ? JSON.stringify(config.data) : undefined,
+        signal: controller.signal,
+        redirect: 'manual',
+      });
+    }
 
     if (!response.ok) {
       throw new Error(`Webhook request failed: ${response.status}`);
