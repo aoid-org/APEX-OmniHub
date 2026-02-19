@@ -3,7 +3,7 @@
  *
  * Defense-in-depth:
  * - Strict scheme and credential validation
- * - Host allowlist enforcement (optional, env-driven)
+ * - Mandatory host allowlist (env-driven or explicit)
  * - IPv4/IPv6 literal validation with private/reserved range blocking
  * - DNS resolution + rebinding defense (all resolved IPs must be public)
  * - Redirects must be handled manually and re-validated
@@ -14,23 +14,28 @@ export interface SsrfValidationOptions {
   dnsResolver?: (hostname: string) => Promise<string[]>;
 }
 
-const PRIVATE_V4_CIDRS = [
-  "10.0.0.0/8",
-  "172.16.0.0/12",
-  "192.168.0.0/16",
-  "127.0.0.0/8",
-  "169.254.0.0/16",
-  "100.64.0.0/10", // CGNAT
-  "0.0.0.0/8",
+const BLOCKED_V4_CIDRS = [
+  "0.0.0.0/8",      // this network
+  "10.0.0.0/8",     // RFC1918 private
+  "100.64.0.0/10",  // CGNAT
+  "127.0.0.0/8",    // loopback
+  "169.254.0.0/16", // link-local
+  "172.16.0.0/12",  // RFC1918 private
+  "192.0.0.0/24",   // IETF protocol assignments
+  "192.168.0.0/16", // RFC1918 private
+  "198.18.0.0/15",  // benchmarking
+  "224.0.0.0/4",    // multicast
+  "240.0.0.0/4",    // reserved
 ] as const;
 
-const SPECIAL_V6_PREFIXES = [
-  "::1/128",      // loopback
-  "::/128",       // unspecified
-  "fc00::/7",     // unique local
-  "fe80::/10",    // link-local
-  "ff00::/8",     // multicast
-  "2001:db8::/32", // documentation
+const BLOCKED_V6_PREFIXES = [
+  "::/128",          // unspecified
+  "::1/128",         // loopback
+  "fc00::/7",        // unique local
+  "fe80::/10",       // link-local
+  "ff00::/8",        // multicast
+  "2001:db8::/32",   // documentation
+  "2001:10::/28",    // ORCHID
 ] as const;
 
 function ipv4ToInt(ip: string): number {
@@ -90,7 +95,7 @@ function isIpInCidr(ip: string, cidr: string): boolean {
   const bits = Number(bitsRaw);
 
   if (isIpv4(ip) && isIpv4(range)) {
-    const mask = bits === 0 ? 0 : (~((1 << (32 - bits)) - 1) >>> 0);
+    const mask = bits === 0 ? 0 : (~((2 ** (32 - bits)) - 1) >>> 0);
     return (ipv4ToInt(ip) & mask) === (ipv4ToInt(range) & mask);
   }
 
@@ -116,11 +121,11 @@ function isBlockedIp(ip: string): boolean {
   }
 
   if (isIpv4(lower)) {
-    return PRIVATE_V4_CIDRS.some((cidr) => isIpInCidr(lower, cidr));
+    return BLOCKED_V4_CIDRS.some((cidr) => isIpInCidr(lower, cidr));
   }
 
   if (isIpv6(lower)) {
-    return SPECIAL_V6_PREFIXES.some((cidr) => isIpInCidr(lower, cidr));
+    return BLOCKED_V6_PREFIXES.some((cidr) => isIpInCidr(lower, cidr));
   }
 
   return true;
@@ -150,19 +155,29 @@ function parseHostAllowlist(): string[] {
     .filter(Boolean);
 }
 
+function normalizeHost(host: string): string {
+  return host.toLowerCase().replace(/^\[/, "").replace(/\]$/, "");
+}
+
 function isHostAllowed(hostname: string, allowlist: readonly string[]): boolean {
-  if (allowlist.length === 0) return true;
-  const host = hostname.toLowerCase();
-  return allowlist.some((entry) => host === entry || host.endsWith(`.${entry}`));
+  const host = normalizeHost(hostname);
+  return allowlist.some((entry) => {
+    const normalizedEntry = normalizeHost(entry);
+    return host === normalizedEntry || host.endsWith(`.${normalizedEntry}`);
+  });
 }
 
 function assertDirectHostSafety(url: URL, allowlistHosts: readonly string[]): void {
-  if (!["https:", "http:"].includes(url.protocol)) {
-    throw new Error("Webhook URL must use http or https");
+  if (url.protocol !== "https:") {
+    throw new Error("Webhook URL must use https");
   }
 
   if (url.username || url.password) {
     throw new Error("Webhook URL must not include credentials");
+  }
+
+  if (allowlistHosts.length === 0) {
+    throw new Error("Webhook host allowlist is not configured");
   }
 
   if (!isHostAllowed(url.hostname, allowlistHosts)) {

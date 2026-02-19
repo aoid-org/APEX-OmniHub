@@ -207,6 +207,11 @@ async function executeWebhook(
   }
 
   const validatedUrl = await validateWebhookUrl(config.url);
+  const method = config.method ?? 'POST';
+  const requestBody =
+    method === 'GET' || method === 'HEAD'
+      ? undefined
+      : (config.data ? JSON.stringify(config.data) : undefined);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000); // 30s timeout
@@ -220,29 +225,37 @@ async function executeWebhook(
   }
 
   try {
-    let response = await fetch(validatedUrl.toString(), {
-      method: config.method ?? 'POST',
+    let currentUrl = validatedUrl;
+    let response = await fetch(currentUrl.toString(), {
+      method,
       headers: requestHeaders,
-      body: config.data ? JSON.stringify(config.data) : undefined,
+      body: requestBody,
       signal: controller.signal,
       redirect: 'manual',
     });
 
     // Manual redirect handling to prevent open redirect SSRF bypass.
-    if (response.status >= 300 && response.status < 400) {
+    let redirectCount = 0;
+    while (response.status >= 300 && response.status < 400) {
+      if (redirectCount >= 3) {
+        throw new Error('Webhook redirect chain exceeded limit');
+      }
+
       const location = response.headers.get('location');
       if (!location) {
         throw new Error('Webhook redirect missing Location header');
       }
 
-      const safeRedirect = await validateRedirectTarget(location, validatedUrl);
-      response = await fetch(safeRedirect.toString(), {
-        method: config.method ?? 'POST',
+      currentUrl = await validateRedirectTarget(location, currentUrl);
+      response = await fetch(currentUrl.toString(), {
+        method,
         headers: requestHeaders,
-        body: config.data ? JSON.stringify(config.data) : undefined,
+        body: requestBody,
         signal: controller.signal,
         redirect: 'manual',
       });
+
+      redirectCount += 1;
     }
 
     if (!response.ok) {

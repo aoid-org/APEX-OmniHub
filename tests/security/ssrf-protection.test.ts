@@ -14,6 +14,24 @@ describe('ssrf-protection', () => {
     expect(result.hostname).toBe('hooks.example.com');
   });
 
+  it('rejects non-https urls', async () => {
+    await expect(
+      validateWebhookUrl('http://hooks.example.com/path', {
+        allowlistHosts: ['example.com'],
+        dnsResolver: async () => ['93.184.216.34'],
+      })
+    ).rejects.toThrow(/must use https/i);
+  });
+
+  it('rejects when allowlist is not configured', async () => {
+    await expect(
+      validateWebhookUrl('https://hooks.example.com/path', {
+        allowlistHosts: [],
+        dnsResolver: async () => ['93.184.216.34'],
+      })
+    ).rejects.toThrow(/allowlist is not configured/i);
+  });
+
   it('blocks private dns resolution', async () => {
     await expect(
       validateWebhookUrl('https://hooks.example.com/path', {
@@ -26,7 +44,7 @@ describe('ssrf-protection', () => {
   it('blocks ipv6 loopback literal', async () => {
     await expect(
       validateWebhookUrl('https://[::1]/x', {
-        allowlistHosts: [],
+        allowlistHosts: ['::1'],
       })
     ).rejects.toThrow(/blocked internal IP/i);
   });
