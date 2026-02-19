@@ -14,12 +14,18 @@ export interface SsrfValidationOptions {
   dnsResolver?: (hostname: string) => Promise<string[]>;
 }
 
+/**
+ * Link-local range intentionally blocked to prevent SSRF access to cloud metadata
+ * endpoints such as 169.254.169.254 (AWS/GCP/Azure/DO/OCI instance metadata).
+ */
+const CLOUD_METADATA_LINK_LOCAL_CIDR = "169.254.0.0/16" as const; // NOSONAR - intentional SSRF denylist control
+
 const BLOCKED_V4_CIDRS = [
   "0.0.0.0/8",      // this network
   "10.0.0.0/8",     // RFC1918 private (intentional SSRF denylist) // NOSONAR
   "100.64.0.0/10",  // CGNAT
   "127.0.0.0/8",    // loopback
-  "169.254.0.0/16", // link-local
+  CLOUD_METADATA_LINK_LOCAL_CIDR,
   "172.16.0.0/12",  // RFC1918 private (intentional SSRF denylist) // NOSONAR
   "192.0.0.0/24",   // IETF protocol assignments (intentional SSRF denylist) // NOSONAR
   "192.168.0.0/16", // RFC1918 private (intentional SSRF denylist) // NOSONAR
