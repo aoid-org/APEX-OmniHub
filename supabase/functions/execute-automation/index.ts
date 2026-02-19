@@ -81,6 +81,70 @@ interface Automation {
   is_active: boolean;
 }
 
+
+const MAX_WEBHOOK_REDIRECTS = 3;
+
+function buildWebhookRequestBody(
+  method: NonNullable<WebhookConfig['method']>,
+  data: unknown
+): string | undefined {
+  if (method === 'GET' || method === 'HEAD') {
+    return undefined;
+  }
+
+  if (!data) {
+    return undefined;
+  }
+
+  return JSON.stringify(data);
+}
+
+async function sendWebhookRequest(
+  url: URL,
+  method: NonNullable<WebhookConfig['method']>,
+  headers: Record<string, string>,
+  body: string | undefined,
+  signal: AbortSignal
+): Promise<Response> {
+  return fetch(url.toString(), {
+    method,
+    headers,
+    body,
+    signal,
+    redirect: 'manual',
+  });
+}
+
+async function followValidatedRedirects(
+  response: Response,
+  startUrl: URL,
+  method: NonNullable<WebhookConfig['method']>,
+  headers: Record<string, string>,
+  body: string | undefined,
+  signal: AbortSignal
+): Promise<Response> {
+  let currentResponse = response;
+  let currentUrl = startUrl;
+  let redirectCount = 0;
+
+  while (currentResponse.status >= 300 && currentResponse.status < 400) {
+    if (redirectCount >= MAX_WEBHOOK_REDIRECTS) {
+      throw new Error('Webhook redirect chain exceeded limit');
+    }
+
+    const location = currentResponse.headers.get('location');
+    if (!location) {
+      throw new Error('Webhook redirect missing Location header');
+    }
+
+    currentUrl = await validateRedirectTarget(location, currentUrl);
+    currentResponse = await sendWebhookRequest(currentUrl, method, headers, body, signal);
+    redirectCount += 1;
+  }
+
+  return currentResponse;
+}
+
 // ============================================================================
 // Type Guards
 // ============================================================================
@@ -207,11 +271,8 @@ async function executeWebhook(
   }
 
   const validatedUrl = await validateWebhookUrl(config.url);
-  const method = config.method ?? 'POST';
-  const requestBody =
-    method === 'GET' || method === 'HEAD'
-      ? undefined
-      : (config.data ? JSON.stringify(config.data) : undefined);
+  const method: NonNullable<WebhookConfig['method']> = config.method ?? 'POST';
+  const requestBody = buildWebhookRequestBody(method, config.data);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000); // 30s timeout
@@ -225,38 +286,22 @@ async function executeWebhook(
   }
 
   try {
-    let currentUrl = validatedUrl;
-    let response = await fetch(currentUrl.toString(), {
+    const initialResponse = await sendWebhookRequest(
+      validatedUrl,
       method,
-      headers: requestHeaders,
-      body: requestBody,
-      signal: controller.signal,
-      redirect: 'manual',
-    });
+      requestHeaders,
+      requestBody,
+      controller.signal
+    );
 
-    // Manual redirect handling to prevent open redirect SSRF bypass.
-    let redirectCount = 0;
-    while (response.status >= 300 && response.status < 400) {
-      if (redirectCount >= 3) {
-        throw new Error('Webhook redirect chain exceeded limit');
-      }
-
-      const location = response.headers.get('location');
-      if (!location) {
-        throw new Error('Webhook redirect missing Location header');
-      }
-
-      currentUrl = await validateRedirectTarget(location, currentUrl);
-      response = await fetch(currentUrl.toString(), {
-        method,
-        headers: requestHeaders,
-        body: requestBody,
-        signal: controller.signal,
-        redirect: 'manual',
-      });
-
-      redirectCount += 1;
-    }
+    const response = await followValidatedRedirects(
+      initialResponse,
+      validatedUrl,
+      method,
+      requestHeaders,
+      requestBody,
+      controller.signal
+    );
 
     if (!response.ok) {
       throw new Error(`Webhook request failed: ${response.status}`);

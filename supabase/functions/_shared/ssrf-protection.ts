@@ -39,7 +39,7 @@ const BLOCKED_V6_PREFIXES = [
 ] as const;
 
 function ipv4ToInt(ip: string): number {
-  const parts = ip.split(".").map((part) => Number(part));
+  const parts = ip.split(".").map(Number);
   if (parts.length !== 4 || parts.some((p) => Number.isNaN(p) || p < 0 || p > 255)) {
     throw new Error(`Invalid IPv4 address: ${ip}`);
   }
