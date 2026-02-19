@@ -5,7 +5,7 @@ export function PrivacyPage() {
     <LegalPage
       title="Privacy Policy"
       documentPath="docs/compliance/PRIVACY_POLICY.md"
-      markdownLoader={() => import('@/content/legal/PRIVACY_POLICY.md?raw')}
+      markdownLoader={() => import('@/content/legal/privacyPolicyContent')}
     />
   );
 }
