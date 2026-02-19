@@ -4,7 +4,6 @@
 # Documentation and example files
 .*PRODUCTION_BLOCKERS_ANALYSIS\.md$
 .*\.example$
-.*/docs/.*
 .*/examples/.*
 .*\.env\.example$
 .*MIGRATION_.*\.md$
@@ -14,10 +13,11 @@
 .*apple\.cjs$
 
 # Dependencies and build artifacts
-.*/node_modules/.*
+node_modules/
 .*/.git/.*
-.*/dist/.*
-.*/build/.*
+dist/
+build/
+.next/
 
 # Test fixtures
 .*__fixtures__/.*

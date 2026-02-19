@@ -1,0 +1,26 @@
+claims:
+  - claim_id: sonarcloud-gate
+    claim_text: SonarCloud Quality Gate PASSED
+    surface: site
+    status: unverified
+    evidence: []
+    expiry: 2026-12-31
+  - claim_id: new-issues
+    claim_text: New Issues 0
+    surface: site
+    status: unverified
+    evidence: []
+    expiry: 2026-12-31
+  - claim_id: security-hotspots
+    claim_text: Security Hotspots (new code) 0
+    surface: site
+    status: unverified
+    evidence: []
+    expiry: 2026-12-31
+  - claim_id: third-party-security-audit
+    claim_text: Regular third-party security audits
+    surface: site
+    status: removed
+    evidence: []
+    rationale: Claim removed from marketing surface until audit report evidence is published.
+    expiry: 2026-12-31

@@ -142,9 +142,9 @@ export const siteConfig = {
 export const proofConfig = {
   title: 'Verified',
   tiles: [
-    buildProofTile('sonarcloud-gate', 'SonarCloud Quality Gate', 'PASSED', true),
-    buildProofTile('new-issues', 'New Issues', '0', true),
-    buildProofTile('security-hotspots', 'Security Hotspots (new code)', '0', true),
+    buildProofTile('sonarcloud-gate', 'SonarCloud Quality Gate', 'PASSED', false),
+    buildProofTile('new-issues', 'New Issues', '0', false),
+    buildProofTile('security-hotspots', 'Security Hotspots (new code)', '0', false),
     buildProofTile('coverage', 'Coverage tracking', 'configurable', false),
   ],
 } as const;
@@ -157,7 +157,7 @@ const techSpecSections = [
   buildTechSpecSection('modular-adapters', 'Modular Adapters', 'No vendor lock-in by design. Adapters are standalone modules that translate between external systems and the canonical event format.', ['Hot-swappable adapter architecture', 'Typed contracts for each adapter', 'Isolated failure domains', 'Community and enterprise adapter ecosystem']),
   buildTechSpecSection('man-mode', 'M.A.N.Mode (Manual Authorization Needed)', 'High-risk operations pause for human approval without blocking the entire workflow. Items requiring authorization are skipped, queued, and the user is notified.', ['Configurable risk thresholds', 'Async approval queue with notifications', 'Audit trail for all approval decisions', 'Timeout policies with safe defaults']),
   buildTechSpecSection('receipts-idempotency', 'Receipts & Idempotency', 'Every operation generates a receipt. Idempotency keys ensure safe retries and deterministic replay.', ['Unique operation IDs for every request', 'Cryptographic receipts for audit', 'Automatic deduplication', 'Replay capability for debugging']),
-  buildTechSpecSection('security-posture', 'Security Posture', 'Defense-in-depth with zero-trust principles. Every request is authenticated, authorized, and logged.', ['mTLS for service-to-service communication', 'RBAC with attribute-based extensions', 'Comprehensive security headers', 'Regular third-party security audits']),
+  buildTechSpecSection('security-posture', 'Security Posture', 'Defense-in-depth with zero-trust principles. Every request is authenticated, authorized, and logged.', ['mTLS for service-to-service communication', 'RBAC with attribute-based extensions', 'Comprehensive security headers', 'Regular independent assessments are tracked in the claims ledger']),
   buildTechSpecSection('rollback-portability', 'Rollback & Portability', 'Migrate between hosts and vendors with confidence. All state is exportable, all operations are reversible.', ['Database-agnostic data layer', 'Configuration as code', 'Compensation transactions for rollback', 'Documented migration runbooks']),
 ] as const;
 

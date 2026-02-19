@@ -59,9 +59,7 @@ logger.info('API request completed', {
 ```
 
 **Log Retention:**
-- Application logs: 90 days
-- Security audit logs: 365 days
-- Access logs: 180 days
+- All log retention timelines are defined in `docs/compliance/DATA_RETENTION_POLICY.md`.
 
 ## Incident Response
 
@@ -127,7 +125,7 @@ npm run smoke-test
 ## Disaster Recovery
 
 ### Backup Strategy
-- **Database:** Automated hourly snapshots, 30-day retention
+- **Database:** Automated hourly snapshots with retention defined in `docs/compliance/DATA_RETENTION_POLICY.md`
 - **Configuration:** Version-controlled in git
 - **Secrets:** Backed up in 1Password with 2-person approval
 

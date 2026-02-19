@@ -92,10 +92,15 @@ export const TEST_PII_SANITIZATION = {
 
   // Sensitive fields (SHOULD be redacted by sanitizer)
   // Note: Values are clearly fake/test data
+  // trufflehog:ignore
   password: 'fake_test_password_not_real',
+  // trufflehog:ignore
   api_key: 'fake_test_key_12345_not_real',
+  // trufflehog:ignore
   access_token: 'fake_test_token_abcdef_not_real',
+  // trufflehog:ignore
   refresh_token: 'fake_refresh_xyz_not_real',
+  // trufflehog:ignore
   secret: 'fake_secret_value_not_real',
 
   // Financial data (should be redacted)
