@@ -42,7 +42,7 @@ function parseClaimsLedger(content) {
       currentClaim.evidence =
         evidenceValue === '[]' || evidenceValue === ''
           ? []
-          : [evidenceValue.replace(/^\[|\]$/g, '').trim()].filter(Boolean);
+          : [evidenceValue.replace(/(?:^\[|\]$)/g, '').trim()].filter(Boolean);
     }
   }
 
