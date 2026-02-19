@@ -5,9 +5,45 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-18
+
+### Added — Armageddon Level 7 Temporal Certification
+
+- **CERTIFIED** — 0.0000% escape rate across 40,000 adversarial iterations
+  - Battery 10 (Goal Hijack/PAIR): 10,000 attempts, 0 escapes → PASS
+  - Battery 11 (Tool Misuse/SQL/API): 10,000 attempts, 0 escapes → PASS
+  - Battery 12 (Memory Poison/VectorDB): 10,000 attempts, 0 escapes → PASS
+  - Battery 13 (Supply Chain/Packages): 10,000 attempts, 0 escapes → PASS
+- **Run ID:** `10efa424-e2e1-4659-b684-f37401f61f2f`
+- **Infrastructure:** Temporal(7233) + Postgres(5433) + Redis(6379) on Docker
+
+### Fixed
+
+- **Docker Compose** — Temporal driver `DB=postgresql` → `DB=postgres12` (auto-setup crash fix)
+- **Docker Compose** — Redis image `7.2.0-v9` → `7.4.0-v3` (RediSearch module crash fix)
+- **ErrorBoundary.tsx** — Removed stray markdown injection, `window`→`globalThis`, `readonly` modifier, `@ts-ignore`→`@ts-expect-error`, replaced `console.group`/`groupEnd` with `console.error`
+- **VoiceInterface.tsx** — Removed unused `React` import, prefixed unused props, `Readonly<>` type, reduced cognitive complexity
+- **package.json** — Scoped `ajv@8.18.0` CVE override for `@nomicfoundation/hardhat-verify` and `@temporalio/worker`
+
+### Security
+
+- **ajv CVE (ReDoS)** — Patched to 8.18.0 via scoped npm overrides
+- **React Singleton** — Vite `resolve.alias` + `dedupe` shield
+
+### Quality Gates
+
+- TypeScript (`tsc --noEmit`): 0 errors
+- ESLint: 0 warnings, 0 errors
+- Production build: exit 0 (3m 9s)
+- Vitest unit/E2E: all green
+- SonarQube: A-grade maintained
+
+---
+
 ## [1.1.1] - 2026-02-13
 
 ### Fixed
+
 - **CI/CD Build** - Added missing PostCSS dependencies to `apps/omnihub-site`
   - Added `autoprefixer@^10.4.21` to devDependencies
   - Added `postcss@^8.5.6` to devDependencies
@@ -19,12 +55,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All production dependencies secure
 
 ### Removed
+
 - Stale error logs from repository tracking
   - `orchestrator/orchestrator_test_error.txt`
   - `orchestrator/test_output.txt`
 - Added error log patterns to `.gitignore` to prevent future commits
 
 ### Quality Gates
+
 - ESLint: 0 warnings, 0 errors
 - Ruff (Python): All checks passed, 55 files formatted
 - TypeScript: strict mode compliance maintained
@@ -33,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-02-09
 
 ### Added — Realtime Brokering & Device Classification Core
+
 - **Nexus (ApexRealtimeGateway)** — WebSocket proxy for OpenAI Realtime API with device auth, idempotency, and orchestrator-routed tool calls (`src/core/gateway/ApexRealtimeGateway.ts`)
 - **Spectre (SpectreHandshake)** — Device authentication and TrustTier classification from connection headers (`src/core/security/SpectreHandshake.ts`)
 - **AegisKernel** — Stateless authorization kernel; per-tool access control based on TrustTier hierarchy (`src/core/security/AegisKernel.ts`)
@@ -45,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **64 new tests** — Full coverage for Spectre, Aegis, Chronos, Veritas, Orchestrator, Manifest, and Gateway (91.7% statement coverage)
 
 ### Security
+
 - Bearer token prefix validation (`apex_sk_`) — fail-closed on invalid auth
 - No Math.random in security paths — crypto.randomUUID and SHA-256 hashing only
 - No stack traces or secrets leaked to clients — SafeErrorPayload contract enforced
@@ -52,6 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Idempotency enforcement on all tool calls — deterministic keys from deviceId + callId
 
 ### Quality Gates
+
 - ESLint: 0 warnings, 0 errors
 - TypeScript strict mode: 0 errors
 - Vitest: 64/64 tests passing
@@ -65,6 +106,7 @@ First production release of the APEX OmniHub platform. All CI gates green, 564 t
 SonarQube A rating across all dimensions, chaos battery verified.
 
 ### Added
+
 - **Turborepo** monorepo build orchestration (`turbo.json`)
 - **TypeScript strict mode** enabled across entire codebase
 - **OmniPort** ingestion engine with text, voice, and webhook support (27 tests)
@@ -92,6 +134,7 @@ SonarQube A rating across all dimensions, chaos battery verified.
 - **Dependabot** with automerge workflow
 
 ### Removed
+
 - **Lovable Cloud** integration fully decommissioned (PR#426)
   - Removed `src/integrations/lovable/` client code
   - Removed `src/lib/lovableConfig.ts`
@@ -101,6 +144,7 @@ SonarQube A rating across all dimensions, chaos battery verified.
   - Removed Lovable domains from CSP headers
 
 ### Security
+
 - SonarQube Quality Gate: **PASSED** (A rating, 0 issues, 0 hotspots)
 - All 8 critical security findings remediated (CORS, rate limiting, SQL injection, XSS)
 - All 17 high-priority findings remediated
@@ -111,6 +155,7 @@ SonarQube A rating across all dimensions, chaos battery verified.
 - OMEGA security hardening enabled
 
 ### Verified
+
 - **597 tests pass** with live Supabase (564 without credentials), 0 code failures
 - **Live Supabase integration**: MAESTRO backend, E2E, admin-unification all GREEN
 - **TypeScript compilation**: zero errors (strict mode)

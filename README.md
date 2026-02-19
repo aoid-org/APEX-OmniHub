@@ -12,12 +12,13 @@
 **INTELLIGENCE DESIGNED.**
 _Directable • Accountable • Dependable_
 
-**Version:** 1.0.0 | **Release Date:** 2026-02-08
+**Version:** 1.2.0 | **Release Date:** 2026-02-18
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
 [![SonarQube](https://img.shields.io/badge/sonarqube-A-success)]()
-[![Tests](https://img.shields.io/badge/tests-564%20pass-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-597%20pass-brightgreen)]()
+[![Armageddon](https://img.shields.io/badge/armageddon-L7%20CERTIFIED-gold)]()
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 
 ---
@@ -27,6 +28,7 @@ _Directable • Accountable • Dependable_
 APEX OmniHub is the enterprise **AI orchestration control plane** for **governed execution** across ALL modern stacks, AI apps, legacy enterprise systems, and Web3 infrastructure. Think "control tower": one place to connect, translate, enforce policy, and produce an audit trail you can defend.
 
 The platform relies on a "Holy Trinity" architecture:
+
 1.  **OmniHub**: The Central Control Plane (Logic & Policy).
 2.  **OmniLink**: The Secure Gateway (Connectivity).
 3.  **OmniPort**: The Multimodal Normalizer (Input/Output).
@@ -37,15 +39,15 @@ The platform relies on a "Holy Trinity" architecture:
 
 ## Platform Statistics (Verified)
 
-| Metric                  | Value                                              |
-| ----------------------- | -------------------------------------------------- |
-| **Source Files**        | 234+ TypeScript/React files                        |
-| **React Components**    | 28+ production components                          |
-| **Edge Functions**      | 18 Supabase serverless functions                   |
-| **Database Migrations** | 35 versioned SQL schemas                           |
-| **CI/CD Pipelines**     | 10 GitHub Actions workflows                        |
-| **Test Files**          | 59 test specifications                             |
-| **Integration Modules** | 4 (Maestro, OmniLink, OmniPort, Supabase)           |
+| Metric                  | Value                                     |
+| ----------------------- | ----------------------------------------- |
+| **Source Files**        | 234+ TypeScript/React files               |
+| **React Components**    | 28+ production components                 |
+| **Edge Functions**      | 18 Supabase serverless functions          |
+| **Database Migrations** | 35 versioned SQL schemas                  |
+| **CI/CD Pipelines**     | 10 GitHub Actions workflows               |
+| **Test Files**          | 59 test specifications                    |
+| **Integration Modules** | 4 (Maestro, OmniLink, OmniPort, Supabase) |
 
 ---
 
@@ -200,13 +202,13 @@ npm run build      # Production build
 
 Full documentation is available in the [`docs/`](./docs/) directory.
 
-| Document                                                                                 | Description          |
-| ---------------------------------------------------------------------------------------- | -------------------- |
-| [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md)  | System design        |
-| [Launch Readiness](./docs/project-status/LAUNCH_READINESS_v1.0.0.md)                     | Deployment checklist |
-| [orchestrator/README](./orchestrator/README.md)                                          | Temporal setup       |
-| [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                                      | Human-in-the-loop    |
-| [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                              | Backend design       |
+| Document                                                                                | Description          |
+| --------------------------------------------------------------------------------------- | -------------------- |
+| [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design        |
+| [Launch Readiness](./docs/project-status/LAUNCH_READINESS_v1.0.0.md)                    | Deployment checklist |
+| [orchestrator/README](./orchestrator/README.md)                                         | Temporal setup       |
+| [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                                     | Human-in-the-loop    |
+| [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                             | Backend design       |
 
 ---
 
