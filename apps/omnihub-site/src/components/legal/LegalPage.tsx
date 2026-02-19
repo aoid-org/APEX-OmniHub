@@ -2,37 +2,50 @@ import { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { Section } from '@/components/Section';
 
-type LegalPageProps = {
+type LegalPageProps = Readonly<{
   title: string;
   documentPath: string;
   markdownLoader: () => Promise<{ default: string }>;
-};
+}>;
+
+function createKeyFactory(): (prefix: string, value: string) => string {
+  const seen = new Map<string, number>();
+
+  return (prefix: string, value: string) => {
+    const base = `${prefix}-${value.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-')}`;
+    const count = seen.get(base) ?? 0;
+    seen.set(base, count + 1);
+    return count === 0 ? base : `${base}-${count}`;
+  };
+}
 
 function renderMarkdown(markdown: string): JSX.Element[] {
   const lines = markdown.split('\n');
   const elements: JSX.Element[] = [];
   let listItems: string[] = [];
+  const getKey = createKeyFactory();
 
-  const flushList = (key: string) => {
+  const flushList = (keySeed: string) => {
     if (listItems.length === 0) {
       return;
     }
 
+    const listKey = getKey('list', keySeed);
     elements.push(
-      <ul key={key}>
+      <ul key={listKey}>
         {listItems.map((item) => (
-          <li key={`${key}-${item}`}>{item}</li>
+          <li key={getKey('item', `${listKey}-${item}`)}>{item}</li>
         ))}
       </ul>,
     );
     listItems = [];
   };
 
-  lines.forEach((rawLine, index) => {
+  lines.forEach((rawLine) => {
     const line = rawLine.trim();
 
     if (!line) {
-      flushList(`list-${index}`);
+      flushList(`line-${line}`);
       return;
     }
 
@@ -41,11 +54,11 @@ function renderMarkdown(markdown: string): JSX.Element[] {
       return;
     }
 
-    flushList(`list-${index}`);
+    flushList(`line-${line}`);
 
     if (line.startsWith('# ')) {
       elements.push(
-        <h1 className="heading-1" key={`h1-${index}`}>
+        <h1 className="heading-1" key={getKey('h1', line)}>
           {line.slice(2)}
         </h1>,
       );
@@ -54,14 +67,14 @@ function renderMarkdown(markdown: string): JSX.Element[] {
 
     if (line.startsWith('## ')) {
       elements.push(
-        <h2 className="heading-3" key={`h2-${index}`}>
+        <h2 className="heading-3" key={getKey('h2', line)}>
           {line.slice(3)}
         </h2>,
       );
       return;
     }
 
-    elements.push(<p key={`p-${index}`}>{line.replaceAll('**', '')}</p>);
+    elements.push(<p key={getKey('p', line)}>{line.replaceAll('**', '')}</p>);
   });
 
   flushList('list-final');

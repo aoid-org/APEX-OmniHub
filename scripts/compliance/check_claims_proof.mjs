@@ -9,6 +9,22 @@ function parseClaimsLedger(content) {
   const lines = content.split('\n');
   let currentClaim = null;
 
+  const pushCurrentClaim = () => {
+    if (currentClaim) {
+      claims.push(currentClaim);
+    }
+  };
+
+  const valueAfterPrefix = (line, prefix) => line.slice(prefix.length).trim();
+
+  const parseEvidence = (value) => {
+    if (value === '[]' || value === '') {
+      return [];
+    }
+
+    return [value.replaceAll(/(?:^\[|\]$)/g, '').trim()].filter(Boolean);
+  };
+
   for (const rawLine of lines) {
     const line = rawLine.trim();
 
@@ -17,12 +33,10 @@ function parseClaimsLedger(content) {
     }
 
     if (line.startsWith('- claim_id:')) {
-      if (currentClaim) {
-        claims.push(currentClaim);
-      }
+      pushCurrentClaim();
 
       currentClaim = {
-        claim_id: line.replace('- claim_id:', '').trim(),
+        claim_id: valueAfterPrefix(line, '- claim_id:'),
         evidence: [],
       };
       continue;
@@ -33,22 +47,16 @@ function parseClaimsLedger(content) {
     }
 
     if (line.startsWith('status:')) {
-      currentClaim.status = line.replace('status:', '').trim();
+      currentClaim.status = valueAfterPrefix(line, 'status:');
       continue;
     }
 
     if (line.startsWith('evidence:')) {
-      const evidenceValue = line.replace('evidence:', '').trim();
-      currentClaim.evidence =
-        evidenceValue === '[]' || evidenceValue === ''
-          ? []
-          : [evidenceValue.replace(/(?:^\[|\]$)/g, '').trim()].filter(Boolean);
+      currentClaim.evidence = parseEvidence(valueAfterPrefix(line, 'evidence:'));
     }
   }
 
-  if (currentClaim) {
-    claims.push(currentClaim);
-  }
+  pushCurrentClaim();
 
   return claims;
 }

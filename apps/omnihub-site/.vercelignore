@@ -12,6 +12,7 @@ tests/
 docs/
 *.md
 !README.md
+!src/content/legal/*.md
 
 # Development reference images
 public/reference/
