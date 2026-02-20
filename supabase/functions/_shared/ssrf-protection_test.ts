@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // deno-lint-ignore-file no-import-prefix no-explicit-any
 // @ts-ignore: Deno imports
 import { assertRejects } from "https://deno.land/std@0.168.0/testing/asserts.ts";
-import { assertUrlSafe, SsrfOptions } from "./ssrf-protection.ts";
+import { assertUrlSafe } from "./ssrf-protection.ts";
 
 /**
  * SSRF Protection Test Suite
@@ -11,167 +13,73 @@ import { assertUrlSafe, SsrfOptions } from "./ssrf-protection.ts";
  * SonarCloud hotspots for hardcoded IPs/HTTP are false positives.
  */
 
-// Tuple format: [name, url, shouldBlock, options?, errorMsg?]
-// This minimizes structural duplication (repeated property names).
-type TestTuple = [
-  string, // Name
-  string, // URL
-  boolean, // Should Block?
-  SsrfOptions?, // Options
-  string?, // Error Message
+const DEFAULT_ERR = "SSRF protection blocked request";
+
+const BLOCKED_IPS = [
+  ["blocks localhost", "http://localhost:8080"], // NOSONAR
+  ["blocks 127.0.0.1", "http://127.0.0.1"], // NOSONAR
+  ["blocks 0.0.0.0", "http://0.0.0.0"], // NOSONAR
+  ["blocks IPv6 localhost", "http://[::1]"], // NOSONAR
+  ["blocks private IP 192.168.x.x", "http://192.168.1.1"], // NOSONAR
+  ["blocks private IP 10.x.x.x", "http://10.0.0.1"], // NOSONAR
+  ["blocks private IP 172.16.x.x", "http://172.16.0.1"], // NOSONAR
+  ["blocks private IP 172.31.x.x", "http://172.31.255.255"], // NOSONAR
+  ["blocks AWS Metadata", "http://169.254.169.254"], // NOSONAR
 ];
 
-const TEST_CASES: TestTuple[] = [
-  // Blocked Local/Private
-  [
-    "blocks localhost",
-    "http://localhost:8080", // NOSONAR
-    true,
-    undefined,
-    "SSRF protection blocked request",
-  ],
-  [
-    "blocks 127.0.0.1",
-    "http://127.0.0.1", // NOSONAR
-    true,
-    undefined,
-    "SSRF protection blocked request",
-  ],
-  [
-    "blocks 0.0.0.0",
-    "http://0.0.0.0", // NOSONAR
-    true,
-    undefined,
-    "SSRF protection blocked request",
-  ],
-  [
-    "blocks IPv6 localhost",
-    "http://[::1]", // NOSONAR
-    true,
-    undefined,
-    "SSRF protection blocked request",
-  ],
-  [
-    "blocks private IP 192.168.x.x",
-    "http://192.168.1.1", // NOSONAR
-    true,
-    undefined,
-    "SSRF protection blocked request",
-  ],
-  [
-    "blocks private IP 10.x.x.x",
-    "http://10.0.0.1", // NOSONAR
-    true,
-    undefined,
-    "SSRF protection blocked request",
-  ],
-  [
-    "blocks private IP 172.16.x.x",
-    "http://172.16.0.1", // NOSONAR
-    true,
-    undefined,
-    "SSRF protection blocked request",
-  ],
-  [
-    "blocks private IP 172.31.x.x",
-    "http://172.31.255.255", // NOSONAR
-    true,
-    undefined,
-    "SSRF protection blocked request",
-  ],
-  [
-    "blocks AWS Metadata",
-    "http://169.254.169.254", // NOSONAR
-    true,
-    undefined,
-    "SSRF protection blocked request",
-  ],
+const BLOCKED_DOMAINS_NO_DNS = [
+  ["blocks .local domain", "http://server.local"], // NOSONAR
+  ["blocks .internal domain", "http://api.internal"], // NOSONAR
+  ["blocks case insensitive LOCALHOST", "http://LOCALHOST"], // NOSONAR
+];
 
-  // Blocked Domains (simulate DNS or suffix checks)
-  [
-    "blocks .local domain",
-    "http://server.local", // NOSONAR
-    true,
-    { resolveDns: false },
-    "SSRF protection blocked request",
-  ],
-  [
-    "blocks .internal domain",
-    "http://api.internal", // NOSONAR
-    true,
-    { resolveDns: false },
-    "SSRF protection blocked request",
-  ],
-  [
-    "blocks case insensitive LOCALHOST",
-    "http://LOCALHOST", // NOSONAR
-    true,
-    { resolveDns: false },
-    "SSRF protection blocked request",
-  ],
+const INVALID_URLS = [
+  ["rejects invalid URL string", "not-a-url"],
+  ["rejects empty string", ""],
+];
 
-  // Invalid Inputs
-  [
-    "rejects invalid URL string",
-    "not-a-url",
-    true,
-    undefined,
-    "Invalid URL format",
-  ],
-  [
-    "rejects empty string",
-    "",
-    true,
-    undefined,
-    "Invalid URL format",
-  ],
-
-  // Allowed Public URLs
-  [
-    "allows public API domain",
-    "https://api.example.com", // NOSONAR
-    false,
-    undefined,
-    undefined,
-  ],
-  [
-    "allows public webhook",
-    "https://webhook.site/test", // NOSONAR
-    false,
-    undefined,
-    undefined,
-  ],
-  [
-    "allows public IP",
-    "http://8.8.8.8", // NOSONAR
-    false,
-    undefined,
-    undefined,
-  ],
-  [
-    "allows URL with path and query",
-    "https://api.example.com/webhook?token=abc123", // NOSONAR
-    false,
-    undefined,
-    undefined,
-  ],
+const ALLOWED_PUBLIC_URLS = [
+  ["allows public API domain", "https://api.example.com"], // NOSONAR
+  ["allows public webhook", "https://webhook.site/test"], // NOSONAR
+  ["allows public IP", "http://8.8.8.8"], // NOSONAR
+  ["allows URL with path and query", "https://api.example.com/v1/data?q=1"], // NOSONAR
 ];
 
 // @ts-ignore: Deno global
 Deno.test("SSRF Protection - Table Driven Verification", async (t: any) => {
-  for (const [name, url, shouldBlock, options, errorMsg] of TEST_CASES) {
+  for (const [name, url] of BLOCKED_IPS) {
     await t.step(name, async () => {
-      if (shouldBlock) {
-        // Expect rejection
-        await assertRejects(
-          async () => await assertUrlSafe(url, options),
-          Error,
-          errorMsg,
-        );
-      } else {
-        // Expect success (no throw)
-        await assertUrlSafe(url, options);
-      }
+      await assertRejects(
+        async () => await assertUrlSafe(url),
+        Error,
+        DEFAULT_ERR,
+      );
+    });
+  }
+
+  for (const [name, url] of BLOCKED_DOMAINS_NO_DNS) {
+    await t.step(name, async () => {
+      await assertRejects(
+        async () => await assertUrlSafe(url, { resolveDns: false }),
+        Error,
+        DEFAULT_ERR,
+      );
+    });
+  }
+
+  for (const [name, url] of INVALID_URLS) {
+    await t.step(name, async () => {
+      await assertRejects(
+        async () => await assertUrlSafe(url),
+        Error,
+        "Invalid URL format",
+      );
+    });
+  }
+
+  for (const [name, url] of ALLOWED_PUBLIC_URLS) {
+    await t.step(name, async () => {
+      await assertUrlSafe(url);
     });
   }
 });

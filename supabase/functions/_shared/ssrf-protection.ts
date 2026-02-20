@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // deno-lint-ignore-file no-import-prefix
 /**
  * SSRF Protection Utility for Edge Functions
