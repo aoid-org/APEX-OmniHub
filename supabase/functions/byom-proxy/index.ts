@@ -107,7 +107,7 @@ serve(async (req: Request) => {
 
     // ── 4. Inference & Post-Flight (Streaming) ────────────
     const adapter = createAdapter(provider);
-    let endpoint = "";
+    let endpoint: string;
 
     switch (provider) {
       case "openai": endpoint = "https://api.openai.com/v1/chat/completions"; break;

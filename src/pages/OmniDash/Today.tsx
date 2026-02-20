@@ -17,7 +17,11 @@ import { useDemoStore } from '@/stores/demoStore';
 
 
 
-
+const getBadgeStyles = (category: string) => {
+  if (category === 'outcome') return 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400';
+  if (category === 'outreach') return 'border-sky-500/50 text-sky-600 dark:text-sky-400';
+  return 'border-amber-500/50 text-amber-600 dark:text-amber-400';
+};
 
 export const Today = () => {
   const { user } = useAuth();
@@ -158,11 +162,7 @@ export const Today = () => {
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <Badge 
                       variant="outline" 
-                      className={`capitalize shrink-0 ${
-                        item.category === 'outcome' ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400' :
-                        item.category === 'outreach' ? 'border-sky-500/50 text-sky-600 dark:text-sky-400' :
-                        'border-amber-500/50 text-amber-600 dark:text-amber-400'
-                      }`}
+                      className={`capitalize shrink-0 ${getBadgeStyles(item.category)}`}
                     >
                       {item.category}
                     </Badge>
