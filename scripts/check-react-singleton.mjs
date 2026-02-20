@@ -6,8 +6,8 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { basename } from 'node:path';
 import { existsSync } from 'node:fs';
+import { dirname } from 'node:path';
 
 const colors = {
   green: '\x1b[32m',
@@ -16,7 +16,7 @@ const colors = {
   reset: '\x1b[0m',
 };
 
-const SAFE_PATH = '/usr/bin:/bin';
+const SAFE_PATH = `${dirname(process.execPath)}:/usr/local/bin:/usr/bin:/bin`;
 
 function buildSafeEnv() {
   return {
@@ -24,27 +24,6 @@ function buildSafeEnv() {
     // Keep locale deterministic for stable command output parsing in CI.
     LC_ALL: 'C',
   };
-}
-
-function resolveBunBinary() {
-  if (basename(process.execPath).toLowerCase() === 'bun') {
-    return process.execPath;
-  }
-
-  const bunCandidates = [
-    '/usr/local/bin/bun',
-    '/usr/bin/bun',
-    '/bin/bun',
-    '/root/.local/share/mise/installs/bun/latest/bin/bun',
-    '/root/.local/share/mise/shims/bun',
-  ];
-  const foundPath = bunCandidates.find((candidate) => existsSync(candidate));
-
-  if (!foundPath) {
-    throw new Error('Unable to locate Bun binary in fixed system paths.');
-  }
-
-  return foundPath;
 }
 
 function resolveNpmRunner() {
@@ -71,7 +50,7 @@ function resolveNpmRunner() {
 
 function extractVersionsFromTree(treeOutput, packageName) {
   const pattern = new RegExp(
-    String.raw`(?:^|\n)\s*[├└]──\s+${packageName}@([0-9]+\.[0-9]+\.[0-9]+(?:[-+][^\s]+)?)`,
+    String.raw`(?:^|\n)[|│\s]*(?:[├└]──|[+\x60]--)\s+${packageName}@([0-9]+\.[0-9]+\.[0-9]+(?:[-+][^\s]+)?)`,
     'g',
   );
   const versions = new Set();
@@ -83,6 +62,7 @@ function extractVersionsFromTree(treeOutput, packageName) {
   return Array.from(versions);
 }
 
+
 async function main() {
   console.log('\n🔍 React Singleton Check');
   console.log('─'.repeat(50));
@@ -91,19 +71,13 @@ async function main() {
   let command;
   let args;
 
-  try {
-    const bunBinary = resolveBunBinary();
-    command = bunBinary;
-    args = ['pm', 'ls', '--all'];
-  } catch {
-    const npmRunner = resolveNpmRunner();
-    if (!npmRunner) {
-      console.error(`${colors.red}✗${colors.reset} Unable to locate Bun or npm binary in fixed system paths.`);
-      process.exit(1);
-    }
-    command = npmRunner.command;
-    args = [...npmRunner.args, 'ls', 'react', 'react-dom', '--all'];
+  const npmRunner = resolveNpmRunner();
+  if (!npmRunner) {
+    console.error(`${colors.red}✗${colors.reset} Unable to locate npm binary in fixed system paths.`);
+    process.exit(1);
   }
+  command = npmRunner.command;
+  args = [...npmRunner.args, 'ls', 'react', 'react-dom', '--all'];
 
   try {
     depTreeText = execFileSync(command, args, {
@@ -131,6 +105,13 @@ async function main() {
   reactDomVersions.forEach((v) => console.log(`   - ${v}`));
 
   let hasError = false;
+
+  if (reactVersions.length === 0 || reactDomVersions.length === 0) {
+    console.log(`
+${colors.red}✗ UNABLE TO RESOLVE REACT DEPENDENCY TREE${colors.reset}`);
+    console.log('  Ensure dependencies are installed and npm can access the lockfile/tree data.');
+    hasError = true;
+  }
 
   if (reactVersions.length > 1) {
     console.log(`\n${colors.red}✗ DUPLICATE REACT DETECTED${colors.reset}`);
@@ -160,7 +141,7 @@ async function main() {
 
   if (hasError) {
     console.log(`\n${colors.red}FAILED:${colors.reset} React singleton check failed`);
-    console.log('Fix: Run `bun pm dedupe` or check for conflicting peer dependencies.\n');
+    console.log('Fix: Run `npm dedupe` or check for conflicting peer dependencies.\n');
     process.exit(1);
   }
 
