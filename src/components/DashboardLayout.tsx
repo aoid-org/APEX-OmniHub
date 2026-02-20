@@ -26,7 +26,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             </main>
           </div>
         </div>
-        {isMobile && <MobileBottomNav />}
+        {isMobile && !isOmniDash && <MobileBottomNav />}
       </SidebarProvider>
     </ProtectedRoute>
   );
