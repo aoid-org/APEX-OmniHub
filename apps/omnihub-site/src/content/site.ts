@@ -30,10 +30,6 @@ function buildShowcaseItem(title: string, image: string) {
   return { title, image };
 }
 
-/** Build a tech spec section */
-const buildTechSpecSection = (id: string, title: string, description: string, details: string[]) =>
-  build({ id, title, description, details });
-
 export const siteConfig = {
   name: 'APEX OmniHub',
   domain: new URL(getSiteUrl()).hostname,
@@ -62,8 +58,7 @@ export const siteConfig = {
   },
   integrations: {
     title: "The Governance Layer for Intelligent Systems",
-    subtitle:
-      'Adapters stay modular, portable, and optional-by-default. Software, agents, and physical AI — under one control plane.',
+    subtitle: 'Adapters stay modular, portable, and optional-by-default. Software, agents, and physical AI — under one control plane.',
     items: [
       buildItem('Enterprise Systems', 'CRMs, ERPs, ticketing, messaging, storage, data warehouses.'),
       buildItem('AI Apps & Agents', 'Model providers, agent frameworks, RAG pipelines, eval gates.'),
@@ -112,7 +107,8 @@ export const siteConfig = {
   manMode: {
     title: 'M.A.N.Mode',
     subtitle: 'Manual Authorization Needed',
-    description: 'High-risk decision items are flagged and blocked. The workflow continues with zero interruption. Your team reviews. You decide. OmniHub remembers.',
+    description:
+      'High-risk decision items are flagged and blocked. The workflow continues with zero interruption. Your team reviews. You decide. OmniHub remembers.',
   },
   footer: {
     copyright: '\u00A9 2026 APEX Business Systems. All rights reserved.',
@@ -129,7 +125,7 @@ export const siteConfig = {
 export const proofConfig = {
   title: 'Verified Unicorn-Class Architecture',
   tiles: [
-    buildProofTile('sonarcloud-gate', 'SonarCloud Quality', 'PASSED', false),
+    buildProofTile('sonarcloud-gate', 'SonarCloud Quality', 'PASSED', true),
     buildProofTile('armageddon-l7', 'Armageddon L7', 'CERTIFIED', true),
     buildProofTile('eu-ai-act', 'EU AI Act Ready', 'AUGUST 2026', true),
     buildProofTile('gdpr', 'GDPR Native', 'COMPLIANT', true),
@@ -138,56 +134,85 @@ export const proofConfig = {
 
 /**
  * Tech Specs page content - the "Nervous System" framework
+ * Structured as plain data to maintain CPD compliance.
  */
-const techSpecSections = [
-  buildTechSpecSection('brain', 'The Brain (Durable Orchestration)', 'Temporal.io cognitive core surviving infrastructure failure with deterministic replay safety.', [
-    'Temporal.io durable execution engine',
-    'Saga-style compensation & rollbacks',
-    'FastAPI / Python AI agent logic',
-    'pgvector semantic memory (RAG)',
-    'Workflow state visualization (:8080)'
-  ]),
-  buildTechSpecSection('senses', 'The Senses (Physical AI Perception)', 'Hardware-level sensory inputs governed by zero-trust and real-time audio intelligence.', [
-    'Ears: Real-time audio stream perception',
-    'Eyes: Multimodal vision input analysis',
-    'Touch: Native sensor permission gates',
-    'Whisper local fallback (air-gapped ready)',
-    'Capacitor 6.0 native iOS/Android bridges'
-  ]),
-  buildTechSpecSection('identity', 'The Identity (Silicon-Level Trust)', 'Cryptographic signing via biometric enclaves and hardware allowlisting.', [
-    'Biometric hardware enclave signing',
-    'Zero-Trust Device Registry (Hardware ID)',
-    'FaceID / TouchID execution gating',
-    'No biometric data leaves the device',
-    'Cryptographic receipts signed by hardware'
-  ]),
-  buildTechSpecSection('conscience', 'The Conscience (Governance Layer)', 'Tri-Force Protocol ensures intent never bypasses policy. Human oversight by design.', [
-    'Tri-Force: Guardian \u2192 Planner \u2192 Executor',
-    'MAN Mode human approval gates',
-    'EU AI Act Article 14 compliant oversight',
-    'OmniLink single controlled port (9876)',
-    'Canonical typed semantic event normalization'
-  ]),
-  buildTechSpecSection('memory', 'The Memory (Immutable Records)', 'OmniTrace forensic replay and immutable audit trails for regulatory compliance.', [
-    'GDPR Art. 30 compliant audit logging',
-    'OmniTrace forensic decision replay',
-    'Full reconstruction of any agent chain',
-    '365-day structured log retention',
-    'DPIA / FRIA audit-ready documentation'
-  ]),
-  buildTechSpecSection('immune', 'The Immune System (Verification)', 'Armageddon L7 certified security posture with self-healing OmniSentry monitoring.', [
-    'Armageddon L7: 40,000 adversarial iterations',
-    '0% escape rate on goal hijack & tool misuse',
-    'OmniSentry self-healing monitor',
-    'Gitleaks + TruffleHog secret scanning',
-    'OMEGA infrastructure hardening layer'
-  ]),
-] as const;
-
 export const techSpecsConfig = {
   title: 'Technical Specifications',
   subtitle: 'The Architecture of Governed Intelligence',
-  sections: techSpecSections,
+  sections: [
+    {
+      id: 'brain',
+      title: 'The Brain (Durable Orchestration)',
+      description: 'Temporal.io cognitive core surviving infrastructure failure with deterministic replay safety.',
+      details: [
+        'Temporal.io durable execution engine',
+        'Saga-style compensation & rollbacks',
+        'FastAPI / Python AI agent logic',
+        'pgvector semantic memory (RAG)',
+        'Workflow state visualization (:8080)',
+      ],
+    },
+    {
+      id: 'senses',
+      title: 'The Senses (Physical AI Perception)',
+      description: 'Hardware-level sensory inputs governed by zero-trust and real-time audio intelligence.',
+      details: [
+        'Ears: Real-time audio stream perception',
+        'Eyes: Multimodal vision input analysis',
+        'Touch: Native sensor permission gates',
+        'Whisper local fallback (air-gapped ready)',
+        'Capacitor 6.0 native iOS/Android bridges',
+      ],
+    },
+    {
+      id: 'identity',
+      title: 'The Identity (Silicon-Level Trust)',
+      description: 'Cryptographic signing via biometric enclaves and hardware allowlisting.',
+      details: [
+        'Biometric hardware enclave signing',
+        'Zero-Trust Device Registry (Hardware ID)',
+        'FaceID / TouchID execution gating',
+        'No biometric data leaves the device',
+        'Cryptographic receipts signed by hardware',
+      ],
+    },
+    {
+      id: 'conscience',
+      title: 'The Conscience (Governance Layer)',
+      description: 'Tri-Force Protocol ensures intent never bypasses policy. Human oversight by design.',
+      details: [
+        'Tri-Force: Guardian \u2192 Planner \u2192 Executor',
+        'MAN Mode human approval gates',
+        'EU AI Act Article 14 compliant oversight',
+        'OmniLink single controlled port (9876)',
+        'Canonical typed semantic event normalization',
+      ],
+    },
+    {
+      id: 'memory',
+      title: 'The Memory (Immutable Records)',
+      description: 'OmniTrace forensic replay and immutable audit trails for regulatory compliance.',
+      details: [
+        'GDPR Art. 30 compliant audit logging',
+        'OmniTrace forensic decision replay',
+        'Full reconstruction of any agent chain',
+        '365-day structured log retention',
+        'DPIA / FRIA audit-ready documentation',
+      ],
+    },
+    {
+      id: 'immune',
+      title: 'The Immune System (Verification)',
+      description: 'Armageddon L7 certified security posture with self-healing OmniSentry monitoring.',
+      details: [
+        'Armageddon L7: 40,000 adversarial iterations',
+        '0% escape rate on goal hijack & tool misuse',
+        'OmniSentry self-healing monitor',
+        'Gitleaks + TruffleHog secret scanning',
+        'OMEGA infrastructure hardening layer',
+      ],
+    },
+  ] as const,
 } as const;
 
 export const demoConfig = {
