@@ -1,4 +1,12 @@
 import '@testing-library/jest-dom';
+import { MockAgent, setGlobalDispatcher } from 'undici';
+
+const mockAgent = new MockAgent();
+mockAgent.disableNetConnect(); // Prevent all unmocked test network leakage
+setGlobalDispatcher(mockAgent);
+
+const loggerMock = mockAgent.get('http://127.0.0.1:7245');
+loggerMock.intercept({ path: () => true }).reply(200, {}).persist();
 
 // Mock Supabase environment variables for testing execution (Critical for Gate 3)
 process.env.VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://mock.supabase.co';
