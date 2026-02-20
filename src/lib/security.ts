@@ -6,6 +6,21 @@ import { logSecurityEvent } from './monitoring';
 import { startGuardianLoops } from '@/guardian/loops';
 import { createDebugLogger } from './debug-logger';
 
+
+function constantTimeEquals(left: string, right: string): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  let mismatch = 0;
+  for (let i = 0; i < left.length; i += 1) {
+    mismatch |= left.charCodeAt(i) ^ right.charCodeAt(i);
+  }
+
+  return mismatch === 0;
+}
+
+
 /**
  * Generate CSRF token
  */
@@ -34,7 +49,7 @@ export function getCsrfToken(): string | null {
  */
 export function validateCsrfToken(token: string): boolean {
   const storedToken = getCsrfToken();
-  if (!storedToken || storedToken !== token) {
+  if (!storedToken || !constantTimeEquals(storedToken, token)) {
     logSecurityEvent('csrf_attempt', { providedToken: token ? 'present' : 'missing' });
     return false;
   }
@@ -232,7 +247,7 @@ export async function verifyRequestSignature(
   secret: string
 ): Promise<boolean> {
   const expected = await generateRequestSignature(data, secret);
-  return signature === expected;
+  return constantTimeEquals(signature, expected);
 }
 
 /**

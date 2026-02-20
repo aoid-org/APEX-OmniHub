@@ -1,4 +1,4 @@
-# OMNILINK-APEX OPS PACK AUDIT REPORT
+# APEX OmniHub OPS PACK AUDIT REPORT
 
 **Audit Date:** December 21, 2025
 **Auditor:** Principal Architect + SRE

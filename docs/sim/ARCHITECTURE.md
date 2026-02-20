@@ -1,5 +1,5 @@
 # Chaos Simulation Architecture
-## OmniLink-APEX Integrated System Testing
+## APEX OmniHub Integrated System Testing
 
 **Version:** 1.0
 **Date:** 2026-01-03

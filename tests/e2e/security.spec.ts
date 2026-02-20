@@ -177,6 +177,26 @@ describe('Security Module E2E Tests', () => {
     });
   });
 
+
+  describe('Request Signature Validation', () => {
+    it('validates matching signatures', async () => {
+      const { generateRequestSignature, verifyRequestSignature } = await import('../../src/lib/security');
+      const payload = JSON.stringify({ route: '/api/demo', ts: Date.now() });
+      const secret = 'super-secret-value';
+      const signature = await generateRequestSignature(payload, secret);
+
+      await expect(verifyRequestSignature(payload, signature, secret)).resolves.toBe(true);
+    });
+
+    it('rejects non-matching signatures', async () => {
+      const { verifyRequestSignature } = await import('../../src/lib/security');
+      const payload = JSON.stringify({ route: '/api/demo', ts: Date.now() });
+      const secret = 'super-secret-value';
+
+      await expect(verifyRequestSignature(payload, 'bad-signature', secret)).resolves.toBe(false);
+    });
+  });
+
   describe('Suspicious Activity Detection', () => {
     it('detects excessive failed attempts', async () => {
       const { recordFailedAuthAttempt, detectSuspiciousActivity } = await import('../../src/lib/security');

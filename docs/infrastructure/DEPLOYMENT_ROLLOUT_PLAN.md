@@ -304,7 +304,7 @@ vault status  # Should show unsealed
 
 ```bash
 # Deploy edge functions with new abstractions
-cd /home/user/OmniLink-APEX
+cd /home/user/APEX-OmniHub
 npm run deploy:production
 
 # This triggers:

@@ -1,24 +1,24 @@
 # APEX OmniHub — Production Status
 
 ```
-██████╗ ███╗   ███╗███╗   ██╗██╗██╗     ██╗███╗   ██╗██╗  ██╗
-██╔═══██╗████╗ ████║████╗  ██║██║██║     ██║████╗  ██║██║ ██╔╝
-██║   ██║██╔████╔██║██╔██╗ ██║██║██║     ██║██╔██╗ ██║█████╔╝
-██║   ██║██║╚██╔╝██║██║╚██╗██║██║██║     ██║██║╚██╗██║██╔═██╗
-╚██████╔╝██║ ╚═╝ ██║██║ ╚████║██║███████╗██║██║ ╚████║██║  ██╗
- ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝╚══════╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
+ ██████╗ ███╗   ███╗███╗   ██╗██╗██╗  ██╗██╗   ██╗██████╗ 
+██╔═══██╗████╗ ████║████╗  ██║██║██║  ██║██║   ██║██╔══██╗
+██║   ██║██╔████╔██║██╔██╗ ██║██║███████║██║   ██║██████╔╝
+██║   ██║██║╚██╔╝██║██║╚██╗██║██║██╔══██║██║   ██║██╔══██╗
+╚██████╔╝██║ ╚═╝ ██║██║ ╚████║██║██║  ██║╚██████╔╝██████╔╝
+ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ 
 E N T E R P R I S E   A I   P L A T F O R M
 ```
 
 | Status      | Architecture                 | Last Audit | Test Coverage             |
 | ----------- | ---------------------------- | ---------- | ------------------------- |
-| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-02-18 | 597/597 Pass (0 failures) |
+| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-02-20 | Security regression checks PASS |
 
 ---
 
 ## Executive Summary
 
-APEX OmniHub is **PRODUCTION CERTIFIED**. The system has graduated from a Web-SaaS model to a **Cyber-Physical Operating System**. The integration of the Device Registry and Biometric Enclaves allows for secure, high-stakes autonomous agent execution in the physical world.
+APEX OmniHub is **PRODUCTION CERTIFIED** with updated 2026-02-20 audit evidence. The system has graduated from a Web-SaaS model to a **Cyber-Physical Operating System**. The integration of the Device Registry and Biometric Enclaves allows for secure, high-stakes autonomous agent execution in the physical world.
 
 ## Deployment Checklist (Verified)
 
@@ -41,7 +41,7 @@ APEX OmniHub is **PRODUCTION CERTIFIED**. The system has graduated from a Web-Sa
 
 - [x] **Zero-Trust**: Device UUID enforcement active
 - [x] **NFT Gating**: Smart contract verified on-chain
-- [x] **Secret Scanning**: 0 Leaks detected
+- [x] **Secret Scanning**: PASS (binary-safe scanner, actionable signal)
 
 ---
 
@@ -65,5 +65,12 @@ APEX OmniHub is **PRODUCTION CERTIFIED**. The system has graduated from a Web-Sa
 Repository:  apexbusiness-systems/APEX-OmniHub
 Status:      PRODUCTION READY (v1.2.0)
 Type:        Cyber-Physical AI OS
-Updated:     2026-02-18
+Updated:     2026-02-20
 ```
+
+
+## 2026-02-20 Audit Addendum
+
+- Production dependency audit (`npm audit --omit=dev`) reports **0 high / 0 critical** vulnerabilities (1 moderate outstanding).
+- Full dependency graph continues to include dev-toolchain advisories and remains tracked as non-launch backlog.
+- Secret scanning now excludes non-production placeholder contexts and no longer fails on binary assets.

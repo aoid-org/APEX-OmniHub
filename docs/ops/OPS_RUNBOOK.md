@@ -1,4 +1,4 @@
-# OMNILINK-APEX OPS RUNBOOK
+# APEX OmniHub OPS RUNBOOK
 
 **Version:** 2.0
 **Last Updated:** January 25, 2026

@@ -2,14 +2,14 @@
 
 **Version:** Phase 1.1 (CI/CD Enhanced)
 **Date:** 2026-01-10
-**Author:** OmniLink APEX Team
+**Author:** APEX OmniHub Team
 **Status:** ✅ Ready for Production
 
 ---
 
 ## 📋 Overview
 
-The Web3 Verification Module is a read-only connector that enables wallet authentication and NFT-based entitlement gating for OmniLink APEX. Phase 1 focuses on signature verification, wallet identity mapping, and on-chain entitlement checks without requiring smart contract deployment.
+The Web3 Verification Module is a read-only connector that enables wallet authentication and NFT-based entitlement gating for APEX OmniHub. Phase 1 focuses on signature verification, wallet identity mapping, and on-chain entitlement checks without requiring smart contract deployment.
 
 ### Key Capabilities
 
@@ -727,7 +727,7 @@ WHERE refreshed_at < NOW() - INTERVAL '10 minutes';
 
 ## 📞 Support
 
-**Issues:** https://github.com/apexbusiness-systems/OmniLink-APEX/issues
+**Issues:** https://github.com/apexbusiness-systems/APEX-OmniHub/issues
 **Documentation:** `/docs/WEB3_VERIFICATION_RUNBOOK.md`
 **Migration Files:** `/supabase/migrations/20260101000000_create_web3_verification.sql`
 
@@ -763,5 +763,5 @@ Before deploying to production:
 **Last Updated:** 2026-01-10
 **Next Review:** After 1 week of production usage
 
-**Maintainer:** OmniLink APEX Team
-**License:** Proprietary - OmniLink APEX
+**Maintainer:** APEX OmniHub Team
+**License:** Proprietary - APEX OmniHub

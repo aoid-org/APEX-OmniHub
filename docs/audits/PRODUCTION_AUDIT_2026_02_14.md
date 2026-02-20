@@ -1,3 +1,5 @@
+> **Superseded Notice (2026-02-20):** This audit remains historical. For current launch posture and documentation baseline, reference `audit_report.json` and `docs/audits/COMPREHENSIVE_DOCUMENTATION_AUDIT_2026_02_20.md`.
+
 # APEX-OmniHub Production Audit Report
 
 **Date:** 2026-02-14

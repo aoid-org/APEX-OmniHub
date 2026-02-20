@@ -74,7 +74,7 @@ doppler login
 
 ```bash
 # Navigate to project root
-cd /home/user/OmniLink-APEX
+cd /home/user/APEX-OmniHub
 
 # Set up Doppler for this project
 doppler setup
@@ -201,7 +201,7 @@ brew install dopplerhq/cli/doppler
 doppler login
 
 ## 3. Setup project
-cd /path/to/OmniLink-APEX
+cd /path/to/APEX-OmniHub
 doppler setup
 
 ## 4. Run development server with Doppler
