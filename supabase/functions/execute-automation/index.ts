@@ -14,9 +14,11 @@
  * Date: 2026-01-25
  */
 
+// deno-lint-ignore no-import-prefix
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createSupabaseClient, authenticateUser } from '../_shared/auth.ts';
 import { handleCors, corsJsonResponse } from '../_shared/cors.ts';
+// deno-lint-ignore no-import-prefix
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { assertUrlSafe } from '../_shared/ssrf-protection.ts';
 
@@ -82,70 +84,7 @@ interface Automation {
 }
 
 
-const MAX_WEBHOOK_REDIRECTS = 3;
 
-function buildWebhookRequestBody(
-  method: NonNullable<WebhookConfig['method']>,
-  data: unknown
-): string | undefined {
-  if (method === 'GET' || method === 'HEAD') {
-    return undefined;
-  }
-
-  if (!data) {
-    return undefined;
-  }
-
-  return JSON.stringify(data);
-}
-
-async function sendWebhookRequest(
-  url: URL,
-  method: NonNullable<WebhookConfig['method']>,
-  headers: Record<string, string>,
-  body: string | undefined,
-  signal: AbortSignal
-): Promise<Response> {
-  return fetch(url.toString(), {
-    method,
-    headers,
-    body,
-    signal,
-    redirect: 'manual',
-  });
-}
-
-async function followValidatedRedirects(
-  response: Response,
-  startUrl: URL,
-  method: NonNullable<WebhookConfig['method']>,
-  headers: Record<string, string>,
-  body: string | undefined,
-  signal: AbortSignal
-): Promise<Response> {
-  let currentResponse = response;
-  let currentUrl = startUrl;
-  let redirectCount = 0;
-
-  while (currentResponse.status >= 300 && currentResponse.status < 400) {
-    if (redirectCount >= MAX_WEBHOOK_REDIRECTS) {
-      throw new Error('Webhook redirect chain exceeded limit');
-    }
-
-    const location = currentResponse.headers.get('location');
-    if (!location) {
-      throw new Error('Webhook redirect missing Location header');
-    }
-
-    currentUrl = await validateRedirectTarget(location, currentUrl);
-    currentResponse = await sendWebhookRequest(currentUrl, method, headers, body, signal);
-    redirectCount += 1;
-  }
-
-  return currentResponse;
-}
-
-// ============================================================================
 // Type Guards
 // ============================================================================
 
@@ -260,6 +199,29 @@ async function executeCreateRecord(
   return result ?? [];
 }
 
+async function parseWebhookResponse(response: Response): Promise<Record<string, unknown>> {
+  if (response.status >= 300 && response.status < 400) {
+    const redirectUrl = response.headers.get('location');
+    if (redirectUrl) {
+      throw new Error(
+        'Webhook returned a redirect. Automatic redirects are disabled for security. ' +
+        `If ${redirectUrl} is a trusted destination, update the webhook URL directly.`
+      );
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(`Webhook request failed: ${response.status}`);
+  }
+
+  const contentType = response.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    return (await response.json()) as Record<string, unknown>;
+  }
+
+  return { text: await response.text() };
+}
+
 /**
  * Execute webhook with URL validation and timeout.
  */
@@ -270,11 +232,6 @@ async function executeWebhook(
     throw new Error('Invalid webhook configuration: URL is required');
   }
 
-  // SECURITY: Multi-layer SSRF protection
-  // - Validates URL format and protocol (http/https only)
-  // - Resolves DNS to prevent hostname-based bypasses
-  // - Blocks all private/internal/cloud metadata IP ranges
-  // - Handles alternative IP encodings (hex, octal, decimal)
   try {
     await assertUrlSafe(config.url, {
       allowPrivate: false,
@@ -288,9 +245,8 @@ async function executeWebhook(
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30_000); // 30s timeout
+  const timeout = setTimeout(() => controller.abort(), 30_000);
 
-  // Build headers with optional custom headers
   const requestHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
   };
@@ -304,31 +260,10 @@ async function executeWebhook(
       headers: requestHeaders,
       body: config.data ? JSON.stringify(config.data) : undefined,
       signal: controller.signal,
-      redirect: 'manual', // SECURITY: Prevent automatic redirect following
+      redirect: 'manual',
     });
 
-    // Handle redirects manually to validate redirect targets
-    if (response.status >= 300 && response.status < 400) {
-      const redirectUrl = response.headers.get('location');
-      if (redirectUrl) {
-        throw new Error(
-          'Webhook returned a redirect. Automatic redirects are disabled for security. ' +
-          `If ${redirectUrl} is a trusted destination, update the webhook URL directly.`
-        );
-      }
-    }
-
-    if (!response.ok) {
-      throw new Error(`Webhook request failed: ${response.status}`);
-    }
-
-    // Try to parse as JSON, fallback to text
-    const contentType = response.headers.get('content-type') ?? '';
-    if (contentType.includes('application/json')) {
-      return (await response.json()) as Record<string, unknown>;
-    }
-
-    return { text: await response.text() };
+    return await parseWebhookResponse(response);
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error('Webhook request timed out after 30 seconds');
@@ -468,7 +403,6 @@ serve(async (req) => {
     // Update automation execution timestamp
     await supabase
       .from('automations')
-      // @ts-ignore: Automation table type not fully defined in client
       .update({ updated_at: new Date().toISOString() })
       .eq('id', automationId);
 
