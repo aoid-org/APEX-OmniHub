@@ -21,7 +21,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                 <SidebarTrigger />
               </header>
             )}
-            <main className={`flex-1 ${!isOmniDash ? 'pb-16 md:pb-0' : ''}`}>
+            <main className={`flex-1 ${isOmniDash ? '' : 'pb-16 md:pb-0'}`}>
               {children}
             </main>
           </div>

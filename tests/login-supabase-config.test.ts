@@ -14,17 +14,17 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 // ─── UNIT TESTS: hasSupabaseConfig logic ───────────────────────────
-describe("hasSupabaseConfig guard (supabase.ts logic)", () => {
-  /**
-   * Mirrors the exact logic from apps/omnihub-site/src/lib/supabase.ts:5-7:
-   *   const hasValidSupabaseUrl = /^https?:\/\//i.test(supabaseUrl);
-   *   export const hasSupabaseConfig = hasValidSupabaseUrl && supabaseAnonKey.length > 0;
-   */
-  function evaluateHasSupabaseConfig(url: string, anonKey: string): boolean {
-    const hasValidSupabaseUrl = /^https?:\/\//i.test(url);
-    return hasValidSupabaseUrl && anonKey.length > 0;
-  }
 
+/**
+ * Mirrors the exact logic from apps/omnihub-site/src/lib/supabase.ts:5-7:
+ *   const hasValidSupabaseUrl = /^https?:\/\//i.test(supabaseUrl);
+ *   export const hasSupabaseConfig = hasValidSupabaseUrl && supabaseAnonKey.length > 0;
+ */
+function evaluateHasSupabaseConfig(url: string, anonKey: string): boolean {
+  const hasValidSupabaseUrl = /^https?:\/\//i.test(url);
+  return hasValidSupabaseUrl && anonKey.length > 0;
+}
+describe("hasSupabaseConfig guard (supabase.ts logic)", () => {
   // ── Happy Path ──
   it("should_return_true_when_valid_https_url_and_nonempty_anon_key", () => {
     const result = evaluateHasSupabaseConfig(

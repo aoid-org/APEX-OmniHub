@@ -29,6 +29,25 @@ interface GoogleRawResponse {
 
 // ─── Shared SSE stream reader ───────────────────────────────────────
 
+function parseSSELine(
+  line: string,
+  skipPatterns: string[],
+  extractContent: (parsed: Record<string, unknown>) => string | undefined
+): string | undefined {
+  const trimmed = line.trim();
+  if (!trimmed || skipPatterns.includes(trimmed)) return undefined;
+
+  if (trimmed.startsWith("data: ")) {
+    try {
+      const data = JSON.parse(trimmed.slice(6)) as Record<string, unknown>;
+      return extractContent(data);
+    } catch {
+      // Ignore parse errors on partial chunks
+    }
+  }
+  return undefined;
+}
+
 /**
  * Reads an SSE stream from a ReadableStream and yields parsed JSON data lines.
  * Shared by OpenAI and Anthropic adapters to eliminate code duplication.
@@ -52,18 +71,8 @@ async function* readSSEStream(
       buffer = lines.pop() || "";
 
       for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || skipPatterns.includes(trimmed)) continue;
-
-        if (trimmed.startsWith("data: ")) {
-          try {
-            const data = JSON.parse(trimmed.slice(6)) as Record<string, unknown>;
-            const content = extractContent(data);
-            if (content) yield content;
-          } catch {
-            // Ignore parse errors on partial chunks
-          }
-        }
+        const content = parseSSELine(line, skipPatterns, extractContent);
+        if (content) yield content;
       }
     }
   } finally {
