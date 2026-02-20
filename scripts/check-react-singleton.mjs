@@ -39,8 +39,33 @@ function resolveBunBinary() {
   return foundPath;
 }
 
+function resolveNpmRunner() {
+  const npmExecPath = process.env.npm_execpath;
+  if (npmExecPath && existsSync(npmExecPath)) {
+    return {
+      command: process.execPath,
+      args: [npmExecPath],
+    };
+  }
+
+  const npmCandidates = ['/usr/bin/npm', '/bin/npm', '/usr/local/bin/npm'];
+  const foundPath = npmCandidates.find((candidate) => existsSync(candidate));
+
+  if (!foundPath) {
+    return null;
+  }
+
+  return {
+    command: foundPath,
+    args: [],
+  };
+}
+
 function extractVersionsFromTree(treeOutput, packageName) {
-  const pattern = new RegExp(`(?:^|\\n)\\s*[├└]──\\s+${packageName}@([0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][^\\s]+)?)`, 'g');
+  const pattern = new RegExp(
+    String.raw`(?:^|\n)\s*[├└]──\s+${packageName}@([0-9]+\.[0-9]+\.[0-9]+(?:[-+][^\s]+)?)`,
+    'g',
+  );
   const versions = new Set();
 
   for (const match of treeOutput.matchAll(pattern)) {
@@ -55,10 +80,25 @@ async function main() {
   console.log('─'.repeat(50));
 
   let depTreeText = '';
-  const bunBinary = resolveBunBinary();
+  let command;
+  let args;
 
   try {
-    depTreeText = execFileSync(bunBinary, ['pm', 'ls', '--all'], {
+    const bunBinary = resolveBunBinary();
+    command = bunBinary;
+    args = ['pm', 'ls', '--all'];
+  } catch {
+    const npmRunner = resolveNpmRunner();
+    if (!npmRunner) {
+      console.error(`${colors.red}✗${colors.reset} Unable to locate Bun or npm binary in fixed system paths.`);
+      process.exit(1);
+    }
+    command = npmRunner.command;
+    args = [...npmRunner.args, 'ls', 'react', 'react-dom', '--all'];
+  }
+
+  try {
+    depTreeText = execFileSync(command, args, {
       encoding: 'utf-8',
       maxBuffer: 10 * 1024 * 1024,
       env: {
@@ -71,7 +111,7 @@ async function main() {
     if (fallbackText.trim()) {
       depTreeText = fallbackText;
     } else {
-      console.error(`${colors.red}✗${colors.reset} Failed to run bun pm ls:`, error.message);
+      console.error(`${colors.red}✗${colors.reset} Failed dependency tree command:`, error.message);
       process.exit(1);
     }
   }
