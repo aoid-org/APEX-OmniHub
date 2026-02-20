@@ -209,7 +209,7 @@ jobs:
           npx playwright --version
 
       - name: Wait for Vercel Preview
-        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
+        uses: patrickedqvist/wait-for-vercel-preview@06c79330064b0e6ef7a2574603b62d3c98789125 # v1.3.2
         id: vercel-preview
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
