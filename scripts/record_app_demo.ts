@@ -117,10 +117,9 @@ async function run() {
 
 try {
   await run();
-} catch (e: unknown) {
-  const err = e instanceof Error ? e : new Error(String(e));
+} catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
   const logPath = path.resolve(__dirname, '../demo_error.log');
-  fs.writeFileSync(logPath, `Error: ${err.message}\nStack: ${err.stack}\n`);
-  console.error('Recording failed:', err.message);
+  fs.writeFileSync(logPath, `Error: ${e.message}\nStack: ${e.stack}\n`);
+  console.error('Recording failed:', e.message);
   process.exit(1);
 }

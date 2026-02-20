@@ -19,7 +19,7 @@ import { useAdminAccess } from '@/omnidash/hooks';
 export function AppSidebar() {
   const { state } = useSidebar();
   const { signOut } = useAuth();
-  const { isAdmin: _isAdmin } = useAdminAccess();
+  useAdminAccess();
   const isCollapsed = state === 'collapsed';
 
   const navItems = [

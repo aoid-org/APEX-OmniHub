@@ -178,6 +178,12 @@
             return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
         }
 
+        function getSecureRandomHex(len) {
+            const arr = new Uint8Array(Math.ceil(len / 2));
+            globalThis.crypto.getRandomValues(arr);
+            return Array.from(arr, byte => byte.toString(16).padStart(2, '0')).join('').substring(0, len).toUpperCase();
+        }
+
         // --- CLASSES ---
 
         class Row {
@@ -195,7 +201,7 @@
                 this.borderColor = COL_RED; // Stored as style string for perf, or switch
                 this.bgColor = COL_RED_DIM;
                 this.textColor = COL_RED;
-                this.text = `TXN-${Array.from(crypto.getRandomValues(new Uint8Array(4)), b => b.toString(16).padStart(2, '0')).join('').toUpperCase()} | PENDING VERIFICATION`;
+                this.text = `TXN-${getSecureRandomHex(8)} | PENDING VERIFICATION`;
                 
                 // Animation triggers
                 this.triggerTime = -1; 

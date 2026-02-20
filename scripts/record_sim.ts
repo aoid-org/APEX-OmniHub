@@ -83,11 +83,10 @@ async function run() {
 
 try {
   await run();
-} catch (e: unknown) {
-  const err = e instanceof Error ? e : new Error(String(e));
+} catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
   const logPath = path.resolve(__dirname, '../error.log');
-  const errorMsg = `Error: ${err.message}\nStack: ${err.stack}\n`;
+  const errorMsg = `Error: ${e.message}\nStack: ${e.stack}\n`;
   fs.writeFileSync(logPath, errorMsg);
-  console.error(err);
+  console.error(e);
   process.exit(1);
 }
