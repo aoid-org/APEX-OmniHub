@@ -55,6 +55,11 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
 AS $$
+DECLARE
+  c_kill_switch CONSTANT TEXT := 'kill_switch';
+  c_safe_mode   CONSTANT TEXT := 'safe_mode';
+  c_op_takeover CONSTANT TEXT := 'operator_takeover';
+  c_allowed_ops CONSTANT TEXT := 'allowed_operations';
 BEGIN
   INSERT INTO public.audit_logs (
     action_type,
@@ -68,16 +73,16 @@ BEGIN
     NEW.id::text,
     jsonb_build_object(
       'old_state', jsonb_build_object(
-        'kill_switch', OLD.kill_switch,
-        'safe_mode', OLD.safe_mode,
-        'operator_takeover', OLD.operator_takeover,
-        'allowed_operations', OLD.allowed_operations
+        c_kill_switch, OLD.kill_switch,
+        c_safe_mode, OLD.safe_mode,
+        c_op_takeover, OLD.operator_takeover,
+        c_allowed_ops, OLD.allowed_operations
       ),
       'new_state', jsonb_build_object(
-        'kill_switch', NEW.kill_switch,
-        'safe_mode', NEW.safe_mode,
-        'operator_takeover', NEW.operator_takeover,
-        'allowed_operations', NEW.allowed_operations
+        c_kill_switch, NEW.kill_switch,
+        c_safe_mode, NEW.safe_mode,
+        c_op_takeover, NEW.operator_takeover,
+        c_allowed_ops, NEW.allowed_operations
       ),
       'reason', NEW.reason,
       'timestamp', now()
@@ -97,11 +102,12 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
-  is_enabled BOOLEAN;
+  c_controls_id CONSTANT UUID := '00000000-0000-0000-0000-000000000001';
+  is_enabled    BOOLEAN;
 BEGIN
   SELECT kill_switch INTO is_enabled
   FROM public.emergency_controls
-  WHERE id = '00000000-0000-0000-0000-000000000001';
+  WHERE id = c_controls_id;
 
   RETURN COALESCE(is_enabled, false);
 END;
@@ -114,11 +120,12 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
-  is_enabled BOOLEAN;
+  c_controls_id CONSTANT UUID := '00000000-0000-0000-0000-000000000001';
+  is_enabled    BOOLEAN;
 BEGIN
   SELECT safe_mode INTO is_enabled
   FROM public.emergency_controls
-  WHERE id = '00000000-0000-0000-0000-000000000001';
+  WHERE id = c_controls_id;
 
   RETURN COALESCE(is_enabled, false);
 END;
@@ -131,11 +138,12 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
-  is_enabled BOOLEAN;
+  c_controls_id CONSTANT UUID := '00000000-0000-0000-0000-000000000001';
+  is_enabled    BOOLEAN;
 BEGIN
   SELECT operator_takeover INTO is_enabled
   FROM public.emergency_controls
-  WHERE id = '00000000-0000-0000-0000-000000000001';
+  WHERE id = c_controls_id;
 
   RETURN COALESCE(is_enabled, false);
 END;
@@ -148,13 +156,14 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
+  c_controls_id       CONSTANT UUID := '00000000-0000-0000-0000-000000000001';
   is_takeover_enabled BOOLEAN;
-  allowed_ops TEXT[];
+  allowed_ops         TEXT[];
 BEGIN
   SELECT operator_takeover, allowed_operations
   INTO is_takeover_enabled, allowed_ops
   FROM public.emergency_controls
-  WHERE id = '00000000-0000-0000-0000-000000000001';
+  WHERE id = c_controls_id;
 
   IF NOT is_takeover_enabled THEN
     RETURN true;
@@ -171,19 +180,24 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
-  status jsonb;
+  c_controls_id CONSTANT UUID := '00000000-0000-0000-0000-000000000001';
+  c_kill_switch CONSTANT TEXT := 'kill_switch';
+  c_safe_mode   CONSTANT TEXT := 'safe_mode';
+  c_op_takeover CONSTANT TEXT := 'operator_takeover';
+  c_allowed_ops CONSTANT TEXT := 'allowed_operations';
+  status        jsonb;
 BEGIN
   SELECT jsonb_build_object(
-    'kill_switch', kill_switch,
-    'safe_mode', safe_mode,
-    'operator_takeover', operator_takeover,
-    'allowed_operations', allowed_operations,
+    c_kill_switch, kill_switch,
+    c_safe_mode, safe_mode,
+    c_op_takeover, operator_takeover,
+    c_allowed_ops, allowed_operations,
     'last_updated', updated_at,
     'updated_by', updated_by,
     'reason', reason
   ) INTO status
   FROM public.emergency_controls
-  WHERE id = '00000000-0000-0000-0000-000000000001';
+  WHERE id = c_controls_id;
 
   RETURN COALESCE(status, '{}'::jsonb);
 END;
@@ -211,47 +225,61 @@ $$;
 
 CREATE OR REPLACE FUNCTION public.is_paid_user(_user_id uuid)
 RETURNS boolean
-LANGUAGE sql
+LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
 STABLE
 AS $$
+DECLARE
+  c_active   CONSTANT TEXT := 'active';
+  c_trialing CONSTANT TEXT := 'trialing';
+  c_canceled CONSTANT TEXT := 'canceled';
+  v_result   boolean;
+BEGIN
   SELECT EXISTS (
     SELECT 1 FROM public.subscriptions
     WHERE user_id = _user_id
       AND tier IN ('starter', 'pro', 'enterprise')
-      AND status IN ('active', 'trialing', 'canceled')
+      AND status IN (c_active, c_trialing, c_canceled)
       AND (
-        (status = 'active' AND (current_period_end IS NULL OR current_period_end > now()))
+        (status = c_active   AND (current_period_end IS NULL OR current_period_end > now()))
         OR
-        (status = 'trialing' AND trial_end > now())
+        (status = c_trialing AND trial_end > now())
         OR
-        (status = 'canceled' AND current_period_end > now())
+        (status = c_canceled AND current_period_end > now())
       )
-  );
+  ) INTO v_result;
+  RETURN v_result;
+END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.get_user_tier(_user_id uuid)
 RETURNS public.subscription_tier
-LANGUAGE sql
+LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
 STABLE
 AS $$
-  SELECT COALESCE(
-    (
-      SELECT tier FROM public.subscriptions
-      WHERE user_id = _user_id
-        AND status IN ('active', 'trialing', 'canceled')
-        AND (
-          (status = 'active' AND (current_period_end IS NULL OR current_period_end > now()))
-          OR (status = 'trialing' AND trial_end > now())
-          OR (status = 'canceled' AND current_period_end > now())
-        )
-      LIMIT 1
-    ),
-    'free'::public.subscription_tier
-  );
+DECLARE
+  c_active   CONSTANT TEXT := 'active';
+  c_trialing CONSTANT TEXT := 'trialing';
+  c_canceled CONSTANT TEXT := 'canceled';
+  v_tier     public.subscription_tier;
+BEGIN
+  SELECT tier
+  INTO v_tier
+  FROM public.subscriptions
+  WHERE user_id = _user_id
+    AND status IN (c_active, c_trialing, c_canceled)
+    AND (
+      (status = c_active   AND (current_period_end IS NULL OR current_period_end > now()))
+      OR (status = c_trialing AND trial_end > now())
+      OR (status = c_canceled AND current_period_end > now())
+    )
+  LIMIT 1;
+
+  RETURN COALESCE(v_tier, 'free'::public.subscription_tier);
+END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.handle_new_user_subscription()

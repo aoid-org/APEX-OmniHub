@@ -11,7 +11,7 @@ import { assertEquals } from 'https://deno.land/std@0.168.0/testing/asserts.ts';
 const VALID_WALLET = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
 const VALID_CONTRACT = '0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D';
 
-function makeRequest(body: unknown, authHeader?: string): Request {
+function _makeRequest(body: unknown, authHeader?: string): Request {
   return new Request('http://localhost/verify-nft', {
     method: 'POST',
     headers: {
@@ -146,5 +146,8 @@ Deno.test('ownedNfts length check: returns false when count == 0', () => {
 
 Deno.test('ownedNfts length check: returns false when field is missing', () => {
   const data = {};
-  assertEquals(((data as Record<string, unknown>).ownedNfts as unknown[] | undefined)?.length ?? 0 > 0, false);
+  assertEquals(
+    (((data as Record<string, unknown>).ownedNfts as unknown[] | undefined)?.length ?? 0) > 0,
+    false,
+  );
 });
