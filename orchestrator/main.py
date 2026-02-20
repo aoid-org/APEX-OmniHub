@@ -104,7 +104,7 @@ async def create_goal(request: GoalRequest):
     and starts Temporal workflows for AI agent orchestration.
     """
     try:
-        logger.info(f"Creating goal workflow: {request.trace_id}")
+        logger.info("Creating goal workflow")
 
         # Connect to Temporal
         client = await Client.connect(
@@ -123,7 +123,7 @@ async def create_goal(request: GoalRequest):
             task_queue=os.getenv("TEMPORAL_TASK_QUEUE", "apex-orchestrator"),
         )
 
-        logger.info(f"✓ Workflow started: {workflow_id}")
+        logger.info("✓ Workflow started")
         return {"workflowId": handle.id, "status": "started"}
 
     except Exception as e:
