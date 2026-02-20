@@ -14,6 +14,8 @@ import { OmniDashNavIconButton } from '@/components/OmniDashNavIconButton';
 import { DemoModeBanner } from '@/components/demo/DemoModeBanner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useOmniDashKeyboardShortcuts } from '@/omnidash/useOmniDashKeyboardShortcuts';
+import { OmniTraceFeed } from '@/components/dashboard/OmniTraceFeed';
+import { CreateSkillWidget } from '@/components/skills/CreateSkillWidget';
 
 export const OmniDashLayout = () => {
   const { user } = useAuth();
@@ -194,6 +196,7 @@ export const OmniDashLayout = () => {
             ))}
           </div>
           <div className="flex items-center gap-4 flex-shrink-0">
+            <CreateSkillWidget />
             {health.data?.lastUpdated && (
               <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
                 <Activity className="h-3 w-3" />
@@ -294,6 +297,8 @@ export const OmniDashLayout = () => {
                 This card intentionally stubs the connected ecosystem view to keep the hub secure while enabling demo narratives.
               </CardContent>
             </Card>
+
+            <OmniTraceFeed maxItems={10} />
           </div>
         </div>
       </main>

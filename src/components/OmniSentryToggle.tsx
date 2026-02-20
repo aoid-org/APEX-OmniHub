@@ -80,10 +80,7 @@ export function OmniSentryDropdown() {
 
   useEffect(() => {
     if (enabled) {
-      const updateHealth = () => setHealth(getHealthStatus());
-      updateHealth();
-      const interval = setInterval(updateHealth, 10000);
-      return () => clearInterval(interval);
+      setHealth(getHealthStatus());
     } else {
       setHealth(null);
     }
@@ -92,6 +89,10 @@ export function OmniSentryDropdown() {
   const handleToggle = (newValue: boolean) => {
     setEnabled(newValue);
     setOmniSentryEnabled(newValue);
+    // Safe haptics guard for iOS WebKit
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate(200);
+    }
   };
 
   const handleClearData = () => {
@@ -216,10 +217,7 @@ export function OmniSentryIndicator() {
 
   useEffect(() => {
     if (enabled) {
-      const updateHealth = () => setHealth(getHealthStatus());
-      updateHealth();
-      const interval = setInterval(updateHealth, 30000);
-      return () => clearInterval(interval);
+      setHealth(getHealthStatus());
     }
   }, [enabled]);
 

@@ -194,7 +194,7 @@ export const OMNIDASH_ADMIN_EMAIL_HINTS = (() => {
     .filter(Boolean);
 })();
 
-import { Home, TrendingUp, Target, AlertTriangle, Plug, Activity, Database, PlayCircle, CheckCircle, type LucideIcon } from 'lucide-react';
+import { Home, TrendingUp, Target, AlertTriangle, Plug, Activity, Database, PlayCircle, CheckCircle, GitBranch, type LucideIcon } from 'lucide-react';
 
 export interface OmniDashNavItem {
   key: string;
@@ -214,6 +214,7 @@ export const OMNIDASH_NAV_ITEMS: OmniDashNavItem[] = [
   { key: "entities", label: "Entities", to: "/omnidash/entities", icon: Database, shortcut: "N" },
   { key: "runs", label: "Runs", to: "/omnidash/runs", icon: PlayCircle, shortcut: "R" },
   { key: "approvals", label: "Approvals", to: "/omnidash/approvals", icon: CheckCircle, shortcut: "A" },
+  { key: "workflows", label: "Workflows", to: "/omnidash/workflows", icon: GitBranch, shortcut: "W" },
 ];
 
 export const OMNIDASH_SAFE_ENABLE_NOTE =

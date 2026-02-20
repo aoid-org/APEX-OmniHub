@@ -15,11 +15,25 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from './ui/button';
 import { useAdminAccess } from '@/omnidash/hooks';
+import { useSystemHealth, type HealthStatus } from '@/hooks/useSystemHealth';
+
+const getStatusColor = (status: HealthStatus) => {
+  if (status === 'healthy') return 'bg-green-500';
+  if (status === 'degraded') return 'bg-amber-500';
+  return 'bg-red-600';
+};
+
+const getPingColor = (status: HealthStatus) => {
+  if (status === 'healthy') return 'bg-green-400';
+  if (status === 'degraded') return 'bg-amber-400';
+  return 'bg-red-500';
+};
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const { signOut } = useAuth();
   useAdminAccess();
+  const { status: healthStatus } = useSystemHealth();
   const isCollapsed = state === 'collapsed';
 
   const navItems = [
@@ -37,7 +51,17 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>
             <div className="flex items-center gap-2">
-              <Link2 className="h-4 w-4" />
+              <div className="relative">
+                <Link2 className="h-4 w-4" />
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                  <span
+                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${getPingColor(healthStatus)}`}
+                  />
+                  <span
+                    className={`relative inline-flex rounded-full h-2.5 w-2.5 ${getStatusColor(healthStatus)}`}
+                  />
+                </span>
+              </div>
               {!isCollapsed && (
                 <span className="font-semibold tracking-widest uppercase text-xs bg-gradient-to-r from-navy to-accent bg-clip-text text-transparent">
                   OmniLink
