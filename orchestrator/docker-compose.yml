@@ -19,7 +19,7 @@ services:
       - "7233:7233" # gRPC
       - "8233:8233" # Web UI
     environment:
-      - DB=postgresql
+      - DB=postgres12
       - DB_PORT=5432
       - POSTGRES_USER=${TEMPORAL_DB_USER:?TEMPORAL_DB_USER required}
       - POSTGRES_PWD=${TEMPORAL_DB_PASSWORD:?TEMPORAL_DB_PASSWORD required}
@@ -70,7 +70,7 @@ services:
 
   # Redis Stack (with vector search)
   redis:
-    image: redis/redis-stack-server:7.2.0-v9
+    image: redis/redis-stack-server:7.4.0-v3
     ports:
       - "6379:6379"
     environment:
