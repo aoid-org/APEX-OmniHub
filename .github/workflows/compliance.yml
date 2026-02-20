@@ -58,7 +58,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: mkdir -p build-artifacts
-      - run: npx @cyclonedx/cyclonedx-npm --output-file build-artifacts/sbom-npm.cdx.json
+      - run: npx @cyclonedx/cyclonedx-npm@4.1.2 --package-lock-only --output-file build-artifacts/sbom-npm.cdx.json
       - run: pip install cyclonedx-bom
       - run: cyclonedx-py environment --output-format JSON --output-file build-artifacts/sbom-python.cdx.json
       - uses: actions/upload-artifact@v4
