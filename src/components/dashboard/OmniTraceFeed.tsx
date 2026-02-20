@@ -26,7 +26,7 @@ const KIND_LABELS: Record<string, string> = {
 function TraceEventRow({ event }: Readonly<{ event: TraceEvent }>) {
   const statusStyle = STATUS_STYLES[event.kind === 'system' ? 'PENDING' : 'SUCCESS'] ?? STATUS_STYLES.PENDING;
   const kindLabel = KIND_LABELS[event.kind] ?? '📌';
-  const latencyDisplay = event.latency_ms !== null ? `${event.latency_ms}ms` : '—';
+  const latencyDisplay = event.latency_ms === null ? '—' : `${event.latency_ms}ms`;
 
   return (
     <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors animate-in slide-in-from-top-1 duration-300">

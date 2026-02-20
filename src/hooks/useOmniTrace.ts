@@ -47,7 +47,7 @@ export function useOmniTrace(workflowId?: string) {
       if (mounted) setIsTracing(false);
     };
 
-    void fetchTraces();
+    fetchTraces().catch(console.error);
 
     const channel = supabase
       .channel(`omnitrace-live-${workflowId ?? 'all'}`)
@@ -69,7 +69,7 @@ export function useOmniTrace(workflowId?: string) {
 
     return () => {
       mounted = false;
-      void supabase.removeChannel(channel);
+      supabase.removeChannel(channel).catch(console.error);
     };
   }, [workflowId]);
 

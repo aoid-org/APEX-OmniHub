@@ -116,7 +116,7 @@ export function CreateSkillWidget() {
         title: 'Skill Forged',
         description: `"${data.name}" is now available in your workflow palette.`,
       });
-      void queryClient.invalidateQueries({ queryKey: ['user-skills'] });
+      queryClient.invalidateQueries({ queryKey: ['user-skills'] }).catch(console.error);
       resetForm();
       setOpen(false);
     },
@@ -289,7 +289,7 @@ export function CreateSkillWidget() {
         {errors.length > 0 && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
             {errors.map((err, i) => (
-              <p key={i} className="text-sm text-destructive">{err}</p>
+              <p key={`err-${i}-${err.slice(0, 10)}`} className="text-sm text-destructive">{err}</p>
             ))}
           </div>
         )}

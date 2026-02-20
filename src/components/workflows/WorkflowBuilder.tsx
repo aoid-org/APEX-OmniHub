@@ -103,7 +103,7 @@ export function WorkflowBuilder() {
     },
     onSuccess: () => {
       toast({ title: 'Workflow Saved', description: 'DAG saved and validated.' });
-      void queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: ['workflows'] }).catch(console.error);
     },
     onError: (error: Error) => {
       toast({ title: 'Save Failed', description: error.message, variant: 'destructive' });
@@ -125,7 +125,7 @@ export function WorkflowBuilder() {
     },
     onSuccess: () => {
       toast({ title: 'Workflow Queued', description: 'Execution started.' });
-      void queryClient.invalidateQueries({ queryKey: ['workflow-runs'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-runs'] }).catch(console.error);
     },
     onError: (error: Error) => {
       toast({ title: 'Run Failed', description: error.message, variant: 'destructive' });
@@ -156,6 +156,11 @@ export function WorkflowBuilder() {
     setEdges((prev) => prev.filter((e) => e.source !== nodeId && e.target !== nodeId));
     if (selectedNode === nodeId) setSelectedNode(null);
   }, [selectedNode]);
+
+  // Remove edge
+  const handleRemoveEdge = useCallback((edgeId: string) => {
+    setEdges((prev) => prev.filter((e) => e.id !== edgeId));
+  }, []);
 
   const nodeCount = nodes.length;
   const edgeCount = edges.length;
@@ -258,13 +263,7 @@ export function WorkflowBuilder() {
         {/* Canvas */}
         <Card className="glass-card rounded-2xl min-h-[400px]">
           <CardContent className="p-4">
-            {!hasNodes ? (
-              <div className="flex flex-col items-center justify-center h-72 text-muted-foreground">
-                <GitBranch className="h-12 w-12 mb-4 opacity-30" />
-                <p className="text-sm font-medium">Empty Canvas</p>
-                <p className="text-xs">Add skills from the palette to build your workflow</p>
-              </div>
-            ) : (
+            {hasNodes ? (
               <div className="space-y-3">
                 {/* Node list (simplified visual representation) */}
                 {nodes.map((node, idx) => (
@@ -276,6 +275,14 @@ export function WorkflowBuilder() {
                         : 'border-border hover:border-primary/40'
                     }`}
                     onClick={() => setSelectedNode(node.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedNode(node.id);
+                      }
+                    }}
                   >
                     <Badge variant="outline" className="text-[10px] shrink-0">
                       {idx + 1}
@@ -338,7 +345,7 @@ export function WorkflowBuilder() {
                             variant="ghost"
                             size="icon"
                             className="h-4 w-4 ml-auto"
-                            onClick={() => setEdges((prev) => prev.filter((e) => e.id !== edge.id))}
+                            onClick={() => handleRemoveEdge(edge.id)}
                           >
                             <Trash2 className="h-2.5 w-2.5" />
                           </Button>
@@ -347,6 +354,12 @@ export function WorkflowBuilder() {
                     })}
                   </div>
                 )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-72 text-muted-foreground">
+                <GitBranch className="h-12 w-12 mb-4 opacity-30" />
+                <p className="text-sm font-medium">Empty Canvas</p>
+                <p className="text-xs">Add skills from the palette to build your workflow</p>
               </div>
             )}
           </CardContent>
