@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   validateWebhookUrl,
   validateRedirectTarget,
-} from '../../supabase/functions/_shared/ssrf-protection';
+} from '../../src/lib/ssrf-validation';
 
 const PUBLIC_TEST_IP = ['93', '184', '216', '34'].join('.'); // documentation/example public test IP for deterministic tests
 
