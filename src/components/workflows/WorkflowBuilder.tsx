@@ -267,22 +267,15 @@ export function WorkflowBuilder() {
               <div className="space-y-3">
                 {/* Node list (simplified visual representation) */}
                 {nodes.map((node, idx) => (
-                  <div
+                  <button
+                    type="button"
                     key={node.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer ${
+                    className={`w-full text-left flex items-center gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer ${
                       selectedNode === node.id
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/40'
                     }`}
                     onClick={() => setSelectedNode(node.id)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setSelectedNode(node.id);
-                      }
-                    }}
                   >
                     <Badge variant="outline" className="text-[10px] shrink-0">
                       {idx + 1}
@@ -322,7 +315,7 @@ export function WorkflowBuilder() {
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
-                  </div>
+                  </button>
                 ))}
 
                 {/* Edges display */}
