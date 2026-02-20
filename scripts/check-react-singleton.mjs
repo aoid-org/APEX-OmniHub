@@ -5,7 +5,9 @@
  * Validates that only ONE version of React and ReactDOM exists in the dependency tree.
  */
 
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
+import { basename } from 'node:path';
+import { existsSync } from 'node:fs';
 
 const colors = {
   green: '\x1b[32m',
@@ -13,6 +15,29 @@ const colors = {
   yellow: '\x1b[33m',
   reset: '\x1b[0m',
 };
+
+const SAFE_PATH = '/usr/bin:/bin';
+
+function resolveBunBinary() {
+  if (basename(process.execPath).toLowerCase() === 'bun') {
+    return process.execPath;
+  }
+
+  const bunCandidates = [
+    '/usr/local/bin/bun',
+    '/usr/bin/bun',
+    '/bin/bun',
+    '/root/.local/share/mise/installs/bun/latest/bin/bun',
+    '/root/.local/share/mise/shims/bun',
+  ];
+  const foundPath = bunCandidates.find((candidate) => existsSync(candidate));
+
+  if (!foundPath) {
+    throw new Error('Unable to locate Bun binary in fixed system paths.');
+  }
+
+  return foundPath;
+}
 
 function extractVersionsFromTree(treeOutput, packageName) {
   const pattern = new RegExp(`(?:^|\\n)\\s*[├└]──\\s+${packageName}@([0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][^\\s]+)?)`, 'g');
@@ -30,10 +55,16 @@ async function main() {
   console.log('─'.repeat(50));
 
   let depTreeText = '';
+  const bunBinary = resolveBunBinary();
+
   try {
-    depTreeText = execSync('bun pm ls --all', {
+    depTreeText = execFileSync(bunBinary, ['pm', 'ls', '--all'], {
       encoding: 'utf-8',
       maxBuffer: 10 * 1024 * 1024,
+      env: {
+        ...process.env,
+        PATH: SAFE_PATH,
+      },
     });
   } catch (error) {
     const fallbackText = String(error?.stdout ?? '');
