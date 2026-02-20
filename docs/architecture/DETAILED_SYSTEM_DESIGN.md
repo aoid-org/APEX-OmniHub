@@ -160,7 +160,7 @@ const status = getOmniPortStatus();
 - Audit logging on security-sensitive actions (login/logout, DR tests, backup verification).
 
 ## Irrelevant / Non-core Artifacts (keep under review)
-- `bun.lockb`: legacy lockfile; npm is the active package manager (see `package-lock.json`).
+- `bun.lockb`: active lockfile; Bun is the standard package manager for local and CI workflows.
 - `src/App.css`: Vite starter styles currently unused; safe to remove or leave inert.
 - Placeholder assets under `public/` and `src/assets/`—verify necessity before pruning.
 

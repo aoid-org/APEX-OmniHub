@@ -1,12 +1,12 @@
 {
   "name": "vite_react_shadcn_ts",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.2.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "typecheck": "npx tsc -p tsconfig.json --noEmit",
-    "build": "npx vite build",
+    "typecheck": "bunx tsc -p tsconfig.json --noEmit",
+    "build": "bunx vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -21,7 +21,7 @@
     "test:assets": "node tests/smoke/assets-check.mjs",
     "check:react": "node scripts/check-react-singleton.mjs",
     "docs:check": "node scripts/ci/check_docs_links.mjs && node scripts/ci/check_doc_code_pointers.mjs",
-    "ci:runtime-gates": "npm run check:react && npm run test:assets && npm run test:e2e",
+    "ci:runtime-gates": "bun run check:react && bun run test:assets && bun run test:e2e",
     "smoke-test": "tsx scripts/smoke-test.ts",
     "guardian:status": "tsx scripts/guardian/status.ts",
     "omnilink:health": "tsx scripts/omnilink/health.ts",
@@ -46,7 +46,7 @@
     "lint:py": "cd orchestrator && python -m ruff check . && python -m ruff format --check .",
     "format:py": "cd orchestrator && python -m ruff format .",
     "test:py": "cd orchestrator && python -m pytest -q",
-    "ci:py": "npm run lint:py && npm run test:py",
+    "ci:py": "bun run lint:py && bun run test:py",
     "hardhat:compile": "hardhat compile",
     "hardhat:test": "hardhat test",
     "hardhat:node": "hardhat node",
@@ -187,5 +187,6 @@
     "lodash": "^4.17.23",
     "tar": "^7.4.3",
     "hono": "^4.11.7"
-  }
+  },
+  "packageManager": "bun@1.2.14"
 }

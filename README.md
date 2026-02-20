@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
 _Directable • Accountable • Dependable_
 
-**Version:** 1.2.0 | **Release Date:** 2026-02-18
+**Version:** 1.2.1 | **Release Date:** 2026-02-20
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
@@ -149,13 +149,13 @@ The "Trinity" connectivity layer:
 ### 1) Install dependencies
 
 ```bash
-npm install
+bun install
 ```
 
 ### 2) Run OmniDash (main UI)
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 ### 3) Run the Orchestrator (Temporal)
@@ -179,10 +179,10 @@ docker compose -f docker-compose.prod.yml up -d
 Run these before any PR:
 
 ```bash
-npm run lint       # ESLint
-npm run typecheck  # TypeScript strict mode
-npm test           # Vitest suite
-npm run build      # Production build
+bun run lint       # ESLint
+bun run typecheck  # TypeScript strict mode
+bun test           # Vitest suite
+bun run build      # Production build
 ```
 
 ### CI/CD Pipelines (8 Workflows)
@@ -217,7 +217,7 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 1. Fork the repo
 2. Create a branch: `git checkout -b feature/your-feature`
 3. Write tests for your changes
-4. Run full gates: `npm test && npm run lint && npm run typecheck && npm run build`
+4. Run full gates: `bun test && bun run lint && bun run typecheck && bun run build`
 5. Submit a PR
 
 ### Non-Negotiables

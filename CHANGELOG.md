@@ -5,6 +5,20 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-02-20
+
+### Changed
+
+- Standardized JavaScript/TypeScript workflow commands on Bun for local and CI usage.
+- Updated `package.json` release version to `1.2.1` and declared Bun package manager metadata.
+- Switched React singleton validation to Bun dependency introspection (`bun pm ls`).
+
+### Documentation
+
+- Updated top-level setup and quality-gate commands in `README.md` from npm to Bun.
+
+---
+
 ## [1.2.0] - 2026-02-18
 
 ### Added — Armageddon Level 7 Temporal Certification
