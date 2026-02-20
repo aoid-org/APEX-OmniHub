@@ -53,7 +53,7 @@ const isPlaceholderValue = (value) => {
 const extractAssignedValue = (assignmentMatch) => {
   const parts = assignmentMatch.split(/[:=]/);
   const raw = parts.slice(1).join('=').trim();
-  return raw.replace(/(?:^['"]|['"]$)/g, '').trim();
+  return raw.replaceAll(/(?:^['"]|['"]$)/g, '').trim();
 };
 
 let violations = 0;

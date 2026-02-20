@@ -14,7 +14,9 @@ function constantTimeEquals(left: string, right: string): boolean {
 
   let mismatch = 0;
   for (let i = 0; i < left.length; i += 1) {
-    mismatch |= left.charCodeAt(i) ^ right.charCodeAt(i);
+    const leftCodePoint = left.codePointAt(i) ?? 0;
+    const rightCodePoint = right.codePointAt(i) ?? 0;
+    mismatch |= leftCodePoint ^ rightCodePoint;
   }
 
   return mismatch === 0;
