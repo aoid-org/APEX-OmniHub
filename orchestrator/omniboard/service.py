@@ -164,11 +164,12 @@ class OmniBoardService:
     @classmethod
     def disconnect_provider(cls, connection_id: str) -> bool:
         """MOCK: Disconnects a provider."""
-        logger.info(f"Disconnecting {connection_id}")
+        _ = connection_id
+        logger.info("Disconnecting provider connection")
         return True
 
     @classmethod
     def rotate_credentials(cls, connection_id: str) -> str:
         """MOCK: Rotates credentials. Returns new token ref."""
-        logger.info(f"Rotating credentials for {connection_id}")
+        logger.info("Rotating provider credentials")
         return f"vault://rotated/{connection_id}/token"

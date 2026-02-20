@@ -1,0 +1,100 @@
+name: compliance
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - release/*
+
+jobs:
+  legal-drift-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/compliance/check_legal_drift.mjs
+
+  retention-evidence-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/compliance/generate_retention_evidence.mjs
+      - run: node scripts/compliance/check_retention_consistency.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: retention-evidence
+          path: build-artifacts/retention-evidence.json
+
+  claims-proof-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/compliance/check_claims_proof.mjs
+
+  rls-posture-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/security/check_rls_posture.sh
+
+  sbom-gate:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: mkdir -p build-artifacts
+      - run: npx @cyclonedx/cyclonedx-npm --output-file build-artifacts/sbom-npm.cdx.json
+      - run: pip install cyclonedx-bom
+      - run: cyclonedx-py environment --output-format JSON --output-file build-artifacts/sbom-python.cdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom-artifacts
+          path: |
+            build-artifacts/sbom-npm.cdx.json
+            build-artifacts/sbom-python.cdx.json
+
+  sonarcloud-gate:
+    if: vars.SONAR_PROJECT_KEY != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: |
+          npx sonar-scanner \
+            -Dproject.settings=sonar-project.properties \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization=apexbusiness-systems \
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }} \
+            -Dsonar.qualitygate.wait=true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  ruff-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install ruff
+      - run: ruff check orchestrator
+      - run: ruff format --check orchestrator

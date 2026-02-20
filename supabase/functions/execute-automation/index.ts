@@ -17,6 +17,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createScopedSupabaseClient, authenticateUser } from '../_shared/auth.ts';
 import { handleCors, corsJsonResponse } from '../_shared/cors.ts';
+import { validateWebhookUrl, validateRedirectTarget } from '../_shared/ssrf-protection.ts';
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // ============================================================================
@@ -78,6 +79,70 @@ interface Automation {
   action_type: 'send_email' | 'create_record' | 'webhook' | 'notification';
   config: AutomationConfig;
   is_active: boolean;
+}
+
+
+const MAX_WEBHOOK_REDIRECTS = 3;
+
+function buildWebhookRequestBody(
+  method: NonNullable<WebhookConfig['method']>,
+  data: unknown
+): string | undefined {
+  if (method === 'GET' || method === 'HEAD') {
+    return undefined;
+  }
+
+  if (!data) {
+    return undefined;
+  }
+
+  return JSON.stringify(data);
+}
+
+async function sendWebhookRequest(
+  url: URL,
+  method: NonNullable<WebhookConfig['method']>,
+  headers: Record<string, string>,
+  body: string | undefined,
+  signal: AbortSignal
+): Promise<Response> {
+  return fetch(url.toString(), {
+    method,
+    headers,
+    body,
+    signal,
+    redirect: 'manual',
+  });
+}
+
+async function followValidatedRedirects(
+  response: Response,
+  startUrl: URL,
+  method: NonNullable<WebhookConfig['method']>,
+  headers: Record<string, string>,
+  body: string | undefined,
+  signal: AbortSignal
+): Promise<Response> {
+  let currentResponse = response;
+  let currentUrl = startUrl;
+  let redirectCount = 0;
+
+  while (currentResponse.status >= 300 && currentResponse.status < 400) {
+    if (redirectCount >= MAX_WEBHOOK_REDIRECTS) {
+      throw new Error('Webhook redirect chain exceeded limit');
+    }
+
+    const location = currentResponse.headers.get('location');
+    if (!location) {
+      throw new Error('Webhook redirect missing Location header');
+    }
+
+    currentUrl = await validateRedirectTarget(location, currentUrl);
+    currentResponse = await sendWebhookRequest(currentUrl, method, headers, body, signal);
+    redirectCount += 1;
+  }
+
+  return currentResponse;
 }
 
 // ============================================================================
@@ -205,32 +270,9 @@ async function executeWebhook(
     throw new Error('Invalid webhook configuration: URL is required');
   }
 
-  // Validate URL format
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(config.url);
-  } catch {
-    throw new Error('Invalid webhook URL format');
-  }
-
-  // Block internal/private URLs (SSRF prevention)
-  const blockedHosts = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
-  const blockedPrefixes = ['192.168.', '10.', '172.16.', '172.17.', '172.18.'];
-
-  if (
-    blockedHosts.includes(parsedUrl.hostname) ||
-    blockedPrefixes.some((prefix) => parsedUrl.hostname.startsWith(prefix))
-  ) {
-    throw new Error('Internal/private URLs are not allowed for webhooks');
-  }
-
-  // Additional check for localhost aliases
-  if (
-    parsedUrl.hostname.endsWith('.local') ||
-    parsedUrl.hostname.endsWith('.internal')
-  ) {
-    throw new Error('Internal domain URLs are not allowed for webhooks');
-  }
+  const validatedUrl = await validateWebhookUrl(config.url);
+  const method: NonNullable<WebhookConfig['method']> = config.method ?? 'POST';
+  const requestBody = buildWebhookRequestBody(method, config.data);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000); // 30s timeout
@@ -244,12 +286,22 @@ async function executeWebhook(
   }
 
   try {
-    const response = await fetch(config.url, {
-      method: config.method ?? 'POST',
-      headers: requestHeaders,
-      body: config.data ? JSON.stringify(config.data) : undefined,
-      signal: controller.signal,
-    });
+    const initialResponse = await sendWebhookRequest(
+      validatedUrl,
+      method,
+      requestHeaders,
+      requestBody,
+      controller.signal
+    );
+
+    const response = await followValidatedRedirects(
+      initialResponse,
+      validatedUrl,
+      method,
+      requestHeaders,
+      requestBody,
+      controller.signal
+    );
 
     if (!response.ok) {
       throw new Error(`Webhook request failed: ${response.status}`);
