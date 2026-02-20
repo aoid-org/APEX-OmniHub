@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-import-prefix require-await
 /**
  * Execute Automation Edge Function
  *
@@ -14,11 +15,11 @@
  * Date: 2026-01-25
  */
 
-// deno-lint-ignore no-import-prefix
+// @ts-ignore: Deno imports are not recognized by standard TS
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createSupabaseClient, authenticateUser } from '../_shared/auth.ts';
 import { handleCors, corsJsonResponse } from '../_shared/cors.ts';
-// deno-lint-ignore no-import-prefix
+// @ts-ignore: Deno imports are not recognized by standard TS
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { assertUrlSafe } from '../_shared/ssrf-protection.ts';
 
@@ -131,6 +132,7 @@ function isAllowedTable(table: string): table is AllowedTable {
 async function executeEmailAction(
   config: unknown
 ): Promise<Record<string, unknown>> {
+  // @ts-ignore: Deno global
   const resendKey = Deno.env.get('RESEND_API_KEY');
   if (!resendKey) {
     throw new Error('Email service not configured');
@@ -298,7 +300,7 @@ async function executeNotification(
 // Main Handler
 // ============================================================================
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;

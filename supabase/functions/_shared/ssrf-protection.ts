@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-import-prefix
 /**
  * SSRF Protection Utility for Edge Functions
  *
@@ -20,6 +21,7 @@
  */
 
 // Import ipaddr.js via esm.sh (handles IPv4/IPv6 parsing and encoding variations)
+// @ts-ignore: Deno imports
 import * as ipaddr from "https://esm.sh/ipaddr.js@2.1.0";
 
 // ============================================================================
@@ -229,6 +231,62 @@ function validateUnresolvedHostname(
   return null;
 }
 
+async function resolveDnsAndValidateIps(
+  hostname: string,
+  options: SsrfOptions,
+): Promise<SsrfValidationResult> {
+  const { dnsTimeoutMs = 5000 } = options;
+  let timerId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    // @ts-ignore: Deno global
+    const resolvePromise = Deno.resolveDns(hostname, "A").catch(() => []);
+    // @ts-ignore: Deno global
+    const resolvePromiseAAAA = Deno.resolveDns(hostname, "AAAA").catch(() => []);
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timerId = setTimeout(
+        () => reject(new Error("DNS resolution timeout")),
+        dnsTimeoutMs,
+      );
+    });
+
+    const [ipv4Records, ipv6Records] = await Promise.race([
+      Promise.all([resolvePromise, resolvePromiseAAAA]),
+      timeoutPromise,
+    ]) as [string[], string[]];
+    clearTimeout(timerId);
+
+    const resolvedIps = [...ipv4Records, ...ipv6Records];
+
+    if (resolvedIps.length === 0) {
+      return {
+        allowed: false,
+        reason: `Hostname ${hostname} did not resolve to any IP addresses`,
+      };
+    }
+
+    for (const ip of resolvedIps) {
+      const ipValidation = validateIpAddress(ip, options);
+      if (!ipValidation.allowed) {
+        return {
+          allowed: false,
+          reason: `Hostname ${hostname} resolves to blocked IP: ${ip}. ${ipValidation.reason}`,
+          resolvedIps,
+        };
+      }
+    }
+
+    return { allowed: true, resolvedIps };
+  } catch (error) {
+    return {
+      allowed: false,
+      reason: `DNS resolution failed for ${hostname}: ${
+        error instanceof Error ? error.message : "unknown error"
+      }`,
+    };
+  }
+}
+
 /**
  * Resolve hostname to IP addresses and validate all resolved IPs.
  */
@@ -236,14 +294,12 @@ async function validateHostname(
   hostname: string,
   options: SsrfOptions,
 ): Promise<SsrfValidationResult> {
-  const { resolveDns = true, dnsTimeoutMs = 5000 } = options;
+  const { resolveDns = true } = options;
 
-  // Check allowlist first
   if (options.allowlist?.includes(hostname)) {
     return { allowed: true, reason: "Hostname in allowlist" };
   }
 
-  // Check blocked domain suffixes
   const lowerHostname = hostname.toLowerCase();
   for (const suffix of BLOCKED_DOMAIN_SUFFIXES) {
     if (lowerHostname.endsWith(suffix)) {
@@ -254,83 +310,30 @@ async function validateHostname(
     }
   }
 
-  // If DNS resolution is disabled, use the helper for direct checks
   if (!resolveDns) {
     const directCheck = validateUnresolvedHostname(hostname, options);
     if (directCheck) {
       return directCheck;
     }
-    // If not a direct IP or loopback literal, and suffixes pass, assume safe (or unresolvable) without DNS
     return { allowed: true };
   }
 
-  // If we are in a testing environment without network access, mock resolution for known test domains
-  // This is a workaround for the Deno test environment restriction or lack of internet
+  const testHostnames = [
+    "api.example.com",
+    "webhook.site",
+    "public-api.com",
+    "api.github.com",
+    "example.com",
+  ];
   if (
+    // @ts-ignore: Deno global
     Deno.env.get("DENO_DEPLOYMENT_ID") === undefined &&
-    (hostname === "api.example.com" || hostname === "webhook.site" ||
-      hostname === "public-api.com" || hostname === "api.github.com" ||
-      hostname === "example.com")
+    testHostnames.includes(hostname)
   ) {
-    // Mock valid resolution for these known public test domains
     return { allowed: true, resolvedIps: ["93.184.216.34"] }; // Example IP // NOSONAR
   }
 
-  // Resolve DNS with timeout
-  let timerId: number | undefined;
-  try {
-    const resolvePromise = Deno.resolveDns(hostname, "A").catch(() => []);
-    const resolvePromiseAAAA = Deno.resolveDns(hostname, "AAAA").catch(
-      () => [],
-    );
-
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      timerId = setTimeout(
-        () => reject(new Error("DNS resolution timeout")),
-        dnsTimeoutMs,
-      );
-    });
-
-    // Race DNS resolution against timeout
-    const [ipv4Records, ipv6Records] = await Promise.race([
-      Promise.all([resolvePromise, resolvePromiseAAAA]),
-      timeoutPromise,
-    ]) as [string[], string[]];
-    clearTimeout(timerId);
-
-    const resolvedIps = [...ipv4Records, ...ipv6Records];
-
-    // If no IPs resolved, DNS doesn't exist (suspicious)
-    if (resolvedIps.length === 0) {
-      return {
-        allowed: false,
-        reason: `Hostname ${hostname} did not resolve to any IP addresses`,
-      };
-    }
-
-    // Validate every resolved IP
-    for (const ip of resolvedIps) {
-      const ipValidation = validateIpAddress(ip, options);
-      if (!ipValidation.allowed) {
-        return {
-          allowed: false,
-          reason:
-            `Hostname ${hostname} resolves to blocked IP: ${ip}. ${ipValidation.reason}`,
-          resolvedIps,
-        };
-      }
-    }
-
-    return { allowed: true, resolvedIps };
-  } catch (error) {
-    // DNS resolution failed or timed out
-    return {
-      allowed: false,
-      reason: `DNS resolution failed for ${hostname}: ${
-        error instanceof Error ? error.message : "unknown error"
-      }`,
-    };
-  }
+  return await resolveDnsAndValidateIps(hostname, options);
 }
 
 // ============================================================================

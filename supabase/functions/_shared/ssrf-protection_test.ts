@@ -1,3 +1,5 @@
+// deno-lint-ignore-file no-import-prefix no-explicit-any
+// @ts-ignore: Deno imports
 import { assertRejects } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 import { assertUrlSafe, SsrfOptions } from "./ssrf-protection.ts";
 
@@ -155,7 +157,8 @@ const TEST_CASES: TestTuple[] = [
   ],
 ];
 
-Deno.test("SSRF Protection - Table Driven Verification", async (t) => {
+// @ts-ignore: Deno global
+Deno.test("SSRF Protection - Table Driven Verification", async (t: any) => {
   for (const [name, url, shouldBlock, options, errorMsg] of TEST_CASES) {
     await t.step(name, async () => {
       if (shouldBlock) {
