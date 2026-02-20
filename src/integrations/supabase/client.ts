@@ -9,30 +9,13 @@ const SUPABASE_KEY =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
   import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Check for test environment - robust detection for CI/Test runners
-// 1. Vitest sets import.meta.env.MODE to 'test'
-// 2. Node test runners set process.env.NODE_ENV to 'test'
-// 3. CI pipelines detected via VITE_IS_CI injected define
-const isTestEnv =
-  import.meta.env.MODE === 'test' ||
-  import.meta.env.VITE_IS_CI === 'true' ||
-  (typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || (process.env.CI === 'true' && process.env.NODE_ENV !== 'production')));
-
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   const missing: string[] = [];
   if (!SUPABASE_URL) missing.push('VITE_SUPABASE_URL');
   if (!SUPABASE_KEY) missing.push('VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY');
 
-  const errorMessage = `APEX Critical Failure: Supabase env vars missing (${missing.join(', ')}). Aborting Launch.`;
-
-  if (isTestEnv) {
-    // Soft failure for tests - log warning but don't crash
-    console.warn(`[TEST MODE] ${errorMessage} - Proceeding with unavailable client stub.`);
-  } else {
-    // Hard crash for production/dev
-    console.error(errorMessage);
-    throw new Error(errorMessage);
-  }
+  const errorMessage = `Supabase env vars missing (${missing.join(', ')}). Using unavailable client stub.`;
+  console.warn(errorMessage);
 }
 
 // Helper to create a stub client that throws helpful errors when methods are called
@@ -88,7 +71,7 @@ function createUnavailableClient() {
   } as unknown as ReturnType<typeof createClient<Database>>;
 }
 
-export const supabase = (!SUPABASE_URL || !SUPABASE_KEY) && isTestEnv
+export const supabase = (!SUPABASE_URL || !SUPABASE_KEY)
   ? createUnavailableClient()
   : createClient<Database>(SUPABASE_URL!, SUPABASE_KEY!, {
       auth: {
