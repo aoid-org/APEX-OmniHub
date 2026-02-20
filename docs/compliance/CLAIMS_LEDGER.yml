@@ -2,8 +2,8 @@ claims:
   - claim_id: sonarcloud-gate
     claim_text: SonarCloud Quality Gate PASSED
     surface: site
-    status: unverified
-    evidence: []
+    status: verified
+    evidence: [docs/audits/sonarcloud-quality-gate.md]
     expiry: 2026-12-31
   - claim_id: new-issues
     claim_text: New Issues 0
