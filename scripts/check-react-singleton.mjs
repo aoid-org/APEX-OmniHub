@@ -18,6 +18,14 @@ const colors = {
 
 const SAFE_PATH = '/usr/bin:/bin';
 
+function buildSafeEnv() {
+  return {
+    PATH: SAFE_PATH,
+    // Keep locale deterministic for stable command output parsing in CI.
+    LC_ALL: 'C',
+  };
+}
+
 function resolveBunBinary() {
   if (basename(process.execPath).toLowerCase() === 'bun') {
     return process.execPath;
@@ -101,10 +109,7 @@ async function main() {
     depTreeText = execFileSync(command, args, {
       encoding: 'utf-8',
       maxBuffer: 10 * 1024 * 1024,
-      env: {
-        ...process.env,
-        PATH: SAFE_PATH,
-      },
+      env: buildSafeEnv(),
     });
   } catch (error) {
     const fallbackText = String(error?.stdout ?? '');
