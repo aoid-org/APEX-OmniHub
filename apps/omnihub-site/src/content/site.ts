@@ -2,7 +2,6 @@
  * APEX OmniHub Marketing Site Content Configuration
  * All copy, proof tiles, and navigation live here for easy updates.
  */
-
 import { getSiteUrl } from '@/lib/site-url';
 
 // ============================================================================
@@ -31,51 +30,41 @@ function buildShowcaseItem(title: string, image: string) {
   return { title, image };
 }
 
-/** Build a tech spec section */
-const buildTechSpecSection = (id: string, title: string, description: string, details: string[]) =>
-  build({ id, title, description, details });
-
 export const siteConfig = {
   name: 'APEX OmniHub',
   domain: new URL(getSiteUrl()).hostname,
-
   nav: {
     logo: 'APEX OmniHub',
     links: [
       buildLink('Tech Specs', '/tech-specs'),
     ],
     loginLink: buildLink('Login', '/login'),
-    primaryCta: buildLink('Request Access', '/request-access'),
+    primaryCta: buildLink('Get Started', '/request-access'),
   },
-
   hero: {
     eyebrow: 'APEX OMNIHUB',
-    title: 'Universal Synchronized Orchestrator',
-    tagline: 'Your systems. Your rules.',
+    title: 'Connect anything. Change anything. Stay in control.',
+    tagline: 'YOUR SYSTEMS. YOUR RULES.',
     subtitle:
-      'Connect anything. Change anything. Stay in control.',
+      'The AI Operating System for the Physical World. Software agents. Enterprise platforms. Physical AI hardware. Every action governed, audited, and reversible.',
   },
-
   highlights: {
     title: '',
     items: [
-      buildItem('Portable Automation', 'You define what happens. The system runs it. You can change it anytime.'),
-      buildItem('Smart Integrations', 'Connect your systems. Keep your rules. Switch tools without rebuilding.'),
-      buildItem('Clear Visibility', 'See what runs. Know what changed. Decide what happens next.'),
+      buildItem('The OS governs your chips.', 'OmniHub governs everything that thinks.'),
+      buildItem('You own the data.', 'You control the flow. Switch tools without rebuilding.'),
+      buildItem('It sees you.', 'Zero-trust means nothing is invisible. Directable. Accountable. Dependable.'),
     ],
   },
-
   integrations: {
-    title: "Integrations that don't compromise your stack",
-    subtitle:
-      'Adapters stay modular, portable, and optional-by-default. OmniHub stays the control tower.',
+    title: "The Governance Layer for Intelligent Systems",
+    subtitle: 'Adapters stay modular, portable, and optional-by-default. Software, agents, and physical AI — under one control plane.',
     items: [
-      buildItem('Enterprise Systems', 'CRMs, ERPs, ticketing, calendars, messaging, storage, data warehouses.'),
-      buildItem('AI Apps & Agents', 'Model providers, agent frameworks, RAG pipelines, tool routers, eval gates.'),
-      buildItem('Web3 & Onchain', 'Wallet ops, tokenization, proofs, attestations, chain event listeners.'),
+      buildItem('Enterprise Systems', 'CRMs, ERPs, ticketing, messaging, storage, data warehouses.'),
+      buildItem('AI Apps & Agents', 'Model providers, agent frameworks, RAG pipelines, eval gates.'),
+      buildItem('Physical AI & Robots', 'OpenAI GumDrop, robotics platforms, industrial edge devices.'),
     ],
   },
-
   showcase: {
     title: 'Experience APEX OmniHub Today',
     subtitle: 'Unite. Automate. Excel.',
@@ -86,48 +75,43 @@ export const siteConfig = {
       buildShowcaseItem('Process Orchestration', '/placeholder-workflow.png'),
     ],
   },
-
   stamp: {
     headline: 'IT SEES YOU.',
     tagline: 'DIRECTABLE \u2022 ACCOUNTABLE \u2022 DEPENDABLE',
   },
-
   ctas: {
-    primary: buildLink('Request Access', '/request-access'),
+    primary: buildLink('Get Started', '/request-access'),
     secondary: buildLink('Watch Demo', '/demo'),
     link: buildLink('Read Tech Specs', '/tech-specs'),
   },
-
   howItWorks: {
     title: 'How It Works',
     steps: [
-      buildItem('Connect', 'Modular adapters plug into any system with an interface (API, webhook, events).'),
+      buildItem('Connect', 'Modular adapters plug into any system—software, agent, or robot.'),
       buildItem('Translate', 'Canonical, typed semantic events so platforms actually understand each other.'),
-      buildItem('Execute', 'Deterministic workflows with receipts, retries, rollback paths, and M.A.N.Mode gates.'),
+      buildItem('Execute', 'Deterministic workflows with biometric gates and full audit trails.'),
     ],
   },
-
   fortress: {
     title: 'Zero-Trust Fortress Protocol',
     items: [
       'Assume breach by default',
-      'Verify explicitly (identity, origin, policy, intent)',
-      'Least privilege (scoped + time-boxed access)',
-      'Idempotency keys + receipts',
-      'M.A.N.Mode for high-risk decision items (workflow continues)',
-      'Observability by default (correlation IDs)',
-      'Reversible execution (compensation/rollback paths)',
+      'Hardware-level allowlisting (Device Registry)',
+      'Biometric hardware enclave signing (FaceID/TouchID)',
+      'Human oversight by architecture (MAN Mode)',
+      'EU AI Act Article 14 compliant gates',
+      'Immutable audit logging (GDPR Art. 30)',
+      'Forensic replay via OmniTrace',
     ],
   },
-
   manMode: {
     title: 'M.A.N.Mode',
     subtitle: 'Manual Authorization Needed',
-    description: 'High-risk decision items are skipped, the workflow continues with zero blocks, and the user is notified to action the item.',
+    description:
+      'High-risk decision items are flagged and blocked. The workflow continues with zero interruption. Your team reviews. You decide. OmniHub remembers.',
   },
-
   footer: {
-    copyright: '\u00A9 2025 APEX Business Systems. All rights reserved.',
+    copyright: '\u00A9 2026 APEX Business Systems. All rights reserved.',
     links: [
       buildLink('Privacy', '/privacy'),
       buildLink('Terms', '/terms'),
@@ -136,40 +120,101 @@ export const siteConfig = {
 } as const;
 
 /**
- * Proof module configuration - data-driven, no hype
- * Values are loaded from config so they can be updated without code edits.
+ * Proof module configuration - evidence-first
  */
 export const proofConfig = {
-  title: 'Verified',
+  title: 'Verified Unicorn-Class Architecture',
   tiles: [
-    buildProofTile('sonarcloud-gate', 'SonarCloud Quality Gate', 'PASSED', false),
-    buildProofTile('new-issues', 'New Issues', '0', false),
-    buildProofTile('security-hotspots', 'Security Hotspots (new code)', '0', false),
-    buildProofTile('coverage', 'Coverage tracking', 'configurable', false),
+    buildProofTile('sonarcloud-gate', 'SonarCloud Quality', 'PASSED', true),
+    buildProofTile('armageddon-l7', 'Armageddon L7', 'CERTIFIED', true),
+    buildProofTile('eu-ai-act', 'EU AI Act Ready', 'AUGUST 2026', true),
+    buildProofTile('gdpr', 'GDPR Native', 'COMPLIANT', true),
   ],
 } as const;
 
 /**
- * Tech Specs page content - evidence-first headings
+ * Tech Specs page content - the "Nervous System" framework
+ * Structured as plain data to maintain CPD compliance.
  */
-const techSpecSections = [
-  buildTechSpecSection('single-port', 'Single-Port Protocol', 'All communication flows through a single controlled port. This simplifies firewall configuration, reduces attack surface, and enables comprehensive audit logging of all data in transit.', ['One ingress/egress point for all adapter traffic', 'Protocol-agnostic envelope format', 'Built-in rate limiting and throttling', 'Automatic TLS termination']),
-  buildTechSpecSection('modular-adapters', 'Modular Adapters', 'No vendor lock-in by design. Adapters are standalone modules that translate between external systems and the canonical event format.', ['Hot-swappable adapter architecture', 'Typed contracts for each adapter', 'Isolated failure domains', 'Community and enterprise adapter ecosystem']),
-  buildTechSpecSection('man-mode', 'M.A.N.Mode (Manual Authorization Needed)', 'High-risk operations pause for human approval without blocking the entire workflow. Items requiring authorization are skipped, queued, and the user is notified.', ['Configurable risk thresholds', 'Async approval queue with notifications', 'Audit trail for all approval decisions', 'Timeout policies with safe defaults']),
-  buildTechSpecSection('receipts-idempotency', 'Receipts & Idempotency', 'Every operation generates a receipt. Idempotency keys ensure safe retries and deterministic replay.', ['Unique operation IDs for every request', 'Cryptographic receipts for audit', 'Automatic deduplication', 'Replay capability for debugging']),
-  buildTechSpecSection('security-posture', 'Security Posture', 'Defense-in-depth with zero-trust principles. Every request is authenticated, authorized, and logged.', ['mTLS for service-to-service communication', 'RBAC with attribute-based extensions', 'Comprehensive security headers', 'Regular independent assessments are tracked in the claims ledger']),
-  buildTechSpecSection('rollback-portability', 'Rollback & Portability', 'Migrate between hosts and vendors with confidence. All state is exportable, all operations are reversible.', ['Database-agnostic data layer', 'Configuration as code', 'Compensation transactions for rollback', 'Documented migration runbooks']),
-] as const;
-
 export const techSpecsConfig = {
   title: 'Technical Specifications',
-  subtitle: 'Evidence-first architecture and security posture',
-  sections: techSpecSections,
+  subtitle: 'The Architecture of Governed Intelligence',
+  sections: [
+    {
+      id: 'brain',
+      title: 'The Brain (Durable Orchestration)',
+      description: 'Temporal.io cognitive core surviving infrastructure failure with deterministic replay safety.',
+      details: [
+        'Temporal.io durable execution engine',
+        'Saga-style compensation & rollbacks',
+        'FastAPI / Python AI agent logic',
+        'pgvector semantic memory (RAG)',
+        'Workflow state visualization (:8080)',
+      ],
+    },
+    {
+      id: 'senses',
+      title: 'The Senses (Physical AI Perception)',
+      description: 'Hardware-level sensory inputs governed by zero-trust and real-time audio intelligence.',
+      details: [
+        'Ears: Real-time audio stream perception',
+        'Eyes: Multimodal vision input analysis',
+        'Touch: Native sensor permission gates',
+        'Whisper local fallback (air-gapped ready)',
+        'Capacitor 6.0 native iOS/Android bridges',
+      ],
+    },
+    {
+      id: 'identity',
+      title: 'The Identity (Silicon-Level Trust)',
+      description: 'Cryptographic signing via biometric enclaves and hardware allowlisting.',
+      details: [
+        'Biometric hardware enclave signing',
+        'Zero-Trust Device Registry (Hardware ID)',
+        'FaceID / TouchID execution gating',
+        'No biometric data leaves the device',
+        'Cryptographic receipts signed by hardware',
+      ],
+    },
+    {
+      id: 'conscience',
+      title: 'The Conscience (Governance Layer)',
+      description: 'Tri-Force Protocol ensures intent never bypasses policy. Human oversight by design.',
+      details: [
+        'Tri-Force: Guardian \u2192 Planner \u2192 Executor',
+        'MAN Mode human approval gates',
+        'EU AI Act Article 14 compliant oversight',
+        'OmniLink single controlled port (9876)',
+        'Canonical typed semantic event normalization',
+      ],
+    },
+    {
+      id: 'memory',
+      title: 'The Memory (Immutable Records)',
+      description: 'OmniTrace forensic replay and immutable audit trails for regulatory compliance.',
+      details: [
+        'GDPR Art. 30 compliant audit logging',
+        'OmniTrace forensic decision replay',
+        'Full reconstruction of any agent chain',
+        '365-day structured log retention',
+        'DPIA / FRIA audit-ready documentation',
+      ],
+    },
+    {
+      id: 'immune',
+      title: 'The Immune System (Verification)',
+      description: 'Armageddon L7 certified security posture with self-healing OmniSentry monitoring.',
+      details: [
+        'Armageddon L7: 40,000 adversarial iterations',
+        '0% escape rate on goal hijack & tool misuse',
+        'OmniSentry self-healing monitor',
+        'Gitleaks + TruffleHog secret scanning',
+        'OMEGA infrastructure hardening layer',
+      ],
+    },
+  ] as const,
 } as const;
 
-/**
- * Demo page content
- */
 export const demoConfig = {
   title: 'See It In Action',
   subtitle: 'Experience the APEX OmniHub workflow',
@@ -183,28 +228,25 @@ export const demoConfig = {
   },
   cta: {
     title: 'Ready to get started?',
-    description: 'Request access to explore the full platform',
-    button: buildLink('Request Access', '/request-access'),
+    description: 'Explore the only governed AI operating system.',
+    button: buildLink('Get Started', '/request-access'),
   },
 } as const;
 
-/**
- * Request Access form configuration
- */
 export const requestAccessConfig = {
-  title: 'Request Access',
-  subtitle: 'Join the early access program',
-  description: 'We\u2019re onboarding select partners and enterprises. Fill out the form to request access.',
+  title: 'Get Started',
+  subtitle: 'Deploy Governed Intelligence',
+  description: 'We\u2019re onboarding select partners and enterprises into the v1.2.0 ecosystem.',
   fields: {
     name: buildField('Name', 'Your name', 100),
     email: buildField('Email', 'you@company.com', 254),
     company: buildField('Company', 'Company name', 100),
     useCase: buildField('Use Case', 'Briefly describe your use case...', 500),
   },
-  submitLabel: 'Request Access',
+  submitLabel: 'Get Started',
   fallbackMessage: 'Having trouble? Email us at',
   fallbackEmail: 'access@apexomnihub.icu',
-  successMessage: 'Thank you! We\u2019ll be in touch soon.',
+  successMessage: 'Welcome to the Fortress. We\u2019ll be in touch soon.',
   antiAbuse: {
     honeypotField: 'website',
     minSubmitTime: 3000,
