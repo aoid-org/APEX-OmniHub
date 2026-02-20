@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// deno-lint-ignore-file no-import-prefix require-await
 /**
  * Execute Automation Edge Function
  *
@@ -14,11 +16,13 @@
  * Date: 2026-01-25
  */
 
+// @ts-ignore: Deno imports are not recognized by standard TS
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createScopedSupabaseClient, authenticateUser } from '../_shared/auth.ts';
+import { createSupabaseClient, authenticateUser } from '../_shared/auth.ts';
 import { handleCors, corsJsonResponse } from '../_shared/cors.ts';
-import { validateWebhookUrl, validateRedirectTarget } from '../_shared/ssrf-protection.ts';
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// @ts-ignore: Deno imports are not recognized by standard TS
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+import { assertUrlSafe } from '../_shared/ssrf-protection.ts';
 
 // ============================================================================
 // Type Definitions
@@ -82,70 +86,7 @@ interface Automation {
 }
 
 
-const MAX_WEBHOOK_REDIRECTS = 3;
 
-function buildWebhookRequestBody(
-  method: NonNullable<WebhookConfig['method']>,
-  data: unknown
-): string | undefined {
-  if (method === 'GET' || method === 'HEAD') {
-    return undefined;
-  }
-
-  if (!data) {
-    return undefined;
-  }
-
-  return JSON.stringify(data);
-}
-
-async function sendWebhookRequest(
-  url: URL,
-  method: NonNullable<WebhookConfig['method']>,
-  headers: Record<string, string>,
-  body: string | undefined,
-  signal: AbortSignal
-): Promise<Response> {
-  return fetch(url.toString(), {
-    method,
-    headers,
-    body,
-    signal,
-    redirect: 'manual',
-  });
-}
-
-async function followValidatedRedirects(
-  response: Response,
-  startUrl: URL,
-  method: NonNullable<WebhookConfig['method']>,
-  headers: Record<string, string>,
-  body: string | undefined,
-  signal: AbortSignal
-): Promise<Response> {
-  let currentResponse = response;
-  let currentUrl = startUrl;
-  let redirectCount = 0;
-
-  while (currentResponse.status >= 300 && currentResponse.status < 400) {
-    if (redirectCount >= MAX_WEBHOOK_REDIRECTS) {
-      throw new Error('Webhook redirect chain exceeded limit');
-    }
-
-    const location = currentResponse.headers.get('location');
-    if (!location) {
-      throw new Error('Webhook redirect missing Location header');
-    }
-
-    currentUrl = await validateRedirectTarget(location, currentUrl);
-    currentResponse = await sendWebhookRequest(currentUrl, method, headers, body, signal);
-    redirectCount += 1;
-  }
-
-  return currentResponse;
-}
-
-// ============================================================================
 // Type Guards
 // ============================================================================
 
@@ -192,6 +133,7 @@ function isAllowedTable(table: string): table is AllowedTable {
 async function executeEmailAction(
   config: unknown
 ): Promise<Record<string, unknown>> {
+  // @ts-ignore: Deno global
   const resendKey = Deno.env.get('RESEND_API_KEY');
   if (!resendKey) {
     throw new Error('Email service not configured');
@@ -260,6 +202,29 @@ async function executeCreateRecord(
   return result ?? [];
 }
 
+async function parseWebhookResponse(response: Response): Promise<Record<string, unknown>> {
+  if (response.status >= 300 && response.status < 400) {
+    const redirectUrl = response.headers.get('location');
+    if (redirectUrl) {
+      throw new Error(
+        'Webhook returned a redirect. Automatic redirects are disabled for security. ' +
+        `If ${redirectUrl} is a trusted destination, update the webhook URL directly.`
+      );
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(`Webhook request failed: ${response.status}`);
+  }
+
+  const contentType = response.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    return (await response.json()) as Record<string, unknown>;
+  }
+
+  return { text: await response.text() };
+}
+
 /**
  * Execute webhook with URL validation and timeout.
  */
@@ -270,14 +235,21 @@ async function executeWebhook(
     throw new Error('Invalid webhook configuration: URL is required');
   }
 
-  const validatedUrl = await validateWebhookUrl(config.url);
-  const method: NonNullable<WebhookConfig['method']> = config.method ?? 'POST';
-  const requestBody = buildWebhookRequestBody(method, config.data);
+  try {
+    await assertUrlSafe(config.url, {
+      allowPrivate: false,
+      allowLoopback: false,
+      resolveDns: true,
+      dnsTimeoutMs: 5000,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'URL failed SSRF validation';
+    throw new Error(`Webhook URL blocked by security policy: ${message}`);
+  }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30_000); // 30s timeout
+  const timeout = setTimeout(() => controller.abort(), 30_000);
 
-  // Build headers with optional custom headers
   const requestHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
   };
@@ -286,34 +258,15 @@ async function executeWebhook(
   }
 
   try {
-    const initialResponse = await sendWebhookRequest(
-      validatedUrl,
-      method,
-      requestHeaders,
-      requestBody,
-      controller.signal
-    );
+    const response = await fetch(config.url, {
+      method: config.method ?? 'POST',
+      headers: requestHeaders,
+      body: config.data ? JSON.stringify(config.data) : undefined,
+      signal: controller.signal,
+      redirect: 'manual',
+    });
 
-    const response = await followValidatedRedirects(
-      initialResponse,
-      validatedUrl,
-      method,
-      requestHeaders,
-      requestBody,
-      controller.signal
-    );
-
-    if (!response.ok) {
-      throw new Error(`Webhook request failed: ${response.status}`);
-    }
-
-    // Try to parse as JSON, fallback to text
-    const contentType = response.headers.get('content-type') ?? '';
-    if (contentType.includes('application/json')) {
-      return (await response.json()) as Record<string, unknown>;
-    }
-
-    return { text: await response.text() };
+    return await parseWebhookResponse(response);
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error('Webhook request timed out after 30 seconds');
@@ -348,7 +301,7 @@ async function executeNotification(
 // Main Handler
 // ============================================================================
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
@@ -362,7 +315,7 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createScopedSupabaseClient(req);
+    const supabase = createSupabaseClient();
 
     // Authenticate user
     const authHeader = req.headers.get('Authorization');
