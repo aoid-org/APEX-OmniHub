@@ -129,7 +129,7 @@ export const siteConfig = {
 export const proofConfig = {
   title: 'Verified Unicorn-Class Architecture',
   tiles: [
-    buildProofTile('sonarcloud-gate', 'SonarCloud Quality', 'PASSED', true),
+    buildProofTile('sonarcloud-gate', 'SonarCloud Quality', 'PASSED', false),
     buildProofTile('armageddon-l7', 'Armageddon L7', 'CERTIFIED', true),
     buildProofTile('eu-ai-act', 'EU AI Act Ready', 'AUGUST 2026', true),
     buildProofTile('gdpr', 'GDPR Native', 'COMPLIANT', true),
