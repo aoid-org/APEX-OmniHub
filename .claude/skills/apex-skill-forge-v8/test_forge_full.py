@@ -22,7 +22,7 @@ import zipfile
 from pathlib import Path
 
 # Add scripts to path
-FORGE_ROOT = Path(__file__).parent / ".claude" / "skills" / "apex-skill-forge-v8"
+FORGE_ROOT = Path(__file__).parent
 sys.path.insert(0, str(FORGE_ROOT / "scripts"))
 
 from audit import audit_skill  # noqa: E402
@@ -75,7 +75,12 @@ def test_forge_all_archetypes(tmp: Path) -> dict[str, Path]:
             has_license = (skill_path / "LICENSE").exists()
 
             all_ok = (
-                result and exists and has_manifest and has_readme and has_executor and has_license
+                result
+                and exists
+                and has_manifest
+                and has_readme
+                and has_executor
+                and has_license
             )
             parts = (
                 f"dir={exists} manifest={has_manifest} "
@@ -106,7 +111,11 @@ def test_audit_all(skills: dict[str, Path]) -> None:
             passed = report.get("passed", False)
 
             weak = [d for d in report.get("dimensions", []) if d["score"] < 9.5]
-            weak_str = "; ".join(f"{d['dimension']}={d['score']}" for d in weak) if weak else ""
+            weak_str = (
+                "; ".join(f"{d['dimension']}={d['score']}" for d in weak)
+                if weak
+                else ""
+            )
 
             detail = f"score={avg}/10"
             if weak_str:
