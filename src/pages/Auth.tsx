@@ -15,6 +15,7 @@ import apexLogo from '@/assets/apex_emblem_logo.svg';
 import { checkRateLimit } from '@/lib/ratelimit';
 import { checkAccountLockout, recordLoginAttempt } from '@/lib/security';
 import { logSecurityEvent } from '@/lib/monitoring';
+import { OAuthButtons } from '@/components/auth/OAuthButtons';
 
 const authSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -235,6 +236,14 @@ const Auth = () => {
                     )}
                   </Button>
                 </form>
+                <OAuthButtons
+                  redirectTo={
+                    searchParams.get('redirect')
+                      ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(searchParams.get('redirect')!)}`
+                      : undefined
+                  }
+                  disabled={loading}
+                />
               </TabsContent>
 
               <TabsContent value="signup">
@@ -282,6 +291,14 @@ const Auth = () => {
                     )}
                   </Button>
                 </form>
+                <OAuthButtons
+                  redirectTo={
+                    searchParams.get('redirect')
+                      ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(searchParams.get('redirect')!)}`
+                      : undefined
+                  }
+                  disabled={loading}
+                />
               </TabsContent>
             </Tabs>
           </CardContent>
