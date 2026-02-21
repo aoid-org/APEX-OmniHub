@@ -60,7 +60,7 @@
     "apex:deploy": "./apex-resilience/scripts/deploy.sh",
     "apex:test": "vitest run apex-resilience/tests/",
     "audit:features": "tsx scripts/audit-features.ts",
-    "security:audit:prod": "node -e \"const fs=require('fs');const dir='security';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});\" && npm audit --omit=dev --json > security/npm-audit-prod.json || true"
+    "apple:secret": "tsx scripts/generate-apple-secret.ts"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.1",

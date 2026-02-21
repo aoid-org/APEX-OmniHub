@@ -11,6 +11,18 @@ client_id = "env(ETHEREUM_CLIENT_ID)"
 secret = "env(ETHEREUM_CLIENT_SECRET)"
 # Note: For demo/CI mode, set ETHEREUM_CLIENT_ID=demo and ETHEREUM_CLIENT_SECRET=demo
 
+[auth.external.google]
+enabled = true
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
+
+[auth.external.apple]
+enabled = true
+client_id = "env(APPLE_CLIENT_ID)"
+secret = "env(APPLE_CLIENT_SECRET)"
+# Secret must be a JWT generated from Apple's .p8 private key
+# Use: npm run apple:secret to generate it
+
 [auth.external.solana]
 enabled = false  # Enable when Solana support is needed
 

@@ -248,24 +248,23 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get webhook signing key
+    // Get webhook signing key — fail-closed: reject all payloads when key is missing
     const signingKey = Deno.env.get('ALCHEMY_WEBHOOK_SIGNING_KEY');
     if (!signingKey) {
-      console.error('ALCHEMY_WEBHOOK_SIGNING_KEY not configured');
-      // Return 200 to prevent Alchemy retries for configuration issues
+      console.error('CRITICAL: ALCHEMY_WEBHOOK_SIGNING_KEY not configured — rejecting payload (fail-closed)');
       return new Response(
-        JSON.stringify({ error: 'configuration_error', message: 'Webhook signing key not configured' }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'configuration_error', message: 'Webhook verification unavailable' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Get membership NFT contract address
+    // Get membership NFT contract address — fail-closed: reject when missing
     const membershipNFTAddress = Deno.env.get('MEMBERSHIP_NFT_ADDRESS');
     if (!membershipNFTAddress) {
-      console.error('MEMBERSHIP_NFT_ADDRESS not configured');
+      console.error('CRITICAL: MEMBERSHIP_NFT_ADDRESS not configured — rejecting payload (fail-closed)');
       return new Response(
         JSON.stringify({ error: 'configuration_error', message: 'NFT contract address not configured' }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
 

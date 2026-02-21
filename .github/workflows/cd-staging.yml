@@ -36,17 +36,17 @@ jobs:
         continue-on-error: true
 
       - name: Terraform Init
+        if: ${{ env.HAS_TF_SECRETS == 'true' }}
         run: terraform init
-        continue-on-error: true
 
       - name: Terraform Validate
+        if: ${{ env.HAS_TF_SECRETS == 'true' }}
         run: terraform validate
-        continue-on-error: true
 
       - name: Terraform Plan
         id: plan
+        if: ${{ env.HAS_TF_SECRETS == 'true' }}
         run: terraform plan -out=tfplan
-        continue-on-error: true
         env:
           TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN || 'mock-token' }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID || 'mock-zone' }}
@@ -63,7 +63,6 @@ jobs:
       - name: Terraform Apply
         if: ${{ github.ref == 'refs/heads/main' && env.HAS_TF_SECRETS == 'true' }}
         run: terraform apply -auto-approve tfplan
-        continue-on-error: true
         env:
           TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}

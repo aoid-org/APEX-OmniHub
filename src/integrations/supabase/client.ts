@@ -39,6 +39,10 @@ function createUnavailableClient() {
       getUser: resolveNull,
       signOut: resolveNull,
       onAuthStateChange: () => ({ data: { subscription: noopSubscription } }),
+      signInWithPassword: reject,
+      signUp: reject,
+      signInWithOAuth: reject,
+      resetPasswordForEmail: reject,
     },
     functions: {
       invoke: reject,

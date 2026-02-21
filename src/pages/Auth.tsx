@@ -13,6 +13,7 @@ import appIcon from '@/assets/app_icon.png';
 import { checkRateLimit } from '@/lib/ratelimit';
 import { checkAccountLockout, recordLoginAttempt } from '@/lib/security';
 import { logSecurityEvent } from '@/lib/monitoring';
+import { OAuthButtons } from '@/components/auth/OAuthButtons';
 
 const authSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -180,8 +181,8 @@ const Auth = () => {
             </div>
           </div>
 
-          {/* Glassmorphism Card */}
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8 space-y-6">
+          <Card className="bg-black/40 border-white/10 backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-600/5" />
             
             {/* Toggle Switch */}
             <div className="flex bg-black/20 p-1 rounded-lg">
@@ -207,80 +208,108 @@ const Auth = () => {
               </button>
             </div>
 
-            <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} className="space-y-4">
-              
-              {mode === 'signup' && (
-                <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-cyan-100/80">Full Name</Label>
-                  <div className="relative">
+              <TabsContent value="signin">
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-email">Email</Label>
                     <Input
-                      id="fullName"
-                      placeholder="John Doe"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                      id="signin-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
                     />
                   </div>
-                </div>
-              )}
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-password">Password</Label>
+                    <Input
+                      id="signin-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      'Sign In'
+                    )}
+                  </Button>
+                </form>
+                <OAuthButtons
+                  redirectTo={
+                    searchParams.get('redirect')
+                      ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(searchParams.get('redirect')!)}`
+                      : undefined
+                  }
+                  disabled={loading}
+                />
+              </TabsContent>
 
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-cyan-100/80">Email</Label>
-                <div className="relative group">
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@company.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/50 focus:ring-cyan-500/20 pl-10 transition-all"
-                  />
-                  <ShieldCheck className="absolute left-3 top-2.5 h-5 w-5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-cyan-100/80">
-                  Password
-                </Label>
-                <div className="relative group">
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/50 focus:ring-cyan-500/20 pl-10 transition-all"
-                  />
-                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
-                </div>
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold py-6 shadow-lg shadow-cyan-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                ) : (
-                  <span className="flex items-center">
-                    {mode === 'signin' ? 'Access Console' : 'Create Account'}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </span>
-                )}
-              </Button>
-
-            </form>
-          </div>
-          
-          <div className="mt-8 text-center space-y-2">
-            <p className="text-xs text-gray-500">
-              By accessing this system, you agree to the <a href="/terms" className="text-cyan-400/80 hover:text-cyan-300 hover:underline">Terms of Service</a>.
-            </p>
-            <p className="text-xs text-gray-600">
-              Protected by APEX Security Layer v4.2
-            </p>
-          </div>
+              <TabsContent value="signup">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName" className="text-cyan-100/80">Full Name</Label>
+                    <div className="relative">
+                      <Input
+                        id="fullName"
+                        placeholder="John Doe"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating account...
+                      </>
+                    ) : (
+                      'Sign Up'
+                    )}
+                  </Button>
+                </form>
+                <OAuthButtons
+                  redirectTo={
+                    searchParams.get('redirect')
+                      ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(searchParams.get('redirect')!)}`
+                      : undefined
+                  }
+                  disabled={loading}
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
         </div>
       </div>
     </>
