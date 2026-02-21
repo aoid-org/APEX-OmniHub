@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Migration Runbook: Lovable Cloud → Supabase + Vercel
 
 **Purpose**: Step-by-step guide for migrating this app from Lovable Cloud backend to independent Supabase + Vercel deployment.

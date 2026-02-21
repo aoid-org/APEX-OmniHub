@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 ⚠️ **HISTORICAL RECORD** — Integration completion report from January 2026
 
 # Web3 Verification Module - Integration Complete ✅

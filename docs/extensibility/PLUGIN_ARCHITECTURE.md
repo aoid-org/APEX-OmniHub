@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 <!-- VALUATION_IMPACT: Plugin architecture enables ecosystem revenue streams (30% margins) and accelerates enterprise customization cycles by 5x. Demonstrates platform extensibility for multi-tenant deployments. Generated: 2026-02-03 -->
 
 # Plugin Architecture

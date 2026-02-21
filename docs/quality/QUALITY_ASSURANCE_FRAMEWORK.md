@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 <!-- VALUATION_IMPACT: Establishes institutional-grade QA framework, demonstrating SOC 2 Type II readiness and enterprise risk mitigation. Increases buyer confidence through measurable quality gates. Generated: 2026-02-03 -->
 
 # Quality Assurance Framework

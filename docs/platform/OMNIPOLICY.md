@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # OmniPolicy Plane - Deterministic Policy Evaluation
 
 **Module:** `orchestrator/security/omni_policy.py`

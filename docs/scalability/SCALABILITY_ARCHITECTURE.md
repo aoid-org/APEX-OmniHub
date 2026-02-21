@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 <!-- VALUATION_IMPACT: Documents proven 100K+ concurrent user capacity with horizontal scaling architecture. Demonstrates enterprise scalability for Fortune 500 deployment scenarios. Generated: 2026-02-03 -->
 
 # Scalability Architecture

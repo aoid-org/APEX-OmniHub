@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 <!-- VALUATION_IMPACT: Captures critical institutional knowledge to eliminate single points of failure. Reduces onboarding time by 65% and ensures business continuity during team transitions. Generated: 2026-02-03 -->
 
 # System Knowledge Base
