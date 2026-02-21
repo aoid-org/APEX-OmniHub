@@ -95,6 +95,14 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.emergency_controls_singleton_id()
+RETURNS UUID
+LANGUAGE sql
+IMMUTABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$ SELECT '00000000-0000-0000-0000-000000000001'::UUID; $$;
+
 CREATE OR REPLACE FUNCTION public.is_kill_switch_enabled()
 RETURNS BOOLEAN
 LANGUAGE plpgsql
@@ -102,7 +110,7 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
-  c_controls_id CONSTANT UUID := '00000000-0000-0000-0000-000000000001';
+  c_controls_id CONSTANT UUID := public.emergency_controls_singleton_id();
   is_enabled    BOOLEAN;
 BEGIN
   SELECT kill_switch INTO is_enabled
@@ -120,7 +128,7 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
-  c_controls_id CONSTANT UUID := '00000000-0000-0000-0000-000000000001';
+  c_controls_id CONSTANT UUID := public.emergency_controls_singleton_id();
   is_enabled    BOOLEAN;
 BEGIN
   SELECT safe_mode INTO is_enabled
@@ -138,7 +146,7 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
-  c_controls_id CONSTANT UUID := '00000000-0000-0000-0000-000000000001';
+  c_controls_id CONSTANT UUID := public.emergency_controls_singleton_id();
   is_enabled    BOOLEAN;
 BEGIN
   SELECT operator_takeover INTO is_enabled
@@ -156,7 +164,7 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
-  c_controls_id       CONSTANT UUID := '00000000-0000-0000-0000-000000000001';
+  c_controls_id       CONSTANT UUID := public.emergency_controls_singleton_id();
   is_takeover_enabled BOOLEAN;
   allowed_ops         TEXT[];
 BEGIN
@@ -180,7 +188,7 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
-  c_controls_id CONSTANT UUID := '00000000-0000-0000-0000-000000000001';
+  c_controls_id CONSTANT UUID := public.emergency_controls_singleton_id();
   c_kill_switch CONSTANT TEXT := 'kill_switch';
   c_safe_mode   CONSTANT TEXT := 'safe_mode';
   c_op_takeover CONSTANT TEXT := 'operator_takeover';
@@ -223,6 +231,14 @@ $$;
 -- 3. paid_access_system functions (20260107)
 -- ──────────────────────────────────────────────────────────────────────────────
 
+CREATE OR REPLACE FUNCTION public.subscription_active_status()
+RETURNS TEXT
+LANGUAGE sql
+IMMUTABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$ SELECT 'active'; $$;
+
 CREATE OR REPLACE FUNCTION public.is_paid_user(_user_id uuid)
 RETURNS boolean
 LANGUAGE plpgsql
@@ -231,7 +247,7 @@ SET search_path = ''
 STABLE
 AS $$
 DECLARE
-  c_active   CONSTANT TEXT := 'active';
+  c_active   CONSTANT TEXT := public.subscription_active_status();
   c_trialing CONSTANT TEXT := 'trialing';
   c_canceled CONSTANT TEXT := 'canceled';
   v_result   boolean;
@@ -261,7 +277,7 @@ SET search_path = ''
 STABLE
 AS $$
 DECLARE
-  c_active   CONSTANT TEXT := 'active';
+  c_active   CONSTANT TEXT := public.subscription_active_status();
   c_trialing CONSTANT TEXT := 'trialing';
   c_canceled CONSTANT TEXT := 'canceled';
   v_tier     public.subscription_tier;
@@ -290,7 +306,7 @@ SET search_path = ''
 AS $$
 BEGIN
   INSERT INTO public.subscriptions (user_id, tier, status)
-  VALUES (NEW.id, 'free', 'active')
+  VALUES (NEW.id, 'free', public.subscription_active_status())
   ON CONFLICT (user_id) DO NOTHING;
   RETURN NEW;
 END;
