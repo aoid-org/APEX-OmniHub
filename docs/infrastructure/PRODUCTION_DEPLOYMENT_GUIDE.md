@@ -15,7 +15,7 @@ Run these commands to verify readiness:
 
 ```bash
 # 1. Verify staging tests passing
-cd /path/to/OmniLink-APEX
+cd /path/to/APEX-OmniHub
 npm run test:unit        # Should pass (55+ tests)
 npm run test:integration # Should pass (80+ tests)
 npm run test:e2e        # Should pass (10+ tests)
@@ -137,7 +137,7 @@ upstash_api_key      = "prod-upstash-key"
 vercel_token         = "prod-vercel-token"
 
 # Application
-github_repo = "apexbusiness-systems/OmniLink-APEX"
+github_repo = "apexbusiness-systems/APEX-OmniHub"
 
 # Environment variables (from Doppler)
 vite_supabase_url                = "https://PROD.supabase.co"

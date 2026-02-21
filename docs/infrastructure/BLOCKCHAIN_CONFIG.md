@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers the configuration of blockchain and Web3 capabilities for the APEX OmniLink platform. The system integrates wallet authentication, NFT-based access control, and real-time blockchain event synchronization.
+This guide covers the configuration of blockchain and Web3 capabilities for the APEX OmniHub platform. The system integrates wallet authentication, NFT-based access control, and real-time blockchain event synchronization.
 
 ## Security Architecture
 
@@ -43,7 +43,7 @@ npx ts-node -e "const {Wallet} = require('ethers'); const wallet = Wallet.create
 
 **How to Obtain:**
 1. Go to [Alchemy Dashboard](https://dashboard.alchemy.com/)
-2. Create a new app: "APEX OmniLink - Ethereum"
+2. Create a new app: "APEX OmniHub - Ethereum"
 3. Select "Ethereum" → "Mainnet" (or "Sepolia" for testnet)
 4. Copy the API key
 
@@ -56,7 +56,7 @@ npx ts-node -e "const {Wallet} = require('ethers'); const wallet = Wallet.create
 **Purpose:** Alchemy API key for Polygon RPC access (recommended for lower gas fees)
 
 **How to Obtain:**
-1. Alchemy Dashboard → Create new app: "APEX OmniLink - Polygon"
+1. Alchemy Dashboard → Create new app: "APEX OmniHub - Polygon"
 2. Select "Polygon" → "Mainnet" (or "Mumbai" for testnet)
 3. Copy the API key
 

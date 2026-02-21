@@ -1,6 +1,6 @@
 # Chaos Simulation RUNBOOK
 
-## How to Run the OmniLink-APEX Chaotic Client Simulation
+## How to Run the APEX OmniHub Chaotic Client Simulation
 
 **Version:** 1.0
 **Last Updated:** 2026-01-03

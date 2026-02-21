@@ -99,7 +99,7 @@ Navigate to **http://localhost:5173/integrations** to see the Web3 wallet integr
 ## 📂 File Structure
 
 ```
-OmniLink-APEX/
+APEX-OmniHub/
 ├── src/
 │   ├── components/
 │   │   ├── WalletConnect.tsx          ← Main wallet UI
@@ -427,7 +427,7 @@ npm install
 
 ## ✅ Summary
 
-The Web3 Verification Module is now **fully integrated** into OmniLink APEX:
+The Web3 Verification Module is now **fully integrated** into APEX OmniHub:
 
 ✅ **Backend:** Database tables, edge functions, RLS policies
 ✅ **Frontend:** React components, hooks, providers, utilities

@@ -1,14 +1,16 @@
 """Unit tests for MAN Mode models and policy engine."""
 
+from uuid import uuid4
+
 import pytest
 from pydantic import ValidationError
 
 from models.man_mode import (
     ActionIntent,
-    ManLane,
     ManTask,
     ManTaskDecision,
     ManTaskStatus,
+    RiskLane,
     RiskTriageResult,
     create_idempotency_key,
 )
@@ -20,20 +22,15 @@ from policies.man_policy import (
 )
 
 
-class TestManLaneEnum:
-    """Test ManLane enum values."""
+class TestRiskLaneEnum:
+    """Test RiskLane enum values."""
 
     def test_all_lanes_present(self):
         """Should have all 4 risk lanes."""
-        assert ManLane.GREEN == "GREEN"
-        assert ManLane.YELLOW == "YELLOW"
-        assert ManLane.RED == "RED"
-        assert ManLane.BLOCKED == "BLOCKED"
-
-    def test_lane_serialization(self):
-        """Lanes should serialize to strings."""
-        assert ManLane.RED.value == "RED"
-        assert str(ManLane.GREEN) == "GREEN"
+        assert RiskLane.GREEN == "GREEN"
+        assert RiskLane.YELLOW == "YELLOW"
+        assert RiskLane.RED == "RED"
+        assert RiskLane.BLOCKED == "BLOCKED"
 
 
 class TestManTaskStatusEnum:
@@ -89,27 +86,34 @@ class TestRiskTriageResult:
     def test_create_valid_result(self):
         """Should create valid triage result."""
         result = RiskTriageResult(
-            lane=ManLane.RED,
-            risk_class="A",
+            task_id=uuid4().hex,
+            risk_lane=RiskLane.RED,
             reasoning="Sensitive tool",
-            confidence_score=0.95,
             requires_approval=True,
-            risk_factors=["sensitive_tool"],
         )
-        assert result.lane == ManLane.RED
+        assert result.risk_lane == RiskLane.RED
         assert result.requires_approval is True
-        assert "sensitive_tool" in result.risk_factors
+        assert result.is_demo is False
 
-    def test_default_timeout(self):
-        """Should default to 24 hour timeout."""
-        result = RiskTriageResult(
-            lane=ManLane.GREEN,
-            risk_class="D",
-            reasoning="Safe",
-            confidence_score=0.99,
-            requires_approval=False,
+    def test_is_executable(self):
+        """Should correctly determine executability."""
+        green = RiskTriageResult(
+            task_id="1", risk_lane=RiskLane.GREEN, reasoning="ok", requires_approval=False
         )
-        assert result.suggested_timeout_hours == 24
+        yellow = RiskTriageResult(
+            task_id="2", risk_lane=RiskLane.YELLOW, reasoning="ok", requires_approval=False
+        )
+        red = RiskTriageResult(
+            task_id="3", risk_lane=RiskLane.RED, reasoning="stop", requires_approval=True
+        )
+        blocked = RiskTriageResult(
+            task_id="4", risk_lane=RiskLane.BLOCKED, reasoning="stop", requires_approval=False
+        )
+
+        assert green.is_executable() is True
+        assert yellow.is_executable() is True
+        assert red.is_executable() is False
+        assert blocked.is_executable() is False
 
 
 class TestManTaskDecision:
@@ -143,10 +147,9 @@ class TestManTask:
         """Should create valid MAN task."""
         intent = ActionIntent(tool_name="delete_user", workflow_id="wf-1")
         triage = RiskTriageResult(
-            lane=ManLane.RED,
-            risk_class="A",
+            task_id=uuid4().hex,
+            risk_lane=RiskLane.RED,
             reasoning="Sensitive",
-            confidence_score=0.95,
             requires_approval=True,
         )
         task = ManTask(
@@ -190,9 +193,10 @@ class TestManPolicy:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        assert result.lane == ManLane.RED
+        assert result.risk_lane == RiskLane.RED
         assert result.requires_approval is True
-        assert "sensitive_tool" in result.risk_factors
+        # reasoning should contain risk factor
+        assert "requires human approval" in result.reasoning
 
     def test_blocked_tool_blocked_lane(self):
         """Blocked tools should return BLOCKED lane."""
@@ -202,7 +206,7 @@ class TestManPolicy:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        assert result.lane == ManLane.BLOCKED
+        assert result.risk_lane == RiskLane.BLOCKED
         assert result.requires_approval is False
 
     def test_safe_tool_green_lane(self):
@@ -213,7 +217,7 @@ class TestManPolicy:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        assert result.lane == ManLane.GREEN
+        assert result.risk_lane == RiskLane.GREEN
         assert result.requires_approval is False
 
     def test_irreversible_flag_red_lane(self):
@@ -225,9 +229,9 @@ class TestManPolicy:
             irreversible=True,
         )
         result = policy.triage(intent)
-        assert result.lane == ManLane.RED
+        assert result.risk_lane == RiskLane.RED
         assert result.requires_approval is True
-        assert "marked_irreversible" in result.risk_factors
+        assert "marked as irreversible" in result.reasoning
 
     def test_unknown_tool_yellow_lane(self):
         """Unknown tools should return YELLOW lane."""
@@ -237,9 +241,9 @@ class TestManPolicy:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        assert result.lane == ManLane.YELLOW
+        assert result.risk_lane == RiskLane.YELLOW
         assert result.requires_approval is False
-        assert "unknown_tool" in result.risk_factors
+        assert "Unknown tool" in result.reasoning
 
     def test_high_risk_params_single_yellow(self):
         """Single high-risk param should return YELLOW."""
@@ -250,7 +254,8 @@ class TestManPolicy:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        assert result.lane == ManLane.YELLOW
+        assert result.risk_lane == RiskLane.YELLOW
+        assert "High-risk parameter detected" in result.reasoning
 
     def test_high_risk_params_multiple_red(self):
         """Multiple high-risk params should return RED."""
@@ -261,8 +266,9 @@ class TestManPolicy:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        assert result.lane == ManLane.RED
+        assert result.risk_lane == RiskLane.RED
         assert result.requires_approval is True
+        assert "Multiple high-risk parameters" in result.reasoning
 
     def test_large_amount_triggers_risk(self):
         """Large financial amounts should trigger risk factor."""
@@ -273,7 +279,7 @@ class TestManPolicy:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        assert any("large_amount" in f for f in result.risk_factors)
+        assert "large_amount" in result.reasoning
 
     def test_case_insensitive_tool_matching(self):
         """Tool matching should be case-insensitive."""
@@ -283,7 +289,7 @@ class TestManPolicy:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        assert result.lane == ManLane.RED
+        assert result.risk_lane == RiskLane.RED
 
     def test_is_sensitive_helper(self):
         """is_sensitive helper should work correctly."""
@@ -332,7 +338,7 @@ class TestManPolicyPerformance:
         intent = ActionIntent(tool_name="delete_record", workflow_id="wf-1")
         result1 = policy.triage(intent)
         result2 = policy.triage(intent)
-        assert result1.lane == result2.lane
+        assert result1.risk_lane == result2.risk_lane
         assert result1.reasoning == result2.reasoning
 
 
@@ -345,14 +351,14 @@ class TestEdgeCases:
         intent = ActionIntent(tool_name="", workflow_id="wf-1")
         result = policy.triage(intent)
         # Empty tool name defaults to YELLOW (unknown)
-        assert result.lane == ManLane.YELLOW
+        assert result.risk_lane == RiskLane.YELLOW
 
     def test_special_characters_in_tool_name(self):
         """Should handle special characters in tool name."""
         policy = ManPolicy()
         intent = ActionIntent(tool_name="tool-with-dashes_and_underscores", workflow_id="wf-1")
         result = policy.triage(intent)
-        assert result.lane == ManLane.YELLOW
+        assert result.risk_lane == RiskLane.YELLOW
 
     def test_exact_high_risk_param_match(self):
         """Should match exact high-risk param values."""
@@ -364,7 +370,7 @@ class TestEdgeCases:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        assert any("high_risk_param" in f for f in result.risk_factors)
+        assert "high_risk_param" in result.reasoning
 
     def test_near_threshold_amount(self):
         """Should not trigger for amounts just below threshold."""
@@ -375,7 +381,7 @@ class TestEdgeCases:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        assert not any("large_amount" in f for f in result.risk_factors)
+        assert "large_amount" not in result.reasoning
 
     def test_negative_amount_safe(self):
         """Negative amounts should not trigger risk."""
@@ -386,7 +392,7 @@ class TestEdgeCases:
             workflow_id="wf-1",
         )
         result = policy.triage(intent)
-        assert not any("large_amount" in f for f in result.risk_factors)
+        assert "large_amount" not in result.reasoning
 
 
 class TestToolConfiguration:

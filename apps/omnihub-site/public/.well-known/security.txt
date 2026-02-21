@@ -1,0 +1,4 @@
+Contact: mailto:[REPLACE_WITH_SECURITY_INBOX]
+Expires: 2027-01-31T23:59:59.000Z
+Preferred-Languages: en
+Policy: https://apexbusiness-systems.com/.github/SECURITY.md

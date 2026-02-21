@@ -1,15 +1,15 @@
 # APEX Ecosystem Inventory
 ## Chaotic Client Simulation - System Discovery
 **Date:** 2026-01-03
-**Repo:** apexbusiness-systems/OmniLink-APEX
+**Repo:** apexbusiness-systems/APEX-OmniHub
 **Purpose:** Map all 12 APEX apps and integration points for chaos simulation
 
 ---
 
 ## 📍 Repository Location
 ```
-Repo: /home/user/OmniLink-APEX
-Origin: http://127.0.0.1:21077/git/apexbusiness-systems/OmniLink-APEX
+Repo: /home/user/APEX-OmniHub
+Origin: http://127.0.0.1:21077/git/apexbusiness-systems/APEX-OmniHub
 Branch: claude/root-cause-analysis-2Vvua
 ```
 
@@ -302,7 +302,7 @@ CREATE TABLE IF NOT EXISTS sim_events (
 ## 🗂️ File Structure for Simulation
 
 ```
-OmniLink-APEX/
+APEX-OmniHub/
 ├── sim/                              # NEW - Simulation framework
 │   ├── contracts.ts                  # Event contracts for all 12 apps
 │   ├── runner.ts                     # Main chaos simulation runner

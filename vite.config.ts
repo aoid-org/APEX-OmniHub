@@ -104,11 +104,13 @@ export default defineConfig(({ mode }) => ({
     // CSS minification
     cssMinify: mode === 'production' ? 'esbuild' : false,
   },
-  // Performance optimizations
   optimizeDeps: {
     include: [
       'react',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
       'react-dom',
+      'react-dom/client',
       'react-router-dom',
       '@supabase/supabase-js',
       '@tanstack/react-query',
@@ -117,8 +119,7 @@ export default defineConfig(({ mode }) => ({
       'tailwind-merge',
     ],
     exclude: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
-    // Discover deps early for faster dev startup
-    holdUntilCrawlEnd: false,
+    holdUntilCrawlEnd: true,
   },
   // Preview server configuration (for testing production builds locally)
   preview: {

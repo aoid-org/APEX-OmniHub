@@ -49,9 +49,9 @@ export function TechSpecsPage() {
       </Section>
       <Section variant="surface">
         <div style={{ textAlign: 'center' }}>
-          <h2 className="heading-2">Ready to see it in action?</h2>
+          <h2 className="heading-2">Deploy Governed Intelligence</h2>
           <p className="text-secondary mt-4">
-            Watch the demo or request access to explore the platform.
+            Architecture built for control. Request access or explore the full platform.
           </p>
           <div className="mt-8">
             <CTAGroup

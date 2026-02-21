@@ -48,6 +48,9 @@ export interface SimulationConfig {
 
   /** Verbose logging */
   verbose?: boolean;
+
+  /** Maximum number of beats processed concurrently (default: 1 for strict sequence) */
+  maxConcurrentBeats?: number;
 }
 
 export interface Beat {
@@ -119,6 +122,7 @@ export class SimulationRunner {
       runId: crypto.randomUUID(),
       dryRun: false,
       verbose: false,
+      maxConcurrentBeats: 1,
       ...config,
     };
 
@@ -162,13 +166,10 @@ export class SimulationRunner {
     this.log('🎬 STEP 3: Execute Story Beats');
     this.log('═'.repeat(64));
 
-    const beatResults: BeatResult[] = [];
+    const beatResults = await this.executeBeats();
 
-    for (const beat of this.config.beats) {
-      const result = await this.executeBeat(beat);
-      beatResults.push(result);
-
-      this.log(`${result.success ? '✅' : '❌'} Beat ${beat.number}: ${beat.name} (${result.latencyMs}ms)`);
+    for (const result of beatResults) {
+      this.log(`${result.success ? '✅' : '❌'} Beat ${result.beat.number}: ${result.beat.name} (${result.latencyMs}ms)`);
       if (result.wasCached) {
         this.log(`   ♻️  Deduplicated (idempotency hit)`);
       }
@@ -220,6 +221,40 @@ export class SimulationRunner {
     this.printSummary(result);
 
     return result;
+  }
+
+
+  /**
+   * Execute beats with bounded concurrency while preserving deterministic output order
+   */
+  private async executeBeats(): Promise<BeatResult[]> {
+    const beatCount = this.config.beats.length;
+    if (beatCount === 0) {
+      return [];
+    }
+
+    const requestedConcurrency = Math.floor(this.config.maxConcurrentBeats ?? 1);
+    const concurrency = Math.min(beatCount, Math.max(1, requestedConcurrency));
+    const beatResults: BeatResult[] = new Array(beatCount);
+    let nextIndex = 0;
+
+    const worker = async (): Promise<void> => {
+      while (true) {
+        const beatIndex = nextIndex;
+        nextIndex += 1;
+
+        if (beatIndex >= beatCount) {
+          return;
+        }
+
+        const beat = this.config.beats[beatIndex];
+        beatResults[beatIndex] = await this.executeBeat(beat);
+      }
+    };
+
+    await Promise.all(Array.from({ length: concurrency }, () => worker()));
+
+    return beatResults;
   }
 
   /**

@@ -2,7 +2,12 @@
 
 **Enterprise AI Orchestration Platform**
 
+- **Document Version:** 2.1.0
+- **Last Updated:** 2026-02-20
+- **Audit Baseline:** [Comprehensive Documentation Audit 2026-02-20](audits/COMPREHENSIVE_DOCUMENTATION_AUDIT_2026_02_20.md)
+
 ---
+
 
 ## Quick Navigation
 
@@ -274,3 +279,10 @@ docs/
 
 **Last Updated:** February 15, 2026
 **Release:** v1.0.0
+
+
+## Documentation Governance
+
+- All strategic status changes must be reflected in `docs/project-status/PRODUCTION_STATUS.md` and the latest audit artifact in `docs/audits/`.
+- Security posture updates must include refreshed `security/npm-audit-latest.json` and `security/npm-audit-prod.json` evidence files.
+- Remove transient logs/artifacts from source control (lint dumps, local reports, backup files) unless explicitly required for compliance evidence.

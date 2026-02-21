@@ -1,12 +1,12 @@
 {
   "name": "vite_react_shadcn_ts",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.2.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "typecheck": "npx tsc -p tsconfig.json --noEmit",
-    "build": "npx vite build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -14,6 +14,7 @@
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run tests/lib",
     "test:integration": "vitest run tests/integration",
+    "omni:validate": "vitest run tests/integration/omni-convergence.test.tsx",
     "test:prompt-defense": "vitest run tests/prompt-defense",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install chromium",
@@ -186,5 +187,6 @@
     "lodash": "^4.17.23",
     "tar": "^7.4.3",
     "hono": "^4.11.7"
-  }
+  },
+  "packageManager": "bun@1.2.14"
 }

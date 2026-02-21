@@ -16,11 +16,11 @@ license: "Proprietary - APEX Business Systems Ltd. Edmonton, AB, Canada. https:/
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  APEX-POWER = OMNISCIENCE × OMNIPOTENCE × ZERO TOLERANCE FOR FAILURE       │
+│  APEX-POWER = OMNISCIENCE × OMNIPOTENCE × ZERO TOLERANCE FOR FAILURE        │
 │                                                                             │
-│  • OMNISCIENCE: Know exactly what to do before acting                      │
-│  • OMNIPOTENCE: Execute with deterministic precision                       │
-│  • ZERO TOLERANCE: No guessing, no hoping, no "good enough"                │
+│  • OMNISCIENCE: Know exactly what to do before acting                       │
+│  • OMNIPOTENCE: Execute with deterministic precision                        │
+│  • ZERO TOLERANCE: No guessing, no hoping, no "good enough"                 │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -314,20 +314,20 @@ Apply APEX-POWER protocol
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│                                                                             │
-│  APEX-POWER is not a checklist. It's a MINDSET.                             │
-│                                                                             │
-│  • Never guess. KNOW.                                                       │
-│  • Never hope. VERIFY.                                                      │
-│  • Never rush. EXECUTE PRECISELY.                                           │
-│  • Never rationalize. FOLLOW THE PROTOCOL.                                  │
-│                                                                             │
-│  The discipline creates the freedom.                                        │
-│  The protocol enables the mastery.                                          │
-│  The rigor produces the results.                                            │
-│                                                                             │
-│  THIS IS APEX-POWER.                                                        │
-│                                                                             │
+│                                                           │
+│  APEX-POWER is not a checklist. It's a MINDSET.           │
+│                                                           │
+│  • Never guess. KNOW.                                     │
+│  • Never hope. VERIFY.                                    │
+│  • Never rush. EXECUTE PRECISELY.                         │
+│  • Never rationalize. FOLLOW THE PROTOCOL.                │
+│                                                           │
+│  The discipline creates the freedom.                      │
+│  The protocol enables the mastery.                        │
+│  The rigor produces the results.                          │
+│                                                           │
+│  THIS IS APEX-POWER.                                      │
+│                                                           │
 └───────────────────────────────────────────────────────────┘
 ```
 

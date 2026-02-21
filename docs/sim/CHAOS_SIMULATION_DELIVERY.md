@@ -296,7 +296,7 @@ npm run test:sim
 ### First Time Setup
 ```bash
 # Navigate to repo
-cd /home/user/OmniLink-APEX
+cd /home/user/APEX-OmniHub
 
 # Install dependencies (if needed)
 npm install

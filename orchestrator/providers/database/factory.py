@@ -7,10 +7,38 @@ This enables runtime switching between different database backends.
 
 import os
 
+from infrastructure.tidb_persistence import TiDBVectorPersistence
+
 from .base import DatabaseProvider
 from .supabase_provider import SupabaseDatabaseProvider
 
-# Global singleton instance
+
+class DatabaseFactory:
+    @staticmethod
+    def get_provider() -> DatabaseProvider:
+        provider_type = os.getenv("DATABASE_PROVIDER", "supabase").lower()
+
+        if provider_type == "supabase":
+            # Get Supabase configuration
+            supabase_url = os.getenv("SUPABASE_URL")
+            supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+            if not supabase_url or not supabase_key:
+                raise ValueError(
+                    "Supabase database provider requires SUPABASE_URL and "
+                    "SUPABASE_SERVICE_ROLE_KEY environment variables"
+                )
+            return SupabaseDatabaseProvider(url=supabase_url, key=supabase_key)
+
+        if provider_type == "tidb":
+            return TiDBVectorPersistence()  # type: ignore # APEX-DEV G2: Portability
+
+        raise ValueError(
+            f"CRITICAL: Unknown DATABASE_PROVIDER '{provider_type}'. Must be 'supabase' or 'tidb'."
+        )
+
+
+# Global singleton instance for backward compatibility
 _db_provider: DatabaseProvider | None = None
 
 
@@ -32,25 +60,7 @@ def get_database_provider() -> DatabaseProvider:
     if _db_provider is not None:
         return _db_provider
 
-    # Read configuration
-    provider_type = os.getenv("DB_PROVIDER", "supabase").lower()
-
-    if provider_type == "supabase":
-        # Get Supabase configuration
-        supabase_url = os.getenv("SUPABASE_URL")
-        supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-
-        if not supabase_url or not supabase_key:
-            raise ValueError(
-                "Supabase database provider requires SUPABASE_URL and "
-                "SUPABASE_SERVICE_ROLE_KEY environment variables"
-            )
-
-        _db_provider = SupabaseDatabaseProvider(url=supabase_url, key=supabase_key)
-
-    else:
-        raise ValueError(f"Unsupported database provider: {provider_type}")
-
+    _db_provider = DatabaseFactory.get_provider()
     return _db_provider
 
 

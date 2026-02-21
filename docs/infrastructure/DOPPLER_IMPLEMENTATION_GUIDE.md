@@ -43,7 +43,7 @@ doppler me
 
 ```bash
 # Setup project (in repo root)
-cd /path/to/OmniLink-APEX
+cd /path/to/APEX-OmniHub
 doppler setup
 
 # Select or create project: omnihub

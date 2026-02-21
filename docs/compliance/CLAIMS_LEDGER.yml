@@ -1,0 +1,44 @@
+claims:
+  - claim_id: sonarcloud-gate
+    claim_text: SonarCloud Quality Gate PASSED
+    surface: site
+    status: verified
+    evidence: [docs/audits/sonarcloud-quality-gate.md]
+    expiry: 2026-12-31
+  - claim_id: new-issues
+    claim_text: New Issues 0
+    surface: site
+    status: unverified
+    evidence: []
+    expiry: 2026-12-31
+  - claim_id: security-hotspots
+    claim_text: Security Hotspots (new code) 0
+    surface: site
+    status: unverified
+    evidence: []
+    expiry: 2026-12-31
+  - claim_id: third-party-security-audit
+    claim_text: Regular third-party security audits
+    surface: site
+    status: removed
+    evidence: []
+    rationale: Claim removed from marketing surface until audit report evidence is published.
+    expiry: 2026-12-31
+  - claim_id: armageddon-l7
+    claim_text: Armageddon L7 CERTIFIED
+    surface: site
+    status: verified
+    evidence: [docs/audits/armageddon-l7-certification.md]
+    expiry: 2026-12-31
+  - claim_id: eu-ai-act
+    claim_text: EU AI Act Ready AUGUST 2026
+    surface: site
+    status: verified
+    evidence: [docs/compliance/OMNILINK_HYBRID_CERTIFICA.md]
+    expiry: 2026-12-31
+  - claim_id: gdpr
+    claim_text: GDPR Native COMPLIANT
+    surface: site
+    status: verified
+    evidence: [docs/compliance/GDPR_COMPLIANCE.md]
+    expiry: 2026-12-31

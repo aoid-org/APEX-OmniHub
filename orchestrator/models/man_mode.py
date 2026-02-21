@@ -6,23 +6,19 @@ safety system that gates high-risk agent actions.
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
 
-class ManLane(str, Enum):
-    """Traffic-light lanes for action risk."""
+class RiskLane(str, Enum):
+    """APEX-DEV D2: MAN Mode Risk Lanes | Source: apex-dev.md"""
 
-    GREEN = "GREEN"
-    YELLOW = "YELLOW"
-    RED = "RED"
-    BLOCKED = "BLOCKED"
-
-    def __str__(self) -> str:
-        """Return the value for string representation."""
-        return self.value
+    GREEN = "GREEN"  # Auto-execute (Standard ops)
+    YELLOW = "YELLOW"  # Execute + Audit (Unknowns)
+    RED = "RED"  # Isolate + Human Approval (High stakes)
+    BLOCKED = "BLOCKED"  # Never Execute (Safety/Security)
 
 
 class ManTaskStatus(str, Enum):
@@ -57,23 +53,14 @@ class ActionIntent(BaseModel):
 
 
 class RiskTriageResult(BaseModel):
-    """
-    MASTER SCHEMA: Aligns Frontend Brochure (Class A-D) with Backend Logic.
-    """
+    task_id: str
+    risk_lane: RiskLane = Field(..., description="The computed security lane for this task")
+    reasoning: str
+    is_demo: bool = False
+    requires_approval: bool = Field(default=False)
 
-    lane: ManLane = Field(..., description="Action: RED (Block), YELLOW (Review), GREEN (Pass)")
-    risk_class: Literal["A", "B", "C", "D"] = Field(
-        ..., description="Marketing Tier: A=Critical, D=Safe"
-    )
-    reasoning: str = Field(...)
-    confidence_score: float = Field(..., ge=0.0, le=1.0)
-    # CRITICAL: Demo flag to bypass DB in presentation mode
-    is_demo: bool = Field(default=False)
-
-    # Optional fields for backward compatibility or future use
-    requires_approval: bool = Field(default=True, description="Human approval required")
-    risk_factors: list[str] = Field(default_factory=list, description="Contributing risk factors")
-    suggested_timeout_hours: int = Field(default=24, description="Approval timeout in hours")
+    def is_executable(self) -> bool:
+        return self.risk_lane in [RiskLane.GREEN, RiskLane.YELLOW]
 
 
 class ManTaskDecision(BaseModel):

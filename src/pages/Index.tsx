@@ -82,7 +82,7 @@ const Index = () => {
                 size="lg"
                 variant="outline"
                 onClick={() => document.getElementById('product')?.scrollIntoView({ behavior: 'smooth' })}
-                className="border-2 border-cyan-400/50 text-white hover:bg-cyan-400/10 hover:border-cyan-300 backdrop-blur-sm px-8 py-6 text-lg transition-all hover:scale-105"
+                className="border-2 border-cyan-400/50 text-cyan-100 hover:text-white hover:bg-cyan-950/30 hover:border-cyan-300 backdrop-blur-sm px-8 py-6 text-lg transition-all hover:scale-105"
               >
                 View Product
               </Button>

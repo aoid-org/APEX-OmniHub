@@ -86,8 +86,8 @@ All colors MUST be HSL.
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 20 76% 44%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -166,5 +166,72 @@ All colors MUST be HSL.
     left: 50%;
     transform: translateX(-50%);
     top: 1em;
+  }
+}
+
+/* Apple-Grade Visual Enhancements */
+@layer utilities {
+  /* Glassmorphism — frosted translucent panels */
+  .glass-card {
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(20px) saturate(1.8);
+    border: 1px solid hsl(var(--border) / 0.3);
+  }
+
+  /* Apple-style hover: 2px lift + deeper shadow */
+  .hover-lift {
+    transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px hsl(var(--foreground) / 0.08);
+  }
+
+  /* Timer pulse glow when Power Block is active */
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--accent) / 0.4); }
+    50% { box-shadow: 0 0 20px 4px hsl(var(--accent) / 0.2); }
+  }
+  .timer-active {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  /* Staggered fade-in for card grids */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-in {
+    animation: fadeInUp 400ms ease-out both;
+  }
+  .animate-in-delay-1 {
+    animation: fadeInUp 400ms ease-out 100ms both;
+  }
+  .animate-in-delay-2 {
+    animation: fadeInUp 400ms ease-out 200ms both;
+  }
+
+  /* Accent gradient for primary CTAs */
+  .btn-accent-gradient {
+    background: linear-gradient(135deg, hsl(20 76% 44%), hsl(20 76% 38%));
+    color: white;
+    border: none;
+  }
+  .btn-accent-gradient:hover {
+    background: linear-gradient(135deg, hsl(20 76% 38%), hsl(20 76% 32%));
+  }
+
+  /* Light mode specific enhancements */
+  :root {
+    .glass-card {
+      background: hsl(var(--card) / 0.95);
+      border: 1px solid hsl(var(--border) / 0.5);
+    }
   }
 }

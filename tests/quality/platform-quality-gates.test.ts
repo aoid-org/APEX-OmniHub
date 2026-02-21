@@ -1,7 +1,7 @@
 /* VALUATION_IMPACT: Automated quality gate validation ensures institutional-grade reliability. Reduces QA costs by 60% through automated enforcement. Generated: 2026-02-03 */
 
 import { describe, it, expect } from 'vitest';
-import { execSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -18,20 +18,43 @@ describe('Platform Quality Gates', () => {
 
   it('Gate 2: ESLint must pass with zero warnings', () => {
     // APEX-FIX: Increased timeout to 30s for full-repo lint scan
-    const result = execSync('npx eslint . --max-warnings 0 --format json', {
-      encoding: 'utf-8',
-      stdio: 'pipe', // Capture output to debug if needed
-      maxBuffer: 20 * 1024 * 1024, // APEX-FIX: prevent JSON output buffer overflow in CI
-      cwd: process.cwd()
-    });
+    let eslintJson = '';
+    const eslintPath = join(process.cwd(), 'node_modules', '.bin', 'eslint');
+
+    try {
+      eslintJson = execFileSync(
+        eslintPath,
+        ['.', '--max-warnings', '0', '--format', 'json'],
+        {
+          encoding: 'utf-8',
+          stdio: 'pipe', // Capture output to debug if needed
+          maxBuffer: 20 * 1024 * 1024, // APEX-FIX: prevent JSON output buffer overflow in CI
+          cwd: process.cwd()
+        }
+      );
+    } catch (error: unknown) {
+      const details = error as { stdout?: string | Buffer; stderr?: string | Buffer };
+      eslintJson = String(details.stdout ?? '[]');
+      const stderrText = String(details.stderr ?? '').trim();
+
+      if (stderrText) {
+        console.error(`ESLint stderr:\n${stderrText}`);
+      }
+    }
 
     // Parse JSON to ensure we are actually getting 0 warnings, not just text output
-    const report: Array<{ warningCount: number; errorCount: number }> = JSON.parse(result);
+    const report: Array<{ filePath: string; warningCount: number; errorCount: number }> = JSON.parse(eslintJson);
     const totalWarnings = report.reduce((acc, curr) => acc + curr.warningCount, 0);
     const totalErrors = report.reduce((acc, curr) => acc + curr.errorCount, 0);
 
     if (totalWarnings > 0 || totalErrors > 0) {
-      console.error(`FAILURE: Found ${totalWarnings} warnings and ${totalErrors} errors. Run 'npm run lint' to see them.`);
+      const failingFiles = report
+        .filter(entry => entry.warningCount > 0 || entry.errorCount > 0)
+        .map(entry => entry.filePath);
+
+      console.error(
+        `FAILURE: Found ${totalWarnings} warnings and ${totalErrors} errors. Failing files: ${failingFiles.join(', ')}`
+      );
     }
 
     expect(totalWarnings).toBe(0);

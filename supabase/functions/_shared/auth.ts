@@ -32,6 +32,28 @@ export function createSupabaseClient(): ReturnType<typeof createClient> {
 }
 
 /**
+ * Initialize Supabase client scoped to the authenticated user (RLS enforced)
+ * @param req - The incoming request with Authorization header
+ * @returns Configured Supabase client with user context
+ */
+export function createScopedSupabaseClient(req: Request): ReturnType<typeof createClient> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing required Supabase environment variables');
+  }
+
+  const authHeader = req.headers.get('Authorization');
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: authHeader ? { Authorization: authHeader } : {},
+    },
+  });
+}
+
+/**
  * Validate JWT token and get authenticated user
  * @param authHeader - Authorization header value
  * @param supabase - Supabase client instance

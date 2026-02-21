@@ -1,0 +1,338 @@
+{
+  "total": 66,
+  "passed": 66,
+  "failed": 0,
+  "pass_rate": "100.0%",
+  "results": [
+    {
+      "test": "forge workflow",
+      "passed": true,
+      "detail": "dir=True manifest=True readme=True executor=True license=True"
+    },
+    {
+      "test": "forge toolkit",
+      "passed": true,
+      "detail": "dir=True manifest=True readme=True executor=True license=True"
+    },
+    {
+      "test": "forge domain",
+      "passed": true,
+      "detail": "dir=True manifest=True readme=True executor=True license=True"
+    },
+    {
+      "test": "forge orchestrator",
+      "passed": true,
+      "detail": "dir=True manifest=True readme=True executor=True license=True"
+    },
+    {
+      "test": "forge transformer",
+      "passed": true,
+      "detail": "dir=True manifest=True readme=True executor=True license=True"
+    },
+    {
+      "test": "forge guardian",
+      "passed": true,
+      "detail": "dir=True manifest=True readme=True executor=True license=True"
+    },
+    {
+      "test": "audit workflow",
+      "passed": true,
+      "detail": "score=10.0/10 [all perfect]"
+    },
+    {
+      "test": "audit toolkit",
+      "passed": true,
+      "detail": "score=10.0/10 [all perfect]"
+    },
+    {
+      "test": "audit domain",
+      "passed": true,
+      "detail": "score=10.0/10 [all perfect]"
+    },
+    {
+      "test": "audit orchestrator",
+      "passed": true,
+      "detail": "score=10.0/10 [all perfect]"
+    },
+    {
+      "test": "audit transformer",
+      "passed": true,
+      "detail": "score=10.0/10 [all perfect]"
+    },
+    {
+      "test": "audit guardian",
+      "passed": true,
+      "detail": "score=10.0/10 [all perfect]"
+    },
+    {
+      "test": "ship workflow -> claude",
+      "passed": true,
+      "detail": "size=6,540B structure=valid"
+    },
+    {
+      "test": "ship workflow -> universal",
+      "passed": true,
+      "detail": "size=4,943B structure=valid"
+    },
+    {
+      "test": "ship workflow -> omnihub",
+      "passed": true,
+      "detail": "size=4,943B structure=valid"
+    },
+    {
+      "test": "ship toolkit -> claude",
+      "passed": true,
+      "detail": "size=6,525B structure=valid"
+    },
+    {
+      "test": "ship toolkit -> universal",
+      "passed": true,
+      "detail": "size=4,926B structure=valid"
+    },
+    {
+      "test": "ship toolkit -> omnihub",
+      "passed": true,
+      "detail": "size=4,926B structure=valid"
+    },
+    {
+      "test": "ship domain -> claude",
+      "passed": true,
+      "detail": "size=6,495B structure=valid"
+    },
+    {
+      "test": "ship domain -> universal",
+      "passed": true,
+      "detail": "size=4,899B structure=valid"
+    },
+    {
+      "test": "ship domain -> omnihub",
+      "passed": true,
+      "detail": "size=4,899B structure=valid"
+    },
+    {
+      "test": "ship orchestrator -> claude",
+      "passed": true,
+      "detail": "size=6,637B structure=valid"
+    },
+    {
+      "test": "ship orchestrator -> universal",
+      "passed": true,
+      "detail": "size=5,023B structure=valid"
+    },
+    {
+      "test": "ship orchestrator -> omnihub",
+      "passed": true,
+      "detail": "size=5,023B structure=valid"
+    },
+    {
+      "test": "ship transformer -> claude",
+      "passed": true,
+      "detail": "size=6,596B structure=valid"
+    },
+    {
+      "test": "ship transformer -> universal",
+      "passed": true,
+      "detail": "size=4,992B structure=valid"
+    },
+    {
+      "test": "ship transformer -> omnihub",
+      "passed": true,
+      "detail": "size=4,992B structure=valid"
+    },
+    {
+      "test": "ship guardian -> claude",
+      "passed": true,
+      "detail": "size=6,548B structure=valid"
+    },
+    {
+      "test": "ship guardian -> universal",
+      "passed": true,
+      "detail": "size=4,946B structure=valid"
+    },
+    {
+      "test": "ship guardian -> omnihub",
+      "passed": true,
+      "detail": "size=4,946B structure=valid"
+    },
+    {
+      "test": "execute workflow",
+      "passed": true,
+      "detail": "status=success time=0.0ms skill=test-workflow"
+    },
+    {
+      "test": "execute toolkit",
+      "passed": true,
+      "detail": "status=success time=0.0ms skill=test-toolkit"
+    },
+    {
+      "test": "execute domain",
+      "passed": true,
+      "detail": "status=success time=0.0ms skill=test-domain"
+    },
+    {
+      "test": "execute orchestrator",
+      "passed": true,
+      "detail": "status=success time=0.0ms skill=test-orchestrator"
+    },
+    {
+      "test": "execute transformer",
+      "passed": true,
+      "detail": "status=success time=0.0ms skill=test-transformer"
+    },
+    {
+      "test": "execute guardian",
+      "passed": true,
+      "detail": "status=success time=0.0ms skill=test-guardian"
+    },
+    {
+      "test": "manifest DAG workflow",
+      "passed": true,
+      "detail": "missing=none types=ok node=processor==processor"
+    },
+    {
+      "test": "manifest DAG toolkit",
+      "passed": true,
+      "detail": "missing=none types=ok node=processor==processor"
+    },
+    {
+      "test": "manifest DAG domain",
+      "passed": true,
+      "detail": "missing=none types=ok node=processor==processor"
+    },
+    {
+      "test": "manifest DAG orchestrator",
+      "passed": true,
+      "detail": "missing=none types=ok node=orchestrator==orchestrator"
+    },
+    {
+      "test": "manifest DAG transformer",
+      "passed": true,
+      "detail": "missing=none types=ok node=transformer==transformer"
+    },
+    {
+      "test": "manifest DAG guardian",
+      "passed": true,
+      "detail": "missing=none types=ok node=validator==validator"
+    },
+    {
+      "test": "reject uppercase name",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "test": "reject name with spaces",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "test": "reject underscored name",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "test": "reject invalid archetype",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "test": "accept single-word name",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "test": "accept alphanumeric name",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "test": "audit non-existent path",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "test": "ship non-existent path",
+      "passed": true,
+      "detail": "correctly raised error"
+    },
+    {
+      "test": "ship invalid format",
+      "passed": true,
+      "detail": "correctly raised error"
+    },
+    {
+      "test": "self-audit >= 9.5",
+      "passed": true,
+      "detail": "score=10.0/10"
+    },
+    {
+      "test": "self-audit == 10.0",
+      "passed": true,
+      "detail": "score=10.0/10"
+    },
+    {
+      "test": "self 1. Manifest completeness",
+      "passed": true,
+      "detail": "10.0/10 -- Complete"
+    },
+    {
+      "test": "self 2. Trigger clarity",
+      "passed": true,
+      "detail": "10.0/10 -- 12 trigger phrases found"
+    },
+    {
+      "test": "self 3. Input/output schema",
+      "passed": true,
+      "detail": "10.0/10 -- Complete"
+    },
+    {
+      "test": "self 4. Execution paths",
+      "passed": true,
+      "detail": "10.0/10 -- OK"
+    },
+    {
+      "test": "self 5. Anti-hallucination",
+      "passed": true,
+      "detail": "10.0/10 -- 3 NEVER + 3 ALWAYS rules"
+    },
+    {
+      "test": "self 6. Usage examples",
+      "passed": true,
+      "detail": "10.0/10 -- OK"
+    },
+    {
+      "test": "self 7. Failure modes",
+      "passed": true,
+      "detail": "10.0/10 -- OK"
+    },
+    {
+      "test": "self 8. DAG compatibility",
+      "passed": true,
+      "detail": "10.0/10 -- Full DAG compliance"
+    },
+    {
+      "test": "self 9. Script determinism",
+      "passed": true,
+      "detail": "10.0/10 -- OK"
+    },
+    {
+      "test": "self 10. Dependencies",
+      "passed": true,
+      "detail": "10.0/10 -- stdlib-only (no external deps needed)"
+    },
+    {
+      "test": "self 11. License/copyright",
+      "passed": true,
+      "detail": "10.0/10 -- OK"
+    },
+    {
+      "test": "self 12. Versioning",
+      "passed": true,
+      "detail": "10.0/10 -- Valid semver: 8.0.0"
+    },
+    {
+      "test": "SKILL.md < 500 lines",
+      "passed": true,
+      "detail": "206 lines"
+    }
+  ]
+}

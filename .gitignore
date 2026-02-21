@@ -67,3 +67,8 @@ test-results/
 
 # Test artifacts
 concurrency_test_temp/
+
+# ── Root-level CI/build artifacts ────────────────────────────────────────────
+eslint_report*.json
+audit_report.json
+test-output.css
