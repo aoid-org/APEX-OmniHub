@@ -33,7 +33,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://esm.sh https://cdn.jsdelivr.net https://vercel.live; style-src 'self'; font-src 'self' data:; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.lovable.dev https://ai.gateway.lovable.dev https://vercel.live; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' https://esm.sh https://cdn.jsdelivr.net https://vercel.live; style-src 'self' 'unsafe-inline'; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.lovable.dev https://ai.gateway.lovable.dev https://vercel.live; frame-src https://accounts.google.com https://appleid.apple.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://*.supabase.co; upgrade-insecure-requests"
         },
         {
           "key": "X-DNS-Prefetch-Control",
@@ -41,15 +41,11 @@
         },
         {
           "key": "Cross-Origin-Opener-Policy",
-          "value": "same-origin"
+          "value": "same-origin-allow-popups"
         },
         {
           "key": "Cross-Origin-Resource-Policy",
           "value": "same-origin"
-        },
-        {
-          "key": "Cross-Origin-Embedder-Policy",
-          "value": "require-corp"
         }
       ]
     },
