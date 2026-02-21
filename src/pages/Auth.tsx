@@ -184,22 +184,29 @@ const Auth = () => {
           <Card className="bg-black/40 border-white/10 backdrop-blur-xl relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-600/5" />
             
-            <CardContent className="p-6 relative z-10">
-              <Tabs value={mode} onValueChange={(v) => setMode(v as 'signin' | 'signup')} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6 bg-black/40 border border-white/5">
-                  <TabsTrigger 
-                    value="signin"
-                    className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300"
-                  >
-                    Sign In
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="signup"
-                    className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300"
-                  >
-                    Register
-                  </TabsTrigger>
-                </TabsList>
+            {/* Toggle Switch */}
+            <div className="flex bg-black/20 p-1 rounded-lg">
+              <button
+                onClick={() => setMode('signin')}
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-300 ${
+                  mode === 'signin' 
+                    ? 'bg-orange-500/30 text-orange-400 shadow-sm' 
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => setMode('signup')}
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-300 ${
+                  mode === 'signup' 
+                    ? 'bg-cyan-500/20 text-cyan-300 shadow-sm' 
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
 
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">

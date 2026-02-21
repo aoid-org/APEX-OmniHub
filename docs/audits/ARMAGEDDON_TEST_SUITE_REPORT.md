@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # ARMAGEDDON TEST SUITE - Comprehensive System Validation Report
 
 ## EXECUTIVE SUMMARY

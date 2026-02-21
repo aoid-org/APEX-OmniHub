@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # OmniHub Connector Kit
 
 The Connector Kit is a universal "Press a Button" integration system that allows you to generate API keys and configure inbound integrations (like Webhooks, OmniLink Events) instantly.

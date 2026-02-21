@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # EMERGENCY CONTROLS - USAGE GUIDE
 **Operator Supremacy Controls for OmniHub Edge Functions**
 

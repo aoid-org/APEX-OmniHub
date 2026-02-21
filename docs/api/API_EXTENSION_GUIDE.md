@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 <!-- VALUATION_IMPACT: Comprehensive API extension guide reduces custom integration time by 60%, enabling faster enterprise adoption. Demonstrates API-first architecture for B2B revenue streams. Generated: 2026-02-03 -->
 
 # API Extension Guide

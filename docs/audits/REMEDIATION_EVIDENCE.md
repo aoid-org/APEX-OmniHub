@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # REMEDIATION EVIDENCE: R2/R3 Security Fixes
 ## APEX-OmniHub Supabase Edge Functions
 

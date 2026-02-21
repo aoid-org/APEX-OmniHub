@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # OBSERVABILITY STACK - IMPLEMENTATION GUIDE
 **Phase 2, Week 3-4 - Logging, Metrics, Traces, Alerts**
 

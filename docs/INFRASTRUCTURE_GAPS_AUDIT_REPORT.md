@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Infrastructure Gaps Audit Report
 **Date:** 2026-02-15
 **Auditor:** Chief Systems/Security Engineer

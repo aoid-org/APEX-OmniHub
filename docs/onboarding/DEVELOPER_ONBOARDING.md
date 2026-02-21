@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 <!-- VALUATION_IMPACT: Reduces onboarding time from 2 weeks to 3 days, lowering bus factor risk by 70%. Demonstrates institutional knowledge transfer capability for M&A scenarios. Generated: 2026-02-03 -->
 
 # Developer Onboarding Guide

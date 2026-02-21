@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Evidence-Required Developer Checklist
 
 Use this checklist before claiming a change is complete.

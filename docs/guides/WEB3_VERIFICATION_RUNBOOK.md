@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Web3 Verification Module - RUNBOOK
 
 **Version:** Phase 1.1 (CI/CD Enhanced)
