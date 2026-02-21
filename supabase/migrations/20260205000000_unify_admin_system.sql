@@ -79,17 +79,26 @@ DROP TRIGGER IF EXISTS sync_admin_metadata_insert_trigger ON auth.users;
 DROP TRIGGER IF EXISTS sync_admin_metadata_update_trigger ON auth.users;
 DROP TRIGGER IF EXISTS sync_admin_metadata_trigger ON auth.users;
 
-CREATE TRIGGER sync_admin_metadata_trigger
-  AFTER INSERT OR UPDATE OF raw_app_meta_data ON auth.users
+-- INSERT trigger: OLD does not exist on insert, so WHEN may only reference NEW.
+-- Fire only when the incoming row actually carries admin=true (avoids no-op syncs).
+CREATE TRIGGER sync_admin_metadata_insert_trigger
+  AFTER INSERT ON auth.users
   FOR EACH ROW
-  WHEN (
-    -- Only fire if admin flag changed (performance optimization)
-    OLD.raw_app_meta_data IS DISTINCT FROM NEW.raw_app_meta_data
-  )
+  WHEN ((NEW.raw_app_meta_data->>'admin')::boolean = true)
   EXECUTE FUNCTION public.sync_admin_metadata_to_user_roles();
 
-COMMENT ON TRIGGER sync_admin_metadata_trigger ON auth.users IS
-'Triggers on app_metadata changes to sync admin role to user_roles table';
+COMMENT ON TRIGGER sync_admin_metadata_insert_trigger ON auth.users IS
+'On new-user insert, syncs admin flag to user_roles when app_metadata.admin=true';
+
+-- UPDATE trigger: both OLD and NEW are available, so we can guard on the delta.
+CREATE TRIGGER sync_admin_metadata_update_trigger
+  AFTER UPDATE OF raw_app_meta_data ON auth.users
+  FOR EACH ROW
+  WHEN (OLD.raw_app_meta_data IS DISTINCT FROM NEW.raw_app_meta_data)
+  EXECUTE FUNCTION public.sync_admin_metadata_to_user_roles();
+
+COMMENT ON TRIGGER sync_admin_metadata_update_trigger ON auth.users IS
+'On metadata update, syncs admin flag to user_roles only when app_metadata changed';
 
 -- ============================================================================
 -- STEP 3: Update claim_admin_access() to explicitly insert into user_roles
