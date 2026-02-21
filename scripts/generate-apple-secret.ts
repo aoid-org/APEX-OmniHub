@@ -33,8 +33,8 @@ function base64url(data: Buffer | string): string {
   const buf = typeof data === 'string' ? Buffer.from(data) : data;
   return buf
     .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
     .replace(/=+$/, '');
 }
 
@@ -42,23 +42,26 @@ function parseArgs(): Partial<AppleSecretConfig> {
   const args = process.argv.slice(2);
   const config: Partial<AppleSecretConfig> = {};
 
-  for (let i = 0; i < args.length; i++) {
-    switch (args[i]) {
-      case '--team-id':
-        config.teamId = args[++i];
-        break;
-      case '--key-id':
-        config.keyId = args[++i];
-        break;
-      case '--client-id':
-        config.clientId = args[++i];
-        break;
-      case '--key-path':
-        config.keyPath = args[++i];
-        break;
-      case '--expiry-days':
-        config.expiryDays = parseInt(args[++i], 10);
-        break;
+  let i = 0;
+  while (i < args.length) {
+    const arg = args[i];
+    if (arg === '--team-id') {
+      config.teamId = args[i + 1];
+      i += 2;
+    } else if (arg === '--key-id') {
+      config.keyId = args[i + 1];
+      i += 2;
+    } else if (arg === '--client-id') {
+      config.clientId = args[i + 1];
+      i += 2;
+    } else if (arg === '--key-path') {
+      config.keyPath = args[i + 1];
+      i += 2;
+    } else if (arg === '--expiry-days') {
+      config.expiryDays = Number.parseInt(args[i + 1], 10);
+      i += 2;
+    } else {
+      i++;
     }
   }
 
@@ -101,7 +104,7 @@ async function promptMissing(partial: Partial<AppleSecretConfig>): Promise<Apple
       keyId,
       clientId,
       keyPath,
-      expiryDays: parseInt(expiryDaysStr, 10) || 180,
+      expiryDays: Number.parseInt(expiryDaysStr, 10) || 180,
     };
   } finally {
     rl.close();
@@ -161,7 +164,13 @@ async function main() {
   console.log('(Authentication > Providers > Apple > Secret Key)');
 }
 
-main().catch((err) => {
-  console.error('Error:', err.message);
+try {
+  await main();
+} catch (err) {
+  if (err instanceof Error) {
+    console.error('Error:', err.message);
+  } else {
+    console.error('An unknown error occurred:', err);
+  }
   process.exit(1);
-});
+}

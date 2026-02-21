@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useLoginRedirect } from '@/hooks/useLoginRedirect';
-import { Loader2, ArrowRight, ShieldCheck, Lock } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import appIcon from '@/assets/app_icon.png';
 import { checkRateLimit } from '@/lib/ratelimit';
