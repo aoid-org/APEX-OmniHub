@@ -181,6 +181,26 @@ const Auth = () => {
             </div>
           </div>
 
+          <Card className="bg-black/40 border-white/10 backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-600/5" />
+            
+            <CardContent className="p-6 relative z-10">
+              <Tabs value={mode} onValueChange={(v) => setMode(v as 'signin' | 'signup')} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6 bg-black/40 border border-white/5">
+                  <TabsTrigger 
+                    value="signin"
+                    className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300"
+                  >
+                    Sign In
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="signup"
+                    className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300"
+                  >
+                    Register
+                  </TabsTrigger>
+                </TabsList>
+
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
@@ -225,19 +245,19 @@ const Auth = () => {
                 />
               </TabsContent>
 
-            <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} className="space-y-4">
-              
-              {mode === 'signup' && (
-                <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-cyan-100/80">Full Name</Label>
-                  <div className="relative">
-                    <Input
-                      id="fullName"
-                      placeholder="John Doe"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/50 focus:ring-cyan-500/20"
-                    />
+              <TabsContent value="signup">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName" className="text-cyan-100/80">Full Name</Label>
+                    <div className="relative">
+                      <Input
+                        id="fullName"
+                        placeholder="John Doe"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
@@ -283,6 +303,7 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
+        </div>
       </div>
     </>
   );
