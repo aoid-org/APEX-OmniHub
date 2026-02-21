@@ -55,12 +55,25 @@ function isPrivateIp(ip: string): boolean {
   return false;
 }
 
-function isIpv6Literal(hostname: string): boolean {
-  return hostname.startsWith('[') && hostname.endsWith(']');
-}
+/**
+ * Asserts that the hostname (which may be an IPv6 literal or a raw IP)
+ * is not a private/internal address. Extracted to reduce CC of the main
+ * validator below the SonarCloud-permitted threshold of 15.
+ */
+function assertHostnameNotPrivate(hostname: string): void {
+  // IPv6 literal (e.g. "[::1]")
+  if (hostname.startsWith('[') && hostname.endsWith(']')) {
+    const addr = hostname.slice(1, -1);
+    if (isPrivateIp(addr)) {
+      throw new Error('SSRF blocked internal IP');
+    }
+    return;
+  }
 
-function extractIpv6Address(hostname: string): string {
-  return hostname.slice(1, -1);
+  // Direct IPv4/IPv6 address
+  if (isIP(hostname) && isPrivateIp(hostname)) {
+    throw new Error('SSRF blocked IP');
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -102,20 +115,8 @@ export async function validateWebhookUrl(
 
   const hostname = parsed.hostname;
 
-  // Check IPv6 loopback literal
-  if (isIpv6Literal(hostname)) {
-    const addr = extractIpv6Address(hostname);
-    if (isPrivateIp(addr)) {
-      throw new Error('SSRF blocked internal IP');
-    }
-  }
-
-  // Check direct IP in hostname
-  if (isIP(hostname)) {
-    if (isPrivateIp(hostname)) {
-      throw new Error('SSRF blocked IP');
-    }
-  }
+  // Block private/internal IPs (IPv4, IPv6, IPv6-literal)
+  assertHostnameNotPrivate(hostname);
 
   // Allowlist check: hostname or parent domain must be in allowlist
   const isAllowed = allowlistHosts.some((allowed) => {
