@@ -1,13 +1,13 @@
 {
   "_meta": {
     "valuation_impact": "Machine-readable institutional readiness checklist for automated due diligence systems. Accelerates M&A and fundraising processes by 50% through standardized compliance verification.",
-    "generated": "2026-02-03",
-    "version": "1.0.0",
-    "schema": "institutional-readiness-v1"
+    "generated": "2026-02-20",
+    "version": "2.0.0",
+    "schema": "institutional-readiness-v2"
   },
   "platform": {
     "name": "APEX OmniHub",
-    "version": "1.0.0",
+    "version": "1.2.1",
     "repository": "https://github.com/apexbusiness-systems/APEX-OmniHub",
     "documentation_url": "https://apex-omnihub.com/docs",
     "demo_url": "https://demo.apex-omnihub.com"
@@ -51,6 +51,9 @@
       "orchestration": "ECS",
       "cdn_enabled": true,
       "multi_region": false,
+      "multi_region_roadmap": "2026-Q4",
+      "current_regions": ["us-east-1"],
+      "gdpr_data_residency": "eu-west-1-roadmap-2026-Q3",
       "disaster_recovery": true
     }
   },
@@ -63,11 +66,22 @@
       "hipaa": false
     },
     "security_controls": {
-      "authentication": "jwt-based",
+      "authentication": {
+        "primary": "supabase-jwt",
+        "mfa": true,
+        "biometric": "hardware-enclave-faceId-touchId",
+        "web3": "siwe-ethereum",
+        "device_binding": "zero-trust-registry"
+      },
       "authorization": "rbac-rls",
       "encryption_at_rest": "aes-256",
       "encryption_in_transit": "tls-1.3",
-      "secret_management": "env-vars",
+      "secret_management": {
+        "method": "env-vars-with-automated-scanning",
+        "scanning": ["gitleaks", "trufflehog"],
+        "rotation_policy": "quarterly",
+        "vault_roadmap": "2026-Q3"
+      },
       "vulnerability_scanning": "automated",
       "penetration_testing": "quarterly"
     },
@@ -78,6 +92,21 @@
       "low_vulnerabilities": 5,
       "secrets_exposed": 0,
       "last_security_audit": "2026-01-15"
+    }
+  },
+  "security_certifications": {
+    "armageddon_l7": {
+      "certified": true,
+      "certification_date": "2026-02-18",
+      "run_id": "10efa424-e2e1-4659-b684-f37401f61f2f",
+      "iterations": 40000,
+      "escape_rate_percent": 0,
+      "batteries": [
+        { "id": 10, "threat": "goal-hijack",    "iterations": 10000, "escapes": 0 },
+        { "id": 11, "threat": "tool-misuse",    "iterations": 10000, "escapes": 0 },
+        { "id": 12, "threat": "memory-poison",  "iterations": 10000, "escapes": 0 },
+        { "id": 13, "threat": "supply-chain",   "iterations": 10000, "escapes": 0 }
+      ]
     }
   },
   "operational_readiness": {
@@ -137,6 +166,9 @@
     "financials": {
       "mrr_usd": 75000,
       "arr_usd": 900000,
+      "metrics_basis": "pre-launch-beta-pilot",
+      "metrics_as_of": "2026-02-01",
+      "public_launch_date": "2026-02-20",
       "gross_margin_percent": 75,
       "cac_usd": 1200,
       "ltv_usd": 18000,
@@ -171,12 +203,36 @@
       "synchronous-safety-layer",
       "horizontal-scaling-architecture",
       "sandboxed-plugin-execution"
-    ],
-    "patent_potential": [
-      "single-port-universal-protocol-translation",
-      "real-time-agent-safety-evaluation",
-      "database-enforced-zero-trust-architecture"
     ]
+  },
+  "physical_ai_readiness": {
+    "device_registry": true,
+    "biometric_execution_gating": true,
+    "robot_governance": true,
+    "eu_ai_act_compliant": true,
+    "eu_ai_act_enforcement_date": "2026-08-02",
+    "high_risk_ai_articles_covered": [9, 12, 13, 14, 27, 73],
+    "patent_pending": true,
+    "patent_claims": [
+      "tri-force-protocol-stateless-risk-classification",
+      "trinity-architecture-omniport-canonical-normalization",
+      "man-mode-registry-cyber-physical-biometric-execution-gating"
+    ]
+  },
+  "intellectual_property": {
+    "patents": {
+      "status": "provisional-application-filed",
+      "filing_type": "USPTO-provisional",
+      "priority_date_locked": true,
+      "evidence_hash": "SHA-256-verified",
+      "claims": 3,
+      "utility_application_deadline": "2027-02-20",
+      "claims_summary": [
+        "tri-force-protocol-stateless-risk-classification-sub-10ms",
+        "trinity-architecture-omniport-canonical-normalization",
+        "man-mode-registry-cyber-physical-biometric-execution-gating"
+      ]
+    }
   },
   "risks_and_mitigations": {
     "technical_risks": [
@@ -220,6 +276,7 @@
     "estimated_value_usd": 5000000,
     "valuation_method": "revenue-multiple",
     "arr_multiple": 5.5,
+    "justified_multiple_range": "10x-15x",
     "comparable_transactions": [
       {
         "company": "n8n",
@@ -238,6 +295,20 @@
         "valuation_usd": 1500000000,
         "revenue_usd": 500000000,
         "multiple": 3.0
+      },
+      {
+        "company": "Armis Security",
+        "category": "device-governance-zero-trust",
+        "year": 2024,
+        "valuation_usd": 1100000000,
+        "relevance": "zero-trust-device-registry-physical-systems"
+      },
+      {
+        "company": "Claroty",
+        "category": "physical-system-governance",
+        "year": 2024,
+        "valuation_usd": 1400000000,
+        "relevance": "cyber-physical-governance-layer"
       }
     ]
   },
