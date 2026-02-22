@@ -247,7 +247,7 @@ const App = () => (
 
                 {/* OmniDash (with mobile gate if enabled) */}
               {OMNIDASH_FLAG && (
-                <Route path="/omnidash" element={<DashboardLayout><OmniDashLayout /></DashboardLayout>}>
+                <Route path="/omnidash" element={<OmniDashLayout />}>
                   <Route index element={<OmniDashToday />} />
                   <Route path="pipeline" element={<OmniDashPipeline />} />
                   <Route path="kpis" element={<OmniDashKpis />} />

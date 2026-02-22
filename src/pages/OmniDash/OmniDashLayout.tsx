@@ -16,6 +16,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { useOmniDashKeyboardShortcuts } from '@/omnidash/useOmniDashKeyboardShortcuts';
 import { OmniTraceFeed } from '@/components/dashboard/OmniTraceFeed';
 import { CreateSkillWidget } from '@/components/skills/CreateSkillWidget';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export const OmniDashLayout = () => {
   const { user } = useAuth();
@@ -176,6 +177,7 @@ export const OmniDashLayout = () => {
   };
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen flex flex-col">
       <DemoModeBanner />
       <header className="h-16 glass-card border-b-2 border-b-accent/30 flex items-center px-6 md:px-8">
@@ -303,6 +305,7 @@ export const OmniDashLayout = () => {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   );
 };
 
