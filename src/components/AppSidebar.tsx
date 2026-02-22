@@ -1,4 +1,4 @@
-import { Home, Link2, FileText, Zap, Package, LogOut, Brain } from 'lucide-react';
+import { Home, Link2, FileText, Zap, LogOut, Settings, Bot, LifeBuoy, LayoutDashboard } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
@@ -41,8 +41,6 @@ export function AppSidebar() {
     { title: 'Links', url: '/links', icon: Link2 },
     { title: 'Files', url: '/files', icon: FileText },
     { title: 'Automations', url: '/automations', icon: Zap },
-    { title: 'Integrations', url: '/integrations', icon: Package },
-    { title: 'APEX Assistant', url: '/apex', icon: Brain },
   ];
 
   return (
@@ -52,7 +50,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>
             <div className="flex items-center gap-2">
               <div className="relative">
-                <Link2 className="h-4 w-4" />
+                <LayoutDashboard className="h-4 w-4" />
                 <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                   <span
                     className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${getPingColor(healthStatus)}`}
@@ -63,8 +61,8 @@ export function AppSidebar() {
                 </span>
               </div>
               {!isCollapsed && (
-                <span className="font-semibold tracking-widest uppercase text-xs bg-gradient-to-r from-navy to-accent bg-clip-text text-transparent">
-                  OmniLink
+                <span className="font-semibold tracking-widest uppercase text-xs">
+                  PLATFORM
                 </span>
               )}
             </div>
@@ -90,21 +88,113 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* OmniBoard / Integrations */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/integrations"
+                    className={({ isActive }) =>
+                      `transition-colors duration-150 ${
+                        isActive
+                          ? 'bg-sidebar-accent text-sidebar-accent-foreground border-l-4 border-l-accent pl-2'
+                          : 'hover:bg-sidebar-accent/30 pl-2'
+                      }`
+                    }
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    {!isCollapsed && (
+                      <div className="flex flex-col leading-tight">
+                        <span>OmniBoard</span>
+                        <span className="text-[10px] text-muted-foreground">Integrations</span>
+                      </div>
+                    )}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Settings - separated */}
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/settings"
+                    className={({ isActive }) =>
+                      `transition-colors duration-150 ${
+                        isActive
+                          ? 'bg-sidebar-accent text-sidebar-accent-foreground border-l-4 border-l-accent pl-2'
+                          : 'hover:bg-sidebar-accent/30 pl-2'
+                      }`
+                    }
+                  >
+                    <Settings className="h-4 w-4" />
+                    {!isCollapsed && <span>Settings</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Connect AI */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/apex"
+                    className={({ isActive }) =>
+                      `transition-colors duration-150 ${
+                        isActive
+                          ? 'bg-sidebar-accent text-sidebar-accent-foreground border-l-4 border-l-accent pl-2'
+                          : 'hover:bg-sidebar-accent/30 pl-2'
+                      }`
+                    }
+                  >
+                    <Bot className="h-4 w-4" />
+                    {!isCollapsed && (
+                      <div className="flex flex-col leading-tight">
+                        <span>Connect AI</span>
+                        <span className="text-[10px] text-muted-foreground">Optional</span>
+                      </div>
+                    )}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
       <SidebarFooter>
-        <div className="border-t border-sidebar-border pt-2" />
-        <Button
-          variant="ghost"
-          size={isCollapsed ? 'icon' : 'default'}
-          onClick={signOut}
-          className="w-full opacity-60 hover:opacity-100 transition-opacity"
-        >
-          <LogOut className="h-4 w-4" />
-          {!isCollapsed && <span className="ml-2">Sign Out</span>}
-        </Button>
+        <div className="space-y-1">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <a href="/support" className="hover:bg-sidebar-accent/30 pl-2 transition-colors duration-150">
+                  <LifeBuoy className="h-4 w-4" />
+                  {!isCollapsed && <span>Support</span>}
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+          <div className="border-t border-sidebar-border pt-2" />
+          <Button
+            variant="ghost"
+            size={isCollapsed ? 'icon' : 'default'}
+            onClick={signOut}
+            className="w-full opacity-60 hover:opacity-100 transition-opacity"
+          >
+            <LogOut className="h-4 w-4" />
+            {!isCollapsed && <span className="ml-2">Sign Out</span>}
+          </Button>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
