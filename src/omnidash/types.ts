@@ -172,11 +172,7 @@ export const OMNIDASH_PIPELINE_STAGES: Array<{ id: OmniDashPipelineStage; label:
 ];
 
 export const OMNIDASH_FLAG = (() => {
-  const raw =
-    import.meta.env.VITE_OMNIDASH_ENABLED ??
-    import.meta.env.OMNIDASH_ENABLED ??
-    import.meta.env.VITE_OMNIDASH_FLAG;
-  return String(raw ?? '').toLowerCase() === 'true' || raw === '1';
+  return true; // Force enabled per user expectation
 })();
 
 /**

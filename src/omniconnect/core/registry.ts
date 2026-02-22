@@ -4,7 +4,8 @@
  */
 
 import { Connector, ConnectorRegistry } from '../types/connector';
-import { BarChart3, MessageCircle, Facebook, Mail, Youtube, Instagram, Music, Zap, Server, Globe, Smartphone, Bot } from 'lucide-react';
+import { BarChart3, MessageCircle, Mail, Music, Zap, Server, Globe, Smartphone, Bot } from 'lucide-react';
+import { FacebookIcon, YoutubeIcon, InstagramIcon } from '@/components/icons/SocialIcons';
 
 export interface IntegrationDef {
   id: string;
@@ -20,11 +21,11 @@ export interface IntegrationDef {
 export const availableIntegrations: IntegrationDef[] = [
   { id: '1', name: 'TradeLine 24/7', type: 'tradeline247', description: 'Analytics and business intelligence', icon: BarChart3, requiresApiKey: true },
   { id: '2', name: 'WhatsApp', type: 'whatsapp', description: 'Business messaging platform', icon: MessageCircle, requiresApiKey: true },
-  { id: '3', name: 'Facebook', type: 'facebook', description: 'Social media integration', icon: Facebook, requiresApiKey: true },
+  { id: '3', name: 'Facebook', type: 'facebook', description: 'Social media integration', icon: FacebookIcon, requiresApiKey: true },
   { id: '4', name: 'Messenger', type: 'messenger', description: 'Facebook Messenger integration', icon: MessageCircle, requiresApiKey: true },
   { id: '5', name: 'Google Apps', type: 'google', description: 'Google Workspace integration', icon: Mail, requiresApiKey: true },
-  { id: '6', name: 'YouTube', type: 'youtube', description: 'Video platform integration', icon: Youtube, requiresApiKey: true },
-  { id: '7', name: 'Instagram', type: 'instagram', description: 'Social media integration', icon: Instagram, requiresApiKey: true },
+  { id: '6', name: 'YouTube', type: 'youtube', description: 'Video platform integration', icon: YoutubeIcon, requiresApiKey: true },
+  { id: '7', name: 'Instagram', type: 'instagram', description: 'Social media integration', icon: InstagramIcon, requiresApiKey: true },
   { id: '8', name: 'TikTok', type: 'tiktok', description: 'Short video platform', icon: Music, requiresApiKey: true },
   { id: '9', name: 'Zapier', type: 'zapier', description: 'Automation platform', icon: Zap, requiresApiKey: true },
   { id: '10', name: 'Klaviyo', type: 'klaviyo', description: 'Email marketing automation', icon: Mail, requiresApiKey: true },
@@ -37,7 +38,7 @@ export const availableIntegrations: IntegrationDef[] = [
 ];
 
 class ConnectorRegistryImpl implements ConnectorRegistry {
-  private connectors = new Map<string, Connector>();
+  private readonly connectors = new Map<string, Connector>();
 
   register(provider: string, connector: Connector): void {
     if (this.connectors.has(provider)) {

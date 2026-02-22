@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useLoginRedirect } from '@/hooks/useLoginRedirect';
-import { Loader2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { z } from 'zod';
 import appIcon from '@/assets/app_icon.png';
 import { checkRateLimit } from '@/lib/ratelimit';
@@ -84,8 +85,8 @@ const Auth = () => {
     }
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSignIn = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) e.preventDefault();
     const lockoutStatus = checkAccountLockout(email);
     if (lockoutStatus.isLocked) {
       toast({
@@ -145,6 +146,7 @@ const Auth = () => {
     }
   };
 
+
   return (
     <>
       <Helmet>
@@ -162,12 +164,12 @@ const Auth = () => {
 
         <div className="w-full max-w-md p-6 relative z-10">
           <div className="text-center mb-8 space-y-4">
-            <div className="relative inline-block group">
+            <div className="relative inline-block group mb-2">
               <div className="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full group-hover:bg-cyan-400/30 transition-all duration-500" />
               <img
                 src={appIcon}
                 alt="APEX OmniHub"
-                className="h-20 w-20 relative z-10 drop-shadow-2xl transition-transform duration-500 group-hover:scale-105"
+                className="h-16 w-16 relative z-0 drop-shadow-2xl transition-transform duration-500 group-hover:scale-105 mx-auto"
               />
             </div>
             
@@ -186,16 +188,22 @@ const Auth = () => {
             
             <CardContent className="p-6 relative z-10">
               <Tabs value={mode} onValueChange={(v) => setMode(v as 'signin' | 'signup')} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6 bg-black/40 border border-white/5">
+                <TabsList className="grid w-full grid-cols-2 mb-6 bg-black/40 border border-white/5 p-1 rounded-lg">
                   <TabsTrigger 
                     value="signin"
-                    className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300"
+                    className="data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=inactive]:bg-slate-800/80 data-[state=inactive]:text-slate-300 data-[state=inactive]:hover:bg-slate-700 transition-all"
+                    onClick={(e) => {
+                      if (mode === 'signin') {
+                        handleSignIn(e);
+                      }
+                    }}
+                    disabled={loading && mode === 'signin'}
                   >
-                    Sign In
+                    {loading && mode === 'signin' ? 'Signing In...' : 'Sign In'}
                   </TabsTrigger>
                   <TabsTrigger 
                     value="signup"
-                    className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300"
+                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=inactive]:bg-slate-800/80 data-[state=inactive]:text-slate-300 data-[state=inactive]:hover:bg-slate-700 transition-all"
                   >
                     Register
                   </TabsTrigger>
@@ -224,25 +232,9 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
-                      </>
-                    ) : (
-                      'Sign In'
-                    )}
-                  </Button>
+                  <button type="submit" className="hidden" tabIndex={-1} aria-hidden="true">Submit</button>
+                  <OAuthButtons />
                 </form>
-                <OAuthButtons
-                  redirectTo={
-                    searchParams.get('redirect')
-                      ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(searchParams.get('redirect')!)}`
-                      : undefined
-                  }
-                  disabled={loading}
-                />
               </TabsContent>
 
               <TabsContent value="signup">
@@ -280,25 +272,17 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      'Sign Up'
-                    )}
-                  </Button>
+                  <div className="flex justify-end mt-4">
+                    <Button 
+                      type="submit" 
+                      className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white" 
+                      disabled={loading}
+                    >
+                      {loading ? 'Creating Account...' : 'Register'}
+                    </Button>
+                  </div>
+                  <OAuthButtons />
                 </form>
-                <OAuthButtons
-                  redirectTo={
-                    searchParams.get('redirect')
-                      ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(searchParams.get('redirect')!)}`
-                      : undefined
-                  }
-                  disabled={loading}
-                />
               </TabsContent>
             </Tabs>
           </CardContent>

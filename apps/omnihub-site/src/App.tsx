@@ -3,6 +3,18 @@ import { HomePage } from '@/pages/Home';
 import { OnboardingWizard } from '@/pages/Launch/OnboardingWizard';
 import { DashboardOverview } from '@/pages/DashboardOverview';
 import { ApprovalsPage } from '@/pages/OmniDash/Approvals';
+
+// New Stub Pages
+import { PipelinePage } from '@/pages/OmniDash/Pipeline';
+import { KpisPage } from '@/pages/OmniDash/Kpis';
+import { OpsPage } from '@/pages/OmniDash/Ops';
+import { IntegrationsPage } from '@/pages/OmniDash/Integrations';
+import { EventsPage } from '@/pages/OmniDash/Events';
+import { EntitiesPage } from '@/pages/OmniDash/Entities';
+import { RunsPage } from '@/pages/OmniDash/Runs';
+import { WorkflowsPage } from '@/pages/OmniDash/Workflows';
+import { ApexAssistantPage } from '@/pages/OmniDash/ApexAssistant';
+
 import { OmniDashLayout } from '@/layouts/OmniDashLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
@@ -40,8 +52,25 @@ function App() {
         }
       >
         <Route index element={<DashboardOverview />} />
+        <Route path="pipeline" element={<PipelinePage />} />
+        <Route path="kpis" element={<KpisPage />} />
+        <Route path="ops" element={<OpsPage />} />
+        <Route path="integrations" element={<IntegrationsPage />} />
+        <Route path="events" element={<EventsPage />} />
+        <Route path="entities" element={<EntitiesPage />} />
+        <Route path="runs" element={<RunsPage />} />
         <Route path="approvals" element={<ApprovalsPage />} />
+        <Route path="workflows" element={<WorkflowsPage />} />
       </Route>
+
+      <Route 
+        path="/apex" 
+        element={
+          <ProtectedRoute>
+            <ApexAssistantPage />
+          </ProtectedRoute>
+        } 
+      />
 
       {/* Existing Content Pages - Mapping to clean URLs */}
       <Route path="/login" element={<LoginPage />} />
@@ -59,12 +88,6 @@ function App() {
       <Route path="/orchestrator" element={<OrchestratorPage />} />
       <Route path="/smart-integrations" element={<SmartIntegrationsPage />} />
       <Route path="/tri-force" element={<TriForcePage />} />
-
-      {/* Fallback for .html URLs if any hardcoded links remain */}
-      {/* Note: This assumes links like /demo.html are requested. React Router handles path matching. */}
-      {/* However, if the server doesn't rewrite .html requests to index.html, this won't be hit. */}
-      {/* Vite development server handles this usually if configured, but production might not. */}
-      {/* For now, we assume clean URLs are used. */}
     </Routes>
   );
 }

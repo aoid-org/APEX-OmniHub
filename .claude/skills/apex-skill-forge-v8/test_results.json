@@ -87,12 +87,12 @@
     {
       "test": "ship toolkit -> universal",
       "passed": true,
-      "detail": "size=4,926B structure=valid"
+      "detail": "size=4,924B structure=valid"
     },
     {
       "test": "ship toolkit -> omnihub",
       "passed": true,
-      "detail": "size=4,926B structure=valid"
+      "detail": "size=4,924B structure=valid"
     },
     {
       "test": "ship domain -> claude",
@@ -102,12 +102,12 @@
     {
       "test": "ship domain -> universal",
       "passed": true,
-      "detail": "size=4,899B structure=valid"
+      "detail": "size=4,898B structure=valid"
     },
     {
       "test": "ship domain -> omnihub",
       "passed": true,
-      "detail": "size=4,899B structure=valid"
+      "detail": "size=4,898B structure=valid"
     },
     {
       "test": "ship orchestrator -> claude",
@@ -117,12 +117,12 @@
     {
       "test": "ship orchestrator -> universal",
       "passed": true,
-      "detail": "size=5,023B structure=valid"
+      "detail": "size=5,022B structure=valid"
     },
     {
       "test": "ship orchestrator -> omnihub",
       "passed": true,
-      "detail": "size=5,023B structure=valid"
+      "detail": "size=5,022B structure=valid"
     },
     {
       "test": "ship transformer -> claude",
@@ -132,57 +132,57 @@
     {
       "test": "ship transformer -> universal",
       "passed": true,
-      "detail": "size=4,992B structure=valid"
+      "detail": "size=4,990B structure=valid"
     },
     {
       "test": "ship transformer -> omnihub",
       "passed": true,
-      "detail": "size=4,992B structure=valid"
+      "detail": "size=4,990B structure=valid"
     },
     {
       "test": "ship guardian -> claude",
       "passed": true,
-      "detail": "size=6,548B structure=valid"
+      "detail": "size=6,547B structure=valid"
     },
     {
       "test": "ship guardian -> universal",
       "passed": true,
-      "detail": "size=4,946B structure=valid"
+      "detail": "size=4,943B structure=valid"
     },
     {
       "test": "ship guardian -> omnihub",
       "passed": true,
-      "detail": "size=4,946B structure=valid"
+      "detail": "size=4,943B structure=valid"
     },
     {
       "test": "execute workflow",
       "passed": true,
-      "detail": "status=success time=0.0ms skill=test-workflow"
+      "detail": "status=success time=0.01ms skill=test-workflow"
     },
     {
       "test": "execute toolkit",
       "passed": true,
-      "detail": "status=success time=0.0ms skill=test-toolkit"
+      "detail": "status=success time=0.01ms skill=test-toolkit"
     },
     {
       "test": "execute domain",
       "passed": true,
-      "detail": "status=success time=0.0ms skill=test-domain"
+      "detail": "status=success time=0.01ms skill=test-domain"
     },
     {
       "test": "execute orchestrator",
       "passed": true,
-      "detail": "status=success time=0.0ms skill=test-orchestrator"
+      "detail": "status=success time=0.01ms skill=test-orchestrator"
     },
     {
       "test": "execute transformer",
       "passed": true,
-      "detail": "status=success time=0.0ms skill=test-transformer"
+      "detail": "status=success time=0.02ms skill=test-transformer"
     },
     {
       "test": "execute guardian",
       "passed": true,
-      "detail": "status=success time=0.0ms skill=test-guardian"
+      "detail": "status=success time=0.01ms skill=test-guardian"
     },
     {
       "test": "manifest DAG workflow",

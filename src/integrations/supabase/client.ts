@@ -77,10 +77,10 @@ function createUnavailableClient() {
 
 export const supabase = (!SUPABASE_URL || !SUPABASE_KEY)
   ? createUnavailableClient()
-  : createClient<Database>(SUPABASE_URL!, SUPABASE_KEY!, {
+  : createClient<Database>(SUPABASE_URL, SUPABASE_KEY, {
       auth: {
         // Safer access to localStorage for SSR/non-browser environments
-        storage: typeof globalThis.window === 'undefined' ? undefined : globalThis.window.localStorage,
+        storage: globalThis.window === undefined ? undefined : globalThis.window.localStorage,
         persistSession: true,
         autoRefreshToken: true,
       },

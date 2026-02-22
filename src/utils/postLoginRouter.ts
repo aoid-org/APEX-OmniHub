@@ -26,7 +26,6 @@ export interface PostLoginDestinationOptions {
  * Protected routes that require specific access levels
  */
 const ROUTE_ACCESS: Record<string, (opts: PostLoginDestinationOptions) => boolean> = {
-  '/dashboard': ({ isPaid }) => isPaid,
   '/links': ({ isPaid }) => isPaid,
   '/files': ({ isPaid }) => isPaid,
   '/automations': ({ isPaid }) => isPaid,
@@ -61,8 +60,7 @@ function canAccessRoute(route: string, options: PostLoginDestinationOptions): bo
  */
 function getUpgradeReason(route: string): string {
   if (route.startsWith('/omnidash')) return 'omnidash';
-  if (route.startsWith('/dashboard') ||
-      route.startsWith('/links') ||
+  if (route.startsWith('/links') ||
       route.startsWith('/files') ||
       route.startsWith('/automations') ||
       route.startsWith('/integrations')) {
@@ -127,8 +125,8 @@ export function getPostLoginDestination(options: PostLoginDestinationOptions): s
   }
 
   if (isPaid) {
-    // Paid users go to standard dashboard
-    return '/dashboard';
+    // Paid users now also go to OmniDash
+    return '/omnidash';
   }
 
   // PRIORITY 3: Free users get OmniDash demo experience

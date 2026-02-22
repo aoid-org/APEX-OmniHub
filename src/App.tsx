@@ -17,13 +17,10 @@ import { initializeSecurity } from './lib/security';
 import { logConfiguration } from './lib/config';
 import { createDebugLogger } from './lib/debug-logger';
 import { Loader2 } from 'lucide-react';
-import { OMNIDASH_FLAG } from './omnidash/types';
-import { OmniLinkShell } from "./layouts/OmniLinkShell";
 
 // Lazy load pages for better code splitting
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
-const Dashboard = lazy(() => import("./pages/dashboard"));
 const Links = lazy(() => import("./pages/Links"));
 const Files = lazy(() => import("./pages/Files"));
 const Automations = lazy(() => import("./pages/Automations"));
@@ -190,7 +187,7 @@ const AuthenticatedRedirect = () => {
 
   useEffect(() => {
     if (user && location.pathname === '/') {
-      navigate('/dashboard', { replace: true });
+      navigate('/omnidash', { replace: true });
     }
   }, [user, location, navigate]);
 
@@ -225,7 +222,6 @@ const App = () => (
                 <Route path="/omnitrace" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><OmniDashRuns /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
 
                 {/* Legacy routes (with mobile gate) */}
-                <Route path="/dashboard" element={<PaidAccessRoute><OmniLinkShell><Dashboard /></OmniLinkShell></PaidAccessRoute>} />
                 <Route path="/links" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Links /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/files" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Files /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/automations" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Automations /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
@@ -245,9 +241,7 @@ const App = () => (
                 <Route path="/apps/built-canadian" element={<BuiltCanadian />} />
                 <Route path="/tech-specs" element={<TechSpecs />} />
 
-                {/* OmniDash (with mobile gate if enabled) */}
-              {OMNIDASH_FLAG && (
-                <Route path="/omnidash" element={<DashboardLayout><OmniDashLayout /></DashboardLayout>}>
+                <Route path="/omnidash" element={<PaidAccessRoute><DashboardLayout><OmniDashLayout /></DashboardLayout></PaidAccessRoute>}>
                   <Route index element={<OmniDashToday />} />
                   <Route path="pipeline" element={<OmniDashPipeline />} />
                   <Route path="kpis" element={<OmniDashKpis />} />
@@ -261,7 +255,6 @@ const App = () => (
                   <Route path="tasks" element={<OmniDashTasks />} />
                   <Route path="workflows" element={<WorkflowStudio />} />
                 </Route>
-              )}
 
                 <Route path="*" element={<NotFound />} />
               </Routes>

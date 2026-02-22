@@ -8,7 +8,7 @@ type MobileOnlyGateProps = Readonly<{
 }>;
 
 const TABLET_BREAKPOINT = 1024; // >= 1024px is desktop
-const FEATURE_FLAG = import.meta.env.VITE_OMNILINK_MOBILE_ONLY !== 'false';
+const FEATURE_FLAG = import.meta.env.VITE_OMNILINK_MOBILE_ONLY === 'true';
 
 /**
  * MobileOnlyGate - Enforces mobile/tablet-only access to OmniLink

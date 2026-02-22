@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Brain } from 'lucide-react';
 import { GoogleIcon, AppleIcon } from '@/components/icons/OAuthIcons';
 import type { Provider } from '@supabase/supabase-js';
 
@@ -42,13 +42,17 @@ export function OAuthButtons({ redirectTo, disabled = false }: OAuthButtonsProps
 
   return (
     <div className="space-y-4 mt-4">
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-        </div>
+      <div className="relative flex items-center gap-4 my-2">
+        <div className="flex-1 h-px bg-white/10" />
+        <Button
+          variant="outline"
+          type="button"
+          className="bg-slate-800 border border-slate-700 text-white hover:bg-slate-700 h-8 px-4 py-0 rounded-md text-xs font-semibold tracking-wide shadow-sm"
+        >
+          <Brain className="mr-2 h-3.5 w-3.5 text-purple-400" />
+          CONNECT AI
+        </Button>
+        <div className="flex-1 h-px bg-white/10" />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
