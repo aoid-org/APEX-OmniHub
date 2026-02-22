@@ -32,7 +32,7 @@ function getSupabaseClient(): Record<string, unknown> | null {
   // Check if we're in a browser environment with Supabase configured
   if (globalThis.window !== undefined) {
     const url = import.meta.env?.VITE_SUPABASE_URL;
-    const key = import.meta.env?.VITE_SUPABASE_ANON_KEY || import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const key = import.meta.env?.VITE_SUPABASE_ANON_KEY;
 
     if (url && key) {
       // Return a minimal client interface for testing

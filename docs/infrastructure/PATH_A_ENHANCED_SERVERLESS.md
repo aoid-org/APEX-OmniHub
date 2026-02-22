@@ -364,7 +364,7 @@ resource "vercel_project" "omnihub" {
       target = ["production", "preview"]
     },
     {
-      key    = "VITE_SUPABASE_PUBLISHABLE_KEY"
+      key    = "VITE_SUPABASE_ANON_KEY"
       value  = var.supabase_anon_key
       target = ["production", "preview"]
     },

@@ -58,7 +58,7 @@ Status:  REMEDIATED (optional key rotation recommended)
 **Documented Secrets:**
 1. **Supabase Credentials** (3 secrets)
    - VITE_SUPABASE_URL (public)
-   - VITE_SUPABASE_PUBLISHABLE_KEY (public, 90-day rotation)
+   - VITE_SUPABASE_ANON_KEY (public, 90-day rotation)
    - SUPABASE_SERVICE_ROLE_KEY (critical, 90-day rotation)
 
 2. **Web3/Blockchain Credentials** (4 secrets)

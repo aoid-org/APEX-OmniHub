@@ -69,16 +69,12 @@ export function getDatabase(): IDatabase {
   // Read from environment variables
   const provider = (import.meta.env.VITE_DATABASE_PROVIDER || 'supabase') as DatabaseFactoryOptions['provider']
   const url = import.meta.env.VITE_SUPABASE_URL
-  const apiKey =
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-  // SECURITY: Never use serviceRoleKey in client code - it bypasses RLS!
-  // Only use anon/publishable keys in browser. Service role is for Edge Functions only.
+  const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY
   const debug = import.meta.env.DEV
 
   if (!url || !apiKey) {
     throw new Error(
-      'Database not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY environment variables.'
+      'Database not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.'
     )
   }
 

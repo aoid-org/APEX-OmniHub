@@ -18,7 +18,7 @@ $ git log --all --full-history --oneline -- .env
 
 **Exposed Credentials:**
 - `VITE_SUPABASE_PROJECT_ID`: wwajmaohwcbooljdureo
-- `VITE_SUPABASE_PUBLISHABLE_KEY`: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (anon key)
+- `VITE_SUPABASE_ANON_KEY`: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (anon key)
 - `VITE_SUPABASE_URL`: https://wwajmaohwcbooljdureo.supabase.co
 
 ---

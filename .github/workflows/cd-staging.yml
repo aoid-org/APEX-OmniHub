@@ -119,7 +119,7 @@ jobs:
         run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.STAGING_SUPABASE_KEY }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_KEY }}
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           VITE_DATADOG_APPLICATION_ID: ${{ secrets.DATADOG_APP_ID }}
           VITE_DATADOG_CLIENT_TOKEN: ${{ secrets.DATADOG_CLIENT_TOKEN }}

@@ -121,7 +121,7 @@ const status = getOmniPortStatus();
 
 ## Runtime & Ops
 - Build: Vite with SWC, terser minification, chunk splitting (`vite.config.ts`), console stripping in production.
-- Env: Requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Auth provider guards missing env and surfaces setup message.
+- Env: Requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Auth provider guards missing env and surfaces setup message.
 - Scripts/CLI (idempotent):
   - Tests: `npm test`, `npm run test:prompt-defense`.
   - Security: `npm run security:audit`.

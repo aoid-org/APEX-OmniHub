@@ -143,14 +143,14 @@ echo "Supabase Configuration:"
 echo "======================="
 check_var "VITE_SUPABASE_URL" "true"
 SUPABASE_KEY_SET=false
-if [ -n "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
-    echo -e "${GREEN}✓${NC} VITE_SUPABASE_PUBLISHABLE_KEY is set"
+if [ -n "$VITE_SUPABASE_ANON_KEY" ]; then
+    echo -e "${GREEN}✓${NC} VITE_SUPABASE_ANON_KEY is set"
     SUPABASE_KEY_SET=true
 elif [ -n "$VITE_SUPABASE_ANON_KEY" ]; then
     echo -e "${GREEN}✓${NC} VITE_SUPABASE_ANON_KEY is set"
     SUPABASE_KEY_SET=true
 else
-    echo -e "${RED}✗${NC} Neither VITE_SUPABASE_PUBLISHABLE_KEY nor VITE_SUPABASE_ANON_KEY is set"
+    echo -e "${RED}✗${NC} Neither VITE_SUPABASE_ANON_KEY nor VITE_SUPABASE_ANON_KEY is set"
     ((ERRORS++))
 fi
 

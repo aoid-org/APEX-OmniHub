@@ -455,7 +455,7 @@ const { data: url, error } = await storage.upload(
 ```bash
 VITE_STORAGE_PROVIDER=supabase
 VITE_SUPABASE_URL=https://wwajmaohwcbooljdureo.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<your-anon-key>
+VITE_SUPABASE_ANON_KEY=<your-anon-key>
 ```
 
 ### Future: AWS S3
@@ -602,7 +602,7 @@ For large file uploads, use chunked uploads:
 **Solution:** Set environment variables:
 ```bash
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 ### Error: "File size exceeds limit"

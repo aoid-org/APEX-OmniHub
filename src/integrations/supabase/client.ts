@@ -4,15 +4,12 @@ import type { Database } from './types';
 // User's own Supabase (highest priority)
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-// Accept multiple key formats for user-provided keys
-const SUPABASE_KEY =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-  import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   const missing: string[] = [];
   if (!SUPABASE_URL) missing.push('VITE_SUPABASE_URL');
-  if (!SUPABASE_KEY) missing.push('VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY');
+  if (!SUPABASE_KEY) missing.push('VITE_SUPABASE_ANON_KEY');
 
   const errorMessage = `Supabase env vars missing (${missing.join(', ')}). Using unavailable client stub.`;
   console.warn(errorMessage);
@@ -21,7 +18,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 // Helper to create a stub client that throws helpful errors when methods are called
 function createUnavailableClient() {
   const err = new Error(
-    'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.'
+    'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'
   );
 
   const reject = async () => {

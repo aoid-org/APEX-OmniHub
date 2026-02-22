@@ -47,21 +47,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
-      const supabaseAnonKey =
-        import.meta.env.VITE_SUPABASE_ANON_KEY ??
-        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
       // #region agent log
       log('Environment variables check', {
         hasUrl: !!supabaseUrl,
-        hasKey: !!supabaseAnonKey,
+        hasKey: !!supabaseKey,
       });
       // #endregion
 
-      if (!supabaseUrl || !supabaseAnonKey) {
+      if (!supabaseUrl || !supabaseKey) {
         if (import.meta.env.DEV) {
           console.warn(
-            'Missing Supabase environment variables. Checked: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY | VITE_SUPABASE_PUBLISHABLE_KEY'
+            'Missing Supabase environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY'
           );
         }
         setCloudConfigured(false);

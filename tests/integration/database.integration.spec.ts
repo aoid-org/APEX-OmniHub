@@ -27,7 +27,7 @@ suite('Database Integration Tests', () => {
   if (!hasCreds && requireIntegration) {
     it('requires Supabase test credentials', () => {
       throw new Error(
-        'Test Supabase credentials not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY).'
+        'Test Supabase credentials not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY).'
       )
     })
     return

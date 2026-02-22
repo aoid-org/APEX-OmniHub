@@ -30,7 +30,7 @@ When `VITE_DEMO_MODE=true` (frontend) and/or `DEMO_MODE=true` (Edge Functions):
 
 - **Required for the frontend to boot:**
   - `VITE_SUPABASE_URL`
-  - `VITE_SUPABASE_PUBLISHABLE_KEY` (or `VITE_SUPABASE_ANON_KEY`)
+  - `VITE_SUPABASE_ANON_KEY` (or `VITE_SUPABASE_ANON_KEY`)
 
 ## Supabase Edge Functions (Demo Mode)
 

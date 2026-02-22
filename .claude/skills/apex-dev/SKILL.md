@@ -482,7 +482,7 @@ npm run armageddon
 ```bash
 # .env.example (NEVER commit actual values)
 VITE_SUPABASE_URL=https://xxx.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
+VITE_SUPABASE_ANON_KEY=eyJ...
 # Optional
 VITE_SENTRY_DSN=https://xxx@sentry.io/xxx
 ```

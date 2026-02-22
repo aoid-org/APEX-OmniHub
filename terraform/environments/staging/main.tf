@@ -99,7 +99,7 @@ module "vercel" {
 
   env_vars = {
     VITE_SUPABASE_URL                = var.vite_supabase_url
-    VITE_SUPABASE_PUBLISHABLE_KEY    = var.vite_supabase_publishable_key
+    VITE_SUPABASE_ANON_KEY    = var.vite_supabase_publishable_key
     VITE_SENTRY_DSN                  = var.vite_sentry_dsn
     VITE_DATADOG_APPLICATION_ID      = var.vite_datadog_application_id
     VITE_DATADOG_CLIENT_TOKEN        = var.vite_datadog_client_token

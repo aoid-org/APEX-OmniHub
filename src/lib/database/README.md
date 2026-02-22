@@ -369,7 +369,7 @@ const { data: users, error } = await db.find('users', {
 ```bash
 VITE_DATABASE_PROVIDER=supabase
 VITE_SUPABASE_URL=https://wwajmaohwcbooljdureo.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<your-anon-key>
+VITE_SUPABASE_ANON_KEY=<your-anon-key>
 ```
 
 ### Future: PostgreSQL (Cloud SQL/RDS/Azure)
@@ -539,7 +539,7 @@ await adminDb.find('users')
 **Solution:** Set environment variables:
 ```bash
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 ### Error: "Delete operation requires filters"

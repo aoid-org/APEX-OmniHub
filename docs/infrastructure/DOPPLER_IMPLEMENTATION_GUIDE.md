@@ -61,7 +61,7 @@ doppler secrets upload .env --project omnihub --config dev
 
 # Or set secrets manually
 doppler secrets set VITE_SUPABASE_URL="https://wwajmaohwcbooljdureo.supabase.co" --project omnihub --config dev
-doppler secrets set VITE_SUPABASE_PUBLISHABLE_KEY="<your-key>" --project omnihub --config dev
+doppler secrets set VITE_SUPABASE_ANON_KEY="<your-key>" --project omnihub --config dev
 
 # For production (DO NOT use dev secrets!)
 doppler secrets set VITE_SUPABASE_URL="<prod-url>" --project omnihub --config prod
@@ -160,15 +160,15 @@ npm run dev
 omnihub (project)
 ├── dev (config)
 │   ├── VITE_SUPABASE_URL=<dev-supabase>
-│   ├── VITE_SUPABASE_PUBLISHABLE_KEY=<dev-anon-key>
+│   ├── VITE_SUPABASE_ANON_KEY=<dev-anon-key>
 │   └── ... (all dev secrets)
 ├── staging (config)
 │   ├── VITE_SUPABASE_URL=<staging-supabase>
-│   ├── VITE_SUPABASE_PUBLISHABLE_KEY=<staging-anon-key>
+│   ├── VITE_SUPABASE_ANON_KEY=<staging-anon-key>
 │   └── ... (all staging secrets)
 └── prod (config)
     ├── VITE_SUPABASE_URL=<prod-supabase>
-    ├── VITE_SUPABASE_PUBLISHABLE_KEY=<prod-anon-key>
+    ├── VITE_SUPABASE_ANON_KEY=<prod-anon-key>
     └── ... (all production secrets)
 ```
 
@@ -178,7 +178,7 @@ omnihub (project)
 
 1. **Supabase Credentials:**
    - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_PUBLISHABLE_KEY`
+   - `VITE_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY` (sensitive!)
 
 2. **Web3/Blockchain:**
@@ -266,7 +266,7 @@ jobs:
 
 2. **Update in Doppler:**
    ```bash
-   doppler secrets set VITE_SUPABASE_PUBLISHABLE_KEY="<new-key>" --project omnihub --config prod
+   doppler secrets set VITE_SUPABASE_ANON_KEY="<new-key>" --project omnihub --config prod
    ```
 
 3. **Automatic propagation:**
@@ -276,7 +276,7 @@ jobs:
 4. **Verify:**
    ```bash
    # Check Vercel has new key
-   vercel env ls production | grep VITE_SUPABASE_PUBLISHABLE_KEY
+   vercel env ls production | grep VITE_SUPABASE_ANON_KEY
    ```
 
 5. **Old key deprecation:**
@@ -289,7 +289,7 @@ jobs:
 
 ```bash
 # Add secret metadata with rotation date
-doppler secrets set VITE_SUPABASE_PUBLISHABLE_KEY="<key>" \
+doppler secrets set VITE_SUPABASE_ANON_KEY="<key>" \
   --project omnihub --config prod \
   --note "Rotate: 2026-04-03 (90 days)"
 ```

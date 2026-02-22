@@ -556,7 +556,7 @@ Idempotency                  ✅ 8 tests
 ```bash
 # Supabase
 VITE_SUPABASE_URL=https://***staging***.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJ***staging***
+VITE_SUPABASE_ANON_KEY=eyJ***staging***
 
 # Redis (from Upstash Terraform module)
 REDIS_URL=redis://***:6379

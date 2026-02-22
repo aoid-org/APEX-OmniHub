@@ -202,7 +202,7 @@ OmniPort is configured via the singleton pattern and environment variables.
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `VITE_SUPABASE_URL` | Supabase project URL | Required |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase anon key | Required |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon key | Required |
 
 ### Programmatic Configuration
 

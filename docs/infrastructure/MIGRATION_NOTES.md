@@ -108,7 +108,7 @@
 
 **Current Supabase Variables:**
 - `VITE_SUPABASE_URL` ✅ (user-provided)
-- `VITE_SUPABASE_PUBLISHABLE_KEY` ✅ (user-provided)
+- `VITE_SUPABASE_ANON_KEY` ✅ (user-provided)
 - `VITE_SUPABASE_ANON_KEY` (alternative)
 - `VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (Lovable fallback - to be removed)
 

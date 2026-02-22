@@ -31,9 +31,7 @@ export const CloudSetupMessage = () => {
               <li>Add your Supabase credentials:
                 <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
 {`VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
-# OR use anon key:
-VITE_SUPABASE_ANON_KEY=your-anon-key`}
+VITE_SUPABASE_ANON_KEY=your-anon-public-key`}
                 </pre>
               </li>
               <li>Get these values from your Supabase project: <strong>Settings → API</strong></li>

@@ -18,7 +18,7 @@ export const SUPABASE_CONFIG = {
     import.meta.env.SUPABASE_SERVICE_ROLE_KEY,
   anonKey:
     import.meta.env.VITE_SUPABASE_ANON_KEY ||
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    import.meta.env.VITE_SUPABASE_ANON_KEY,
 };
 
 export const isSupabaseConfigured = (): boolean =>

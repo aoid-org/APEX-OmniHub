@@ -96,7 +96,7 @@ doppler secrets upload .env.example
 ```bash
 # Supabase
 doppler secrets set VITE_SUPABASE_URL="https://wwajmaohwcbooljdureo.supabase.co"
-doppler secrets set VITE_SUPABASE_PUBLISHABLE_KEY="<your-anon-key>"
+doppler secrets set VITE_SUPABASE_ANON_KEY="<your-anon-key>"
 doppler secrets set SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>"
 
 # Blockchain (when ready)

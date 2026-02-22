@@ -29,7 +29,7 @@ This document inventories all secrets used in OmniHub infrastructure and provide
 **Rotation:** Not required (public identifier)
 
 #### 1.2 Supabase Publishable Key (Anon Key)
-**Variable:** `VITE_SUPABASE_PUBLISHABLE_KEY`
+**Variable:** `VITE_SUPABASE_ANON_KEY`
 **Current Value:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` (anon key)
 **Sensitivity:** PUBLIC (designed for client-side use)
 **Permissions:** Limited by Row Level Security (RLS)
@@ -47,12 +47,12 @@ https://app.supabase.com/project/wwajmaohwcbooljdureo/settings/api
 # 3. Copy new anon key
 
 # 4. Update in Vercel
-vercel env rm VITE_SUPABASE_PUBLISHABLE_KEY production
-vercel env add VITE_SUPABASE_PUBLISHABLE_KEY production
+vercel env rm VITE_SUPABASE_ANON_KEY production
+vercel env add VITE_SUPABASE_ANON_KEY production
 # Paste new key when prompted
 
 # 5. Update in Supabase Edge Functions (if needed)
-supabase secrets set VITE_SUPABASE_PUBLISHABLE_KEY=<new-key>
+supabase secrets set VITE_SUPABASE_ANON_KEY=<new-key>
 
 # 6. Trigger new deployment
 vercel --prod
