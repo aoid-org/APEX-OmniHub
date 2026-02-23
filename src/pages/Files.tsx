@@ -11,12 +11,10 @@ import 'react-resizable/css/styles.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FileItem = any;
-
 const Files = () => {
   const [uid, setUid] = useState<string>("");
-  const [items, setItems] = useState<FileItem[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [items, setItems] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -90,7 +88,7 @@ const Files = () => {
       // Error logged via toast
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload file",
+        description: (error as Error).message || "Failed to upload file",
         variant: "destructive"
       });
     } finally {
@@ -111,7 +109,7 @@ const Files = () => {
       // Error logged via toast
       toast({
         title: "Download failed",
-        description: error.message || "Failed to download file",
+        description: (error as Error).message || "Failed to download file",
         variant: "destructive"
       });
     }
@@ -136,7 +134,7 @@ const Files = () => {
       // Error logged via toast
       toast({
         title: "Delete failed",
-        description: error.message || "Failed to delete file",
+        description: (error as Error).message || "Failed to delete file",
         variant: "destructive"
       });
     }
