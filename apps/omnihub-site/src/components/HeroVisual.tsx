@@ -1,32 +1,11 @@
-import { useState, useEffect } from 'react';
-
 /**
- * Theme-aware hero visual that swaps between light and dark PNG assets.
- * Falls back to SVG if PNGs fail to load.
+ * Hero visual — single transparent PNG asset (theme-agnostic).
  */
 export function HeroVisual() {
-  const [theme, setTheme] = useState<string>(
-    () => document.documentElement.dataset.theme ?? 'light'
-  );
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setTheme(document.documentElement.dataset.theme ?? 'light');
-    });
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme'],
-    });
-    return () => observer.disconnect();
-  }, []);
-
-  const src =
-    theme === 'dark' ? '/assets/hero-night.png' : '/assets/hero-light.png';
-
   return (
     <div className="hero-visual" aria-hidden="true">
       <img
-        src={src}
+        src="/assets/hero-image.png"
         alt=""
         className="hero-visual__image"
         loading="eager"

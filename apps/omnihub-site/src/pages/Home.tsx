@@ -27,7 +27,7 @@ function Hero() {
       </div>
       <div className="container hero__grid">
         <div className="hero__content">
-          <h1 className="heading-hero hero__title">{siteConfig.hero.title}</h1>
+          <h1 className="heading-hero hero__title" style={{ whiteSpace: 'pre-line' }}>{siteConfig.hero.title}</h1>
           <p className="hero__tagline">{siteConfig.hero.tagline}</p>
           <p className="hero__subtagline">
             {siteConfig.stamp.tagline}
