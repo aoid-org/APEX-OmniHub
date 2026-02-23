@@ -11,7 +11,7 @@ export interface IntegrationDef {
   name: string;
   type: string;
   description: string;
-  icon: unknown;
+  icon: React.ElementType;
   requiresApiKey: boolean;
   requiresUsername?: boolean;
   scopes?: string[];
