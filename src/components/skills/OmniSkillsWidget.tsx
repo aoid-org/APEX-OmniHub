@@ -1,5 +1,5 @@
 /**
- * CreateSkillWidget — 3-Stage Skill Forge Modal
+ * OmniSkillsWidget — 3-Stage OmniSkill Forge Modal
  *
  * Stage 1: Meta (name + trigger_intent)
  * Stage 2: Intelligence (instructions)
@@ -48,7 +48,7 @@ const intelligenceSchema = z.object({
 
 type Stage = 1 | 2 | 3;
 
-export function CreateSkillWidget() {
+export function OmniSkillsWidget({ children }: { readonly children?: React.ReactNode }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -93,7 +93,9 @@ export function CreateSkillWidget() {
         throw new Error('Output schema is not valid JSON');
       }
 
-      const { data, error } = await supabase
+      // MIGRATION-PENDING: cast removed once 'user_generated_skills' table is applied via supabase migration
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from('user_generated_skills')
         .insert({
           user_id: user.id,
@@ -106,17 +108,19 @@ export function CreateSkillWidget() {
           },
         })
         .select('id, name')
-        .single();
+        .single() as { data: { id: string; name: string } | null; error: { message: string } | null };
 
       if (error) throw new Error(error.message);
       return data;
     },
     onSuccess: (data) => {
       toast({
-        title: 'Skill Forged',
-        description: `"${data.name}" is now available in your workflow palette.`,
+        title: 'OmniSkill Forged',
+        description: data?.name
+          ? `"${data.name}" is now available in your OmniSkills palette.`
+          : 'OmniSkill created successfully.',
       });
-      queryClient.invalidateQueries({ queryKey: ['user-skills'] }).catch(console.error);
+      queryClient.invalidateQueries({ queryKey: ['omni-skills'] }).catch(console.error);
       resetForm();
       setOpen(false);
     },
@@ -181,16 +185,18 @@ export function CreateSkillWidget() {
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Sparkles className="h-4 w-4" />
-          <span className="hidden sm:inline">Forge Skill</span>
-        </Button>
+        {children || (
+          <Button variant="outline" size="sm" className="gap-2 text-white border-white/20 hover:bg-white/10">
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Forge OmniSkill</span>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <Sparkles className="h-5 w-5 text-primary" />
-            Skill Forge
+            OmniSkill Forge
             <Badge variant="secondary" className="text-xs">
               {stage}/3 · {stageLabels[stage - 1]}
             </Badge>
@@ -213,9 +219,9 @@ export function CreateSkillWidget() {
         {stage === 1 && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="skill-name">Skill Name</Label>
+              <Label htmlFor="omniskill-name">OmniSkill Name</Label>
               <Input
-                id="skill-name"
+                id="omniskill-name"
                 placeholder="e.g. Invoice Processor"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -223,16 +229,16 @@ export function CreateSkillWidget() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="skill-trigger">Trigger Intent</Label>
+              <Label htmlFor="omniskill-trigger">Trigger Intent</Label>
               <Input
-                id="skill-trigger"
+                id="omniskill-trigger"
                 placeholder="e.g. Process an invoice from email attachment"
                 value={triggerIntent}
                 onChange={(e) => setTriggerIntent(e.target.value)}
                 maxLength={200}
               />
               <p className="text-xs text-muted-foreground">
-                What should this skill respond to?
+                What should this OmniSkill respond to?
               </p>
             </div>
           </div>
@@ -242,9 +248,9 @@ export function CreateSkillWidget() {
         {stage === 2 && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="skill-instructions">System Instructions</Label>
+              <Label htmlFor="omniskill-instructions">System Instructions</Label>
               <Textarea
-                id="skill-instructions"
+                id="omniskill-instructions"
                 placeholder="You are an invoice processing expert. Extract line items, totals, and vendor details..."
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
@@ -263,9 +269,9 @@ export function CreateSkillWidget() {
         {stage === 3 && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="skill-input-schema">Input Schema (JSON)</Label>
+              <Label htmlFor="omniskill-input-schema">Input Schema (JSON)</Label>
               <Textarea
-                id="skill-input-schema"
+                id="omniskill-input-schema"
                 value={inputSchema}
                 onChange={(e) => setInputSchema(e.target.value)}
                 rows={4}
@@ -273,9 +279,9 @@ export function CreateSkillWidget() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="skill-output-schema">Output Schema (JSON)</Label>
+              <Label htmlFor="omniskill-output-schema">Output Schema (JSON)</Label>
               <Textarea
-                id="skill-output-schema"
+                id="omniskill-output-schema"
                 value={outputSchema}
                 onChange={(e) => setOutputSchema(e.target.value)}
                 rows={4}
@@ -320,7 +326,7 @@ export function CreateSkillWidget() {
                 ) : (
                   <Check className="h-4 w-4 mr-1" />
                 )}
-                Forge Skill
+                Forge OmniSkill
               </Button>
             )}
           </div>

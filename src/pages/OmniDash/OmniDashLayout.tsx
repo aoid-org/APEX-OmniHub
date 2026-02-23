@@ -1,9 +1,31 @@
-import { Outlet, Link } from 'react-router-dom';
-import { AlertCircle, Activity, ShieldCheck, Loader2, Sparkles, TrendingUp, Zap } from 'lucide-react';
+/**
+ * OmniDashLayout — SPA Command Center
+ *
+ * Architecture:
+ * - OVERRIDE: STRICT Single Page App (CTO Mandate)
+ * - Today dashboard is the PERMANENT main view (zero routing)
+ * - All sub-views (telemetry, analytics, tools) open as Apple-grade Dialog modals
+ * - Zero route changes within the dashboard
+ * - Highly responsive, intuitive cross-platform UX
+ * - Keyboard shortcuts trigger activeDialog state
+ */
+import { useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  AlertCircle, Activity, ShieldCheck, Loader2,
+  Sparkles, TrendingUp, Zap,
+} from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useAdminAccess, useOmniDashSettings } from '@/omnidash/hooks';
 import { usePaidAccess } from '@/hooks/usePaidAccess';
 import { useQuery } from '@tanstack/react-query';
@@ -13,9 +35,50 @@ import { OMNIDASH_FLAG, OMNIDASH_SAFE_ENABLE_NOTE, OMNIDASH_NAV_ITEMS } from '@/
 import { OmniDashNavIconButton } from '@/components/OmniDashNavIconButton';
 import { DemoModeBanner } from '@/components/demo/DemoModeBanner';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { useOmniDashKeyboardShortcuts } from '@/omnidash/useOmniDashKeyboardShortcuts';
 import { OmniTraceFeed } from '@/components/dashboard/OmniTraceFeed';
-import { CreateSkillWidget } from '@/components/skills/CreateSkillWidget';
+import { OmniSkillsWidget } from '@/components/skills/OmniSkillsWidget';
+import { useOmniDashKeyboardShortcuts } from '@/omnidash/useOmniDashKeyboardShortcuts';
+
+// Sub-view lazy imports (loaded only when Sheet opens)
+import { lazy, Suspense } from 'react';
+const Today        = lazy(() => import('./Today'));
+const Pipeline     = lazy(() => import('./Pipeline'));
+const Kpis         = lazy(() => import('./Kpis'));
+const Ops          = lazy(() => import('./Ops'));
+const Integrations = lazy(() => import('./Integrations'));
+const Events       = lazy(() => import('./Events'));
+const Entities     = lazy(() => import('./Entities'));
+const Runs         = lazy(() => import('./Runs'));
+const Tasks        = lazy(() => import('./Tasks'));
+const Approvals    = lazy(() => import('./Approvals'));
+const WorkflowStudio = lazy(() => import('./WorkflowStudio'));
+const LocalAgents  = lazy(() => import('./LocalAgents'));
+
+type PanelKey =
+  | 'pipeline' | 'kpis' | 'ops' | 'integrations'
+  | 'events' | 'entities' | 'runs' | 'tasks'
+  | 'approvals' | 'workflows' | 'local-agents'
+  | null;
+
+const PANEL_LABELS: Record<Exclude<PanelKey, null>, string> = {
+  pipeline: 'Pipeline',
+  kpis: 'KPIs',
+  ops: 'Ops Console',
+  integrations: 'Integrations',
+  events: 'Events',
+  entities: 'Entities',
+  runs: 'Runs',
+  tasks: 'Tasks',
+  approvals: 'Approvals',
+  workflows: 'Workflow Studio',
+  'local-agents': 'Local Agents',
+};
+
+const PanelFallback = () => (
+  <div className="flex items-center justify-center h-48">
+    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+  </div>
+);
 
 export const OmniDashLayout = () => {
   const { user } = useAuth();
@@ -23,10 +86,15 @@ export const OmniDashLayout = () => {
   const { isPaid, loading: paidLoading } = usePaidAccess();
   const settings = useOmniDashSettings();
 
-  // Enable keyboard shortcuts (H, P, K, O, I, E, N, R, A)
-  useOmniDashKeyboardShortcuts();
+  // Active Dialog panel state — null = no dialog open
+  const [activePanel, setActivePanel] = useState<PanelKey>(null);
 
-  // Determine full access: Admin OR Paid user
+  const openPanel = useCallback((key: PanelKey) => setActivePanel(key), []);
+  const closePanel = useCallback(() => setActivePanel(null), []);
+
+  // Keyboard shortcuts: H=Today P=Pipeline K=KPIs O=Ops I=Integrations etc.
+  useOmniDashKeyboardShortcuts(openPanel);
+
   const hasFullAccess = isAdmin || isPaid;
   const loading = adminLoading || paidLoading;
 
@@ -40,6 +108,7 @@ export const OmniDashLayout = () => {
     refetchInterval: 60_000,
   });
 
+  // ── Feature flag guard ────────────────────────────────────────────────────
   if (!OMNIDASH_FLAG) {
     return (
       <div className="p-6 space-y-2">
@@ -51,6 +120,7 @@ export const OmniDashLayout = () => {
     );
   }
 
+  // ── Loading state ─────────────────────────────────────────────────────────
   if (loading || settings.isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -62,6 +132,7 @@ export const OmniDashLayout = () => {
     );
   }
 
+  // ── Auth guard ────────────────────────────────────────────────────────────
   if (!user) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -82,6 +153,7 @@ export const OmniDashLayout = () => {
     );
   }
 
+  // ── Access guard (demo mode for free users) ───────────────────────────────
   if (!hasFullAccess) {
     return (
       <div className="p-6 space-y-6">
@@ -167,6 +239,7 @@ export const OmniDashLayout = () => {
     );
   }
 
+  // ── Settings toggle helper ────────────────────────────────────────────────
   const toggleSetting = async (
     key: 'demo_mode' | 'show_connected_ecosystem' | 'anonymize_kpis' | 'freeze_mode',
     value: boolean
@@ -175,28 +248,56 @@ export const OmniDashLayout = () => {
     await settings.refetch();
   };
 
+  // ── Resolve which component to render inside the Sheet ───────────────────
+  const renderPanelContent = () => {
+    switch (activePanel) {
+      case 'pipeline':     return <Pipeline />;
+      case 'kpis':         return <Kpis />;
+      case 'ops':          return <Ops />;
+      case 'integrations': return <Integrations />;
+      case 'events':       return <Events />;
+      case 'entities':     return <Entities />;
+      case 'runs':         return <Runs />;
+      case 'tasks':        return <Tasks />;
+      case 'approvals':    return <Approvals />;
+      case 'workflows':    return <WorkflowStudio />;
+      case 'local-agents': return <LocalAgents />;
+      default:             return null;
+    }
+  };
+
+  // ── Main render ───────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col">
       <DemoModeBanner />
+
+      {/* Header */}
       <header className="h-16 glass-card border-b-2 border-b-accent/30 flex items-center px-6 md:px-8">
         <div className="flex items-center justify-between w-full max-w-full">
           <div className="min-w-0 flex-shrink flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
             <h1 className="text-lg font-semibold tracking-tight truncate">APEX OmniHub</h1>
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {OMNIDASH_NAV_ITEMS.map((item) => (
-              <OmniDashNavIconButton
-                key={item.key}
-                to={item.to}
-                label={item.label}
-                icon={item.icon}
-                shortcut={item.shortcut}
-              />
-            ))}
+
+          {/* Desktop nav — horizontally scrollable on small screens */}
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-shrink-0 max-w-[50vw]">
+            {OMNIDASH_NAV_ITEMS.map((item) => {
+              const panelKey = item.key as PanelKey;
+              return (
+                <OmniDashNavIconButton
+                  key={item.key}
+                  onClick={() => openPanel(panelKey)}
+                  label={item.label}
+                  icon={item.icon}
+                  shortcut={item.shortcut}
+                  isActive={activePanel === panelKey}
+                />
+              );
+            })}
           </div>
+
           <div className="flex items-center gap-4 flex-shrink-0">
-            <CreateSkillWidget />
+            <OmniSkillsWidget />
             {health.data?.lastUpdated && (
               <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
                 <Activity className="h-3 w-3" />
@@ -215,22 +316,30 @@ export const OmniDashLayout = () => {
         </div>
       </header>
 
+      {/* Mobile bottom nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t flex items-center justify-around py-2 px-2 safe-bottom">
-        {OMNIDASH_NAV_ITEMS.map((item) => (
-          <OmniDashNavIconButton
-            key={item.key}
-            to={item.to}
-            label={item.label}
-            icon={item.icon}
-            shortcut={item.shortcut}
-          />
-        ))}
+        {OMNIDASH_NAV_ITEMS.map((item) => {
+          const panelKey = item.key as PanelKey;
+          return (
+            <OmniDashNavIconButton
+              key={item.key}
+              onClick={() => openPanel(panelKey)}
+              label={item.label}
+              icon={item.icon}
+              shortcut={item.shortcut}
+              isActive={activePanel === panelKey}
+            />
+          );
+        })}
       </div>
 
+      {/* Main content — Today is always visible */}
       <main className="flex-1 p-6 md:p-8 pb-20 md:pb-8 bg-background/50">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-[2fr,1fr]">
           <div className="space-y-6">
-            <Outlet />
+            <Suspense fallback={<PanelFallback />}>
+              <Today />
+            </Suspense>
           </div>
           <div className="space-y-6">
             <Card className="glass-card hover-lift animate-in-delay-1 rounded-2xl">
@@ -244,10 +353,7 @@ export const OmniDashLayout = () => {
                     <p className="font-medium">Demo Mode</p>
                     <p className="text-sm text-muted-foreground">Redacts client names, PII, and buckets $ values.</p>
                   </div>
-                  <Switch
-                    checked={settings.data?.demo_mode}
-                    onCheckedChange={(v) => toggleSetting('demo_mode', v)}
-                  />
+                  <Switch checked={settings.data?.demo_mode} onCheckedChange={(v) => toggleSetting('demo_mode', v)} />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
@@ -255,10 +361,7 @@ export const OmniDashLayout = () => {
                     <p className="font-medium">Show Connected Ecosystem</p>
                     <p className="text-sm text-muted-foreground">Stub card for ecosystem view (no hub build required).</p>
                   </div>
-                  <Switch
-                    checked={settings.data?.show_connected_ecosystem}
-                    onCheckedChange={(v) => toggleSetting('show_connected_ecosystem', v)}
-                  />
+                  <Switch checked={settings.data?.show_connected_ecosystem} onCheckedChange={(v) => toggleSetting('show_connected_ecosystem', v)} />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
@@ -266,10 +369,7 @@ export const OmniDashLayout = () => {
                     <p className="font-medium">Anonymize KPIs</p>
                     <p className="text-sm text-muted-foreground">Buckets KPI values while in demo mode.</p>
                   </div>
-                  <Switch
-                    checked={settings.data?.anonymize_kpis}
-                    onCheckedChange={(v) => toggleSetting('anonymize_kpis', v)}
-                  />
+                  <Switch checked={settings.data?.anonymize_kpis} onCheckedChange={(v) => toggleSetting('anonymize_kpis', v)} />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
@@ -277,10 +377,7 @@ export const OmniDashLayout = () => {
                     <p className="font-medium">Freeze switch</p>
                     <p className="text-sm text-muted-foreground">When ON, limit work to bugfix + onboarding only.</p>
                   </div>
-                  <Switch
-                    checked={settings.data?.freeze_mode}
-                    onCheckedChange={(v) => toggleSetting('freeze_mode', v)}
-                  />
+                  <Switch checked={settings.data?.freeze_mode} onCheckedChange={(v) => toggleSetting('freeze_mode', v)} />
                 </div>
               </CardContent>
             </Card>
@@ -302,6 +399,39 @@ export const OmniDashLayout = () => {
           </div>
         </div>
       </main>
+
+      </main>
+
+      {/* Strict SPA Overlay — Apple-grade Framer Motion Dialog */}
+      <AnimatePresence>
+        {activePanel !== null && (
+          <Dialog open={true} onOpenChange={(open) => { if (!open) closePanel(); }}>
+            <DialogContent
+              className="w-[95vw] md:w-[85vw] lg:w-[75vw] xl:max-w-5xl max-h-[90vh] p-0 flex flex-col gap-0 rounded-2xl overflow-hidden glass-card shadow-2xl border border-white/10"
+              style={{ zIndex: 100 }}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="flex flex-col h-full max-h-[90vh]"
+              >
+                <DialogHeader className="px-6 py-4 border-b border-border bg-background/80 backdrop-blur-xl shrink-0">
+                  <DialogTitle className="text-left text-lg font-semibold tracking-tight">
+                    {activePanel ? PANEL_LABELS[activePanel] : ''}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar bg-background/40">
+                  <Suspense fallback={<PanelFallback />}>
+                    {renderPanelContent()}
+                  </Suspense>
+                </div>
+              </motion.div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
