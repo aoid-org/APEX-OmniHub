@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 
 /**
  * Theme-aware hero visual that swaps between light and dark PNG assets.
- * Falls back to SVG if PNGs fail to load.
  */
 export function HeroVisual() {
-  const [theme, setTheme] = useState<string>(
+    const [theme, setTheme] = useState<string>(
     () => document.documentElement.dataset.theme ?? 'light'
   );
 
