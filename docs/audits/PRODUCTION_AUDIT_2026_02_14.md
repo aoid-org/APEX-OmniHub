@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 > **Superseded Notice (2026-02-20):** This audit remains historical. For current launch posture and documentation baseline, reference `audit_report.json` and `docs/audits/COMPREHENSIVE_DOCUMENTATION_AUDIT_2026_02_20.md`.
 
 # APEX-OmniHub Production Audit Report

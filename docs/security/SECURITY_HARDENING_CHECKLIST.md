@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 <!-- VALUATION_IMPACT: Production-ready security hardening demonstrates SOC 2 Type II and ISO 27001 compliance readiness. Reduces security insurance premiums by 40% and accelerates enterprise sales cycles. Generated: 2026-02-03 -->
 
 # Security Hardening Checklist

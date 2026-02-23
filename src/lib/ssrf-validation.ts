@@ -77,6 +77,34 @@ function assertHostnameNotPrivate(hostname: string): void {
 }
 
 // ---------------------------------------------------------------------------
+// Private guards (extracted to keep validateWebhookUrl CC ≤ 15)
+// ---------------------------------------------------------------------------
+
+/**
+ * Throws if a bracketed IPv6 literal resolves to a private/internal address.
+ * ROOT CAUSE: extracted to reduce CC of validateWebhookUrl (SonarCloud S1541).
+ */
+function assertIpv6LiteralAllowed(hostname: string): void {
+  if (!isIpv6Literal(hostname)) return;
+  const addr = extractIpv6Address(hostname);
+  if (isPrivateIp(addr)) {
+    throw new Error('SSRF blocked internal IP');
+  }
+}
+
+/**
+ * Throws if any DNS-resolved IP for a hostname is private/internal.
+ * ROOT CAUSE: extracted to reduce CC of validateWebhookUrl (SonarCloud S1541).
+ */
+function assertDnsResolutionAllowed(resolvedIps: string[]): void {
+  for (const ip of resolvedIps) {
+    if (isPrivateIp(ip)) {
+      throw new Error(`DNS resolved to blocked IP: ${ip}`);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -119,23 +147,18 @@ export async function validateWebhookUrl(
   assertHostnameNotPrivate(hostname);
 
   // Allowlist check: hostname or parent domain must be in allowlist
-  const isAllowed = allowlistHosts.some((allowed) => {
-    return hostname === allowed || hostname.endsWith(`.${allowed}`);
-  });
-
+  const isAllowed = allowlistHosts.some(
+    (allowed) => hostname === allowed || hostname.endsWith(`.${allowed}`),
+  );
   if (!isAllowed) {
     throw new Error(`Host '${hostname}' is not on the allowlist`);
   }
 
-  // DNS resolution check
+  // DNS resolution check — delegated to helper (CC reduction)
   let resolvedIps: string[] = [];
   if (dnsResolver) {
     resolvedIps = await dnsResolver(hostname);
-    for (const ip of resolvedIps) {
-      if (isPrivateIp(ip)) {
-        throw new Error(`DNS resolved to blocked IP: ${ip}`);
-      }
-    }
+    assertDnsResolutionAllowed(resolvedIps);
   }
 
   return { hostname, resolvedIps };

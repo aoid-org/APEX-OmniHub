@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Chaotic Client Story: "Sarah's Terrible, Horrible, No Good, Very Bad Day"
 ## Full-System Integration Test - All 12 APEX Apps
 

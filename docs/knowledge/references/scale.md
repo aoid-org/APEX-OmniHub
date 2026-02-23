@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # High-Scale Architecture Reference
 
 Copyright (c) 2025 APEX Business Systems Ltd. | https://apexbusiness-systems.com

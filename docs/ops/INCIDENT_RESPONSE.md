@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Incident Response Playbook
 
 **Version:** 1.0.0

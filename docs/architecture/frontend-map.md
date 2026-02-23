@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Frontend Structure Map
 
 This document maps the main frontend topology in `APEX-OmniHub`, with a visual artifact for quick onboarding and architecture reviews.

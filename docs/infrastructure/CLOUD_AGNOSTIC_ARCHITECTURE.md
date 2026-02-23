@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # OMNIHUB CLOUD-AGNOSTIC ARCHITECTURE
 **Global-Grade Infrastructure Blueprint for OmniHub/TradeLine/APEX**
 

@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Admin Secret Setup (Post-Deploy)
 
 After deploying migrations, you must configure the admin claim secret via the

@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # CI Runtime Gates
 
 > **Purpose:** Ensure that a "green build" guarantees the deployed site actually renders and critical assets are accessible.

@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 ⚠️ **HISTORICAL RECORD** — Feature snapshot from January 2026 | Test count: 221 → Current: 564
 
 # APEX-OmniHub Technical Enhancements Documentation

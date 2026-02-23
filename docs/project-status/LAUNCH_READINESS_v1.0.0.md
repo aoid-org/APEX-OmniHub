@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # 🚀 LAUNCH READINESS: APEX OmniHub v1.2.0
 
 **Status**: 🟢 **GO FOR LAUNCH**

@@ -1,3 +1,4 @@
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # OmniLink Architecture Output: Portability Matrix + SRE Package + Rollback/DR
 
 > **Evidence labeling**: statements are tagged as **VERIFIED** (from repo evidence) or **PROPOSED** (design guidance).
