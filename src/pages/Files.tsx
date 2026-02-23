@@ -14,19 +14,19 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FileItem = any;
 
+const COLS = { lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 };
+
 const Files = () => {
   const [uid, setUid] = useState<string>("");
   const [items, setItems] = useState<FileItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-
-  const cols = { lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 };
   const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>({});
 
   useEffect(() => {
     const newLayouts: Partial<Record<string, Layout>> = {};
-    for (const [bp, c] of Object.entries(cols)) {
+    for (const [bp, c] of Object.entries(COLS)) {
       newLayouts[bp] = items.map((item, i) => ({
         i: item.name,
         x: i % c,
@@ -178,7 +178,7 @@ const Files = () => {
           className="layout -mx-2"
           layouts={layouts}
           breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
-          cols={cols}
+          cols={COLS}
           rowHeight={88}
           onLayoutChange={(_layout, allLayouts) => setLayouts(allLayouts)}
           draggableHandle=".custom-drag-handle"

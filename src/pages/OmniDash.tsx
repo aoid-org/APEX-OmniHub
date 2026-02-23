@@ -397,6 +397,7 @@ export const OmniDash = () => {
 
             <OmniTraceFeed maxItems={10} />
           </div>
+        </div>
       </main>
 
       {/* Strict SPA Overlay — Apple-grade Framer Motion Dialog */}

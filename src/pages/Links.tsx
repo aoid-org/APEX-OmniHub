@@ -19,6 +19,8 @@ import 'react-resizable/css/styles.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
+const COLS = { lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 };
+
 const linkSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
   url: z.string().trim().url("Invalid URL format").max(2048, "URL must be less than 2048 characters"),
@@ -47,7 +49,6 @@ const Links = () => {
     description: '',
   });
 
-  const cols = { lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 };
   const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>({});
 
   const { data: links = [] as Link[], isLoading, error } = useQuery({
@@ -82,7 +83,7 @@ const Links = () => {
 
   useEffect(() => {
     const newLayouts: Partial<Record<string, Layout>> = {};
-    for (const [bp, c] of Object.entries(cols)) {
+    for (const [bp, c] of Object.entries(COLS)) {
       newLayouts[bp] = links.map((link, i) => ({
         i: link.id,
         x: i % c,
@@ -281,7 +282,7 @@ const Links = () => {
         className="layout -mx-2"
         layouts={layouts}
         breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
-        cols={cols}
+        COLS={COLS}
         rowHeight={160}
         onLayoutChange={(_layout, allLayouts) => setLayouts(allLayouts)}
         draggableHandle=".custom-drag-handle"

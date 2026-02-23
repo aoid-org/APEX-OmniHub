@@ -232,7 +232,6 @@ const App = () => (
                 <Route path="/apps/built-canadian" element={<BuiltCanadian />} />
                 <Route path="/tech-specs" element={<TechSpecs />} />
 
-<<<<<<< Updated upstream
                 {/* OmniDash (with mobile gate if enabled) */}
               {OMNIDASH_FLAG && (
                 <Route path="/omnidash" element={<DashboardLayout><OmniDashLayout /></DashboardLayout>}>
@@ -250,9 +249,6 @@ const App = () => (
                   <Route path="workflows" element={<WorkflowStudio />} />
                 </Route>
               )}
-=======
-                <Route path="/omnidash" element={<AccessProvider><PaidAccessRoute><DashboardLayout><OmniDash /></DashboardLayout></PaidAccessRoute></AccessProvider>} />
->>>>>>> Stashed changes
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
