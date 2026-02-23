@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
+
 /**
- * Hero visual — single transparent PNG asset (theme-agnostic).
+ * Theme-aware hero visual that swaps between light and dark PNG assets.
  */
 export function HeroVisual() {
     const [theme, setTheme] = useState<string>(
