@@ -9,7 +9,7 @@
  * - Highly responsive, intuitive cross-platform UX
  * - Keyboard shortcuts trigger activeDialog state
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -40,7 +40,6 @@ import { OmniSkillsWidget } from '@/components/skills/OmniSkillsWidget';
 import { useOmniDashKeyboardShortcuts } from '@/omnidash/useOmniDashKeyboardShortcuts';
 
 // Sub-view lazy imports (loaded only when Sheet opens)
-import { lazy, Suspense } from 'react';
 const Today        = lazy(() => import('../components/omnidash/Today'));
 const Pipeline     = lazy(() => import('../components/omnidash/Pipeline'));
 const Kpis         = lazy(() => import('../components/omnidash/Kpis'));

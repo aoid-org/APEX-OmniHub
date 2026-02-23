@@ -11,14 +11,12 @@ import 'react-resizable/css/styles.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FileItem = any;
-
 const COLS = { lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 };
 
 const Files = () => {
   const [uid, setUid] = useState<string>("");
-  const [items, setItems] = useState<FileItem[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [items, setItems] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
