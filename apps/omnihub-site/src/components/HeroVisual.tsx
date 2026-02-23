@@ -2,7 +2,6 @@
 
 /**
  * Theme-aware hero visual that swaps between light and dark PNG assets.
- * Falls back to SVG if PNGs fail to load.
  */
 export function HeroVisual() {
   const src = '/assets/hero-image.png';
