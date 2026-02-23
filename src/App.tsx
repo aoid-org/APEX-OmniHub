@@ -18,13 +18,12 @@ import { initializeSecurity } from './lib/security';
 import { logConfiguration } from './lib/config';
 import { createDebugLogger } from './lib/debug-logger';
 import { Loader2 } from 'lucide-react';
-import { OMNIDASH_FLAG } from './omnidash/types';
 import { OmniLinkShell } from "./layouts/OmniLinkShell";
 
 // Lazy load pages for better code splitting
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
-const Dashboard = lazy(() => import("./pages/dashboard"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Links = lazy(() => import("./pages/Links"));
 const Files = lazy(() => import("./pages/Files"));
 const Automations = lazy(() => import("./pages/Automations"));
@@ -44,6 +43,7 @@ const TechSpecs = lazy(() => import("./pages/TechSpecs"));
 const Diagnostics = lazy(() => import("./pages/Diagnostics"));
 const Health = lazy(() => import("./pages/Health"));
 const OmniDash = lazy(() => import("./pages/OmniDash"));
+const OmniTraceFeed = lazy(() => import("./components/dashboard/OmniTraceFeed").then(module => ({ default: module.OmniTraceFeed })));
 const Translation = lazy(() => import("./pages/Translation"));
 const Agent = lazy(() => import("./pages/Agent"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -210,7 +210,7 @@ const App = () => (
                 <Route path="/translation" element={<MobileOnlyGate><PaidAccessRoute><Translation /></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/agent" element={<MobileOnlyGate><PaidAccessRoute><Agent /></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/settings" element={<MobileOnlyGate><PaidAccessRoute><Settings /></PaidAccessRoute></MobileOnlyGate>} />
-                <Route path="/omnitrace" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><OmniDashRuns /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
+                <Route path="/omnitrace" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><OmniTraceFeed /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
 
                 {/* Legacy routes (with mobile gate) */}
                 <Route path="/dashboard" element={<PaidAccessRoute><OmniLinkShell><Dashboard /></OmniLinkShell></PaidAccessRoute>} />
@@ -232,9 +232,7 @@ const App = () => (
                 <Route path="/apps/built-canadian" element={<BuiltCanadian />} />
                 <Route path="/tech-specs" element={<TechSpecs />} />
 
-                {/* OmniDash Router */}
                 <Route path="/omnidash" element={<AccessProvider><PaidAccessRoute><DashboardLayout><OmniDash /></DashboardLayout></PaidAccessRoute></AccessProvider>} />
-
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

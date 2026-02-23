@@ -93,7 +93,7 @@ const Links = () => {
       }));
     }
     setLayouts(newLayouts);
-  }, [links]);
+  }, [links, cols]);
 
   const createLinkMutation = useMutation({
     mutationFn: async (linkData: z.infer<typeof linkSchema>) => {

@@ -23,7 +23,8 @@ export const Events = () => {
     },
   });
 
-  const events = eventsQuery.data || [];
+  const rawEvents = eventsQuery.data || [];
+  const events = useMemo(() => rawEvents, [rawEvents]);
 
   const initialLayouts = useMemo(() => {
     const lg = events.map((event, i) => ({ i: event.id, x: 0, y: i, w: 1, h: 1, isResizable: false }));

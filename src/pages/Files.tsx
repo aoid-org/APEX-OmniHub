@@ -37,7 +37,7 @@ const Files = () => {
       }));
     }
     setLayouts(newLayouts);
-  }, [items]);
+  }, [items, cols]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {

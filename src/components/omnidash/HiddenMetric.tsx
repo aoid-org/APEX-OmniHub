@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const HiddenMetric = ({ icon: Icon, label, value, valueClass }: { icon: any, label: string, value: string | React.ReactNode, valueClass?: string }) => {
+export const HiddenMetric = ({ icon: Icon, label, value, valueClass }: { icon: React.ElementType, label: string, value: string | React.ReactNode, valueClass?: string }) => {
   const isDesktopHidden = false; // Default: show full info on desktop
 
   return (
@@ -21,7 +21,7 @@ export const HiddenMetric = ({ icon: Icon, label, value, valueClass }: { icon: a
   );
 };
 
-export const HiddenValue = ({ icon: Icon, value, valueClass }: { icon?: any, value: string | React.ReactNode, valueClass?: string }) => {
+export const HiddenValue = ({ icon: Icon, value, valueClass }: { icon?: React.ElementType, value: string | React.ReactNode, valueClass?: string }) => {
   const isDesktopHidden = false; // Default: show full info on desktop
   const DefaultIcon = Icon || (() => <span className="h-3.5 w-3.5 inline-block opacity-50">•</span>);
 
