@@ -1,8 +1,13 @@
 import { Routes, Route } from 'react-router-dom';
 import { HomePage } from '@/pages/Home';
+<<<<<<< Updated upstream
 import { OnboardingWizard } from '@/pages/Launch/OnboardingWizard';
 import { DashboardOverview } from '@/pages/DashboardOverview';
 import { ApprovalsPage } from '@/pages/OmniDash/Approvals';
+=======
+import { ApexAssistantPage } from '@/pages/OmniDash/ApexAssistant';
+
+>>>>>>> Stashed changes
 import { OmniDashLayout } from '@/layouts/OmniDashLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
@@ -30,7 +35,7 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/launch" element={<OnboardingWizard />} />
 
-      {/* OmniDash Console Routes */}
+      {/* Strict SPA OmniDash Console */}
       <Route
         path="/omnidash"
         element={
@@ -38,10 +43,14 @@ function App() {
             <OmniDashLayout />
           </ProtectedRoute>
         }
+<<<<<<< Updated upstream
       >
         <Route index element={<DashboardOverview />} />
         <Route path="approvals" element={<ApprovalsPage />} />
       </Route>
+=======
+      />
+>>>>>>> Stashed changes
 
       {/* Existing Content Pages - Mapping to clean URLs */}
       <Route path="/login" element={<LoginPage />} />
