@@ -232,27 +232,8 @@ const App = () => (
                 <Route path="/apps/built-canadian" element={<BuiltCanadian />} />
                 <Route path="/tech-specs" element={<TechSpecs />} />
 
-<<<<<<< Updated upstream
-                {/* OmniDash (with mobile gate if enabled) */}
-              {OMNIDASH_FLAG && (
-                <Route path="/omnidash" element={<DashboardLayout><OmniDashLayout /></DashboardLayout>}>
-                  <Route index element={<OmniDashToday />} />
-                  <Route path="pipeline" element={<OmniDashPipeline />} />
-                  <Route path="kpis" element={<OmniDashKpis />} />
-                  <Route path="ops" element={<OmniDashOps />} />
-                  <Route path="integrations" element={<OmniDashIntegrations />} />
-                  <Route path="events" element={<OmniDashEvents />} />
-                  <Route path="entities" element={<OmniDashEntities />} />
-                  <Route path="runs" element={<OmniDashRuns />} />
-                  <Route path="approvals" element={<OmniDashApprovals />} />
-                  <Route path="local-agents" element={<OmniDashLocalAgents />} />
-                  <Route path="tasks" element={<OmniDashTasks />} />
-                  <Route path="workflows" element={<WorkflowStudio />} />
-                </Route>
-              )}
-=======
+                {/* OmniDash Router */}
                 <Route path="/omnidash" element={<AccessProvider><PaidAccessRoute><DashboardLayout><OmniDash /></DashboardLayout></PaidAccessRoute></AccessProvider>} />
->>>>>>> Stashed changes
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
