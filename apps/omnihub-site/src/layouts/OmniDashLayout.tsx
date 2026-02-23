@@ -133,17 +133,17 @@ export function OmniDashLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#030303] text-white font-sans">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-white/10 flex flex-col p-6 hidden md:flex sticky top-0 h-screen">
-        <div className="mb-8">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#030303] text-white font-sans">
+      {/* Mobile Header */}
+      <div className="md:hidden flex justify-between items-center px-4 py-4 sticky top-0 z-50 bg-[#030303] border-b border-white/10">
+        <div className="flex items-center gap-3">
           <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
             OmniDash
           </h1>
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
         </div>
-        <button 
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="text-gray-400 hover:text-white transition-colors"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}

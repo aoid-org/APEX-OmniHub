@@ -1,9 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { HomePage } from "@/pages/Home";
 import { OnboardingWizard } from "@/pages/Launch/OnboardingWizard";
-import { DashboardOverview } from "@/pages/DashboardOverview";
-import { ApprovalsPage } from "@/pages/OmniDash/Approvals";
-import { ApexAssistantPage } from "@/pages/OmniDash/ApexAssistant";
 import { OmniDashLayout } from "@/layouts/OmniDashLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
@@ -39,11 +36,7 @@ function App() {
             <OmniDashLayout />
           </ProtectedRoute>
         }
-      >
-        <Route index element={<DashboardOverview />} />
-        <Route path="approvals" element={<ApprovalsPage />} />
-        <Route path="apex-assistant" element={<ApexAssistantPage />} />
-      </Route>
+      />
 
       {/* Existing Content Pages - Mapping to clean URLs */}
       <Route path="/login" element={<LoginPage />} />
