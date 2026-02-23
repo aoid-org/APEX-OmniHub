@@ -5,8 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { 
   ExternalLink, Sparkles, LineChart, Shield, Lock, 
   MessageCircle, MessageSquare, Mail, Music, Zap, 
-  Send, Globe, Smartphone, Bot, Share2, Video 
+  Send, Globe, Smartphone, Bot, Share2, Video, Info
 } from 'lucide-react';
+import { HiddenValue } from './HiddenMetric';
+import { Responsive, WidthProvider, Layout } from 'react-grid-layout/legacy';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
+
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
 // Mock data definitions matching the screenshots exactly
 const ecosystemApps = [
@@ -81,6 +87,28 @@ const onboardApps = [
 export const Integrations = () => {
   const [activeTab, setActiveTab] = useState('All Apps');
 
+  // Generator helper to auto-populate layout positions based on index
+  const generateLayouts = (items: { id?: string, name: string }[], colsMap: Record<string, number>): Partial<Record<string, Layout>> => {
+    const layouts: Partial<Record<string, Layout>> = {};
+    for (const [bp, cols] of Object.entries(colsMap)) {
+      layouts[bp] = items.map((item, i) => ({
+        i: item.id || item.name,
+        x: i % cols,
+        y: Math.floor(i / cols),
+        w: 1,
+        h: 1,
+        isResizable: false
+      }));
+    }
+    return layouts;
+  };
+
+  const ecosystemCols = { lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 };
+  const onboardCols = { lg: 4, md: 3, sm: 2, xs: 1, xxs: 1 };
+
+  const [ecosystemLayouts, setEcosystemLayouts] = useState<Partial<Record<string, Layout>>>(() => generateLayouts(ecosystemApps, ecosystemCols));
+  const [onboardLayouts, setOnboardLayouts] = useState<Partial<Record<string, Layout>>>(() => generateLayouts(onboardApps, onboardCols));
+
   return (
     <div className="flex flex-col min-h-full bg-[#0A0D14] text-gray-200 p-6 md:p-8 max-w-7xl mx-auto space-y-10 animate-in">
       
@@ -124,33 +152,48 @@ export const Integrations = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <ResponsiveGridLayout
+          className="layout -mx-2"
+          layouts={ecosystemLayouts}
+          breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
+          cols={ecosystemCols}
+          rowHeight={150}
+          onLayoutChange={(_layout, allLayouts) => setEcosystemLayouts(allLayouts)}
+          draggableHandle=".custom-drag-handle"
+          margin={[20, 20]}
+        >
           {ecosystemApps.map((app) => (
-            <Card key={app.id} className="bg-[#1A1F2E]/50 border-white/5 hover:border-white/10 transition-colors hover-lift overflow-hidden rounded-xl">
-              <CardContent className="p-3 flex flex-col h-full">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${app.iconBg}`}>
-                    <app.icon className={`h-4 w-4 ${app.iconColor}`} />
-                  </div>
-                  <div className="space-y-0.5">
-                    <h3 className="font-semibold text-sm text-white">{app.name}</h3>
-                    <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 transition-colors text-[10px] px-2 py-0 rounded-full">
-                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-1.5 inline-block" />
-                      {app.status}
-                    </Badge>
-                  </div>
+            <div key={app.id}>
+              <Card className="bg-[#1A1F2E]/50 border-white/5 hover:border-white/10 transition-colors hover-lift overflow-hidden rounded-xl h-full relative group">
+                <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/0 group-hover:text-white/30 hover:!text-white/60 transition-colors z-20">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
                 </div>
-                <p className="text-xs text-gray-400 mb-3 flex-1 pr-4">{app.description}</p>
-                {app.action && (
-                  <Button variant="outline" className="w-full bg-[#0F131D] hover:bg-white/5 border-white/10 text-white rounded-lg h-8 text-xs">
-                    <ExternalLink className="h-3 w-3 mr-1.5 opacity-70" />
-                    {app.action}
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+                <CardContent className="p-3 flex flex-col h-full">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${app.iconBg}`}>
+                      <app.icon className={`h-4 w-4 ${app.iconColor}`} />
+                    </div>
+                    <div className="space-y-0.5">
+                      <h3 className="font-semibold text-sm text-white">{app.name}</h3>
+                      <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 transition-colors text-[10px] px-2 py-0 rounded-full">
+                        <HiddenValue icon={Info} value={
+                          <><div className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-1.5 inline-block" />{app.status}</>
+                        } />
+                      </Badge>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-3 flex-1 pr-4">{app.description}</p>
+                  {app.action && (
+                    <Button variant="outline" className="w-full bg-[#0F131D] hover:bg-white/5 border-white/10 text-white rounded-lg h-8 text-xs cancel-drag">
+                      <ExternalLink className="h-3 w-3 mr-1.5 opacity-70" />
+                      {app.action}
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           ))}
-        </div>
+        </ResponsiveGridLayout>
       </section>
 
       {/* Onboard App Section */}
@@ -170,22 +213,36 @@ export const Integrations = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <ResponsiveGridLayout
+          className="layout -mx-2"
+          layouts={onboardLayouts}
+          breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
+          cols={onboardCols}
+          rowHeight={110}
+          onLayoutChange={(_layout, allLayouts) => setOnboardLayouts(allLayouts)}
+          draggableHandle=".custom-drag-handle"
+          margin={[16, 16]}
+        >
           {onboardApps.map((app) => (
-            <Card key={app.name} className="bg-[#141A22]/80 border-white/5 hover:border-white/10 transition-colors hover-lift rounded-xl">
-              <CardContent className="p-3 flex flex-col justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <app.icon className={`h-4 w-4 ${app.color}`} />
-                  <h3 className="font-semibold text-sm text-white truncate">{app.name}</h3>
+            <div key={app.name}>
+              <Card className="bg-[#141A22]/80 border-white/5 hover:border-white/10 transition-colors hover-lift rounded-xl h-full relative group">
+                <div className="custom-drag-handle absolute top-0 right-0 p-3 h-8 w-8 cursor-grab active:cursor-grabbing text-white/0 group-hover:text-white/30 hover:!text-white/60 transition-colors z-20">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
                 </div>
-                <p className="text-[11px] text-gray-400 line-clamp-1">{app.desc}</p>
-                <Button className="w-full bg-white text-black hover:bg-gray-200 rounded-lg h-7 font-semibold text-xs transition-colors shadow-sm">
-                  Connect
-                </Button>
-              </CardContent>
-            </Card>
+                <CardContent className="p-3 flex flex-col justify-between gap-2 h-full">
+                  <div className="flex items-center gap-2">
+                    <app.icon className={`h-4 w-4 ${app.color}`} />
+                    <h3 className="font-semibold text-sm text-white truncate pr-4">{app.name}</h3>
+                  </div>
+                  <p className="text-[11px] text-gray-400 line-clamp-1">{app.desc}</p>
+                  <Button className="w-full bg-white text-black hover:bg-gray-200 rounded-lg h-7 font-semibold text-xs transition-colors shadow-sm cancel-drag">
+                    Connect
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           ))}
-        </div>
+        </ResponsiveGridLayout>
       </section>
 
     </div>
