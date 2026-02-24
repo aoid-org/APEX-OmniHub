@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchSettings, updateSettings } from './api';
+import { fetchSettings, updateSettings, fetchUsageMetering, aggregateUsageMetering } from './api';
+import type { UsageMeteringSummary, UsageMeteringRow } from './api';
 import { OMNIDASH_FLAG, OmniDashSettings } from './types';
 
 export function useAdminAccess() {
@@ -59,4 +60,30 @@ export function useOmniDashSettings() {
   });
 
   return { ...query, updateSettings: mutation.mutateAsync, updating: mutation.isPending };
+}
+
+export function useUsageMetering(days = 7) {
+  const { user } = useAuth();
+
+  const query = useQuery<UsageMeteringRow[]>({
+    queryKey: ['omnidash-usage-metering', user?.id, days],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) throw new Error('User not found');
+      return fetchUsageMetering(user.id, days);
+    },
+    refetchInterval: 30_000, // Real-time: poll every 30s
+    staleTime: 15_000,
+  });
+
+  const summary: UsageMeteringSummary[] = query.data
+    ? aggregateUsageMetering(query.data)
+    : [];
+
+  const totalTokens = summary.reduce(
+    (acc, s) => acc + s.total_input_tokens + s.total_output_tokens,
+    0,
+  );
+
+  return { ...query, summary, totalTokens };
 }
