@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { OMNIDASH_NAV_ITEMS } from './types';
 
 /**
@@ -18,9 +17,7 @@ import { OMNIDASH_NAV_ITEMS } from './types';
  *
  * Shortcuts are disabled when user is typing in an input field.
  */
-export function useOmniDashKeyboardShortcuts() {
-  const navigate = useNavigate();
-  const location = useLocation();
+export function useOmniDashKeyboardShortcuts(openPanel: (panel: string | null) => void) {
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -50,11 +47,7 @@ export function useOmniDashKeyboardShortcuts() {
       if (matchingItem) {
         // Prevent default behavior (e.g., quick find)
         event.preventDefault();
-
-        // Only navigate if we're not already on that page
-        if (location.pathname !== matchingItem.to) {
-          navigate(matchingItem.to);
-        }
+        openPanel(matchingItem.key === 'home' ? null : matchingItem.key);
       }
     };
 
@@ -65,5 +58,5 @@ export function useOmniDashKeyboardShortcuts() {
     return () => {
       document.removeEventListener('keydown', handleKeyPress);
     };
-  }, [navigate, location.pathname]);
+  }, [openPanel]);
 }
