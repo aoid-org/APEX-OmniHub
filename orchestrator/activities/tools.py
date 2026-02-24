@@ -258,7 +258,7 @@ Output valid JSON matching the PlanStep schema."""
         }
 
     except Exception as e:
-        activity.logger.error(f"Plan generation failed: {str(e)}")
+        activity.logger.error(f"Plan generation failed: {e!s}")
         raise
 
 
@@ -546,7 +546,7 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
         activity.logger.error(f"Blocked SSRF attempt: {e}")
         return {
             "success": False,
-            "error": f"Security violation: {str(e)}",
+            "error": f"Security violation: {e!s}",
             "status_code": 403,
         }
 

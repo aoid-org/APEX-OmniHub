@@ -204,7 +204,7 @@ class SagaContext:
             except Exception as e:
                 # Log but continue (best-effort rollback)
                 workflow.logger.error(
-                    f"✗ Compensation failed: {compensation.activity_name} - {str(e)}"
+                    f"✗ Compensation failed: {compensation.activity_name} - {e!s}"
                 )
                 results.append({"step_id": compensation.step_id, "success": False, "error": str(e)})
 
@@ -497,11 +497,11 @@ class AgentWorkflow:
 
         except Exception as e:
             # 6. Workflow failed - trigger Saga rollback
-            workflow.logger.error(f"✗ Workflow failed: {str(e)}")
+            workflow.logger.error(f"✗ Workflow failed: {e!s}")
             workflow_result = await self._handle_failure(str(e))
 
             raise ApplicationError(
-                f"Workflow failed: {str(e)}",
+                f"Workflow failed: {e!s}",
                 non_retryable=True,
                 details=workflow_result,
             ) from e
@@ -1230,7 +1230,7 @@ class AgentWorkflow:
                 },
             )
 
-            workflow.logger.error(f"  ✗ Failed step: {step_name} - {str(e)}")
+            workflow.logger.error(f"  ✗ Failed step: {step_name} - {e!s}")
             raise
 
     async def _handle_success(self) -> dict[str, Any]:
@@ -1263,7 +1263,7 @@ class AgentWorkflow:
                 )
                 workflow.logger.info(f"✓ Updated agent_runs for trace_id: {trace_id}")
             except Exception as e:
-                workflow.logger.warning(f"Failed to update agent_runs: {str(e)}")
+                workflow.logger.warning(f"Failed to update agent_runs: {e!s}")
 
         await self._append_event(
             WorkflowCompleted(
