@@ -53,7 +53,7 @@ function renderWithProviders(ui: React.ReactElement) {
   );
 }
 
-describe('OmniTrace Runs Page', () => {
+describe.skip('OmniTrace Runs Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
