@@ -181,7 +181,9 @@ export class SemanticTranslator {
     const translatedPayload = await this.translatePayload(event.payload, sourceLang, targetLang);
 
     // 2. Back translate for verification (target → en)
-    const backTranslated = await this.translatePayload(translatedPayload, targetLang, sourceLang);
+    const backSourceLang = targetLang;
+    const backTargetLang = sourceLang;
+    const backTranslated = await this.translatePayload(translatedPayload, backSourceLang, backTargetLang);
 
     // 3. Semantic equivalence check
     const originalNorm = this.normalizeForComparison(event.payload);
