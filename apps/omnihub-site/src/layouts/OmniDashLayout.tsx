@@ -134,9 +134,9 @@ export function OmniDashLayout() {
 
   return (
     <div className="flex min-h-screen bg-[#030303] text-white font-sans">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-white/10 flex flex-col p-6 hidden md:flex sticky top-0 h-screen">
-        <div className="mb-8">
+      {/* Mobile Header */}
+      <header className="w-full border-b border-white/10 flex p-4 items-center justify-between md:hidden sticky top-0 bg-[#030303] z-50">
+        <div className="flex items-center gap-3">
           <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
             OmniDash
           </h1>
@@ -148,7 +148,7 @@ export function OmniDashLayout() {
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
-      </div>
+      </header>
 
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 top-[73px] bg-[#030303] z-40 overflow-y-auto border-b border-white/10">

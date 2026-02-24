@@ -9,6 +9,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    env: {
+      VITE_SUPABASE_URL: 'http://127.0.0.1:54321',
+      VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlZmF1bHQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYxNDQxMzEwNywiZXhwIjoxOTI5OTg5MTA3fQ.0c1T92zI0p49K4d2VMBW5w8Gj6nZlS0t-1t2e5K6RjQ'
+    },
     setupFiles: ['./tests/setup.ts'],
     pool: 'forks', // Fix coverage race condition in CI
     include: [

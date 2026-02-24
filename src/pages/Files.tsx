@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Upload, Download, Trash2, FileIcon } from 'lucide-react';
@@ -19,16 +19,17 @@ const Files = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const cols = { lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 };
+  const cols = useMemo(() => ({ lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 }), []);
   const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>({});
 
   useEffect(() => {
     const newLayouts: Partial<Record<string, Layout>> = {};
     for (const [bp, c] of Object.entries(cols)) {
+      const colCount = c as number;
       newLayouts[bp] = items.map((item, i) => ({
         i: item.name,
-        x: i % c,
-        y: Math.floor(i / c),
+        x: i % colCount,
+        y: Math.floor(i / colCount),
         w: 1,
         h: 1,
         isResizable: false

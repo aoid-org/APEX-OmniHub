@@ -28,7 +28,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 }));
 
 // Import after mocks are set up
-import { Runs } from '@/pages/OmniDash/Runs';
+import { Runs } from '@/components/omnidash/Runs';
 import { fetchOmniTraceRuns } from '@/omnidash/omnilink-api';
 import type { OmniTraceRunsListResponse } from '@/omnidash/types';
 

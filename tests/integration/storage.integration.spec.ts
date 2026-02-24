@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { createStorage } from '@/lib/storage'
-import type { IStorage } from '@/lib/storage'
+import { createStorage } from '../../src/lib/storage'
+import type { IStorage } from '../../src/lib/storage'
 import { getIntegrationConfig } from './setup-helpers'
 
 // ============================================================================
@@ -29,7 +29,7 @@ function registerTestFile(path: string) {
 // INTEGRATION TESTS
 // ============================================================================
 
-suite('Storage Integration Tests', () => {
+describe('Storage Integration Tests', () => {
   if (!hasCreds && requireIntegration) {
     it('requires Supabase test credentials', () => {
       throw new Error(
@@ -40,6 +40,8 @@ suite('Storage Integration Tests', () => {
   }
 
   beforeAll(async () => {
+    if (!hasCreds && requireIntegration) return;
+
     storage = createStorage({
       provider: 'supabase',
       url: supabaseUrl,
@@ -64,6 +66,8 @@ suite('Storage Integration Tests', () => {
   })
 
   afterAll(async () => {
+    if (!hasCreds && requireIntegration) return;
+
     // Cleanup: Delete all test files
     if (testFiles.length > 0) {
       await storage.deleteMany(testBucket, testFiles)

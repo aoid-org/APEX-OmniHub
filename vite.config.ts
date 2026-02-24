@@ -58,26 +58,8 @@ export default defineConfig(({ mode }) => ({
       output: {
         // Use function-based manualChunks to avoid empty chunks when modules are tree-shaken
         manualChunks(id) {
-          // React vendor chunk
-          if (id.includes('node_modules/react/') ||
-              id.includes('node_modules/react-dom/') ||
-              id.includes('node_modules/react-router-dom/') ||
-              id.includes('node_modules/scheduler/')) {
-            return 'react-vendor';
-          }
-          // Web3 core chunk
-          if (id.includes('node_modules/viem/') ||
-              id.includes('node_modules/wagmi/') ||
-              id.includes('node_modules/@tanstack/react-query/')) {
-            return 'web3-core';
-          }
-          // UI components chunk
-          if (id.includes('node_modules/@radix-ui/')) {
-            return 'ui-components';
-          }
-          // Supabase chunk - only create if module is actually included
-          if (id.includes('node_modules/@supabase/')) {
-            return 'supabase-vendor';
+          if (id.includes('node_modules')) {
+            return id.toString().split('node_modules/')[1].split('/')[0].toString();
           }
         },
         // Optimize chunk file names with content hash for better caching
@@ -94,7 +76,7 @@ export default defineConfig(({ mode }) => ({
     // Enable CSS code splitting
     cssCodeSplit: true,
     // Inline small assets (< 4KB) for fewer HTTP requests
-    assetsInlineLimit: 4096,
+    assetsInlineLimit: 0,
     // Increase chunk size warning limit
     chunkSizeWarningLimit: 1000,
     // Source maps: disabled for production (proprietary protection), enabled for dev

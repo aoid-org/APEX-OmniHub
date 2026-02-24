@@ -36,7 +36,6 @@ import { OmniDashNavIconButton } from '@/components/OmniDashNavIconButton';
 import { DemoModeBanner } from '@/components/demo/DemoModeBanner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { OmniTraceFeed } from '@/components/dashboard/OmniTraceFeed';
-import { OmniSkillsWidget } from '@/components/skills/OmniSkillsWidget';
 import { useOmniDashKeyboardShortcuts } from '@/omnidash/useOmniDashKeyboardShortcuts';
 
 // Sub-view lazy imports (loaded only when Sheet opens)
@@ -297,7 +296,6 @@ export const OmniDash = () => {
           </div>
 
           <div className="flex items-center gap-4 flex-shrink-0">
-            <OmniSkillsWidget />
             {health.data?.lastUpdated && (
               <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
                 <Activity className="h-3 w-3" />

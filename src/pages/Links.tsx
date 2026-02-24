@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,7 +47,7 @@ const Links = () => {
     description: '',
   });
 
-  const cols = { lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 };
+  const cols = useMemo(() => ({ lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 }), []);
   const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>({});
 
   const { data: links = [] as Link[], isLoading, error } = useQuery({
@@ -83,10 +83,11 @@ const Links = () => {
   useEffect(() => {
     const newLayouts: Partial<Record<string, Layout>> = {};
     for (const [bp, c] of Object.entries(cols)) {
+      const colCount = c as number;
       newLayouts[bp] = links.map((link, i) => ({
         i: link.id,
-        x: i % c,
-        y: Math.floor(i / c),
+        x: i % colCount,
+        y: Math.floor(i / colCount),
         w: 1,
         h: 1,
         isResizable: false

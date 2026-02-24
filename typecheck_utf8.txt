@@ -1,0 +1,5 @@
+﻿
+> vite_react_shadcn_ts@1.2.1 typecheck
+> tsc -p tsconfig.json --noEmit
+
+

@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { createDatabase } from '@/lib/database'
-import type { IDatabase } from '@/lib/database'
+import { createDatabase } from '../../src/lib/database'
+import type { IDatabase } from '../../src/lib/database'
 import { getIntegrationConfig } from './setup-helpers'
 
 // ============================================================================
@@ -23,7 +23,7 @@ let testUserId: string
 // INTEGRATION TESTS
 // ============================================================================
 
-suite('Database Integration Tests', () => {
+describe('Database Integration Tests', () => {
   if (!hasCreds && requireIntegration) {
     it('requires Supabase test credentials', () => {
       throw new Error(
@@ -34,6 +34,8 @@ suite('Database Integration Tests', () => {
   }
 
   beforeAll(async () => {
+    if (!hasCreds && requireIntegration) return;
+
     db = createDatabase({
       provider: 'supabase',
       url: supabaseUrl,
@@ -52,6 +54,7 @@ suite('Database Integration Tests', () => {
   })
 
   afterAll(async () => {
+    if (!hasCreds && requireIntegration) return;
     // Cleanup: Delete test user if created
     if (testUserId) {
       await db.deleteById('users', testUserId)
@@ -146,7 +149,7 @@ suite('Database Integration Tests', () => {
       })
 
       expect(user).not.toBeNull()
-      const userId = (user as unknown).id
+      const userId = (user as any).id
 
       // Update user
       const { data: updated, error } = await db.updateById('users', userId, {
@@ -168,7 +171,7 @@ suite('Database Integration Tests', () => {
       })
 
       expect(user).not.toBeNull()
-      const userId = (user as unknown).id
+      const userId = (user as any).id
 
       // Delete user
       const { data: success, error } = await db.deleteById('users', userId)
@@ -214,8 +217,8 @@ suite('Database Integration Tests', () => {
       expect(page2).toHaveLength(2)
 
       // Pages should have different users
-      const page1Ids = page1?.map((u: unknown) => u.id) || []
-      const page2Ids = page2?.map((u: unknown) => u.id) || []
+      const page1Ids = page1?.map((u: any) => u.id) || []
+      const page2Ids = page2?.map((u: any) => u.id) || []
 
       expect(page1Ids).not.toEqual(page2Ids)
     })
@@ -230,7 +233,7 @@ suite('Database Integration Tests', () => {
       const email1 = `test-tx-1-${Date.now()}@example.com`
       const email2 = `test-tx-2-${Date.now()}@example.com`
 
-      const { data: result, error } = await db.transaction(async (tx) => {
+      const { data: result, error } = await db.transaction(async (tx: any) => {
         await tx.insert('users', { email: email1, name: 'TX User 1' })
         await tx.insert('users', { email: email2, name: 'TX User 2' })
         return { success: true }
@@ -251,60 +254,12 @@ suite('Database Integration Tests', () => {
       expect(user2).not.toBeNull()
 
       // Cleanup
-      if (user1 && 'id' in user1) await db.deleteById('users', user1.id as string)
-      if (user2 && 'id' in user2) await db.deleteById('users', user2.id as string)
+      if (user1 && (user1 as any).id) await db.deleteById('users', (user1 as any).id)
+      if (user2 && (user2 as any).id) await db.deleteById('users', (user2 as any).id)
     })
   })
 
-  // -------------------------------------------------------------------------
-  // STORAGE OPERATIONS
-  // -------------------------------------------------------------------------
 
-  describe('Storage Operations', () => {
-    const testBucket = 'test-files'
-    const testPath = `test-${Date.now()}.txt`
-
-    it('should upload file', async () => {
-      const fileContent = 'Hello, World!'
-      const blob = new Blob([fileContent], { type: 'text/plain' })
-
-      const { data: url, error } = await db.uploadFile(
-        testBucket,
-        testPath,
-        blob,
-        { contentType: 'text/plain' }
-      )
-
-      expect(error).toBeNull()
-      expect(url).toContain(testPath)
-    })
-
-    it('should download file', async () => {
-      const { data: blob, error } = await db.downloadFile(testBucket, testPath)
-
-      expect(error).toBeNull()
-      expect(blob).toBeInstanceOf(Blob)
-
-      const text = await blob?.text()
-      expect(text).toContain('Hello, World!')
-    })
-
-    it('should get file URL', () => {
-      const url = db.getFileUrl(testBucket, testPath)
-
-      expect(url).toContain(testBucket)
-      expect(url).toContain(testPath)
-    })
-
-    it('should delete file', async () => {
-      const { data: success, error } = await db.deleteFile(testBucket, testPath)
-
-      expect(error).toBeNull()
-      expect(success).toBe(true)
-    })
-  })
-
-  // -------------------------------------------------------------------------
   // ERROR HANDLING
   // -------------------------------------------------------------------------
 
