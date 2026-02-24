@@ -88,10 +88,10 @@ def reset_database_provider() -> None:
 # Vector Provider singleton (TiDB — embeddings only)
 # ---------------------------------------------------------------------------
 
-_vector_provider = None  # TiDBVectorPersistence | None
+_vector_provider: object | None = None
 
 
-def get_vector_provider():
+def get_vector_provider() -> object | None:
     """
     Get the vector persistence provider singleton.
 
