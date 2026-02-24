@@ -2,7 +2,7 @@
 TiDB Vector Persistence Module
 SOVEREIGN DATA PLANE INTEGRATION - Phase 4
 Optional persistence hook for embeddings
-Requires TLS verification, only enabled if VECTOR_PERSISTENCE_MODE == "tidb"
+Requires TLS verification, only enabled if VECTOR_PROVIDER == "tidb"
 """
 
 import os
@@ -21,12 +21,12 @@ class TiDBVectorPersistence:
     """
     TiDB Vector Persistence Store
     - Enforces TLS with CA verification
-    - Only active if VECTOR_PERSISTENCE_MODE == "tidb"
+    - Only active if VECTOR_PROVIDER == "tidb"
     - No-op if disabled or dependencies missing
     """
 
     def __init__(self):
-        self.enabled = os.getenv("VECTOR_PERSISTENCE_MODE") == "tidb"
+        self.enabled = os.getenv("VECTOR_PROVIDER", "").lower() == "tidb"
         self.connection = None
 
         if self.enabled:

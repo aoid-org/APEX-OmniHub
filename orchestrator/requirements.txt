@@ -16,9 +16,12 @@ redis-om>=0.2.0
 instructor>=1.0.0
 litellm>=1.0.0
 
-# Database
+# Database (Primary: Supabase/Postgres)
 supabase>=2.3.0
 asyncpg>=0.29.0
+
+# TiDB Vector Persistence (Secondary: Hybrid C6 embeddings)
+mysql-connector-python>=8.3.0
 
 # Utilities
 python-dotenv>=1.0.0
