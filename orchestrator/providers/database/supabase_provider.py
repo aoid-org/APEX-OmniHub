@@ -35,6 +35,13 @@ ALLOWED_TABLES = frozenset(
         # OmniTrace tables
         "omni_runs",
         "omni_run_events",
+        # BYOM Cockpit tables
+        "provider_connections",
+        "pilot_sessions",
+        # Monetization tables
+        "usage_metering",
+        # Agent execution tables
+        "agent_runs",
     ]
 )
 
