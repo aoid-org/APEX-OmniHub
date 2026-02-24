@@ -594,9 +594,7 @@ class AgentWorkflow:
         except Exception as e:
             workflow.logger.warning(f"OmniTrace event recording failed (ignored): {e}")
 
-    async def _mint_pilot_session_if_byom(
-        self, user_id: str, context: dict[str, Any]
-    ) -> None:
+    async def _mint_pilot_session_if_byom(self, user_id: str, context: dict[str, Any]) -> None:
         """
         Mint a pilot session if the run uses a BYOM credential.
 
@@ -634,13 +632,9 @@ class AgentWorkflow:
             if result.get("success"):
                 self._pilot_session_id = result["pilot_session_id"]
                 self.workflow_context["pilot_session_id"] = self._pilot_session_id
-                workflow.logger.info(
-                    f"✓ Pilot session minted: {self._pilot_session_id}"
-                )
+                workflow.logger.info(f"✓ Pilot session minted: {self._pilot_session_id}")
             else:
-                workflow.logger.warning(
-                    f"Pilot session mint failed: {result.get('error')}"
-                )
+                workflow.logger.warning(f"Pilot session mint failed: {result.get('error')}")
 
         except Exception as e:
             # Best-effort — don't crash the workflow if minting fails

@@ -47,8 +47,7 @@ class DatabaseFactory:
             return SupabaseDatabaseProvider(url=supabase_url, key=supabase_key)
 
         raise ValueError(
-            f"CRITICAL: Unknown DATABASE_PROVIDER '{provider_type}'. "
-            "Must be 'supabase'."
+            f"CRITICAL: Unknown DATABASE_PROVIDER '{provider_type}'. Must be 'supabase'."
         )
 
 
@@ -117,9 +116,7 @@ def get_vector_provider() -> object | None:
         _vector_provider = TiDBVectorPersistence()
         return _vector_provider
 
-    raise ValueError(
-        f"Unknown VECTOR_PROVIDER '{vector_type}'. Supported: 'tidb'."
-    )
+    raise ValueError(f"Unknown VECTOR_PROVIDER '{vector_type}'. Supported: 'tidb'.")
 
 
 def reset_vector_provider() -> None:
