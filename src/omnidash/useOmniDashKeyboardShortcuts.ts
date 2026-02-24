@@ -18,7 +18,6 @@ import { OMNIDASH_NAV_ITEMS } from './types';
  * Shortcuts are disabled when user is typing in an input field.
  */
 export function useOmniDashKeyboardShortcuts(openPanel: (panel: string | null) => void) {
-
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       // Ignore if user is typing in an input/textarea/select or contentEditable
@@ -47,7 +46,14 @@ export function useOmniDashKeyboardShortcuts(openPanel: (panel: string | null) =
       if (matchingItem) {
         // Prevent default behavior (e.g., quick find)
         event.preventDefault();
-        openPanel(matchingItem.key === 'home' ? null : matchingItem.key);
+
+        // Home maps to default panel; all other shortcuts map to panel keys.
+        if (matchingItem.key === 'home') {
+          openPanel(null);
+          return;
+        }
+
+        openPanel(matchingItem.key);
       }
     };
 

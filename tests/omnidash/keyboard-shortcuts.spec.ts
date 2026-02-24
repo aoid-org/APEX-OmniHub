@@ -7,7 +7,7 @@
  * - Validates panel-open behavior
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useOmniDashKeyboardShortcuts } from '@/omnidash/useOmniDashKeyboardShortcuts';
 
@@ -44,9 +44,6 @@ const ALL_SHORTCUTS = [
 ];
 
 describe('useOmniDashKeyboardShortcuts', () => {
-  beforeEach(() => {
-    mockOpenPanel.mockClear();
-  });
 
   afterEach(() => {
     mockOpenPanel.mockClear();

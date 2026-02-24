@@ -258,7 +258,7 @@ Output valid JSON matching the PlanStep schema."""
         }
 
     except Exception as e:
-        activity.logger.error(f"Plan generation failed: {str(e)}")
+        activity.logger.error(f"Plan generation failed: {e!s}")
         raise
 
 
@@ -546,7 +546,7 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
         activity.logger.error(f"Blocked SSRF attempt: {e}")
         return {
             "success": False,
-            "error": f"Security violation: {str(e)}",
+            "error": f"Security violation: {e!s}",
             "status_code": 403,
         }
 
@@ -655,6 +655,101 @@ async def update_agent_run_completion(params: dict[str, Any]) -> dict[str, Any]:
             "error": error_msg,
             "trace_id": trace_id,
         }
+
+
+# ============================================================================
+# BYOM PILOT SESSION MINTING (Context Binding)
+# ============================================================================
+
+
+@activity.defn(name="mint_pilot_session")
+async def mint_pilot_session(params: dict[str, Any]) -> dict[str, Any]:
+    """
+    Mint a pilot session for BYOM credential binding.
+
+    Called at workflow start when run_context.credential_type == 'byom'.
+    Inserts a new record into pilot_sessions and returns the pilot_session_id
+    for binding to the active AgentRunContext.
+
+    Args:
+        params: {
+            "user_id": "uuid",
+            "tenant_id": "uuid",
+            "connection_id": "uuid (from provider_connections)",
+            "trace_id": "uuid (agent_runs.id)",
+            "model": "gpt-4o",
+            "sovereignty_mode": "standard" | "byom_sovereign" | "strict_region",
+            "policy_snapshot_hash": "sha256-hex-string"
+        }
+
+    Returns:
+        {
+            "success": True,
+            "pilot_session_id": "uuid",
+            "connection_id": "uuid",
+            "expires_at": "iso-timestamp"
+        }
+    """
+    user_id = params.get("user_id")
+    tenant_id = params.get("tenant_id", user_id)
+    connection_id = params.get("connection_id")
+    trace_id = params.get("trace_id")
+    model = params.get("model", "gpt-4o")
+    sovereignty_mode = params.get("sovereignty_mode", "standard")
+    policy_snapshot_hash = params.get("policy_snapshot_hash", "")
+
+    if not connection_id or not trace_id or not user_id:
+        activity.logger.warning("mint_pilot_session: missing required params, skipping")
+        return {"success": False, "error": "Missing connection_id, trace_id, or user_id"}
+
+    activity.logger.info(
+        f"Minting pilot session: user={user_id}, connection={connection_id}, "
+        f"trace={trace_id}, model={model}"
+    )
+
+    try:
+        db = get_database_provider()
+
+        # Verify credential is active
+        connections = await db.select(
+            table="provider_connections",
+            filters={"connection_id": connection_id, "status": "active"},
+            select_fields="connection_id",
+        )
+        if not connections:
+            return {
+                "success": False,
+                "error": f"Connection {connection_id} not found or not active",
+            }
+
+        # Insert pilot session (1-hour expiry)
+        record = {
+            "connection_id": connection_id,
+            "trace_id": trace_id,
+            "user_id": user_id,
+            "tenant_id": tenant_id,
+            "model": model,
+            "sovereignty_mode": sovereignty_mode,
+            "policy_snapshot_hash": policy_snapshot_hash,
+            "expires_at": "now() + interval '1 hour'",
+        }
+
+        created = await db.insert(table="pilot_sessions", record=record)
+        pilot_session_id = created.get("pilot_session_id")
+
+        activity.logger.info(f"✓ Pilot session minted: {pilot_session_id}")
+
+        return {
+            "success": True,
+            "pilot_session_id": pilot_session_id,
+            "connection_id": connection_id,
+            "expires_at": created.get("expires_at"),
+        }
+
+    except Exception as e:
+        error_msg = str(e)
+        activity.logger.error(f"Pilot session mint failed: {error_msg}")
+        return {"success": False, "error": error_msg}
 
 
 # ============================================================================
