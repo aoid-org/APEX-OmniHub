@@ -11,6 +11,44 @@ import { redactKpiDaily, redactAmount } from '@/omnidash/redaction';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+const UsageMeteringContent = ({ usage }: { usage: ReturnType<typeof useUsageMetering> }) => {
+  if (usage.isLoading) {
+    return <p className="text-sm text-muted-foreground">Loading usage data...</p>;
+  }
+  if (usage.summary.length === 0) {
+    return <p className="text-sm text-muted-foreground">No BYOM usage recorded yet.</p>;
+  }
+  return (
+    <>
+      <p className="text-sm mb-3 text-muted-foreground">
+        Total tokens: <span className="font-semibold text-foreground">{usage.totalTokens.toLocaleString()}</span>
+      </p>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Provider</TableHead>
+            <TableHead>Model</TableHead>
+            <TableHead>Input tokens</TableHead>
+            <TableHead>Output tokens</TableHead>
+            <TableHead>Requests</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {usage.summary.map((row) => (
+            <TableRow key={`${row.provider}:${row.model}`}>
+              <TableCell className="capitalize">{row.provider}</TableCell>
+              <TableCell>{row.model}</TableCell>
+              <TableCell>{row.total_input_tokens.toLocaleString()}</TableCell>
+              <TableCell>{row.total_output_tokens.toLocaleString()}</TableCell>
+              <TableCell>{row.request_count}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </>
+  );
+};
+
 export const Kpis = () => {
   const { user } = useAuth();
   const settings = useOmniDashSettings();
@@ -138,39 +176,7 @@ export const Kpis = () => {
           <CardTitle>BYOM Usage Metering (7d)</CardTitle>
         </CardHeader>
         <CardContent>
-          {usage.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading usage data...</p>
-          ) : usage.summary.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No BYOM usage recorded yet.</p>
-          ) : (
-            <>
-              <p className="text-sm mb-3 text-muted-foreground">
-                Total tokens: <span className="font-semibold text-foreground">{usage.totalTokens.toLocaleString()}</span>
-              </p>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Provider</TableHead>
-                    <TableHead>Model</TableHead>
-                    <TableHead>Input tokens</TableHead>
-                    <TableHead>Output tokens</TableHead>
-                    <TableHead>Requests</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {usage.summary.map((row) => (
-                    <TableRow key={`${row.provider}:${row.model}`}>
-                      <TableCell className="capitalize">{row.provider}</TableCell>
-                      <TableCell>{row.model}</TableCell>
-                      <TableCell>{row.total_input_tokens.toLocaleString()}</TableCell>
-                      <TableCell>{row.total_output_tokens.toLocaleString()}</TableCell>
-                      <TableCell>{row.request_count}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </>
-          )}
+          <UsageMeteringContent usage={usage} />
         </CardContent>
       </Card>
     </div>

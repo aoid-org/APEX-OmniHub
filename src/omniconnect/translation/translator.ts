@@ -89,6 +89,22 @@ export class SemanticTranslator {
   }
 
   /**
+   * Extract content token from a single SSE data line.
+   * Returns the delta content string, or empty string if not parseable.
+   */
+  private extractSSEContent(line: string): string {
+    if (!line.startsWith('data: ') || line === 'data: [DONE]') {
+      return '';
+    }
+    try {
+      const parsed = JSON.parse(line.slice(6));
+      return parsed?.choices?.[0]?.delta?.content ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  /**
    * Collect full text from SSE stream response.
    */
   private async collectSSEResponse(response: Response): Promise<string> {
@@ -103,18 +119,8 @@ export class SemanticTranslator {
       if (done) break;
 
       const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
-        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-          try {
-            const parsed = JSON.parse(line.slice(6));
-            const content = parsed?.choices?.[0]?.delta?.content;
-            if (content) result += content;
-          } catch {
-            // Skip malformed SSE lines
-          }
-        }
+      for (const line of chunk.split('\n')) {
+        result += this.extractSSEContent(line);
       }
     }
 
@@ -122,14 +128,81 @@ export class SemanticTranslator {
   }
 
   /**
-   * Back-translate text for verification.
+   * Translate all string values in a payload map from sourceLang to targetLang.
    */
-  private async backTranslateText(
-    text: string,
+  private async translatePayload(
+    payload: Record<string, unknown>,
     sourceLang: string,
     targetLang: string,
-  ): Promise<string> {
-    return this.translateText(text, sourceLang, targetLang);
+  ): Promise<Record<string, unknown>> {
+    const translated: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(payload)) {
+      translated[key] = (typeof val === 'string' && val.trim().length > 0)
+        ? await this.translateText(val, sourceLang, targetLang)
+        : val;
+    }
+    return translated;
+  }
+
+  /**
+   * Build a fail-closed TranslatedEvent (verification failure or LLM error).
+   */
+  private buildFailedEvent(
+    event: CanonicalEvent,
+    correlationId: string,
+    appId: string,
+    status: 'FAILED' | 'ERROR',
+    errorMsg: string,
+    riskLane: 'RED' | 'YELLOW',
+    auditReason: string,
+  ): TranslatedEvent {
+    return {
+      eventId: event.eventId,
+      correlationId,
+      appId,
+      userId: event.userId,
+      payload: { ...event.payload, _translation_status: status, _error: errorMsg },
+      metadata: { ...event.metadata, risk_lane: riskLane, audit_reason: auditReason },
+    };
+  }
+
+  /**
+   * Translate a single event with forward+back verification.
+   */
+  private async translateSingleEvent(
+    event: CanonicalEvent,
+    appId: string,
+    correlationId: string,
+    sourceLang: string,
+    targetLang: string,
+    targetLocale: string,
+  ): Promise<TranslatedEvent> {
+    // 1. Forward translate (en → target)
+    const translatedPayload = await this.translatePayload(event.payload, sourceLang, targetLang);
+
+    // 2. Back translate for verification (target → en)
+    const backTranslated = await this.translatePayload(translatedPayload, targetLang, sourceLang);
+
+    // 3. Semantic equivalence check
+    const originalNorm = this.normalizeForComparison(event.payload);
+    const backNorm = this.normalizeForComparison(backTranslated);
+
+    if (originalNorm !== backNorm) {
+      console.error(`[${correlationId}] Translation verification failed for event ${event.eventId}`);
+      return this.buildFailedEvent(
+        event, correlationId, appId, 'FAILED',
+        'Back-translation verification diverged', 'RED', 'translation_verification_failed',
+      );
+    }
+
+    return {
+      eventId: event.eventId,
+      correlationId,
+      appId,
+      userId: event.userId,
+      payload: translatedPayload,
+      metadata: { ...event.metadata, locale: targetLocale, verified: true },
+    };
   }
 
   async translate(
@@ -139,103 +212,29 @@ export class SemanticTranslator {
   ): Promise<TranslatedEvent[]> {
     console.log(`[${correlationId}] Translating ${events.length} events for app ${appId}`);
 
-    // Check for registered app-specific translator first
     const appTranslator = this.translators.get(appId);
     if (appTranslator) {
       return events.map(event => appTranslator(event));
     }
 
-    // Resolve target locale (default: fr-FR for USO)
     const targetLocale = 'fr-FR';
     const sourceLang = 'en';
-    const targetLang = targetLocale.split('-')[0]; // 'fr'
+    const targetLang = targetLocale.split('-')[0];
 
     const results: TranslatedEvent[] = [];
 
     for (const event of events) {
-      const originalPayload = JSON.stringify(event.payload);
-
       try {
-        // 1. Forward Translate (en → target)
-        const translatedPayload: Record<string, unknown> = {};
-        for (const [key, val] of Object.entries(event.payload)) {
-          if (typeof val === 'string' && val.trim().length > 0) {
-            translatedPayload[key] = await this.translateText(val, sourceLang, targetLang);
-          } else {
-            translatedPayload[key] = val;
-          }
-        }
-
-        // 2. Back Translate for verification (target → en)
-        const backTranslated: Record<string, unknown> = {};
-        for (const [key, val] of Object.entries(translatedPayload)) {
-          if (typeof val === 'string' && val.trim().length > 0) {
-            backTranslated[key] = await this.backTranslateText(val, targetLang, sourceLang);
-          } else {
-            backTranslated[key] = val;
-          }
-        }
-
-        // 3. Semantic Equivalence Check
-        // Compare normalized forms (lowercase, trimmed) since LLM back-translation
-        // may not be character-identical but should be semantically equivalent
-        const originalNorm = this.normalizeForComparison(event.payload);
-        const backNorm = this.normalizeForComparison(backTranslated);
-
-        if (originalNorm !== backNorm) {
-          console.error(
-            `[${correlationId}] Translation verification failed for event ${event.eventId}`,
-          );
-          // FAIL-CLOSED: Do not forward potentially corrupted / hallucinated content
-          results.push({
-            eventId: event.eventId,
-            correlationId,
-            appId,
-            userId: event.userId,
-            payload: {
-              ...event.payload,
-              _translation_status: 'FAILED',
-              _error: 'Back-translation verification diverged',
-            },
-            metadata: {
-              ...event.metadata,
-              risk_lane: 'RED',
-              audit_reason: 'translation_verification_failed',
-            },
-          });
-          continue;
-        }
-
-        results.push({
-          eventId: event.eventId,
-          correlationId,
-          appId,
-          userId: event.userId,
-          payload: translatedPayload,
-          metadata: { ...event.metadata, locale: targetLocale, verified: true },
-        });
-      } catch (error) {
-        // LLM call failure — fail-closed, return original with error tag
-        console.error(
-          `[${correlationId}] Translation error for event ${event.eventId}:`,
-          error,
+        const translated = await this.translateSingleEvent(
+          event, appId, correlationId, sourceLang, targetLang, targetLocale,
         );
-        results.push({
-          eventId: event.eventId,
-          correlationId,
-          appId,
-          userId: event.userId,
-          payload: {
-            ...event.payload,
-            _translation_status: 'ERROR',
-            _error: error instanceof Error ? error.message : 'Translation service unavailable',
-          },
-          metadata: {
-            ...event.metadata,
-            risk_lane: 'YELLOW',
-            audit_reason: 'translation_service_error',
-          },
-        });
+        results.push(translated);
+      } catch (error) {
+        console.error(`[${correlationId}] Translation error for event ${event.eventId}:`, error);
+        const errorMsg = error instanceof Error ? error.message : 'Translation service unavailable';
+        results.push(this.buildFailedEvent(
+          event, correlationId, appId, 'ERROR', errorMsg, 'YELLOW', 'translation_service_error',
+        ));
       }
     }
 
@@ -250,7 +249,7 @@ export class SemanticTranslator {
     const normalized: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(payload)) {
       if (typeof val === 'string') {
-        normalized[key] = val.toLowerCase().trim().replace(/\s+/g, ' ');
+        normalized[key] = val.toLowerCase().trim().replaceAll(/\s+/g, ' ');
       } else {
         normalized[key] = val;
       }
