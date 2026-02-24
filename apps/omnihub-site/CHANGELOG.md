@@ -2,6 +2,20 @@
 
 All notable changes to the APEX OmniHub Marketing Site.
 
+## [1.7.0] - 2026-02-24
+
+### Fixed
+
+- **P0: OmniDashLayout JSX tag mismatch** — `src/layouts/OmniDashLayout.tsx:151`: closing `</div>` tag was mismatched to an `<aside>` element, causing a fatal Vite/Rollup parse error that broke all Vercel preview builds; corrected to `</aside>`
+
+### Quality Gates
+
+- TypeScript (`tsc --noEmit`): 0 errors
+- ESLint (`--max-warnings 0`): 0 warnings, 0 errors
+- Production build: exit 0
+
+---
+
 ## [1.6.0] - 2026-02-07
 
 ### Fixed

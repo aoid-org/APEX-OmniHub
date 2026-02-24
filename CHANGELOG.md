@@ -5,6 +5,27 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-02-24
+
+### Fixed — PR #591: OmniDash Drag-and-Drop Grid CI Gate Resolution
+
+- **Build (Vercel/Vite)** — `apps/omnihub-site/src/layouts/OmniDashLayout.tsx:151`: JSX tag mismatch `</div>` closing an `<aside>` element caused fatal Rollup parse error; corrected to `</aside>`
+- **ESLint (`react-hooks/exhaustive-deps`)** — `src/components/omnidash/Events.tsx`: eliminated intermediate `rawEvents` variable that created a new array reference on every render, making the `useMemo` dependency unstable; collapsed into `useMemo(() => eventsQuery.data ?? [], [eventsQuery.data])`
+- **ESLint (`react-hooks/exhaustive-deps`)** — `src/pages/Files.tsx`: stabilized `cols` object literal with `useMemo` to prevent spurious re-renders and hook warnings
+- **ESLint (`react-hooks/exhaustive-deps`)** — `src/pages/Links.tsx`: same `cols` stabilization as Files.tsx; added `useMemo` to import list
+- **RLS Posture Gate** — `supabase/migrations/20260223061443_init_omnidash_workflows.sql`: four tables (`workflows`, `workflow_runs`, `user_generated_skills`, `omni_run_events`) created without `ENABLE ROW LEVEL SECURITY`; added full owner-scoped RLS policies for all CRUD operations; `omni_run_events` scoped via parent workflow ownership with `EXISTS` subquery
+- **Test Module Resolution** — `src/pages/OmniDash/Runs.tsx` existed on development branch but not on PR branch, causing `tests/omnidash/runs.spec.tsx` to fail at import-time (Vitest resolves static imports before `describe.skip`); created the file on the PR branch with three TypeScript fixes: `detail` declared after loading/error guards, `policyEvents` derived from `detail.events`, `handleDownloadBundle` implemented as blob download
+- **Integration Test Gating** — `tests/integration/setup-helpers.ts`: re-applied `isPlaceholder()` detection for mock Supabase credentials set by `tests/setup.ts`; prevents integration tests from hitting unreachable endpoints in CI when only unit-test mock credentials are present
+
+### Quality Gates (Post-Fix)
+
+- TypeScript (`tsc --noEmit`): 0 errors
+- ESLint (`--max-warnings 0`): 0 warnings, 0 errors
+- RLS posture (`check_rls_posture.sh`): PASS
+- Vitest (`tests/omnidash`, `tests/integration`, `tests/quality`): 82 passed, 75 skipped, 0 failed
+
+---
+
 ## [1.2.1] - 2026-02-20
 
 ### Changed
