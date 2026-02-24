@@ -1,4 +1,4 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, Activity, ShieldCheck, Loader2, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,13 +18,24 @@ import { OmniTraceFeed } from '@/components/dashboard/OmniTraceFeed';
 import { CreateSkillWidget } from '@/components/skills/CreateSkillWidget';
 
 export const OmniDashLayout = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin, loading: adminLoading, featureEnabled } = useAdminAccess();
   const { isPaid, loading: paidLoading } = usePaidAccess();
   const settings = useOmniDashSettings();
 
   // Enable keyboard shortcuts (H, P, K, O, I, E, N, R, A)
-  useOmniDashKeyboardShortcuts();
+  useOmniDashKeyboardShortcuts((panel) => {
+    if (panel === null) {
+      navigate('/omnidash');
+      return;
+    }
+
+    const item = OMNIDASH_NAV_ITEMS.find((navItem) => navItem.key === panel);
+    if (item) {
+      navigate(item.to);
+    }
+  });
 
   // Determine full access: Admin OR Paid user
   const hasFullAccess = isAdmin || isPaid;
