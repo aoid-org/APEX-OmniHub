@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { AlertCircle, Activity, ShieldCheck, Loader2, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,8 +24,16 @@ export const OmniDashLayout = () => {
   const { isPaid, loading: paidLoading } = usePaidAccess();
   const settings = useOmniDashSettings();
 
+  const [activePanel, setActivePanel] = useState<string | null>(null);
+  const openPanel = (panel: string | null) => {
+    if (panel === activePanel) {
+      return;
+    }
+    setActivePanel(panel);
+  };
+
   // Enable keyboard shortcuts (H, P, K, O, I, E, N, R, A)
-  useOmniDashKeyboardShortcuts();
+  useOmniDashKeyboardShortcuts(openPanel);
 
   // Determine full access: Admin OR Paid user
   const hasFullAccess = isAdmin || isPaid;
