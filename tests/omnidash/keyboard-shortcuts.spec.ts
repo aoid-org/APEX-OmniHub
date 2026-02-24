@@ -7,29 +7,34 @@
  * - Validates panel-open behavior
  */
 
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useOmniDashKeyboardShortcuts } from '@/omnidash/useOmniDashKeyboardShortcuts';
 
 const mockOpenPanel = vi.fn();
 
+// Helper to create keyboard events
 const createKeyboardEvent = (key: string, options?: Partial<KeyboardEventInit>) =>
   new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...options });
 
+// Helper to render the hook
 const renderShortcutsHook = () => renderHook(() => useOmniDashKeyboardShortcuts(mockOpenPanel));
 
+// Helper to dispatch key and expect panel to open
 const dispatchKeyAndExpectPanel = (key: string, expectedPanelKey: string | null) => {
   const event = createKeyboardEvent(key);
   document.dispatchEvent(event);
   expect(mockOpenPanel).toHaveBeenCalledWith(expectedPanelKey);
 };
 
+// Helper to dispatch key and expect no panel to open
 const dispatchKeyAndExpectNoPanelOpen = (key: string) => {
   const event = createKeyboardEvent(key);
   document.dispatchEvent(event);
   expect(mockOpenPanel).not.toHaveBeenCalled();
 };
 
+// Shortcut definitions for data-driven tests
 const ALL_SHORTCUTS = [
   { key: 'H', panelKey: null },
   { key: 'P', panelKey: 'pipeline' },
@@ -44,6 +49,10 @@ const ALL_SHORTCUTS = [
 ];
 
 describe('useOmniDashKeyboardShortcuts', () => {
+  beforeEach(() => {
+    mockOpenPanel.mockClear();
+  });
+
   afterEach(() => {
     mockOpenPanel.mockClear();
   });
