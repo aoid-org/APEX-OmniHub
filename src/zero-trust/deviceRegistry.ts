@@ -51,9 +51,16 @@ let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let flushInFlight = false;
 let consecutiveFailures = 0;
 
-// Warm caches opportunistically (blocking load for safety)
-await loadRegistryFromLocal();
-await loadUpsertQueue();
+// Cache warm via async IIFE (es2020 compat: await inside function, not top-level)
+/** Consumers can optionally await this to guarantee cache is warm before first read */
+export const registryReady = (async () => {
+  try {
+    await loadRegistryFromLocal();
+    await loadUpsertQueue();
+  } catch (err) {
+    console.error('[deviceRegistry] Cache warm failed:', err);
+  }
+})();
 
 async function loadRegistryFromLocal() {
   const stored = await persistentGet<DeviceRecord[]>(REGISTRY_KEY);
@@ -303,6 +310,7 @@ export async function flushDeviceUpserts(force = false) {
 }
 
 export async function markDeviceTrusted(deviceId: string): Promise<DeviceRecord | undefined> {
+  await loadRegistryFromLocal(); // Defensive lazy load
   const existing = registry.get(deviceId);
   if (!existing) return undefined;
   existing.status = 'trusted';
@@ -316,6 +324,7 @@ export async function markDeviceTrusted(deviceId: string): Promise<DeviceRecord 
 }
 
 export async function markDeviceBlocked(deviceId: string): Promise<DeviceRecord | undefined> {
+  await loadRegistryFromLocal(); // Defensive lazy load
   const existing = registry.get(deviceId);
   if (!existing) return undefined;
   existing.status = 'blocked';
