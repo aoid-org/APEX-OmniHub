@@ -14,15 +14,14 @@ describe('Retry Logic', () => {
     engine = new ChaosEngine({ ...DEFAULT_CHAOS_CONFIG, seed: 42 });
   });
 
-  describe('calculateBackoff', () => {
+  describe('calculateRetryDelay', () => {
     it('should return exponential backoff values', () => {
-      const backoff0 = engine.calculateBackoff(0);
-      const backoff1 = engine.calculateBackoff(1);
-      const backoff2 = engine.calculateBackoff(2); // >= maxRetries (2) → -1
-      const backoff3 = engine.calculateBackoff(3); // >= maxRetries (2) → -1
+      const backoff0 = engine.calculateRetryDelay(0);
+      const backoff1 = engine.calculateRetryDelay(1);
+      const backoff2 = engine.calculateRetryDelay(2); // >= maxRetries (2) → -1
+      const backoff3 = engine.calculateRetryDelay(3); // >= maxRetries (2) → -1
 
-      // calculateBackoff() now delegates to calculateRetryDelay() which uses
-      // config.baseBackoffMs (500ms) + full-range jitter [0, 500ms].
+      // Uses config.baseBackoffMs (500ms) + full-range jitter [0, 500ms].
       // DEFAULT_CHAOS_CONFIG.maxRetries = 2, so attempts >= 2 return -1.
       expect(backoff0).toBeGreaterThanOrEqual(500);  // 500ms base + jitter ≥ 0
       expect(backoff0).toBeLessThanOrEqual(1000);    // 500ms + max jitter 500ms
@@ -34,15 +33,15 @@ describe('Retry Logic', () => {
       expect(backoff3).toBe(-1); // maxRetries exceeded
     });
 
-    it('should cap backoff at max delay', () => {
-      const backoff10 = engine.calculateBackoff(10); // Would be 102,400ms without cap
-      expect(backoff10).toBeLessThanOrEqual(5000 * 1.25); // Max 5s + jitter
+    it('should return -1 when max retries exceeded', () => {
+      const backoff10 = engine.calculateRetryDelay(10); // >= maxRetries (2) → -1
+      expect(backoff10).toBe(-1);
     });
 
     it('should add jitter to prevent synchronized retries', () => {
       const backoffs = [];
       for (let i = 0; i < 10; i++) {
-        backoffs.push(engine.calculateBackoff(1));
+        backoffs.push(engine.calculateRetryDelay(1));
       }
 
       // All values should be in range but not identical
@@ -54,8 +53,8 @@ describe('Retry Logic', () => {
       const engine1 = new ChaosEngine({ ...DEFAULT_CHAOS_CONFIG, seed: 123 });
       const engine2 = new ChaosEngine({ ...DEFAULT_CHAOS_CONFIG, seed: 123 });
 
-      const backoffs1 = Array.from({ length: 5 }, (_, i) => engine1.calculateBackoff(i));
-      const backoffs2 = Array.from({ length: 5 }, (_, i) => engine2.calculateBackoff(i));
+      const backoffs1 = Array.from({ length: 5 }, (_, i) => engine1.calculateRetryDelay(i));
+      const backoffs2 = Array.from({ length: 5 }, (_, i) => engine2.calculateRetryDelay(i));
 
       expect(backoffs1).toEqual(backoffs2);
     });
