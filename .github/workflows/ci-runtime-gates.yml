@@ -16,6 +16,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Repo Hygiene Guard
+        run: bash scripts/repo-hygiene-guard.sh
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

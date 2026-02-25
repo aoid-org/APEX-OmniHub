@@ -309,8 +309,8 @@ export class MetricsCollector {
     // Determine threshold based on context
     // Default: 70 for PRs (permissive), 90 for main/scheduled (strict)
     // Can be overridden via CHAOS_THRESHOLD env var or requiredScore param
-    const threshold = requiredScore ??
-      (process.env.CHAOS_THRESHOLD ? parseInt(process.env.CHAOS_THRESHOLD) : 70);
+    const envParsed = parseInt(process.env.CHAOS_THRESHOLD ?? '', 10);
+    const threshold = requiredScore ?? (isNaN(envParsed) ? 70 : envParsed);
 
     // Overall pass/fail
     const passed = overallScore >= threshold && systemScore.passed;
@@ -407,7 +407,7 @@ export class MetricsCollector {
     const retryThreshold = process.env.SIM_MODE === 'true' ? 0.8 : 0.3;
     const resilience = metrics.retryRate < retryThreshold;
 
-    const idempotency = metrics.dedupeRate >= 0; // Deduplication working
+    const idempotency = metrics.dedupeRate > 0 || metrics.totalEvents === 0; // Dedupes occurred OR no events
 
     let score = 100;
 
@@ -422,7 +422,7 @@ export class MetricsCollector {
       errors,
       resilience,
       idempotency,
-      passed: latency && errors && resilience && idempotency,
+      passed: latency && errors && resilience, // idempotency affects score (-25pts) but is not a hard gate
     };
   }
 
