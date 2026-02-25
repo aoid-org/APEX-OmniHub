@@ -227,6 +227,74 @@ export async function addIncident(incident: Partial<Incident> & { user_id: strin
   return result.data;
 }
 
+// ============================================================================
+// Usage Metering (BYOM Telemetry Bridge)
+// ============================================================================
+
+export interface UsageMeteringSummary {
+  provider: string;
+  model: string;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  request_count: number;
+}
+
+export interface UsageMeteringRow {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  provider: string;
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  region: string;
+  timestamp: string;
+}
+
+export async function fetchUsageMetering(userId: string, days = 7): Promise<UsageMeteringRow[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+
+  const { data, error } = await supabase
+    .from('usage_metering')
+    .select('id, tenant_id, user_id, provider, model, input_tokens, output_tokens, region, timestamp')
+    .eq('user_id', userId)
+    .gte('timestamp', since.toISOString())
+    .order('timestamp', { ascending: false })
+    .limit(500);
+
+  if (error) {
+    logError(error, { action: 'omnidash_fetch_usage_metering' });
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export function aggregateUsageMetering(rows: UsageMeteringRow[]): UsageMeteringSummary[] {
+  const map = new Map<string, UsageMeteringSummary>();
+
+  for (const row of rows) {
+    const key = `${row.provider}:${row.model}`;
+    const existing = map.get(key);
+    if (existing) {
+      existing.total_input_tokens += row.input_tokens;
+      existing.total_output_tokens += row.output_tokens;
+      existing.request_count += 1;
+    } else {
+      map.set(key, {
+        provider: row.provider,
+        model: row.model,
+        total_input_tokens: row.input_tokens,
+        total_output_tokens: row.output_tokens,
+        request_count: 1,
+      });
+    }
+  }
+
+  return Array.from(map.values()).sort((a, b) => b.request_count - a.request_count);
+}
+
 export async function fetchHealthSnapshot(userId: string): Promise<{ lastUpdated: string | null }> {
   const healthTables: TableName[] = ['omnidash_today_items', 'omnidash_pipeline_items', 'omnidash_kpi_daily', 'omnidash_incidents', 'omnidash_settings'];
   const latest = await Promise.all(

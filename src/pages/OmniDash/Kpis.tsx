@@ -6,15 +6,54 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { fetchKpiDaily, upsertKpiDailyEntry } from '@/omnidash/api';
-import { useOmniDashSettings } from '@/omnidash/hooks';
+import { useOmniDashSettings, useUsageMetering } from '@/omnidash/hooks';
 import { redactKpiDaily, redactAmount } from '@/omnidash/redaction';
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+const UsageMeteringContent = ({ usage }: { usage: ReturnType<typeof useUsageMetering> }) => {
+  if (usage.isLoading) {
+    return <p className="text-sm text-muted-foreground">Loading usage data...</p>;
+  }
+  if (usage.summary.length === 0) {
+    return <p className="text-sm text-muted-foreground">No BYOM usage recorded yet.</p>;
+  }
+  return (
+    <>
+      <p className="text-sm mb-3 text-muted-foreground">
+        Total tokens: <span className="font-semibold text-foreground">{usage.totalTokens.toLocaleString()}</span>
+      </p>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Provider</TableHead>
+            <TableHead>Model</TableHead>
+            <TableHead>Input tokens</TableHead>
+            <TableHead>Output tokens</TableHead>
+            <TableHead>Requests</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {usage.summary.map((row) => (
+            <TableRow key={`${row.provider}:${row.model}`}>
+              <TableCell className="capitalize">{row.provider}</TableCell>
+              <TableCell>{row.model}</TableCell>
+              <TableCell>{row.total_input_tokens.toLocaleString()}</TableCell>
+              <TableCell>{row.total_output_tokens.toLocaleString()}</TableCell>
+              <TableCell>{row.request_count}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </>
+  );
+};
 
 export const Kpis = () => {
   const { user } = useAuth();
   const settings = useOmniDashSettings();
   const queryClient = useQueryClient();
+  const usage = useUsageMetering(7);
 
   const kpiQuery = useQuery({
     queryKey: ['omnidash-kpis', user?.id],
@@ -129,6 +168,15 @@ export const Kpis = () => {
               ))}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>BYOM Usage Metering (7d)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <UsageMeteringContent usage={usage} />
         </CardContent>
       </Card>
     </div>

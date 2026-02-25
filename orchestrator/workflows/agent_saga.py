@@ -204,7 +204,7 @@ class SagaContext:
             except Exception as e:
                 # Log but continue (best-effort rollback)
                 workflow.logger.error(
-                    f"✗ Compensation failed: {compensation.activity_name} - {str(e)}"
+                    f"✗ Compensation failed: {compensation.activity_name} - {e!s}"
                 )
                 results.append({"step_id": compensation.step_id, "success": False, "error": str(e)})
 
@@ -305,6 +305,9 @@ class AgentWorkflow:
 
         # OmniTrace: track whether recording is enabled for this run
         self._omnitrace_enabled: bool = False
+
+        # BYOM: pilot session ID (bound when credential_type == 'byom')
+        self._pilot_session_id: str | None = None
 
     # =========================================================================
     # OPERATOR SUPREMACY SIGNALS (MAN Mode 2.0)
@@ -454,6 +457,9 @@ class AgentWorkflow:
                 }
             )
 
+            # 1c. BYOM: Mint pilot session if credential_type is 'byom'
+            await self._mint_pilot_session_if_byom(user_id, context or {})
+
             # 2. Try semantic cache lookup
             cached_plan = await self._check_semantic_cache(goal)
 
@@ -491,11 +497,11 @@ class AgentWorkflow:
 
         except Exception as e:
             # 6. Workflow failed - trigger Saga rollback
-            workflow.logger.error(f"✗ Workflow failed: {str(e)}")
+            workflow.logger.error(f"✗ Workflow failed: {e!s}")
             workflow_result = await self._handle_failure(str(e))
 
             raise ApplicationError(
-                f"Workflow failed: {str(e)}",
+                f"Workflow failed: {e!s}",
                 non_retryable=True,
                 details=workflow_result,
             ) from e
@@ -587,6 +593,52 @@ class AgentWorkflow:
             )
         except Exception as e:
             workflow.logger.warning(f"OmniTrace event recording failed (ignored): {e}")
+
+    async def _mint_pilot_session_if_byom(self, user_id: str, context: dict[str, Any]) -> None:
+        """
+        Mint a pilot session if the run uses a BYOM credential.
+
+        Checks context for credential_type == 'byom'. If present, calls the
+        mint_pilot_session activity and binds the returned pilot_session_id
+        to the workflow context for downstream proxy use.
+        """
+        credential_type = context.get("credential_type", "")
+        if credential_type != "byom":
+            return
+
+        connection_id = context.get("connection_id")
+        if not connection_id:
+            workflow.logger.warning("BYOM credential_type set but no connection_id — skipping mint")
+            return
+
+        try:
+            result = await workflow.execute_activity(
+                "mint_pilot_session",
+                args=[
+                    {
+                        "user_id": user_id,
+                        "tenant_id": context.get("tenant_id", user_id),
+                        "connection_id": connection_id,
+                        "trace_id": workflow.info().workflow_id,
+                        "model": context.get("model", "gpt-4o"),
+                        "sovereignty_mode": context.get("sovereignty_mode", "standard"),
+                        "policy_snapshot_hash": context.get("policy_snapshot_hash", ""),
+                    }
+                ],
+                start_to_close_timeout=timedelta(seconds=15),
+                retry_policy=RetryPolicy(maximum_attempts=2),
+            )
+
+            if result.get("success"):
+                self._pilot_session_id = result["pilot_session_id"]
+                self.workflow_context["pilot_session_id"] = self._pilot_session_id
+                workflow.logger.info(f"✓ Pilot session minted: {self._pilot_session_id}")
+            else:
+                workflow.logger.warning(f"Pilot session mint failed: {result.get('error')}")
+
+        except Exception as e:
+            # Best-effort — don't crash the workflow if minting fails
+            workflow.logger.warning(f"Pilot session mint error (non-fatal): {e}")
 
     async def _check_semantic_cache(self, goal: str) -> dict[str, Any] | None:
         """
@@ -1172,7 +1224,7 @@ class AgentWorkflow:
                 },
             )
 
-            workflow.logger.error(f"  ✗ Failed step: {step_name} - {str(e)}")
+            workflow.logger.error(f"  ✗ Failed step: {step_name} - {e!s}")
             raise
 
     async def _handle_success(self) -> dict[str, Any]:
@@ -1205,7 +1257,7 @@ class AgentWorkflow:
                 )
                 workflow.logger.info(f"✓ Updated agent_runs for trace_id: {trace_id}")
             except Exception as e:
-                workflow.logger.warning(f"Failed to update agent_runs: {str(e)}")
+                workflow.logger.warning(f"Failed to update agent_runs: {e!s}")
 
         await self._append_event(
             WorkflowCompleted(
