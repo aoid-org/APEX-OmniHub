@@ -105,6 +105,8 @@ const ProgressRow = ({ colorClass, widthPercent }: ProgressRowProps) => (
     </div>
   </div>
 );
+type ItemCategory = "outcome" | "outreach" | "metric";
+
 const getBadgeStyles = (category: string) => {
   if (category === "outcome")
     return "border-emerald-500/50 text-emerald-600 dark:text-emerald-400";
@@ -113,9 +115,38 @@ const getBadgeStyles = (category: string) => {
   return "border-amber-500/50 text-amber-600 dark:text-amber-400";
 };
 
-type ItemCategory = "outcome" | "outreach" | "metric";
+export const omniDashLayouts: Partial<Record<string, Layout>> = {
+  lg: [
+    { i: "apex-agent", x: 0, y: 0, w: 3, h: 4, isResizable: false },
+    { i: "omnitrace", x: 0, y: 4, w: 3, h: 4, isResizable: false },
+    { i: "analytics", x: 0, y: 8, w: 1, h: 2, isResizable: false },
+    { i: "security", x: 1, y: 8, w: 1, h: 2, isResizable: false },
+    { i: "knowledge", x: 2, y: 8, w: 1, h: 2, isResizable: false },
+  ],
+  md: [
+    { i: "apex-agent", x: 0, y: 0, w: 3, h: 5, isResizable: false },
+    { i: "omnitrace", x: 0, y: 5, w: 3, h: 4, isResizable: false },
+    { i: "analytics", x: 0, y: 9, w: 1, h: 2, isResizable: false },
+    { i: "security", x: 1, y: 9, w: 1, h: 2, isResizable: false },
+    { i: "knowledge", x: 2, y: 9, w: 1, h: 2, isResizable: false },
+  ],
+  sm: [
+    { i: "apex-agent", x: 0, y: 0, w: 2, h: 8, isResizable: false },
+    { i: "omnitrace", x: 0, y: 8, w: 2, h: 4, isResizable: false },
+    { i: "analytics", x: 0, y: 12, w: 2, h: 2, isResizable: false },
+    { i: "security", x: 0, y: 14, w: 2, h: 2, isResizable: false },
+    { i: "knowledge", x: 0, y: 16, w: 2, h: 2, isResizable: false },
+  ],
+  xs: [
+    { i: "apex-agent", x: 0, y: 0, w: 1, h: 10, isResizable: false },
+    { i: "omnitrace", x: 0, y: 10, w: 1, h: 4, isResizable: false },
+    { i: "analytics", x: 0, y: 14, w: 1, h: 2, isResizable: false },
+    { i: "security", x: 0, y: 16, w: 1, h: 2, isResizable: false },
+    { i: "knowledge", x: 0, y: 18, w: 1, h: 2, isResizable: false },
+  ],
+};
 
-export const Today = () => {
+export function useOmniDashTelemetry() {
   const { user } = useAuth();
   const { toast } = useToast();
   const settings = useOmniDashSettings();
@@ -124,6 +155,7 @@ export const Today = () => {
   const demoStore = useDemoStore();
   const [newTitle, setNewTitle] = useState("");
   const [category] = useState<ItemCategory>("outcome");
+
   const itemsQuery = useQuery({
     queryKey: ["omnidash-today", user?.id],
     enabled: !!user,
@@ -177,8 +209,6 @@ export const Today = () => {
     },
   });
 
-  // Powerblock state was removed to make room for Action Center and OmniSLATE Telemetry
-
   const handleNextAction = async (item: TodayItem) => {
     if (!user) return;
     await upsertTodayItem({
@@ -190,43 +220,18 @@ export const Today = () => {
     toast({ title: "Next action captured", description: item.title });
   };
 
-  const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>({
-    lg: [
-      { i: "apex-agent", x: 0, y: 0, w: 3, h: 4, isResizable: false },
-      { i: "omnitrace", x: 0, y: 4, w: 3, h: 4, isResizable: false },
-      { i: "analytics", x: 0, y: 8, w: 1, h: 2, isResizable: false },
-      { i: "security", x: 1, y: 8, w: 1, h: 2, isResizable: false },
-      { i: "knowledge", x: 2, y: 8, w: 1, h: 2, isResizable: false },
-    ],
-    md: [
-      { i: "apex-agent", x: 0, y: 0, w: 3, h: 5, isResizable: false },
-      { i: "omnitrace", x: 0, y: 5, w: 3, h: 4, isResizable: false },
-      { i: "analytics", x: 0, y: 9, w: 1, h: 2, isResizable: false },
-      { i: "security", x: 1, y: 9, w: 1, h: 2, isResizable: false },
-      { i: "knowledge", x: 2, y: 9, w: 1, h: 2, isResizable: false },
-    ],
-    sm: [
-      { i: "apex-agent", x: 0, y: 0, w: 2, h: 8, isResizable: false },
-      { i: "omnitrace", x: 0, y: 8, w: 2, h: 4, isResizable: false },
-      { i: "analytics", x: 0, y: 12, w: 2, h: 2, isResizable: false },
-      { i: "security", x: 0, y: 14, w: 2, h: 2, isResizable: false },
-      { i: "knowledge", x: 0, y: 16, w: 2, h: 2, isResizable: false },
-    ],
-    xs: [
-      { i: "apex-agent", x: 0, y: 0, w: 1, h: 10, isResizable: false },
-      { i: "omnitrace", x: 0, y: 10, w: 1, h: 4, isResizable: false },
-      { i: "analytics", x: 0, y: 14, w: 1, h: 2, isResizable: false },
-      { i: "security", x: 0, y: 16, w: 1, h: 2, isResizable: false },
-      { i: "knowledge", x: 0, y: 18, w: 1, h: 2, isResizable: false },
-    ],
-  });
+  return { itemsQuery, addMutation, handleNextAction, newTitle, setNewTitle };
+}
+
+export const Today = () => {
+  const { itemsQuery, addMutation, handleNextAction, newTitle, setNewTitle } = useOmniDashTelemetry();
+  const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>(omniDashLayouts);
 
   const onLayoutChange = (
     _currentLayout: Layout,
     allLayouts: Partial<Record<string, Layout>>
   ) => {
     setLayouts(allLayouts);
-    // Future: Persist this via updateSettings to user profile table
   };
 
   return (
@@ -553,30 +558,6 @@ export const Today = () => {
           <ProgressRow colorClass="bg-purple-500" widthPercent="74%" />
           <HiddenMetric icon={GitMerge} label="Workflow Execution" value="8.4k" />
           <ProgressRow colorClass="bg-blue-500" widthPercent="92%" />
-        </WidgetCard>
-
-        <WidgetCard
-          id="security"
-          bgClass="bg-[#0A141A]/90"
-          borderClass="border-cyan-900/30"
-          textClass="text-cyan-400"
-          icon={Shield}
-          title="Security Audit"
-          contentClass="p-3"
-        >
-          <div className="flex items-center gap-3 mb-2 px-2">
-            <div className="h-8 w-8 rounded-full bg-cyan-950/50 border border-cyan-900/50 flex items-center justify-center">
-              <Shield className="h-4 w-4 text-cyan-500" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-200">Zero Trust Active</p>
-              <p className="text-[10px] text-gray-500">All gateways secured</p>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <HiddenMetric icon={Lock} label="Threats" value="0 Blocked" valueClass="text-emerald-500 font-bold" />
-            <HiddenMetric icon={Clock} label="Auth Fixes" value="Last 24h" />
-          </div>
         </WidgetCard>
 
         <WidgetCard
