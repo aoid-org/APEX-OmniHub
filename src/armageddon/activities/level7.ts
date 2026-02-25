@@ -126,14 +126,16 @@ async function runGenericBattery(params: GenericBatteryConfig): Promise<BatteryR
         // Batch insert to Supabase every 500 iterations
         if (i % LOG_BATCH_INTERVAL === 0 && eventBatch.length > 0) {
             logs.push(`[B${batteryId}] Batch insert at iteration ${i}: ${eventBatch.length} events`);
-            await supabase.from('armageddon_events').insert(eventBatch);
+            const { error: batchErr } = await supabase.from('armageddon_events').insert(eventBatch);
+            if (batchErr) throw new Error(`[B${batteryId}] Batch insert failed at iteration ${i}: ${batchErr.message}`);
             eventBatch.length = 0;
         }
     }
 
     // Final batch insert
     if (eventBatch.length > 0) {
-        await supabase.from('armageddon_events').insert(eventBatch);
+        const { error: finalErr } = await supabase.from('armageddon_events').insert(eventBatch);
+        if (finalErr) throw new Error(`[B${batteryId}] Final batch insert failed: ${finalErr.message}`);
     }
 
     const durationMs = Date.now() - startTime;
