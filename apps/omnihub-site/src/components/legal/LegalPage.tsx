@@ -12,7 +12,7 @@ function createKeyFactory(): (prefix: string, value: string) => string {
   const seen = new Map<string, number>();
 
   return (prefix: string, value: string) => {
-    const base = `${prefix}-${value.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-')}`;
+    const base = `${prefix}-${value.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
     const count = seen.get(base) ?? 0;
     seen.set(base, count + 1);
     return count === 0 ? base : `${base}-${count}`;
@@ -74,7 +74,7 @@ function renderMarkdown(markdown: string): JSX.Element[] {
       return;
     }
 
-    elements.push(<p key={getKey('p', line)}>{line.replaceAll('**', '')}</p>);
+    elements.push(<p key={getKey('p', line)}>{line.split('**').join('')}</p>);
   });
 
   flushList('list-final');
