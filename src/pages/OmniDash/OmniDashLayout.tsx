@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { AlertCircle, Activity, ShieldCheck, Loader2, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import { AlertCircle, ShieldCheck, Loader2, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -15,8 +15,6 @@ import { OmniDashNavIconButton } from '@/components/OmniDashNavIconButton';
 import { DemoModeBanner } from '@/components/demo/DemoModeBanner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useOmniDashKeyboardShortcuts } from '@/omnidash/useOmniDashKeyboardShortcuts';
-import { OmniTraceFeed } from '@/components/dashboard/OmniTraceFeed';
-import { CreateSkillWidget } from '@/components/skills/CreateSkillWidget';
 
 export const OmniDashLayout = () => {
   const { user } = useAuth();

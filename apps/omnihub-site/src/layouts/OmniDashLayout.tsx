@@ -148,7 +148,7 @@ export function OmniDashLayout() {
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
-      </aside>
+      </div>
 
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 top-[73px] bg-[#030303] z-40 overflow-y-auto border-b border-white/10">
