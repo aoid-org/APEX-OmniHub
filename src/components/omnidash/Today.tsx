@@ -28,6 +28,22 @@ const getBadgeStyles = (category: string) => {
   return 'border-amber-500/50 text-amber-600 dark:text-amber-400';
 };
 
+const DragHandle = React.memo(() => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9" cy="12" r="1" /><circle cx="9" cy="5" r="1" /><circle cx="9" cy="19" r="1" />
+    <circle cx="15" cy="12" r="1" /><circle cx="15" cy="5" r="1" /><circle cx="15" cy="19" r="1" />
+  </svg>
+));
+
+const OmniSlateMetrics = React.memo(() => (
+  <div className="flex items-center justify-between gap-1">
+    <HiddenMetric icon={Network} label="Tasks Today" value="27 / 50" valueClass="text-white" />
+    <HiddenMetric icon={Activity} label="Success Rate" value="96.8%" valueClass="text-emerald-400" />
+    <HiddenMetric icon={Cpu} label="Avg. Latency" value="842ms" valueClass="text-[hsl(var(--accent))]" />
+    <HiddenMetric icon={LineChart} label="Cost Saved" value="$3,240" valueClass="text-green-400" />
+  </div>
+));
+
 export const Today = () => {
   const { user } = useAuth();
   const { toast } = useToast();
