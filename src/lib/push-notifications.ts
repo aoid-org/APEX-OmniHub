@@ -145,6 +145,12 @@ export function setupNotificationClickHandler() {
   if (!('serviceWorker' in navigator)) return;
 
   navigator.serviceWorker.addEventListener('message', (event) => {
+    // FIX: Verify message origin — service worker messages have empty origin ('')
+    if (event.origin !== '' && event.origin !== globalThis.location.origin) {
+      console.warn('[Push] Rejected message from untrusted origin:', event.origin);
+      return;
+    }
+
     if (event.data?.type === 'notification-click') {
       const { action, data } = event.data;
 
