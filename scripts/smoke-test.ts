@@ -26,14 +26,16 @@ async function runTest(name: string, testFn: () => Promise<void>): Promise<void>
     const duration = Date.now() - start;
     results.push({ name, status: 'pass', message: 'OK', duration });
     console.log(`✅ ${name} (${duration}ms)`);
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - start;
     
+    // Narrowing the error for network check without using `any`
+    const err = error as Record<string, unknown>;
     const isNetworkLimitation = 
-      error?.message?.includes('ENETUNREACH') || 
-      error?.cause?.code === 'ENETUNREACH' || 
-      error?.code === 'ENETUNREACH' ||
-      error?.message?.includes('fetch failed');
+      (typeof err?.message === 'string' && err.message.includes('ENETUNREACH')) || 
+      (err?.cause as Record<string, unknown>)?.code === 'ENETUNREACH' || 
+      err?.code === 'ENETUNREACH' ||
+      (typeof err?.message === 'string' && err.message.includes('fetch failed'));
 
     if (isNetworkLimitation) {
       results.push({ name, status: 'pass', message: 'Bypassed (ENETUNREACH)', duration });

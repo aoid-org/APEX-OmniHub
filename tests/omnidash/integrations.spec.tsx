@@ -51,20 +51,23 @@ const createMockEvent = (idPrefix: string, integrationId: string, sourceType: st
   received_at: new Date().toISOString(),
 });
 
-function setupMockedReturns(
-  integrationsData: any[],
+function setupAndRenderIntegrations(
+  integrationsData: Record<string, unknown>[],
   keyName: string,
   eventIdPrefix: string,
   sourceType: string
 ) {
-  mockedIntegrations.mockResolvedValueOnce(integrationsData);
-  mockedKeys.mockResolvedValueOnce([createMockKey(eventIdPrefix, integrationsData[0].id, keyName)]);
-  mockedEvents.mockResolvedValueOnce([createMockEvent(eventIdPrefix, integrationsData[0].id, sourceType)]);
+  mockedIntegrations.mockResolvedValueOnce(integrationsData as any);
+  mockedKeys.mockResolvedValueOnce([createMockKey(eventIdPrefix, String(integrationsData[0].id), keyName)]);
+  mockedEvents.mockResolvedValueOnce([createMockEvent(eventIdPrefix, String(integrationsData[0].id), sourceType)]);
+  
+  const client = new QueryClient();
+  render(<QueryClientProvider client={client}><Integrations /></QueryClientProvider>);
 }
 
 describe('OmniBoard Integrations', () => {
   it('renders connector tiles only from live integration records (no ghost tiles)', async () => {
-    setupMockedReturns(
+    setupAndRenderIntegrations(
       [
         { id: 'i-1', user_id: 'u-1', name: 'Salesforce', type: 'salesforce', status: 'active', created_at: null },
         { id: 'i-2', user_id: 'u-1', name: 'Slack', type: 'slack', status: 'active', created_at: null },
@@ -74,16 +77,13 @@ describe('OmniBoard Integrations', () => {
       'salesforce'
     );
 
-    const client = new QueryClient();
-    render(<QueryClientProvider client={client}><Integrations /></QueryClientProvider>);
-
     expect(await screen.findByTestId('connector-tile-i-1')).toBeInTheDocument();
     expect(await screen.findByTestId('connector-tile-i-2')).toBeInTheDocument();
     expect(screen.queryByTestId('connector-tile-i-3')).not.toBeInTheDocument();
   });
 
   it('derives LIVE vs NEEDS_AUTH status from key and event records', async () => {
-    setupMockedReturns(
+    setupAndRenderIntegrations(
       [
         { id: 'i-live', user_id: 'u-1', name: 'HubSpot', type: 'hubspot', status: 'active', created_at: null },
         { id: 'i-needs-auth', user_id: 'u-1', name: 'Notion', type: 'notion', status: 'active', created_at: null },
@@ -92,9 +92,6 @@ describe('OmniBoard Integrations', () => {
       'live',
       'hubspot'
     );
-
-    const client = new QueryClient();
-    render(<QueryClientProvider client={client}><Integrations /></QueryClientProvider>);
 
     expect(await screen.findByTestId('connector-status-i-live')).toHaveTextContent('LIVE');
     expect(await screen.findByTestId('connector-status-i-needs-auth')).toHaveTextContent('NEEDS_AUTH');
