@@ -52,9 +52,7 @@ let flushInFlight = false;
 let consecutiveFailures = 0;
 
 // Warm caches opportunistically (blocking load for safety)
-// eslint-disable-next-line unicorn/prefer-top-level-await
 await loadRegistryFromLocal();
-// eslint-disable-next-line unicorn/prefer-top-level-await
 await loadUpsertQueue();
 
 async function loadRegistryFromLocal() {
