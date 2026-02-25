@@ -1,27 +1,25 @@
-import { Routes, Route } from 'react-router-dom';
-import { HomePage } from '@/pages/Home';
-import { OnboardingWizard } from '@/pages/Launch/OnboardingWizard';
-import { DashboardOverview } from '@/pages/DashboardOverview';
-import { ApprovalsPage } from '@/pages/OmniDash/Approvals';
-import { OmniDashLayout } from '@/layouts/OmniDashLayout';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { Routes, Route } from "react-router-dom";
+import { HomePage } from "@/pages/Home";
+import { OnboardingWizard } from "@/pages/Launch/OnboardingWizard";
+import { OmniDashLayout } from "@/layouts/OmniDashLayout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Legacy/Existing Pages
-import { LoginPage } from '@/pages/Login';
-import { PrivacyPage } from '@/pages/Privacy';
-import { TermsPage } from '@/pages/Terms';
-import { DemoPage } from '@/pages/Demo';
-import { TechSpecsPage } from '@/pages/TechSpecs';
-import { RequestAccessPage } from '@/pages/RequestAccess';
-import { AdvancedAnalyticsPage } from '@/pages/AdvancedAnalytics';
-import { AiAutomationPage } from '@/pages/AiAutomation';
-import { FortressPage } from '@/pages/Fortress';
-import { MaestroPage } from '@/pages/Maestro';
-import { ManModePage } from '@/pages/ManMode';
-import { OmniPortPage } from '@/pages/OmniPort';
-import { OrchestratorPage } from '@/pages/Orchestrator';
-import { SmartIntegrationsPage } from '@/pages/SmartIntegrations';
-import { TriForcePage } from '@/pages/TriForce';
+import { LoginPage } from "@/pages/Login";
+import { PrivacyPage } from "@/pages/Privacy";
+import { TermsPage } from "@/pages/Terms";
+import { DemoPage } from "@/pages/Demo";
+import { TechSpecsPage } from "@/pages/TechSpecs";
+import { RequestAccessPage } from "@/pages/RequestAccess";
+import { AdvancedAnalyticsPage } from "@/pages/AdvancedAnalytics";
+import { AiAutomationPage } from "@/pages/AiAutomation";
+import { FortressPage } from "@/pages/Fortress";
+import { MaestroPage } from "@/pages/Maestro";
+import { ManModePage } from "@/pages/ManMode";
+import { OmniPortPage } from "@/pages/OmniPort";
+import { OrchestratorPage } from "@/pages/Orchestrator";
+import { SmartIntegrationsPage } from "@/pages/SmartIntegrations";
+import { TriForcePage } from "@/pages/TriForce";
 
 function App() {
   return (
@@ -30,7 +28,7 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/launch" element={<OnboardingWizard />} />
 
-      {/* OmniDash Console Routes */}
+      {/* Strict SPA OmniDash Console */}
       <Route
         path="/omnidash"
         element={
@@ -38,10 +36,7 @@ function App() {
             <OmniDashLayout />
           </ProtectedRoute>
         }
-      >
-        <Route index element={<DashboardOverview />} />
-        <Route path="approvals" element={<ApprovalsPage />} />
-      </Route>
+      />
 
       {/* Existing Content Pages - Mapping to clean URLs */}
       <Route path="/login" element={<LoginPage />} />

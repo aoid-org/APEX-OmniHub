@@ -5,6 +5,49 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-02-25
+
+### Added — OmniDash Strict SPA Refactor & Drag-and-Drop Grid
+
+- **OmniDash SPA Architecture** — Enforced strict single-page application structure with modal-based sub-views. All OmniDash panel components consolidated from `pages/OmniDash/` to `components/omnidash/`.
+- **Drag-and-Drop Grid** — Implemented responsive drag-and-drop grid layout for all OmniDash widgets, files, and links using `react-grid-layout`.
+- **Keyboard Shortcuts** — Refactored keyboard shortcut hook to pure panel-callback flow (`useOmniDashKeyboardShortcuts(openPanel)`), decoupled from router navigation.
+- **Nav Icon Buttons** — Added `OmniDashNavIconButton` component with custom nav icons for all OmniDash panels.
+- **Workflow Studio** — Integrated WorkflowStudio panel into OmniDash SPA.
+- **Test Suite** — Added `keyboard-shortcuts.spec.ts` (21 test cases) and `runs.spec.tsx` for OmniDash component testing.
+
+### Changed
+
+- **Component Migration** — Moved `Approvals`, `Entities`, `Events`, `Integrations`, `Kpis`, `LocalAgents`, `Ops`, `Pipeline`, `Runs`, `Tasks`, `Today`, `WorkflowStudio` from `src/pages/OmniDash/` to `src/components/omnidash/`.
+- **App.tsx Routing** — Updated lazy imports to point to new component locations; removed stale page-based routing.
+- **HiddenMetric** — Combined main's tooltip-based `HiddenMetric` with `HiddenValue` hover-reveal component for backward compatibility.
+- **OmniDashLayout** — Fixed mismatched `aside`/`div` tag, updated sidebar wiring for panel-callback pattern.
+- **AppSidebar** — Updated navigation to use new OmniDash SPA structure.
+
+### Fixed
+
+- **RLS Policies** — Added complete Row Level Security policies for `workflows`, `workflow_runs`, `user_generated_skills`, and `omni_run_events` tables with `IF NOT EXISTS` guards.
+- **ESLint** — Resolved all ESLint errors and warnings blocking CI.
+- **Dead Code** — Removed stale `src/pages/OmniDash.tsx` conflict remnant and unused page files.
+
+### Removed
+
+- **Junk Artifacts** — Removed `eslint_report.txt`, `tsc_report.txt`, `lint_output.txt`, `search_results.txt`, `playwright-report/`, and other CI/build artifacts from version control.
+- **Stale Page Files** — Removed `src/pages/OmniDash/Kpis.tsx`, `src/pages/Integrations.tsx`, and other page files superseded by component versions.
+- **Duplicate Imports** — Cleaned up duplicate React imports and unused dependencies.
+
+### Security
+
+- All new database tables have RLS enabled with owner-scoped policies
+- `omni_run_events` uses join-based RLS through parent workflow ownership
+
+### Quality Gates
+
+- SonarQube exclusions configured for test artifacts
+- `.gitignore` updated to prevent future artifact tracking
+
+---
+
 ## [1.2.1] - 2026-02-20
 
 ### Changed

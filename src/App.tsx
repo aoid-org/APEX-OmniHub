@@ -20,6 +20,21 @@ import { Loader2 } from 'lucide-react';
 import { OMNIDASH_FLAG } from './omnidash/types';
 import { OmniLinkShell } from "./layouts/OmniLinkShell";
 
+// Lazy load OmniDash components (SPA: all panels in components/omnidash/)
+const OmniDashLayout = lazy(() => import("./pages/OmniDash/OmniDashLayout"));
+const OmniDashToday = lazy(() => import("./components/omnidash/Today"));
+const OmniDashPipeline = lazy(() => import("./components/omnidash/Pipeline"));
+const OmniDashKpis = lazy(() => import("./components/omnidash/Kpis"));
+const OmniDashOps = lazy(() => import("./components/omnidash/Ops"));
+const OmniDashIntegrations = lazy(() => import("./components/omnidash/Integrations"));
+const OmniDashEvents = lazy(() => import("./components/omnidash/Events"));
+const OmniDashEntities = lazy(() => import("./components/omnidash/Entities"));
+const OmniDashRuns = lazy(() => import("./components/omnidash/Runs"));
+const OmniDashApprovals = lazy(() => import("./components/omnidash/Approvals"));
+const OmniDashLocalAgents = lazy(() => import("./components/omnidash/LocalAgents"));
+const OmniDashTasks = lazy(() => import("./components/omnidash/Tasks"));
+const WorkflowStudio = lazy(() => import("./components/omnidash/WorkflowStudio"));
+
 // Lazy load pages for better code splitting
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -27,7 +42,6 @@ const Dashboard = lazy(() => import("./pages/dashboard"));
 const Links = lazy(() => import("./pages/Links"));
 const Files = lazy(() => import("./pages/Files"));
 const Automations = lazy(() => import("./pages/Automations"));
-const Integrations = lazy(() => import("./pages/Integrations"));
 const ApexAssistant = lazy(() => import("./pages/ApexAssistant"));
 const Todos = lazy(() => import("./pages/Todos"));
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -43,19 +57,6 @@ const BuiltCanadian = lazy(() => import("./pages/apps/BuiltCanadian"));
 const TechSpecs = lazy(() => import("./pages/TechSpecs"));
 const Diagnostics = lazy(() => import("./pages/Diagnostics"));
 const Health = lazy(() => import("./pages/Health"));
-const OmniDashLayout = lazy(() => import("./pages/OmniDash/OmniDashLayout"));
-const OmniDashToday = lazy(() => import("./pages/OmniDash/Today"));
-const OmniDashPipeline = lazy(() => import("./pages/OmniDash/Pipeline"));
-const OmniDashKpis = lazy(() => import("./pages/OmniDash/Kpis"));
-const OmniDashOps = lazy(() => import("./pages/OmniDash/Ops"));
-const OmniDashIntegrations = lazy(() => import("./pages/OmniDash/Integrations"));
-const OmniDashEvents = lazy(() => import("./pages/OmniDash/Events"));
-const OmniDashEntities = lazy(() => import("./pages/OmniDash/Entities"));
-const OmniDashRuns = lazy(() => import("./pages/OmniDash/Runs"));
-const OmniDashApprovals = lazy(() => import("./pages/OmniDash/Approvals"));
-const OmniDashLocalAgents = lazy(() => import("./pages/OmniDash/LocalAgents"));
-const OmniDashTasks = lazy(() => import("./pages/OmniDash/Tasks"));
-const WorkflowStudio = lazy(() => import("./pages/OmniDash/WorkflowStudio"));
 const Translation = lazy(() => import("./pages/Translation"));
 const Agent = lazy(() => import("./pages/Agent"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -229,7 +230,6 @@ const App = () => (
                 <Route path="/links" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Links /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/files" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Files /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/automations" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Automations /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
-                <Route path="/integrations" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Integrations /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/apex" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><ApexAssistant /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/todos" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Todos /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/diagnostics" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Diagnostics /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
