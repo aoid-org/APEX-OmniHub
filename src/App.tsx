@@ -27,7 +27,6 @@ const Dashboard = lazy(() => import("./pages/dashboard"));
 const Links = lazy(() => import("./pages/Links"));
 const Files = lazy(() => import("./pages/Files"));
 const Automations = lazy(() => import("./pages/Automations"));
-const Integrations = lazy(() => import("./pages/Integrations"));
 const ApexAssistant = lazy(() => import("./pages/ApexAssistant"));
 const Todos = lazy(() => import("./pages/Todos"));
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -43,19 +42,6 @@ const BuiltCanadian = lazy(() => import("./pages/apps/BuiltCanadian"));
 const TechSpecs = lazy(() => import("./pages/TechSpecs"));
 const Diagnostics = lazy(() => import("./pages/Diagnostics"));
 const Health = lazy(() => import("./pages/Health"));
-const OmniDashLayout = lazy(() => import("./pages/OmniDash/OmniDashLayout"));
-const OmniDashToday = lazy(() => import("./pages/OmniDash/Today"));
-const OmniDashPipeline = lazy(() => import("./pages/OmniDash/Pipeline"));
-const OmniDashKpis = lazy(() => import("./pages/OmniDash/Kpis"));
-const OmniDashOps = lazy(() => import("./pages/OmniDash/Ops"));
-const OmniDashIntegrations = lazy(() => import("./pages/OmniDash/Integrations"));
-const OmniDashEvents = lazy(() => import("./pages/OmniDash/Events"));
-const OmniDashEntities = lazy(() => import("./pages/OmniDash/Entities"));
-const OmniDashRuns = lazy(() => import("./pages/OmniDash/Runs"));
-const OmniDashApprovals = lazy(() => import("./pages/OmniDash/Approvals"));
-const OmniDashLocalAgents = lazy(() => import("./pages/OmniDash/LocalAgents"));
-const OmniDashTasks = lazy(() => import("./pages/OmniDash/Tasks"));
-const WorkflowStudio = lazy(() => import("./pages/OmniDash/WorkflowStudio"));
 const Translation = lazy(() => import("./pages/Translation"));
 const Agent = lazy(() => import("./pages/Agent"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -229,7 +215,6 @@ const App = () => (
                 <Route path="/links" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Links /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/files" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Files /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/automations" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Automations /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
-                <Route path="/integrations" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Integrations /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/apex" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><ApexAssistant /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/todos" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Todos /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/diagnostics" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Diagnostics /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />

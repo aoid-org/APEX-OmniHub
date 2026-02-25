@@ -1,4 +1,4 @@
-import { FC, memo } from 'react';
+import React, { FC, memo } from 'react';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -38,3 +38,19 @@ export const HiddenMetric: FC<HiddenMetricProps> = memo(({
 });
 
 HiddenMetric.displayName = 'HiddenMetric';
+
+export const HiddenValue = ({ icon: Icon, value, valueClass }: { icon?: React.ComponentType<{ className?: string }>, value: string | React.ReactNode, valueClass?: string }) => {
+  const isDesktopHidden = false;
+  const DefaultIcon = Icon || (() => <span className="h-3.5 w-3.5 inline-block opacity-50">&bull;</span>);
+
+  return (
+    <div className="group relative inline-flex items-center justify-center min-w-[20px] h-5 cursor-default overflow-hidden">
+      <div className={`absolute flex items-center transition-all duration-300 opacity-100 group-hover:opacity-0 group-hover:scale-50 ${isDesktopHidden ? '' : 'lg:opacity-0 lg:scale-50'}`}>
+        <DefaultIcon className="h-3.5 w-3.5 text-muted-foreground" />
+      </div>
+      <span className={`transition-all duration-300 opacity-0 scale-95 group-hover:scale-100 group-hover:opacity-100 whitespace-nowrap ${isDesktopHidden ? '' : 'lg:opacity-100 lg:scale-100'} ${valueClass || ''}`}>
+        {value}
+      </span>
+    </div>
+  );
+};

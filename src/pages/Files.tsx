@@ -5,13 +5,37 @@ import { Upload, Download, Trash2, FileIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getUploadToken, uploadWithToken, listUserFiles, createDownloadUrl, deleteFile } from '@/lib/files';
 import { useToast } from '@/hooks/use-toast';
+import { Responsive, WidthProvider, Layout } from 'react-grid-layout/legacy';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
+
+const ResponsiveGridLayout = WidthProvider(Responsive);
+
+const COLS = { lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 };
 
 const Files = () => {
   const [uid, setUid] = useState<string>("");
-  const [items, setItems] = useState<unknown[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [items, setItems] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>({});
+
+  useEffect(() => {
+    const newLayouts: Partial<Record<string, Layout>> = {};
+    for (const [bp, c] of Object.entries(COLS)) {
+      newLayouts[bp] = items.map((item, i) => ({
+        i: item.name,
+        x: i % c,
+        y: Math.floor(i / c),
+        w: 1,
+        h: 1,
+        isResizable: false
+      }));
+    }
+    setLayouts(newLayouts);
+  }, [items]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -148,41 +172,57 @@ const Files = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-3">
+        <ResponsiveGridLayout
+          className="layout -mx-2"
+          layouts={layouts}
+          breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
+          cols={COLS}
+          rowHeight={88}
+          onLayoutChange={(_layout, allLayouts) => setLayouts(allLayouts)}
+          draggableHandle=".custom-drag-handle"
+          margin={[16, 16]}
+        >
           {items.map((obj) => (
-            <Card key={obj.name}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <FileIcon className="h-8 w-8 text-muted-foreground flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium truncate">{obj.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {formatFileSize(obj.metadata?.size || 0)} • {new Date(obj.created_at).toLocaleDateString()}
+            <div key={obj.name}>
+              <Card className="h-full relative group shadow-sm border border-white/10 hover:border-white/20 transition-all bg-[#121622]/50">
+                <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/0 group-hover:text-white/30 hover:!text-white/60 transition-colors z-20">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+                </div>
+                <CardContent className="p-4 h-full pr-10">
+                  <div className="flex items-center justify-between h-full">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <FileIcon className="h-8 w-8 text-muted-foreground flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium truncate pr-2">{obj.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {formatFileSize(obj.metadata?.size || 0)} • {new Date(obj.created_at).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
+                    <div className="flex gap-2 flex-shrink-0 z-10">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onDownload(obj.name)}
+                        className="cancel-drag relative z-30"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onDelete(obj.name)}
+                        className="cancel-drag relative z-30"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onDownload(obj.name)}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onDelete(obj.name)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           ))}
-        </div>
+        </ResponsiveGridLayout>
       )}
     </div>
   );
