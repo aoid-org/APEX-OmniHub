@@ -86,3 +86,8 @@ test_output*.txt
 test_json*.json
 test_forge_full*.py
 apps/**/dist/
+
+# ── Stale CI artifacts (auto-generated, should never be committed) ───────────
+final_eslint.json
+security/npm-audit-latest.json
+security/npm-audit-prod.json

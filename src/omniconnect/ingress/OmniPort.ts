@@ -380,7 +380,7 @@ class OmniPortEngine {
   public initialize(): void {
     if (this.isInitialized) return;
     this.isInitialized = true;
-    console.log('[OmniPort] Engine initialized');
+    if (import.meta.env.DEV) console.log('[OmniPort] Engine initialized');
   }
 
   // ===========================================================================
@@ -949,13 +949,14 @@ class OmniPortEngine {
     // Async logging to avoid blocking the main thread with JSON.stringify and I/O
     Promise.resolve().then(() => {
       try {
-        console.log(
-          `[OmniPort] [${correlationId}] [${latencyMs}ms] ${event}`,
-          data ? JSON.stringify(data) : ''
-        );
-      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.log(
+            `[OmniPort] [${correlationId}] [${latencyMs}ms] ${event}`,
+            data ? JSON.stringify(data) : ''
+          );
+        }
+      } catch {
         // Prevent unhandled rejections from logging failures (e.g. circular refs)
-        console.error('[OmniPort] Async logging failed:', err);
       }
     });
   }

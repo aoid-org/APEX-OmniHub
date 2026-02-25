@@ -9,8 +9,8 @@
  * - Zero-Maintenance: Autonomous operation
  */
 
-/* eslint-disable no-console */
-// Console statements are intentional for monitoring system diagnostics
+// OmniSentry uses structured logging via console.warn/error for operational diagnostics.
+// All console.info calls are guarded behind import.meta.env.DEV.
 
 // ============================================================================
 // TYPES
@@ -340,7 +340,7 @@ function runSelfDiagnostics(): void {
     if (circuitBreaker.state === 'open' &&
         Date.now() - circuitBreaker.lastFailure > config.circuitResetMs * 2) {
       circuitBreaker.state = 'half-open';
-      console.info('[OmniSentry] Force-reset circuit to half-open');
+      if (import.meta.env.DEV) console.info('[OmniSentry] Force-reset circuit to half-open');
     }
   }
 
@@ -374,7 +374,7 @@ export function initializeOmniSentry(customConfig?: Partial<SentryConfig>): void
   // Run initial diagnostics
   runSelfDiagnostics();
 
-  console.info('[OmniSentry] Initialized with config:', config);
+  if (import.meta.env.DEV) console.info('[OmniSentry] Initialized with config:', config);
 }
 
 /**
@@ -435,7 +435,7 @@ export async function flushOfflineErrors(): Promise<number> {
 
   if (flushed > 0) {
     safePersist('omni_sentry_offline', []);
-    console.info(`[OmniSentry] Flushed ${flushed} offline errors`);
+    if (import.meta.env.DEV) console.info(`[OmniSentry] Flushed ${flushed} offline errors`);
   }
 
   return flushed;
@@ -452,7 +452,7 @@ export function shutdownOmniSentry(): void {
 
   // Persist final state
   safePersist('omni_sentry_circuit', circuitBreaker);
-  console.info('[OmniSentry] Shutdown complete');
+  if (import.meta.env.DEV) console.info('[OmniSentry] Shutdown complete');
 }
 
 /**
@@ -484,5 +484,5 @@ export function clearAllData(): void {
     lastFailure: 0,
     lastSuccess: Date.now(),
   };
-  console.info('[OmniSentry] All data cleared');
+  if (import.meta.env.DEV) console.info('[OmniSentry] All data cleared');
 }

@@ -89,7 +89,7 @@ export class OmniConnect {
    */
   async initiateHandshake(provider: string): Promise<string> {
     const correlationId = generateCorrelationId();
-    console.log(`[${correlationId}] Initiating handshake for ${provider}`);
+    if (import.meta.env.DEV) console.log(`[${correlationId}] Initiating handshake for ${provider}`);
 
     const connector = getConnector(provider);
     if (!connector) {
@@ -114,7 +114,7 @@ export class OmniConnect {
     state: string
   ): Promise<SessionToken> {
     const correlationId = this.extractCorrelationId(state);
-    console.log(`[${correlationId}] Completing handshake for ${provider}`);
+    if (import.meta.env.DEV) console.log(`[${correlationId}] Completing handshake for ${provider}`);
 
     const connector = getConnector(provider);
     if (!connector) {
@@ -133,7 +133,7 @@ export class OmniConnect {
     // Store encrypted token
     await this.tokenStorage.store(sessionToken);
 
-    console.log(`[${correlationId}] Handshake completed for ${provider}`);
+    if (import.meta.env.DEV) console.log(`[${correlationId}] Handshake completed for ${provider}`);
     return sessionToken;
   }
 
@@ -142,7 +142,7 @@ export class OmniConnect {
    */
   async syncAll(): Promise<{ eventsProcessed: number; eventsDelivered: number }> {
     const correlationId = generateCorrelationId();
-    console.log(`[${correlationId}] Starting sync for user ${this.config.userId}`);
+    if (import.meta.env.DEV) console.log(`[${correlationId}] Starting sync for user ${this.config.userId}`);
 
     let totalProcessed = 0;
     let totalDelivered = 0;
@@ -172,7 +172,7 @@ export class OmniConnect {
       });
     }
 
-    console.log(`[${correlationId}] Sync completed: ${totalProcessed} processed, ${totalDelivered} delivered`);
+    if (import.meta.env.DEV) console.log(`[${correlationId}] Sync completed: ${totalProcessed} processed, ${totalDelivered} delivered`);
     return { eventsProcessed: totalProcessed, eventsDelivered: totalDelivered };
   }
 
@@ -188,7 +188,7 @@ export class OmniConnect {
 
     // DEMO MODE: Create synthetic session if demo enabled
     if (!session && this.config.enableDemoMode) {
-      console.log(`[${correlationId}] Demo mode: Creating synthetic session for ${connectorId}`);
+      if (import.meta.env.DEV) console.log(`[${correlationId}] Demo mode: Creating synthetic session for ${connectorId}`);
       session = {
         token: `DEMO_${connectorId}_${Date.now()}`,
         connectorId,
@@ -270,7 +270,7 @@ export class OmniConnect {
    */
   async disconnectConnector(connectorId: string): Promise<void> {
     const correlationId = generateCorrelationId();
-    console.log(`[${correlationId}] Disconnecting connector ${connectorId}`);
+    if (import.meta.env.DEV) console.log(`[${correlationId}] Disconnecting connector ${connectorId}`);
 
     const session = await this.tokenStorage.get(connectorId);
     if (!session) {
@@ -285,7 +285,7 @@ export class OmniConnect {
     // Clean up stored data
     await this.tokenStorage.delete(connectorId);
 
-    console.log(`[${correlationId}] Connector ${connectorId} disconnected`);
+    if (import.meta.env.DEV) console.log(`[${correlationId}] Connector ${connectorId} disconnected`);
   }
 
   /**

@@ -97,7 +97,7 @@ export class MetaBusinessConnector extends BaseConnector {
   async disconnect(connectorId: string): Promise<void> {
     // Meta doesn't have a revoke endpoint, just clean up local storage
     // The token will naturally expire
-    console.log(`Disconnecting Meta Business connector: ${connectorId}`);
+    if (import.meta.env.DEV) console.log(`Disconnecting Meta Business connector: ${connectorId}`);
   }
 
   async refreshToken(session: SessionToken): Promise<SessionToken> {
@@ -129,7 +129,7 @@ export class MetaBusinessConnector extends BaseConnector {
 
     // Handle Demo Mode
     if (accessToken.startsWith('DEMO_')) {
-      console.log('Demo mode detected in MetaBusinessConnector. Returning mock data.');
+      if (import.meta.env.DEV) console.log('Demo mode: MetaBusinessConnector returning mock data.');
       return [
         {
           id: 'demo_post_1',
