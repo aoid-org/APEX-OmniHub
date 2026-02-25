@@ -1,5 +1,5 @@
 -- workflows table
-CREATE TABLE workflows (
+CREATE TABLE IF NOT EXISTS workflows (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES auth.users NOT NULL,
   name text NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE workflows (
 );
 
 -- workflow_runs table
-CREATE TABLE workflow_runs (
+CREATE TABLE IF NOT EXISTS workflow_runs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   workflow_id uuid REFERENCES workflows(id),
   user_id uuid REFERENCES auth.users NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE workflow_runs (
 );
 
 -- user_generated_skills table
-CREATE TABLE user_generated_skills (
+CREATE TABLE IF NOT EXISTS user_generated_skills (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES auth.users NOT NULL,
   name text NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE user_generated_skills (
 );
 
 -- omni_run_events table
-CREATE TABLE omni_run_events (
+CREATE TABLE IF NOT EXISTS omni_run_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   workflow_id uuid REFERENCES workflows(id),
   event_key text NOT NULL,
@@ -40,3 +40,6 @@ CREATE TABLE omni_run_events (
   payload jsonb,
   occurred_at timestamptz DEFAULT now()
 );
+
+-- omnidash_workflows table (RLS)
+ALTER TABLE public.omnidash_workflows ENABLE ROW LEVEL SECURITY;

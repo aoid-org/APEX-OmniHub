@@ -32,7 +32,7 @@ export const OmniDashLayout = () => {
     setActivePanel(panel);
   };
 
-  // Enable keyboard shortcuts (H, P, K, O, I, E, N, R, A)
+  // Enable keyboard shortcuts (H, P, K, O, I, E, N, R, A, W)
   useOmniDashKeyboardShortcuts(openPanel);
 
   // Determine full access: Admin OR Paid user
@@ -51,126 +51,121 @@ export const OmniDashLayout = () => {
 
   if (!OMNIDASH_FLAG) {
     return (
-      <div className="p-6 space-y-2">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <AlertCircle className="h-5 w-5" />
-          <span>OmniDash is disabled. Set OMNIDASH_ENABLED=1 to enable. {OMNIDASH_SAFE_ENABLE_NOTE}</span>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <AlertCircle className="h-8 w-8 text-yellow-500" />
+        <p className="text-muted-foreground text-sm">
+          OmniDash is disabled. Set OMNIDASH_ENABLED=1 to enable.
+        </p>
+        <p className="text-xs text-muted-foreground max-w-md text-center">{OMNIDASH_SAFE_ENABLE_NOTE}</p>
       </div>
     );
   }
 
   if (loading || settings.isLoading) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Loading dashboard...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen gap-2">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span className="text-muted-foreground">Loading dashboard...</span>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <Card className="max-w-lg">
-          <CardHeader>
-            <CardTitle>Sign in to access OmniDash</CardTitle>
-            <CardDescription>
-              Authenticate to access the live command center or demo mode.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild>
-              <Link to="/login">Sign In</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <ShieldCheck className="h-8 w-8 text-muted-foreground" />
+        <div className="text-center">
+          <h2 className="font-semibold">Sign in to access OmniDash</h2>
+          <p className="text-sm text-muted-foreground">
+            Authenticate to access the live command center or demo mode.
+          </p>
+        </div>
+        <Button asChild><Link to="/login">Sign In</Link></Button>
       </div>
     );
   }
 
   if (!hasFullAccess) {
     return (
-      <div className="p-6 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" /> OmniDash Demo Mode
-            </CardTitle>
-            <CardDescription>
-              You&apos;re in guided demo mode. Explore live-style metrics and workflows, then upgrade to unlock execution.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-3">
-            <Button asChild>
-              <Link to="/pricing">Unlock Full OmniDash</Link>
-            </Button>
+      <div className="container max-w-4xl mx-auto py-10 space-y-6">
+        <DemoModeBanner />
+        <div className="text-center space-y-2">
+          <Sparkles className="h-8 w-8 mx-auto text-muted-foreground" />
+          <h2 className="text-xl font-semibold">OmniDash Demo Mode</h2>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            You're in guided demo mode. Explore live-style metrics and workflows,
+            then upgrade to unlock execution.
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button>Unlock Full OmniDash</Button>
             <Button variant="outline" asChild>
               <Link to="/dashboard">Open Standard Dashboard</Link>
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Conversion Opportunities</CardDescription>
-              <CardTitle className="text-2xl">24</CardTitle>
+              <CardTitle className="text-sm font-medium">Conversion Opportunities</CardTitle>
             </CardHeader>
-            <CardContent className="text-xs text-muted-foreground">
-              Potential automations identified from your current usage patterns.
+            <CardContent>
+              <div className="text-2xl font-bold">24</div>
+              <p className="text-xs text-muted-foreground">
+                Potential automations identified from your current usage patterns.
+              </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Time Saved / Week</CardDescription>
-              <CardTitle className="text-2xl">11.8h</CardTitle>
+              <CardTitle className="text-sm font-medium">Time Saved / Week</CardTitle>
             </CardHeader>
-            <CardContent className="text-xs text-muted-foreground">
-              Projected with tri-force workflow orchestration enabled.
+            <CardContent>
+              <div className="text-2xl font-bold">11.8h</div>
+              <p className="text-xs text-muted-foreground">
+                Projected with tri-force workflow orchestration enabled.
+              </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Revenue Lift Potential</CardDescription>
-              <CardTitle className="text-2xl">+18%</CardTitle>
+              <CardTitle className="text-sm font-medium">Revenue Lift Potential</CardTitle>
             </CardHeader>
-            <CardContent className="text-xs text-muted-foreground">
-              Modeled from similar teams after activating KPI + Pipeline modules.
+            <CardContent>
+              <div className="text-2xl font-bold">+18%</div>
+              <p className="text-xs text-muted-foreground">
+                Modeled from similar teams after activating KPI + Pipeline modules.
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" /> Demo Pipeline Snapshot
-              </CardTitle>
-              <CardDescription>Read-only sample based on production patterns.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between"><span>Discovery</span><span className="font-medium">9 deals</span></div>
-              <div className="flex justify-between"><span>Proposal</span><span className="font-medium">6 deals</span></div>
-              <div className="flex justify-between"><span>Negotiation</span><span className="font-medium">4 deals</span></div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-4 w-4" /> Next Unlocks
-              </CardTitle>
-              <CardDescription>Upgrade to activate write actions and integrations.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p>• One-click workflow execution</p>
-              <p>• Real-time incident console + alerts</p>
-              <p>• Bi-directional CRM + ERP sync</p>
-              <p>• KPI anomaly detection with AI recommendations</p>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Demo Pipeline Snapshot</CardTitle>
+            <CardDescription>Read-only sample based on production patterns.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {[['Discovery', 9], ['Proposal', 6], ['Negotiation', 4]].map(([stage, count]) => (
+                <div key={stage as string} className="min-w-[120px] p-3 rounded-lg border bg-muted/30">
+                  <div className="text-xs font-medium text-muted-foreground">{stage}</div>
+                  <div className="text-lg font-bold">{count} deals</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">Next Unlocks</h3>
+          <p className="text-xs text-muted-foreground">Upgrade to activate write actions and integrations.</p>
+          <ul className="text-xs text-muted-foreground space-y-1">
+            <li>• One-click workflow execution</li>
+            <li>• Real-time incident console + alerts</li>
+            <li>• Bi-directional CRM + ERP sync</li>
+            <li>• KPI anomaly detection with AI recommendations</li>
+          </ul>
         </div>
       </div>
     );
@@ -185,132 +180,105 @@ export const OmniDashLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <DemoModeBanner />
-      <header className="h-16 glass-card border-b-2 border-b-accent/30 flex items-center px-6 md:px-8">
-        <div className="flex items-center justify-between w-full max-w-full">
-          <div className="min-w-0 flex-shrink flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-            <h1 className="text-lg font-semibold tracking-tight truncate">APEX OmniHub</h1>
-          </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {OMNIDASH_NAV_ITEMS.map((item) => (
-              <OmniDashNavIconButton
-                key={item.key}
-                to={item.to}
-                label={item.label}
-                icon={item.icon}
-                shortcut={item.shortcut}
-              />
-            ))}
-          </div>
-          <div className="flex items-center gap-4 flex-shrink-0">
-            <CreateSkillWidget />
-            {health.data?.lastUpdated && (
-              <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
-                <Activity className="h-3 w-3" />
-                <span>Last updated: {new Date(health.data.lastUpdated).toLocaleString()}</span>
-              </div>
-            )}
-            <ThemeToggle />
-            <div className="flex items-center gap-2">
-              <span className="text-sm hidden sm:inline">Demo</span>
-              <Switch
-                checked={settings.data?.demo_mode}
-                onCheckedChange={(v) => toggleSetting('demo_mode', v)}
-              />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t flex items-center justify-around py-2 px-2 safe-bottom">
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar */}
+      <aside className="w-16 border-r flex flex-col items-center py-4 gap-3 bg-background">
+        <div className="text-xs font-bold tracking-tight mb-2">APEX</div>
         {OMNIDASH_NAV_ITEMS.map((item) => (
           <OmniDashNavIconButton
             key={item.key}
-            to={item.to}
-            label={item.label}
-            icon={item.icon}
-            shortcut={item.shortcut}
+            item={item}
+            isActive={activePanel === item.key}
+            onClick={() => openPanel(item.key === 'home' ? null : item.key)}
           />
         ))}
-      </div>
-
-      <main className="flex-1 p-6 md:p-8 pb-20 md:pb-8 bg-background/50">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-[2fr,1fr]">
-          <div className="space-y-6">
-            <Outlet />
-          </div>
-          <div className="space-y-6">
-            <Card className="glass-card hover-lift animate-in-delay-1 rounded-2xl">
-              <CardHeader>
-                <CardTitle>Sales Demo Toggles</CardTitle>
-                <CardDescription>Controls for redaction and demo stories.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Demo Mode</p>
-                    <p className="text-sm text-muted-foreground">Redacts client names, PII, and buckets $ values.</p>
-                  </div>
-                  <Switch
-                    checked={settings.data?.demo_mode}
-                    onCheckedChange={(v) => toggleSetting('demo_mode', v)}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Show Connected Ecosystem</p>
-                    <p className="text-sm text-muted-foreground">Stub card for ecosystem view (no hub build required).</p>
-                  </div>
-                  <Switch
-                    checked={settings.data?.show_connected_ecosystem}
-                    onCheckedChange={(v) => toggleSetting('show_connected_ecosystem', v)}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Anonymize KPIs</p>
-                    <p className="text-sm text-muted-foreground">Buckets KPI values while in demo mode.</p>
-                  </div>
-                  <Switch
-                    checked={settings.data?.anonymize_kpis}
-                    onCheckedChange={(v) => toggleSetting('anonymize_kpis', v)}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Freeze switch</p>
-                    <p className="text-sm text-muted-foreground">When ON, limit work to bugfix + onboarding only.</p>
-                  </div>
-                  <Switch
-                    checked={settings.data?.freeze_mode}
-                    onCheckedChange={(v) => toggleSetting('freeze_mode', v)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-card hover-lift animate-in-delay-2 rounded-2xl">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Connected Ecosystem</CardTitle>
-                  <CardDescription>Stubbed for demo storytelling.</CardDescription>
-                </div>
-                <ShieldCheck className="h-5 w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                This card intentionally stubs the connected ecosystem view to keep the hub secure while enabling demo narratives.
-              </CardContent>
-            </Card>
-
-            <OmniTraceFeed maxItems={10} />
+        <div className="mt-auto flex flex-col gap-2 items-center">
+          {health.data?.lastUpdated && (
+            <div className="text-[9px] text-muted-foreground text-center px-1">
+              Last updated: {new Date(health.data.lastUpdated).toLocaleString()}
+            </div>
+          )}
+          <ThemeToggle />
+          <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
+            Demo <Switch checked={settings.data?.demo_mode} onCheckedChange={(v) => toggleSetting('demo_mode', v)} />
           </div>
         </div>
+      </aside>
+
+      {/* Main */}
+      <main className="flex-1 overflow-auto">
+        <Outlet />
       </main>
+
+      {/* Sheet panels */}
+      {OMNIDASH_NAV_ITEMS.map((item) => (
+        <OmniDashNavIconButton
+          key={item.key}
+          item={item}
+          isActive={activePanel === item.key}
+          onClick={() => openPanel(item.key === 'home' ? null : item.key)}
+          asSheet
+          onClose={() => setActivePanel(null)}
+        />
+      ))}
+
+      {/* Settings side panel */}
+      {activePanel === 'settings' && (
+        <aside className="w-72 border-l p-4 overflow-y-auto bg-background space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Sales Demo Toggles</CardTitle>
+              <CardDescription>Controls for redaction and demo stories.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium">Demo Mode</div>
+                  <div className="text-xs text-muted-foreground">Redacts client names, PII, and buckets $ values.</div>
+                </div>
+                <Switch checked={settings.data?.demo_mode} onCheckedChange={(v) => toggleSetting('demo_mode', v)} />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium">Show Connected Ecosystem</div>
+                  <div className="text-xs text-muted-foreground">Stub card for ecosystem view (no hub build required).</div>
+                </div>
+                <Switch checked={settings.data?.show_connected_ecosystem} onCheckedChange={(v) => toggleSetting('show_connected_ecosystem', v)} />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium">Anonymize KPIs</div>
+                  <div className="text-xs text-muted-foreground">Buckets KPI values while in demo mode.</div>
+                </div>
+                <Switch checked={settings.data?.anonymize_kpis} onCheckedChange={(v) => toggleSetting('anonymize_kpis', v)} />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium">Freeze switch</div>
+                  <div className="text-xs text-muted-foreground">When ON, limit work to bugfix + onboarding only.</div>
+                </div>
+                <Switch checked={settings.data?.freeze_mode} onCheckedChange={(v) => toggleSetting('freeze_mode', v)} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Connected Ecosystem</CardTitle>
+              <CardDescription>Stubbed for demo storytelling.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                This card intentionally stubs the connected ecosystem view to keep
+                the hub secure while enabling demo narratives.
+              </p>
+            </CardContent>
+          </Card>
+        </aside>
+      )}
     </div>
   );
 };

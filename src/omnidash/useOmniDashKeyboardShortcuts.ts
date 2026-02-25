@@ -4,14 +4,14 @@ import { OMNIDASH_NAV_ITEMS } from './types';
 type PanelKey = string | null;
 
 /**
- * OmniDash Keyboard Shortcuts Hook — SPA Edition
+ * OmniDash Keyboard Shortcuts Hook - SPA Edition
  *
  * Triggers Sheet panel open callbacks instead of router navigation.
  * No route changes. Pure SPA.
  *
  * Shortcuts (disabled while typing):
  *   H = Today (closes all panels)
- *   P = Pipeline  |  K = KPIs  |  O = Ops
+ *   P = Pipeline  |  K = KPIs   |  O = Ops
  *   I = Integrations  |  E = Events  |  N = Entities
  *   R = Runs  |  A = Approvals  |  W = Workflows
  */
@@ -39,7 +39,7 @@ export function useOmniDashKeyboardShortcuts(
 
       if (match) {
         event.preventDefault();
-        // key === 'home' means Today — close all panels
+        // key === 'home' means Today - close all panels
         openPanel(match.key === 'home' ? null : match.key as PanelKey);
       }
     };
