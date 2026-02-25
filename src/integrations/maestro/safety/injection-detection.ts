@@ -48,9 +48,9 @@ const HIGH_RISK_PATTERNS: Array<{ name: string; pattern: RegExp; score: number }
   { name: 'dan_jailbreak', pattern: /\bDAN\b.*mode|do\s+anything\s+now/i, score: 95 },
   { name: 'developer_mode', pattern: /developer\s+mode/i, score: 90 },
   { name: 'jailbreak', pattern: /\bjailbreak\b/i, score: 90 },
-  { name: 'hypothetical_framing_act', pattern: /act\s+as\s+(?:a|an|my|the)?\s*(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
-  { name: 'hypothetical_framing_pretend', pattern: /pretend(?:\s+to\s+be)?\s+(?:a|an|my|the)?\s*(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
-  { name: 'hypothetical_framing_imagine', pattern: /imagine\s+(?:a|an|my|the)?\s*(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
+  { name: 'hypothetical_framing_act', pattern: /act\s+as\s+(?:(?:a|an|my|the)\s+)?(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
+  { name: 'hypothetical_framing_pretend', pattern: /pretend(?:\s+to\s+be)?\s+(?:(?:a|an|my|the)\s+)?(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
+  { name: 'hypothetical_framing_imagine', pattern: /imagine\s+(?:(?:a|an|my|the)\s+)?(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
   
   // Obfuscation and Token Smuggling
   { name: 'obfuscated_text', pattern: /(?:[a-zA-Z]\W+){8,}[a-zA-Z]/, score: 85 },
