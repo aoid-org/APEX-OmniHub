@@ -120,14 +120,6 @@ export const Today = () => {
     toast({ title: "Next action captured", description: item.title });
   };
 
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const settings = useOmniDashSettings();
-  const queryClient = useQueryClient();
-  const { isDemo, execute } = useExecute();
-  const demoStore = useDemoStore();
-  const [newTitle, setNewTitle] = useState("");
-  const [category] = useState<"outcome" | "outreach" | "metric">("outcome");
   const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>({
     lg: [
       { i: "apex-agent", x: 0, y: 0, w: 3, h: 4, isResizable: false },
