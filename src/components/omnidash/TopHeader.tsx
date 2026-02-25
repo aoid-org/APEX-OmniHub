@@ -14,7 +14,7 @@ import { type AgentPersona, readAgentPrefs, writeAgentPrefs } from '@/omnidash/a
 const ORG_BADGE_STORAGE_KEY = 'apex.org.badge.v1';
 
 function readOrgBadge(): string {
-  if (typeof globalThis.window === 'undefined') return 'APEX Org';
+  if (globalThis.window === undefined) return 'APEX Org';
   return globalThis.window.localStorage.getItem(ORG_BADGE_STORAGE_KEY) ?? 'APEX Org';
 }
 
@@ -40,7 +40,7 @@ export function OmniDashTopHeader({ userEmail }: Readonly<OmniDashTopHeaderProps
 
   const updateOrgBadge = (next: string) => {
     setOrgBadge(next);
-    if (typeof globalThis.window !== 'undefined') {
+    if (globalThis.window !== undefined) {
       globalThis.window.localStorage.setItem(ORG_BADGE_STORAGE_KEY, next);
     }
   };

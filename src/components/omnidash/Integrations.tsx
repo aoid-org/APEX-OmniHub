@@ -12,6 +12,7 @@ import {
 import type { OmniLinkEvent, OmniLinkIntegration, OmniLinkApiKey } from '@/omnidash/types';
 
 type ConnectorStatus = 'LIVE' | 'NEEDS_AUTH' | 'PARTIAL' | 'ERROR';
+type HealthStatus = 'healthy' | 'degraded' | 'unknown';
 
 interface ConnectorViewModel {
   id: string;
@@ -19,7 +20,7 @@ interface ConnectorViewModel {
   displayName: string;
   status: ConnectorStatus;
   lastSyncAt: string | null;
-  healthStatus: 'healthy' | 'degraded' | 'unknown';
+  healthStatus: HealthStatus;
   supportsContextBinding: boolean;
 }
 
@@ -46,7 +47,7 @@ function deriveStatus(
   return 'LIVE';
 }
 
-function deriveHealth(events: OmniLinkEvent[]): 'healthy' | 'degraded' | 'unknown' {
+function deriveHealth(events: OmniLinkEvent[]): HealthStatus {
   if (events.length === 0) return 'unknown';
   const newest = new Date(events[0].received_at).getTime();
   const ageHours = (Date.now() - newest) / (1000 * 60 * 60);
@@ -88,7 +89,7 @@ function statusBadgeClass(status: ConnectorStatus): string {
   return 'border-red-500/30 text-red-300';
 }
 
-function HealthIcon({ status }: { status: 'healthy' | 'degraded' | 'unknown' }) {
+function HealthIcon({ status }: Readonly<{ status: HealthStatus }>) {
   if (status === 'healthy') return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />;
   if (status === 'degraded') return <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />;
   return <ShieldAlert className="h-3.5 w-3.5 text-slate-500" />;
