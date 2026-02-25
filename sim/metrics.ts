@@ -407,7 +407,7 @@ export class MetricsCollector {
     const retryThreshold = process.env.SIM_MODE === 'true' ? 0.8 : 0.3;
     const resilience = metrics.retryRate < retryThreshold;
 
-    const idempotency = metrics.dedupeRate >= 0; // Deduplication working
+    const idempotency = metrics.dedupeRate > 0 || metrics.totalEvents === 0; // Dedupes occurred OR no events
 
     let score = 100;
 
