@@ -35,6 +35,28 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const ApexAgentAvatar = React.lazy(() => import("./ApexAgentAvatar"));
 
+const DragHandle = () => (
+  <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/20 hover:text-white/60 transition-colors z-20">
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="9" cy="12" r="1" />
+      <circle cx="9" cy="5" r="1" />
+      <circle cx="9" cy="19" r="1" />
+      <circle cx="15" cy="12" r="1" />
+      <circle cx="15" cy="5" r="1" />
+      <circle cx="15" cy="19" r="1" />
+    </svg>
+  </div>
+);
+
 const getBadgeStyles = (category: string) => {
   if (category === "outcome")
     return "border-emerald-500/50 text-emerald-600 dark:text-emerald-400";
@@ -174,25 +196,7 @@ export const Today = () => {
         {/* APEX AGENT Unified Hero Section */}
         <div key="apex-agent" className="col-span-full h-full">
           <Card className="glass-card animate-in border-[hsl(var(--accent))]/30 rounded-3xl h-full flex flex-col relative overflow-hidden bg-[#0A0D14]/90 shadow-2xl">
-            <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/20 hover:text-white/60 transition-colors z-20">
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="9" cy="12" r="1" />
-                <circle cx="9" cy="5" r="1" />
-                <circle cx="9" cy="19" r="1" />
-                <circle cx="15" cy="12" r="1" />
-                <circle cx="15" cy="5" r="1" />
-                <circle cx="15" cy="19" r="1" />
-              </svg>
-            </div>
+            <DragHandle />
 
             <div className="flex flex-col lg:flex-row h-full">
               {/* Left Column: Top 3 Outcomes */}
@@ -446,25 +450,7 @@ export const Today = () => {
         {/* OmniTrace Event Log */}
         <div key="omnitrace">
           <Card className="glass-card hover-lift h-full overflow-hidden relative border border-white/5">
-            <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/20 hover:text-white/60 transition-colors z-20">
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="9" cy="12" r="1" />
-                <circle cx="9" cy="5" r="1" />
-                <circle cx="9" cy="19" r="1" />
-                <circle cx="15" cy="12" r="1" />
-                <circle cx="15" cy="5" r="1" />
-                <circle cx="15" cy="19" r="1" />
-              </svg>
-            </div>
+            <DragHandle />
             <div className="h-full overflow-hidden pt-2 pl-2">
               <OmniTraceFeed maxItems={4} />
             </div>
@@ -473,25 +459,7 @@ export const Today = () => {
 
         <div key="analytics">
           <Card className="glass-card hover-lift bg-[#120D1A]/90 border-purple-900/30 rounded-2xl h-full relative">
-            <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/20 hover:text-white/60 transition-colors z-20">
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="9" cy="12" r="1" />
-                <circle cx="9" cy="5" r="1" />
-                <circle cx="9" cy="19" r="1" />
-                <circle cx="15" cy="12" r="1" />
-                <circle cx="15" cy="5" r="1" />
-                <circle cx="15" cy="19" r="1" />
-              </svg>
-            </div>
+            <DragHandle />
             <CardHeader className="py-3">
               <CardTitle className="flex items-center gap-2 text-sm text-purple-400">
                 <LineChart className="h-4 w-4" /> Analytics Metrics
@@ -531,25 +499,7 @@ export const Today = () => {
 
         <div key="security">
           <Card className="glass-card hover-lift bg-[#0A141A]/90 border-cyan-900/30 rounded-2xl h-full relative">
-            <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/20 hover:text-white/60 transition-colors z-20">
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="9" cy="12" r="1" />
-                <circle cx="9" cy="5" r="1" />
-                <circle cx="9" cy="19" r="1" />
-                <circle cx="15" cy="12" r="1" />
-                <circle cx="15" cy="5" r="1" />
-                <circle cx="15" cy="19" r="1" />
-              </svg>
-            </div>
+            <DragHandle />
             <CardHeader className="py-3">
               <CardTitle className="flex items-center gap-2 text-sm text-cyan-400">
                 <Shield className="h-4 w-4" /> Security Audit
@@ -588,25 +538,7 @@ export const Today = () => {
 
         <div key="knowledge">
           <Card className="glass-card hover-lift bg-[#1A100A]/90 border-orange-900/30 rounded-2xl h-full relative">
-            <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/20 hover:text-white/60 transition-colors z-20">
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="9" cy="12" r="1" />
-                <circle cx="9" cy="5" r="1" />
-                <circle cx="9" cy="19" r="1" />
-                <circle cx="15" cy="12" r="1" />
-                <circle cx="15" cy="5" r="1" />
-                <circle cx="15" cy="19" r="1" />
-              </svg>
-            </div>
+            <DragHandle />
             <CardHeader className="py-3">
               <CardTitle className="flex items-center gap-2 text-sm text-orange-400">
                 <Database className="h-4 w-4" /> Knowledge Graph
