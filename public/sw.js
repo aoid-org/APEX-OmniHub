@@ -131,6 +131,16 @@ globalThis.addEventListener('fetch', (event) => {
 
 // Message event - handle client messages
 globalThis.addEventListener('message', (event) => {
+  // FIX: SonarCloud alert #21 (javascript:S2819)
+  // Verify the origin of the received message to prevent cross-origin attacks.
+  const ALLOWED_ORIGINS = [
+    globalThis.location.origin,
+  ];
+  if (!ALLOWED_ORIGINS.includes(event.origin)) {
+    console.warn('[SW] Rejected message from untrusted origin:', event.origin);
+    return;
+  }
+
   if (event.data && event.data.type === 'SKIP_WAITING') {
     console.log('[SW] Received SKIP_WAITING message');
     globalThis.skipWaiting();
