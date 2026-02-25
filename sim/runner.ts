@@ -10,7 +10,7 @@
  */
 
 import { assertGuardRails } from './guard-rails';
-import { ChaosEngine, type ChaosConfig, DEFAULT_CHAOS_CONFIG } from './chaos-engine';
+import { ChaosEngine, type ChaosConfig, type ChaosDecision, DEFAULT_CHAOS_CONFIG } from './chaos-engine';
 import { getCircuitBreaker, type CircuitBreakerConfig, getAllCircuitStats } from './circuit-breaker';
 import { executeEventIdempotently, clearAllReceipts, getStats as getIdempotencyStats } from './idempotency';
 import { MetricsCollector } from './metrics';
@@ -373,7 +373,7 @@ export class SimulationRunner {
   private async executeEvent(
     event: EventEnvelope,
     beat: Beat,
-    chaosDecision: unknown,
+    chaosDecision: ChaosDecision,
     attempt: number = 0,
     networkDelayMs: number = 0
   ): Promise<unknown> {

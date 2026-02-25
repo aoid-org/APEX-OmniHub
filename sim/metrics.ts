@@ -309,8 +309,8 @@ export class MetricsCollector {
     // Determine threshold based on context
     // Default: 70 for PRs (permissive), 90 for main/scheduled (strict)
     // Can be overridden via CHAOS_THRESHOLD env var or requiredScore param
-    const threshold = requiredScore ??
-      (process.env.CHAOS_THRESHOLD ? parseInt(process.env.CHAOS_THRESHOLD) : 70);
+    const envParsed = parseInt(process.env.CHAOS_THRESHOLD ?? '', 10);
+    const threshold = requiredScore ?? (isNaN(envParsed) ? 70 : envParsed);
 
     // Overall pass/fail
     const passed = overallScore >= threshold && systemScore.passed;
