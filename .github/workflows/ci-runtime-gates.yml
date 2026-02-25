@@ -22,8 +22,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -163,6 +163,25 @@ jobs:
           path: test-results/
           retention-days: 7
 
+      # ─────────────────────────────────────────────────────────────
+      # PHASE 5.5: Guardrail Scan
+      # ─────────────────────────────────────────────────────────────
+      - name: Guardrail Scan
+        id: guardrail
+        if: always()
+        run: |
+          mkdir -p logs
+          if grep -rqE "GUARD_RAIL_VIOLATION|policy.*breach" logs/ 2>/dev/null; then
+            echo "🚨 GUARDRAIL VIOLATION DETECTED"
+            echo "VIOLATION=true" >> $GITHUB_ENV
+            echo "violation=true" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "✅ No guardrail violations detected"
+            echo "VIOLATION=false" >> $GITHUB_ENV
+            echo "violation=false" >> $GITHUB_OUTPUT
+          fi
+
   # ─────────────────────────────────────────────────────────────────
   # OPTIONAL: Vercel Preview URL Tests
   # Runs against deployed preview if available
@@ -172,7 +191,7 @@ jobs:
     needs: build-and-test
     if: github.event_name == 'pull_request'
     timeout-minutes: 20
-    continue-on-error: true  # Don't block merge if preview isn't ready
+    continue-on-error: true # Don't block merge if preview isn't ready
 
     steps:
       - name: Checkout code
@@ -181,8 +200,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2

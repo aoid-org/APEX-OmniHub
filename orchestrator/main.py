@@ -53,6 +53,7 @@ from activities.tools import (
     setup_activities,
 )
 from config import settings
+from metrics import get_metrics_app
 from omniboard.router import router as omniboard_router
 from security.request_signing import SignatureVerificationMiddleware
 from workflows.agent_saga import AgentWorkflow
@@ -66,6 +67,9 @@ app = FastAPI(title="APEX Orchestrator API", version="1.0.0")
 
 # Register OmniBoard Router
 app.include_router(omniboard_router)
+
+# Mount Prometheus /metrics endpoint
+app.mount("/metrics", get_metrics_app())
 
 # Attach rate limiter to app
 app.state.limiter = limiter

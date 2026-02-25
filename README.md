@@ -195,6 +195,7 @@ bun run build      # Production build
 | `secret-scanning`       | PR              | Security scanning            |
 | `chaos-simulation-ci`   | Scheduled       | Resilience testing           |
 | `sonarqube-analysis`    | PR              | Code quality audit           |
+| `guardrail-alert`       | CI failure      | Guardrail violation alerting |
 
 ---
 
@@ -202,13 +203,15 @@ bun run build      # Production build
 
 Full documentation is available in the [`docs/`](./docs/) directory.
 
-| Document                                                                                | Description          |
-| --------------------------------------------------------------------------------------- | -------------------- |
-| [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design        |
-| [Launch Readiness](./docs/project-status/LAUNCH_READINESS_v1.0.0.md)                    | Deployment checklist |
-| [orchestrator/README](./orchestrator/README.md)                                         | Temporal setup       |
-| [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                                     | Human-in-the-loop    |
-| [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                             | Backend design       |
+| Document                                                                                | Description           |
+| --------------------------------------------------------------------------------------- | --------------------- |
+| [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
+| [Launch Readiness](./docs/project-status/LAUNCH_READINESS_v1.0.0.md)                    | Deployment checklist  |
+| [OPS Runbooks](./OPS_RUNBOOKS.md)                                                       | Operations procedures |
+| [Supabase Setup](./SUPABASE_SETUP.md)                                                   | Database config guide |
+| [orchestrator/README](./orchestrator/README.md)                                         | Temporal setup        |
+| [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                                     | Human-in-the-loop     |
+| [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                             | Backend design        |
 
 ---
 
