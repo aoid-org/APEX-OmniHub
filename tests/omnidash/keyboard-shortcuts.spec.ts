@@ -1,54 +1,49 @@
 /**
  * OmniDash Keyboard Shortcuts Tests
  *
- * Tests keyboard panel toggling for OmniDash pages:
- * - Verifies shortcuts work (H, P, K, O, I, E, N, R, A)
+ * Tests keyboard panel opening behavior for OmniDash pages:
+ * - Verifies shortcuts work (H, P, K, O, I, E, N, R, A, W)
  * - Ensures shortcuts are disabled when typing
- * - Validates panel opening behavior
+ * - Validates panel-open behavior
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useOmniDashKeyboardShortcuts } from '@/omnidash/useOmniDashKeyboardShortcuts';
 
 const mockOpenPanel = vi.fn();
 
-// Helper to create keyboard events
 const createKeyboardEvent = (key: string, options?: Partial<KeyboardEventInit>) =>
   new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...options });
 
-// Helper to render the hook
-const renderShortcutsHook = () =>
-  renderHook(() => useOmniDashKeyboardShortcuts(mockOpenPanel));
+const renderShortcutsHook = () => renderHook(() => useOmniDashKeyboardShortcuts(mockOpenPanel));
 
-// Helper to dispatch key and verify panel behavior
-const dispatchKeyAndExpect = (key: string, expectedPanel?: string | null) => {
+const dispatchKeyAndExpectPanel = (key: string, expectedPanelKey: string | null) => {
   const event = createKeyboardEvent(key);
   document.dispatchEvent(event);
-  if (expectedPanel === undefined) {
-    expect(mockOpenPanel).not.toHaveBeenCalled();
-    return;
-  }
-  expect(mockOpenPanel).toHaveBeenCalledWith(expectedPanel);
+  expect(mockOpenPanel).toHaveBeenCalledWith(expectedPanelKey);
 };
 
-// Shortcut definitions for data-driven tests
+const dispatchKeyAndExpectNoPanelOpen = (key: string) => {
+  const event = createKeyboardEvent(key);
+  document.dispatchEvent(event);
+  expect(mockOpenPanel).not.toHaveBeenCalled();
+};
+
 const ALL_SHORTCUTS = [
-  { key: 'H', panel: null },
-  { key: 'P', panel: 'pipeline' },
-  { key: 'K', panel: 'kpis' },
-  { key: 'O', panel: 'ops' },
-  { key: 'I', panel: 'integrations' },
-  { key: 'E', panel: 'events' },
-  { key: 'N', panel: 'entities' },
-  { key: 'R', panel: 'runs' },
-  { key: 'A', panel: 'approvals' },
+  { key: 'H', panelKey: null },
+  { key: 'P', panelKey: 'pipeline' },
+  { key: 'K', panelKey: 'kpis' },
+  { key: 'O', panelKey: 'ops' },
+  { key: 'I', panelKey: 'integrations' },
+  { key: 'E', panelKey: 'events' },
+  { key: 'N', panelKey: 'entities' },
+  { key: 'R', panelKey: 'runs' },
+  { key: 'A', panelKey: 'approvals' },
+  { key: 'W', panelKey: 'workflows' },
 ];
 
 describe('useOmniDashKeyboardShortcuts', () => {
-  beforeEach(() => {
-    mockOpenPanel.mockClear();
-  });
 
   afterEach(() => {
     mockOpenPanel.mockClear();
@@ -56,22 +51,22 @@ describe('useOmniDashKeyboardShortcuts', () => {
 
   it('should open Pipeline panel when P is pressed', () => {
     renderShortcutsHook();
-    dispatchKeyAndExpect('P', 'pipeline');
+    dispatchKeyAndExpectPanel('P', 'pipeline');
   });
 
   it('should open KPIs panel when K is pressed', () => {
     renderShortcutsHook();
-    dispatchKeyAndExpect('K', 'kpis');
+    dispatchKeyAndExpectPanel('K', 'kpis');
   });
 
-  it('should reset panel to Home when H is pressed', () => {
+  it('should open Home panel when H is pressed', () => {
     renderShortcutsHook();
-    dispatchKeyAndExpect('H', null);
+    dispatchKeyAndExpectPanel('H', null);
   });
 
   it('should handle lowercase keys', () => {
     renderShortcutsHook();
-    dispatchKeyAndExpect('p', 'pipeline');
+    dispatchKeyAndExpectPanel('p', 'pipeline');
   });
 
   it('should ignore shortcuts when typing in input field', () => {
@@ -107,14 +102,14 @@ describe('useOmniDashKeyboardShortcuts', () => {
     expect(mockOpenPanel).not.toHaveBeenCalled();
   });
 
-  it.each(ALL_SHORTCUTS)('should open $panel when $key is pressed', ({ key, panel }) => {
+  it.each(ALL_SHORTCUTS)('should open $panelKey when $key is pressed', ({ key, panelKey }) => {
     renderShortcutsHook();
-    dispatchKeyAndExpect(key, panel);
+    dispatchKeyAndExpectPanel(key, panelKey);
   });
 
   it('should ignore non-shortcut keys', () => {
     renderShortcutsHook();
-    dispatchKeyAndExpect('X');
+    dispatchKeyAndExpectNoPanelOpen('X');
   });
 
   it('should prevent default behavior when shortcut is triggered', () => {
