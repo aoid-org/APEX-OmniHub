@@ -48,7 +48,9 @@ const HIGH_RISK_PATTERNS: Array<{ name: string; pattern: RegExp; score: number }
   { name: 'dan_jailbreak', pattern: /\bDAN\b.*mode|do\s+anything\s+now/i, score: 95 },
   { name: 'developer_mode', pattern: /developer\s+mode/i, score: 90 },
   { name: 'jailbreak', pattern: /\bjailbreak\b/i, score: 90 },
-  { name: 'hypothetical_framing', pattern: /(?:act\s+as|pretend(?:\s+to\s+be)?|imagine)\s+(?:a|an|my|the)?\s*(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
+  { name: 'hypothetical_framing_act', pattern: /act\s+as\s+(?:a|an|my|the)?\s*(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
+  { name: 'hypothetical_framing_pretend', pattern: /pretend(?:\s+to\s+be)?\s+(?:a|an|my|the)?\s*(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
+  { name: 'hypothetical_framing_imagine', pattern: /imagine\s+(?:a|an|my|the)?\s*(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
   
   // Obfuscation and Token Smuggling
   { name: 'obfuscated_text', pattern: /(?:[a-zA-Z]\W+){8,}[a-zA-Z]/, score: 85 },
@@ -59,7 +61,7 @@ const MEDIUM_RISK_PATTERNS: Array<{ name: string; pattern: RegExp; score: number
   // Encoded payloads - base64 detection
   {
     name: 'base64_payload',
-    pattern: /(?:(?:[A-Za-z0-9+/]{4}){10,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?|[A-Za-z0-9+/]{20,}={0,2})/,
+    pattern: /[A-Za-z0-9+/]{30,}={0,2}/,
     score: 85,
   },
   // Hex encoded payloads - case-insensitive flag handles case
