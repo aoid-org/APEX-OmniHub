@@ -20,6 +20,21 @@ import { Loader2 } from 'lucide-react';
 import { OMNIDASH_FLAG } from './omnidash/types';
 import { OmniLinkShell } from "./layouts/OmniLinkShell";
 
+// Lazy load OmniDash components (SPA: all panels in components/omnidash/)
+const OmniDashLayout = lazy(() => import("./pages/OmniDash/OmniDashLayout"));
+const OmniDashToday = lazy(() => import("./components/omnidash/Today"));
+const OmniDashPipeline = lazy(() => import("./components/omnidash/Pipeline"));
+const OmniDashKpis = lazy(() => import("./components/omnidash/Kpis"));
+const OmniDashOps = lazy(() => import("./components/omnidash/Ops"));
+const OmniDashIntegrations = lazy(() => import("./components/omnidash/Integrations"));
+const OmniDashEvents = lazy(() => import("./components/omnidash/Events"));
+const OmniDashEntities = lazy(() => import("./components/omnidash/Entities"));
+const OmniDashRuns = lazy(() => import("./components/omnidash/Runs"));
+const OmniDashApprovals = lazy(() => import("./components/omnidash/Approvals"));
+const OmniDashLocalAgents = lazy(() => import("./components/omnidash/LocalAgents"));
+const OmniDashTasks = lazy(() => import("./components/omnidash/Tasks"));
+const WorkflowStudio = lazy(() => import("./components/omnidash/WorkflowStudio"));
+
 // Lazy load pages for better code splitting
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
