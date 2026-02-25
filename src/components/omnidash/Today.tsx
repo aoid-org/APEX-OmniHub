@@ -115,7 +115,7 @@ const getBadgeStyles = (category: string) => {
   return "border-amber-500/50 text-amber-600 dark:text-amber-400";
 };
 
-export const omniDashLayouts: Partial<Record<string, Layout>> = {
+const omniDashLayouts: Partial<Record<string, Layout>> = {
   lg: [
     { i: "apex-agent", x: 0, y: 0, w: 3, h: 4, isResizable: false },
     { i: "omnitrace", x: 0, y: 4, w: 3, h: 4, isResizable: false },
@@ -146,7 +146,7 @@ export const omniDashLayouts: Partial<Record<string, Layout>> = {
   ],
 };
 
-export function useOmniDashTelemetry() {
+function useOmniDashTelemetry() {
   const { user } = useAuth();
   const { toast } = useToast();
   const settings = useOmniDashSettings();
