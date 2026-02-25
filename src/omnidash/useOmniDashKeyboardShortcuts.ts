@@ -1,7 +1,5 @@
-import { useEffect } from 'react';
-import { OMNIDASH_NAV_ITEMS } from './types';
-
-type PanelKey = string | null;
+import { useEffect } from "react";
+import { OMNIDASH_NAV_ITEMS } from "./types";
 
 /**
  * OmniDash Keyboard Shortcuts Hook — SPA Edition
@@ -15,19 +13,18 @@ type PanelKey = string | null;
  *   I = Integrations  |  E = Events  |  N = Entities
  *   R = Runs  |  A = Approvals  |  W = Workflows
  */
-export function useOmniDashKeyboardShortcuts(
-  openPanel: (key: PanelKey) => void
-) {
+export function useOmniDashKeyboardShortcuts(openPanel: (key: any) => void) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Ignore when user is focused inside an input
       const target = event.target as HTMLElement;
       if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.tagName === 'SELECT' ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
         target.isContentEditable
-      ) return;
+      )
+        return;
 
       // Ignore modified shortcuts (Ctrl/Alt/Meta)
       if (event.ctrlKey || event.altKey || event.metaKey) return;
@@ -40,11 +37,11 @@ export function useOmniDashKeyboardShortcuts(
       if (match) {
         event.preventDefault();
         // key === 'home' means Today — close all panels
-        openPanel(match.key === 'home' ? null : match.key as PanelKey);
+        openPanel(match.key === "home" ? null : (match.key as any));
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [openPanel]);
 }

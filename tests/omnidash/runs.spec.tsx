@@ -8,29 +8,29 @@
  * 4. Handles errors
  */
 
-import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from "react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Mock the API module
-vi.mock('@/omnidash/omnilink-api', () => ({
+vi.mock("@/omnidash/omnilink-api", () => ({
   fetchOmniTraceRuns: vi.fn(),
   fetchOmniTraceRunDetail: vi.fn(),
 }));
 
 // Mock the auth context
-vi.mock('@/contexts/AuthContext', () => ({
+vi.mock("@/contexts/AuthContext", () => ({
   useAuth: vi.fn(() => ({
-    user: { id: 'test-user-id', email: 'test@example.com' },
-    session: { access_token: 'mock-token' },
+    user: { id: "test-user-id", email: "test@example.com" },
+    session: { access_token: "mock-token" },
   })),
 }));
 
 // Import after mocks are set up
-import { Runs } from '@/components/omnidash/Runs';
-import { fetchOmniTraceRuns } from '@/omnidash/omnilink-api';
-import type { OmniTraceRunsListResponse } from '@/omnidash/types';
+import { Runs } from "../../src/components/omnidash/Runs";
+import { fetchOmniTraceRuns } from "../../src/omnidash/omnilink-api";
+import type { OmniTraceRunsListResponse } from "../../src/omnidash/types";
 
 function createTestQueryClient() {
   return new QueryClient({
@@ -47,18 +47,16 @@ function createTestQueryClient() {
 function renderWithProviders(ui: React.ReactElement) {
   const queryClient = createTestQueryClient();
   return render(
-    <QueryClientProvider client={queryClient}>
-      {ui}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
   );
 }
 
-describe('OmniTrace Runs Page', () => {
+describe("OmniTrace Runs Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders page title and description', async () => {
+  it("renders page title and description", async () => {
     const mockData: OmniTraceRunsListResponse = {
       runs: [],
       total: 0,
@@ -68,13 +66,13 @@ describe('OmniTrace Runs Page', () => {
 
     renderWithProviders(<Runs />);
 
-    expect(screen.getByText('OmniTrace Runs')).toBeInTheDocument();
+    expect(screen.getByText("OmniTrace Runs")).toBeInTheDocument();
     expect(
       screen.getByText(/Workflow execution history with event timeline/)
     ).toBeInTheDocument();
   });
 
-  it('shows loading state initially', () => {
+  it("shows loading state initially", () => {
     // Never resolve the promise to keep loading state
     vi.mocked(fetchOmniTraceRuns).mockImplementation(
       () => new Promise(() => {})
@@ -82,10 +80,10 @@ describe('OmniTrace Runs Page', () => {
 
     renderWithProviders(<Runs />);
 
-    expect(screen.getByText('Loading runs...')).toBeInTheDocument();
+    expect(screen.getByText("Loading runs...")).toBeInTheDocument();
   });
 
-  it('handles empty state gracefully', async () => {
+  it("handles empty state gracefully", async () => {
     const mockData: OmniTraceRunsListResponse = {
       runs: [],
       total: 0,
@@ -102,36 +100,36 @@ describe('OmniTrace Runs Page', () => {
     expect(emptyMessage).toBeInTheDocument();
   });
 
-  it('renders runs when data is available', async () => {
+  it("renders runs when data is available", async () => {
     const mockData: OmniTraceRunsListResponse = {
       runs: [
         {
-          id: 'run-1',
-          workflow_id: 'wf-test-12345678',
-          trace_id: 'trace-1',
-          user_id: 'test-user-id',
-          status: 'completed',
-          input_redacted: { goal: 'test' },
-          output_redacted: { status: 'success' },
-          input_hash: 'abc123def456',
-          output_hash: 'xyz789',
+          id: "run-1",
+          workflow_id: "wf-test-12345678",
+          trace_id: "trace-1",
+          user_id: "test-user-id",
+          status: "completed",
+          input_redacted: { goal: "test" },
+          output_redacted: { status: "success" },
+          input_hash: "abc123def456",
+          output_hash: "xyz789",
           event_count: 5,
-          created_at: '2026-01-24T10:00:00Z',
-          updated_at: '2026-01-24T10:01:00Z',
+          created_at: "2026-01-24T10:00:00Z",
+          updated_at: "2026-01-24T10:01:00Z",
         },
         {
-          id: 'run-2',
-          workflow_id: 'wf-running-workflow',
-          trace_id: 'trace-2',
-          user_id: 'test-user-id',
-          status: 'running',
+          id: "run-2",
+          workflow_id: "wf-running-workflow",
+          trace_id: "trace-2",
+          user_id: "test-user-id",
+          status: "running",
           input_redacted: {},
           output_redacted: null,
-          input_hash: 'hash123',
+          input_hash: "hash123",
           output_hash: null,
           event_count: 2,
-          created_at: '2026-01-24T11:00:00Z',
-          updated_at: '2026-01-24T11:00:00Z',
+          created_at: "2026-01-24T11:00:00Z",
+          updated_at: "2026-01-24T11:00:00Z",
         },
       ],
       total: 2,
@@ -142,24 +140,22 @@ describe('OmniTrace Runs Page', () => {
     renderWithProviders(<Runs />);
 
     // Wait for runs to render
-    const completedBadge = await screen.findByText('completed');
+    const completedBadge = await screen.findByText("completed");
     expect(completedBadge).toBeInTheDocument();
 
-    const runningBadge = await screen.findByText('running');
+    const runningBadge = await screen.findByText("running");
     expect(runningBadge).toBeInTheDocument();
 
     // Check event counts are displayed
-    expect(screen.getByText('5 events')).toBeInTheDocument();
-    expect(screen.getByText('2 events')).toBeInTheDocument();
+    expect(screen.getByText("5 events")).toBeInTheDocument();
+    expect(screen.getByText("2 events")).toBeInTheDocument();
 
     // Check total count
-    expect(screen.getByText('Showing 2 of 2 runs')).toBeInTheDocument();
+    expect(screen.getByText("Showing 2 of 2 runs")).toBeInTheDocument();
   });
 
-  it('shows error state when fetch fails', async () => {
-    vi.mocked(fetchOmniTraceRuns).mockRejectedValue(
-      new Error('Network error')
-    );
+  it("shows error state when fetch fails", async () => {
+    vi.mocked(fetchOmniTraceRuns).mockRejectedValue(new Error("Network error"));
 
     renderWithProviders(<Runs />);
 
@@ -168,22 +164,22 @@ describe('OmniTrace Runs Page', () => {
     expect(screen.getByText(/Network error/)).toBeInTheDocument();
   });
 
-  it('displays status badges with correct styling', async () => {
+  it("displays status badges with correct styling", async () => {
     const mockData: OmniTraceRunsListResponse = {
       runs: [
         {
-          id: 'run-failed',
-          workflow_id: 'wf-failed',
-          trace_id: 'trace-f',
-          user_id: 'test-user-id',
-          status: 'failed',
+          id: "run-failed",
+          workflow_id: "wf-failed",
+          trace_id: "trace-f",
+          user_id: "test-user-id",
+          status: "failed",
           input_redacted: {},
           output_redacted: null,
-          input_hash: 'hash',
+          input_hash: "hash",
           output_hash: null,
           event_count: 1,
-          created_at: '2026-01-24T10:00:00Z',
-          updated_at: '2026-01-24T10:00:00Z',
+          created_at: "2026-01-24T10:00:00Z",
+          updated_at: "2026-01-24T10:00:00Z",
         },
       ],
       total: 1,
@@ -193,27 +189,27 @@ describe('OmniTrace Runs Page', () => {
 
     renderWithProviders(<Runs />);
 
-    const failedBadge = await screen.findByText('failed');
+    const failedBadge = await screen.findByText("failed");
     expect(failedBadge).toBeInTheDocument();
   });
 
-  it('truncates long workflow IDs', async () => {
-    const longWorkflowId = 'workflow-with-a-very-long-identifier-12345678';
+  it("truncates long workflow IDs", async () => {
+    const longWorkflowId = "workflow-with-a-very-long-identifier-12345678";
     const mockData: OmniTraceRunsListResponse = {
       runs: [
         {
-          id: 'run-1',
+          id: "run-1",
           workflow_id: longWorkflowId,
-          trace_id: 'trace-1',
-          user_id: 'test-user-id',
-          status: 'completed',
+          trace_id: "trace-1",
+          user_id: "test-user-id",
+          status: "completed",
           input_redacted: {},
           output_redacted: null,
-          input_hash: 'hash',
+          input_hash: "hash",
           output_hash: null,
           event_count: 0,
-          created_at: '2026-01-24T10:00:00Z',
-          updated_at: '2026-01-24T10:00:00Z',
+          created_at: "2026-01-24T10:00:00Z",
+          updated_at: "2026-01-24T10:00:00Z",
         },
       ],
       total: 1,
@@ -224,7 +220,7 @@ describe('OmniTrace Runs Page', () => {
     renderWithProviders(<Runs />);
 
     // Wait for content to render
-    await screen.findByText('completed');
+    await screen.findByText("completed");
 
     // The full workflow ID should not be displayed
     expect(screen.queryByText(longWorkflowId)).not.toBeInTheDocument();

@@ -1,29 +1,29 @@
-import React from 'react';
-import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { HiddenMetric } from '@/components/omnidash/HiddenMetric';
-import { Activity } from 'lucide-react';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import React from "react";
+import { describe, it, expect } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import { HiddenMetric } from "../../src/components/omnidash/HiddenMetric";
+import { Activity } from "lucide-react";
+import { TooltipProvider } from "../../src/components/ui/tooltip";
+import userEvent from "@testing-library/user-event";
+import "@testing-library/jest-dom";
 
-describe('Info Minimization UX (Phase A.5)', () => {
-  it('renders strictly as an icon by default with hidden visually-accessible labels', () => {
-    const { container } = render(
+describe("Info Minimization UX (Phase A.5)", () => {
+  it("renders strictly as an icon by default with hidden visually-accessible labels", () => {
+    render(
       <TooltipProvider delayDuration={0}>
         <HiddenMetric icon={Activity} label="telemetry-ping" value="42ms" />
       </TooltipProvider>
     );
 
     // ensure exact canonical behavior
-    const trigger = screen.getByTestId('telemetry-telemetry-ping');
+    const trigger = screen.getByTestId("telemetry-telemetry-ping");
     expect(trigger).toBeInTheDocument();
-    
+
     // ensure the actual value text doesn't pollute the DOM initially
-    expect(screen.queryByText('42ms')).not.toBeInTheDocument();
+    expect(screen.queryByText("42ms")).not.toBeInTheDocument();
   });
 
-  it('reveals telemetry data on hover or focus via Tooltip', async () => {
+  it("reveals telemetry data on hover or focus via Tooltip", async () => {
     const user = userEvent.setup();
     render(
       <TooltipProvider delayDuration={0}>
@@ -31,16 +31,16 @@ describe('Info Minimization UX (Phase A.5)', () => {
       </TooltipProvider>
     );
 
-    const trigger = screen.getByTestId('telemetry-latency');
-    
+    const trigger = screen.getByTestId("telemetry-latency");
+
     // Fire hover using userEvent
     await user.hover(trigger);
 
     await waitFor(() => {
-      const tooltip = screen.getByTestId('telemetry-tooltip-latency');
+      const tooltip = screen.getByTestId("telemetry-tooltip-latency");
       expect(tooltip).toBeInTheDocument();
-      expect(tooltip).toHaveTextContent('latency');
-      expect(tooltip).toHaveTextContent('15ms');
+      expect(tooltip).toHaveTextContent("latency");
+      expect(tooltip).toHaveTextContent("15ms");
     });
   });
 });
