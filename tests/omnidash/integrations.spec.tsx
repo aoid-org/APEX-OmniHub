@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Integrations from '@/components/omnidash/Integrations';
+import type { OmniLinkIntegration } from '@/omnidash/types';
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'u-1', email: 'admin@apex.test' } }),
@@ -51,13 +52,16 @@ const createMockEvent = (idPrefix: string, integrationId: string, sourceType: st
   received_at: new Date().toISOString(),
 });
 
+// FIX: PR#611/#614 CI gate failure
+// ROOT CAUSE: as any cast violated @typescript-eslint/no-explicit-any, cascading to 4 CI gate failures
+// CHANGE: Parameter typed as OmniLinkIntegration[] to match fetchOmniLinkIntegrations return type
 function setupAndRenderIntegrations(
-  integrationsData: Record<string, unknown>[],
+  integrationsData: OmniLinkIntegration[],
   keyName: string,
   eventIdPrefix: string,
   sourceType: string
 ) {
-  mockedIntegrations.mockResolvedValueOnce(integrationsData as any);
+  mockedIntegrations.mockResolvedValueOnce(integrationsData);
   mockedKeys.mockResolvedValueOnce([createMockKey(eventIdPrefix, String(integrationsData[0].id), keyName)]);
   mockedEvents.mockResolvedValueOnce([createMockEvent(eventIdPrefix, String(integrationsData[0].id), sourceType)]);
   
