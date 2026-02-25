@@ -4,6 +4,29 @@ Configuration management for APEX Orchestrator.
 Uses pydantic-settings for type-safe environment variable loading.
 """
 
+
+import os
+from pathlib import Path
+
+
+def load_docker_secrets() -> None:
+    """Hydrate env vars from Docker secret file pointers (<VAR>_FILE)."""
+    for key, value in list(os.environ.items()):
+        if not key.endswith('_FILE'):
+            continue
+        target = key[:-5]
+        if os.environ.get(target):
+            continue
+        try:
+            secret_value = Path(value).read_text(encoding='utf-8').strip()
+        except OSError:
+            continue
+        if secret_value:
+            os.environ[target] = secret_value
+
+
+load_docker_secrets()
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 

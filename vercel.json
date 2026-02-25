@@ -1,21 +1,61 @@
 {
-  "buildCommand": "cd apps/omnihub-site && npm install && npm run build",
+  "buildCommand": "bun run build",
   "outputDirectory": "apps/omnihub-site/dist",
-  "installCommand": "npm install",
+  "installCommand": "bun install --frozen-lockfile",
   "framework": "vite",
   "rewrites": [
-    { "source": "/demo", "destination": "/demo.html" },
-    { "source": "/demo/", "destination": "/demo.html" },
-    { "source": "/tech-specs", "destination": "/tech-specs.html" },
-    { "source": "/tech-specs/", "destination": "/tech-specs.html" },
-    { "source": "/request-access", "destination": "/request-access.html" },
-    { "source": "/request-access/", "destination": "/request-access.html" },
-    { "source": "/login", "destination": "/login.html" },
-    { "source": "/login/", "destination": "/login.html" },
-    { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/privacy/", "destination": "/privacy.html" },
-    { "source": "/terms", "destination": "/terms.html" },
-    { "source": "/terms/", "destination": "/terms.html" }
+    {
+      "source": "/demo",
+      "destination": "/demo.html"
+    },
+    {
+      "source": "/demo/",
+      "destination": "/demo.html"
+    },
+    {
+      "source": "/tech-specs",
+      "destination": "/tech-specs.html"
+    },
+    {
+      "source": "/tech-specs/",
+      "destination": "/tech-specs.html"
+    },
+    {
+      "source": "/request-access",
+      "destination": "/request-access.html"
+    },
+    {
+      "source": "/request-access/",
+      "destination": "/request-access.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/login/",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy.html"
+    },
+    {
+      "source": "/privacy/",
+      "destination": "/privacy.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms.html"
+    },
+    {
+      "source": "/terms/",
+      "destination": "/terms.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {

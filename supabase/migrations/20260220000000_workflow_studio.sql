@@ -1,3 +1,5 @@
+BEGIN;
+
 -- ============================================================================
 -- MIGRATION: APEX Workflow Studio — DAG Orchestration
 -- ============================================================================
@@ -100,3 +102,5 @@ COMMENT ON TABLE public.workflows IS 'APEX Workflow Studio — visual DAG workfl
 COMMENT ON COLUMN public.workflows.definition IS 'React Flow serialized: { nodes, edges, meta }';
 COMMENT ON COLUMN public.workflows.schedule IS 'Optional cron expression for scheduled execution';
 COMMENT ON TABLE public.workflow_runs IS 'Execution runs for workflows with status tracking and logs';
+
+COMMIT;

@@ -60,7 +60,10 @@
     "apex:deploy": "./apex-resilience/scripts/deploy.sh",
     "apex:test": "vitest run apex-resilience/tests/",
     "audit:features": "tsx scripts/audit-features.ts",
-    "apple:secret": "tsx scripts/generate-apple-secret.ts"
+    "apple:secret": "tsx scripts/generate-apple-secret.ts",
+    "mobile:sync": "bun run build && npx cap sync",
+    "mobile:open:ios": "npx cap open ios",
+    "mobile:open:android": "npx cap open android"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.1",

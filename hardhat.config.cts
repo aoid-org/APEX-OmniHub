@@ -1,14 +1,19 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
+import { selectRpcUrl } from "./src/lib/web3/rpcFallback";
 
 dotenv.config({ path: ".env.local" });
 
 const PRIVATE_KEY = process.env.WEB3_PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000001";
-const ALCHEMY_API_KEY_ETH = process.env.ALCHEMY_API_KEY_ETH || "";
-const ALCHEMY_API_KEY_POLYGON = process.env.ALCHEMY_API_KEY_POLYGON || "";
+const ALCHEMY_RPC_URL = process.env.ALCHEMY_RPC_URL || "";
+const INFURA_RPC_URL = process.env.INFURA_RPC_URL || "";
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 const POLYGONSCAN_API_KEY = process.env.POLYGONSCAN_API_KEY || "";
+
+if (process.env.NODE_ENV === "production" && (!ALCHEMY_RPC_URL || !INFURA_RPC_URL)) {
+  throw new Error("ALCHEMY_RPC_URL and INFURA_RPC_URL are required in production");
+}
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -31,23 +36,23 @@ const config: HardhatUserConfig = {
     },
     // Ethereum networks
     sepolia: {
-      url: `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY_ETH}`,
+      url: selectRpcUrl(ALCHEMY_RPC_URL, INFURA_RPC_URL),
       accounts: [PRIVATE_KEY],
       chainId: 11155111,
     },
     mainnet: {
-      url: `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY_ETH}`,
+      url: selectRpcUrl(ALCHEMY_RPC_URL, INFURA_RPC_URL),
       accounts: [PRIVATE_KEY],
       chainId: 1,
     },
     // Polygon networks
     amoy: {
-      url: `https://polygon-amoy.g.alchemy.com/v2/${ALCHEMY_API_KEY_POLYGON}`,
+      url: selectRpcUrl(ALCHEMY_RPC_URL, INFURA_RPC_URL),
       accounts: [PRIVATE_KEY],
       chainId: 80002,
     },
     polygon: {
-      url: `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY_POLYGON}`,
+      url: selectRpcUrl(ALCHEMY_RPC_URL, INFURA_RPC_URL),
       accounts: [PRIVATE_KEY],
       chainId: 137,
     },

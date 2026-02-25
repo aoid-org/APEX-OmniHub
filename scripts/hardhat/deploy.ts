@@ -1,3 +1,4 @@
+import { TX_CONFIRMATIONS } from "../../src/lib/web3/rpcFallback";
 import { ethers, network, run } from "hardhat";
 
 /**
@@ -63,7 +64,7 @@ async function main() {
   // Verify on block explorer (skip for local networks)
   if (network.name !== "hardhat" && network.name !== "localhost") {
     console.log("Waiting for block confirmations before verification...");
-    await contract.deploymentTransaction()?.wait(5);
+    await contract.deploymentTransaction()?.wait(TX_CONFIRMATIONS);
 
     console.log("Verifying contract on block explorer...");
     try {

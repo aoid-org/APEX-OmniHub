@@ -2,7 +2,7 @@
 # Prefer pyproject.toml, this is for compatibility
 
 # Temporal.io
-temporalio>=1.5.0
+temporalio==1.6.*
 
 # Data validation
 pydantic>=2.5.0

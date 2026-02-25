@@ -34,7 +34,7 @@ jobs:
           bun-version: "1.2.14"
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: TypeScript compilation
         run: npx tsc --noEmit
@@ -50,6 +50,12 @@ jobs:
 
       - name: Documentation drift check
         run: npm run docs:check
+
+      - name: SonarCloud quality gate
+        run: npx sonar-scanner -Dproject.settings=sonar-project.properties -Dsonar.qualitygate.wait=true
+
+      - name: Chaos battery gate
+        run: bun run sim:chaos -- --seed 42
 
       - name: Guardrail - No TS suppression in config files
         run: |
@@ -131,7 +137,7 @@ jobs:
           bun-version: "1.2.14"
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build production bundle
         run: npm run build

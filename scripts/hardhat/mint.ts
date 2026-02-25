@@ -1,3 +1,4 @@
+import { TX_CONFIRMATIONS } from "../../src/lib/web3/rpcFallback";
 import { ethers, network } from "hardhat";
 
 /**
@@ -63,7 +64,7 @@ async function main() {
 
       // Mint
       const tx = await contract.mintMembership(recipient);
-      const receipt = await tx.wait();
+      const receipt = await tx.wait(TX_CONFIRMATIONS);
 
       // Get token ID from event (unused but kept for debugging)
       const _event = receipt?.logs.find(

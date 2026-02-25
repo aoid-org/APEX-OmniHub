@@ -1,0 +1,12 @@
+groups:
+  - name: apex-alerts
+    rules:
+      - alert: ContainerRestartLoop
+        expr: increase(container_restart_count[5m]) > 3
+        for: 5m
+      - alert: HealthcheckFailing
+        expr: up == 0
+        for: 2m
+      - alert: ApiErrorRateSpike
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 1
+        for: 10m

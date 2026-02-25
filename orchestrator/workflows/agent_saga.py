@@ -38,7 +38,6 @@ Architecture:
 """
 
 import asyncio
-import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -238,8 +237,9 @@ class SagaContext:
 # AGENT WORKFLOW (Event Sourcing + Saga)
 # ============================================================================
 
+WORKFLOW_VERSION = "1.0"
 
-@workflow.defn
+@workflow.defn(name="AgentWorkflow")
 class AgentWorkflow:
     """
     AI Agent Orchestration Workflow with Event Sourcing and Saga Pattern.
@@ -403,12 +403,13 @@ class AgentWorkflow:
             ApplicationError: If workflow fails after exhausting retries
         """
         correlation_id = workflow.info().workflow_id
+        workflow.get_version("agent-workflow-core", workflow.DEFAULT_VERSION, 1)
+        workflow.logger.info(f"Agent workflow version={WORKFLOW_VERSION}")
 
         # Record start time for continue-as-new threshold
         if self.start_time is None:
-            import time
-
-            self.start_time = time.time()
+            
+            self.start_time = workflow.time()
 
         # Initialize Saga context
         self.saga = SagaContext(workflow_instance=self)
@@ -1151,7 +1152,7 @@ class AgentWorkflow:
         )
 
         # Track execution time for OmniTrace
-        tool_start_time = time.time()
+        tool_start_time = workflow.time()
         attempt = 1  # Could be incremented on retry if needed
 
         try:
@@ -1164,7 +1165,7 @@ class AgentWorkflow:
             )
 
             # Calculate latency
-            latency_ms = int((time.time() - tool_start_time) * 1000)
+            latency_ms = int((workflow.time() - tool_start_time) * 1000)
 
             # Record success
             await self._append_event(
@@ -1196,7 +1197,7 @@ class AgentWorkflow:
 
         except ActivityError as e:
             # Calculate latency
-            latency_ms = int((time.time() - tool_start_time) * 1000)
+            latency_ms = int((workflow.time() - tool_start_time) * 1000)
 
             # Record failure
             await self._append_event(
@@ -1264,7 +1265,7 @@ class AgentWorkflow:
                 correlation_id=workflow.info().workflow_id,
                 plan_id=self.plan_id,
                 total_steps=len(self.plan_steps),
-                duration_seconds=time.time() - self.start_time if self.start_time else 0.0,
+                duration_seconds=workflow.time() - self.start_time if self.start_time else 0.0,
             )
         )
 
