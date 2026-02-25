@@ -51,9 +51,9 @@ let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let flushInFlight = false;
 let consecutiveFailures = 0;
 
-// Warm caches opportunistically (non-blocking)
-void loadRegistryFromLocal();
-void loadUpsertQueue();
+// Warm caches opportunistically (non-blocking); log errors so silent failures surface.
+void loadRegistryFromLocal().catch(err => console.error('[deviceRegistry] Cache warm failed (registry):', err));
+void loadUpsertQueue().catch(err => console.error('[deviceRegistry] Cache warm failed (queue):', err));
 
 async function loadRegistryFromLocal() {
   const stored = await persistentGet<DeviceRecord[]>(REGISTRY_KEY);

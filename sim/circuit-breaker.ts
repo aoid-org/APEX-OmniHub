@@ -151,10 +151,12 @@ export class CircuitBreaker {
     this.state = 'open';
     this.lastStateChange = new Date();
 
-    // Schedule transition to half-open
+    // Schedule transition to half-open; unref so the timer doesn't
+    // prevent the Node.js event loop from exiting after a sim run.
     this.openTimer = setTimeout(() => {
       this.halfOpen();
     }, this.config.openTimeout);
+    this.openTimer.unref();
   }
 
   /**

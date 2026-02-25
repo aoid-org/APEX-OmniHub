@@ -125,11 +125,14 @@ serve(async (req) => {
     const data = await response.json();
 
     // If orchestrator returned workflowId, update it
-    if (data.workflowId) {
-      await supabase
+    if (data.workflowId && typeof data.workflowId === 'string') {
+      const { error: updateErr } = await supabase
         .from("agent_runs")
         .update({ workflow_id: data.workflowId })
         .eq("id", traceId);
+      if (updateErr) {
+        console.error(`[omnilink-agent] Failed to update workflow_id for run ${traceId}:`, updateErr.message);
+      }
     }
 
     // Return orchestrator response

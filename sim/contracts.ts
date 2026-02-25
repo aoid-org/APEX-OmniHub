@@ -394,7 +394,8 @@ export function generateIdempotencyKey(
   nonce: string = ''
 ): string {
   const ts = timestamp.getTime();
-  const nonceStr = nonce || Math.random().toString(36).substring(2, 10);
+  if (!nonce) throw new Error('generateIdempotencyKey: nonce is required — Math.random() fallback removed for determinism');
+  const nonceStr = nonce;
   return `${tenantId}-${eventType}-${ts}-${nonceStr}`;
 }
 

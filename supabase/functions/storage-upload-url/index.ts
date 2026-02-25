@@ -7,7 +7,7 @@ import { createServiceClient } from "../_shared/supabaseClient.ts";
 const MAX_REQUEST_SIZE = 1024 * 1024;
 
 function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `req_${crypto.randomUUID()}`;
 }
 
 /**
@@ -56,9 +56,11 @@ serve(async (req) => {
     return errorResponse('Origin not allowed', 403, corsHeaders);
   }
 
-  // Check request size limit
-  const contentLength = parseInt(req.headers.get('content-length') || '0', 10);
-  if (contentLength > MAX_REQUEST_SIZE) {
+  // Check request size limit.
+  // parseInt returns NaN on malformed values; NaN > n is always false which
+  // would silently bypass the size gate — use Number() + isNaN guard instead.
+  const contentLength = Number(req.headers.get('content-length') ?? '0');
+  if (isNaN(contentLength) || contentLength > MAX_REQUEST_SIZE) {
     return errorResponse(
       { error: 'Request body too large', max_size: MAX_REQUEST_SIZE },
       413,
