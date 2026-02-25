@@ -1,7 +1,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { SemanticTranslator } from '../src/omniconnect/translation/translator';
-import { CanonicalEvent } from '../src/omniconnect/types/canonical';
+import { CanonicalEvent, EventType, DataClassification } from '../src/omniconnect/types/canonical';
 
 
 
@@ -38,7 +38,9 @@ describe('Final Closure Verification', () => {
                 userId: 'user-1',
                 source: 'test',
                 provider: 'manual',
-                eventType: 'content_published',
+                externalId: 'ext-clos-1',
+                eventType: EventType.COMMENT,
+                classification: DataClassification.PUBLIC,
                 timestamp: new Date().toISOString(),
                 consentFlags: {},
                 metadata: {},

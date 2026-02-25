@@ -10,8 +10,8 @@ import {
   Cpu,
   Network,
   Users,
-  GitMerge,
   Lock,
+  Workflow
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -510,55 +510,96 @@ export const Today = () => {
           </Card>
         </div>
 
-        <WidgetCard
-          id="analytics"
-          bgClass="bg-[#120D1A]/90"
-          borderClass="border-purple-900/30"
-          textClass="text-purple-400"
-          icon={LineChart}
-          title="Analytics Metrics"
-        >
-          <HiddenMetric icon={Users} label="Daily Active Users" value="1,248" />
-          <ProgressRow colorClass="bg-purple-500" widthPercent="74%" />
-          <HiddenMetric icon={GitMerge} label="Workflow Execution" value="8.4k" />
-          <ProgressRow colorClass="bg-blue-500" widthPercent="92%" />
-        </WidgetCard>
-
-        <WidgetCard
-          id="security"
-          bgClass="bg-[#0A141A]/90"
-          borderClass="border-cyan-900/30"
-          textClass="text-cyan-400"
-          icon={Shield}
-          title="Security Audit"
-          contentClass="p-3"
-        >
-          <div className="flex items-center gap-3 mb-2 px-2">
-            <div className="h-8 w-8 rounded-full bg-cyan-950/50 border border-cyan-900/50 flex items-center justify-center">
-              <Shield className="h-4 w-4 text-cyan-500" />
+        {/* Dynamic Metric Widgets */}
+        {(
+          [
+            {
+              id: "analytics",
+              bgClass: "bg-[#120D1A]/90",
+              borderClass: "border-purple-900/30",
+              textClass: "text-purple-400",
+              icon: LineChart,
+              title: "Analytics Metrics",
+              metrics: [
+                { isProgress: false, icon: Users, label: "Daily Active Users", value: "1,248" },
+                { isProgress: true, colorClass: "bg-purple-500", widthPercent: "74%" },
+                { isProgress: false, icon: Workflow, label: "Workflow Execution", value: "8.4k" },
+                { isProgress: true, colorClass: "bg-blue-500", widthPercent: "92%" },
+              ],
+            },
+            {
+              id: "security",
+              bgClass: "bg-[#0A141A]/90",
+              borderClass: "border-cyan-900/30",
+              textClass: "text-cyan-400",
+              icon: Shield,
+              title: "Security Audit",
+              contentClass: "p-3",
+              customHeader: (
+                <div className="flex items-center gap-3 mb-2 px-2">
+                  <div className="h-8 w-8 rounded-full bg-cyan-950/50 border border-cyan-900/50 flex items-center justify-center">
+                    <Shield className="h-4 w-4 text-cyan-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-200">Zero Trust Active</p>
+                    <p className="text-[10px] text-gray-500">All gateways secured</p>
+                  </div>
+                </div>
+              ),
+              metrics: [
+                { isProgress: false, icon: Lock, label: "Threats", value: "0 Blocked", valueClass: "text-emerald-500 font-bold" },
+                { isProgress: false, icon: Clock, label: "Auth Fixes", value: "Last 24h" },
+              ],
+            },
+            {
+              id: "knowledge",
+              bgClass: "bg-[#1A100A]/90",
+              borderClass: "border-orange-900/30",
+              textClass: "text-orange-400",
+              icon: Database,
+              title: "Knowledge Graph",
+              metrics: [
+                { isProgress: false, icon: Database, label: "Vector Store", value: "14.2 GB", valueClass: "text-orange-200" },
+                { isProgress: false, icon: Database, label: "SQL Relational", value: "2.1 GB", valueClass: "text-rose-200" },
+              ],
+            },
+          ] as Array<{
+            id: string;
+            bgClass: string;
+            borderClass: string;
+            textClass: string;
+            icon: React.ComponentType<{ className?: string }>;
+            title: string;
+            contentClass?: string;
+            customHeader?: React.ReactNode;
+            metrics: Array<
+              | { isProgress: true; colorClass: string; widthPercent: string }
+              | { isProgress: false; icon: React.ComponentType<{ className?: string }>; label: string; value: string; valueClass?: string }
+            >;
+          }>
+        ).map((widget) => (
+          <WidgetCard
+            key={widget.id}
+            id={widget.id}
+            bgClass={widget.bgClass}
+            borderClass={widget.borderClass}
+            textClass={widget.textClass}
+            icon={widget.icon as any}
+            title={widget.title}
+            contentClass={widget.contentClass}
+          >
+            {widget.customHeader}
+            <div className={widget.customHeader ? "space-y-1" : ""}>
+              {widget.metrics.map((m) =>
+                m.isProgress ? (
+                  <ProgressRow key={`prog-${m.colorClass}`} colorClass={m.colorClass} widthPercent={m.widthPercent} />
+                ) : (
+                  <HiddenMetric key={`met-${m.label.replaceAll(' ', '-')}`} icon={m.icon as any} label={m.label} value={m.value} valueClass={m.valueClass} />
+                )
+              )}
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-200">Zero Trust Active</p>
-              <p className="text-[10px] text-gray-500">All gateways secured</p>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <HiddenMetric icon={Lock} label="Threats" value="0 Blocked" valueClass="text-emerald-500 font-bold" />
-            <HiddenMetric icon={Clock} label="Auth Fixes" value="Last 24h" />
-          </div>
-        </WidgetCard>
-
-        <WidgetCard
-          id="knowledge"
-          bgClass="bg-[#1A100A]/90"
-          borderClass="border-orange-900/30"
-          textClass="text-orange-400"
-          icon={Database}
-          title="Knowledge Graph"
-        >
-          <HiddenMetric icon={Database} label="Vector Store" value="14.2 GB" valueClass="text-orange-200" />
-          <HiddenMetric icon={Database} label="SQL Relational" value="2.1 GB" valueClass="text-rose-200" />
-        </WidgetCard>
+          </WidgetCard>
+        ))}
       </ResponsiveGridLayout>
     </div>
   );
