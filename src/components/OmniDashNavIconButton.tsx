@@ -28,7 +28,7 @@ export const OmniDashNavIconButton = ({
         <button
           type="button"
           onClick={onClick}
-          data-testid={`omnidash-nav-${label.toLowerCase().replaceAll(/\s/g, '-')}`}
+          data-testid={`omnidash-nav-${(label || '').toLowerCase().replaceAll(/\s/g, '-')}`}
           aria-label={shortcut ? `${label} (Shortcut: ${shortcut})` : label}
           aria-pressed={isActive}
           className={`
