@@ -306,6 +306,15 @@ export class ChaosEngine {
   }
 
   /**
+   * Seeded base network latency for adapter calls (50–150ms).
+   * Uses the same seeded RNG so every run with the same seed produces
+   * identical latency measurements — required for determinism.
+   */
+  nextNetworkDelay(): number {
+    return this.rng.nextInt(50, 150);
+  }
+
+  /**
    * Canonical retry backoff - uses config.baseBackoffMs (default 500ms)
    * Exponential + full-range jitter [0, baseBackoffMs]
    */
