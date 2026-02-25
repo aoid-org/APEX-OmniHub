@@ -155,9 +155,11 @@ describe('MetricsCollector', () => {
       // Simulate good behavior
       const app: AppName = 'omnilink';
 
-      // 100 successful events, low latency
+      // 100 successful events, low latency — at least 1 dedupe required for
+      // idempotency score (BUG-1 fix: dedupeRate > 0 || totalEvents === 0)
       for (let i = 0; i < 100; i++) {
-        collector.recordAppEvent(app, true);
+        const isDedupe = i === 0; // first event is a deduplicated hit
+        collector.recordAppEvent(app, true, false, isDedupe);
         collector.recordLatency(`${app}:op`, 50, true);
       }
 

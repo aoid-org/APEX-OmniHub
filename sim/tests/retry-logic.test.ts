@@ -18,21 +18,20 @@ describe('Retry Logic', () => {
     it('should return exponential backoff values', () => {
       const backoff0 = engine.calculateBackoff(0);
       const backoff1 = engine.calculateBackoff(1);
-      const backoff2 = engine.calculateBackoff(2);
-      const backoff3 = engine.calculateBackoff(3);
+      const backoff2 = engine.calculateBackoff(2); // >= maxRetries (2) → -1
+      const backoff3 = engine.calculateBackoff(3); // >= maxRetries (2) → -1
 
-      // Base delay is 100ms, exponential growth
-      expect(backoff0).toBeGreaterThanOrEqual(75); // 100ms ±25% jitter
-      expect(backoff0).toBeLessThanOrEqual(125);
+      // calculateBackoff() now delegates to calculateRetryDelay() which uses
+      // config.baseBackoffMs (500ms) + full-range jitter [0, 500ms].
+      // DEFAULT_CHAOS_CONFIG.maxRetries = 2, so attempts >= 2 return -1.
+      expect(backoff0).toBeGreaterThanOrEqual(500);  // 500ms base + jitter ≥ 0
+      expect(backoff0).toBeLessThanOrEqual(1000);    // 500ms + max jitter 500ms
 
-      expect(backoff1).toBeGreaterThanOrEqual(150); // 200ms ±25% jitter
-      expect(backoff1).toBeLessThanOrEqual(250);
+      expect(backoff1).toBeGreaterThanOrEqual(1000); // 1000ms base + jitter ≥ 0
+      expect(backoff1).toBeLessThanOrEqual(1500);    // 1000ms + max jitter 500ms
 
-      expect(backoff2).toBeGreaterThanOrEqual(300); // 400ms ±25% jitter
-      expect(backoff2).toBeLessThanOrEqual(500);
-
-      expect(backoff3).toBeGreaterThanOrEqual(600); // 800ms ±25% jitter
-      expect(backoff3).toBeLessThanOrEqual(1000);
+      expect(backoff2).toBe(-1); // maxRetries exceeded
+      expect(backoff3).toBe(-1); // maxRetries exceeded
     });
 
     it('should cap backoff at max delay', () => {
