@@ -7,6 +7,19 @@ import { supabase } from '@/integrations/supabase/client';
 
 export type DeviceStatus = 'trusted' | 'suspect' | 'blocked';
 
+export interface DeviceAuthorizationResult {
+  authorized: boolean;
+  reason: string;
+  riskScore: number;
+  deviceId: string;
+}
+
+export interface FingerprintResult {
+  fingerprintValid: boolean;
+  reason: string;
+  mismatchedFields: string[];
+}
+
 export interface DeviceRecord {
   deviceId: string;
   userId: string;
@@ -326,5 +339,127 @@ export function stopBackgroundDeviceSync() {
 
 export async function getUpsertQueueSnapshot(): Promise<QueuedUpsert[]> {
   return loadUpsertQueue().then((items) => [...items]);
+}
+
+// ============================================================================
+// ZERO-TRUST AUTHORIZATION GATE
+// ============================================================================
+
+/**
+ * Deterministic device authorization check.
+ * ONLY 'trusted' devices pass. Everything else is denied.
+ * This is the single enforcement point for device access control.
+ */
+export function isDeviceAuthorized(deviceId: string): DeviceAuthorizationResult {
+  const device = registry.get(deviceId);
+
+  if (!device) {
+    return {
+      authorized: false,
+      reason: 'device_not_found',
+      riskScore: 100,
+      deviceId,
+    };
+  }
+
+  if (device.status === 'blocked') {
+    return {
+      authorized: false,
+      reason: 'device_blocked',
+      riskScore: 100,
+      deviceId,
+    };
+  }
+
+  if (device.status === 'suspect') {
+    return {
+      authorized: false,
+      reason: 'device_suspect',
+      riskScore: 75,
+      deviceId,
+    };
+  }
+
+  if (device.status === 'trusted') {
+    return {
+      authorized: true,
+      reason: 'device_trusted',
+      riskScore: 0,
+      deviceId,
+    };
+  }
+
+  // Fail-closed: any unknown status is denied
+  return {
+    authorized: false,
+    reason: 'unknown_status',
+    riskScore: 100,
+    deviceId,
+  };
+}
+
+/**
+ * Fingerprint integrity validation.
+ * Compares incoming device fingerprint against stored record.
+ * Detects field mutations (OS swap, UA mismatch, field count changes).
+ */
+export function validateDeviceFingerprint(
+  deviceId: string,
+  incomingFingerprint: Record<string, unknown>
+): FingerprintResult {
+  const device = registry.get(deviceId);
+
+  if (!device) {
+    return {
+      fingerprintValid: false,
+      reason: 'device_not_found',
+      mismatchedFields: [],
+    };
+  }
+
+  const storedKeys = Object.keys(device.deviceInfo);
+  const incomingKeys = Object.keys(incomingFingerprint);
+
+  // Field count mismatch = hardware profile spoof
+  if (storedKeys.length !== incomingKeys.length) {
+    return {
+      fingerprintValid: false,
+      reason: 'field_count_mismatch',
+      mismatchedFields: incomingKeys.filter((k) => !storedKeys.includes(k)),
+    };
+  }
+
+  // Field-by-field comparison
+  const mismatched: string[] = [];
+  for (const key of storedKeys) {
+    const storedVal = JSON.stringify(device.deviceInfo[key]);
+    const incomingVal = JSON.stringify(incomingFingerprint[key]);
+    if (storedVal !== incomingVal) {
+      mismatched.push(key);
+    }
+  }
+
+  if (mismatched.length > 0) {
+    return {
+      fingerprintValid: false,
+      reason: 'field_value_mismatch',
+      mismatchedFields: mismatched,
+    };
+  }
+
+  return {
+    fingerprintValid: true,
+    reason: 'fingerprint_matches',
+    mismatchedFields: [],
+  };
+}
+
+/**
+ * Returns risk score 0–100 for a device.
+ * 0 = safe (trusted), 75 = suspect, 100 = blocked/unknown.
+ */
+export function getDeviceRiskScore(deviceId: string): number {
+  const result = isDeviceAuthorized(deviceId);
+  return result.riskScore;
 }
 
