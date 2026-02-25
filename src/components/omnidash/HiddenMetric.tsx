@@ -11,6 +11,7 @@ interface HiddenMetricProps {
   icon: LucideIcon;
   label: string;
   value: string;
+  valueClass?: string;
   className?: string;
 }
 
@@ -18,6 +19,7 @@ export const HiddenMetric: FC<HiddenMetricProps> = memo(({
   icon: Icon,
   label,
   value,
+  valueClass,
   className,
 }) => {
   return (
@@ -31,7 +33,7 @@ export const HiddenMetric: FC<HiddenMetricProps> = memo(({
       </TooltipTrigger>
       <TooltipContent data-testid={`telemetry-tooltip-${label}`}>
         <span className="font-medium">{label}</span>
-        <span className="ml-2 tabular-nums">{value}</span>
+        <span className={cn('ml-2 tabular-nums', valueClass)}>{value}</span>
       </TooltipContent>
     </Tooltip>
   );

@@ -215,7 +215,7 @@ describe('MAESTRO Execution Engine', () => {
       const results = await executeBatch(intents);
 
       expect(results).toHaveLength(2);
-      expect(results.every((r) => r.success)).toBe(true);
+      expect(results.every((r: { success: boolean }) => r.success)).toBe(true);
     });
 
     it('should stop batch on RED lane detection', async () => {
