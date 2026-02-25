@@ -57,6 +57,55 @@ const DragHandle = () => (
   </div>
 );
 
+interface WidgetCardProps {
+  id: string;
+  bgClass: string;
+  borderClass: string;
+  textClass: string;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  children: React.ReactNode;
+  contentClass?: string;
+}
+
+const WidgetCard = ({
+  id,
+  bgClass,
+  borderClass,
+  textClass,
+  icon: Icon,
+  title,
+  children,
+  contentClass = "p-2 space-y-1",
+}: WidgetCardProps) => (
+  <div key={id}>
+    <Card className={`glass-card hover-lift ${bgClass} ${borderClass} rounded-2xl h-full relative`}>
+      <DragHandle />
+      <CardHeader className="py-3">
+        <CardTitle className={`flex items-center gap-2 text-sm ${textClass}`}>
+          <Icon className="h-4 w-4" /> {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className={contentClass}>
+        {children}
+      </CardContent>
+    </Card>
+  </div>
+);
+
+interface ProgressRowProps {
+  colorClass: string;
+  widthPercent: string;
+}
+
+const ProgressRow = ({ colorClass, widthPercent }: ProgressRowProps) => (
+  <div className="px-2 pb-2">
+    <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+      <div className={`${colorClass} h-1.5 rounded-full`} style={{ width: widthPercent }}></div>
+    </div>
+  </div>
+);
+
 const getBadgeStyles = (category: string) => {
   if (category === "outcome")
     return "border-emerald-500/50 text-emerald-600 dark:text-emerald-400";
@@ -457,109 +506,55 @@ export const Today = () => {
           </Card>
         </div>
 
-        <div key="analytics">
-          <Card className="glass-card hover-lift bg-[#120D1A]/90 border-purple-900/30 rounded-2xl h-full relative">
-            <DragHandle />
-            <CardHeader className="py-3">
-              <CardTitle className="flex items-center gap-2 text-sm text-purple-400">
-                <LineChart className="h-4 w-4" /> Analytics Metrics
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1 p-2">
-              <HiddenMetric
-                icon={Users}
-                label="Daily Active Users"
-                value="1,248"
-              />
-              <div className="px-2 pb-2">
-                <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-purple-500 h-1.5 rounded-full"
-                    style={{ width: "74%" }}
-                  ></div>
-                </div>
-              </div>
+        <WidgetCard
+          id="analytics"
+          bgClass="bg-[#120D1A]/90"
+          borderClass="border-purple-900/30"
+          textClass="text-purple-400"
+          icon={LineChart}
+          title="Analytics Metrics"
+        >
+          <HiddenMetric icon={Users} label="Daily Active Users" value="1,248" />
+          <ProgressRow colorClass="bg-purple-500" widthPercent="74%" />
+          <HiddenMetric icon={GitMerge} label="Workflow Execution" value="8.4k" />
+          <ProgressRow colorClass="bg-blue-500" widthPercent="92%" />
+        </WidgetCard>
 
-              <HiddenMetric
-                icon={GitMerge}
-                label="Workflow Execution"
-                value="8.4k"
-              />
-              <div className="px-2 pb-2">
-                <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-blue-500 h-1.5 rounded-full"
-                    style={{ width: "92%" }}
-                  ></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <WidgetCard
+          id="security"
+          bgClass="bg-[#0A141A]/90"
+          borderClass="border-cyan-900/30"
+          textClass="text-cyan-400"
+          icon={Shield}
+          title="Security Audit"
+          contentClass="p-3"
+        >
+          <div className="flex items-center gap-3 mb-2 px-2">
+            <div className="h-8 w-8 rounded-full bg-cyan-950/50 border border-cyan-900/50 flex items-center justify-center">
+              <Shield className="h-4 w-4 text-cyan-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-200">Zero Trust Active</p>
+              <p className="text-[10px] text-gray-500">All gateways secured</p>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <HiddenMetric icon={Lock} label="Threats" value="0 Blocked" valueClass="text-emerald-500 font-bold" />
+            <HiddenMetric icon={Clock} label="Auth Fixes" value="Last 24h" />
+          </div>
+        </WidgetCard>
 
-        <div key="security">
-          <Card className="glass-card hover-lift bg-[#0A141A]/90 border-cyan-900/30 rounded-2xl h-full relative">
-            <DragHandle />
-            <CardHeader className="py-3">
-              <CardTitle className="flex items-center gap-2 text-sm text-cyan-400">
-                <Shield className="h-4 w-4" /> Security Audit
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3">
-              <div className="flex items-center gap-3 mb-2 px-2">
-                <div className="h-8 w-8 rounded-full bg-cyan-950/50 border border-cyan-900/50 flex items-center justify-center">
-                  <Shield className="h-4 w-4 text-cyan-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-200">
-                    Zero Trust Active
-                  </p>
-                  <p className="text-[10px] text-gray-500">
-                    All gateways secured
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <HiddenMetric
-                  icon={Lock}
-                  label="Threats"
-                  value="0 Blocked"
-                  valueClass="text-emerald-500 font-bold"
-                />
-                <HiddenMetric
-                  icon={Clock}
-                  label="Auth Fixes"
-                  value="Last 24h"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div key="knowledge">
-          <Card className="glass-card hover-lift bg-[#1A100A]/90 border-orange-900/30 rounded-2xl h-full relative">
-            <DragHandle />
-            <CardHeader className="py-3">
-              <CardTitle className="flex items-center gap-2 text-sm text-orange-400">
-                <Database className="h-4 w-4" /> Knowledge Graph
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 space-y-1">
-              <HiddenMetric
-                icon={Database}
-                label="Vector Store"
-                value="14.2 GB"
-                valueClass="text-orange-200"
-              />
-              <HiddenMetric
-                icon={Database}
-                label="SQL Relational"
-                value="2.1 GB"
-                valueClass="text-rose-200"
-              />
-            </CardContent>
-          </Card>
-        </div>
+        <WidgetCard
+          id="knowledge"
+          bgClass="bg-[#1A100A]/90"
+          borderClass="border-orange-900/30"
+          textClass="text-orange-400"
+          icon={Database}
+          title="Knowledge Graph"
+        >
+          <HiddenMetric icon={Database} label="Vector Store" value="14.2 GB" valueClass="text-orange-200" />
+          <HiddenMetric icon={Database} label="SQL Relational" value="2.1 GB" valueClass="text-rose-200" />
+        </WidgetCard>
       </ResponsiveGridLayout>
     </div>
   );
