@@ -72,3 +72,4 @@ concurrency_test_temp/
 eslint_report*.json
 audit_report.json
 test-output.css
+playwright-report/

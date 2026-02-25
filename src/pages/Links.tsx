@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,6 +13,11 @@ import { Plus, ExternalLink, Star, Trash2, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import { isValidRedirectUrl } from '@/lib/security';
 import { logError } from '@/lib/monitoring';
+import { Responsive, WidthProvider, Layout } from 'react-grid-layout/legacy';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
+
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const linkSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
@@ -42,7 +47,10 @@ const Links = () => {
     description: '',
   });
 
-  const { data: links = [], isLoading, error } = useQuery({
+  const cols = { lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 };
+  const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>({});
+
+  const { data: links = [] as Link[], isLoading, error } = useQuery({
     queryKey: ['links', user?.id],
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
@@ -59,15 +67,33 @@ const Links = () => {
     enabled: !!user,
     staleTime: 30 * 1000,
     retry: 2,
-    onError: (error) => {
-      logError(error as Error, { action: 'links_fetch', userId: user?.id });
+  });
+
+  useEffect(() => {
+    if (error) {
+      logError(error, { action: 'links_fetch', userId: user?.id });
       toast({
         title: 'Error fetching links',
         description: error instanceof Error ? error.message : 'Failed to load links',
         variant: 'destructive',
       });
-    },
-  });
+    }
+  }, [error, toast, user?.id]);
+
+  useEffect(() => {
+    const newLayouts: Partial<Record<string, Layout>> = {};
+    for (const [bp, c] of Object.entries(cols)) {
+      newLayouts[bp] = links.map((link, i) => ({
+        i: link.id,
+        x: i % c,
+        y: Math.floor(i / c),
+        w: 1,
+        h: 1,
+        isResizable: false
+      }));
+    }
+    setLayouts(newLayouts);
+  }, [links, cols]);
 
   const createLinkMutation = useMutation({
     mutationFn: async (linkData: z.infer<typeof linkSchema>) => {
@@ -90,7 +116,7 @@ const Links = () => {
       setNewLink({ title: '', url: '', description: '' });
     },
     onError: (error) => {
-      logError(error as Error, { action: 'link_create', userId: user?.id });
+      logError(error, { action: 'link_create', userId: user?.id });
       toast({
         title: 'Error creating link',
         description: error instanceof Error ? error.message : 'Failed to create link',
@@ -109,7 +135,7 @@ const Links = () => {
       toast({ title: 'Link deleted successfully!' });
     },
     onError: (error) => {
-      logError(error as Error, { action: 'link_delete', userId: user?.id });
+      logError(error, { action: 'link_delete', userId: user?.id });
       toast({
         title: 'Error deleting link',
         description: error instanceof Error ? error.message : 'Failed to delete link',
@@ -130,7 +156,7 @@ const Links = () => {
       queryClient.invalidateQueries({ queryKey: ['links', user?.id] });
     },
     onError: (error) => {
-      logError(error as Error, { action: 'link_toggle_favorite', userId: user?.id });
+      logError(error, { action: 'link_toggle_favorite', userId: user?.id });
       toast({
         title: 'Error updating link',
         description: error instanceof Error ? error.message : 'Failed to update link',
@@ -251,64 +277,80 @@ const Links = () => {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <ResponsiveGridLayout
+        className="layout -mx-2"
+        layouts={layouts}
+        breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
+        cols={cols}
+        rowHeight={160}
+        onLayoutChange={(_layout, allLayouts) => setLayouts(allLayouts)}
+        draggableHandle=".custom-drag-handle"
+        margin={[16, 16]}
+      >
         {links.map((link) => (
-          <Card key={link.id}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg">{link.title}</CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => toggleFavorite(link)}
-                    disabled={toggleFavoriteMutation.isPending}
-                  >
-                    <Star
-                      className={`h-4 w-4 ${
-                        link.is_favorite ? 'fill-yellow-400 text-yellow-400' : ''
-                      }`}
-                    />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteLink(link.id)}
-                    disabled={deleteLinkMutation.isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+          <div key={link.id}>
+            <Card className="h-full flex flex-col relative group shadow-sm border border-white/10 hover:border-white/20 transition-all bg-[#121622]/50">
+              <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/0 group-hover:text-white/30 hover:!text-white/60 transition-colors z-20">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
               </div>
-              {link.description && (
-                <CardDescription>{link.description}</CardDescription>
-              )}
-            </CardHeader>
-            <CardContent>
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => {
-                  // Validate URL before opening to prevent open redirect attacks
-                  if (!isValidRedirectUrl(link.url)) {
-                    e.preventDefault();
-                    toast({
-                      title: 'Invalid URL',
-                      description: 'This link cannot be opened for security reasons',
-                      variant: 'destructive',
-                    });
-                  }
-                }}
-                className="flex items-center text-sm text-primary hover:underline"
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Visit Link
-              </a>
-            </CardContent>
-          </Card>
+              <CardHeader className="pr-10">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg truncate font-bold">{link.title}</CardTitle>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="cancel-drag relative z-30"
+                      onClick={() => toggleFavorite(link)}
+                      disabled={toggleFavoriteMutation.isPending}
+                    >
+                      <Star
+                        className={`h-4 w-4 ${
+                          link.is_favorite ? 'fill-yellow-400 text-yellow-400' : ''
+                        }`}
+                      />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="cancel-drag relative z-30"
+                      onClick={() => handleDeleteLink(link.id)}
+                      disabled={deleteLinkMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                {link.description && (
+                  <CardDescription className="line-clamp-2">{link.description}</CardDescription>
+                )}
+              </CardHeader>
+              <CardContent className="mt-auto">
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    // Validate URL before opening to prevent open redirect attacks
+                    if (!isValidRedirectUrl(link.url)) {
+                      e.preventDefault();
+                      toast({
+                        title: 'Invalid URL',
+                        description: 'This link cannot be opened for security reasons',
+                        variant: 'destructive',
+                      });
+                    }
+                  }}
+                  className="flex items-center text-sm font-medium text-[hsl(var(--accent))] hover:text-[hsl(var(--accent))]/80 transition-colors cancel-drag relative z-30"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Visit Link
+                </a>
+              </CardContent>
+            </Card>
+          </div>
         ))}
-      </div>
+      </ResponsiveGridLayout>
 
       {links.length === 0 && (
         <Card>

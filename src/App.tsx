@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AccessProvider } from "./contexts/AccessContext";
 import { Web3Provider } from "./providers/Web3Provider";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { ConsentBanner } from "./components/ConsentBanner";
@@ -17,17 +18,15 @@ import { initializeSecurity } from './lib/security';
 import { logConfiguration } from './lib/config';
 import { createDebugLogger } from './lib/debug-logger';
 import { Loader2 } from 'lucide-react';
-import { OMNIDASH_FLAG } from './omnidash/types';
 import { OmniLinkShell } from "./layouts/OmniLinkShell";
 
 // Lazy load pages for better code splitting
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
-const Dashboard = lazy(() => import("./pages/dashboard"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Links = lazy(() => import("./pages/Links"));
 const Files = lazy(() => import("./pages/Files"));
 const Automations = lazy(() => import("./pages/Automations"));
-const Integrations = lazy(() => import("./pages/Integrations"));
 const ApexAssistant = lazy(() => import("./pages/ApexAssistant"));
 const Todos = lazy(() => import("./pages/Todos"));
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -43,19 +42,8 @@ const BuiltCanadian = lazy(() => import("./pages/apps/BuiltCanadian"));
 const TechSpecs = lazy(() => import("./pages/TechSpecs"));
 const Diagnostics = lazy(() => import("./pages/Diagnostics"));
 const Health = lazy(() => import("./pages/Health"));
-const OmniDashLayout = lazy(() => import("./pages/OmniDash/OmniDashLayout"));
-const OmniDashToday = lazy(() => import("./pages/OmniDash/Today"));
-const OmniDashPipeline = lazy(() => import("./pages/OmniDash/Pipeline"));
-const OmniDashKpis = lazy(() => import("./pages/OmniDash/Kpis"));
-const OmniDashOps = lazy(() => import("./pages/OmniDash/Ops"));
-const OmniDashIntegrations = lazy(() => import("./pages/OmniDash/Integrations"));
-const OmniDashEvents = lazy(() => import("./pages/OmniDash/Events"));
-const OmniDashEntities = lazy(() => import("./pages/OmniDash/Entities"));
-const OmniDashRuns = lazy(() => import("./pages/OmniDash/Runs"));
-const OmniDashApprovals = lazy(() => import("./pages/OmniDash/Approvals"));
-const OmniDashLocalAgents = lazy(() => import("./pages/OmniDash/LocalAgents"));
-const OmniDashTasks = lazy(() => import("./pages/OmniDash/Tasks"));
-const WorkflowStudio = lazy(() => import("./pages/OmniDash/WorkflowStudio"));
+const OmniDash = lazy(() => import("./pages/OmniDash"));
+const OmniTraceFeed = lazy(() => import("./components/dashboard/OmniTraceFeed").then(module => ({ default: module.OmniTraceFeed })));
 const Translation = lazy(() => import("./pages/Translation"));
 const Agent = lazy(() => import("./pages/Agent"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -222,14 +210,13 @@ const App = () => (
                 <Route path="/translation" element={<MobileOnlyGate><PaidAccessRoute><Translation /></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/agent" element={<MobileOnlyGate><PaidAccessRoute><Agent /></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/settings" element={<MobileOnlyGate><PaidAccessRoute><Settings /></PaidAccessRoute></MobileOnlyGate>} />
-                <Route path="/omnitrace" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><OmniDashRuns /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
+                <Route path="/omnitrace" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><OmniTraceFeed /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
 
                 {/* Legacy routes (with mobile gate) */}
                 <Route path="/dashboard" element={<PaidAccessRoute><OmniLinkShell><Dashboard /></OmniLinkShell></PaidAccessRoute>} />
                 <Route path="/links" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Links /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/files" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Files /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/automations" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Automations /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
-                <Route path="/integrations" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Integrations /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/apex" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><ApexAssistant /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/todos" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Todos /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/diagnostics" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Diagnostics /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
@@ -245,24 +232,7 @@ const App = () => (
                 <Route path="/apps/built-canadian" element={<BuiltCanadian />} />
                 <Route path="/tech-specs" element={<TechSpecs />} />
 
-                {/* OmniDash (with mobile gate if enabled) */}
-              {OMNIDASH_FLAG && (
-                <Route path="/omnidash" element={<DashboardLayout><OmniDashLayout /></DashboardLayout>}>
-                  <Route index element={<OmniDashToday />} />
-                  <Route path="pipeline" element={<OmniDashPipeline />} />
-                  <Route path="kpis" element={<OmniDashKpis />} />
-                  <Route path="ops" element={<OmniDashOps />} />
-                  <Route path="integrations" element={<OmniDashIntegrations />} />
-                  <Route path="events" element={<OmniDashEvents />} />
-                  <Route path="entities" element={<OmniDashEntities />} />
-                  <Route path="runs" element={<OmniDashRuns />} />
-                  <Route path="approvals" element={<OmniDashApprovals />} />
-                  <Route path="local-agents" element={<OmniDashLocalAgents />} />
-                  <Route path="tasks" element={<OmniDashTasks />} />
-                  <Route path="workflows" element={<WorkflowStudio />} />
-                </Route>
-              )}
-
+                <Route path="/omnidash" element={<AccessProvider><PaidAccessRoute><DashboardLayout><OmniDash /></DashboardLayout></PaidAccessRoute></AccessProvider>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
