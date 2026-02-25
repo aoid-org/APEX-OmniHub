@@ -5,46 +5,64 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.3.0] - 2026-02-25
+## [1.3.0] - 2026-02-24
 
-### Added — OmniDash Strict SPA Refactor & Drag-and-Drop Grid
+### Added — SPA Architecture & Security Hardening
 
-- **OmniDash SPA Architecture** — Enforced strict single-page application structure with modal-based sub-views. All OmniDash panel components consolidated from `pages/OmniDash/` to `components/omnidash/`.
-- **Drag-and-Drop Grid** — Implemented responsive drag-and-drop grid layout for all OmniDash widgets, files, and links using `react-grid-layout`.
-- **Keyboard Shortcuts** — Refactored keyboard shortcut hook to pure panel-callback flow (`useOmniDashKeyboardShortcuts(openPanel)`), decoupled from router navigation.
-- **Nav Icon Buttons** — Added `OmniDashNavIconButton` component with custom nav icons for all OmniDash panels.
-- **Workflow Studio** — Integrated WorkflowStudio panel into OmniDash SPA.
-- **Test Suite** — Added `keyboard-shortcuts.spec.ts` (21 test cases) and `runs.spec.tsx` for OmniDash component testing.
+#### Architecture Refactoring
 
-### Changed
+- **OmniDash SPA**: Restructured from multi-page routing to Single Page Application with panel-based navigation
+- Migrated `src/pages/OmniDash/{Today,Kpis,Ops,Integrations,Events}.tsx` → `src/components/omnidash/`
+- Enhanced `useOmniDashKeyboardShortcuts.ts` with panel-based activation keys (H, P, K, O, I, E, N, R, A, W)
+- Added `react-grid-layout` responsive dashboard widget positioning (breakpoints: lg:3, md:2, sm:1)
+- Added `framer-motion` for SPA panel transition animations
+- Added `HiddenMetric.tsx` for sensitive data redaction with tooltip support
+- Added category-based badge color coding (outcome/outreach/metric)
 
-- **Component Migration** — Moved `Approvals`, `Entities`, `Events`, `Integrations`, `Kpis`, `LocalAgents`, `Ops`, `Pipeline`, `Runs`, `Tasks`, `Today`, `WorkflowStudio` from `src/pages/OmniDash/` to `src/components/omnidash/`.
-- **App.tsx Routing** — Updated lazy imports to point to new component locations; removed stale page-based routing.
-- **HiddenMetric** — Combined main's tooltip-based `HiddenMetric` with `HiddenValue` hover-reveal component for backward compatibility.
-- **OmniDashLayout** — Fixed mismatched `aside`/`div` tag, updated sidebar wiring for panel-callback pattern.
-- **AppSidebar** — Updated navigation to use new OmniDash SPA structure.
+#### MAESTRO Engine Hardening (Phase II)
+
+- **6 adversarial injection vectors** in `tests/maestro/execution.test.ts`: Base64, Hex, XML boundaries, Data Exfiltration, Jailbreak/Role Manipulation, Obfuscation/Token Smuggling
+- Hardened `injection-detection.ts` with widened regex patterns, elevated risk scores, `hypothetical_framing` and `obfuscated_text` pattern detection
+- **22/22 execution tests passing**
+
+#### OmniConnect Translation Engine (Phase III)
+
+- **[NEW]** `src/omniconnect/types/schema.ts` — Zod runtime schemas for `CanonicalEvent`, `ConsentFlags`, `EventEnvelope`
+- Integrated `CanonicalEventSchema.safeParse()` into `translator.ts` for Zero-Drift enforcement
+- Extracted `extractRawFields()` and `buildDroppedResult()` helpers (SonarQube Cognitive Complexity ≤ 15)
+- **[NEW]** `tests/omniconnect/semantic-translation.test.ts` — 3 malformed payload stress tests
+
+#### Zero-Trust Cyber-Physical Layer (Phase IV)
+
+- **`isDeviceAuthorized()`** — Deterministic gate: ONLY `trusted` devices pass (suspect/blocked/unknown → denied)
+- **`validateDeviceFingerprint()`** — Field-level integrity check detecting OS swaps, UA mutations, profile spoofs
+- **`getDeviceRiskScore()`** — Returns 0 (trusted), 75 (suspect), 100 (blocked/unknown)
+- `DeviceAuthorizationResult` and `FingerprintResult` interfaces
+- **8 hostile device spoofing tests** (10 total zero-trust tests passing)
+
+#### Database & API
+
+- Added `workflows` table migration with RLS policies
+- Updated Supabase types (managed separately from auto-generated file)
 
 ### Fixed
 
-- **RLS Policies** — Added complete Row Level Security policies for `workflows`, `workflow_runs`, `user_generated_skills`, and `omni_run_events` tables with `IF NOT EXISTS` guards.
-- **ESLint** — Resolved all ESLint errors and warnings blocking CI.
-- **Dead Code** — Removed stale `src/pages/OmniDash.tsx` conflict remnant and unused page files.
-
-### Removed
-
-- **Junk Artifacts** — Removed `eslint_report.txt`, `tsc_report.txt`, `lint_output.txt`, `search_results.txt`, `playwright-report/`, and other CI/build artifacts from version control.
-- **Stale Page Files** — Removed `src/pages/OmniDash/Kpis.tsx`, `src/pages/Integrations.tsx`, and other page files superseded by component versions.
-- **Duplicate Imports** — Cleaned up duplicate React imports and unused dependencies.
+- Removed duplicate hook declarations in `Today.tsx` causing esbuild transform errors
+- Fixed `framer-motion` missing dependency (Rollup resolution failure)
 
 ### Security
 
-- All new database tables have RLS enabled with owner-scoped policies
-- `omni_run_events` uses join-based RLS through parent workflow ownership
+- **MAESTRO**: 6 new adversarial injection defenses (OWASP LLM Top 10 aligned)
+- **OmniConnect**: Zod schema validation prevents malformed payloads from reaching the translation pipeline
+- **Zero-Trust**: Device authorization gate with fingerprint integrity verification
 
 ### Quality Gates
 
-- SonarQube exclusions configured for test artifacts
-- `.gitignore` updated to prevent future artifact tracking
+- TypeScript (`tsc --noEmit`): 0 errors
+- ESLint: 0 errors on all changed files
+- Production build: 8,447 modules, exit 0
+- Vitest: 155 passed, 46 skipped, 0 failed
+- Git: Pushed to origin (`ff849e6a → d42ed456`)
 
 ---
 

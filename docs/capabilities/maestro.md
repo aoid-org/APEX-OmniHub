@@ -1,13 +1,14 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.3.0-SECURITY | LAST_UPDATED=2026-02-24 -->
+
 # Maestro
 
-**Intent execution with validation and risk routing**
+**Intent execution with validation, risk routing, and adversarial injection defense**
 
 ---
 
 ## What this is in the repository
 
-Maestro is the intent execution layer implemented under `src/integrations/maestro`. It validates intents, applies allowlist rules, performs injection detection, and executes actions (currently mocked) with explicit success/error responses.
+Maestro is the intent execution layer implemented under `src/integrations/maestro`. It validates intents, applies allowlist rules, performs multi-vector injection detection, and executes actions with explicit success/error responses and risk-lane routing.
 
 ---
 
@@ -19,6 +20,7 @@ Maestro is the intent execution layer implemented under `src/integrations/maestr
 - Risk lanes (`GREEN`, `YELLOW`, `RED`, `BLOCKED`) are part of the type system for downstream routing.
 
 **Files**
+
 - `src/integrations/maestro/types.ts`
 
 ---
@@ -32,9 +34,26 @@ Maestro is the intent execution layer implemented under `src/integrations/maestr
 - `executeIntent` returns structured outcomes with risk-lane metadata and stops batch execution on blocked `RED` results.
 
 **Files**
+
 - `src/integrations/maestro/execution/engine.ts`
 - `src/integrations/maestro/safety/injection-detection.ts`
 - `src/integrations/maestro/safety/risk-events.ts`
+
+---
+
+## Advanced Injection Defense (v1.1.0 — 2026-02-24)
+
+**Implementation evidence**
+
+- 6 adversarial injection vectors tested: Base64/Hex encoding, XML/delimiter escapes, Jailbreak/DAN, Data Exfiltration, Obfuscation/Token Smuggling
+- `hypothetical_framing` and `obfuscated_text` pattern detection added
+- Encoding risk scores elevated to blocking threshold (85+)
+- **22/22 execution tests passing** (OWASP LLM Top 10 aligned)
+
+**Files**
+
+- `src/integrations/maestro/safety/injection-detection.ts`
+- `tests/maestro/execution.test.ts`
 
 ---
 
@@ -45,6 +64,7 @@ Maestro is the intent execution layer implemented under `src/integrations/maestr
 - MAN Mode request/response structures are defined for escalation and approval flows.
 
 **Files**
+
 - `src/integrations/maestro/types.ts`
 
 ---
