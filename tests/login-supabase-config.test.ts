@@ -113,11 +113,11 @@ describe("monorepo root .env contains Supabase credentials", () => {
     expect(content).toMatch(/^VITE_SUPABASE_URL=https:\/\//m);
   });
 
-  it("should_have_VITE_SUPABASE_ANON_KEY_with_nonempty_value", () => {
+  it("should_have_VITE_SUPABASE_PUBLISHABLE_KEY_with_nonempty_value", () => {
     if (!existsSync(envPath)) {
       return;
     }
     const content = readFileSync(envPath, "utf-8");
-    expect(content).toMatch(/^VITE_SUPABASE_ANON_KEY=.{10,}/m);
+    expect(content).toMatch(/^VITE_SUPABASE_PUBLISHABLE_KEY=.{10,}/m);
   });
 });
