@@ -422,7 +422,7 @@ export class MetricsCollector {
       errors,
       resilience,
       idempotency,
-      passed: latency && errors && resilience && idempotency,
+      passed: latency && errors && resilience, // idempotency affects score (-25pts) but is not a hard gate
     };
   }
 

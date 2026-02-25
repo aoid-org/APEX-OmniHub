@@ -344,7 +344,7 @@ export class SimulationRunner {
         }
 
         // Exponential backoff before retry
-        const backoffMs = this.chaos.calculateBackoff(attempt);
+        const backoffMs = this.chaos.calculateRetryDelay(attempt);
         await new Promise(resolve => setTimeout(resolve, backoffMs));
       }
     }
