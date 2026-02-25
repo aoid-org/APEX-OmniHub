@@ -20,7 +20,7 @@ describe('Persona system', () => {
 
     fireEvent.click(screen.getByTestId('persona-option-sentinel'));
     expect(readAgentPrefs().persona).toBe('Sentinel');
-    expect(window.localStorage.getItem(AGENT_PREFS_STORAGE_KEY)).toContain('Sentinel');
+    expect(globalThis.window.localStorage.getItem(AGENT_PREFS_STORAGE_KEY)).toContain('Sentinel');
   });
 
   it('renders required top header controls including Connect AI', () => {

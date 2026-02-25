@@ -51,9 +51,11 @@ let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let flushInFlight = false;
 let consecutiveFailures = 0;
 
-// Warm caches opportunistically (non-blocking)
-void loadRegistryFromLocal();
-void loadUpsertQueue();
+// Warm caches opportunistically (blocking load for safety)
+// eslint-disable-next-line unicorn/prefer-top-level-await
+await loadRegistryFromLocal();
+// eslint-disable-next-line unicorn/prefer-top-level-await
+await loadUpsertQueue();
 
 async function loadRegistryFromLocal() {
   const stored = await persistentGet<DeviceRecord[]>(REGISTRY_KEY);

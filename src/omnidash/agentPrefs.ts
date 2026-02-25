@@ -11,12 +11,12 @@ const VALID_PERSONAS: readonly AgentPersona[] = ['Navigator', 'Companion', 'Sent
 const DEFAULT_PREFS: AgentPrefs = { persona: 'Navigator' };
 
 export function readAgentPrefs(): AgentPrefs {
-  if (typeof window === 'undefined') {
+  if (globalThis.window === undefined) {
     return DEFAULT_PREFS;
   }
 
   try {
-    const raw = window.localStorage.getItem(AGENT_PREFS_STORAGE_KEY);
+    const raw = globalThis.window.localStorage.getItem(AGENT_PREFS_STORAGE_KEY);
     if (!raw) return DEFAULT_PREFS;
 
     const parsed = JSON.parse(raw) as Partial<AgentPrefs>;
@@ -30,8 +30,8 @@ export function readAgentPrefs(): AgentPrefs {
 }
 
 export function writeAgentPrefs(next: AgentPrefs): void {
-  if (typeof window === 'undefined') {
+  if (globalThis.window === undefined) {
     return;
   }
-  window.localStorage.setItem(AGENT_PREFS_STORAGE_KEY, JSON.stringify(next));
+  globalThis.window.localStorage.setItem(AGENT_PREFS_STORAGE_KEY, JSON.stringify(next));
 }

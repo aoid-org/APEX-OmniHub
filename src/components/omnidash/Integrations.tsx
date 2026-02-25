@@ -27,8 +27,8 @@ function slugify(input: string): string {
   return input
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/(^-|-$)/g, '');
 }
 
 function deriveStatus(
@@ -86,6 +86,12 @@ function statusBadgeClass(status: ConnectorStatus): string {
   if (status === 'PARTIAL') return 'border-amber-500/30 text-amber-300';
   if (status === 'ERROR') return 'border-red-500/30 text-red-300';
   return 'border-red-500/30 text-red-300';
+}
+
+function HealthIcon({ status }: { status: 'healthy' | 'degraded' | 'unknown' }) {
+  if (status === 'healthy') return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />;
+  if (status === 'degraded') return <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />;
+  return <ShieldAlert className="h-3.5 w-3.5 text-slate-500" />;
 }
 
 export const Integrations = () => {
@@ -211,13 +217,7 @@ export const Integrations = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {connector.healthStatus === 'healthy' ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                    ) : connector.healthStatus === 'degraded' ? (
-                      <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
-                    ) : (
-                      <ShieldAlert className="h-3.5 w-3.5 text-slate-500" />
-                    )}
+                    <HealthIcon status={connector.healthStatus} />
                     <span>Health: {connector.healthStatus}</span>
                   </div>
                 </div>
