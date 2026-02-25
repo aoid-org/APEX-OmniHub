@@ -23,6 +23,34 @@ const mockedIntegrations = vi.mocked(fetchOmniLinkIntegrations);
 const mockedKeys = vi.mocked(fetchOmniLinkKeys);
 const mockedEvents = vi.mocked(fetchOmniLinkEvents);
 
+const createMockKey = (idPrefix: string, integrationId: string, keyName: string) => ({
+  id: `k-${idPrefix}`,
+  tenant_id: 'u-1',
+  integration_id: integrationId,
+  name: keyName,
+  key_prefix: 'pk_',
+  scopes: {},
+  last_used_at: null,
+  revoked_at: null,
+  created_at: new Date().toISOString(),
+});
+
+const createMockEvent = (idPrefix: string, integrationId: string, sourceType: string) => ({
+  id: `e-${idPrefix}`,
+  tenant_id: 'u-1',
+  integration_id: integrationId,
+  api_key_id: `k-${idPrefix}`,
+  envelope_id: `env-${idPrefix}`,
+  idempotency_key: `idem-${idPrefix}`,
+  source: sourceType,
+  type: 'sync',
+  subject: null,
+  time: new Date().toISOString(),
+  data: {},
+  entity: null,
+  received_at: new Date().toISOString(),
+});
+
 function setupMockedReturns(
   integrationsData: any[],
   keyName: string,
@@ -30,36 +58,8 @@ function setupMockedReturns(
   sourceType: string
 ) {
   mockedIntegrations.mockResolvedValueOnce(integrationsData);
-  mockedKeys.mockResolvedValueOnce([
-    {
-      id: `k-${eventIdPrefix}`,
-      tenant_id: 'u-1',
-      integration_id: integrationsData[0].id,
-      name: keyName,
-      key_prefix: 'pk_',
-      scopes: {},
-      last_used_at: null,
-      revoked_at: null,
-      created_at: new Date().toISOString(),
-    },
-  ]);
-  mockedEvents.mockResolvedValueOnce([
-    {
-      id: `e-${eventIdPrefix}`,
-      tenant_id: 'u-1',
-      integration_id: integrationsData[0].id,
-      api_key_id: `k-${eventIdPrefix}`,
-      envelope_id: `env-${eventIdPrefix}`,
-      idempotency_key: `idem-${eventIdPrefix}`,
-      source: sourceType,
-      type: 'sync',
-      subject: null,
-      time: new Date().toISOString(),
-      data: {},
-      entity: null,
-      received_at: new Date().toISOString(),
-    },
-  ]);
+  mockedKeys.mockResolvedValueOnce([createMockKey(eventIdPrefix, integrationsData[0].id, keyName)]);
+  mockedEvents.mockResolvedValueOnce([createMockEvent(eventIdPrefix, integrationsData[0].id, sourceType)]);
 }
 
 describe('OmniBoard Integrations', () => {
