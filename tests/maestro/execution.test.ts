@@ -104,7 +104,7 @@ describe('MAESTRO Execution Engine', () => {
 
     it('should detect Hex encoded payloads', async () => {
       const intent = createTestIntent({
-        parameters: { message: '\\x69\\x67\\x6e\\x6f\\x72\\x65\\x20\\x70\\x72\\x65\\x76\\x69\\x6f\\x75\\x73' },
+        parameters: { message: String.raw`\x69\x67\x6e\x6f\x72\x65\x20\x70\x72\x65\x76\x69\x6f\x75\x73` },
       });
       const result = await executeIntent(intent);
       expect(result.success).toBe(false);
