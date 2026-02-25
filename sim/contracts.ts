@@ -570,7 +570,7 @@ export function validateEvent(event: EventEnvelope): { valid: boolean; errors: s
   if (!event.tenantId) errors.push('tenantId is required');
   if (!event.eventType) errors.push('eventType is required');
   if (!event.source) errors.push('source is required');
-  if (!event.payload) errors.push('payload is required');
+  if (event.payload === undefined || event.payload === null) errors.push('payload is required');
   if (!event.timestamp) errors.push('timestamp is required');
   if (!event.trace) errors.push('trace is required');
   if (!event.schemaVersion) errors.push('schemaVersion is required');
