@@ -12,12 +12,12 @@
 **INTELLIGENCE DESIGNED.**
 _Directable • Accountable • Dependable_
 
-**Version:** 1.3.1 | **Release Date:** 2026-02-25
+**Version:** 1.3.2 | **Release Date:** 2026-02-25
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
 [![SonarQube](https://img.shields.io/badge/sonarqube-A-success)]()
-[![Tests](https://img.shields.io/badge/tests-155%20pass-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-265%2B%20pass-brightgreen)]()
 [![Armageddon](https://img.shields.io/badge/armageddon-L7%20CERTIFIED-gold)]()
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 
@@ -37,16 +37,18 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Verified)
+## Platform Statistics (Verified 2026-02-25)
 
 | Metric                  | Value                                     |
 | ----------------------- | ----------------------------------------- |
-| **Source Files**        | 234+ TypeScript/React files               |
-| **React Components**    | 28+ production components                 |
+| **Source Files**        | 259 TypeScript/React files                |
+| **React Components**    | 93 component files (49 shadcn/ui)         |
+| **Page Routes**         | 25 page components                        |
 | **Edge Functions**      | 18 Supabase serverless functions          |
-| **Database Migrations** | 35 versioned SQL schemas                  |
-| **CI/CD Pipelines**     | 10 GitHub Actions workflows               |
-| **Test Files**          | 59 test specifications                    |
+| **Database Migrations** | 43 versioned SQL schemas                  |
+| **CI/CD Pipelines**     | 11 GitHub Actions workflows               |
+| **Test Files**          | 87 test specifications                    |
+| **Custom Hooks**        | 12 React hooks                            |
 | **Integration Modules** | 4 (Maestro, OmniLink, OmniPort, Supabase) |
 
 ---

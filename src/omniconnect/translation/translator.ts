@@ -97,9 +97,7 @@ export class SemanticTranslator {
     appId: string,
     correlationId: string
   ): Promise<TranslatedEvent[]> {
-    console.log(
-      `[${correlationId}] Translating ${events.length} events for app ${appId}`
-    );
+    if (import.meta.env.DEV) console.log(`[${correlationId}] Translating ${events.length} events for app ${appId}`);
 
     // Simulate target locale retrieval (mock)
     const targetLocale = 'fr-FR';

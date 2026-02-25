@@ -84,7 +84,7 @@ export class OmniLinkDelivery {
     const failedEvents = await this.fetchPendingDLQEvents(appId);
 
     if (!failedEvents?.length) {
-      console.log(`[${correlationId}] Retrying failed deliveries for app ${appId}`);
+      if (import.meta.env.DEV) console.log(`[${correlationId}] Retrying failed deliveries for app ${appId}`);
       return 0;
     }
 
@@ -112,7 +112,7 @@ export class OmniLinkDelivery {
     processor: (item: T) => Promise<void>,
     errorHandler: (item: T, error: unknown) => Promise<void>
   ): Promise<number> {
-    console.log(`[${correlationId}] ${startLogMessage}`);
+    if (import.meta.env.DEV) console.log(`[${correlationId}] ${startLogMessage}`);
 
     const successCount = await this.processEvents(
       items,
@@ -120,7 +120,7 @@ export class OmniLinkDelivery {
       errorHandler
     );
 
-    console.log(`[${correlationId}] Processed ${successCount}/${items.length} events successfully`);
+    if (import.meta.env.DEV) console.log(`[${correlationId}] Processed ${successCount}/${items.length} events successfully`);
     return successCount;
   }
 
@@ -157,7 +157,7 @@ export class OmniLinkDelivery {
     if (dlqError) {
       console.error(`[${correlationId}] Failed to write to DLQ for event ${event.eventId}:`, dlqError);
     } else {
-      console.log(`[${correlationId}] Event ${event.eventId} written to DLQ`);
+      if (import.meta.env.DEV) console.log(`[${correlationId}] Event ${event.eventId} written to DLQ`);
     }
   }
 
