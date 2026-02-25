@@ -77,7 +77,7 @@ describe('useOmniDashKeyboardShortcuts', () => {
     Object.defineProperty(event, 'target', { value: input, enumerable: true });
     document.dispatchEvent(event);
     expect(mockOpenPanel).not.toHaveBeenCalled();
-    document.body.removeChild(input);
+    input.remove();
   });
 
   it('should ignore shortcuts when typing in textarea', () => {
@@ -88,7 +88,7 @@ describe('useOmniDashKeyboardShortcuts', () => {
     Object.defineProperty(event, 'target', { value: textarea, enumerable: true });
     document.dispatchEvent(event);
     expect(mockOpenPanel).not.toHaveBeenCalled();
-    document.body.removeChild(textarea);
+    textarea.remove();
   });
 
   it.each([

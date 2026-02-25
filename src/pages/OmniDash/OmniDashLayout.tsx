@@ -15,6 +15,7 @@ import { OmniDashNavIconButton } from '@/components/OmniDashNavIconButton';
 import { DemoModeBanner } from '@/components/demo/DemoModeBanner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useOmniDashKeyboardShortcuts } from '@/omnidash/useOmniDashKeyboardShortcuts';
+import { OmniDashTopHeader } from '@/components/omnidash/TopHeader';
 
 export const OmniDashLayout = () => {
   const { user } = useAuth();
@@ -204,7 +205,8 @@ export const OmniDashLayout = () => {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto bg-slate-950">
+        <OmniDashTopHeader userEmail={user.email} />
         <Outlet />
       </main>
 
