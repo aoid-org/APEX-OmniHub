@@ -121,4 +121,15 @@ WHISPER_LOCAL_FALLBACK=true
 
 ---
 
+### Production Enhancements (v1.3.2 — 2026-02-25)
+
+- [x] **Idempotency Monitoring**: Prometheus counters (`idempotency_hits_total` / `idempotency_misses_total`) + Grafana dashboard with < 95% alert
+- [x] **pg_cron Receipt Cleanup**: Automated daily cleanup of expired idempotency receipts (30-day retention)
+- [x] **Guard Rail Alerting**: CI scans for violations → auto GitHub Issue + Slack notification
+- [x] **Python Verification**: CI pre-check step ensures Python3 available before drift scans
+- [x] **Console Hardening**: All production `console.log` guarded with `import.meta.env.DEV`
+- [x] **ESLint Tightened**: Removed blanket page/connector exemptions
+
+---
+
 **Verdict: SYSTEM IS GO FOR MAINNET LAUNCH.**

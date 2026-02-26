@@ -5,6 +5,38 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.3] - 2026-02-26
+
+### Added — Production Infrastructure Enhancements
+
+#### Task 1: Idempotency Hit-Rate Monitoring
+- `orchestrator/metrics.py`: Prometheus counters `idempotency_hits_total` / `idempotency_misses_total` with `/metrics` endpoint
+- `docs/monitoring/idempotency_hitrate.json`: Grafana dashboard with hit-rate panel and < 95% alert rule
+- Integrated metrics server startup into `orchestrator/main.py` worker boot sequence
+- `tests/test_idempotency_metrics.py`: Unit tests for counter labels, hit-rate math, server idempotency
+
+#### Task 2: pg_cron Automatic Receipt Cleanup
+- `supabase/migrations/20260226000000_enable_pg_cron_receipt_cleanup.sql`: Idempotent migration enabling pg_cron + daily 03:00 UTC cleanup of expired receipts > 30 days
+- `supabase/migrations/20260226000001_rollback_receipt_cleanup.sql`: Safe rollback migration
+- `scripts/verify_cron.sql`: Verification query for cron job status and run history
+- `tests/test_receipt_cleanup.py`: Unit tests for cleanup SQL logic and rollback existence
+
+#### Task 3: Guard Rail Violation Alerting
+- `.github/workflows/ci-runtime-gates.yml`: Added guard rail scan step (Phase 5) + Python availability verification
+- `.github/workflows/alert-guard-rail-violation.yml`: New workflow — triggers on CI failure, opens GitHub Issue labeled `guard-rail-violation`, posts to Slack `#platform-alerts`
+- `tests/test_guard_rail_alert.py`: Tests for grep pattern matching, false-positive prevention
+
+#### Documentation Updates
+- `docs/ops/OPS_RUNBOOK.md`: Added idempotency monitoring, pg_cron cleanup, guard rail response sections
+- `docs/project-status/LAUNCH_READINESS_v1.0.0.md`: Added v1.3.2+ production enhancement checklist
+
+### Quality Gates
+- Build: PASS | TypeScript: PASS | ESLint: 0 errors, 0 warnings
+- Python ruff: PASS | All existing tests: PASS
+- Zero breaking changes to existing CI, workflows, or runtime behavior
+
+---
+
 ## [1.3.2] - 2026-02-25
 
 ### Fixed — Production Audit & Optimization
