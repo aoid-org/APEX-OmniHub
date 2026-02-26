@@ -78,6 +78,9 @@ class TestReceiptCronCleanup:
     def test_boundary_30_days_survives(self) -> None:
         """Receipt exactly at 30 days is NOT deleted (< not <=)."""
         boundary = self._make_receipt(days_old=30)
+        # Add 10 seconds to ensure the receipt strictly survives the small time delta
+        # between its creation and the cutoff calculation in cleanup_receipts()
+        boundary.created_at += datetime.timedelta(seconds=10)
         survivors = cleanup_receipts([boundary])
         # At exactly 30 days the cutoff is now - 30d, created_at == cutoff → not <
         assert len(survivors) == 1

@@ -9,9 +9,9 @@ import { useEffect, useRef, type JSX } from 'react';
 /** Respects user's prefers-reduced-motion setting. */
 function useReducedMotion(): boolean {
   const mql =
-    typeof globalThis.window !== 'undefined'
-      ? globalThis.matchMedia('(prefers-reduced-motion: reduce)')
-      : null;
+    globalThis.window === undefined
+      ? null
+      : globalThis.matchMedia('(prefers-reduced-motion: reduce)');
   return mql?.matches ?? false;
 }
 
