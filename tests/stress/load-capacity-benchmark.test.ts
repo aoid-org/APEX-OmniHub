@@ -42,7 +42,7 @@ async function runLoadTest(
   await Promise.all(userPromises);
 
   const totalTime = (performance.now() - startTime) / 1000;
-  const sortedLatencies = allLatencies.sort((a, b) => a - b);
+  const sortedLatencies = allLatencies.toSorted((a, b) => a - b);
 
   return {
     totalRequests: concurrentUsers * requestsPerUser,
