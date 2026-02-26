@@ -245,9 +245,9 @@ const App = () => (
                 <Route path="/apps/built-canadian" element={<BuiltCanadian />} />
                 <Route path="/tech-specs" element={<TechSpecs />} />
 
-                {/* OmniDash (with mobile gate if enabled) */}
+                {/* OmniDash (own layout shell — no DashboardLayout wrapper) */}
               {OMNIDASH_FLAG && (
-                <Route path="/omnidash" element={<DashboardLayout><OmniDashLayout /></DashboardLayout>}>
+                <Route path="/omnidash" element={<OmniDashLayout />}>
                   <Route index element={<OmniDashToday />} />
                   <Route path="pipeline" element={<OmniDashPipeline />} />
                   <Route path="kpis" element={<OmniDashKpis />} />
