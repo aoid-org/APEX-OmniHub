@@ -1,83 +1,168 @@
-import { useMemo } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import type { AgentPersona } from '@/omnidash/agentPrefs';
+import React from 'react';
+import navigatorAvatar from '../../assets/navigator-avatar-icon.png';
+import companionAvatar from '../../assets/companion-avatar-icon.png';
+import sentinelAvatar from '../../assets/sentinel-avatar-icon.png';
+import pulseAvatar from '../../assets/pulse-avatar-icon.png';
 
-interface PersonaOption {
-  id: AgentPersona;
-  tone: string;
-  focus: string;
-}
-
-const PERSONAS: readonly PersonaOption[] = [
-  { id: 'Navigator', tone: 'Calm', focus: 'Trustworthy guidance' },
-  { id: 'Companion', tone: 'Human', focus: 'Approachable collaboration' },
-  { id: 'Sentinel', tone: 'Precise', focus: 'Security and risk controls' },
-  { id: 'Pulse', tone: 'Adaptive', focus: 'Fast execution cadence' },
-] as const;
+export type AgentPersona = 'Navigator' | 'Companion' | 'Sentinel' | 'Pulse';
 
 interface PersonaModalProps {
-  open: boolean;
+  isOpen: boolean;
   currentPersona: AgentPersona;
-  onOpenChange: (next: boolean) => void;
-  onSelectPersona: (next: AgentPersona) => void;
+  onClose: () => void;
+  onSelect: (persona: AgentPersona) => void;
 }
 
-export function PersonaModal({
-  open,
+const PERSONAS = [
+  {
+    id: 'Navigator' as AgentPersona,
+    name: 'Navigator',
+    tone: 'Calm & Trustworthy',
+    focus: 'Strategic guidance',
+    description: 'Long-term planning and decision support for complex business challenges',
+    avatar: navigatorAvatar,
+    color: 'from-blue-500 to-cyan-500',
+    borderColor: 'border-blue-500/30',
+  },
+  {
+    id: 'Companion' as AgentPersona,
+    name: 'Companion',
+    tone: 'Human & Warm',
+    focus: 'Approachable collaboration',
+    description: 'Friendly assistance and team coordination for daily operations',
+    avatar: companionAvatar,
+    color: 'from-violet-500 to-purple-500',
+    borderColor: 'border-violet-500/30',
+  },
+  {
+    id: 'Sentinel' as AgentPersona,
+    name: 'Sentinel',
+    tone: 'Precise & Vigilant',
+    focus: 'Security & compliance',
+    description: 'Risk monitoring, threat detection, and regulatory compliance',
+    avatar: sentinelAvatar,
+    color: 'from-emerald-500 to-teal-500',
+    borderColor: 'border-emerald-500/30',
+  },
+  {
+    id: 'Pulse' as AgentPersona,
+    name: 'Pulse',
+    tone: 'Fast & Adaptive',
+    focus: 'Rapid execution',
+    description: 'High-speed workflow automation and real-time task processing',
+    avatar: pulseAvatar,
+    color: 'from-orange-500 to-red-500',
+    borderColor: 'border-orange-500/30',
+  },
+];
+
+const PersonaModal: React.FC<PersonaModalProps> = ({
+  isOpen,
   currentPersona,
-  onOpenChange,
-  onSelectPersona,
-}: Readonly<PersonaModalProps>) {
-  const orderedPersonas = useMemo(
-    () => [
-      ...PERSONAS.filter((persona) => persona.id === currentPersona),
-      ...PERSONAS.filter((persona) => persona.id !== currentPersona),
-    ],
-    [currentPersona],
-  );
+  onClose,
+  onSelect,
+}) => {
+  if (!isOpen) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl border-orange-500/30 bg-slate-900 text-slate-100" data-testid="persona-modal">
-        <DialogHeader>
-          <DialogTitle>Agent Persona</DialogTitle>
-          <DialogDescription className="text-slate-400">
-            Choose how APEX Agent communicates and prioritizes actions.
-          </DialogDescription>
-        </DialogHeader>
+    <div
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#0a1628] border border-slate-800 rounded-2xl p-6 max-w-3xl w-full shadow-2xl animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-white font-bold text-xl">Choose Agent Persona</h2>
+            <p className="text-sm text-slate-500 mt-1">
+              Select how your AI agent communicates and behaves
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            aria-label="Close modal"
+          >
+            <i className="fa-solid fa-xmark" />
+          </button>
+        </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {orderedPersonas.map((persona) => {
-            const selected = persona.id === currentPersona;
+        {/* Persona Grid */}
+        <div className="grid sm:grid-cols-2 gap-4">
+          {PERSONAS.map((persona) => {
+            const isSelected = currentPersona === persona.id;
             return (
               <button
                 key={persona.id}
-                type="button"
-                onClick={() => onSelectPersona(persona.id)}
-                className={`rounded-xl border p-4 text-left transition-colors ${
-                  selected
-                    ? 'border-orange-500 bg-orange-500/10'
-                    : 'border-slate-700 bg-slate-950 hover:border-cyan-400/50'
+                onClick={() => onSelect(persona.id)}
+                className={`group relative p-5 rounded-xl border-2 transition-all text-left overflow-hidden ${
+                  isSelected
+                    ? `border-[#c2501f] bg-[#c2501f]/10 shadow-lg shadow-[#c2501f]/20`
+                    : 'border-slate-800 hover:border-slate-700 bg-slate-900/20 hover:bg-slate-900/40'
                 }`}
-                data-testid={`persona-option-${persona.id.toLowerCase()}`}
               >
-                <div className="mb-1 flex items-center justify-between">
-                  <p className="font-semibold">{persona.id}</p>
-                  {selected && <span className="text-xs text-orange-300">Active</span>}
+                {/* Background gradient */}
+                <div
+                  className={`absolute inset-0 bg-gradient-to-br ${persona.color} opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none`}
+                />
+
+                <div className="relative z-10">
+                  {/* Avatar + Title */}
+                  <div className="flex items-center gap-4 mb-3">
+                    <div
+                      className={`w-14 h-14 rounded-xl border-2 ${persona.borderColor} bg-slate-900/50 p-1 shrink-0 overflow-hidden`}
+                    >
+                      <img
+                        src={persona.avatar}
+                        alt={`${persona.name} avatar`}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-semibold text-base">
+                        {persona.name}
+                      </h3>
+                      <p className="text-xs text-slate-500">{persona.tone}</p>
+                    </div>
+                    {isSelected && (
+                      <div className="shrink-0">
+                        <div className="w-6 h-6 rounded-full bg-[#c2501f] flex items-center justify-center">
+                          <i className="fa-solid fa-check text-white text-xs" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Details */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                        Focus
+                      </span>
+                      <span className="text-xs text-[#c2501f]">{persona.focus}</span>
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      {persona.description}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-400">{persona.tone} · {persona.focus}</p>
               </button>
             );
           })}
         </div>
 
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Done
-          </Button>
+        {/* Footer */}
+        <div className="mt-6 pt-4 border-t border-slate-800/50">
+          <p className="text-[10px] text-slate-600 text-center">
+            Persona settings are saved locally and persist across sessions
+          </p>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
-}
+};
+
+export default PersonaModal;
