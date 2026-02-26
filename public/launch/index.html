@@ -25,6 +25,8 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- SECURITY: SRI (integrity) not applicable — Google Fonts serves dynamically generated CSS.
+         The preconnect + same-origin policy provide adequate protection. -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
       rel="stylesheet"
@@ -39,7 +41,6 @@
     <a
       href="#hero-content"
       class="launch-skip-link"
-      aria-label="Skip to main content"
     >
       Skip to content
     </a>
@@ -106,8 +107,6 @@
             <a
               href="/auth"
               class="launch-btn launch-btn--primary"
-              role="button"
-              aria-label="Launch the OmniHub console"
             >
               <svg
                 class="launch-btn__icon"
@@ -128,7 +127,6 @@
             <button
               type="button"
               class="launch-btn launch-btn--outline"
-              aria-label="Watch a demo of OmniHub"
             >
               <svg
                 class="launch-btn__icon"
@@ -198,8 +196,6 @@
           <a
             href="/auth"
             class="launch-btn launch-btn--primary launch-btn--full"
-            role="button"
-            aria-label="Launch Console — main call to action"
           >
             LAUNCH CONSOLE
           </a>

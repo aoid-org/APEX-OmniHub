@@ -12,7 +12,6 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-
 # ── Helpers ──────────────────────────────────────────────────────────
 
 GREP_PATTERN = r"GUARD_RAIL_VIOLATION|policy.*breach"
@@ -23,8 +22,8 @@ def _run_guardrail_scan(logs_dir: str) -> tuple[bool, int]:
 
     Returns (violation_detected, exit_code).
     """
-    result = subprocess.run(  # noqa: S603, S607
-        ["grep", "-rqE", GREP_PATTERN, logs_dir],
+    result = subprocess.run(  # noqa: S603
+        ["grep", "-rqE", GREP_PATTERN, logs_dir],  # noqa: S607
         capture_output=True,
         text=True,
     )
@@ -63,7 +62,7 @@ class TestGuardrailDetection:
 
     def test_empty_logs_dir_no_violation(self, tmp_path: Path) -> None:
         """Empty logs directory must not trigger a violation."""
-        detected, exit_code = _run_guardrail_scan(str(tmp_path))
+        detected, _ = _run_guardrail_scan(str(tmp_path))
         assert detected is False
 
     def test_nested_log_files_scanned(self, tmp_path: Path) -> None:

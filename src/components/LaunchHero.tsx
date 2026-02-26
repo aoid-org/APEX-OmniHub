@@ -9,8 +9,8 @@ import { useEffect, useRef, type JSX } from 'react';
 /** Respects user's prefers-reduced-motion setting. */
 function useReducedMotion(): boolean {
   const mql =
-    typeof window !== 'undefined'
-      ? window.matchMedia('(prefers-reduced-motion: reduce)')
+    typeof globalThis.window !== 'undefined'
+      ? globalThis.matchMedia('(prefers-reduced-motion: reduce)')
       : null;
   return mql?.matches ?? false;
 }
@@ -110,7 +110,6 @@ function HeroActions(): JSX.Element {
       {/* Primary CTA */}
       <a
         href="/auth"
-        role="button"
         aria-label="Launch the OmniHub console"
         className="inline-flex items-center justify-center gap-2.5 min-h-[52px] px-7
                    bg-gradient-to-br from-launch-purple to-purple-700
@@ -292,7 +291,6 @@ export const LaunchHero = (): JSX.Element => {
           <VideoCard />
           <a
             href="/auth"
-            role="button"
             aria-label="Launch Console — main call to action"
             className="inline-flex items-center justify-center w-full min-h-[52px] px-7
                        bg-gradient-to-br from-launch-purple to-purple-700

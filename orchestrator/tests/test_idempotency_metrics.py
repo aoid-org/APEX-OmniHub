@@ -9,6 +9,7 @@ Covers:
 
 from __future__ import annotations
 
+import pytest
 
 # ── Unit Tests ───────────────────────────────────────────────────────
 
@@ -22,7 +23,7 @@ class TestIdempotencyCounters:
         before = idempotency_hits.labels(workflow_type="agent_saga")._value.get()
         record_hit("agent_saga")
         after = idempotency_hits.labels(workflow_type="agent_saga")._value.get()
-        assert after == before + 1.0
+        assert after == pytest.approx(before + 1.0)
 
     def test_miss_increments_counter(self) -> None:
         from metrics import idempotency_misses, record_miss
@@ -30,7 +31,7 @@ class TestIdempotencyCounters:
         before = idempotency_misses.labels(workflow_type="agent_saga")._value.get()
         record_miss("agent_saga")
         after = idempotency_misses.labels(workflow_type="agent_saga")._value.get()
-        assert after == before + 1.0
+        assert after == pytest.approx(before + 1.0)
 
     def test_workflow_type_label_isolation(self) -> None:
         """Different workflow types must have independent counters."""
