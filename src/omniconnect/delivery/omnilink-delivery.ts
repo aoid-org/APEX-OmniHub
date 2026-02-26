@@ -156,8 +156,8 @@ export class OmniLinkDelivery {
 
     if (dlqError) {
       console.error(`[${correlationId}] Failed to write to DLQ for event ${event.eventId}:`, dlqError);
-    } else {
-      if (import.meta.env.DEV) console.log(`[${correlationId}] Event ${event.eventId} written to DLQ`);
+    } else if (import.meta.env.DEV) {
+      console.log(`[${correlationId}] Event ${event.eventId} written to DLQ`);
     }
   }
 
