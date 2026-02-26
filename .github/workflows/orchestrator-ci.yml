@@ -60,6 +60,18 @@ jobs:
             echo "✅ PASSED: No direct Supabase SDK usage in activities"
           fi
 
+      - name: Check requirements.lock denylist
+        run: |
+          DENYLIST="dbus-python|python-apt|PyGObject|launchpadlib"
+          if grep -iE "^(${DENYLIST})==" orchestrator/requirements.lock; then
+            echo "❌ BLOCKED: Denylist package found in requirements.lock"
+            echo "These packages are non-portable and must not be included."
+            echo "See docs/orchestrator/DEPENDENCIES.md for rationale."
+            exit 1
+          else
+            echo "✅ PASSED: No denylist packages in requirements.lock"
+          fi
+
       - name: Check for stubbed provider implementations
         run: |
           python scripts/ci/assert_no_stubbed_provider_impls.py

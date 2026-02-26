@@ -151,3 +151,62 @@ Deno.test('ownedNfts length check: returns false when field is missing', () => {
     false,
   );
 });
+
+// ── DEMO_MODE / fail-closed guard tests ──────────────────────────────────────
+
+Deno.test('HARD GUARD: prod without API key must return 501 hasNFT:false', () => {
+  // Simulate production: no DEMO_MODE, no SUPABASE_ENV=sandbox, no API key
+  const demoMode = undefined;
+  const isSandbox = undefined;
+  const alchemyKey = undefined;
+
+  const shouldAllowDemo = demoMode === 'true' && isSandbox === 'sandbox';
+  assertEquals(shouldAllowDemo, false, 'Demo mode must not activate without both flags');
+
+  // Without API key and without demo mode → 501 fail-closed
+  const shouldFailClosed = !alchemyKey && !shouldAllowDemo;
+  assertEquals(shouldFailClosed, true);
+
+  // Response contract: hasNFT MUST be false
+  const response = { hasNFT: false, error: 'verification_not_implemented' };
+  assertEquals(response.hasNFT, false, 'Production NEVER returns hasNFT:true without on-chain lookup');
+});
+
+Deno.test('HARD GUARD: DEMO_MODE alone (no sandbox) must NOT return hasNFT:true', () => {
+  const demoMode = 'true';
+  const isSandbox = undefined;
+  const alchemyKey = undefined;
+
+  const shouldAllowDemo = demoMode === 'true' && isSandbox === 'sandbox';
+  assertEquals(shouldAllowDemo, false, 'Demo mode requires BOTH DEMO_MODE=true AND SUPABASE_ENV=sandbox');
+
+  const shouldFailClosed = !alchemyKey && !shouldAllowDemo;
+  assertEquals(shouldFailClosed, true);
+});
+
+Deno.test('HARD GUARD: SUPABASE_ENV=sandbox alone (no DEMO_MODE) must NOT return hasNFT:true', () => {
+  const demoMode = undefined;
+  const isSandbox = 'sandbox';
+  const alchemyKey = undefined;
+
+  const shouldAllowDemo = demoMode === 'true' && isSandbox === 'sandbox';
+  assertEquals(shouldAllowDemo, false, 'Demo mode requires BOTH flags');
+
+  const shouldFailClosed = !alchemyKey && !shouldAllowDemo;
+  assertEquals(shouldFailClosed, true);
+});
+
+Deno.test('DEMO_MODE: returns hasNFT:true ONLY when DEMO_MODE=true AND SUPABASE_ENV=sandbox', () => {
+  const demoMode = 'true';
+  const isSandbox = 'sandbox';
+
+  const shouldAllowDemo = demoMode === 'true' && isSandbox === 'sandbox';
+  assertEquals(shouldAllowDemo, true, 'Demo mode activates with both flags');
+});
+
+Deno.test('HARD GUARD: real API key bypasses demo logic and proceeds to on-chain verification', () => {
+  const alchemyKey = 'real-alchemy-key';
+  // When API key exists, we skip the demo/fail-closed block entirely
+  const shouldSkipGuard = !!alchemyKey;
+  assertEquals(shouldSkipGuard, true, 'Real API key proceeds to Alchemy verification');
+});

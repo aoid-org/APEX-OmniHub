@@ -115,13 +115,41 @@ serve(async (req) => {
 
     // ── Alchemy API key ─────────────────────────────────────────────
     const alchemyKey = Deno.env.get(chainCfg.envKey);
+    const demoMode = Deno.env.get('DEMO_MODE') === 'true';
+    const isSandbox = Deno.env.get('SUPABASE_ENV') === 'sandbox';
+
     if (!alchemyKey) {
-      console.error(`${chainCfg.envKey} not configured — fail-closed`);
-      return corsErrorResponse(
-        'CONFIGURATION_ERROR',
-        'NFT verification service is not configured for this chain',
-        503,
-        origin,
+      // ── HARD GUARD ──────────────────────────────────────────────
+      // Option A (preferred): Real verification via Alchemy NFT API.
+      // Option B (fallback):  Return hasNFT:false unless DEMO_MODE=true AND SUPABASE_ENV=sandbox.
+      // Decision: Option A implemented. Option B active as fallback when API key is absent.
+      if (demoMode && isSandbox) {
+        // Demo/sandbox only — both flags required
+        console.warn('DEMO_MODE active in sandbox — returning mock hasNFT:true');
+        const headers = buildCorsHeaders(origin);
+        return new Response(
+          JSON.stringify({
+            hasNFT: true,
+            walletAddress,
+            chainId: resolvedChainId,
+            contractAddress,
+            verifiedAt: new Date().toISOString(),
+            _demo: true,
+          }),
+          { headers: { ...headers, 'Content-Type': 'application/json' } },
+        );
+      }
+
+      // Fail-closed: production NEVER returns hasNFT:true without verified on-chain lookup
+      console.error(`${chainCfg.envKey} not configured and DEMO_MODE not active — fail-closed (501)`);
+      const headers = buildCorsHeaders(origin);
+      return new Response(
+        JSON.stringify({
+          hasNFT: false,
+          error: 'verification_not_implemented',
+          message: `NFT verification requires ${chainCfg.envKey} to be configured`,
+        }),
+        { status: 501, headers: { ...headers, 'Content-Type': 'application/json' } },
       );
     }
 
