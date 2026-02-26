@@ -5,6 +5,43 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-02-25
+
+### Fixed — Sim Framework P0 Bug Fixes
+
+#### BUG-1: `sim/metrics.ts` — Idempotency Scoring Logic
+
+- **Root cause:** `dedupeRate >= 0` is always `true` (rate is a non-negative float), making idempotency perpetually pass even when zero deduplication occurred on a non-empty event stream.
+- **Fix:** `dedupeRate > 0 || totalEvents === 0` — idempotency passes only when actual dedupe hits are recorded **or** no events were processed (empty-run edge case).
+- **Impact:** Systems with `dedupeRate = 0` and `totalEvents > 0` now correctly lose 25 points from system score.
+
+#### BUG-2: `sim/chaos-engine.ts` — Backoff Consolidation
+
+- **Root cause:** `calculateBackoff()` used a hardcoded 100ms base and ±25% jitter, diverging from `calculateRetryDelay()` which correctly reads `config.baseBackoffMs` (default 500ms) with full-range jitter `[0, baseBackoffMs]`. Two implementations, different behavior.
+- **Fix:** `calculateBackoff()` is now a deprecated thin wrapper that delegates to `calculateRetryDelay()` with a `console.warn`. The canonical config-aware method is authoritative.
+- **Impact:** All retry back-off paths now use consistent exponential + full-jitter timing from config.
+
+#### BUG-3: `sim/circuit-breaker.ts` — flushQueue Event Loss
+
+- **Root cause:** `flushQueue(): void` cleared the internal queue and discarded all queued events with no mechanism to re-deliver them. Events queued during OPEN state were silently dropped on recovery.
+- **Fix:** `flushQueue(): EventEnvelope[]` returns a copy of queued events before clearing. `close()` now passes each returned event to `config.onRecover?.(event)` callback. Added optional `onRecover` field to `CircuitBreakerConfig`.
+- **Impact:** Events queued during circuit OPEN state are delivered to callers on recovery rather than silently dropped.
+
+#### BUG-4: `sim/contracts.ts` — Payload Strict Null/Undefined Check
+
+- **Root cause:** `if (!event.payload)` is falsy for `false`, `0`, `""`, `[]` — all of which are valid payloads. Only `null` and `undefined` should be rejected.
+- **Fix:** `if (event.payload === undefined || event.payload === null)` — strict identity check.
+- **Impact:** Events with boolean `false`, numeric `0`, empty string `""`, or empty array `[]` as payload are now correctly accepted by `validateEvent()`.
+
+### Quality Gates
+
+- TypeScript: 0 new errors introduced
+- All 4 fixes are surgical (≤ 20 lines changed per file)
+- 4 atomic commits, clean git history
+- Zero side effects on unrelated modules
+
+---
+
 ## [1.3.0] - 2026-02-24
 
 ### Added — SPA Architecture & Security Hardening

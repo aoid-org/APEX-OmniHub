@@ -51,9 +51,16 @@ let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let flushInFlight = false;
 let consecutiveFailures = 0;
 
-// Warm caches opportunistically (non-blocking)
-void loadRegistryFromLocal();
-void loadUpsertQueue();
+// Cache warm via async IIFE (es2020 compat: await inside function, not top-level)
+/** Consumers can optionally await this to guarantee cache is warm before first read */
+export const registryReady = (async () => {
+  try {
+    await loadRegistryFromLocal();
+    await loadUpsertQueue();
+  } catch (err) {
+    console.error('[deviceRegistry] Cache warm failed:', err);
+  }
+})();
 
 async function loadRegistryFromLocal() {
   const stored = await persistentGet<DeviceRecord[]>(REGISTRY_KEY);
@@ -146,6 +153,67 @@ function scheduleFlush(delay = 0) {
   }, delay);
 }
 
+async function handleUpsertSuccess(item: QueuedUpsert, updated: QueuedUpsert[]): Promise<QueuedUpsert[]> {
+  const next = updated.filter((u) => u.record.deviceId !== item.record.deviceId);
+  consecutiveFailures = 0;
+  await logAnalyticsEvent('device.upsert.success', { deviceId: item.record.deviceId });
+  return next;
+}
+
+async function handleUpsertFailure(item: QueuedUpsert, error: unknown, updated: QueuedUpsert[]): Promise<void> {
+  const attempts = item.attempts + 1;
+  const isTerminal = attempts >= MAX_ATTEMPTS;
+  const delay = calculateBackoffDelay(attempts, {
+    baseMs: BASE_DELAY_MS,
+    maxMs: MAX_DELAY_MS,
+    jitterMs: JITTER_MS,
+  });
+
+  const found = updated.find((u) => u.record.deviceId === item.record.deviceId);
+  if (found) {
+    found.attempts = attempts;
+    found.nextAttemptAt = Date.now() + delay;
+    found.status = isTerminal ? 'failed' : 'pending';
+  }
+
+  consecutiveFailures += 1;
+
+  if (isTerminal) {
+    await logError(error as Error, {
+      action: 'device_upsert_failed_terminal',
+      metadata: { deviceId: item.record.deviceId, attempts },
+    });
+  } else {
+    await logAnalyticsEvent('device.upsert.retry', {
+      deviceId: item.record.deviceId,
+      attempts,
+      delay,
+    });
+  }
+}
+
+function isOffline(): boolean {
+  return typeof navigator !== 'undefined' && !navigator.onLine;
+}
+
+function scheduleRemainingFlush(updated: QueuedUpsert[]) {
+  if (consecutiveFailures >= DEGRADE_THRESHOLD) {
+    void logAnalyticsEvent('device.upsert.degraded', {
+      failures: consecutiveFailures,
+      queueSize: updated.filter((u) => u.status === 'pending').length,
+    });
+  }
+
+  if (updated.some((u) => u.status === 'pending')) {
+    const delay = calculateBackoffDelay(1, {
+      baseMs: BASE_DELAY_MS,
+      maxMs: MAX_DELAY_MS,
+      jitterMs: JITTER_MS,
+    });
+    scheduleFlush(delay);
+  }
+}
+
 async function flushUpserts(force = false) {
   if (flushInFlight) return;
   flushInFlight = true;
@@ -156,13 +224,12 @@ async function flushUpserts(force = false) {
   for (const item of queue) {
     if (item.status === 'failed') continue;
     if (!force && item.nextAttemptAt > now) continue;
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    if (isOffline()) {
       scheduleFlush(2_000);
       break;
     }
 
     try {
-      // Write directly to Supabase device_registry table
       const { error } = await supabase
         .from('device_registry')
         .upsert({
@@ -179,60 +246,15 @@ async function flushUpserts(force = false) {
         throw new Error(`Device upsert failed: ${error.message}`);
       }
 
-      updated = updated.filter((u) => u.record.deviceId !== item.record.deviceId);
-      consecutiveFailures = 0;
-      await logAnalyticsEvent('device.upsert.success', { deviceId: item.record.deviceId });
+      updated = await handleUpsertSuccess(item, updated);
     } catch (error) {
-      const attempts = item.attempts + 1;
-      const isTerminal = attempts >= MAX_ATTEMPTS;
-      const delay = calculateBackoffDelay(attempts, {
-        baseMs: BASE_DELAY_MS,
-        maxMs: MAX_DELAY_MS,
-        jitterMs: JITTER_MS,
-      });
-
-      const found = updated.find((u) => u.record.deviceId === item.record.deviceId);
-      if (found) {
-        found.attempts = attempts;
-        found.nextAttemptAt = Date.now() + delay;
-        found.status = isTerminal ? 'failed' : 'pending';
-      }
-
-      consecutiveFailures += 1;
-
-      if (isTerminal) {
-        await logError(error as Error, {
-          action: 'device_upsert_failed_terminal',
-          metadata: { deviceId: item.record.deviceId, attempts },
-        });
-      } else {
-        await logAnalyticsEvent('device.upsert.retry', {
-          deviceId: item.record.deviceId,
-          attempts,
-          delay,
-        });
-      }
+      await handleUpsertFailure(item, error, updated);
     }
   }
 
   await saveUpsertQueue(updated);
   flushInFlight = false;
-
-  if (consecutiveFailures >= DEGRADE_THRESHOLD) {
-    void logAnalyticsEvent('device.upsert.degraded', {
-      failures: consecutiveFailures,
-      queueSize: updated.filter((u) => u.status === 'pending').length,
-    });
-  }
-
-  if (updated.some((u) => u.status === 'pending')) {
-    const delay = calculateBackoffDelay(1, {
-      baseMs: BASE_DELAY_MS,
-      maxMs: MAX_DELAY_MS,
-      jitterMs: JITTER_MS,
-    });
-    scheduleFlush(delay);
-  }
+  scheduleRemainingFlush(updated);
 }
 
 async function upsertLocal(record: DeviceRecord): Promise<DeviceRecord> {
@@ -288,6 +310,7 @@ export async function flushDeviceUpserts(force = false) {
 }
 
 export async function markDeviceTrusted(deviceId: string): Promise<DeviceRecord | undefined> {
+  await loadRegistryFromLocal(); // Defensive lazy load
   const existing = registry.get(deviceId);
   if (!existing) return undefined;
   existing.status = 'trusted';
@@ -301,6 +324,7 @@ export async function markDeviceTrusted(deviceId: string): Promise<DeviceRecord 
 }
 
 export async function markDeviceBlocked(deviceId: string): Promise<DeviceRecord | undefined> {
+  await loadRegistryFromLocal(); // Defensive lazy load
   const existing = registry.get(deviceId);
   if (!existing) return undefined;
   existing.status = 'blocked';
