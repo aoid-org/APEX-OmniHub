@@ -1,4 +1,5 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+
 # 🚀 LAUNCH READINESS: APEX OmniHub v1.2.0
 
 **Status**: 🟢 **GO FOR LAUNCH**
@@ -13,17 +14,20 @@ The APEX OmniHub has passed all "Heart Transplant" verification gates and has su
 
 ## 🚦 Go/No-Go Decision Matrix
 
-| Gate                        | Status | Owner    | Verified By |
-| --------------------------- | :----: | -------- | ----------- |
-| **Core Infrastructure**     |   🟢   | DevOps   | Antigravity |
-| **Data Persistence**        |   🟢   | Database | Antigravity |
-| **Workflow Engine**         |   🟢   | Backend  | Antigravity |
-| **Physical AI / Edge Grid** |   🟢   | Hardware | DeviceReg   |
-| **Armageddon Level 7**      |   🟢   | SecOps   | Temporal    |
-| **Security Posture**        |   🟢   | SecOps   | Antigravity |
-| **E2E Testing**             |   🟢   | QA       | Playwright  |
-| **Disaster Recovery**       |   🟢   | SRE      | Antigravity |
-| **Self-Healing Monitoring** |   🟢   | SRE      | OmniSentry  |
+| Gate                          | Status | Owner    | Verified By    |
+| ----------------------------- | :----: | -------- | -------------- |
+| **Core Infrastructure**       |   🟢   | DevOps   | Antigravity    |
+| **Data Persistence**          |   🟢   | Database | Antigravity    |
+| **Workflow Engine**           |   🟢   | Backend  | Antigravity    |
+| **Physical AI / Edge Grid**   |   🟢   | Hardware | DeviceReg      |
+| **Armageddon Level 7**        |   🟢   | SecOps   | Temporal       |
+| **Security Posture**          |   🟢   | SecOps   | Antigravity    |
+| **E2E Testing**               |   🟢   | QA       | Playwright     |
+| **Disaster Recovery**         |   🟢   | SRE      | Antigravity    |
+| **Self-Healing Monitoring**   |   🟢   | SRE      | OmniSentry     |
+| **Idempotency Monitoring**    |   🟢   | SRE      | Prometheus     |
+| **CI Guardrail Alerts**       |   🟢   | SecOps   | GitHub Actions |
+| **Receipt Cleanup (pg_cron)** |   🟢   | Database | Supabase       |
 
 ### Deployment Topology (Hybrid C6)
 

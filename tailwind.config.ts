@@ -13,6 +13,14 @@ export default {
         "2xl": "1400px",
       },
     },
+    screens: {
+      xs: "320px",
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+    },
     extend: {
       colors: {
         border: "hsl(var(--border))",
@@ -58,6 +66,12 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        launch: {
+          purple: "#8B5CF6",
+          gold: "#F59E0B",
+          dark: "#0F0A1F",
+          "dark-card": "#1A1030",
+        },
       },
       spacing: {
         'icon-sm': 'var(--icon-size-sm)',
@@ -87,10 +101,21 @@ export default {
             height: "0",
           },
         },
+        launchFadeIn: {
+          from: {
+            opacity: "0",
+            transform: "translateY(24px)",
+          },
+          to: {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "launch-fade-in": "launchFadeIn 0.6s ease-out both",
       },
     },
   },
