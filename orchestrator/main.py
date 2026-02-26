@@ -22,6 +22,8 @@ import logging
 import os
 import sys
 
+from metrics import start_metrics_server
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -164,6 +166,7 @@ async def start_worker() -> None:
         Temporal Server → Task Queue → Worker (this process) → Workflows/Activities
     """
     logger.info("🚀 Starting APEX Orchestrator Worker...")
+    start_metrics_server(port=int(os.getenv("METRICS_PORT", "9090")))
     logger.info(f"Environment: {settings.environment}")
     logger.info(f"Temporal: {settings.temporal_host} (namespace={settings.temporal_namespace})")
     logger.info(f"Task Queue: {settings.temporal_task_queue}")
