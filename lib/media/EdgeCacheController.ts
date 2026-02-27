@@ -130,7 +130,7 @@ class EdgeCacheController {
 
     try {
       const cache = await caches.open(CACHE_STORE);
-      let ledger = this.loadLedger();
+      const ledger = this.loadLedger();
 
       // --- Cache hit ---------------------------------------------------
       const cachedResponse = await cache.match(sourceUrl);

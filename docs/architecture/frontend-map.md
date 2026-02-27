@@ -27,12 +27,12 @@ The map focuses on the React/Vite application rooted under `src/`, its route she
    - Edge compute & media (`lib/media`, `stores/omniMediaStore`, `stores/omniModalStore`)
    - Core/support modules (`core`, `api`, `stores`, `utils`, `armageddon`, `lib/*`)
 
-5. **Edge Compute Layer (Root-level)**
+4. **Edge Compute Layer (Root-level)**
    - Vercel Edge CORS proxy (`api/cors.ts`)
    - LRU media cache governor (`lib/media/EdgeCacheController.ts`)
    - Cloudflare Worker proxy (`edge/cors-proxy/edge-cors-proxy.js`)
 
-4. **Testing & Tooling Layer**
+5. **Testing & Tooling Layer**
    - Vitest (`vitest.config.ts`) for broad frontend/unit/integration/simulation suites.
    - Playwright (`playwright.config.ts`) for runtime smoke/e2e.
    - Type/lint/build/security scripts in `package.json` + config files.
