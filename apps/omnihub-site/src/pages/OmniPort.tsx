@@ -17,7 +17,7 @@ export function OmniPortPage() {
             <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-bold)', letterSpacing: '0.1em', marginBottom: 'var(--space-3)' }}>ONE PORT. TOTAL CONTROL.</div>
             <p style={{ fontSize: 'var(--font-size-lg)', lineHeight: '1.75', margin: 0 }}>
               Instead of managing dozens of firewall rules and network policies, OmniPort channels all
-              traffic through one gateway—simplifying security while providing complete visibility.
+              traffic through one gateway - simplifying security while providing complete visibility.
             </p>
           </div>
 
@@ -71,7 +71,7 @@ export function OmniPortPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--space-6)' }}>
               <div className="card" style={{ padding: 'var(--space-6)', textAlign: 'center' }}>
                 <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-3)' }}>Protocol Agnostic</div>
-                <p className="text-secondary text-sm">HTTP, gRPC, WebSocket, MQTT—all protocols supported through unified envelope format</p>
+                <p className="text-secondary text-sm">HTTP, gRPC, WebSocket, MQTT - all protocols supported through unified envelope format</p>
               </div>
               <div className="card" style={{ padding: 'var(--space-6)', textAlign: 'center' }}>
                 <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-accent)', marginBottom: 'var(--space-3)' }}>Auto TLS</div>

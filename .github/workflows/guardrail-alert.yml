@@ -33,9 +33,9 @@ jobs:
         if: steps.check.outputs.violation == 'true'
         uses: slackapi/slack-github-action@b0de1fd9d52f1b9e8aea1b3d49a06f26c5fd1a9c # v1.27.0
         with:
-          channel-id: "platform-alerts"
           payload: |
             {
+              "channel": "platform-alerts",
               "text": "🚨 GUARDRAIL VIOLATION DETECTED",
               "blocks": [
                 {
@@ -82,7 +82,7 @@ jobs:
               ]
             }
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets['SLACK_BOT_TOKEN'] }}
         continue-on-error: true
 
       - name: Create GitHub Issue

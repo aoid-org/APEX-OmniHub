@@ -5,6 +5,7 @@ import App from './App';
 import './styles/globals.css';
 import './styles/theme.css';
 import './styles/components.css';
+import './styles/omnidash-layout.css';
 
 // Phase 1: Frontend Ignition Hardening
 const rootElement = document.getElementById('root');

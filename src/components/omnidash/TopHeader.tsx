@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { PersonaModal } from '@/components/omnidash/PersonaModal';
+import PersonaModal from '@/components/omnidash/PersonaModal';
 import { type AgentPersona, readAgentPrefs, writeAgentPrefs } from '@/omnidash/agentPrefs';
 
 const ORG_BADGE_STORAGE_KEY = 'apex.org.badge.v1';
@@ -125,10 +125,10 @@ export function OmniDashTopHeader({ userEmail }: Readonly<OmniDashTopHeaderProps
       </header>
 
       <PersonaModal
-        open={showPersonaModal}
+        isOpen={showPersonaModal}
         currentPersona={activePersona}
-        onOpenChange={setShowPersonaModal}
-        onSelectPersona={selectPersona}
+        onClose={() => setShowPersonaModal(false)}
+        onSelect={selectPersona}
       />
     </>
   );

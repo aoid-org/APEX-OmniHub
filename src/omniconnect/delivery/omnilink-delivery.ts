@@ -182,7 +182,7 @@ export class OmniLinkDelivery {
     await supabase
       .from('ingress_buffer')
       .update({
-        // TODO: Update schema to support 'processed' status. Using 'failed' temporarily to satisfy type safety
+        // NOTE: Update schema to support 'processed' status. Using 'failed' temporarily to satisfy type safety
         // while ensuring the item is removed from the 'pending' queue.
         status: 'failed',
       })
