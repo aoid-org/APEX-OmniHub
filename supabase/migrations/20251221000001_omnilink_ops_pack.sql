@@ -96,15 +96,11 @@ ALTER TABLE public.skill_matches ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "skill_matches_select_via_run" ON public.skill_matches
 FOR SELECT TO authenticated
-USING (agent_run_id IN (
-    SELECT id FROM public.agent_runs WHERE user_id = auth.uid()
-));
+USING (agent_run_id IN (SELECT id FROM public.agent_runs WHERE user_id = auth.uid()));
 
 CREATE POLICY "skill_matches_insert_via_run" ON public.skill_matches
 FOR INSERT TO authenticated
-WITH CHECK (agent_run_id IN (
-    SELECT id FROM public.agent_runs WHERE user_id = auth.uid()
-));
+WITH CHECK (agent_run_id IN (SELECT id FROM public.agent_runs WHERE user_id = auth.uid()));
 
 -- Tool invocations telemetry table
 CREATE TABLE IF NOT EXISTS public.tool_invocations (
@@ -135,15 +131,11 @@ ALTER TABLE public.tool_invocations ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "tool_invocations_select_via_run" ON public.tool_invocations
 FOR SELECT TO authenticated
-USING (agent_run_id IN (
-    SELECT id FROM public.agent_runs WHERE user_id = auth.uid()
-));
+USING (agent_run_id IN (SELECT id FROM public.agent_runs WHERE user_id = auth.uid()));
 
 CREATE POLICY "tool_invocations_insert_via_run" ON public.tool_invocations
 FOR INSERT TO authenticated
-WITH CHECK (agent_run_id IN (
-    SELECT id FROM public.agent_runs WHERE user_id = auth.uid()
-));
+WITH CHECK (agent_run_id IN (SELECT id FROM public.agent_runs WHERE user_id = auth.uid()));
 
 -- Evaluation cases table
 CREATE TABLE IF NOT EXISTS public.eval_cases (
@@ -199,33 +191,12 @@ CREATE INDEX IF NOT EXISTS eval_results_score_idx ON public.eval_results (score)
 -- RLS for eval_results
 ALTER TABLE public.eval_results ENABLE ROW LEVEL SECURITY;
 
-DO $$
-DECLARE
-  table_name text;
-  policy_name text;
-BEGIN
-  FOREACH table_name IN ARRAY ARRAY[
-    'agent_runs',
-    'skill_matches',
-    'tool_invocations',
-    'eval_cases',
-    'eval_results'
-  ] LOOP
-    policy_name := format('%s_all_service_role', table_name);
-    IF NOT EXISTS (
-      SELECT 1 FROM pg_policies
-      WHERE schemaname = 'public'
-        AND tablename = table_name
-        AND policyname = policy_name
-    ) THEN
-      EXECUTE format(
-        'CREATE POLICY "%s" ON public.%I FOR ALL TO service_role USING (true) WITH CHECK (true);',
-        policy_name,
-        table_name
-      );
-    END IF;
-  END LOOP;
-END $$;
+-- Reuse helper defined in 20251221000000 to avoid duplicating the policy-loop boilerplate
+SELECT public.ensure_service_role_policy('agent_runs');
+SELECT public.ensure_service_role_policy('skill_matches');
+SELECT public.ensure_service_role_policy('tool_invocations');
+SELECT public.ensure_service_role_policy('eval_cases');
+SELECT public.ensure_service_role_policy('eval_results');
 
 CREATE POLICY "eval_results_select_via_case" ON public.eval_results
 FOR SELECT TO authenticated
