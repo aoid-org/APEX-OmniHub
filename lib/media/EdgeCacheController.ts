@@ -106,10 +106,10 @@ class EdgeCacheController {
   // Fetch URL helper
   // -----------------------------------------------------------------------
   private buildFetchUrl(sourceUrl: string): string {
-    if (typeof window === 'undefined') return sourceUrl;
+    if (typeof globalThis.window === 'undefined') return sourceUrl;
     const isExternal =
       sourceUrl.startsWith('http') &&
-      !sourceUrl.includes(window.location.host);
+      !sourceUrl.includes(globalThis.location.host);
     if (!isExternal) return sourceUrl;
     return `/api/cors?source=${encodeURIComponent(sourceUrl)}`;
   }
@@ -179,7 +179,7 @@ class EdgeCacheController {
       }
 
       // Enforce 250 MB ceiling (async, non-blocking to the caller)
-      ledger = await this.enforceMemoryCeiling(ledger);
+      await this.enforceMemoryCeiling(ledger);
 
       return URL.createObjectURL(blob);
     } catch {
