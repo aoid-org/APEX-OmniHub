@@ -66,6 +66,7 @@ const PersonaModal: React.FC<PersonaModalProps> = ({
 
   return (
     <div
+      data-testid="persona-modal"
       className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200"
       role="button"
       tabIndex={0}
@@ -103,6 +104,7 @@ const PersonaModal: React.FC<PersonaModalProps> = ({
             return (
               <button
                 key={persona.id}
+                data-testid={`persona-option-${persona.id.toLowerCase()}`}
                 onClick={() => onSelect(persona.id)}
                 className={`group relative p-5 rounded-xl border-2 transition-all text-left overflow-hidden ${
                   isSelected
