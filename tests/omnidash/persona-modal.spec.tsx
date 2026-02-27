@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { PersonaModal } from '@/components/omnidash/PersonaModal';
+import PersonaModal from '@/components/omnidash/PersonaModal';
 import { AGENT_PREFS_STORAGE_KEY, readAgentPrefs, writeAgentPrefs, type AgentPersona } from '@/omnidash/agentPrefs';
 import { OmniDashTopHeader } from '@/components/omnidash/TopHeader';
 
@@ -11,10 +11,10 @@ describe('Persona system', () => {
 
     render(
       <PersonaModal
-        open
+        isOpen={true}
         currentPersona="Navigator"
-        onOpenChange={() => undefined}
-        onSelectPersona={onSelect}
+        onClose={() => undefined}
+        onSelect={onSelect}
       />,
     );
 

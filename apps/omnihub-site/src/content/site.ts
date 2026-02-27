@@ -58,7 +58,7 @@ export const siteConfig = {
   },
   integrations: {
     title: "The Governance Layer for Intelligent Systems",
-    subtitle: 'Adapters stay modular, portable, and optional-by-default. Software, agents, and physical AI — under one control plane.',
+    subtitle: 'Adapters stay modular, portable, and optional-by-default. Software, agents, and physical AI - under one control plane.',
     items: [
       buildItem('Enterprise Systems', 'CRMs, ERPs, ticketing, messaging, storage, data warehouses.'),
       buildItem('AI Apps & Agents', 'Model providers, agent frameworks, RAG pipelines, eval gates.'),
@@ -87,7 +87,7 @@ export const siteConfig = {
   howItWorks: {
     title: 'How It Works',
     steps: [
-      buildItem('Connect', 'Modular adapters plug into any system—software, agent, or robot.'),
+      buildItem('Connect', 'Modular adapters plug into any system - software, agent, or robot.'),
       buildItem('Translate', 'Canonical, typed semantic events so platforms actually understand each other.'),
       buildItem('Execute', 'Deterministic workflows with biometric gates and full audit trails.'),
     ],
