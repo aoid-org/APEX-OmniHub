@@ -41,7 +41,7 @@ const wagmiAccountState = {
 };
 
 const walletVerifState = {
-  walletState: { status: 'disconnected' as string, isVerified: false, error: undefined as string | undefined, chainId: undefined as number | undefined } as any,
+  walletState: { status: 'disconnected' as string, isVerified: false, error: undefined as string | undefined, chainId: undefined as number | undefined } as WalletState,
   verify: mockVerify,
   disconnect: mockDisconnect,
   address: undefined as string | undefined,
@@ -178,7 +178,7 @@ describe('WalletConnect — Chaos Battery', () => {
 
   it('shows_connected_state_with_formatted_address', () => {
     wagmiAccountState.isConnected = true;
-    walletVerifState.walletState = { status: 'connected', isVerified: false, chainId: 137 } as any;
+    walletVerifState.walletState = { status: 'connected', isVerified: false, chainId: 137 } as WalletState;
     walletVerifState.address = '0x1234567890abcdef1234567890abcdef12345678';
     walletVerifState.isConnected = true;
     walletVerifState.chainId = 137;
@@ -190,7 +190,7 @@ describe('WalletConnect — Chaos Battery', () => {
   });
 
   it('shows_verify_wallet_button_when_connected_but_not_verified', () => {
-    walletVerifState.walletState = { status: 'connected', isVerified: false } as any;
+    walletVerifState.walletState = { status: 'connected', isVerified: false } as WalletState;
     walletVerifState.address = '0xabcdef1234567890abcdef1234567890abcdef12';
     walletVerifState.isConnected = true;
     walletVerifState.chainId = 1;
@@ -202,7 +202,7 @@ describe('WalletConnect — Chaos Battery', () => {
   });
 
   it('calls_verify_when_verify_button_clicked', () => {
-    walletVerifState.walletState = { status: 'connected', isVerified: false } as any;
+    walletVerifState.walletState = { status: 'connected', isVerified: false } as WalletState;
     walletVerifState.address = '0xabcdef1234567890abcdef1234567890abcdef12';
     walletVerifState.isConnected = true;
     walletVerifState.chainId = 1;
@@ -213,7 +213,7 @@ describe('WalletConnect — Chaos Battery', () => {
   });
 
   it('calls_disconnect_when_disconnect_button_clicked', () => {
-    walletVerifState.walletState = { status: 'connected', isVerified: false } as any;
+    walletVerifState.walletState = { status: 'connected', isVerified: false } as WalletState;
     walletVerifState.address = '0xabcdef1234567890abcdef1234567890abcdef12';
     walletVerifState.isConnected = true;
     walletVerifState.chainId = 1;
@@ -224,7 +224,7 @@ describe('WalletConnect — Chaos Battery', () => {
   });
 
   it('shows_verified_state_with_verified_badge', () => {
-    walletVerifState.walletState = { status: 'verified', isVerified: true, chainId: 1 } as any;
+    walletVerifState.walletState = { status: 'verified', isVerified: true, chainId: 1 } as WalletState;
     walletVerifState.address = '0x1234567890abcdef1234567890abcdef12345678';
     walletVerifState.isConnected = true;
     walletVerifState.chainId = 1;
@@ -241,14 +241,14 @@ describe('WalletConnect — Chaos Battery', () => {
       status: 'error',
       isVerified: false,
       error: 'User rejected the request',
-    } as any;
+    } as WalletState;
 
     renderWithProviders(<WalletConnect />);
     expect(screen.getByText('User rejected the request')).toBeInTheDocument();
   });
 
   it('shows_verifying_spinner_during_verification', () => {
-    walletVerifState.walletState = { status: 'verifying', isVerified: false } as any;
+    walletVerifState.walletState = { status: 'verifying', isVerified: false } as WalletState;
     walletVerifState.address = '0x1234567890abcdef1234567890abcdef12345678';
     walletVerifState.isConnected = true;
     walletVerifState.chainId = 1;
