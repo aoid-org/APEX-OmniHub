@@ -29,11 +29,11 @@ function Hero() {
         <div className="hero__content">
           <h1 className="heading-hero hero__title" style={{ display: 'grid', gridTemplateColumns: 'max-content max-content', columnGap: '0.75em', textAlign: 'left' }}>
             <span style={{ gridColumn: 1, gridRow: 1 }}>Connect</span>
+            <span style={{ gridColumn: 2, gridRow: 1 }}>Change</span>
             <span style={{ gridColumn: 1, gridRow: 2 }}>anything.</span>
-            <span style={{ gridColumn: 1, gridRow: 3 }}>Change</span>
-            <span style={{ gridColumn: 2, gridRow: 3 }}>Stay</span>
-            <span style={{ gridColumn: 1, gridRow: 4 }}>anything.</span>
-            <span style={{ gridColumn: 2, gridRow: 4 }}>in control.</span>
+            <span style={{ gridColumn: 2, gridRow: 2 }}>anything.</span>
+            <span style={{ gridColumn: '1 / -1', gridRow: 3 }}>Stay</span>
+            <span style={{ gridColumn: '1 / -1', gridRow: 4 }}>in control.</span>
           </h1>
           <p className="hero__tagline">{siteConfig.hero.tagline}</p>
           <p className="hero__subtagline">
