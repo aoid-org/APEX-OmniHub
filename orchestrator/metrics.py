@@ -1,56 +1,58 @@
 """
-Prometheus metrics for APEX Orchestrator.
+APEX Orchestrator — Idempotency Monitoring.
 
-Exposes idempotency hit-rate counters and a /metrics HTTP endpoint
-for Prometheus scraping. Integrates with Temporal workers.
+Exposes Prometheus counters for cache-hit / cache-miss events so that
+the orchestrator's idempotency-key replay rate can be tracked, alerted,
+and graphed in Grafana.
 
-Usage:
-    from metrics import idempotency_hits, idempotency_misses, start_metrics_server
+Counters
+--------
+- ``idempotency_hits_total``  – incremented on semantic-cache hit or
+  idempotency-key replay.
+- ``idempotency_misses_total`` – incremented on cache miss (new plan
+  generated).
+
+Usage
+-----
+::
+
+    from metrics import record_hit, record_miss
+    record_hit("agent_saga")
+    record_miss("agent_saga")
 """
 
-import logging
-from threading import Thread
+from __future__ import annotations
 
-from prometheus_client import Counter, Gauge, start_http_server
+from prometheus_client import Counter, make_asgi_app
 
-logger = logging.getLogger(__name__)
-
-# ── Idempotency Counters ────────────────────────────────────────────────────
+# ── Prometheus Counters ──────────────────────────────────────────────
 
 idempotency_hits = Counter(
     "idempotency_hits_total",
-    "Total idempotency cache/replay hits (duplicate request correctly deduplicated)",
-    ["workflow", "activity"],
+    "Semantic-cache / idempotency-key replay hits",
+    ["workflow_type"],
 )
 
 idempotency_misses = Counter(
     "idempotency_misses_total",
-    "Total idempotency misses (new unique request processed)",
-    ["workflow", "activity"],
+    "Semantic-cache / idempotency-key misses (new plan generated)",
+    ["workflow_type"],
 )
 
-# ── Operational Gauges ──────────────────────────────────────────────────────
 
-active_workflows = Gauge(
-    "apex_active_workflows",
-    "Currently active Temporal workflows",
-)
-
-# ── Server ──────────────────────────────────────────────────────────────────
-
-_metrics_started = False
+# ── Helper Functions ─────────────────────────────────────────────────
 
 
-def start_metrics_server(port: int = 9090) -> None:
-    """Start Prometheus metrics HTTP server on a background thread (idempotent)."""
-    global _metrics_started
-    if _metrics_started:
-        return
-    _metrics_started = True
+def record_hit(workflow_type: str = "agent_saga") -> None:
+    """Increment the idempotency-hit counter."""
+    idempotency_hits.labels(workflow_type=workflow_type).inc()
 
-    def _serve() -> None:
-        start_http_server(port)
-        logger.info(f"Prometheus metrics server listening on :{port}/metrics")
 
-    t = Thread(target=_serve, daemon=True)
-    t.start()
+def record_miss(workflow_type: str = "agent_saga") -> None:
+    """Increment the idempotency-miss counter."""
+    idempotency_misses.labels(workflow_type=workflow_type).inc()
+
+
+def get_metrics_app():
+    """Return an ASGI app that serves ``/metrics`` in Prometheus format."""
+    return make_asgi_app()
