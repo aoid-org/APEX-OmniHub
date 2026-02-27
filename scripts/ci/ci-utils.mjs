@@ -10,13 +10,13 @@ import path from 'node:path';
 export function getAllFiles(dir, exts = ['.md']) {
   let results = [];
   const list = fs.readdirSync(dir);
-  list.forEach(file => {
-    file = path.join(dir, file);
-    const stat = fs.statSync(file);
-    if (stat && stat.isDirectory()) {
-      results = results.concat(getAllFiles(file, exts));
-    } else if (exts.includes(path.extname(file))) {
-      results.push(file);
+  list.forEach(entry => {
+    const filePath = path.join(dir, entry);
+    const stat = fs.statSync(filePath);
+    if (stat?.isDirectory()) {
+      results = results.concat(getAllFiles(filePath, exts));
+    } else if (exts.includes(path.extname(filePath))) {
+      results.push(filePath);
     }
   });
   return results;

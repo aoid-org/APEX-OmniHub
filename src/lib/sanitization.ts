@@ -128,16 +128,16 @@ function sanitizeString(text: string, metrics: SanitizationMetrics): string {
   let sanitized = text;
 
   // Tier 1: Security-critical PII (always redact)
-  sanitized = sanitized.replace(SECURITY_PATTERNS.email, REDACTED_MARKER);
-  sanitized = sanitized.replace(SECURITY_PATTERNS.phone, REDACTED_MARKER);
-  sanitized = sanitized.replace(SECURITY_PATTERNS.ssn, REDACTED_MARKER);
-  sanitized = sanitized.replace(SECURITY_PATTERNS.creditCard, REDACTED_MARKER);
-  sanitized = sanitized.replace(SECURITY_PATTERNS.apiKey, REDACTED_MARKER);
-  sanitized = sanitized.replace(SECURITY_PATTERNS.ipv4, REDACTED_MARKER);
-  sanitized = sanitized.replace(SECURITY_PATTERNS.ipv6, REDACTED_MARKER);
+  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.email, REDACTED_MARKER);
+  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.phone, REDACTED_MARKER);
+  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.ssn, REDACTED_MARKER);
+  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.creditCard, REDACTED_MARKER);
+  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.apiKey, REDACTED_MARKER);
+  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.ipv4, REDACTED_MARKER);
+  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.ipv6, REDACTED_MARKER);
 
   // Tier 2: Financial data (bucket)
-  sanitized = sanitized.replace(FINANCIAL_PATTERNS.dollarAmount, BUCKETED_MARKER);
+  sanitized = sanitized.replaceAll(FINANCIAL_PATTERNS.dollarAmount, BUCKETED_MARKER);
 
   return sanitized;
 }

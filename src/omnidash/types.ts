@@ -194,7 +194,7 @@ export const OMNIDASH_ADMIN_EMAIL_HINTS = (() => {
     .filter(Boolean);
 })();
 
-import { Home, TrendingUp, Target, AlertTriangle, Plug, Activity, Database, PlayCircle, CheckCircle, GitBranch, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Zap, Heart, ClipboardCheck, Link2, Workflow, GitBranch, FolderOpen, CreditCard, Settings, type LucideIcon } from 'lucide-react';
 
 export interface OmniDashNavItem {
   key: string;
@@ -205,16 +205,16 @@ export interface OmniDashNavItem {
 }
 
 export const OMNIDASH_NAV_ITEMS: OmniDashNavItem[] = [
-  { key: "home", label: "Today", to: "/omnidash", icon: Home, shortcut: "H" },
-  { key: "pipeline", label: "Pipeline", to: "/omnidash/pipeline", icon: TrendingUp, shortcut: "P" },
-  { key: "kpis", label: "KPIs", to: "/omnidash/kpis", icon: Target, shortcut: "K" },
-  { key: "ops", label: "Ops", to: "/omnidash/ops", icon: AlertTriangle, shortcut: "O" },
-  { key: "integrations", label: "Integrations", to: "/omnidash/integrations", icon: Plug, shortcut: "I" },
-  { key: "events", label: "Events", to: "/omnidash/events", icon: Activity, shortcut: "E" },
-  { key: "entities", label: "Entities", to: "/omnidash/entities", icon: Database, shortcut: "N" },
-  { key: "runs", label: "Runs", to: "/omnidash/runs", icon: PlayCircle, shortcut: "R" },
-  { key: "approvals", label: "Approvals", to: "/omnidash/approvals", icon: CheckCircle, shortcut: "A" },
-  { key: "workflows", label: "Workflows", to: "/omnidash/workflows", icon: GitBranch, shortcut: "W" },
+  { key: 'omniboard', label: 'OmniBoard', to: '/omnidash', icon: LayoutDashboard, shortcut: 'H' },
+  { key: 'omniskills', label: 'OmniSkills', to: '/omnidash/tasks', icon: Zap, shortcut: 'S' },
+  { key: 'physiomni', label: 'PhysiOmni', to: '/omnidash/runs', icon: Heart, shortcut: 'P' },
+  { key: 'audits', label: 'Audits', to: '/omnidash/approvals', icon: ClipboardCheck, shortcut: 'A' },
+  { key: 'links', label: 'Links', to: '/omnidash/integrations', icon: Link2, shortcut: 'L' },
+  { key: 'automations', label: 'Automations', to: '/omnidash/pipeline', icon: Workflow, shortcut: 'M' },
+  { key: 'workflows', label: 'Workflows', to: '/omnidash/workflows', icon: GitBranch, shortcut: 'W' },
+  { key: 'files', label: 'Files', to: '/omnidash/events', icon: FolderOpen, shortcut: 'F' },
+  { key: 'billing', label: 'Billing', to: '/omnidash/kpis', icon: CreditCard, shortcut: 'B' },
+  { key: 'settings', label: 'Settings', to: '/omnidash/ops', icon: Settings, shortcut: 'O' },
 ];
 
 export const OMNIDASH_SAFE_ENABLE_NOTE =

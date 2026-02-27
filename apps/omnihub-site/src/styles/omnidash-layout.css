@@ -77,9 +77,11 @@
 
 .od-nav-item.active {
   color: #ffffff; /* Max contrast */
-  background: rgba(194,80,31,0.18);
-  border: 1px solid rgba(194,80,31,0.3);
-  box-shadow: 0 0 16px rgba(194,80,31,0.12), inset 0 0 12px rgba(194,80,31,0.06);
+  background: rgba(255, 255, 255, 0.08); /* Frosted finish matching center tiles */
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 4px 15px rgba(0,0,0,0.3);
 }
 
 .od-nav-item img.nav-icon {
@@ -274,14 +276,21 @@
 
 /* ===== Glassmorphism Card (Antigravity Engine) ===== */
 .glass {
-  background: rgba(0, 0, 0, 0.80);
-  backdrop-filter: blur(48px);
-  -webkit-backdrop-filter: blur(48px);
-  border: 1px solid rgba(255,255,255,0.30);
-  box-shadow: inset 0 1px 2px rgba(255,255,255,0.25), 0 8px 30px rgba(0,0,0,0.6);
+  background: rgba(255, 255, 255, 0.08); /* Frosted finish matching center tiles */
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 4px 15px rgba(0,0,0,0.3);
   border-radius: 16px;
   padding: 16px;
   image-rendering: auto;
+  transition: all 0.3s ease-out;
+}
+
+.glass:hover {
+  transform: translateY(-2px) scale(1.03);
+  border-color: rgba(194, 80, 31, 0.45);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 0 20px rgba(194,80,31,0.3), 0 8px 25px rgba(0,0,0,0.5);
 }
 
 /* ===== Hex Clip-Path (outer containers only) ===== */

@@ -8,14 +8,28 @@
  *                when OmniSlate mic stops, Agent returns to "Listening..."
  */
 
-import { memo, useState, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { memo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
 import lightbulbIcon from '@/assets/lightbulb-icon.png';
+import ecoAspiralIcon from '@/assets/eco-aspiral-icon.png';
+import ecoTradelineIcon from '@/assets/eco-tradeline-icon.png';
+import ecoArmageddonIcon from '@/assets/eco-armageddon-icon.png';
+import appSalesforce from '@/assets/apps/salesforce.png';
+import appHubspot from '@/assets/apps/hubspot.png';
+import appQuickbooks from '@/assets/apps/quickbooks.png';
+import appNetsuite from '@/assets/apps/netsuite.png';
+import appSap from '@/assets/apps/sap.png';
+import appGmail from '@/assets/apps/gmail.png';
+import appSlack from '@/assets/apps/slack.png';
+import appShopify from '@/assets/apps/shopify.png';
+import appStripe from '@/assets/apps/stripe.png';
+import appZapier from '@/assets/apps/zapier.png';
+import appIntercom from '@/assets/apps/intercom.png';
+import { useOmniModal } from '@/stores/omniModalStore';
+import { useOmniMediaStore } from '@/stores/omniMediaStore';
 
-/* ── Real app logos via Clearbit ── */
-const LOGO = (domain: string) => `https://logo.clearbit.com/${domain}`;
+/* ── Real app logos ── */
 
 /* ── Data ── */
 
@@ -45,20 +59,34 @@ const HC = {
 
 
 const APPS = [
-  { name: 'Salesforce',  cat: 'Sales',      logo: LOGO('salesforce.com'),  synced: '1m',  status: 'Live' as const },
-  { name: 'HubSpot',     cat: 'Marketing',  logo: LOGO('hubspot.com'),     synced: '3m',  status: 'Live' as const },
-  { name: 'QuickBooks',  cat: 'Finance',    logo: LOGO('quickbooks.com'),  synced: '2m',  status: 'Live' as const },
-  { name: 'NetSuite',    cat: 'ERP',        logo: LOGO('netsuite.com'),    synced: '1m',  status: 'Partial' as const },
-  { name: 'SAP',         cat: 'ERP',        logo: LOGO('sap.com'),         synced: '1m',  status: 'Live' as const },
-  { name: 'Gmail',       cat: 'Comms',      logo: LOGO('gmail.com'),       synced: '9m',  status: 'Live' as const },
-  { name: 'Slack',       cat: 'Comms',      logo: LOGO('slack.com'),       synced: '1m',  status: 'Live' as const },
-  { name: 'Shopify',     cat: 'Commerce',   logo: LOGO('shopify.com'),     synced: '10m', status: 'Partial' as const },
-  { name: 'Stripe',      cat: 'Payments',   logo: LOGO('stripe.com'),      synced: '2m',  status: 'Live' as const },
-  { name: 'Zapier',      cat: 'Automation', logo: LOGO('zapier.com'),      synced: '3m',  status: 'Live' as const },
-  { name: 'Intercom',    cat: 'Support',    logo: LOGO('intercom.com'),    synced: '3m',  status: 'Partial' as const },
-  { name: 'Custom API',  cat: 'HTTP',       logo: '',                      synced: '',    status: 'Live' as const },
+  { name: 'Salesforce',  cat: 'Sales',      logo: appSalesforce,  synced: '1m',  status: 'Live' as const },
+  { name: 'HubSpot',     cat: 'Marketing',  logo: appHubspot,     synced: '3m',  status: 'Live' as const },
+  { name: 'QuickBooks',  cat: 'Finance',    logo: appQuickbooks,  synced: '2m',  status: 'Live' as const },
+  { name: 'NetSuite',    cat: 'ERP',        logo: appNetsuite,    synced: '1m',  status: 'Partial' as const },
+  { name: 'SAP',         cat: 'ERP',        logo: appSap,         synced: '1m',  status: 'Live' as const },
+  { name: 'Gmail',       cat: 'Comms',      logo: appGmail,       synced: '9m',  status: 'Live' as const },
+  { name: 'Slack',       cat: 'Comms',      logo: appSlack,       synced: '1m',  status: 'Live' as const },
+  { name: 'Shopify',     cat: 'Commerce',   logo: appShopify,     synced: '10m', status: 'Partial' as const },
+  { name: 'Stripe',      cat: 'Payments',   logo: appStripe,      synced: '2m',  status: 'Live' as const },
+  { name: 'Zapier',      cat: 'Automation', logo: appZapier,      synced: '3m',  status: 'Live' as const },
+  { name: 'Intercom',    cat: 'Support',    logo: appIntercom,    synced: '3m',  status: 'Partial' as const },
+  { name: 'Custom API',  cat: 'HTTP',       logo: lightbulbIcon,  synced: '',    status: 'Live' as const },
 ] as const;
 
+const ECOSYSTEM = [
+  { name: 'aSpiral',          desc: 'Mental Wellness App',    color: '#38bdf8', status: 'Active' as const,  icon: ecoAspiralIcon },
+  { name: 'TradeLine 24/7',   desc: 'AI Receptionist',        color: '#f97316', status: 'Active' as const,  icon: ecoTradelineIcon },
+  { name: 'Armageddon Test',  desc: 'Chaos Testing Suite', color: '#ef4444', status: 'Standby' as const, icon: ecoArmageddonIcon },
+] as const;
+
+/* ── Typography tokens ── */
+const T = {
+  heading: { fontFamily: 'inherit', fontWeight: 600, color: '#cad2e5' } as const,
+  subhead: { fontFamily: 'inherit', fontWeight: 500, color: '#8b97b8', textTransform: 'uppercase' as const, letterSpacing: '0.1em' } as const,
+  body:    { fontFamily: 'inherit', fontWeight: 400, color: '#b8c4e0' } as const,
+  mono:    { fontFamily: "'JetBrains Mono', monospace", fontWeight: 500 } as const,
+  label:   { fontFamily: 'inherit', fontWeight: 500, color: '#8b97b8' } as const,
+};
 
 function deriveHealth(items: readonly ContextItem[]): 'green' | 'yellow' | 'red' {
   if (items.some(i => i.health === 'red')) return 'red';
@@ -68,67 +96,36 @@ function deriveHealth(items: readonly ContextItem[]): 'green' | 'yellow' | 'red'
 
 const O = '#c2501f'; // burnt orange
 
+/* ── Shared frosted-glass style for all section cards ── */
+const FROST = {
+  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  backdropFilter: 'blur(32px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+  border: '1px solid rgba(255, 255, 255, 0.12)',
+  boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 4px 15px rgba(0,0,0,0.3)',
+} as const;
+
+const FROST_HOVER = {
+  scale: 1.03,
+  borderColor: 'rgba(194, 80, 31, 0.45)',
+  boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), 0 0 20px rgba(194,80,31,0.3), 0 8px 25px rgba(0,0,0,0.5)',
+  translateY: -2,
+} as const;
+
 /* ── Component ── */
 
 export const DashboardOverview = memo(function DashboardOverview() {
-  const navigate = useNavigate();
-  const [context, setContext] = useState<readonly ContextItem[]>(INITIAL_CONTEXT);
-  const [activeInsight, setActiveInsight] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const mediaRef = useRef<MediaRecorder | null>(null);
+  const { invoke } = useOmniModal();
+  const mediaStore = useOmniMediaStore();
+  const [context] = useState<readonly ContextItem[]>(INITIAL_CONTEXT);
+  const [activeInsight] = useState<string | null>(null);
+  const [isRecording] = useState(false);
+  const [recordingDuration] = useState(0);
 
   const health = deriveHealth(context);
   const s = HC[health];
 
-  const handleCleanSlate = useCallback(() => { setContext([]); setActiveInsight(null); }, []);
-  const toggleInsight = useCallback((n: string) => setActiveInsight(p => p === n ? null : n), []);
-
   // ────────────────────────────────────────────────
-  // TTS Voice Recording - record-then-send (NOT real-time)
-  // Mutual exclusion: recording ON → Agent "Standby"
-  // ────────────────────────────────────────────────
-  const startRecording = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-
-      recorder.onstop = () => {
-        stream.getTracks().forEach(t => t.stop());
-      };
-
-      mediaRef.current = recorder;
-      recorder.start();
-      setIsRecording(true);
-      setRecordingDuration(0);
-
-      // Duration counter
-      timerRef.current = setInterval(() => {
-        setRecordingDuration(d => d + 1);
-      }, 1000);
-    } catch {
-      // Mic permission denied - fail silently
-    }
-  }, []);
-
-  const stopRecording = useCallback(() => {
-    if (mediaRef.current?.state === 'recording') {
-      mediaRef.current.stop();
-    }
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setIsRecording(false);
-    setRecordingDuration(0);
-  }, []);
-
-  const toggleRecording = useCallback(() => {
-    if (isRecording) stopRecording();
-    else startRecording();
-  }, [isRecording, startRecording, stopRecording]);
-
   // Agent status derives from recording state
   const agentStatus = isRecording ? 'standby' : 'listening';
 
@@ -166,7 +163,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
           <div className="relative z-10 flex flex-col items-center justify-center h-full w-full gap-4">
             {/* Header: Agent label + status */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-extrabold tracking-widest uppercase text-gray-400">APEX Agent</span>
+              <span style={{ fontSize: 11, ...T.subhead, letterSpacing: '0.15em' }}>APEX Agent</span>
               <span className="chip-live" style={agentStatus === 'standby' ? {
                 background: 'rgba(250,204,21,0.1)', color: '#facc15',
                 borderColor: 'rgba(250,204,21,0.2)',
@@ -177,13 +174,14 @@ export const DashboardOverview = memo(function DashboardOverview() {
 
             {/* Session Timer */}
             <div className="flex flex-col items-center text-center">
-              <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Session</span>
-              <span className="text-xl font-extrabold text-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>00:00</span>
+              <span style={{ fontSize: 10, ...T.subhead, letterSpacing: '0.15em' }}>Session</span>
+              <span style={{ fontSize: 20, ...T.mono, color: '#cad2e5' }}>00:00</span>
             </div>
 
             {/* Avatar Orb */}
             <motion.div
               className="agent-orb"
+              onClick={() => invoke({ id: 'agent-persona', provider: 'APEX Agent', type: 'selection', title: 'Select Agent Persona' })}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               drag
@@ -200,10 +198,10 @@ export const DashboardOverview = memo(function DashboardOverview() {
 
             {/* Play/Pause Controls - horizontal row */}
             <div className="flex flex-row items-center justify-center gap-3">
-              <button title="Play" className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer" style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#f97316', transition: 'all 0.2s' }}>
+              <button title="Play" className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer" style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#f97316', transition: 'all 0.2s' }} onClick={() => mediaStore.loadMedia({ id: 'agent-vid', type: 'video', url: '/demo/agent.mp4', title: 'Agent Feed' })}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
               </button>
-              <button title="Pause" className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer" style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#f97316', transition: 'all 0.2s' }}>
+              <button title="Pause" className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer" onClick={() => mediaStore.pause()} style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#f97316', transition: 'all 0.2s' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
               </button>
             </div>
@@ -215,10 +213,10 @@ export const DashboardOverview = memo(function DashboardOverview() {
                   {[{id: 'b1', h: 6}, {id: 'b2', h: 10}, {id: 'b3', h: 16}, {id: 'b4', h: 10}, {id: 'b5', h: 6}].map((bar) => (
                     <div key={bar.id} style={{ width: 3, height: bar.h, borderRadius: 2, background: '#34d399', opacity: 0.7 }} />
                   ))}
-                  <span className="text-emerald-400 ml-1">Listening...</span>
+                  <span style={{ fontSize: 12, color: '#34d399', marginLeft: 6 }}>Listening...</span>
                 </>
               ) : (
-                <span className="text-yellow-400">⏸ Standby</span>
+                <span style={{ fontSize: 12, color: '#facc15' }}>⏸ Standby</span>
               )}
             </div>
           </div>
@@ -250,10 +248,10 @@ export const DashboardOverview = memo(function DashboardOverview() {
           <div className="relative z-10 flex flex-col gap-3">
             {/* OmniSlate header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 11.77, fontWeight: 800, color: '#a1a1aa', letterSpacing: '0.15em', textTransform: 'uppercase' }}>OmniSlate</span>
+              <span style={{ fontSize: 11, ...T.subhead, letterSpacing: '0.15em' }}>OmniSlate</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {health !== 'green' && (
-                  <button type="button" onClick={() => setActiveInsight(p => p ? null : '__global__')} title="View health insights" style={{
+                  <button type="button" onClick={() => invoke({ id: 'slate-clean', provider: 'OmniSlate', type: 'confirmation', title: 'Purge Slate?' })} title="View health insights" style={{
                     width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
                     background: s.bg, border: `1px solid ${s.border}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -261,8 +259,8 @@ export const DashboardOverview = memo(function DashboardOverview() {
                     <img src={lightbulbIcon} alt="Insights" style={{ width: 14, height: 14 }} />
                   </button>
                 )}
-                <button type="button" onClick={handleCleanSlate} style={{
-                  fontSize: 11.77, fontWeight: 600, padding: '5px 12px', borderRadius: 8,
+                <button type="button" onClick={() => invoke({ id: 'slate-clean', provider: 'OmniSlate', type: 'confirmation', title: 'Purge Slate?' })} style={{
+                  fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 8,
                   background: `rgba(194,80,31,0.06)`, border: `1px solid rgba(194,80,31,0.2)`,
                   color: '#f97316', cursor: 'pointer', fontFamily: 'inherit',
                 }}>CleanSlate</button>
@@ -297,12 +295,12 @@ export const DashboardOverview = memo(function DashboardOverview() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.5 }}
                       drag
-                      dragConstraints={{ left: -100, right: 100, top: -50, bottom: 50 }}
+                        dragConstraints={{ left: -100, right: 100, top: -50, bottom: 50 }}
                       dragElastic={0.5}
                       dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
                     >
-                      <button type="button" onClick={() => toggleInsight(ctx.name)} style={{
-                        fontSize: 13, fontWeight: 700, padding: '5px 14px', borderRadius: 10,
+                      <button type="button" onClick={() => invoke({ id: 'slate-context', provider: 'OmniSlate', type: 'selection', title: 'Manage Context' })} style={{
+                        fontSize: 13, fontWeight: 500, padding: '5px 14px', borderRadius: 10,
                         background: ch.bg, border: `1.5px solid ${ch.border}`, color: ch.text,
                         cursor: 'pointer', boxShadow: ch.shadow, fontFamily: 'inherit',
                       }}>{ctx.name}</button>
@@ -327,7 +325,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
                 })}
                 </AnimatePresence>
                 <button type="button" style={{
-                  fontSize: 13, fontWeight: 700, padding: '5px 14px', borderRadius: 10,
+                  fontSize: 13, fontWeight: 500, padding: '5px 14px', borderRadius: 10,
                   background: `rgba(194,80,31,0.06)`, border: `1px solid rgba(194,80,31,0.2)`,
                   color: '#f97316', cursor: 'pointer', fontFamily: 'inherit',
                 }}>+ Add context</button>
@@ -336,7 +334,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
 
             {/* Prompt bar + TTS mic */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 'auto' }}>
-              <input type="text" placeholder="Ask APEX Agent to do anything..." style={{
+              <input type="text" placeholder="Ask APEX Agent to do anything..." onClick={(e) => { e.stopPropagation(); invoke({ id: 'slate-input', provider: 'OmniSlate', type: 'form', title: 'Context Entry' }); }} style={{
                 flex: 1, height: 44, borderRadius: 12, padding: '0 20px',
                 background: 'rgba(255,255,255,0.03)', border: `1px solid rgba(255,255,255,0.1)`,
                 color: '#dfe6fe', fontSize: 15, outline: 'none', fontFamily: 'inherit',
@@ -349,7 +347,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
               {/* TTS Record button */}
               <button
                 type="button"
-                onClick={toggleRecording}
+                onClick={(e) => { e.stopPropagation(); invoke({ id: 'slate-mic', provider: 'System', type: 'confirmation', title: 'Activate Input?' }); }}
                 title={isRecording ? 'Stop recording' : 'Record voice message'}
                 style={{
                   width: 36, height: 36, borderRadius: 10,
@@ -381,7 +379,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
               </button>
 
               {/* Attach */}
-              <div style={{
+              <div onClick={(e) => { e.stopPropagation(); invoke({ id: 'slate-mic', provider: 'System', type: 'confirmation', title: 'Activate Input?' }); }} style={{
                 width: 28, height: 28, borderRadius: 8,
                 background: `rgba(194,80,31,0.08)`, border: `1px solid rgba(194,80,31,0.2)`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -389,7 +387,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
               }}>+</div>
 
               {/* Send */}
-              <div style={{
+              <div onClick={(e) => { e.stopPropagation(); invoke({ id: 'slate-mic', provider: 'System', type: 'confirmation', title: 'Activate Input?' }); }} style={{
                 width: 36, height: 36, borderRadius: '50%',
                 background: `linear-gradient(135deg, #f97316, ${O})`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
@@ -425,15 +423,16 @@ export const DashboardOverview = memo(function DashboardOverview() {
             style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E")' }}
           />
           <div className="relative z-10 w-full">
-            <div style={{ fontSize: 19, fontWeight: 800, color: '#dfe6fe', marginBottom: 2, letterSpacing: '-0.02em' }}>Top 3 Outcomes</div>
-            <div style={{ fontSize: 11.77, fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Today&apos;s Focus</div>
-            <div className="flex flex-col gap-2.5 w-full">
+            <div style={{ fontSize: 18, ...T.heading, letterSpacing: '-0.02em' }}>Top 3 Outcomes</div>
+            <div style={{ fontSize: 11, ...T.subhead, marginBottom: 16 }}>Today&apos;s Focus</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {OUTCOMES.map((o) => (
                 <motion.div
                   key={o.rank}
-                  className="flex flex-row items-center justify-between w-full p-3 rounded-xl overflow-hidden gap-2"
+                  onClick={() => invoke({ id: 'outcome-drill', provider: 'Analytics', type: 'form', title: 'Outcome Data' })}
                   style={{
-                    background: 'rgba(0,0,0,0.20)',
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
+                    borderRadius: 14, background: 'rgba(0,0,0,0.20)',
                     border: '1px solid rgba(255,255,255,0.05)',
                     cursor: 'grab', touchAction: 'none',
                   }}
@@ -443,21 +442,16 @@ export const DashboardOverview = memo(function DashboardOverview() {
                   whileHover={{ scale: 1.02, translateX: 4, rotate: 0.5 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {/* Left: Number + truncated text */}
-                  <div className="flex flex-row items-center gap-2 min-w-0 flex-1">
-                    <span className="text-gray-500 font-mono text-xs flex-shrink-0">0{o.rank}</span>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-white text-sm font-semibold truncate">{o.title}</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded w-max mt-0.5" style={{
-                        background: `${o.tagColor}18`, color: o.tagColor, border: `1px solid ${o.tagColor}40`,
-                        fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
-                      }}>{o.tag}</span>
-                    </div>
+                  <span style={{ fontSize: 14, ...T.mono, color: '#5a6380', flexShrink: 0 }}>0{o.rank}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, ...T.heading, lineHeight: 1.3 }}>{o.title}</div>
+                    <span style={{
+                      fontSize: 9, padding: '2px 6px', borderRadius: 4, display: 'inline-block', marginTop: 2,
+                      background: `${o.tagColor}18`, color: o.tagColor, border: `1px solid ${o.tagColor}40`,
+                      fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em',
+                    }}>{o.tag}</span>
                   </div>
-                  {/* Right: Unbreakable value */}
-                  <div className="flex-shrink-0 text-right">
-                    <span className="text-white font-bold text-sm tracking-tight" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{o.metric}</span>
-                  </div>
+                  <span style={{ fontSize: 14, ...T.mono, color: '#cad2e5', flexShrink: 0 }}>{o.metric}</span>
                 </motion.div>
               ))}
             </div>
@@ -466,78 +460,109 @@ export const DashboardOverview = memo(function DashboardOverview() {
 
       </div>
 
-      {/* ═══════ INTEGRATED APPS ═══════ */}
-      <div className="apps-hex" style={{ padding: '8px 32px 24px 32px', marginTop: 4 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <span style={{ fontSize: 19.26, fontWeight: 800, color: '#dfe6fe', letterSpacing: '-0.02em' }}>Integrated Apps</span>
-            <span style={{ fontSize: 12.84, fontWeight: 700, color: '#a1a1aa', fontFamily: 'JetBrains Mono, monospace' }}>ALL SYSTEMS ({APPS.length})</span>
-          </div>
-          <span style={{ fontSize: 12.84, color: '#f97316', cursor: 'pointer', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Manage →</span>
+      {/* ═══════ APEX ECOSYSTEM (directly below hero) ═══════ */}
+      <div style={{ padding: '0 0 0 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, padding: '0 4px' }}>
+          <span style={{ fontSize: 18, ...T.heading, letterSpacing: '-0.02em' }}>APEX Ecosystem</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          {ECOSYSTEM.map((p) => {
+            const getEcoIdAndTitle = (name: string) => {
+              if (name === 'aSpiral') return { id: 'eco-aspiral', title: 'aSpiral Engine Config' };
+              if (name.includes('TradeLine')) return { id: 'eco-tradeline', title: 'TradeLine 24/7 Management' };
+              return { id: 'eco-armageddon', title: 'Armageddon Suite Config' };
+            };
+            const ecoAction = getEcoIdAndTitle(p.name);
+            return (
+            <motion.div
+              key={p.name}
+              onClick={() => invoke({ id: ecoAction.id, provider: 'APEX Ecosystem', type: 'form', title: ecoAction.title })}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px',
+                borderRadius: 16, ...FROST,
+                cursor: 'pointer', height: 80,
+                transition: 'all 0.3s ease-out',
+              }}
+              whileHover={FROST_HOVER}
+              whileTap={{ scale: 0.98 }}
+            >
+              <img src={p.icon} alt={p.name} style={{
+                width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                objectFit: 'cover', border: `1px solid ${p.color}40`,
+              }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 15, ...T.heading }}>{p.name}</span>
+                  <span className="chip-live" style={{
+                    flexShrink: 0,
+                    ...(p.status === 'Standby' ? {
+                      background: 'rgba(250,204,21,0.12)', color: '#facc15',
+                      borderColor: 'rgba(250,204,21,0.3)',
+                    } : {})
+                  }}>{p.status}</span>
+                </div>
+                <div style={{ fontSize: 11, ...T.label, marginTop: 2 }}>{p.desc}</div>
+              </div>
+            </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ═══════ INTEGRATED APPS ═══════ */}
+      <div style={{ padding: '0 0 0 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, padding: '0 4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <span style={{ fontSize: 18, ...T.heading, letterSpacing: '-0.02em' }}>Integrated Apps</span>
+            <span style={{ fontSize: 12, ...T.mono, color: '#8b97b8' }}>ALL SYSTEMS ({APPS.length})</span>
+          </div>
+          <span onClick={() => invoke({ id: 'int-manage', provider: 'System', type: 'selection', title: 'Manage Connections' })} style={{ fontSize: 12, color: '#f97316', cursor: 'pointer', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Manage →</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
           {APPS.map((app) => (
             <motion.div 
               key={app.name} 
               style={{
                 display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px',
-                borderRadius: 16, background: 'rgba(255,255,255,0.02)',
-                border: `1px solid rgba(255,255,255,0.05)`, cursor: 'grab',
-                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 15px rgba(0,0,0,0.4)`,
-                touchAction: 'none',
-                height: 92,
+                borderRadius: 16, ...FROST,
+                cursor: 'pointer', height: 92,
                 transition: 'all 0.3s ease-out',
-                position: 'relative'
               }}
-              drag
-              dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-              dragElastic={0.1}
-              whileHover={{ scale: 1.03, borderColor: 'rgba(255,255,255,0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 8px 25px rgba(0,0,0,0.6)', translateY: -2 }}
-              whileTap={{ scale: 0.98, cursor: 'grabbing' }}
-              onClick={() => navigate('/omnidash/omniport')}
+              whileHover={FROST_HOVER}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => invoke({ id: `int-auth-${app.name.toLowerCase()}`, provider: app.name, type: 'oauth', title: `Authenticate ${app.name}` })}
             >
-              {app.logo ? (
-                <img src={app.logo} alt={app.name} style={{
-                  width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                  background: '#09090b', objectFit: 'contain', padding: 6,
-                  border: `1px solid rgba(255,255,255,0.1)`,
-                }} />
-              ) : (
-                <div style={{
-                  width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                  background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.1)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 19.26, fontWeight: 800, color: '#f97316',
-                }}>{app.name[0]}</div>
-              )}
+              <img src={app.logo} alt={app.name} style={{
+                width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                background: '#09090b', objectFit: 'contain', padding: 6,
+                border: `1px solid rgba(255,255,255,0.1)`,
+              }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 16.05, fontWeight: 800, color: '#dfe6fe', letterSpacing: '-0.01em' }}>{app.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 15, ...T.heading }}>{app.name}</span>
                   <span className="chip-live" style={{
-                    position: 'absolute', top: 16, right: 16,
+                    flexShrink: 0,
                     ...(app.status === 'Partial' ? {
                       background: 'rgba(250,204,21,0.12)', color: '#facc15',
                       borderColor: 'rgba(250,204,21,0.3)',
                     } : {})
                   }}>{app.status}</span>
                 </div>
-                <div style={{ fontSize: 11.770000000000001, color: '#a1a1aa', marginTop: 4, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{app.cat}</div>
-                {app.synced && <div style={{ fontSize: 11.235000000000001, color: '#71717a', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>SYNC: {app.synced}</div>}
+                <div style={{ fontSize: 11, ...T.subhead, marginTop: 4 }}>{app.cat}</div>
+                {app.synced && <div style={{ fontSize: 11, ...T.mono, color: '#5a6380', marginTop: 2 }}>SYNC: {app.synced}</div>}
               </div>
               {app.status === 'Partial' && (
-                <button type="button" style={{
-                  position: 'absolute', bottom: 16, right: 16,
-                  fontSize: 10.700000000000001, fontWeight: 800, padding: '6px 14px', borderRadius: 8,
+                <button type="button" onClick={(e) => { e.stopPropagation(); invoke({ id: `force-sync-${app.name.toLowerCase()}`, provider: app.name, type: 'confirmation', title: `Force Sync Data?` }); }} style={{
+                  fontSize: 10, fontWeight: 500, padding: '4px 12px', borderRadius: 8,
                   background: `rgba(249,115,22,0.1)`, border: `1px solid rgba(249,115,22,0.3)`,
-                  color: '#f97316', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: '0.05em'
+                  color: '#f97316', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: '0.05em',
+                  flexShrink: 0,
                 }}>Sync</button>
               )}
             </motion.div>
           ))}
         </div>
       </div>
-
-      {/* REMOVED: Original APEX Ecosystem — moved above IntegratedApps (Mutation 2) */}
     </div>
   );
 });

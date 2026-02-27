@@ -75,7 +75,7 @@ globalThis.addEventListener('fetch', (event) => {
     fetch(request)
       .then((response) => {
         // Cache successful responses
-        if (response && response.status === 200 && response.type !== 'error') {
+        if (response?.status === 200 && response.type !== 'error') {
           // Clone response before caching
           const responseToCache = response.clone();
 
@@ -141,7 +141,7 @@ globalThis.addEventListener('message', (event) => {
     return;
   }
 
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  if (event.data?.type === 'SKIP_WAITING') {
     console.log('[SW] Received SKIP_WAITING message');
     globalThis.skipWaiting();
   }
@@ -197,12 +197,12 @@ globalThis.addEventListener('notificationclick', (event) => {
     url = '/omnitrace';
   } else if (event.action === 'open-integrations') {
     url = '/integrations';
-  } else if (event.notification.data && event.notification.data.url) {
+  } else if (event.notification.data?.url) {
     url = event.notification.data.url;
   }
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+    globalThis.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       // Focus existing window if available
       for (const client of clientList) {
         if (client.url.includes(url.split('?')[0]) && 'focus' in client) {
@@ -210,15 +210,15 @@ globalThis.addEventListener('notificationclick', (event) => {
         }
       }
       // Open new window if no existing window found
-      if (clients.openWindow) {
-        return clients.openWindow(url);
+      if (globalThis.clients.openWindow) {
+        return globalThis.clients.openWindow(url);
       }
     })
   );
 
   // Send message to client
-  clients.matchAll().then((clients) => {
-    clients.forEach((client) => {
+  globalThis.clients.matchAll().then((clientsList) => {
+    clientsList.forEach((client) => {
       client.postMessage({
         type: 'notification-click',
         action: event.action,

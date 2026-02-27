@@ -10,7 +10,7 @@ import { createEvent } from '../contracts';
  * but injected with the Chaos Engine to verify crash resilience.
  */
 class ManWorkflow {
-    private chaos: ChaosEngine;
+    private readonly chaos: ChaosEngine;
 
     constructor(chaosConfig = HEAVY_CHAOS_CONFIG) {
         this.chaos = new ChaosEngine(chaosConfig);

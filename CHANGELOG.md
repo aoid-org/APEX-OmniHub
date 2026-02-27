@@ -5,6 +5,23 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.4] - 2026-02-27
+
+### Added — Feature & Widget Architecture
+
+- **OmniDash Feature Registry (`featureRegistry.ts`)**: Cataloged 20 unique feature flags across the dashboard for centralized role-based access control and environment toggling (`VITE_OMNIDASH_FEATURES_DISABLED`).
+- **OmniDash Widget Registry (`widgetRegistry.ts`)**: Mapped all 10 dashboard panels with strict layout properties, data dependencies, and role enforcement matching actual repository UI truth.
+- **Unified UI Registry (`uiRegistry.ts`)**: Centralized barrel export for all features, widgets, navigation, and core routes.
+
+### Fixed — DOM-to-State Surface Activation
+
+- Conducted exhaustive DOM-to-State forensic audit of OmniDash UI.
+- Rewired 100% of inactive/local-state surface elements (`OmniDashLayout.tsx`, `TopHeader.tsx`, `DashboardOverview.tsx`, `Today.tsx`) to global bindings (`omniModalStore.invoke`, `demoStore`).
+- Wired the Connect AI widget in TopHeader to invoke the BYOM OAuth feature via modal invocation payloads.
+- **Pristine Quality Gate**: Remediated resulting unused references to ensure strict 0-Error/0-Warning ESLint pass.
+
+---
+
 ## [1.3.3] - 2026-02-26
 
 ### Added — UI Architecture & Media Security

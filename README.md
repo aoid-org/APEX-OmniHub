@@ -130,6 +130,7 @@ The "Trinity" connectivity layer:
 
 ```
 /src                 — OmniDash UI (234 files, 28 components)
+/src/omnidash        — Feature & Widget Registries, UI State
 /supabase/migrations — Database schema (35 versioned migrations)
 /supabase/functions  — Edge functions (18 serverless endpoints)
 /orchestrator        — Temporal workers (Python, 55 files)

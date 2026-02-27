@@ -2,24 +2,27 @@ import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SkillDefinition, SkillMatch } from './types.ts';
 
 export class SkillRegistry {
-  private supabase: SupabaseClient;
+  private readonly supabase: SupabaseClient;
   private aiSession: unknown;
 
   constructor(supabase: SupabaseClient) {
     this.supabase = supabase;
-    this.initializeAISession();
+    // Async initialization moved to ensureAISession()
   }
 
-  private async initializeAISession() {
-    try {
-      // Initialize Supabase AI session for gte-small embeddings
-      this.aiSession = await this.supabase.ai.createSession({
-        model: 'gte-small'
-      });
-    } catch (error) {
-      console.error('Failed to initialize AI session:', error);
-      throw new Error('Supabase AI session unavailable. Ensure AI add-on is enabled and compute credits are available.');
+  private async ensureAISession(): Promise<unknown> {
+    if (!this.aiSession) {
+      try {
+        // Initialize Supabase AI session for gte-small embeddings
+        this.aiSession = await this.supabase.ai.createSession({
+          model: 'gte-small'
+        });
+      } catch (error) {
+        console.error('Failed to initialize AI session:', error);
+        throw new Error('Supabase AI session unavailable. Ensure AI add-on is enabled and compute credits are available.');
+      }
     }
+    return this.aiSession;
   }
 
   /**
@@ -37,7 +40,8 @@ export class SkillRegistry {
     // Generate embedding for the skill description
     let embedding: number[];
     try {
-      const response = await this.aiSession.run({
+      const session = await this.ensureAISession();
+      const response = await (session as { run: (opts: Record<string, unknown>) => Promise<{ embedding: number[] }> }).run({
         input: `${sanitizedName}: ${sanitizedDescription}`,
         mean_pool: true,
         normalize: true

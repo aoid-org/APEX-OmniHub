@@ -28,8 +28,9 @@ interface QueuedLog {
 }
 
 const storage = new LocalStorageAdapter();
-const queue = new MonitoringQueue<QueuedLog>(MAX_QUEUE_SIZE, (item) =>
-  simpleHash(`${item.key}:${JSON.stringify(item.entry)}`)
+const queue = new MonitoringQueue<QueuedLog>((item) =>
+  simpleHash(`${item.key}:${JSON.stringify(item.entry)}`),
+  MAX_QUEUE_SIZE,
 );
 
 /**
@@ -41,7 +42,7 @@ const logCache = new Map<string, unknown[]>();
 let cacheSyncInitialized = false;
 
 function initCacheSync() {
-  if (cacheSyncInitialized || typeof window === 'undefined') return;
+  if (cacheSyncInitialized || typeof globalThis.window === 'undefined') return;
 
   globalThis.window.addEventListener('storage', (event) => {
     // Sync cache when other tabs modify logs
@@ -89,7 +90,7 @@ function setCachedLogs(key: string, logs: unknown[]) {
   }
 }
 
-let flushHandle: unknown | null = null;
+let flushHandle: ReturnType<typeof setTimeout> | unknown | null = null;
 let isIdleCallback = false;
 
 export interface ErrorContext {
@@ -368,17 +369,17 @@ export function initializeMonitoring(): void {
     void ensureSentry();
 
     // Register flush handlers
-    if (typeof window !== 'undefined') {
+    if (typeof globalThis.window !== 'undefined') {
       const flushHandler = () => flushQueue();
       // Use pagehide for modern browsers as it is more reliable than beforeunload
-      window.addEventListener('pagehide', flushHandler);
-      window.addEventListener('visibilitychange', () => {
+      globalThis.window.addEventListener('pagehide', flushHandler);
+      globalThis.window.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
           flushHandler();
         }
       });
       // Fallback
-      window.addEventListener('beforeunload', flushHandler);
+      globalThis.window.addEventListener('beforeunload', flushHandler);
     }
 
     // Initialize cache sync listener

@@ -1,15 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Bell, Bot, ChevronDown, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import PersonaModal from '@/components/omnidash/PersonaModal';
-import { type AgentPersona, readAgentPrefs, writeAgentPrefs } from '@/omnidash/agentPrefs';
+import { type AgentPersona, readAgentPrefs } from '@/omnidash/agentPrefs';
+import { useOmniModal } from '@/stores/omniModalStore';
 
 const ORG_BADGE_STORAGE_KEY = 'apex.org.badge.v1';
 
@@ -24,8 +18,8 @@ interface OmniDashTopHeaderProps {
 
 export function OmniDashTopHeader({ userEmail }: Readonly<OmniDashTopHeaderProps>) {
   const [orgBadge, setOrgBadge] = useState<string>('APEX Org');
-  const [showPersonaModal, setShowPersonaModal] = useState(false);
   const [activePersona, setActivePersona] = useState<AgentPersona>('Navigator');
+  const { invoke } = useOmniModal();
 
   useEffect(() => {
     setOrgBadge(readOrgBadge());
@@ -45,11 +39,6 @@ export function OmniDashTopHeader({ userEmail }: Readonly<OmniDashTopHeaderProps
     }
   };
 
-  const selectPersona = (next: AgentPersona) => {
-    setActivePersona(next);
-    writeAgentPrefs({ persona: next });
-  };
-
   return (
     <>
       <header className="sticky top-0 z-20 border-b border-orange-500/20 bg-slate-950/95 backdrop-blur" data-testid="omnidash-top-header">
@@ -59,7 +48,7 @@ export function OmniDashTopHeader({ userEmail }: Readonly<OmniDashTopHeaderProps
             <span>APEX OmniDash</span>
           </div>
 
-          <label className="relative hidden flex-1 md:block" aria-label="Global Search" data-testid="global-search-container">
+          <label className="relative hidden flex-1 md:block cursor-pointer" aria-label="Global Search" data-testid="global-search-container" onClick={() => invoke({ id: 'sys-search', provider: 'OmniSearch', type: 'form', title: 'Command Node Search' })}>
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <input
               type="search"
@@ -73,12 +62,13 @@ export function OmniDashTopHeader({ userEmail }: Readonly<OmniDashTopHeaderProps
             type="text"
             value={orgBadge}
             onChange={(event) => updateOrgBadge(event.target.value)}
-            className="h-8 w-28 rounded-md border border-slate-700 bg-slate-900 px-2 text-xs text-slate-200 md:w-36"
+            className="h-8 w-28 rounded-md border border-slate-700 bg-slate-900 px-2 text-xs text-slate-200 md:w-36 cursor-pointer"
             aria-label="Organization Badge"
             data-testid="organization-badge-input"
+            onClick={() => invoke({ id: 'sys-org', provider: 'System', type: 'selection', title: 'Switch Workspace' })}
           />
 
-          <Button asChild className="h-8 bg-orange-600 px-3 text-xs hover:bg-orange-500" data-testid="connect-ai-header-action">
+          <Button asChild className="h-8 bg-orange-600 px-3 text-xs hover:bg-orange-500 cursor-pointer" data-testid="connect-ai-header-action" onClick={(e) => { e.preventDefault(); invoke({ id: 'connect-ai', provider: 'BYOM', type: 'oauth', title: 'Bring Your Own Model' }); }}>
             <Link to="/apex">Connect AI</Link>
           </Button>
 
@@ -87,6 +77,7 @@ export function OmniDashTopHeader({ userEmail }: Readonly<OmniDashTopHeaderProps
             className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-700 bg-slate-900 text-slate-300"
             aria-label="Notifications"
             data-testid="notifications-trigger"
+            onClick={() => invoke({ id: 'sys-feed', provider: 'System', type: 'selection', title: 'System Notifications' })}
           >
             <Bell className="h-4 w-4" />
           </button>
@@ -95,41 +86,23 @@ export function OmniDashTopHeader({ userEmail }: Readonly<OmniDashTopHeaderProps
             type="button"
             variant="outline"
             className="h-8 border-cyan-500/40 bg-slate-900 px-2 text-xs text-cyan-300"
-            onClick={() => setShowPersonaModal(true)}
+            onClick={() => invoke({ id: 'agent-persona', provider: 'APEX Agent', type: 'selection', title: 'Select Agent Persona' })}
             data-testid="persona-trigger"
           >
             {activePersona}
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-700 bg-slate-900 px-2 text-xs text-slate-300"
+                className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-700 bg-slate-900 px-2 text-xs text-slate-300 cursor-pointer"
                 data-testid="user-menu-trigger"
+                onClick={() => invoke({ id: 'sys-profile', provider: 'System', type: 'form', title: 'User Preferences' })}
               >
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-[10px]">{initials}</span>
                 <ChevronDown className="h-3 w-3" />
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link to="/settings">Settings</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/agent">Open Agent</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </header>
-
-      <PersonaModal
-        isOpen={showPersonaModal}
-        currentPersona={activePersona}
-        onClose={() => setShowPersonaModal(false)}
-        onSelect={selectPersona}
-      />
     </>
   );
 }

@@ -80,6 +80,12 @@ interface DemoStore {
   pipeline: DemoPipelineItem[];
   approvals: DemoApproval[];
 
+  // Settings
+  demoMode: boolean;
+  showConnectedEcosystem: boolean;
+  anonymizeKpis: boolean;
+  freezeMode: boolean;
+
   // Actions
   addEntity: (entity: Omit<DemoEntity, 'id' | 'createdAt'>) => void;
   updateEntity: (id: string, updates: Partial<DemoEntity>) => void;
@@ -90,6 +96,10 @@ interface DemoStore {
   approveItem: (id: string) => void;
   rejectItem: (id: string) => void;
   reset: () => void;
+  setDemoMode: (val: boolean) => void;
+  setShowConnectedEcosystem: (val: boolean) => void;
+  setAnonymizeKpis: (val: boolean) => void;
+  setFreezeMode: (val: boolean) => void;
 }
 
 // ============================================================================
@@ -167,6 +177,11 @@ export const useDemoStore = create<DemoStore>((set) => ({
   pipeline: seedPipeline,
   approvals: seedApprovals,
 
+  demoMode: false,
+  showConnectedEcosystem: true,
+  anonymizeKpis: false,
+  freezeMode: false,
+
   // Actions
   addEntity: (entity) =>
     set((state) => ({
@@ -232,4 +247,9 @@ export const useDemoStore = create<DemoStore>((set) => ({
       pipeline: seedPipeline,
       approvals: seedApprovals,
     }),
+
+  setDemoMode: (val) => set({ demoMode: val }),
+  setShowConnectedEcosystem: (val) => set({ showConnectedEcosystem: val }),
+  setAnonymizeKpis: (val) => set({ anonymizeKpis: val }),
+  setFreezeMode: (val) => set({ freezeMode: val }),
 }));
