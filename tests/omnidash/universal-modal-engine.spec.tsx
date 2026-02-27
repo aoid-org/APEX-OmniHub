@@ -14,17 +14,17 @@ import { UniversalModalEngine } from '@/components/omnidash/media/UniversalModal
 import { useOmniModal } from '@/stores/omniModalStore';
 
 // Polyfill window.PointerEvent for Radix UI Dialog
-if (!window.PointerEvent) {
+if (!(globalThis as Record<string, unknown>).PointerEvent) {
   class PointerEvent extends Event {
     button: number;
     ctrlKey: boolean;
-    constructor(type: string, props: any) {
+    constructor(type: string, props: PointerEventInit & { button?: number; ctrlKey?: boolean }) {
       super(type, props);
       this.button = props?.button || 0;
       this.ctrlKey = props?.ctrlKey || false;
     }
   }
-  (window as any).PointerEvent = PointerEvent;
+  (globalThis as Record<string, unknown>).PointerEvent = PointerEvent;
 }
   
 describe('UniversalModalEngine', () => {

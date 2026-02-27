@@ -111,7 +111,7 @@ export const Integrations = () => {
       title: 'QuickBooks Data Sync',
       description: 'Connect APEX OmniHub to QuickBooks to sync ledger data.',
       onComplete: async (payload) => {
-        console.log('QuickBooks integration complete:', payload);
+        console.warn('QuickBooks integration complete:', payload);
       }
     });
   };

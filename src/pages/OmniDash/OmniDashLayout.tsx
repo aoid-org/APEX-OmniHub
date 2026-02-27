@@ -36,7 +36,7 @@ import { Switch } from '@/components/ui/switch';
 import { updateSettings } from '@/omnidash/api';
 import apexLogo from '@/assets/apex_emblem_logo.svg';
 import { UniversalModalEngine } from '@/components/omnidash/media/UniversalModalEngine';
-import './omnidash-layout.css';
+import '@/styles/omnidash-layout.css';
 
 const SIDEBAR_NAV = [
   { key: 'omniboard', label: 'OmniBoard', icon: LayoutDashboard, to: '/omnidash' },
@@ -110,7 +110,7 @@ export const OmniDashLayout = () => {
             <span className="od-sentry-dot" />
             All Systems Operational
           </div>
-          APEX Business Systems Ltd. &middot; OmniDash Platform
+          <span>APEX Business Systems Ltd. {"\u00B7"} OmniDash Platform</span>
         </div>
       </aside>
 

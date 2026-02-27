@@ -89,7 +89,7 @@ describe('OmniMediaPlayer', () => {
 
   it('renders an error fallback for unsupported media types', () => {
     // Cast to force an invalid type for boundary testing
-    useOmniMedia.setState({ currentMedia: { ...MOCK_AUDIO, type: 'unknown' as any } });
+    useOmniMedia.setState({ currentMedia: { ...MOCK_AUDIO, type: 'unknown' as MediaPayload['type'] } });
     
     render(<OmniMediaPlayer />);
     
