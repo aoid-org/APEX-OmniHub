@@ -114,17 +114,28 @@ export function UniversalModalEngine() {
               {activeModal.schema?.items &&
               Array.isArray(activeModal.schema.items)
                 ? (activeModal.schema.items as ReadonlyArray<Record<string, unknown>>).map(
-                    (item, idx) => (
-                      <button
-                        key={item.id != null ? String(item.id) : String(idx)}
-                        type="button"
-                        className="w-full text-left px-4 py-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors text-sm"
-                        onClick={() => handleAction({ selected: item })}
-                        disabled={isProcessing}
-                      >
-                        {typeof item.label === 'string' ? item.label : typeof item.name === 'string' ? item.name : `Option ${idx + 1}`}
-                      </button>
-                    ),
+                    (item, idx) => {
+                      const itemKey = typeof item.id === 'string' || typeof item.id === 'number'
+                        ? String(item.id)
+                        : String(idx);
+                      let itemLabel = `Option ${idx + 1}`;
+                      if (typeof item.label === 'string') {
+                        itemLabel = item.label;
+                      } else if (typeof item.name === 'string') {
+                        itemLabel = item.name;
+                      }
+                      return (
+                        <button
+                          key={itemKey}
+                          type="button"
+                          className="w-full text-left px-4 py-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors text-sm"
+                          onClick={() => handleAction({ selected: item })}
+                          disabled={isProcessing}
+                        >
+                          {itemLabel}
+                        </button>
+                      );
+                    },
                   )
                 : (
                   <p className="text-sm text-muted-foreground text-center py-4">

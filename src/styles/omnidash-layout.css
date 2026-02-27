@@ -163,7 +163,8 @@
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.03);
-  color: #ffffff;
+  --text-color: #ffffff;
+  color: var(--text-color);
   padding: 0 14px 0 38px;
   font-size: 15.729000000000001px; /* 14px * 1.05 */
   font-family: inherit;
@@ -205,7 +206,8 @@
   font-size: 13.91px;
   font-family: 'JetBrains Mono', monospace; /* Tech feel */
   font-weight: 500;
-  color: #e2e8f0;
+  --text-color: #e2e8f0;
+  color: var(--text-color);
   white-space: nowrap;
 }
 
@@ -216,7 +218,8 @@
   padding: 5px 12px;
   border-radius: 10px;
   font-size: 13.482000000000001px; /* 12px * 1.05 */
-  color: #86efac; /* Best contrast */
+  --text-color: #86efac;
+  color: var(--text-color);
   background: rgba(52,211,153,0.25);
   border: 1px solid rgba(52,211,153,0.4);
 }
@@ -226,7 +229,8 @@
   padding: 0 16px;
   border-radius: 17px;
   background: linear-gradient(135deg, #f97316, #c2501f);
-  color: #ffffff;
+  --text-color: #ffffff;
+  color: var(--text-color);
   font-size: 14.552px; /* 13px * 1.05 */
   font-weight: 600;
   font-family: inherit;
@@ -503,7 +507,8 @@
   font-size: 12.305000000000001px; /* 11px * 1.05 */
   font-weight: 700;
   background: rgba(52,211,153,0.12);
-  color: #bbf7d0;
+  --text-color: #bbf7d0;
+  color: var(--text-color);
   border: 1px solid rgba(52,211,153,0.3);
 }
 
@@ -653,7 +658,8 @@
 .od-modal-close:hover {
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.3);
-  color: #ffffff;
+  --text-color: #ffffff;
+  color: var(--text-color);
 }
 
 .center-content-blur {

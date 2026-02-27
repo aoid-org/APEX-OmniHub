@@ -130,12 +130,14 @@
 
 .omni-dock-btn:hover {
   background: rgba(56, 189, 248, 0.08);
-  color: #ffffff;
+  --text-color: #ffffff;
+  color: var(--text-color);
 }
 
 .omni-dock-btn-close:hover {
   background: rgba(239, 68, 68, 0.1);
-  color: #ffffff;
+  --text-color: #ffffff;
+  color: var(--text-color);
 }
 
 /* ===== Volume Row ===== */
