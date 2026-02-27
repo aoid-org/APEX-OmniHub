@@ -22,8 +22,6 @@ import logging
 import os
 import sys
 
-from metrics import start_metrics_server
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -55,7 +53,7 @@ from activities.tools import (
     setup_activities,
 )
 from config import settings
-from metrics import get_metrics_app
+from metrics import get_metrics_app, start_metrics_server
 from omniboard.router import router as omniboard_router
 from security.request_signing import SignatureVerificationMiddleware
 from workflows.agent_saga import AgentWorkflow
