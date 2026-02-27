@@ -234,7 +234,7 @@ describe('Wallet Integration Flow', () => {
       } as unknown);
 
       vi.mocked(useSignMessage).mockReturnValue({
-        signMessageAsync: vi.fn().mockRejectedValue(new Error('User rejected signature')),
+        signMessageAsync: vi.fn().mockImplementation(() => Promise.reject(new Error('User rejected signature'))),
       } as unknown);
 
       global.fetch = vi.fn().mockResolvedValue({
