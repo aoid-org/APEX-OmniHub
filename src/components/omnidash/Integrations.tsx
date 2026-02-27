@@ -3,7 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, CheckCircle2, Clock3, Plug, ShieldAlert } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOmniModal } from '@/stores/omniModalStore';
+import { useOmniMedia } from '@/stores/omniMediaStore';
 import {
   fetchOmniLinkEvents,
   fetchOmniLinkIntegrations,
@@ -97,6 +100,31 @@ function HealthIcon({ status }: Readonly<{ status: HealthStatus }>) {
 
 export const Integrations = () => {
   const { user } = useAuth();
+  const omniModal = useOmniModal();
+  const omniMedia = useOmniMedia();
+
+  const handleTestModal = () => {
+    omniModal.invoke({
+      id: 'demo-qb-auth',
+      provider: 'QuickBooks',
+      type: 'oauth',
+      title: 'QuickBooks Data Sync',
+      description: 'Connect APEX OmniHub to QuickBooks to sync ledger data.',
+      onComplete: async (payload) => {
+        console.log('QuickBooks integration complete:', payload);
+      }
+    });
+  };
+
+  const handleTestMedia = () => {
+    omniMedia.loadMedia({
+      id: 'demo-yt-01',
+      source: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1',
+      type: 'embed',
+      title: 'APEX Platform Demo',
+      provider: 'YouTube'
+    });
+  };
 
   const integrationsQuery = useQuery({
     queryKey: ['omnilink-integrations', user?.id],
@@ -149,6 +177,42 @@ export const Integrations = () => {
         <Badge variant="outline" className="border-cyan-500/30 text-cyan-300">
           {connectors.length} connectors
         </Badge>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <Card className="border-slate-800 bg-slate-900">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Plug className="h-5 w-5 text-purple-400" />
+              Universal Modal Engine Demo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-400 mb-4">
+              Schema-driven global integration layer. Zero DOM bloat. Test the OAuth modal flow.
+            </p>
+            <Button variant="secondary" onClick={handleTestModal} className="w-full">
+              Test QuickBooks OAuth
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-slate-800 bg-slate-900">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-blue-400" />
+              OmniMedia Engine Demo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-400 mb-4">
+              Persistent cross-route PiP player. Click to load media, then navigate between routes.
+            </p>
+            <Button variant="secondary" onClick={handleTestMedia} className="w-full">
+              Test YouTube PiP
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       {isLoading && (
