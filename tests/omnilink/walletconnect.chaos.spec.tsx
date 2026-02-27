@@ -13,8 +13,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { renderWithProviders, mockMonitoringFactory, mockDebugLoggerFactory, mockAuthContextFactory } from './chaos-setup';
 
 // ---------------------------------------------------------------------------
 // Mocks — static, module-scope (not per-test dynamic imports)
@@ -49,11 +48,14 @@ const walletVerifState = {
   chainId: undefined as number | undefined,
 };
 
+const wagmiSignMessageState = { signMessageAsync: vi.fn() };
+const wagmiDisconnectState = { disconnect: vi.fn() };
+
 vi.mock('wagmi', () => ({
   useConnect: vi.fn(() => wagmiConnectState),
   useAccount: vi.fn(() => wagmiAccountState),
-  useSignMessage: vi.fn(() => ({ signMessageAsync: vi.fn() })),
-  useDisconnect: vi.fn(() => ({ disconnect: vi.fn() })),
+  useSignMessage: vi.fn(() => wagmiSignMessageState),
+  useDisconnect: vi.fn(() => wagmiDisconnectState),
 }));
 
 vi.mock('@/hooks/useWalletVerification', () => ({
@@ -87,16 +89,9 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@/lib/monitoring', () => ({
-  logError: vi.fn().mockResolvedValue(undefined),
-  logAnalyticsEvent: vi.fn().mockResolvedValue(undefined),
-  initializeMonitoring: vi.fn(),
-  trackUserAction: vi.fn(),
-}));
+vi.mock('@/lib/monitoring', () => mockMonitoringFactory());
 
-vi.mock('@/lib/debug-logger', () => ({
-  createDebugLogger: vi.fn(() => vi.fn()),
-}));
+vi.mock('@/lib/debug-logger', () => mockDebugLoggerFactory());
 
 // ---------------------------------------------------------------------------
 // Eagerly import components at module level (one-time cost, not per-test)
@@ -110,21 +105,6 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: 0, staleTime: 0 } },
-  });
-}
-
-function renderWithProviders(ui: React.ReactElement) {
-  const queryClient = createTestQueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>{ui}</MemoryRouter>
-    </QueryClientProvider>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Reset mutable state between tests
