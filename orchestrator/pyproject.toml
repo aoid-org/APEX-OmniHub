@@ -112,7 +112,7 @@ ignore = [
 "workflows/**/*.py" = [
   "C901",  # Complex workflow orchestration is expected
 ]
-"main.py" = ["S104"]  # Allow 0.0.0.0 binding for container deployment
+"server.py" = ["S104"]  # Allow 0.0.0.0 binding for container deployment
 
 [tool.black]
 line-length = 100

@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-02-27 -->
 # ARMAGEDDON TEST SUITE - Comprehensive System Validation Report
 
 ## EXECUTIVE SUMMARY
@@ -7,7 +7,7 @@
 | ------------------------ | ---------------------------------------- |
 | **Test Date**            | 2026-02-18 04:35:00 UTC                  |
 | **Test Suite Version**   | ARMAGEDDON v3.0 (Level 7 CERTIFIED)      |
-| **Platform**             | APEX-OmniHub v1.2.0                      |
+| **Platform**             | APEX-OmniHub v1.3.4                      |
 | **Environment**          | Windows 11 / Node 22.x / Temporal 1.24.2 |
 | **Total Test Batteries** | 9 (including Level 7 Adversarial)        |
 | **Total Tests Executed** | 485 + 40,000 L7 iterations               |

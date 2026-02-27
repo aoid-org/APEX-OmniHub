@@ -305,6 +305,7 @@ img {
   animation: fadeSlideUp 600ms 250ms ease-out both;
 }
 .launch-hero__line--3 {
+  text-align: center;
   animation: fadeSlideUp 600ms 400ms ease-out both;
 }
 

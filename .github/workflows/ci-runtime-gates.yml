@@ -8,7 +8,79 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ═══════════════════════════════════════════════════════════════════
+  # ARCHITECTURAL BOUNDARY ENFORCEMENT — v1.3.0-RC
+  # Fail-closed gate: grep-only, < 2 s, blocks all downstream jobs.
+  # ═══════════════════════════════════════════════════════════════════
+  architectural-boundary-enforcement:
+    name: Architectural Boundary Enforcement
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # ── Guardrail 0 — File Existence (Rename-Drift Closure) ──────
+      - name: "Guardrail 0 - File Existence (Rename-Drift Closure)"
+        run: |
+          MONITORED_FILES=(
+            "orchestrator/main.py"
+            "services/orchestrator/api/routes.py"
+            "orchestrator/metrics.py"
+          )
+          MISSING=0
+          for f in "${MONITORED_FILES[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "🛑 BOUNDARY VIOLATION: Monitored file '$f' is missing."
+              echo "   RULE: All boundary-monitored files must exist at their canonical paths. File renames silently bypass path-specific guardrails."
+              echo "   FIX:  Restore '$f' to its canonical path, or update .github/workflows/ci-runtime-gates.yml to track the new location."
+              MISSING=1
+            fi
+          done
+          if [ "$MISSING" -eq 1 ]; then
+            exit 1
+          fi
+          echo "✅ BOUNDARY CLEAR: All 3 monitored files exist at canonical paths."
+
+      # ── Guardrail 1 — Worker Purity (B1: main.py) ───────────────
+      - name: "Guardrail 1 - Worker Purity (main.py must not import HTTP servers)"
+        run: |
+          if grep -qE "^\s*(import|from)\s+(fastapi|uvicorn)\b" orchestrator/main.py; then
+            echo "🛑 BOUNDARY VIOLATION: orchestrator/main.py contains an HTTP server import (fastapi or uvicorn)."
+            echo "   RULE: main.py is a pure Temporal Worker CLI entrypoint — no HTTP server imports permitted."
+            echo "   FIX:  Remove all fastapi/uvicorn imports from main.py. Move HTTP logic to services/orchestrator/api/."
+            exit 1
+          else
+            echo "✅ BOUNDARY CLEAR: main.py worker purity confirmed — no fastapi/uvicorn imports."
+          fi
+
+      # ── Guardrail 2 — API Purity (B2: routes.py) ────────────────
+      - name: "Guardrail 2 - API Purity (routes.py must not init Temporal Workers)"
+        run: |
+          if grep -qE "\.Worker\(|Worker\(|start_worker" services/orchestrator/api/routes.py; then
+            echo "🛑 BOUNDARY VIOLATION: routes.py initializes or references a Temporal Worker."
+            echo "   RULE: API routes are HTTP client-only — Worker lifecycle belongs exclusively in orchestrator/main.py."
+            echo "   FIX:  Remove Worker()/start_worker references. Use Temporal Client to dispatch workflows, not run Workers."
+            exit 1
+          else
+            echo "✅ BOUNDARY CLEAR: routes.py API purity confirmed — no Worker initialization."
+          fi
+
+      # ── Guardrail 3 — Metrics Decoupling (B3: metrics.py) ───────
+      - name: "Guardrail 3 - Metrics Decoupling (metrics.py must not import API layer)"
+        run: |
+          if grep -qE "^\s*from\s+services\.orchestrator\.api\b" orchestrator/metrics.py; then
+            echo "🛑 BOUNDARY VIOLATION: metrics.py imports from services.orchestrator.api."
+            echo "   RULE: The telemetry layer is a shared utility — it must not couple to the API layer."
+            echo "   FIX:  Remove the services.orchestrator.api import. Pass any needed dependencies via function arguments."
+            exit 1
+          else
+            echo "✅ BOUNDARY CLEAR: metrics.py decoupling confirmed — no API layer imports."
+          fi
+
   build-and-test:
+    needs: architectural-boundary-enforcement
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -59,6 +131,11 @@ jobs:
 
       - name: React singleton check
         run: npm run check:react
+
+      - name: Verify Python availability
+        run: |
+          python3 --version
+          which python3
 
       # ─────────────────────────────────────────────────────────────
       # PHASE 2: Unit Tests
@@ -145,7 +222,21 @@ jobs:
           fi
 
       # ─────────────────────────────────────────────────────────────
-      # PHASE 5: Upload Artifacts
+      # PHASE 5: Guard Rail Violation Scan
+      # ─────────────────────────────────────────────────────────────
+      - name: Scan for Guard Rail Violations
+        if: always()
+        run: |
+          mkdir -p logs
+          if grep -rqE "GUARD_RAIL_VIOLATION|policy breach|tri-force violation" logs/ 2>/dev/null; then
+            echo "GUARD_RAIL_VIOLATION_DETECTED=true" >> "$GITHUB_ENV"
+            echo "::error::Guard rail violation detected in logs"
+            exit 1
+          fi
+          echo "No guard rail violations detected"
+
+      # ─────────────────────────────────────────────────────────────
+      # PHASE 6: Upload Artifacts
       # ─────────────────────────────────────────────────────────────
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

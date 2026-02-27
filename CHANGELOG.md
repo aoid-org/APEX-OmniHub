@@ -24,31 +24,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.3] - 2026-02-26
 
-### Added — UI Architecture & Media Security
+### Added — Edge Compute & Deterministic Media Cache
 
-#### Tri-Pane Kinetic Architecture
+#### Vercel Edge CORS Proxy (`api/cors.ts`)
 
-- **OmniDash Hero Restructure:** Refactored the Dashboard Hero section into a 12-column grid "Tri-Pane" layout (Agent col-span-3, OmniSlate col-span-6, Outcomes col-span-3).
-- **Flex Confinement:** Applied rigid flex boundaries to Outcome cards, ensuring values and truncated text fit perfectly within the glass panes.
-- **Agent Axis Transposition:** Reoriented the APEX Agent widget from a horizontal to a vertical stack for improved spatial containment.
+- **Edge Runtime Handler:** Deployed a Vercel Edge Function at `/api/cors?source=<url>` for zero-latency cross-origin media proxying.
+- **WinterCG-Safe Headers:** Response headers reconstructed via `new Headers()` — upstream `Response` objects never mutated (immutable header compliance).
+- **Range Request Passthrough:** Forwards `Range` headers to upstream for media scrubbing and partial content delivery (HTTP 206).
+- **Preflight Support:** Full CORS preflight handling on `OPTIONS` with `Access-Control-Allow-Origin: *`, exposed `Content-Length`, `Content-Range`, `Content-Type`.
+- **Fail-Safe Validation:** Returns HTTP 400 with descriptive JSON body on missing or malformed `source` query parameter.
 
-#### Edge Security Pipeline
+#### LRU Media Cache Governor (`lib/media/EdgeCacheController.ts`)
 
-- **EdgeCORSProxy:** Deployed a stateless Cloudflare Edge Worker (`edge-cors-proxy.js`) to intercept and append `Access-Control-Allow-Origin: *` headers to external media.
-- **EdgeCacheController Routing:** Updated `prefetchAndCacheMedia` to route non-same-origin media requests through the CORS proxy, eliminating Web Audio API `MediaElementAudioSourceNode` cross-origin failures.
+- **250 MB Hard Ceiling:** Deterministic LRU eviction via localStorage ledger — sorted ascending by `lastAccessed`, evicts oldest entries until `totalBytes <= MAX_BYTES`.
+- **Cache API Integration:** Caches only HTTP 200 responses; never stores 206 partial content.
+- **Ledger Persistence:** localStorage-backed `apex_omni_cache_ledger` with `saveLedger()` quota-exceeded guard — on failure, cache entry is deleted to maintain ledger-cache consistency.
+- **Singleton Export:** `edgeCacheController` singleton — no Zustand, no React, no npm dependencies (pure Web APIs).
+- **Public API (Frozen Signatures):** `proxyMediaUrl(sourceUrl)`, `clearAll()`, `evictUrl(sourceUrl)` — fail-safe fallback to CORS proxy URL on any error.
 
-### Fixed — Quality Gates & Accessibility
+### Fixed — Code Quality (SonarQube Compliance)
 
-- **PersonaModal HTML Semantics:** Replaced `role="button"` on the backdrop with a native `<button type="button">` and replaced the inner `role="dialog"` container with a native `<dialog open>` element, resolving three major SonarQube Code Smells.
-- **CI Unused Variables:** Removed legacy `ECOSYSTEM` constant merged from upstream `main` that triggered an ESLint warning and CI failure.
-- **TypeScript Warnings:** Fixed global object references (`globalThis` vs `window`), cleared `TODO` tags, added explicit `NOSONAR` boundaries for intentional IIFE top-level awaits, and optimized array instantiation in `monitoring.test.ts`.
+- **ES2020 Portability:** Replaced bare `window` references with `globalThis.window` and `globalThis.location` in `EdgeCacheController.buildFetchUrl()` (L109, L112).
+- **Dead Assignment Removal:** Removed useless `ledger =` reassignment at L182 — `enforceMemoryCeiling()` return value was never read after assignment.
 
 ### Quality Gates
 
 - Build: 0 errors
 - TypeScript: 0 errors
 - ESLint: 0 errors, 0 warnings
-- SonarQube: A-grade maintained
+- SonarQube: A-grade maintained (3 code smells resolved)
+
+---
+
+## [1.3.3] - 2026-02-26
+
+### Added — Production Infrastructure Enhancements
+
+#### Task 1: Idempotency Hit-Rate Monitoring
+- `orchestrator/metrics.py`: Prometheus counters `idempotency_hits_total` / `idempotency_misses_total` with `/metrics` endpoint
+- `docs/monitoring/idempotency_hitrate.json`: Grafana dashboard with hit-rate panel and < 95% alert rule
+- Integrated metrics server startup into `orchestrator/main.py` worker boot sequence
+- `tests/test_idempotency_metrics.py`: Unit tests for counter labels, hit-rate math, server idempotency
+
+#### Task 2: pg_cron Automatic Receipt Cleanup
+- `supabase/migrations/20260226000000_enable_pg_cron_receipt_cleanup.sql`: Idempotent migration enabling pg_cron + daily 03:00 UTC cleanup of expired receipts > 30 days
+- `supabase/migrations/20260226000001_rollback_receipt_cleanup.sql`: Safe rollback migration
+- `scripts/verify_cron.sql`: Verification query for cron job status and run history
+- `tests/test_receipt_cleanup.py`: Unit tests for cleanup SQL logic and rollback existence
+
+#### Task 3: Guard Rail Violation Alerting
+- `.github/workflows/ci-runtime-gates.yml`: Added guard rail scan step (Phase 5) + Python availability verification
+- `.github/workflows/alert-guard-rail-violation.yml`: New workflow — triggers on CI failure, opens GitHub Issue labeled `guard-rail-violation`, posts to Slack `#platform-alerts`
+- `tests/test_guard_rail_alert.py`: Tests for grep pattern matching, false-positive prevention
+
+#### Documentation Updates
+- `docs/ops/OPS_RUNBOOK.md`: Added idempotency monitoring, pg_cron cleanup, guard rail response sections
+- `docs/project-status/LAUNCH_READINESS_v1.0.0.md`: Added v1.3.2+ production enhancement checklist
+
+### Quality Gates
+- Build: PASS | TypeScript: PASS | ESLint: 0 errors, 0 warnings
+- Python ruff: PASS | All existing tests: PASS
+- Zero breaking changes to existing CI, workflows, or runtime behavior
 
 ---
 

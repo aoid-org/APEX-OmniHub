@@ -12,12 +12,12 @@
 **INTELLIGENCE DESIGNED.**
 _Directable • Accountable • Dependable_
 
-**Version:** 1.3.3 | **Release Date:** 2026-02-26
+**Version:** 1.3.4 | **Release Date:** 2026-02-27
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
 [![SonarQube](https://img.shields.io/badge/sonarqube-A-success)]()
-[![Tests](https://img.shields.io/badge/tests-265%2B%20pass-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-597%2B%20pass-brightgreen)]()
 [![Armageddon](https://img.shields.io/badge/armageddon-L7%20CERTIFIED-gold)]()
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 
@@ -37,19 +37,20 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Verified 2026-02-26)
+## Platform Statistics (Repository Snapshot 2026-02-27)
 
-| Metric                  | Value                                     |
-| ----------------------- | ----------------------------------------- |
-| **Source Files**        | 259 TypeScript/React files                |
-| **React Components**    | 93 component files (49 shadcn/ui)         |
-| **Page Routes**         | 25 page components                        |
-| **Edge Functions**      | 18 Supabase serverless functions          |
-| **Database Migrations** | 43 versioned SQL schemas                  |
-| **CI/CD Pipelines**     | 11 GitHub Actions workflows               |
-| **Test Files**          | 87 test specifications                    |
-| **Custom Hooks**        | 12 React hooks                            |
-| **Integration Modules** | 4 (Maestro, OmniLink, OmniPort, Supabase) |
+| Metric                  | Value                              |
+| ----------------------- | ---------------------------------- |
+| **Source Files (`src/`)** | 297 total files                     |
+| **TypeScript/TSX (`src/`)** | 267 files                        |
+| **React Components (`src/`)** | 134 `.tsx` component files      |
+| **Page Routes (`src/pages/`)** | 27 page files                   |
+| **Edge Functions (`supabase/functions/`)** | 22 function directories |
+| **Database Migrations (`supabase/migrations/`)** | 50 SQL migration files |
+| **CI/CD Workflows (`.github/workflows/`)** | 12 workflow files      |
+| **Test Specs (`tests/` + `e2e/`)** | 93 test specs (`*.test.ts`, `*.spec.ts`) |
+| **Custom Hooks (`src/`)** | 14 hook files matching `use*.ts*` |
+| **Orchestrator (Python)** | 84 files (Temporal workers, activities, security) |
 
 ---
 
@@ -100,7 +101,16 @@ The "Trinity" connectivity layer:
 - **OmniPort**: The Multimodal Normalizer for standardized I/O and DLQ (`20260124000000_omniport_dlq.sql`).
 - **OmniTrace**: Full replay & tracing capability (`20260125000000_omnitrace_replay.sql`).
 
-### 5) Web3-Native Identity (Optional)
+### 5) Edge Compute Layer (Media & CORS)
+
+Client-side infrastructure for deterministic media delivery:
+
+- **Edge CORS Proxy**: Vercel Edge Function (`api/cors.ts`) with WinterCG-safe header handling and Range passthrough.
+- **LRU Media Cache**: 250 MB ceiling with localStorage ledger eviction (`lib/media/EdgeCacheController.ts`).
+- **Cloudflare Worker**: Stateless CORS proxy at `edge/cors-proxy/edge-cors-proxy.js` for production CDN.
+- **Fail-Safe Design**: Every cache miss gracefully degrades to proxy URL — zero silent failures.
+
+### 6) Web3-Native Identity (Optional)
 
 - SIWE (Sign-In with Ethereum) — `supabase/functions/web3-verify/`
 - NFT verification — `supabase/functions/verify-nft/`
@@ -109,7 +119,7 @@ The "Trinity" connectivity layer:
 
 ---
 
-## Edge Functions (18 Deployed)
+## Edge Functions (22 Directories in Repository)
 
 | Function                 | Purpose                    |
 | ------------------------ | -------------------------- |
@@ -188,7 +198,7 @@ bun test           # Vitest suite
 bun run build      # Production build
 ```
 
-### CI/CD Pipelines (8 Workflows)
+### CI/CD Pipelines (Selected Workflows)
 
 | Workflow                | Trigger         | Purpose                      |
 | ----------------------- | --------------- | ---------------------------- |

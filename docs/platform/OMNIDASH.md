@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-02-27 -->
 # OmniDash (Founder/Sales Dashboard)
 
 ## Setup
@@ -53,4 +53,22 @@ Based on `src/pages/OmniDash/Today.tsx` and database schema.
 - **Data Access**: `src/omnidash/api.ts` (Typed API Layer)
 - **Security**: Row Level Security (RLS) enabled on all widgets.
 - **Edge Functions**: Secure invocation via `supabase/functions/execute-automation`.
+
+## OmniMedia Engine (v1.3.4)
+
+Media playback and caching subsystem integrated into the OmniDash UI.
+
+### Components
+- **OmniMediaPlayer** (`src/components/omnidash/media/OmniMediaPlayer.tsx`) — Adaptive renderer for audio, video, and embed types.
+- **ClientComputeNode** (`src/components/omnidash/media/ClientComputeNode.tsx`) — Web Audio API graph compute for audio processing.
+- **GlobalMediaDock** (`src/components/omnidash/media/GlobalMediaDock.tsx`) — Persistent media player dock UI.
+- **UniversalModalEngine** (`src/components/omnidash/media/UniversalModalEngine.tsx`) — Schema-driven modal renderer (OAuth, form, selection, confirmation).
+
+### State Management (Zustand)
+- **`useOmniMedia`** (`src/stores/omniMediaStore.ts`) — Media playback state with single-stream enforcement and blob URL memory safety.
+- **`useOmniModal`** (`src/stores/omniModalStore.ts`) — Modal lifecycle with Zod boundary validation and deterministic teardown.
+
+### Edge Cache Integration
+- **LRU Cache Governor** (`lib/media/EdgeCacheController.ts`) — 250 MB ceiling, Cache API + localStorage ledger.
+- **CORS Proxy** — Dual-layer: Vercel Edge (`api/cors.ts`) + Cloudflare Worker (`edge/cors-proxy/edge-cors-proxy.js`).
 
