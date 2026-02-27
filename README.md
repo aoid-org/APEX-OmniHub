@@ -17,7 +17,7 @@ _Directable • Accountable • Dependable_
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
 [![SonarQube](https://img.shields.io/badge/sonarqube-A-success)]()
-[![Tests](https://img.shields.io/badge/tests-265%2B%20pass-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-597%2B%20pass-brightgreen)]()
 [![Armageddon](https://img.shields.io/badge/armageddon-L7%20CERTIFIED-gold)]()
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 
@@ -37,19 +37,20 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-02-26)
+## Platform Statistics (Repository Snapshot 2026-02-27)
 
 | Metric                  | Value                              |
 | ----------------------- | ---------------------------------- |
-| **Source Files (`src/`)** | 277 total files                     |
-| **TypeScript/TSX (`src/`)** | 260 files                        |
-| **React Components (`src/`)** | 130 `.tsx` component files      |
+| **Source Files (`src/`)** | 297 total files                     |
+| **TypeScript/TSX (`src/`)** | 267 files                        |
+| **React Components (`src/`)** | 134 `.tsx` component files      |
 | **Page Routes (`src/pages/`)** | 27 page files                   |
 | **Edge Functions (`supabase/functions/`)** | 22 function directories |
-| **Database Migrations (`supabase/migrations/`)** | 48 SQL migration files |
+| **Database Migrations (`supabase/migrations/`)** | 50 SQL migration files |
 | **CI/CD Workflows (`.github/workflows/`)** | 12 workflow files      |
-| **Test Specs (`tests/` + `e2e/`)** | 86 test specs (`*.test.ts`, `*.spec.ts`) |
+| **Test Specs (`tests/` + `e2e/`)** | 93 test specs (`*.test.ts`, `*.spec.ts`) |
 | **Custom Hooks (`src/`)** | 14 hook files matching `use*.ts*` |
+| **Orchestrator (Python)** | 84 files (Temporal workers, activities, security) |
 
 ---
 
