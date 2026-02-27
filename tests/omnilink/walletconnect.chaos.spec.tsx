@@ -103,6 +103,7 @@ vi.mock('@/lib/debug-logger', () => ({
 // ---------------------------------------------------------------------------
 
 import { WalletConnect } from '@/components/WalletConnect';
+import type { WalletState } from '@/lib/web3/types';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
