@@ -247,27 +247,26 @@ export const DashboardOverview = memo(function DashboardOverview() {
             className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
             style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E")' }}
           />
+          {/* OmniSLATE badge — top-left */}
+          <span style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000, padding: '8px 14px', fontSize: 11.77, fontWeight: 800, color: '#a1a1aa', letterSpacing: '0.15em', textTransform: 'uppercase' }}>OmniSlate</span>
+          {/* CleanSlate + Lightbulb — top-right */}
+          <div style={{ position: 'absolute', top: 0, right: 0, zIndex: 1000, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px' }}>
+            <button type="button" onClick={handleCleanSlate} style={{
+              fontSize: 11.77, fontWeight: 600, padding: '5px 12px', borderRadius: 8,
+              background: `rgba(194,80,31,0.06)`, border: `1px solid rgba(194,80,31,0.2)`,
+              color: '#f97316', cursor: 'pointer', fontFamily: 'inherit',
+            }}>CleanSlate</button>
+            {health !== 'green' && (
+              <button type="button" onClick={() => setActiveInsight(p => p ? null : '__global__')} title="View health insights" style={{
+                width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
+                background: s.bg, border: `1px solid ${s.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <img src={lightbulbIcon} alt="Insights" style={{ width: 14, height: 14 }} />
+              </button>
+            )}
+          </div>
           <div className="relative z-10 flex flex-col gap-3">
-            {/* OmniSlate header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 11.77, fontWeight: 800, color: '#a1a1aa', letterSpacing: '0.15em', textTransform: 'uppercase' }}>OmniSlate</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {health !== 'green' && (
-                  <button type="button" onClick={() => setActiveInsight(p => p ? null : '__global__')} title="View health insights" style={{
-                    width: 28, height: 28, borderRadius: 8, cursor: 'pointer',
-                    background: s.bg, border: `1px solid ${s.border}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <img src={lightbulbIcon} alt="Insights" style={{ width: 14, height: 14 }} />
-                  </button>
-                )}
-                <button type="button" onClick={handleCleanSlate} style={{
-                  fontSize: 11.77, fontWeight: 600, padding: '5px 12px', borderRadius: 8,
-                  background: `rgba(194,80,31,0.06)`, border: `1px solid rgba(194,80,31,0.2)`,
-                  color: '#f97316', cursor: 'pointer', fontFamily: 'inherit',
-                }}>CleanSlate</button>
-              </div>
-            </div>
 
             {/* Insight panel */}
             {activeInsight === '__global__' && (
@@ -336,7 +335,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
 
             {/* Prompt bar + TTS mic */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 'auto' }}>
-              <input type="text" placeholder="Ask APEX Agent to do anything..." style={{
+              <input type="text" placeholder="Ask APEX Agent" style={{
                 flex: 1, height: 44, borderRadius: 12, padding: '0 20px',
                 background: 'rgba(255,255,255,0.03)', border: `1px solid rgba(255,255,255,0.1)`,
                 color: '#dfe6fe', fontSize: 15, outline: 'none', fontFamily: 'inherit',
