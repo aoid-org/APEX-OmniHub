@@ -25,9 +25,8 @@ def _fresh_metrics():
 
 def test_counter_labels_exist():
     """Counters should accept workflow/activity labels."""
-    mod, counter = _fresh_metrics()
+    mod, _ = _fresh_metrics()
     # Verify Counter was called with correct names
-    calls = [c[0][0] for c in MagicMock.call_args_list.__get__(counter.__class__.Counter) or []]
     # At module level, Counter() is called - we verify the mock was used
     assert mod.idempotency_hits is not None
     assert mod.idempotency_misses is not None
