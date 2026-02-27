@@ -53,7 +53,7 @@ from activities.tools import (
     setup_activities,
 )
 from config import settings
-from metrics import get_metrics_app
+from metrics import get_metrics_app, start_metrics_server
 from omniboard.router import router as omniboard_router
 from security.request_signing import SignatureVerificationMiddleware
 from workflows.agent_saga import AgentWorkflow
@@ -164,6 +164,7 @@ async def start_worker() -> None:
         Temporal Server → Task Queue → Worker (this process) → Workflows/Activities
     """
     logger.info("🚀 Starting APEX Orchestrator Worker...")
+    start_metrics_server(port=int(os.getenv("METRICS_PORT", "9090")))
     logger.info(f"Environment: {settings.environment}")
     logger.info(f"Temporal: {settings.temporal_host} (namespace={settings.temporal_namespace})")
     logger.info(f"Task Queue: {settings.temporal_task_queue}")

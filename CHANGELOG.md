@@ -41,31 +41,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.3] - 2026-02-26
 
-### Added — UI Architecture & Media Security
+### Added — Production Infrastructure Enhancements
 
-#### Tri-Pane Kinetic Architecture
+#### Task 1: Idempotency Hit-Rate Monitoring
+- `orchestrator/metrics.py`: Prometheus counters `idempotency_hits_total` / `idempotency_misses_total` with `/metrics` endpoint
+- `docs/monitoring/idempotency_hitrate.json`: Grafana dashboard with hit-rate panel and < 95% alert rule
+- Integrated metrics server startup into `orchestrator/main.py` worker boot sequence
+- `tests/test_idempotency_metrics.py`: Unit tests for counter labels, hit-rate math, server idempotency
 
-- **OmniDash Hero Restructure:** Refactored the Dashboard Hero section into a 12-column grid "Tri-Pane" layout (Agent col-span-3, OmniSlate col-span-6, Outcomes col-span-3).
-- **Flex Confinement:** Applied rigid flex boundaries to Outcome cards, ensuring values and truncated text fit perfectly within the glass panes.
-- **Agent Axis Transposition:** Reoriented the APEX Agent widget from a horizontal to a vertical stack for improved spatial containment.
+#### Task 2: pg_cron Automatic Receipt Cleanup
+- `supabase/migrations/20260226000000_enable_pg_cron_receipt_cleanup.sql`: Idempotent migration enabling pg_cron + daily 03:00 UTC cleanup of expired receipts > 30 days
+- `supabase/migrations/20260226000001_rollback_receipt_cleanup.sql`: Safe rollback migration
+- `scripts/verify_cron.sql`: Verification query for cron job status and run history
+- `tests/test_receipt_cleanup.py`: Unit tests for cleanup SQL logic and rollback existence
 
-#### Edge Security Pipeline
+#### Task 3: Guard Rail Violation Alerting
+- `.github/workflows/ci-runtime-gates.yml`: Added guard rail scan step (Phase 5) + Python availability verification
+- `.github/workflows/alert-guard-rail-violation.yml`: New workflow — triggers on CI failure, opens GitHub Issue labeled `guard-rail-violation`, posts to Slack `#platform-alerts`
+- `tests/test_guard_rail_alert.py`: Tests for grep pattern matching, false-positive prevention
 
-- **EdgeCORSProxy:** Deployed a stateless Cloudflare Edge Worker (`edge-cors-proxy.js`) to intercept and append `Access-Control-Allow-Origin: *` headers to external media.
-- **EdgeCacheController Routing:** Updated `prefetchAndCacheMedia` to route non-same-origin media requests through the CORS proxy, eliminating Web Audio API `MediaElementAudioSourceNode` cross-origin failures.
-
-### Fixed — Quality Gates & Accessibility
-
-- **PersonaModal HTML Semantics:** Replaced `role="button"` on the backdrop with a native `<button type="button">` and replaced the inner `role="dialog"` container with a native `<dialog open>` element, resolving three major SonarQube Code Smells.
-- **CI Unused Variables:** Removed legacy `ECOSYSTEM` constant merged from upstream `main` that triggered an ESLint warning and CI failure.
-- **TypeScript Warnings:** Fixed global object references (`globalThis` vs `window`), cleared `TODO` tags, added explicit `NOSONAR` boundaries for intentional IIFE top-level awaits, and optimized array instantiation in `monitoring.test.ts`.
+#### Documentation Updates
+- `docs/ops/OPS_RUNBOOK.md`: Added idempotency monitoring, pg_cron cleanup, guard rail response sections
+- `docs/project-status/LAUNCH_READINESS_v1.0.0.md`: Added v1.3.2+ production enhancement checklist
 
 ### Quality Gates
-
-- Build: 0 errors
-- TypeScript: 0 errors
-- ESLint: 0 errors, 0 warnings
-- SonarQube: A-grade maintained
+- Build: PASS | TypeScript: PASS | ESLint: 0 errors, 0 warnings
+- Python ruff: PASS | All existing tests: PASS
+- Zero breaking changes to existing CI, workflows, or runtime behavior
 
 ---
 

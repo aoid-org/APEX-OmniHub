@@ -60,6 +60,11 @@ jobs:
       - name: React singleton check
         run: npm run check:react
 
+      - name: Verify Python availability
+        run: |
+          python3 --version
+          which python3
+
       # ─────────────────────────────────────────────────────────────
       # PHASE 2: Unit Tests
       # ─────────────────────────────────────────────────────────────
@@ -145,7 +150,21 @@ jobs:
           fi
 
       # ─────────────────────────────────────────────────────────────
-      # PHASE 5: Upload Artifacts
+      # PHASE 5: Guard Rail Violation Scan
+      # ─────────────────────────────────────────────────────────────
+      - name: Scan for Guard Rail Violations
+        if: always()
+        run: |
+          mkdir -p logs
+          if grep -rqE "GUARD_RAIL_VIOLATION|policy breach|tri-force violation" logs/ 2>/dev/null; then
+            echo "GUARD_RAIL_VIOLATION_DETECTED=true" >> "$GITHUB_ENV"
+            echo "::error::Guard rail violation detected in logs"
+            exit 1
+          fi
+          echo "No guard rail violations detected"
+
+      # ─────────────────────────────────────────────────────────────
+      # PHASE 6: Upload Artifacts
       # ─────────────────────────────────────────────────────────────
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
