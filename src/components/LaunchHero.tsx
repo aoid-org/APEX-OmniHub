@@ -81,7 +81,7 @@ function HeroHeadline(): JSX.Element {
             anything.
           </em>
         </span>
-        <span className="block">
+        <span className="block text-center">
           Stay in{' '}
           <em className="not-italic bg-gradient-to-br from-launch-gold to-yellow-300 bg-clip-text text-transparent">
             control.
