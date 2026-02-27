@@ -26,7 +26,6 @@ SET request.jwt.claims = '{"app_metadata": {"tenants": [{"tenant_id": "aaaaaaaa-
 SELECT COUNT(*) AS accessible_rows 
 FROM audit_logs 
 WHERE tenant_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
--- Expected: 0 (RLS blocks cross-tenant access)
 
 -- Test 2: Idempotency Chaos (Armageddon Battery 02)
 -- Verify same idempotency_key can exist in different tenants
@@ -41,7 +40,6 @@ VALUES
 SELECT COUNT(*) as total_records
 FROM idempotency_receipts 
 WHERE idempotency_key = 'test-key-123';
--- Expected: 2 (cross-tenant isolation)
 
 -- Test 3: Tenant Data Backfill
 -- Verify personal tenant generation for existing users
@@ -74,7 +72,6 @@ SELECT COUNT(*) as tenant_count
 FROM tenant_members tm
 JOIN tenants t ON tm.tenant_id = t.id
 WHERE tm.user_id = 'test-user-123';
--- Expected: 1
 
 -- Test 4: JWT Hook Verification
 -- Verify custom_access_token_hook function exists and is properly configured
@@ -172,6 +169,3 @@ DELETE FROM audit_logs WHERE actor_id LIKE 'user-%-uuid';
 DELETE FROM tenant_members WHERE user_id = 'test-user-123';
 DELETE FROM tenants WHERE name LIKE '%Personal Workspace%';
 DELETE FROM tenants WHERE id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
-
--- Note: auth.users deletion requires special handling in Supabase
--- DELETE FROM auth.users WHERE id = 'test-user-123';
