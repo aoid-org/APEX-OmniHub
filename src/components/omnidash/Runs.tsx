@@ -239,7 +239,7 @@ function RunDetailPanel({ workflowId }: { readonly workflowId: string }) {
           <p className="text-sm text-muted-foreground">No events recorded</p>
         ) : (
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {detail.events.map((event: any, idx: number) => (
+            {detail.events.map((event: (typeof detail.events)[number], idx: number) => (
               <div
                 key={event.id}
                 className={`flex items-start gap-2 text-sm border-l-2 pl-3 transition-all ${idx === replayIndex
