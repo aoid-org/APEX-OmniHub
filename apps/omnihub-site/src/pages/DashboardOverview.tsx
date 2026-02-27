@@ -59,11 +59,6 @@ const APPS = [
   { name: 'Custom API',  cat: 'HTTP',       logo: '',                      synced: '',    status: 'Live' as const },
 ] as const;
 
-const ECOSYSTEM = [
-  { name: 'aSpiral',          desc: 'AI Workforce Engine',    color: '#38bdf8', status: 'Active' },
-  { name: 'TradeLine 24/7',   desc: 'Real-Time Trading',      color: '#f97316', status: 'Active' },
-  { name: 'Armageddon Test',  desc: 'Chaos Engineering Suite', color: '#ef4444', status: 'Standby' },
-] as const;
 
 function deriveHealth(items: readonly ContextItem[]): 'green' | 'yellow' | 'red' {
   if (items.some(i => i.health === 'red')) return 'red';
