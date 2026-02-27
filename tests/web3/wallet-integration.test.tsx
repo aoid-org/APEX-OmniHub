@@ -74,26 +74,26 @@ describe('Wallet Integration Flow', () => {
       connectors: [{ id: 'injected', name: 'MetaMask' }] as unknown,
       connect: vi.fn(),
       isPending: false,
-    } as unknown);
+    } as unknown as ReturnType<typeof useConnect>);
 
     vi.mocked(useAccount).mockReturnValue({
       address: undefined,
       isConnected: false,
       chainId: undefined,
-    } as unknown);
+    } as unknown as ReturnType<typeof useAccount>);
 
     vi.mocked(useSignMessage).mockReturnValue({
       signMessageAsync: vi.fn(),
-    } as unknown);
+    } as unknown as ReturnType<typeof useSignMessage>);
 
     vi.mocked(useDisconnect).mockReturnValue({
       disconnect: vi.fn(),
-    } as unknown);
+    } as unknown as ReturnType<typeof useDisconnect>);
 
     vi.mocked(supabase.auth.getSession).mockResolvedValue({
       data: { session: { user: { id: 'user123' }, access_token: 'token123' } },
       error: null,
-    } as unknown);
+    } as unknown as any);
   });
 
   afterEach(() => {
@@ -106,7 +106,7 @@ describe('Wallet Integration Flow', () => {
         address: undefined,
         isConnected: false,
         chainId: undefined,
-      } as unknown);
+      } as unknown as ReturnType<typeof useAccount>);
 
       render(
         <Web3Provider>
@@ -122,13 +122,13 @@ describe('Wallet Integration Flow', () => {
         address: mockAddress,
         isConnected: true,
         chainId: 1,
-      } as unknown);
+      } as unknown as ReturnType<typeof useAccount>);
 
       vi.mocked(supabase.from).mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-      } as unknown);
+      } as unknown as any);
 
       render(
         <Web3Provider>
@@ -150,11 +150,11 @@ describe('Wallet Integration Flow', () => {
         address: mockAddress,
         isConnected: true,
         chainId: 1,
-      } as unknown);
+      } as unknown as ReturnType<typeof useAccount>);
 
       vi.mocked(useSignMessage).mockReturnValue({
         signMessageAsync: vi.fn().mockResolvedValue(mockSignature),
-      } as unknown);
+      } as unknown as ReturnType<typeof useSignMessage>);
 
       // Mock nonce request
       global.fetch = vi.fn().mockImplementation((url: string) => {
@@ -193,7 +193,7 @@ describe('Wallet Integration Flow', () => {
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
         update: vi.fn().mockReturnThis(),
-      } as unknown);
+      } as unknown as any);
 
       render(
         <Web3Provider>
@@ -231,11 +231,11 @@ describe('Wallet Integration Flow', () => {
         address: mockAddress,
         isConnected: true,
         chainId: 1,
-      } as unknown);
+      } as unknown as ReturnType<typeof useAccount>);
 
       vi.mocked(useSignMessage).mockReturnValue({
         signMessageAsync: vi.fn().mockImplementation(() => Promise.reject(new Error('User rejected signature'))),
-      } as unknown);
+      } as unknown as ReturnType<typeof useSignMessage>);
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -253,7 +253,7 @@ describe('Wallet Integration Flow', () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-      } as unknown);
+      } as unknown as any);
 
       render(
         <Web3Provider>
@@ -287,7 +287,7 @@ describe('Wallet Integration Flow', () => {
         address: mockAddress,
         isConnected: true,
         chainId: 1,
-      } as unknown);
+      } as unknown as ReturnType<typeof useAccount>);
 
       vi.mocked(supabase.from).mockReturnValue({
         select: vi.fn().mockReturnThis(),
@@ -301,7 +301,7 @@ describe('Wallet Integration Flow', () => {
           error: null,
         }),
         update: vi.fn().mockReturnThis(),
-      } as unknown);
+      } as unknown as any);
 
       render(
         <Web3Provider>
@@ -324,11 +324,11 @@ describe('Wallet Integration Flow', () => {
         address: mockAddress,
         isConnected: true,
         chainId: 1,
-      } as unknown);
+      } as unknown as ReturnType<typeof useAccount>);
 
       vi.mocked(useDisconnect).mockReturnValue({
         disconnect: mockDisconnect,
-      } as unknown);
+      } as unknown as ReturnType<typeof useDisconnect>);
 
       vi.mocked(supabase.from).mockReturnValue({
         select: vi.fn().mockReturnThis(),
@@ -341,7 +341,7 @@ describe('Wallet Integration Flow', () => {
           error: null,
         }),
         update: vi.fn().mockReturnThis(),
-      } as unknown);
+      } as unknown as any);
 
       render(
         <Web3Provider>
