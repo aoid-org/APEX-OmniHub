@@ -1,10 +1,11 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-02-27 -->
 # APEX OmniHub Documentation
 
 **Enterprise AI Orchestration Platform**
 
-- **Document Version:** 2.1.0
-- **Last Updated:** 2026-02-20
+- **Document Version:** 2.2.0
+- **Platform Version:** 1.3.4
+- **Last Updated:** 2026-02-27
 - **Audit Baseline:** [Comprehensive Documentation Audit 2026-02-20](audits/COMPREHENSIVE_DOCUMENTATION_AUDIT_2026_02_20.md)
 
 ---
@@ -44,6 +45,7 @@ Core platform components with dedicated documentation:
 | **OmniLink**      | Integration bus                 | [OMNILINK_MANIFESTO_LITE.md](platform/OMNILINK_MANIFESTO_LITE.md) |
 | **OmniBoard**     | Onboarding engine               | [OMNIBOARD.md](platform/OMNIBOARD.md)                             |
 | **OmniLink PWA**  | Mobile PWA capabilities         | [OMNILINK_MOBILE_PWA.md](platform/OMNILINK_MOBILE_PWA.md)         |
+| **OmniSentry**    | Health & monitoring system      | [OMNISENTRY.md](platform/OMNISENTRY.md)                           |
 | **Connector Kit** | Integration adapters            | [CONNECTOR_KIT.md](platform/CONNECTOR_KIT.md)                     |
 
 ---
@@ -278,8 +280,8 @@ docs/
 
 ---
 
-**Last Updated:** February 15, 2026
-**Release:** v1.0.0
+**Last Updated:** February 27, 2026
+**Release:** v1.3.4
 
 
 ## Documentation Governance

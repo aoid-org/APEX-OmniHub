@@ -2,9 +2,10 @@
 
 ## Status: PASSED
 
-**Analysis Date:** 2026-02-20  
-**Project:** apexbusiness-systems_APEX-OmniHub  
-**Quality Gate:** Sonar way  
+**Analysis Date:** 2026-02-27
+**Project:** apexbusiness-systems_APEX-OmniHub
+**Platform Version:** 1.3.4
+**Quality Gate:** Sonar way
 **Result:** PASSED
 
 ## Metrics
@@ -15,12 +16,23 @@
 | Security Hotspots | 0 | 0 | PASS |
 | Duplication on New Code | 0.0% | <= 3.0% | PASS |
 | Coverage on New Code | 0.0% | No gate | N/A |
+| Code Smells Resolved | 3 | N/A | IMPROVED |
 
 ## Analysis Reference
 
 - SonarCloud Project: https://sonarcloud.io/project/overview?id=apexbusiness-systems_APEX-OmniHub
 - Quality Gate: Sonar way (standard)
 - Analysis triggered by: GitHub Actions CI (automatic analysis)
+
+## v1.3.4 Code Smell Resolutions (2026-02-27)
+
+Three code smells resolved in `lib/media/EdgeCacheController.ts`:
+
+| Line | Category | Rule | Severity | Resolution |
+|------|----------|------|----------|------------|
+| L109 | Consistency / ES2020 Portability | Prefer `globalThis.window` over `window` | Minor | Replaced bare `window` with `globalThis.window` |
+| L112 | Consistency / ES2020 Portability | Prefer `globalThis` over `window` | Minor | Replaced `window.location.host` with `globalThis.location.host` |
+| L182 | Intentionality / Unused Assignment | Remove useless assignment to variable | Major | Removed dead `ledger =` reassignment (return value never read) |
 
 ## Verification
 
