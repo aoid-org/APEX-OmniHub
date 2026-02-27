@@ -414,6 +414,14 @@ class AgentWorkflow:
         self.saga = SagaContext(workflow_instance=self)
         self.workflow_context = context or {}
 
+        # Extract tenant_id from workflow context or default to user_id
+        tenant_id = context.get("tenant_id") or user_id
+
+        # Inject into workflow context for downstream activities
+        self.workflow_context["tenant_id"] = tenant_id
+
+        workflow.logger.info(f"🔒 Workflow bound to tenant: {tenant_id}")
+
         # Restore snapshot if this is a continue-as-new
         if context and "step_results" in context:
             workflow.logger.info("♻️  Restoring from continue-as-new snapshot")
