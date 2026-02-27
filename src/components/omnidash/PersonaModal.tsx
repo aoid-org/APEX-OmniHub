@@ -67,11 +67,17 @@ const PersonaModal: React.FC<PersonaModalProps> = ({
   return (
     <div
       className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200"
+      role="button"
+      tabIndex={0}
       onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Escape' || e.key === 'Enter') onClose(); }}
     >
       <div
         className="bg-[#0a1628] border border-slate-800 rounded-2xl p-6 max-w-3xl w-full shadow-2xl animate-in zoom-in-95 duration-200"
+        role="dialog"
+        aria-label="Choose Agent Persona"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
