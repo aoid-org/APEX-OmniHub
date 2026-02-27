@@ -58,7 +58,7 @@ export const useOmniMedia = create<OmniMediaState>((set, get) => ({
   loadMedia: async (payload, autoPlay = true) => {
     // Close previous media first (revoke blob URLs, reset state)
     const prev = get().currentMedia;
-    if (prev && prev.source.startsWith('blob:')) {
+    if (prev?.source?.startsWith('blob:')) {
       revokeCachedBlobUrl(prev.source);
     }
 
@@ -91,7 +91,7 @@ export const useOmniMedia = create<OmniMediaState>((set, get) => ({
 
   close: () => {
     const prev = get().currentMedia;
-    if (prev && prev.source.startsWith('blob:')) {
+    if (prev?.source?.startsWith('blob:')) {
       revokeCachedBlobUrl(prev.source);
     }
     set({ currentMedia: null, isPlaying: false, isDocked: false });

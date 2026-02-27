@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
 export function ProtectedRoute({ children }: Readonly<{ children: React.ReactNode }>) {

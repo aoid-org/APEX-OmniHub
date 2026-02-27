@@ -116,13 +116,13 @@ export function UniversalModalEngine() {
                 ? (activeModal.schema.items as ReadonlyArray<Record<string, unknown>>).map(
                     (item, idx) => (
                       <button
-                        key={String(item.id ?? idx)}
+                        key={item.id !== undefined ? String(item.id) : String(idx)}
                         type="button"
                         className="w-full text-left px-4 py-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors text-sm"
                         onClick={() => handleAction({ selected: item })}
                         disabled={isProcessing}
                       >
-                        {String(item.label ?? item.name ?? `Option ${idx + 1}`)}
+                        {String(item.label || item.name || `Option ${idx + 1}`)}
                       </button>
                     ),
                   )

@@ -43,12 +43,6 @@ const HC = {
   red:    { border: 'rgba(239,68,68,0.5)',   bg: 'rgba(239,68,68,0.06)',   text: '#ef4444', shadow: '0 0 12px rgba(239,68,68,0.25)' },
 } as const;
 
-const TELEMETRY = [
-  { label: 'TASKS TODAY',  value: '27/50',  color: '#e2e8f0' },
-  { label: 'SUCCESS RATE', value: '96.8%',  color: '#34d399' },
-  { label: 'AVG. LATENCY', value: '842ms',  color: '#38bdf8' },
-  { label: 'COST SAVED',   value: '$3,240', color: '#f97316' },
-] as const;
 
 const APPS = [
   { name: 'Salesforce',  cat: 'Sales',      logo: LOGO('salesforce.com'),  synced: '1m',  status: 'Live' as const },
@@ -104,14 +98,9 @@ export const DashboardOverview = memo(function DashboardOverview() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      // const chunks: Blob[] = [];
 
-      // recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
       recorder.onstop = () => {
         stream.getTracks().forEach(t => t.stop());
-        // Audio blob ready for STT processing
-        // const _audioBlob = new Blob(chunks, { type: 'audio/webm' });
-        // console.log('Audio blob captured:', _audioBlob.size);
       };
 
       mediaRef.current = recorder;
@@ -149,15 +138,14 @@ export const DashboardOverview = memo(function DashboardOverview() {
   const agentStatus = isRecording ? 'standby' : 'listening';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
       {/* ═══════ HERO HEX ═══════ */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '17fr 8fr',
-        gridTemplateRows: '1fr 1fr',
+        gridTemplateRows: 'auto auto',
         gridTemplateAreas: `"agent outcomes" "slate slate"`,
-        minHeight: 440,
         background: 'rgba(255, 255, 255, 0.02)',
         backdropFilter: 'blur(24px)',
         border: `1px solid rgba(255,255,255,0.08)`,
@@ -171,11 +159,11 @@ export const DashboardOverview = memo(function DashboardOverview() {
         <div style={{
           gridArea: 'agent',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: 32, borderRight: `1px solid rgba(255,255,255,0.05)`,
+          padding: 27, borderRight: `1px solid rgba(255,255,255,0.05)`,
           borderBottom: `1px solid rgba(255,255,255,0.05)`,
           background: `radial-gradient(ellipse at center, rgba(194,80,31,0.1) 0%, transparent 60%)`,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <span style={{ fontSize: 13.91, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#a1a1aa' }}>APEX Agent</span>
             <span className="chip-live" style={agentStatus === 'standby' ? {
               background: 'rgba(250,204,21,0.1)', color: '#facc15',
@@ -184,7 +172,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
               {agentStatus === 'listening' ? 'Active' : 'Standby'}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 27 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
               <span style={{ fontSize: 10.7, fontWeight: 800, color: '#a1a1aa', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Session</span>
               <span style={{ fontSize: 25.68, fontWeight: 800, color: '#dfe6fe', fontFamily: 'JetBrains Mono, monospace' }}>00:00</span>
@@ -222,8 +210,8 @@ export const DashboardOverview = memo(function DashboardOverview() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 8 }}>
             {agentStatus === 'listening' ? (
               <>
-                {[6,10,16,10,6].map((h,i) => (
-                  <div key={i} style={{ width: 3, height: h, borderRadius: 2, background: '#34d399', opacity: 0.7 }} />
+                {[{id: 'b1', h: 6}, {id: 'b2', h: 10}, {id: 'b3', h: 16}, {id: 'b4', h: 10}, {id: 'b5', h: 6}].map((bar) => (
+                  <div key={bar.id} style={{ width: 3, height: bar.h, borderRadius: 2, background: '#34d399', opacity: 0.7 }} />
                 ))}
                 <span style={{ fontSize: 12.84, color: '#34d399', marginLeft: 6 }}>Listening...</span>
               </>
@@ -236,12 +224,12 @@ export const DashboardOverview = memo(function DashboardOverview() {
         {/* ── TOP 3 OUTCOMES (top-right, 20%) ── */}
         <div style={{
           gridArea: 'outcomes',
-          display: 'flex', flexDirection: 'column', padding: 32,
+          display: 'flex', flexDirection: 'column', padding: 27,
           borderBottom: `1px solid rgba(255,255,255,0.05)`,
         }}>
           <div style={{ fontSize: 19.26, fontWeight: 800, color: '#dfe6fe', marginBottom: 2, letterSpacing: '-0.02em' }}>Top 3 Outcomes</div>
-          <div style={{ fontSize: 11.770000000000001, fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 20 }}>Today's Focus</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1, justifyContent: 'center' }}>
+          <div style={{ fontSize: 11.770000000000001, fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 17 }}>Today's Focus</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, justifyContent: 'center' }}>
             {OUTCOMES.map((o) => (
               <motion.div 
                 key={o.rank} 
@@ -268,7 +256,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
         </div>
 
         {/* ── OMNISLATE (bottom, 50%) - prompt + recording + context ── */}
-        <div style={{ gridArea: 'slate', padding: 32, display: 'flex', flexDirection: 'column', gap: 12, background: `radial-gradient(ellipse at bottom, rgba(194,80,31,0.06) 0%, transparent 80%)` }}>
+        <div style={{ gridArea: 'slate', padding: 34, display: 'flex', flexDirection: 'column', gap: 12, background: `radial-gradient(ellipse at bottom, rgba(194,80,31,0.06) 0%, transparent 80%)` }}>
           <div style={{
             flex: 1, borderRadius: 16, padding: 20,
             background: 'rgba(255,255,255,0.02)',
@@ -432,31 +420,36 @@ export const DashboardOverview = memo(function DashboardOverview() {
         </div>
       </div>
 
-      {/* ═══════ LIVE TELEMETRY ═══════ */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-around', padding: '20px 32px',
-        borderRadius: 20, background: 'rgba(255,255,255,0.02)', border: `1px solid rgba(255,255,255,0.08)`,
-        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 40px rgba(0,0,0,0.5)`,
-        backdropFilter: 'blur(20px)'
-      }}>
-        {TELEMETRY.map((t, i) => (
-          <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            {i > 0 && <div style={{ width: 1, height: 32, background: `rgba(255,255,255,0.08)`, marginRight: 16 }} />}
-            <div>
-              <div style={{ fontSize: 10.700000000000001, fontWeight: 800, color: '#71717a', letterSpacing: '0.15em', marginBottom: 4 }}>{t.label}</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span style={{ fontSize: 25.68, fontWeight: 800, color: t.color, fontFamily: 'JetBrains Mono, monospace' }}>{t.value}</span>
-                <svg width="40" height="16" viewBox="0 0 36 14" style={{ opacity: 0.6 }}>
-                  <polyline points="0,12 7,7 14,9 21,3 28,5 36,1" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </div>
+      {/* ═══════ APEX ECOSYSTEM (swapped from bottom — Mutation 2) ═══════ */}
+      <h2 style={{ fontSize: 19.26, fontWeight: 800, color: '#f97316', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '4px 0 0 0' }}>APEX Ecosystem</h2>
+      <div className="eco-hex" style={{ padding: '32px' }}>
+        {ECOSYSTEM.map((p) => (
+          <motion.div
+            key={p.name}
+            className="eco-cube"
+            drag
+            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+            dragElastic={0.15}
+            whileHover={{ scale: 1.05, translateY: -5, boxShadow: `0 10px 30px rgba(194,80,31,0.1)` }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 17.12, fontWeight: 800, color: p.color, letterSpacing: '-0.02em' }}>{p.name}</span>
+              <span style={{
+                position: 'absolute', top: 12, right: 12,
+                fontSize: 10.700000000000001, fontWeight: 800, padding: '4px 10px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.05em',
+                background: p.status === 'Active' ? 'rgba(52,211,153,0.1)' : 'rgba(161,161,170,0.1)',
+                color: p.status === 'Active' ? '#4ade80' : '#a1a1aa',
+                border: `1px solid ${p.status === 'Active' ? 'rgba(52,211,153,0.2)' : 'rgba(161,161,170,0.2)'}`,
+              }}>{p.status}</span>
             </div>
-          </div>
+            <div style={{ fontSize: 13.91, color: '#a1a1aa', fontWeight: 600 }}>{p.desc}</div>
+          </motion.div>
         ))}
       </div>
 
       {/* ═══════ INTEGRATED APPS ═══════ */}
-      <div className="apps-hex" style={{ padding: '16px 32px 32px 32px', marginTop: 16 }}>
+      <div className="apps-hex" style={{ padding: '8px 32px 24px 32px', marginTop: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <span style={{ fontSize: 19.26, fontWeight: 800, color: '#dfe6fe', letterSpacing: '-0.02em' }}>Integrated Apps</span>
@@ -526,32 +519,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
         </div>
       </div>
 
-      {/* ═══════ APEX ECOSYSTEM ═══════ */}
-      <div className="eco-hex" style={{ padding: '32px' }}>
-        {ECOSYSTEM.map((p) => (
-          <motion.div 
-            key={p.name} 
-            className="eco-cube"
-            drag
-            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-            dragElastic={0.15}
-            whileHover={{ scale: 1.05, translateY: -5, boxShadow: `0 10px 30px rgba(194,80,31,0.1)` }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 17.12, fontWeight: 800, color: p.color, letterSpacing: '-0.02em' }}>{p.name}</span>
-              <span style={{
-                position: 'absolute', top: 12, right: 12,
-                fontSize: 10.700000000000001, fontWeight: 800, padding: '4px 10px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.05em',
-                background: p.status === 'Active' ? 'rgba(52,211,153,0.1)' : 'rgba(161,161,170,0.1)',
-                color: p.status === 'Active' ? '#4ade80' : '#a1a1aa',
-                border: `1px solid ${p.status === 'Active' ? 'rgba(52,211,153,0.2)' : 'rgba(161,161,170,0.2)'}`,
-              }}>{p.status}</span>
-            </div>
-            <div style={{ fontSize: 13.91, color: '#a1a1aa', fontWeight: 600 }}>{p.desc}</div>
-          </motion.div>
-        ))}
-      </div>
+      {/* REMOVED: Original APEX Ecosystem — moved above IntegratedApps (Mutation 2) */}
     </div>
   );
 });

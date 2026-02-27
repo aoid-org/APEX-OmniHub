@@ -113,7 +113,7 @@ export function OmniDashLayout() {
             <span className="od-sentry-dot" />
             All Systems Operational
           </div>
-          <span>APEX Business Systems Ltd. &middot; OmniDash Platform</span>
+          <span>APEX Business Systems Ltd. {"\u00B7"} OmniDash Platform</span>
           <button
             onClick={handleLogout}
             style={{
@@ -172,7 +172,7 @@ export function OmniDashLayout() {
           </div>
         </header>
 
-        <div className={`od-content ${location.pathname !== '/omnidash' ? 'center-content-blur' : ''}`}>
+        <div className={`od-content ${location.pathname === '/omnidash' ? '' : 'center-content-blur'}`}>
           {/* Dashboard is PERMANENT in the background */}
           <DashboardOverview />
         </div>
