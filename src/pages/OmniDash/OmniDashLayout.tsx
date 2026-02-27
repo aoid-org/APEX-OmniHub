@@ -107,10 +107,10 @@ export const OmniDashLayout = () => {
         </nav>
         <div className="od-sidebar-footer">
           <div className="od-sentry-status">
-            <span className="od-sentry-dot" />
-            All Systems Operational
+            <span className="od-sentry-dot" />{' '}
+            <span>All Systems Operational</span>
           </div>
-          <span>APEX Business Systems Ltd. {"\u00B7"} OmniDash Platform</span>
+          <span>{'APEX Business Systems Ltd. \u00B7 OmniDash Platform'}</span>
         </div>
       </aside>
 
