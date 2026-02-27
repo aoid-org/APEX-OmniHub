@@ -3,6 +3,8 @@ import { HomePage } from "@/pages/Home";
 import { OnboardingWizard } from "@/pages/Launch/OnboardingWizard";
 import { OmniDashLayout } from "@/layouts/OmniDashLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { DashboardOverview } from "@/pages/DashboardOverview";
+import { ComingSoonPage } from "@/pages/ComingSoon";
 
 // Legacy/Existing Pages
 import { LoginPage } from "@/pages/Login";
@@ -28,7 +30,7 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/launch" element={<OnboardingWizard />} />
 
-      {/* Strict SPA OmniDash Console */}
+      {/* Graduated OmniDash Console — Nested Route Layout */}
       <Route
         path="/omnidash"
         element={
@@ -36,7 +38,22 @@ function App() {
             <OmniDashLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<DashboardOverview />} />
+        <Route path="omniport" element={<OmniPortPage />} />
+        <Route path="maestro" element={<MaestroPage />} />
+        <Route path="fortress" element={<FortressPage />} />
+        <Route path="orchestrator" element={<OrchestratorPage />} />
+        <Route path="omniskills" element={<ComingSoonPage title="OmniSkills" desc="Skill management and task orchestration" />} />
+        <Route path="physiomni" element={<ComingSoonPage title="PhysiOmni" desc="Physical operations and execution tracking" />} />
+        <Route path="audits" element={<ComingSoonPage title="Audits" desc="Governance, compliance, and security gates" />} />
+        <Route path="billing" element={<ComingSoonPage title="Billing" desc="Subscription management and usage analytics" />} />
+        <Route path="links" element={<ComingSoonPage title="Links" desc="Connection management and integration endpoints" />} />
+        <Route path="automations" element={<ComingSoonPage title="Automations" desc="Workflow automation and pipeline orchestration" />} />
+        <Route path="workflows" element={<ComingSoonPage title="Workflows" desc="Visual workflow builder and process studio" />} />
+        <Route path="files" element={<ComingSoonPage title="Files" desc="Document management and file operations" />} />
+        <Route path="settings" element={<ComingSoonPage title="Settings" desc="Platform configuration and preferences" />} />
+      </Route>
 
       {/* Existing Content Pages - Mapping to clean URLs */}
       <Route path="/login" element={<LoginPage />} />
