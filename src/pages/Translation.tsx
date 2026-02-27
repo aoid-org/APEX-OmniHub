@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Languages, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { Mic, Globe, History, Webhook, Loader2, PlayCircle, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { SemanticTranslator } from '@/omniconnect/translation/translator';
 import { CanonicalEvent } from '@/omniconnect/types/canonical';
