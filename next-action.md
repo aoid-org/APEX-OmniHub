@@ -1,16 +1,13 @@
 ### ARTIFACT: Handover
 
-**Type:** `next-action.md`
+**Complete:**
 
-**What's complete:**
+- Addressed `@typescript-eslint/no-explicit-any` errors in `tests/omnilink/walletconnect.chaos.spec.tsx` via `WalletState` imported definitions.
+- Fixed Python `ruff` E501 and W293 formatting alerts in `orchestrator/activities/tools.py`.
+- Fixed `RLS_POSTURE` failure by explicitly adding `ENABLE ROW LEVEL SECURITY` to `tenants` and `tenant_members` in `supabase/migrations/20260227000000_tenant_schema_init.sql`.
+- Fixed the `check_rls_posture.sh` line ending script failures for cross-platform reliability by converting from CRLF to LF using Python buffer.
+- Fixed `excess property checks` for TypeScript compilation on `hooks-chaos.spec.tsx`.
 
-- Recovered the entire `tests/omnilink` directory holding the Chaos Battery test suite from the old `feature/omnidash-registry-20260227-082753` branch state.
-- Resolved a Vite-breaking merge conflict in `PersonaModal.tsx` left on the local branch.
-- Re-applied deduplication bounds and test logic overrides to `hooks-chaos.spec.tsx` (`updated_first`).
-- Executed the complete test suite: 79 out of 83 tests fully passed, validating the core components, resilient hooks, and 5 separate chaos scenarios.
+**Next Action:** Push these resolutions safely to the remote PR branch and consider increasing NodeJS allocated heap sizes if Vitest worker OOMs persist.
 
-**Highest-impact next action:**
-Commit the restored `tests/omnilink` directory to the active `feature/omnidash-registry-20260227-082826` branch to ensure they aren't lost again.
-
-**Blockers:**
-None.
+**Blockers:** None.
