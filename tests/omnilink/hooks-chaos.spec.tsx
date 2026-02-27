@@ -125,10 +125,11 @@ describe('useSystemHealth — Status Derivation Logic', () => {
   it('deriveStatus_returns_degraded_when_some_loops_are_stale', async () => {
     // Test the derivation logic directly by checking module internals
     const heartbeatMod = await import('@/guardian/heartbeat');
-    vi.mocked(heartbeatMod.getLoopStatuses).mockReturnValue([
+    const mockData: unknown = [
       { name: 'loop-1', status: 'active', lastBeat: new Date() },
       { name: 'loop-2', status: 'stale', lastBeat: new Date(Date.now() - 60000) },
-    ] as unknown as ReturnType<typeof heartbeatMod.getLoopStatuses>);
+    ];
+    vi.mocked(heartbeatMod.getLoopStatuses).mockReturnValue(mockData as ReturnType<typeof heartbeatMod.getLoopStatuses>);
 
     // deriveStatus is internal, so we verify concept:
     // if staleCount > 0 && staleCount < total → degraded
@@ -141,10 +142,11 @@ describe('useSystemHealth — Status Derivation Logic', () => {
 
   it('deriveStatus_returns_critical_when_all_loops_are_stale', async () => {
     const heartbeatMod = await import('@/guardian/heartbeat');
-    vi.mocked(heartbeatMod.getLoopStatuses).mockReturnValue([
+    const mockData: unknown = [
       { name: 'loop-1', status: 'stale', lastBeat: new Date(Date.now() - 60000) },
       { name: 'loop-2', status: 'stale', lastBeat: new Date(Date.now() - 120000) },
-    ] as unknown as ReturnType<typeof heartbeatMod.getLoopStatuses>);
+    ];
+    vi.mocked(heartbeatMod.getLoopStatuses).mockReturnValue(mockData as ReturnType<typeof heartbeatMod.getLoopStatuses>);
 
     const statuses = heartbeatMod.getLoopStatuses();
     const staleCount = statuses.filter((s: { status: string }) => s.status === 'stale').length;
