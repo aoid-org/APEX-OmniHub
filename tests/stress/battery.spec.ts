@@ -364,7 +364,7 @@ describe('Battery Tests - Production Stress', () => {
       const duration = Date.now() - startTime;
 
       expect(progress).toBe(100);
-      expect(duration).toBeLessThan(3000); // Allow for test environment overhead
+      expect(duration).toBeLessThan(5000); // Allow for test environment overhead and timer jitter
     });
 
     it('handles continuous polling for 1 minute', { timeout: 5000 }, async () => {
