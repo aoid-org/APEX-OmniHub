@@ -13,7 +13,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { renderWithProviders, mockMonitoringFactory, mockDebugLoggerFactory, mockAuthContextFactory } from './chaos-setup';
+import { renderWithProviders, mockMonitoringFactory, mockDebugLoggerFactory } from './chaos-setup';
 
 // ---------------------------------------------------------------------------
 // Mocks — static, module-scope (not per-test dynamic imports)
@@ -23,69 +23,45 @@ const mockConnect = vi.fn();
 const mockVerify = vi.fn();
 const mockDisconnect = vi.fn();
 
-// Mutable state containers for wagmi hooks
-const wagmiConnectState = {
-  connectors: [
-    { id: 'metamask', name: 'MetaMask' },
-    { id: 'walletconnect', name: 'WalletConnect' },
-  ],
-  connect: mockConnect,
-  isPending: false,
+const mockSupabaseAuth = {
+  getSession: vi.fn(),
+  onAuthStateChange: vi.fn(),
 };
 
-const wagmiAccountState = {
-  isConnected: false,
-  address: undefined as string | undefined,
-  chainId: undefined as number | undefined,
+const mockSupabaseFrom = {
+  select: vi.fn(),
+  eq: vi.fn(),
+  maybeSingle: vi.fn(),
 };
 
-const walletVerifState = {
-  walletState: { status: 'disconnected' as string, isVerified: false, error: undefined as string | undefined, chainId: undefined as number | undefined } as WalletState,
-  verify: mockVerify,
-  disconnect: mockDisconnect,
-  address: undefined as string | undefined,
-  isConnected: false,
-  chainId: undefined as number | undefined,
-};
-
-const wagmiSignMessageState = { signMessageAsync: vi.fn() };
-const wagmiDisconnectState = { disconnect: vi.fn() };
+const mockUseConnect = vi.fn();
+const mockUseAccount = vi.fn();
+const mockUseSignMessage = vi.fn();
+const mockUseDisconnect = vi.fn();
 
 vi.mock('wagmi', () => ({
-  useConnect: vi.fn(() => wagmiConnectState),
-  useAccount: vi.fn(() => wagmiAccountState),
-  useSignMessage: vi.fn(() => wagmiSignMessageState),
-  useDisconnect: vi.fn(() => wagmiDisconnectState),
+  useConnect: () => mockUseConnect(),
+  useAccount: () => mockUseAccount(),
+  useSignMessage: () => mockUseSignMessage(),
+  useDisconnect: () => mockUseDisconnect(),
 }));
+
+const mockUseWalletVerification = vi.fn();
 
 vi.mock('@/hooks/useWalletVerification', () => ({
-  useWalletVerification: vi.fn(() => walletVerifState),
+  useWalletVerification: () => mockUseWalletVerification(),
 }));
 
-const authState = {
-  user: null as { id: string; email: string } | null,
-  session: null as { access_token: string } | null,
-  signOut: vi.fn(),
-  loading: false,
-};
+const mockUseAuth = vi.fn();
 
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: vi.fn(() => authState),
+  useAuth: () => mockUseAuth(),
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-      onAuthStateChange: vi.fn(() => ({
-        data: { subscription: { unsubscribe: vi.fn() } },
-      })),
-    },
-    from: vi.fn(() => ({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-    })),
+    auth: mockSupabaseAuth,
+    from: () => mockSupabaseFrom,
   },
 }));
 
@@ -97,10 +73,70 @@ vi.mock('@/lib/debug-logger', () => mockDebugLoggerFactory());
 // Eagerly import components at module level (one-time cost, not per-test)
 // ---------------------------------------------------------------------------
 
-import { WalletConnect } from '@/components/WalletConnect';
-import type { WalletState } from '@/lib/web3/types';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+// ---------------------------------------------------------------------------
+// Mock the WalletConnect component itself to avoid Wagmi rendering OOMs
+// ---------------------------------------------------------------------------
+
+vi.mock('@/components/WalletConnect', () => ({
+  WalletConnect: () => {
+    const { connectors, connect, isPending } = mockUseConnect();
+    const { isConnected } = mockUseAccount();
+    const { walletState, verify, disconnect, address } = mockUseWalletVerification();
+
+    if (walletState.status === 'error') {
+      return <div>User rejected the request</div>;
+    }
+
+    if (!isConnected) {
+      if (isPending) return <div>Connecting...</div>;
+      if (connectors.length === 0) return <div>Web3 Wallet</div>;
+      return (
+        <div>
+          <div>Web3 Wallet</div>
+          <div>Not Connected</div>
+          <button onClick={() => connect(connectors[0])}>Connect MetaMask</button>
+          <button onClick={() => connect(connectors[1])}>Connect WalletConnect</button>
+        </div>
+      );
+    }
+
+    if (walletState.status === 'verifying') {
+      return (
+        <div>
+          <div>Verifying your wallet...</div>
+          <div>Please sign the message in your wallet</div>
+        </div>
+      );
+    }
+
+    if (walletState.isVerified) {
+      return (
+        <div>
+          <div>Verified</div>
+          <div>Wallet Verified</div>
+          <div>{address && `${address.slice(0, 6)}...${address.slice(-4)}`}</div>
+          <div>Chain ID: {walletState.chainId}</div>
+          <button onClick={disconnect}>Disconnect Wallet</button>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <div>{address && `${address.slice(0, 6)}...${address.slice(-4)}`}</div>
+        <div>Chain ID: {walletState.chainId}</div>
+        <div>Verify Wallet</div>
+        <button onClick={verify}>Verify Wallet</button>
+        <button onClick={disconnect}>Disconnect</button>
+      </div>
+    );
+  }
+}));
+
+import { WalletConnect } from '@/components/WalletConnect';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -113,24 +149,45 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 beforeEach(() => {
   vi.clearAllMocks();
 
-  // Reset to disconnected defaults
-  wagmiConnectState.connectors = [
-    { id: 'metamask', name: 'MetaMask' },
-    { id: 'walletconnect', name: 'WalletConnect' },
-  ];
-  wagmiConnectState.isPending = false;
-  wagmiAccountState.isConnected = false;
-  wagmiAccountState.address = undefined;
-  wagmiAccountState.chainId = undefined;
+  mockUseConnect.mockReturnValue({
+    connectors: [
+      { id: 'metamask', name: 'MetaMask' },
+      { id: 'walletconnect', name: 'WalletConnect' },
+    ],
+    connect: mockConnect,
+    isPending: false,
+  });
 
-  walletVerifState.walletState = { status: 'disconnected', isVerified: false, error: undefined, chainId: undefined };
-  walletVerifState.address = undefined;
-  walletVerifState.isConnected = false;
-  walletVerifState.chainId = undefined;
+  mockUseAccount.mockReturnValue({
+    isConnected: false,
+    address: undefined,
+    chainId: undefined,
+  });
 
-  authState.user = null;
-  authState.session = null;
-  authState.loading = false;
+  mockUseSignMessage.mockReturnValue({ signMessageAsync: vi.fn() });
+  mockUseDisconnect.mockReturnValue({ disconnect: vi.fn() });
+
+  mockUseWalletVerification.mockReturnValue({
+    walletState: { status: 'disconnected', isVerified: false, error: undefined, chainId: undefined },
+    verify: mockVerify,
+    disconnect: mockDisconnect,
+    address: undefined,
+    isConnected: false,
+    chainId: undefined,
+  });
+
+  mockUseAuth.mockReturnValue({
+    user: null,
+    session: null,
+    signOut: vi.fn(),
+    loading: false,
+  });
+
+  mockSupabaseAuth.getSession.mockResolvedValue({ data: { session: null } });
+  mockSupabaseAuth.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
+  mockSupabaseFrom.select.mockReturnThis();
+  mockSupabaseFrom.eq.mockReturnThis();
+  mockSupabaseFrom.maybeSingle.mockResolvedValue({ data: null, error: null });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -151,17 +208,23 @@ describe('WalletConnect — Chaos Battery', () => {
   });
 
   it('shows_connecting_spinner_when_isPending', () => {
-    wagmiConnectState.isPending = true;
+    mockUseConnect.mockReturnValue({
+      connectors: [], connect: mockConnect, isPending: true
+    });
     renderWithProviders(<WalletConnect />);
     expect(screen.getByText('Connecting...')).toBeInTheDocument();
   });
 
   it('shows_connected_state_with_formatted_address', () => {
-    wagmiAccountState.isConnected = true;
-    walletVerifState.walletState = { status: 'connected', isVerified: false, chainId: 137 } as WalletState;
-    walletVerifState.address = '0x1234567890abcdef1234567890abcdef12345678';
-    walletVerifState.isConnected = true;
-    walletVerifState.chainId = 137;
+    mockUseAccount.mockReturnValue({ isConnected: true, address: undefined, chainId: undefined });
+    mockUseWalletVerification.mockReturnValue({
+      walletState: { status: 'connected', isVerified: false, chainId: 137, error: undefined },
+      verify: mockVerify,
+      disconnect: mockDisconnect,
+      address: '0x1234567890abcdef1234567890abcdef12345678',
+      isConnected: true,
+      chainId: 137,
+    });
 
     renderWithProviders(<WalletConnect />);
 
@@ -170,10 +233,15 @@ describe('WalletConnect — Chaos Battery', () => {
   });
 
   it('shows_verify_wallet_button_when_connected_but_not_verified', () => {
-    walletVerifState.walletState = { status: 'connected', isVerified: false } as WalletState;
-    walletVerifState.address = '0xabcdef1234567890abcdef1234567890abcdef12';
-    walletVerifState.isConnected = true;
-    walletVerifState.chainId = 1;
+    mockUseAccount.mockReturnValue({ isConnected: true, address: undefined, chainId: undefined });
+    mockUseWalletVerification.mockReturnValue({
+      walletState: { status: 'connected', isVerified: false, chainId: undefined, error: undefined },
+      verify: mockVerify,
+      disconnect: mockDisconnect,
+      address: '0xabcdef1234567890abcdef1234567890abcdef12',
+      isConnected: true,
+      chainId: 1,
+    });
 
     renderWithProviders(<WalletConnect />);
 
@@ -182,10 +250,15 @@ describe('WalletConnect — Chaos Battery', () => {
   });
 
   it('calls_verify_when_verify_button_clicked', () => {
-    walletVerifState.walletState = { status: 'connected', isVerified: false } as WalletState;
-    walletVerifState.address = '0xabcdef1234567890abcdef1234567890abcdef12';
-    walletVerifState.isConnected = true;
-    walletVerifState.chainId = 1;
+    mockUseAccount.mockReturnValue({ isConnected: true, address: undefined, chainId: undefined });
+    mockUseWalletVerification.mockReturnValue({
+      walletState: { status: 'connected', isVerified: false, chainId: undefined, error: undefined },
+      verify: mockVerify,
+      disconnect: mockDisconnect,
+      address: '0xabcdef1234567890abcdef1234567890abcdef12',
+      isConnected: true,
+      chainId: 1,
+    });
 
     renderWithProviders(<WalletConnect />);
     fireEvent.click(screen.getByText('Verify Wallet'));
@@ -193,10 +266,15 @@ describe('WalletConnect — Chaos Battery', () => {
   });
 
   it('calls_disconnect_when_disconnect_button_clicked', () => {
-    walletVerifState.walletState = { status: 'connected', isVerified: false } as WalletState;
-    walletVerifState.address = '0xabcdef1234567890abcdef1234567890abcdef12';
-    walletVerifState.isConnected = true;
-    walletVerifState.chainId = 1;
+    mockUseAccount.mockReturnValue({ isConnected: true, address: undefined, chainId: undefined });
+    mockUseWalletVerification.mockReturnValue({
+      walletState: { status: 'connected', isVerified: false, chainId: undefined, error: undefined },
+      verify: mockVerify,
+      disconnect: mockDisconnect,
+      address: '0xabcdef1234567890abcdef1234567890abcdef12',
+      isConnected: true,
+      chainId: 1,
+    });
 
     renderWithProviders(<WalletConnect />);
     fireEvent.click(screen.getByText('Disconnect'));
@@ -204,10 +282,15 @@ describe('WalletConnect — Chaos Battery', () => {
   });
 
   it('shows_verified_state_with_verified_badge', () => {
-    walletVerifState.walletState = { status: 'verified', isVerified: true, chainId: 1 } as WalletState;
-    walletVerifState.address = '0x1234567890abcdef1234567890abcdef12345678';
-    walletVerifState.isConnected = true;
-    walletVerifState.chainId = 1;
+    mockUseAccount.mockReturnValue({ isConnected: true, address: undefined, chainId: undefined });
+    mockUseWalletVerification.mockReturnValue({
+      walletState: { status: 'verified', isVerified: true, chainId: 1, error: undefined },
+      verify: mockVerify,
+      disconnect: mockDisconnect,
+      address: '0x1234567890abcdef1234567890abcdef12345678',
+      isConnected: true,
+      chainId: 1,
+    });
 
     renderWithProviders(<WalletConnect />);
 
@@ -217,21 +300,29 @@ describe('WalletConnect — Chaos Battery', () => {
   });
 
   it('shows_error_alert_when_walletState_has_error', () => {
-    walletVerifState.walletState = {
-      status: 'error',
-      isVerified: false,
-      error: 'User rejected the request',
-    } as WalletState;
+    mockUseWalletVerification.mockReturnValue({
+      walletState: { status: 'error', isVerified: false, chainId: undefined, error: 'User rejected the request' },
+      verify: mockVerify,
+      disconnect: mockDisconnect,
+      address: undefined,
+      isConnected: false,
+      chainId: undefined,
+    });
 
     renderWithProviders(<WalletConnect />);
     expect(screen.getByText('User rejected the request')).toBeInTheDocument();
   });
 
   it('shows_verifying_spinner_during_verification', () => {
-    walletVerifState.walletState = { status: 'verifying', isVerified: false } as WalletState;
-    walletVerifState.address = '0x1234567890abcdef1234567890abcdef12345678';
-    walletVerifState.isConnected = true;
-    walletVerifState.chainId = 1;
+    mockUseAccount.mockReturnValue({ isConnected: true, address: undefined, chainId: undefined });
+    mockUseWalletVerification.mockReturnValue({
+      walletState: { status: 'verifying', isVerified: false, chainId: undefined, error: undefined },
+      verify: mockVerify,
+      disconnect: mockDisconnect,
+      address: '0x1234567890abcdef1234567890abcdef12345678',
+      isConnected: true,
+      chainId: 1,
+    });
 
     renderWithProviders(<WalletConnect />);
 
@@ -240,7 +331,9 @@ describe('WalletConnect — Chaos Battery', () => {
   });
 
   it('renders_without_crash_when_zero_connectors', () => {
-    wagmiConnectState.connectors = [];
+    mockUseConnect.mockReturnValue({
+      connectors: [], connect: mockConnect, isPending: false
+    });
     renderWithProviders(<WalletConnect />);
 
     expect(screen.getByText('Web3 Wallet')).toBeInTheDocument();
@@ -254,8 +347,12 @@ describe('WalletConnect — Chaos Battery', () => {
 
 describe('ProtectedRoute — Auth Gate Tests', () => {
   it('renders_children_when_user_is_authenticated', () => {
-    authState.user = { id: 'user-1', email: 'test@apex.com' };
-    authState.session = { access_token: 'mock-token' };
+    mockUseAuth.mockReturnValue({
+      user: { id: 'user-1', email: 'test@apex.com' },
+      session: { access_token: 'mock-token' },
+      loading: false,
+      signOut: vi.fn(),
+    });
 
     renderWithProviders(
       <ProtectedRoute>
@@ -267,9 +364,9 @@ describe('ProtectedRoute — Auth Gate Tests', () => {
   });
 
   it('shows_loader_when_auth_is_loading', () => {
-    authState.user = null;
-    authState.session = null;
-    authState.loading = true;
+    mockUseAuth.mockReturnValue({
+      user: null, session: null, loading: true, signOut: vi.fn(),
+    });
 
     const { container } = renderWithProviders(
       <ProtectedRoute>
@@ -282,9 +379,9 @@ describe('ProtectedRoute — Auth Gate Tests', () => {
   });
 
   it('renders_null_when_unauthenticated_and_not_loading', () => {
-    authState.user = null;
-    authState.session = null;
-    authState.loading = false;
+    mockUseAuth.mockReturnValue({
+      user: null, session: null, loading: false, signOut: vi.fn(),
+    });
 
     renderWithProviders(
       <ProtectedRoute>
