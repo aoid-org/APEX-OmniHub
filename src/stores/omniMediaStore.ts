@@ -63,16 +63,16 @@ export const useOmniMedia = create<OmniMediaState>((set, get) => ({
     }
 
     // Route non-embed through edge cache for local buffering
-    if (payload.type !== 'embed') {
-      const localSource = await prefetchAndCacheMedia(payload.source);
+    if (payload.type === 'embed') {
       set({
-        currentMedia: { ...payload, source: localSource },
+        currentMedia: payload,
         isPlaying: autoPlay,
         isDocked: false,
       });
     } else {
+      const localSource = await prefetchAndCacheMedia(payload.source);
       set({
-        currentMedia: payload,
+        currentMedia: { ...payload, source: localSource },
         isPlaying: autoPlay,
         isDocked: false,
       });

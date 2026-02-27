@@ -163,7 +163,7 @@
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.03);
-  color: #f8fafc; /* Higher contrast */
+  color: #ffffff;
   padding: 0 14px 0 38px;
   font-size: 15.729000000000001px; /* 14px * 1.05 */
   font-family: inherit;
@@ -205,7 +205,7 @@
   font-size: 13.91px;
   font-family: 'JetBrains Mono', monospace; /* Tech feel */
   font-weight: 500;
-  color: #cbd5e1; /* Increased contrast from #94a3b8 */
+  color: #e2e8f0;
   white-space: nowrap;
 }
 
@@ -217,8 +217,8 @@
   border-radius: 10px;
   font-size: 13.482000000000001px; /* 12px * 1.05 */
   color: #86efac; /* Best contrast */
-  background: rgba(52,211,153,0.12);
-  border: 1px solid rgba(52,211,153,0.25);
+  background: rgba(52,211,153,0.25);
+  border: 1px solid rgba(52,211,153,0.4);
 }
 
 .od-connect-ai {
@@ -226,7 +226,7 @@
   padding: 0 16px;
   border-radius: 17px;
   background: linear-gradient(135deg, #f97316, #c2501f);
-  color: white;
+  color: #ffffff;
   font-size: 14.552px; /* 13px * 1.05 */
   font-weight: 600;
   font-family: inherit;
@@ -481,7 +481,7 @@
   border-radius: 12px;
   background: rgba(194,80,31,0.08);
   border: 1px solid rgba(194,80,31,0.2);
-  color: #fdba74; /* Increased contrast from #f97316 */
+  color: #ffffff;
   font-size: 13.91px;
   font-weight: 600;
   font-family: inherit;
@@ -503,7 +503,7 @@
   font-size: 12.305000000000001px; /* 11px * 1.05 */
   font-weight: 700;
   background: rgba(52,211,153,0.12);
-  color: #86efac; /* Brighter green for contrast */
+  color: #bbf7d0;
   border: 1px solid rgba(52,211,153,0.3);
 }
 
@@ -653,7 +653,7 @@
 .od-modal-close:hover {
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.3);
-  color: #fca5a5; /* Increased contrast on hover */
+  color: #ffffff;
 }
 
 .center-content-blur {
