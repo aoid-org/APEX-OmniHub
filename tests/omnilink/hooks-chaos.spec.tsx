@@ -254,16 +254,18 @@ describe('useOmniStream — Event Stream Chaos Battery', () => {
     // Test the dedup logic used by mergeEvent
     const eventMap = new Map<string, { id: string; sequence_id: number; data: string }>();
 
+    const evt1Key = 'evt-1';
+    
     // Add event
-    eventMap.set('evt-1', { id: 'evt-1', sequence_id: 1, data: 'first' });
+    eventMap.set(evt1Key, { id: evt1Key, sequence_id: 1, data: 'first' });
     eventMap.set('evt-2', { id: 'evt-2', sequence_id: 2, data: 'second' });
 
     // Add duplicate with updated data
-    eventMap.set('evt-1', { id: 'evt-1', sequence_id: 1, data: 'updated_first' });
+    eventMap.set(evt1Key, { id: evt1Key, sequence_id: 1, data: 'updated_first' });
 
     // Map deduplicates by key
     expect(eventMap.size).toBe(2);
-    expect(eventMap.get('evt-1')?.data).toBe('updated_first');
+    expect(eventMap.get(evt1Key)?.data).toBe('updated_first');
   });
 
   it('events_are_sorted_by_sequence_id', () => {

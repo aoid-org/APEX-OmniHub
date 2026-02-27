@@ -65,13 +65,15 @@ _redis_client = None
 def extract_tenant_from_activity_input(input_data: dict) -> str:
     """
     Extract tenant_id from activity input payload.
-    
+
     Fallback chain: input.tenant_id → user_id → "default"
     """
     tenant_id = input_data.get("tenant_id")
     if not tenant_id:
         tenant_id = input_data.get("user_id", "default")
-        activity.logger.warning(f"No tenant_id in activity input, falling back to user_id: {tenant_id}")
+        activity.logger.warning(
+            f"No tenant_id in activity input, falling back to user_id: {tenant_id}"
+        )
     return tenant_id
 
 
