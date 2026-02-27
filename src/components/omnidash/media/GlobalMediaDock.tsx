@@ -36,15 +36,15 @@ import './OmniMediaDock.css';
 // ---------------------------------------------------------------------------
 
 interface DockInfoRowProps {
-  title: string;
-  provider: string;
-  mediaType: string;
-  isPlaying: boolean;
-  onTogglePlay: () => void;
-  DockIcon: ComponentType<{ className?: string }>;
-  dockLabel: string;
-  onToggleDock: () => void;
-  onClose: () => void;
+  readonly title: string;
+  readonly provider: string;
+  readonly mediaType: string;
+  readonly isPlaying: boolean;
+  readonly onTogglePlay: () => void;
+  readonly DockIcon: ComponentType<{ readonly className?: string }>;
+  readonly dockLabel: string;
+  readonly onToggleDock: () => void;
+  readonly onClose: () => void;
 }
 
 function DockInfoRow({

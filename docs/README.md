@@ -117,7 +117,6 @@ Operational runbooks and procedures:
 | ----------------------------------------------------- | ------------------------- |
 | [Operational Excellence](ops/OPERATIONAL_EXCELLENCE.md) | Enterprise operations framework |
 | [Operations Runbook](ops/OPS_RUNBOOK.md)              | Master ops runbook (v2.0) |
-| [Ops Audit](ops/OPS_AUDIT.md)                         | Operations audit          |
 | [Incident Response](ops/INCIDENT_RESPONSE.md)         | Incident handling         |
 | [Adaptive Nightly Eval](ops/adaptive-nightly-eval.md) | Automated evaluation      |
 
@@ -239,16 +238,10 @@ Audit reports, remediation, and historical records:
 
 | Document                                                         | Description            |
 | ---------------------------------------------------------------- | ---------------------- |
-| [Platform Audit 2026-01-10](audits/PLATFORM_AUDIT_2026_01_10.md) | Full platform audit    |
-| [Architectural Convergence](audits/ARCHITECTURAL_CONVERGENCE_REPORT_2026_01.md) | Convergence report |
-| [Technical Enhancements](audits/TECHNICAL_ENHANCEMENTS_REPORT_2026_01.md) | Enhancements report |
-| [System Performance Optimization](audits/SYSTEM_PERFORMANCE_OPTIMIZATION_2026-01-30.md) | Performance audit |
-| [Remediation Tracker](audits/REMEDIATION_TRACKER.md)             | Issue tracking         |
-| [Remediation Evidence](audits/REMEDIATION_EVIDENCE.md)           | Fix evidence           |
-| [Battery Test Report](audits/BATTERY_TEST_REPORT.md)             | Stress test results    |
 | [Armageddon Test](audits/ARMAGEDDON_TEST_SUITE_REPORT.md)        | Extreme testing        |
-| [Web3 Integration](audits/WEB3_INTEGRATION_COMPLETE.md)          | Blockchain audit       |
 | [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md) | Voice security         |
+| [CTO Platform Audit 2026-02-27](audits/CTO_PLATFORM_AUDIT_2026_02_27.md) | CTO audit report |
+| [Production Audit 2026-02-14](audits/PRODUCTION_AUDIT_2026_02_14.md) | Production audit   |
 
 ---
 
