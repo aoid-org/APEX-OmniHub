@@ -84,7 +84,11 @@ function RunDetailPanel({ workflowId }: { readonly workflowId: string }) {
     );
   }
 
+  const detail = detailQuery.data;
+  if (!detail) return null;
+
   const currentEvent = detail.events[replayIndex];
+  const policyEvents = detail.events.filter(e => e.kind === 'policy');
 
   return (
     <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
@@ -127,7 +131,15 @@ function RunDetailPanel({ workflowId }: { readonly workflowId: string }) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleDownloadBundle}
+                onClick={() => {
+                  const blob = new Blob([JSON.stringify(detail.replay_bundle, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `omnitrace-${workflowId}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
               >
                 <Download className="w-4 h-4 mr-1" />
                 Export
@@ -227,7 +239,7 @@ function RunDetailPanel({ workflowId }: { readonly workflowId: string }) {
           <p className="text-sm text-muted-foreground">No events recorded</p>
         ) : (
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {detail.events.map((event, idx) => (
+            {detail.events.map((event: (typeof detail.events)[number], idx: number) => (
               <div
                 key={event.id}
                 className={`flex items-start gap-2 text-sm border-l-2 pl-3 transition-all ${idx === replayIndex
@@ -275,7 +287,7 @@ function RunDetailPanel({ workflowId }: { readonly workflowId: string }) {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <pre className="mt-2 text-xs bg-background p-3 rounded border overflow-x-auto max-h-48 overflow-y-auto">
-              {formatPayload(detail.run.output_redacted)}
+              {formatPayload(detail.run.output_redacted as Record<string, unknown>)}
             </pre>
           </CollapsibleContent>
         </Collapsible>

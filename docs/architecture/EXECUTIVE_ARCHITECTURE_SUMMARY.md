@@ -1,10 +1,10 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-02-27 -->
 # APEX-OmniHub Technical Architecture Specification
 
-**Document Owner:** CTO & Chief Platform Architect  
-**Last Updated:** 2026-02-01  
-**Status:** Production  
-**Version:** 2.1 (Cyber-Physical Update)
+**Document Owner:** CTO & Chief Platform Architect
+**Last Updated:** 2026-02-27
+**Status:** Production
+**Version:** 2.2 (Edge Compute Update)
 
 ---
 
@@ -18,6 +18,7 @@ APEX-OmniHub is a production-grade, **Hybrid-Cloud AI Operating System**. It con
 - **Cyber-Physical Security** with Zero-Trust Device Registry & Biometrics
 - **Edge-First Architecture** running locally on iOS/Android via Capacitor
 - **Enterprise Resilience** with Chaos Engineering & Self-Healing (OmniSentry)
+- **Edge Compute Layer** with deterministic LRU media cache and dual CORS proxy (Vercel + Cloudflare)
 
 ---
 
@@ -42,7 +43,16 @@ APEX-OmniHub is a production-grade, **Hybrid-Cloud AI Operating System**. It con
 | **Identity**        | `src/lib/biometric-native.ts`      | Hardware Enclave Signing     |
 | **Eyes (Vision)**   | `src/integrations/omniport`        | Multimodal Input Analysis    |
 
-### 1.3 Backend Stack (The Brain)
+### 1.3 Edge Compute Stack (The Cache)
+
+| Component              | Implementation                           | Purpose                           |
+| ---------------------- | ---------------------------------------- | --------------------------------- |
+| **Vercel Edge Proxy**  | `api/cors.ts`                            | WinterCG-safe CORS proxy (Edge)   |
+| **Cloudflare Worker**  | `edge/cors-proxy/edge-cors-proxy.js`     | CDN-level CORS proxy (stateless)  |
+| **LRU Cache Governor** | `lib/media/EdgeCacheController.ts`       | 250 MB ceiling, localStorage ledger |
+| **Lightweight Cache**  | `src/lib/media/EdgeCacheController.ts`   | Async prefetch + blob URL management |
+
+### 1.4 Backend Stack (The Brain)
 
 | Layer            | Technology        | Purpose                          |
 | ---------------- | ----------------- | -------------------------------- |
@@ -107,5 +117,5 @@ graph TD
 
 ---
 
-**Document Version:** 2.1  
-**Last Audit:** 2026-02-01
+**Document Version:** 2.2
+**Last Audit:** 2026-02-27

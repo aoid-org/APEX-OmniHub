@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as monitoring from '../../src/lib/monitoring';
 import { _testing } from '../../src/lib/monitoring';
-import { getGlobalDispatcher, MockAgent } from 'undici';
+
 
 // Mock storage adapter to avoid side effects and inspect calls
 // Actually, _testing.storage is a singleton instance. We can spy on it.
@@ -14,13 +14,7 @@ describe('monitoring integration', () => {
     if (_testing.logCache) _testing.logCache.clear();
     vi.clearAllMocks();
 
-    const dispatcher = getGlobalDispatcher();
-    if (dispatcher instanceof MockAgent) {
-      dispatcher.get('http://127.0.0.1:7245')
-        .intercept({ path: /.*/, method: 'POST' })
-        .reply(200, {})
-        .persist();
-    }
+
 
     // Mock getHealthStatus to be healthy by default
     vi.mock('../../src/lib/omni-sentry', async () => {
