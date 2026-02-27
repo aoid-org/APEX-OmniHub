@@ -1,6 +1,6 @@
 /**
  * GlobalMediaDock — Persistent PiP Media Layer
- * @version 1.0.0
+ * @version 1.1.0
  * @module src/components/omnidash/media/GlobalMediaDock
  *
  * Fixed-position dock that persists across route transitions.
@@ -15,6 +15,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
+import { type ComponentType } from 'react';
 import { useOmniMedia } from '@/stores/omniMediaStore';
 import { OmniMediaPlayer } from './OmniMediaPlayer';
 import { Slider } from '@/components/ui/slider';
@@ -30,6 +31,75 @@ import {
 } from 'lucide-react';
 import './OmniMediaDock.css';
 
+// ---------------------------------------------------------------------------
+// Shared sub-component — eliminates the duplicated info-row JSX block
+// ---------------------------------------------------------------------------
+
+interface DockInfoRowProps {
+  title: string;
+  provider: string;
+  mediaType: string;
+  isPlaying: boolean;
+  onTogglePlay: () => void;
+  DockIcon: ComponentType<{ className?: string }>;
+  dockLabel: string;
+  onToggleDock: () => void;
+  onClose: () => void;
+}
+
+function DockInfoRow({
+  title,
+  provider,
+  mediaType,
+  isPlaying,
+  onTogglePlay,
+  DockIcon,
+  dockLabel,
+  onToggleDock,
+  onClose,
+}: DockInfoRowProps) {
+  return (
+    <div className="omni-dock-info-row">
+      <div className="omni-dock-info">
+        <span className="omni-dock-title">{title}</span>
+        <span className="omni-dock-provider">{provider}</span>
+      </div>
+      <div className="omni-dock-actions">
+        {mediaType !== 'embed' && (
+          <button
+            type="button"
+            className="omni-dock-btn"
+            onClick={onTogglePlay}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+          >
+            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          </button>
+        )}
+        <button
+          type="button"
+          className="omni-dock-btn"
+          onClick={onToggleDock}
+          aria-label={dockLabel}
+        >
+          <DockIcon className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          className="omni-dock-btn omni-dock-btn-close"
+          onClick={onClose}
+          aria-label="Close media player"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// GlobalMediaDock
+// ---------------------------------------------------------------------------
+
 export function GlobalMediaDock() {
   const {
     currentMedia,
@@ -42,47 +112,27 @@ export function GlobalMediaDock() {
     close,
   } = useOmniMedia();
 
-  // Render nothing when no media or not docked
   if (!currentMedia) return null;
+
+  const sharedInfoRowProps = {
+    title: currentMedia.title,
+    provider: currentMedia.provider,
+    mediaType: currentMedia.type,
+    isPlaying,
+    onTogglePlay: togglePlay,
+    onClose: close,
+  };
 
   // When not docked, render a minimal floating "re-dock" button
   if (!isDocked) {
     return (
       <div className="omni-media-dock" style={{ width: 'auto', padding: '8px 12px' }}>
-        <div className="omni-dock-info-row">
-          <div className="omni-dock-info">
-            <span className="omni-dock-title">{currentMedia.title}</span>
-            <span className="omni-dock-provider">{currentMedia.provider}</span>
-          </div>
-          <div className="omni-dock-actions">
-            {currentMedia.type !== 'embed' && (
-              <button
-                type="button"
-                className="omni-dock-btn"
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pause' : 'Play'}
-              >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-              </button>
-            )}
-            <button
-              type="button"
-              className="omni-dock-btn"
-              onClick={() => setDocked(true)}
-              aria-label="Expand media player"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              className="omni-dock-btn omni-dock-btn-close"
-              onClick={close}
-              aria-label="Close media player"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <DockInfoRow
+          {...sharedInfoRowProps}
+          DockIcon={Maximize2}
+          dockLabel="Expand media player"
+          onToggleDock={() => setDocked(true)}
+        />
       </div>
     );
   }
@@ -102,40 +152,12 @@ export function GlobalMediaDock() {
 
       {/* Control Bar */}
       <div className="omni-dock-controls">
-        <div className="omni-dock-info-row">
-          <div className="omni-dock-info">
-            <span className="omni-dock-title">{currentMedia.title}</span>
-            <span className="omni-dock-provider">{currentMedia.provider}</span>
-          </div>
-          <div className="omni-dock-actions">
-            {currentMedia.type !== 'embed' && (
-              <button
-                type="button"
-                className="omni-dock-btn"
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pause' : 'Play'}
-              >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-              </button>
-            )}
-            <button
-              type="button"
-              className="omni-dock-btn"
-              onClick={() => setDocked(false)}
-              aria-label="Minimize media player"
-            >
-              <Minimize2 className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              className="omni-dock-btn omni-dock-btn-close"
-              onClick={close}
-              aria-label="Close media player"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <DockInfoRow
+          {...sharedInfoRowProps}
+          DockIcon={Minimize2}
+          dockLabel="Minimize media player"
+          onToggleDock={() => setDocked(false)}
+        />
 
         {/* Volume Slider — hidden for embeds (no control) */}
         {currentMedia.type !== 'embed' && (
