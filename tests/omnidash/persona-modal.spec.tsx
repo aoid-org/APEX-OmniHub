@@ -11,7 +11,7 @@ describe('Persona system', () => {
 
     render(
       <PersonaModal
-        isOpen
+        isOpen={true}
         currentPersona="Navigator"
         onClose={() => undefined}
         onSelect={onSelect}

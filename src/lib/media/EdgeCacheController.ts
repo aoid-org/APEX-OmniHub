@@ -19,6 +19,36 @@
 const DEFAULT_CACHE_KEY = 'omni-media-v1';
 
 /**
+ * CORS proxy base URL for cross-origin media.
+ * Routes external media through EdgeCORSProxy to guarantee
+ * Access-Control-Allow-Origin headers for Web Audio API.
+ */
+const EDGE_CORS_PROXY_BASE = 'https://cors.apexomnihub.icu';
+
+/**
+ * Determines if a URL requires CORS proxying.
+ * Same-origin, blob:, and data: URLs bypass the proxy.
+ */
+function requiresProxy(url: string): boolean {
+  if (url.startsWith('blob:') || url.startsWith('data:')) return false;
+  try {
+    const parsed = new URL(url, globalThis.location?.origin);
+    return parsed.origin !== globalThis.location?.origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Wraps an external URL in the EdgeCORSProxy.
+ * @returns Proxied URL for cross-origin sources, original URL for same-origin.
+ */
+export function proxyMediaUrl(url: string): string {
+  if (!requiresProxy(url)) return url;
+  return `${EDGE_CORS_PROXY_BASE}/?source=${encodeURIComponent(url)}`;
+}
+
+/**
  * Prefetch and cache media at the given URL.
  *
  * @returns A blob: URL if the media is already cached locally,
@@ -40,10 +70,12 @@ export async function prefetchAndCacheMedia(
       return URL.createObjectURL(blob);
     }
 
-    // Not cached yet — fetch in background, cache for next access
-    fetch(url)
+    // Not cached yet — fetch via CORS proxy for external sources, cache for next access
+    const fetchUrl = proxyMediaUrl(url);
+    fetch(fetchUrl)
       .then((response) => {
         if (response.ok) {
+          // Cache under original URL key for consistent lookups
           return cache.put(url, response.clone());
         }
         return undefined;

@@ -53,7 +53,7 @@ let consecutiveFailures = 0;
 
 // Cache warm via async IIFE (es2020 compat: await inside function, not top-level)
 /** Consumers can optionally await this to guarantee cache is warm before first read */
-export const registryReady = (async () => {
+export const registryReady = (async () => { // NOSONAR - es2020 target compat
   try {
     await loadRegistryFromLocal();
     await loadUpsertQueue();

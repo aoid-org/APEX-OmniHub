@@ -5,26 +5,60 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.3] - 2026-02-26
+
+### Added — UI Architecture & Media Security
+
+#### Tri-Pane Kinetic Architecture
+
+- **OmniDash Hero Restructure:** Refactored the Dashboard Hero section into a 12-column grid "Tri-Pane" layout (Agent col-span-3, OmniSlate col-span-6, Outcomes col-span-3).
+- **Flex Confinement:** Applied rigid flex boundaries to Outcome cards, ensuring values and truncated text fit perfectly within the glass panes.
+- **Agent Axis Transposition:** Reoriented the APEX Agent widget from a horizontal to a vertical stack for improved spatial containment.
+
+#### Edge Security Pipeline
+
+- **EdgeCORSProxy:** Deployed a stateless Cloudflare Edge Worker (`edge-cors-proxy.js`) to intercept and append `Access-Control-Allow-Origin: *` headers to external media.
+- **EdgeCacheController Routing:** Updated `prefetchAndCacheMedia` to route non-same-origin media requests through the CORS proxy, eliminating Web Audio API `MediaElementAudioSourceNode` cross-origin failures.
+
+### Fixed — Quality Gates & Accessibility
+
+- **PersonaModal HTML Semantics:** Replaced `role="button"` on the backdrop with a native `<button type="button">` and replaced the inner `role="dialog"` container with a native `<dialog open>` element, resolving three major SonarQube Code Smells.
+- **CI Unused Variables:** Removed legacy `ECOSYSTEM` constant merged from upstream `main` that triggered an ESLint warning and CI failure.
+- **TypeScript Warnings:** Fixed global object references (`globalThis` vs `window`), cleared `TODO` tags, added explicit `NOSONAR` boundaries for intentional IIFE top-level awaits, and optimized array instantiation in `monitoring.test.ts`.
+
+### Quality Gates
+
+- Build: 0 errors
+- TypeScript: 0 errors
+- ESLint: 0 errors, 0 warnings
+- SonarQube: A-grade maintained
+
+---
+
 ## [1.3.2] - 2026-02-25
 
 ### Fixed — Production Audit & Optimization
 
 #### Code Quality & SonarQube Compliance
+
 - **Console logging hardened:** All 36+ `console.log` statements in production source code (`src/omniconnect/`, `src/lib/offline.ts`, `src/lib/omni-sentry.ts`) guarded with `import.meta.env.DEV` — zero information disclosure in production builds
 - **Console.info hardened:** All 6 `console.info` statements in OmniSentry monitoring module guarded for dev-only output
 - **ESLint blanket eslint-disable removed:** Removed `/* eslint-disable no-console */` from `src/lib/omni-sentry.ts`
 - **ESLint config tightened:** Removed overly broad `src/pages/**/*.tsx` and narrowed exemptions to only infrastructure files with properly guarded logging
 
 #### Test Infrastructure
+
 - **Vitest coverage crash fixed:** Coverage is now opt-in via `VITEST_COVERAGE=true` env var, preventing `ENOENT: coverage/.tmp/coverage-0.json` crash on default test runs
 - **`test:coverage` script updated:** Now sets `VITEST_COVERAGE=true` automatically
 
 #### Repository Hygiene
+
 - **Stale CI artifacts removed:** Deleted `final_eslint.json` (UTF-16 encoded legacy artifact), `security/npm-audit-latest.json`, `security/npm-audit-prod.json`, `coverage/` directory
 - **`.gitignore` extended:** Added rules for stale CI artifacts to prevent re-commitment
 - **README.md updated:** Platform statistics updated to verified 2026-02-25 counts (259 source files, 93 components, 43 migrations, 87 test files, 11 CI pipelines)
 
 ### Quality Gates
+
 - Build: 0 errors
 - TypeScript: 0 errors
 - ESLint: 0 errors, 0 warnings

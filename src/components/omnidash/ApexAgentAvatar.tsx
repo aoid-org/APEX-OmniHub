@@ -48,8 +48,8 @@ const ApexAgentAvatar: React.FC<ApexAgentAvatarProps> = memo(
         }
       };
 
-      window.addEventListener('storage', handleStorageChange);
-      return () => window.removeEventListener('storage', handleStorageChange);
+      globalThis.addEventListener('storage', handleStorageChange);
+      return () => globalThis.removeEventListener('storage', handleStorageChange);
     }, []);
 
     const sizeClass = SIZE_CLASSES[size];
