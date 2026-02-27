@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
 _Directable • Accountable • Dependable_
 
-**Version:** 1.3.3 | **Release Date:** 2026-02-26
+**Version:** 1.3.4 | **Release Date:** 2026-02-27
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
@@ -37,7 +37,7 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Verified 2026-02-26)
+## Platform Statistics (Verified 2026-02-27)
 
 | Metric                  | Value                                     |
 | ----------------------- | ----------------------------------------- |
@@ -100,7 +100,16 @@ The "Trinity" connectivity layer:
 - **OmniPort**: The Multimodal Normalizer for standardized I/O and DLQ (`20260124000000_omniport_dlq.sql`).
 - **OmniTrace**: Full replay & tracing capability (`20260125000000_omnitrace_replay.sql`).
 
-### 5) Web3-Native Identity (Optional)
+### 5) Edge Compute Layer (Media & CORS)
+
+Client-side infrastructure for deterministic media delivery:
+
+- **Edge CORS Proxy**: Vercel Edge Function (`api/cors.ts`) with WinterCG-safe header handling and Range passthrough.
+- **LRU Media Cache**: 250 MB ceiling with localStorage ledger eviction (`lib/media/EdgeCacheController.ts`).
+- **Cloudflare Worker**: Stateless CORS proxy at `edge/cors-proxy/edge-cors-proxy.js` for production CDN.
+- **Fail-Safe Design**: Every cache miss gracefully degrades to proxy URL — zero silent failures.
+
+### 6) Web3-Native Identity (Optional)
 
 - SIWE (Sign-In with Ethereum) — `supabase/functions/web3-verify/`
 - NFT verification — `supabase/functions/verify-nft/`
@@ -130,6 +139,9 @@ The "Trinity" connectivity layer:
 
 ```
 /src                 — OmniDash UI (234 files, 28 components)
+/api                 — Vercel Edge Functions (CORS proxy)
+/lib/media           — Edge Cache Controller (LRU, 250 MB ceiling)
+/edge/cors-proxy     — Cloudflare Edge Worker (stateless CORS)
 /supabase/migrations — Database schema (35 versioned migrations)
 /supabase/functions  — Edge functions (18 serverless endpoints)
 /orchestrator        — Temporal workers (Python, 55 files)

@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-02-27 -->
 # Frontend Structure Map
 
 This document maps the main frontend topology in `APEX-OmniHub`, with a visual artifact for quick onboarding and architecture reviews.
@@ -24,7 +24,13 @@ The map focuses on the React/Vite application rooted under `src/`, its route she
    - OmniConnect pipeline (`omniconnect/*`)
    - Integrations (`integrations/*`)
    - Security & identity (`security`, `zero-trust`, `guardian`, `lib/web3`)
+   - Edge compute & media (`lib/media`, `stores/omniMediaStore`, `stores/omniModalStore`)
    - Core/support modules (`core`, `api`, `stores`, `utils`, `armageddon`, `lib/*`)
+
+5. **Edge Compute Layer (Root-level)**
+   - Vercel Edge CORS proxy (`api/cors.ts`)
+   - LRU media cache governor (`lib/media/EdgeCacheController.ts`)
+   - Cloudflare Worker proxy (`edge/cors-proxy/edge-cors-proxy.js`)
 
 4. **Testing & Tooling Layer**
    - Vitest (`vitest.config.ts`) for broad frontend/unit/integration/simulation suites.

@@ -5,6 +5,40 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.4] - 2026-02-27
+
+### Added — Edge Compute & Deterministic Media Cache
+
+#### Vercel Edge CORS Proxy (`api/cors.ts`)
+
+- **Edge Runtime Handler:** Deployed a Vercel Edge Function at `/api/cors?source=<url>` for zero-latency cross-origin media proxying.
+- **WinterCG-Safe Headers:** Response headers reconstructed via `new Headers()` — upstream `Response` objects never mutated (immutable header compliance).
+- **Range Request Passthrough:** Forwards `Range` headers to upstream for media scrubbing and partial content delivery (HTTP 206).
+- **Preflight Support:** Full CORS preflight handling on `OPTIONS` with `Access-Control-Allow-Origin: *`, exposed `Content-Length`, `Content-Range`, `Content-Type`.
+- **Fail-Safe Validation:** Returns HTTP 400 with descriptive JSON body on missing or malformed `source` query parameter.
+
+#### LRU Media Cache Governor (`lib/media/EdgeCacheController.ts`)
+
+- **250 MB Hard Ceiling:** Deterministic LRU eviction via localStorage ledger — sorted ascending by `lastAccessed`, evicts oldest entries until `totalBytes <= MAX_BYTES`.
+- **Cache API Integration:** Caches only HTTP 200 responses; never stores 206 partial content.
+- **Ledger Persistence:** localStorage-backed `apex_omni_cache_ledger` with `saveLedger()` quota-exceeded guard — on failure, cache entry is deleted to maintain ledger-cache consistency.
+- **Singleton Export:** `edgeCacheController` singleton — no Zustand, no React, no npm dependencies (pure Web APIs).
+- **Public API (Frozen Signatures):** `proxyMediaUrl(sourceUrl)`, `clearAll()`, `evictUrl(sourceUrl)` — fail-safe fallback to CORS proxy URL on any error.
+
+### Fixed — Code Quality (SonarQube Compliance)
+
+- **ES2020 Portability:** Replaced bare `window` references with `globalThis.window` and `globalThis.location` in `EdgeCacheController.buildFetchUrl()` (L109, L112).
+- **Dead Assignment Removal:** Removed useless `ledger =` reassignment at L182 — `enforceMemoryCeiling()` return value was never read after assignment.
+
+### Quality Gates
+
+- Build: 0 errors
+- TypeScript: 0 errors
+- ESLint: 0 errors, 0 warnings
+- SonarQube: A-grade maintained (3 code smells resolved)
+
+---
+
 ## [1.3.3] - 2026-02-26
 
 ### Added — UI Architecture & Media Security
