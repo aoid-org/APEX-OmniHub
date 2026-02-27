@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
 _Directable • Accountable • Dependable_
 
-**Version:** 1.3.2 | **Release Date:** 2026-02-25
+**Version:** 1.3.3 | **Release Date:** 2026-02-26
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
@@ -37,19 +37,19 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Verified 2026-02-25)
+## Platform Statistics (Repository Snapshot 2026-02-26)
 
-| Metric                  | Value                                     |
-| ----------------------- | ----------------------------------------- |
-| **Source Files**        | 259 TypeScript/React files                |
-| **React Components**    | 93 component files (49 shadcn/ui)         |
-| **Page Routes**         | 25 page components                        |
-| **Edge Functions**      | 18 Supabase serverless functions          |
-| **Database Migrations** | 43 versioned SQL schemas                  |
-| **CI/CD Pipelines**     | 11 GitHub Actions workflows               |
-| **Test Files**          | 87 test specifications                    |
-| **Custom Hooks**        | 12 React hooks                            |
-| **Integration Modules** | 4 (Maestro, OmniLink, OmniPort, Supabase) |
+| Metric                  | Value                              |
+| ----------------------- | ---------------------------------- |
+| **Source Files (`src/`)** | 277 total files                     |
+| **TypeScript/TSX (`src/`)** | 260 files                        |
+| **React Components (`src/`)** | 130 `.tsx` component files      |
+| **Page Routes (`src/pages/`)** | 27 page files                   |
+| **Edge Functions (`supabase/functions/`)** | 22 function directories |
+| **Database Migrations (`supabase/migrations/`)** | 48 SQL migration files |
+| **CI/CD Workflows (`.github/workflows/`)** | 12 workflow files      |
+| **Test Specs (`tests/` + `e2e/`)** | 86 test specs (`*.test.ts`, `*.spec.ts`) |
+| **Custom Hooks (`src/`)** | 14 hook files matching `use*.ts*` |
 
 ---
 
@@ -109,7 +109,7 @@ The "Trinity" connectivity layer:
 
 ---
 
-## Edge Functions (18 Deployed)
+## Edge Functions (22 Directories in Repository)
 
 | Function                 | Purpose                    |
 | ------------------------ | -------------------------- |
@@ -129,13 +129,12 @@ The "Trinity" connectivity layer:
 ## Repository Layout
 
 ```
-/src                 — OmniDash UI (234 files, 28 components)
-/supabase/migrations — Database schema (35 versioned migrations)
-/supabase/functions  — Edge functions (18 serverless endpoints)
-/orchestrator        — Temporal workers (Python, 55 files)
-/apps/omnihub-site   — Marketing site (Vite)
-/tests               — Test suite (59 specifications)
-/.github/workflows   — CI/CD pipelines (10 workflows)
+/src                 — OmniDash UI (277 files)
+/supabase/migrations — Database schema (48 versioned SQL migrations)
+/supabase/functions  — Edge functions (22 serverless endpoints)
+/orchestrator        — Temporal workers and orchestration services (83 files)
+/tests               — Automated test suite (115 files)
+/.github/workflows   — CI/CD workflows (12 pipelines)
 ```
 
 ---
@@ -187,7 +186,7 @@ bun test           # Vitest suite
 bun run build      # Production build
 ```
 
-### CI/CD Pipelines (8 Workflows)
+### CI/CD Pipelines (Selected Workflows)
 
 | Workflow                | Trigger         | Purpose                      |
 | ----------------------- | --------------- | ---------------------------- |
