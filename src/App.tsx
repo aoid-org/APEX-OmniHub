@@ -34,6 +34,7 @@ const OmniDashApprovals = lazy(() => import("./components/omnidash/Approvals"));
 const OmniDashLocalAgents = lazy(() => import("./components/omnidash/LocalAgents"));
 const OmniDashTasks = lazy(() => import("./components/omnidash/Tasks"));
 const WorkflowStudio = lazy(() => import("./components/omnidash/WorkflowStudio"));
+const GlobalMediaDock = lazy(() => import("./components/omnidash/media/GlobalMediaDock").then(m => ({ default: m.GlobalMediaDock })));
 
 // Lazy load pages for better code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -211,6 +212,8 @@ const App = () => (
           <AuthProvider>
             <Web3Provider>
             <Suspense fallback={<PageLoader />}>
+              {/* OmniMedia PiP Dock — persists across all routes */}
+              <GlobalMediaDock />
               <Routes>
                 {/* Public routes (no mobile gate) */}
                 <Route path="/" element={<AuthenticatedRedirect />} />

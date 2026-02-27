@@ -1,4 +1,142 @@
-export function DashboardOverview() {
+/**
+ * DashboardOverview - OmniBoard Center Content
+ *
+ * Hero: Agent (30%, left) | Top 3 (20%, right) | OmniSlate (50%, bottom)
+ * OmniSlate = prompt bar + TTS recording + health-colored context tiles
+ *
+ * Mic exclusion: when OmniSlate mic is recording, Agent shows "Standby"
+ *                when OmniSlate mic stops, Agent returns to "Listening..."
+ */
+
+import { memo, useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
+import lightbulbIcon from '@/assets/lightbulb-icon.png';
+
+/* ── Real app logos via Clearbit ── */
+const LOGO = (domain: string) => `https://logo.clearbit.com/${domain}`;
+
+/* ── Data ── */
+
+const OUTCOMES = [
+  { rank: 1, title: 'Close 12 Invoices', tag: 'Finance',  tagColor: '#34d399', metric: '+$24.6K' },
+  { rank: 2, title: 'Sync 48 Leads',     tag: 'Sales',    tagColor: '#38bdf8', metric: '+42' },
+  { rank: 3, title: 'Resolve 7 Tickets', tag: 'Support',  tagColor: '#f97316', metric: '95%' },
+] as const;
+
+interface ContextItem {
+  readonly name: string;
+  readonly health: 'green' | 'yellow' | 'red';
+  readonly insight: string;
+}
+
+const INITIAL_CONTEXT: readonly ContextItem[] = [
+  { name: 'QuickBooks',  health: 'green',  insight: 'All syncs healthy. Last refresh 2m ago.' },
+  { name: 'Salesforce',  health: 'yellow', insight: 'API rate limit at 78%. Consider batching calls.' },
+  { name: 'SAP ERP',     health: 'red',    insight: 'Auth token expired. Re-authenticate to restore sync.' },
+] as const;
+
+const HC = {
+  green:  { border: 'rgba(52,211,153,0.5)',  bg: 'rgba(52,211,153,0.06)',  text: '#34d399', shadow: '0 0 12px rgba(52,211,153,0.25)' },
+  yellow: { border: 'rgba(250,204,21,0.5)',  bg: 'rgba(250,204,21,0.06)',  text: '#facc15', shadow: '0 0 12px rgba(250,204,21,0.25)' },
+  red:    { border: 'rgba(239,68,68,0.5)',   bg: 'rgba(239,68,68,0.06)',   text: '#ef4444', shadow: '0 0 12px rgba(239,68,68,0.25)' },
+} as const;
+
+
+const APPS = [
+  { name: 'Salesforce',  cat: 'Sales',      logo: LOGO('salesforce.com'),  synced: '1m',  status: 'Live' as const },
+  { name: 'HubSpot',     cat: 'Marketing',  logo: LOGO('hubspot.com'),     synced: '3m',  status: 'Live' as const },
+  { name: 'QuickBooks',  cat: 'Finance',    logo: LOGO('quickbooks.com'),  synced: '2m',  status: 'Live' as const },
+  { name: 'NetSuite',    cat: 'ERP',        logo: LOGO('netsuite.com'),    synced: '1m',  status: 'Partial' as const },
+  { name: 'SAP',         cat: 'ERP',        logo: LOGO('sap.com'),         synced: '1m',  status: 'Live' as const },
+  { name: 'Gmail',       cat: 'Comms',      logo: LOGO('gmail.com'),       synced: '9m',  status: 'Live' as const },
+  { name: 'Slack',       cat: 'Comms',      logo: LOGO('slack.com'),       synced: '1m',  status: 'Live' as const },
+  { name: 'Shopify',     cat: 'Commerce',   logo: LOGO('shopify.com'),     synced: '10m', status: 'Partial' as const },
+  { name: 'Stripe',      cat: 'Payments',   logo: LOGO('stripe.com'),      synced: '2m',  status: 'Live' as const },
+  { name: 'Zapier',      cat: 'Automation', logo: LOGO('zapier.com'),      synced: '3m',  status: 'Live' as const },
+  { name: 'Intercom',    cat: 'Support',    logo: LOGO('intercom.com'),    synced: '3m',  status: 'Partial' as const },
+  { name: 'Custom API',  cat: 'HTTP',       logo: '',                      synced: '',    status: 'Live' as const },
+] as const;
+
+const ECOSYSTEM = [
+  { name: 'aSpiral',          desc: 'AI Workforce Engine',    color: '#38bdf8', status: 'Active' },
+  { name: 'TradeLine 24/7',   desc: 'Real-Time Trading',      color: '#f97316', status: 'Active' },
+  { name: 'Armageddon Test',  desc: 'Chaos Engineering Suite', color: '#ef4444', status: 'Standby' },
+] as const;
+
+function deriveHealth(items: readonly ContextItem[]): 'green' | 'yellow' | 'red' {
+  if (items.some(i => i.health === 'red')) return 'red';
+  if (items.some(i => i.health === 'yellow')) return 'yellow';
+  return 'green';
+}
+
+const O = '#c2501f'; // burnt orange
+
+/* ── Component ── */
+
+export const DashboardOverview = memo(function DashboardOverview() {
+  const navigate = useNavigate();
+  const [context, setContext] = useState<readonly ContextItem[]>(INITIAL_CONTEXT);
+  const [activeInsight, setActiveInsight] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const mediaRef = useRef<MediaRecorder | null>(null);
+
+  const health = deriveHealth(context);
+  const s = HC[health];
+
+  const handleCleanSlate = useCallback(() => { setContext([]); setActiveInsight(null); }, []);
+  const toggleInsight = useCallback((n: string) => setActiveInsight(p => p === n ? null : n), []);
+
+  // ────────────────────────────────────────────────
+  // TTS Voice Recording - record-then-send (NOT real-time)
+  // Mutual exclusion: recording ON → Agent "Standby"
+  // ────────────────────────────────────────────────
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+      recorder.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+      };
+
+      mediaRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+      setRecordingDuration(0);
+
+      // Duration counter
+      timerRef.current = setInterval(() => {
+        setRecordingDuration(d => d + 1);
+      }, 1000);
+    } catch {
+      // Mic permission denied - fail silently
+    }
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRef.current?.state === 'recording') {
+      mediaRef.current.stop();
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsRecording(false);
+    setRecordingDuration(0);
+  }, []);
+
+  const toggleRecording = useCallback(() => {
+    if (isRecording) stopRecording();
+    else startRecording();
+  }, [isRecording, startRecording, stopRecording]);
+
+  // Agent status derives from recording state
+  const agentStatus = isRecording ? 'standby' : 'listening';
+
   return (
 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -332,6 +470,79 @@ export function DashboardOverview() {
         </motion.div>
 
       </div>
+
+      {/* ═══════ INTEGRATED APPS ═══════ */}
+      <div className="apps-hex" style={{ padding: '8px 32px 24px 32px', marginTop: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <span style={{ fontSize: 19.26, fontWeight: 800, color: '#dfe6fe', letterSpacing: '-0.02em' }}>Integrated Apps</span>
+            <span style={{ fontSize: 12.84, fontWeight: 700, color: '#a1a1aa', fontFamily: 'JetBrains Mono, monospace' }}>ALL SYSTEMS ({APPS.length})</span>
+          </div>
+          <span style={{ fontSize: 12.84, color: '#f97316', cursor: 'pointer', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Manage →</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          {APPS.map((app) => (
+            <motion.div 
+              key={app.name} 
+              style={{
+                display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px',
+                borderRadius: 16, background: 'rgba(255,255,255,0.02)',
+                border: `1px solid rgba(255,255,255,0.05)`, cursor: 'grab',
+                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 15px rgba(0,0,0,0.4)`,
+                touchAction: 'none',
+                height: 92,
+                transition: 'all 0.3s ease-out',
+                position: 'relative'
+              }}
+              drag
+              dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+              dragElastic={0.1}
+              whileHover={{ scale: 1.03, borderColor: 'rgba(255,255,255,0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 8px 25px rgba(0,0,0,0.6)', translateY: -2 }}
+              whileTap={{ scale: 0.98, cursor: 'grabbing' }}
+              onClick={() => navigate('/omnidash/omniport')}
+            >
+              {app.logo ? (
+                <img src={app.logo} alt={app.name} style={{
+                  width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                  background: '#09090b', objectFit: 'contain', padding: 6,
+                  border: `1px solid rgba(255,255,255,0.1)`,
+                }} />
+              ) : (
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                  background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.1)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 19.26, fontWeight: 800, color: '#f97316',
+                }}>{app.name[0]}</div>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16.05, fontWeight: 800, color: '#dfe6fe', letterSpacing: '-0.01em' }}>{app.name}</span>
+                  <span className="chip-live" style={{
+                    position: 'absolute', top: 16, right: 16,
+                    ...(app.status === 'Partial' ? {
+                      background: 'rgba(250,204,21,0.12)', color: '#facc15',
+                      borderColor: 'rgba(250,204,21,0.3)',
+                    } : {})
+                  }}>{app.status}</span>
+                </div>
+                <div style={{ fontSize: 11.770000000000001, color: '#a1a1aa', marginTop: 4, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{app.cat}</div>
+                {app.synced && <div style={{ fontSize: 11.235000000000001, color: '#71717a', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>SYNC: {app.synced}</div>}
+              </div>
+              {app.status === 'Partial' && (
+                <button type="button" style={{
+                  position: 'absolute', bottom: 16, right: 16,
+                  fontSize: 10.700000000000001, fontWeight: 800, padding: '6px 14px', borderRadius: 8,
+                  background: `rgba(249,115,22,0.1)`, border: `1px solid rgba(249,115,22,0.3)`,
+                  color: '#f97316', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: '0.05em'
+                }}>Sync</button>
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* REMOVED: Original APEX Ecosystem — moved above IntegratedApps (Mutation 2) */}
     </div>
   );
-}
+});
