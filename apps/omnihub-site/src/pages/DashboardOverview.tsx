@@ -400,6 +400,74 @@ export const DashboardOverview = memo(function DashboardOverview() {
             </div>
           </div>
         </motion.div>
+<<<<<<< Updated upstream
+=======
+
+        {/* ── RIGHT PANE: Top 3 Outcomes (col-span-3) ── */}
+        <motion.div
+          layout
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 170, damping: 26, mass: 1, delay: 0.1 }}
+          whileHover={{ scale: 1.01, transition: { type: 'spring', stiffness: 170, damping: 26, mass: 1 } }}
+          className="col-span-3 flex flex-col relative overflow-hidden"
+          style={{
+            padding: 24,
+            borderRadius: 24,
+            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            backdropFilter: 'blur(32px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 10px 30px rgba(0,0,0,0.2)',
+          }}
+        >
+          {/* SVG Noise Layer */}
+          <div
+            className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
+            style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E")' }}
+          />
+          <div className="relative z-10 w-full">
+            <div style={{ fontSize: 19, fontWeight: 800, color: '#dfe6fe', marginBottom: 2, letterSpacing: '-0.02em' }}>Top 3 Outcomes</div>
+            <div style={{ fontSize: 11.77, fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Today&apos;s Focus</div>
+            <div className="flex flex-col gap-2.5 w-full">
+              {OUTCOMES.map((o) => (
+                <motion.div
+                  key={o.rank}
+                  className="flex flex-row items-center justify-between w-full p-3 rounded-xl overflow-hidden gap-2"
+                  style={{
+                    background: 'rgba(0,0,0,0.20)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    cursor: 'grab', touchAction: 'none',
+                  }}
+                  drag
+                  dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                  dragElastic={0.4}
+                  whileHover={{ scale: 1.02, translateX: 4, rotate: 0.5 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {/* Left: Number + truncated text */}
+                  <div className="flex flex-row items-center gap-2 min-w-0 flex-1">
+                    <span className="text-gray-500 font-mono text-xs flex-shrink-0">0{o.rank}</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-white text-sm font-semibold truncate">{o.title}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded w-max mt-0.5" style={{
+                        background: `${o.tagColor}18`, color: o.tagColor, border: `1px solid ${o.tagColor}40`,
+                        fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
+                      }}>{o.tag}</span>
+                    </div>
+                  </div>
+                  {/* Right: Unbreakable value */}
+                  <div className="flex-shrink-0 text-right">
+                    <span className="text-white font-bold text-sm tracking-tight" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{o.metric}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+      </div>
+>>>>>>> Stashed changes
 
         {/* ── RIGHT PANE: Top 3 Outcomes (col-span-3) ── */}
         <motion.div
