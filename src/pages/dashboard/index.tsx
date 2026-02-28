@@ -9,15 +9,15 @@ function TradeLineStatus(): JSX.Element {
   const { events, isConnected } = useOmniStream(sessionId);
 
   const activeCalls = useMemo(
-    () => events.filter((event) => event.type === 'run.started').length,
+    () => events.filter((event) => (event.type as string) === 'run.started').length,
     [events],
   );
 
   const activeAgents = useMemo(() => {
     const names = new Set(
       events
-        .filter((event) => event.type === 'run.completed')
-        .map((event) => event.agent)
+        .filter((event) => (event.type as string) === 'run.completed')
+        .map((event) => (event as unknown as Record<string, string>).agent)
         .filter((name): name is string => Boolean(name)),
     );
 

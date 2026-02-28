@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useLoginRedirect } from '@/hooks/useLoginRedirect';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import appIcon from '@/assets/app_icon.png';
@@ -35,7 +37,7 @@ const Auth = () => {
   const { redirect: performPostLoginRedirect, loading: redirectLoading } = useLoginRedirect();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: unknown } }) => {
       if (session && !redirectLoading) {
         performPostLoginRedirect();
       }
@@ -185,7 +187,7 @@ const Auth = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-600/5" />
             
             <CardContent className="p-6 relative z-10">
-              <Tabs value={mode} onValueChange={(v) => setMode(v as 'signin' | 'signup')} className="w-full">
+              <Tabs value={mode} onValueChange={(v: string) => setMode(v as 'signin' | 'signup')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6 bg-black/40 border border-white/5">
                   <TabsTrigger 
                     value="signin"

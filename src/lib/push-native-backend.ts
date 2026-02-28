@@ -2,8 +2,8 @@
  * Register device token with Supabase backend
  */
 export async function registerTokenWithBackend(token: string, platform: string): Promise<void> {
-    const { createClient } = await import('@/lib/supabase');
-    const supabase = createClient();
+    const mod = await import('@/lib/supabase/client');
+    const supabase = mod.createSupabaseClient({ url: '', apiKey: '' });
 
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
@@ -13,7 +13,7 @@ export async function registerTokenWithBackend(token: string, platform: string):
 
     // Get device info with type assertions
     const { Device } = await import('@capacitor/device');
-    const deviceInfo = await Device.getInfo() as { appVersion: string; osVersion: string; model: string };
+    const deviceInfo = await Device.getInfo() as unknown as { appVersion: string; osVersion: string; model: string };
     const deviceId = await Device.getId() as { identifier: string };
 
     // Upsert token

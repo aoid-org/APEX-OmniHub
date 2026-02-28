@@ -157,7 +157,7 @@ export function useOmniStream(
           table: 'agent_events',
           filter: `session_id=eq.${sessionId}`,
         },
-        (payload) => {
+        (payload: { new: unknown }) => {
           const newEvent = payload.new as AgentEvent;
           mergeEvent(newEvent);
         }
@@ -170,12 +170,12 @@ export function useOmniStream(
           table: 'agent_events',
           filter: `session_id=eq.${sessionId}`,
         },
-        (payload) => {
+        (payload: { new: unknown }) => {
           const updatedEvent = payload.new as AgentEvent;
           mergeEvent(updatedEvent);
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         setIsConnected(status === 'SUBSCRIBED');
         if (status === 'CHANNEL_ERROR') {
           console.error('[useOmniStream] Channel error');

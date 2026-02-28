@@ -57,12 +57,13 @@ export default function VoiceHealth(): JSX.Element {
 
   useEffect(() => {
     const fetchHealth = async (): Promise<void> => {
-      const { data } = await supabase.functions.invoke<VoiceHealthResponse>(
+      const { data } = await supabase.functions.invoke(
         'ops-voice-health'
       );
       if (data) {
-        setMetrics(data.metrics);
-        setLogs(data.logs);
+        const resp = data as VoiceHealthResponse;
+        setMetrics(resp.metrics);
+        setLogs(resp.logs);
       }
     };
     fetchHealth();

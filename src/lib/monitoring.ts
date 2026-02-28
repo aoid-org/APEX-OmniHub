@@ -13,7 +13,13 @@ import { LocalStorageAdapter } from './storage-adapter';
 // Re-export OmniSentry for external access
 export { getHealthStatus, reportError as reportOmniError, withResilience } from './omni-sentry';
 
-let sentry: unknown = null;
+interface SentryLike {
+  init: (config: Record<string, unknown>) => void;
+  captureException: (error: Error, context?: Record<string, unknown>) => void;
+  addBreadcrumb: (breadcrumb: Record<string, unknown>) => void;
+}
+
+let sentry: SentryLike | null = null;
 let sentryInitialized = false;
 
 // Batching configuration
@@ -106,7 +112,7 @@ export interface PerformanceEvent {
   metadata?: Record<string, unknown>;
 }
 
-async function ensureSentry() {
+async function ensureSentry(): Promise<SentryLike | null> {
   if (sentryInitialized || sentry) return sentry;
 
   const dsn = import.meta.env.VITE_SENTRY_DSN;
@@ -114,17 +120,15 @@ async function ensureSentry() {
 
   try {
     // Dynamic import from CDN - TypeScript can't resolve these at compile time
-     
-    sentry = await import('https://esm.sh/@sentry/browser@7.120.1');
-     
+    // @ts-expect-error CDN import not resolvable at compile time
+    sentry = (await import('https://esm.sh/@sentry/browser@7.120.1')) as SentryLike;
+    // @ts-expect-error CDN import not resolvable at compile time
     const { BrowserTracing } = await import('https://esm.sh/@sentry/tracing@7.120.1');
 
-     
-    sentry.init({
+    sentry!.init({
       dsn,
       environment: getEnvironment(),
       release: `${appConfig.name}@${appConfig.version}`,
-       
       integrations: [new BrowserTracing()],
       tracesSampleRate: 0.2,
     });
@@ -264,7 +268,7 @@ export async function logError(error: Error, context?: ErrorContext): Promise<vo
   persistLog('error_logs', entry, 50);
 
   const s = await ensureSentry();
-  if (s?.captureException) {
+  if (s) {
     s.captureException(error, { extra: context });
   }
 }
@@ -291,7 +295,7 @@ export async function logAnalyticsEvent(
   }
 
   const s = await ensureSentry();
-  if (s?.addBreadcrumb) {
+  if (s) {
     s.addBreadcrumb({
       category: 'analytics',
       message: eventName,
@@ -321,7 +325,7 @@ export async function logSecurityEvent(
   persistLog('security_logs', entry, 100);
 
   const s = await ensureSentry();
-  if (s?.addBreadcrumb) {
+  if (s) {
     s.addBreadcrumb({
       category: 'security',
       message: eventType,
