@@ -5,6 +5,36 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.5] - 2026-02-28
+
+### Added — Security & UX Enhancements
+
+#### Core Security Hardening
+
+- **Rate Limiters (Fail-Closed):** Enforced a strict fail-closed strategy for distributed (`_shared/rate-limit.ts`) and database rate limiters (`_shared/rate-limiter.ts`) during unavailability to align with the core deterministic law.
+- **Armageddon Compliance:** Enabled Row Level Security (RLS) on `armageddon_events` and `armageddon_runs`.
+- **Database Migrations:** Added idempotency guards to OmniDash paid access migration.
+
+#### UX & Infrastructure
+
+- **Home Integration:** Added autoplay demo video section below the hero.
+- **Hero Optimization:** Rearranged and modernized the hero `h1` grid layout to drop inline styling.
+- **Dynamic Skill Loader:** Implemented dynamic skill loading and githooks automation.
+- **Dependency Consolidation:** Rolled out automated dependency consolidation.
+
+### Fixed
+
+- **CI Pipelines:** Resolved migration permission errors and npm audit vulnerabilities.
+- **Code Quality:** Resolved all TypeScript errors (264 → 0) across `src/` and test directories.
+
+### Quality Gates
+
+- Build: 0 errors
+- TypeScript: 0 errors
+- ESLint: 0 errors, 0 warnings
+
+---
+
 ## [1.3.4] - 2026-02-27
 
 ### Added — Edge Compute & Deterministic Media Cache
@@ -44,27 +74,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added — Production Infrastructure Enhancements
 
 #### Task 1: Idempotency Hit-Rate Monitoring
+
 - `orchestrator/metrics.py`: Prometheus counters `idempotency_hits_total` / `idempotency_misses_total` with `/metrics` endpoint
 - `docs/monitoring/idempotency_hitrate.json`: Grafana dashboard with hit-rate panel and < 95% alert rule
 - Integrated metrics server startup into `orchestrator/main.py` worker boot sequence
 - `tests/test_idempotency_metrics.py`: Unit tests for counter labels, hit-rate math, server idempotency
 
 #### Task 2: pg_cron Automatic Receipt Cleanup
+
 - `supabase/migrations/20260226000000_enable_pg_cron_receipt_cleanup.sql`: Idempotent migration enabling pg_cron + daily 03:00 UTC cleanup of expired receipts > 30 days
 - `supabase/migrations/20260226000001_rollback_receipt_cleanup.sql`: Safe rollback migration
 - `scripts/verify_cron.sql`: Verification query for cron job status and run history
 - `tests/test_receipt_cleanup.py`: Unit tests for cleanup SQL logic and rollback existence
 
 #### Task 3: Guard Rail Violation Alerting
+
 - `.github/workflows/ci-runtime-gates.yml`: Added guard rail scan step (Phase 5) + Python availability verification
 - `.github/workflows/alert-guard-rail-violation.yml`: New workflow — triggers on CI failure, opens GitHub Issue labeled `guard-rail-violation`, posts to Slack `#platform-alerts`
 - `tests/test_guard_rail_alert.py`: Tests for grep pattern matching, false-positive prevention
 
 #### Documentation Updates
+
 - `docs/ops/OPS_RUNBOOK.md`: Added idempotency monitoring, pg_cron cleanup, guard rail response sections
 - `docs/project-status/LAUNCH_READINESS_v1.0.0.md`: Added v1.3.2+ production enhancement checklist
 
 ### Quality Gates
+
 - Build: PASS | TypeScript: PASS | ESLint: 0 errors, 0 warnings
 - Python ruff: PASS | All existing tests: PASS
 - Zero breaking changes to existing CI, workflows, or runtime behavior
