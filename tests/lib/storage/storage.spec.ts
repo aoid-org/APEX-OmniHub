@@ -127,7 +127,7 @@ class MockStorage implements IStorage {
 
   async list(
     bucket: string,
-    options?: unknown
+    options?: { prefix?: string; search?: string; offset?: number; limit?: number }
   ): Promise<{ data: StorageFile[] | null; error: Error | null; count?: number | null }> {
     if (!this.mockFiles[bucket]) {
       return { data: [], error: null, count: 0 }
@@ -137,12 +137,12 @@ class MockStorage implements IStorage {
 
     // Apply prefix filter
     if (options?.prefix) {
-      files = files.filter((f) => f.path.startsWith(options.prefix))
+      files = files.filter((f) => f.path.startsWith(options.prefix!))
     }
 
     // Apply search filter
     if (options?.search) {
-      files = files.filter((f) => f.name.includes(options.search))
+      files = files.filter((f) => f.name.includes(options.search!))
     }
 
     // Apply limit/offset
@@ -209,7 +209,7 @@ class MockStorage implements IStorage {
   async createSignedUrl(
     bucket: string,
     path: string,
-    options?: unknown
+    options?: { expiresIn?: number }
   ): Promise<{ data: string | null; error: Error | null }> {
     const file = this.mockFiles[bucket]?.[path]
     if (!file) {
@@ -229,7 +229,7 @@ class MockStorage implements IStorage {
   ): Promise<{ data: string[] | null; error: Error | null }> {
     const urls: string[] = []
     for (const path of paths) {
-      const { data: url } = await this.createSignedUrl(bucket, path, options)
+      const { data: url } = await this.createSignedUrl(bucket, path, options as { expiresIn?: number } | undefined)
       if (url) urls.push(url)
     }
     return { data: urls, error: null }

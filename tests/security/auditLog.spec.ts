@@ -18,7 +18,8 @@ describe('audit log queue', () => {
 
   it('enqueues and flushes audit events', async () => {
     const { recordAuditEvent, getAuditQueueSnapshot, flushQueue } = await importAudit();
-    (fetch as unknown).mockResolvedValue({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (fetch as any).mockResolvedValue({
       ok: true,
       headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => ({ status: 'ok' }),
@@ -42,7 +43,8 @@ describe('audit log queue', () => {
   it.skip('keeps events queued when Lovable returns 500', { timeout: 10000 }, async () => {
     const { recordAuditEvent, getAuditQueueSnapshot, flushQueue } = await importAudit();
     let callCount = 0;
-    (fetch as unknown).mockImplementation(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (fetch as any).mockImplementation(async () => {
       callCount++;
       if (callCount === 1) {
         return {

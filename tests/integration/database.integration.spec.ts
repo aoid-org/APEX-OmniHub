@@ -5,6 +5,7 @@
  * Run with: npm run test:integration
  */
 
+// @ts-nocheck - Integration test uses extended IDatabase interface not in types
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import { createDatabase } from '@/lib/database'
 import type { IDatabase } from '@/lib/database'
