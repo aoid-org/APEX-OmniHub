@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# .githooks/pre-commit
+# Runs ruff linting and format checks on the orchestrator Python code.
+# Exit on first failure to block the commit.
+
+set -euo pipefail
+
+echo "🔍 Pre-commit: running ruff checks..."
+
+# Check if ruff is available
+if ! command -v ruff &> /dev/null; then
+  echo "WARNING: ruff not found in PATH. Skipping pre-commit lint."
+  echo "Install with: pip install ruff"
+  exit 0
+fi
+
+echo "  → ruff check orchestrator"
+ruff check orchestrator
+
+echo "  → ruff format --check orchestrator"
+ruff format --check orchestrator
+
+echo "✅ Pre-commit checks passed."
