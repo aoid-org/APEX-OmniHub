@@ -104,16 +104,28 @@ export const Integrations = () => {
   const omniMedia = useOmniMedia();
 
   const handleTestModal = () => {
-    omniModal.invoke({
-      id: 'demo-qb-auth',
-      provider: 'QuickBooks',
-      type: 'oauth',
-      title: 'QuickBooks Data Sync',
-      description: 'Connect APEX OmniHub to QuickBooks to sync ledger data.',
-      onComplete: async (payload) => {
-        console.warn('QuickBooks integration complete:', payload);
+    // APEX Standard Invocation Pattern — try/catch absorbs user dismissals
+    try {
+      omniModal.invoke({
+        id: 'demo-qb-auth',
+        provider: 'QuickBooks',
+        type: 'oauth',
+        title: 'QuickBooks Data Sync',
+        description: 'Connect APEX OmniHub to QuickBooks to sync ledger data.',
+        onComplete: async (payload) => {
+          console.warn('QuickBooks integration complete:', payload);
+        },
+        onCancel: () => {
+          console.warn('APEX OmniModal: User dismissed the QuickBooks flow.');
+        },
+      });
+    } catch (error: unknown) {
+      const abortError = error as { status?: string } | undefined;
+      if (abortError?.status === 'ABORTED') {
+        return; // Absorb gracefully — no console noise
       }
-    });
+      console.error('APEX OmniModal: Critical failure', error);
+    }
   };
 
   const handleTestMedia = () => {
