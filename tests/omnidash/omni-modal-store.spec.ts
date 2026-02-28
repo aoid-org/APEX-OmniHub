@@ -139,4 +139,30 @@ describe('omniModalStore', () => {
       expect(useOmniModal.getState().activeModal).toBeNull();
     });
   });
+
+  describe('abortModal', () => {
+    it('resets state and calls onCancel', () => {
+      const onCancel = vi.fn();
+      const config = createValidConfig({ onCancel });
+      useOmniModal.getState().invoke(config);
+      expect(useOmniModal.getState().isOpen).toBe(true);
+
+      useOmniModal.getState().abortModal('USER_DISMISSED');
+      expect(useOmniModal.getState().activeModal).toBeNull();
+      expect(useOmniModal.getState().isOpen).toBe(false);
+      expect(onCancel).toHaveBeenCalledOnce();
+    });
+
+    it('works without onCancel defined', () => {
+      const config = createValidConfig({ onCancel: undefined });
+      useOmniModal.getState().invoke(config);
+      expect(() => useOmniModal.getState().abortModal()).not.toThrow();
+      expect(useOmniModal.getState().isOpen).toBe(false);
+    });
+
+    it('is idempotent — aborting with no active modal is a no-op', () => {
+      expect(() => useOmniModal.getState().abortModal()).not.toThrow();
+      expect(useOmniModal.getState().activeModal).toBeNull();
+    });
+  });
 });

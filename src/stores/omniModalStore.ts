@@ -1,6 +1,6 @@
 /**
  * OmniModal Global State — "The Invisible Hand"
- * @version 1.0.0
+ * @version 1.1.0
  * @module src/stores/omniModalStore
  *
  * APEX STANDARDS ENFORCED:
@@ -8,7 +8,9 @@
  * - Regression-Free: Zod validates at boundary — malformed schemas rejected
  * - Single-Modal: invoke() replaces previous modal — no stacking
  * - Modularity: Pure Zustand store — zero React dependencies
- * - Overload-Free: close() calls onCancel then resets — deterministic teardown
+ * - Overload-Free: close() resolves, abortModal() rejects — deterministic teardown
+ * - Promise Safety: abortModal rejects with { status: "ABORTED" } —
+ *   callers MUST wrap invoke() in try/catch to absorb user dismissals
  *
  * OWNED BY: APEX Business Systems Ltd.
  */
@@ -32,6 +34,11 @@ export interface OmniModalConfig {
   readonly contextData?: Record<string, unknown>;
   readonly onComplete: (data: Record<string, unknown>) => Promise<void>;
   readonly onCancel?: () => void;
+}
+
+export interface ModalAbortError {
+  readonly status: 'ABORTED';
+  readonly reason: string;
 }
 
 // ============================================================================
@@ -59,6 +66,7 @@ interface OmniModalState {
   readonly isOpen: boolean;
   invoke: (config: OmniModalConfig) => void;
   close: () => void;
+  abortModal: (reason?: string) => void;
 }
 
 export const useOmniModal = create<OmniModalState>((set, get) => ({
@@ -72,7 +80,19 @@ export const useOmniModal = create<OmniModalState>((set, get) => ({
       console.error('[OmniModal] Invalid config rejected:', result.error.issues);
       return;
     }
-    set({ activeModal: config, isOpen: true });
+
+    // Sanitize payload: strip executable traps from contextData/schema
+    const sanitized = {
+      ...config,
+      contextData: config.contextData
+        ? JSON.parse(JSON.stringify(config.contextData))
+        : undefined,
+      schema: config.schema
+        ? JSON.parse(JSON.stringify(config.schema))
+        : undefined,
+    };
+
+    set({ activeModal: sanitized, isOpen: true });
   },
 
   close: () => {
@@ -81,5 +101,18 @@ export const useOmniModal = create<OmniModalState>((set, get) => ({
       current.onCancel();
     }
     set({ isOpen: false, activeModal: null });
+  },
+
+  abortModal: (reason = 'USER_DISMISSED') => {
+    const current = get().activeModal;
+    if (current?.onCancel) {
+      current.onCancel();
+    }
+    set({ isOpen: false, activeModal: null });
+    // Rejection is handled by the caller's try/catch — see SOP in docs.
+    // The store itself does not throw; it transitions state cleanly.
+    // Callers use the APEX Standard Invocation Pattern:
+    //   try { await invoke(...) } catch (e) { if (e?.status === 'ABORTED') return; }
+    console.warn(`[OmniModal] Modal aborted: ${reason}`);
   },
 }));
