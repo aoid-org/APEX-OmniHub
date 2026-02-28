@@ -9,7 +9,7 @@
  *
  * APEX STANDARDS ENFORCED:
  * - Atomic Idempotency: Same modal config always produces identical render
- * - Overload-Free: Renders null when no active modal — zero DOM cost
+ * - Kinematic Exit: Dialog stays in DOM with open={false} so Radix runs exit animations
  * - Regression-Free: Processing state is local (useState), not global
  * - Modularity: Each modal type is an isolated render path
  * - Enterprise Reliability: resolveModal/abortModal always called — no orphaned Promises
@@ -42,7 +42,16 @@ export function UniversalModalEngine() {
     if (!activeModal) setIsProcessing(false);
   }, [activeModal]);
 
-  if (!activeModal) return null;
+  // CRITICAL: Do NOT return null when activeModal is absent.
+  // Shadcn/Radix requires the Dialog wrapper to remain in the DOM
+  // with open={false} to execute kinematic exit animations (fade out, scale down).
+  // Returning null would sever the animation lifecycle.
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open && activeModal) {
+      abortModal('USER_DISMISSED');
+    }
+  };
 
   /**
    * Resolve the modal Promise with the action payload.
@@ -65,6 +74,8 @@ export function UniversalModalEngine() {
   };
 
   const renderContent = () => {
+    if (!activeModal) return null;
+
     switch (activeModal.type) {
       case 'oauth':
         return (
@@ -194,12 +205,14 @@ export function UniversalModalEngine() {
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{activeModal.title}</DialogTitle>
-          {activeModal.description && activeModal.type !== 'confirmation' && (
-            <DialogDescription>{activeModal.description}</DialogDescription>
-          )}
-        </DialogHeader>
+        {activeModal && (
+          <DialogHeader>
+            <DialogTitle>{activeModal.title}</DialogTitle>
+            {activeModal.description && activeModal.type !== 'confirmation' && (
+              <DialogDescription>{activeModal.description}</DialogDescription>
+            )}
+          </DialogHeader>
+        )}
         {renderContent()}
       </DialogContent>
     </Dialog>

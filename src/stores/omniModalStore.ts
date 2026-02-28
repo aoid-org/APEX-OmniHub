@@ -36,6 +36,11 @@ export interface OmniModalConfig {
   readonly contextData?: Record<string, unknown>;
 }
 
+export interface ModalAbortError {
+  readonly status: 'ABORTED';
+  readonly reason: string;
+}
+
 // ============================================================================
 // Zod Validation Schema — boundary guard
 // ============================================================================
@@ -131,5 +136,18 @@ export const useOmniModal = create<OmniModalState>((set, get) => ({
       modalPromise.reject({ status: 'ABORTED', reason });
     }
     set({ activeModal: null, modalPromise: null });
+  },
+
+  abortModal: (reason = 'USER_DISMISSED') => {
+    const current = get().activeModal;
+    if (current?.onCancel) {
+      current.onCancel();
+    }
+    set({ isOpen: false, activeModal: null });
+    // Rejection is handled by the caller's try/catch — see SOP in docs.
+    // The store itself does not throw; it transitions state cleanly.
+    // Callers use the APEX Standard Invocation Pattern:
+    //   try { await invoke(...) } catch (e) { if (e?.status === 'ABORTED') return; }
+    console.warn(`[OmniModal] Modal aborted: ${reason}`);
   },
 }));
