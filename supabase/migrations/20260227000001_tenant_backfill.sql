@@ -1,8 +1,6 @@
 -- Migration: Tenant Data Backfill (Idempotent)
 -- Dependencies: 20260227000000_tenant_schema_init.sql
--- Rollback: DELETE FROM tenant_members WHERE tenant_id IN 
---             (SELECT id FROM tenants WHERE name LIKE '%Personal%');
---           DELETE FROM tenants WHERE name LIKE '%Personal%';
+-- Rollback: See docs/migrations/rollback-procedures.md
 
 DO $$ 
 DECLARE

@@ -1,8 +1,21 @@
 -- Migration: JWT-Based RLS Policies (Zero-Latency)
 -- Dependencies: 20260227000002_tenant_enforcement.sql
--- Rollback: DROP POLICY <policy_names>; Restore legacy policies.
+-- Rollback: See docs/migrations/rollback-procedures.md
 
 BEGIN;
+
+-- Helper: Extract tenant IDs from JWT claims (O(1), no DB lookup)
+CREATE OR REPLACE FUNCTION public.jwt_tenant_ids()
+RETURNS SETOF TEXT
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT jsonb_array_elements_text(
+    (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' -> 'tenants')::jsonb
+  ) #>> '{tenant_id}'
+$$;
 
 -- Drop legacy RLS policies
 DROP POLICY IF EXISTS idempotency_receipts_tenant_isolation ON public.idempotency_receipts;
@@ -11,13 +24,7 @@ DROP POLICY IF EXISTS idempotency_receipts_service_role ON public.idempotency_re
 -- Install O(1) JWT-based policies (NO database lookups)
 CREATE POLICY tenant_isolation_jwt ON public.idempotency_receipts
   FOR ALL
-  USING (
-    tenant_id::text IN (
-      SELECT jsonb_array_elements_text(
-        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' -> 'tenants')::jsonb
-      ) #>> '{tenant_id}'
-    )
-  );
+  USING (tenant_id::text IN (SELECT public.jwt_tenant_ids()));
 
 CREATE POLICY service_role_bypass ON public.idempotency_receipts
   FOR ALL
@@ -30,13 +37,7 @@ DROP POLICY IF EXISTS audit_logs_insert ON public.audit_logs;
 
 CREATE POLICY tenant_isolation_jwt ON public.audit_logs
   FOR ALL
-  USING (
-    tenant_id::text IN (
-      SELECT jsonb_array_elements_text(
-        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' -> 'tenants')::jsonb
-      ) #>> '{tenant_id}'
-    )
-  );
+  USING (tenant_id::text IN (SELECT public.jwt_tenant_ids()));
 
 CREATE POLICY service_role_bypass ON public.audit_logs
   FOR ALL
@@ -48,13 +49,7 @@ DROP POLICY IF EXISTS man_tasks_rls ON public.man_tasks;
 
 CREATE POLICY tenant_isolation_jwt ON public.man_tasks
   FOR ALL
-  USING (
-    tenant_id::text IN (
-      SELECT jsonb_array_elements_text(
-        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' -> 'tenants')::jsonb
-      ) #>> '{tenant_id}'
-    )
-  );
+  USING (tenant_id::text IN (SELECT public.jwt_tenant_ids()));
 
 CREATE POLICY service_role_bypass ON public.man_tasks
   FOR ALL
@@ -64,13 +59,7 @@ CREATE POLICY service_role_bypass ON public.man_tasks
 -- Repeat for omnitrace_runs
 CREATE POLICY tenant_isolation_jwt ON public.omnitrace_runs
   FOR ALL
-  USING (
-    tenant_id::text IN (
-      SELECT jsonb_array_elements_text(
-        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' -> 'tenants')::jsonb
-      ) #>> '{tenant_id}'
-    )
-  );
+  USING (tenant_id::text IN (SELECT public.jwt_tenant_ids()));
 
 CREATE POLICY service_role_bypass ON public.omnitrace_runs
   FOR ALL
@@ -80,13 +69,7 @@ CREATE POLICY service_role_bypass ON public.omnitrace_runs
 -- Repeat for omnitrace_events
 CREATE POLICY tenant_isolation_jwt ON public.omnitrace_events
   FOR ALL
-  USING (
-    tenant_id::text IN (
-      SELECT jsonb_array_elements_text(
-        (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' -> 'tenants')::jsonb
-      ) #>> '{tenant_id}'
-    )
-  );
+  USING (tenant_id::text IN (SELECT public.jwt_tenant_ids()));
 
 CREATE POLICY service_role_bypass ON public.omnitrace_events
   FOR ALL

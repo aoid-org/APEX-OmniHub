@@ -260,8 +260,8 @@ describe('useOmniStream — Event Stream Chaos Battery', () => {
     eventMap.set('evt-1', { id: 'evt-1', sequence_id: 1, data: 'first' });
     eventMap.set('evt-2', { id: 'evt-2', sequence_id: 2, data: 'second' });
 
-    // Simulate an update on the same exact key
-    eventMap.set('evt-1', { id: 'evt-1', sequence_id: 1, data: 'updated_first' });
+    // Intentionally re-set same key to test Map dedup behavior
+    eventMap.set('evt-1', { id: 'evt-1', sequence_id: 1, data: 'updated_first' }); // NOSONAR - intentional duplicate key to test dedup
 
     // Map deduplicates by key
     expect(eventMap.size).toBe(2);

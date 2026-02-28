@@ -142,7 +142,7 @@ describe('Chaos: Empty Connectors', () => {
       connectors: [], // Zero connectors
       connect: vi.fn(),
       isPending: false,
-    } as ReturnType<typeof wagmi.useConnect>);
+    } as unknown as ReturnType<typeof wagmi.useConnect>);
 
     const { WalletConnect } = await import('@/components/WalletConnect');
     const { container } = renderWithProviders(<WalletConnect />);
@@ -180,11 +180,14 @@ describe('Chaos: Null Data Returns', () => {
 
   it('null_event_array_handled_by_omnistream_merge', () => {
     const events: unknown[] = [];
-    const data: unknown[] | null = null;
+    // eslint-disable-next-line prefer-const
+    let data: unknown[] | null = null;
 
     // Mimics useOmniStream's merge logic with null data
-    if (data && Array.isArray(data)) {
-      events.push(...data);
+    if (data !== null && Array.isArray(data)) {
+      for (const item of data) {
+        events.push(item);
+      }
     }
 
     expect(events).toHaveLength(0);
@@ -416,7 +419,7 @@ describe('Chaos: Error Handling Fidelity', () => {
   it('error_is_cast_to_Error_instance_for_message_extraction', () => {
     // Mimics: const errorMessage = (error as Error).message;
     const error1 = new Error('Network timeout');
-    expect((error1 as Error).message).toBe('Network timeout');
+    expect(error1.message).toBe('Network timeout');
 
     const error2 = { message: 'Custom error object' };
     expect((error2 as Error).message).toBe('Custom error object');
