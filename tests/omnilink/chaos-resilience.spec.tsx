@@ -180,8 +180,9 @@ describe('Chaos: Null Data Returns', () => {
 
   it('null_event_array_handled_by_omnistream_merge', () => {
     const events: unknown[] = [];
-    // eslint-disable-next-line prefer-const
-    let data: unknown[] | null = null;
+    // Simulate runtime null data (TS cannot narrow through function boundary)
+    const getData = (): unknown[] | null => null;
+    const data = getData();
 
     // Mimics useOmniStream's merge logic with null data
     if (data !== null && Array.isArray(data)) {
