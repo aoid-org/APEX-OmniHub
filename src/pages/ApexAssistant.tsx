@@ -424,7 +424,7 @@ const ApexAssistant = () => {
           table: 'agent_runs',
           filter: `id=eq.${traceId}`,
         },
-        (payload) => {
+        (payload: { new: unknown }) => {
           const updatedRun = payload.new as Record<string, unknown>;
           const unsubscribe = () => channel.unsubscribe();
 

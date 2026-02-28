@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from './types';
 
 // User's own Supabase (highest priority)
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -72,12 +71,13 @@ function createUnavailableClient() {
     }),
     removeChannel: () => {},
     rpc: reject,
-  } as unknown as ReturnType<typeof createClient<Database>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
 }
 
 export const supabase = (!SUPABASE_URL || !SUPABASE_KEY)
   ? createUnavailableClient()
-  : createClient<Database>(SUPABASE_URL!, SUPABASE_KEY!, {
+  : createClient(SUPABASE_URL!, SUPABASE_KEY!, {
       auth: {
         // Safer access to localStorage for SSR/non-browser environments
         storage: typeof globalThis.window === 'undefined' ? undefined : globalThis.window.localStorage,

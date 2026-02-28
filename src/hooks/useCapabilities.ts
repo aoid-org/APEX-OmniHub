@@ -44,7 +44,7 @@ export function useCapabilities() {
         return getDefaultCapabilities(false);
       }
 
-      const isAdmin = roleData?.role === 'admin';
+      const isAdmin = (roleData as Record<string, unknown>)?.role === 'admin';
 
       // Derive capabilities based on role and subscription tier
       return {

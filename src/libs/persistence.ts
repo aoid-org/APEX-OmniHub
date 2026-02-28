@@ -17,14 +17,14 @@ async function getDb(): Promise<IDBDatabase | null> {
   if (!hasIndexedDB()) return null;
   if (dbPromise) return dbPromise;
 
-  dbPromise = new Promise((resolve, reject) => {
+  dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
     request.onupgradeneeded = () => {
       request.result.createObjectStore(STORE_NAME);
     };
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
-  }).catch(() => null);
+  }).catch(() => null) as Promise<IDBDatabase>;
 
   return dbPromise;
 }

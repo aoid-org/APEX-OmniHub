@@ -282,7 +282,7 @@ const Links = () => {
         className="layout -mx-2"
         layouts={layouts}
         breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
-        COLS={COLS}
+        cols={COLS}
         rowHeight={160}
         onLayoutChange={(_layout, allLayouts) => setLayouts(allLayouts)}
         draggableHandle=".custom-drag-handle"

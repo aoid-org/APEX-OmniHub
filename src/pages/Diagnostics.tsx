@@ -43,7 +43,7 @@ export default function Diagnostics() {
         deviceQueueSize: deviceQueue.filter((q) => q.status === 'pending').length,
         auditQueueSize: auditQueue.filter((q) => q.status === 'pending').length,
         errorCount: errors.length,
-        lastError: errors[errors.length - 1]?.message,
+        lastError: (errors[errors.length - 1] as Record<string, string>)?.message,
       });
     } catch (error) {
       console.error('Failed to load diagnostics:', error);

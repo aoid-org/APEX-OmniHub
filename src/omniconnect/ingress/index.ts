@@ -25,7 +25,7 @@ export {
 } from './OmniPort';
 
 // Type Definitions (re-exported for convenience)
-export {
+export type {
   RawInput,
   TextSource,
   VoiceSource,
@@ -34,6 +34,8 @@ export {
   IngestStatus,
   RiskLane,
   SecurityError,
+} from '../types/ingress';
+export {
   validateRawInput,
   safeValidateRawInput,
   isTextSource,

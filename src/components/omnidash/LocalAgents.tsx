@@ -6,6 +6,14 @@ import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Activity, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react";
 
+interface AgentEventRow {
+  id: string;
+  time: string;
+  source: string;
+  type: string;
+  data: Record<string, unknown> | null;
+}
+
 type TimeRange = "24h" | "7d";
 type SourceFilter = "all" | "lead-gen" | "apex-sales";
 
@@ -33,14 +41,14 @@ export default function LocalAgents() {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as AgentEventRow[];
     },
   });
 
   const leadGenMetrics = events
-    ?.filter((e) => e.source === "lead-gen")
+    ?.filter((e: AgentEventRow) => e.source === "lead-gen")
     .reduce(
-      (acc, e) => {
+      (acc: { ingested: number; qualified: number; queueSize: number }, e: AgentEventRow) => {
         if (e.type === "lead_ingested") acc.ingested++;
         if (e.type === "lead_qualified") acc.qualified++;
         if (e.type === "queue_seeded") acc.queueSize = (e.data as { queue_size?: number })?.queue_size ?? 0;
@@ -50,9 +58,9 @@ export default function LocalAgents() {
     ) ?? { ingested: 0, qualified: 0, queueSize: 0 };
 
   const apexSalesMetrics = events
-    ?.filter((e) => e.source === "apex-sales")
+    ?.filter((e: AgentEventRow) => e.source === "apex-sales")
     .reduce(
-      (acc, e) => {
+      (acc: { attempted: number; connected: number; booked: number; completed: number; errors: number }, e: AgentEventRow) => {
         if (e.type === "call_attempted") acc.attempted++;
         if (e.type === "call_connected") acc.connected++;
         if (e.type === "meeting_booked") acc.booked++;
@@ -228,7 +236,7 @@ export default function LocalAgents() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {events?.slice(0, 50).map((event) => (
+                {events?.slice(0, 50).map((event: AgentEventRow) => (
                   <div key={event.id} className="flex justify-between items-center p-2 border-b text-sm">
                     <div className="flex items-center gap-4">
                       <span className="font-mono text-xs text-muted-foreground">

@@ -1,7 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logError } from '@/lib/monitoring';
 import { recordAuditEvent } from '@/security/auditLog';
-import type { Database } from '@/integrations/supabase/types';
 import { Incident, KpiDaily, PipelineItem, TodayItem, OmniDashSettings } from './types';
 
 /**
@@ -27,12 +26,11 @@ export const OMNIDASH_COLUMNS = {
   incidents: 'id, user_id, severity, status, title, description, resolution_notes, occurred_at, resolved_at, created_at, updated_at',
 } as const;
 
-type TableName = keyof Database['public']['Tables'];
-
-async function handleError<T>(promise: Promise<{ data: T | null; error: { message: string } | null }>, context: string): Promise<T> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleError<T>(promise: Promise<any>, context: string): Promise<T> {
   const { data, error } = await promise;
   if (error) {
-    logError(error, { action: `omnidash_${context}` });
+    logError(error as Error, { action: `omnidash_${context}` });
     throw new Error(error.message || `Failed to ${context}`);
   }
   if (!data) {
@@ -137,7 +135,7 @@ export async function restartRitual(userId: string): Promise<void> {
 
   const categories: Array<'outcome' | 'outreach' | 'metric'> = ['outcome', 'outreach', 'metric'];
   const keepIds = categories
-    .map((cat) => data?.find((row) => row.category === cat)?.id)
+    .map((cat) => data?.find((row: Record<string, unknown>) => row.category === cat)?.id)
     .filter(Boolean) as string[];
 
   await supabase.from('omnidash_today_items').update({ is_active: false }).eq('user_id', userId);
@@ -296,7 +294,7 @@ export function aggregateUsageMetering(rows: UsageMeteringRow[]): UsageMeteringS
 }
 
 export async function fetchHealthSnapshot(userId: string): Promise<{ lastUpdated: string | null }> {
-  const healthTables: TableName[] = ['omnidash_today_items', 'omnidash_pipeline_items', 'omnidash_kpi_daily', 'omnidash_incidents', 'omnidash_settings'];
+  const healthTables = ['omnidash_today_items', 'omnidash_pipeline_items', 'omnidash_kpi_daily', 'omnidash_incidents', 'omnidash_settings'] as const;
   const latest = await Promise.all(
     healthTables.map(
       async (table) => {
