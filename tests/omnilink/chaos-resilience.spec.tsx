@@ -19,113 +19,29 @@
 
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { screen } from '@testing-library/react';
+import {
+  renderWithProviders,
+  mockSupabaseFactory,
+  mockMonitoringFactory,
+  mockDebugLoggerFactory,
+  mockAuthContextFactory,
+  mockHeartbeatFactory,
+  mockWagmiFactory,
+  mockWalletVerificationFactory,
+} from './chaos-setup';
 
 // ---------------------------------------------------------------------------
-// Mocks
+// Mocks — all delegated to shared factories
 // ---------------------------------------------------------------------------
 
-vi.mock('wagmi', () => ({
-  useConnect: vi.fn(() => ({
-    connectors: [],
-    connect: vi.fn(),
-    isPending: false,
-  })),
-  useAccount: vi.fn(() => ({
-    isConnected: false,
-    address: undefined,
-    chainId: undefined,
-  })),
-  useSignMessage: vi.fn(() => ({
-    signMessageAsync: vi.fn(),
-  })),
-  useDisconnect: vi.fn(() => ({
-    disconnect: vi.fn(),
-  })),
-}));
-
-vi.mock('@/hooks/useWalletVerification', () => ({
-  useWalletVerification: vi.fn(() => ({
-    walletState: { status: 'disconnected', isVerified: false },
-    verify: vi.fn(),
-    disconnect: vi.fn(),
-    address: undefined,
-    isConnected: false,
-    chainId: undefined,
-  })),
-}));
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-      onAuthStateChange: vi.fn(() => ({
-        data: { subscription: { unsubscribe: vi.fn() } },
-      })),
-    },
-    from: vi.fn(() => ({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-    })),
-    channel: vi.fn(() => ({
-      on: vi.fn().mockReturnThis(),
-      subscribe: vi.fn(),
-      unsubscribe: vi.fn(),
-    })),
-  },
-}));
-
-vi.mock('@/lib/monitoring', () => ({
-  logError: vi.fn().mockResolvedValue(undefined),
-  logAnalyticsEvent: vi.fn().mockResolvedValue(undefined),
-  initializeMonitoring: vi.fn(),
-  trackUserAction: vi.fn(),
-}));
-
-vi.mock('@/lib/debug-logger', () => ({
-  createDebugLogger: vi.fn(() => vi.fn()),
-}));
-
-vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: vi.fn(() => ({
-    user: { id: 'test-user-id', email: 'test@example.com' },
-    session: { access_token: 'mock-token' },
-    signOut: vi.fn(),
-    loading: false,
-  })),
-}));
-
-vi.mock('@/guardian/heartbeat', () => ({
-  getLoopStatuses: vi.fn(() => []),
-}));
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: { retry: false, gcTime: 0, staleTime: 0 },
-    },
-  });
-}
-
-function renderWithProviders(ui: React.ReactElement) {
-  const queryClient = createTestQueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        {ui}
-      </MemoryRouter>
-    </QueryClientProvider>
-  );
-}
+vi.mock('wagmi', () => mockWagmiFactory());
+vi.mock('@/hooks/useWalletVerification', () => mockWalletVerificationFactory());
+vi.mock('@/integrations/supabase/client', () => mockSupabaseFactory());
+vi.mock('@/lib/monitoring', () => mockMonitoringFactory());
+vi.mock('@/lib/debug-logger', () => mockDebugLoggerFactory());
+vi.mock('@/contexts/AuthContext', () => mockAuthContextFactory());
+vi.mock('@/guardian/heartbeat', () => mockHeartbeatFactory());
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CHAOS SCENARIO 1: Empty Connectors
@@ -199,12 +115,7 @@ describe('Chaos: Null Data Returns', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('Chaos: Rapid State Cycling', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it('wallet_state_machine_handles_rapid_transitions', () => {
-    // Simulate rapid state transitions
     type WalletStatus = 'disconnected' | 'connecting' | 'connected' | 'verifying' | 'verified' | 'error';
     const transitions: WalletStatus[] = [
       'disconnected',
@@ -227,7 +138,6 @@ describe('Chaos: Rapid State Cycling', () => {
   });
 
   it('isVerified_is_false_when_disconnected_regardless_of_history', () => {
-    // After any disconnect, isVerified MUST be false
     const state = {
       status: 'disconnected' as const,
       isVerified: false,
@@ -296,9 +206,6 @@ describe('Chaos: Auth Session Expiry', () => {
 
     const result = await supabaseMod.supabase.auth.getSession();
     expect(result.data.session).toBeNull();
-
-    // verifySignature checks for session and throws 'Authentication required'
-    // The hook catches this and sets error state
   });
 
   it('wallet_state_transitions_to_error_on_auth_failure', () => {
@@ -333,7 +240,6 @@ describe('Chaos: Boundary Values', () => {
 
   it('formatAddress_with_1_char_address', () => {
     const result = formatAddress('A');
-    // slice(0,6) = 'A', slice(-4) = 'A'
     expect(result).toBe('A...A');
   });
 
@@ -341,7 +247,6 @@ describe('Chaos: Boundary Values', () => {
     const longAddr = 'X'.repeat(1000);
     const result = formatAddress(longAddr);
     expect(result).toBe('XXXXXX...XXXX');
-    // Does not crash, produces valid output
   });
 
   it('formatAddress_with_empty_string', () => {
@@ -352,7 +257,6 @@ describe('Chaos: Boundary Values', () => {
   it('chainId_boundary_zero_is_valid', () => {
     const chainId = 0;
     const resolvedChainId = chainId ?? 1;
-    // 0 is falsy but ?? only catches null/undefined
     expect(resolvedChainId).toBe(0);
   });
 
@@ -375,7 +279,6 @@ describe('Chaos: Boundary Values', () => {
 
 describe('Chaos: Concurrent Operations', () => {
   it('multiple_simultaneous_verify_calls_resolve_without_corruption', async () => {
-    // Simulate multiple verify calls — all should resolve cleanly
     const results: string[] = [];
     const mockVerify = async (callId: string) => {
       results.push(`start:${callId}`);
@@ -389,23 +292,18 @@ describe('Chaos: Concurrent Operations', () => {
       mockVerify('call-3'),
     ]);
 
-    // All calls complete
     expect(results.filter((r) => r.startsWith('end:'))).toHaveLength(3);
-    // No corruption
     expect(results).toHaveLength(6);
   });
 
   it('event_map_handles_concurrent_insertions', () => {
     const eventMap = new Map<string, { id: string; value: number }>();
 
-    // Simulate concurrent inserts
     for (let i = 0; i < 1000; i++) {
       eventMap.set(`evt-${i % 100}`, { id: `evt-${i % 100}`, value: i });
     }
 
-    // Map maintains correct size (100 unique keys)
     expect(eventMap.size).toBe(100);
-    // Last write wins
     expect(eventMap.get('evt-0')?.value).toBe(900);
     expect(eventMap.get('evt-99')?.value).toBe(999);
   });
@@ -417,7 +315,6 @@ describe('Chaos: Concurrent Operations', () => {
 
 describe('Chaos: Error Handling Fidelity', () => {
   it('error_is_cast_to_Error_instance_for_message_extraction', () => {
-    // Mimics: const errorMessage = (error as Error).message;
     const error1 = new Error('Network timeout');
     expect(error1.message).toBe('Network timeout');
 

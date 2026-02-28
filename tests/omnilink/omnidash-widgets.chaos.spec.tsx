@@ -12,9 +12,21 @@
 
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { screen } from '@testing-library/react';
+import {
+  renderWithProviders,
+  mockSupabaseFactory,
+  mockAuthContextFactory,
+  mockAccessContextFactory,
+  mockMonitoringFactory,
+  mockDebugLoggerFactory,
+  mockOmnilinkApiFactory,
+  mockHeartbeatFactory,
+  mockOmniModalFactory,
+  mockAgentPrefsFactory,
+  mockHiddenMetricFactory,
+  mockDemoStoreFactory,
+} from './chaos-setup';
 
 // ---------------------------------------------------------------------------
 // Global polyfills for jsdom (ResizeObserver not available)
@@ -29,137 +41,20 @@ beforeAll(() => {
 });
 
 // ---------------------------------------------------------------------------
-// Mocks
+// Mocks — all delegated to shared factories
 // ---------------------------------------------------------------------------
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-      onAuthStateChange: vi.fn(() => ({
-        data: { subscription: { unsubscribe: vi.fn() } },
-      })),
-    },
-    from: vi.fn(() => ({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-      insert: vi.fn().mockResolvedValue({ data: null, error: null }),
-      upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
-    })),
-    channel: vi.fn(() => ({
-      on: vi.fn().mockReturnThis(),
-      subscribe: vi.fn(),
-      unsubscribe: vi.fn(),
-    })),
-    removeChannel: vi.fn().mockResolvedValue(undefined),
-  },
-}));
-
-vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: vi.fn(() => ({
-    user: { id: 'test-user-id', email: 'test@example.com' },
-    session: { access_token: 'mock-token' },
-    signOut: vi.fn(),
-    loading: false,
-  })),
-}));
-
-vi.mock('@/contexts/AccessContext', () => ({
-  useAccess: vi.fn(() => ({
-    isDemo: true,
-    setDemoMode: vi.fn(),
-    userScopes: ['public', 'authenticated', 'demo'],
-    isAuthenticated: true,
-    isAdmin: false,
-  })),
-  useCanAccess: vi.fn(() => true),
-}));
-
-vi.mock('@/lib/monitoring', () => ({
-  logError: vi.fn().mockResolvedValue(undefined),
-  logAnalyticsEvent: vi.fn().mockResolvedValue(undefined),
-  initializeMonitoring: vi.fn(),
-  trackUserAction: vi.fn(),
-}));
-
-vi.mock('@/lib/debug-logger', () => ({
-  createDebugLogger: vi.fn(() => vi.fn()),
-}));
-
-vi.mock('@/omnidash/omnilink-api', () => ({
-  fetchOmniTraceRuns: vi.fn(),
-  fetchOmniTraceRunDetail: vi.fn(),
-}));
-
-vi.mock('@/guardian/heartbeat', () => ({
-  getLoopStatuses: vi.fn(() => []),
-}));
-
-vi.mock('@/stores/omniModalStore', () => ({
-  useOmniModal: vi.fn(() => ({
-    invoke: vi.fn(),
-    dismiss: vi.fn(),
-    isOpen: false,
-    modal: null,
-  })),
-}));
-
-vi.mock('@/omnidash/agentPrefs', () => ({
-  readAgentPrefs: vi.fn(() => ({ persona: 'Navigator' })),
-}));
-
-vi.mock('@/components/omnidash/HiddenMetric', () => ({
-  // Cut Radix Tooltip dependency — not the target of these tests
-  default: () => null,
-  HiddenMetric: () => null,
-}));
-
-vi.mock('@/stores/demoStore', () => ({
-  useDemoStore: vi.fn(() => ({
-    entities: [],
-    events: [],
-    runs: [],
-    tasks: [],
-    kpis: [],
-    pipeline: [],
-    approvals: [],
-    addEntity: vi.fn(),
-    updateEntity: vi.fn(),
-    deleteEntity: vi.fn(),
-    addTask: vi.fn(),
-    updateTask: vi.fn(),
-    addEvent: vi.fn(),
-    approveItem: vi.fn(),
-    rejectItem: vi.fn(),
-    reset: vi.fn(),
-  })),
-}));
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: { retry: false, gcTime: 0, staleTime: 0 },
-    },
-  });
-}
-
-function renderWithProviders(ui: React.ReactElement) {
-  const queryClient = createTestQueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        {ui}
-      </MemoryRouter>
-    </QueryClientProvider>
-  );
-}
+vi.mock('@/integrations/supabase/client', () => mockSupabaseFactory());
+vi.mock('@/contexts/AuthContext', () => mockAuthContextFactory());
+vi.mock('@/contexts/AccessContext', () => mockAccessContextFactory());
+vi.mock('@/lib/monitoring', () => mockMonitoringFactory());
+vi.mock('@/lib/debug-logger', () => mockDebugLoggerFactory());
+vi.mock('@/omnidash/omnilink-api', () => mockOmnilinkApiFactory());
+vi.mock('@/guardian/heartbeat', () => mockHeartbeatFactory());
+vi.mock('@/stores/omniModalStore', () => mockOmniModalFactory());
+vi.mock('@/omnidash/agentPrefs', () => mockAgentPrefsFactory());
+vi.mock('@/components/omnidash/HiddenMetric', () => mockHiddenMetricFactory());
+vi.mock('@/stores/demoStore', () => mockDemoStoreFactory());
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SUITE 1: Today.tsx — OmniDash Main Widget
@@ -265,10 +160,6 @@ describe('Kpis — KPI Cards Chaos Battery', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('Runs — Import Validation', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it('module_has_valid_export', async () => {
     const mod = await import('@/components/omnidash/Runs');
     expect(mod.default || mod.Runs).toBeDefined();
@@ -280,10 +171,6 @@ describe('Runs — Import Validation', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('Pipeline — Import Validation', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it('module_imports_without_crashing', async () => {
     const mod = await import('@/components/omnidash/Pipeline');
     expect(mod.default).toBeDefined();
@@ -295,10 +182,6 @@ describe('Pipeline — Import Validation', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('Tasks — Import Validation', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it('module_imports_without_crashing', async () => {
     const mod = await import('@/components/omnidash/Tasks');
     expect(mod.default).toBeDefined();
@@ -310,10 +193,6 @@ describe('Tasks — Import Validation', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('Integrations — Import Validation', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it('module_imports_without_crashing', async () => {
     const mod = await import('@/components/omnidash/Integrations');
     expect(mod.default).toBeDefined();

@@ -10,10 +10,9 @@
  * to avoid re-importing wagmi on each test (which exhausts the V8 heap in jsdom).
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { renderWithProviders, mockMonitoringFactory, mockDebugLoggerFactory, mockAuthContextFactory } from './chaos-setup';
+import { renderWithProviders, mockMonitoringFactory, mockDebugLoggerFactory, mockSupabaseFactory } from './chaos-setup';
 
 // ---------------------------------------------------------------------------
 // Mocks — static, module-scope (not per-test dynamic imports)
@@ -73,24 +72,8 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: vi.fn(() => authState),
 }));
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-      onAuthStateChange: vi.fn(() => ({
-        data: { subscription: { unsubscribe: vi.fn() } },
-      })),
-    },
-    from: vi.fn(() => ({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-    })),
-  },
-}));
-
+vi.mock('@/integrations/supabase/client', () => mockSupabaseFactory());
 vi.mock('@/lib/monitoring', () => mockMonitoringFactory());
-
 vi.mock('@/lib/debug-logger', () => mockDebugLoggerFactory());
 
 // ---------------------------------------------------------------------------
@@ -98,7 +81,6 @@ vi.mock('@/lib/debug-logger', () => mockDebugLoggerFactory());
 // ---------------------------------------------------------------------------
 
 import { WalletConnect } from '@/components/WalletConnect';
-import type { WalletState } from '@/lib/web3/types';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 

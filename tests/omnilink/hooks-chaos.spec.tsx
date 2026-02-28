@@ -11,6 +11,12 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import {
+  mockMonitoringFactory,
+  mockDebugLoggerFactory,
+  mockHeartbeatFactory,
+  mockAccessContextFactory,
+} from './chaos-setup';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -57,30 +63,10 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@/lib/monitoring', () => ({
-  logError: vi.fn().mockResolvedValue(undefined),
-  logAnalyticsEvent: vi.fn().mockResolvedValue(undefined),
-  initializeMonitoring: vi.fn(),
-  trackUserAction: vi.fn(),
-}));
-
-vi.mock('@/lib/debug-logger', () => ({
-  createDebugLogger: vi.fn(() => vi.fn()),
-}));
-
-vi.mock('@/guardian/heartbeat', () => ({
-  getLoopStatuses: vi.fn(() => []),
-}));
-
-vi.mock('@/contexts/AccessContext', () => ({
-  useAccess: vi.fn(() => ({
-    isDemo: true,
-    setDemoMode: vi.fn(),
-    userScopes: ['public', 'authenticated', 'demo'],
-    isAuthenticated: true,
-    isAdmin: false,
-  })),
-}));
+vi.mock('@/lib/monitoring', () => mockMonitoringFactory());
+vi.mock('@/lib/debug-logger', () => mockDebugLoggerFactory());
+vi.mock('@/guardian/heartbeat', () => mockHeartbeatFactory());
+vi.mock('@/contexts/AccessContext', () => mockAccessContextFactory());
 
 vi.mock('@/stores/demoStore', () => ({
   useDemoStore: vi.fn(() => ({
