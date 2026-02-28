@@ -26,6 +26,8 @@
 
 -- Drop old admin-only policy
 DROP POLICY IF EXISTS "Admins manage omnidash_settings" ON public.omnidash_settings;
+-- FIX: Idempotency guard — drop new policy if already exists from prior partial apply
+DROP POLICY IF EXISTS "Admins and paid users manage omnidash_settings" ON public.omnidash_settings;
 
 -- Create new policy: admin OR paid user
 CREATE POLICY "Admins and paid users manage omnidash_settings"
@@ -50,6 +52,7 @@ COMMENT ON POLICY "Admins and paid users manage omnidash_settings"
 -- ============================================================================
 
 DROP POLICY IF EXISTS "Admins manage today items" ON public.omnidash_today_items;
+DROP POLICY IF EXISTS "Admins and paid users manage today items" ON public.omnidash_today_items;
 
 CREATE POLICY "Admins and paid users manage today items"
   ON public.omnidash_today_items
@@ -73,6 +76,7 @@ COMMENT ON POLICY "Admins and paid users manage today items"
 -- ============================================================================
 
 DROP POLICY IF EXISTS "Admins manage pipeline items" ON public.omnidash_pipeline_items;
+DROP POLICY IF EXISTS "Admins and paid users manage pipeline items" ON public.omnidash_pipeline_items;
 
 CREATE POLICY "Admins and paid users manage pipeline items"
   ON public.omnidash_pipeline_items
@@ -96,6 +100,7 @@ COMMENT ON POLICY "Admins and paid users manage pipeline items"
 -- ============================================================================
 
 DROP POLICY IF EXISTS "Admins manage KPI daily" ON public.omnidash_kpi_daily;
+DROP POLICY IF EXISTS "Admins and paid users manage KPI daily" ON public.omnidash_kpi_daily;
 
 CREATE POLICY "Admins and paid users manage KPI daily"
   ON public.omnidash_kpi_daily
@@ -119,6 +124,7 @@ COMMENT ON POLICY "Admins and paid users manage KPI daily"
 -- ============================================================================
 
 DROP POLICY IF EXISTS "Admins manage incidents" ON public.omnidash_incidents;
+DROP POLICY IF EXISTS "Admins and paid users manage incidents" ON public.omnidash_incidents;
 
 CREATE POLICY "Admins and paid users manage incidents"
   ON public.omnidash_incidents
