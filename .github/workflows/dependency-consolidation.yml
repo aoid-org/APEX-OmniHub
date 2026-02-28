@@ -1,0 +1,99 @@
+name: dependency-consolidation
+
+# BETA-T2: Weekly schedule — Sunday midnight UTC
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  consolidate-dependencies:
+    runs-on: ubuntu-latest
+    # BETA-T3: Only process PRs with "dependencies" label
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Find open dependency PRs
+        id: find-prs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              sort: 'created',
+              direction: 'asc'
+            });
+
+            const depPRs = prs.filter(pr =>
+              pr.labels.some(label => label.name === 'dependencies')
+            );
+
+            if (depPRs.length === 0) {
+              core.info('No open dependency PRs found. Exiting.');
+              core.setOutput('has_prs', 'false');
+              return;
+            }
+
+            core.setOutput('has_prs', 'true');
+            core.setOutput('pr_numbers', JSON.stringify(depPRs.map(pr => pr.number)));
+            core.setOutput('pr_count', depPRs.length.toString());
+
+            for (const pr of depPRs) {
+              core.info(`Found dependency PR #${pr.number}: ${pr.title}`);
+            }
+
+      - name: Auto-merge dependency PRs
+        if: steps.find-prs.outputs.has_prs == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumbers = JSON.parse('${{ steps.find-prs.outputs.pr_numbers }}');
+
+            for (const prNumber of prNumbers) {
+              try {
+                // BETA-T4: YELLOW LANE — mustBeGreen: false (user-confirmed)
+                // update_branch: true — keeps PR branch current with base
+                await github.rest.pulls.updateBranch({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber
+                });
+
+                core.info(`Updated branch for PR #${prNumber}`);
+
+                // Merge with mustBeGreen: false — force-merges even if CI is failing
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber,
+                  merge_method: 'squash',
+                  commit_title: `chore(deps): auto-merge dependency PR #${prNumber}`,
+                });
+
+                core.info(`Merged PR #${prNumber}`);
+              } catch (error) {
+                core.warning(`Failed to merge PR #${prNumber}: ${error.message}`);
+              }
+            }
+
+      - name: Summary
+        if: steps.find-prs.outputs.has_prs == 'true'
+        run: |
+          echo "## Dependency Consolidation Report" >> $GITHUB_STEP_SUMMARY
+          echo "- PRs processed: ${{ steps.find-prs.outputs.pr_count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- PR numbers: ${{ steps.find-prs.outputs.pr_numbers }}" >> $GITHUB_STEP_SUMMARY
+          echo "- mustBeGreen: false (force-merge enabled)" >> $GITHUB_STEP_SUMMARY
+          echo "- update_branch: true" >> $GITHUB_STEP_SUMMARY
