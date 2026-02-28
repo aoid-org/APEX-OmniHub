@@ -1,11 +1,15 @@
-import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// @ts-expect-error Deno CDN import - unused but documents dependency
+import type { SupabaseClient as _SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SkillDefinition, SkillMatch } from './types.ts';
 
-export class SkillRegistry {
-  private supabase: SupabaseClient;
-  private aiSession: unknown;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyClient = any;
 
-  constructor(supabase: SupabaseClient) {
+export class SkillRegistry {
+  private supabase: AnyClient;
+  private aiSession: AnyClient;
+
+  constructor(supabase: AnyClient) {
     this.supabase = supabase;
     this.initializeAISession();
   }
@@ -134,7 +138,7 @@ export class SkillRegistry {
       throw new Error(`Failed to retrieve skills: ${error.message}`);
     }
 
-    return (data || []).map(row => ({
+    return (data || []).map((row: Record<string, unknown>) => ({
       name: row.name,
       description: row.description,
       parameters: row.tool_definition,

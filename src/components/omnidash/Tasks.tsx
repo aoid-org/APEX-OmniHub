@@ -349,10 +349,10 @@ export default function Tasks() {
                   {task.worker_id && (
                     <p className="text-xs text-muted-foreground">Worker: {task.worker_id}</p>
                   )}
-                  {task.output && (
+                  {!!task.output && (
                     <details className="text-xs">
                       <summary className="cursor-pointer text-muted-foreground">Output</summary>
-                      <pre className="mt-2 p-2 bg-muted rounded overflow-x-auto">{JSON.stringify(task.output, null, 2)}</pre>
+                      <pre className="mt-2 p-2 bg-muted rounded overflow-x-auto">{String(JSON.stringify(task.output, null, 2))}</pre>
                     </details>
                   )}
                   {task.error_message && (

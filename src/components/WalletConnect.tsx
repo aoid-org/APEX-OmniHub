@@ -145,8 +145,8 @@ export function WalletConnect() {
             </Alert>
 
             <div className="flex gap-2">
-              <Button onClick={verify} className="flex-1" disabled={walletState.status === 'verifying'}>
-                {walletState.status === 'verifying' ? (
+              <Button onClick={verify} className="flex-1" disabled={(walletState.status as string) === 'verifying'}>
+                {(walletState.status as string) === 'verifying' ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Verifying...

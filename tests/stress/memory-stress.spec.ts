@@ -52,7 +52,7 @@ describe('Memory Stress Tests', () => {
         };
       };
 
-      const tree = createTree(5, 10);
+      const tree = createTree(5, 10) as { children: unknown[] };
       expect(tree).toBeDefined();
       expect(tree.children.length).toBe(10);
     });
@@ -139,7 +139,7 @@ describe('Memory Stress Tests', () => {
 
       const addToCache = (key: string, value: unknown) => {
         if (cache.size >= maxCacheSize) {
-          const firstKey = cache.keys().next().value;
+          const firstKey = cache.keys().next().value as string;
           cache.delete(firstKey);
         }
         cache.set(key, value);

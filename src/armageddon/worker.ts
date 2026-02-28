@@ -35,7 +35,8 @@ export async function createArmageddonWorker(): Promise<Worker> {
             destination: {
                 type: 'console',
             },
-        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
     });
 
     // Establish connection to Temporal server

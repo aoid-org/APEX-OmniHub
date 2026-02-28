@@ -1,5 +1,4 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
 
 export { supabase };
@@ -15,7 +14,7 @@ type SupabaseClientOptions = {
 // This factory now returns the singleton instance from integrations/supabase/client.ts
 // to eliminate "Split Brain" architecture and enforce a Single Source of Truth.
 // Options are intentionally ignored to prevent configuration drift.
-export function createSupabaseClient(options?: SupabaseClientOptions): SupabaseClient<Database> {
+export function createSupabaseClient(options?: SupabaseClientOptions): SupabaseClient {
   if (options?.debug) {
     console.warn('[SupabaseClient] createSupabaseClient called with options, but returning singleton instance to enforce Source of Truth.');
   }

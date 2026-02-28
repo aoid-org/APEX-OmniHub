@@ -328,7 +328,7 @@ export const Today = () => {
                     </svg>
                   </div>
                   <Input
-                    placeholder="Ask OmniAgent to do anything..."
+                    placeholder="Ask APEX Agent"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     onKeyDown={(e) => {

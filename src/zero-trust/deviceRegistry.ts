@@ -129,11 +129,11 @@ async function fetchRemoteRegistry(userId: string): Promise<DeviceRecord[]> {
       throw new Error(`Failed to fetch device registry: ${error.message}`);
     }
 
-    return (data || []).map((d) => ({
+    return (data || []).map((d: Record<string, unknown>) => ({
       deviceId: d.device_id,
       userId: d.user_id,
       lastSeen: d.last_seen_at,
-      deviceInfo: d.device_fingerprint ? JSON.parse(d.device_fingerprint) : {},
+      deviceInfo: d.device_fingerprint ? JSON.parse(d.device_fingerprint as string) : {},
       status: d.status as DeviceStatus,
     }));
   } catch (error) {
