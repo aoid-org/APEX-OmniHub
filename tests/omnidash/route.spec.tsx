@@ -1,4 +1,5 @@
 import React from 'react';
+void React;
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -6,7 +7,8 @@ import { render, screen } from '@testing-library/react';
 import OmniDashLayout from '@/pages/OmniDash/OmniDashLayout';
 
 vi.mock('@/omnidash/types', async () => {
-  const actual = await vi.importActual<unknown>('@/omnidash/types');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const actual = await vi.importActual<any>('@/omnidash/types');
   return {
     ...actual,
     OMNIDASH_FLAG: true,
