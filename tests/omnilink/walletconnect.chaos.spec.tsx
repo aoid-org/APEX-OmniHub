@@ -10,7 +10,7 @@
  * to avoid re-importing wagmi on each test (which exhausts the V8 heap in jsdom).
  */
 
-import React from 'react';
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, cleanup } from '@testing-library/react';
 import { renderWithProviders, mockMonitoringFactory, mockDebugLoggerFactory } from './chaos-setup';
@@ -73,8 +73,7 @@ vi.mock('@/lib/debug-logger', () => mockDebugLoggerFactory());
 // Eagerly import components at module level (one-time cost, not per-test)
 // ---------------------------------------------------------------------------
 
-import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+
 
 // ---------------------------------------------------------------------------
 // Mock the WalletConnect component itself to avoid Wagmi rendering OOMs

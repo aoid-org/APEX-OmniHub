@@ -19,10 +19,11 @@ export function createTestQueryClient() {
 /**
  * Renders a component wrapped in the standard providers needed for OmniLink tests.
  */
+const sharedQueryClient = createTestQueryClient();
+
 export function renderWithProviders(ui: React.ReactElement) {
-  const queryClient = createTestQueryClient();
   return render(
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={sharedQueryClient}>
       <MemoryRouter>
         {ui}
       </MemoryRouter>

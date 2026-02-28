@@ -33,6 +33,12 @@ CREATE INDEX IF NOT EXISTS idx_tenant_members_user_id ON public.tenant_members(u
 COMMENT ON TABLE public.tenant_members IS 
   'User-to-tenant membership with RBAC role. Composite PK prevents duplicate memberships.';
 
+-- Enforce RLS on tenants
+ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
+
+-- Enforce RLS on tenant_members
+ALTER TABLE public.tenant_members ENABLE ROW LEVEL SECURITY;
+
 -- Convert idempotency_receipts.tenant_id from TEXT to UUID (nullable for now)
 ALTER TABLE public.idempotency_receipts 
   ALTER COLUMN tenant_id TYPE UUID USING tenant_id::uuid,
