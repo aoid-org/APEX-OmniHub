@@ -89,8 +89,13 @@ CREATE TRIGGER sync_admin_metadata_insert_trigger
   )
   EXECUTE FUNCTION public.sync_admin_metadata_to_user_roles();
 
-COMMENT ON TRIGGER sync_admin_metadata_insert_trigger ON auth.users IS
-'Triggers on user creation to sync admin role to user_roles table';
+DO $comment$
+BEGIN
+  COMMENT ON TRIGGER sync_admin_metadata_insert_trigger ON auth.users IS
+  'Triggers on user creation to sync admin role to user_roles table';
+EXCEPTION WHEN insufficient_privilege THEN
+  RAISE NOTICE 'Skipping COMMENT ON TRIGGER (not owner of auth.users) — non-blocking';
+END $comment$;
 
 -- UPDATE trigger: use OLD vs NEW comparison for performance optimization
 CREATE TRIGGER sync_admin_metadata_update_trigger
@@ -101,8 +106,13 @@ CREATE TRIGGER sync_admin_metadata_update_trigger
   )
   EXECUTE FUNCTION public.sync_admin_metadata_to_user_roles();
 
-COMMENT ON TRIGGER sync_admin_metadata_update_trigger ON auth.users IS
-'Triggers on app_metadata changes to sync admin role to user_roles table';
+DO $comment$
+BEGIN
+  COMMENT ON TRIGGER sync_admin_metadata_update_trigger ON auth.users IS
+  'Triggers on app_metadata changes to sync admin role to user_roles table';
+EXCEPTION WHEN insufficient_privilege THEN
+  RAISE NOTICE 'Skipping COMMENT ON TRIGGER (not owner of auth.users) — non-blocking';
+END $comment$;
 
 -- ============================================================================
 -- STEP 3: Update claim_admin_access() to explicitly insert into user_roles
