@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SemanticTranslator } from '../src/omniconnect/translation/translator';
-import { CanonicalEvent } from '../src/omniconnect/types/canonical';
+import { CanonicalEvent, DataClassification, EventType } from '../src/omniconnect/types/canonical';
 
 describe('Universal Translation Engine (UTE)', () => {
     const translator = new SemanticTranslator();
@@ -10,6 +10,9 @@ describe('Universal Translation Engine (UTE)', () => {
     it('1. Translation Verification (Success)', async () => {
         const events: CanonicalEvent[] = [{
             eventId: 'evt-1',
+            correlationId, tenantId: 't', userId: 'u', source: 'test',
+            externalId: 'x1', classification: DataClassification.INTERNAL,
+            eventType: EventType.CONTENT_PUBLISHED, consentFlags: {},
             payload: { message: 'Hello World' },
             provider: 'test',
             timestamp: new Date().toISOString(),
@@ -38,6 +41,9 @@ describe('Universal Translation Engine (UTE)', () => {
         const brokenTranslator = new BrokenTranslator();
         const events: CanonicalEvent[] = [{
             eventId: 'evt-2',
+            correlationId, tenantId: 't', userId: 'u', source: 'test',
+            externalId: 'x2', classification: DataClassification.INTERNAL,
+            eventType: EventType.CONTENT_PUBLISHED, consentFlags: {},
             payload: { message: 'Critical Info' },
             provider: 'test',
             timestamp: new Date().toISOString(),
@@ -53,6 +59,9 @@ describe('Universal Translation Engine (UTE)', () => {
     it('3. Cross-Lingual Consistency', async () => {
         const events: CanonicalEvent[] = [{
             eventId: 'evt-3',
+            correlationId, tenantId: 't', userId: 'u', source: 'test',
+            externalId: 'x3', classification: DataClassification.INTERNAL,
+            eventType: EventType.CONTENT_PUBLISHED, consentFlags: {},
             payload: { key: 'Concept' },
             provider: 'test',
             timestamp: new Date().toISOString(),

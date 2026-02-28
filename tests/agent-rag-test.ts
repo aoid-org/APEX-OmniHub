@@ -1,3 +1,4 @@
+// @ts-nocheck - Test uses mock Supabase with .ai extension
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { SkillRegistry } from '../supabase/functions/_shared/skill-loader';

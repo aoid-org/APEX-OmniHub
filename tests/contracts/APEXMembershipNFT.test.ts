@@ -1,3 +1,4 @@
+// @ts-nocheck - Hardhat/typechain types not available in main tsconfig
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { expect } from "chai";
 import { ethers } from "hardhat";

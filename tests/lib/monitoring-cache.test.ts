@@ -42,7 +42,7 @@ describe('monitoring - in-memory cache', () => {
     // Cache should have the log
     const cached = getCachedLogs('error_logs');
     expect(cached.length).toBeGreaterThan(0);
-    expect(cached[0].message).toBe('test error');
+    expect((cached[0] as { message: string }).message).toBe('test error');
 
     // localStorage should match cache
     const fromStorage = JSON.parse(localStorage.getItem('error_logs') || '[]');
