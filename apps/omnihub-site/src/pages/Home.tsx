@@ -32,7 +32,8 @@ function Hero() {
             <span style={{ gridColumn: 2, gridRow: 1 }}>Change</span>
             <span style={{ gridColumn: 1, gridRow: 2 }}>anything.</span>
             <span style={{ gridColumn: 2, gridRow: 2 }}>anything.</span>
-            <span style={{ gridColumn: '1 / -1', gridRow: 3, textAlign: 'center' }}>Stay in control.</span>
+            <span style={{ gridColumn: 1, gridRow: 3 }}>Stay in</span>
+            <span style={{ gridColumn: 2, gridRow: 3 }}>control.</span>
           </h1>
           <p className="hero__tagline">{siteConfig.hero.tagline}</p>
           <p className="hero__subtagline">
