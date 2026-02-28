@@ -62,6 +62,21 @@ _semantic_cache = None  # SemanticCacheService instance
 _redis_client = None
 
 
+def extract_tenant_from_activity_input(input_data: dict) -> str:
+    """
+    Extract tenant_id from activity input payload.
+
+    Fallback chain: input.tenant_id → user_id → "default"
+    """
+    tenant_id = input_data.get("tenant_id")
+    if not tenant_id:
+        tenant_id = input_data.get("user_id", "default")
+        activity.logger.warning(
+            f"No tenant_id in activity input, falling back to user_id: {tenant_id}"
+        )
+    return tenant_id
+
+
 # ============================================================================
 # ACTIVITY SETUP
 # ============================================================================
@@ -553,7 +568,7 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
     activity.logger.info(f"Calling webhook: {method} {url}")
 
     async with httpx.AsyncClient() as client:
-        response = await client.request(  # NOSONAR: SSRF risk mitigated by validate_url_async above
+        response = await client.request(  # noqa: S310 - SSRF risk mitigated by validate_url_async above
             method=method,
             url=url,
             json=payload,

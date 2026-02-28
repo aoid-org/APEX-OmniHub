@@ -33,6 +33,9 @@ from models.man_mode import (
 from policies.man_policy import ManPolicy
 from providers.database.factory import get_database_provider
 
+# Import tenant extraction helper from tools.py
+from .tools import extract_tenant_from_activity_input
+
 # ============================================================================
 # RISK TRIAGE ACTIVITY
 # ============================================================================
@@ -128,6 +131,9 @@ async def create_man_task(params: dict[str, Any]) -> dict[str, Any]:
         provided_key = params.get("idempotency_key")
         tool_name = intent_data.get("tool_name")
 
+        # Extract tenant_id from activity input payload
+        tenant_id = extract_tenant_from_activity_input(params)
+
         # Create idempotency key
         idempotency_key = provided_key or create_idempotency_key(
             workflow_id, step_id, tool_name=tool_name, namespace="man"
@@ -148,6 +154,7 @@ async def create_man_task(params: dict[str, Any]) -> dict[str, Any]:
             "intent": intent_data,
             "triage_result": triage_data,
             "expires_at": expires_at,
+            "tenant_id": tenant_id,  # ← NEW
         }
 
         # Upsert (insert or return existing)
