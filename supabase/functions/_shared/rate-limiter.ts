@@ -31,12 +31,8 @@ export class RateLimiter {
 
     if (error) {
       console.error("[RateLimiter] RPC error:", error);
-      // Fail open (allow) if DB check fails to avoid outage during DB blips?
-      // Or fail closed for security? 
-      // APEX principle: Fail Closed for security, Fail Open for reliability if non-critical.
-      // Rate limiting is non-critical for safety, but critical for cost. 
-      // We'll Log and Allow to prevent blocking legitimate users on unrelated DB errors.
-      return; 
+      // FAIL-CLOSED: Deny on subsystem failure to protect upstream compute.
+      throw new Error(`Rate limiter subsystem failure: ${error.message}`);
     }
 
     if (allowed === false) {
