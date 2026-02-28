@@ -103,17 +103,19 @@ export const Integrations = () => {
   const omniModal = useOmniModal();
   const omniMedia = useOmniMedia();
 
-  const handleTestModal = () => {
-    omniModal.invoke({
-      id: 'demo-qb-auth',
-      provider: 'QuickBooks',
-      type: 'oauth',
-      title: 'QuickBooks Data Sync',
-      description: 'Connect APEX OmniHub to QuickBooks to sync ledger data.',
-      onComplete: async (payload) => {
-        console.warn('QuickBooks integration complete:', payload);
-      }
-    });
+  const handleTestModal = async () => {
+    try {
+      const result = await omniModal.invoke({
+        id: 'demo-qb-auth',
+        provider: 'QuickBooks',
+        type: 'oauth',
+        title: 'QuickBooks Data Sync',
+        description: 'Connect APEX OmniHub to QuickBooks to sync ledger data.',
+      });
+      console.warn('QuickBooks integration complete:', result);
+    } catch {
+      // Modal was dismissed or cancelled — no action required
+    }
   };
 
   const handleTestMedia = () => {

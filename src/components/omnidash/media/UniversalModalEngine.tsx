@@ -1,6 +1,6 @@
 /**
  * UniversalModalEngine — Schema-Driven Adaptive Modal Renderer
- * @version 1.0.0
+ * @version 2.0.0
  * @module src/components/omnidash/media/UniversalModalEngine
  *
  * Mounted once in OmniDashLayout, renders modals on demand from
@@ -12,7 +12,9 @@
  * - Overload-Free: Renders null when no active modal — zero DOM cost
  * - Regression-Free: Processing state is local (useState), not global
  * - Modularity: Each modal type is an isolated render path
- * - Enterprise Reliability: onComplete errors caught and logged, never crash UI
+ * - Enterprise Reliability: resolveModal/abortModal always called — no orphaned Promises
+ * - Orphan-Free: onOpenChange intercepts Escape + backdrop to call abortModal —
+ *   guarantees the pending Promise is always settled before state is cleared
  *
  * OWNED BY: APEX Business Systems Ltd.
  */
@@ -31,31 +33,34 @@ import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, CheckCircle2 } from 'lucide-react';
 
 export function UniversalModalEngine() {
-  const { activeModal, isOpen, close } = useOmniModal();
+  const { activeModal, resolveModal, abortModal } = useOmniModal();
+  const isOpen = !!activeModal;
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Reset processing state on modal change — idempotent
+  // Reset processing state whenever the modal closes — idempotent
   useEffect(() => {
-    if (!isOpen) setIsProcessing(false);
-  }, [isOpen]);
+    if (!activeModal) setIsProcessing(false);
+  }, [activeModal]);
 
   if (!activeModal) return null;
 
-  const handleAction = async (payload: Record<string, unknown>) => {
+  /**
+   * Resolve the modal Promise with the action payload.
+   * Clears state via resolveModal — setIsProcessing reset by the useEffect above.
+   */
+  const handleAction = (payload: Record<string, unknown>) => {
     setIsProcessing(true);
-    try {
-      await activeModal.onComplete({
-        ...payload,
-        context: activeModal.contextData,
-      });
-      close();
-    } catch (err: unknown) {
-      console.error(
-        `[OmniModal] Failed to process ${activeModal.provider} action:`,
-        err,
-      );
-    } finally {
-      setIsProcessing(false);
+    resolveModal({ ...payload, context: activeModal.contextData });
+  };
+
+  /**
+   * Intercept Shadcn Dialog background clicks and Escape keypresses.
+   * Calling abortModal() rejects the pending Promise before clearing state,
+   * preventing orphaned coroutines in the invoking widget.
+   */
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      abortModal('USER_DISMISSED');
     }
   };
 
@@ -93,7 +98,11 @@ export function UniversalModalEngine() {
               </p>
             </div>
             <DialogFooter className="mt-4">
-              <Button variant="outline" onClick={close} disabled={isProcessing}>
+              <Button
+                variant="outline"
+                onClick={() => abortModal('USER_CANCELLED')}
+                disabled={isProcessing}
+              >
                 Cancel
               </Button>
               <Button
@@ -155,7 +164,11 @@ export function UniversalModalEngine() {
               </p>
             )}
             <DialogFooter>
-              <Button variant="outline" onClick={close} disabled={isProcessing}>
+              <Button
+                variant="outline"
+                onClick={() => abortModal('USER_CANCELLED')}
+                disabled={isProcessing}
+              >
                 Cancel
               </Button>
               <Button
@@ -179,7 +192,7 @@ export function UniversalModalEngine() {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) close(); }}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{activeModal.title}</DialogTitle>
