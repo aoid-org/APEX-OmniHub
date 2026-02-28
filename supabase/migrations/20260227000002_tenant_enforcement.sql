@@ -1,7 +1,6 @@
 -- Migration: Tenant Column Enforcement + JWT Hook
 -- Dependencies: 20260227000001_tenant_backfill.sql
--- Rollback: ALTER TABLE <tables> ALTER COLUMN tenant_id DROP NOT NULL;
---           DROP FUNCTION IF EXISTS custom_access_token_hook CASCADE;
+-- Rollback: See docs/migrations/rollback-procedures.md
 
 BEGIN;
 

@@ -21,13 +21,11 @@ import { MemoryRouter } from 'react-router-dom';
 // ---------------------------------------------------------------------------
 
 beforeAll(() => {
-  if (globalThis.ResizeObserver === undefined) {
-    globalThis.ResizeObserver = class ResizeObserver {
-      observe() { /* noop */ }
-      unobserve() { /* noop */ }
-      disconnect() { /* noop */ }
-    };
-  }
+  globalThis.ResizeObserver ??= class ResizeObserver {
+    observe() { /* noop */ }
+    unobserve() { /* noop */ }
+    disconnect() { /* noop */ }
+  };
 });
 
 // ---------------------------------------------------------------------------
