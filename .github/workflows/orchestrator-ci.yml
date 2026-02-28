@@ -110,14 +110,40 @@ jobs:
         working-directory: orchestrator
         run: |
           pip install -e .
-          safety check || true
+          # Block on HIGH and CRITICAL severity vulnerabilities.
+          # safety exits non-zero on findings; CI job fails, blocking merge.
+          safety check --output=json --save-json safety-report.json \
+            --severity high || (cat safety-report.json && exit 1)
+
+      - name: Upload safety results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: safety-report
+          path: orchestrator/safety-report.json
 
       - name: Run bandit security scan
         working-directory: orchestrator
         run: |
-          bandit -r . -ll -f json -o bandit-report.json || true
+          # -ll = report MEDIUM and HIGH severity findings only.
+          # Intentionally NOT using || true — bandit exits non-zero on findings.
+          bandit -r . -ll -f json -o bandit-report.json; BANDIT_EXIT=$?
+          # Fail CI when any HIGH severity finding is present.
+          python -c "
+          import json, sys
+          with open('bandit-report.json') as f:
+              report = json.load(f)
+          highs = [r for r in report.get('results', []) if r.get('issue_severity') == 'HIGH']
+          if highs:
+              print(f'BLOCKED: {len(highs)} HIGH severity bandit finding(s):')
+              for h in highs:
+                  print(f\"  [{h['issue_severity']}] {h['issue_text']} @ {h['filename']}:{h['line_number']}\")
+              sys.exit(1)
+          print(f'Bandit: no HIGH severity findings.')
+          "
 
       - name: Upload bandit results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: bandit-report
