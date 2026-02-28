@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { useUserRole } from '@/stores/userRoleStore';
 
 interface AdminGateProps {
-  children: ReactNode;
+  readonly children: ReactNode;
 }
 
 export function AdminGate({ children }: AdminGateProps) {
