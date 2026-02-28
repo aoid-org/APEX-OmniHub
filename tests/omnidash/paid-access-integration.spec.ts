@@ -1,4 +1,3 @@
-// @ts-nocheck - Integration test uses dynamic Supabase client types
 /**
  * PATCH 2: Paid Access Integration Tests
  *

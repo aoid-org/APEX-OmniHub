@@ -1,5 +1,5 @@
-// @ts-expect-error Deno CDN import
-import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// @ts-expect-error Deno CDN import - unused but documents dependency
+import type { SupabaseClient as _SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SkillDefinition, SkillMatch } from './types.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
