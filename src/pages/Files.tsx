@@ -38,7 +38,7 @@ const Files = () => {
   }, [items]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }: { data: { user: { id: string } | null } }) => {
       if (data.user?.id) {
         setUid(data.user.id);
       }
@@ -88,7 +88,7 @@ const Files = () => {
       // Error logged via toast
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload file",
+        description: (error as Error).message || "Failed to upload file",
         variant: "destructive"
       });
     } finally {
@@ -109,7 +109,7 @@ const Files = () => {
       // Error logged via toast
       toast({
         title: "Download failed",
-        description: error.message || "Failed to download file",
+        description: (error as Error).message || "Failed to download file",
         variant: "destructive"
       });
     }
@@ -134,7 +134,7 @@ const Files = () => {
       // Error logged via toast
       toast({
         title: "Delete failed",
-        description: error.message || "Failed to delete file",
+        description: (error as Error).message || "Failed to delete file",
         variant: "destructive"
       });
     }

@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // #endregion
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (event, session) => {
+        (event: string, session: Session | null) => {
           // #region agent log
           log('Auth state change', {
             event,
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       log('Before getSession');
       // #endregion
 
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
         // #region agent log
         log('getSession result', {
           hasSession: !!session,
@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-      }).catch((error) => {
+      }).catch((error: unknown) => {
         // #region agent log
         log('getSession error', {
           error: error instanceof Error ? error.message : 'unknown',

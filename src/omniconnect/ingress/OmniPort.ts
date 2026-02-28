@@ -25,6 +25,7 @@ import {
   CanonicalEvent,
   EventType,
   ConsentFlags,
+  DataClassification,
   CanonicalDevice,
   DeviceType,
   DeviceProtocol,
@@ -607,6 +608,7 @@ class OmniPortEngine {
       provider: 'omniport',
       externalId: eventId,
       eventType: this.mapToEventType(input),
+      classification: DataClassification.INTERNAL,
       timestamp: now,
       consentFlags: this.getDefaultConsentFlags(),
       metadata: {

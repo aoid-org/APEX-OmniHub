@@ -58,7 +58,7 @@ export function useOmniTrace(workflowId?: string) {
           schema: 'public',
           table: 'omni_run_events',
         },
-        (payload) => {
+        (payload: { new: unknown }) => {
           const row = payload.new as TraceEvent;
           if (!workflowId || row.workflow_id === workflowId) {
             setTraces((prev) => [row, ...prev].slice(0, 50));

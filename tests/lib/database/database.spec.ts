@@ -11,9 +11,20 @@ import type { IDatabase, QueryFilter } from '@/lib/database/interface'
 // MOCK DATABASE IMPLEMENTATION
 // ============================================================================
 
+interface MockOptions {
+  filters?: QueryFilter[];
+  offset?: number;
+  limit?: number;
+}
+
+interface MockRecord {
+  id: string;
+  [key: string]: unknown;
+}
+
 class MockDatabase implements IDatabase {
   // Store mock data
-  private mockData: Record<string, unknown[]> = {
+  private mockData: Record<string, MockRecord[]> = {
     users: [
       { id: '1', email: 'user1@example.com', name: 'User 1', active: true },
       { id: '2', email: 'user2@example.com', name: 'User 2', active: true },
@@ -22,17 +33,17 @@ class MockDatabase implements IDatabase {
   }
 
   async findById<T>(table: string, id: string): Promise<{ data: T | null; error: Error | null }> {
-    const record = this.mockData[table]?.find((r) => r.id === id)
-    return { data: record as T || null, error: null }
+    const record = this.mockData[table]?.find((r: MockRecord) => r.id === id)
+    return { data: (record as T) || null, error: null }
   }
 
-  async find<T>(table: string, options?: unknown): Promise<{ data: T[] | null; error: Error | null; count?: number | null }> {
+  async find<T>(table: string, options?: MockOptions): Promise<{ data: T[] | null; error: Error | null; count?: number | null }> {
     let records = this.mockData[table] || []
 
     // Apply filters
     if (options?.filters) {
-      records = records.filter((record) => {
-        return options.filters.every((filter: QueryFilter) => {
+      records = records.filter((record: MockRecord) => {
+        return options.filters!.every((filter: QueryFilter) => {
           const value = record[filter.column]
           switch (filter.operator) {
             case '=':
@@ -40,13 +51,13 @@ class MockDatabase implements IDatabase {
             case '!=':
               return value !== filter.value
             case '>':
-              return value > filter.value
+              return (value as number) > (filter.value as number)
             case '>=':
-              return value >= filter.value
+              return (value as number) >= (filter.value as number)
             case '<':
-              return value < filter.value
+              return (value as number) < (filter.value as number)
             case '<=':
-              return value <= filter.value
+              return (value as number) <= (filter.value as number)
             case 'in':
               return Array.isArray(filter.value) ? filter.value.includes(value) : value === filter.value
             default:
@@ -67,62 +78,62 @@ class MockDatabase implements IDatabase {
     return { data: records as T[], error: null, count: records.length }
   }
 
-  async findOne<T>(table: string, options?: unknown): Promise<{ data: T | null; error: Error | null }> {
+  async findOne<T>(table: string, options?: MockOptions): Promise<{ data: T | null; error: Error | null }> {
     const result = await this.find<T>(table, { ...options, limit: 1 })
     return { data: result.data?.[0] || null, error: result.error }
   }
 
-  async count(table: string, options?: unknown): Promise<{ data: number | null; error: Error | null }> {
+  async count(table: string, options?: MockOptions): Promise<{ data: number | null; error: Error | null }> {
     const result = await this.find(table, options)
     return { data: result.data?.length || 0, error: null }
   }
 
   async insert<T>(table: string, data: Partial<T>): Promise<{ data: T | null; error: Error | null }> {
-    const record = { id: Date.now().toString(), ...data } as T
+    const record = { id: Date.now().toString(), ...(data as object) } as MockRecord
     this.mockData[table] = [...(this.mockData[table] || []), record]
-    return { data: record, error: null }
+    return { data: record as T, error: null }
   }
 
   async insertMany<T>(table: string, data: Partial<T>[]): Promise<{ data: T[] | null; error: Error | null }> {
-    const records = data.map((d, i) => ({ id: `${Date.now()}-${i}`, ...d } as T))
+    const records = data.map((d, i) => ({ id: `${Date.now()}-${i}`, ...(d as object) } as MockRecord))
     this.mockData[table] = [...(this.mockData[table] || []), ...records]
-    return { data: records, error: null }
+    return { data: records as T[], error: null }
   }
 
-  async update<T>(table: string, data: Partial<T>, options?: unknown): Promise<{ data: T[] | null; error: Error | null }> {
-    const result = await this.find(table, options)
+  async update<T>(table: string, data: Partial<T>, options?: MockOptions): Promise<{ data: T[] | null; error: Error | null }> {
+    const result = await this.find<MockRecord>(table, options)
     if (!result.data) return { data: null, error: result.error }
 
-    const updatedRecords = result.data.map((record: unknown) => ({ ...record, ...data }))
+    const updatedRecords = result.data.map((record: MockRecord) => ({ ...record, ...(data as object) }))
     this.mockData[table] = [
-      ...this.mockData[table].filter((r) => !result.data!.find((ur: unknown) => ur.id === r.id)),
-      ...updatedRecords,
+      ...this.mockData[table].filter((r: MockRecord) => !result.data!.find((ur: MockRecord) => ur.id === r.id)),
+      ...(updatedRecords as MockRecord[]),
     ]
     return { data: updatedRecords as T[], error: null }
   }
 
   async updateById<T>(table: string, id: string, data: Partial<T>): Promise<{ data: T | null; error: Error | null }> {
-    const record = this.mockData[table]?.find((r) => r.id === id)
+    const record = this.mockData[table]?.find((r: MockRecord) => r.id === id)
     if (!record) return { data: null, error: new Error('Record not found') }
 
-    const updated = { ...record, ...data }
+    const updated = { ...record, ...(data as object) } as MockRecord
     this.mockData[table] = [
-      ...this.mockData[table].filter((r) => r.id !== id),
+      ...this.mockData[table].filter((r: MockRecord) => r.id !== id),
       updated,
     ]
     return { data: updated as T, error: null }
   }
 
-  async delete(table: string, options?: unknown): Promise<{ data: boolean | null; error: Error | null }> {
+  async delete(table: string, options?: MockOptions): Promise<{ data: boolean | null; error: Error | null }> {
     if (!options?.filters) {
       return { data: null, error: new Error('Delete requires filters') }
     }
 
-    const result = await this.find(table, options)
+    const result = await this.find<MockRecord>(table, options)
     if (!result.data) return { data: false, error: result.error }
 
     this.mockData[table] = this.mockData[table].filter(
-      (r) => !result.data!.find((dr: unknown) => dr.id === r.id)
+      (r: MockRecord) => !result.data!.find((dr: MockRecord) => dr.id === r.id)
     )
     return { data: true, error: null }
   }
@@ -156,15 +167,15 @@ class MockDatabase implements IDatabase {
     // No-op for mock
   }
 
-  async uploadFile(): Promise<{ data: string | null; error: Error | null }> {
+  async uploadFile(_bucket: string, _path: string, _file: Blob): Promise<{ data: string | null; error: Error | null }> {
     return { data: 'https://example.com/file.jpg', error: null }
   }
 
-  async downloadFile(): Promise<{ data: Blob | null; error: Error | null }> {
+  async downloadFile(_bucket: string, _path: string): Promise<{ data: Blob | null; error: Error | null }> {
     return { data: new Blob(['test']), error: null }
   }
 
-  async deleteFile(): Promise<{ data: boolean | null; error: Error | null }> {
+  async deleteFile(_bucket: string, _path: string): Promise<{ data: boolean | null; error: Error | null }> {
     return { data: true, error: null }
   }
 
@@ -237,7 +248,7 @@ describe('Database Abstraction Layer', () => {
 
       expect(error).toBeNull()
       expect(users).toHaveLength(2)
-      expect(users?.every((u: unknown) => u.active === true)).toBe(true)
+      expect((users as MockRecord[])?.every((u) => u.active === true)).toBe(true)
     })
 
     it('should filter records by inequality', async () => {
@@ -257,7 +268,7 @@ describe('Database Abstraction Layer', () => {
 
       expect(error).toBeNull()
       expect(users).toHaveLength(2)
-      expect(users?.map((u: unknown) => u.id)).toEqual(['1', '2'])
+      expect((users as MockRecord[])?.map((u) => u.id)).toEqual(['1', '2'])
     })
 
     it('should apply limit', async () => {
@@ -498,7 +509,7 @@ describe('Database Abstraction Layer', () => {
 
   describe('uploadFile', () => {
     it('should upload a file', async () => {
-      const { data: url, error } = await db.uploadFile(
+      const { data: url, error } = await (db as MockDatabase).uploadFile(
         'avatars',
         'profile.jpg',
         new Blob(['test'])
@@ -511,7 +522,7 @@ describe('Database Abstraction Layer', () => {
 
   describe('downloadFile', () => {
     it('should download a file', async () => {
-      const { data: blob, error } = await db.downloadFile('avatars', 'profile.jpg')
+      const { data: blob, error } = await (db as MockDatabase).downloadFile('avatars', 'profile.jpg')
 
       expect(error).toBeNull()
       expect(blob).toBeInstanceOf(Blob)
@@ -520,7 +531,7 @@ describe('Database Abstraction Layer', () => {
 
   describe('deleteFile', () => {
     it('should delete a file', async () => {
-      const { data: success, error } = await db.deleteFile('avatars', 'profile.jpg')
+      const { data: success, error } = await (db as MockDatabase).deleteFile('avatars', 'profile.jpg')
 
       expect(error).toBeNull()
       expect(success).toBe(true)
@@ -529,7 +540,7 @@ describe('Database Abstraction Layer', () => {
 
   describe('getFileUrl', () => {
     it('should get public URL for file', () => {
-      const url = db.getFileUrl('avatars', 'profile.jpg')
+      const url = (db as MockDatabase).getFileUrl('avatars', 'profile.jpg')
 
       expect(url).toContain('profile.jpg')
     })
