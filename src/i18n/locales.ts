@@ -15,7 +15,7 @@ export const LOCALES = ['en', 'es', 'de', 'ja', 'fr', 'pt', 'zh'] as const;
 
 export type LangCode = typeof LOCALES[number];
 
-export type LocaleTag = string;
+
 
 /**
  * resolveLangCode — the ONLY locale translation function

@@ -15,11 +15,11 @@ import {
   type ReactNode,
   createElement,
 } from 'react';
-import { resolveLangCode, type LangCode, type LocaleTag } from './locales';
+import { resolveLangCode, type LangCode } from './locales';
 import { resolveTranslation } from './dictionaries';
 
 // Re-export primitives
-export { LOCALES, resolveLangCode, type LangCode, type LocaleTag } from './locales';
+export { LOCALES, resolveLangCode, type LangCode } from './locales';
 export type { DictionaryKey } from './dictionaries';
 
 // ---------------------------------------------------------------------------
@@ -32,7 +32,7 @@ interface I18nContextValue {
   /** Current language code (ISO-639-1) */
   lang: LangCode;
   /** Set locale from BCP-47 tag — resolved through resolveLangCode() */
-  setLocale: (tag: LocaleTag) => void;
+  setLocale: (tag: string) => void;
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -44,7 +44,7 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 interface LocaleProviderProps {
   children: ReactNode;
   /** Initial BCP-47 locale tag. Defaults to navigator.language or 'en'. */
-  initialLocale?: LocaleTag;
+  initialLocale?: string;
 }
 
 /**
@@ -60,7 +60,7 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
     return 'en';
   });
 
-  const setLocale = useCallback((tag: LocaleTag) => {
+  const setLocale = useCallback((tag: string) => {
     setLang(resolveLangCode(tag));
   }, []);
 
