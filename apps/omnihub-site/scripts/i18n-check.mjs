@@ -24,7 +24,9 @@ const DICTIONARIES_PATH = resolve(__dirname, '../../../src/i18n/dictionaries.ts'
  * @returns {number}
  */
 function compareKeys(a, b) {
-  return a < b ? -1 : a > b ? 1 : 0;
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
 }
 
 function extractKeys(source) {
@@ -32,7 +34,7 @@ function extractKeys(source) {
   const keys = [];
   for (const line of source.split('\n')) {
     const trimmed = line.trimStart();
-    if (trimmed.charCodeAt(0) !== 39) continue; // fast path: must start with "'"
+    if (trimmed.codePointAt(0) !== 39) continue; // fast path: must start with "'"
     const end = trimmed.indexOf("':", 1);
     if (end > 1) {
       keys.push(trimmed.slice(1, end));
