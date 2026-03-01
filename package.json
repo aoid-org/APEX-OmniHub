@@ -1,7 +1,7 @@
 {
   "name": "vite_react_shadcn_ts",
   "private": true,
-  "version": "1.3.3",
+  "version": "1.3.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -56,7 +56,7 @@
     "hardhat:deploy:mainnet": "hardhat run scripts/hardhat/deploy.ts --network mainnet",
     "hardhat:deploy:polygon": "hardhat run scripts/hardhat/deploy.ts --network polygon",
     "hardhat:mint": "hardhat run scripts/hardhat/mint.ts",
-    "apex:demo": "tsx apex-resilience/scripts/demo-verify.ts",
+    "demo:verify": "tsx apex-resilience/scripts/demo-verify.ts",
     "apex:deploy": "./apex-resilience/scripts/deploy.sh",
     "apex:test": "vitest run apex-resilience/tests/",
     "audit:features": "tsx scripts/audit-features.ts",

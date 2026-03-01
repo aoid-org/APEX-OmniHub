@@ -31,8 +31,9 @@ export class RateLimiter {
 
     if (error) {
       console.error("[RateLimiter] RPC error:", error);
-      // FAIL-CLOSED: Deny on subsystem failure to protect upstream compute.
-      throw new Error(`Rate limiter subsystem failure: ${error.message}`);
+      // APEX principle: Fail Closed for determinism and security.
+      // We throw an Error to prevent unmetered abuse during DB blips.
+      throw new Error(`Rate limit check failed. Failing closed. ${error.message}`);
     }
 
     if (allowed === false) {

@@ -188,16 +188,16 @@ export async function checkRateLimit(
     const limiter = getRatelimiter(config);
 
     if (!limiter) {
-        // FAIL-OPEN: Upstash not configured or initialization failed
-        console.warn(
-            `Rate limiting fail-open: Upstash not configured for ${config.keyPrefix}. ` +
+        // FAIL-CLOSED: Upstash not configured or initialization failed
+        console.error(
+            `Rate limiting fail-closed: Upstash not configured for ${config.keyPrefix}. ` +
             'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to enable distributed rate limiting.'
         );
 
         return {
-            allowed: true,
+            allowed: false,
             limit: config.maxRequests,
-            remaining: config.maxRequests,
+            remaining: 0,
             reset: now + config.windowMs,
             resetIn: config.windowMs,
             headers: new Headers(),
@@ -217,13 +217,13 @@ export async function checkRateLimit(
             headers: createRateLimitHeaders(result),
         };
     } catch (error) {
-        // FAIL-OPEN: Upstash error (network, timeout, etc.)
-        console.error(`Rate limiting fail-open: Upstash error for ${config.keyPrefix}:`, error);
+        // FAIL-CLOSED: Upstash error (network, timeout, etc.)
+        console.error(`Rate limiting fail-closed: Upstash error for ${config.keyPrefix}:`, error);
 
         return {
-            allowed: true,
+            allowed: false,
             limit: config.maxRequests,
-            remaining: config.maxRequests,
+            remaining: 0,
             reset: now + config.windowMs,
             resetIn: config.windowMs,
             headers: new Headers(),
