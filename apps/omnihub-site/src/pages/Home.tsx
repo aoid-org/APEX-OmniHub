@@ -3,6 +3,7 @@ import { Section } from '@/components/Section';
 import { CTAGroup } from '@/components/CTAGroup';
 import { HeroVisual } from '@/components/HeroVisual';
 import { FeatureHighlightGrid } from '@/components/FeatureHighlightGrid';
+import { DemoVideoPlayer } from '@/components/DemoVideoPlayer';
 import { siteConfig } from '@/content/site';
 import { useTranslation } from 'react-i18next';
 import {
@@ -84,21 +85,7 @@ function DemoVideoSection() {
             through a single controlled port.
           </p>
         </div>
-        <div className="demo-video__container">
-          <div className="demo-video__glow" aria-hidden="true" />
-          <video
-            id="apex-demo-video"
-            className="demo-video__player"
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-          >
-            <source src="/apex-demo-video.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
+        <DemoVideoPlayer id="apex-demo-video" />
       </div>
     </Section>
   );

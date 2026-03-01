@@ -218,9 +218,10 @@ export const techSpecsConfig = {
 export const demoConfig = {
   title: 'See It In Action',
   subtitle: 'Experience the APEX OmniHub workflow',
-  videoPlaceholder: {
+  video: {
     title: 'Demo Video',
-    description: 'Coming soon - see how APEX OmniHub connects your systems',
+    description: 'See how APEX OmniHub orchestrates your systems in real time',
+    src: '/apex-demo-video.mp4',
   },
   interactivePlaceholder: {
     title: 'Interactive Demo',

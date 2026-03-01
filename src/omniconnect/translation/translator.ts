@@ -9,6 +9,7 @@
 
 import { CanonicalEvent } from '../types/canonical';
 import { CanonicalEventSchema } from '../types/schema';
+import { type LangCode } from '@/i18n/locales';
 
 export interface TranslatedEvent {
   eventId: string;
@@ -144,7 +145,8 @@ export class SemanticTranslator {
   async translate(
     events: CanonicalEvent[],
     appId: string,
-    correlationId: string
+    correlationId: string,
+    _targetLocale: LangCode = 'en'
   ): Promise<TranslatedEvent[]> {
     if (import.meta.env.DEV) console.log(`[${correlationId}] Translating ${events.length} events for app ${appId}`);
 

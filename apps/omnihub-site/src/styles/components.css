@@ -2081,6 +2081,29 @@ body {
   border-radius: var(--border-radius-lg);
 }
 
+.demo-video__mute-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s ease;
+}
+
+.demo-video__mute-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
 [data-theme="dark"] .demo-video__container {
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.08),

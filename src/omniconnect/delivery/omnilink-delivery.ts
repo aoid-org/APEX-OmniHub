@@ -60,7 +60,7 @@ export class OmniLinkDelivery {
           headers: {
             'X-Correlation-ID': correlationId,
             'X-App-ID': event.appId,
-            ...(event.metadata?.locale == null ? {} : { 'Accept-Language': typeof event.metadata.locale === 'string' ? event.metadata.locale : JSON.stringify(event.metadata.locale) }),
+            ...(typeof event.metadata?.locale === 'string' ? { 'Accept-Language': event.metadata.locale } : {}),
           }
         });
         return;
