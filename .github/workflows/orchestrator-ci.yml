@@ -110,10 +110,13 @@ jobs:
         working-directory: orchestrator
         run: |
           pip install -e .
-          # Block on HIGH and CRITICAL severity vulnerabilities.
-          # safety exits non-zero on findings; CI job fails, blocking merge.
-          safety check --output=json --save-json safety-report.json \
-            --severity high || (cat safety-report.json && exit 1)
+          # safety 3.x: --severity and --save-json flags do not exist.
+          # Capture JSON to file; non-zero exit means vulnerabilities found.
+          safety check --output json > safety-report.json 2>&1 || {
+            echo "::error::Safety found vulnerabilities in Python dependencies — see safety-report artifact."
+            cat safety-report.json
+            exit 1
+          }
 
       - name: Upload safety results
         if: always()
