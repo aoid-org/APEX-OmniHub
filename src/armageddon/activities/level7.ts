@@ -77,6 +77,21 @@ interface GenericBatteryConfig {
     successMessage: string;
 }
 
+function createArmageddonEvent(
+    runId: string,
+    batteryId: number,
+    iteration: number,
+    attackValue: number,
+    escapeChance: number,
+    attackLog: string,
+    successMessage: string,
+): ArmageddonEvent {
+    if (attackValue < escapeChance) {
+        return { run_id: runId, battery_id: batteryId, event_type: 'ESCAPE', details: `${successMessage} at iteration ${iteration}`, iteration };
+    }
+    return { run_id: runId, battery_id: batteryId, event_type: 'BLOCKED', details: attackLog, iteration };
+}
+
 /**
  * Shared runner for all battery simulations to eliminate code duplication
  */
@@ -106,22 +121,8 @@ async function runGenericBattery(params: GenericBatteryConfig): Promise<BatteryR
         // Probabilistic escape check
         if (attackValue < escapeChance) {
             escapes++;
-            eventBatch.push({
-                run_id: config.runId,
-                battery_id: batteryId,
-                event_type: 'ESCAPE',
-                details: `${successMessage} at iteration ${i}`,
-                iteration: i,
-            });
-        } else {
-            eventBatch.push({
-                run_id: config.runId,
-                battery_id: batteryId,
-                event_type: 'BLOCKED',
-                details: attackLog,
-                iteration: i,
-            });
         }
+        eventBatch.push(createArmageddonEvent(config.runId, batteryId, i, attackValue, escapeChance, attackLog, successMessage));
 
         // Batch insert to Supabase every 500 iterations
         if (i % LOG_BATCH_INTERVAL === 0 && eventBatch.length > 0) {

@@ -83,7 +83,7 @@ for (const claimId of verifiedIds) {
   const entry = byId.get(claimId);
   const hasEvidence = Array.isArray(entry?.evidence) && entry.evidence.length > 0;
 
-  if (!entry || entry.status !== 'verified' || !hasEvidence) {
+  if (entry?.status !== 'verified' || !hasEvidence) {
     console.error(`[UNPROVEN] verified claim ${claimId} lacks verified ledger evidence`);
     failed = true;
   }

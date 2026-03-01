@@ -222,7 +222,7 @@ describe('Guardian Response Format', () => {
     expect(blockedResponse.safe).toBe(false);
     expect(blockedResponse.reason).toBeDefined();
     expect(blockedResponse.violations).toBeDefined();
-    expect(blockedResponse.violations!.length).toBeGreaterThan(0);
+    expect(blockedResponse.violations?.length).toBeGreaterThan(0);
   });
 
   it('should return safe: true for allowed requests', () => {

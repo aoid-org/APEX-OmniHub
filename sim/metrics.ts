@@ -98,7 +98,7 @@ export interface SystemScore {
 
 export class MetricsCollector {
   private latencyMetrics: LatencyMetric[] = [];
-  private appCounts: Map<AppName, { success: number; failure: number; retries: number; dedupes: number }> = new Map();
+  private readonly appCounts: Map<AppName, { success: number; failure: number; retries: number; dedupes: number }> = new Map();
   private startTime: Date;
   private endTime: Date | null = null;
 
@@ -309,8 +309,8 @@ export class MetricsCollector {
     // Determine threshold based on context
     // Default: 70 for PRs (permissive), 90 for main/scheduled (strict)
     // Can be overridden via CHAOS_THRESHOLD env var or requiredScore param
-    const envParsed = parseInt(process.env.CHAOS_THRESHOLD ?? '', 10);
-    const threshold = requiredScore ?? (isNaN(envParsed) ? 70 : envParsed);
+    const envParsed = Number.parseInt(process.env.CHAOS_THRESHOLD ?? '', 10);
+    const threshold = requiredScore ?? (Number.isNaN(envParsed) ? 70 : envParsed);
 
     // Overall pass/fail
     const passed = overallScore >= threshold && systemScore.passed;
@@ -453,9 +453,7 @@ export class MetricsCollector {
 let collector: MetricsCollector | null = null;
 
 export function getMetricsCollector(): MetricsCollector {
-  if (!collector) {
-    collector = new MetricsCollector();
-  }
+  collector ??= new MetricsCollector();
   return collector;
 }
 

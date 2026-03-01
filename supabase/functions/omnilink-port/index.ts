@@ -320,7 +320,7 @@ async function processRequestItem(
     payload.policy = { ...(payload.policy as Record<string, unknown>), require_approval: true };
   }
 
-  const idempotencyKey = `${idempotencyHeader}:${payload.id ?? index}`;
+  const idempotencyKey = `${idempotencyHeader}:${String(payload.id ?? index)}`;
 
   const { data, error } = await serviceClient.rpc('omnilink_ingest', {
     p_api_key_id: apiKey.id,
@@ -639,7 +639,7 @@ Deno.serve(async (req) => {
   }
 
   // Task dispatch routes
-  const taskResponse = await routeTaskRequest(route, req, corsHeaders);
+  const taskResponse = routeTaskRequest(route, req, corsHeaders);
   if (taskResponse) return taskResponse;
 
   // Validate route for batch processing

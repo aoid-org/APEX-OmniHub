@@ -106,7 +106,7 @@ class EdgeCacheController {
   // Fetch URL helper
   // -----------------------------------------------------------------------
   private buildFetchUrl(sourceUrl: string): string {
-    if (typeof globalThis.window === 'undefined') return sourceUrl;
+    if (globalThis.window === undefined) return sourceUrl;
     const isExternal =
       sourceUrl.startsWith('http') &&
       !sourceUrl.includes(globalThis.location.host);

@@ -155,8 +155,8 @@ class SeededRandom {
 // ============================================================================
 
 export class ChaosEngine {
-  private config: ChaosConfig;
-  private rng: SeededRandom;
+  private readonly config: ChaosConfig;
+  private readonly rng: SeededRandom;
   private stats: ChaosStats;
   private eventSequence: number = 0;
 

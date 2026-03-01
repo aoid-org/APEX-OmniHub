@@ -70,7 +70,7 @@ function getPackageJsonRemote() {
     const pkgPath = path.join(process.cwd(), 'package.json');
     if (fs.existsSync(pkgPath)) {
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-      if (pkg.repository && pkg.repository.url) {
+      if (pkg.repository?.url) {
         const match = pkg.repository.url.match(/github\.com[:/]([\w-]+\/[\w-.]+)/);
          if (match) {
             const [owner, repo] = match[1].replace('.git', '').split('/');

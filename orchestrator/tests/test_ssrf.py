@@ -39,7 +39,7 @@ class TestValidateUrl:
 
     def test_private_ip_literal(self):
         """Test that private IP literals are rejected."""
-        # Split strings to potentially avoid naive grep detection, though NOSONAR is safer
+        # Split strings to avoid naive grep detection of private IP patterns
         private_ips = [
             "http://127.0.0.1",  # NOSONAR
             "http://10.0.0.1",  # NOSONAR

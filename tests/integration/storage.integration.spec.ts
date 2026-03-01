@@ -292,7 +292,7 @@ suite('Storage Integration Tests', () => {
 
       expect(error).toBeNull()
       expect(urls).toHaveLength(2)
-      expect(urls?.every(url => url.match(/^https?:\/\//))).toBe(true)
+      expect(urls?.every(url => /^https?:\/\//.exec(url))).toBe(true)
     })
   })
 

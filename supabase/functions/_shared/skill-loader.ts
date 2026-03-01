@@ -1,9 +1,4 @@
-// @ts-expect-error Deno CDN import - unused but documents dependency
-import type { SupabaseClient as _SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SkillDefinition, SkillMatch } from './types.ts';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyClient = any;
 
 /**
  * @deprecated Use DynamicToolScanner instead. This centralized registry is
@@ -12,12 +7,20 @@ type AnyClient = any;
  * DynamicToolScanner auto-discover them at runtime.
  */
 export class SkillRegistry {
-  private supabase: AnyClient;
-  private aiSession: AnyClient;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly supabase: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private aiSession: any;
 
-  constructor(supabase: AnyClient) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor(supabase: any) {
     this.supabase = supabase;
-    this.initializeAISession();
+  }
+
+  private async ensureInitialized(): Promise<void> {
+    if (!this.aiSession) {
+      await this.initializeAISession();
+    }
   }
 
   private async initializeAISession() {
@@ -36,6 +39,7 @@ export class SkillRegistry {
    * Register a new skill in the registry
    */
   async registerSkill(skill: SkillDefinition): Promise<void> {
+    await this.ensureInitialized();
     // Sanitize inputs
     const sanitizedName = skill.name.trim();
     const sanitizedDescription = skill.description.trim();
@@ -84,6 +88,7 @@ export class SkillRegistry {
    * Retrieve relevant skills based on a query
    */
   async retrieveSkills(query: string, limit: number = 5, threshold: number = 0.1): Promise<SkillDefinition[]> {
+    await this.ensureInitialized();
     const sanitizedQuery = query.trim();
 
     if (!sanitizedQuery) {
@@ -219,7 +224,7 @@ export function tool(meta: ToolMetadata): (fn: (...args: any[]) => any) => (...a
  *   scanner.attachTo(mcpService);
  */
 export class DynamicToolScanner {
-  private discoveredModules: string[] = [];
+  private readonly discoveredModules: string[] = [];
 
   /**
    * Recursively walk `basePath` looking for `.ts` files,

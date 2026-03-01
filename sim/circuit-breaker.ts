@@ -64,7 +64,7 @@ export interface QueuedEvent {
 // ============================================================================
 
 export class CircuitBreaker {
-  private config: CircuitBreakerConfig;
+  private readonly config: CircuitBreakerConfig;
   private state: CircuitState = 'closed';
   private failures: number = 0;
   private successes: number = 0;
@@ -309,7 +309,7 @@ export class CircuitBreakerError extends Error {
 // ============================================================================
 
 class CircuitBreakerRegistry {
-  private breakers: Map<string, CircuitBreaker> = new Map();
+  private readonly breakers: Map<string, CircuitBreaker> = new Map();
 
   /**
    * Get or create circuit breaker
@@ -378,9 +378,7 @@ class CircuitBreakerRegistry {
 let registry: CircuitBreakerRegistry | null = null;
 
 function getRegistry(): CircuitBreakerRegistry {
-  if (!registry) {
-    registry = new CircuitBreakerRegistry();
-  }
+  registry ??= new CircuitBreakerRegistry();
   return registry;
 }
 
