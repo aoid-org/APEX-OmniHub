@@ -1,5 +1,4 @@
 import { PipelineItem, TodayItem, KpiDaily } from './types';
-// eslint-disable-next-line @typescript-eslint/no-deprecated
 import { stripPii, redactAmount as libRedactAmount } from '@/lib/sanitization';
 
 const CLIENT_LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';

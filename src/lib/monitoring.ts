@@ -34,8 +34,9 @@ interface QueuedLog {
 }
 
 const storage = new LocalStorageAdapter();
-const queue = new MonitoringQueue<QueuedLog>(MAX_QUEUE_SIZE, (item) =>
-  simpleHash(`${item.key}:${JSON.stringify(item.entry)}`)
+const queue = new MonitoringQueue<QueuedLog>(
+  (item) => simpleHash(`${item.key}:${JSON.stringify(item.entry)}`),
+  MAX_QUEUE_SIZE,
 );
 
 /**

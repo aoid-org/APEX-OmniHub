@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
-// eslint-disable-next-line @typescript-eslint/no-deprecated
 import { SkillRegistry } from '../supabase/functions/_shared/skill-loader'; // NOSONAR
 import { SkillDefinition } from '../supabase/functions/_shared/types';
 

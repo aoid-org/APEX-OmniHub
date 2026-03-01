@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   sanitizeEventPayload,
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
   stripPii,
   redactAmount,
 } from '@/lib/sanitization';

@@ -115,7 +115,7 @@ function isPrivateOrReservedIp(hostname: string): boolean {
 // URL validation
 // ---------------------------------------------------------------------------
 
-interface UrlValidation {
+type UrlValidation = {
   ok: true;
   url: string;
   hostname: string;
@@ -123,7 +123,7 @@ interface UrlValidation {
   ok: false;
   status: number;
   error: string;
-}
+};
 
 function validateProxyUrl(raw: string, allowlist: string[]): UrlValidation {
   let parsed: URL;

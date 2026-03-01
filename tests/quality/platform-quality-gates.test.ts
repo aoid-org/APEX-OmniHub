@@ -43,7 +43,7 @@ describe('Platform Quality Gates', () => {
     }
 
     // Parse JSON to ensure we are actually getting 0 warnings, not just text output
-    const report: Array<{ filePath: string; warningCount: number; errorCount: number }> = JSON.parse(eslintJson);
+    const report: Array<{ filePath: string; warningCount: number; errorCount: number }> = JSON.parse(eslintJson || '[]');
     const totalWarnings = report.reduce((acc, curr) => acc + curr.warningCount, 0);
     const totalErrors = report.reduce((acc, curr) => acc + curr.errorCount, 0);
 
