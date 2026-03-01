@@ -12,6 +12,12 @@ interface ScreenshotTestConfig {
     snapshotName: string;
 }
 
+interface ResponsiveTestConfig {
+    width: number;
+    height: number;
+    snapshotName: string;
+}
+
 async function captureThemeScreenshot(page: Page, config: ScreenshotTestConfig) {
     await page.addInitScript((theme) => {
         localStorage.setItem('theme', theme);
@@ -22,6 +28,24 @@ async function captureThemeScreenshot(page: Page, config: ScreenshotTestConfig) 
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
+
+    await expect(page).toHaveScreenshot(config.snapshotName, {
+        fullPage: true,
+        maxDiffPixelRatio: 0.02,
+        animations: 'disabled',
+    });
+}
+
+async function captureResponsiveScreenshot(page: Page, config: ResponsiveTestConfig) {
+    await page.setViewportSize({ width: config.width, height: config.height });
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
 
     await expect(page).toHaveScreenshot(config.snapshotName, {
         fullPage: true,
@@ -65,5 +89,32 @@ test.describe('Homepage Visual Regression', () => {
 
         await page.click('text=WHITE FORTRESS');
         await expect(html).toHaveAttribute('data-theme', 'light');
+    });
+});
+
+test.describe('Responsive i18n Regression', () => {
+
+    test('Mobile 375x812 — no horizontal scroll, no overlap', async ({ page }) => {
+        await captureResponsiveScreenshot(page, {
+            width: 375,
+            height: 812,
+            snapshotName: 'home-mobile-375.png',
+        });
+    });
+
+    test('Tablet 768x1024 — no horizontal scroll, no overlap', async ({ page }) => {
+        await captureResponsiveScreenshot(page, {
+            width: 768,
+            height: 1024,
+            snapshotName: 'home-tablet-768.png',
+        });
+    });
+
+    test('Desktop 1440x900 — no horizontal scroll, no overlap', async ({ page }) => {
+        await captureResponsiveScreenshot(page, {
+            width: 1440,
+            height: 900,
+            snapshotName: 'home-desktop-1440.png',
+        });
     });
 });
