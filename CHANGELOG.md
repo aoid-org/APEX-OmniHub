@@ -5,7 +5,34 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.3.6] - 2026-03-01
+## [1.3.7] - 2026-03-01
+
+### Fixed — i18n Locale Resolution & Test Hygiene (PR #660)
+
+#### Locale Resolution (`src/omniconnect/translation/translator.ts`)
+
+- **Root Cause:** Hardcoded `const targetLocale = 'fr-FR'` replaced with dynamic `resolveTargetLocale()`.
+- **Resolution Priority:** `metadata.locale` → `metadata.location.countryCode` → default `'en'`.
+- **Helpers Added:** `normalizeLocale()`, `countryCodeToLang()`, `resolveTargetLocale()` — zero external deps.
+
+#### Modal Accessibility (`UniversalModalEngine.tsx`)
+
+- **Radix `aria-describedby` Warning:** Suppressed via conditional prop spread when no description is present.
+- **Confirmation `DialogDescription`:** Moved description from inline `<p>` to proper `DialogDescription` (semantic HTML).
+- **act() Wrapping:** All store mutations in `universal-modal-engine.spec.tsx` wrapped in `act()`.
+
+#### Test Hygiene
+
+- **Sanitization (`sanitization.spec.ts`):** Circuit breaker `console.error` now muted via spy and asserted — zero uncontrolled stderr.
+- **IronLaw (`iron-law.ts`):** Added `APEX_IRON_LAW_FAST_MODE` env guard — skips recursive `npm test` inside vitest (latency: 30s → 23ms).
+
+### Quality Gates
+
+- Tests: **956 passed**, 87 skipped, 0 failed (92 test files)
+- TypeScript (`tsc --noEmit`): 0 errors
+- Build: 0 errors
+
+---
 
 ### Changed — USO Canon Hero Copy Migration (omnihub-site)
 
