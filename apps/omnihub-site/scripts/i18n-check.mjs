@@ -16,14 +16,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const DICTIONARIES_PATH = resolve(__dirname, '../../../src/i18n/dictionaries.ts');
 
 /**
- * Compare function for deterministic alphabetical sorting of translation keys.
- * Avoids type-dependent default Array.sort() behavior.
+ * Compare function for deterministic sorting of translation keys.
+ * Uses Unicode code-point order via JS relational operators — locale-independent
+ * and free of type-dependent behavior (avoids localeCompare runtime variance).
  * @param {string} a
  * @param {string} b
  * @returns {number}
  */
 function compareKeys(a, b) {
-  return a.localeCompare(b, 'en', { sensitivity: 'base' });
+  return a < b ? -1 : a > b ? 1 : 0;
 }
 
 function extractKeys(source) {
@@ -49,14 +50,18 @@ function main() {
     process.exit(1);
   }
 
-  // Extract the English dictionary block
-  const enBlockMatch = source.match(/const en\s*=\s*\{([\s\S]*?)\}\s*as\s*const/);
-  if (!enBlockMatch) {
+  // Extract the English dictionary block — linear scan, no regex backtracking
+  const startMarker = 'const en = {';
+  const endMarker = '} as const';
+  const startIdx = source.indexOf(startMarker);
+  const endIdx = source.indexOf(endMarker, startIdx);
+  if (startIdx === -1 || endIdx === -1) {
     console.error('Could not parse English dictionary from dictionaries.ts');
     process.exit(1);
   }
+  const enBlock = source.slice(startIdx + startMarker.length, endIdx);
 
-  const canonicalKeys = extractKeys(enBlockMatch[1]);
+  const canonicalKeys = extractKeys(enBlock);
   console.log(`Canonical (en) keys: ${canonicalKeys.length}`);
 
   // Check for duplicate keys
