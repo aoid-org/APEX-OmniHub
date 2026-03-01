@@ -69,6 +69,55 @@ function buildDroppedResult(
 }
 
 /**
+ * Normalize a raw locale string (trim whitespace, replace _ with -).
+ */
+function normalizeLocale(l: string): string {
+  return l.trim().replaceAll('_', '-');
+}
+
+/**
+ * Map a two-letter country code to an ISO-639-1 language code.
+ * Only well-known mappings are returned; unknown codes yield null.
+ */
+function countryCodeToLang(cc: string): string | null {
+  const map: Record<string, string> = {
+    FR: 'fr', DE: 'de', ES: 'es', JP: 'ja', PT: 'pt', CN: 'zh',
+    BR: 'pt', MX: 'es', AT: 'de', CH: 'de', BE: 'fr', CA: 'en',
+    US: 'en', GB: 'en', AU: 'en',
+  };
+  return map[cc.trim().toUpperCase()] ?? null;
+}
+
+/**
+ * Resolve target locale from event metadata.
+ *
+ * Priority:
+ *  1. metadata.locale (explicit BCP-47 tag → base lang extracted)
+ *  2. metadata.location.countryCode → mapped language
+ *  3. metadata.countryCode → mapped language
+ *  4. Fallback: 'en'
+ */
+function resolveTargetLocale(event: CanonicalEvent): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const md = (event as any).metadata ?? {};
+  const explicit = md['locale'];
+  if (typeof explicit === 'string' && explicit.trim()) {
+    // Extract base language from BCP-47 (e.g. 'fr-FR' → 'fr')
+    return normalizeLocale(explicit).split('-')[0].toLowerCase();
+  }
+
+  const loc = md['location'];
+  let cc = '';
+  if (typeof loc === 'object' && loc !== null && typeof loc.countryCode === 'string') {
+    cc = String(loc.countryCode);
+  } else if (typeof md['countryCode'] === 'string') {
+    cc = String(md['countryCode']);
+  }
+
+  return (cc ? countryCodeToLang(cc) : null) ?? 'en';
+}
+
+/**
  * Semantic translator for app-specific event formats
  */
 export class SemanticTranslator {
@@ -99,9 +148,6 @@ export class SemanticTranslator {
   ): Promise<TranslatedEvent[]> {
     if (import.meta.env.DEV) console.log(`[${correlationId}] Translating ${events.length} events for app ${appId}`);
 
-    // Simulate target locale retrieval (mock)
-    const targetLocale = 'fr-FR';
-
     return events.map((event) => {
       // 0. Payload Schema Validation (Zero-Drift Enforcement)
       const validation = CanonicalEventSchema.safeParse(event);
@@ -119,6 +165,9 @@ export class SemanticTranslator {
 
       const validEvent = validation.data;
       const originalPayload = JSON.stringify(validEvent.payload);
+
+      // Resolve locale from event metadata; defaults to 'en'
+      const targetLocale = resolveTargetLocale(event);
 
       // 1. Forward Translate
       const translatedPayload: Record<string, unknown> = {};

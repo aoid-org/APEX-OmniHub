@@ -8,7 +8,6 @@ describe('Universal Translation Engine (UTE) Stress Tests', () => {
   const correlationId = 'test-corr-123';
 
   it('should gracefully drop events missing required canonical fields', async () => {
-    // Malformed legacy payload completely ignoring the schema
     const malformedPayload = {
       foo: 'bar',
       garbageData: true,
@@ -25,7 +24,6 @@ describe('Universal Translation Engine (UTE) Stress Tests', () => {
   });
 
   it('should gracefully drop events with incorrect data types', async () => {
-    // Payload with incorrect types for EventType and DataClassification
     const malformedTypePayload = {
       eventId: 'evt-1',
       correlationId: 'corr-1',
@@ -70,7 +68,7 @@ describe('Universal Translation Engine (UTE) Stress Tests', () => {
     expect(results).toHaveLength(1);
     expect(results[0].payload._translation_status).toBeUndefined();
     expect(results[0].metadata.verified).toBe(true);
-    // Pseudo translate prepends [fr-FR]
-    expect(results[0].payload.message).toBe('[fr-FR] Hello Translator');
+    // Empty metadata → defaults to [en]
+    expect(results[0].payload.message).toBe('[en] Hello Translator');
   });
 });

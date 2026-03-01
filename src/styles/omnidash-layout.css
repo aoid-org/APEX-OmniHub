@@ -38,19 +38,10 @@
 
 .od-sidebar-logo img {
   width: auto;
-  height: 26px;
+  height: 36px;
+  max-width: 220px;
   object-fit: contain;
   border-radius: 4px;
-}
-
-.od-sidebar-logo span {
-  font-size: 18.725px; /* 16px * 1.05 = 16.8 -> 17.5 for pop */
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  background: linear-gradient(135deg, #f97316, #c2501f);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .od-nav { flex: 1; padding: 8px 10px; }

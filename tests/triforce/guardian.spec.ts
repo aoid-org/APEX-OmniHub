@@ -28,7 +28,7 @@ const INJECTION_PATTERNS = [
 const PII_PATTERNS: Array<[RegExp, string]> = [
   [/\b\d{3}-\d{2}-\d{4}\b/g, '[SSN REDACTED]'],
   [/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, '[CARD REDACTED]'],
-  [/\b\d{10,11}\b/g, '[PHONE REDACTED]'],
+  [/(?<!\d)(\+1[\s-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)/g, '[PHONE REDACTED]'],
   [/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL REDACTED]'],
 ];
 
@@ -142,10 +142,34 @@ describe('Guardian Node - PII Redaction', () => {
     }
   });
 
-  it('redacts phone numbers', () => {
-    const input = 'Call me at 5551234567';
-    const output = redactPII(input);
-    expect(output).toBe('Call me at [PHONE REDACTED]');
+  it('redacts phone numbers in various formats', () => {
+    const cases: Array<[string, string]> = [
+      ['Call me at 5551234567', 'Call me at [PHONE REDACTED]'],
+      ['Call me at (555) 123-4567', 'Call me at [PHONE REDACTED]'],
+      ['Call me at 555-123-4567', 'Call me at [PHONE REDACTED]'],
+      ['Call me at 555.123.4567', 'Call me at [PHONE REDACTED]'],
+      ['Call me at +1 555-123-4567', 'Call me at [PHONE REDACTED]'],
+      ['Call me at +1-555-123-4567', 'Call me at [PHONE REDACTED]'],
+    ];
+
+    for (const [input, expected] of cases) {
+      const output = redactPII(input);
+      expect(output, `Failed for input: "${input}"`).toBe(expected);
+    }
+  });
+
+  it('does NOT false-positive on non-phone digit strings', () => {
+    const safeInputs = [
+      'Order ID: 98765432101',
+      'Tracking number: 12345678901',
+      'Invoice #10000000001',
+      'Transaction ref: 99887766554',
+    ];
+
+    for (const input of safeInputs) {
+      const output = redactPII(input);
+      expect(output, `False-positive redaction on: "${input}"`).toBe(input);
+    }
   });
 
   it('redacts email addresses', () => {

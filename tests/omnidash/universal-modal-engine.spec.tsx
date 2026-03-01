@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UniversalModalEngine } from '@/components/omnidash/media/UniversalModalEngine';
 import { useOmniModal } from '@/stores/omniModalStore';
@@ -26,13 +26,18 @@ if (!(globalThis as Record<string, unknown>).PointerEvent) {
   }
   (globalThis as Record<string, unknown>).PointerEvent = PointerEvent;
 }
-  
+
 describe('UniversalModalEngine', () => {
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
     useOmniModal.setState({ activeModal: null, isOpen: false });
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
     cleanup();
     vi.restoreAllMocks();
   });
@@ -49,14 +54,16 @@ describe('UniversalModalEngine', () => {
       
       const onCompleteMock = vi.fn().mockResolvedValue(undefined);
       
-      // Act: invoke the store
-      useOmniModal.getState().invoke({
-        id: 'test-modal-oauth',
-        provider: 'Stripe',
-        type: 'oauth',
-        title: 'Connect Stripe',
-        description: 'Authorize Stripe to proceed.',
-        onComplete: onCompleteMock
+      // Act: invoke the store within act()
+      await act(async () => {
+        useOmniModal.getState().invoke({
+          id: 'test-modal-oauth',
+          provider: 'Stripe',
+          type: 'oauth',
+          title: 'Connect Stripe',
+          description: 'Authorize Stripe to proceed.',
+          onComplete: onCompleteMock
+        });
       });
 
       // Assert: Semantic roles should appear
@@ -73,18 +80,20 @@ describe('UniversalModalEngine', () => {
     it('handles selection type properly and fires onComplete', async () => {
       render(<UniversalModalEngine />);
       
-      useOmniModal.getState().invoke({
-        id: 'test-modal-selection',
-        provider: 'System',
-        type: 'selection',
-        title: 'Choose Environment',
-        schema: {
-          items: [
-            { id: 'prod', label: 'Production' },
-            { id: 'stag', label: 'Staging' }
-          ]
-        },
-        onComplete: onCompleteMock
+      await act(async () => {
+        useOmniModal.getState().invoke({
+          id: 'test-modal-selection',
+          provider: 'System',
+          type: 'selection',
+          title: 'Choose Environment',
+          schema: {
+            items: [
+              { id: 'prod', label: 'Production' },
+              { id: 'stag', label: 'Staging' }
+            ]
+          },
+          onComplete: onCompleteMock
+        });
       });
 
       // Assert modal renders
@@ -115,14 +124,16 @@ describe('UniversalModalEngine', () => {
     it('handles confirmation type properly and fires onComplete', async () => {
        render(<UniversalModalEngine />);
       
-       useOmniModal.getState().invoke({
-         id: 'test-modal-conf',
-         provider: 'System',
-         type: 'confirmation',
-         title: 'Delete Resource?',
-         description: 'This is a permanent action.',
-         onComplete: onCompleteMock,
-         contextData: { resourceId: 123 }
+       await act(async () => {
+         useOmniModal.getState().invoke({
+           id: 'test-modal-conf',
+           provider: 'System',
+           type: 'confirmation',
+           title: 'Delete Resource?',
+           description: 'This is a permanent action.',
+           onComplete: onCompleteMock,
+           contextData: { resourceId: 123 }
+         });
        });
  
        const dialog = await screen.findByRole('dialog', { name: 'Delete Resource?' });
@@ -154,12 +165,14 @@ describe('UniversalModalEngine', () => {
       
       render(<UniversalModalEngine />);
       
-      useOmniModal.getState().invoke({
-        id: 'error-modal',
-        provider: 'System',
-        type: 'confirmation',
-        title: 'Error Test',
-        onComplete: errorMock
+      await act(async () => {
+        useOmniModal.getState().invoke({
+          id: 'error-modal',
+          provider: 'System',
+          type: 'confirmation',
+          title: 'Error Test',
+          onComplete: errorMock
+        });
       });
 
       const confirmButton = await screen.findByRole('button', { name: /Confirm/i });

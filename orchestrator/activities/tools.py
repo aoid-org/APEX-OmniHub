@@ -553,7 +553,7 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
     activity.logger.info(f"Calling webhook: {method} {url}")
 
     async with httpx.AsyncClient() as client:
-        response = await client.request(  # nosonar
+        response = await client.request(  # NOSONAR - URL validated by SSRF guard above
             method=method,
             url=url,
             json=payload,

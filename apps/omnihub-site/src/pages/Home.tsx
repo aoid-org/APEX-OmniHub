@@ -4,6 +4,7 @@ import { CTAGroup } from '@/components/CTAGroup';
 import { HeroVisual } from '@/components/HeroVisual';
 import { FeatureHighlightGrid } from '@/components/FeatureHighlightGrid';
 import { siteConfig } from '@/content/site';
+import { useTranslation } from 'react-i18next';
 import {
   IconConnect,
   IconTranslate,
@@ -18,6 +19,8 @@ import {
 } from '@/components/icons';
 
 function Hero() {
+  const { t } = useTranslation();
+
   return (
     <section className="hero hero--mission">
       <div className="hero__background" aria-hidden="true">
@@ -35,11 +38,11 @@ function Hero() {
             <span>Orchestrate everything.</span>
             <span>Stay in control.</span>
           </h1>
-          <p className="hero__tagline">{siteConfig.hero.tagline}</p>
+          <p className="hero__tagline">{t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}</p>
           <p className="hero__subtagline">
-            {siteConfig.stamp.tagline}
+            {t('hero.traits', { defaultValue: 'DIRECTABLE \u2022 AUDITABLE \u2022 REVERSIBLE' })}
           </p>
-          <p className="hero__subtitle">{siteConfig.hero.subtitle}</p>
+          <p className="hero__subtitle">{t('hero.subtitle', { defaultValue: 'The Anti-OS: Universal Sync Orchestrator (USO). Designed to translate intent into governed execution across SaaS, legacy systems, blockchain infrastructure, and physical edge devices (PhysiOmni, Enterprise).' })}</p>
           <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
             OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. One-hand ready.
             <br />
@@ -49,9 +52,12 @@ function Hero() {
           </p>
           <div className="hero__actions">
             <CTAGroup
-              primary={siteConfig.ctas.primary}
-              secondary={siteConfig.ctas.secondary}
+              primary={{ label: t('hero.cta.primary', { defaultValue: 'Request Access' }), href: siteConfig.ctas.primary.href }}
+              secondary={{ label: t('hero.cta.secondary', { defaultValue: 'Watch Demo' }), href: siteConfig.ctas.secondary.href }}
             />
+            <p className="hero__footnote" style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '1rem' }}>
+              {t('hero.footnote', { defaultValue: '*Blockchain, wallet, and NFT integrations are optional and disabled by default.' })}
+            </p>
           </div>
           <small style={{ display: 'block', marginTop: 'var(--space-2)', fontSize: 'var(--font-size-xs)', color: 'rgba(255, 255, 255, 0.5)' }}>
             *Blockchain, wallet, and NFT integrations are optional and disabled by default.

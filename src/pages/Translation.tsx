@@ -16,15 +16,12 @@ import { toast } from 'sonner';
 import { SemanticTranslator } from '@/omniconnect/translation/translator';
 import { CanonicalEvent } from '@/omniconnect/types/canonical';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useI18n, LOCALES, type LangCode } from '@/i18n';
 
-const LOCALES = [
-  { value: 'en-US', label: 'English (US)' },
-  { value: 'fr-FR', label: 'French (France)' },
-  { value: 'es-ES', label: 'Spanish (Spain)' },
-  { value: 'de-DE', label: 'German (Germany)' },
-  { value: 'ja-JP', label: 'Japanese (Japan)' },
-  { value: 'zh-CN', label: 'Chinese (Simplified)' },
-];
+const LOCALE_OPTIONS: { value: LangCode; labelKey: string }[] = LOCALES.map((code) => ({
+  value: code,
+  labelKey: `locale.${code}`,
+}));
 
 /**
  * Translation Page - User-facing translation UI
@@ -32,8 +29,9 @@ const LOCALES = [
  * Read-only, no external API calls
  */
 export default function Translation() {
+  const { t } = useI18n();
   const [inputJson, setInputJson] = useState('');
-  const [targetLocale, setTargetLocale] = useState('fr-FR');
+  const [targetLocale, setTargetLocale] = useState<LangCode>('fr');
   const [translatedResult, setTranslatedResult] = useState<string>('');
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -57,7 +55,7 @@ export default function Translation() {
       const translator = new SemanticTranslator();
 
       // Translate (client-side, deterministic)
-      const result = await translator.translate([event], 'omnilink-ui', crypto.randomUUID());
+      const result = await translator.translate([event], 'omnilink-ui', crypto.randomUUID(), targetLocale);
 
       // Check translation status
       const translatedEvent = result[0];
@@ -70,12 +68,12 @@ export default function Translation() {
       } else {
         setStatus('success');
         setTranslatedResult(JSON.stringify(translatedEvent, null, 2));
-        toast.success('Translation complete with verification');
+        toast.success(t('translation.completeWithVerification'));
       }
     } catch (err) {
       setStatus('error');
       setErrorMessage(err instanceof Error ? err.message : 'Invalid JSON');
-      toast.error('Translation failed');
+      toast.error(t('translation.translationFailed'));
     }
   };
 
@@ -93,7 +91,7 @@ export default function Translation() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Languages className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold">Translation</h1>
+            <h1 className="text-xl font-bold">{t('translation.title')}</h1>
           </div>
           <ThemeToggle />
         </div>
@@ -106,10 +104,10 @@ export default function Translation() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Languages className="w-5 h-5" />
-              Semantic Translation
+              {t('translation.semanticTitle')}
             </CardTitle>
             <CardDescription>
-              Translate event payloads with automatic verification (preview mode)
+              {t('translation.semanticDescription')}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -117,19 +115,19 @@ export default function Translation() {
         {/* Input Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Input</CardTitle>
+            <CardTitle className="text-base">{t('translation.inputTitle')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="locale">Target Locale</Label>
-              <Select value={targetLocale} onValueChange={setTargetLocale}>
+              <Label htmlFor="locale">{t('translation.targetLocale')}</Label>
+              <Select value={targetLocale} onValueChange={(v) => setTargetLocale(v as LangCode)}>
                 <SelectTrigger id="locale">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {LOCALES.map((locale) => (
-                    <SelectItem key={locale.value} value={locale.value}>
-                      {locale.label}
+                  {LOCALE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {t(opt.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -137,10 +135,10 @@ export default function Translation() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="input">JSON Payload</Label>
+              <Label htmlFor="input">{t('translation.jsonPayload')}</Label>
               <Textarea
                 id="input"
-                placeholder='{"eventType": "message.sent", "payload": {"text": "Hello world"}}'
+                placeholder={t('translation.jsonPlaceholder')}
                 value={inputJson}
                 onChange={(e) => setInputJson(e.target.value)}
                 className="font-mono text-sm min-h-[120px]"
@@ -149,10 +147,10 @@ export default function Translation() {
 
             <div className="flex gap-2">
               <Button onClick={handleTranslate} disabled={!inputJson}>
-                Translate
+                {t('translation.translate')}
               </Button>
               <Button variant="outline" onClick={handleClear}>
-                Clear
+                {t('translation.clear')}
               </Button>
             </div>
           </CardContent>
@@ -163,17 +161,17 @@ export default function Translation() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Result</CardTitle>
+                <CardTitle className="text-base">{t('translation.resultTitle')}</CardTitle>
                 {status === 'success' && (
                   <Badge variant="default" className="gap-1">
                     <CheckCircle2 className="w-3 h-3" />
-                    Verified
+                    {t('translation.verified')}
                   </Badge>
                 )}
                 {status === 'error' && (
                   <Badge variant="destructive" className="gap-1">
                     <XCircle className="w-3 h-3" />
-                    Failed
+                    {t('translation.failed')}
                   </Badge>
                 )}
               </div>
@@ -187,7 +185,7 @@ export default function Translation() {
               )}
 
               <div className="space-y-2">
-                <Label>Translated Event</Label>
+                <Label>{t('translation.translatedEvent')}</Label>
                 <div className="relative">
                   <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs font-mono max-h-[400px] overflow-y-auto">
                     {translatedResult}
@@ -198,10 +196,10 @@ export default function Translation() {
                     className="absolute top-2 right-2"
                     onClick={() => {
                       navigator.clipboard.writeText(translatedResult);
-                      toast.success('Copied to clipboard');
+                      toast.success(t('translation.copiedToClipboard'));
                     }}
                   >
-                    Copy
+                    {t('translation.copy')}
                   </Button>
                 </div>
               </div>
@@ -215,11 +213,9 @@ export default function Translation() {
             <div className="flex items-start gap-3 text-sm text-muted-foreground">
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-medium mb-1">Preview Mode</p>
+                <p className="font-medium mb-1">{t('translation.previewMode')}</p>
                 <p className="text-xs">
-                  This is a deterministic preview using pseudo-translation. Production
-                  translation would use local AI models or cached dictionaries with full
-                  semantic equivalence verification.
+                  {t('translation.previewDescription')}
                 </p>
               </div>
             </div>
