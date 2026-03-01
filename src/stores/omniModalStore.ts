@@ -85,10 +85,10 @@ export const useOmniModal = create<OmniModalState>((set, get) => ({
     const sanitized = {
       ...config,
       contextData: config.contextData
-        ? JSON.parse(JSON.stringify(config.contextData))
+        ? structuredClone(config.contextData)
         : undefined,
       schema: config.schema
-        ? JSON.parse(JSON.stringify(config.schema))
+        ? structuredClone(config.schema)
         : undefined,
     };
 

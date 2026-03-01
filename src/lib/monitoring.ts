@@ -47,7 +47,7 @@ const logCache = new Map<string, unknown[]>();
 let cacheSyncInitialized = false;
 
 function initCacheSync() {
-  if (cacheSyncInitialized || typeof window === 'undefined') return;
+  if (cacheSyncInitialized || globalThis.window === undefined) return;
 
   globalThis.window.addEventListener('storage', (event) => {
     // Sync cache when other tabs modify logs
@@ -95,7 +95,7 @@ function setCachedLogs(key: string, logs: unknown[]) {
   }
 }
 
-let flushHandle: unknown | null = null;
+let flushHandle: unknown = null;
 let isIdleCallback = false;
 
 export interface ErrorContext {
@@ -125,7 +125,7 @@ async function ensureSentry(): Promise<SentryLike | null> {
     // @ts-expect-error CDN import not resolvable at compile time
     const { BrowserTracing } = await import('https://esm.sh/@sentry/tracing@7.120.1');
 
-    sentry!.init({
+    sentry.init({
       dsn,
       environment: getEnvironment(),
       release: `${appConfig.name}@${appConfig.version}`,
@@ -372,11 +372,11 @@ export function initializeMonitoring(): void {
     void ensureSentry();
 
     // Register flush handlers
-    if (typeof window !== 'undefined') {
+    if (globalThis.window !== undefined) {
       const flushHandler = () => flushQueue();
       // Use pagehide for modern browsers as it is more reliable than beforeunload
       window.addEventListener('pagehide', flushHandler);
-      window.addEventListener('visibilitychange', () => {
+      globalThis.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
           flushHandler();
         }

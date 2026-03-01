@@ -38,8 +38,8 @@ import type {
 
 /** service_role client — bypasses RLS for credential mutations */
 const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  Deno.env.get("SUPABASE_URL") ?? '',
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ''
 );
 
 const cockpitCrypto = getCockpitCrypto();

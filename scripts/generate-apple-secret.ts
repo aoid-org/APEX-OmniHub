@@ -33,8 +33,8 @@ function base64url(data: Buffer | string): string {
   const buf = typeof data === 'string' ? Buffer.from(data) : data;
   return buf
     .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
     .replace(/=+$/, '');
 }
 
@@ -57,7 +57,7 @@ function parseArgs(): Partial<AppleSecretConfig> {
         config.keyPath = args[++i];
         break;
       case '--expiry-days':
-        config.expiryDays = parseInt(args[++i], 10);
+        config.expiryDays = Number.parseInt(args[++i], 10);
         break;
     }
   }
@@ -101,7 +101,7 @@ async function promptMissing(partial: Partial<AppleSecretConfig>): Promise<Apple
       keyId,
       clientId,
       keyPath,
-      expiryDays: parseInt(expiryDaysStr, 10) || 180,
+      expiryDays: Number.parseInt(expiryDaysStr, 10) || 180,
     };
   } finally {
     rl.close();
@@ -161,7 +161,9 @@ async function main() {
   console.log('(Authentication > Providers > Apple > Secret Key)');
 }
 
-main().catch((err) => {
-  console.error('Error:', err.message);
+try {
+  await main();
+} catch (err) {
+  console.error('Error:', (err as Error).message);
   process.exit(1);
-});
+}

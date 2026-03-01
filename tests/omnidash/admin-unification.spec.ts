@@ -174,7 +174,7 @@ describe('useAdminAccess() hook (unit) — tamper resistance', () => {
     const types = await import('@/omnidash/types');
     expect('OMNIDASH_ADMIN_EMAIL_HINTS' in types).toBe(true);
     // It exists but must never be used for auth decisions
-    expect(Array.isArray(types.OMNIDASH_ADMIN_EMAIL_HINTS)).toBe(true);
+    expect(Array.isArray(types.OMNIDASH_ADMIN_EMAIL_HINTS)).toBe(true); // NOSONAR
   });
 
   it('hooks.tsx should NOT import OMNIDASH_ADMIN_ALLOWLIST', async () => {

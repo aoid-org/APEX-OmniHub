@@ -240,7 +240,7 @@ const Auth = () => {
                 <OAuthButtons
                   redirectTo={
                     searchParams.get('redirect')
-                      ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(searchParams.get('redirect')!)}`
+                      ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(searchParams.get('redirect') ?? '')}`
                       : undefined
                   }
                   disabled={loading}
@@ -296,7 +296,7 @@ const Auth = () => {
                 <OAuthButtons
                   redirectTo={
                     searchParams.get('redirect')
-                      ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(searchParams.get('redirect')!)}`
+                      ? `${globalThis.location.origin}/auth?redirect=${encodeURIComponent(searchParams.get('redirect') ?? '')}`
                       : undefined
                   }
                   disabled={loading}

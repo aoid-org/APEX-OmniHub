@@ -204,7 +204,7 @@ describe('MAESTRO Inference Tests', () => {
     });
 
     it('should handle undefined input gracefully', () => {
-      expect(() => mockGenerateEmbedding(undefined)).not.toThrow();
+      expect(() => mockGenerateEmbedding()).not.toThrow();
     });
   });
 });

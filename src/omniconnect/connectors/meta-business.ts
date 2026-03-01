@@ -5,8 +5,7 @@
 
 import { BaseConnector } from './base';
 import { ConnectorConfig, SessionToken, RawEvent, NormalizationContext } from '../types/connector';
-import { CanonicalEvent, EventType } from '../types/canonical';
-import { DataClassification } from '../types/canonical';
+import { CanonicalEvent, EventType, DataClassification } from '../types/canonical';
 import { generateCorrelationId } from '../utils/correlation';
 
 // Lightweight auth session storage for PKCE flow

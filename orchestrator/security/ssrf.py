@@ -66,7 +66,7 @@ def validate_url(url: str) -> str:
         ip_obj = ipaddress.ip_address(hostname.strip("[]"))
         _check_ip(ip_obj)
         # If it's an IP literal and passes checks, it's safe.
-        return url
+        return urlparse(url).geturl()
     except ValueError:
         # Not an IP literal, proceed to resolution
         pass
@@ -77,8 +77,7 @@ def validate_url(url: str) -> str:
         # We only care about the sockaddr (IP)
         # Use AI_ADDRCONFIG to filter out IPv6 if system doesn't support it, but
         # for security, we want to see ALL resolutions.
-        # NOSONAR: DNS lookup is required for SSRF validation
-        addr_infos = socket.getaddrinfo(hostname, None)
+        addr_infos = socket.getaddrinfo(hostname, None)  # nosonar
     except socket.gaierror as e:
         raise ValueError(f"Could not resolve hostname {hostname}: {e}") from e
 
@@ -99,7 +98,7 @@ def validate_url(url: str) -> str:
             # Re-raise with context if check fails
             raise ValueError(f"Resolved IP {ip_str} for {hostname} is blocked: {e}") from e
 
-    return url
+    return urlparse(url).geturl()
 
 
 def _check_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> None:

@@ -63,8 +63,8 @@ serve(async (req) => {
       return jsonResponse({ error: "bad_request" }, 400, origin);
     }
 
-    const query = body.query as string;
-    const traceId = body.traceId as string;
+    const query = body.query;
+    const traceId = body.traceId;
 
     // 5. Guardian enforcement (toggled via OMNI_GUARDIAN_ENABLED, default true)
     const guardianEnabled = Deno.env.get("OMNI_GUARDIAN_ENABLED") !== "false";

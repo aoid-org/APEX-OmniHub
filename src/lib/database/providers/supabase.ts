@@ -20,7 +20,7 @@ import type {
 // ============================================================================
 
 export class SupabaseDatabase implements IDatabase {
-  private client: SupabaseClient
+  private readonly client: SupabaseClient
   private userContext: string | null = null
   private debug: boolean
 
@@ -487,7 +487,6 @@ export class SupabaseDatabase implements IDatabase {
     this.userContext = userId
     // In Supabase, RLS is handled automatically via JWT
     // This method is for compatibility with other providers
-    void this.userContext; // reserved for future RLS header injection
   }
 
   // -------------------------------------------------------------------------

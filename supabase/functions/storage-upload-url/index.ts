@@ -60,7 +60,7 @@ serve(async (req) => {
   // parseInt returns NaN on malformed values; NaN > n is always false which
   // would silently bypass the size gate — use Number() + isNaN guard instead.
   const contentLength = Number(req.headers.get('content-length') ?? '0');
-  if (isNaN(contentLength) || contentLength > MAX_REQUEST_SIZE) {
+  if (Number.isNaN(contentLength) || contentLength > MAX_REQUEST_SIZE) {
     return errorResponse(
       { error: 'Request body too large', max_size: MAX_REQUEST_SIZE },
       413,
