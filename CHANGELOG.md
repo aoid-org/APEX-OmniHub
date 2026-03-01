@@ -5,6 +5,31 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.6] - 2026-03-01
+
+### Changed — USO Canon Hero Copy Migration (omnihub-site)
+
+- **Hero Copy:** Full hero text replaced with APEX OmniHub USO canon. 3-line headline, Anti-OS subtitle, AUDITABLE • REVERSIBLE trait line, supporting ecosystem paragraph, asterisk footnote.
+- **i18n Integration:** All 10 hero strings wrapped with `react-i18next` `t()` calls with `defaultValue` fallbacks. 6 locale JSONs (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). Triple-layer key leak prevention.
+- **CTA Label:** Primary CTA "Get Started" → "Request Access".
+
+### Fixed
+
+- **useAuth.ts lint error (omnihub-site):** Resolved `react-hooks/set-state-in-effect` — `loading` initialized from `hasSupabaseConfig`.
+- **tools.py suppression comment (orchestrator):** Fixed `# nosonar` → `# NOSONAR` for SonarQube compliance.
+
+### Security
+
+- **Dependabot Alert #63 (RCE):** `serialize-javascript` pinned to `7.0.3` via npm overrides. Vulnerability count reduced from 6 to 2.
+
+### Quality Gates
+
+- Build (omnihub-site): 0 errors (16.94s)
+- TypeScript: 0 errors
+- ESLint: 0 errors, 0 warnings
+
+---
+
 ## [1.3.4] - 2026-02-27
 
 ### Added — Edge Compute & Deterministic Media Cache
@@ -44,27 +69,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added — Production Infrastructure Enhancements
 
 #### Task 1: Idempotency Hit-Rate Monitoring
+
 - `orchestrator/metrics.py`: Prometheus counters `idempotency_hits_total` / `idempotency_misses_total` with `/metrics` endpoint
 - `docs/monitoring/idempotency_hitrate.json`: Grafana dashboard with hit-rate panel and < 95% alert rule
 - Integrated metrics server startup into `orchestrator/main.py` worker boot sequence
 - `tests/test_idempotency_metrics.py`: Unit tests for counter labels, hit-rate math, server idempotency
 
 #### Task 2: pg_cron Automatic Receipt Cleanup
+
 - `supabase/migrations/20260226000000_enable_pg_cron_receipt_cleanup.sql`: Idempotent migration enabling pg_cron + daily 03:00 UTC cleanup of expired receipts > 30 days
 - `supabase/migrations/20260226000001_rollback_receipt_cleanup.sql`: Safe rollback migration
 - `scripts/verify_cron.sql`: Verification query for cron job status and run history
 - `tests/test_receipt_cleanup.py`: Unit tests for cleanup SQL logic and rollback existence
 
 #### Task 3: Guard Rail Violation Alerting
+
 - `.github/workflows/ci-runtime-gates.yml`: Added guard rail scan step (Phase 5) + Python availability verification
 - `.github/workflows/alert-guard-rail-violation.yml`: New workflow — triggers on CI failure, opens GitHub Issue labeled `guard-rail-violation`, posts to Slack `#platform-alerts`
 - `tests/test_guard_rail_alert.py`: Tests for grep pattern matching, false-positive prevention
 
 #### Documentation Updates
+
 - `docs/ops/OPS_RUNBOOK.md`: Added idempotency monitoring, pg_cron cleanup, guard rail response sections
 - `docs/project-status/LAUNCH_READINESS_v1.0.0.md`: Added v1.3.2+ production enhancement checklist
 
 ### Quality Gates
+
 - Build: PASS | TypeScript: PASS | ESLint: 0 errors, 0 warnings
 - Python ruff: PASS | All existing tests: PASS
 - Zero breaking changes to existing CI, workflows, or runtime behavior

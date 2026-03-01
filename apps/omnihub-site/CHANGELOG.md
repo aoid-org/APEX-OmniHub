@@ -2,9 +2,40 @@
 
 All notable changes to the APEX OmniHub Marketing Site.
 
+## [1.8.0] - 2026-03-01
+
+### Changed — USO Canon Hero Copy Migration
+
+- **Hero Headline:** 3-line USO canon: "Connect anything." / "Orchestrate everything." / "Stay in control."
+- **Hero Subtitle:** Anti-OS USO description with PhysiOmni, Enterprise reference.
+- **Trait Line:** "DIRECTABLE • AUDITABLE • REVERSIBLE"
+- **Supporting Paragraph:** OmniDash/PhysiOmni/APEX Agent ecosystem copy.
+- **CTA Label:** "Get Started" → "Request Access".
+- **Footnote:** Blockchain/wallet/NFT opt-out disclaimer.
+
+### Added — i18n Infrastructure
+
+- **Core:** `i18next`, `react-i18next`, `i18next-browser-languagedetector`. `src/i18n/index.ts` with triple-layer key leak prevention.
+- **Locales:** 6 JSONs (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN) × 10 hero keys.
+- **Formatting:** `src/i18n/format.ts` — locale-aware `formatNumber`, `formatCurrency`, `formatPercent`, `formatDate`, `formatDateTime`.
+- **Hero Localization:** All 10 hero strings use `t()` with `defaultValue` fallbacks.
+
+### Fixed
+
+- **useAuth.ts:** `react-hooks/set-state-in-effect` — `loading` initialized from `hasSupabaseConfig`.
+
+### Security
+
+- **Dependabot Alert #63 (RCE):** `serialize-javascript` → `7.0.3` via npm overrides.
+
+### Quality Gates
+
+- TypeScript: 0 errors | ESLint: 0 errors | Build: 0 errors (16.94s)
+
 ## [1.6.0] - 2026-02-07
 
 ### Fixed
+
 - **P0: Mobile nav overlay** - Sheet z-index raised from 50 to 100; overlay from 50 to 99. Mobile hamburger menu now correctly overlays all page content including hero and sticky headers
 - **P1: Hero text "g" descender clipped** - `heading-hero` line-height changed from 0.95 to 1.1 with 0.05em bottom padding. The lowercase "g" in "Designed" is now fully visible
 - **P1: Feature tile dead links** - HighlightsSection, TriForceSection, CapabilityShowcase, and ManMode links updated from non-existent standalone pages to valid `/tech-specs.html#section` anchors matching MPA entry points
@@ -15,15 +46,18 @@ All notable changes to the APEX OmniHub Marketing Site.
 - **Test stability: OmniPort timing** - Relaxed flaky performance assertion from 50ms to 200ms threshold
 
 ### Added
+
 - `apps/omnihub-site/src/lib/supabase.ts` - Supabase client for marketing site auth using `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` environment variables
 
 ## [1.5.0] - 2026-01-22
 
 ### Removed
+
 - **Restricted access page** - Removed `/restricted.html` and all references to restricted blocking behavior
 - Deleted `nav.login` dead link configuration pointing to non-existent restricted page
 
 ### Changed
+
 - **Login navigation** - Updated Login link to point to `/login.html` instead of dead `/restricted.html`
 - **Routing system** - Added explicit clean URL rewrites to root `vercel.json` for all marketing pages
 - **Documentation** - Updated README.md to reflect actual page structure and routing behavior
@@ -31,6 +65,7 @@ All notable changes to the APEX OmniHub Marketing Site.
 - **Content checks** - Added "Welcome Back", "Privacy", and "Terms" to smoke test content validation
 
 ### Added
+
 - **Clean URL support** - All marketing pages now accessible via both clean URLs (`/demo`) and `.html` URLs (`/demo.html`)
 - **Routing documentation** - Added "Routing" section to README explaining clean URL vs .html URL behavior
 - **Enhanced smoke tests** - Added checks for login, privacy, and terms pages with content validation
@@ -38,11 +73,13 @@ All notable changes to the APEX OmniHub Marketing Site.
 ## [1.4.0] - 2026-01-16
 
 ### Added
+
 - **Header badge** (`apex-badge.png`) - New branded badge with subtle orange glow effect
 - **MAN Mode icon** (`manmode-icon.svg`) - Custom SVG icon for the MAN Mode section
 - **Responsive badge sizing** - Badge scales appropriately across mobile, tablet, and desktop
 
 ### Changed
+
 - Header logo replaced with new branded badge image
 - Added orange glow effect (`drop-shadow`) to badge for brand recognition
 - Badge has hover state with enhanced glow
@@ -50,10 +87,12 @@ All notable changes to the APEX OmniHub Marketing Site.
 ## [1.3.0] - 2026-01-16
 
 ### Added
+
 - **SVG wordmark** (`apex-omnihub-wordmark.svg`) - Optimized vector format for crisp rendering at all sizes
 - **SVG hero image** (`assets/hero.svg`) - Theme-agnostic hero visual that works for both White Fortress and Night Watch
 
 ### Changed
+
 - Header wordmark upgraded from PNG to optimized SVG (244 KB)
 - Hero visual simplified to single SVG, removing theme-dependent image switching
 - All browser API access now uses `globalThis.window` and `globalThis.localStorage` for SSR compatibility
@@ -62,17 +101,20 @@ All notable changes to the APEX OmniHub Marketing Site.
 - Removed duplicate `.nav__burger` CSS selector
 
 ### Fixed
+
 - SonarQube S1128: Removed unused `useSyncExternalStore` import from HeroVisual
 - SonarQube style: Changed `typeof globalThis.window === 'undefined'` to direct comparison
 - CSS duplicate selector warning for `.nav__burger`
 - Improved accessibility with proper ARIA labels and semantic HTML elements
 
 ### Security
+
 - All components now use `globalThis` for safe server-side rendering without `ReferenceError`
 
 ## [1.2.0] - 2026-01-15
 
 ### Added
+
 - **Tri-Force Protocol section** - Connect, Translate, Execute pillars with linked cards
 - **Orchestrator section** - Central coordination capabilities with animated visual
 - **Zero-Trust Fortress Protocol section** - Security principles in navy variant
@@ -90,6 +132,7 @@ All notable changes to the APEX OmniHub Marketing Site.
   - Extended description about OmniHub as universal translator/orchestrator
 
 ### Changed
+
 - Navigation simplified: removed desktop link row, added burger menu for all screen sizes
 - Auth button: single "Log in" / "Log out" button replaces redundant "Get Started" in header
 - Hero visual now includes glow effect behind the central hub image
@@ -98,6 +141,7 @@ All notable changes to the APEX OmniHub Marketing Site.
 - Tailwind config updated to include all HTML entry files
 
 ### Fixed
+
 - ESLint errors for setState in useEffect (refactored to initial state functions)
 - All navigation links now scroll to valid anchors or route to existing pages
 - No more 404s for Privacy/Terms pages
@@ -105,16 +149,19 @@ All notable changes to the APEX OmniHub Marketing Site.
 ## [1.1.0] - 2026-01-15
 
 ### Added
+
 - Visual regression tests with Playwright (`npm run test:visual`)
 - Theme toggle tests for White Fortress / Night Watch
 
 ### Changed
+
 - Hero tagline updated to "It Sees You" (title case)
 - Hero subtitle updated to "Welcome to the future of workflow automation and business intelligence."
 - Feature highlights now display: AI-Powered Automation, Smart Integrations, Advanced Analytics
 - Showcase section title updated to "Experience APEX OmniHub Today"
 
 ### Removed
+
 - `ReferenceOverlay.tsx` - Development-only overlay tool (security hotspot)
 - `FeatureCard.tsx` - Unused component
 - `ShowcaseCard.tsx` - Unused component
@@ -123,12 +170,14 @@ All notable changes to the APEX OmniHub Marketing Site.
 - CSS classes for removed components
 
 ### Fixed
+
 - SonarCloud security hotspot (window.location.search usage)
 - Code duplication reduced from 28.2% to <3%
 
 ## [1.0.0] - 2026-01-14
 
 ### Added
+
 - Initial release with White Fortress and Night Watch themes
 - 5-page static MPA architecture
 - Anti-abuse protection (honeypot, timing, rate limiting)
