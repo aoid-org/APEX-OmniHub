@@ -72,7 +72,7 @@ function buildDroppedResult(
  * Normalize a raw locale string (trim whitespace, replace _ with -).
  */
 function normalizeLocale(l: string): string {
-  return l.trim().replace(/_/g, '-');
+  return l.trim().replaceAll('_', '-');
 }
 
 /**
@@ -107,9 +107,12 @@ function resolveTargetLocale(event: CanonicalEvent): string {
   }
 
   const loc = md['location'];
-  const cc = typeof loc === 'object' && loc !== null && typeof loc.countryCode === 'string'
-    ? String(loc.countryCode)
-    : typeof md['countryCode'] === 'string' ? String(md['countryCode']) : '';
+  let cc = '';
+  if (typeof loc === 'object' && loc !== null && typeof loc.countryCode === 'string') {
+    cc = String(loc.countryCode);
+  } else if (typeof md['countryCode'] === 'string') {
+    cc = String(md['countryCode']);
+  }
 
   return (cc ? countryCodeToLang(cc) : null) ?? 'en';
 }
