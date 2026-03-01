@@ -9,6 +9,7 @@
 
 import { CanonicalEvent } from '../types/canonical';
 import { CanonicalEventSchema } from '../types/schema';
+import { resolveLangCode, type LangCode } from '@/i18n/locales';
 
 export interface TranslatedEvent {
   eventId: string;
@@ -95,12 +96,10 @@ export class SemanticTranslator {
   async translate(
     events: CanonicalEvent[],
     appId: string,
-    correlationId: string
+    correlationId: string,
+    targetLocale: LangCode = 'en'
   ): Promise<TranslatedEvent[]> {
-    if (import.meta.env.DEV) console.log(`[${correlationId}] Translating ${events.length} events for app ${appId}`);
-
-    // Simulate target locale retrieval (mock)
-    const targetLocale = 'fr-FR';
+    if (import.meta.env.DEV) console.log(`[${correlationId}] Translating ${events.length} events for app ${appId} -> ${targetLocale}`);
 
     return events.map((event) => {
       // 0. Payload Schema Validation (Zero-Drift Enforcement)

@@ -8,6 +8,7 @@ import { waitWithBackoff } from '@/lib/backoff';
 import { Database } from '@/integrations/supabase/types';
 import { TranslatedEvent } from '../translation/translator';
 import { requestOmniLink } from '../../integrations/omnilink';
+import type { LangCode } from '@/i18n/locales';
 
 export interface DeliveryResult {
   eventId: string;
@@ -27,12 +28,13 @@ export class OmniLinkDelivery {
   async deliverBatch(
     events: TranslatedEvent[],
     appId: string,
-    correlationId: string
+    correlationId: string,
+    locale?: LangCode
   ): Promise<number> {
     return this.executeBatchDelivery(
       events,
       correlationId,
-      `Delivering ${events.length} events to OmniLink for app ${appId}`,
+      `Delivering ${events.length} events to OmniLink for app ${appId}${locale ? ` [${locale}]` : ''}`,
       async (event) => await this.deliverEvent(event, correlationId),
       async (event, error) => {
         console.error(`[${correlationId}] Failed to deliver event ${event.eventId}:`, error);
@@ -56,7 +58,8 @@ export class OmniLinkDelivery {
           body: event,
           headers: {
             'X-Correlation-ID': correlationId,
-            'X-App-ID': event.appId
+            'X-App-ID': event.appId,
+            ...(event.metadata?.locale ? { 'Accept-Language': String(event.metadata.locale) } : {}),
           }
         });
         return;
