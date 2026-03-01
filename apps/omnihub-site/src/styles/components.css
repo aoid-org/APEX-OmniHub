@@ -2081,16 +2081,11 @@ body {
   border-radius: var(--border-radius-lg);
 }
 
-.demo-video__controls {
+.demo-video__mute-btn {
   position: absolute;
   bottom: 16px;
   right: 16px;
   z-index: 2;
-  display: flex;
-  gap: 8px;
-}
-
-.demo-video__ctrl-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2105,7 +2100,7 @@ body {
   transition: background 0.2s ease;
 }
 
-.demo-video__ctrl-btn:hover {
+.demo-video__mute-btn:hover {
   background: rgba(0, 0, 0, 0.8);
 }
 
