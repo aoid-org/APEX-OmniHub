@@ -129,8 +129,9 @@ jobs:
         working-directory: orchestrator
         run: |
           # -ll = report MEDIUM and HIGH severity findings only.
-          # Intentionally NOT using || true — bandit exits non-zero on findings.
-          bandit -r . -ll -f json -o bandit-report.json; BANDIT_EXIT=$?
+          # Allow bandit to exit non-zero (findings exist) so the Python
+          # filter below can decide whether to block on HIGH severity only.
+          bandit -r . -ll -f json -o bandit-report.json || true
           # Fail CI when any HIGH severity finding is present.
           python -c "
           import json, sys
