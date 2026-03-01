@@ -309,6 +309,6 @@ export async function fetchHealthSnapshot(userId: string): Promise<{ lastUpdated
     )
   );
 
-  const lastUpdated = latest.filter(Boolean).sort().reverse()[0] ?? null;
+  const lastUpdated = latest.filter(Boolean).sort((a, b) => a < b ? -1 : a > b ? 1 : 0).reverse()[0] ?? null;
   return { lastUpdated };
 }
