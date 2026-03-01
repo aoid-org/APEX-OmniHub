@@ -1,4 +1,13 @@
 // SPDX-License-Identifier: MIT
+//
+// Licensing note: This on-chain smart contract file is intentionally published
+// under the MIT License to ensure EVM toolchain compatibility (Hardhat, Ethers,
+// OpenZeppelin) and to allow blockchain explorers and auditors to verify the
+// deployed bytecode.  All off-chain components of the APEX OmniHub platform
+// (UI, API, orchestrator, edge functions, and supporting libraries) remain
+// proprietary and are governed exclusively by the top-level LICENSE file.
+// See THIRD_PARTY_NOTICES.md for dependency attribution.
+//
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";

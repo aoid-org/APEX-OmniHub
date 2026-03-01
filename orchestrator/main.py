@@ -31,6 +31,7 @@ import sys
 from temporalio.client import Client
 from temporalio.worker import Worker
 
+from activities.iron_law_verify import verify_deductive_path
 from activities.man_mode import (
     check_man_decision,
     create_man_task,
@@ -126,6 +127,8 @@ async def start_worker() -> None:
             get_man_task,
             check_man_decision,
             notify_man_task,
+            # Iron Law verification (physical AI safety gate)
+            verify_deductive_path,
             # OmniTrace activities
             *get_omnitrace_activities(),
         ],
