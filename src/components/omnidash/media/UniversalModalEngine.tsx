@@ -1,6 +1,6 @@
 /**
  * UniversalModalEngine — Schema-Driven Adaptive Modal Renderer
- * @version 1.0.0
+ * @version 1.1.0
  * @module src/components/omnidash/media/UniversalModalEngine
  *
  * Mounted once in OmniDashLayout, renders modals on demand from
@@ -9,7 +9,7 @@
  *
  * APEX STANDARDS ENFORCED:
  * - Atomic Idempotency: Same modal config always produces identical render
- * - Overload-Free: Renders null when no active modal — zero DOM cost
+ * - Kinematic Exit: Dialog stays in DOM with open={false} so Radix runs exit animations
  * - Regression-Free: Processing state is local (useState), not global
  * - Modularity: Each modal type is an isolated render path
  * - Enterprise Reliability: onComplete errors caught and logged, never crash UI
@@ -31,7 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, CheckCircle2 } from 'lucide-react';
 
 export function UniversalModalEngine() {
-  const { activeModal, isOpen, close } = useOmniModal();
+  const { activeModal, isOpen, close, abortModal } = useOmniModal();
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Reset processing state on modal change — idempotent
@@ -39,9 +39,19 @@ export function UniversalModalEngine() {
     if (!isOpen) setIsProcessing(false);
   }, [isOpen]);
 
-  if (!activeModal) return null;
+  // CRITICAL: Do NOT return null when activeModal is absent.
+  // Shadcn/Radix requires the Dialog wrapper to remain in the DOM
+  // with open={false} to execute kinematic exit animations (fade out, scale down).
+  // Returning null would sever the animation lifecycle.
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open && activeModal) {
+      abortModal('USER_DISMISSED');
+    }
+  };
 
   const handleAction = async (payload: Record<string, unknown>) => {
+    if (!activeModal) return;
     setIsProcessing(true);
     try {
       await activeModal.onComplete({
@@ -60,6 +70,8 @@ export function UniversalModalEngine() {
   };
 
   const renderContent = () => {
+    if (!activeModal) return null;
+
     switch (activeModal.type) {
       case 'oauth':
         return (
@@ -179,14 +191,16 @@ export function UniversalModalEngine() {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) close(); }}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{activeModal.title}</DialogTitle>
-          {activeModal.description && activeModal.type !== 'confirmation' && (
-            <DialogDescription>{activeModal.description}</DialogDescription>
-          )}
-        </DialogHeader>
+        {activeModal && (
+          <DialogHeader>
+            <DialogTitle>{activeModal.title}</DialogTitle>
+            {activeModal.description && activeModal.type !== 'confirmation' && (
+              <DialogDescription>{activeModal.description}</DialogDescription>
+            )}
+          </DialogHeader>
+        )}
         {renderContent()}
       </DialogContent>
     </Dialog>

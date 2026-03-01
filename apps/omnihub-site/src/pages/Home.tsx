@@ -27,12 +27,12 @@ function Hero() {
       </div>
       <div className="container hero__grid">
         <div className="hero__content">
-          <h1 className="heading-hero hero__title" style={{ display: 'grid', gridTemplateColumns: 'max-content max-content', columnGap: '0.75em', textAlign: 'left' }}>
-            <span style={{ gridColumn: 1, gridRow: 1 }}>Connect</span>
-            <span style={{ gridColumn: 2, gridRow: 1 }}>Change</span>
-            <span style={{ gridColumn: 1, gridRow: 2 }}>anything.</span>
-            <span style={{ gridColumn: 2, gridRow: 2 }}>anything.</span>
-            <span style={{ gridColumn: '1 / -1', gridRow: 3, textAlign: 'center' }}>Stay in control.</span>
+          <h1 className="heading-hero hero__title hero__title--grid">
+            <span>Connect</span>
+            <span>Change</span>
+            <span>anything.</span>
+            <span>anything.</span>
+            <span className="hero__title--span">Stay in control.</span>
           </h1>
           <p className="hero__tagline">{siteConfig.hero.tagline}</p>
           <p className="hero__subtagline">
@@ -58,6 +58,37 @@ function Hero() {
         </div>
       </div>
     </section>
+  );
+}
+
+function DemoVideoSection() {
+  return (
+    <Section id="demo-video" variant="default">
+      <div className="demo-video">
+        <div className="demo-video__header">
+          <h2 className="heading-2">See OmniHub in Action</h2>
+          <p className="text-secondary mt-4">
+            Watch how OmniHub orchestrates AI, enterprise systems, and Web3
+            through a single controlled port.
+          </p>
+        </div>
+        <div className="demo-video__container">
+          <div className="demo-video__glow" aria-hidden="true" />
+          <video
+            id="apex-demo-video"
+            className="demo-video__player"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+          >
+            <source src="/apex-demo-video.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    </Section>
   );
 }
 
@@ -336,6 +367,7 @@ export function HomePage() {
   return (
     <Layout>
       <Hero />
+      <DemoVideoSection />
       <HighlightsSection />
       <TriForceSection />
       <OrchestratorSection />

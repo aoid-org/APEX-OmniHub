@@ -147,7 +147,7 @@ suite('Database Integration Tests', () => {
       })
 
       expect(user).not.toBeNull()
-      const userId = (user as unknown).id
+      const userId = (user as Record<string, unknown>).id as string
 
       // Update user
       const { data: updated, error } = await db.updateById('users', userId, {
@@ -169,7 +169,7 @@ suite('Database Integration Tests', () => {
       })
 
       expect(user).not.toBeNull()
-      const userId = (user as unknown).id
+      const userId = (user as Record<string, unknown>).id as string
 
       // Delete user
       const { data: success, error } = await db.deleteById('users', userId)
@@ -215,8 +215,8 @@ suite('Database Integration Tests', () => {
       expect(page2).toHaveLength(2)
 
       // Pages should have different users
-      const page1Ids = page1?.map((u: unknown) => u.id) || []
-      const page2Ids = page2?.map((u: unknown) => u.id) || []
+      const page1Ids = page1?.map((u: unknown) => (u as Record<string, unknown>).id) || []
+      const page2Ids = page2?.map((u: unknown) => (u as Record<string, unknown>).id) || []
 
       expect(page1Ids).not.toEqual(page2Ids)
     })
@@ -252,8 +252,8 @@ suite('Database Integration Tests', () => {
       expect(user2).not.toBeNull()
 
       // Cleanup
-      if (user1 && 'id' in user1) await db.deleteById('users', user1.id as string)
-      if (user2 && 'id' in user2) await db.deleteById('users', user2.id as string)
+      if (user1 && typeof user1 === 'object' && 'id' in (user1 as Record<string, unknown>)) await db.deleteById('users', (user1 as Record<string, unknown>).id as string)
+      if (user2 && typeof user2 === 'object' && 'id' in (user2 as Record<string, unknown>)) await db.deleteById('users', (user2 as Record<string, unknown>).id as string)
     })
   })
 
@@ -264,12 +264,15 @@ suite('Database Integration Tests', () => {
   describe('Storage Operations', () => {
     const testBucket = 'test-files'
     const testPath = `test-${Date.now()}.txt`
+    // Storage methods exist on SupabaseDatabase but not on IDatabase interface
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const storageDb = db as any
 
     it('should upload file', async () => {
       const fileContent = 'Hello, World!'
       const blob = new Blob([fileContent], { type: 'text/plain' })
 
-      const { data: url, error } = await db.uploadFile(
+      const { data: url, error } = await storageDb.uploadFile(
         testBucket,
         testPath,
         blob,
@@ -281,7 +284,7 @@ suite('Database Integration Tests', () => {
     })
 
     it('should download file', async () => {
-      const { data: blob, error } = await db.downloadFile(testBucket, testPath)
+      const { data: blob, error } = await storageDb.downloadFile(testBucket, testPath)
 
       expect(error).toBeNull()
       expect(blob).toBeInstanceOf(Blob)
@@ -291,14 +294,14 @@ suite('Database Integration Tests', () => {
     })
 
     it('should get file URL', () => {
-      const url = db.getFileUrl(testBucket, testPath)
+      const url = storageDb.getFileUrl(testBucket, testPath)
 
       expect(url).toContain(testBucket)
       expect(url).toContain(testPath)
     })
 
     it('should delete file', async () => {
-      const { data: success, error } = await db.deleteFile(testBucket, testPath)
+      const { data: success, error } = await storageDb.deleteFile(testBucket, testPath)
 
       expect(error).toBeNull()
       expect(success).toBe(true)

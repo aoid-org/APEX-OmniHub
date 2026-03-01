@@ -1,6 +1,6 @@
 // @ts-nocheck - Test uses mock Supabase with .ai extension
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import { SkillRegistry } from '../supabase/functions/_shared/skill-loader';
 import { SkillDefinition } from '../supabase/functions/_shared/types';
 
@@ -27,13 +27,16 @@ vi.mock('@supabase/supabase-js', () => ({
   }))
 }));
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MockSupabase = ReturnType<typeof createClient> & { ai: any; rpc: any; from: any };
+
 describe('OmniLink Agentic RAG', () => {
-  let mockSupabase: SupabaseClient;
+  let mockSupabase: MockSupabase;
   let skillRegistry: SkillRegistry;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSupabase = createClient('mock-url', 'mock-key');
+    mockSupabase = createClient('mock-url', 'mock-key') as MockSupabase;
     skillRegistry = new SkillRegistry(mockSupabase);
   });
 
