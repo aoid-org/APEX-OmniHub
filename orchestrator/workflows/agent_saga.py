@@ -38,7 +38,6 @@ Architecture:
 """
 
 import asyncio
-import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -404,11 +403,10 @@ class AgentWorkflow:
         """
         correlation_id = workflow.info().workflow_id
 
-        # Record start time for continue-as-new threshold
+        # Record start time for continue-as-new threshold.
+        # Uses workflow.now() — deterministic Temporal clock, safe for replay.
         if self.start_time is None:
-            import time
-
-            self.start_time = time.time()
+            self.start_time = workflow.now().timestamp()
 
         # Initialize Saga context
         self.saga = SagaContext(workflow_instance=self)
@@ -864,10 +862,11 @@ class AgentWorkflow:
             workflow.logger.warning(f"  🚫 Step {step_name} cancelled by admin")
             return {"status": "cancelled", "reason": "Cancelled by admin"}
 
-        # Check if admin paused workflow
+        # Check if admin paused workflow.
+        # workflow.sleep() is the deterministic Temporal-safe alternative to asyncio.sleep().
         while self._admin_paused:
             workflow.logger.info("⏸️  Workflow paused, waiting for resume...")
-            await asyncio.sleep(5)
+            await workflow.sleep(timedelta(seconds=5))
 
         workflow.logger.info(f"  ⚙ Starting step: {step_name}")
         self.step_count += 1
@@ -1150,8 +1149,9 @@ class AgentWorkflow:
             )
         )
 
-        # Track execution time for OmniTrace
-        tool_start_time = time.time()
+        # Track execution time for OmniTrace.
+        # workflow.now() is deterministic — safe for Temporal replay.
+        tool_start_time = workflow.now().timestamp()
         attempt = 1  # Could be incremented on retry if needed
 
         try:
@@ -1164,7 +1164,7 @@ class AgentWorkflow:
             )
 
             # Calculate latency
-            latency_ms = int((time.time() - tool_start_time) * 1000)
+            latency_ms = int((workflow.now().timestamp() - tool_start_time) * 1000)
 
             # Record success
             await self._append_event(
@@ -1196,7 +1196,7 @@ class AgentWorkflow:
 
         except ActivityError as e:
             # Calculate latency
-            latency_ms = int((time.time() - tool_start_time) * 1000)
+            latency_ms = int((workflow.now().timestamp() - tool_start_time) * 1000)
 
             # Record failure
             await self._append_event(
@@ -1264,7 +1264,7 @@ class AgentWorkflow:
                 correlation_id=workflow.info().workflow_id,
                 plan_id=self.plan_id,
                 total_steps=len(self.plan_steps),
-                duration_seconds=time.time() - self.start_time if self.start_time else 0.0,
+                duration_seconds=workflow.now().timestamp() - self.start_time if self.start_time else 0.0,
             )
         )
 

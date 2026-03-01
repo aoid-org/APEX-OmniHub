@@ -56,3 +56,29 @@ def record_miss(workflow_type: str = "agent_saga") -> None:
 def get_metrics_app():
     """Return an ASGI app that serves ``/metrics`` in Prometheus format."""
     return make_asgi_app()
+
+
+def start_metrics_server(port: int = 9090) -> None:
+    """Start a Prometheus metrics HTTP server in a background daemon thread.
+
+    Called by the Temporal worker (main.py) to expose ``/metrics`` without
+    requiring a full ASGI stack.  Uses prometheus_client's built-in WSGI
+    server which internally daemonizes its thread, so the caller does not need
+    to manage the lifecycle — the server stops when the process exits.
+
+    Args:
+        port: TCP port to listen on (default 9090, overridable via METRICS_PORT).
+    """
+    import logging
+    import threading
+
+    from prometheus_client import start_http_server
+
+    _logger = logging.getLogger(__name__)
+
+    def _serve() -> None:
+        start_http_server(port)
+
+    thread = threading.Thread(target=_serve, daemon=True, name="prometheus-metrics-server")
+    thread.start()
+    _logger.info("Prometheus metrics server started on port %d", port)
