@@ -77,34 +77,34 @@ test.describe('Homepage Visual Regression', () => {
     });
 });
 
+/**
+ * Shared helper — asserts no horizontal scroll and takes a full-page screenshot
+ * at the given viewport dimensions. Extracts the duplicated pattern from each
+ * responsive breakpoint test to satisfy SonarCloud CPD compliance.
+ */
+async function assertResponsiveViewport(
+    page: import('@playwright/test').Page,
+    width: number,
+    height: number,
+    screenshotName: string,
+) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
+
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+
+    await expect(page).toHaveScreenshot(screenshotName, {
+        fullPage: true,
+        maxDiffPixelRatio: 0.02,
+        animations: 'disabled',
+    });
+}
+
 test.describe('Responsive i18n Regression', () => {
-
-    /**
-     * Shared helper — asserts no horizontal scroll and takes a full-page screenshot
-     * at the given viewport dimensions. Extracts the duplicated pattern from each
-     * responsive breakpoint test to satisfy SonarCloud CPD compliance.
-     */
-    async function assertResponsiveViewport(
-        page: import('@playwright/test').Page,
-        width: number,
-        height: number,
-        screenshotName: string,
-    ) {
-        await page.setViewportSize({ width, height });
-        await page.goto('/');
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(1000);
-
-        const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-        const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
-        expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
-
-        await expect(page).toHaveScreenshot(screenshotName, {
-            fullPage: true,
-            maxDiffPixelRatio: 0.02,
-            animations: 'disabled',
-        });
-    }
 
     test('Mobile 375x812 — no horizontal scroll, no overlap', async ({ page }) => {
         await assertResponsiveViewport(page, 375, 812, 'home-mobile-375.png');
