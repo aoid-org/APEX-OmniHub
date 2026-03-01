@@ -76,3 +76,58 @@ test.describe('Homepage Visual Regression', () => {
         await expect(html).toHaveAttribute('data-theme', 'light');
     });
 });
+
+test.describe('Responsive i18n Regression', () => {
+
+    test('Mobile 375x812 — no horizontal scroll, no overlap', async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 812 });
+        await page.goto('/');
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(1000);
+
+        const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+        const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+        expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+
+        await expect(page).toHaveScreenshot('home-mobile-375.png', {
+            fullPage: true,
+            maxDiffPixelRatio: 0.02,
+            animations: 'disabled',
+        });
+    });
+
+    test('Tablet 768x1024 — no horizontal scroll, no overlap', async ({ page }) => {
+        await page.setViewportSize({ width: 768, height: 1024 });
+        await page.goto('/');
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(1000);
+
+        const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+        const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+        expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+
+        await expect(page).toHaveScreenshot('home-tablet-768.png', {
+            fullPage: true,
+            maxDiffPixelRatio: 0.02,
+            animations: 'disabled',
+        });
+    });
+
+    test('Desktop 1440x900 — no horizontal scroll, no overlap', async ({ page }) => {
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await page.goto('/');
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(1000);
+
+        const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+        const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+        expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+
+        await expect(page).toHaveScreenshot('home-desktop-1440.png', {
+            fullPage: true,
+            maxDiffPixelRatio: 0.02,
+            animations: 'disabled',
+        });
+    });
+});
+
