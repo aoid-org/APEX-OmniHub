@@ -7,6 +7,7 @@ import VoiceInterface from '@/components/VoiceInterface';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
+import { useI18n } from '@/i18n';
 
 interface VoiceCommand {
   pattern: RegExp;
@@ -20,6 +21,7 @@ interface VoiceCommand {
  * Minimal telemetry (no transcripts unless user opts in)
  */
 export default function Agent() {
+  const { t } = useI18n();
   const [transcript, setTranscript] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastCommand, setLastCommand] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export default function Agent() {
       pattern: /enable dark mode|turn on dark mode|dark mode on/i,
       action: () => {
         setTheme('dark');
-        toast.success('Dark mode enabled');
+        toast.success(t('agent.darkModeEnabled'));
       },
       description: 'Enable dark mode',
     },
@@ -65,18 +67,18 @@ export default function Agent() {
       pattern: /enable light mode|turn on light mode|light mode on/i,
       action: () => {
         setTheme('light');
-        toast.success('Light mode enabled');
+        toast.success(t('agent.lightModeEnabled'));
       },
       description: 'Enable light mode',
     },
     {
       pattern: /help|what can you do|commands/i,
       action: () => {
-        toast.info('Voice commands available - see list below');
+        toast.info(t('agent.voiceCommandsAvailable'));
       },
       description: 'Show help',
     },
-  ], [navigate, setTheme]);
+  ], [navigate, setTheme, t]);
 
   const processCommand = useCallback(
     (text: string) => {
@@ -89,11 +91,11 @@ export default function Agent() {
         }
       }
       // No match found
-      toast('Command not recognized', {
-        description: 'Try saying "help" for available commands',
+      toast(t('agent.commandNotRecognized'), {
+        description: t('agent.commandHint'),
       });
     },
-    [commands]
+    [commands, t]
   );
 
   const handleTranscript = useCallback(
@@ -117,7 +119,7 @@ export default function Agent() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Mic className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold">OmniAgent</h1>
+            <h1 className="text-xl font-bold">{t('agent.title')}</h1>
           </div>
           <ThemeToggle />
         </div>
@@ -132,15 +134,15 @@ export default function Agent() {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <Mic className="w-5 h-5" />
-                  Voice Interface
+                  {t('agent.voiceInterfaceTitle')}
                 </CardTitle>
                 <CardDescription>
-                  Speak commands to control OmniLink
+                  {t('agent.voiceInterfaceDescription')}
                 </CardDescription>
               </div>
               {isSpeaking && (
                 <Badge variant="default" className="animate-pulse">
-                  Speaking...
+                  {t('agent.speaking')}
                 </Badge>
               )}
             </div>
@@ -156,7 +158,7 @@ export default function Agent() {
                 <div className="flex items-start gap-2">
                   <MessageSquare className="w-4 h-4 mt-1 text-muted-foreground" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium mb-1">Transcript</p>
+                    <p className="text-sm font-medium mb-1">{t('agent.transcript')}</p>
                     <p className="text-sm text-muted-foreground">{transcript}</p>
                   </div>
                 </div>
@@ -168,7 +170,7 @@ export default function Agent() {
                 <div className="flex items-start gap-2">
                   <Navigation className="w-4 h-4 mt-1 text-primary" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium mb-1">Last Command</p>
+                    <p className="text-sm font-medium mb-1">{t('agent.lastCommand')}</p>
                     <p className="text-sm text-primary">{lastCommand}</p>
                   </div>
                 </div>
@@ -180,9 +182,9 @@ export default function Agent() {
         {/* Available Commands Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Available Commands</CardTitle>
+            <CardTitle className="text-base">{t('agent.availableCommands')}</CardTitle>
             <CardDescription>
-              Speak any of these phrases to control OmniLink
+              {t('agent.availableCommandsDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -211,12 +213,12 @@ export default function Agent() {
         <Card className="bg-muted/30 border-dashed">
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground space-y-2">
-              <p className="font-medium">Privacy & Security</p>
+              <p className="font-medium">{t('agent.privacyTitle')}</p>
               <ul className="text-xs space-y-1 list-disc list-inside">
-                <li>Voice processing uses WebSocket to edge function</li>
-                <li>Transcripts are not logged unless you opt-in</li>
-                <li>Commands are processed client-side (deterministic mapping)</li>
-                <li>No external AI services for command interpretation</li>
+                <li>{t('agent.privacyVoice')}</li>
+                <li>{t('agent.privacyTranscripts')}</li>
+                <li>{t('agent.privacyCommands')}</li>
+                <li>{t('agent.privacyNoExternal')}</li>
               </ul>
             </div>
           </CardContent>

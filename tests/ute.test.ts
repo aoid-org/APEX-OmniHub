@@ -21,17 +21,32 @@ describe('Universal Translation Engine (UTE)', () => {
 
         const result = await translator.translate(events, appId, correlationId);
 
-        expect(result[0].payload.message).toBe('[fr-FR] Hello World');
+        // No location metadata → defaults to 'en'
+        expect(result[0].payload.message).toBe('[en] Hello World');
         expect(result[0].metadata.verified).toBe(true);
-        expect(result[0].metadata.locale).toBe('fr-FR');
+        expect(result[0].metadata.locale).toBe('en');
+    });
+
+    it('Localizes by location when provided', async () => {
+        const events: CanonicalEvent[] = [{
+            eventId: 'evt-loc-1',
+            correlationId, tenantId: 't', userId: 'u', source: 'test',
+            externalId: 'x-loc', classification: DataClassification.INTERNAL,
+            eventType: EventType.CONTENT_PUBLISHED, consentFlags: {},
+            payload: { message: 'Hello World' },
+            provider: 'test',
+            timestamp: new Date().toISOString(),
+            metadata: { location: { countryCode: 'FR' } }
+        }];
+
+        const result = await translator.translate(events, appId, correlationId);
+
+        expect(result[0].payload.message).toBe('[fr] Hello World');
+        expect(result[0].metadata.verified).toBe(true);
+        expect(result[0].metadata.locale).toBe('fr');
     });
 
     it('2. Fail-Closed on Verification Failure (Simulated)', async () => {
-        // We hack the pseudoDetranslate by passing a value that can't be detranslated cleanly
-        // But since our pseudo logic is simple string manipulation, let's simulate a mutation
-
-        // Actually, with the current implementation, it's hard to fail unless we override the method or mock it.
-        // Let's create a subclass that intentionally breaks back-translation to test the harness.
         class BrokenTranslator extends SemanticTranslator {
             protected pseudoDetranslate(_text: string, _targetLang: string): string {
                 return "Corrupted Text"; // Simulates hallucination/drift
@@ -53,7 +68,7 @@ describe('Universal Translation Engine (UTE)', () => {
         const result = await brokenTranslator.translate(events, appId, correlationId);
 
         expect(result[0].payload._translation_status).toBe('FAILED');
-        expect(result[0].metadata.risk_lane).toBe('RED'); // Must be atomic cut
+        expect(result[0].metadata.risk_lane).toBe('RED');
     });
 
     it('3. Cross-Lingual Consistency', async () => {
@@ -69,6 +84,7 @@ describe('Universal Translation Engine (UTE)', () => {
         }];
 
         const result = await translator.translate(events, appId, correlationId);
-        expect(result[0].payload.key).toBe('[fr-FR] Concept');
+        // No location → defaults to 'en'
+        expect(result[0].payload.key).toBe('[en] Concept');
     });
 });

@@ -19,6 +19,7 @@ import { createDebugLogger } from './lib/debug-logger';
 import { Loader2 } from 'lucide-react';
 import { OMNIDASH_FLAG } from './omnidash/types';
 import { OmniLinkShell } from "./layouts/OmniLinkShell";
+import { LocaleProvider } from './i18n';
 
 // Lazy load OmniDash components (SPA: all panels in components/omnidash/)
 const OmniDashLayout = lazy(() => import("./pages/OmniDash/OmniDashLayout"));
@@ -210,6 +211,7 @@ const App = () => (
         <BrowserRouter>
           <ConsentBanner />
           <AuthProvider>
+            <LocaleProvider>
             <Web3Provider>
             <Suspense fallback={<PageLoader />}>
               {/* OmniMedia PiP Dock — persists across all routes */}
@@ -270,6 +272,7 @@ const App = () => (
               </Routes>
             </Suspense>
             </Web3Provider>
+            </LocaleProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
