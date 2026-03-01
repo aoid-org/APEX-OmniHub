@@ -5,48 +5,55 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.3.5] - 2026-02-28
+## [1.3.7] - 2026-03-01
 
-### Added — Security & UX Enhancements
+### Fixed — i18n Locale Resolution & Test Hygiene (PR #660)
 
-#### Core Security Hardening
+#### Locale Resolution (`src/omniconnect/translation/translator.ts`)
 
-- **Rate Limiters (Fail-Closed):** Enforced a strict fail-closed strategy for distributed (`_shared/rate-limit.ts`) and database rate limiters (`_shared/rate-limiter.ts`) during unavailability to align with the core deterministic law.
-- **Armageddon Compliance:** Enabled Row Level Security (RLS) on `armageddon_events` and `armageddon_runs`.
-- **Database Migrations:** Added idempotency guards to OmniDash paid access migration.
+- **Root Cause:** Hardcoded `const targetLocale = 'fr-FR'` replaced with dynamic `resolveTargetLocale()`.
+- **Resolution Priority:** `metadata.locale` → `metadata.location.countryCode` → default `'en'`.
+- **Helpers Added:** `normalizeLocale()`, `countryCodeToLang()`, `resolveTargetLocale()` — zero external deps.
 
-#### UX & Infrastructure
+#### Modal Accessibility (`UniversalModalEngine.tsx`)
 
-- **Home Integration:** Added autoplay demo video section below the hero.
-- **Hero Optimization:** Rearranged and modernized the hero `h1` grid layout to drop inline styling.
-- **Dynamic Skill Loader:** Implemented dynamic skill loading and githooks automation.
-- **Dependency Consolidation:** Rolled out automated dependency consolidation.
-- **OmniDash Sidebar Logo:** Replaced SVG emblem + text wordmark with OmniDash horizontal logo (`omnidash-sidebar-logo.png`). Adjusted `.od-sidebar-logo img` CSS (height 26→36px, max-width 220px). Removed orphaned `.od-sidebar-logo span` rule.
+- **Radix `aria-describedby` Warning:** Suppressed via conditional prop spread when no description is present.
+- **Confirmation `DialogDescription`:** Moved description from inline `<p>` to proper `DialogDescription` (semantic HTML).
+- **act() Wrapping:** All store mutations in `universal-modal-engine.spec.tsx` wrapped in `act()`.
 
-#### i18n — Internationalization Infrastructure (omnihub-site)
+#### Test Hygiene
 
-- **i18n Init:** Added `i18next`, `react-i18next`, `i18next-browser-languagedetector` to `apps/omnihub-site`. Created `src/i18n/index.ts` with triple-layer key leak prevention (parseMissingKeyHandler + defaultValue + i18n-check).
-- **Locale Resources:** 6 locale JSONs (`en-US`, `fr-FR`, `es-ES`, `de-DE`, `ja-JP`, `zh-CN`) with 10 hero string keys. Non-English locales use English placeholders (no fake translations).
-- **Hero Localization:** All 10 hero strings in `Home.tsx` replaced with `t()` calls, each with hardcoded `defaultValue` fallback.
-- **Intl Formatting Helpers:** `src/i18n/format.ts` — `formatNumber`, `formatCurrency`, `formatPercent`, `formatDate`, `formatDateTime` using `Intl` with resolved language.
-- **Key Parity Script:** `scripts/i18n-check.mjs` — CI-ready script verifying all locales match `en-US` key set. Added `npm run i18n:check`.
-- **Locale Detection:** Browser language auto-detected via `localStorage` (`apex_locale`) → navigator fallback. Fallback: `en-US`.
-- **Responsive Visual Tests:** Added mobile (375×812), tablet (768×1024), desktop (1440×900) viewport tests with horizontal scroll assertions.
-
-### Fixed
-
-- **CI Pipelines:** Resolved migration permission errors and npm audit vulnerabilities.
-- **Code Quality:** Resolved all TypeScript errors (264 → 0) across `src/` and test directories.
-- **Stress Test Stability:** Widened scaling factor threshold from 6 to 7 in `load-capacity-benchmark.test.ts` to accommodate ±10% CI timer jitter (observed 6.61, theoretical max 5.0).
+- **Sanitization (`sanitization.spec.ts`):** Circuit breaker `console.error` now muted via spy and asserted — zero uncontrolled stderr.
+- **IronLaw (`iron-law.ts`):** Added `APEX_IRON_LAW_FAST_MODE` env guard — skips recursive `npm test` inside vitest (latency: 30s → 23ms).
 
 ### Quality Gates
 
-- Build (main): 0 errors (1m 6s)
-- Build (omnihub-site): 0 errors (22.66s)
-- TypeScript: 0 errors (both apps)
+- Tests: **956 passed**, 87 skipped, 0 failed (92 test files)
+- TypeScript (`tsc --noEmit`): 0 errors
+- Build: 0 errors
+
+---
+
+### Changed — USO Canon Hero Copy Migration (omnihub-site)
+
+- **Hero Copy:** Full hero text replaced with APEX OmniHub USO canon. 3-line headline, Anti-OS subtitle, AUDITABLE • REVERSIBLE trait line, supporting ecosystem paragraph, asterisk footnote.
+- **i18n Integration:** All 10 hero strings wrapped with `react-i18next` `t()` calls with `defaultValue` fallbacks. 6 locale JSONs (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). Triple-layer key leak prevention.
+- **CTA Label:** Primary CTA "Get Started" → "Request Access".
+
+### Fixed
+
+- **useAuth.ts lint error (omnihub-site):** Resolved `react-hooks/set-state-in-effect` — `loading` initialized from `hasSupabaseConfig`.
+- **tools.py suppression comment (orchestrator):** Fixed `# nosonar` → `# NOSONAR` for SonarQube compliance.
+
+### Security
+
+- **Dependabot Alert #63 (RCE):** `serialize-javascript` pinned to `7.0.3` via npm overrides. Vulnerability count reduced from 6 to 2.
+
+### Quality Gates
+
+- Build (omnihub-site): 0 errors (16.94s)
+- TypeScript: 0 errors
 - ESLint: 0 errors, 0 warnings
-- i18n Key Parity: 6 locales × 10 keys — all match
-- Tests: 924 passed, 87 skipped, 0 failed
 
 ---
 

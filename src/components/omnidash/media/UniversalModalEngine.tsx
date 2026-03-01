@@ -161,11 +161,6 @@ export function UniversalModalEngine() {
       case 'confirmation':
         return (
           <div className="py-4">
-            {activeModal.description && (
-              <p className="text-sm text-muted-foreground mb-4">
-                {activeModal.description}
-              </p>
-            )}
             <DialogFooter>
               <Button variant="outline" onClick={close} disabled={isProcessing}>
                 Cancel
@@ -190,14 +185,24 @@ export function UniversalModalEngine() {
     }
   };
 
+  const hasDescription = Boolean(activeModal?.description);
+
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        className="sm:max-w-[425px]"
+        {...(!hasDescription ? { 'aria-describedby': undefined } : {})}
+      >
         {activeModal && (
           <DialogHeader>
             <DialogTitle>{activeModal.title}</DialogTitle>
             {activeModal.description && activeModal.type !== 'confirmation' && (
               <DialogDescription>{activeModal.description}</DialogDescription>
+            )}
+            {activeModal.type === 'confirmation' && activeModal.description && (
+              <DialogDescription>
+                {activeModal.description}
+              </DialogDescription>
             )}
           </DialogHeader>
         )}

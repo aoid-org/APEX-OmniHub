@@ -2,22 +2,35 @@
 
 All notable changes to the APEX OmniHub Marketing Site.
 
-## [1.7.0] - 2026-02-28
+## [1.8.0] - 2026-03-01
 
-### Added — Internationalization (i18n) Infrastructure
+### Changed — USO Canon Hero Copy Migration
 
-- **i18n Core:** Installed `i18next`, `react-i18next`, `i18next-browser-languagedetector`. Created `src/i18n/index.ts` with language detection (localStorage `apex_locale` → navigator), `en-US` fallback, and triple-layer key leak prevention.
-- **6 Locale Resources:** `en-US`, `fr-FR`, `es-ES`, `de-DE`, `ja-JP`, `zh-CN` — 10 hero keys each. Non-English locales use English placeholders (no fake translations).
-- **Hero Localization:** All 10 hero strings in `Home.tsx` replaced with `t()` calls using `defaultValue` for guaranteed fallback rendering.
-- **Intl Formatting Helpers:** `src/i18n/format.ts` — `formatNumber`, `formatCurrency`, `formatPercent`, `formatDate`, `formatDateTime` using `Intl.NumberFormat`/`Intl.DateTimeFormat`.
-- **Key Parity Script:** `scripts/i18n-check.mjs` — verifies all locales match `en-US` key set. `npm run i18n:check`.
-- **Responsive Visual Tests:** Added mobile (375×812), tablet (768×1024), desktop (1440×900) Playwright viewport tests with horizontal scroll assertions.
+- **Hero Headline:** 3-line USO canon: "Connect anything." / "Orchestrate everything." / "Stay in control."
+- **Hero Subtitle:** Anti-OS USO description with PhysiOmni, Enterprise reference.
+- **Trait Line:** "DIRECTABLE • AUDITABLE • REVERSIBLE"
+- **Supporting Paragraph:** OmniDash/PhysiOmni/APEX Agent ecosystem copy.
+- **CTA Label:** "Get Started" → "Request Access".
+- **Footnote:** Blockchain/wallet/NFT opt-out disclaimer.
+
+### Added — i18n Infrastructure
+
+- **Core:** `i18next`, `react-i18next`, `i18next-browser-languagedetector`. `src/i18n/index.ts` with triple-layer key leak prevention.
+- **Locales:** 6 JSONs (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN) × 10 hero keys.
+- **Formatting:** `src/i18n/format.ts` — locale-aware `formatNumber`, `formatCurrency`, `formatPercent`, `formatDate`, `formatDateTime`.
+- **Hero Localization:** All 10 hero strings use `t()` with `defaultValue` fallbacks.
+
+### Fixed
+
+- **useAuth.ts:** `react-hooks/set-state-in-effect` — `loading` initialized from `hasSupabaseConfig`.
+
+### Security
+
+- **Dependabot Alert #63 (RCE):** `serialize-javascript` → `7.0.3` via npm overrides.
 
 ### Quality Gates
 
-- TypeScript: 0 errors
-- Build: 0 errors (22.66s)
-- i18n Key Parity: 6 locales × 10 keys — all match
+- TypeScript: 0 errors | ESLint: 0 errors | Build: 0 errors (16.94s)
 
 ## [1.6.0] - 2026-02-07
 

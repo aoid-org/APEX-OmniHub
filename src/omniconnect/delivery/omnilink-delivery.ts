@@ -22,8 +22,8 @@ export interface DeliveryResult {
  * Delivery service for OmniLink integration
  */
 export class OmniLinkDelivery {
-  private maxRetries = 3;
-  private baseDelay = 1000; // 1 second
+  private readonly maxRetries = 3;
+  private readonly baseDelay = 1000; // 1 second
 
   async deliverBatch(
     events: TranslatedEvent[],
@@ -31,6 +31,7 @@ export class OmniLinkDelivery {
     correlationId: string,
     locale?: LangCode
   ): Promise<number> {
+    const localeSuffix = locale ? ` [${locale}]` : '';
     return this.executeBatchDelivery(
       events,
       correlationId,
