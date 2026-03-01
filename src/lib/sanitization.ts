@@ -45,8 +45,8 @@ const SECURITY_PATTERNS = {
   // API keys/JWT: Bearer tokens and common key patterns
   apiKey: /\b(?:Bearer\s+)?[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g,
 
-  // IPv4
-  ipv4: /\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b/g,
+  // IPv4 — simplified pattern for PII detection (not strict octet validation)
+  ipv4: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
 
   // IPv6 (simplified pattern)
   ipv6: /\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b/g,

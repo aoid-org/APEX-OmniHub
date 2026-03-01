@@ -183,23 +183,74 @@ function buildResponseHeaders(upstream: Response): Headers {
 }
 
 // ---------------------------------------------------------------------------
+// Proxy engine — redirect-safe fetch loop
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch `startUrl` following up to `MAX_REDIRECTS` hops.
+ * Each redirect Location is validated through the allowlist + IP checks
+ * before being followed, preventing SSRF via open-redirect chains.
+ */
+async function proxyWithRedirects(
+  startUrl: string,
+  method: string,
+  proxyHeaders: Headers,
+  allowlist: string[],
+): Promise<Response> {
+  let currentUrl = startUrl;
+  let hopsRemaining = MAX_REDIRECTS;
+
+  while (hopsRemaining >= 0) {
+    const upstream = await fetch(currentUrl, {
+      method,
+      headers: proxyHeaders,
+      redirect: 'manual', // validate each hop ourselves
+    });
+
+    if (upstream.status < 300 || upstream.status >= 400) {
+      // Non-redirect — return the proxied response.
+      return new Response(upstream.body, {
+        status: upstream.status,
+        statusText: upstream.statusText,
+        headers: buildResponseHeaders(upstream),
+      });
+    }
+
+    // Redirect path
+    if (hopsRemaining === 0) {
+      return errorResponse(502, 'Too many redirects from upstream source.');
+    }
+    const location = upstream.headers.get('Location');
+    if (!location) {
+      return errorResponse(502, 'Upstream returned a redirect with no Location header.');
+    }
+    const redirectUrl = new URL(location, currentUrl).toString();
+    const redirectValidation = validateProxyUrl(redirectUrl, allowlist);
+    if (!redirectValidation.ok) {
+      const blockedHost = new URL(location, currentUrl).hostname;
+      return errorResponse(403, `Redirect to '${blockedHost}' is not allowed.`);
+    }
+    currentUrl = redirectValidation.url;
+    hopsRemaining--;
+  }
+
+  return errorResponse(502, 'Proxy redirect loop detected.');
+}
+
+// ---------------------------------------------------------------------------
 // Main handler
 // ---------------------------------------------------------------------------
 
 export default async function handler(request: Request): Promise<Response> {
-  // Preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, { headers: CORS_HEADERS });
   }
 
   const allowlist = loadAllowlist();
-
-  // Fail-closed: if allowlist is empty, deny all proxy requests
   if (allowlist.length === 0) {
     return errorResponse(403, 'CORS proxy is not configured. Set CORS_PROXY_ALLOWLIST.');
   }
 
-  // Extract + validate source URL
   const { searchParams } = new URL(request.url);
   const source = searchParams.get('source');
   if (!source) {
@@ -218,52 +269,13 @@ export default async function handler(request: Request): Promise<Response> {
     return errorResponse(validation.status, validation.error);
   }
 
-  // Proxy with manual redirect handling to prevent SSRF via redirect chains
   try {
-    const proxyHeaders = buildProxyHeaders(request);
-    let currentUrl = validation.url;
-    let hopsRemaining = MAX_REDIRECTS;
-
-    while (hopsRemaining >= 0) {
-      const upstream = await fetch(currentUrl, {
-        method: request.method,
-        headers: proxyHeaders,
-        redirect: 'manual', // we validate each hop ourselves
-      });
-
-      // Redirect: validate Location before following
-      if (upstream.status >= 300 && upstream.status < 400) {
-        if (hopsRemaining === 0) {
-          return errorResponse(502, 'Too many redirects from upstream source.');
-        }
-        const location = upstream.headers.get('Location');
-        if (!location) {
-          return errorResponse(502, 'Upstream returned a redirect with no Location header.');
-        }
-        // Resolve potentially relative redirect URL against current URL
-        const redirectUrl = new URL(location, currentUrl).toString();
-        const redirectValidation = validateProxyUrl(redirectUrl, allowlist);
-        if (!redirectValidation.ok) {
-          return errorResponse(
-            403,
-            `Redirect to '${new URL(location, currentUrl).hostname}' is not allowed.`,
-          );
-        }
-        currentUrl = redirectValidation.url;
-        hopsRemaining--;
-        continue;
-      }
-
-      // Non-redirect: return proxied response
-      return new Response(upstream.body, {
-        status: upstream.status,
-        statusText: upstream.statusText,
-        headers: buildResponseHeaders(upstream),
-      });
-    }
-
-    // Should never reach here
-    return errorResponse(502, 'Proxy redirect loop detected.');
+    return await proxyWithRedirects(
+      validation.url,
+      request.method,
+      buildProxyHeaders(request),
+      allowlist,
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown proxy error';
     return errorResponse(502, `Proxy fetch failed: ${message}`);
