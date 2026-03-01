@@ -1265,8 +1265,7 @@ class AgentWorkflow:
                 plan_id=self.plan_id,
                 total_steps=len(self.plan_steps),
                 duration_seconds=(
-                    workflow.now().timestamp() - self.start_time
-                    if self.start_time else 0.0
+                    workflow.now().timestamp() - self.start_time if self.start_time else 0.0
                 ),
             )
         )
