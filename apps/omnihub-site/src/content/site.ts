@@ -39,14 +39,14 @@ export const siteConfig = {
       buildLink('Tech Specs', '/tech-specs'),
     ],
     loginLink: buildLink('Login', '/login'),
-    primaryCta: buildLink('Get Started', '/request-access'),
+    primaryCta: buildLink('Request Access', '/request-access'),
   },
   hero: {
     eyebrow: 'APEX OMNIHUB',
     title: 'Connect anything.\nOrchestrate everything.\nStay in control.',
     tagline: 'YOUR SYSTEMS. YOUR RULES.',
     subtitle:
-      'The Anti-OS: Universal Sync Orchestrator (USO). Designed to translate intent into governed execution across SaaS, legacy systems, blockchain infrastructure, and physical edge devices (PhysiOmni, Enterprise).',
+      'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.',
   },
   highlights: {
     title: '',
