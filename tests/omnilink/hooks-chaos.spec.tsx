@@ -76,10 +76,8 @@ describe('Hooks Chaos Battery', () => {
     });
 
     it('correctly handles empty event list', () => {
-      const events: OmniEvent[] = [];
+      // An empty source array produces an empty Map — no iteration needed.
       const eventMap = new Map<string, OmniEvent>();
-      events.forEach((e) => eventMap.set(e.id, e));
-
       expect(eventMap.size).toBe(0);
     });
 

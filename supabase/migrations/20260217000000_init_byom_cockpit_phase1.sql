@@ -63,7 +63,7 @@ CREATE TABLE public.provider_connections (
   scopes_or_permissions JSONB DEFAULT '{}',
 
   -- Lifecycle
-  status byom_status DEFAULT 'active',
+  status byom_status DEFAULT 'active', -- NOSONAR (SQL has no constants; literal repetition is structurally required)
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
   last_used_at TIMESTAMPTZ,
@@ -77,7 +77,7 @@ CREATE TABLE public.provider_connections (
 -- Partial unique index: only one active connection per provider per user
 CREATE UNIQUE INDEX idx_unique_active_provider_per_user
   ON public.provider_connections (user_id, provider)
-  WHERE status = 'active';
+  WHERE status = 'active'; -- NOSONAR
 
 -- Performance indexes
 CREATE INDEX idx_provider_connections_tenant ON public.provider_connections(tenant_id);
