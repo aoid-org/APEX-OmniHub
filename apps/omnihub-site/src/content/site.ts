@@ -39,14 +39,14 @@ export const siteConfig = {
       buildLink('Tech Specs', '/tech-specs'),
     ],
     loginLink: buildLink('Login', '/login'),
-    primaryCta: buildLink('Get Started', '/request-access'),
+    primaryCta: buildLink('Request Access', '/request-access'),
   },
   hero: {
     eyebrow: 'APEX OMNIHUB',
-    title: 'Connect anything. Change Anything.\nStay in control.',
+    title: 'Connect anything.\nOrchestrate everything.\nStay in control.',
     tagline: 'YOUR SYSTEMS. YOUR RULES.',
     subtitle:
-      'The AI Operating System for the Physical World. Software agents. Enterprise platforms. Physical AI hardware. Every action governed, audited, and reversible.',
+      'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.',
   },
   highlights: {
     title: '',
@@ -77,10 +77,10 @@ export const siteConfig = {
   },
   stamp: {
     headline: 'IT SEES YOU.',
-    tagline: 'DIRECTABLE \u2022 ACCOUNTABLE \u2022 DEPENDABLE',
+    tagline: 'DIRECTABLE \u2022 AUDITABLE \u2022 REVERSIBLE',
   },
   ctas: {
-    primary: buildLink('Get Started', '/request-access'),
+    primary: buildLink('Request Access', '/request-access'),
     secondary: buildLink('Watch Demo', '/demo'),
     link: buildLink('Read Tech Specs', '/tech-specs'),
   },

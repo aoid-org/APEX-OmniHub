@@ -27,12 +27,13 @@ function Hero() {
       </div>
       <div className="container hero__grid">
         <div className="hero__content">
-          <h1 className="heading-hero hero__title hero__title--grid">
-            <span>Connect</span>
-            <span>Change</span>
-            <span>anything.</span>
-            <span>anything.</span>
-            <span className="hero__title--span">Stay in control.</span>
+          <h1
+            className="heading-hero hero__title hero__title--grid"
+            style={{ gridTemplateColumns: '1fr' }}
+          >
+            <span>Connect anything.</span>
+            <span>Orchestrate everything.</span>
+            <span>Stay in control.</span>
           </h1>
           <p className="hero__tagline">{siteConfig.hero.tagline}</p>
           <p className="hero__subtagline">
@@ -40,9 +41,11 @@ function Hero() {
           </p>
           <p className="hero__subtitle">{siteConfig.hero.subtitle}</p>
           <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
-            Synchronize everything. Translate between any platforms.
-            OmniHub coordinates AI, enterprise systems, and Web3 through
-            a single controlled port. You own the data. You control the flow.
+            OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. One-hand ready.
+            <br />
+            Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN).
+            <br />
+            OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.
           </p>
           <div className="hero__actions">
             <CTAGroup
@@ -50,6 +53,9 @@ function Hero() {
               secondary={siteConfig.ctas.secondary}
             />
           </div>
+          <small style={{ display: 'block', marginTop: 'var(--space-2)', fontSize: 'var(--font-size-xs)', color: 'rgba(255, 255, 255, 0.5)' }}>
+            *Blockchain, wallet, and NFT integrations are optional and disabled by default.
+          </small>
         </div>
 
         <div className="hero__visual" aria-hidden="true">
