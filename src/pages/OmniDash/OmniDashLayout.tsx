@@ -34,7 +34,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOmniDashSettings } from '@/omnidash/hooks';
 import { Switch } from '@/components/ui/switch';
 import { updateSettings } from '@/omnidash/api';
-import apexLogo from '@/assets/apex_emblem_logo.svg';
+import omniDashLogo from '@/assets/omnidash-sidebar-logo.png';
 import { UniversalModalEngine } from '@/components/omnidash/media/UniversalModalEngine';
 import '@/styles/omnidash-layout.css';
 
@@ -87,8 +87,7 @@ export const OmniDashLayout = () => {
       {/* LEFT SIDEBAR */}
       <aside className="od-sidebar">
         <div className="od-sidebar-logo">
-          <img src={apexLogo} alt="APEX" />
-          <span>APEX OmniHub</span>
+          <img src={omniDashLogo} alt="OmniDash" />
         </div>
         <nav className="od-nav">
           {SIDEBAR_NAV.map((item) => {
