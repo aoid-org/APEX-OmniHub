@@ -146,9 +146,9 @@ export class SemanticTranslator {
     events: CanonicalEvent[],
     appId: string,
     correlationId: string,
-    targetLocale: LangCode = 'en'
+    _targetLocale: LangCode = 'en'
   ): Promise<TranslatedEvent[]> {
-    if (import.meta.env.DEV) console.log(`[${correlationId}] Translating ${events.length} events for app ${appId} -> ${targetLocale}`);
+    if (import.meta.env.DEV) console.log(`[${correlationId}] Translating ${events.length} events for app ${appId}`);
 
     return events.map((event) => {
       // 0. Payload Schema Validation (Zero-Drift Enforcement)

@@ -107,9 +107,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   };
 
   // Locale-aware system prompt
-  const localizedPrompt = clientLang !== "en"
-    ? `${APEX_SYSTEM_PROMPT}\nIMPORTANT: Respond in language code "${clientLang}" when the user speaks that language.`
-    : APEX_SYSTEM_PROMPT;
+  const localizedPrompt = clientLang === "en"
+    ? APEX_SYSTEM_PROMPT
+    : `${APEX_SYSTEM_PROMPT}\nIMPORTANT: Respond in language code "${clientLang}" when the user speaks that language.`;
 
   let openAISocket: WebSocket | null = null;
   let sessionState: Record<string, string> = {};

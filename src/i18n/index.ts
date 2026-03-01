@@ -54,7 +54,7 @@ interface LocaleProviderProps {
 export function LocaleProvider({ children, initialLocale }: LocaleProviderProps) {
   const [lang, setLang] = useState<LangCode>(() => {
     if (initialLocale) return resolveLangCode(initialLocale);
-    if (typeof globalThis.navigator !== 'undefined' && globalThis.navigator.language) {
+    if (globalThis.navigator?.language !== undefined) {
       return resolveLangCode(globalThis.navigator.language);
     }
     return 'en';

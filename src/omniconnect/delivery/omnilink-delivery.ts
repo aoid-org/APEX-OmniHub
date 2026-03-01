@@ -35,7 +35,7 @@ export class OmniLinkDelivery {
     return this.executeBatchDelivery(
       events,
       correlationId,
-      `Delivering ${events.length} events to OmniLink for app ${appId}${locale ? ` [${locale}]` : ''}`,
+      `Delivering ${events.length} events to OmniLink for app ${appId}${localeSuffix}`,
       async (event) => await this.deliverEvent(event, correlationId),
       async (event, error) => {
         console.error(`[${correlationId}] Failed to deliver event ${event.eventId}:`, error);
