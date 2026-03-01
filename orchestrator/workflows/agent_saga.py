@@ -1264,7 +1264,10 @@ class AgentWorkflow:
                 correlation_id=workflow.info().workflow_id,
                 plan_id=self.plan_id,
                 total_steps=len(self.plan_steps),
-                duration_seconds=workflow.now().timestamp() - self.start_time if self.start_time else 0.0,
+                duration_seconds=(
+                    workflow.now().timestamp() - self.start_time
+                    if self.start_time else 0.0
+                ),
             )
         )
 
