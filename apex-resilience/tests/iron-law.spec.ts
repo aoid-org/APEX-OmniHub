@@ -7,6 +7,7 @@ describe('IronLawVerifier - Core Functionality', () => {
   let verifier: IronLawVerifier;
 
   beforeAll(() => {
+    process.env.APEX_IRON_LAW_FAST_MODE = '1';
     verifier = new IronLawVerifier();
   });
 
