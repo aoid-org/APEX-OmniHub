@@ -12,7 +12,7 @@ export function startGuardianLoops() {
     }, 60000)
   );
 
-  // Offline sync monitor placeholder
+  // Offline sync watchdog — records heartbeat for monitoring continuity
   intervals.push(
     setInterval(() => {
       recordLoopHeartbeat('guardian-offline-sync');
