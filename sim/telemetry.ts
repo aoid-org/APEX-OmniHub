@@ -136,7 +136,7 @@ export function addSpanEvent(
 /**
  * Record exception in span
  */
-export function recordException(span: Span, error: Error | unknown): void {
+export function recordException(span: Span, error: unknown): void {
   const errorMessage = error instanceof Error ? error.message : String(error);
   const errorStack = error instanceof Error ? error.stack : undefined;
 

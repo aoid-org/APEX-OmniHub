@@ -64,7 +64,7 @@ async function testSlack(config: IntegrationConfig): Promise<TestResult> {
   return testApiConnection(
     {
       url: 'https://slack.com/api/auth.test',
-      headers: buildBearerAuth(config.apiKey!),
+      headers: buildBearerAuth(config.apiKey),
     },
     (data: { ok: boolean; team?: string; user?: string; error?: string }) => ({
       connected: data.ok,
@@ -78,7 +78,7 @@ async function testZapier(config: IntegrationConfig): Promise<TestResult> {
   const validationError = validateConfigKey(config, 'webhookUrl', 'Webhook URL missing');
   if (validationError) return validationError;
 
-  const response = await fetch(config.webhookUrl!, {
+  const response = await fetch(config.webhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ test: true, timestamp: new Date().toISOString() }),
@@ -97,7 +97,7 @@ async function testGitHub(config: IntegrationConfig): Promise<TestResult> {
   return testApiConnection(
     {
       url: 'https://api.github.com/user',
-      headers: buildTokenAuth(config.apiKey!),
+      headers: buildTokenAuth(config.apiKey),
     },
     (data: { login?: string; name?: string }, response) => ({
       connected: response.ok,
@@ -115,7 +115,7 @@ async function testNotion(config: IntegrationConfig): Promise<TestResult> {
     {
       url: 'https://api.notion.com/v1/users/me',
       headers: {
-        ...buildBearerAuth(config.apiKey!),
+        ...buildBearerAuth(config.apiKey),
         'Notion-Version': '2022-06-28',
       },
     },
@@ -134,7 +134,7 @@ async function testGoogleDrive(config: IntegrationConfig): Promise<TestResult> {
   return testApiConnection(
     {
       url: 'https://www.googleapis.com/drive/v3/about?fields=user',
-      headers: buildBearerAuth(config.apiKey!),
+      headers: buildBearerAuth(config.apiKey),
     },
     (data: { user?: { emailAddress?: string } }, response) => ({
       connected: response.ok,

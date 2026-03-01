@@ -80,7 +80,7 @@ class MockDatabase implements IDatabase {
 
   async findOne<T>(table: string, options?: MockOptions): Promise<{ data: T | null; error: Error | null }> {
     const result = await this.find<T>(table, { ...options, limit: 1 })
-    return { data: result.data?.[0] || null, error: result.error }
+    return { data: result.data?.[0] ?? null, error: result.error }
   }
 
   async count(table: string, options?: MockOptions): Promise<{ data: number | null; error: Error | null }> {
@@ -106,7 +106,7 @@ class MockDatabase implements IDatabase {
 
     const updatedRecords = result.data.map((record: MockRecord) => ({ ...record, ...(data as object) }))
     this.mockData[table] = [
-      ...this.mockData[table].filter((r: MockRecord) => !result.data!.find((ur: MockRecord) => ur.id === r.id)),
+      ...this.mockData[table].filter((r: MockRecord) => !result.data!.some((ur: MockRecord) => ur.id === r.id)),
       ...(updatedRecords as MockRecord[]),
     ]
     return { data: updatedRecords as T[], error: null }
@@ -133,7 +133,7 @@ class MockDatabase implements IDatabase {
     if (!result.data) return { data: false, error: result.error }
 
     this.mockData[table] = this.mockData[table].filter(
-      (r: MockRecord) => !result.data!.find((dr: MockRecord) => dr.id === r.id)
+      (r: MockRecord) => !result.data!.some((dr: MockRecord) => dr.id === r.id)
     )
     return { data: true, error: null }
   }

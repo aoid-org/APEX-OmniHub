@@ -79,7 +79,7 @@ export function withHttp(
 
             if (requireAuth) {
                 const authHeader = req.headers.get('Authorization');
-                if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                if (!authHeader?.startsWith('Bearer ')) {
                     return jsonResponse(
                         { error: 'unauthorized', message: 'Missing or malformed Authorization header' },
                         401,

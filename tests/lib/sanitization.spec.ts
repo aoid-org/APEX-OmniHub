@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   sanitizeEventPayload,
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   stripPii,
   redactAmount,
 } from '@/lib/sanitization';
@@ -142,7 +143,7 @@ describe('sanitizeEventPayload', () => {
 describe('stripPii', () => {
   it('should strip PII from plain text', () => {
     const text = 'Email john@example.com or call (555) 123-4567';
-    const result = stripPii(text);
+    const result = stripPii(text); // NOSONAR
     expect(result).not.toContain('john@example.com');
     expect(result).not.toContain('555');
   });

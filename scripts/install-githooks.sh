@@ -9,8 +9,8 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 HOOKS_SRC="${REPO_ROOT}/.githooks"
 HOOKS_DST="${REPO_ROOT}/.git/hooks"
 
-if [ ! -d "$HOOKS_SRC" ]; then
-  echo "ERROR: ${HOOKS_SRC} does not exist. Nothing to install."
+if [[ ! -d "$HOOKS_SRC" ]]; then
+  echo "ERROR: ${HOOKS_SRC} does not exist. Nothing to install." >&2
   exit 1
 fi
 
@@ -21,7 +21,7 @@ for hook in "${HOOKS_SRC}"/*; do
   target="${HOOKS_DST}/${hook_name}"
 
   # Remove existing hook (file or symlink)
-  if [ -e "$target" ] || [ -L "$target" ]; then
+  if [[ -e "$target" ]] || [[ -L "$target" ]]; then
     rm -f "$target"
   fi
 

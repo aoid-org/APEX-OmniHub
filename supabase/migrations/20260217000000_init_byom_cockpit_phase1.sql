@@ -29,7 +29,9 @@ CREATE TYPE byom_auth_type AS ENUM (
 );
 
 -- Connection lifecycle status
-CREATE TYPE byom_status AS ENUM ('active', 'revoked', 'expired', 'rotated');
+-- Note: 'active' status is intentionally repeated in ENUM definition, table DEFAULT, and partial index WHERE clause.
+-- SQL DDL does not support constants; these repetitions are structurally necessary.
+CREATE TYPE byom_status AS ENUM ('active', 'revoked', 'expired', 'rotated'); -- nosonar
 
 -- Data sovereignty modes
 CREATE TYPE byom_sovereignty_mode AS ENUM (

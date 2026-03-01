@@ -7,7 +7,7 @@
  * Date: 2026-01-01
  */
 
-import React from 'react'; void React;
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
