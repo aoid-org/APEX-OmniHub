@@ -191,7 +191,7 @@ export function UniversalModalEngine() {
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
         className="sm:max-w-[425px]"
-        {...(!hasDescription ? { 'aria-describedby': undefined } : {})}
+        {...(hasDescription ? {} : { 'aria-describedby': undefined })}
       >
         {activeModal && (
           <DialogHeader>
