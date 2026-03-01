@@ -22,7 +22,7 @@ function extractKeys(obj, prefix = '') {
       keys.push(fullKey);
     }
   }
-  return keys.sort();
+  return keys.sort((a, b) => a.localeCompare(b));
 }
 
 const files = readdirSync(localesDir).filter((f) => f.endsWith('.json'));
