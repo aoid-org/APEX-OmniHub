@@ -1,0 +1,18 @@
+{
+  "hero": {
+    "headline": {
+      "line1": "Connect anything.",
+      "line2": "Orchestrate everything.",
+      "line3": "Stay in control."
+    },
+    "tagline": "YOUR SYSTEMS. YOUR RULES.",
+    "traits": "DIRECTABLE \u2022 AUDITABLE \u2022 REVERSIBLE",
+    "subtitle": "The Anti-OS: Universal Sync Orchestrator (USO). Designed to translate intent into governed execution across SaaS, legacy systems, blockchain infrastructure, and physical edge devices (PhysiOmni, Enterprise).",
+    "description": "OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese. OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet. APEX Agent is the Voice. OmniLink is the AppShell.",
+    "cta": {
+      "primary": "Request Access",
+      "secondary": "Watch Demo"
+    },
+    "footnote": "*Blockchain, wallet, and NFT integrations are optional and disabled by default."
+  }
+}
