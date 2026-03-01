@@ -85,7 +85,7 @@ export function LocaleProvider({ children, initialLocale }: LocaleProviderProps)
  * useI18n — access translation function, current lang, and locale setter.
  *
  * Hook contract:
- *   { t: (key: string) => string; lang: LangCode; setLocale: (tag: LocaleTag) => void }
+ *   { t: (key: string) => string; lang: LangCode; setLocale: (tag: string) => void }
  *
  * Missing dictionary key -> returns English value silently. Never returns raw key.
  */

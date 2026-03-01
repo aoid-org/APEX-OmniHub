@@ -15,8 +15,6 @@ export const LOCALES = ['en', 'es', 'de', 'ja', 'fr', 'pt', 'zh'] as const;
 
 export type LangCode = typeof LOCALES[number];
 
-export type LocaleTag = string; // BCP-47, validated at boundary only
-
 /**
  * resolveLangCode — the ONLY locale translation function
  *
