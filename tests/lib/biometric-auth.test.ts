@@ -6,6 +6,8 @@ const MockPKC = function() { /* Mock PKC constructor */ };
 describe('biometric-auth', () => {
   const originalWindow = globalThis.window;
   const originalNavigator = globalThis.navigator;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const originalPKC = (globalThis as any).PublicKeyCredential;
 
   afterEach(() => {
     // Restore global objects after each test
@@ -13,6 +15,8 @@ describe('biometric-auth', () => {
     (globalThis as any).window = originalWindow;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).navigator = originalNavigator;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).PublicKeyCredential = originalPKC;
   });
 
   describe('isBiometricAuthSupported', () => {
@@ -55,12 +59,15 @@ describe('biometric-auth', () => {
     });
 
     it('should return true if all APIs are available', () => {
-      // Mock full browser support
+      // Mock full browser support — code checks globalThis.PublicKeyCredential
+      const mockPKC = vi.fn();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (globalThis as any).window = {
         ...originalWindow,
-        PublicKeyCredential: vi.fn(),
+        PublicKeyCredential: mockPKC,
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (globalThis as any).PublicKeyCredential = mockPKC;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (globalThis as any).navigator = {
@@ -89,12 +96,14 @@ describe('biometric-auth', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (MockPKC as any).isUserVerifyingPlatformAuthenticatorAvailable = mockMethod;
 
-      // Setup window with method
+      // Setup window and globalThis.PublicKeyCredential (code reads from globalThis directly)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (globalThis as any).window = {
         ...originalWindow,
         PublicKeyCredential: MockPKC,
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (globalThis as any).PublicKeyCredential = MockPKC;
 
       // Setup navigator
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,12 +124,14 @@ describe('biometric-auth', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (MockPKC as any).isUserVerifyingPlatformAuthenticatorAvailable = mockMethod;
 
-      // Setup window with failing method
+      // Setup window and globalThis.PublicKeyCredential with failing method
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (globalThis as any).window = {
         ...originalWindow,
         PublicKeyCredential: MockPKC,
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (globalThis as any).PublicKeyCredential = MockPKC;
 
       // Setup navigator
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
