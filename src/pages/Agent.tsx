@@ -95,7 +95,7 @@ export default function Agent() {
         description: t('agent.commandHint'),
       });
     },
-    [commands]
+    [commands, t]
   );
 
   const handleTranscript = useCallback(

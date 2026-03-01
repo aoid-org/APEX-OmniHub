@@ -27,11 +27,15 @@ function compareKeys(a, b) {
 }
 
 function extractKeys(source) {
-  const keyPattern = /^\s*'([^']+)':/gm;
+  // Linear parser — no regex backtracking, immune to ReDoS (S5852)
   const keys = [];
-  let match;
-  while ((match = keyPattern.exec(source)) !== null) {
-    keys.push(match[1]);
+  for (const line of source.split('\n')) {
+    const trimmed = line.trimStart();
+    if (trimmed.charCodeAt(0) !== 39) continue; // fast path: must start with "'"
+    const end = trimmed.indexOf("':", 1);
+    if (end > 1) {
+      keys.push(trimmed.slice(1, end));
+    }
   }
   return keys.sort(compareKeys);
 }

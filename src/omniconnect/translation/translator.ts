@@ -9,7 +9,7 @@
 
 import { CanonicalEvent } from '../types/canonical';
 import { CanonicalEventSchema } from '../types/schema';
-import { resolveLangCode, type LangCode } from '@/i18n/locales';
+import { type LangCode } from '@/i18n/locales';
 
 export interface TranslatedEvent {
   eventId: string;

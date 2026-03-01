@@ -15,8 +15,8 @@ import {
   type ReactNode,
   createElement,
 } from 'react';
-import { LOCALES, resolveLangCode, type LangCode, type LocaleTag } from './locales';
-import { resolveTranslation, type DictionaryKey } from './dictionaries';
+import { resolveLangCode, type LangCode, type LocaleTag } from './locales';
+import { resolveTranslation } from './dictionaries';
 
 // Re-export primitives
 export { LOCALES, resolveLangCode, type LangCode, type LocaleTag } from './locales';
