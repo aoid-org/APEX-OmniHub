@@ -55,7 +55,7 @@ export default function Translation() {
       const translator = new SemanticTranslator();
 
       // Translate (client-side, deterministic)
-      const result = await translator.translate([event], 'omnilink-ui', crypto.randomUUID());
+      const result = await translator.translate([event], 'omnilink-ui', crypto.randomUUID(), targetLocale);
 
       // Check translation status
       const translatedEvent = result[0];
