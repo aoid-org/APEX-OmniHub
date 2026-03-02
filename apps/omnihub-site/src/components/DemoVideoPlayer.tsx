@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 
-export function DemoVideoPlayer({ id }: { id?: string }) {
+export function DemoVideoPlayer({ id }: { readonly id?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
 
@@ -38,6 +38,7 @@ export function DemoVideoPlayer({ id }: { id?: string }) {
         preload="auto"
       >
         <source src="/apex-demo-video.mp4" type="video/mp4" />
+        <track kind="captions" src="/captions/demo.vtt" srcLang="en" label="English" />
         Your browser does not support the video tag.
       </video>
       <button

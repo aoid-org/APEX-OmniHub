@@ -8,13 +8,11 @@
  *                when OmniSlate mic stops, Agent returns to "Listening..."
  */
 
-import { memo, useState, useCallback, useRef, Suspense } from 'react';
+import { memo, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
 import lightbulbIcon from '@/assets/lightbulb-icon.png';
-import { BridgeFSM } from '@/components/omnidash/BridgeFSM';
-import { useBridgeState } from '@/components/omnidash/useBridgeState';
 
 /* ── Real app logos via Clearbit ── */
 const LOGO = (domain: string) => `https://logo.clearbit.com/${domain}`;
@@ -66,23 +64,6 @@ function deriveHealth(items: readonly ContextItem[]): 'green' | 'yellow' | 'red'
   if (items.some(i => i.health === 'red')) return 'red';
   if (items.some(i => i.health === 'yellow')) return 'yellow';
   return 'green';
-}
-
-/* ── Bridge FSM Panel — isolated from main component to keep CC ≤ 15 ── */
-
-function BridgeFSMPanel() {
-  const { payload, dismissMANMode } = useBridgeState();
-  if (!payload) return null;
-  return (
-    <div style={{ padding: '0 32px 8px 32px' }}>
-      <div style={{ marginBottom: 8, fontSize: 11.77, fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-        Semantic Bridge
-      </div>
-      <Suspense fallback={null}>
-        <BridgeFSM payload={payload} onMANModeDismissed={dismissMANMode} />
-      </Suspense>
-    </div>
-  );
 }
 
 const O = '#c2501f'; // burnt orange
@@ -483,9 +464,6 @@ export const DashboardOverview = memo(function DashboardOverview() {
         </motion.div>
 
       </div>
-
-      {/* ═══════ SEMANTIC BRIDGE FSM ═══════ */}
-      <BridgeFSMPanel />
 
       {/* ═══════ INTEGRATED APPS ═══════ */}
       <div className="apps-hex" style={{ padding: '8px 32px 24px 32px', marginTop: 4 }}>

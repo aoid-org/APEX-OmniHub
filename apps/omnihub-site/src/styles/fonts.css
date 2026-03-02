@@ -11,33 +11,18 @@
  * - Works offline
  */
 
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
+
 /* System UI Font Stack - Modern, Professional */
 :root {
-  /* Primary: Inter-like system fonts */
-  --font-sans:
-    "Inter",
-    "SF Pro Display",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    "Helvetica Neue",
-    Arial,
-    sans-serif,
-    "Apple Color Emoji",
-    "Segoe UI Emoji";
+  /* Primary: Space Grotesk */
+  --font-sans: "Space Grotesk", "Inter", "SF Pro Display", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji";
 
-  /* Monospace: JetBrains Mono-like system fonts */
-  --font-mono:
-    "JetBrains Mono",
-    "SF Mono",
-    "Fira Code",
-    "Cascadia Code",
-    Consolas,
-    "Liberation Mono",
-    Menlo,
-    Monaco,
-    "Courier New",
+  /* Monospace: Space Grotesk per user request for ALL TEXT */
+  --font-mono: "Space Grotesk", "JetBrains Mono", "SF Mono", "Fira Code",
+    "Cascadia Code", Consolas, "Liberation Mono", Menlo, Monaco, "Courier New",
     monospace;
 }
 
@@ -46,10 +31,8 @@
  * These work with system fonts that support them
  */
 body {
-  font-feature-settings:
-    "kern" 1,      /* Kerning */
-    "liga" 1,      /* Standard ligatures */
-    "calt" 1;      /* Contextual alternates */
+  font-feature-settings: "kern" 1, /* Kerning */ "liga" 1,
+    /* Standard ligatures */ "calt" 1; /* Contextual alternates */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -62,9 +45,5 @@ kbd,
 samp,
 .font-mono {
   font-family: var(--font-mono);
-  font-feature-settings:
-    "kern" 1,
-    "liga" 1,
-    "calt" 1,
-    "zero" 1;      /* Slashed zero */
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "zero" 1; /* Slashed zero */
 }

@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1260" viewBox="0 0 1600 1260" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title desc">
   <title id="title">APEX OmniHub Frontend Structure Map</title>
-  <desc id="desc">Diagram of frontend architecture including app shell, routing, feature domains, shared infrastructure, OmniDash Bridge FSM (apps/omnihub-site plane), semantic translation bridge, financial automation layer, and test/config layers. VERSION=v8.2-SEMANTIC-BRIDGE | LAST_UPDATED=2026-03-02</desc>
+  <desc id="desc">Diagram of frontend architecture including app shell, routing, feature domains, shared infrastructure, and test/config layers.</desc>
   <defs>
     <style>
       .title { font: 700 30px Arial, sans-serif; fill: #0f172a; }
@@ -8,25 +8,19 @@
       .h { font: 700 18px Arial, sans-serif; fill: #0f172a; }
       .t { font: 500 14px Arial, sans-serif; fill: #1f2937; }
       .small { font: 500 12px Arial, sans-serif; fill: #475569; }
-      .version { font: 400 11px monospace; fill: #94a3b8; }
       .box { rx: 16; ry: 16; stroke-width: 2; }
       .arrow { stroke: #64748b; stroke-width: 2.5; fill: none; marker-end: url(#m); }
-      .arrow-accent { stroke: #7c3aed; stroke-width: 2.5; fill: none; marker-end: url(#mp); }
       .dashed { stroke-dasharray: 8 8; }
     </style>
     <marker id="m" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L10,5 L0,10 z" fill="#64748b" />
     </marker>
-    <marker id="mp" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L10,5 L0,10 z" fill="#7c3aed" />
-    </marker>
   </defs>
 
-  <rect x="0" y="0" width="1600" height="1260" fill="#f8fafc"/>
+  <rect x="0" y="0" width="1600" height="980" fill="#f8fafc"/>
 
   <text x="40" y="56" class="title">APEX OmniHub – Frontend Structure Map</text>
-  <text x="40" y="84" class="subtitle">Entry + shell + route domains + shared platform modules + Bridge FSM + quality/tooling</text>
-  <text x="40" y="106" class="version">VERSION=v8.2-SEMANTIC-BRIDGE | LAST_UPDATED=2026-03-02 | Migration-52 | armageddon-L7</text>
+  <text x="40" y="84" class="subtitle">Entry + shell + route domains + shared platform modules + quality/tooling</text>
 
   <!-- Entry -->
   <rect class="box" x="40" y="130" width="320" height="140" fill="#dbeafe" stroke="#3b82f6"/>
@@ -88,9 +82,9 @@
   <text x="84" y="447" class="small">providers/, hooks/</text>
 
   <rect x="310" y="378" width="220" height="110" rx="12" ry="12" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
-  <text x="324" y="405" class="t">OmniConnect Bridge</text>
-  <text x="324" y="427" class="small">bridge/acl.ts, translation/,</text>
-  <text x="324" y="447" class="small">ingress/, policy/, delivery/</text>
+  <text x="324" y="405" class="t">OmniConnect</text>
+  <text x="324" y="427" class="small">ingress/, policy/, delivery/,</text>
+  <text x="324" y="447" class="small">translation/, storage/</text>
 
   <rect x="550" y="378" width="220" height="110" rx="12" ry="12" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
   <text x="564" y="405" class="t">Integration Adapters</text>
@@ -104,8 +98,8 @@
 
   <rect x="310" y="510" width="220" height="110" rx="12" ry="12" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
   <text x="324" y="537" class="t">Core Platform</text>
-  <text x="324" y="559" class="small">core/mcp/ (MCPHostManager),</text>
-  <text x="324" y="579" class="small">stores/, armageddon/, utils/</text>
+  <text x="324" y="559" class="small">core/, api/, armageddon/,</text>
+  <text x="324" y="579" class="small">stores/, utils/</text>
 
   <rect x="550" y="510" width="220" height="110" rx="12" ry="12" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
   <text x="564" y="537" class="t">Shared Libraries</text>
@@ -118,82 +112,21 @@
   <text x="880" y="548" class="small">vitest.config.ts → unit/integration/sim/apex-resilience test selection</text>
   <text x="880" y="570" class="small">playwright.config.ts → e2e runtime smoke + preview server startup</text>
   <text x="880" y="592" class="small">eslint.config.js + tsconfig* + package.json scripts drive CI gates</text>
-  <text x="880" y="614" class="small">tests/ folders: components, integration, omniconnect, omnidash, security, web3, stress</text>
+  <text x="880" y="614" class="small">tests/ folders: components, integration, omniconnect, security, web3, stress</text>
 
-  <!-- ══ NEW: apps/omnihub-site Bridge FSM Plane (Plane Isolation) ══ -->
-  <rect class="box" x="40" y="700" width="820" height="250" fill="#fdf4ff" stroke="#a21caf"/>
-  <text x="60" y="732" class="h">apps/omnihub-site — Bridge FSM Plane (Isolated, No src/ Imports)</text>
-  <text x="60" y="756" class="small">Supabase Realtime WebSocket → isBridgePayload() guard → BridgeFSM render → DashboardOverview</text>
+  <!-- Docs -->
+  <rect class="box" x="40" y="700" width="1520" height="220" fill="#ecfeff" stroke="#0e7490"/>
+  <text x="60" y="734" class="h">Documentation &amp; Learning Paths</text>
+  <text x="60" y="760" class="small">docs/README.md (navigation hub) • docs/onboarding/DEVELOPER_ONBOARDING.md (3-day onboarding)</text>
+  <text x="60" y="782" class="small">docs/architecture/* (executive summary, detailed design, MAN mode diagrams, SRE strategy)</text>
+  <text x="60" y="804" class="small">Key orientation sequence: README → App shell/routes → OmniConnect/OmniPort → orchestrator docs → test configs</text>
 
-  <rect x="70" y="775" width="230" height="150" rx="12" ry="12" fill="#fae8ff" stroke="#c026d3" stroke-width="1.5"/>
-  <text x="84" y="802" class="t">bridge-types.ts</text>
-  <text x="84" y="824" class="small">• BridgePayload interface</text>
-  <text x="84" y="844" class="small">• MANModeCredential types</text>
-  <text x="84" y="864" class="small">• isBridgePayload() type guard</text>
-  <text x="84" y="884" class="small">• 5-action FSM contract</text>
-  <text x="84" y="904" class="small">(Self-contained, no Zustand)</text>
-
-  <rect x="320" y="775" width="230" height="150" rx="12" ry="12" fill="#fae8ff" stroke="#c026d3" stroke-width="1.5"/>
-  <text x="334" y="802" class="t">useBridgeState.ts</text>
-  <text x="334" y="824" class="small">• Supabase channel subscribe</text>
-  <text x="334" y="844" class="small">• isBridgePayload() on event</text>
-  <text x="334" y="864" class="small">• MAN Mode fail-closed dismiss</text>
-  <text x="334" y="884" class="small">• MULTISIG_CODE_RE ^\d{6}$</text>
-  <text x="334" y="904" class="small">• Returns BridgeState</text>
-
-  <rect x="570" y="775" width="270" height="150" rx="12" ry="12" fill="#fae8ff" stroke="#c026d3" stroke-width="1.5"/>
-  <text x="584" y="802" class="t">BridgeFSM.tsx + DashboardOverview</text>
-  <text x="584" y="824" class="small">• Renders: PENDING_NETWORK → Spinner</text>
-  <text x="584" y="844" class="small">• Renders: PROCESSING → Progress</text>
-  <text x="584" y="864" class="small">• Renders: SETTLED → CheckCircle</text>
-  <text x="584" y="884" class="small">• Renders: RECONCILED → Delta $0.00</text>
-  <text x="584" y="904" class="small">• MAN_MODE_LOCKDOWN → MANModeModal</text>
-
-  <!-- ══ NEW: Semantic Bridge + Financial Automation ══ -->
-  <rect class="box" x="880" y="700" width="680" height="250" fill="#fff7ed" stroke="#c2410c"/>
-  <text x="900" y="732" class="h">Semantic Bridge + Financial Automation Layer</text>
-  <text x="900" y="756" class="small">Zero-Trust financial tables + Temporal compensation + JWT claim enforcement</text>
-
-  <rect x="900" y="770" width="300" height="155" rx="12" ry="12" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
-  <text x="914" y="797" class="t">OmniConnect bridge/acl.ts</text>
-  <text x="914" y="819" class="small">• BridgePayloadSchema (Zod)</text>
-  <text x="914" y="839" class="small">• BridgeParseError + correlationId</text>
-  <text x="914" y="859" class="small">• validateBridgePayload()</text>
-  <text x="914" y="879" class="small">• tryParseBridgePayload()</text>
-  <text x="914" y="899" class="small">• Anchored ISO/TX/amount regex</text>
-  <text x="914" y="919" class="small">• SemanticTranslator Web3+ERP</text>
-
-  <rect x="1220" y="770" width="310" height="155" rx="12" ry="12" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
-  <text x="1234" y="797" class="t">Orchestrator + Migration 52</text>
-  <text x="1234" y="819" class="small">• compensate_web3_tx.py activity</text>
-  <text x="1234" y="839" class="small">• saga_jwt_validator.py (SagaAuthError)</text>
-  <text x="1234" y="859" class="small">• invoices table (RLS + tenant_id)</text>
-  <text x="1234" y="879" class="small">• compliance_records table (RLS)</text>
-  <text x="1234" y="899" class="small">• apex_jwt_tenant_id() IMMUTABLE</text>
-  <text x="1234" y="919" class="small">• MCPHostManager.requireFinancialApproval</text>
-
-  <!-- ══ Docs ══ -->
-  <rect class="box" x="40" y="990" width="1520" height="220" fill="#ecfeff" stroke="#0e7490"/>
-  <text x="60" y="1024" class="h">Documentation &amp; Learning Paths</text>
-  <text x="60" y="1050" class="small">docs/README.md (navigation hub) • docs/onboarding/DEVELOPER_ONBOARDING.md (3-day onboarding)</text>
-  <text x="60" y="1072" class="small">docs/architecture/* (executive summary, detailed design, MAN mode diagrams, SRE strategy, frontend-map.md v8.2)</text>
-  <text x="60" y="1094" class="small">CHANGELOG.md → Unreleased (2026-03-02): Phase 1-4 Zero-Trust + Bridge FSM + Chaos Battery</text>
-  <text x="60" y="1116" class="small">ARCHITECTURE_CANONICAL_MAP.md → Migration-52, apps/omnihub-site plane, Bridge FSM, Armageddon L7</text>
-  <text x="60" y="1138" class="small">Key orientation: README → App shell/routes → OmniConnect/bridge → orchestrator docs → test configs → chaos battery</text>
-
-  <!-- Arrows (existing) -->
+  <!-- Arrows -->
   <path class="arrow" d="M360 200 L420 200"/>
   <path class="arrow" d="M810 250 L860 250"/>
   <path class="arrow" d="M620 370 L620 320"/>
   <path class="arrow" d="M620 650 L620 700"/>
   <path class="arrow" d="M1210 450 L1210 490"/>
   <path class="arrow dashed" d="M1220 650 L1220 700"/>
-
-  <!-- Arrows (new: bridge FSM ↔ OmniConnect) -->
-  <path class="arrow-accent dashed" d="M860 830 L900 830"/>
-  <!-- Bridge FSM → Docs -->
-  <path class="arrow dashed" d="M450 950 L450 990"/>
-  <!-- Financial Automation → Docs -->
-  <path class="arrow dashed" d="M1230 950 L1230 990"/>
 
 </svg>

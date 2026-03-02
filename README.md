@@ -45,20 +45,20 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-03-02)
+## Platform Statistics (Repository Snapshot 2026-02-27)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
-| **Source Files (`src/`)**                        | 300+ total files                                  |
-| **TypeScript/TSX (`src/`)**                      | 270+ files                                        |
-| **React Components (`src/`)**                    | 136+ `.tsx` component files                       |
+| **Source Files (`src/`)**                        | 297 total files                                   |
+| **TypeScript/TSX (`src/`)**                      | 267 files                                         |
+| **React Components (`src/`)**                    | 134 `.tsx` component files                        |
 | **Page Routes (`src/pages/`)**                   | 27 page files                                     |
 | **Edge Functions (`supabase/functions/`)**       | 22 function directories                           |
-| **Database Migrations (`supabase/migrations/`)** | 52 SQL migration files                            |
+| **Database Migrations (`supabase/migrations/`)** | 50 SQL migration files                            |
 | **CI/CD Workflows (`.github/workflows/`)**       | 12 workflow files                                 |
-| **Test Specs (`tests/` + `e2e/`)**               | 95+ test specs (`*.test.ts`, `*.spec.ts`)         |
-| **Custom Hooks (`src/`)**                        | 15+ hook files matching `use*.ts*`                |
-| **Orchestrator (Python)**                        | 86 files (Temporal workers, activities, security) |
+| **Test Specs (`tests/` + `e2e/`)**               | 93 test specs (`*.test.ts`, `*.spec.ts`)          |
+| **Custom Hooks (`src/`)**                        | 14 hook files matching `use*.ts*`                 |
+| **Orchestrator (Python)**                        | 84 files (Temporal workers, activities, security) |
 
 ---
 
