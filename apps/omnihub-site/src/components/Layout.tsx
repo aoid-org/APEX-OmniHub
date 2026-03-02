@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import { siteConfig } from '@/content/site';
 import { ReferenceOverlay } from './ReferenceOverlay';
 import { useAuth } from '@/lib/useAuth';
+import { BrandAnthemPlayer } from './BrandAnthemPlayer';
 
 type LayoutProps = Readonly<{
   children: ReactNode;
@@ -266,6 +267,7 @@ export function Layout({ children, title }: LayoutProps) {
   return (
     <>
       <ReferenceOverlay />
+      <BrandAnthemPlayer />
       <Nav />
       <main>{children}</main>
       <Footer />
