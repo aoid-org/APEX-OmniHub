@@ -25,7 +25,6 @@ import { MCPServerRegistry, type ServerStatus } from './MCPServerRegistry';
 import { MCPToolDiscovery, type MCPToolSchema } from './MCPToolDiscovery';
 import {
   createTransport,
-  type JsonRpcRequest,
   type MCPTransport,
 } from './MCPTransport';
 import type { MCPConfig } from './mcp.config';
@@ -231,7 +230,17 @@ export class MCPHostManager {
 
     // 3. Send JSON-RPC request
     const transport = this.transports.get(tool.serverId);
-    if (transport?.status !== 'connected') {
+    const response =
+      transport?.status === 'connected'
+        ? await transport.send({
+            jsonrpc: '2.0',
+            id: parsed.correlationId,
+            method: `tools/${parsed.toolName}`,
+            params: parsed.params,
+          })
+        : undefined;
+
+    if (!response) {
       return {
         success: false,
         data: undefined,
@@ -242,15 +251,6 @@ export class MCPHostManager {
     }
 
     try {
-      const request: JsonRpcRequest = {
-        jsonrpc: '2.0',
-        id: parsed.correlationId,
-        method: `tools/${parsed.toolName}`,
-        params: parsed.params,
-      };
-
-      const response = await transport.send(request);
-
       if (response.error) {
         return {
           success: false,
@@ -291,16 +291,18 @@ export class MCPHostManager {
     serverId: string,
   ): Promise<MCPToolSchema[]> {
     const transport = this.transports.get(serverId);
-    if (transport?.status !== 'connected') return [];
 
     try {
-      const request: JsonRpcRequest = {
-        jsonrpc: '2.0',
-        id: `discover-${serverId}-${Date.now()}`,
-        method: 'tools/list',
-      };
+      const response =
+        transport?.status === 'connected'
+          ? await transport.send({
+              jsonrpc: '2.0',
+              id: `discover-${serverId}-${Date.now()}`,
+              method: 'tools/list',
+            })
+          : undefined;
 
-      const response = await transport.send(request);
+      if (!response) return [];
       if (response.error || !response.result) return [];
 
       // Parse tools from response
