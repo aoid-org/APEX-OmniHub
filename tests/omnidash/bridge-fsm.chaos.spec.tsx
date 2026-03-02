@@ -64,14 +64,10 @@ function makePayload(
 }
 
 const SETTLED_PAYLOAD = makePayload('SETTLED');
-const PROCESSING_PAYLOAD = makePayload('PROCESSING', {
-  txHash: '0x' + 'a'.repeat(64),
-});
+const PROCESSING_PAYLOAD = makePayload('PROCESSING', { txHash: '0x' + 'a'.repeat(64) });
 const MAN_LOCKDOWN_PAYLOAD = makePayload('MAN_MODE_LOCKDOWN', {
   anomaly: 'ERP_MISMATCH: lineItems $9800.00 \u2260 total $10500.00',
 });
-
-// ── Supabase channel mock factory ─────────────────────────────────────────────
 
 // ── In-memory bridge state (mirrors useBridgeState without Supabase I/O) ─────
 
@@ -82,20 +78,13 @@ interface InMemoryBridgeState {
 }
 
 function createInMemoryBridgeHook() {
-  let state: InMemoryBridgeState = {
-    payload: null,
-    isMANModeActive: false,
-    manModeAnomaly: null,
-  };
+  let state: InMemoryBridgeState = { payload: null, isMANModeActive: false, manModeAnomaly: null };
+
   function dispatch(incoming: unknown): void {
     if (!isBridgePayload(incoming)) return;
     state = { ...state, payload: incoming };
     if (incoming.action === 'MAN_MODE_LOCKDOWN') {
-      state = {
-        ...state,
-        isMANModeActive: true,
-        manModeAnomaly: incoming.anomaly ?? 'Anomaly detected',
-      };
+      state = { ...state, isMANModeActive: true, manModeAnomaly: incoming.anomaly ?? 'Anomaly detected' };
     }
   }
 
@@ -111,10 +100,10 @@ function createInMemoryBridgeHook() {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// TEST 1 — Mid-Saga Severance
+// CHAOS BATTERY — shared setup hoisted to eliminate duplication
 // ═════════════════════════════════════════════════════════════════════════════
 
-describe('CHAOS TEST 1 — Mid-Saga Severance', () => {
+describe('BridgeFSM Chaos Battery', () => {
   let errorSpy: MockInstance;
   let bridge: ReturnType<typeof createInMemoryBridgeHook>;
 
@@ -129,211 +118,128 @@ describe('CHAOS TEST 1 — Mid-Saga Severance', () => {
     vi.clearAllMocks();
   });
 
-  it('transitions to PENDING_NETWORK when network severs mid-flight', () => {
-    // Arrange: established SETTLED state
-    bridge.dispatch(SETTLED_PAYLOAD);
-    expect(bridge.getState().payload?.action).toBe('SETTLED');
+  // ── TEST 1 — Mid-Saga Severance ─────────────────────────────────────────
 
-    // Act: simulate network severance → PENDING_NETWORK
-    const pendingPayload = makePayload('PENDING_NETWORK', {
-      anomaly: 'WEB3_SAGA_COMPENSATION',
+  describe('CHAOS TEST 1 — Mid-Saga Severance', () => {
+    it('transitions to PENDING_NETWORK when network severs mid-flight', () => {
+      bridge.dispatch(SETTLED_PAYLOAD);
+      expect(bridge.getState().payload?.action).toBe('SETTLED');
+
+      bridge.dispatch(makePayload('PENDING_NETWORK', { anomaly: 'WEB3_SAGA_COMPENSATION' }));
+
+      const state = bridge.getState();
+      expect(state.payload?.action).toBe('PENDING_NETWORK');
+      expect(state.isMANModeActive).toBe(false);
     });
-    bridge.dispatch(pendingPayload);
 
-    // Assert: transitioned to PENDING_NETWORK
-    const state = bridge.getState();
-    expect(state.payload?.action).toBe('PENDING_NETWORK');
-    expect(state.isMANModeActive).toBe(false);
-  });
+    it('restores prior action on reconnect without orphaned state', () => {
+      bridge.dispatch(makePayload('PENDING_NETWORK'));
+      bridge.dispatch(SETTLED_PAYLOAD);
 
-  it('restores prior action on reconnect without orphaned state', () => {
-    // Arrange: sever, then reconnect with fresh SETTLED
-    bridge.dispatch(makePayload('PENDING_NETWORK'));
-    bridge.dispatch(SETTLED_PAYLOAD);
-
-    // Assert: restored to SETTLED
-    const state = bridge.getState();
-    expect(state.payload?.action).toBe('SETTLED');
-    expect(state.isMANModeActive).toBe(false);
-    expect(state.manModeAnomaly).toBeNull();
-  });
-
-  it('leaves no orphaned MAN mode state after severance recovery', () => {
-    // Arrange: MAN mode → sever → recover
-    bridge.dispatch(MAN_LOCKDOWN_PAYLOAD);
-    expect(bridge.getState().isMANModeActive).toBe(true);
-
-    bridge.reset();
-
-    // Assert: bridge store fully cleared
-    const state = bridge.getState();
-    expect(state.payload).toBeNull();
-    expect(state.isMANModeActive).toBe(false);
-    expect(state.manModeAnomaly).toBeNull();
-  });
-});
-
-// ═════════════════════════════════════════════════════════════════════════════
-// TEST 2 — State Regression (Chain Reorg / ERP Rollback)
-// ═════════════════════════════════════════════════════════════════════════════
-
-describe('CHAOS TEST 2 — State Regression (Chain Reorg / ERP Rollback)', () => {
-  let errorSpy: MockInstance;
-  let bridge: ReturnType<typeof createInMemoryBridgeHook>;
-
-  beforeEach(() => {
-    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    bridge = createInMemoryBridgeHook();
-  });
-
-  afterEach(() => {
-    errorSpy.mockRestore();
-    vi.clearAllMocks();
-  });
-
-  it('demotes SETTLED → PROCESSING on the same txHash (no state skip)', () => {
-    // Arrange: emit SETTLED first
-    bridge.dispatch(SETTLED_PAYLOAD);
-    expect(bridge.getState().payload?.action).toBe('SETTLED');
-
-    // Act: emit PROCESSING for same txHash (chain reorg)
-    bridge.dispatch(PROCESSING_PAYLOAD);
-
-    // Assert: demoted to PROCESSING — state skip forbidden
-    expect(bridge.getState().payload?.action).toBe('PROCESSING');
-  });
-
-  it('clears stale SETTLED confirmation after demotion', () => {
-    // Arrange + Act
-    bridge.dispatch(SETTLED_PAYLOAD);
-    bridge.dispatch(PROCESSING_PAYLOAD);
-
-    // Assert: no stale SETTLED remnants
-    const state = bridge.getState();
-    expect(state.payload?.action).not.toBe('SETTLED');
-    expect(state.isMANModeActive).toBe(false);
-  });
-
-  it('handles RECONCILED → PENDING_NETWORK ERP rollback gracefully', () => {
-    // Arrange: ERP-sourced RECONCILED
-    const reconciled = makePayload('RECONCILED', {
-      source: 'ERP',
-      erpRef: 'ERP-9001',
+      const state = bridge.getState();
+      expect(state.payload?.action).toBe('SETTLED');
+      expect(state.isMANModeActive).toBe(false);
+      expect(state.manModeAnomaly).toBeNull();
     });
-    bridge.dispatch(reconciled);
-    expect(bridge.getState().payload?.action).toBe('RECONCILED');
 
-    // Act: ERP rollback → PENDING_NETWORK
-    const pending = makePayload('PENDING_NETWORK', {
-      source: 'ERP',
-      erpRef: 'ERP-9001',
-      anomaly: 'ERP_ROLLBACK: transaction reversed',
+    it('leaves no orphaned MAN mode state after severance recovery', () => {
+      bridge.dispatch(MAN_LOCKDOWN_PAYLOAD);
+      expect(bridge.getState().isMANModeActive).toBe(true);
+
+      bridge.reset();
+
+      const state = bridge.getState();
+      expect(state.payload).toBeNull();
+      expect(state.isMANModeActive).toBe(false);
+      expect(state.manModeAnomaly).toBeNull();
     });
-    bridge.dispatch(pending);
-
-    // Assert: PENDING_NETWORK accepted, no stale RECONCILED
-    expect(bridge.getState().payload?.action).toBe('PENDING_NETWORK');
-  });
-});
-
-// ═════════════════════════════════════════════════════════════════════════════
-// TEST 3 — Malicious Injection
-// ═════════════════════════════════════════════════════════════════════════════
-
-describe('CHAOS TEST 3 — Malicious Injection', () => {
-  let errorSpy: MockInstance;
-  let bridge: ReturnType<typeof createInMemoryBridgeHook>;
-
-  beforeEach(() => {
-    // IronLaw: suppress circuit-breaker stderr — expected errors must not surface as failures
-    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    bridge = createInMemoryBridgeHook();
   });
 
-  afterEach(() => {
-    errorSpy.mockRestore();
-    vi.clearAllMocks();
+  // ── TEST 2 — State Regression (Chain Reorg / ERP Rollback) ─────────────
+
+  describe('CHAOS TEST 2 — State Regression (Chain Reorg / ERP Rollback)', () => {
+    it('demotes SETTLED → PROCESSING on the same txHash (no state skip)', () => {
+      bridge.dispatch(SETTLED_PAYLOAD);
+      expect(bridge.getState().payload?.action).toBe('SETTLED');
+
+      bridge.dispatch(PROCESSING_PAYLOAD);
+      expect(bridge.getState().payload?.action).toBe('PROCESSING');
+    });
+
+    it('clears stale SETTLED confirmation after demotion', () => {
+      bridge.dispatch(SETTLED_PAYLOAD);
+      bridge.dispatch(PROCESSING_PAYLOAD);
+
+      const state = bridge.getState();
+      expect(state.payload?.action).not.toBe('SETTLED');
+      expect(state.isMANModeActive).toBe(false);
+    });
+
+    it('handles RECONCILED → PENDING_NETWORK ERP rollback gracefully', () => {
+      bridge.dispatch(makePayload('RECONCILED', { source: 'ERP', erpRef: 'ERP-9001' }));
+      expect(bridge.getState().payload?.action).toBe('RECONCILED');
+
+      bridge.dispatch(makePayload('PENDING_NETWORK', {
+        source: 'ERP',
+        erpRef: 'ERP-9001',
+        anomaly: 'ERP_ROLLBACK: transaction reversed',
+      }));
+      expect(bridge.getState().payload?.action).toBe('PENDING_NETWORK');
+    });
   });
 
-  it('rejects unknown BridgeAction before dispatch', () => {
-    const malicious = {
-      action: 'UNKNOWN_ACTION',
-      discrepancy: '0.00',
-      source: 'WEB3',
-      timestamp: new Date().toISOString(),
-    };
+  // ── TEST 3 — Malicious Injection ────────────────────────────────────────
 
-    // Assert: isBridgePayload guard returns false
-    expect(isBridgePayload(malicious)).toBe(false);
+  describe('CHAOS TEST 3 — Malicious Injection', () => {
+    it('rejects unknown BridgeAction before dispatch', () => {
+      const malicious = { action: 'UNKNOWN_ACTION', discrepancy: '0.00', source: 'WEB3', timestamp: new Date().toISOString() };
+      expect(isBridgePayload(malicious)).toBe(false);
+      expect(() => validateBridgePayload(malicious)).toThrow(BridgeParseError);
+    });
 
-    // Assert: Zod schema throws BridgeParseError
-    expect(() => validateBridgePayload(malicious)).toThrow(BridgeParseError);
-  });
+    it('rejects 10 MB JSON blob in < 50 ms (circuit breaker timing)', () => {
+      const megaBlob = { action: 'UNKNOWN_ACTION', data: 'x'.repeat(10 * 1024 * 1024) };
+      const start = Date.now();
+      const result = isBridgePayload(megaBlob);
+      const elapsed = Date.now() - start;
+      expect(result).toBe(false);
+      expect(elapsed).toBeLessThan(50);
+    });
 
-  it('rejects 10 MB JSON blob in < 50 ms (circuit breaker timing)', () => {
-    const megaBlob = { action: 'UNKNOWN_ACTION', data: 'x'.repeat(10 * 1024 * 1024) };
-    const start = Date.now();
+    it('rejects 500-level deeply nested object before dispatch', () => {
+      function buildNested(depth: number): Record<string, unknown> {
+        if (depth === 0) return { value: 'leaf' };
+        return { child: buildNested(depth - 1) };
+      }
+      const deep = { action: 'UNKNOWN_ACTION', nested: buildNested(500), discrepancy: '0.00', source: 'WEB3', timestamp: new Date().toISOString() };
 
-    // Assert: guard is O(n)-bounded and returns false quickly
-    const result = isBridgePayload(megaBlob);
-    const elapsed = Date.now() - start;
+      expect(isBridgePayload(deep)).toBe(false);
+      expect(bridge.getState().payload).toBeNull();
+      bridge.dispatch(deep);
+      expect(bridge.getState().payload).toBeNull();
+    });
 
-    expect(result).toBe(false);
-    expect(elapsed).toBeLessThan(50);
-  });
+    it('triggers MAN mode on MAN_MODE_LOCKDOWN payload (injection guard passes valid)', () => {
+      expect(isBridgePayload(MAN_LOCKDOWN_PAYLOAD)).toBe(true);
+      bridge.dispatch(MAN_LOCKDOWN_PAYLOAD);
 
-  it('rejects 500-level deeply nested object before dispatch', () => {
-    function buildNested(depth: number): Record<string, unknown> {
-      if (depth === 0) return { value: 'leaf' };
-      return { child: buildNested(depth - 1) };
-    }
-    const deep = {
-      action: 'UNKNOWN_ACTION',
-      nested: buildNested(500),
-      discrepancy: '0.00',
-      source: 'WEB3',
-      timestamp: new Date().toISOString(),
-    };
+      const state = bridge.getState();
+      expect(state.isMANModeActive).toBe(true);
+      expect(state.manModeAnomaly).toContain('ERP_MISMATCH');
+      expect(state.payload?.action).toBe('MAN_MODE_LOCKDOWN');
+    });
 
-    // Assert: guard rejects without dispatch
-    expect(isBridgePayload(deep)).toBe(false);
-
-    // Assert: no state mutation
-    expect(bridge.getState().payload).toBeNull();
-
-    // Assert: dispatch with invalid payload is silently dropped
-    bridge.dispatch(deep);
-    expect(bridge.getState().payload).toBeNull();
-  });
-
-  it('triggers MAN mode on MAN_MODE_LOCKDOWN payload (injection guard passes valid)', () => {
-    // Arrange: valid MAN_MODE_LOCKDOWN payload (should pass guard)
-    expect(isBridgePayload(MAN_LOCKDOWN_PAYLOAD)).toBe(true);
-
-    // Act
-    bridge.dispatch(MAN_LOCKDOWN_PAYLOAD);
-
-    // Assert: MAN Mode activated
-    const state = bridge.getState();
-    expect(state.isMANModeActive).toBe(true);
-    expect(state.manModeAnomaly).toContain('ERP_MISMATCH');
-
-    // Assert: no standard input accepted — modal state blocks further dispatch
-    // (UI layer enforces unclosable constraint via fail-closed credential check)
-    expect(state.payload?.action).toBe('MAN_MODE_LOCKDOWN');
-  });
-
-  it('validates BridgeParseError carries correct issue path on unknown action', () => {
-    let caught: BridgeParseError | null = null;
-    try {
-      validateBridgePayload({ action: 'UNKNOWN_ACTION', discrepancy: '0.00', source: 'WEB3', timestamp: new Date().toISOString() });
-    } catch (e) {
-      if (e instanceof BridgeParseError) caught = e;
-    }
-    expect(caught).not.toBeNull();
-    expect(caught!.issues.length).toBeGreaterThan(0);
-    const actionIssue = caught!.issues.find((i) => i.path.includes('action'));
-    expect(actionIssue).toBeDefined();
+    it('validates BridgeParseError carries correct issue path on unknown action', () => {
+      let caught: BridgeParseError | null = null;
+      try {
+        validateBridgePayload({ action: 'UNKNOWN_ACTION', discrepancy: '0.00', source: 'WEB3', timestamp: new Date().toISOString() });
+      } catch (e) {
+        if (e instanceof BridgeParseError) caught = e;
+      }
+      expect(caught).not.toBeNull();
+      expect(caught!.issues.length).toBeGreaterThan(0);
+      expect(caught!.issues.find((i) => i.path.includes('action'))).toBeDefined();
+    });
   });
 });
 
