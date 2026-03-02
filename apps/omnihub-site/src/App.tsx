@@ -21,6 +21,7 @@ import { OmniPortPage } from "@/pages/OmniPort";
 import { OrchestratorPage } from "@/pages/Orchestrator";
 import { SmartIntegrationsPage } from "@/pages/SmartIntegrations";
 import { TriForcePage } from "@/pages/TriForce";
+import { DemoPage } from "@/pages/Demo";
 
 function App() {
   return (
@@ -69,6 +70,8 @@ function App() {
       <Route path="/orchestrator" element={<OrchestratorPage />} />
       <Route path="/smart-integrations" element={<SmartIntegrationsPage />} />
       <Route path="/tri-force" element={<TriForcePage />} />
+      <Route path="/demo" element={<DemoPage />} />
+      <Route path="/demo.html" element={<DemoPage />} />
 
       {/* Fallback for .html URLs if any hardcoded links remain */}
       {/* Note: This assumes links like /demo.html are requested. React Router handles path matching. */}
