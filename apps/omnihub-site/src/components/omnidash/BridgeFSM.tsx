@@ -129,10 +129,9 @@ function MANModeModal({ anomaly, onDismiss }: MANModeModalProps) {
   );
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      open
+      className="fixed inset-0 z-50 flex items-center justify-center m-0 w-full h-full max-w-none max-h-none bg-transparent p-0 border-0"
       aria-label="MAN Mode Lockdown — Authorization Required"
     >
       {/* Backdrop — not dismissable */}
@@ -215,7 +214,7 @@ function MANModeModal({ anomaly, onDismiss }: MANModeModalProps) {
           )}
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 

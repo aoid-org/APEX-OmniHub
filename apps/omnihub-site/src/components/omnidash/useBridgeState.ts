@@ -74,7 +74,7 @@ export function useBridgeState(channelName = 'bridge-payloads'): BridgeState {
       .subscribe();
 
     return () => {
-      void supabase.removeChannel(channel);
+      supabase.removeChannel(channel).catch(() => {});
     };
   }, [channelName]);
 
