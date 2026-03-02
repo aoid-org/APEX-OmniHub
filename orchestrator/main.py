@@ -29,6 +29,7 @@ import os
 import sys
 
 from temporalio.client import Client
+from temporalio.service import TLSConfig
 from temporalio.worker import Worker
 
 from activities.iron_law_verify import verify_deductive_path
@@ -64,6 +65,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _build_temporal_tls_config() -> TLSConfig | bool:
+    if not settings.temporal_tls_enabled:
+        return False
+
+    if not settings.temporal_tls_cert or not settings.temporal_tls_key:
+        raise ValueError("TEMPORAL_TLS_CERT and TEMPORAL_TLS_KEY are required when TLS is enabled")
+
+    with open(settings.temporal_tls_cert, "rb") as cert_file:
+        client_cert = cert_file.read()
+    with open(settings.temporal_tls_key, "rb") as key_file:
+        client_private_key = key_file.read()
+
+    return TLSConfig(client_cert=client_cert, client_private_key=client_private_key)
+
+
 async def start_worker() -> None:
     """
     Start Temporal worker.
@@ -86,9 +102,16 @@ async def start_worker() -> None:
 
     # Initialize activity dependencies
     logger.info("Initializing activity dependencies...")
+    activity_key = settings.supabase_activity_key or settings.supabase_service_role_key
+    if activity_key == settings.supabase_service_role_key:
+        logger.warning(
+            "Using SUPABASE_SERVICE_ROLE_KEY for activities; "
+            "configure SUPABASE_ACTIVITY_KEY for least privilege"
+        )
+
     await setup_activities(
         supabase_url=settings.supabase_url,
-        supabase_key=settings.supabase_service_role_key,
+        supabase_key=activity_key,
         redis_url=settings.redis_url,
     )
     logger.info("✓ Dependencies initialized")
@@ -98,6 +121,7 @@ async def start_worker() -> None:
     client = await Client.connect(
         settings.temporal_host,
         namespace=settings.temporal_namespace,
+        tls=_build_temporal_tls_config(),
     )
     logger.info("✓ Connected to Temporal")
 
@@ -132,8 +156,8 @@ async def start_worker() -> None:
             # OmniTrace activities
             *get_omnitrace_activities(),
         ],
-        max_concurrent_workflow_tasks=10,
-        max_concurrent_activities=20,
+        max_concurrent_workflow_tasks=settings.temporal_max_workflow_tasks,
+        max_concurrent_activities=settings.temporal_max_activities,
     )
 
     logger.info("✅ Worker started - polling for tasks...")
@@ -155,10 +179,14 @@ async def submit_workflow(goal: str, user_id: str = "test-user") -> None:
     """
     logger.info(f"Submitting workflow: {goal}")
 
+    if user_id == "test-user" and settings.environment.lower() == "production":
+        raise ValueError("submit_workflow requires explicit user_id in production")
+
     # Connect to Temporal
     client = await Client.connect(
         settings.temporal_host,
         namespace=settings.temporal_namespace,
+        tls=_build_temporal_tls_config(),
     )
 
     # Start workflow
@@ -250,7 +278,8 @@ def main() -> None:
             print('Usage: python main.py submit "Book flight to Paris tomorrow"')
             sys.exit(1)
         goal = sys.argv[2]
-        asyncio.run(submit_workflow(goal))
+        cli_user_id = sys.argv[3] if len(sys.argv) >= 4 else "test-user"
+        asyncio.run(submit_workflow(goal, cli_user_id))
 
     elif command == "test":
         asyncio.run(run_tests())

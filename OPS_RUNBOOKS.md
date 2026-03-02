@@ -99,7 +99,7 @@ greps CI logs for `GUARD_RAIL_VIOLATION` or `policy.*breach` patterns. On
 detection:
 
 1. CI fails with exit code 1
-2. The `guardrail-alert.yml` workflow fires
+2. The `alert-guard-rail-violation.yml` workflow fires
 3. Slack notification sent to `#platform-alerts`
 4. GitHub Issue created with `guard-rail-violation` label
 
