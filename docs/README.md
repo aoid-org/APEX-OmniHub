@@ -13,6 +13,8 @@
 
 ## Quick Navigation
 
+**Start here:** [Canonical Repo Map](../ARCHITECTURE_CANONICAL_MAP.md) — first-stop architecture + infrastructure map.
+
 | Category                                          | Description                                |
 | ------------------------------------------------- | ------------------------------------------ |
 | [Platform Modules](#platform-modules)             | Core Omni-\* module documentation          |
