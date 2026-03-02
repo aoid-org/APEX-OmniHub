@@ -9,7 +9,7 @@ import { ComingSoonPage } from "@/pages/ComingSoon";
 import { LoginPage } from "@/pages/Login";
 import { PrivacyPage } from "@/pages/Privacy";
 import { TermsPage } from "@/pages/Terms";
-import { DemoPage } from "@/pages/Demo";
+
 import { TechSpecsPage } from "@/pages/TechSpecs";
 import { RequestAccessPage } from "@/pages/RequestAccess";
 import { AdvancedAnalyticsPage } from "@/pages/AdvancedAnalytics";
@@ -57,7 +57,7 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
-      <Route path="/demo" element={<DemoPage />} />
+
       <Route path="/tech-specs" element={<TechSpecsPage />} />
       <Route path="/request-access" element={<RequestAccessPage />} />
       <Route path="/advanced-analytics" element={<AdvancedAnalyticsPage />} />

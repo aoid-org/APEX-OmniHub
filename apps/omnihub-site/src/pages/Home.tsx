@@ -30,25 +30,47 @@ function Hero() {
       </div>
       <div className="container hero__grid">
         <div className="hero__content">
-          <h1 className="heading-hero hero__title hero__title--grid">
-            <span>{t('hero.headline.line1', { defaultValue: 'Connect anything.' })}</span>
-            <span>{t('hero.headline.line2', { defaultValue: 'Orchestrate everything.' })}</span>
-            <span className="hero__title--span">{t('hero.headline.line3', { defaultValue: 'Stay in control.' })}</span>
+          <h1 className="heading-hero hero__title flex flex-col items-center lg:items-start w-fit mx-auto lg:mx-0">
+            <div className="flex flex-row gap-[0.5em] justify-center lg:justify-start text-left">
+              <span className="w-min">{t('hero.headline.line1', { defaultValue: 'Connect anything.' })}</span>
+              <span className="w-min">{t('hero.headline.line2', { defaultValue: 'Change anything.' })}</span>
+            </div>
+            <div className="w-full text-center mt-[0.1em]">
+              <span>{t('hero.headline.line3', { defaultValue: 'Stay in control.' })}</span>
+            </div>
           </h1>
           <p className="hero__tagline">{t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}</p>
           <p className="hero__subtagline">
             {t('hero.traits', { defaultValue: 'DIRECTABLE \u2022 AUDITABLE \u2022 REVERSIBLE' })}
           </p>
-          <p className="hero__subtitle">{t('hero.subtitle', { defaultValue: 'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.' })}</p>
-          <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
-            {t('hero.description', { defaultValue: 'OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese. OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet. APEX Agent is the Voice. OmniLink is the AppShell.' })}
-          </p>
-          <div className="hero__actions">
-            <CTAGroup
-              primary={{ label: t('hero.cta.primary', { defaultValue: 'Request Access' }), href: siteConfig.ctas.primary.href }}
-              secondary={{ label: t('hero.cta.secondary', { defaultValue: 'Watch Demo' }), href: siteConfig.ctas.secondary.href }}
-            />
-            <p className="hero__footnote" style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '1rem' }}>
+          
+          <div className="flex flex-col gap-4 mt-6 mb-6">
+            <p className="hero__subtitle" style={{ 
+              textIndent: '1.5em', 
+              textAlign: 'justify', 
+              color: 'white',
+              margin: 0
+            }}>
+              {t('hero.subtitle', { defaultValue: 'The AI Operating System for the Physical World. Software agents. Enterprise platforms. Physical AI hardware. Every action governed, audited, and reversible.' })}
+            </p>
+            <p className="hero__description" style={{ 
+              textIndent: '1.5em', 
+              textAlign: 'justify', 
+              color: 'rgba(100, 180, 255, 0.95)',
+              margin: 0
+            }}>
+              {t('hero.description', { defaultValue: 'Synchronize everything. Translate between any platforms. OmniHub coordinates AI, enterprise systems, and Web3 through a single controlled port. You own the data. You control the flow.' })}
+            </p>
+          </div>
+          
+          <div className="flex flex-col items-center lg:items-start gap-4 mt-8">
+            <div className="flex flex-row flex-wrap justify-center lg:justify-start gap-4">
+              <CTAGroup
+                primary={{ label: t('hero.cta.primary', { defaultValue: 'Request Access' }), href: siteConfig.ctas.primary.href }}
+                secondary={{ label: t('hero.cta.secondary', { defaultValue: 'Watch Demo' }), href: siteConfig.ctas.secondary.href }}
+              />
+            </div>
+            <p className="hero__footnote mt-2 text-center lg:text-left" style={{ fontSize: '0.75rem', opacity: 0.7 }}>
               {t('hero.footnote', { defaultValue: '*Blockchain, wallet, and NFT integrations are optional and disabled by default.' })}
             </p>
           </div>
@@ -63,36 +85,7 @@ function Hero() {
   );
 }
 
-function DemoVideoSection() {
-  return (
-    <Section id="demo-video" variant="default">
-      <div className="demo-video">
-        <div className="demo-video__header">
-          <h2 className="heading-2">See OmniHub in Action</h2>
-          <p className="text-secondary mt-4">
-            Watch how OmniHub orchestrates AI, enterprise systems, and Web3
-            through a single controlled port.
-          </p>
-        </div>
-        <div className="demo-video__container">
-          <div className="demo-video__glow" aria-hidden="true" />
-          <video
-            id="apex-demo-video"
-            className="demo-video__player"
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-          >
-            <source src="/apex-demo-video.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-      </div>
-    </Section>
-  );
-}
+
 
 function HighlightsSection() {
   const highlightItems = [
@@ -369,7 +362,6 @@ export function HomePage() {
   return (
     <Layout>
       <Hero />
-      <DemoVideoSection />
       <HighlightsSection />
       <TriForceSection />
       <OrchestratorSection />

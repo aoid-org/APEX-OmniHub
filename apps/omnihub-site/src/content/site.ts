@@ -38,15 +38,17 @@ export const siteConfig = {
     links: [
       buildLink('Tech Specs', '/tech-specs'),
     ],
-    loginLink: buildLink('Login', '/login'),
+    loginLink: buildLink('Launch Console', '/login'),
     primaryCta: buildLink('Request Access', '/request-access'),
   },
   hero: {
     eyebrow: 'APEX OMNIHUB',
-    title: 'Connect anything.\nOrchestrate everything.\nStay in control.',
+    title: 'Connect anything.\nChange anything.\nStay in control.',
     tagline: 'YOUR SYSTEMS. YOUR RULES.',
     subtitle:
-      'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.',
+      'The AI Operating System for the Physical World. Software agents. Enterprise platforms. Physical AI hardware. Every action governed, audited, and reversible.',
+    description:
+      'Synchronize everything. Translate between any platforms. OmniHub coordinates AI, enterprise systems, and Web3 through a single controlled port. You own the data. You control the flow.',
   },
   highlights: {
     title: '',
