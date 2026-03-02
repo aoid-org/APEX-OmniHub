@@ -107,7 +107,11 @@ def validate_saga_jwt_claims(
 
     # Expiry check
     exp = claims.get("exp")
-    if isinstance(exp, (int, float)) and time.time() > float(exp):
+    if exp is None:
+        raise SagaAuthError("SAGA_JWT: missing exp claim")
+    if not isinstance(exp, (int, float)):
+        raise SagaAuthError("SAGA_JWT: invalid exp claim type")
+    if time.time() > float(exp):
         raise SagaAuthError("SAGA_JWT: token is expired")
 
     if not require_tenant_id:

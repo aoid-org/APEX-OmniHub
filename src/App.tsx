@@ -101,7 +101,7 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes
       refetchOnWindowFocus: false, // Prevent excessive refetches
-      refetchOnMount: false, // Use cached data when available
+      refetchOnMount: true, // Refresh on mount to avoid cross-device stale views
       refetchOnReconnect: true, // Refetch when network reconnects
     },
     mutations: {
@@ -174,18 +174,16 @@ const App = () => (
   <div data-testid="app-shell">
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <AppContent />
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <AppContent />
           <ConsentBanner />
           <AuthProvider>
             <LocaleProvider>
             <Web3Provider>
             <Suspense fallback={<PageLoader />}>
-              {/* OmniMedia PiP Dock — persists across all routes */}
-              <GlobalMediaDock />
               <Routes>
                 {/* Public routes */}
                 <Route path="/privacy" element={<Privacy />} />
@@ -206,6 +204,7 @@ const App = () => (
                 <Route path="/diagnostics" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Diagnostics /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
 
                 {/* App routes (no mobile gate for now) */}
+                {/* App-route access policy tracked in platform access-control roadmap. */}
                 <Route path="/apps/tradeline247" element={<TradeLine247 />} />
                 <Route path="/apps/autorepai" element={<AutoRepAi />} />
                 <Route path="/apps/keepsafe" element={<KeepSafe />} />
@@ -220,6 +219,10 @@ const App = () => (
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
+            </Suspense>
+            {/* Keep media dock isolated so route rendering never blocks on its lazy chunk */}
+            <Suspense fallback={null}>
+              <GlobalMediaDock />
             </Suspense>
             </Web3Provider>
             </LocaleProvider>
