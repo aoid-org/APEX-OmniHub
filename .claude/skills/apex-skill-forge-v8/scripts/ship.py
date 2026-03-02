@@ -14,12 +14,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import shutil
 import sys
 import textwrap
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -198,7 +197,7 @@ def package_skill(
     changelog = textwrap.dedent(f"""\
         # Changelog — {skill_name}
 
-        ## [{version}] - {datetime.now(timezone.utc).strftime("%Y-%m-%d")}
+        ## [{version}] - {datetime.now(UTC).strftime("%Y-%m-%d")}
 
         ### Added
         - Initial release via APEX Skill Forge v{VERSION}

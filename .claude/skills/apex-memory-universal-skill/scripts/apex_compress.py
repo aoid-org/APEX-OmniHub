@@ -8,13 +8,13 @@ Standalone compression tool implementing primacy-recency + semantic dedup + map-
 Exit codes: 0=success, 1=input error, 2=system error
 """
 
-import sys
-import re
-import json
-import hashlib
 import argparse
-from pathlib import Path
+import hashlib
+import json
+import re
+import sys
 from datetime import datetime
+from pathlib import Path
 
 APEX_HEADER = "APEX-Memory Compress v2.0.0 | (C) 2025 APEX Business Systems Ltd."
 

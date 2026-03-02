@@ -9,8 +9,8 @@ This module provides:
 Security: XSS-safe implementation (SonarQube S5131 compliant)
 """
 
-from omega.engine import VerificationEngine, VerificationRequest, VerificationResult
 from omega.dashboard import start_dashboard
+from omega.engine import VerificationEngine, VerificationRequest, VerificationResult
 
 __all__ = [
     'VerificationEngine',

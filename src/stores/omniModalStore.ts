@@ -22,7 +22,14 @@ import { z } from 'zod';
 // Types
 // ============================================================================
 
-export type ModalType = 'oauth' | 'form' | 'selection' | 'confirmation';
+export type ModalType =
+  | 'oauth'
+  | 'form'
+  | 'selection'
+  | 'confirmation'
+  | 'vision_redact'
+  | 'vision_confirm'
+  | 'mcp_tool_approve';
 
 export interface OmniModalConfig {
   readonly id: string;
@@ -48,7 +55,7 @@ export interface ModalAbortError {
 const OmniModalConfigSchema = z.object({
   id: z.string().min(1),
   provider: z.string().min(1),
-  type: z.enum(['oauth', 'form', 'selection', 'confirmation']),
+  type: z.enum(['oauth', 'form', 'selection', 'confirmation', 'vision_redact', 'vision_confirm', 'mcp_tool_approve']),
   title: z.string().min(1),
   description: z.string().optional(),
   schema: z.record(z.unknown()).optional(),

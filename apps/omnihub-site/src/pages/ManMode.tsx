@@ -133,7 +133,7 @@ export function ManModePage() {
 
           {/* CTA */}
           <div className="text-center p-8 bg-surface border border-border rounded-lg">
-            <h3 className="heading-3 mb-4">Directable. Accountable. Dependable.</h3>
+            <h3 className="heading-3 mb-4">Directable. Auditable. Reversible.</h3>
             <p className="text-secondary mb-8 max-w-2xl mx-auto">
               M.A.N.Mode isn't just a feature. It's a safety philosophy. Your automation moves fast, 
               but the important decisions still go through you.

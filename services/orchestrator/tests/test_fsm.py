@@ -3,8 +3,10 @@ Tests for APEX OmniBoard Finite State Machine.
 Validates deterministic behavior and dependency injection.
 """
 
-import pytest
 from datetime import UTC, datetime
+
+import pytest
+
 from services.orchestrator.fsm import FSM
 
 
