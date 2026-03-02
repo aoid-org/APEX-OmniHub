@@ -25,7 +25,6 @@ import { MCPServerRegistry, type ServerStatus } from './MCPServerRegistry';
 import { MCPToolDiscovery, type MCPToolSchema } from './MCPToolDiscovery';
 import {
   createTransport,
-  type JsonRpcRequest,
   type MCPTransport,
 } from './MCPTransport';
 import type { MCPConfig } from './mcp.config';
@@ -214,7 +213,7 @@ export class MCPHostManager {
       const approved = await this.requestApproval({
         toolName: parsed.toolName,
         params: parsed.params,
-        riskLevel: tool.riskLevel,
+        riskLevel: resolveBridgeRiskLevel(parsed.toolName, tool.riskLevel),
         serverId: tool.serverId,
       });
 
@@ -242,15 +241,6 @@ export class MCPHostManager {
     }
 
     try {
-      const request: JsonRpcRequest = {
-        jsonrpc: '2.0',
-        id: parsed.correlationId,
-        method: `tools/${parsed.toolName}`,
-        params: parsed.params,
-      };
-
-      const response = await transport.send(request);
-
       if (response.error) {
         return {
           success: false,
@@ -294,13 +284,16 @@ export class MCPHostManager {
     if (!transport || transport.status !== 'connected') return [];
 
     try {
-      const request: JsonRpcRequest = {
-        jsonrpc: '2.0',
-        id: `discover-${serverId}-${Date.now()}`,
-        method: 'tools/list',
-      };
+      const response =
+        transport?.status === 'connected'
+          ? await transport.send({
+              jsonrpc: '2.0',
+              id: `discover-${serverId}-${Date.now()}`,
+              method: 'tools/list',
+            })
+          : undefined;
 
-      const response = await transport.send(request);
+      if (!response) return [];
       if (response.error || !response.result) return [];
 
       // Parse tools from response
