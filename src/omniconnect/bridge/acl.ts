@@ -36,8 +36,8 @@ const normalizeToolName = (toolName: string): string =>
   toolName
     .trim()
     .toLowerCase()
-    .replace(/[\s:/]+/g, '.')
-    .replace(/[^a-z0-9._-]/g, '');
+    .replaceAll(/[\s:/]+/g, '.')
+    .replaceAll(/[^a-z0-9._-]/g, '');
 
 export const resolveBridgeRiskLevel = (
   toolName: string,
