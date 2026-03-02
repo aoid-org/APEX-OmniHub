@@ -23,6 +23,14 @@ _Directable • Accountable • Dependable_
 
 ---
 
+## 🚦 Start Here (Canonical Map)
+
+**Before touching code, read the canonical architecture map:**
+
+- [ARCHITECTURE_CANONICAL_MAP.md](./ARCHITECTURE_CANONICAL_MAP.md)
+
+---
+
 ## Overview
 
 APEX OmniHub is the enterprise **AI orchestration control plane** for **governed execution** across ALL modern stacks, AI apps, legacy enterprise systems, and Web3 infrastructure. Think "control tower": one place to connect, translate, enforce policy, and produce an audit trail you can defend.
