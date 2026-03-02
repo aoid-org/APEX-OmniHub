@@ -35,7 +35,7 @@ describe('OmniLink Agentic RAG', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSupabase = createClient('mock-url', 'mock-key') as MockSupabase;
+    mockSupabase = createClient('mock-url', 'mock-key') as unknown as MockSupabase;
     skillRegistry = new SkillRegistry(mockSupabase); // NOSONAR
   });
 

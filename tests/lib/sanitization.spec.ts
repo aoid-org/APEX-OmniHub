@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   sanitizeEventPayload,
-  stripPii,
   redactAmount,
 } from '@/lib/sanitization';
 
@@ -159,10 +158,10 @@ describe('sanitizeEventPayload', () => {
   });
 });
 
-describe('stripPii', () => {
-  it('should strip PII from plain text', () => {
+describe('Standalone string sanitization (legacy replacement test)', () => {
+  it('should strip PII from a mock payload wrapping a string', () => {
     const text = 'Email john@example.com or call (555) 123-4567';
-    const result = stripPii(text); // NOSONAR
+    const result = sanitizeEventPayload({ text }).text;
     expect(result).not.toContain('john@example.com');
     expect(result).not.toContain('555');
   });

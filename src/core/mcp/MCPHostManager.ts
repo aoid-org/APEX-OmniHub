@@ -29,7 +29,6 @@ import {
   type MCPTransport,
 } from './MCPTransport';
 import type { MCPConfig } from './mcp.config';
-import { BRIDGE_ACTIONS, type BridgePayload } from '@/omniconnect/bridge/acl';
 
 // ============================================================================
 // Types
@@ -231,7 +230,7 @@ export class MCPHostManager {
 
     // 3. Send JSON-RPC request
     const transport = this.transports.get(tool.serverId);
-    if (!transport || transport.status !== 'connected') {
+    if (transport?.status !== 'connected') {
       return {
         success: false,
         data: undefined,
@@ -291,7 +290,7 @@ export class MCPHostManager {
     serverId: string,
   ): Promise<MCPToolSchema[]> {
     const transport = this.transports.get(serverId);
-    if (!transport || transport.status !== 'connected') return [];
+    if (transport?.status !== 'connected') return [];
 
     try {
       const request: JsonRpcRequest = {
@@ -313,15 +312,15 @@ export class MCPHostManager {
             typeof t === 'object' && t !== null,
         )
         .map((t) => ({
-          name: String(t['name'] ?? ''),
-          description: String(t['description'] ?? ''),
+          name: t['name'] ? String(t['name']) : '',
+          description: t['description'] ? String(t['description']) : '',
           serverId,
           parameters: Array.isArray(t['parameters'])
             ? (t['parameters'] as Array<Record<string, unknown>>).map(
                 (p) => ({
-                  name: String(p['name'] ?? ''),
-                  type: String(p['type'] ?? 'string'),
-                  description: String(p['description'] ?? ''),
+                  name: p['name'] ? String(p['name']) : '',
+                  type: p['type'] ? String(p['type']) : 'string',
+                  description: p['description'] ? String(p['description']) : '',
                   required: Boolean(p['required']),
                 }),
               )
@@ -364,53 +363,4 @@ export class MCPHostManager {
   ): void {
     this.registry.updateStatus(serverId, status, error);
   }
-
-  // --------------------------------------------------------------------------
-  // Financial Approval Gate (OmniMCP)
-  // --------------------------------------------------------------------------
-
-  /**
-   * Gate for saga actions that mutate invoice or compliance_records data.
-   *
-   * Flow:
-   *   1. Dispatch mcp_tool_approve → omniModalStore via approvalCallback
-   *   2. Await user confirmation (fail-closed — no callback = reject)
-   *   3. On rejection: return a PENDING_NETWORK BridgePayload
-   *   4. On approval: return null (caller proceeds)
-   *
-   * @param toolName  - The tool name requesting financial data access
-   * @param params    - Tool parameters for display in approval modal
-   * @param correlId  - Correlation ID for audit trail
-   * @returns null on approval, PENDING_NETWORK BridgePayload on rejection
-   */
-  async requireFinancialApproval(
-    toolName: string,
-    params: Record<string, unknown>,
-    correlId: string,
-  ): Promise<BridgePayload | null> {
-    const approved = await this.requestApproval({
-      toolName,
-      params,
-      riskLevel: 'write',
-      serverId: 'financial-gate',
-    });
-
-    if (approved) return null;
-
-    return buildPendingNetworkPayload(correlId);
-  }
-}
-
-// ── Module-level helpers (not on class to keep cognitive complexity ≤ 15) ─────
-
-function buildPendingNetworkPayload(correlId: string): BridgePayload {
-  // Validate action membership at compile time via the imported const array
-  const action = BRIDGE_ACTIONS[0]; // 'PENDING_NETWORK'
-  return {
-    action,
-    discrepancy: '0.00',
-    source: 'WEB3',
-    timestamp: new Date().toISOString(),
-    anomaly: `MCP_APPROVAL_REJECTED: correlationId=${correlId}`,
-  };
 }
