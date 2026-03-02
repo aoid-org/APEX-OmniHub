@@ -214,7 +214,7 @@ export class MCPHostManager {
       const approved = await this.requestApproval({
         toolName: parsed.toolName,
         params: parsed.params,
-        riskLevel: tool.riskLevel,
+        riskLevel: resolveBridgeRiskLevel(parsed.toolName, tool.riskLevel),
         serverId: tool.serverId,
       });
 
