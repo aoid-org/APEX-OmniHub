@@ -131,16 +131,6 @@ function Nav() {
         </ul>
 
         <div className="nav__actions">
-          {isAuthenticated ? (
-            <a href={dashboardUrl} className="btn btn--primary btn--sm">
-              LAUNCH CONSOLE
-            </a>
-          ) : (
-            <a href={siteConfig.nav.loginLink.href} className="btn btn--primary btn--sm">
-              {siteConfig.nav.loginLink.label}
-            </a>
-          )}
-
           <div className="nav__burger" ref={menuRef}>
             <button
               type="button"
@@ -207,6 +197,16 @@ function Nav() {
               </dialog>
             )}
           </div>
+
+          {isAuthenticated ? (
+            <a href={dashboardUrl} className="btn btn--primary btn--sm">
+              LAUNCH CONSOLE
+            </a>
+          ) : (
+            <a href={siteConfig.nav.loginLink.href} className="btn btn--primary btn--sm">
+              {siteConfig.nav.loginLink.label}
+            </a>
+          )}
         </div>
       </div>
     </nav>

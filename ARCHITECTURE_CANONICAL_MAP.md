@@ -22,7 +22,7 @@ APEX OmniHub is a **polyglot platform monorepo** with five primary execution pla
 
 - `src/` → main web app and UI runtime.
 - `supabase/functions/` → serverless edge endpoints (22 directories).
-- `supabase/migrations/` → Postgres schema evolution (52 SQL migrations).
+- `supabase/migrations/` → Postgres schema evolution (51 SQL migrations).
 - `orchestrator/` → Python Temporal workers/activities/workflows.
 - `tests/` + `e2e/` → test suites across unit/integration/security/e2e domains.
 - `.github/workflows/` → CI/CD and security workflows.
@@ -202,27 +202,15 @@ NPM scripts in `package.json` define gate commands:
 
 ---
 
-## 9) Current Build Snapshot (from direct repository inspection — 2026-03-02)
+## 9) Current Build Snapshot (from direct repository inspection)
 
-- `src/` files: **322+**
+- `src/` files: **319**
 - `src/pages/` files (max depth 2): **23**
 - `src/components/**/*.tsx`: **98**
 - `supabase/functions/` directories: **22**
-- `supabase/migrations/*.sql`: **52** (added `20260302000000_financial_automation_core.sql`)
-- test spec files in `tests/` + `e2e/`: **100+** (added `bridge-fsm.chaos.spec.tsx`)
+- `supabase/migrations/*.sql`: **51**
+- test spec files in `tests/` + `e2e/`: **99**
 - GitHub workflow YAML files: **13**
-
-### Key additions in this snapshot
-
-| File | Plane | Purpose |
-|------|-------|---------|
-| `supabase/migrations/20260302000000_financial_automation_core.sql` | Data | invoices + compliance_records with tenant RLS |
-| `orchestrator/activities/compensate_web3_tx.py` | Workflow | Web3 saga compensation activity |
-| `orchestrator/security/saga_jwt_validator.py` | Workflow | Saga JWT tenant_id claim enforcer |
-| `src/omniconnect/bridge/acl.ts` | Frontend | BridgePayload ACL + Zod schema |
-| `apps/omnihub-site/src/components/omnidash/BridgeFSM.tsx` | Frontend | Exhaustive FSM renderer |
-| `apps/omnihub-site/src/components/omnidash/useBridgeState.ts` | Frontend | Realtime bridge state hook |
-| `tests/omnidash/bridge-fsm.chaos.spec.tsx` | Testing | 3-test Armageddon chaos battery |
 
 > These values should be treated as a point-in-time map for this commit and can drift as the repo evolves.
 

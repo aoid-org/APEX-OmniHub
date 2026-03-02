@@ -170,7 +170,7 @@ html {
 }
 
 body {
-  font-family: var(--font-family-sans);
+  font-family: 'Space Grotesk', var(--font-family-sans);
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
   color: var(--color-text-primary);

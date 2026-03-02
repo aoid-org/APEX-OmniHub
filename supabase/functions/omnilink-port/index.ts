@@ -320,7 +320,7 @@ async function processRequestItem(
     payload.policy = { ...(payload.policy as Record<string, unknown>), require_approval: true };
   }
 
-  const idempotencyKey = `${idempotencyHeader}:${String(payload.id ?? index)}`;
+  const idempotencyKey = `${idempotencyHeader}:${payload.id ? String(payload.id) : String(index)}`;
 
   const { data, error } = await serviceClient.rpc('omnilink_ingest', {
     p_api_key_id: apiKey.id,
