@@ -1,26 +1,44 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-export function DemoVideoPlayer({ id }: { readonly id?: string }) {
+type DemoVideoPlayerProps = {
+  readonly id?: string;
+  readonly sourceUrl: string;
+  readonly captionUrl?: string;
+};
+
+export function DemoVideoPlayer({
+  id,
+  sourceUrl,
+  captionUrl = '/captions/demo.vtt',
+}: DemoVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
-    // Attempt unmuted autoplay; fall back to muted if browser blocks it
+    if (!video) {
+      return;
+    }
+
     video.muted = false;
-    video.play().then(() => {
-      setIsMuted(false);
-    }).catch(() => {
-      video.muted = true;
-      video.play().catch(() => { /* autoplay fully blocked */ });
-      setIsMuted(true);
-    });
+    video
+      .play()
+      .then(() => {
+        setIsMuted(false);
+      })
+      .catch(() => {
+        video.muted = true;
+        video.play().catch(() => undefined);
+        setIsMuted(true);
+      });
   }, []);
 
   const toggleMute = useCallback(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video) {
+      return;
+    }
+
     video.muted = !video.muted;
     setIsMuted(video.muted);
   }, []);
@@ -28,17 +46,9 @@ export function DemoVideoPlayer({ id }: { readonly id?: string }) {
   return (
     <div className="demo-video__container">
       <div className="demo-video__glow" aria-hidden="true" />
-      <video
-        ref={videoRef}
-        id={id}
-        className="demo-video__player"
-        autoPlay
-        loop
-        playsInline
-        preload="auto"
-      >
-        <source src="/apex-demo-video.mp4" type="video/mp4" />
-        <track kind="captions" src="/captions/demo.vtt" srcLang="en" label="English" />
+      <video ref={videoRef} id={id} className="demo-video__player" autoPlay loop playsInline preload="auto">
+        <source src={sourceUrl} type="video/mp4" />
+        <track kind="captions" src={captionUrl} srcLang="en" label="English" />
         Your browser does not support the video tag.
       </video>
       <button
