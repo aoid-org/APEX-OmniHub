@@ -29,6 +29,9 @@ httpx>=0.26.0
 tenacity>=8.2.0
 markupsafe>=2.1.0  # XSS-safe HTML escaping (SonarQube S5131)
 
+# Metrics
+prometheus-client>=0.20.0
+
 # FastAPI and Rate Limiting
 fastapi>=0.109.0
 uvicorn>=0.27.0
