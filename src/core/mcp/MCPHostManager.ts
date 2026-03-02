@@ -29,6 +29,7 @@ import {
   type MCPTransport,
 } from './MCPTransport';
 import type { MCPConfig } from './mcp.config';
+import { resolveBridgeRiskLevel } from '@/omniconnect/bridge/acl';
 
 // ============================================================================
 // Types
@@ -213,7 +214,7 @@ export class MCPHostManager {
       const approved = await this.requestApproval({
         toolName: parsed.toolName,
         params: parsed.params,
-        riskLevel: tool.riskLevel,
+        riskLevel: resolveBridgeRiskLevel(parsed.toolName, tool.riskLevel),
         serverId: tool.serverId,
       });
 
