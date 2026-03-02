@@ -154,6 +154,31 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets['VITE_SUPABASE_PUBLISHABLE_KEY'] }}
           REQUIRE_SUPABASE_INTEGRATION_TESTS: "false"
 
+      - name: Run JS coverage
+        run: npm run test:coverage
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run orchestrator Python coverage
+        run: cd orchestrator && pip install -r requirements.txt && pytest --cov=. --cov-report=xml:coverage.xml
+
+      - name: SonarCloud Scan Disabled Notice
+        if: ${{ vars.SONAR_CI_SCAN_ENABLED != 'true' }}
+        run: |
+          echo "Skipping CI Sonar scan because SONAR_CI_SCAN_ENABLED is not true."
+          echo "Use SonarCloud Automatic Analysis or set repository variable SONAR_CI_SCAN_ENABLED=true and disable Automatic Analysis in SonarCloud."
+
+      - name: SonarCloud Scan
+        if: ${{ vars.SONAR_CI_SCAN_ENABLED == 'true' }}
+        uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d
+        continue-on-error: true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # ─────────────────────────────────────────────────────────────
       # PHASE 2.5: OmniEval Deterministic Evaluation
       # ─────────────────────────────────────────────────────────────

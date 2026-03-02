@@ -29,6 +29,9 @@ httpx>=0.26.0
 tenacity>=8.2.0
 markupsafe>=2.1.0  # XSS-safe HTML escaping (SonarQube S5131)
 
+# Metrics
+prometheus-client>=0.20.0
+
 # FastAPI and Rate Limiting
 fastapi>=0.109.0
 uvicorn>=0.27.0
@@ -38,7 +41,7 @@ slowapi>=0.1.9
 sentence-transformers>=2.3.0
 numpy>=1.26.0
 
-# Development dependencies
+# Development and coverage dependencies
 pytest>=7.4.0
 pytest-asyncio>=0.23.0
 pytest-cov>=4.1.0
