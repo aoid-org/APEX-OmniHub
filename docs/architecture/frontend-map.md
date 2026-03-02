@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.2-SEMANTIC-BRIDGE | LAST_UPDATED=2026-03-02 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-03-01 -->
 # Frontend Structure Map
 
 This document maps the main frontend topology in `APEX-OmniHub`, with a visual

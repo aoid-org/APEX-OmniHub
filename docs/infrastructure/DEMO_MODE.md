@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
 # Demo Mode
 
 Demo mode allows running OmniHub without real blockchain or webhook secrets. **Never enable demo mode in production.**

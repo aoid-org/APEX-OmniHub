@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-02-27 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-03-01 -->
 # APEX OmniHub — Production Status
 
 ```
@@ -13,13 +13,13 @@ E N T E R P R I S E   A I   P L A T F O R M
 
 | Status      | Architecture                 | Last Audit | Test Coverage             |
 | ----------- | ---------------------------- | ---------- | ------------------------- |
-| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-02-27 | Security regression checks PASS |
+| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-03-01 | Security regression checks PASS |
 
 ---
 
 ## Executive Summary
 
-APEX OmniHub is **PRODUCTION CERTIFIED** with updated 2026-02-27 audit evidence. The system has graduated from a Web-SaaS model to a **Cyber-Physical Operating System**. The integration of the Device Registry and Biometric Enclaves allows for secure, high-stakes autonomous agent execution in the physical world. v1.3.4 adds the **Edge Compute Layer** — a deterministic LRU media cache (250 MB ceiling) and dual CORS proxy infrastructure (Vercel Edge + Cloudflare Worker).
+APEX OmniHub is **PRODUCTION CERTIFIED** with updated 2026-03-01 audit evidence. The system has graduated from a Web-SaaS model to a **Cyber-Physical Operating System**. The integration of the Device Registry and Biometric Enclaves allows for secure, high-stakes autonomous agent execution in the physical world. v1.3.8 adds the **Edge Compute Layer** — a deterministic LRU media cache (250 MB ceiling) and dual CORS proxy infrastructure (Vercel Edge + Cloudflare Worker).
 
 ## Deployment Checklist (Verified)
 
@@ -38,7 +38,7 @@ APEX OmniHub is **PRODUCTION CERTIFIED** with updated 2026-02-27 audit evidence.
 - [x] **Voice**: Latency < 300ms verified (`VOICE_FORTRESS_AUDIT`)
 - [x] **Offline Mode**: Sync queue persistence verified
 
-### Edge Compute (v1.3.4)
+### Edge Compute (v1.3.8)
 
 - [x] **Edge CORS Proxy**: Vercel Edge runtime (`api/cors.ts`) — WinterCG-safe, Range passthrough
 - [x] **LRU Media Cache**: 250 MB ceiling, localStorage ledger, deterministic eviction (`lib/media/EdgeCacheController.ts`)
@@ -71,13 +71,13 @@ APEX OmniHub is **PRODUCTION CERTIFIED** with updated 2026-02-27 audit evidence.
 
 ```
 Repository:  apexbusiness-systems/APEX-OmniHub
-Status:      PRODUCTION READY (v1.3.4)
+Status:      PRODUCTION READY (v1.3.8)
 Type:        Cyber-Physical AI OS
-Updated:     2026-02-27
+Updated:     2026-03-01
 ```
 
 
-## 2026-02-27 Audit Addendum
+## 2026-03-01 Audit Addendum
 
 - **Edge Compute Layer shipped:** Vercel Edge CORS proxy + LRU media cache governor (250 MB ceiling, localStorage ledger, deterministic eviction).
 - **SonarQube:** 3 code smells resolved — `globalThis.window`/`globalThis.location` for ES2020 portability, dead assignment removal.

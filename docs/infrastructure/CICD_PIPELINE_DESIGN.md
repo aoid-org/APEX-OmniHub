@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
 # CI/CD PIPELINE DESIGN
 **Continuous Integration & Deployment for OmniHub/TradeLine/APEX**
 

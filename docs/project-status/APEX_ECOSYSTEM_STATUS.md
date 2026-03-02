@@ -1,7 +1,7 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-02-27 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-03-01 -->
 # APEX Ecosystem Status
 
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-03-01
 **Platform Version:** 1.3.4
 **Status:** 🟢 PRODUCTION LIVE
 
@@ -55,7 +55,7 @@ const metrics = getOmniPortMetrics(60000);
 
 ---
 
-## Edge Compute Layer (v1.3.4)
+## Edge Compute Layer (v1.3.8)
 
 Deterministic client-side infrastructure for media delivery.
 
