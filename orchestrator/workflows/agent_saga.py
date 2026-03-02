@@ -49,6 +49,11 @@ from temporalio.exceptions import ActivityError, ApplicationError
 
 # Import our models and activities
 with workflow.unsafe.imports_passed_through():
+    # Re-exported via PEP-484 alias: Temporal worker registers this activity by name;
+    # plan steps reference it as "compensate_web3_tx" string in compensation_activity field.
+    from activities.compensate_web3_tx import (
+        compensate_web3_tx as compensate_web3_tx,
+    )
     from models.events import (
         AgentEvent,
         GoalReceived,
@@ -59,6 +64,7 @@ with workflow.unsafe.imports_passed_through():
         WorkflowFailed,
     )
     from models.man_mode import create_idempotency_key
+    from security.saga_jwt_validator import SagaAuthError, validate_saga_jwt_claims
 
 
 # ============================================================================
@@ -403,6 +409,9 @@ class AgentWorkflow:
         """
         correlation_id = workflow.info().workflow_id
 
+        # ── Zero-Trust JWT guard ─────────────────────────────────────────────
+        self._validate_jwt_guard(context)
+
         # Record start time for continue-as-new threshold.
         # Uses workflow.now() — deterministic Temporal clock, safe for replay.
         if self.start_time is None:
@@ -503,6 +512,22 @@ class AgentWorkflow:
                 non_retryable=True,
                 details=workflow_result,
             ) from e
+
+    # =========================================================================
+    # ZERO-TRUST HELPERS
+    # =========================================================================
+
+    def _validate_jwt_guard(self, context: dict[str, Any] | None) -> None:
+        """Validate tenant JWT claims fail-closed before any saga step executes."""
+        jwt_token: str | None = (context or {}).get("jwt_token")
+        if jwt_token:
+            try:
+                validate_saga_jwt_claims(jwt_token)
+            except SagaAuthError as auth_err:
+                raise ApplicationError(
+                    str(auth_err),
+                    non_retryable=True,
+                ) from auth_err
 
     # =========================================================================
     # OMNITRACE HELPERS (Best-effort telemetry - never breaks workflow)

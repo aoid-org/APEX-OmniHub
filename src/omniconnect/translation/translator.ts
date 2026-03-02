@@ -10,6 +10,11 @@
 import { CanonicalEvent } from '../types/canonical';
 import { CanonicalEventSchema } from '../types/schema';
 import { type LangCode } from '@/i18n/locales';
+import {
+  type BridgePayload,
+  validateBridgePayload,
+  BridgeParseError,
+} from '../bridge/acl';
 
 export interface TranslatedEvent {
   eventId: string;
@@ -235,5 +240,161 @@ export class SemanticTranslator {
 
   unregisterTranslator(appId: string): boolean {
     return this.translators.delete(appId);
+  }
+
+  // ── Bridge: Web3 hex → BridgePayload ──────────────────────────────────────
+
+  /**
+   * Translate a raw Web3 transaction receipt to a validated BridgePayload.
+   *
+   * Maps hex value to SETTLED, or to MAN_MODE_LOCKDOWN when value is zero.
+   * All IDs: crypto.randomUUID(). Finance output: integer string → .toFixed(2).
+   *
+   * @param receipt - Raw Web3 transaction receipt object
+   * @param correlId - Optional correlation ID for tracing
+   * @returns Validated BridgePayload
+   * @throws BridgeParseError if the constructed payload fails schema validation
+   */
+  translateWeb3Receipt(
+    receipt: Record<string, unknown>,
+    correlId?: string,
+  ): BridgePayload {
+    const id = correlId ?? crypto.randomUUID();
+    const timestamp = new Date().toISOString();
+    const status = typeof receipt['status'] === 'string' ? receipt['status'] : '0x0';
+    const rawValue = typeof receipt['value'] === 'string' ? receipt['value'] : '0x0';
+    const txHash = typeof receipt['hash'] === 'string' ? receipt['hash'] : undefined;
+
+    const isSuccess = status === '0x1' || status === '1' || status.toLowerCase() === 'true';
+    const valueWei = BigInt(rawValue);
+    const valueEth = Number(valueWei) / 1e18;
+    const discrepancy = isSuccess && valueWei > 0n ? '0.00' : valueEth.toFixed(2);
+
+    let raw: Record<string, unknown>;
+
+    if (isSuccess && valueWei > 0n) {
+      raw = {
+        action: 'SETTLED',
+        discrepancy: '0.00',
+        source: 'WEB3',
+        timestamp,
+        txHash,
+      };
+    } else {
+      raw = {
+        action: 'MAN_MODE_LOCKDOWN',
+        discrepancy,
+        source: 'WEB3',
+        timestamp,
+        txHash,
+        anomaly: `WEB3_ZERO_VALUE: transaction value is ${discrepancy} ETH`,
+      };
+    }
+
+    return validateBridgePayload(raw, id);
+  }
+
+  // ── Bridge: ERP XML → BridgePayload ───────────────────────────────────────
+
+  /**
+   * Translate an ERP XML string to a validated BridgePayload.
+   *
+   * Compares invoice total vs line-item sum using integer-cent arithmetic.
+   * RECONCILED when delta is zero; MAN_MODE_LOCKDOWN when delta ≠ zero.
+   *
+   * @param xmlString - Raw ERP XML document string
+   * @param erpRef    - ERP reference identifier for tracing
+   * @param correlId  - Optional correlation ID
+   * @returns Validated BridgePayload
+   * @throws BridgeParseError on schema validation failure
+   * @throws Error if DOM parser is unavailable
+   */
+  translateErpXml(
+    xmlString: string,
+    erpRef?: string,
+    correlId?: string,
+  ): BridgePayload {
+    const id = correlId ?? crypto.randomUUID();
+    const timestamp = new Date().toISOString();
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xmlString, 'application/xml');
+
+    const parseError = doc.querySelector('parsererror');
+    if (parseError) {
+      throw new BridgeParseError(
+        'ERP_XML: XML parse error',
+        [{
+          code: 'custom',
+          path: ['xmlString'],
+          message: 'XML document could not be parsed',
+        }],
+        id,
+      );
+    }
+
+    const invoiceTotal = this.extractXmlDecimalCents(doc, 'total');
+    const lineItemTotal = this.extractLineItemsCents(doc);
+
+    const deltaCents = Math.abs(invoiceTotal - lineItemTotal);
+    const deltaStr = (deltaCents / 100).toFixed(2);
+    const isReconciled = deltaCents === 0;
+
+    let raw: Record<string, unknown>;
+
+    if (isReconciled) {
+      raw = {
+        action: 'RECONCILED',
+        discrepancy: '0.00',
+        source: 'ERP',
+        timestamp,
+        erpRef,
+      };
+    } else {
+      const lineFormatted = (lineItemTotal / 100).toFixed(2);
+      const totalFormatted = (invoiceTotal / 100).toFixed(2);
+      raw = {
+        action: 'MAN_MODE_LOCKDOWN',
+        discrepancy: deltaStr,
+        source: 'ERP',
+        timestamp,
+        erpRef,
+        anomaly: `ERP_MISMATCH: lineItems $${lineFormatted} \u2260 total $${totalFormatted}`,
+      };
+    }
+
+    return validateBridgePayload(raw, id);
+  }
+
+  /** Extract a decimal field from XML and convert to integer cents. */
+  private extractXmlDecimalCents(doc: Document, tagName: string): number {
+    const el = doc.querySelector(tagName);
+    if (!el?.textContent) return 0;
+    const parsed = Number.parseFloat(el.textContent.trim());
+    if (Number.isNaN(parsed)) return 0;
+    return Math.round(parsed * 100);
+  }
+
+  /** Sum all lineItems total attributes from XML and return integer cents. */
+  private extractLineItemsCents(doc: Document): number {
+    const lineItemsEl = doc.querySelector('lineItems');
+    if (!lineItemsEl) return 0;
+
+    const totalAttr = lineItemsEl.getAttribute('total');
+    if (totalAttr) {
+      const parsed = Number.parseFloat(totalAttr);
+      if (!Number.isNaN(parsed)) return Math.round(parsed * 100);
+    }
+
+    // Fall back: sum all <item total="..."> children
+    let sumCents = 0;
+    for (const item of Array.from(lineItemsEl.querySelectorAll('item'))) {
+      const val = item.getAttribute('total') ?? item.querySelector('total')?.textContent ?? '0';
+      const parsed = Number.parseFloat(val.trim());
+      if (!Number.isNaN(parsed)) {
+        sumCents += Math.round(parsed * 100);
+      }
+    }
+    return sumCents;
   }
 }
