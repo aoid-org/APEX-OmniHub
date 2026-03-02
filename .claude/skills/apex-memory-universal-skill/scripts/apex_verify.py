@@ -8,12 +8,12 @@ Audits a response for potential hallucinations by checking claims against contex
 Exit codes: 0=all clear, 1=hallucinations detected, 2=system error
 """
 
-import sys
-import re
-import json
 import argparse
-from pathlib import Path
+import json
+import re
+import sys
 from datetime import datetime
+from pathlib import Path
 
 APEX_HEADER = "APEX-Memory Verifier v2.0.0 | (C) 2025 APEX Business Systems Ltd."
 
@@ -331,7 +331,7 @@ def main():
         print(f"{'=' * 60}")
 
         if result["details"]:
-            print(f"\n  DETAILS:")
+            print("\n  DETAILS:")
             for i, detail in enumerate(result["details"][:10], 1):
                 status = detail.get("status", detail.get("type", "FLAG"))
                 claim = detail.get("claim", detail.get("match", "N/A"))

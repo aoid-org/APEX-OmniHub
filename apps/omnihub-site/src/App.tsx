@@ -3,7 +3,6 @@ import { HomePage } from "@/pages/Home";
 import { OnboardingWizard } from "@/pages/Launch/OnboardingWizard";
 import { OmniDashLayout } from "@/layouts/OmniDashLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { DashboardOverview } from "@/pages/DashboardOverview";
 import { ComingSoonPage } from "@/pages/ComingSoon";
 
 // Legacy/Existing Pages
@@ -39,7 +38,6 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<DashboardOverview />} />
         <Route path="omniport" element={<OmniPortPage />} />
         <Route path="maestro" element={<MaestroPage />} />
         <Route path="fortress" element={<FortressPage />} />

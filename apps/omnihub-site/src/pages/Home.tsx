@@ -3,7 +3,6 @@ import { Section } from '@/components/Section';
 import { CTAGroup } from '@/components/CTAGroup';
 import { HeroVisual } from '@/components/HeroVisual';
 import { FeatureHighlightGrid } from '@/components/FeatureHighlightGrid';
-import { DemoVideoPlayer } from '@/components/DemoVideoPlayer';
 import { siteConfig } from '@/content/site';
 import { useTranslation } from 'react-i18next';
 import {
@@ -31,25 +30,18 @@ function Hero() {
       </div>
       <div className="container hero__grid">
         <div className="hero__content">
-          <h1
-            className="heading-hero hero__title hero__title--grid"
-            style={{ gridTemplateColumns: '1fr' }}
-          >
-            <span>Connect anything.</span>
-            <span>Orchestrate everything.</span>
-            <span>Stay in control.</span>
+          <h1 className="heading-hero hero__title hero__title--grid">
+            <span>{t('hero.headline.line1', { defaultValue: 'Connect anything.' })}</span>
+            <span>{t('hero.headline.line2', { defaultValue: 'Orchestrate everything.' })}</span>
+            <span className="hero__title--span">{t('hero.headline.line3', { defaultValue: 'Stay in control.' })}</span>
           </h1>
           <p className="hero__tagline">{t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}</p>
           <p className="hero__subtagline">
             {t('hero.traits', { defaultValue: 'DIRECTABLE \u2022 AUDITABLE \u2022 REVERSIBLE' })}
           </p>
-          <p className="hero__subtitle">{t('hero.subtitle', { defaultValue: 'The Anti-OS: Universal Sync Orchestrator (USO). Designed to translate intent into governed execution across SaaS, legacy systems, blockchain infrastructure, and physical edge devices (PhysiOmni, Enterprise).' })}</p>
+          <p className="hero__subtitle">{t('hero.subtitle', { defaultValue: 'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.' })}</p>
           <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
-            OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. One-hand ready.
-            <br />
-            Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN).
-            <br />
-            OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.
+            {t('hero.description', { defaultValue: 'OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese. OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet. APEX Agent is the Voice. OmniLink is the AppShell.' })}
           </p>
           <div className="hero__actions">
             <CTAGroup
@@ -60,9 +52,6 @@ function Hero() {
               {t('hero.footnote', { defaultValue: '*Blockchain, wallet, and NFT integrations are optional and disabled by default.' })}
             </p>
           </div>
-          <small style={{ display: 'block', marginTop: 'var(--space-2)', fontSize: 'var(--font-size-xs)', color: 'rgba(255, 255, 255, 0.5)' }}>
-            *Blockchain, wallet, and NFT integrations are optional and disabled by default.
-          </small>
         </div>
 
         <div className="hero__visual" aria-hidden="true">
@@ -85,7 +74,21 @@ function DemoVideoSection() {
             through a single controlled port.
           </p>
         </div>
-        <DemoVideoPlayer id="apex-demo-video" />
+        <div className="demo-video__container">
+          <div className="demo-video__glow" aria-hidden="true" />
+          <video
+            id="apex-demo-video"
+            className="demo-video__player"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+          >
+            <source src="/apex-demo-video.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
       </div>
     </Section>
   );

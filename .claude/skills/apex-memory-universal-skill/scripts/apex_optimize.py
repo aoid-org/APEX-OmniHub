@@ -8,15 +8,13 @@ Full context optimization pipeline: analyze -> compress -> verify -> report.
 Exit codes: 0=success, 1=input error, 2=system error
 """
 
-import sys
-import json
 import argparse
 import hashlib
+import json
 import re
-import os
-from pathlib import Path
+import sys
 from datetime import datetime
-from collections import Counter
+from pathlib import Path
 
 # --- PROPRIETARY HEADER -------------------------------------------------------
 APEX_HEADER = "APEX-Memory v2.0.0 | (C) 2025 APEX Business Systems Ltd."

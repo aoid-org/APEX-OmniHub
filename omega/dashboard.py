@@ -8,6 +8,7 @@ Uses markupsafe.escape() for SonarQube-recognized sanitization
 
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
+
 try:
     from http.server import ThreadingHTTPServer
 except ImportError:
@@ -17,8 +18,7 @@ except ImportError:
     class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
         """Fallback ThreadingHTTPServer for older Python versions"""
         daemon_threads = True
-from typing import Any, Dict
-from pathlib import Path
+from typing import Any
 
 from markupsafe import escape
 
@@ -97,7 +97,7 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
                 self._handle_reject(data)
             else:
                 self._send_error(404, "Not Found")
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             self._send_error(400, "Invalid JSON")
         except ValueError as e:
             self._send_error(400, str(e))
@@ -181,7 +181,7 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
             raise ValueError("Username too long")
         return username
 
-    def _handle_approve(self, data: Dict[str, str]) -> None:
+    def _handle_approve(self, data: dict[str, str]) -> None:
         """Handle approval request"""
         # SECURITY FIX (S5131): Validate and escape all user-controlled data
         request_id = escape_html(self._sanitize_request_id(data.get('request_id', '')))
@@ -190,7 +190,7 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
         result = self.engine.approve_request(request_id, approved_by)
         self._send_json(result)
 
-    def _handle_reject(self, data: Dict[str, str]) -> None:
+    def _handle_reject(self, data: dict[str, str]) -> None:
         """Handle rejection request"""
         # SECURITY FIX (S5131): Validate and escape all user-controlled data
         request_id = escape_html(self._sanitize_request_id(data.get('request_id', '')))

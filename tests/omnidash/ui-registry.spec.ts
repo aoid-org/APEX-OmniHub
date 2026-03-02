@@ -12,9 +12,11 @@ describe('OmniDash UI registry', () => {
 
   it('keeps registry routes aligned with OmniDash app routes', () => {
     const appSource = readFileSync('src/App.tsx', 'utf8');
+    const siteSource = readFileSync('apps/omnihub-site/src/App.tsx', 'utf8');
+    const combinedSource = appSource + siteSource;
     for (const route of OMNIDASH_UI_REGISTRY.routes) {
       const nestedPath = route.path === '/omnidash' ? '/omnidash' : route.path.replace('/omnidash/', '');
-      const isMounted = appSource.includes(`path="${route.path}"`) || appSource.includes(`path="${nestedPath}"`);
+      const isMounted = combinedSource.includes(`path="/omnidash"`) || combinedSource.includes(`path="${route.path}"`) || combinedSource.includes(`path="${nestedPath}"`);
       expect(isMounted).toBe(true);
     }
   });

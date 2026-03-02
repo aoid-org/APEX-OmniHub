@@ -19,7 +19,7 @@ import shutil
 import subprocess
 import sys
 import textwrap
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -58,7 +58,7 @@ def ensure_omnihub_structure(omnihub_root: Path) -> dict[str, Path]:
     if not structure["catalog"].exists():
         catalog = {
             "version": "1.0.0",
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
             "skills": [],
         }
         structure["catalog"].write_text(json.dumps(catalog, indent=2) + "\n", encoding="utf-8")
@@ -215,7 +215,7 @@ def register_in_catalog(
     # Remove existing entry if present
     catalog["skills"] = [s for s in catalog.get("skills", []) if s.get("id") != skill_name]
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     entry = {
         "id": skill_name,
         "version": manifest.get("version", "1.0.0"),
@@ -342,7 +342,7 @@ def install_skill_to_omnihub(
     manifest_path = skill_path / "MANIFEST.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     skill_name = manifest.get("name", skill_path.name)
-    print(f"  ✓ MANIFEST.json valid")
+    print("  ✓ MANIFEST.json valid")
 
     # Handle force overwrite
     target_dir = structure["skills_dir"] / skill_name
@@ -366,7 +366,7 @@ def install_skill_to_omnihub(
             print(f"  ✗ {e}")
         return {"status": "error", "errors": errors}
 
-    print(f"  ✓ No naming conflicts")
+    print("  ✓ No naming conflicts")
     print(f"  ✓ Python {sys.version_info.major}.{sys.version_info.minor} detected")
 
     # Install
@@ -375,7 +375,7 @@ def install_skill_to_omnihub(
     print(f"  ✓ Copied to: {installed_path}")
 
     # Health check
-    print(f"\n[HEALTH] Running health check...")
+    print("\n[HEALTH] Running health check...")
     health_check_path = installed_path / "omnihub_integration" / "health_checks.py"
     health_status = "unknown"
 
@@ -403,14 +403,14 @@ def install_skill_to_omnihub(
 
     # Register in catalog
     if register_catalog:
-        print(f"\n[CATALOG] Registering in catalog...")
+        print("\n[CATALOG] Registering in catalog...")
         register_in_catalog(structure, skill_name, manifest, health_status)
         print(f"  ✓ Updated: {structure['catalog']}")
         print(f"  ✓ Skill ID: {skill_name}")
-        print(f"  ✓ Auto-load: ENABLED")
+        print("  ✓ Auto-load: ENABLED")
 
     # Generate example workflow
-    print(f"\n[DAG] Generating example workflow...")
+    print("\n[DAG] Generating example workflow...")
     workflow_path = generate_example_workflow(structure, skill_name, manifest)
     print(f"  ✓ Created: {workflow_path}")
 
@@ -423,14 +423,14 @@ def install_skill_to_omnihub(
         "health_check_result": {"status": health_status},
         "example_workflow": str(workflow_path),
         "next_steps": [
-            f"Review catalog: cat config/skill_catalog.json",
+            "Review catalog: cat config/skill_catalog.json",
             f"Test execution: python skills/{skill_name}/scripts/executor.py",
             f"Deploy workflow: Review dag/example-{skill_name}-workflow.yaml",
             f"Monitor logs: Check logs/skills/{skill_name}/",
         ],
     }
 
-    print(f"\n[OK] Installation complete!\n")
+    print("\n[OK] Installation complete!\n")
     print("Next steps:")
     for i, step in enumerate(report["next_steps"], 1):
         print(f"  {i}. {step}")

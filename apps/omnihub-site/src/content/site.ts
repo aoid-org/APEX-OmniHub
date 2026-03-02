@@ -53,7 +53,7 @@ export const siteConfig = {
     items: [
       buildItem('The OS governs your chips.', 'OmniHub governs everything that thinks.'),
       buildItem('You own the data.', 'You control the flow. Switch tools without rebuilding.'),
-      buildItem('It sees you.', 'Zero-trust means nothing is invisible. Directable. Accountable. Dependable.'),
+      buildItem('It sees you.', 'Zero-trust means nothing is invisible. Directable. Auditable. Reversible.'),
     ],
   },
   integrations: {
@@ -230,12 +230,12 @@ export const demoConfig = {
   cta: {
     title: 'Ready to get started?',
     description: 'Explore the only governed AI operating system.',
-    button: buildLink('Get Started', '/request-access'),
+    button: buildLink('Request Access', '/request-access'),
   },
 } as const;
 
 export const requestAccessConfig = {
-  title: 'Get Started',
+  title: 'Request Access',
   subtitle: 'Deploy Governed Intelligence',
   description: 'We\u2019re onboarding select partners and enterprises into the v1.2.0 ecosystem.',
   fields: {
@@ -244,7 +244,7 @@ export const requestAccessConfig = {
     company: buildField('Company', 'Company name', 100),
     useCase: buildField('Use Case', 'Briefly describe your use case...', 500),
   },
-  submitLabel: 'Get Started',
+  submitLabel: 'Request Access',
   fallbackMessage: 'Having trouble? Email us at',
   fallbackEmail: 'access@apexomnihub.icu',
   successMessage: 'Welcome to the Fortress. We\u2019ll be in touch soon.',
