@@ -5,6 +5,53 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.8] - 2026-03-02
+
+### Added — Agentic Intelligence Architecture (Phases 1–3A)
+
+#### OmniCognition Unit Tests (Phase 1)
+
+- **[NEW]** `tests/core/cognition/CognitionManager.spec.ts` — 31 tests: singleton lifecycle, state management, session recording, brain promotion, entity indexing, auto-compression, token estimation
+- **[NEW]** `tests/core/cognition/compressionEngine.spec.ts` — 27 tests: entity extraction (PascalCase, file paths, ALL_CAPS), Jaccard similarity, deduplication, primacy-recency compression, retention gate
+- **[NEW]** `tests/core/gateway/OmniRoute.spec.ts` — 35 tests: task scoring, domain classification, 100-run determinism gate, policy overrides, model validation, cost estimation, batch routing
+
+#### OmniMCP Framework (Phase 2) — 6 New Modules
+
+- **[NEW]** `src/core/mcp/mcp.config.ts` — Zod-validated MCP server configuration with environment-aware API key resolution (Firecrawl, Google Workspace, GitHub, Supabase)
+- **[NEW]** `src/core/mcp/MCPTransport.ts` — Transport abstraction: `StdioTransport` (browser proxy pattern) + `StreamableHTTPTransport` + JSON-RPC schemas + factory function
+- **[NEW]** `src/core/mcp/MCPServerRegistry.ts` — Config-driven registry with capability-based filtering, status tracking, server validation
+- **[NEW]** `src/core/mcp/MCPToolDiscovery.ts` — "Tool Search Tool" meta-tool: lazy schema caching, keyword search, risk-level filtering (`read`|`write`|`destructive`)
+- **[NEW]** `src/core/mcp/MCPHostManager.ts` — Singleton MCP host: connection lifecycle, capability negotiation, approval gating for write/destructive ops via `mcp_tool_approve` modal
+- **[NEW]** `src/core/mcp/index.ts` — Barrel export for all MCP modules
+- **[NEW]** `tests/core/mcp/MCPHostManager.spec.ts` — 52 tests: registry, discovery, transport, host lifecycle, approval flow, fail-closed semantics
+
+#### OmniVision Foundation (Phase 3A) — 3 New Modules
+
+- **[NEW]** `src/stores/omniVisionStore.ts` — Zustand store: frame submission with idempotency, PII redaction tracking (`none`|`standard`|`strict`), pipeline result recording, LRU history (50 frames)
+- **[NEW]** `src/lib/media/VisionCacheController.ts` — SHA-256 deterministic hashing (`visionContextId`), browser Cache API integration, LRU eviction (100 entries), privacy-first purge
+- **[MODIFY]** `src/omniconnect/types/ingress.ts` — Added `VisionSourceSchema` (`type: 'vision'`) to `RawInputSchema` discriminated union + `isVisionSource()` type guard
+
+#### Modal Type Extension
+
+- **[MODIFY]** `src/stores/omniModalStore.ts` — Extended `ModalType` union with 3 new variants: `vision_redact`, `vision_confirm`, `mcp_tool_approve` (both type alias and Zod enum)
+
+### Fixed — SonarQube A-Grade Compliance (9 Warnings)
+
+- **`CognitionManager.ts`** — Nullish coalescing assignment (`??=`) for singleton, eliminated nested template literal, split complex regex into 4 simpler patterns with `RegExp.exec()`
+- **`compressionEngine.ts`** — `RegExp.exec()` over `String.match()` for entity extraction, `String.localeCompare()` for sort (×2), removed unnecessary type assertion in `chunkArray`
+- **`mcp.config.ts`** — Direct `undefined` check instead of `typeof` operator
+- **`MCPHostManager.ts`** — Removed unused `JsonRpcResponse` import
+- **`OmniRoute.spec.ts`** — Optional chain expression
+
+### Quality Gates
+
+- TypeScript (`tsc --noEmit`): 0 errors
+- Core Tests: **203 passed** (10 test files)
+- Full Suite: **1101 passed**, 86 skipped, 0 new failures
+- SonarQube: A-grade maintained (9 code smells resolved)
+
+---
+
 ## [1.3.7] - 2026-03-01
 
 ### Fixed — i18n Locale Resolution & Test Hygiene (PR #660)
