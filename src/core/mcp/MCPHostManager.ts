@@ -313,15 +313,15 @@ export class MCPHostManager {
             typeof t === 'object' && t !== null,
         )
         .map((t) => ({
-          name: String(t['name'] ?? ''),
-          description: String(t['description'] ?? ''),
+          name: coerceUnknownToString(t['name']),
+          description: coerceUnknownToString(t['description']),
           serverId,
           parameters: Array.isArray(t['parameters'])
             ? (t['parameters'] as Array<Record<string, unknown>>).map(
                 (p) => ({
-                  name: String(p['name'] ?? ''),
-                  type: String(p['type'] ?? 'string'),
-                  description: String(p['description'] ?? ''),
+                  name: coerceUnknownToString(p['name']),
+                  type: coerceUnknownToString(p['type'], 'string'),
+                  description: coerceUnknownToString(p['description']),
                   required: Boolean(p['required']),
                 }),
               )
@@ -399,6 +399,13 @@ export class MCPHostManager {
 
     return buildPendingNetworkPayload(correlId);
   }
+}
+
+function coerceUnknownToString(value: unknown, fallback = ''): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (value === null || value === undefined) return fallback;
+  return fallback;
 }
 
 // ── Module-level helpers (not on class to keep cognitive complexity ≤ 15) ─────
