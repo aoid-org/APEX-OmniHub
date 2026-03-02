@@ -261,8 +261,8 @@ export class SemanticTranslator {
   ): BridgePayload {
     const id = correlId ?? crypto.randomUUID();
     const timestamp = new Date().toISOString();
-    const status = String(receipt['status'] ?? '0x0');
-    const rawValue = String(receipt['value'] ?? '0x0');
+    const status = typeof receipt['status'] === 'string' ? receipt['status'] : '0x0';
+    const rawValue = typeof receipt['value'] === 'string' ? receipt['value'] : '0x0';
     const txHash = typeof receipt['hash'] === 'string' ? receipt['hash'] : undefined;
 
     const isSuccess = status === '0x1' || status === '1' || status.toLowerCase() === 'true';
@@ -370,7 +370,7 @@ export class SemanticTranslator {
   private extractXmlDecimalCents(doc: Document, tagName: string): number {
     const el = doc.querySelector(tagName);
     if (!el?.textContent) return 0;
-    const parsed = parseFloat(el.textContent.trim());
+    const parsed = Number.parseFloat(el.textContent.trim());
     if (Number.isNaN(parsed)) return 0;
     return Math.round(parsed * 100);
   }
@@ -382,7 +382,7 @@ export class SemanticTranslator {
 
     const totalAttr = lineItemsEl.getAttribute('total');
     if (totalAttr) {
-      const parsed = parseFloat(totalAttr);
+      const parsed = Number.parseFloat(totalAttr);
       if (!Number.isNaN(parsed)) return Math.round(parsed * 100);
     }
 
@@ -390,7 +390,7 @@ export class SemanticTranslator {
     let sumCents = 0;
     for (const item of Array.from(lineItemsEl.querySelectorAll('item'))) {
       const val = item.getAttribute('total') ?? item.querySelector('total')?.textContent ?? '0';
-      const parsed = parseFloat(val.trim());
+      const parsed = Number.parseFloat(val.trim());
       if (!Number.isNaN(parsed)) {
         sumCents += Math.round(parsed * 100);
       }

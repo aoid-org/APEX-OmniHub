@@ -100,7 +100,7 @@ function resolveNpmRunner() {
 }
 
 function extractVersionsFromTree(treeOutput, packageName) {
-  const escaped = packageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escaped = packageName.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
   const pattern = new RegExp(
     String.raw`(?:^|\n)[|│\s]*(?:[├└]──|[+` + '`' + String.raw`]--)\s+${escaped}@([0-9]+\.[0-9]+\.[0-9]+(?:[-+][^\s]+)?)`,
     'g',

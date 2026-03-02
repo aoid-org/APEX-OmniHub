@@ -70,7 +70,7 @@ def _decode_jwt_payload(token: str) -> dict[str, Any]:
     try:
         decoded = base64.urlsafe_b64decode(payload_segment)
         return json.loads(decoded)
-    except (ValueError, json.JSONDecodeError) as exc:
+    except ValueError as exc:
         raise SagaAuthError(f"SAGA_JWT: payload decode failed — {exc}") from exc
 
 

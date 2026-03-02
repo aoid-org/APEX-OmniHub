@@ -28,7 +28,7 @@
  * @module tests/omnidash/bridge-fsm.chaos.spec
  */
 
-import { act, renderHook } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import {
   afterEach,
   beforeEach,
@@ -87,13 +87,6 @@ function createInMemoryBridgeHook() {
     isMANModeActive: false,
     manModeAnomaly: null,
   };
-  const listeners: Array<(s: InMemoryBridgeState) => void> = [];
-
-  function notify() {
-    const snapshot = { ...state };
-    listeners.forEach((l) => l(snapshot));
-  }
-
   function dispatch(incoming: unknown): void {
     if (!isBridgePayload(incoming)) return;
     state = { ...state, payload: incoming };
@@ -104,12 +97,10 @@ function createInMemoryBridgeHook() {
         manModeAnomaly: incoming.anomaly ?? 'Anomaly detected',
       };
     }
-    notify();
   }
 
   function reset(): void {
     state = { payload: null, isMANModeActive: false, manModeAnomaly: null };
-    notify();
   }
 
   function getState(): InMemoryBridgeState {
@@ -346,9 +337,6 @@ describe('CHAOS TEST 3 — Malicious Injection', () => {
   });
 });
 
-// ── Sanity: renderHook import used (prevents unused-import lint error) ─────────
-// renderHook is available for integration use in future test expansion.
-const _renderHookRef = renderHook;
-const _actRef = act;
-void _renderHookRef;
-void _actRef;
+// ── Sanity: renderHook available for future integration-test expansion ─────────
+const _renderHookRef: typeof renderHook = renderHook;
+export { _renderHookRef };

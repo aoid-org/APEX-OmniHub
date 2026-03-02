@@ -410,17 +410,7 @@ class AgentWorkflow:
         correlation_id = workflow.info().workflow_id
 
         # ── Zero-Trust JWT guard ─────────────────────────────────────────────
-        # Validate tenant JWT claims before any saga step is executed.
-        # Fail-closed: SagaAuthError → non-retryable ApplicationError.
-        jwt_token: str | None = (context or {}).get("jwt_token")
-        if jwt_token:
-            try:
-                validate_saga_jwt_claims(jwt_token)
-            except SagaAuthError as auth_err:
-                raise ApplicationError(
-                    str(auth_err),
-                    non_retryable=True,
-                ) from auth_err
+        self._validate_jwt_guard(context)
 
         # Record start time for continue-as-new threshold.
         # Uses workflow.now() — deterministic Temporal clock, safe for replay.
@@ -522,6 +512,22 @@ class AgentWorkflow:
                 non_retryable=True,
                 details=workflow_result,
             ) from e
+
+    # =========================================================================
+    # ZERO-TRUST HELPERS
+    # =========================================================================
+
+    def _validate_jwt_guard(self, context: dict[str, Any] | None) -> None:
+        """Validate tenant JWT claims fail-closed before any saga step executes."""
+        jwt_token: str | None = (context or {}).get("jwt_token")
+        if jwt_token:
+            try:
+                validate_saga_jwt_claims(jwt_token)
+            except SagaAuthError as auth_err:
+                raise ApplicationError(
+                    str(auth_err),
+                    non_retryable=True,
+                ) from auth_err
 
     # =========================================================================
     # OMNITRACE HELPERS (Best-effort telemetry - never breaks workflow)
