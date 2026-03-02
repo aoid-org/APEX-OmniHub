@@ -150,7 +150,7 @@ export class CognitionManager {
    */
   recordAction(action: string, result?: string): SessionEntry {
     const entry: SessionEntry = {
-      id: `se-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: `se-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
       action,
       result,
       timestamp: new Date().toISOString(),
@@ -201,7 +201,7 @@ export class CognitionManager {
     }
 
     const fact: CognitiveFact = {
-      id: `bf-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: `bf-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
       content,
       source,
       timestamp: new Date().toISOString(),
@@ -302,9 +302,9 @@ export class CognitionManager {
 
       // Extract entity-like tokens (capitalized words, file paths, etc.)
       const entityPatterns: RegExp[] = [
-        /[A-Z][a-z]+(?:[A-Z][a-z]+)+/g,
-        /[a-zA-Z]+\.[a-zA-Z]{2,4}/g,
-        /src\/[^\s]+/g,
+        /\b(?:[A-Z][a-z]+){2,}\b/g, // CamelCase entities (safe, bounded)
+        /\b[a-zA-Z0-9_-]+\.[a-zA-Z]{2,4}\b/g, // files or domains (bounded)
+        /\bsrc\/[^\s]+\b/g, // src paths (bounded)
       ];
       for (const pattern of entityPatterns) {
         let match: RegExpExecArray | null;

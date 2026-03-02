@@ -75,7 +75,7 @@ export type RouteDecision = z.infer<typeof RouteDecisionSchema>;
  * @returns RouteDecision with full audit trail
  */
 export function routeTask(taskDescription: string): RouteDecision {
-  const decisionId = `rd-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const decisionId = `rd-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
   const timestamp = new Date().toISOString();
 
   // Step 1: Score the task
