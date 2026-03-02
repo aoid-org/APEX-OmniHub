@@ -34,6 +34,9 @@ fastapi>=0.109.0
 uvicorn>=0.27.0
 slowapi>=0.1.9
 
+# Observability — Prometheus metrics (idempotency monitoring)
+prometheus_client>=0.20.0
+
 # Embeddings
 sentence-transformers>=2.3.0
 numpy>=1.26.0

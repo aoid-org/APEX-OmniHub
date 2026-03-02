@@ -5,6 +5,86 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-03-02
+
+### Added — Zero-Trust Financial Automation + Semantic Bridge (Phase 4)
+
+#### Phase 1 — Zero-Trust Vault (Planes 2 + 3 + 4)
+
+- **[NEW]** `supabase/migrations/20260302000000_financial_automation_core.sql` — Migration 52:
+  `invoices` + `compliance_records` tables with RLS tenant isolation.
+  `apex_jwt_tenant_id()` IMMUTABLE helper reads `auth.jwt() ->> 'tenant_id'`.
+  Full CRUD policies: SELECT/INSERT/UPDATE/DELETE guarded by exact JWT claim match.
+  Integer-cent `amount_cents` field — no floating-point finance.
+- **[NEW]** `orchestrator/activities/compensate_web3_tx.py` — Temporal compensation
+  activity: on ApplicationError, emits `PENDING_NETWORK` BridgePayload via event
+  contract; heartbeat-safe; anchored `_TX_HASH_RE` regex.
+- **[NEW]** `orchestrator/security/saga_jwt_validator.py` — Saga JWT claim validator:
+  decodes payload without signature re-verification, enforces `tenant_id` claim
+  presence, wallet address format, expiry; raises `SagaAuthError` (fail-closed).
+- **[MODIFY]** `orchestrator/workflows/agent_saga.py` — Imports `compensate_web3_tx`
+  activity and `validate_saga_jwt_claims` within `imports_passed_through` block.
+
+#### Phase 2 — Semantic Translation Bridge (Plane 1)
+
+- **[NEW]** `src/omniconnect/bridge/acl.ts` — BridgePayload ACL gateway:
+  `BridgePayloadSchema` (Zod), `BridgeParseError` typed error, `validateBridgePayload()`,
+  `tryParseBridgePayload()`, `isBridgePayload()` — all with anchored O(n) patterns.
+- **[MODIFY]** `src/omniconnect/translation/translator.ts` — Extended `SemanticTranslator`:
+  `translateWeb3Receipt()` (hex → BridgePayload via integer-arithmetic), `translateErpXml()`
+  (DOMParser + integer-cent comparison → BridgePayload), MAN_MODE_LOCKDOWN on mismatch.
+
+#### Phase 3 — OmniDash UI Rendering (Plane 1)
+
+- **[NEW]** `apps/omnihub-site/src/components/omnidash/bridge-types.ts` — Isolated
+  BridgePayload types + MANModeCredential (BiometricResult | MultiSigCode).
+- **[NEW]** `apps/omnihub-site/src/components/omnidash/BridgeFSM.tsx` — Exhaustive
+  FSM renderer: never assertion on unknown actions, MANModeModal (unclosable,
+  WebAuthn biometric + 6-digit multi-sig dismissal), anchored validation regex.
+- **[NEW]** `apps/omnihub-site/src/components/omnidash/useBridgeState.ts` — Supabase
+  realtime hook for bridge-payloads channel; fail-closed `dismissMANMode()`.
+- **[MODIFY]** `apps/omnihub-site/src/pages/DashboardOverview.tsx` — Integrated
+  `BridgeFSMPanel` between Hero Tri-Pane and Integrated Apps sections.
+- **[MODIFY]** `src/stores/omniModalStore.ts` v1.2.0 — Added `triggerMANMode()`,
+  `dismissMANMode()` (credential-validated, fail-closed), `isMANModeActive`,
+  `manModeAnomaly` state; `close()` + `abortModal()` blocked during MAN Mode.
+- **[MODIFY]** `src/core/mcp/MCPHostManager.ts` — Added `requireFinancialApproval()`
+  gate: dispatches `mcp_tool_approve` → approval callback; on rejection returns
+  `PENDING_NETWORK` BridgePayload (never auto-approves).
+
+#### Phase 4 — Armageddon Chaos Battery
+
+- **[NEW]** `tests/omnidash/bridge-fsm.chaos.spec.tsx` — 3-test chaos battery:
+  1. Mid-Saga Severance: PENDING_NETWORK transition + reconnect state restoration
+  2. State Regression: SETTLED→PROCESSING demotion (chain reorg / ERP rollback)
+  3. Malicious Injection: 10 MB JSON + 500-deep nested + unknown action guard;
+     IronLaw pattern: console.error suppressed for expected circuit-breaker output
+
+#### CI Infrastructure
+
+- **[FIX]** `scripts/check-react-singleton.mjs` — ELF binary detection: reads bun
+  magic bytes (0x7f454c46), falls back to `node_modules` JSON manifests when bun
+  is detected instead of spawning `node /bun-elf-binary`.
+- **[FIX]** `orchestrator/requirements.txt` — Added `prometheus_client>=0.20.0`
+  (was missing; caused 8 test failures in `test_idempotency_metrics.py`).
+
+#### Cleanup
+
+- **[REMOVE]** `APEX_RECON_ENGINE_V2.html` — Stale development prototype deleted.
+
+### Quality Gates
+
+- TypeScript (`tsc --noEmit`): 0 errors
+- ESLint: 0 warnings
+- Bun test: 1102+ passed, 0 failures
+- check:react: React 18.3.1 singleton confirmed
+- docs:check: no broken links/pointers
+- ruff format --check: 0 violations
+- pytest orchestrator: 240 passed, 0 failures
+- SonarQube: A-grade maintained
+
+---
+
 ## [1.3.8] - 2026-03-02
 
 ### Added — Agentic Intelligence Architecture (Phases 1–3A)

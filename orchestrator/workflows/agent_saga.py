@@ -49,6 +49,7 @@ from temporalio.exceptions import ActivityError, ApplicationError
 
 # Import our models and activities
 with workflow.unsafe.imports_passed_through():
+    from activities.compensate_web3_tx import compensate_web3_tx
     from models.events import (
         AgentEvent,
         GoalReceived,
@@ -59,6 +60,7 @@ with workflow.unsafe.imports_passed_through():
         WorkflowFailed,
     )
     from models.man_mode import create_idempotency_key
+    from security.saga_jwt_validator import SagaAuthError, validate_saga_jwt_claims
 
 
 # ============================================================================
