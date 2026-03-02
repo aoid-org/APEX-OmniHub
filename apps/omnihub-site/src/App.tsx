@@ -1,15 +1,13 @@
-import { Routes, Route } from "react-router-dom";
+import type { ReactElement } from "react";
+import { Route, Routes } from "react-router-dom";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ComingSoonPage } from "@/pages/ComingSoon";
 import { HomePage } from "@/pages/Home";
 import { OnboardingWizard } from "@/pages/Launch/OnboardingWizard";
 import { OmniDashLayout } from "@/layouts/OmniDashLayout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { ComingSoonPage } from "@/pages/ComingSoon";
-
-// Legacy/Existing Pages
 import { LoginPage } from "@/pages/Login";
 import { PrivacyPage } from "@/pages/Privacy";
 import { TermsPage } from "@/pages/Terms";
-
 import { TechSpecsPage } from "@/pages/TechSpecs";
 import { RequestAccessPage } from "@/pages/RequestAccess";
 import { AdvancedAnalyticsPage } from "@/pages/AdvancedAnalytics";
@@ -23,61 +21,72 @@ import { SmartIntegrationsPage } from "@/pages/SmartIntegrations";
 import { TriForcePage } from "@/pages/TriForce";
 import { DemoPage } from "@/pages/Demo";
 
+type AppRoute = {
+  readonly path: string;
+  readonly element: ReactElement;
+  readonly isPublic?: boolean;
+};
+
+const createProtectedElement = (element: ReactElement, isPublic = false): ReactElement => {
+  if (isPublic) {
+    return element;
+  }
+
+  return <ProtectedRoute>{element}</ProtectedRoute>;
+};
+
+const appRoutes: readonly AppRoute[] = [
+  { path: "/", element: <HomePage />, isPublic: true },
+  { path: "/launch", element: <OnboardingWizard />, isPublic: true },
+  { path: "/login", element: <LoginPage />, isPublic: true },
+  { path: "/privacy", element: <PrivacyPage />, isPublic: true },
+  { path: "/terms", element: <TermsPage />, isPublic: true },
+  { path: "/tech-specs", element: <TechSpecsPage />, isPublic: true },
+  { path: "/request-access", element: <RequestAccessPage />, isPublic: true },
+  { path: "/advanced-analytics", element: <AdvancedAnalyticsPage />, isPublic: true },
+  { path: "/ai-automation", element: <AiAutomationPage />, isPublic: true },
+  { path: "/fortress", element: <FortressPage />, isPublic: true },
+  { path: "/maestro", element: <MaestroPage />, isPublic: true },
+  { path: "/man-mode", element: <ManModePage />, isPublic: true },
+  { path: "/omniport", element: <OmniPortPage />, isPublic: true },
+  { path: "/orchestrator", element: <OrchestratorPage />, isPublic: true },
+  { path: "/smart-integrations", element: <SmartIntegrationsPage />, isPublic: true },
+  { path: "/tri-force", element: <TriForcePage />, isPublic: true },
+  { path: "/demo", element: <DemoPage />, isPublic: true },
+  { path: "/demo.html", element: <DemoPage />, isPublic: true },
+];
+
+const omniDashRoutes: readonly AppRoute[] = [
+  { path: "omniport", element: <OmniPortPage /> },
+  { path: "maestro", element: <MaestroPage /> },
+  { path: "fortress", element: <FortressPage /> },
+  { path: "orchestrator", element: <OrchestratorPage /> },
+  { path: "omniskills", element: <ComingSoonPage title="OmniSkills" desc="Skill management and task orchestration" /> },
+  { path: "physiomni", element: <ComingSoonPage title="PhysiOmni" desc="Physical operations and execution tracking" /> },
+  { path: "audits", element: <ComingSoonPage title="Audits" desc="Governance, compliance, and security gates" /> },
+  { path: "billing", element: <ComingSoonPage title="Billing" desc="Subscription management and usage analytics" /> },
+  { path: "links", element: <ComingSoonPage title="Links" desc="Connection management and integration endpoints" /> },
+  { path: "automations", element: <ComingSoonPage title="Automations" desc="Workflow automation and pipeline orchestration" /> },
+  { path: "workflows", element: <ComingSoonPage title="Workflows" desc="Visual workflow builder and process studio" /> },
+  { path: "files", element: <ComingSoonPage title="Files" desc="Document management and file operations" /> },
+  { path: "settings", element: <ComingSoonPage title="Settings" desc="Platform configuration and preferences" /> },
+];
+
 function App() {
   return (
     <Routes>
-      {/* Core Application Routes */}
-      <Route path="/" element={<HomePage />} />
-      <Route path="/launch" element={<OnboardingWizard />} />
-
-      {/* Graduated OmniDash Console — Nested Route Layout */}
-      <Route
-        path="/omnidash"
-        element={
-          <ProtectedRoute>
-            <OmniDashLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="omniport" element={<OmniPortPage />} />
-        <Route path="maestro" element={<MaestroPage />} />
-        <Route path="fortress" element={<FortressPage />} />
-        <Route path="orchestrator" element={<OrchestratorPage />} />
-        <Route path="omniskills" element={<ComingSoonPage title="OmniSkills" desc="Skill management and task orchestration" />} />
-        <Route path="physiomni" element={<ComingSoonPage title="PhysiOmni" desc="Physical operations and execution tracking" />} />
-        <Route path="audits" element={<ComingSoonPage title="Audits" desc="Governance, compliance, and security gates" />} />
-        <Route path="billing" element={<ComingSoonPage title="Billing" desc="Subscription management and usage analytics" />} />
-        <Route path="links" element={<ComingSoonPage title="Links" desc="Connection management and integration endpoints" />} />
-        <Route path="automations" element={<ComingSoonPage title="Automations" desc="Workflow automation and pipeline orchestration" />} />
-        <Route path="workflows" element={<ComingSoonPage title="Workflows" desc="Visual workflow builder and process studio" />} />
-        <Route path="files" element={<ComingSoonPage title="Files" desc="Document management and file operations" />} />
-        <Route path="settings" element={<ComingSoonPage title="Settings" desc="Platform configuration and preferences" />} />
+      {appRoutes.map((route) => (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={createProtectedElement(route.element, route.isPublic)}
+        />
+      ))}
+      <Route path="/omnidash" element={createProtectedElement(<OmniDashLayout />)}>
+        {omniDashRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={createProtectedElement(route.element, route.isPublic)} />
+        ))}
       </Route>
-
-      {/* Existing Content Pages - Mapping to clean URLs */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/privacy" element={<PrivacyPage />} />
-      <Route path="/terms" element={<TermsPage />} />
-
-      <Route path="/tech-specs" element={<TechSpecsPage />} />
-      <Route path="/request-access" element={<RequestAccessPage />} />
-      <Route path="/advanced-analytics" element={<AdvancedAnalyticsPage />} />
-      <Route path="/ai-automation" element={<AiAutomationPage />} />
-      <Route path="/fortress" element={<FortressPage />} />
-      <Route path="/maestro" element={<MaestroPage />} />
-      <Route path="/man-mode" element={<ManModePage />} />
-      <Route path="/omniport" element={<OmniPortPage />} />
-      <Route path="/orchestrator" element={<OrchestratorPage />} />
-      <Route path="/smart-integrations" element={<SmartIntegrationsPage />} />
-      <Route path="/tri-force" element={<TriForcePage />} />
-      <Route path="/demo" element={<DemoPage />} />
-      <Route path="/demo.html" element={<DemoPage />} />
-
-      {/* Fallback for .html URLs if any hardcoded links remain */}
-      {/* Note: This assumes links like /demo.html are requested. React Router handles path matching. */}
-      {/* However, if the server doesn't rewrite .html requests to index.html, this won't be hit. */}
-      {/* Vite development server handles this usually if configured, but production might not. */}
-      {/* For now, we assume clean URLs are used. */}
     </Routes>
   );
 }
