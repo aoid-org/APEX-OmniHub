@@ -231,7 +231,7 @@ export class MCPHostManager {
 
     // 3. Send JSON-RPC request
     const transport = this.transports.get(tool.serverId);
-    if (!transport || transport.status !== 'connected') {
+    if (transport?.status !== 'connected') {
       return {
         success: false,
         data: undefined,
@@ -291,7 +291,7 @@ export class MCPHostManager {
     serverId: string,
   ): Promise<MCPToolSchema[]> {
     const transport = this.transports.get(serverId);
-    if (!transport || transport.status !== 'connected') return [];
+    if (transport?.status !== 'connected') return [];
 
     try {
       const request: JsonRpcRequest = {
