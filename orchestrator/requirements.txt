@@ -41,7 +41,7 @@ prometheus_client>=0.20.0
 sentence-transformers>=2.3.0
 numpy>=1.26.0
 
-# Development dependencies
+# Development and coverage dependencies
 pytest>=7.4.0
 pytest-asyncio>=0.23.0
 pytest-cov>=4.1.0
