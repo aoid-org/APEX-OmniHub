@@ -49,7 +49,11 @@ from temporalio.exceptions import ActivityError, ApplicationError
 
 # Import our models and activities
 with workflow.unsafe.imports_passed_through():
-    from activities.compensate_web3_tx import compensate_web3_tx
+    # Re-exported via PEP-484 alias: Temporal worker registers this activity by name;
+    # plan steps reference it as "compensate_web3_tx" string in compensation_activity field.
+    from activities.compensate_web3_tx import (
+        compensate_web3_tx as compensate_web3_tx,
+    )
     from models.events import (
         AgentEvent,
         GoalReceived,
@@ -404,6 +408,19 @@ class AgentWorkflow:
             ApplicationError: If workflow fails after exhausting retries
         """
         correlation_id = workflow.info().workflow_id
+
+        # ── Zero-Trust JWT guard ─────────────────────────────────────────────
+        # Validate tenant JWT claims before any saga step is executed.
+        # Fail-closed: SagaAuthError → non-retryable ApplicationError.
+        jwt_token: str | None = (context or {}).get("jwt_token")
+        if jwt_token:
+            try:
+                validate_saga_jwt_claims(jwt_token)
+            except SagaAuthError as auth_err:
+                raise ApplicationError(
+                    str(auth_err),
+                    non_retryable=True,
+                ) from auth_err
 
         # Record start time for continue-as-new threshold.
         # Uses workflow.now() — deterministic Temporal clock, safe for replay.
