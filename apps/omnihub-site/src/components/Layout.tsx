@@ -3,6 +3,7 @@ import { siteConfig } from '@/content/site';
 import { ReferenceOverlay } from './ReferenceOverlay';
 import { useAuth } from '@/lib/useAuth';
 import { BrandAnthemPlayer } from './BrandAnthemPlayer';
+import { useLocation } from 'react-router-dom';
 
 type LayoutProps = Readonly<{
   children: ReactNode;
@@ -256,6 +257,9 @@ function Footer() {
 }
 
 export function Layout({ children, title }: LayoutProps) {
+  const { pathname } = useLocation();
+  const shouldRenderBrandAnthem = pathname === '/';
+
   useEffect(() => {
     if (title) {
       document.title = `${title} | ${siteConfig.name}`;
@@ -267,7 +271,7 @@ export function Layout({ children, title }: LayoutProps) {
   return (
     <>
       <ReferenceOverlay />
-      <BrandAnthemPlayer />
+      {shouldRenderBrandAnthem ? <BrandAnthemPlayer /> : null}
       <Nav />
       <main>{children}</main>
       <Footer />

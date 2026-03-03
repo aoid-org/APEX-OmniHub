@@ -42,7 +42,7 @@ export function CapabilityPageTemplate({ pageTitle, title, subtitle, introText, 
     <Layout title={pageTitle}>
       <Section>
         <SectionHeader title={title} subtitle={subtitle} />
-        <div className="page-content">
+        <div className="page-content feature-page-copy-font">
           <p className="text-lg mb-8" style={{ lineHeight: '1.75' }}>{introText}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)', marginTop: 'var(--space-12)' }}>
             {features.map((f) => <FeatureCard key={f.title} {...f} />)}
