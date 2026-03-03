@@ -20,4 +20,17 @@ ruff check orchestrator
 echo "  → ruff format --check orchestrator"
 ruff format --check orchestrator
 
+# Cross-domain boundary gate
+STAGED=$(git diff --cached --name-only)
+HAS_CORE=$(echo "$STAGED" | grep -q 'src/core/' && echo 1 || echo 0)
+HAS_UI=$(echo "$STAGED"   | grep -q 'apps/omnihub-site/src/pages/' && echo 1 || echo 0)
+if [ "$HAS_CORE" = "1" ] && [ "$HAS_UI" = "1" ]; then
+  echo "❌ CROSS-DOMAIN COMMIT REJECTED
+Reason: Commit modifies both src/core/ (Logic) and apps/omnihub-site/src/pages/ (UI).
+Fix: Split into two commits — (1) backend data change, (2) frontend render change.
+See ARCHITECTURE_CANONICAL_MAP.md for domain isolation rules."
+  exit 1
+fi
+
+
 echo "✅ Pre-commit checks passed."
