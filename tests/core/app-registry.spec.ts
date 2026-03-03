@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { APP_REGISTRY } from '../../packages/core/src/registry';
 import { CHAOS_TARGETS } from '../../packages/core/src/chaos-contract';
+import { parseAppRegistry } from '../../packages/core/src/registry.schema';
 
 describe('App registry contract', () => {
   it('enforces exactly 14 registry entries', () => {
     expect(APP_REGISTRY).toHaveLength(14);
+    expect(() => parseAppRegistry(APP_REGISTRY)).not.toThrow();
   });
 
   it('derives chaos targets from chaosTarget=true entries', () => {
