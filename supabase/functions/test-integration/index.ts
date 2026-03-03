@@ -1,7 +1,7 @@
 import { z } from 'https://esm.sh/zod@3.25.76';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-import { createSupabaseClient } from '../_shared/auth.ts';
+import { createSupabaseClient, authenticateUser } from '../_shared/auth.ts';
 import { buildCorsHeaders, handleCors } from '../_shared/cors.ts';
 import { assertUrlSafe } from '../_shared/ssrf-protection.ts';
 
@@ -43,6 +43,14 @@ serve(async (req) => {
 
   try {
     const supabase = createSupabaseClient();
+
+    // Work Package C: Auth Gate (SD-02)
+    const authHeader = req.headers.get('Authorization');
+    const authResult = await authenticateUser(authHeader, supabase);
+    if (!authResult.success) {
+      return jsonResponse({ error: 'Unauthorized', message: authResult.error }, 401, corsHeaders);
+    }
+
     const requestBody = REQUEST_SCHEMA.parse(await req.json());
 
     const { data: integration, error: fetchError } = await supabase
