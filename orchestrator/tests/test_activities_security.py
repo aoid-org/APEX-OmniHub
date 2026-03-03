@@ -91,3 +91,41 @@ async def test_call_webhook_valid_url():
 
             # Verify httpx WAS called
             mock_client.request.assert_called_once()
+            mock_client_cls.assert_called_once_with(follow_redirects=False)
+
+            request_kwargs = mock_client.request.call_args.kwargs
+            assert request_kwargs["url"] == "http://93.184.216.34/webhook"
+            assert request_kwargs["headers"] == {"Host": "example.com"}
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("mock_dependencies")
+async def test_call_webhook_redirects_not_followed():
+    """Test that call_webhook does not follow redirects."""
+
+    from activities.tools import call_webhook
+
+    with patch("httpx.AsyncClient") as mock_client_cls:
+        mock_client = mock_client_cls.return_value.__aenter__.return_value
+        mock_client.request.return_value = MagicMock(
+            status_code=302,
+            text="redirect",
+            headers={"Location": "http://127.0.0.1/internal"},  # NOSONAR
+        )
+
+        with patch("socket.getaddrinfo") as mock_getaddrinfo:
+            mock_getaddrinfo.return_value = [
+                (2, 1, 6, "", ("93.184.216.34", 80))  # NOSONAR
+            ]
+
+            result = await call_webhook(
+                {
+                    "url": "http://example.com/redirect",  # NOSONAR
+                    "method": "GET",
+                }
+            )
+
+            assert result["success"] is True
+            assert result["status_code"] == 302
+            mock_client_cls.assert_called_once_with(follow_redirects=False)
+            mock_client.request.assert_called_once()
