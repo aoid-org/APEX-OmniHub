@@ -15,19 +15,19 @@
   gap: 8px;
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(var(--color-background-rgb, 10, 10, 10), 0.6);
+  background: rgba(196, 87, 28, 0.85); /* Brand orange with glassmorphism transparency */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(var(--color-border-rgb, 255, 255, 255), 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(196, 87, 28, 0.3);
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .glassmorphism-panel {
-  /* Using fallback vars assuming an APEX UI root context */
-  background: var(--glass-bg, rgba(20, 20, 20, 0.7));
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.5);
+  /* APEX UI root context overrides for Anthem pill */
+  background: rgba(196, 87, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 24px -4px rgba(196, 87, 28, 0.4);
   backdrop-filter: blur(16px);
 }
 
@@ -38,7 +38,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  color: var(--color-text, #fff);
+  color: var(--color-navy, #0f1729); /* Brand Navy Blue for high contrast */
   background: transparent;
   border: none;
   cursor: pointer;
@@ -46,7 +46,7 @@
 }
 
 .anthem-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 41, 0.1); /* Subtle navy background on hover */
   transform: scale(1.05);
 }
 
