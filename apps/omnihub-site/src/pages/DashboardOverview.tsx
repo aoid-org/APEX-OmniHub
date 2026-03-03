@@ -12,7 +12,7 @@ import { memo, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Blocks } from 'lucide-react';
-import { useOmniModal } from '@/stores/omniModalStore';
+import { useOmniModal } from '../../../../src/stores/omniModalStore';
 import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
 import lightbulbIcon from '@/assets/lightbulb-icon.png';
 

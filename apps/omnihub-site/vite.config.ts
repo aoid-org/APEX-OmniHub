@@ -11,11 +11,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['icon.png'],
       manifest: {
-        name: 'APEX OmniHub',
-        short_name: 'OmniHub',
-        description: 'APEX OmniHub - Intelligence, Designed.',
+        name: 'APEX OmniLink',
+        short_name: 'OmniLink',
+        description: 'APEX OmniLink - Intelligence, Designed.',
         theme_color: '#0f1729',
         background_color: '#0f1729',
         display: 'standalone',
@@ -33,6 +34,9 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 3000000,
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
