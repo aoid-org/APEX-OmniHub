@@ -593,3 +593,9 @@ export function validateEvent(event: EventEnvelope): { valid: boolean; errors: s
 
   return { valid: errors.length === 0, errors };
 }
+
+// ============================================================================
+// CHAOS TARGET CONTRACTS (Derived from App Registry)
+// ============================================================================
+
+export { CHAOS_TARGETS, type ChaosTarget } from '../packages/core/src/chaos-contract';
