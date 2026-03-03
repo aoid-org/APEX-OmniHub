@@ -1,27 +1,27 @@
-import { z } from 'zod';
+export type AppRegistryCategory = 'control-plane' | 'security' | 'automation' | 'operations' | 'platform';
+export type AppHealthStatus = 'green' | 'yellow' | 'red';
+export type DashboardStatus = 'Live' | 'Partial';
 
-const appRegistryEntrySchema = z.object({
-  key: z.string().min(1),
-  label: z.string().min(1),
-  routePath: z.string().startsWith('/omnidash'),
-  category: z.enum(['control-plane', 'security', 'automation', 'operations', 'platform']),
-  iconAssetKey: z.string().min(1),
-  logoDomain: z.string().min(1),
-  chaosTarget: z.boolean(),
-  comingSoon: z.boolean(),
-  healthContext: z.object({
-    health: z.enum(['green', 'yellow', 'red']),
-    insight: z.string().min(1),
-  }),
-  dashboard: z.object({
-    syncedMinutesAgo: z.number().int().nonnegative(),
-    status: z.enum(['Live', 'Partial']),
-  }),
-});
+export interface AppRegistryEntry {
+  readonly key: string;
+  readonly label: string;
+  readonly routePath: `/omnidash${string}`;
+  readonly category: AppRegistryCategory;
+  readonly iconAssetKey: string;
+  readonly logoDomain: string;
+  readonly chaosTarget: boolean;
+  readonly comingSoon: boolean;
+  readonly healthContext: {
+    readonly health: AppHealthStatus;
+    readonly insight: string;
+  };
+  readonly dashboard: {
+    readonly syncedMinutesAgo: number;
+    readonly status: DashboardStatus;
+  };
+}
 
-export type AppRegistryEntry = z.infer<typeof appRegistryEntrySchema>;
-
-const appRegistrySource = [
+const APP_REGISTRY_SOURCE = [
   {
     key: 'omniboard',
     label: 'OmniBoard',
@@ -190,9 +190,9 @@ const appRegistrySource = [
     healthContext: { health: 'green', insight: 'Configuration revisions persisted and versioned safely.' },
     dashboard: { syncedMinutesAgo: 2, status: 'Live' },
   },
-] as const;
+] as const satisfies readonly AppRegistryEntry[];
 
-export const APP_REGISTRY: readonly AppRegistryEntry[] = appRegistryEntrySchema.array().parse(appRegistrySource);
+export const APP_REGISTRY: readonly AppRegistryEntry[] = APP_REGISTRY_SOURCE;
 
 if (APP_REGISTRY.length !== 14) {
   throw new Error(`APP_REGISTRY must contain exactly 14 entries. Found: ${APP_REGISTRY.length}`);
