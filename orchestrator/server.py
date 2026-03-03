@@ -99,9 +99,9 @@ async def create_goal(request: GoalRequest):
         logger.info("✓ Workflow started")
         return {"workflowId": handle.id, "status": "started"}
 
-    except Exception as e:
-        logger.error(f"Failed to create goal workflow: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    except Exception:
+        logger.error("Unhandled exception", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.get("/health")
