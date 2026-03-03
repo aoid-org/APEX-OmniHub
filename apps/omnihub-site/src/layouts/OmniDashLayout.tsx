@@ -12,6 +12,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Search, Bell, Shield, ChevronDown, Scan, Sun, Moon, X } from 'lucide-react';
 import { DashboardOverview } from '@/pages/DashboardOverview';
+import { UniversalModalEngine } from '../../../../src/components/omnidash/media/UniversalModalEngine';
 import '@/styles/omnidash-layout.css';
 
 // Custom nav icons
@@ -279,6 +280,9 @@ export function OmniDashLayout() {
           </button>
         </div>
       </aside>
+
+      {/* ────── GLOBAL MODAL ENGINE ────── */}
+      <UniversalModalEngine />
     </div>
   );
 }

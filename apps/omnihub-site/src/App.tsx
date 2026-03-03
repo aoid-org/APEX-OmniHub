@@ -57,6 +57,14 @@ const appRoutes: readonly AppRoute[] = [
 ];
 
 const omniDashRoutes: readonly AppRoute[] = [
+  { path: "pipeline", element: <ComingSoonPage title="Pipeline" desc="Sales pipeline and opportunity tracking" /> },
+  { path: "kpis", element: <ComingSoonPage title="KPIs" desc="Key performance indicators and daily metrics" /> },
+  { path: "ops", element: <ComingSoonPage title="Ops" desc="Operations, incidents, and system health" /> },
+  { path: "integrations", element: <ComingSoonPage title="Integrations" desc="Connected services and data sources" /> },
+  { path: "events", element: <ComingSoonPage title="Events" desc="OmniLink event feed and activity log" /> },
+  { path: "entities", element: <ComingSoonPage title="Entities" desc="Managed entities and data objects" /> },
+  { path: "runs", element: <ComingSoonPage title="Runs" desc="Workflow execution history and trace logs" /> },
+  { path: "approvals", element: <ComingSoonPage title="Approvals" desc="MAN Mode approval queue and governance" /> },
   { path: "omniport", element: <OmniPortPage /> },
   { path: "maestro", element: <MaestroPage /> },
   { path: "fortress", element: <FortressPage /> },

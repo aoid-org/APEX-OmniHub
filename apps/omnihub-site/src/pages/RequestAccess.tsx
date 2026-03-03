@@ -57,6 +57,7 @@ interface FormErrors {
   email?: string;
   company?: string;
   useCase?: string;
+  consent?: string;
   general?: string;
 }
 
@@ -83,12 +84,27 @@ function getLastSubmitTime(): number {
 /**
  * Records the current timestamp as the last submission time.
  * Silently fails if localStorage is unavailable.
+ * Only writes if consent has been explicitly granted by the user.
  */
-function setLastSubmitTime(): void {
+function setLastSubmitTime(hasConsent: boolean): void {
+  if (!hasConsent) return;
   try {
     localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
+    localStorage.setItem('apex_cooldown_consent', 'true');
   } catch {
     // Ignore storage errors - cooldown is a best-effort feature
+  }
+}
+
+/**
+ * Removes local storage tracking keys from the device to reset state.
+ */
+function clearLocalData(): void {
+  try {
+    localStorage.removeItem(COOLDOWN_KEY);
+    localStorage.removeItem('apex_cooldown_consent');
+  } catch {
+    // Ignore
   }
 }
 
@@ -97,8 +113,10 @@ function setLastSubmitTime(): void {
  *
  * @returns true if user must wait before submitting again
  */
-function isOnCooldown(): boolean {
+function isOnCooldown(hasConsent: boolean): boolean {
+  if (!hasConsent) return false;
   const lastSubmit = getLastSubmitTime();
+  if (lastSubmit === 0) return false;
   const cooldownMs = requestAccessConfig.antiAbuse.cooldownTime;
   return Date.now() - lastSubmit < cooldownMs;
 }
@@ -280,10 +298,22 @@ export function RequestAccessPage(): JSX.Element {
     useCase: '',
     website: '', // honeypot - must remain empty
   });
+  const [hasConsent, setHasConsent] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    // Hydrate consent from storage on original pageload if previously opted in
+    try {
+      if (localStorage.getItem('apex_cooldown_consent') === 'true') {
+        setHasConsent(true);
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
 
   // Track form load time for timing-based anti-abuse
   const formStartTime = useRef<number>(Date.now());
@@ -305,7 +335,7 @@ export function RequestAccessPage(): JSX.Element {
     // Name validation
     const trimmedName = formData.name.trim();
     if (!trimmedName) {
-      newErrors.name = 'Name is required';
+      newErrors.name = 'Name is required.';
     } else if (trimmedName.length > fields.name.maxLength) {
       newErrors.name = `Name must be ${fields.name.maxLength} characters or less`;
     }
@@ -313,20 +343,26 @@ export function RequestAccessPage(): JSX.Element {
     // Email validation
     const trimmedEmail = formData.email.trim();
     if (!trimmedEmail) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'Email is required.';
     } else if (!validateEmail(trimmedEmail)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = 'Enter a valid email.';
     } else if (trimmedEmail.length > fields.email.maxLength) {
       newErrors.email = `Email must be ${fields.email.maxLength} characters or less`;
     }
 
-    // Company validation (optional but length-limited)
-    if (formData.company.length > fields.company.maxLength) {
+    // Company validation (now required)
+    const trimmedCompany = formData.company.trim();
+    if (!trimmedCompany) {
+      newErrors.company = 'Company is required.';
+    } else if (trimmedCompany.length > fields.company.maxLength) {
       newErrors.company = `Company must be ${fields.company.maxLength} characters or less`;
     }
 
-    // Use case validation (optional but length-limited)
-    if (formData.useCase.length > fields.useCase.maxLength) {
+    // Use case validation (now required)
+    const trimmedUseCase = formData.useCase.trim();
+    if (!trimmedUseCase) {
+      newErrors.useCase = 'Use case is required.';
+    } else if (trimmedUseCase.length > fields.useCase.maxLength) {
       newErrors.useCase = `Use case must be ${fields.useCase.maxLength} characters or less`;
     }
 
@@ -372,8 +408,9 @@ export function RequestAccessPage(): JSX.Element {
         return;
       }
 
-      // Anti-abuse: Cooldown check (rate limiting)
-      if (isOnCooldown()) {
+      // Anti-abuse: Cooldown check (rate limiting) ONLY if they consented
+      // If no consent, bypass client-side block and rely on server.
+      if (hasConsent && isOnCooldown(hasConsent)) {
         setErrors({
           general: 'Please wait a few minutes before submitting again.',
         });
@@ -421,12 +458,12 @@ export function RequestAccessPage(): JSX.Element {
             throw new Error(error.message);
           }
 
-          setLastSubmitTime();
+          setLastSubmitTime(hasConsent);
           setIsSuccess(true);
         } else {
           // Fallback: Open mailto link with safe redirect
           safeMailtoRedirect(generateMailtoPayload(sanitizedData));
-          setLastSubmitTime();
+          setLastSubmitTime(hasConsent);
           setIsSuccess(true);
         }
       } catch {
@@ -438,7 +475,7 @@ export function RequestAccessPage(): JSX.Element {
         setIsSubmitting(false);
       }
     },
-    [formData, validateForm]
+    [formData, hasConsent, validateForm]
   );
 
   /**
@@ -605,10 +642,11 @@ export function RequestAccessPage(): JSX.Element {
               )}
             </div>
 
-            {/* Company field (optional) */}
+            {/* Company field (required) */}
             <div className="form-group">
               <label htmlFor="company" className="form-label">
-                {requestAccessConfig.fields.company.label}
+                {requestAccessConfig.fields.company.label}{' '}
+                <span aria-label="required">*</span>
               </label>
               <input
                 type="text"
@@ -619,6 +657,8 @@ export function RequestAccessPage(): JSX.Element {
                 value={formData.company}
                 onChange={handleChange}
                 maxLength={requestAccessConfig.fields.company.maxLength}
+                required
+                aria-required="true"
                 aria-invalid={errors.company ? 'true' : undefined}
                 aria-describedby={errors.company ? 'company-error' : undefined}
               />
@@ -629,10 +669,11 @@ export function RequestAccessPage(): JSX.Element {
               )}
             </div>
 
-            {/* Use case field (optional) */}
+            {/* Use case field (required) */}
             <div className="form-group">
               <label htmlFor="useCase" className="form-label">
-                {requestAccessConfig.fields.useCase.label}
+                {requestAccessConfig.fields.useCase.label}{' '}
+                <span aria-label="required">*</span>
               </label>
               <textarea
                 id="useCase"
@@ -642,6 +683,8 @@ export function RequestAccessPage(): JSX.Element {
                 value={formData.useCase}
                 onChange={handleChange}
                 maxLength={requestAccessConfig.fields.useCase.maxLength}
+                required
+                aria-required="true"
                 aria-invalid={errors.useCase ? 'true' : undefined}
                 aria-describedby={errors.useCase ? 'useCase-error' : undefined}
               />
@@ -650,6 +693,54 @@ export function RequestAccessPage(): JSX.Element {
                   {errors.useCase}
                 </p>
               )}
+            </div>
+
+            {/* Local Storage Consent Checkbox */}
+            <div className="form-group" style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '4px', 
+              marginTop: 'var(--space-2)',
+              marginBottom: 'var(--space-6)',
+              padding: 'var(--space-4)',
+              backgroundColor: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 255, 255, 0.05)'
+            }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  id="consent"
+                  name="consent"
+                  checked={hasConsent}
+                  onChange={(e) => setHasConsent(e.target.checked)}
+                  style={{ marginTop: '4px' }}
+                />
+                <span className="text-sm font-medium">
+                  Allow this device to store a small timestamp locally to prevent spam submissions.
+                </span>
+              </label>
+              <div style={{ paddingLeft: '22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="text-xs text-muted" style={{ lineHeight: 1.4, opacity: 0.8 }}>
+                  No files are uploaded. No personal data is stored—only a numeric cooldown timestamp.
+                </span>
+                {hasConsent && (
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      clearLocalData();
+                      setHasConsent(false);
+                    }}
+                    style={{ 
+                      background: 'none', border: 'none', color: 'var(--color-error)', 
+                      fontSize: '11px', textDecoration: 'underline', cursor: 'pointer',
+                      padding: 0, opacity: 0.8, whiteSpace: 'nowrap', marginLeft: '8px'
+                    }}
+                  >
+                    Clear local data
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Submit button */}
@@ -662,6 +753,9 @@ export function RequestAccessPage(): JSX.Element {
             >
               {isSubmitting ? 'Submitting...' : requestAccessConfig.submitLabel}
             </button>
+            <div className="mt-4 text-center">
+              {/* // TODO[DEFERRED]: Request Access via Voice - integration point: VoiceInterface onOpen missing */}
+            </div>
           </form>
 
           {/* Fallback options */}

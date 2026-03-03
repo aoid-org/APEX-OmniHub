@@ -18,6 +18,9 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
+      "@/components/ui/*": ["./src/components/ui/*", "../../src/components/ui/*"],
+      "@/stores/*": ["./src/stores/*", "../../src/stores/*"],
+      "@/lib/*": ["./src/lib/*", "../../src/lib/*"],
       "@/*": ["./src/*"]
     }
   },

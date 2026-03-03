@@ -11,6 +11,8 @@
 import { memo, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Blocks } from 'lucide-react';
+import { useOmniModal } from '../../../../src/stores/omniModalStore';
 import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
 import lightbulbIcon from '@/assets/lightbulb-icon.png';
 
@@ -72,6 +74,7 @@ const O = '#c2501f'; // burnt orange
 
 export const DashboardOverview = memo(function DashboardOverview() {
   const navigate = useNavigate();
+  const omniModal = useOmniModal();
   const [context, setContext] = useState<readonly ContextItem[]>(INITIAL_CONTEXT);
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -493,7 +496,26 @@ export const DashboardOverview = memo(function DashboardOverview() {
               dragElastic={0.1}
               whileHover={{ scale: 1.03, borderColor: 'rgba(255,255,255,0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 8px 25px rgba(0,0,0,0.6)', translateY: -2 }}
               whileTap={{ scale: 0.98, cursor: 'grabbing' }}
-              onClick={() => navigate('/omnidash/omniport')}
+              onClick={(e) => {
+                if (app.status === 'Partial') {
+                  e.stopPropagation();
+                  omniModal.invoke({
+                    id: `auth-${app.name.toLowerCase()}`,
+                    provider: app.name,
+                    type: 'oauth',
+                    title: `${app.name} Authentication`,
+                    description: `Connect APEX OmniHub to ${app.name} to sync ${app.cat} data seamlessly.`,
+                    onComplete: async (payload) => {
+                      console.warn(`${app.name} integration complete:`, payload);
+                    },
+                    onCancel: () => {
+                      console.warn(`User dismissed the ${app.name} flow.`);
+                    },
+                  });
+                } else {
+                  navigate('/omnidash/omniport');
+                }
+              }}
             >
               {app.logo ? (
                 <img src={app.logo} alt={app.name} style={{
@@ -506,8 +528,10 @@ export const DashboardOverview = memo(function DashboardOverview() {
                   width: 44, height: 44, borderRadius: 12, flexShrink: 0,
                   background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.1)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 19.26, fontWeight: 800, color: '#f97316',
-                }}>{app.name[0]}</div>
+                  color: '#f97316',
+                }}>
+                  <Blocks size={20} strokeWidth={2.5} />
+                </div>
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
