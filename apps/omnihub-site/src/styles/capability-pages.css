@@ -135,3 +135,13 @@
 .section-spacing--lg {
   margin-top: var(--space-12);
 }
+
+.feature-page-copy-font,
+.feature-page-copy-font * {
+  font-family: 'Space Grotesk', var(--font-family-sans);
+}
+
+.demo-copy-font,
+.demo-copy-font * {
+  font-family: 'Space Grotesk', var(--font-family-sans);
+}
