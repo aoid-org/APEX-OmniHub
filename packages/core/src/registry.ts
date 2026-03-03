@@ -21,7 +21,41 @@ export interface AppRegistryEntry {
   };
 }
 
-const APP_REGISTRY_SOURCE = [
+type AppRegistrySeed = {
+  readonly key: AppRegistryEntry['key'];
+  readonly label: AppRegistryEntry['label'];
+  readonly routePath: AppRegistryEntry['routePath'];
+  readonly category: AppRegistryCategory;
+  readonly iconAssetKey: AppRegistryEntry['iconAssetKey'];
+  readonly logoDomain: AppRegistryEntry['logoDomain'];
+  readonly chaosTarget: AppRegistryEntry['chaosTarget'];
+  readonly comingSoon: AppRegistryEntry['comingSoon'];
+  readonly health: AppHealthStatus;
+  readonly insight: string;
+  readonly syncedMinutesAgo: number;
+  readonly status: DashboardStatus;
+};
+
+const createAppRegistryEntry = (seed: AppRegistrySeed): AppRegistryEntry => ({
+  key: seed.key,
+  label: seed.label,
+  routePath: seed.routePath,
+  category: seed.category,
+  iconAssetKey: seed.iconAssetKey,
+  logoDomain: seed.logoDomain,
+  chaosTarget: seed.chaosTarget,
+  comingSoon: seed.comingSoon,
+  healthContext: {
+    health: seed.health,
+    insight: seed.insight,
+  },
+  dashboard: {
+    syncedMinutesAgo: seed.syncedMinutesAgo,
+    status: seed.status,
+  },
+});
+
+const APP_REGISTRY_SOURCE: readonly AppRegistrySeed[] = [
   {
     key: 'omniboard',
     label: 'OmniBoard',
@@ -31,8 +65,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'apexomnihub.icu',
     chaosTarget: false,
     comingSoon: false,
-    healthContext: { health: 'green', insight: 'Control plane telemetry healthy and within SLO.' },
-    dashboard: { syncedMinutesAgo: 1, status: 'Live' },
+    health: 'green',
+    insight: 'Control plane telemetry healthy and within SLO.',
+    syncedMinutesAgo: 1,
+    status: 'Live',
   },
   {
     key: 'omniport',
@@ -43,8 +79,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'cloudflare.com',
     chaosTarget: true,
     comingSoon: false,
-    healthContext: { health: 'yellow', insight: 'Throughput elevated; queue depth remains controlled.' },
-    dashboard: { syncedMinutesAgo: 2, status: 'Live' },
+    health: 'yellow',
+    insight: 'Throughput elevated; queue depth remains controlled.',
+    syncedMinutesAgo: 2,
+    status: 'Live',
   },
   {
     key: 'maestro',
@@ -55,8 +93,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'temporal.io',
     chaosTarget: true,
     comingSoon: false,
-    healthContext: { health: 'green', insight: 'Workflow orchestration heartbeat stable across shards.' },
-    dashboard: { syncedMinutesAgo: 1, status: 'Live' },
+    health: 'green',
+    insight: 'Workflow orchestration heartbeat stable across shards.',
+    syncedMinutesAgo: 1,
+    status: 'Live',
   },
   {
     key: 'fortress',
@@ -67,8 +107,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'supabase.com',
     chaosTarget: true,
     comingSoon: false,
-    healthContext: { health: 'green', insight: 'Zero-trust controls passing policy and audit checks.' },
-    dashboard: { syncedMinutesAgo: 1, status: 'Live' },
+    health: 'green',
+    insight: 'Zero-trust controls passing policy and audit checks.',
+    syncedMinutesAgo: 1,
+    status: 'Live',
   },
   {
     key: 'orchestrator',
@@ -79,8 +121,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'python.org',
     chaosTarget: true,
     comingSoon: false,
-    healthContext: { health: 'yellow', insight: 'Planner latency elevated during simulation windows.' },
-    dashboard: { syncedMinutesAgo: 3, status: 'Partial' },
+    health: 'yellow',
+    insight: 'Planner latency elevated during simulation windows.',
+    syncedMinutesAgo: 3,
+    status: 'Partial',
   },
   {
     key: 'omniskills',
@@ -91,8 +135,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'openai.com',
     chaosTarget: false,
     comingSoon: true,
-    healthContext: { health: 'green', insight: 'Skill bundle indexing remains up-to-date.' },
-    dashboard: { syncedMinutesAgo: 4, status: 'Live' },
+    health: 'green',
+    insight: 'Skill bundle indexing remains up-to-date.',
+    syncedMinutesAgo: 4,
+    status: 'Live',
   },
   {
     key: 'physiomni',
@@ -103,8 +149,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'whoop.com',
     chaosTarget: false,
     comingSoon: true,
-    healthContext: { health: 'green', insight: 'Device ingest channels reporting nominal cadence.' },
-    dashboard: { syncedMinutesAgo: 5, status: 'Live' },
+    health: 'green',
+    insight: 'Device ingest channels reporting nominal cadence.',
+    syncedMinutesAgo: 5,
+    status: 'Live',
   },
   {
     key: 'audits',
@@ -115,8 +163,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'vercel.com',
     chaosTarget: true,
     comingSoon: true,
-    healthContext: { health: 'green', insight: 'Audit event writes are durable and replayable.' },
-    dashboard: { syncedMinutesAgo: 2, status: 'Live' },
+    health: 'green',
+    insight: 'Audit event writes are durable and replayable.',
+    syncedMinutesAgo: 2,
+    status: 'Live',
   },
   {
     key: 'links',
@@ -127,8 +177,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'zapier.com',
     chaosTarget: true,
     comingSoon: true,
-    healthContext: { health: 'yellow', insight: 'Connector retries active for one downstream endpoint.' },
-    dashboard: { syncedMinutesAgo: 6, status: 'Partial' },
+    health: 'yellow',
+    insight: 'Connector retries active for one downstream endpoint.',
+    syncedMinutesAgo: 6,
+    status: 'Partial',
   },
   {
     key: 'automations',
@@ -139,8 +191,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'n8n.io',
     chaosTarget: true,
     comingSoon: true,
-    healthContext: { health: 'green', insight: 'Automation schedules executing on configured cadence.' },
-    dashboard: { syncedMinutesAgo: 3, status: 'Live' },
+    health: 'green',
+    insight: 'Automation schedules executing on configured cadence.',
+    syncedMinutesAgo: 3,
+    status: 'Live',
   },
   {
     key: 'workflows',
@@ -151,8 +205,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'airflow.apache.org',
     chaosTarget: true,
     comingSoon: true,
-    healthContext: { health: 'green', insight: 'Workflow graph validation passes pre-execution gates.' },
-    dashboard: { syncedMinutesAgo: 3, status: 'Live' },
+    health: 'green',
+    insight: 'Workflow graph validation passes pre-execution gates.',
+    syncedMinutesAgo: 3,
+    status: 'Live',
   },
   {
     key: 'files',
@@ -163,8 +219,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'dropbox.com',
     chaosTarget: false,
     comingSoon: true,
-    healthContext: { health: 'green', insight: 'Document sync jobs are processing without drift.' },
-    dashboard: { syncedMinutesAgo: 7, status: 'Live' },
+    health: 'green',
+    insight: 'Document sync jobs are processing without drift.',
+    syncedMinutesAgo: 7,
+    status: 'Live',
   },
   {
     key: 'billing',
@@ -175,8 +233,10 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'stripe.com',
     chaosTarget: false,
     comingSoon: true,
-    healthContext: { health: 'yellow', insight: 'Billing export task retried and recovered automatically.' },
-    dashboard: { syncedMinutesAgo: 8, status: 'Partial' },
+    health: 'yellow',
+    insight: 'Billing export task retried and recovered automatically.',
+    syncedMinutesAgo: 8,
+    status: 'Partial',
   },
   {
     key: 'settings',
@@ -187,12 +247,14 @@ const APP_REGISTRY_SOURCE = [
     logoDomain: 'okta.com',
     chaosTarget: false,
     comingSoon: true,
-    healthContext: { health: 'green', insight: 'Configuration revisions persisted and versioned safely.' },
-    dashboard: { syncedMinutesAgo: 2, status: 'Live' },
+    health: 'green',
+    insight: 'Configuration revisions persisted and versioned safely.',
+    syncedMinutesAgo: 2,
+    status: 'Live',
   },
-] as const satisfies readonly AppRegistryEntry[];
+] as const;
 
-export const APP_REGISTRY: readonly AppRegistryEntry[] = APP_REGISTRY_SOURCE;
+export const APP_REGISTRY: readonly AppRegistryEntry[] = APP_REGISTRY_SOURCE.map(createAppRegistryEntry);
 
 if (APP_REGISTRY.length !== 14) {
   throw new Error(`APP_REGISTRY must contain exactly 14 entries. Found: ${APP_REGISTRY.length}`);
