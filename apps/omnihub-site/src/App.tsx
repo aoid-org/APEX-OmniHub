@@ -90,7 +90,7 @@ function App() {
           element={createProtectedElement(route.element, route.isPublic)}
         />
       ))}
-      <Route path='/omnidash' element={createProtectedElement(<OmniDashLayout />)}>
+      <Route path="/omnidash" element={createProtectedElement(<OmniDashLayout />)}>
         {omniDashRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={createProtectedElement(route.element, route.isPublic)} />
         ))}
