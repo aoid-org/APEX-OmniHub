@@ -1,25 +1,12 @@
 #!/usr/bin/env bash
 # .githooks/pre-commit
-# Runs ruff linting and format checks on the orchestrator Python code.
-# Exit on first failure to block the commit.
+# Runs all pre-commit checks in .githooks/pre-commit.d/ in lexical order.
 
 set -euo pipefail
 
-echo "🔍 Pre-commit: running ruff checks..."
-
-# Check if ruff is available
-if ! command -v ruff &> /dev/null; then
-  echo "WARNING: ruff not found in PATH. Skipping pre-commit lint."
-  echo "Install with: pip install ruff"
-  exit 0
-fi
-
-echo "  → ruff check orchestrator"
-ruff check orchestrator
-
-echo "  → ruff format --check orchestrator"
-ruff format --check orchestrator
-
-bash .githooks/pre-commit.d/cross-domain-boundary.sh
+for hook in .githooks/pre-commit.d/*.sh; do
+  [ -e "$hook" ] || continue
+  bash "$hook"
+done
 
 echo "✅ Pre-commit checks passed."
