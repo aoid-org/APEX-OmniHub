@@ -9,7 +9,7 @@ import { registerSW } from 'virtual:pwa-register';
 const UPDATE_INTERVAL_MS = 60 * 60 * 1000;
 
 export function initPWA() {
-  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+  if (globalThis.window === undefined || !('serviceWorker' in navigator)) {
     return; // Bail out in SSR or unsupported browsers
   }
 
@@ -29,13 +29,9 @@ export function initPWA() {
       setInterval(() => {
         // Only attempt to check for updates if the device has a network connection
         if (navigator.onLine) {
-          try {
-            r.update().catch((e) => {
-              console.error('[APEX PWA] Auto-update ping failed:', e);
-            });
-          } catch (e) {
-            console.error('[APEX PWA] Sync error during update ping:', e);
-          }
+          r.update().catch((e) => {
+            console.error('[APEX PWA] Auto-update ping failed:', e);
+          });
         }
       }, UPDATE_INTERVAL_MS);
     },
