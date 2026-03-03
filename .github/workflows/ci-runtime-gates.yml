@@ -196,6 +196,9 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       # PHASE 3: Build
       # ─────────────────────────────────────────────────────────────
+      - name: Vercel Production Sync Shield
+        run: cd apps/omnihub-site && npm ci --omit=dev && npm run build
+
       - name: Build production bundle
         run: npm run build
 
