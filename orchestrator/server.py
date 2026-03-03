@@ -101,7 +101,7 @@ async def create_goal(request: GoalRequest):
 
     except Exception:
         logger.error("Unhandled exception", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
 @app.get("/health")
