@@ -15,6 +15,7 @@ import { Blocks } from 'lucide-react';
 import { useOmniModal } from '../../../../src/stores/omniModalStore';
 import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
 import lightbulbIcon from '@/assets/lightbulb-icon.png';
+import { APP_REGISTRY } from '../../../../packages/core/src/registry';
 
 /* ── Real app logos via Clearbit ── */
 const LOGO = (domain: string) => `https://logo.clearbit.com/${domain}`;
@@ -33,11 +34,11 @@ interface ContextItem {
   readonly insight: string;
 }
 
-const INITIAL_CONTEXT: readonly ContextItem[] = [
-  { name: 'QuickBooks',  health: 'green',  insight: 'All syncs healthy. Last refresh 2m ago.' },
-  { name: 'Salesforce',  health: 'yellow', insight: 'API rate limit at 78%. Consider batching calls.' },
-  { name: 'SAP ERP',     health: 'red',    insight: 'Auth token expired. Re-authenticate to restore sync.' },
-] as const;
+const INITIAL_CONTEXT: readonly ContextItem[] = APP_REGISTRY.slice(0, 3).map((entry) => ({
+  name: entry.label,
+  health: entry.healthContext.health,
+  insight: entry.healthContext.insight,
+}));
 
 const HC = {
   green:  { border: 'rgba(52,211,153,0.5)',  bg: 'rgba(52,211,153,0.06)',  text: '#34d399', shadow: '0 0 12px rgba(52,211,153,0.25)' },
@@ -46,20 +47,13 @@ const HC = {
 } as const;
 
 
-const APPS = [
-  { name: 'Salesforce',  cat: 'Sales',      logo: LOGO('salesforce.com'),  synced: '1m',  status: 'Live' as const },
-  { name: 'HubSpot',     cat: 'Marketing',  logo: LOGO('hubspot.com'),     synced: '3m',  status: 'Live' as const },
-  { name: 'QuickBooks',  cat: 'Finance',    logo: LOGO('quickbooks.com'),  synced: '2m',  status: 'Live' as const },
-  { name: 'NetSuite',    cat: 'ERP',        logo: LOGO('netsuite.com'),    synced: '1m',  status: 'Partial' as const },
-  { name: 'SAP',         cat: 'ERP',        logo: LOGO('sap.com'),         synced: '1m',  status: 'Live' as const },
-  { name: 'Gmail',       cat: 'Comms',      logo: LOGO('gmail.com'),       synced: '9m',  status: 'Live' as const },
-  { name: 'Slack',       cat: 'Comms',      logo: LOGO('slack.com'),       synced: '1m',  status: 'Live' as const },
-  { name: 'Shopify',     cat: 'Commerce',   logo: LOGO('shopify.com'),     synced: '10m', status: 'Partial' as const },
-  { name: 'Stripe',      cat: 'Payments',   logo: LOGO('stripe.com'),      synced: '2m',  status: 'Live' as const },
-  { name: 'Zapier',      cat: 'Automation', logo: LOGO('zapier.com'),      synced: '3m',  status: 'Live' as const },
-  { name: 'Intercom',    cat: 'Support',    logo: LOGO('intercom.com'),    synced: '3m',  status: 'Partial' as const },
-  { name: 'Custom API',  cat: 'HTTP',       logo: '',                      synced: '',    status: 'Live' as const },
-] as const;
+const APPS = APP_REGISTRY.map((entry) => ({
+  name: entry.label,
+  cat: entry.category,
+  logo: LOGO(entry.logoDomain),
+  synced: `${entry.dashboard.syncedMinutesAgo}m`,
+  status: entry.dashboard.status,
+}));
 
 
 function deriveHealth(items: readonly ContextItem[]): 'green' | 'yellow' | 'red' {

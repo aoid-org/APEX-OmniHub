@@ -26,22 +26,34 @@ import navFiles from '@/assets/nav/files_icon.png';
 import navBilling from '@/assets/nav/billing_icon.png';
 import navSettings from '@/assets/nav/settings_icon.png';
 import apexWordmark from '@/assets/apex_omnihub_wordmark.png';
+import { APP_REGISTRY } from '../../../../packages/core/src/registry';
 
 // ────────────────────────────────────────────────
 // Sidebar Navigation Map - custom icon images
 // ────────────────────────────────────────────────
-const SIDEBAR_NAV = [
-  { key: 'omniboard',    label: 'OmniBoard',    icon: navOmniboard,    to: '/omnidash' },
-  { key: 'omniskills',   label: 'OmniSkills',   icon: navOmniskills,   to: '/omnidash/omniskills' },
-  { key: 'physiomni',    label: 'PhysiOmni',    icon: navPhysiomni,    to: '/omnidash/physiomni' },
-  { key: 'audits',       label: 'Audits',       icon: navAudits,       to: '/omnidash/audits' },
-  { key: 'links',        label: 'Links',        icon: navLinks,        to: '/omnidash/links' },
-  { key: 'automations',  label: 'Automations',  icon: navAutomations,  to: '/omnidash/automations' },
-  { key: 'workflows',    label: 'Workflows',    icon: navWorkflows,    to: '/omnidash/workflows' },
-  { key: 'files',        label: 'Files',        icon: navFiles,        to: '/omnidash/files' },
-  { key: 'billing',      label: 'Billing',      icon: navBilling,      to: '/omnidash/billing' },
-  { key: 'settings',     label: 'Settings',     icon: navSettings,     to: '/omnidash/settings' },
-] as const;
+const NAV_ICON_MAP: Readonly<Record<string, string>> = {
+  omniboard: navOmniboard,
+  omniport: navLinks,
+  maestro: navAutomations,
+  fortress: navAudits,
+  orchestrator: navWorkflows,
+  omniskills: navOmniskills,
+  physiomni: navPhysiomni,
+  audits: navAudits,
+  links: navLinks,
+  automations: navAutomations,
+  workflows: navWorkflows,
+  files: navFiles,
+  billing: navBilling,
+  settings: navSettings,
+};
+
+const SIDEBAR_NAV = APP_REGISTRY.map((entry) => ({
+  key: entry.key,
+  label: entry.label,
+  icon: NAV_ICON_MAP[entry.iconAssetKey] ?? navOmniboard,
+  to: entry.routePath,
+}));
 
 const TRACE_FEED = [
   { color: '#34d399', text: 'Salesforce sync completed - 48 records' },

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
 export function ProtectedRoute({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -7,14 +8,18 @@ export function ProtectedRoute({ children }: Readonly<{ children: React.ReactNod
 
   useEffect(() => {
     async function checkAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       setAuthenticated(!!session);
       setLoading(false);
     }
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthenticated(!!session);
       setLoading(false);
     });
@@ -27,8 +32,7 @@ export function ProtectedRoute({ children }: Readonly<{ children: React.ReactNod
   }
 
   if (!authenticated) {
-    // DEV BYPASS
-    return <>{children}</>;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;

@@ -552,17 +552,17 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
             "status_code": 403,
         }
 
-    request_url = validated_url.original_url
     request_headers: dict[str, str] = {}
     parsed = urlparse(validated_url.original_url)
-    if parsed.scheme == "http" and parsed.hostname and not _is_ip_literal(parsed.hostname):
+    request_url = validated_url.original_url
+    if parsed.hostname and not _is_ip_literal(parsed.hostname):
         pinned_netloc = parsed.netloc.replace(parsed.hostname, validated_url.resolved_ip, 1)
         request_url = urlunparse(parsed._replace(netloc=pinned_netloc))
         request_headers["Host"] = validated_url.host_header
 
     activity.logger.info(f"Calling webhook: {method} {validated_url.original_url}")
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(follow_redirects=False) as client:
         response = await client.request(  # NOSONAR - URL validated by SSRF guard above
             method=method,
             url=request_url,
