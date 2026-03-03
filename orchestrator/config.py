@@ -24,6 +24,17 @@ class Settings(BaseSettings):
     temporal_task_queue: str = Field(
         default="apex-orchestrator", description="Temporal task queue name"
     )
+    temporal_tls_enabled: bool = Field(
+        default=False, description="Enable TLS when connecting to Temporal"
+    )
+    temporal_tls_cert: str = Field(default="", description="Path to Temporal TLS client cert")
+    temporal_tls_key: str = Field(default="", description="Path to Temporal TLS client key")
+    temporal_max_workflow_tasks: int = Field(
+        default=10, description="Max concurrent workflow tasks for worker"
+    )
+    temporal_max_activities: int = Field(
+        default=20, description="Max concurrent activities for worker"
+    )
 
     # Redis Configuration
     redis_url: str = Field(default="redis://localhost:6379", description="Redis connection URL")
@@ -33,6 +44,9 @@ class Settings(BaseSettings):
     # Supabase Configuration
     supabase_url: str = Field(..., description="Supabase project URL")
     supabase_service_role_key: str = Field(..., description="Supabase service role key")
+    supabase_activity_key: str = Field(
+        default="", description="Least-privilege key/JWT for workflow activities"
+    )
     supabase_db_url: str = Field(..., description="Direct Supabase PostgreSQL URL")
 
     # LLM Configuration

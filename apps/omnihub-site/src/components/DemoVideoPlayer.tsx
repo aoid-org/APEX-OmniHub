@@ -1,66 +1,134 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-export function DemoVideoPlayer({ id }: { readonly id?: string }) {
+type DemoVideoPlayerProps = {
+  readonly id?: string;
+  readonly sourceUrl: string;
+  readonly captionUrl?: string;
+};
+
+export function DemoVideoPlayer({
+  id,
+  sourceUrl,
+  captionUrl = '/captions/demo.vtt',
+}: DemoVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
-    // Attempt unmuted autoplay; fall back to muted if browser blocks it
-    video.muted = false;
-    video.play().then(() => {
-      setIsMuted(false);
-    }).catch(() => {
-      video.muted = true;
-      video.play().catch(() => { /* autoplay fully blocked */ });
-      setIsMuted(true);
-    });
+    if (!video) {
+      return;
+    }
+
+    video.muted = true;
+    video
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+      })
+      .catch(() => {
+        setIsPlaying(false);
+        setIsMuted(true);
+      });
+
+    const handlePause = () => setIsPlaying(false);
+    const handlePlay = () => setIsPlaying(true);
+    const handleError = () => {
+      setHasError(true);
+      setIsPlaying(false);
+    };
+
+    video.addEventListener('pause', handlePause);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('error', handleError);
+
+    return () => {
+      video.removeEventListener('pause', handlePause);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('error', handleError);
+    };
+  }, []);
+
+  const togglePlayback = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+
+    if (video.paused) {
+      video.play().then(() => {
+        setIsPlaying(true);
+      }).catch(() => {
+        setIsPlaying(false);
+      });
+      return;
+    }
+
+    video.pause();
+    setIsPlaying(false);
   }, []);
 
   const toggleMute = useCallback(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video) {
+      return;
+    }
+
     video.muted = !video.muted;
     setIsMuted(video.muted);
+  }, []);
+
+  const reloadVideo = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+
+    setHasError(false);
+    video.load();
+    video.play().then(() => {
+      setIsPlaying(true);
+    }).catch(() => {
+      setIsPlaying(false);
+    });
   }, []);
 
   return (
     <div className="demo-video__container">
       <div className="demo-video__glow" aria-hidden="true" />
-      <video
-        ref={videoRef}
-        id={id}
-        className="demo-video__player"
-        autoPlay
-        loop
-        playsInline
-        preload="auto"
-      >
-        <source src="/apex-demo-video.mp4" type="video/mp4" />
-        <track kind="captions" src="/captions/demo.vtt" srcLang="en" label="English" />
+      <video ref={videoRef} id={id} className="demo-video__player" autoPlay loop playsInline preload="metadata" controls>
+        <source src={sourceUrl} type="video/mp4" />
+        <track kind="captions" src={captionUrl} srcLang="en" label="English" />
         Your browser does not support the video tag.
       </video>
-      <button
-        type="button"
-        className="demo-video__mute-btn"
-        onClick={toggleMute}
-        aria-label={isMuted ? 'Unmute video' : 'Mute video'}
-      >
-        {isMuted ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-            <line x1="23" y1="9" x2="17" y2="15" />
-            <line x1="17" y1="9" x2="23" y2="15" />
-          </svg>
-        ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-          </svg>
-        )}
-      </button>
+      <div className="demo-video__controls">
+        <button
+          type="button"
+          className="demo-video__control-btn"
+          onClick={togglePlayback}
+          aria-label={isPlaying ? 'Pause video' : 'Play video'}
+        >
+          {isPlaying ? 'Pause' : 'Play'}
+        </button>
+        <button
+          type="button"
+          className="demo-video__control-btn"
+          onClick={toggleMute}
+          aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+        >
+          {isMuted ? 'Unmute' : 'Mute'}
+        </button>
+      </div>
+      {hasError ? (
+        <div className="demo-video__error" role="status" aria-live="polite">
+          <p>The current video file could not be played in this browser.</p>
+          <button type="button" className="demo-video__retry-btn" onClick={reloadVideo}>
+            Retry
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

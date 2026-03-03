@@ -25,10 +25,12 @@ Compensation Pattern:
 """
 
 import asyncio
+import ipaddress
 import json
 import os
 import time
 from typing import Any
+from urllib.parse import urlparse, urlunparse
 from uuid import uuid4
 
 import instructor
@@ -534,14 +536,14 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
     """
     import httpx
 
-    from security.ssrf import validate_url_async
+    from security.ssrf import validate_url_with_dns_pin_async
 
     url = params.get("url")
     method = params.get("method", "POST")
     payload = params.get("payload", {})
 
     try:
-        await validate_url_async(url)
+        validated_url = await validate_url_with_dns_pin_async(url)
     except ValueError as e:
         activity.logger.error(f"Blocked SSRF attempt: {e}")
         return {
@@ -550,13 +552,22 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
             "status_code": 403,
         }
 
-    activity.logger.info(f"Calling webhook: {method} {url}")
+    request_headers: dict[str, str] = {}
+    parsed = urlparse(validated_url.original_url)
+    request_url = validated_url.original_url
+    if parsed.hostname and not _is_ip_literal(parsed.hostname):
+        pinned_netloc = parsed.netloc.replace(parsed.hostname, validated_url.resolved_ip, 1)
+        request_url = urlunparse(parsed._replace(netloc=pinned_netloc))
+        request_headers["Host"] = validated_url.host_header
 
-    async with httpx.AsyncClient() as client:
+    activity.logger.info(f"Calling webhook: {method} {validated_url.original_url}")
+
+    async with httpx.AsyncClient(follow_redirects=False) as client:
         response = await client.request(  # NOSONAR - URL validated by SSRF guard above
             method=method,
-            url=url,
+            url=request_url,
             json=payload,
+            headers=request_headers,
             timeout=15.0,
         )
 
@@ -565,6 +576,14 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
             "status_code": response.status_code,
             "body": response.text,
         }
+
+
+def _is_ip_literal(value: str) -> bool:
+    try:
+        ipaddress.ip_address(value.strip("[]"))
+        return True
+    except ValueError:
+        return False
 
 
 @activity.defn(name="search_youtube")

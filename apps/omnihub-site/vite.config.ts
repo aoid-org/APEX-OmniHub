@@ -104,4 +104,10 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
   },
+  test: {
+    coverage: {
+      reporter: ['text', 'lcov'],
+      reportsDirectory: './coverage',
+    },
+  },
 });

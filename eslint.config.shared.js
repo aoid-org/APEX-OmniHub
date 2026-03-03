@@ -33,6 +33,30 @@ export const createEslintConfig = (options = {}) => {
           { argsIgnorePattern: '^_' },
         ],
       },
+    },
+    {
+      files: ['apps/omnihub-site/src/pages/**/*.{ts,tsx}'],
+      rules: {
+        'no-restricted-imports': ['error', {
+          patterns: [
+            { group: ['*/src/core/*', '**/core/**'], message: 'Pages must not import from src/core/. Use src/adapters/ instead.' },
+            { group: ['*/stores/*', '**/stores/**'], message: 'Pages must not import stores directly. Use src/adapters/toOmniDashUI().' },
+          ],
+        }],
+      },
+    },
+    {
+      files: ['src/core/**/*.{ts,tsx}'],
+      rules: {
+        'no-restricted-imports': ['error', {
+          patterns: [
+            {
+              group: ['*/pages/*', '**/pages/**', '*/components/*', '**/components/**'],
+              message: 'Core must not import from UI layers. Flow: core → adapters → UI.',
+            },
+          ],
+        }],
+      },
     }
   );
 };

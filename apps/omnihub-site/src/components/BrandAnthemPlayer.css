@@ -1,0 +1,92 @@
+.brand-anthem-player {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.brand-anthem-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(var(--color-background-rgb, 10, 10, 10), 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(var(--color-border-rgb, 255, 255, 255), 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.anthem-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text, #fff);
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.glassmorphism-panel {
+  /* Using fallback vars assuming an APEX UI root context */
+  background: var(--glass-bg, rgba(20, 20, 20, 0.7));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px);
+}
+
+.anthem-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--color-text, #fff);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.anthem-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.22);
+  transform: scale(1.05);
+}
+
+.anthem-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.anthem-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.anthem-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.anthem-error-text {
+  font-size: 0.75rem;
+  color: #ff4d4f; /* generic error color fallback */
+  margin-left: 8px;
+}
+
+/* Optional subtle entry animation */
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

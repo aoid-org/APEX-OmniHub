@@ -10,7 +10,17 @@ Provides URL validation to prevent SSRF attacks by checking:
 import asyncio
 import ipaddress
 import socket
+from dataclasses import dataclass
 from urllib.parse import urlparse
+
+
+@dataclass(frozen=True)
+class ValidatedURL:
+    """Validated request target with DNS-pinned IP for outbound calls."""
+
+    original_url: str
+    resolved_ip: str
+    host_header: str
 
 
 async def validate_url_async(url: str) -> str:
@@ -28,7 +38,14 @@ async def validate_url_async(url: str) -> str:
         ValueError: If the URL is invalid or points to a restricted IP.
     """
     loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, validate_url, url)
+    validated = await loop.run_in_executor(None, validate_url_with_dns_pin, url)
+    return validated.original_url
+
+
+async def validate_url_with_dns_pin_async(url: str) -> ValidatedURL:
+    """Async wrapper returning pinned DNS resolution for request execution."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, validate_url_with_dns_pin, url)
 
 
 def validate_url(url: str) -> str:
@@ -44,6 +61,10 @@ def validate_url(url: str) -> str:
     Raises:
         ValueError: If the URL is invalid or points to a restricted IP.
     """
+    return validate_url_with_dns_pin(url).original_url
+
+
+def validate_url_with_dns_pin(url: str) -> ValidatedURL:
     if not url:
         raise ValueError("URL cannot be empty")
 
@@ -66,7 +87,11 @@ def validate_url(url: str) -> str:
         ip_obj = ipaddress.ip_address(hostname.strip("[]"))
         _check_ip(ip_obj)
         # If it's an IP literal and passes checks, it's safe.
-        return urlparse(url).geturl()
+        return ValidatedURL(
+            original_url=urlparse(url).geturl(),
+            resolved_ip=str(ip_obj),
+            host_header=hostname,
+        )
     except ValueError:
         # Not an IP literal, proceed to resolution
         pass
@@ -84,6 +109,7 @@ def validate_url(url: str) -> str:
     if not addr_infos:
         raise ValueError(f"No IP addresses found for hostname {hostname}")
 
+    selected_ip = ""
     for info in addr_infos:
         # sockaddr is (address, port) for IPv4, (address, port, flowinfo, scopeid) for IPv6
         ip_str = info[4][0]
@@ -94,11 +120,20 @@ def validate_url(url: str) -> str:
 
             ip_obj = ipaddress.ip_address(ip_str)
             _check_ip(ip_obj)
+            if not selected_ip:
+                selected_ip = str(ip_obj)
         except ValueError as e:
             # Re-raise with context if check fails
             raise ValueError(f"Resolved IP {ip_str} for {hostname} is blocked: {e}") from e
 
-    return urlparse(url).geturl()
+    if not selected_ip:
+        raise ValueError(f"No valid public IP addresses found for hostname {hostname}")
+
+    return ValidatedURL(
+        original_url=urlparse(url).geturl(),
+        resolved_ip=selected_ip,
+        host_header=hostname,
+    )
 
 
 def _check_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> None:

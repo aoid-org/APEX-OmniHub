@@ -55,8 +55,8 @@ export function DemoPage() {
           title={demoConfig.title}
           subtitle={demoConfig.subtitle}
         />
-        <div className="demo-video" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
-          <DemoVideoPlayer />
+        <div className="demo-video demo-copy-font" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
+          <DemoVideoPlayer sourceUrl={demoConfig.video.src} />
           <InteractivePlaceholder />
         </div>
       </Section>
