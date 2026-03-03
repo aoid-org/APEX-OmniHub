@@ -54,21 +54,28 @@ const appRoutes: readonly AppRoute[] = [
   { path: "/tri-force", element: <TriForcePage />, isPublic: true },
 ];
 
-const omniDashRoutes: readonly AppRoute[] = [
-  { path: "omniport", element: <OmniPortPage /> },
-  { path: "maestro", element: <MaestroPage /> },
-  { path: "fortress", element: <FortressPage /> },
-  { path: "orchestrator", element: <OrchestratorPage /> },
-  { path: "omniskills", element: <ComingSoonPage title="OmniSkills" desc="Skill management and task orchestration" /> },
-  { path: "physiomni", element: <ComingSoonPage title="PhysiOmni" desc="Physical operations and execution tracking" /> },
-  { path: "audits", element: <ComingSoonPage title="Audits" desc="Governance, compliance, and security gates" /> },
-  { path: "billing", element: <ComingSoonPage title="Billing" desc="Subscription management and usage analytics" /> },
-  { path: "links", element: <ComingSoonPage title="Links" desc="Connection management and integration endpoints" /> },
-  { path: "automations", element: <ComingSoonPage title="Automations" desc="Workflow automation and pipeline orchestration" /> },
-  { path: "workflows", element: <ComingSoonPage title="Workflows" desc="Visual workflow builder and process studio" /> },
-  { path: "files", element: <ComingSoonPage title="Files" desc="Document management and file operations" /> },
-  { path: "settings", element: <ComingSoonPage title="Settings" desc="Platform configuration and preferences" /> },
-];
+const routeElements: Readonly<Record<string, ReactElement>> = {
+  omniboard: <ComingSoonPage title='OmniBoard' desc='Control plane overview and operational telemetry' />,
+  omniport: <OmniPortPage />,
+  maestro: <MaestroPage />,
+  fortress: <FortressPage />,
+  orchestrator: <OrchestratorPage />,
+  omniskills: <ComingSoonPage title='OmniSkills' desc='Skill management and task orchestration' />,
+  physiomni: <ComingSoonPage title='PhysiOmni' desc='Physical operations and execution tracking' />,
+  audits: <ComingSoonPage title='Audits' desc='Governance, compliance, and security gates' />,
+  billing: <ComingSoonPage title='Billing' desc='Subscription management and usage analytics' />,
+  links: <ComingSoonPage title='Links' desc='Connection management and integration endpoints' />,
+  automations: <ComingSoonPage title='Automations' desc='Workflow automation and pipeline orchestration' />,
+  workflows: <ComingSoonPage title='Workflows' desc='Visual workflow builder and process studio' />,
+  files: <ComingSoonPage title='Files' desc='Document management and file operations' />,
+  settings: <ComingSoonPage title='Settings' desc='Platform configuration and preferences' />,
+};
+
+const omniDashRoutes: readonly AppRoute[] = APP_REGISTRY.filter((entry) => entry.key !== 'omniboard').map((entry) => ({
+  path: entry.routePath.replace('/omnidash/', ''),
+  element: routeElements[entry.key],
+  isPublic: false,
+}));
 
 function App() {
   return (

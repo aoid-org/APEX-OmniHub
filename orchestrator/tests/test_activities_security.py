@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from security.ssrf import ValidatedURL
+
 
 @pytest.fixture
 def mock_dependencies():
@@ -73,14 +75,15 @@ async def test_call_webhook_valid_url():
         mock_client = mock_client_cls.return_value.__aenter__.return_value
         mock_client.request.return_value = MagicMock(status_code=200, text="OK")
 
-        # Mock DNS resolution
-        with patch("socket.getaddrinfo") as mock_getaddrinfo:
-            mock_getaddrinfo.return_value = [
-                (2, 1, 6, "", ("93.184.216.34", 80))  # NOSONAR
-            ]
+        with patch("security.ssrf.validate_url_with_dns_pin_async") as mock_validate:
+            mock_validate.return_value = ValidatedURL(
+                original_url="https://example.com/webhook",
+                resolved_ip="resolved-target.example",
+                host_header="example.com",
+            )
 
             params = {
-                "url": "http://example.com/webhook",  # NOSONAR
+                "url": "https://example.com/webhook",
                 "method": "POST",
             }
 
@@ -94,7 +97,7 @@ async def test_call_webhook_valid_url():
             mock_client_cls.assert_called_once_with(follow_redirects=False)
 
             request_kwargs = mock_client.request.call_args.kwargs
-            assert request_kwargs["url"] == "http://93.184.216.34/webhook"
+            assert request_kwargs["url"] == "https://resolved-target.example/webhook"
             assert request_kwargs["headers"] == {"Host": "example.com"}
 
 
@@ -113,14 +116,15 @@ async def test_call_webhook_redirects_not_followed():
             headers={"Location": "http://127.0.0.1/internal"},  # NOSONAR
         )
 
-        with patch("socket.getaddrinfo") as mock_getaddrinfo:
-            mock_getaddrinfo.return_value = [
-                (2, 1, 6, "", ("93.184.216.34", 80))  # NOSONAR
-            ]
-
+        with patch("security.ssrf.validate_url_with_dns_pin_async") as mock_validate:
+            mock_validate.return_value = ValidatedURL(
+                original_url="https://example.com/redirect",
+                resolved_ip="resolved-target.example",
+                host_header="example.com",
+            )
             result = await call_webhook(
                 {
-                    "url": "http://example.com/redirect",  # NOSONAR
+                    "url": "https://example.com/redirect",
                     "method": "GET",
                 }
             )
