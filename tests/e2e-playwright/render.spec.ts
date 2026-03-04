@@ -53,7 +53,7 @@ test.describe('Runtime Render Smoke Tests', () => {
   });
 
   test('app renders interactive content', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/omnitrace');
 
     // Wait for app shell
     await expect(page.locator('[data-testid="app-shell"]')).toBeVisible();
