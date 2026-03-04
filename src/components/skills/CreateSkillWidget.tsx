@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +14,37 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, ArrowRight, ArrowLeft, Check, Loader2, ShieldCheck, Zap } from 'lucide-react';
+import { Sparkles, ArrowRight, ArrowLeft, Check, Loader2, ShieldCheck, Zap, Mic, MicOff } from 'lucide-react';
+
+type SpeechRecognitionConstructor = new () => SpeechRecognition;
+
+interface SpeechRecognitionEventResult {
+  isFinal: boolean;
+  0: {
+    transcript: string;
+  };
+}
+
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionEventResult>;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onerror: ((event: Event) => void) | null;
+  onend: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+
+interface VoiceWindow extends Window {
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
+}
 
 type StepField = 'intent' | 'trigger' | 'constraints';
 type WizardStep = {
@@ -78,6 +108,8 @@ export function CreateSkillWidget() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [errors, setErrors] = useState<string[]>([]);
   const [formData, setFormData] = useState({ intent: '', trigger: '', constraints: '' });
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const currentStep = wizardSteps[step - 1];
   const progressWidth = (step / wizardSteps.length) * 100;
@@ -88,9 +120,90 @@ export function CreateSkillWidget() {
   }, [currentStep.field, formData]);
 
   const resetForm = () => {
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setIsListening(false);
     setStep(1);
     setFormData({ intent: '', trigger: '', constraints: '' });
     setErrors([]);
+  };
+
+  const resolveSpeechRecognition = (): SpeechRecognitionConstructor | null => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const voiceWindow = window as VoiceWindow;
+    return voiceWindow.SpeechRecognition ?? voiceWindow.webkitSpeechRecognition ?? null;
+  };
+
+  const appendTranscriptToCurrentField = (transcript: string) => {
+    setFormData((previous) => {
+      const priorValue = previous[currentStep.field].trim();
+      const mergedValue = priorValue.length > 0 ? `${priorValue} ${transcript}` : transcript;
+      return {
+        ...previous,
+        [currentStep.field]: mergedValue,
+      };
+    });
+  };
+
+  const handleVoiceToggle = () => {
+    setErrors([]);
+    const SpeechRecognitionAPI = resolveSpeechRecognition();
+
+    if (!SpeechRecognitionAPI) {
+      toast({
+        title: 'VOICE UNAVAILABLE',
+        description: 'Your browser does not support speech recognition for Skill Forge.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event) => {
+      const captured: string[] = [];
+
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        const result = event.results[index];
+        if (result.isFinal) {
+          captured.push(result[0].transcript.trim());
+        }
+      }
+
+      const transcript = captured.join(' ').trim();
+      if (transcript.length > 0) {
+        appendTranscriptToCurrentField(transcript);
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+      toast({
+        title: 'VOICE CAPTURE FAILED',
+        description: 'Could not capture speech. Please retry.',
+        variant: 'destructive',
+      });
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognitionRef.current = recognition;
+    setIsListening(true);
+    recognition.start();
   };
 
   const mutation = useMutation({
@@ -209,6 +322,20 @@ export function CreateSkillWidget() {
             }}
             placeholder={currentStep.placeholder}
           />
+
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleVoiceToggle}
+              disabled={mutation.isPending}
+            >
+              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              {isListening ? 'Stop voice input' : 'Use voice input'}
+            </Button>
+          </div>
         </div>
 
         {errors.length > 0 && (
