@@ -108,8 +108,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
         env:
-          TURBO_TOKEN: ${{ secrets['TURBO_TOKEN'] }}
-          TURBO_TEAM: ${{ secrets['TURBO_TEAM'] }}
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
       # ─────────────────────────────────────────────────────────────
       # Turborepo Caching
@@ -154,7 +154,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets['VITE_SUPABASE_PUBLISHABLE_KEY'] }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           REQUIRE_SUPABASE_INTEGRATION_TESTS: "false"
 
       - name: Run JS coverage
@@ -169,13 +169,13 @@ jobs:
         run: cd orchestrator && pip install -r requirements.txt && pytest --cov=. --cov-report=xml:coverage.xml
 
       - name: SonarCloud Scan Disabled Notice
-        if: ${{ vars.SONAR_CI_SCAN_ENABLED != 'true' }}
+        if: vars.SONAR_CI_SCAN_ENABLED != 'true'
         run: |
           echo "Skipping CI Sonar scan because SONAR_CI_SCAN_ENABLED is not true."
           echo "Use SonarCloud Automatic Analysis or set repository variable SONAR_CI_SCAN_ENABLED=true and disable Automatic Analysis in SonarCloud."
 
       - name: SonarCloud Scan
-        if: ${{ vars.SONAR_CI_SCAN_ENABLED == 'true' }}
+        if: vars.SONAR_CI_SCAN_ENABLED == 'true'
         uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d
         continue-on-error: true
         env:
