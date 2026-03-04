@@ -541,6 +541,44 @@
   color: var(--color-text-primary);
 }
 
+.nav__btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 8px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.nav__btn-pill--orange {
+  background-color: var(--color-orange, #c4571c);
+  color: #ffffff !important;
+}
+
+.nav__btn-pill--orange:hover {
+  background-color: var(--color-orange-light, #ea7c44);
+}
+
+.nav__btn-pill--navy {
+  background-color: var(--color-navy, #0f1729);
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="light"] .nav__btn-pill--navy {
+  background-color: var(--color-navy, #0f1729);
+  color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.nav__btn-pill--navy:hover {
+  background-color: #1a2333;
+}
+
 .nav__actions {
   display: flex;
   align-items: center;
@@ -1074,7 +1112,7 @@
 .hero__subtitle,
 .hero__description,
 .hero__footnote {
-  font-family: 'Space Grotesk', var(--font-family-sans);
+  font-family: "Space Grotesk", var(--font-family-sans);
 }
 
 /* Hero title grid layout — auto-placement flows spans left→right:
@@ -1122,7 +1160,6 @@
   line-height: 1.4;
   letter-spacing: -0.01em;
 }
-
 
 [data-theme="light"] .hero__subtitle {
   color: #000000;
@@ -2040,7 +2077,7 @@ body {
 
 .demo-copy-font,
 .demo-copy-font * {
-  font-family: 'Space Grotesk', var(--font-family-sans);
+  font-family: "Space Grotesk", var(--font-family-sans);
 }
 
 .demo-video__header {

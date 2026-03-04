@@ -1,4 +1,5 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-03-01 -->
+
 # Frontend Structure Map
 
 This document maps the main frontend topology in `APEX-OmniHub`, with a visual artifact for quick onboarding and architecture reviews.
@@ -10,16 +11,20 @@ The map focuses on the React/Vite application rooted under `src/`, its route she
 ## High-Level Topology
 
 1. **Bootstrap & Shell**
+
    - `src/main.tsx` mounts the app and theme provider.
    - `src/App.tsx` composes core providers (error boundary, React Query, router, auth, web3) and route definitions.
 
 2. **Route Surfaces**
-   - Public pages (`/`, `/auth`, `/privacy`, `/health`)
-   - Protected/mobile-gated pages (`/dashboard`, `/translation`, `/agent`, `/settings`, etc.)
-   - Nested OmniDash route tree (`/omnidash/*`)
-   - Standalone app pages (`/apps/*`, `/tech-specs`)
+
+   - Public pages (`/`, `/auth`) — root `src/App.tsx`
+   - Public pages (`/privacy`, `/tech-specs`, `/story`) — `apps/omnihub-site/`
+   - Protected/mobile-gated pages (`/omnitrace`) — root `src/App.tsx`
+   - E2E legacy endpoints (`/omnidash`, `/omnidash/ops`) — root `src/App.tsx`
+   - Full OmniHub site routes — `apps/omnihub-site/src/App.tsx`
 
 3. **Feature Domains under `src/`**
+
    - UI composition (`components`, `contexts`, `providers`, `hooks`)
    - OmniConnect pipeline (`omniconnect/*`)
    - Integrations (`integrations/*`)
@@ -28,6 +33,7 @@ The map focuses on the React/Vite application rooted under `src/`, its route she
    - Core/support modules (`core`, `api`, `stores`, `utils`, `armageddon`, `lib/*`)
 
 4. **Edge Compute Layer (Root-level)**
+
    - Vercel Edge CORS proxy (`api/cors.ts`)
    - LRU media cache governor (`lib/media/EdgeCacheController.ts`)
    - Cloudflare Worker proxy (`edge/cors-proxy/edge-cors-proxy.js`)

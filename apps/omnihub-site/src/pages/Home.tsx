@@ -31,8 +31,8 @@ function Hero() {
       <div className="container hero__grid">
         <div className="hero__content">
           <h1 className="heading-hero hero__title flex flex-col items-center lg:items-start w-fit mx-auto lg:mx-0">
-            <div className="flex flex-row gap-[0.5em] justify-center lg:justify-start text-left">
-              <span className="w-min">{t('hero.headline.line1', { defaultValue: 'Connect everything.' })}</span>
+            <div className="flex flex-row gap-[0.5em] justify-center lg:justify-start text-center">
+              <span className="w-min">{t('hero.headline.line1', { defaultValue: 'Connect anything.' })}</span>
               <span className="w-min">{t('hero.headline.line2', { defaultValue: 'Change anything.' })}</span>
             </div>
             <div className="w-full text-center mt-[0.1em]">

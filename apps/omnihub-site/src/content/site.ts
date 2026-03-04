@@ -37,6 +37,7 @@ export const siteConfig = {
     logo: 'APEX OmniHub',
     links: [
       buildLink('Tech Specs', '/tech-specs'),
+      buildLink('Story', '/story'),
     ],
     loginLink: buildLink('Launch Console', '/login'),
     primaryCta: buildLink('Request Access', '/request-access'),

@@ -93,6 +93,7 @@ export default {
         'icon-xl': 'var(--icon-size-xl)',
       },
       fontFamily: {
+        sans: ['"Space Grotesk"', 'sans-serif'],
         grotesk: ['"Space Grotesk"', 'sans-serif'],
         mono: ['"Space Mono"', 'monospace'],
       },

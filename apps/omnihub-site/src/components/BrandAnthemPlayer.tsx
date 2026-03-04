@@ -35,22 +35,23 @@ export function BrandAnthemPlayer() {
     };
   }, []);
 
-  const togglePlayPause = () => {
+  const playAudio = () => {
     const audio = audioRef.current;
     if (!audio) return;
+    audio.play().then(() => {
+      setIsPlaying(true);
+      setHasError(false);
+    }).catch(err => {
+      console.error('Failed to play audio manually:', err);
+      setHasError(true);
+    });
+  };
 
-    if (isPlaying) {
-      audio.pause();
-      setIsPlaying(false);
-    } else {
-      audio.play().then(() => {
-        setIsPlaying(true);
-        setHasError(false);
-      }).catch(err => {
-        console.error('Failed to play audio manually:', err);
-        setHasError(true);
-      });
-    }
+  const pauseAudio = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.pause();
+    setIsPlaying(false);
   };
 
   return (
@@ -63,25 +64,27 @@ export function BrandAnthemPlayer() {
       >
         <track kind="captions" srcLang="en" label="English_captions" />
       </audio>
-      <div className="brand-anthem-controls glassmorphism-panel">
-        <span className="anthem-label">Brand Anthem</span>
+      <div className="brand-anthem-controls">
         <button 
-          onClick={togglePlayPause} 
-          className="btn btn--icon anthem-btn"
-          aria-label={isPlaying ? "Pause brand anthem" : "Play brand anthem"}
+          onClick={playAudio} 
+          className={`anthem-action-btn ${isPlaying ? "active" : ""}`}
+          aria-label="Play brand anthem"
         >
-          {isPlaying ? (
-            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="6" y="4" width="4" height="16"></rect>
-              <rect x="14" y="4" width="4" height="16"></rect>
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-          )}
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
         </button>
-        {hasError && <span className="anthem-error-text">Playback error</span>}
+        <button 
+          onClick={pauseAudio} 
+          className={`anthem-action-btn ${isPlaying ? "" : "active"}`}
+          aria-label="Pause brand anthem"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+        </button>
+        {hasError && <span className="anthem-error-text">!</span>}
       </div>
     </div>
   );

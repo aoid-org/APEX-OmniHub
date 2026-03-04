@@ -8,6 +8,7 @@ import { OmniDashLayout } from "@/layouts/OmniDashLayout";
 import { LoginPage } from "@/pages/Login";
 import { PrivacyPage } from "@/pages/Privacy";
 import { TermsPage } from "@/pages/Terms";
+import FounderStory from "@/pages/FounderStory";
 
 import { TechSpecsPage } from "@/pages/TechSpecs";
 import { RequestAccessPage } from "@/pages/RequestAccess";
@@ -39,6 +40,7 @@ const appRoutes: readonly AppRoute[] = [
   { path: "/", element: <HomePage />, isPublic: true },
   { path: "/launch", element: <OnboardingWizard />, isPublic: true },
   { path: "/login", element: <LoginPage />, isPublic: true },
+  { path: "/story", element: <FounderStory />, isPublic: true },
   { path: "/privacy", element: <PrivacyPage />, isPublic: true },
   { path: "/terms", element: <TermsPage />, isPublic: true },
   { path: "/tech-specs", element: <TechSpecsPage />, isPublic: true },
