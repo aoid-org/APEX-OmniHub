@@ -175,7 +175,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
             {/* Session Timer */}
             <div className="flex flex-col items-center text-center">
               <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Session</span>
-              <span className="text-xl font-extrabold text-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>00:00</span>
+              <span className="text-xl font-extrabold text-white" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>00:00</span>
             </div>
 
             {/* Avatar Orb */}
@@ -452,7 +452,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
                   </div>
                   {/* Right: Unbreakable value */}
                   <div className="flex-shrink-0 text-right">
-                    <span className="text-white font-bold text-sm tracking-tight" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{o.metric}</span>
+                    <span className="text-white font-bold text-sm tracking-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{o.metric}</span>
                   </div>
                 </motion.div>
               ))}
@@ -467,7 +467,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <span style={{ fontSize: 19.26, fontWeight: 800, color: '#dfe6fe', letterSpacing: '-0.02em' }}>Integrated Apps</span>
-            <span style={{ fontSize: 12.84, fontWeight: 700, color: '#a1a1aa', fontFamily: 'JetBrains Mono, monospace' }}>ALL SYSTEMS ({APPS.length})</span>
+            <span style={{ fontSize: 12.84, fontWeight: 700, color: '#a1a1aa', fontFamily: 'Space Grotesk, sans-serif' }}>ALL SYSTEMS ({APPS.length})</span>
           </div>
           <span style={{ fontSize: 12.84, color: '#f97316', cursor: 'pointer', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Manage →</span>
         </div>
@@ -539,7 +539,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
                   }}>{app.status}</span>
                 </div>
                 <div style={{ fontSize: 11.770000000000001, color: '#a1a1aa', marginTop: 4, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{app.cat}</div>
-                {app.synced && <div style={{ fontSize: 11.235000000000001, color: '#71717a', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>SYNC: {app.synced}</div>}
+                {app.synced && <div style={{ fontSize: 11.235000000000001, color: '#71717a', marginTop: 2, fontFamily: 'Space Grotesk, sans-serif' }}>SYNC: {app.synced}</div>}
               </div>
               {app.status === 'Partial' && (
                 <button type="button" style={{
