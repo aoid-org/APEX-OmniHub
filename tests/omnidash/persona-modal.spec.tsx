@@ -34,7 +34,7 @@ describe('Persona system', () => {
     expect(screen.getByTestId('global-search-input')).toBeInTheDocument();
     expect(screen.getByTestId('organization-badge-input')).toBeInTheDocument();
     expect(screen.getByTestId('connect-ai-header-action')).toBeInTheDocument();
-    expect(screen.getByTestId('notification-center-trigger')).toBeInTheDocument();
+    expect(screen.getByTestId('notifications-trigger')).toBeInTheDocument();
     expect(screen.getByTestId('persona-trigger')).toBeInTheDocument();
     expect(screen.getByTestId('user-menu-trigger')).toBeInTheDocument();
   });
