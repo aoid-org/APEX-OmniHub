@@ -9,24 +9,24 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../../../../src/integrations/supabase/client';
 import { Search, Bell, Shield, ChevronDown, Scan, Sun, Moon, X } from 'lucide-react';
-import { DashboardOverview } from '@/pages/DashboardOverview';
+import { DashboardOverview } from '../pages/DashboardOverview';
 import { UniversalModalEngine } from '../../../../src/components/omnidash/media/UniversalModalEngine';
-import '@/styles/omnidash-layout.css';
+import '../styles/omnidash-layout.css';
 
 // Custom nav icons
-import navOmniboard from '@/assets/nav/omniboard_icon.png';
-import navOmniskills from '@/assets/nav/omniskills_icon.png';
-import navPhysiomni from '@/assets/nav/physiomni_icon.png';
-import navAudits from '@/assets/nav/audits_icon.png';
-import navLinks from '@/assets/nav/links_icon.png';
-import navAutomations from '@/assets/nav/automations_icon.png';
-import navWorkflows from '@/assets/nav/workflows_icon.png';
-import navFiles from '@/assets/nav/files_icon.png';
-import navBilling from '@/assets/nav/billing_icon.png';
-import navSettings from '@/assets/nav/settings_icon.png';
-import apexWordmark from '@/assets/apex_omnihub_wordmark.png';
+import navOmniboard from '../assets/nav/omniboard_icon.png';
+import navOmniskills from '../assets/nav/omniskills_icon.png';
+import navPhysiomni from '../assets/nav/physiomni_icon.png';
+import navAudits from '../assets/nav/audits_icon.png';
+import navLinks from '../assets/nav/links_icon.png';
+import navAutomations from '../assets/nav/automations_icon.png';
+import navWorkflows from '../assets/nav/workflows_icon.png';
+import navFiles from '../assets/nav/files_icon.png';
+import navBilling from '../assets/nav/billing_icon.png';
+import navSettings from '../assets/nav/settings_icon.png';
+import apexWordmark from '../assets/apex_omnihub_wordmark.png';
 import { APP_REGISTRY, type AppRegistryEntry } from '../../../../packages/core/src/registry';
 
 // ────────────────────────────────────────────────
@@ -101,7 +101,7 @@ export function OmniDashLayout() {
   )?.key ?? 'omniboard';
 
   return (
-    <div className="omnidash-shell">
+    <div className={`omnidash-shell ${isDarkMode ? "theme-dark" : "theme-light"}`}>
       {/* ────── LEFT SIDEBAR ────── */}
       <aside className="od-sidebar">
         <div className="od-sidebar-logo">
@@ -116,7 +116,7 @@ export function OmniDashLayout() {
               className={`od-nav-item transition-all duration-300 ease-out hover:translate-x-1 ${activeNav === item.key ? ' active' : ''}`}
             >
               <img src={item.icon} alt={item.label} className="nav-icon drop-shadow-md" />
-              <span className="font-bold tracking-tight">{item.label}</span>
+              <span className="tracking-tight">{item.label}</span>
             </Link>
           ))}
         </nav>
@@ -187,7 +187,7 @@ export function OmniDashLayout() {
 
         <div className={`od-content ${location.pathname === '/omnidash' ? '' : 'center-content-blur'}`}>
           {/* Dashboard is PERMANENT in the background */}
-          <DashboardOverview />
+          <DashboardOverview connectedEco={connectedEco} />
         </div>
 
         {/* ────── UNIVERSAL SPA MODAL ────── */}
@@ -214,21 +214,21 @@ export function OmniDashLayout() {
       <aside className="od-right">
         {/* Ops Controls */}
         <div className="glass transition-all duration-300 ease-out hover:border-white/20 hover:-translate-y-1">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Ops Controls</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Ops Controls</div>
           <div className="od-toggle-row">
-            <span className="font-semibold tracking-tight text-sm" style={{ color: '#dfe6fe' }}>Demo Mode</span>
+            <span className=" tracking-tight text-sm" style={{ color: '#dfe6fe' }}>Demo Mode</span>
             <Toggle checked={demoMode} onChange={setDemoMode} />
           </div>
           <div className="od-toggle-row">
-            <span className="font-semibold tracking-tight text-sm" style={{ color: '#dfe6fe' }}>Connected Ecosystem</span>
+            <span className=" tracking-tight text-sm" style={{ color: '#dfe6fe' }}>Connected Ecosystem</span>
             <Toggle checked={connectedEco} onChange={setConnectedEco} />
           </div>
           <div className="od-toggle-row">
-            <span className="font-semibold tracking-tight text-sm" style={{ color: '#dfe6fe' }}>Anonymize KPIs</span>
+            <span className=" tracking-tight text-sm" style={{ color: '#dfe6fe' }}>Anonymize KPIs</span>
             <Toggle checked={anonymizeKpis} onChange={setAnonymizeKpis} />
           </div>
           <div className="od-toggle-row">
-            <span className="font-semibold tracking-tight text-sm" style={{ color: '#dfe6fe' }}>Freeze Mode</span>
+            <span className=" tracking-tight text-sm" style={{ color: '#dfe6fe' }}>Freeze Mode</span>
             <Toggle checked={freezeMode} onChange={setFreezeMode} />
           </div>
           <div className="mt-4 text-[10px] text-muted-foreground text-center font-mono uppercase tracking-wider">
@@ -238,7 +238,7 @@ export function OmniDashLayout() {
 
         {/* OmniTrace */}
         <div className="glass transition-all duration-300 ease-out hover:border-white/20 hover:-translate-y-1">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3">OmniTrace</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">OmniTrace</div>
           {TRACE_FEED.map((item) => (
             <div key={item.text} className="od-trace-item transition-all duration-300 hover:translate-x-1">
               <span className="od-trace-dot shadow-[0_0_8px_currentColor]" style={{ background: item.color, color: item.color }} />
@@ -252,41 +252,41 @@ export function OmniDashLayout() {
 
         {/* Analytics */}
         <div className="glass transition-all duration-300 ease-out hover:border-white/20 hover:-translate-y-1">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Analytics</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Analytics</div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center transition-all duration-300 hover:border-white/20 hover:-translate-y-1 shadow-sm">
-              <div className="font-mono text-xl font-extrabold" style={{ color: '#dfe6fe' }}>27/50</div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1 font-bold">Tasks Today</div>
+              <div className="font-mono text-xl " style={{ color: '#dfe6fe' }}>27/50</div>
+              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1 ">Tasks Today</div>
             </div>
             <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center transition-all duration-300 hover:border-white/20 hover:-translate-y-1 shadow-sm">
-              <div className="font-mono text-xl font-extrabold text-[#34d399]">96.8%</div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1 font-bold">Success Rate</div>
+              <div className="font-mono text-xl  text-[#34d399]">96.8%</div>
+              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1 ">Success Rate</div>
             </div>
             <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center transition-all duration-300 hover:border-white/20 hover:-translate-y-1 shadow-sm">
-              <div className="font-mono text-xl font-extrabold text-[#f97316]">842ms</div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1 font-bold">Avg. Latency</div>
+              <div className="font-mono text-xl  text-[#f97316]">842ms</div>
+              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1 ">Avg. Latency</div>
             </div>
             <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center transition-all duration-300 hover:border-white/20 hover:-translate-y-1 shadow-sm">
-              <div className="font-mono text-xl font-extrabold text-[#4ade80]">$3,240</div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1 font-bold">Cost Saved</div>
+              <div className="font-mono text-xl  text-[#4ade80]">$3,240</div>
+              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1 ">Cost Saved</div>
             </div>
           </div>
         </div>
 
         {/* Security Audit */}
         <div className="glass transition-all duration-300 ease-out hover:border-white/20 hover:-translate-y-1">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Security Audit</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Security Audit</div>
           <div className="flex items-center gap-3 mb-2">
             <Shield className="h-5 w-5 text-[#34d399] drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
             <div>
-              <div className="text-sm font-extrabold tracking-tight" style={{ color: '#dfe6fe' }}>Zero Trust Active</div>
-              <div className="text-xs font-semibold tracking-tight text-slate-400">All gateways secured</div>
+              <div className="text-sm  tracking-tight" style={{ color: '#dfe6fe' }}>Zero Trust Active</div>
+              <div className="text-xs  tracking-tight text-slate-400">All gateways secured</div>
             </div>
           </div>
           <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-3 font-mono">
             LAST SCAN: 12 MIN AGO
           </div>
-          <button type="button" className="od-scan-btn transition-all duration-300 hover:-translate-y-0.5 shadow-sm text-xs font-bold tracking-widest uppercase">
+          <button type="button" className="od-scan-btn transition-all duration-300 hover:-translate-y-0.5 shadow-sm text-xs  tracking-widest uppercase">
             <Scan className="h-3 w-3 mr-1" />
             Scan Now
           </button>
