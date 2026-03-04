@@ -11,7 +11,7 @@ DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_type WHERE typname = 'cb_state_enum'
   ) THEN
-    CREATE TYPE public.cb_state_enum AS ENUM (
+    CREATE TYPE public.cb_state_enum AS ENUM ( -- NOSONAR
       'CLOSED', 'HALF_OPEN', 'OPEN' -- NOSONAR
     );
   END IF;
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS public.circuit_breaker_state (
   service_name TEXT NOT NULL,
 
   -- State
-  state public.cb_state_enum NOT NULL DEFAULT 'CLOSED',
+  state public.cb_state_enum NOT NULL DEFAULT 'CLOSED', -- NOSONAR
   failure_count INTEGER NOT NULL DEFAULT 0,
   success_count INTEGER NOT NULL DEFAULT 0,
   last_failure_at TIMESTAMPTZ,

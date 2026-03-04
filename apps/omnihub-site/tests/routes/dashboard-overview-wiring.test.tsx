@@ -9,8 +9,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
-import { DashboardOverview } from '../../apps/omnihub-site/src/pages/DashboardOverview';
-import { useOmniModal } from '@/stores/omniModalStore';
+import { DashboardOverview } from '../../src/pages/DashboardOverview';
+import { useOmniModal } from '../../../../src/stores/omniModalStore';
 
 
 // ARRANGE: Mock the router navigation to test Live integration handling

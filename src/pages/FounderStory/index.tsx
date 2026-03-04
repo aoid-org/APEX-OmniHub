@@ -239,7 +239,7 @@ const FounderStory = memo(function FounderStory() {
         <div className="relative z-[2] max-w-[860px] animate-fadeUp">
           <p className="font-mono text-[0.6rem] tracking-[0.25em] uppercase text-apex-teal mb-5 flex items-center gap-4">
             <span className="block w-6 h-px bg-apex-teal" aria-hidden="true" />
-            Founder&apos;s Story
+            {' '}Founder&apos;s Story
           </p>
 
           <div className="flex gap-2 mb-5 flex-wrap">
@@ -260,8 +260,8 @@ const FounderStory = memo(function FounderStory() {
 
           <p className="font-mono text-[0.62rem] tracking-[0.22em] uppercase text-apex-muted font-bold mb-[0.45rem]">Your Systems. Your Rules.</p>
           <p className="font-mono text-[0.58rem] tracking-[0.18em] uppercase text-apex-orange">
-            Directable <span className="text-apex-muted mx-1">&bull;</span>
-            Auditable <span className="text-apex-muted mx-1">&bull;</span>
+            Directable{' '}<span className="text-apex-muted mx-1">&bull;</span>
+            {' '}Auditable{' '}<span className="text-apex-muted mx-1">&bull;</span>
             Reversible
           </p>
 
@@ -313,7 +313,7 @@ const FounderStory = memo(function FounderStory() {
             <p key={text} className="text-base text-apex-text-dim mb-6 text-justify indent-8 hyphens-auto">{text}</p>
           ))}
 
-          <ul className="list-none my-6 flex flex-col gap-3" role="list">
+          <ul className="list-none my-6 flex flex-col gap-3">
             {[
               ['Universal integration', 'vendor agnostic by design'],
               ['Universal translation', 'systems and humans do not think in one language'],

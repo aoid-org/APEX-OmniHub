@@ -71,7 +71,7 @@ export const Header = memo(function Header() {
             className="text-apex-orange2 py-[0.65rem] border-b border-apex-teal/10 flex items-center justify-between text-[0.9rem] font-medium"
             onClick={closeDrawer}
           >
-            Founder&apos;s Story
+            <span>Founder&apos;s Story</span>{' '}
             <span className="font-mono text-[0.5rem] tracking-[0.14em] uppercase px-[0.6em] py-[0.22em] bg-apex-orange/[0.08] border border-apex-orange/[0.22] text-apex-orange2 rounded-[2px]">
               New
             </span>
