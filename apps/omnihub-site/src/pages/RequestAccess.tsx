@@ -753,9 +753,6 @@ export function RequestAccessPage(): JSX.Element {
             >
               {isSubmitting ? 'Submitting...' : requestAccessConfig.submitLabel}
             </button>
-            <div className="mt-4 text-center">
-              {/* // TODO[DEFERRED]: Request Access via Voice - integration point: VoiceInterface onOpen missing */}
-            </div>
           </form>
 
           {/* Fallback options */}

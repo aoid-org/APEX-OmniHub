@@ -45,11 +45,11 @@ describe('DashboardOverview - OmniBoard Wiring', () => {
     );
 
     // Filter down to the specific Partial integration tile (e.g. Orchestrator)
-    const partialAppTile = screen.getByText('Orchestrator').closest('div[draggable="true"]') || screen.getByText('Orchestrator').parentElement?.parentElement;
-    expect(partialAppTile).not.toBeNull();
+    const partialAppTile = screen.getByText('Orchestrator').closest('div[draggable="true"]') ?? screen.getByText('Orchestrator').parentElement?.parentElement;
+    if (!partialAppTile) throw new Error('Partial app tile not found');
 
     // ACT: Fire a click event on the partial integration container
-    fireEvent.click(partialAppTile!);
+    fireEvent.click(partialAppTile);
 
     // ASSERT: Verify propagation stopped and modal state invoked
     const modalState = useOmniModal.getState();
@@ -68,11 +68,11 @@ describe('DashboardOverview - OmniBoard Wiring', () => {
     );
 
     // Filter down to the specific Live integration tile (e.g. OmniBoard)
-    const liveAppTile = screen.getByText('OmniBoard').closest('div[draggable="true"]') || screen.getByText('OmniBoard').parentElement?.parentElement;
-    expect(liveAppTile).not.toBeNull();
+    const liveAppTile = screen.getByText('OmniBoard').closest('div[draggable="true"]') ?? screen.getByText('OmniBoard').parentElement?.parentElement;
+    if (!liveAppTile) throw new Error('Live app tile not found');
 
     // ACT: Fire a click event
-    fireEvent.click(liveAppTile!);
+    fireEvent.click(liveAppTile);
 
     // ASSERT: Verify navigation routing
     expect(mockNavigate).toHaveBeenCalledWith('/omnidash/omniport');
