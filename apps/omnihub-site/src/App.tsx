@@ -71,7 +71,9 @@ const routeElements: Readonly<Record<string, ReactElement>> = {
   settings: <ComingSoonPage title='Settings' desc='Platform configuration and preferences' />,
 };
 
-const omniDashRoutes: readonly AppRoute[] = APP_REGISTRY.filter((entry) => entry.key !== 'omniboard').map((entry) => ({
+import { APP_REGISTRY, type AppRegistryEntry } from '../../../packages/core/src/registry';
+
+const omniDashRoutes: readonly AppRoute[] = APP_REGISTRY.filter((entry: AppRegistryEntry) => entry.key !== 'omniboard').map((entry: AppRegistryEntry) => ({
   path: entry.routePath.replace('/omnidash/', ''),
   element: routeElements[entry.key],
   isPublic: false,

@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
 import lightbulbIcon from '@/assets/lightbulb-icon.png';
-import { APP_REGISTRY } from '../../../../packages/core/src/registry';
+import { APP_REGISTRY, type AppRegistryEntry } from '../../../../../packages/core/src/registry';
 
 /* ── Real app logos via Clearbit ── */
 const LOGO = (domain: string) => `https://logo.clearbit.com/${domain}`;
@@ -32,7 +32,7 @@ interface ContextItem {
   readonly insight: string;
 }
 
-const INITIAL_CONTEXT: readonly ContextItem[] = APP_REGISTRY.slice(0, 3).map((entry) => ({
+const INITIAL_CONTEXT: readonly ContextItem[] = APP_REGISTRY.slice(0, 3).map((entry: AppRegistryEntry) => ({
   name: entry.label,
   health: entry.healthContext.health,
   insight: entry.healthContext.insight,
@@ -45,7 +45,7 @@ const HC = {
 } as const;
 
 
-const APPS = APP_REGISTRY.map((entry) => ({
+const APPS = APP_REGISTRY.map((entry: AppRegistryEntry) => ({
   name: entry.label,
   cat: entry.category,
   logo: LOGO(entry.logoDomain),

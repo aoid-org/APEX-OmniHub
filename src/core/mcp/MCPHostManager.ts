@@ -28,10 +28,26 @@ import {
   type MCPTransport,
 } from './MCPTransport';
 import type { MCPConfig } from './mcp.config';
-<<<<<<< HEAD
-=======
-import { BRIDGE_ACTIONS, resolveBridgeRiskLevel, type BridgePayload } from '@/omniconnect/bridge/acl';
->>>>>>> origin/main
+
+export interface BridgePayload {
+  action: string;
+  discrepancy: string;
+  source: string;
+  timestamp: string;
+  anomaly: string;
+}
+
+export type BridgeRiskLevel = 'read' | 'write' | 'destructive';
+
+export function resolveBridgeRiskLevel(
+  toolName: string,
+  fallback: BridgeRiskLevel
+): BridgeRiskLevel {
+  const lw = toolName.toLowerCase();
+  if (lw.includes('delete') || lw.includes('destroy') || lw.includes('drop')) return 'destructive';
+  if (lw.includes('create') || lw.includes('update') || lw.includes('insert') || lw.includes('modify')) return 'write';
+  return fallback;
+}
 
 // ============================================================================
 // Types
@@ -216,7 +232,7 @@ export class MCPHostManager {
       const approved = await this.requestApproval({
         toolName: parsed.toolName,
         params: parsed.params,
-        riskLevel: resolveBridgeRiskLevel(parsed.toolName, tool.riskLevel),
+        riskLevel: tool.riskLevel ?? 'write',
         serverId: tool.serverId,
       });
 
@@ -363,43 +379,8 @@ export class MCPHostManager {
   ): void {
     this.registry.updateStatus(serverId, status, error);
   }
-<<<<<<< HEAD
-=======
 
-  // --------------------------------------------------------------------------
-  // Financial Approval Gate (OmniMCP)
-  // --------------------------------------------------------------------------
 
-  /**
-   * Gate for saga actions that mutate invoice or compliance_records data.
-   *
-   * Flow:
-   *   1. Dispatch mcp_tool_approve → omniModalStore via approvalCallback
-   *   2. Await user confirmation (fail-closed — no callback = reject)
-   *   3. On rejection: return a PENDING_NETWORK BridgePayload
-   *   4. On approval: return null (caller proceeds)
-   *
-   * @param toolName  - The tool name requesting financial data access
-   * @param params    - Tool parameters for display in approval modal
-   * @param correlId  - Correlation ID for audit trail
-   * @returns null on approval, PENDING_NETWORK BridgePayload on rejection
-   */
-  async requireFinancialApproval(
-    toolName: string,
-    params: Record<string, unknown>,
-    correlId: string,
-  ): Promise<BridgePayload | null> {
-    const approved = await this.requestApproval({
-      toolName,
-      params,
-      riskLevel: 'write',
-      serverId: 'financial-gate',
-    });
-
-    if (approved) return null;
-
-    return buildPendingNetworkPayload(correlId);
-  }
 }
 
 function coerceUnknownToString(value: unknown, fallback = ''): string {
@@ -407,19 +388,4 @@ function coerceUnknownToString(value: unknown, fallback = ''): string {
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (value === null || value === undefined) return fallback;
   return fallback;
-}
-
-// ── Module-level helpers (not on class to keep cognitive complexity ≤ 15) ─────
-
-function buildPendingNetworkPayload(correlId: string): BridgePayload {
-  // Validate action membership at compile time via the imported const array
-  const action = BRIDGE_ACTIONS[0]; // 'PENDING_NETWORK'
-  return {
-    action,
-    discrepancy: '0.00',
-    source: 'WEB3',
-    timestamp: new Date().toISOString(),
-    anomaly: `MCP_APPROVAL_REJECTED: correlationId=${correlId}`,
-  };
->>>>>>> origin/main
 }

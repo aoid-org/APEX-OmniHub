@@ -24,7 +24,7 @@ export interface AppRegistryEntry {
 type AppRegistrySeed = {
   readonly key: AppRegistryEntry['key'];
   readonly label: AppRegistryEntry['label'];
-  readonly routePath: AppRegistryEntry['routePath'];
+  readonly routePath: `/omnidash${string}`;
   readonly category: AppRegistryCategory;
   readonly iconAssetKey: AppRegistryEntry['iconAssetKey'];
   readonly logoDomain: AppRegistryEntry['logoDomain'];
@@ -252,7 +252,7 @@ const APP_REGISTRY_SOURCE: readonly AppRegistrySeed[] = [
     syncedMinutesAgo: 2,
     status: 'Live',
   },
-] as const;
+];
 
 export const APP_REGISTRY: readonly AppRegistryEntry[] = APP_REGISTRY_SOURCE.map(createAppRegistryEntry);
 
