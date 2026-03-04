@@ -546,9 +546,11 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-2) var(--space-4);
-  border-radius: 9999px;
+  border-radius: var(--border-radius-md);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
+  line-height: 1;
+  border: var(--border-width, 1px) solid transparent;
   text-decoration: none;
   transition: all var(--transition-fast);
   white-space: nowrap;

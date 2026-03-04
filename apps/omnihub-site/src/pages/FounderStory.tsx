@@ -264,14 +264,6 @@ const FounderStory = memo(function FounderStory() {
 
           <p className="font-mono text-[0.62rem] tracking-[0.22em] uppercase text-apex-muted font-bold mb-[0.45rem]">Your Systems. Your Rules.</p>
           <p className="font-mono text-[0.58rem] tracking-[0.18em] uppercase text-apex-orange">Directable<span className="text-apex-muted mx-1">&bull;</span>Auditable<span className="text-apex-muted mx-1">&bull;</span>Reversible</p>
-
-          <div className="flex items-center gap-6 mt-8 flex-wrap font-mono text-[0.54rem] tracking-[0.12em] uppercase text-apex-muted">
-            <span>JR - Founder and CTO</span>
-            <span className="w-px h-3 bg-apex-border hidden sm:block" aria-hidden="true" />
-            <span>APEX Business Systems Ltd.</span>
-            <span className="w-px h-3 bg-apex-border hidden sm:block" aria-hidden="true" />
-            <span>Edmonton, AB</span>
-          </div>
         </div>
       </section>
 
