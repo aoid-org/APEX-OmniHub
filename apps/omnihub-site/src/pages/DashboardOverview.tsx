@@ -229,7 +229,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
               {agentStatus === 'listening' ? (
                 <>
                   {[6, 10, 16, 10, 6].map((h, i) => (
-                    <div key={`bar-${i}`} style={{ width: 3, height: h, borderRadius: 2, background: 'var(--health-green)', opacity: 0.7 }} />
+                    <div key={`bar-${String(h)}-${String(i)}`} style={{ width: 3, height: h, borderRadius: 2, background: 'var(--health-green)', opacity: 0.7 }} />
                   ))}
                   <span style={{ color: 'var(--health-green)', marginLeft: 4 }}>Listening...</span>
                 </>
@@ -439,8 +439,11 @@ export const DashboardOverview = memo(function DashboardOverview() {
             <div
               key={app.key}
               className={`app-tile${mobileExpanded === app.key ? ' mobile-expanded' : ''}`}
+              role="button"
+              tabIndex={0}
               draggable
               onDragStart={(e) => { e.dataTransfer.setData('text/plain', app.key); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
               onClick={() => {
                 // Mobile: toggle expand
                 setMobileExpanded(prev => prev === app.key ? null : app.key);

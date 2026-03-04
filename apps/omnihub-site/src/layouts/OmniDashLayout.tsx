@@ -169,15 +169,22 @@ export function OmniDashLayout() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--tile-gap)' }}>
                   {ecoAppsVisible.map((app) => (
                     <div className="app-tile" key={app.key}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => omniModal.invoke({
                         id: `eco-${app.key}`,
                         provider: app.label,
                         type: 'oauth',
                         title: `${app.label} Connection`,
                         description: `Configure ${app.label} integration for ${app.category} data synchronization.`,
-                        onComplete: async (payload) => { console.warn(`${app.label} configured:`, payload); },
-                        onCancel: () => { console.warn(`${app.label} config dismissed.`); },
+                        onComplete: async (payload) => {
+                          console.warn(`${app.label} configured:`, payload);
+                        },
+                        onCancel: () => {
+                          console.warn(`${app.label} config dismissed.`);
+                        },
                       })}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                       style={{ cursor: 'pointer' }}
                     >
                       <img
@@ -202,16 +209,27 @@ export function OmniDashLayout() {
                 </button>
               </>
             ) : (
-              <div className="app-tile-add" onClick={() => omniModal.invoke({
-                id: 'add-apex-app',
-                provider: 'APEX Ecosystem',
-                type: 'selection',
-                title: 'Add APEX App',
-                description: 'Select an app to connect to your APEX ecosystem.',
-                schema: { items: APP_REGISTRY.map(a => ({ id: a.key, label: a.label })) },
-                onComplete: async (payload) => { console.warn('App selected:', payload); setConnectedEco(true); },
-                onCancel: () => { console.warn('Add app dismissed.'); },
-              })} style={{ cursor: 'pointer' }}>
+              <div className="app-tile-add"
+                role="button"
+                tabIndex={0}
+                onClick={() => omniModal.invoke({
+                  id: 'add-apex-app',
+                  provider: 'APEX Ecosystem',
+                  type: 'selection',
+                  title: 'Add APEX App',
+                  description: 'Select an app to connect to your APEX ecosystem.',
+                  schema: { items: APP_REGISTRY.map(a => ({ id: a.key, label: a.label })) },
+                  onComplete: async (payload) => {
+                    console.warn('App selected:', payload);
+                    setConnectedEco(true);
+                  },
+                  onCancel: () => {
+                    console.warn('Add app dismissed.');
+                  },
+                })}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
+                style={{ cursor: 'pointer' }}
+              >
                 <span style={{ fontSize: 20 }}>+</span>
                 Add APEX App
               </div>
@@ -303,7 +321,7 @@ export function OmniDashLayout() {
     <div className="omnidash-shell" data-theme={isDarkMode ? 'dark' : 'light'}>
       {/* Mobile overlay for sidebar/widgets drawer */}
       {mobileMenuOpen && (
-        <div className="mobile-overlay" onClick={() => setMobileMenuOpen(null)} />
+        <div className="mobile-overlay" role="button" tabIndex={0} onClick={() => setMobileMenuOpen(null)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') { setMobileMenuOpen(null); } }} aria-label="Close menu" />
       )}
 
       {/* ────── LEFT SIDEBAR ────── */}
@@ -468,11 +486,13 @@ export function OmniDashLayout() {
 
       {/* ────── APEX ECOSYSTEM OVERFLOW MODAL ────── */}
       {showEcoModal && (
-        <div className="od-modal-overlay" onClick={() => setShowEcoModal(false)}>
+        <div className="od-modal-overlay" role="button" tabIndex={0} onClick={() => setShowEcoModal(false)} onKeyDown={(e) => { if (e.key === 'Escape') { setShowEcoModal(false); } }} aria-label="Close modal">
           <div
             className="od-modal-content"
             style={{ maxWidth: 700, padding: 32 }}
+            role="dialog"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
           >
             <button
               type="button"
@@ -485,15 +505,26 @@ export function OmniDashLayout() {
               <div className="eco-section-title" style={{ fontSize: 20, marginBottom: 20 }}>APEX Ecosystem</div>
               <div className="integrated-grid">
                 {ecoAppsOverflow.map((app) => (
-                  <div className="app-tile" key={app.key} onClick={() => omniModal.invoke({
-                    id: `overflow-eco-${app.key}`,
-                    provider: app.label,
-                    type: 'oauth',
-                    title: `${app.label} Connection`,
-                    description: `Configure ${app.label} integration for ${app.category} data synchronization.`,
-                    onComplete: async (payload) => { console.warn(`${app.label} configured:`, payload); setShowEcoModal(false); },
-                    onCancel: () => { console.warn(`${app.label} dismissed.`); },
-                  })} style={{ cursor: 'pointer' }}>
+                  <div className="app-tile" key={app.key}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => omniModal.invoke({
+                      id: `overflow-eco-${app.key}`,
+                      provider: app.label,
+                      type: 'oauth',
+                      title: `${app.label} Connection`,
+                      description: `Configure ${app.label} integration for ${app.category} data synchronization.`,
+                      onComplete: async (payload) => {
+                        console.warn(`${app.label} configured:`, payload);
+                        setShowEcoModal(false);
+                      },
+                      onCancel: () => {
+                        console.warn(`${app.label} dismissed.`);
+                      },
+                    })}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <img
                       src={LOGO(app.logoDomain)}
                       alt={app.label}

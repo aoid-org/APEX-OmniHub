@@ -1223,6 +1223,7 @@
   }
   .od-content {
     padding: 12px 8px;
+    padding-bottom: 72px;
   }
   .od-modal-overlay {
     padding: 8px;
@@ -1298,7 +1299,7 @@
   }
   /* Mobile bottom nav bar */
   .mobile-bottom-nav {
-    display: flex;
+    display: flex !important;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -1328,17 +1329,10 @@
   .mobile-bottom-nav button.active {
     color: var(--accent);
   }
-  /* Offset content for bottom nav */
-  .od-content {
-    padding-bottom: 72px !important;
-  }
-  /* Show mobile-only elements */
   .mobile-only-btn {
     display: flex !important;
   }
-  .mobile-bottom-nav {
-    display: flex !important;
-  }
+
 }
 
 /* ===== Custom APEX Scrollbars ===== */
