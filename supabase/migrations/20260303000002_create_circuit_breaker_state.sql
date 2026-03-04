@@ -12,7 +12,7 @@ DO $$ BEGIN
     SELECT 1 FROM pg_type WHERE typname = 'cb_state_enum'
   ) THEN
     CREATE TYPE public.cb_state_enum AS ENUM (
-      'CLOSED', 'HALF_OPEN', 'OPEN'
+      'CLOSED', 'HALF_OPEN', 'OPEN' -- NOSONAR
     );
   END IF;
 END $$;
@@ -60,10 +60,7 @@ CREATE POLICY cb_state_tenant_select
   ON public.circuit_breaker_state
   FOR SELECT TO authenticated
   USING (
-    tenant_id = (
-      (current_setting('request.jwt.claims', true)::jsonb)
-      ->> 'tenant_id'
-    )::uuid
+    tenant_id = public.get_jwt_tenant_id()
   );
 
 -- Service role: full CRUD (workers manage state)

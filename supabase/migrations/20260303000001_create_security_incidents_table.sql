@@ -77,10 +77,7 @@ CREATE POLICY security_incidents_user_select
   ON public.security_incidents
   FOR SELECT TO authenticated
   USING (
-    tenant_id = (
-      (current_setting('request.jwt.claims', true)::jsonb)
-      ->> 'tenant_id'
-    )::uuid
+    tenant_id = public.get_jwt_tenant_id()
   );
 
 -- INSERT allowed (for logging from client-side detection)
@@ -88,10 +85,7 @@ CREATE POLICY security_incidents_user_insert
   ON public.security_incidents
   FOR INSERT TO authenticated
   WITH CHECK (
-    tenant_id = (
-      (current_setting('request.jwt.claims', true)::jsonb)
-      ->> 'tenant_id'
-    )::uuid
+    tenant_id = public.get_jwt_tenant_id()
   );
 
 -- No UPDATE/DELETE policies for authenticated = append-only
