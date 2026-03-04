@@ -5,6 +5,97 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.9] - 2026-03-03
+
+### Added — Memory & Resilience Architecture (ACRA v2.2)
+
+#### Persistent Memory Subsystem
+
+- **[NEW]** `supabase/migrations/20260303000000_create_memories_table.sql` — ACRA memories table: pgvector HNSW index, `tenant_id` multi-tenant isolation, `device_id` + `device_trust_level` enforcement, `provenance_type` + `trust_score` anti-poisoning, SHA-256 content-hash deduplication (`UNIQUE(tenant_id, user_id, content_hash)`), 4-type cognitive classification, importance scoring, `embedding_model` versioning
+- **[NEW]** PostgreSQL ENUMs: `memory_type_enum`, `provenance_type_enum`, `device_trust_enum`
+- **[NEW]** RLS tenant isolation: JWT `tenant_id` claim enforcement on all policies, device trust gating on INSERT (blocks `blocked`/`unknown`)
+- **[NEW]** `promote_memory()` — Anti-poisoning gate: only `user_confirmed` provenance can promote to semantic/procedural
+- **[NEW]** `export_user_memories()` — GDPR/PIPEDA data subject access request
+- **[NEW]** `purge_user_memories()` — Audited hard delete for account closure/legal
+- **[NEW]** `fetch_tenant_memory_health()` — SECURITY DEFINER RPC with JWT tenant validation
+- **[NEW]** `set_ef_search()` — HNSW runtime recall tuning (P1, default=100)
+- **[NEW]** `batch_reembed_candidates()` + `apply_reembedding()` — Throttled re-embed with SKIP LOCKED (P1)
+- **[NEW]** `apply_memory_ttl_policy()` — Sole owner of `expires_at`, 3-tier pruning
+- **[NEW]** `memory_health_stats` view — Tenant-scoped aggregates with trust + poisoning metrics
+
+#### Compliance Retention Split
+
+- **[NEW]** `supabase/migrations/20260303000001_create_security_incidents_table.sql` — 24-month breach retention (PIPEDA), append-only RLS, incident classification, severity levels, resolution tracking
+- **[NEW]** `cleanup_old_security_incidents()` — Monthly cleanup of incidents >24 months
+- **Retention Matrix**: `audit_logs` (90d) | `security_incidents` (24mo) | `idempotency_receipts` (30d)
+
+#### Circuit Breaker State Persistence (P1)
+
+- **[NEW]** `supabase/migrations/20260303000002_create_circuit_breaker_state.sql` — Persists CB state across worker restarts, tenant-scoped, atomic `upsert_circuit_breaker()`, per-service config overrides
+
+#### Memory SDK (P2)
+
+- **[NEW]** `src/lib/memory/MemoryClient.ts` — Unified SDK: `store()`, `recall()`, `purge()`, `export()`
+- **[NEW]** `src/lib/memory/index.ts` — Barrel export with full type definitions
+
+#### OmniDash Observability Widgets (Ops Page)
+
+- **[MODIFY]** `src/components/omnidash/Ops.tsx` — Memory Health + System Resilience widgets, `xs`/`xxs` responsive breakpoints
+- **[MODIFY]** `src/omnidash/api.ts` — `MemoryHealthStats` with `avg_trust_score`, `poisoned_candidate_count`
+- **[MODIFY]** `src/omnidash/hooks.ts` — `useMemoryHealth()` hook (30s poll)
+
+#### Quarantine Lane (Round 3: Fail-Closed Governance)
+
+- **[NEW]** `is_quarantined` column — quarantined rows invisible to normal recall (SELECT RLS filter), blocked from promotion
+- **[NEW]** `quarantine_memory()` — SECURITY DEFINER function, logs to `security_incidents`
+- **[NEW]** `unquarantine_memory()` — service_role only release
+- **[NEW]** `quarantined_memories` view — Ops-only, tenant-scoped, service_role access
+- **[NEW]** `quarantined_count` added to `memory_health_stats` view + `fetch_tenant_memory_health()` RPC
+
+#### Encrypt-at-Rest (Round 3: Ciphertext-Only Storage)
+
+- **[NEW]** `pgcrypto` extension enabled
+- **[NEW]** `content_encrypted BYTEA` + `encryption_key_id TEXT` columns
+- **[NEW]** `encrypt_memory_content()` — PGP symmetric encryption, replaces `content` with `[ENCRYPTED]` sentinel
+- **[NEW]** `decrypt_memory_content()` — SECURITY DEFINER decrypt, returns plaintext without modifying row
+- **Key Management**: Server-managed keys (Supabase Vault / env secrets), never exposed to client
+
+#### Observability Alert Thresholds
+
+| Metric                     | Warn             | Sev2/Sev1       |
+| -------------------------- | ---------------- | --------------- |
+| p95 API latency            | >500ms           | >1000ms (sev2)  |
+| Error rate                 | >2%              | >5% (sev1)      |
+| `poisoned_candidate_count` | Rising >baseline | Security review |
+
+### Rollback
+
+Explicit rollback scripts in `supabase/migrations/rollback/`:
+
+- `20260303000000_rollback.sql` — DROP order: views → functions → table → ENUMs → extension
+- `20260303000001_rollback.sql` — security_incidents cleanup
+- `20260303000002_rollback.sql` — circuit_breaker_state cleanup
+
+### Fixed
+
+- **`NotificationCenter.tsx`** — `Readonly` props (SonarQube)
+- **`man-mode-dispatcher.ts`** — Interface → function types, removed dead `taskLabel` parameter from `blockTask()`
+
+### Component Stability Gate
+
+- **[NEW]** `tests/e2e-playwright/ops-widgets-smoke.spec.ts` — Playwright smoke: Memory Health, System Resilience, Freeze Switch, Incident Log visible, zero console errors
+- **Rule**: Playwright smoke required if Ops UI changed (per APEX Bible)
+- **No stable exports renamed** — all existing test-ids and translation hooks preserved
+
+### Quality Gates
+
+- TypeScript (`tsc --noEmit`): 0 errors
+- ESLint: 0 errors, 0 warnings on all modified files
+- Build: exit 0
+- SonarQube: A-grade compliance
+
+---
+
 ## [1.3.8] - 2026-03-02
 
 ### Added — Agentic Intelligence Architecture (Phases 1–3A)
