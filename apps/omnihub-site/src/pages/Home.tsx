@@ -33,7 +33,7 @@ function Hero() {
           <h1 className="heading-hero hero__title flex flex-col items-center lg:items-start w-fit mx-auto lg:mx-0">
             <div className="flex flex-row gap-[0.5em] justify-center lg:justify-start text-center">
               <span className="w-min">{t('hero.headline.line1', { defaultValue: 'Connect anything.' })}</span>
-              <span className="w-min">{t('hero.headline.line2', { defaultValue: 'Change anything.' })}</span>
+              <span className="w-min">{t('hero.headline.line2', { defaultValue: 'Orchestrate everything.' })}</span>
             </div>
             <div className="w-full text-center mt-[0.1em]">
               <span>{t('hero.headline.line3', { defaultValue: 'Stay in control.' })}</span>
@@ -45,20 +45,11 @@ function Hero() {
           </p>
           
           <div className="flex flex-col gap-4 mt-6 mb-6">
-            <p className="hero__subtitle" style={{ 
-              textIndent: '1.5em', 
-              textAlign: 'justify', 
-              margin: 0
-            }}>
-              {t('hero.subtitle', { defaultValue: 'The AI Operating System for the Physical World. Software agents. Enterprise platforms. Physical AI hardware. Every action governed, audited, and reversible.' })}
+            <p className="hero__subtitle">
+              {t('hero.subtitle', { defaultValue: 'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.' })}
             </p>
-            <p className="hero__description" style={{ 
-              textIndent: '1.5em', 
-              textAlign: 'justify', 
-              color: 'rgba(100, 180, 255, 0.95)',
-              margin: 0
-            }}>
-              {t('hero.description', { defaultValue: 'Synchronize everything. Translate between any platforms. OmniHub coordinates AI, enterprise systems, and Web3 through a single controlled port. You own the data. You control the flow.' })}
+            <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
+              {t('hero.description', { defaultValue: 'OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.' })}
             </p>
           </div>
           
