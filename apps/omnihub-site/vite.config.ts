@@ -14,9 +14,9 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['icon.png'],
       manifest: {
-        name: 'APEX OmniLink',
-        short_name: 'OmniLink',
-        description: 'APEX OmniLink - Intelligence, Designed.',
+        name: 'APEX OmniHub',
+        short_name: 'OmniHub',
+        description: 'APEX OmniHub - Intelligence, Designed.',
         theme_color: '#0f1729',
         background_color: '#0f1729',
         display: 'standalone',
