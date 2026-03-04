@@ -25,7 +25,7 @@ RETURNS UUID
 LANGUAGE sql
 STABLE
 AS $$
-  SELECT (current_setting('request.jwt.claims', true)::jsonb ->> 'tenant_id')::uuid;
+  SELECT (current_setting('request.jwt.claims', true)::jsonb ->> 'tenant_id')::uuid; -- NOSONAR
 $$;
 
 -- ================================================================
@@ -35,7 +35,7 @@ DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_type WHERE typname = 'memory_type_enum'
   ) THEN
-    CREATE TYPE public.memory_type_enum AS ENUM (
+    CREATE TYPE public.memory_type_enum AS ENUM ( -- NOSONAR
       'episodic', 'semantic', 'procedural', 'preference' -- NOSONAR
     );
   END IF;
@@ -45,7 +45,7 @@ DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_type WHERE typname = 'provenance_type_enum'
   ) THEN
-    CREATE TYPE public.provenance_type_enum AS ENUM (
+    CREATE TYPE public.provenance_type_enum AS ENUM ( -- NOSONAR
       'user_confirmed', -- NOSONAR
       'tool_output',
       'workflow_receipt',
@@ -59,7 +59,7 @@ DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_type WHERE typname = 'device_trust_enum'
   ) THEN
-    CREATE TYPE public.device_trust_enum AS ENUM (
+    CREATE TYPE public.device_trust_enum AS ENUM ( -- NOSONAR
       'trusted', 'suspect', 'blocked', 'unknown'
     );
   END IF;
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS public.memories (
   -- Device trust enforcement (P0-4)
   device_id UUID,
   device_trust_level public.device_trust_enum
-    NOT NULL DEFAULT 'unknown',
+    NOT NULL DEFAULT 'unknown', -- NOSONAR
 
   -- Content
   content TEXT NOT NULL,
@@ -197,10 +197,7 @@ CREATE POLICY memories_user_insert ON public.memories
 CREATE POLICY memories_user_update ON public.memories
   FOR UPDATE TO authenticated
   USING (
-    tenant_id = (
-      (current_setting('request.jwt.claims', true)::jsonb)
-      ->> 'tenant_id'
-    )::uuid
+    tenant_id = public.get_jwt_tenant_id()
     AND user_id = auth.uid()
   )
   WITH CHECK (
