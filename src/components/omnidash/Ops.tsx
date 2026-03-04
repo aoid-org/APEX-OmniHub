@@ -211,13 +211,13 @@ export const Ops = () => {
         </div>
 
         {/* ── Memory Health (ACRA Observability) ──── */}
-        <div key="memoryhealth">
+        <div key="memoryhealth" data-testid="widget-memory-health">
           <Card className="h-full relative group shadow-md border-white/5 bg-[#121622]/50">
             <DragHandle />
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2">
                 <Brain className="h-4 w-4 text-purple-400" />
-                Memory Health
+                <span>Memory Health</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm pr-10">
@@ -359,13 +359,13 @@ export const Ops = () => {
         </div>
 
         {/* ── System Resilience (ACRA Observability) ── */}
-        <div key="systemresilience">
+        <div key="systemresilience" data-testid="widget-system-resilience">
           <Card className="h-full relative group shadow-md border-white/5 bg-[#0F131D]/80">
             <DragHandle />
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-emerald-400" />
-                System Resilience
+                <span>System Resilience</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm pr-10">

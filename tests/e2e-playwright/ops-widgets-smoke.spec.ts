@@ -23,11 +23,11 @@ test.describe('Ops Widgets Smoke (Component Stability Gate)', () => {
     await page.goto('/omnidash/ops', { waitUntil: 'networkidle' });
 
     // Memory Health widget must be visible
-    const memoryHealthCard = page.getByText('Memory Health');
+    const memoryHealthCard = page.getByTestId('widget-memory-health');
     await expect(memoryHealthCard).toBeVisible({ timeout: 10000 });
 
     // System Resilience widget must be visible
-    const resilienceCard = page.getByText('System Resilience');
+    const resilienceCard = page.getByTestId('widget-system-resilience');
     await expect(resilienceCard).toBeVisible({ timeout: 10000 });
 
     // Freeze Switch widget must be visible (pre-existing)

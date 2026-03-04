@@ -5,13 +5,13 @@ test.describe('OmniBoard Modal Integration Wiring', () => {
     // ARRANGE: Navigate to the Dashboard Overview
     await page.goto('/omnidash', { waitUntil: 'networkidle' });
 
-    // Scroll to the Integrated Apps section (below the hero tri-pane)
-    const appsSection = page.locator('.apps-hex');
-    await appsSection.scrollIntoViewIfNeeded();
-
-    // Ensure the integration apps section is loaded
+    // Scroll to the Integrated Apps section
     const appsHeader = page.getByText('Integrated Apps');
+    await appsHeader.scrollIntoViewIfNeeded();
     await expect(appsHeader).toBeVisible();
+
+    // The container for the apps is the parent of the header and the grid
+    const appsSection = appsHeader.locator('..').locator('..');
 
     // ACT: Click on a "Partial" app (Orchestrator has status: 'Partial' in APP_REGISTRY)
     const partialTile = appsSection.locator('div').filter({ hasText: /^Orchestrator/ });
@@ -36,8 +36,11 @@ test.describe('OmniBoard Modal Integration Wiring', () => {
     await page.goto('/omnidash', { waitUntil: 'networkidle' });
 
     // Scroll to the Integrated Apps section
-    const appsSection = page.locator('.apps-hex');
-    await appsSection.scrollIntoViewIfNeeded();
+    const appsHeader = page.getByText('Integrated Apps');
+    await appsHeader.scrollIntoViewIfNeeded();
+    await expect(appsHeader).toBeVisible();
+
+    const appsSection = appsHeader.locator('..').locator('..');
 
     // ACT: Click a "Live" app (OmniBoard has status: 'Live' in APP_REGISTRY)
     const liveTile = appsSection.locator('div').filter({ hasText: /^OmniBoard/ });

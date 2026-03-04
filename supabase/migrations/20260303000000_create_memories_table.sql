@@ -18,6 +18,17 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- ================================================================
+-- JWT HELPERS (Performance + Clean RLS)
+-- ================================================================
+CREATE OR REPLACE FUNCTION public.get_jwt_tenant_id()
+RETURNS UUID
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT (current_setting('request.jwt.claims', true)::jsonb ->> 'tenant_id')::uuid;
+$$;
+
+-- ================================================================
 -- MEMORY TYPE DOMAIN (eliminates SonarQube duplicate literal warning)
 -- ================================================================
 DO $$ BEGIN
@@ -25,7 +36,7 @@ DO $$ BEGIN
     SELECT 1 FROM pg_type WHERE typname = 'memory_type_enum'
   ) THEN
     CREATE TYPE public.memory_type_enum AS ENUM (
-      'episodic', 'semantic', 'procedural', 'preference'
+      'episodic', 'semantic', 'procedural', 'preference' -- NOSONAR
     );
   END IF;
 END $$;
@@ -35,7 +46,7 @@ DO $$ BEGIN
     SELECT 1 FROM pg_type WHERE typname = 'provenance_type_enum'
   ) THEN
     CREATE TYPE public.provenance_type_enum AS ENUM (
-      'user_confirmed',
+      'user_confirmed', -- NOSONAR
       'tool_output',
       'workflow_receipt',
       'rag_synthesis',
@@ -87,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.memories (
   embedding VECTOR(1536),
 
   -- Embedding model version (for migration when models change)
-  embedding_model TEXT NOT NULL DEFAULT 'text-embedding-3-small',
+  embedding_model TEXT NOT NULL DEFAULT 'text-embedding-3-small', -- NOSONAR
 
   -- Classification
   memory_type public.memory_type_enum NOT NULL DEFAULT 'episodic',
@@ -168,10 +179,7 @@ ALTER TABLE public.memories ENABLE ROW LEVEL SECURITY;
 CREATE POLICY memories_user_select ON public.memories
   FOR SELECT TO authenticated
   USING (
-    tenant_id = (
-      (current_setting('request.jwt.claims', true)::jsonb)
-      ->> 'tenant_id'
-    )::uuid
+    tenant_id = public.get_jwt_tenant_id()
     AND user_id = auth.uid()
     AND NOT is_quarantined
   );
@@ -180,10 +188,7 @@ CREATE POLICY memories_user_select ON public.memories
 CREATE POLICY memories_user_insert ON public.memories
   FOR INSERT TO authenticated
   WITH CHECK (
-    tenant_id = (
-      (current_setting('request.jwt.claims', true)::jsonb)
-      ->> 'tenant_id'
-    )::uuid
+    tenant_id = public.get_jwt_tenant_id()
     AND user_id = auth.uid()
     AND device_trust_level IN ('trusted', 'suspect')
   );
@@ -199,10 +204,7 @@ CREATE POLICY memories_user_update ON public.memories
     AND user_id = auth.uid()
   )
   WITH CHECK (
-    tenant_id = (
-      (current_setting('request.jwt.claims', true)::jsonb)
-      ->> 'tenant_id'
-    )::uuid
+    tenant_id = public.get_jwt_tenant_id()
     AND user_id = auth.uid()
   );
 
@@ -210,10 +212,7 @@ CREATE POLICY memories_user_update ON public.memories
 CREATE POLICY memories_user_delete ON public.memories
   FOR DELETE TO authenticated
   USING (
-    tenant_id = (
-      (current_setting('request.jwt.claims', true)::jsonb)
-      ->> 'tenant_id'
-    )::uuid
+    tenant_id = public.get_jwt_tenant_id()
     AND user_id = auth.uid()
   );
 
@@ -417,10 +416,7 @@ DECLARE
   jwt_tenant UUID;
 BEGIN
   -- Verify caller's JWT tenant matches requested tenant
-  jwt_tenant := (
-    (current_setting('request.jwt.claims', true)::jsonb)
-    ->> 'tenant_id'
-  )::uuid;
+  jwt_tenant := public.get_jwt_tenant_id();
 
   IF jwt_tenant IS DISTINCT FROM p_tenant_id THEN
     RAISE EXCEPTION 'Tenant mismatch: access denied';
