@@ -1,10 +1,8 @@
 /* OmniDash Layout — Glassmorphism + Hex Grid Shell
- * Font: Inter (Google Fonts)
+ * Font: Space Grotesk + JetBrains Mono
  * Accent: Burnt orange (#c2501f / #f97316) + Navy blue (#0a0e1a)
  */
 
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap");
 
 /* ===== Grid Shell ===== */
 .omnidash-shell {
