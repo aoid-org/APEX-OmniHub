@@ -90,7 +90,6 @@ jobs:
 
       - name: Verify changelog paths exist
         run: node scripts/verify-changelog-paths.js CHANGELOG.md
-        continue-on-error: true
 
       - name: Repo Hygiene Guard
         run: bash scripts/repo-hygiene-guard.sh
