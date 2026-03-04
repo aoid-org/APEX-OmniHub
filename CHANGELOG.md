@@ -5,6 +5,73 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.9] - 2026-03-03
+
+### Added
+
+- **ACRA v2.2 Persistent Memory (multi-tenant + anti-poisoning)**
+
+  - Tenant-isolated memory storage with RLS, device-trust gating, provenance + trust scoring, SHA-256 content-hash dedupe, cognitive classification, importance scoring, embedding model versioning, and HNSW vector search.
+  - Promotion gate: only `user_confirmed` provenance can promote to semantic/procedural.
+  - TTL policy owns `expires_at` (3-tier pruning); re-embedding is throttled (`SKIP LOCKED`).
+
+- **Compliance retention split**
+
+  - `security_incidents` table w/ append-only RLS + 24-month retention cleanup job.
+  - Retention matrix: `audit_logs` (90d) | `security_incidents` (24mo) | `idempotency_receipts` (30d)
+
+- **Circuit breaker persistence (P1)**
+
+  - Tenant-scoped state table + atomic `upsert_circuit_breaker()` to persist CB state across restarts.
+
+- **Quarantine lane (fail-closed governance)**
+
+  - `is_quarantined` blocks recall + promotion.
+  - `quarantine_memory()` logs to `security_incidents`.
+  - `unquarantine_memory()` is service_role-only.
+  - Ops-only view + health stat additions.
+
+- **Ciphertext-only memory storage**
+
+  - `pgcrypto` enabled.
+  - `content_encrypted BYTEA` + `encryption_key_id TEXT`.
+  - Encrypt on write; plaintext never persisted (sentinel replaces plaintext field).
+  - `decrypt_memory_content()` is SECURITY DEFINER (read-only; does not mutate rows).
+  - Keys are server-managed (Vault/env), never exposed to clients.
+
+- **Memory SDK (P2)**
+
+  - `MemoryClient`: `store()`, `recall()`, `purge()`, `export()`.
+
+- **Ops widgets + alert thresholds**
+  - Memory Health + System Resilience widgets on Ops page.
+  - Thresholds:
+    - p95 latency: warn >500ms, sev2 >1000ms
+    - error rate: warn >2%, sev1 >5%
+    - poisoned candidates rising: security review
+
+### Fixed
+
+- `NotificationCenter.tsx`: Readonly props for Sonar.
+- `man-mode-dispatcher.ts`: Function types; removed dead `taskLabel` arg from `blockTask()`.
+
+### Rollback
+
+- `supabase/migrations/rollback/20260303000000_rollback.sql`
+- `supabase/migrations/rollback/20260303000001_rollback.sql`
+- `supabase/migrations/rollback/20260303000002_rollback.sql`
+
+### Verification (release blocking)
+
+- `npm run typecheck` → 0 errors
+- `npm run lint` → 0 errors / 0 warnings
+- `npm test` → green
+- `npm run build` → exit 0
+- Apply migrations on clean DB; confirm RLS + RPC compile; run rollback scripts successfully.
+- Ops smoke: Memory Health + Resilience + Incident Log visible; zero console errors.
+
+---
+
 ## [1.3.8] - 2026-03-02
 
 ### Added — Agentic Intelligence Architecture (Phases 1–3A)
@@ -89,7 +156,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **useAuth.ts lint error (omnihub-site):** Resolved `react-hooks/set-state-in-effect` — `loading` initialized from `hasSupabaseConfig`.
+- **useAuth.ts lint error (omnihub-site):** Resolved 'react-hooks/set-state-in-effect' — `loading` initialized from `hasSupabaseConfig`.
 - **tools.py suppression comment (orchestrator):** Fixed `# nosonar` → `# NOSONAR` for SonarQube compliance.
 
 ### Security
@@ -144,7 +211,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Task 1: Idempotency Hit-Rate Monitoring
 
-- `orchestrator/metrics.py`: Prometheus counters `idempotency_hits_total` / `idempotency_misses_total` with `/metrics` endpoint
+- `orchestrator/metrics.py`: Prometheus counters `idempotency_hits_total` / `idempotency_misses_total` with '/metrics' endpoint
 - `docs/monitoring/idempotency_hitrate.json`: Grafana dashboard with hit-rate panel and < 95% alert rule
 - Integrated metrics server startup into `orchestrator/main.py` worker boot sequence
 - `tests/test_idempotency_metrics.py`: Unit tests for counter labels, hit-rate math, server idempotency
@@ -165,7 +232,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Documentation Updates
 
 - `docs/ops/OPS_RUNBOOK.md`: Added idempotency monitoring, pg_cron cleanup, guard rail response sections
-- `docs/project-status/LAUNCH_READINESS_v1.0.0.md`: Added v1.3.2+ production enhancement checklist
+- 'docs/project-status/LAUNCH_READINESS_v1.0.0.md': Added v1.3.2+ production enhancement checklist
 
 ### Quality Gates
 
@@ -183,17 +250,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Console logging hardened:** All 36+ `console.log` statements in production source code (`src/omniconnect/`, `src/lib/offline.ts`, `src/lib/omni-sentry.ts`) guarded with `import.meta.env.DEV` — zero information disclosure in production builds
 - **Console.info hardened:** All 6 `console.info` statements in OmniSentry monitoring module guarded for dev-only output
-- **ESLint blanket eslint-disable removed:** Removed `/* eslint-disable no-console */` from `src/lib/omni-sentry.ts`
-- **ESLint config tightened:** Removed overly broad `src/pages/**/*.tsx` and narrowed exemptions to only infrastructure files with properly guarded logging
+- **ESLint blanket eslint-disable removed:** Removed '/* eslint-disable no-console */' from `src/lib/omni-sentry.ts`
+- **ESLint config tightened:** Removed overly broad 'src/pages/**/*.tsx' and narrowed exemptions to only infrastructure files with properly guarded logging
 
 #### Test Infrastructure
 
-- **Vitest coverage crash fixed:** Coverage is now opt-in via `VITEST_COVERAGE=true` env var, preventing `ENOENT: coverage/.tmp/coverage-0.json` crash on default test runs
+- **Vitest coverage crash fixed:** Coverage is now opt-in via `VITEST_COVERAGE=true` env var, preventing 'ENOENT: coverage/.tmp/coverage-0.json' crash on default test runs
 - **`test:coverage` script updated:** Now sets `VITEST_COVERAGE=true` automatically
 
 #### Repository Hygiene
 
-- **Stale CI artifacts removed:** Deleted `final_eslint.json` (UTF-16 encoded legacy artifact), `security/npm-audit-latest.json`, `security/npm-audit-prod.json`, `coverage/` directory
+- **Stale CI artifacts removed:** Deleted `final_eslint.json` (UTF-16 encoded legacy artifact), 'security/npm-audit-latest.json', 'security/npm-audit-prod.json', `coverage/` directory
 - **`.gitignore` extended:** Added rules for stale CI artifacts to prevent re-commitment
 - **README.md updated:** Platform statistics updated to verified 2026-02-25 counts (259 source files, 93 components, 43 migrations, 87 test files, 11 CI pipelines)
 
@@ -251,7 +318,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Architecture Refactoring
 
 - **OmniDash SPA**: Restructured from multi-page routing to Single Page Application with panel-based navigation
-- Migrated `src/pages/OmniDash/{Today,Kpis,Ops,Integrations,Events}.tsx` → `src/components/omnidash/`
+- Migrated 'src/pages/OmniDash/{Today,Kpis,Ops,Integrations,Events}.tsx' → `src/components/omnidash/`
 - Enhanced `useOmniDashKeyboardShortcuts.ts` with panel-based activation keys (H, P, K, O, I, E, N, R, A, W)
 - Added `react-grid-layout` responsive dashboard widget positioning (breakpoints: lg:3, md:2, sm:1)
 - Added `framer-motion` for SPA panel transition animations
@@ -337,7 +404,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Docker Compose** — Redis image `7.2.0-v9` → `7.4.0-v3` (RediSearch module crash fix)
 - **ErrorBoundary.tsx** — Removed stray markdown injection, `window`→`globalThis`, `readonly` modifier, `@ts-ignore`→`@ts-expect-error`, replaced `console.group`/`groupEnd` with `console.error`
 - **VoiceInterface.tsx** — Removed unused `React` import, prefixed unused props, `Readonly<>` type, reduced cognitive complexity
-- **package.json** — Scoped `ajv@8.18.0` CVE override for `@nomicfoundation/hardhat-verify` and `@temporalio/worker`
+- **package.json** — Scoped `ajv@8.18.0` CVE override for '@nomicfoundation/hardhat-verify' and '@temporalio/worker'
 
 ### Security
 
@@ -371,8 +438,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Stale error logs from repository tracking
-  - `orchestrator/orchestrator_test_error.txt`
-  - `orchestrator/test_output.txt`
+  - 'orchestrator/orchestrator_test_error.txt'
+  - 'orchestrator/test_output.txt'
 - Added error log patterns to `.gitignore` to prevent future commits
 
 ### Quality Gates
@@ -450,9 +517,9 @@ SonarQube A rating across all dimensions, chaos battery verified.
 ### Removed
 
 - **Lovable Cloud** integration fully decommissioned (PR#426)
-  - Removed `src/integrations/lovable/` client code
-  - Removed `src/lib/lovableConfig.ts`
-  - Removed `src/server/api/lovable/` proxy endpoints
+  - Removed 'src/integrations/lovable/' client code
+  - Removed 'src/lib/lovableConfig.ts'
+  - Removed 'src/server/api/lovable/' proxy endpoints
   - Removed `lovable-tagger` dev dependency
   - Cleaned orphaned `supabase/config.toml` function definitions
   - Removed Lovable domains from CSP headers

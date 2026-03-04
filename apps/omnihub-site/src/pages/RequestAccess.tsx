@@ -90,7 +90,7 @@ function setLastSubmitTime(hasConsent: boolean): void {
   if (!hasConsent) return;
   try {
     localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
-    localStorage.setItem('LOCAL_CONSENT', 'true');
+    localStorage.setItem('apex_cooldown_consent', 'true');
   } catch {
     // Ignore storage errors - cooldown is a best-effort feature
   }
@@ -102,7 +102,7 @@ function setLastSubmitTime(hasConsent: boolean): void {
 function clearLocalData(): void {
   try {
     localStorage.removeItem(COOLDOWN_KEY);
-    localStorage.removeItem('LOCAL_CONSENT');
+    localStorage.removeItem('apex_cooldown_consent');
   } catch {
     // Ignore
   }
@@ -113,8 +113,10 @@ function clearLocalData(): void {
  *
  * @returns true if user must wait before submitting again
  */
-function isOnCooldown(): boolean {
+function isOnCooldown(hasConsent: boolean): boolean {
+  if (!hasConsent) return false;
   const lastSubmit = getLastSubmitTime();
+  if (lastSubmit === 0) return false;
   const cooldownMs = requestAccessConfig.antiAbuse.cooldownTime;
   return Date.now() - lastSubmit < cooldownMs;
 }
@@ -305,7 +307,7 @@ export function RequestAccessPage(): JSX.Element {
   useEffect(() => {
     // Hydrate consent from storage on original pageload if previously opted in
     try {
-      if (localStorage.getItem('LOCAL_CONSENT') === 'true') {
+      if (localStorage.getItem('apex_cooldown_consent') === 'true') {
         setHasConsent(true);
       }
     } catch {
@@ -408,7 +410,7 @@ export function RequestAccessPage(): JSX.Element {
 
       // Anti-abuse: Cooldown check (rate limiting) ONLY if they consented
       // If no consent, bypass client-side block and rely on server.
-      if (hasConsent && isOnCooldown()) {
+      if (hasConsent && isOnCooldown(hasConsent)) {
         setErrors({
           general: 'Please wait a few minutes before submitting again.',
         });

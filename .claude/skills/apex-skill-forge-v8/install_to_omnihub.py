@@ -28,6 +28,7 @@ COPYRIGHT = "Copyright (c) 2026 APEX Business Systems Ltd. All Rights Reserved."
 
 # Required OmniHub directories (created if missing)
 OMNIHUB_DIRS = ["skills", "config", "dag", "logs"]
+HEALTH_CHECK_FILENAME = "health_checks.py"
 
 
 # ---------------------------------------------------------------------------
@@ -61,7 +62,9 @@ def ensure_omnihub_structure(omnihub_root: Path) -> dict[str, Path]:
             "updated_at": datetime.now(UTC).isoformat(),
             "skills": [],
         }
-        structure["catalog"].write_text(json.dumps(catalog, indent=2) + "\n", encoding="utf-8")
+        structure["catalog"].write_text(
+            json.dumps(catalog, indent=2) + "\n", encoding="utf-8"
+        )
 
     return structure
 
@@ -125,7 +128,7 @@ def preflight_checks(
 # ---------------------------------------------------------------------------
 def install_skill(
     skill_path: Path,
-    omnihub_root: Path,
+    _omnihub_root: Path,
     skill_name: str,
     structure: dict[str, Path],
 ) -> Path:
@@ -140,9 +143,11 @@ def install_skill(
     integration_dir.mkdir(exist_ok=True)
 
     # Generate health_checks.py if not present
-    health_check_path = integration_dir / "health_checks.py"
+    health_check_path = integration_dir / HEALTH_CHECK_FILENAME
     if not health_check_path.exists():
-        health_check_src = skill_path.parent / "omnihub_integration" / "health_checks.py"
+        health_check_src = (
+            skill_path.parent / "omnihub_integration" / HEALTH_CHECK_FILENAME
+        )
         if health_check_src.exists():
             shutil.copy2(health_check_src, health_check_path)
         else:
@@ -213,7 +218,9 @@ def register_in_catalog(
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
 
     # Remove existing entry if present
-    catalog["skills"] = [s for s in catalog.get("skills", []) if s.get("id") != skill_name]
+    catalog["skills"] = [
+        s for s in catalog.get("skills", []) if s.get("id") != skill_name
+    ]
 
     now = datetime.now(UTC).isoformat()
     entry = {
@@ -376,7 +383,7 @@ def install_skill_to_omnihub(
 
     # Health check
     print("\n[HEALTH] Running health check...")
-    health_check_path = installed_path / "omnihub_integration" / "health_checks.py"
+    health_check_path = installed_path / "omnihub_integration" / HEALTH_CHECK_FILENAME
     health_status = "unknown"
 
     try:
@@ -448,9 +455,14 @@ def main() -> None:
         description=f"APEX Skill Forge v{VERSION} — OmniHub Direct Installer",
         epilog=COPYRIGHT,
     )
-    parser.add_argument("--skill-path", type=Path, required=True, help="Path to skill directory")
     parser.add_argument(
-        "--omnihub-root", type=Path, required=True, help="Path to APEX-OmniHub repository root"
+        "--skill-path", type=Path, required=True, help="Path to skill directory"
+    )
+    parser.add_argument(
+        "--omnihub-root",
+        type=Path,
+        required=True,
+        help="Path to APEX-OmniHub repository root",
     )
     parser.add_argument(
         "--register-in-catalog",
@@ -458,7 +470,9 @@ def main() -> None:
         default=True,
         help="Register skill in catalog (default: true)",
     )
-    parser.add_argument("--force", action="store_true", help="Force overwrite existing skill")
+    parser.add_argument(
+        "--force", action="store_true", help="Force overwrite existing skill"
+    )
     args = parser.parse_args()
 
     report = install_skill_to_omnihub(

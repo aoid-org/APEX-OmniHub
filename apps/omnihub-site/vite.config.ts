@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import { resolve } from 'node:path';
@@ -61,6 +62,7 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, './src'),
     },
+    dedupe: ['react', 'react-dom'],
   },
   build: {
     outDir: 'dist',
@@ -95,6 +97,7 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
   },
+  // @ts-expect-error test is an extension provided by vitest
   test: {
     coverage: {
       reporter: ['text', 'lcov'],

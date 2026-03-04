@@ -1,7 +1,7 @@
 {
   "name": "omnihub-site",
   "private": true,
-  "version": "1.3.8",
+  "version": "1.3.9",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,6 +14,7 @@
     "i18n:check": "node scripts/i18n-check.mjs"
   },
   "dependencies": {
+    "apex-omnihub": "file:../..",
     "clsx": "^2.1.1",
     "framer-motion": "^12.34.3",
     "i18next": "^25.8.13",
@@ -25,6 +26,7 @@
     "react-router-dom": "^7.13.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
+    "vite-plugin-pwa": "^1.2.0",
     "zustand": "^4.5.7"
   },
   "devDependencies": {
@@ -44,8 +46,7 @@
     "terser": "^5.44.1",
     "typescript": "^5.8.0",
     "typescript-eslint": "^8.52.0",
-    "vite": "^7.2.0",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite": "^7.2.0"
   },
   "overrides": {
     "serialize-javascript": "7.0.3"

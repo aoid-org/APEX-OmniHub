@@ -54,30 +54,29 @@ const appRoutes: readonly AppRoute[] = [
   { path: "/tri-force", element: <TriForcePage />, isPublic: true },
 ];
 
-const routeElements: Readonly<Record<string, ReactElement>> = {
-  omniboard: <ComingSoonPage title='OmniBoard' desc='Control plane overview and operational telemetry' />,
-  omniport: <OmniPortPage />,
-  maestro: <MaestroPage />,
-  fortress: <FortressPage />,
-  orchestrator: <OrchestratorPage />,
-  omniskills: <ComingSoonPage title='OmniSkills' desc='Skill management and task orchestration' />,
-  physiomni: <ComingSoonPage title='PhysiOmni' desc='Physical operations and execution tracking' />,
-  audits: <ComingSoonPage title='Audits' desc='Governance, compliance, and security gates' />,
-  billing: <ComingSoonPage title='Billing' desc='Subscription management and usage analytics' />,
-  links: <ComingSoonPage title='Links' desc='Connection management and integration endpoints' />,
-  automations: <ComingSoonPage title='Automations' desc='Workflow automation and pipeline orchestration' />,
-  workflows: <ComingSoonPage title='Workflows' desc='Visual workflow builder and process studio' />,
-  files: <ComingSoonPage title='Files' desc='Document management and file operations' />,
-  settings: <ComingSoonPage title='Settings' desc='Platform configuration and preferences' />,
-};
-
-import { APP_REGISTRY, type AppRegistryEntry } from '../../../packages/core/src/registry';
-
-const omniDashRoutes: readonly AppRoute[] = APP_REGISTRY.filter((entry: AppRegistryEntry) => entry.key !== 'omniboard').map((entry: AppRegistryEntry) => ({
-  path: entry.routePath.replace('/omnidash/', ''),
-  element: routeElements[entry.key],
-  isPublic: false,
-}));
+const omniDashRoutes: readonly AppRoute[] = [
+  { path: "pipeline", element: <ComingSoonPage title="Pipeline" desc="Sales pipeline and opportunity tracking" /> },
+  { path: "kpis", element: <ComingSoonPage title="KPIs" desc="Key performance indicators and daily metrics" /> },
+  { path: "ops", element: <ComingSoonPage title="Ops" desc="Operations, incidents, and system health" /> },
+  { path: "integrations", element: <ComingSoonPage title="Integrations" desc="Connected services and data sources" /> },
+  { path: "events", element: <ComingSoonPage title="Events" desc="OmniLink event feed and activity log" /> },
+  { path: "entities", element: <ComingSoonPage title="Entities" desc="Managed entities and data objects" /> },
+  { path: "runs", element: <ComingSoonPage title="Runs" desc="Workflow execution history and trace logs" /> },
+  { path: "approvals", element: <ComingSoonPage title="Approvals" desc="MAN Mode approval queue and governance" /> },
+  { path: "omniport", element: <OmniPortPage /> },
+  { path: "maestro", element: <MaestroPage /> },
+  { path: "fortress", element: <FortressPage /> },
+  { path: "orchestrator", element: <OrchestratorPage /> },
+  { path: "omniskills", element: <ComingSoonPage title="OmniSkills" desc="Skill management and task orchestration" /> },
+  { path: "physiomni", element: <ComingSoonPage title="PhysiOmni" desc="Physical operations and execution tracking" /> },
+  { path: "audits", element: <ComingSoonPage title="Audits" desc="Governance, compliance, and security gates" /> },
+  { path: "billing", element: <ComingSoonPage title="Billing" desc="Subscription management and usage analytics" /> },
+  { path: "links", element: <ComingSoonPage title="Links" desc="Connection management and integration endpoints" /> },
+  { path: "automations", element: <ComingSoonPage title="Automations" desc="Workflow automation and pipeline orchestration" /> },
+  { path: "workflows", element: <ComingSoonPage title="Workflows" desc="Visual workflow builder and process studio" /> },
+  { path: "files", element: <ComingSoonPage title="Files" desc="Document management and file operations" /> },
+  { path: "settings", element: <ComingSoonPage title="Settings" desc="Platform configuration and preferences" /> },
+];
 
 function App() {
   return (
