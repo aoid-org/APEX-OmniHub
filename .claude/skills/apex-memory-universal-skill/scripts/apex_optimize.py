@@ -238,7 +238,7 @@ def main():
         print(f"[NO] Read error: {e}", file=sys.stderr)
         sys.exit(2)
 
-    result = optimize_context(text, ratio=args.ratio, max_tokens=args.max_tokens)
+    result = optimize_context(text, args.ratio, args.max_tokens)
 
     if args.json:
         report = {

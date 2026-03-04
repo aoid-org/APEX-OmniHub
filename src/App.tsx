@@ -30,29 +30,13 @@ const GlobalMediaDock = lazy(() => import("./components/omnidash/media/GlobalMed
 const OmniDashOverview = lazy(() => import("../apps/omnihub-site/src/pages/DashboardOverview").then(m => ({ default: m.DashboardOverview })));
 const OmniDashOps = lazy(() => import("./components/omnidash/Ops").then(m => ({ default: m.Ops || m.default })));
 
-// Lazy load pages for better code splitting
-const Links = lazy(() => import("./pages/Links"));
-const Files = lazy(() => import("./pages/Files"));
-const Automations = lazy(() => import("./pages/Automations"));
-const ApexAssistant = lazy(() => import("./pages/ApexAssistant"));
-const Todos = lazy(() => import("./pages/Todos"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const TradeLine247 = lazy(() => import("./pages/apps/TradeLine247"));
-const AutoRepAi = lazy(() => import("./pages/apps/AutoRepAi"));
-const KeepSafe = lazy(() => import("./pages/apps/KeepSafe"));
-const StrideGuide = lazy(() => import("./pages/apps/StrideGuide"));
-const RobuxMinerPro = lazy(() => import("./pages/apps/RobuxMinerPro"));
-const FLOWBills = lazy(() => import("./pages/apps/FLOWBills"));
-const JubeeLove = lazy(() => import("./pages/apps/JubeeLove"));
-const BuiltCanadian = lazy(() => import("./pages/apps/BuiltCanadian"));
-const TechSpecs = lazy(() => import("./pages/TechSpecs"));
-const Diagnostics = lazy(() => import("./pages/Diagnostics"));
-const Health = lazy(() => import("./pages/Health"));
-const Translation = lazy(() => import("./pages/Translation"));
-const Agent = lazy(() => import("./pages/Agent"));
-const Settings = lazy(() => import("./pages/Settings"));
-const FounderStory = lazy(() => import("./pages/FounderStory"));
+// Inline NotFound fallback (legacy src/pages/ removed — all public pages now live in apps/omnihub-site)
+const NotFound = () => (
+  <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' as const }}>
+    <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>404</h1>
+    <p>Page not found</p>
+  </div>
+);
 
 // Loading fallback component
 const PageLoader = () => (
@@ -203,41 +187,14 @@ const App = () => (
             <Web3Provider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                {/* Public routes */}
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/health" element={<Health />} />
-
                 {/* OmniLink mobile routes (with mobile gate) */}
-                <Route path="/translation" element={<MobileOnlyGate><PaidAccessRoute><Translation /></PaidAccessRoute></MobileOnlyGate>} />
-                <Route path="/agent" element={<MobileOnlyGate><PaidAccessRoute><Agent /></PaidAccessRoute></MobileOnlyGate>} />
-                <Route path="/settings" element={<MobileOnlyGate><PaidAccessRoute><Settings /></PaidAccessRoute></MobileOnlyGate>} />
                 <Route path="/omnitrace" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><OmniDashRuns /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
-                
+
                 {/* Legacy OmniDash endpoints mapped for root E2E testers without PaidAccessRoute */}
                 <Route path="/omnidash" element={<AnonymousDashboardLayout><OmniDashOverview /></AnonymousDashboardLayout>} />
                 <Route path="/omnidash/ops" element={<AnonymousDashboardLayout><OmniDashOps /></AnonymousDashboardLayout>} />
 
-                {/* OmniLink mobile routes (continued) */}
-                <Route path="/links" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Links /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
-                <Route path="/files" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Files /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
-                <Route path="/automations" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Automations /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
-                <Route path="/apex" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><ApexAssistant /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
-                <Route path="/todos" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Todos /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
-                <Route path="/diagnostics" element={<MobileOnlyGate><PaidAccessRoute><DashboardLayout><Diagnostics /></DashboardLayout></PaidAccessRoute></MobileOnlyGate>} />
-
-                {/* App routes (no mobile gate for now) */}
-                {/* App-route access policy tracked in platform access-control roadmap. */}
-                <Route path="/apps/tradeline247" element={<TradeLine247 />} />
-                <Route path="/apps/autorepai" element={<AutoRepAi />} />
-                <Route path="/apps/keepsafe" element={<KeepSafe />} />
-                <Route path="/apps/strideguide" element={<StrideGuide />} />
-                <Route path="/apps/robuxminerpro" element={<RobuxMinerPro />} />
-                <Route path="/apps/flowbills" element={<FLOWBills />} />
-                <Route path="/apps/jubeelove" element={<JubeeLove />} />
-                <Route path="/apps/built-canadian" element={<BuiltCanadian />} />
-                <Route path="/tech-specs" element={<TechSpecs />} />
-                <Route path="/founder-story" element={<FounderStory />} />
-
+                {/* All public pages now served by apps/omnihub-site */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

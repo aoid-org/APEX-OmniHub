@@ -47,9 +47,9 @@
   --color-error: #dc2626;
   --color-info: #0ea5e9;
 
-  /* Typography - uses self-hosted font stack from fonts.css */
-  --font-family-sans: var(--font-sans);
-  --font-family-mono: var(--font-mono);
+  /* Typography */
+  --font-family-sans: 'Space Grotesk', sans-serif;
+  --font-family-mono: 'Space Grotesk', monospace;
 
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
