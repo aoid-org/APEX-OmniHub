@@ -28,7 +28,26 @@ import {
   type MCPTransport,
 } from './MCPTransport';
 import type { MCPConfig } from './mcp.config';
-import { BRIDGE_ACTIONS, resolveBridgeRiskLevel, type BridgePayload } from '@/omniconnect/bridge/acl';
+
+export interface BridgePayload {
+  action: string;
+  discrepancy: string;
+  source: string;
+  timestamp: string;
+  anomaly: string;
+}
+
+export type BridgeRiskLevel = 'read' | 'write' | 'destructive';
+
+export function resolveBridgeRiskLevel(
+  toolName: string,
+  fallback: BridgeRiskLevel
+): BridgeRiskLevel {
+  const lw = toolName.toLowerCase();
+  if (lw.includes('delete') || lw.includes('destroy') || lw.includes('drop')) return 'destructive';
+  if (lw.includes('create') || lw.includes('update') || lw.includes('insert') || lw.includes('modify')) return 'write';
+  return fallback;
+}
 
 // ============================================================================
 // Types
@@ -213,7 +232,7 @@ export class MCPHostManager {
       const approved = await this.requestApproval({
         toolName: parsed.toolName,
         params: parsed.params,
-        riskLevel: resolveBridgeRiskLevel(parsed.toolName, tool.riskLevel),
+        riskLevel: tool.riskLevel ?? 'write',
         serverId: tool.serverId,
       });
 
@@ -230,17 +249,7 @@ export class MCPHostManager {
 
     // 3. Send JSON-RPC request
     const transport = this.transports.get(tool.serverId);
-    const response =
-      transport?.status === 'connected'
-        ? await transport.send({
-            jsonrpc: '2.0',
-            id: parsed.correlationId,
-            method: `tools/${parsed.toolName}`,
-            params: parsed.params,
-          })
-        : undefined;
-
-    if (!response) {
+    if (transport?.status !== 'connected') {
       return {
         success: false,
         data: undefined,
@@ -251,6 +260,13 @@ export class MCPHostManager {
     }
 
     try {
+      const response = await transport.send({
+        jsonrpc: '2.0',
+        id: parsed.correlationId,
+        method: `tools/${parsed.toolName}`,
+        params: parsed.params,
+      });
+
       if (response.error) {
         return {
           success: false,
@@ -291,19 +307,16 @@ export class MCPHostManager {
     serverId: string,
   ): Promise<MCPToolSchema[]> {
     const transport = this.transports.get(serverId);
+    if (transport?.status !== 'connected') return [];
 
     try {
-      const response =
-        transport?.status === 'connected'
-          ? await transport.send({
-              jsonrpc: '2.0',
-              id: `discover-${serverId}-${Date.now()}`,
-              method: 'tools/list',
-            })
-          : undefined;
+      const response = await transport.send({
+        jsonrpc: '2.0',
+        id: `discover-${serverId}-${Date.now()}`,
+        method: 'tools/list',
+      });
 
-      if (!response) return [];
-      if (response.error || !response.result) return [];
+      if (!response || response.error || !response.result) return [];
 
       // Parse tools from response
       const tools = response.result;
@@ -367,40 +380,7 @@ export class MCPHostManager {
     this.registry.updateStatus(serverId, status, error);
   }
 
-  // --------------------------------------------------------------------------
-  // Financial Approval Gate (OmniMCP)
-  // --------------------------------------------------------------------------
 
-  /**
-   * Gate for saga actions that mutate invoice or compliance_records data.
-   *
-   * Flow:
-   *   1. Dispatch mcp_tool_approve → omniModalStore via approvalCallback
-   *   2. Await user confirmation (fail-closed — no callback = reject)
-   *   3. On rejection: return a PENDING_NETWORK BridgePayload
-   *   4. On approval: return null (caller proceeds)
-   *
-   * @param toolName  - The tool name requesting financial data access
-   * @param params    - Tool parameters for display in approval modal
-   * @param correlId  - Correlation ID for audit trail
-   * @returns null on approval, PENDING_NETWORK BridgePayload on rejection
-   */
-  async requireFinancialApproval(
-    toolName: string,
-    params: Record<string, unknown>,
-    correlId: string,
-  ): Promise<BridgePayload | null> {
-    const approved = await this.requestApproval({
-      toolName,
-      params,
-      riskLevel: 'write',
-      serverId: 'financial-gate',
-    });
-
-    if (approved) return null;
-
-    return buildPendingNetworkPayload(correlId);
-  }
 }
 
 function coerceUnknownToString(value: unknown, fallback = ''): string {
@@ -408,18 +388,4 @@ function coerceUnknownToString(value: unknown, fallback = ''): string {
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (value === null || value === undefined) return fallback;
   return fallback;
-}
-
-// ── Module-level helpers (not on class to keep cognitive complexity ≤ 15) ─────
-
-function buildPendingNetworkPayload(correlId: string): BridgePayload {
-  // Validate action membership at compile time via the imported const array
-  const action = BRIDGE_ACTIONS[0]; // 'PENDING_NETWORK'
-  return {
-    action,
-    discrepancy: '0.00',
-    source: 'WEB3',
-    timestamp: new Date().toISOString(),
-    anomaly: `MCP_APPROVAL_REJECTED: correlationId=${correlId}`,
-  };
 }

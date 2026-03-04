@@ -27,7 +27,7 @@ import navFiles from '@/assets/nav/files_icon.png';
 import navBilling from '@/assets/nav/billing_icon.png';
 import navSettings from '@/assets/nav/settings_icon.png';
 import apexWordmark from '@/assets/apex_omnihub_wordmark.png';
-import { APP_REGISTRY } from '../../../../packages/core/src/registry';
+import { APP_REGISTRY, type AppRegistryEntry } from '../../../../packages/core/src/registry';
 
 // ────────────────────────────────────────────────
 // Sidebar Navigation Map - custom icon images
@@ -49,7 +49,7 @@ const NAV_ICON_MAP: Readonly<Record<string, string>> = {
   settings: navSettings,
 };
 
-const SIDEBAR_NAV = APP_REGISTRY.map((entry) => ({
+const SIDEBAR_NAV = APP_REGISTRY.map((entry: AppRegistryEntry) => ({
   key: entry.key,
   label: entry.label,
   icon: NAV_ICON_MAP[entry.iconAssetKey] ?? navOmniboard,

@@ -122,12 +122,12 @@ export function DemoVideoPlayer({
         </button>
       </div>
       {hasError ? (
-        <div className="demo-video__error" role="status" aria-live="polite">
+        <output className="demo-video__error" aria-live="polite">
           <p>The current video file could not be played in this browser.</p>
           <button type="button" className="demo-video__retry-btn" onClick={reloadVideo}>
             Retry
           </button>
-        </div>
+        </output>
       ) : null}
     </div>
   );
