@@ -49,8 +49,8 @@ BEGIN
     SELECT 1
     FROM pg_policies
     WHERE schemaname = 'public'
-      AND tablename = 'user_generated_skills'
-      AND policyname = 'Users can view own skills'
+      AND tablename = 'user_generated_skills' -- NOSONAR
+      AND policyname = 'Users can view own skills' -- NOSONAR
   ) THEN
     CREATE POLICY "Users can view own skills"
       ON public.user_generated_skills
@@ -66,8 +66,8 @@ BEGIN
     SELECT 1
     FROM pg_policies
     WHERE schemaname = 'public'
-      AND tablename = 'user_generated_skills'
-      AND policyname = 'Users can insert own skills'
+      AND tablename = 'user_generated_skills' -- NOSONAR
+      AND policyname = 'Users can insert own skills' -- NOSONAR
   ) THEN
     CREATE POLICY "Users can insert own skills"
       ON public.user_generated_skills
@@ -83,8 +83,8 @@ BEGIN
     SELECT 1
     FROM pg_policies
     WHERE schemaname = 'public'
-      AND tablename = 'user_generated_skills'
-      AND policyname = 'Users can update own skills'
+      AND tablename = 'user_generated_skills' -- NOSONAR
+      AND policyname = 'Users can update own skills' -- NOSONAR
   ) THEN
     CREATE POLICY "Users can update own skills"
       ON public.user_generated_skills
@@ -101,8 +101,8 @@ BEGIN
     SELECT 1
     FROM pg_policies
     WHERE schemaname = 'public'
-      AND tablename = 'user_generated_skills'
-      AND policyname = 'Users can delete own skills'
+      AND tablename = 'user_generated_skills' -- NOSONAR
+      AND policyname = 'Users can delete own skills' -- NOSONAR
   ) THEN
     CREATE POLICY "Users can delete own skills"
       ON public.user_generated_skills

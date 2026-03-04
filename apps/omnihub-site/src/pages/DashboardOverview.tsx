@@ -134,7 +134,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
       {/* ═══════ HERO TRI-PANE — Kinetic Architecture ═══════ */}
-      <div className="grid grid-cols-12 gap-4 w-full relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 w-full relative z-10">
 
         {/* ── LEFT PANE: APEX Agent (col-span-3) ── */}
         <motion.div
@@ -143,7 +143,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 170, damping: 26, mass: 1 }}
           whileHover={{ scale: 1.01, transition: { type: 'spring', stiffness: 170, damping: 26, mass: 1 } }}
-          className="col-span-3 flex flex-col items-center justify-center relative overflow-hidden"
+          className="col-span-1 md:col-span-3 flex flex-col items-center justify-center relative overflow-hidden"
           style={{
             padding: 24,
             borderRadius: 24,
@@ -228,7 +228,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 170, damping: 26, mass: 1, delay: 0.05 }}
           whileHover={{ scale: 1.005, transition: { type: 'spring', stiffness: 170, damping: 26, mass: 1 } }}
-          className="col-span-6 flex flex-col justify-end relative overflow-hidden"
+          className="col-span-1 md:col-span-6 flex flex-col justify-end relative overflow-hidden"
           style={{
             padding: 28,
             borderRadius: 24,
@@ -404,7 +404,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 170, damping: 26, mass: 1, delay: 0.1 }}
           whileHover={{ scale: 1.01, transition: { type: 'spring', stiffness: 170, damping: 26, mass: 1 } }}
-          className="col-span-3 flex flex-col relative overflow-hidden"
+          className="col-span-1 md:col-span-3 flex flex-col relative overflow-hidden"
           style={{
             padding: 24,
             borderRadius: 24,
@@ -463,7 +463,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
       </div>
 
       {/* ═══════ INTEGRATED APPS ═══════ */}
-      <div className="apps-hex" style={{ padding: '8px 32px 24px 32px', marginTop: 4 }}>
+      <div className="apps-hex" style={{ padding: '8px 16px 24px 16px', marginTop: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <span style={{ fontSize: 19.26, fontWeight: 800, color: '#dfe6fe', letterSpacing: '-0.02em' }}>Integrated Apps</span>
@@ -471,7 +471,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
           </div>
           <span style={{ fontSize: 12.84, color: '#f97316', cursor: 'pointer', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Manage →</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
           {APPS.map((app) => (
             <motion.div 
               key={app.name} 
