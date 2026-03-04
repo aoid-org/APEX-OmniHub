@@ -1,35 +1,12 @@
 #!/usr/bin/env bash
 # .githooks/pre-commit
-# Runs ruff linting and format checks on the orchestrator Python code.
-# Exit on first failure to block the commit.
+# Runs all pre-commit checks in .githooks/pre-commit.d/ in lexical order.
 
 set -euo pipefail
 
-echo "🔍 Pre-commit: running ruff checks..."
-
-# Check if ruff is available
-if ! command -v ruff &> /dev/null; then
-  echo "WARNING: ruff not found in PATH. Skipping pre-commit lint."
-  echo "Install with: pip install ruff"
-  exit 0
-fi
-
-echo "  → ruff check orchestrator"
-ruff check orchestrator
-
-echo "  → ruff format --check orchestrator"
-ruff format --check orchestrator
-
-# Cross-domain boundary gate
-STAGED=$(git diff --cached --name-only)
-HAS_CORE=$(echo "$STAGED" | grep -q 'src/core/' && echo 1 || echo 0)
-HAS_UI=$(echo "$STAGED"   | grep -q 'apps/omnihub-site/src/pages/' && echo 1 || echo 0)
-if [ "$HAS_CORE" = "1" ] && [ "$HAS_UI" = "1" ]; then
-  echo "❌ CROSS-DOMAIN COMMIT REJECTED
-Reason: Commit modifies both src/core/ (Logic) and apps/omnihub-site/src/pages/ (UI).
-Fix: Split into two commits — (1) backend data change, (2) frontend render change.
-See ARCHITECTURE_CANONICAL_MAP.md for domain isolation rules."
-  exit 1
-fi
+for hook in .githooks/pre-commit.d/*.sh; do
+  [ -e "$hook" ] || continue
+  bash "$hook"
+done
 
 echo "✅ Pre-commit checks passed."

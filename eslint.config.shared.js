@@ -58,5 +58,6 @@ export const createEslintConfig = (options = {}) => {
         }],
       },
     }
+
   );
 };
