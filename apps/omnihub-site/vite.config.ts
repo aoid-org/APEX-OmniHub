@@ -74,19 +74,6 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
-        manualChunks(id) {
-          // Split React vendor bundle (only if actually imported)
-          if (id.includes('node_modules/react/') || 
-              id.includes('node_modules/react-dom/') ||
-              id.includes('node_modules/scheduler/') ||
-              id.includes('node_modules/react-router-dom/')) {
-            return 'vendor-react';
-          }
-          // All other node_modules go into vendor chunk
-          if (id.includes('node_modules/')) {
-            return 'vendor';
-          }
-        },
       },
     },
     // Performance optimizations
