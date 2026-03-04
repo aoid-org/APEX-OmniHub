@@ -5,6 +5,7 @@ import { Plus, Play, Pause, Trash2, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { CreateSkillWidget } from '@/components/skills/CreateSkillWidget';
 
 interface Automation {
   id: string;
@@ -135,10 +136,13 @@ const Automations = () => {
           <h1 className="text-3xl font-bold">Automations</h1>
           <p className="text-muted-foreground">Create and manage your automated workflows</p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          New Automation
-        </Button>
+        <div className="flex items-center gap-2">
+          <CreateSkillWidget />
+          <Button variant="outline">
+            <Plus className="mr-2 h-4 w-4" />
+            New Automation
+          </Button>
+        </div>
       </div>
 
       {automations.length === 0 ? (

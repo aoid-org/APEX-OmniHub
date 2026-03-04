@@ -1,18 +1,7 @@
-/**
- * CreateSkillWidget — 3-Stage Skill Forge Modal
- *
- * Stage 1: Meta (name + trigger_intent)
- * Stage 2: Intelligence (instructions)
- * Stage 3: Schema (input/output JSON definition)
- *
- * Inserts into user_generated_skills. Invalidates React Query cache on success.
- */
-
-import { useState, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -23,307 +12,244 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, ArrowRight, ArrowLeft, Check, Loader2 } from 'lucide-react';
+import { Sparkles, ArrowRight, ArrowLeft, Check, Loader2, ShieldCheck, Zap } from 'lucide-react';
 
-// ---------------------------------------------------------------------------
-// Validation schemas
-// ---------------------------------------------------------------------------
+type StepField = 'intent' | 'trigger' | 'constraints';
+type WizardStep = {
+  id: 1 | 2 | 3;
+  title: string;
+  icon: typeof Sparkles;
+  field: StepField;
+  placeholder: string;
+};
 
-const metaSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').max(80),
-  trigger_intent: z.string().min(5, 'Trigger must be at least 5 characters').max(200),
+const formSchema = z.object({
+  intent: z.string().min(8, 'Intent must be at least 8 characters').max(300),
+  trigger: z.string().min(8, 'Trigger must be at least 8 characters').max(300),
+  constraints: z.string().min(8, 'Constraints must be at least 8 characters').max(500),
 });
 
-const intelligenceSchema = z.object({
-  instructions: z.string().min(10, 'Instructions must be at least 10 characters').max(4000),
+const entitlementSchema = z.object({
+  used: z.number().int().nonnegative(),
+  max: z.number().int().positive(),
+  tier: z.string().min(1),
 });
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+const forgeSuccessSchema = z.object({
+  success: z.literal(true),
+  skill: z.object({
+    name: z.string().min(1),
+    description: z.string().min(1),
+  }),
+  entitlement: entitlementSchema,
+});
 
-type Stage = 1 | 2 | 3;
+const wizardSteps: WizardStep[] = [
+  {
+    id: 1,
+    title: 'What outcome do you need this skill to achieve?',
+    icon: Sparkles,
+    field: 'intent',
+    placeholder: 'e.g. Auto-save paid invoices into Xero and update CRM status',
+  },
+  {
+    id: 2,
+    title: 'What event should activate this skill?',
+    icon: Zap,
+    field: 'trigger',
+    placeholder: 'e.g. Stripe payment_succeeded webhook with invoice metadata',
+  },
+  {
+    id: 3,
+    title: 'What constraints must always be enforced?',
+    icon: ShieldCheck,
+    field: 'constraints',
+    placeholder: 'e.g. Process only invoices over $100 and skip duplicate transaction_ids',
+  },
+];
 
 export function CreateSkillWidget() {
-  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
-  const [stage, setStage] = useState<Stage>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [errors, setErrors] = useState<string[]>([]);
+  const [formData, setFormData] = useState({ intent: '', trigger: '', constraints: '' });
 
-  // Form state
-  const [name, setName] = useState('');
-  const [triggerIntent, setTriggerIntent] = useState('');
-  const [instructions, setInstructions] = useState('');
-  const [inputSchema, setInputSchema] = useState('{}');
-  const [outputSchema, setOutputSchema] = useState('{}');
+  const currentStep = wizardSteps[step - 1];
+  const progressWidth = (step / wizardSteps.length) * 100;
 
-  const resetForm = useCallback(() => {
-    setStage(1);
-    setName('');
-    setTriggerIntent('');
-    setInstructions('');
-    setInputSchema('{}');
-    setOutputSchema('{}');
+  const isStepEmpty = useMemo(() => {
+    const value = formData[currentStep.field];
+    return value.trim().length === 0;
+  }, [currentStep.field, formData]);
+
+  const resetForm = () => {
+    setStep(1);
+    setFormData({ intent: '', trigger: '', constraints: '' });
     setErrors([]);
-  }, []);
+  };
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!user) throw new Error('User not authenticated');
-
-      let parsedInput: Record<string, unknown>;
-      let parsedOutput: Record<string, unknown>;
-
-      try {
-        parsedInput = JSON.parse(inputSchema) as Record<string, unknown>;
-      } catch {
-        throw new Error('Input schema is not valid JSON');
+      const parsed = formSchema.safeParse(formData);
+      if (!parsed.success) {
+        throw new Error(parsed.error.issues.map((issue) => issue.message).join('\n'));
       }
 
-      try {
-        parsedOutput = JSON.parse(outputSchema) as Record<string, unknown>;
-      } catch {
-        throw new Error('Output schema is not valid JSON');
-      }
-
-      const { data, error } = await supabase
-        .from('user_generated_skills')
-        .insert({
-          user_id: user.id,
-          name,
-          trigger_intent: triggerIntent,
-          definition: {
-            instructions,
-            input_schema: parsedInput,
-            output_schema: parsedOutput,
-          },
-        })
-        .select('id, name')
-        .single();
-
-      if (error) throw new Error(error.message);
-      return data;
-    },
-    onSuccess: (data) => {
-      toast({
-        title: 'Skill Forged',
-        description: `"${data.name}" is now available in your workflow palette.`,
+      const { data, error } = await supabase.functions.invoke('generate-business-skills', {
+        body: parsed.data,
       });
-      queryClient.invalidateQueries({ queryKey: ['user-skills'] }).catch(console.error);
+
+      if (error) {
+        const statusCode = typeof error.context?.status === 'number' ? error.context.status : undefined;
+        if (statusCode === 402) {
+          throw new Error('SYSTEM OVERLOAD — Upgrade to Architect Tier to forge more skills.');
+        }
+        throw new Error(error.message || 'Unable to forge skill at this time');
+      }
+
+      const result = forgeSuccessSchema.safeParse(data);
+      if (!result.success) {
+        throw new Error('Forge response was invalid. Please retry.');
+      }
+
+      return result.data;
+    },
+    onSuccess: async (result) => {
+      toast({
+        title: 'SKILL FORGED',
+        description: `${result.skill.name} is operational (${result.entitlement.used}/${result.entitlement.max}).`,
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['user-skills'] }),
+        queryClient.invalidateQueries({ queryKey: ['workflows'] }),
+      ]);
+
       resetForm();
       setOpen(false);
     },
     onError: (error: Error) => {
-      setErrors([error.message]);
+      setErrors(error.message.split('\n'));
+      toast({
+        title: 'FORGE FAILED',
+        description: error.message,
+        variant: 'destructive',
+      });
     },
   });
 
-  const validateStage = (): boolean => {
-    setErrors([]);
-    if (stage === 1) {
-      const result = metaSchema.safeParse({ name, trigger_intent: triggerIntent });
-      if (!result.success) {
-        setErrors(result.error.errors.map((e) => e.message));
-        return false;
-      }
-      return true;
-    }
-    if (stage === 2) {
-      const result = intelligenceSchema.safeParse({ instructions });
-      if (!result.success) {
-        setErrors(result.error.errors.map((e) => e.message));
-        return false;
-      }
-      return true;
-    }
-    if (stage === 3) {
-      try {
-        JSON.parse(inputSchema);
-      } catch {
-        setErrors(['Input schema is not valid JSON']);
-        return false;
-      }
-      try {
-        JSON.parse(outputSchema);
-      } catch {
-        setErrors(['Output schema is not valid JSON']);
-        return false;
-      }
-      return true;
-    }
-    return false;
-  };
-
   const handleNext = () => {
-    if (!validateStage()) return;
-    if (stage < 3) setStage((s) => (s + 1) as Stage);
+    setErrors([]);
+    if (step < 3) {
+      setStep((step + 1) as 1 | 2 | 3);
+      return;
+    }
+    mutation.mutate();
   };
 
   const handleBack = () => {
     setErrors([]);
-    if (stage > 1) setStage((s) => (s - 1) as Stage);
+    if (step > 1) {
+      setStep((step - 1) as 1 | 2 | 3);
+    }
   };
-
-  const handleSubmit = () => {
-    if (!validateStage()) return;
-    mutation.mutate();
-  };
-
-  const stageLabels = ['Meta', 'Intelligence', 'Schema'];
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
+    <Dialog open={open} onOpenChange={(nextOpen) => { setOpen(nextOpen); if (!nextOpen) resetForm(); }}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button size="sm" className="gap-2">
           <Sparkles className="h-4 w-4" />
-          <span className="hidden sm:inline">Forge Skill</span>
+          Forge Skill
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <Sparkles className="h-5 w-5 text-primary" />
             Skill Forge
             <Badge variant="secondary" className="text-xs">
-              {stage}/3 · {stageLabels[stage - 1]}
+              {step}/3
             </Badge>
           </DialogTitle>
         </DialogHeader>
 
-        {/* Progress indicator */}
-        <div className="flex gap-1.5 my-2">
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`h-1 flex-1 rounded-full transition-colors ${
-                s <= stage ? 'bg-primary' : 'bg-muted'
-              }`}
-            />
-          ))}
+        <div className="w-full bg-muted rounded-full h-2">
+          <div
+            className="bg-primary h-2 rounded-full transition-all duration-300"
+            style={{ width: `${progressWidth}%` }}
+          />
         </div>
 
-        {/* Stage 1: Meta */}
-        {stage === 1 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="skill-name">Skill Name</Label>
-              <Input
-                id="skill-name"
-                placeholder="e.g. Invoice Processor"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={80}
-              />
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-md bg-primary/10">
+              <currentStep.icon className="h-5 w-5 text-primary" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="skill-trigger">Trigger Intent</Label>
-              <Input
-                id="skill-trigger"
-                placeholder="e.g. Process an invoice from email attachment"
-                value={triggerIntent}
-                onChange={(e) => setTriggerIntent(e.target.value)}
-                maxLength={200}
-              />
-              <p className="text-xs text-muted-foreground">
-                What should this skill respond to?
-              </p>
+            <div>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">Step {step}</p>
+              <p className="text-sm font-medium">{currentStep.title}</p>
             </div>
           </div>
-        )}
 
-        {/* Stage 2: Intelligence */}
-        {stage === 2 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="skill-instructions">System Instructions</Label>
-              <Textarea
-                id="skill-instructions"
-                placeholder="You are an invoice processing expert. Extract line items, totals, and vendor details..."
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                rows={8}
-                maxLength={4000}
-                className="font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                {instructions.length}/4000 characters
-              </p>
-            </div>
-          </div>
-        )}
+          <Textarea
+            autoFocus
+            rows={5}
+            value={formData[currentStep.field]}
+            onChange={(event) => {
+              setFormData((previous) => ({
+                ...previous,
+                [currentStep.field]: event.target.value,
+              }));
+            }}
+            placeholder={currentStep.placeholder}
+          />
+        </div>
 
-        {/* Stage 3: Schema */}
-        {stage === 3 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="skill-input-schema">Input Schema (JSON)</Label>
-              <Textarea
-                id="skill-input-schema"
-                value={inputSchema}
-                onChange={(e) => setInputSchema(e.target.value)}
-                rows={4}
-                className="font-mono text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="skill-output-schema">Output Schema (JSON)</Label>
-              <Textarea
-                id="skill-output-schema"
-                value={outputSchema}
-                onChange={(e) => setOutputSchema(e.target.value)}
-                rows={4}
-                className="font-mono text-sm"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Errors */}
         {errors.length > 0 && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
-            {errors.map((err, i) => (
-              <p key={`err-${i}-${err.slice(0, 10)}`} className="text-sm text-destructive">{err}</p>
+            {errors.map((err, index) => (
+              <p key={`${index}-${err}`} className="text-sm text-destructive">{err}</p>
             ))}
           </div>
         )}
 
         <DialogFooter className="flex justify-between gap-2">
           <div>
-            {stage > 1 && (
-              <Button variant="ghost" onClick={handleBack} size="sm">
+            {step > 1 && (
+              <Button variant="ghost" onClick={handleBack} size="sm" disabled={mutation.isPending}>
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back
               </Button>
             )}
           </div>
-          <div>
-            {stage < 3 ? (
-              <Button onClick={handleNext} size="sm">
+          <Button
+            onClick={handleNext}
+            size="sm"
+            disabled={isStepEmpty || mutation.isPending}
+          >
+            {mutation.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                Forging...
+              </>
+            ) : step < 3 ? (
+              <>
                 Next
                 <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
+              </>
             ) : (
-              <Button
-                onClick={handleSubmit}
-                disabled={mutation.isPending}
-                size="sm"
-              >
-                {mutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                ) : (
-                  <Check className="h-4 w-4 mr-1" />
-                )}
+              <>
+                <Check className="h-4 w-4 mr-1" />
                 Forge Skill
-              </Button>
+              </>
             )}
-          </div>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
