@@ -302,6 +302,32 @@ export const Integrations = () => {
                 <div className="rounded-md border border-slate-800 bg-slate-950 p-2 text-xs text-slate-300">
                   Drag this tile into OmniSLATE context to bind connector metadata.
                 </div>
+                
+                {connector.status !== 'LIVE' && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 transition-all duration-300"
+                    style={{ transitionTimingFunction: 'var(--apex-ease-out-expo)' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      omniModal.invoke({
+                        id: `auth-${connector.id}`,
+                        provider: connector.displayName,
+                        type: 'oauth',
+                        title: `${connector.displayName} Authentication`,
+                        description: `Connect APEX OmniHub to ${connector.displayName} to sync ${connector.appSlug} data.`,
+                        onComplete: async (payload) => {
+                          console.warn(`${connector.displayName} integration complete:`, payload);
+                        },
+                        onCancel: () => {
+                          console.warn(`User dismissed the ${connector.displayName} flow.`);
+                        },
+                      });
+                    }}
+                  >
+                    {connector.status === 'NEEDS_AUTH' ? 'Connect Account' : 'Resolve Connection'}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}

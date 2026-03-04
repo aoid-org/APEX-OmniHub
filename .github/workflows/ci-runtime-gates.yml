@@ -88,6 +88,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: Verify changelog paths exist
+        run: node scripts/verify-changelog-paths.js CHANGELOG.md
+
       - name: Repo Hygiene Guard
         run: bash scripts/repo-hygiene-guard.sh
 
@@ -105,8 +108,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
         env:
-          TURBO_TOKEN: ${{ secrets['TURBO_TOKEN'] }}
-          TURBO_TEAM: ${{ secrets['TURBO_TEAM'] }}
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
       # ─────────────────────────────────────────────────────────────
       # Turborepo Caching
@@ -151,7 +154,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets['VITE_SUPABASE_PUBLISHABLE_KEY'] }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           REQUIRE_SUPABASE_INTEGRATION_TESTS: "false"
 
       - name: Run JS coverage
@@ -166,13 +169,13 @@ jobs:
         run: cd orchestrator && pip install -r requirements.txt && pytest --cov=. --cov-report=xml:coverage.xml
 
       - name: SonarCloud Scan Disabled Notice
-        if: ${{ vars.SONAR_CI_SCAN_ENABLED != 'true' }}
+        if: vars.SONAR_CI_SCAN_ENABLED != 'true'
         run: |
           echo "Skipping CI Sonar scan because SONAR_CI_SCAN_ENABLED is not true."
           echo "Use SonarCloud Automatic Analysis or set repository variable SONAR_CI_SCAN_ENABLED=true and disable Automatic Analysis in SonarCloud."
 
       - name: SonarCloud Scan
-        if: ${{ vars.SONAR_CI_SCAN_ENABLED == 'true' }}
+        if: vars.SONAR_CI_SCAN_ENABLED == 'true'
         uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d
         continue-on-error: true
         env:
@@ -197,7 +200,7 @@ jobs:
       # PHASE 3: Build
       # ─────────────────────────────────────────────────────────────
       - name: Vercel Production Sync Shield
-        run: cd apps/omnihub-site && npm ci && npm run build
+        run: cd apps/omnihub-site && npm ci --omit=dev && npm run build
 
       - name: Build production bundle
         run: npm run build

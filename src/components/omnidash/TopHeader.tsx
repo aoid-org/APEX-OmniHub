@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Bell, Bot, ChevronDown, Search } from 'lucide-react';
+import { Bot, ChevronDown, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { NotificationCenter } from '@/components/omnidash/NotificationCenter';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,14 +83,7 @@ export function OmniDashTopHeader({ userEmail }: Readonly<OmniDashTopHeaderProps
             <Link to="/apex">Connect AI</Link>
           </Button>
 
-          <button
-            type="button"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-700 bg-slate-900 text-slate-300"
-            aria-label="Notifications"
-            data-testid="notifications-trigger"
-          >
-            <Bell className="h-4 w-4" />
-          </button>
+          <NotificationCenter />
 
           <Button
             type="button"

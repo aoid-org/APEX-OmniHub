@@ -316,3 +316,110 @@ export async function fetchHealthSnapshot(userId: string): Promise<{ lastUpdated
   }).reverse()[0] ?? null;
   return { lastUpdated };
 }
+
+// ============================================================================
+// Memory Health Stats (ACRA Observability)
+// ============================================================================
+
+export interface MemoryHealthStats {
+  total_memories: number;
+  episodic_count: number;
+  semantic_count: number;
+  procedural_count: number;
+  preference_count: number;
+  embedded_count: number;
+  expired_count: number;
+  pending_reembed_count: number;
+  avg_importance: number;
+  avg_trust_score: number;
+  avg_access_count: number;
+  latest_memory_at: string | null;
+  oldest_memory_at: string | null;
+  current_embedding_model: string | null;
+  poisoned_candidate_count: number;
+  dedup_attempts: number;
+}
+
+const MEMORY_HEALTH_COLUMNS = [
+  'total_memories',
+  'episodic_count',
+  'semantic_count',
+  'procedural_count',
+  'preference_count',
+  'embedded_count',
+  'expired_count',
+  'pending_reembed_count',
+  'avg_importance',
+  'avg_trust_score',
+  'avg_access_count',
+  'latest_memory_at',
+  'oldest_memory_at',
+  'current_embedding_model',
+  'poisoned_candidate_count',
+].join(', ');
+
+export async function fetchMemoryHealthStats(
+  userId: string,
+): Promise<MemoryHealthStats> {
+  // Fetch from the memory_health_stats view
+  const { data, error } = await supabase
+    .from('memory_health_stats')
+    .select(MEMORY_HEALTH_COLUMNS)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    logError(error, { action: 'omnidash_fetch_memory_health' });
+    // Return empty stats on error (fail-safe for new users)
+    return emptyMemoryHealthStats();
+  }
+
+  // Fetch dedup count from idempotency_receipts
+  const { count: dedupCount } = await supabase
+    .from('idempotency_receipts')
+    .select('*', { count: 'exact', head: true })
+    .eq('tenant_id', userId)
+    .gt('attempt_count', 1);
+
+  return {
+    total_memories: data?.total_memories ?? 0,
+    episodic_count: data?.episodic_count ?? 0,
+    semantic_count: data?.semantic_count ?? 0,
+    procedural_count: data?.procedural_count ?? 0,
+    preference_count: data?.preference_count ?? 0,
+    embedded_count: data?.embedded_count ?? 0,
+    expired_count: data?.expired_count ?? 0,
+    pending_reembed_count: data?.pending_reembed_count ?? 0,
+    avg_importance: data?.avg_importance ?? 0,
+    avg_trust_score: data?.avg_trust_score ?? 0,
+    avg_access_count: data?.avg_access_count ?? 0,
+    latest_memory_at: data?.latest_memory_at ?? null,
+    oldest_memory_at: data?.oldest_memory_at ?? null,
+    current_embedding_model:
+      data?.current_embedding_model ?? null,
+    poisoned_candidate_count:
+      data?.poisoned_candidate_count ?? 0,
+    dedup_attempts: dedupCount ?? 0,
+  };
+}
+
+function emptyMemoryHealthStats(): MemoryHealthStats {
+  return {
+    total_memories: 0,
+    episodic_count: 0,
+    semantic_count: 0,
+    procedural_count: 0,
+    preference_count: 0,
+    embedded_count: 0,
+    expired_count: 0,
+    pending_reembed_count: 0,
+    avg_importance: 0,
+    avg_trust_score: 0,
+    avg_access_count: 0,
+    latest_memory_at: null,
+    oldest_memory_at: null,
+    current_embedding_model: null,
+    poisoned_candidate_count: 0,
+    dedup_attempts: 0,
+  };
+}
