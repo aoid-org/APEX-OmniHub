@@ -43,7 +43,7 @@ export const siteConfig = {
   },
   hero: {
     eyebrow: 'APEX OMNIHUB',
-    title: 'Connect anything.\nChange anything.\nStay in control.',
+    title: 'Connect everything.\nChange anything.\nStay in control.',
     tagline: 'YOUR SYSTEMS. YOUR RULES.',
     subtitle:
       'The AI Operating System for the Physical World. Software agents. Enterprise platforms. Physical AI hardware. Every action governed, audited, and reversible.',

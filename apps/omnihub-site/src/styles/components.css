@@ -940,7 +940,7 @@
 
 /* === HERO === */
 .hero {
-  padding: calc(var(--space-16) - 5rem) 0 var(--space-16);
+  padding: calc(var(--space-16) + 1.5rem) 0 var(--space-16);
   text-align: center;
   position: relative; /* Context for absolute background */
 
@@ -1068,6 +1068,15 @@
   z-index: 2;
 }
 
+.hero__title,
+.hero__tagline,
+.hero__subtagline,
+.hero__subtitle,
+.hero__description,
+.hero__footnote {
+  font-family: 'Space Grotesk', var(--font-family-sans);
+}
+
 /* Hero title grid layout — auto-placement flows spans left→right:
    Connect | Change
    anything. | anything.
@@ -1112,6 +1121,11 @@
   margin-bottom: var(--space-4);
   line-height: 1.4;
   letter-spacing: -0.01em;
+}
+
+
+[data-theme="light"] .hero__subtitle {
+  color: #000000;
 }
 
 .hero__description {
