@@ -117,6 +117,15 @@ export const Ops = () => {
     },
   });
 
+  /** Build a single-column stacked layout with optional height overrides */
+  const singleColumnLayout = (overrides?: Partial<Record<string, number>>): Layout => [
+    { i: 'freeze', x: 0, y: 0, w: 1, h: 2, isResizable: false },
+    { i: 'memoryhealth', x: 0, y: 2, w: 1, h: overrides?.memoryhealth ?? 4, isResizable: false },
+    { i: 'newlog', x: 0, y: 6, w: 1, h: overrides?.newlog ?? 5, isResizable: false },
+    { i: 'systemresilience', x: 0, y: 11, w: 1, h: 3, isResizable: false },
+    { i: 'incidentlog', x: 0, y: 14, w: 1, h: overrides?.incidentlog ?? 7, isResizable: false },
+  ] as Layout;
+
   const [layouts, setLayouts] = useState<
     Partial<Record<string, Layout>>
   >({
@@ -127,34 +136,10 @@ export const Ops = () => {
       { i: 'systemresilience', x: 1, y: 4, w: 1, h: 3, isResizable: false },
       { i: 'incidentlog', x: 0, y: 7, w: 2, h: 7, isResizable: false },
     ],
-    md: [
-      { i: 'freeze', x: 0, y: 0, w: 1, h: 2, isResizable: false },
-      { i: 'memoryhealth', x: 0, y: 2, w: 1, h: 4, isResizable: false },
-      { i: 'newlog', x: 0, y: 6, w: 1, h: 5, isResizable: false },
-      { i: 'systemresilience', x: 0, y: 11, w: 1, h: 3, isResizable: false },
-      { i: 'incidentlog', x: 0, y: 14, w: 1, h: 7, isResizable: false },
-    ],
-    sm: [
-      { i: 'freeze', x: 0, y: 0, w: 1, h: 2, isResizable: false },
-      { i: 'memoryhealth', x: 0, y: 2, w: 1, h: 4, isResizable: false },
-      { i: 'newlog', x: 0, y: 6, w: 1, h: 5, isResizable: false },
-      { i: 'systemresilience', x: 0, y: 11, w: 1, h: 3, isResizable: false },
-      { i: 'incidentlog', x: 0, y: 14, w: 1, h: 7, isResizable: false },
-    ],
-    xs: [
-      { i: 'freeze', x: 0, y: 0, w: 1, h: 2, isResizable: false },
-      { i: 'memoryhealth', x: 0, y: 2, w: 1, h: 5, isResizable: false },
-      { i: 'newlog', x: 0, y: 7, w: 1, h: 6, isResizable: false },
-      { i: 'systemresilience', x: 0, y: 13, w: 1, h: 3, isResizable: false },
-      { i: 'incidentlog', x: 0, y: 16, w: 1, h: 8, isResizable: false },
-    ],
-    xxs: [
-      { i: 'freeze', x: 0, y: 0, w: 1, h: 2, isResizable: false },
-      { i: 'memoryhealth', x: 0, y: 2, w: 1, h: 5, isResizable: false },
-      { i: 'newlog', x: 0, y: 7, w: 1, h: 6, isResizable: false },
-      { i: 'systemresilience', x: 0, y: 13, w: 1, h: 3, isResizable: false },
-      { i: 'incidentlog', x: 0, y: 16, w: 1, h: 8, isResizable: false },
-    ],
+    md: singleColumnLayout(),
+    sm: singleColumnLayout(),
+    xs: singleColumnLayout({ memoryhealth: 5, newlog: 6, incidentlog: 8 }),
+    xxs: singleColumnLayout({ memoryhealth: 5, newlog: 6, incidentlog: 8 }),
   });
 
   // Derive circuit-breaker status from error ratio
