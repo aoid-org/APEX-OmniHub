@@ -10,7 +10,7 @@
 ```
 
 **INTELLIGENCE DESIGNED.**
-_Directable • Accountable • Dependable_
+                                                                                                                                            _Directable • Accountable • Dependable_
 
 **Version:** 1.3.8 | **Release Date:** 2026-03-02
 
