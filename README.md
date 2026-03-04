@@ -1,4 +1,4 @@
-# APEX OmniHub
+# Univeral Synchronized Orchestrator
 
 ```
  █████╗ ██████╗ ███████╗██╗  ██╗  ██████╗ ███╗   ███╗███╗   ██╗██╗██╗  ██╗██╗   ██╗██████╗
@@ -33,11 +33,11 @@ _Directable • Accountable • Dependable_
 
 ## Overview
 
-APEX OmniHub is the enterprise **AI orchestration control plane** for **governed execution** across ALL modern stacks, AI apps, legacy enterprise systems, and Web3 infrastructure. Think "control tower": one place to connect, translate, enforce policy, and produce an audit trail you can defend.
+APEX OmniHub is the first **Universal Sync Orchestrator** for **governed execution** across ALL modern stacks, AI apps, legacy enterprise systems, and Web3 infrastructure. Think "Anti-OS, it is the USO": one place to connect fragmented systems, translate universally, enforce policy, and produce an audit trail you can defend.
 
 The platform relies on a "Holy Trinity" architecture:
 
-1.  **OmniHub**: The Central Control Plane (Logic & Policy).
+1.  **OmniHub**: The Universal Sync Orchestrator (Logic & Policy).
 2.  **OmniLink**: The Secure Gateway (Connectivity).
 3.  **OmniPort**: The Multimodal Normalizer (Input/Output).
 
