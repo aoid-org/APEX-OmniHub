@@ -1,4 +1,4 @@
-# Univeral Synchronized Orchestrator
+# Universal Synchronized Orchestrator
 
 ```
  █████╗ ██████╗ ███████╗██╗  ██╗  ██████╗ ███╗   ███╗███╗   ██╗██╗██╗  ██╗██╗   ██╗██████╗
@@ -148,7 +148,12 @@ Client-side infrastructure for deterministic media delivery:
 
 ```
 /src                 - OmniDash UI (277 files)
-/supabase/migrations - Database schema (48 versioned SQL migrations)
+/src/pages/OmniDash/OmniDashLayout.tsx  -  Shell / layout
+/src/components/omnidash/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
+/src/omnidash/uiRegistry.ts  -   UI registry wiring
+
+
+/supabase/migrations - Database schema (50+ versioned SQL migrations)
 /supabase/functions  - Edge functions (22 serverless endpoints)
 /orchestrator        - Temporal workers and orchestration services (83 files)
 /tests               - Automated test suite (115 files)
