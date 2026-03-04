@@ -260,11 +260,7 @@ const FounderStory = memo(function FounderStory() {
 
           <p className="font-mono text-[0.62rem] tracking-[0.22em] uppercase text-apex-muted font-bold mb-[0.45rem]">Your Systems. Your Rules.</p>
           <p className="font-mono text-[0.58rem] tracking-[0.18em] uppercase text-apex-orange">
-            Directable{' '}
-            <span className="text-apex-muted mx-1">&bull;</span>{' '}
-            Auditable{' '}
-            <span className="text-apex-muted mx-1">&bull;</span>{' '}
-            Reversible
+            Directable <span className="text-apex-muted" aria-hidden="true">&bull;</span> Auditable <span className="text-apex-muted" aria-hidden="true">&bull;</span> Reversible
           </p>
 
           <div className="flex items-center gap-6 mt-8 flex-wrap font-mono text-[0.54rem] tracking-[0.12em] uppercase text-apex-muted">
@@ -315,7 +311,7 @@ const FounderStory = memo(function FounderStory() {
             <p key={text} className="text-base text-apex-text-dim mb-6 text-justify indent-8 hyphens-auto">{text}</p>
           ))}
 
-          <ul className="list-none my-6 flex flex-col gap-3" role="list">
+          <ul className="list-none my-6 flex flex-col gap-3">
             {[
               ['Universal integration', 'vendor agnostic by design'],
               ['Universal translation', 'systems and humans do not think in one language'],
