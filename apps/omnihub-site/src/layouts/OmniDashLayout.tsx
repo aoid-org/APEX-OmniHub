@@ -1,18 +1,20 @@
 /**
- * APEX OmniDash Layout - apps/omnihub-site
- * @version 6.0.0 - Custom nav icons, Space Grotesk font, burnt orange accents
+ * APEX OmniDash Layout — v1.4.2 Unified Apple-Grade Shell
+ * @version 1.4.2 — Theme system, APEX Ecosystem widget, glassmorphism, drag-reorder
  *
  * 3-column CSS Grid: 260px | 1fr | 320px
- * Custom APEX-branded 3D nav icons (no Lucide in sidebar)
- * Lucide kept only for header utility icons (Search, Bell, Shield, ChevronDown)
+ * Custom APEX-branded 3D nav icons
+ * Theme-aware via data-theme attribute
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { Search, Bell, Shield, ChevronDown, Scan, Sun, Moon, X } from 'lucide-react';
+import { Search, Bell, Shield, ChevronDown, Scan, Sun, Moon, X, ChevronRight, Menu, LayoutGrid, Zap, Settings } from 'lucide-react';
 import { DashboardOverview } from '@/pages/DashboardOverview';
 import { UniversalModalEngine } from '../../../../src/components/omnidash/media/UniversalModalEngine';
+import { useOmniModal } from '../../../../src/stores/omniModalStore';
+import { Reorder } from 'framer-motion';
 import '@/styles/omnidash-layout.css';
 
 // Custom nav icons
@@ -64,6 +66,14 @@ const TRACE_FEED = [
   { color: '#34d399', text: 'Ticket #7291 auto-resolved by agent' },
 ];
 
+const LOGO = (domain: string) => `https://logo.clearbit.com/${domain}`;
+
+// Widget IDs for reordering
+type WidgetId = 'ops' | 'ecosystem' | 'trace' | 'analytics' | 'security';
+
+const STORAGE_KEY_THEME = 'apex-theme';
+const STORAGE_KEY_WIDGET_ORDER = 'apex-widget-order';
+
 // ────────────────────────────────────────────────
 // Ops Controls toggle
 // ────────────────────────────────────────────────
@@ -87,7 +97,34 @@ export function OmniDashLayout() {
   const [connectedEco, setConnectedEco] = useState(true);
   const [anonymizeKpis, setAnonymizeKpis] = useState(false);
   const [freezeMode, setFreezeMode] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [showEcoModal, setShowEcoModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<'sidebar' | 'widgets' | null>(null);
+  const omniModal = useOmniModal();
+
+  // Theme state — persisted to localStorage
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_THEME);
+    return saved ? saved === 'dark' : true;
+  });
+
+  // Widget reorder state — persisted to localStorage
+  const [widgetOrder, setWidgetOrder] = useState<WidgetId[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_WIDGET_ORDER);
+    if (saved) {
+      try { return JSON.parse(saved) as WidgetId[]; } catch { /* fallback */ }
+    }
+    return ['ops', 'ecosystem', 'trace', 'analytics', 'security'];
+  });
+
+  // Persist theme
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_THEME, isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+
+  // Persist widget order
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_WIDGET_ORDER, JSON.stringify(widgetOrder));
+  }, [widgetOrder]);
 
   const handleLogout = useCallback(async () => {
     try { await supabase.auth.signOut(); }
@@ -100,10 +137,177 @@ export function OmniDashLayout() {
     (n) => n.to === location.pathname || (n.to === '/omnidash' && location.pathname === '/omnidash'),
   )?.key ?? 'omniboard';
 
+  // APEX Ecosystem — first 3 visible, rest in modal
+  const ecoAppsVisible = useMemo(() => APP_REGISTRY.slice(0, 3), []);
+  const ecoAppsOverflow = useMemo(() => APP_REGISTRY.slice(3), []);
+
+  // ────────────────────────────────────────────────
+  // Widget Renderers
+  // ────────────────────────────────────────────────
+  const renderWidget = useCallback((id: WidgetId) => {
+    switch (id) {
+      case 'ops':
+        return (
+          <div className="glass" key="ops">
+            <div className="od-card-title">Ops Controls</div>
+            <div className="od-toggle-row"><span>Demo Mode</span><Toggle checked={demoMode} onChange={setDemoMode} /></div>
+            <div className="od-toggle-row"><span>Connected Ecosystem</span><Toggle checked={connectedEco} onChange={setConnectedEco} /></div>
+            <div className="od-toggle-row"><span>Anonymize KPIs</span><Toggle checked={anonymizeKpis} onChange={setAnonymizeKpis} /></div>
+            <div className="od-toggle-row"><span>Freeze Mode</span><Toggle checked={freezeMode} onChange={setFreezeMode} /></div>
+            <div style={{ marginTop: 12, fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              Running 24 tasks · 96.8% success
+            </div>
+          </div>
+        );
+
+      case 'ecosystem':
+        return (
+          <div className="eco-hex" key="ecosystem">
+            <div className="eco-section-title">APEX Ecosystem</div>
+            {connectedEco ? (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--tile-gap)' }}>
+                  {ecoAppsVisible.map((app) => (
+                    <div className="app-tile" key={app.key}
+                      onClick={() => omniModal.invoke({
+                        id: `eco-${app.key}`,
+                        provider: app.label,
+                        type: 'oauth',
+                        title: `${app.label} Connection`,
+                        description: `Configure ${app.label} integration for ${app.category} data synchronization.`,
+                        onComplete: async (payload) => { console.warn(`${app.label} configured:`, payload); },
+                        onCancel: () => { console.warn(`${app.label} config dismissed.`); },
+                      })}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <img
+                        src={LOGO(app.logoDomain)}
+                        alt={app.label}
+                        className="app-tile-icon"
+                      />
+                      <div className="app-tile-info">
+                        <div className="app-tile-name">{app.label}</div>
+                        <div className="app-tile-cat">{app.category}</div>
+                      </div>
+                      <span className={`health-dot health-dot-${app.healthContext.health}`} />
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="more-apps-btn"
+                  onClick={() => setShowEcoModal(true)}
+                >
+                  More apps <ChevronRight size={14} />
+                </button>
+              </>
+            ) : (
+              <div className="app-tile-add" onClick={() => omniModal.invoke({
+                id: 'add-apex-app',
+                provider: 'APEX Ecosystem',
+                type: 'selection',
+                title: 'Add APEX App',
+                description: 'Select an app to connect to your APEX ecosystem.',
+                schema: { items: APP_REGISTRY.map(a => ({ id: a.key, label: a.label })) },
+                onComplete: async (payload) => { console.warn('App selected:', payload); setConnectedEco(true); },
+                onCancel: () => { console.warn('Add app dismissed.'); },
+              })} style={{ cursor: 'pointer' }}>
+                <span style={{ fontSize: 20 }}>+</span>
+                Add APEX App
+              </div>
+            )}
+          </div>
+        );
+
+      case 'trace':
+        return (
+          <div className="glass" key="trace">
+            <div className="od-card-title">OmniTrace</div>
+            {TRACE_FEED.map((item) => (
+              <div key={item.text} className="od-trace-item">
+                <span className="od-trace-dot" style={{ background: item.color }} />
+                <span style={{ fontSize: 12, color: 'var(--text-primary)' }}>{item.text}</span>
+              </div>
+            ))}
+            <button type="button" className="od-scan-btn" style={{ marginTop: 12 }} onClick={() => omniModal.invoke({
+              id: 'replay-workflows',
+              provider: 'OmniTrace',
+              type: 'confirmation',
+              title: 'Replay Workflows',
+              description: 'This will replay all recent workflow executions for analysis. Proceed?',
+              onComplete: async () => { console.warn('Workflows replayed.'); },
+              onCancel: () => { console.warn('Replay cancelled.'); },
+            })}>✦ REPLAY WORKFLOWS</button>
+          </div>
+        );
+
+      case 'analytics':
+        return (
+          <div className="glass" key="analytics">
+            <div className="od-card-title">Analytics</div>
+            <div className="od-metric-grid">
+              <div className="od-metric-cube">
+                <div className="od-metric-value">27/50</div>
+                <div className="od-metric-label">Tasks Today</div>
+              </div>
+              <div className="od-metric-cube">
+                <div className="od-metric-value" style={{ color: 'var(--health-green)' }}>96.8%</div>
+                <div className="od-metric-label">Success Rate</div>
+              </div>
+              <div className="od-metric-cube">
+                <div className="od-metric-value" style={{ color: 'var(--accent)' }}>842ms</div>
+                <div className="od-metric-label">Avg. Latency</div>
+              </div>
+              <div className="od-metric-cube">
+                <div className="od-metric-value" style={{ color: 'var(--health-green)' }}>$3,240</div>
+                <div className="od-metric-label">Cost Saved</div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'security':
+        return (
+          <div className="glass" key="security">
+            <div className="od-card-title">Security Audit</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <Shield style={{ width: 20, height: 20, color: 'var(--health-green)' }} />
+              <div>
+                <div style={{ fontSize: 14, color: 'var(--text-heading)' }}>Zero Trust Active</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>All gateways secured</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
+              LAST SCAN: 12 MIN AGO
+            </div>
+            <button type="button" className="od-scan-btn" onClick={() => omniModal.invoke({
+              id: 'security-scan',
+              provider: 'Fortress',
+              type: 'confirmation',
+              title: 'Security Scan',
+              description: 'Initiate a full zero-trust security audit across all connected systems. This process is non-destructive.',
+              onComplete: async () => { console.warn('Security scan initiated.'); },
+              onCancel: () => { console.warn('Security scan cancelled.'); },
+            })}>
+              <Scan style={{ width: 12, height: 12 }} /> Scan Now
+            </button>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  }, [demoMode, connectedEco, anonymizeKpis, freezeMode, ecoAppsVisible, omniModal]);
+
   return (
-    <div className="omnidash-shell">
+    <div className="omnidash-shell" data-theme={isDarkMode ? 'dark' : 'light'}>
+      {/* Mobile overlay for sidebar/widgets drawer */}
+      {mobileMenuOpen && (
+        <div className="mobile-overlay" onClick={() => setMobileMenuOpen(null)} />
+      )}
+
       {/* ────── LEFT SIDEBAR ────── */}
-      <aside className="od-sidebar">
+      <aside className={`od-sidebar${mobileMenuOpen === 'sidebar' ? ' mobile-open' : ''}`}>
         <div className="od-sidebar-logo">
           <img src={apexWordmark} alt="APEX OmniHub" style={{ height: 26 }} />
         </div>
@@ -113,10 +317,10 @@ export function OmniDashLayout() {
             <Link
               key={item.key}
               to={item.to}
-              className={`od-nav-item transition-all duration-300 ease-out hover:translate-x-1 ${activeNav === item.key ? ' active' : ''}`}
+              className={`od-nav-item${activeNav === item.key ? ' active' : ''}`}
             >
-              <img src={item.icon} alt={item.label} className="nav-icon drop-shadow-md" />
-              <span className="font-bold tracking-tight">{item.label}</span>
+              <img src={item.icon} alt={item.label} className="nav-icon" />
+              <span>{item.label}</span>
             </Link>
           ))}
         </nav>
@@ -130,8 +334,8 @@ export function OmniDashLayout() {
           <button
             onClick={handleLogout}
             style={{
-              display: 'block', marginTop: 8, fontSize: 13.375,
-              color: '#64748b', cursor: 'pointer', background: 'none',
+              display: 'block', marginTop: 8, fontSize: 13,
+              color: 'var(--text-muted)', cursor: 'pointer', background: 'none',
               border: 'none', padding: 0, fontFamily: 'inherit',
             }}
           >
@@ -143,6 +347,16 @@ export function OmniDashLayout() {
       {/* ────── CENTER COLUMN ────── */}
       <div className="od-center">
         <header className="od-header">
+          {/* Mobile hamburger */}
+          <button
+            type="button"
+            className="od-avatar mobile-only-btn"
+            onClick={() => setMobileMenuOpen(p => p === 'sidebar' ? null : 'sidebar')}
+            aria-label="Menu"
+            id="mobile-hamburger"
+          >
+            <Menu style={{ width: 16, height: 16 }} />
+          </button>
           <div className="od-header-search" style={{ flex: 1, maxWidth: 470 }}>
             <Search />
             <input
@@ -154,29 +368,51 @@ export function OmniDashLayout() {
           <div style={{ flex: 1 }} />
 
           <div className="od-header-actions">
-            <button 
-              type="button" 
-              className="od-avatar" 
+            <button
+              type="button"
+              className="od-avatar"
               onClick={() => setIsDarkMode(!isDarkMode)}
               title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {isDarkMode ? <Sun style={{ width: 16, height: 16 }} /> : <Moon style={{ width: 16, height: 16 }} />}
             </button>
 
             <div className="od-org-badge">
               APEX Business Systems
-              <ChevronDown className="h-3 w-3" />
+              <ChevronDown style={{ width: 12, height: 12 }} />
             </div>
 
             <div className="od-sentry-badge">
-              <Shield className="h-3 w-3" />
+              <Shield style={{ width: 12, height: 12 }} />
               Zero Trust Active
             </div>
 
-            <button type="button" onClick={() => navigate('/omnidash/omniport')} className="od-connect-ai">Connect AI</button>
+            <button type="button" onClick={() => omniModal.invoke({
+              id: 'connect-ai',
+              provider: 'APEX OmniPort',
+              type: 'oauth',
+              title: 'Connect AI Provider',
+              description: 'Link your AI provider (OpenAI, Anthropic, or Google) for seamless agent integration.',
+              onComplete: async (payload) => { console.warn('AI connected:', payload); navigate('/omnidash/omniport'); },
+              onCancel: () => { console.warn('AI connect dismissed.'); },
+            })} className="od-connect-ai">Connect AI</button>
 
-            <button type="button" className="od-avatar" aria-label="Notifications">
-              <Bell className="h-3.5 w-3.5" />
+            <button type="button" className="od-avatar" aria-label="Notifications" onClick={() => omniModal.invoke({
+              id: 'notifications',
+              provider: 'APEX',
+              type: 'selection',
+              title: 'Notifications',
+              description: 'Recent system notifications and alerts.',
+              schema: { items: [
+                { id: '1', label: 'Salesforce sync completed — 48 records updated' },
+                { id: '2', label: 'Security scan passed — Zero Trust Active' },
+                { id: '3', label: 'Invoice batch #1042 processed successfully' },
+                { id: '4', label: 'Workflow "Lead Nurture" triggered by new lead' },
+              ]},
+              onComplete: async (payload) => { console.warn('Notification selected:', payload); },
+              onCancel: () => { /* dismiss */ },
+            })}>
+              <Bell style={{ width: 14, height: 14 }} />
             </button>
 
             <div className="od-avatar" title="User">
@@ -186,7 +422,6 @@ export function OmniDashLayout() {
         </header>
 
         <div className={`od-content ${location.pathname === '/omnidash' ? '' : 'center-content-blur'}`}>
-          {/* Dashboard is PERMANENT in the background */}
           <DashboardOverview />
         </div>
 
@@ -194,14 +429,14 @@ export function OmniDashLayout() {
         {location.pathname !== '/omnidash' && (
           <div className="od-modal-overlay">
             <div className="od-modal-content hex-outer">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="od-modal-close"
                 onClick={() => navigate('/omnidash')}
               >
                 <X size={20} />
               </button>
-              
+
               <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto' }}>
                 <Outlet />
               </div>
@@ -210,91 +445,95 @@ export function OmniDashLayout() {
         )}
       </div>
 
-      {/* ────── RIGHT SIDEBAR ────── */}
-      <aside className="od-right">
-        {/* Ops Controls */}
-        <div className="glass transition-all duration-300 ease-out hover:border-white/20 hover:-translate-y-1">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Ops Controls</div>
-          <div className="od-toggle-row">
-            <span className="font-semibold tracking-tight text-sm" style={{ color: '#dfe6fe' }}>Demo Mode</span>
-            <Toggle checked={demoMode} onChange={setDemoMode} />
-          </div>
-          <div className="od-toggle-row">
-            <span className="font-semibold tracking-tight text-sm" style={{ color: '#dfe6fe' }}>Connected Ecosystem</span>
-            <Toggle checked={connectedEco} onChange={setConnectedEco} />
-          </div>
-          <div className="od-toggle-row">
-            <span className="font-semibold tracking-tight text-sm" style={{ color: '#dfe6fe' }}>Anonymize KPIs</span>
-            <Toggle checked={anonymizeKpis} onChange={setAnonymizeKpis} />
-          </div>
-          <div className="od-toggle-row">
-            <span className="font-semibold tracking-tight text-sm" style={{ color: '#dfe6fe' }}>Freeze Mode</span>
-            <Toggle checked={freezeMode} onChange={setFreezeMode} />
-          </div>
-          <div className="mt-4 text-[10px] text-muted-foreground text-center font-mono uppercase tracking-wider">
-            Running 24 tasks &middot; 96.8% success
-          </div>
-        </div>
-
-        {/* OmniTrace */}
-        <div className="glass transition-all duration-300 ease-out hover:border-white/20 hover:-translate-y-1">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3">OmniTrace</div>
-          {TRACE_FEED.map((item) => (
-            <div key={item.text} className="od-trace-item transition-all duration-300 hover:translate-x-1">
-              <span className="od-trace-dot shadow-[0_0_8px_currentColor]" style={{ background: item.color, color: item.color }} />
-              <span className="text-xs font-medium tracking-tight" style={{ color: '#dfe6fe' }}>{item.text}</span>
-            </div>
+      {/* ────── RIGHT SIDEBAR (Reorderable Widgets) ────── */}
+      <aside className={`od-right${mobileMenuOpen === 'widgets' ? ' mobile-open' : ''}`}>
+        <Reorder.Group
+          axis="y"
+          values={widgetOrder}
+          onReorder={setWidgetOrder}
+          style={{ display: 'flex', flexDirection: 'column', gap: 12, listStyle: 'none', padding: 0, margin: 0 }}
+        >
+          {widgetOrder.map((id) => (
+            <Reorder.Item
+              key={id}
+              value={id}
+              style={{ cursor: 'grab' }}
+              whileDrag={{ scale: 1.02, boxShadow: '0 8px 30px rgba(0,0,0,0.3)', zIndex: 10 }}
+            >
+              {renderWidget(id)}
+            </Reorder.Item>
           ))}
-          <button type="button" className="od-scan-btn mt-3 transition-all duration-300 hover:-translate-y-0.5 shadow-sm">
-            ✦ REPLAY WORKFLOWS
-          </button>
-        </div>
-
-        {/* Analytics */}
-        <div className="glass transition-all duration-300 ease-out hover:border-white/20 hover:-translate-y-1">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Analytics</div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center transition-all duration-300 hover:border-white/20 hover:-translate-y-1 shadow-sm">
-              <div className="font-mono text-xl font-extrabold" style={{ color: '#dfe6fe' }}>27/50</div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1 font-bold">Tasks Today</div>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center transition-all duration-300 hover:border-white/20 hover:-translate-y-1 shadow-sm">
-              <div className="font-mono text-xl font-extrabold text-[#34d399]">96.8%</div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1 font-bold">Success Rate</div>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center transition-all duration-300 hover:border-white/20 hover:-translate-y-1 shadow-sm">
-              <div className="font-mono text-xl font-extrabold text-[#f97316]">842ms</div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1 font-bold">Avg. Latency</div>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center transition-all duration-300 hover:border-white/20 hover:-translate-y-1 shadow-sm">
-              <div className="font-mono text-xl font-extrabold text-[#4ade80]">$3,240</div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1 font-bold">Cost Saved</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Security Audit */}
-        <div className="glass transition-all duration-300 ease-out hover:border-white/20 hover:-translate-y-1">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Security Audit</div>
-          <div className="flex items-center gap-3 mb-2">
-            <Shield className="h-5 w-5 text-[#34d399] drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-            <div>
-              <div className="text-sm font-extrabold tracking-tight" style={{ color: '#dfe6fe' }}>Zero Trust Active</div>
-              <div className="text-xs font-semibold tracking-tight text-slate-400">All gateways secured</div>
-            </div>
-          </div>
-          <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-3 font-mono">
-            LAST SCAN: 12 MIN AGO
-          </div>
-          <button type="button" className="od-scan-btn transition-all duration-300 hover:-translate-y-0.5 shadow-sm text-xs font-bold tracking-widest uppercase">
-            <Scan className="h-3 w-3 mr-1" />
-            Scan Now
-          </button>
-        </div>
+        </Reorder.Group>
       </aside>
+
+      {/* ────── APEX ECOSYSTEM OVERFLOW MODAL ────── */}
+      {showEcoModal && (
+        <div className="od-modal-overlay" onClick={() => setShowEcoModal(false)}>
+          <div
+            className="od-modal-content"
+            style={{ maxWidth: 700, padding: 32 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="od-modal-close"
+              onClick={() => setShowEcoModal(false)}
+            >
+              <X size={20} />
+            </button>
+            <div style={{ padding: 32 }}>
+              <div className="eco-section-title" style={{ fontSize: 20, marginBottom: 20 }}>APEX Ecosystem</div>
+              <div className="integrated-grid">
+                {ecoAppsOverflow.map((app) => (
+                  <div className="app-tile" key={app.key} onClick={() => omniModal.invoke({
+                    id: `overflow-eco-${app.key}`,
+                    provider: app.label,
+                    type: 'oauth',
+                    title: `${app.label} Connection`,
+                    description: `Configure ${app.label} integration for ${app.category} data synchronization.`,
+                    onComplete: async (payload) => { console.warn(`${app.label} configured:`, payload); setShowEcoModal(false); },
+                    onCancel: () => { console.warn(`${app.label} dismissed.`); },
+                  })} style={{ cursor: 'pointer' }}>
+                    <img
+                      src={LOGO(app.logoDomain)}
+                      alt={app.label}
+                      className="app-tile-icon"
+                    />
+                    <div className="app-tile-info">
+                      <div className="app-tile-name">{app.label}</div>
+                      <div className="app-tile-cat">{app.category}</div>
+                    </div>
+                    <span className={`health-dot health-dot-${app.healthContext.health}`} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ────── GLOBAL MODAL ENGINE ────── */}
       <UniversalModalEngine />
+
+      {/* ────── MOBILE BOTTOM NAV ────── */}
+      <nav className="mobile-bottom-nav">
+        <button type="button" className="active" onClick={() => { setMobileMenuOpen(null); navigate('/omnidash'); }}>
+          <LayoutGrid size={20} />
+          <span>Home</span>
+        </button>
+        <button type="button" onClick={() => setMobileMenuOpen(p => p === 'sidebar' ? null : 'sidebar')}>
+          <Menu size={20} />
+          <span>Apps</span>
+        </button>
+        <button type="button" onClick={() => setMobileMenuOpen(p => p === 'widgets' ? null : 'widgets')}>
+          <Zap size={20} />
+          <span>Widgets</span>
+        </button>
+        <button type="button" onClick={() => navigate('/omnidash/settings')}>
+          <Settings size={20} />
+          <span>Settings</span>
+        </button>
+      </nav>
     </div>
   );
 }
