@@ -7,92 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.9] - 2026-03-03
 
-### Added — Memory & Resilience Architecture (ACRA v2.2)
+### Added
 
-#### Persistent Memory Subsystem
+- **ACRA v2.2 Persistent Memory (multi-tenant + anti-poisoning)**
 
-- **[NEW]** `supabase/migrations/20260303000000_create_memories_table.sql` — ACRA memories table: pgvector HNSW index, `tenant_id` multi-tenant isolation, `device_id` + `device_trust_level` enforcement, `provenance_type` + `trust_score` anti-poisoning, SHA-256 content-hash deduplication (`UNIQUE(tenant_id, user_id, content_hash)`), 4-type cognitive classification, importance scoring, `embedding_model` versioning
-- **[NEW]** PostgreSQL ENUMs: `memory_type_enum`, `provenance_type_enum`, `device_trust_enum`
-- **[NEW]** RLS tenant isolation: JWT `tenant_id` claim enforcement on all policies, device trust gating on INSERT (blocks `blocked`/`unknown`)
-- **[NEW]** `promote_memory()` — Anti-poisoning gate: only `user_confirmed` provenance can promote to semantic/procedural
-- **[NEW]** `export_user_memories()` — GDPR/PIPEDA data subject access request
-- **[NEW]** `purge_user_memories()` — Audited hard delete for account closure/legal
-- **[NEW]** `fetch_tenant_memory_health()` — SECURITY DEFINER RPC with JWT tenant validation
-- **[NEW]** `set_ef_search()` — HNSW runtime recall tuning (P1, default=100)
-- **[NEW]** `batch_reembed_candidates()` + `apply_reembedding()` — Throttled re-embed with SKIP LOCKED (P1)
-- **[NEW]** `apply_memory_ttl_policy()` — Sole owner of `expires_at`, 3-tier pruning
-- **[NEW]** `memory_health_stats` view — Tenant-scoped aggregates with trust + poisoning metrics
+  - Tenant-isolated memory storage with RLS, device-trust gating, provenance + trust scoring, SHA-256 content-hash dedupe, cognitive classification, importance scoring, embedding model versioning, and HNSW vector search.
+  - Promotion gate: only `user_confirmed` provenance can promote to semantic/procedural.
+  - TTL policy owns `expires_at` (3-tier pruning); re-embedding is throttled (`SKIP LOCKED`).
 
-#### Compliance Retention Split
+- **Compliance retention split**
 
-- **[NEW]** `supabase/migrations/20260303000001_create_security_incidents_table.sql` — 24-month breach retention (PIPEDA), append-only RLS, incident classification, severity levels, resolution tracking
-- **[NEW]** `cleanup_old_security_incidents()` — Monthly cleanup of incidents >24 months
-- **Retention Matrix**: `audit_logs` (90d) | `security_incidents` (24mo) | `idempotency_receipts` (30d)
+  - `security_incidents` table w/ append-only RLS + 24-month retention cleanup job.
+  - Retention matrix: `audit_logs` (90d) | `security_incidents` (24mo) | `idempotency_receipts` (30d)
 
-#### Circuit Breaker State Persistence (P1)
+- **Circuit breaker persistence (P1)**
 
-- **[NEW]** `supabase/migrations/20260303000002_create_circuit_breaker_state.sql` — Persists CB state across worker restarts, tenant-scoped, atomic `upsert_circuit_breaker()`, per-service config overrides
+  - Tenant-scoped state table + atomic `upsert_circuit_breaker()` to persist CB state across restarts.
 
-#### Memory SDK (P2)
+- **Quarantine lane (fail-closed governance)**
 
-- **[NEW]** `src/lib/memory/MemoryClient.ts` — Unified SDK: `store()`, `recall()`, `purge()`, `export()`
-- **[NEW]** `src/lib/memory/index.ts` — Barrel export with full type definitions
+  - `is_quarantined` blocks recall + promotion.
+  - `quarantine_memory()` logs to `security_incidents`.
+  - `unquarantine_memory()` is service_role-only.
+  - Ops-only view + health stat additions.
 
-#### OmniDash Observability Widgets (Ops Page)
+- **Ciphertext-only memory storage**
 
-- **[MODIFY]** `src/components/omnidash/Ops.tsx` — Memory Health + System Resilience widgets, `xs`/`xxs` responsive breakpoints
-- **[MODIFY]** `src/omnidash/api.ts` — `MemoryHealthStats` with `avg_trust_score`, `poisoned_candidate_count`
-- **[MODIFY]** `src/omnidash/hooks.ts` — `useMemoryHealth()` hook (30s poll)
+  - `pgcrypto` enabled.
+  - `content_encrypted BYTEA` + `encryption_key_id TEXT`.
+  - Encrypt on write; plaintext never persisted (sentinel replaces plaintext field).
+  - `decrypt_memory_content()` is SECURITY DEFINER (read-only; does not mutate rows).
+  - Keys are server-managed (Vault/env), never exposed to clients.
 
-#### Quarantine Lane (Round 3: Fail-Closed Governance)
+- **Memory SDK (P2)**
 
-- **[NEW]** `is_quarantined` column — quarantined rows invisible to normal recall (SELECT RLS filter), blocked from promotion
-- **[NEW]** `quarantine_memory()` — SECURITY DEFINER function, logs to `security_incidents`
-- **[NEW]** `unquarantine_memory()` — service_role only release
-- **[NEW]** `quarantined_memories` view — Ops-only, tenant-scoped, service_role access
-- **[NEW]** `quarantined_count` added to `memory_health_stats` view + `fetch_tenant_memory_health()` RPC
+  - `MemoryClient`: `store()`, `recall()`, `purge()`, `export()`.
 
-#### Encrypt-at-Rest (Round 3: Ciphertext-Only Storage)
-
-- **[NEW]** `pgcrypto` extension enabled
-- **[NEW]** `content_encrypted BYTEA` + `encryption_key_id TEXT` columns
-- **[NEW]** `encrypt_memory_content()` — PGP symmetric encryption, replaces `content` with `[ENCRYPTED]` sentinel
-- **[NEW]** `decrypt_memory_content()` — SECURITY DEFINER decrypt, returns plaintext without modifying row
-- **Key Management**: Server-managed keys (Supabase Vault / env secrets), never exposed to client
-
-#### Observability Alert Thresholds
-
-| Metric                     | Warn             | Sev2/Sev1       |
-| -------------------------- | ---------------- | --------------- |
-| p95 API latency            | >500ms           | >1000ms (sev2)  |
-| Error rate                 | >2%              | >5% (sev1)      |
-| `poisoned_candidate_count` | Rising >baseline | Security review |
-
-### Rollback
-
-Explicit rollback scripts in `supabase/migrations/rollback/`:
-
-- `20260303000000_rollback.sql` — DROP order: views → functions → table → ENUMs → extension
-- `20260303000001_rollback.sql` — security_incidents cleanup
-- `20260303000002_rollback.sql` — circuit_breaker_state cleanup
+- **Ops widgets + alert thresholds**
+  - Memory Health + System Resilience widgets on Ops page.
+  - Thresholds:
+    - p95 latency: warn >500ms, sev2 >1000ms
+    - error rate: warn >2%, sev1 >5%
+    - poisoned candidates rising: security review
 
 ### Fixed
 
-- **`NotificationCenter.tsx`** — `Readonly` props (SonarQube)
-- **`man-mode-dispatcher.ts`** — Interface → function types, removed dead `taskLabel` parameter from `blockTask()`
+- `NotificationCenter.tsx`: Readonly props for Sonar.
+- `man-mode-dispatcher.ts`: Function types; removed dead `taskLabel` arg from `blockTask()`.
 
-### Component Stability Gate
+### Rollback
 
-- **[NEW]** `tests/e2e-playwright/ops-widgets-smoke.spec.ts` — Playwright smoke: Memory Health, System Resilience, Freeze Switch, Incident Log visible, zero console errors
-- **Rule**: Playwright smoke required if Ops UI changed (per APEX Bible)
-- **No stable exports renamed** — all existing test-ids and translation hooks preserved
+- `supabase/migrations/rollback/20260303000000_rollback.sql`
+- `supabase/migrations/rollback/20260303000001_rollback.sql`
+- `supabase/migrations/rollback/20260303000002_rollback.sql`
 
-### Quality Gates
+### Verification (release blocking)
 
-- TypeScript (`tsc --noEmit`): 0 errors
-- ESLint: 0 errors, 0 warnings on all modified files
-- Build: exit 0
-- SonarQube: A-grade compliance
+- `npm run typecheck` → 0 errors
+- `npm run lint` → 0 errors / 0 warnings
+- `npm test` → green
+- `npm run build` → exit 0
+- Apply migrations on clean DB; confirm RLS + RPC compile; run rollback scripts successfully.
+- Ops smoke: Memory Health + Resilience + Incident Log visible; zero console errors.
 
 ---
 
@@ -180,7 +156,7 @@ Explicit rollback scripts in `supabase/migrations/rollback/`:
 
 ### Fixed
 
-- **useAuth.ts lint error (omnihub-site):** Resolved `react-hooks/set-state-in-effect` — `loading` initialized from `hasSupabaseConfig`.
+- **useAuth.ts lint error (omnihub-site):** Resolved 'react-hooks/set-state-in-effect' — `loading` initialized from `hasSupabaseConfig`.
 - **tools.py suppression comment (orchestrator):** Fixed `# nosonar` → `# NOSONAR` for SonarQube compliance.
 
 ### Security
@@ -235,7 +211,7 @@ Explicit rollback scripts in `supabase/migrations/rollback/`:
 
 #### Task 1: Idempotency Hit-Rate Monitoring
 
-- `orchestrator/metrics.py`: Prometheus counters `idempotency_hits_total` / `idempotency_misses_total` with `/metrics` endpoint
+- `orchestrator/metrics.py`: Prometheus counters `idempotency_hits_total` / `idempotency_misses_total` with '/metrics' endpoint
 - `docs/monitoring/idempotency_hitrate.json`: Grafana dashboard with hit-rate panel and < 95% alert rule
 - Integrated metrics server startup into `orchestrator/main.py` worker boot sequence
 - `tests/test_idempotency_metrics.py`: Unit tests for counter labels, hit-rate math, server idempotency
@@ -256,7 +232,7 @@ Explicit rollback scripts in `supabase/migrations/rollback/`:
 #### Documentation Updates
 
 - `docs/ops/OPS_RUNBOOK.md`: Added idempotency monitoring, pg_cron cleanup, guard rail response sections
-- `docs/project-status/LAUNCH_READINESS_v1.0.0.md`: Added v1.3.2+ production enhancement checklist
+- 'docs/project-status/LAUNCH_READINESS_v1.0.0.md': Added v1.3.2+ production enhancement checklist
 
 ### Quality Gates
 
@@ -274,17 +250,17 @@ Explicit rollback scripts in `supabase/migrations/rollback/`:
 
 - **Console logging hardened:** All 36+ `console.log` statements in production source code (`src/omniconnect/`, `src/lib/offline.ts`, `src/lib/omni-sentry.ts`) guarded with `import.meta.env.DEV` — zero information disclosure in production builds
 - **Console.info hardened:** All 6 `console.info` statements in OmniSentry monitoring module guarded for dev-only output
-- **ESLint blanket eslint-disable removed:** Removed `/* eslint-disable no-console */` from `src/lib/omni-sentry.ts`
-- **ESLint config tightened:** Removed overly broad `src/pages/**/*.tsx` and narrowed exemptions to only infrastructure files with properly guarded logging
+- **ESLint blanket eslint-disable removed:** Removed '/* eslint-disable no-console */' from `src/lib/omni-sentry.ts`
+- **ESLint config tightened:** Removed overly broad 'src/pages/**/*.tsx' and narrowed exemptions to only infrastructure files with properly guarded logging
 
 #### Test Infrastructure
 
-- **Vitest coverage crash fixed:** Coverage is now opt-in via `VITEST_COVERAGE=true` env var, preventing `ENOENT: coverage/.tmp/coverage-0.json` crash on default test runs
+- **Vitest coverage crash fixed:** Coverage is now opt-in via `VITEST_COVERAGE=true` env var, preventing 'ENOENT: coverage/.tmp/coverage-0.json' crash on default test runs
 - **`test:coverage` script updated:** Now sets `VITEST_COVERAGE=true` automatically
 
 #### Repository Hygiene
 
-- **Stale CI artifacts removed:** Deleted `final_eslint.json` (UTF-16 encoded legacy artifact), `security/npm-audit-latest.json`, `security/npm-audit-prod.json`, `coverage/` directory
+- **Stale CI artifacts removed:** Deleted `final_eslint.json` (UTF-16 encoded legacy artifact), 'security/npm-audit-latest.json', 'security/npm-audit-prod.json', `coverage/` directory
 - **`.gitignore` extended:** Added rules for stale CI artifacts to prevent re-commitment
 - **README.md updated:** Platform statistics updated to verified 2026-02-25 counts (259 source files, 93 components, 43 migrations, 87 test files, 11 CI pipelines)
 
@@ -342,7 +318,7 @@ Explicit rollback scripts in `supabase/migrations/rollback/`:
 #### Architecture Refactoring
 
 - **OmniDash SPA**: Restructured from multi-page routing to Single Page Application with panel-based navigation
-- Migrated `src/pages/OmniDash/{Today,Kpis,Ops,Integrations,Events}.tsx` → `src/components/omnidash/`
+- Migrated 'src/pages/OmniDash/{Today,Kpis,Ops,Integrations,Events}.tsx' → `src/components/omnidash/`
 - Enhanced `useOmniDashKeyboardShortcuts.ts` with panel-based activation keys (H, P, K, O, I, E, N, R, A, W)
 - Added `react-grid-layout` responsive dashboard widget positioning (breakpoints: lg:3, md:2, sm:1)
 - Added `framer-motion` for SPA panel transition animations
@@ -428,7 +404,7 @@ Explicit rollback scripts in `supabase/migrations/rollback/`:
 - **Docker Compose** — Redis image `7.2.0-v9` → `7.4.0-v3` (RediSearch module crash fix)
 - **ErrorBoundary.tsx** — Removed stray markdown injection, `window`→`globalThis`, `readonly` modifier, `@ts-ignore`→`@ts-expect-error`, replaced `console.group`/`groupEnd` with `console.error`
 - **VoiceInterface.tsx** — Removed unused `React` import, prefixed unused props, `Readonly<>` type, reduced cognitive complexity
-- **package.json** — Scoped `ajv@8.18.0` CVE override for `@nomicfoundation/hardhat-verify` and `@temporalio/worker`
+- **package.json** — Scoped `ajv@8.18.0` CVE override for '@nomicfoundation/hardhat-verify' and '@temporalio/worker'
 
 ### Security
 
@@ -462,8 +438,8 @@ Explicit rollback scripts in `supabase/migrations/rollback/`:
 ### Removed
 
 - Stale error logs from repository tracking
-  - `orchestrator/orchestrator_test_error.txt`
-  - `orchestrator/test_output.txt`
+  - 'orchestrator/orchestrator_test_error.txt'
+  - 'orchestrator/test_output.txt'
 - Added error log patterns to `.gitignore` to prevent future commits
 
 ### Quality Gates
@@ -541,9 +517,9 @@ SonarQube A rating across all dimensions, chaos battery verified.
 ### Removed
 
 - **Lovable Cloud** integration fully decommissioned (PR#426)
-  - Removed `src/integrations/lovable/` client code
-  - Removed `src/lib/lovableConfig.ts`
-  - Removed `src/server/api/lovable/` proxy endpoints
+  - Removed 'src/integrations/lovable/' client code
+  - Removed 'src/lib/lovableConfig.ts'
+  - Removed 'src/server/api/lovable/' proxy endpoints
   - Removed `lovable-tagger` dev dependency
   - Cleaned orphaned `supabase/config.toml` function definitions
   - Removed Lovable domains from CSP headers
