@@ -1,7 +1,12 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Header } from '@/components/Header';
-import { cn } from '@/lib/utils';
+import { Layout } from '@/components/Layout';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 type PillProps = Readonly<{
   label: string;
@@ -228,18 +233,17 @@ const FounderStory = memo(function FounderStory() {
   };
 
   return (
-    <div className="min-h-screen bg-apex-bg text-apex-text">
-      <Header />
+    <Layout title="Founder's Story">
       <ReadingProgress />
 
       <section className="relative min-h-screen flex flex-col justify-end overflow-hidden px-6 pb-20 pt-[calc(60px+3rem)]" aria-labelledby="founder-story-title">
         <div className="absolute inset-0 pointer-events-none z-0 bg-[linear-gradient(rgba(74,154,186,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(74,154,186,0.055)_1px,transparent_1px)] bg-[size:52px_52px]" aria-hidden="true" />
         <div className="absolute inset-0 pointer-events-none z-[1] bg-[radial-gradient(ellipse_70%_55%_at_10%_88%,rgba(212,98,31,0.13)_0%,transparent_55%),radial-gradient(ellipse_55%_60%_at_88%_12%,rgba(74,154,186,0.07)_0%,transparent_50%)]" aria-hidden="true" />
 
-        <div className="relative z-[2] max-w-[860px] animate-fadeUp">
+        <div className="relative z-[2] max-w-[860px] animate-fadeUp mx-auto w-full">
           <p className="font-mono text-[0.6rem] tracking-[0.25em] uppercase text-apex-teal mb-5 flex items-center gap-4">
             <span className="block w-6 h-px bg-apex-teal" aria-hidden="true" />
-            <span>Founder&apos;s Story</span>
+            {' '}Founder&apos;s Story
           </p>
 
           <div className="flex gap-2 mb-5 flex-wrap">
@@ -259,9 +263,7 @@ const FounderStory = memo(function FounderStory() {
           </p>
 
           <p className="font-mono text-[0.62rem] tracking-[0.22em] uppercase text-apex-muted font-bold mb-[0.45rem]">Your Systems. Your Rules.</p>
-          <p className="font-mono text-[0.58rem] tracking-[0.18em] uppercase text-apex-orange">
-            Directable <span className="text-apex-muted" aria-hidden="true">&bull;</span> Auditable <span className="text-apex-muted" aria-hidden="true">&bull;</span> Reversible
-          </p>
+          <p className="font-mono text-[0.58rem] tracking-[0.18em] uppercase text-apex-orange">Directable<span className="text-apex-muted mx-1">&bull;</span>Auditable<span className="text-apex-muted mx-1">&bull;</span>Reversible</p>
 
           <div className="flex items-center gap-6 mt-8 flex-wrap font-mono text-[0.54rem] tracking-[0.12em] uppercase text-apex-muted">
             <span>JR - Founder and CTO</span>
@@ -355,7 +357,7 @@ const FounderStory = memo(function FounderStory() {
           </div>
         </article>
       </main>
-    </div>
+    </Layout>
   );
 });
 

@@ -123,13 +123,24 @@ function Nav() {
         </div>
 
         <ul className="nav__links" aria-label="Primary navigation">
-          {siteConfig.nav.links.map((link) => (
-            <li key={link.href}>
-              <a href={link.href} className="nav__link">
-                {link.label}
-              </a>
-            </li>
-          ))}
+          {siteConfig.nav.links.map((link) => {
+            let customStyle = "";
+            if (link.label === "Tech Specs") {
+              customStyle = "nav__btn-pill nav__btn-pill--orange";
+            } else if (link.label === "Story") {
+              customStyle = "nav__btn-pill nav__btn-pill--navy";
+            }
+            return (
+              <li key={link.href}>
+                <a 
+                  href={link.href} 
+                  className={customStyle || 'nav__link'}
+                >
+                  {link.label}
+                </a>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="nav__actions">
