@@ -315,7 +315,7 @@ const FounderStory = memo(function FounderStory() {
             <p key={text} className="text-base text-apex-text-dim mb-6 text-justify indent-8 hyphens-auto">{text}</p>
           ))}
 
-          <ul className="list-none my-6 flex flex-col gap-3">
+          <ul className="list-none my-6 flex flex-col gap-3" role="list">
             {[
               ['Universal integration', 'vendor agnostic by design'],
               ['Universal translation', 'systems and humans do not think in one language'],
