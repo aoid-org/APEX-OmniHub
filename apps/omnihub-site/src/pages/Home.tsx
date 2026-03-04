@@ -48,7 +48,6 @@ function Hero() {
             <p className="hero__subtitle" style={{ 
               textIndent: '1.5em', 
               textAlign: 'justify', 
-              color: 'white',
               margin: 0
             }}>
               {t('hero.subtitle', { defaultValue: 'The AI Operating System for the Physical World. Software agents. Enterprise platforms. Physical AI hardware. Every action governed, audited, and reversible.' })}

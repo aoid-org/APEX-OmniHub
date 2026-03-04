@@ -14,9 +14,9 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['icon.png'],
       manifest: {
-        name: 'APEX OmniLink',
-        short_name: 'OmniLink',
-        description: 'APEX OmniLink - Intelligence, Designed.',
+        name: 'APEX OmniHub',
+        short_name: 'OmniHub',
+        description: 'APEX OmniHub - Intelligence, Designed.',
         theme_color: '#0f1729',
         background_color: '#0f1729',
         display: 'standalone',
@@ -72,19 +72,6 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
-        manualChunks(id) {
-          // Split React vendor bundle (only if actually imported)
-          if (id.includes('node_modules/react/') || 
-              id.includes('node_modules/react-dom/') ||
-              id.includes('node_modules/scheduler/') ||
-              id.includes('node_modules/react-router-dom/')) {
-            return 'vendor-react';
-          }
-          // All other node_modules go into vendor chunk
-          if (id.includes('node_modules/')) {
-            return 'vendor';
-          }
-        },
       },
     },
     // Performance optimizations

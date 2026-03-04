@@ -72,12 +72,29 @@ export default {
           dark: "#0F0A1F",
           "dark-card": "#1A1030",
         },
+        apex: {
+          bg: "#0f131c",
+          surface: "#161d2b",
+          surface2: "#1a2336",
+          border: "#1e2d3e",
+          text: "#e8edf5",
+          "text-dim": "#b0bdd0",
+          muted: "#6b7d95",
+          orange: "#d4621f",
+          orange2: "#e8832a",
+          teal: "#4a9aba",
+          teal2: "#62b8d8",
+        },
       },
       spacing: {
         'icon-sm': 'var(--icon-size-sm)',
         'icon-md': 'var(--icon-size-md)',
         'icon-lg': 'var(--icon-size-lg)',
         'icon-xl': 'var(--icon-size-xl)',
+      },
+      fontFamily: {
+        grotesk: ['"Space Grotesk"', 'sans-serif'],
+        mono: ['"Space Mono"', 'monospace'],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -111,11 +128,22 @@ export default {
             transform: "translateY(0)",
           },
         },
+        fadeUp: {
+          from: {
+            opacity: "0",
+            transform: "translateY(20px)",
+          },
+          to: {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "launch-fade-in": "launchFadeIn 0.6s ease-out both",
+        fadeUp: "fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) both",
       },
     },
   },

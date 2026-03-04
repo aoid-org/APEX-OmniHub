@@ -46,6 +46,7 @@ const Health = lazy(() => import("./pages/Health"));
 const Translation = lazy(() => import("./pages/Translation"));
 const Agent = lazy(() => import("./pages/Agent"));
 const Settings = lazy(() => import("./pages/Settings"));
+const FounderStory = lazy(() => import("./pages/FounderStory"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -214,8 +215,7 @@ const App = () => (
                 <Route path="/apps/jubeelove" element={<JubeeLove />} />
                 <Route path="/apps/built-canadian" element={<BuiltCanadian />} />
                 <Route path="/tech-specs" element={<TechSpecs />} />
-
-
+                <Route path="/founder-story" element={<FounderStory />} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
