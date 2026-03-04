@@ -1,17 +1,11 @@
 /**
- * Self-Hosted Font Configuration
+ * Shared Font Configuration
  *
- * Uses system font stack with optimized fallbacks.
- * No external font requests - zero Google Fonts dependency.
+ * Uses Space Grotesk as the primary family and applies typography feature settings.
+ * Font assets are loaded via the document stylesheet link in index.html.
  *
- * Benefits:
- * - Faster LCP (no font download blocking render)
- * - Stricter CSP (no external font-src needed)
- * - Privacy-preserving (no third-party requests)
- * - Works offline
  */
 
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
 
 /* System UI Font Stack - Modern, Professional */
 :root {

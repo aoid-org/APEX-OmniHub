@@ -1,6 +1,6 @@
 /**
  * APEX OmniDash Layout - apps/omnihub-site
- * @version 6.0.0 - Custom nav icons, Inter font, burnt orange accents
+ * @version 6.0.0 - Custom nav icons, Space Grotesk font, burnt orange accents
  *
  * 3-column CSS Grid: 260px | 1fr | 320px
  * Custom APEX-branded 3D nav icons (no Lucide in sidebar)
