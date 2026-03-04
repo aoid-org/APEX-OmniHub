@@ -3,7 +3,6 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, R
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { CloudSetupMessage } from '@/components/CloudSetupMessage';
 import {
   markDeviceTrusted,
   syncOnLogin,
@@ -34,7 +33,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [cloudConfigured, setCloudConfigured] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,12 +59,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!supabaseUrl || !supabaseAnonKey) {
         if (import.meta.env.DEV) {
           console.warn(
-            'Missing Supabase environment variables. Checked: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY | VITE_SUPABASE_PUBLISHABLE_KEY'
+            'Missing Supabase environment variables. Checked: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY | VITE_SUPABASE_PUBLISHABLE_KEY. Running in offline-safe mode.'
           );
         }
-        setCloudConfigured(false);
-        setLoading(false);
-        return;
       }
 
       // #region agent log
@@ -248,11 +243,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }),
     [loading, session, signOut, user],
   );
-
-  // Show setup message if Cloud is not configured
-  if (!cloudConfigured) {
-    return <CloudSetupMessage />;
-  }
 
   return (
     <AuthContext.Provider value={authValue}>
