@@ -89,7 +89,7 @@ A three-tier agent architecture designed to keep unsafe reasoning from reaching 
 - Event sourcing + deterministic replay
 - Saga-style compensation patterns
 - Idempotent task execution
-- Human approval gates (**MAN Mode** — `supabase/migrations/20260108120000_man_mode.sql`)
+- Human approval gates (**MAN Mode** - `supabase/migrations/20260108120000_man_mode.sql`)
 
 ### 3) Fortress Protocol (Security & Compliance)
 
@@ -120,8 +120,8 @@ Client-side infrastructure for deterministic media delivery:
 
 ### 6) Web3-Native Identity (Optional)
 
-- SIWE (Sign-In with Ethereum) — `supabase/functions/web3-verify/`
-- NFT verification — `supabase/functions/verify-nft/`
+- SIWE (Sign-In with Ethereum) - `supabase/functions/web3-verify/`
+- NFT verification - `supabase/functions/verify-nft/`
 - Multi-chain support (`20260101000000_create_web3_verification.sql`)
 - Chain transaction logging (`20260109120000_create_chain_tx_log.sql`)
 
@@ -147,12 +147,12 @@ Client-side infrastructure for deterministic media delivery:
 ## Repository Layout
 
 ```
-/src                 — OmniDash UI (277 files)
-/supabase/migrations — Database schema (48 versioned SQL migrations)
-/supabase/functions  — Edge functions (22 serverless endpoints)
-/orchestrator        — Temporal workers and orchestration services (83 files)
-/tests               — Automated test suite (115 files)
-/.github/workflows   — CI/CD workflows (12 pipelines)
+/src                 - OmniDash UI (277 files)
+/supabase/migrations - Database schema (48 versioned SQL migrations)
+/supabase/functions  - Edge functions (22 serverless endpoints)
+/orchestrator        - Temporal workers and orchestration services (83 files)
+/tests               - Automated test suite (115 files)
+/.github/workflows   - CI/CD workflows (12 pipelines)
 ```
 
 ---
@@ -244,17 +244,17 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 
 ### Non-Negotiables
 
-- **No vendor lock-in** — portable adapters, clean interfaces
-- **Single-port integration** — no scattered API calls
-- **Idempotent operations** — safe to re-run, easy rollback
-- **No secrets in code** — env/config only
-- **Observable behavior** — health checks, structured logs
+- **No vendor lock-in** - portable adapters, clean interfaces
+- **Single-port integration** - no scattered API calls
+- **Idempotent operations** - safe to re-run, easy rollback
+- **No secrets in code** - env/config only
+- **Observable behavior** - health checks, structured logs
 
 ---
 
 ## 📄 Documentation
 
-**Proprietary** — © 2026 APEX Business Systems Ltd.
+**Proprietary** - © 2026 APEX Business Systems Ltd.
 
 ---
 
