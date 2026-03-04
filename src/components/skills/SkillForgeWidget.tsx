@@ -47,8 +47,9 @@ interface VoiceWindow extends Window {
 }
 
 type StepField = 'intent' | 'trigger' | 'constraints';
+type StepId = 1 | 2 | 3;
 type WizardStep = {
-  id: 1 | 2 | 3;
+  id: StepId;
   title: string;
   icon: typeof Sparkles;
   field: StepField;
@@ -100,12 +101,12 @@ const wizardSteps: WizardStep[] = [
   },
 ];
 
-export function CreateSkillWidget() {
+export function SkillForgeWidget() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<StepId>(1);
   const [errors, setErrors] = useState<string[]>([]);
   const [formData, setFormData] = useState({ intent: '', trigger: '', constraints: '' });
   const [isListening, setIsListening] = useState(false);
@@ -129,11 +130,11 @@ export function CreateSkillWidget() {
   };
 
   const resolveSpeechRecognition = (): SpeechRecognitionConstructor | null => {
-    if (typeof window === 'undefined') {
+    if (globalThis.window === undefined) {
       return null;
     }
 
-    const voiceWindow = window as VoiceWindow;
+    const voiceWindow = globalThis as unknown as VoiceWindow;
     return voiceWindow.SpeechRecognition ?? voiceWindow.webkitSpeechRecognition ?? null;
   };
 
@@ -259,7 +260,7 @@ export function CreateSkillWidget() {
   const handleNext = () => {
     setErrors([]);
     if (step < 3) {
-      setStep((step + 1) as 1 | 2 | 3);
+      setStep((step + 1) as StepId);
       return;
     }
     mutation.mutate();
@@ -268,7 +269,7 @@ export function CreateSkillWidget() {
   const handleBack = () => {
     setErrors([]);
     if (step > 1) {
-      setStep((step - 1) as 1 | 2 | 3);
+      setStep((step - 1) as StepId);
     }
   };
 
@@ -360,17 +361,19 @@ export function CreateSkillWidget() {
             size="sm"
             disabled={isStepEmpty || mutation.isPending}
           >
-            {mutation.isPending ? (
+            {mutation.isPending && (
               <>
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                 Forging...
               </>
-            ) : step < 3 ? (
+            )}
+            {!mutation.isPending && step < 3 && (
               <>
                 Next
                 <ArrowRight className="h-4 w-4 ml-1" />
               </>
-            ) : (
+            )}
+            {!mutation.isPending && step >= 3 && (
               <>
                 <Check className="h-4 w-4 mr-1" />
                 Forge Skill

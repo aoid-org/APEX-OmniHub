@@ -1,8 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchSettings, updateSettings, fetchUsageMetering, aggregateUsageMetering } from './api';
-import type { UsageMeteringSummary, UsageMeteringRow } from './api';
+import {
+  fetchSettings,
+  updateSettings,
+  fetchUsageMetering,
+  aggregateUsageMetering,
+  fetchMemoryHealthStats,
+} from './api';
+import type {
+  UsageMeteringSummary,
+  UsageMeteringRow,
+  MemoryHealthStats,
+} from './api';
 import { OMNIDASH_FLAG, OmniDashSettings } from './types';
 
 export function useAdminAccess() {
@@ -86,4 +96,21 @@ export function useUsageMetering(days = 7) {
   );
 
   return { ...query, summary, totalTokens };
+}
+
+export function useMemoryHealth() {
+  const { user } = useAuth();
+
+  const query = useQuery<MemoryHealthStats>({
+    queryKey: ['omnidash-memory-health', user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) throw new Error('User not found');
+      return fetchMemoryHealthStats(user.id);
+    },
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+  });
+
+  return query;
 }

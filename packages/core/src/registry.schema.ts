@@ -23,5 +23,5 @@ export const appRegistryEntrySchema = z.object({
 export const appRegistrySchema = appRegistryEntrySchema.array().length(14);
 
 export const parseAppRegistry = (input: readonly AppRegistryEntry[]): readonly AppRegistryEntry[] => {
-  return appRegistrySchema.parse(input);
+  return appRegistrySchema.parse(input) as unknown as readonly AppRegistryEntry[];
 };

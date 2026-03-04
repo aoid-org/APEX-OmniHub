@@ -107,7 +107,7 @@ export default function VoiceHealth(): JSX.Element {
           />
         </div>
 
-        <Card className="bg-black/95 border-gray-800">
+        <Card className="bg-slate-900 border-gray-800">
           <CardHeader>
             <CardTitle className="text-white">Live Telemetry</CardTitle>
           </CardHeader>
