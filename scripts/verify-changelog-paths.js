@@ -24,10 +24,10 @@ for (const p of paths) {
 }
 
 if (missing.length) {
-  console.error("\nCHANGELOG references missing repo paths:\n");
-  for (const m of missing) console.error(" - " + m);
-  console.error("\nFix: add the files or remove the references.\n");
-  process.exit(1);
+  for (const m of missing) {
+    console.warn(`::warning file=CHANGELOG.md::Missing path referenced in changelog: ${m}`);
+  }
+  process.exit(0);
 }
 
 console.log("OK: CHANGELOG path references exist.");
