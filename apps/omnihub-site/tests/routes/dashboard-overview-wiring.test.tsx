@@ -9,15 +9,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
-import { DashboardOverview } from '@/pages/DashboardOverview'; // using the alias mapped in tsconfig
+import { DashboardOverview } from '../../apps/omnihub-site/src/pages/DashboardOverview';
 import { useOmniModal } from '@/stores/omniModalStore';
-import React from 'react';
+
 
 // ARRANGE: Mock the router navigation to test Live integration handling
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
-    ...actual as any,
+    ...(actual as Record<string, unknown>),
     useNavigate: vi.fn(),
   };
 });
@@ -44,8 +44,8 @@ describe('DashboardOverview - OmniBoard Wiring', () => {
       </MemoryRouter>
     );
 
-    // Filter down to the specific Partial integration tile (e.g. NetSuite)
-    const partialAppTile = screen.getByText('NetSuite').closest('div[draggable="true"]') || screen.getByText('NetSuite').parentElement?.parentElement;
+    // Filter down to the specific Partial integration tile (e.g. Orchestrator)
+    const partialAppTile = screen.getByText('Orchestrator').closest('div[draggable="true"]') || screen.getByText('Orchestrator').parentElement?.parentElement;
     expect(partialAppTile).not.toBeNull();
 
     // ACT: Fire a click event on the partial integration container
@@ -55,7 +55,7 @@ describe('DashboardOverview - OmniBoard Wiring', () => {
     const modalState = useOmniModal.getState();
     expect(modalState.isOpen).toBe(true);
     expect(modalState.activeModal?.type).toBe('oauth');
-    expect(modalState.activeModal?.provider).toBe('NetSuite');
+    expect(modalState.activeModal?.provider).toBe('Orchestrator');
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
@@ -67,8 +67,8 @@ describe('DashboardOverview - OmniBoard Wiring', () => {
       </MemoryRouter>
     );
 
-    // Filter down to the specific Live integration tile (e.g. Salesforce)
-    const liveAppTile = screen.getByText('Salesforce').closest('div[draggable="true"]') || screen.getByText('Salesforce').parentElement?.parentElement;
+    // Filter down to the specific Live integration tile (e.g. OmniBoard)
+    const liveAppTile = screen.getByText('OmniBoard').closest('div[draggable="true"]') || screen.getByText('OmniBoard').parentElement?.parentElement;
     expect(liveAppTile).not.toBeNull();
 
     // ACT: Fire a click event

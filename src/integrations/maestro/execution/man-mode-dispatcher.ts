@@ -14,20 +14,20 @@
 import type { RiskLane } from '../types';
 
 /** Minimal toast interface matching src/components/ui/use-toast */
-export interface ToastFn {
-  (opts: { title: string; description: string; variant?: string }): void;
-}
+export type ToastFn = (
+  opts: { title: string; description: string; variant?: string },
+) => void;
 
 /** Notification push interface matching NotificationCenter */
-export interface NotificationPushFn {
-  (notification: {
+export type NotificationPushFn = (
+  notification: {
     id: string;
     taskId: string;
     title: string;
     description: string;
     lane: 'RED';
-  }): void;
-}
+  },
+) => void;
 
 export interface ManModeDispatcherDeps {
   readonly toast: ToastFn;
@@ -52,6 +52,26 @@ export interface DispatchResult {
  * Deterministic: same inputs always produce same outputs.
  * No side effects leak between lanes.
  */
+/**
+ * Push a blocking notification for RED-tier risk events.
+ * Extracted to avoid near-identical pushNotification blocks
+ * across RED, BLOCKED, and default cases (SonarCloud dedup).
+ */
+function blockTask(
+  pushNotification: NotificationPushFn,
+  taskId: string,
+  taskLabel: string,
+  description: string,
+): void {
+  pushNotification({
+    id: `man-${taskId}-${Date.now()}`,
+    taskId,
+    title: 'Action Blocked',
+    description,
+    lane: 'RED',
+  });
+}
+
 export function dispatchManMode(
   deps: ManModeDispatcherDeps,
   options: DispatchOptions
@@ -81,38 +101,18 @@ export function dispatchManMode(
     }
 
     case 'RED': {
-      // RED → isolate affected task; push persistent notification
-      pushNotification({
-        id: `man-${taskId}-${Date.now()}`,
-        taskId,
-        title: 'Action Blocked',
-        description: `${taskLabel} blocked. Approval required.`,
-        lane: 'RED',
-      });
+      blockTask(pushNotification, taskId, taskLabel, `${taskLabel} blocked. Approval required.`);
       return { action: 'blocked', lane: 'RED' };
     }
 
     case 'BLOCKED': {
-      // BLOCKED treated same as RED for dispatcher purposes
-      pushNotification({
-        id: `man-${taskId}-${Date.now()}`,
-        taskId,
-        title: 'Action Blocked',
-        description: `${taskLabel} blocked. Approval required.`,
-        lane: 'RED',
-      });
+      blockTask(pushNotification, taskId, taskLabel, `${taskLabel} blocked. Approval required.`);
       return { action: 'blocked', lane: 'BLOCKED' };
     }
 
     default: {
       // Fail-closed: unknown lanes are treated as RED
-      pushNotification({
-        id: `man-${taskId}-${Date.now()}`,
-        taskId,
-        title: 'Action Blocked',
-        description: `${taskLabel} blocked. Unknown risk lane.`,
-        lane: 'RED',
-      });
+      blockTask(pushNotification, taskId, taskLabel, `${taskLabel} blocked. Unknown risk lane.`);
       return { action: 'blocked', lane: riskLane };
     }
   }

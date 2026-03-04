@@ -7,7 +7,7 @@
  * @module components/omnidash/NotificationCenter
  */
 
-import { useState, useCallback, useSyncExternalStore } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -20,75 +20,76 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell } from 'lucide-react';
 
-// ─── Notification Store (singleton, external) ────────────────────────────────
-
-export interface ManModeNotification {
-  readonly id: string;
-  readonly taskId: string;
-  readonly title: string;
-  readonly description: string;
-  readonly lane: 'RED';
-  readonly timestamp: number;
-  readonly status: 'pending' | 'approved' | 'denied';
-}
-
-type Listener = () => void;
-
-let _notifications: readonly ManModeNotification[] = [];
-const _listeners = new Set<Listener>();
-
-function emitChange(): void {
-  for (const listener of _listeners) {
-    listener();
-  }
-}
-
-function subscribe(listener: Listener): () => void {
-  _listeners.add(listener);
-  return () => _listeners.delete(listener);
-}
-
-function getSnapshot(): readonly ManModeNotification[] {
-  return _notifications;
-}
-
-export function pushNotification(
-  notification: Omit<ManModeNotification, 'timestamp' | 'status'>
-): void {
-  _notifications = [
-    ...getSnapshot(),
-    { ...notification, timestamp: Date.now(), status: 'pending' },
-  ];
-  emitChange();
-}
-
-export function approveTask(taskId: string): void {
-  _notifications = getSnapshot().map((n) =>
-    n.taskId === taskId ? { ...n, status: 'approved' as const } : n
-  );
-  emitChange();
-}
-
-export function denyTask(taskId: string): void {
-  _notifications = getSnapshot().map((n) =>
-    n.taskId === taskId ? { ...n, status: 'denied' as const } : n
-  );
-  emitChange();
-}
-
-// ─── Hook ────────────────────────────────────────────────────────────────────
-
-export function useNotifications() {
-  const notifications = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  return {
-    notifications,
-    push: pushNotification,
-    approve: approveTask,
-    deny: denyTask,
-  } as const;
-}
+import { useNotifications, type ManModeNotification } from '@/stores/notificationStore';
 
 // ─── Component ───────────────────────────────────────────────────────────────
+
+function getBadgeVariant(status: string) {
+  if (status === 'pending') return 'destructive' as const;
+  if (status === 'approved') return 'default' as const;
+  return 'outline' as const;
+}
+
+// --- Helper Components ---------------------------------------------------------
+
+function NotificationItem({ n, handleApprove, handleDeny }: Readonly<{ n: ManModeNotification, handleApprove: (id: string) => void, handleDeny: (id: string) => void }>) {
+  const isPending = n.status === 'pending';
+  const badgeVariant = getBadgeVariant(n.status);
+  
+  return (
+    <div
+      className={`relative group overflow-hidden rounded-xl border transition-all duration-300 hover:shadow-md ${
+        isPending
+          ? 'bg-white dark:bg-neutral-900 border-red-200 dark:border-red-900/50 shadow-sm'
+          : 'bg-neutral-50 dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800 opacity-75 grayscale-[0.5]'
+      }`}
+      data-testid={`notification-${n.id}`}
+    >
+      {isPending && (
+        <div className="absolute top-0 left-0 w-1 h-full bg-red-500 dark:bg-red-600 rounded-l-xl" />
+      )}
+      
+      <div className="p-4 pl-5">
+        <div className="flex items-start justify-between mb-2">
+          <p className="font-semibold text-sm leading-tight text-neutral-900 dark:text-neutral-100 tracking-tight pr-4">
+            {n.title}
+          </p>
+          <Badge
+            variant={badgeVariant}
+            className="shrink-0 uppercase tracking-wider text-[10px] font-bold"
+          >
+            {n.status}
+          </Badge>
+        </div>
+        <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-400 line-clamp-2">
+          {n.description}
+        </p>
+        
+        {isPending && (
+          <div className="flex gap-2 mt-4 pt-3 border-t border-neutral-100 dark:border-neutral-800">
+            <Button
+              size="sm"
+              className="w-full font-medium shadow-sm transition-transform active:scale-[0.98] bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900"
+              onClick={() => handleApprove(n.taskId)}
+              data-testid={`approve-${n.taskId}`}
+            >
+              Authorize
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full font-medium transition-transform active:scale-[0.98] hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-950/30 dark:hover:text-red-400 dark:hover:border-red-900"
+              onClick={() => handleDeny(n.taskId)}
+              data-testid={`deny-${n.taskId}`}
+            >
+              Reject
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function NotificationCenter() {
   const { notifications, approve, deny } = useNotifications();
@@ -96,19 +97,8 @@ export function NotificationCenter() {
 
   const pendingCount = notifications.filter((n) => n.status === 'pending').length;
 
-  const handleApprove = useCallback(
-    (taskId: string) => {
-      approve(taskId);
-    },
-    [approve]
-  );
-
-  const handleDeny = useCallback(
-    (taskId: string) => {
-      deny(taskId);
-    },
-    [deny]
-  );
+  const handleApprove = useCallback((taskId: string) => approve(taskId), [approve]);
+  const handleDeny = useCallback((taskId: string) => deny(taskId), [deny]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -116,75 +106,57 @@ export function NotificationCenter() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative"
+          className="relative transition-all duration-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full group"
           aria-label="Open notification center"
           data-testid="notification-center-trigger"
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="h-5 w-5 text-neutral-600 dark:text-neutral-300 drop-shadow-sm group-hover:scale-105 transition-transform" />
           {pendingCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] font-bold shadow-sm animate-in zoom-in-50"
             >
               {pendingCount}
             </Badge>
           )}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>MAN Mode Notifications</DialogTitle>
-          <DialogDescription>
-            Actions that require manual approval before proceeding.
+      <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col p-0 border border-neutral-200/50 dark:border-neutral-800/50 shadow-2xl rounded-2xl bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl">
+        <DialogHeader className="px-6 py-5 border-b border-neutral-100 dark:border-neutral-800/50">
+          <DialogTitle className="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-50 flex items-center gap-2">
+            MAN Mode Notifications
+            {pendingCount > 0 && (
+              <span className="text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full">
+                {pendingCount} Pending
+              </span>
+            )}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-neutral-500 dark:text-neutral-400">
+            Actions requiring explicit human authorization before system execution.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 mt-4" data-testid="notification-list">
+        
+        <div 
+          className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-neutral-50/50 dark:bg-neutral-900/20" 
+          data-testid="notification-list"
+        >
           {notifications.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No pending notifications.
-            </p>
-          )}
-          {notifications.map((n) => (
-            <div
-              key={n.id}
-              className="border rounded-lg p-3"
-              data-testid={`notification-${n.id}`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <p className="font-semibold text-sm">{n.title}</p>
-                <Badge
-                  variant={
-                    n.status === 'pending'
-                      ? 'destructive'
-                      : n.status === 'approved'
-                        ? 'default'
-                        : 'outline'
-                  }
-                >
-                  {n.status}
-                </Badge>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="h-12 w-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-3">
+                <Bell className="h-6 w-6 text-neutral-400 dark:text-neutral-500" />
               </div>
-              <p className="text-sm text-muted-foreground">{n.description}</p>
-              {n.status === 'pending' && (
-                <div className="flex gap-2 mt-3">
-                  <Button
-                    size="sm"
-                    onClick={() => handleApprove(n.taskId)}
-                    data-testid={`approve-${n.taskId}`}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDeny(n.taskId)}
-                    data-testid={`deny-${n.taskId}`}
-                  >
-                    Deny
-                  </Button>
-                </div>
-              )}
+              <p className="text-sm font-medium text-neutral-900 dark:text-neutral-200">All clear</p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">No pending notifications require your attention.</p>
             </div>
+          )}
+          
+          {notifications.map((n) => (
+            <NotificationItem 
+              key={n.id} 
+              n={n} 
+              handleApprove={handleApprove} 
+              handleDeny={handleDeny} 
+            />
           ))}
         </div>
       </DialogContent>
