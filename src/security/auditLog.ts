@@ -2,6 +2,7 @@ import { calculateBackoffDelay } from '@/lib/backoff';
 import { logAnalyticsEvent, logError } from '@/lib/monitoring';
 import { persistentGet, persistentSet } from '@/libs/persistence';
 import { supabase } from '@/integrations/supabase/client';
+import { generateSecureId } from '@/lib/security';
 
 /**
  * Audit event payload interface — writes directly to Supabase audit_logs table
@@ -37,9 +38,7 @@ let flushInFlight = false;
 let consecutiveFlushFailures = 0;
 
 function generateId() {
-  return typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2);
+  return generateSecureId();
 }
 
 async function loadQueue(): Promise<QueuedAuditEvent[]> {
