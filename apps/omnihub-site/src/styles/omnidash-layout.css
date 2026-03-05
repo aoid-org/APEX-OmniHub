@@ -7,7 +7,7 @@
 /* ===== Grid Shell ===== */
 .omnidash-shell {
   display: grid;
-  grid-template-columns: 260px 1fr 320px;
+  grid-template-columns: 260px minmax(0, 1fr);
   background: #050505; /* Pitch black / Deep obsidian */
   color: #e0e7ff;
   overflow: hidden; /* Global overflow hidden to prevent body scroll */
@@ -127,6 +127,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  width: 100%;
 }
 
 .od-content {
@@ -265,18 +266,6 @@
   font-weight: 600;
   color: #f1f5f9; /* Increased contrast from #94a3b8 */
   cursor: pointer;
-}
-
-/* ===== Right Sidebar ===== */
-.od-right {
-  background: #09090b;
-  border-left: 1px solid rgba(255, 255, 255, 0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  overflow-y: auto;
-  overflow-x: hidden;
 }
 
 /* ===== Glassmorphism Card (Antigravity Engine) ===== */
@@ -629,7 +618,7 @@
 /* ===== Responsive — Tablet (≤1200px) ===== */
 @media (max-width: 1200px) {
   .omnidash-shell {
-    grid-template-columns: 220px 1fr 280px;
+    grid-template-columns: 220px minmax(0, 1fr);
   }
   .od-org-badge,
   .od-sentry-badge {
@@ -646,8 +635,7 @@
   .omnidash-shell {
     grid-template-columns: 1fr;
   }
-  .od-sidebar,
-  .od-right {
+  .od-sidebar {
     display: none;
   }
   .od-content {

@@ -8,7 +8,7 @@
  *                when OmniSlate mic stops, Agent returns to "Listening..."
  */
 
-import { memo, useState, useCallback, useRef } from 'react';
+import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Blocks } from 'lucide-react';
@@ -23,6 +23,15 @@ const LOGO = (domain: string) => `https://logo.clearbit.com/${domain}`;
 /* ── Data ── */
 
 const HIDDEN_APPS = new Set(['OmniBoard', 'OmniPort', 'Maestro']);
+
+
+interface DashboardOverviewProps {
+  readonly demoMode: boolean;
+  readonly appHealth: 'green' | 'yellow' | 'red';
+  readonly setAppHealth: (health: 'green' | 'yellow' | 'red') => void;
+  readonly ecoAppsVisible: boolean;
+  readonly setEcoAppsVisible: (visible: boolean) => void;
+}
 
 interface ContextItem {
   readonly name: string;
@@ -69,21 +78,55 @@ const O = '#c2501f'; // burnt orange
 
 /* ── Component ── */
 
-export const DashboardOverview = memo(function DashboardOverview() {
+export const DashboardOverview = memo(function DashboardOverview({
+  demoMode,
+  appHealth,
+  setAppHealth,
+  ecoAppsVisible,
+  setEcoAppsVisible,
+}: DashboardOverviewProps) {
   const navigate = useNavigate();
   const omniModal = useOmniModal();
   const [context, setContext] = useState<readonly ContextItem[]>(INITIAL_CONTEXT);
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [prompt, setPrompt] = useState('');
+  const [traceLogs, setTraceLogs] = useState<readonly string[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRef = useRef<MediaRecorder | null>(null);
 
-  const health = deriveHealth(context);
+  const health = appHealth === 'green' ? deriveHealth(context) : appHealth;
   const s = HC[health];
 
   const handleCleanSlate = useCallback(() => { setContext([]); setActiveInsight(null); }, []);
   const toggleInsight = useCallback((n: string) => setActiveInsight(p => p === n ? null : n), []);
+
+  const addTraceLog = useCallback((message: string) => {
+    setTraceLogs((prev) => [message, ...prev].slice(0, 4));
+  }, []);
+
+  useEffect(() => {
+    setEcoAppsVisible(ECOSYSTEM.length > 0);
+  }, [setEcoAppsVisible]);
+
+  const handleCommandSubmit = useCallback(() => {
+    if (!prompt.trim()) return;
+
+    if (demoMode) {
+      setAppHealth('yellow');
+      addTraceLog('Routing through OmniPort edge...');
+      window.setTimeout(() => {
+        setAppHealth('green');
+        addTraceLog('USO SYNC COMPLETE: ERP DATA HARMONIZED.');
+        setPrompt('');
+      }, 2500);
+      return;
+    }
+
+    addTraceLog(`QUEUED: ${prompt.trim()}`);
+    setPrompt('');
+  }, [addTraceLog, demoMode, prompt, setAppHealth]);
 
   // ────────────────────────────────────────────────
   // TTS Voice Recording - record-then-send (NOT real-time)
@@ -137,7 +180,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
       {/* ═══════ HERO TRI-PANE — Kinetic Architecture ═══════ */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 w-full relative z-10">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 w-full mt-6 relative z-10">
 
         {/* ── LEFT PANE: APEX Agent (col-span-3) ── */}
         <motion.div
@@ -146,7 +189,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 170, damping: 26, mass: 1 }}
           whileHover={{ scale: 1.01, transition: { type: 'spring', stiffness: 170, damping: 26, mass: 1 } }}
-          className="col-span-1 md:col-span-3 flex flex-col items-center justify-center relative overflow-hidden"
+          className="lg:col-span-3 order-2 lg:order-1 flex flex-col items-center justify-center relative overflow-hidden"
           style={{
             padding: 24,
             borderRadius: 24,
@@ -231,7 +274,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 170, damping: 26, mass: 1, delay: 0.05 }}
           whileHover={{ scale: 1.005, transition: { type: 'spring', stiffness: 170, damping: 26, mass: 1 } }}
-          className="col-span-1 md:col-span-6 flex flex-col justify-end relative overflow-hidden"
+          className="lg:col-span-6 order-1 lg:order-2 z-[9999] pointer-events-auto flex flex-col justify-end relative overflow-hidden"
           style={{
             padding: 28,
             borderRadius: 24,
@@ -335,7 +378,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
 
             {/* Prompt bar + TTS mic */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 'auto' }}>
-              <input type="text" placeholder="Ask APEX Agent" style={{
+              <input type="text" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Ask APEX Agent" style={{
                 flex: 1, height: 44, borderRadius: 12, padding: '0 20px',
                 background: 'rgba(255,255,255,0.03)', border: `1px solid rgba(255,255,255,0.1)`,
                 color: '#dfe6fe', fontSize: 15, outline: 'none', fontFamily: 'inherit',
@@ -388,15 +431,21 @@ export const DashboardOverview = memo(function DashboardOverview() {
               }}>+</div>
 
               {/* Send */}
-              <div style={{
+              <button type="button" onClick={handleCommandSubmit} style={{
                 width: 36, height: 36, borderRadius: '50%',
                 background: `linear-gradient(135deg, #f97316, ${O})`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                 boxShadow: '0 0 16px rgba(194,80,31,0.3)',
               }}>
                 <span style={{ fontSize: 12, color: '#dfe6fe' }}>▶</span>
-              </div>
+              </button>
             </div>
+
+            {traceLogs[0] && (
+              <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: traceLogs[0].includes('COMPLETE') ? '#34d399' : '#facc15', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {traceLogs[0]}
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -407,7 +456,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 170, damping: 26, mass: 1, delay: 0.1 }}
           whileHover={{ scale: 1.01, transition: { type: 'spring', stiffness: 170, damping: 26, mass: 1 } }}
-          className="col-span-1 md:col-span-3 flex flex-col relative overflow-hidden"
+          className="lg:col-span-3 order-3 lg:order-3 flex flex-col relative overflow-hidden"
           style={{
             padding: 24,
             borderRadius: 24,
@@ -427,7 +476,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
             <div style={{ fontSize: 19, fontWeight: 800, color: '#dfe6fe', marginBottom: 2, letterSpacing: '-0.02em' }}>APEX Ecosystems</div>
             <div style={{ fontSize: 11.77, fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Connected Modules</div>
             <div className="flex flex-col gap-2.5 w-full">
-              {ECOSYSTEM.map((app) => (
+              {ecoAppsVisible && ECOSYSTEM.map((app) => (
                 <motion.div
                   key={app.name}
                   className="flex flex-row items-center justify-between w-full p-3 rounded-xl overflow-hidden gap-2"
