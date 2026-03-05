@@ -8,12 +8,13 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Search, Bell, Shield, ChevronDown, Sun, Moon, X } from 'lucide-react';
 import { DashboardOverview } from '@/pages/DashboardOverview';
 import { UniversalModalEngine } from '../../../../src/components/omnidash/media/UniversalModalEngine';
 import '@/styles/omnidash-layout.css';
+import { z } from 'zod';
 
 // Custom nav icons
 import navOmniboard from '@/assets/nav/omniboard_icon.png';
@@ -59,8 +60,13 @@ const SIDEBAR_NAV = APP_REGISTRY.map((entry: AppRegistryEntry) => ({
 export function OmniDashLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [demoMode] = useState(true);
+  const simModeSchema = z.enum(['true', 'false']);
+  const simModeParam = searchParams.get('sim_mode');
+  const demoMode = simModeSchema.safeParse(simModeParam).success
+    ? simModeParam === 'true'
+    : false;
   const [ecoAppsVisible, setEcoAppsVisible] = useState(false);
   const [appHealth, setAppHealth] = useState<'green' | 'yellow' | 'red'>('green');
   const [isDarkMode, setIsDarkMode] = useState(true);

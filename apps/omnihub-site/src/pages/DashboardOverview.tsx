@@ -95,6 +95,25 @@ export const DashboardOverview = memo(function DashboardOverview({
   const [traceLogs, setTraceLogs] = useState<readonly string[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      if (mediaRef.current?.state === 'recording') {
+        mediaRef.current.stop();
+      }
+
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+      }
+    };
+  }, []);
 
   const health = appHealth === 'green' ? deriveHealth(context) : appHealth;
   const s = HC[health];
@@ -136,9 +155,11 @@ export const DashboardOverview = memo(function DashboardOverview({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      mediaStreamRef.current = stream;
 
       recorder.onstop = () => {
         stream.getTracks().forEach(t => t.stop());
+        mediaStreamRef.current = null;
       };
 
       mediaRef.current = recorder;
@@ -151,13 +172,17 @@ export const DashboardOverview = memo(function DashboardOverview({
         setRecordingDuration(d => d + 1);
       }, 1000);
     } catch {
-      // Mic permission denied - fail silently
+      addTraceLog('Microphone access denied. Voice capture unavailable.');
     }
-  }, []);
+  }, [addTraceLog]);
 
   const stopRecording = useCallback(() => {
     if (mediaRef.current?.state === 'recording') {
       mediaRef.current.stop();
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
     }
     if (timerRef.current) {
       clearInterval(timerRef.current);

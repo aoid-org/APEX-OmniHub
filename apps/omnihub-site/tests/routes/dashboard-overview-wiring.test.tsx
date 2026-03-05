@@ -1,19 +1,14 @@
 /**
  * DashboardOverview OmniBoard Wiring Tests
  * @module tests/omnidash/dashboard-overview-wiring.test.tsx
- *
- * Validates the UX interception wiring on the integrated apps grid.
- * Enforces the APEX-TEST AAA pattern.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { DashboardOverview } from '../../src/pages/DashboardOverview';
 import { useOmniModal } from '../../../../src/stores/omniModalStore';
 
-
-// ARRANGE: Mock the router navigation to test Live integration handling
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
@@ -24,34 +19,37 @@ vi.mock('react-router-dom', async () => {
 
 describe('DashboardOverview - OmniBoard Wiring', () => {
   const mockNavigate = vi.fn();
+  const setAppHealth = vi.fn();
+  const setEcoAppsVisible = vi.fn();
 
   beforeEach(() => {
-    // Reset modal store
     useOmniModal.setState({
       activeModal: null,
       isOpen: false,
     });
-    // Reset router mock
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
     vi.clearAllMocks();
   });
 
-  it('triggers UniversalModalEngine oauth flow when clicking an unconnected integration (AAA pattern)', () => {
-    // ARRANGE: Render the component
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('triggers UniversalModalEngine oauth flow when clicking a Partial integration tile', () => {
     render(
       <MemoryRouter>
-        <DashboardOverview />
-      </MemoryRouter>
+        <DashboardOverview
+          demoMode={false}
+          appHealth="green"
+          setAppHealth={setAppHealth}
+          ecoAppsVisible={false}
+          setEcoAppsVisible={setEcoAppsVisible}
+        />
+      </MemoryRouter>,
     );
 
-    // Filter down to the specific Partial integration tile (e.g. Orchestrator)
-    const partialAppTile = screen.getByText('Orchestrator').closest('div[draggable="true"]') ?? screen.getByText('Orchestrator').parentElement?.parentElement;
-    if (!partialAppTile) throw new Error('Partial app tile not found');
+    fireEvent.click(screen.getAllByText('Orchestrator')[0]);
 
-    // ACT: Fire a click event on the partial integration container
-    fireEvent.click(partialAppTile);
-
-    // ASSERT: Verify propagation stopped and modal state invoked
     const modalState = useOmniModal.getState();
     expect(modalState.isOpen).toBe(true);
     expect(modalState.activeModal?.type).toBe('oauth');
@@ -59,24 +57,74 @@ describe('DashboardOverview - OmniBoard Wiring', () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('navigates to omniport when clicking a live integration (AAA pattern)', () => {
-    // ARRANGE: Render the component
+  it('navigates to omniport when clicking a Live integration tile', () => {
     render(
       <MemoryRouter>
-        <DashboardOverview />
-      </MemoryRouter>
+        <DashboardOverview
+          demoMode={false}
+          appHealth="green"
+          setAppHealth={setAppHealth}
+          ecoAppsVisible={false}
+          setEcoAppsVisible={setEcoAppsVisible}
+        />
+      </MemoryRouter>,
     );
 
-    // Filter down to the specific Live integration tile (e.g. OmniBoard)
-    const liveAppTile = screen.getByText('OmniBoard').closest('div[draggable="true"]') ?? screen.getByText('OmniBoard').parentElement?.parentElement;
-    if (!liveAppTile) throw new Error('Live app tile not found');
+    fireEvent.click(screen.getAllByText('Fortress')[0]);
 
-    // ACT: Fire a click event
-    fireEvent.click(liveAppTile);
-
-    // ASSERT: Verify navigation routing
     expect(mockNavigate).toHaveBeenCalledWith('/omnidash/omniport');
     const modalState = useOmniModal.getState();
     expect(modalState.isOpen).toBe(false);
+  });
+
+  it('sim_mode=false queues prompt and does not flip health state', () => {
+    render(
+      <MemoryRouter>
+        <DashboardOverview
+          demoMode={false}
+          appHealth="green"
+          setAppHealth={setAppHealth}
+          ecoAppsVisible={false}
+          setEcoAppsVisible={setEcoAppsVisible}
+        />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('Ask APEX Agent'), {
+      target: { value: 'Reconcile end-of-day cash and deposit ledger' },
+    });
+    fireEvent.click(screen.getByText('▶').closest('button') as HTMLButtonElement);
+
+    expect(screen.getByText('QUEUED: Reconcile end-of-day cash and deposit ledger')).toBeInTheDocument();
+    expect(setAppHealth).not.toHaveBeenCalled();
+  });
+
+  it('sim_mode=true performs deterministic bypass and returns health to green after 2.5s', () => {
+    vi.useFakeTimers();
+
+    render(
+      <MemoryRouter>
+        <DashboardOverview
+          demoMode={true}
+          appHealth="green"
+          setAppHealth={setAppHealth}
+          ecoAppsVisible={false}
+          setEcoAppsVisible={setEcoAppsVisible}
+        />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('Ask APEX Agent'), {
+      target: { value: 'Sync sales, tips, and safe-drop data' },
+    });
+    fireEvent.click(screen.getByText('▶').closest('button') as HTMLButtonElement);
+
+    expect(setAppHealth).toHaveBeenCalledWith('yellow');
+    expect(screen.getByText('Routing through OmniPort edge...')).toBeInTheDocument();
+
+    vi.advanceTimersByTime(2500);
+
+    expect(setAppHealth).toHaveBeenLastCalledWith('green');
+    expect(screen.getByText('USO SYNC COMPLETE: ERP DATA HARMONIZED.')).toBeInTheDocument();
   });
 });
