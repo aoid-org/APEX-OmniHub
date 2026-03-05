@@ -9,9 +9,9 @@
  * - RLS is_admin() checks user_roles (single source of truth).
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { hasServiceKey, OmniDashTestContext, setupTestUser, cleanupTestUser } from './_test-helpers';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 const describeIf = hasServiceKey ? describe : describe.skip;
 
@@ -32,7 +32,7 @@ describeIf('Admin Role Unification (integration)', () => {
 
   // Helper to claim admin access
   const claimAdminAccess = (secret: string) =>
-    (ctx.anonClient as any).rpc('claim_admin_access', { secret_key: secret });
+    (ctx.anonClient as unknown as { rpc: (fn: string, args: Record<string, unknown>) => unknown }).rpc('claim_admin_access', { secret_key: secret });
 
   describe('claim_admin_access() function', () => {
     it('should set app_metadata AND insert into user_roles table', async () => {
@@ -47,7 +47,7 @@ describeIf('Admin Role Unification (integration)', () => {
 
       const { data: roleData, error: roleError } = await queryUserRole();
       expect(roleError).toBeNull();
-      expect((roleData as any)?.role).toBe('admin');
+      expect((roleData as unknown as { role: string })?.role).toBe('admin');
     });
 
     it('should return false for incorrect secret', async () => {
@@ -87,14 +87,14 @@ describeIf('Admin Role Unification (integration)', () => {
 
       const { data: roleData, error: roleError } = await queryUserRole();
       expect(roleError).toBeNull();
-      expect((roleData as any)?.role).toBe('admin');
+      expect((roleData as unknown as { role: string })?.role).toBe('admin');
     });
 
     it('should auto-delete from user_roles when app_metadata.admin=false is set', async () => {
       await ctx.adminClient.auth.admin.updateUserById(ctx.testUserId, {
         app_metadata: { admin: true, role: 'admin' },
       });
-      await (ctx.adminClient as any).from('user_roles').insert({ user_id: ctx.testUserId, role: 'admin' });
+      await (ctx.adminClient as unknown as SupabaseClient).from('user_roles').insert({ user_id: ctx.testUserId, role: 'admin' });
 
       await ctx.adminClient.auth.admin.updateUserById(ctx.testUserId, {
         app_metadata: { admin: false },
@@ -108,21 +108,21 @@ describeIf('Admin Role Unification (integration)', () => {
 
   describe('is_admin() RLS function', () => {
     it('should return true for users in user_roles table with role=admin', async () => {
-      await (ctx.adminClient as any).from('user_roles').insert({ user_id: ctx.testUserId, role: 'admin' });
-      const { data, error } = await (ctx.adminClient as any).rpc('is_admin', { _user_id: ctx.testUserId });
+      await (ctx.adminClient as unknown as SupabaseClient).from('user_roles').insert({ user_id: ctx.testUserId, role: 'admin' });
+      const { data, error } = await (ctx.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx.testUserId });
       expect(error).toBeNull();
       expect(data).toBe(true);
     });
 
     it('should return false for users not in user_roles table', async () => {
-      const { data, error } = await (ctx.adminClient as any).rpc('is_admin', { _user_id: ctx.testUserId });
+      const { data, error } = await (ctx.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx.testUserId });
       expect(error).toBeNull();
       expect(data).toBe(false);
     });
 
     it('should return false for users with non-admin roles', async () => {
-      await (ctx.adminClient as any).from('user_roles').insert({ user_id: ctx.testUserId, role: 'user' });
-      const { data, error } = await (ctx.adminClient as any).rpc('is_admin', { _user_id: ctx.testUserId });
+      await (ctx.adminClient as unknown as SupabaseClient).from('user_roles').insert({ user_id: ctx.testUserId, role: 'user' });
+      const { data, error } = await (ctx.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx.testUserId });
       expect(error).toBeNull();
       expect(data).toBe(false);
     });
@@ -132,7 +132,7 @@ describeIf('Admin Role Unification (integration)', () => {
     it('should grant full admin access via claim_admin_access() -> RLS check passes', async () => {
       await claimAdminAccess('checklist-complete-2026');
 
-      const { data: isAdminResult } = await (ctx.adminClient as any).rpc('is_admin', { _user_id: ctx.testUserId });
+      const { data: isAdminResult } = await (ctx.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx.testUserId });
       expect(isAdminResult).toBe(true);
 
       const { error: settingsError } = await ctx.anonClient
@@ -150,9 +150,9 @@ describeIf('Admin Role Unification (integration)', () => {
       expect(userData.user?.app_metadata?.admin).toBe(true);
 
       const { data: roleData } = await queryUserRole();
-      expect((roleData as any)?.role).toBe('admin');
+      expect((roleData as unknown as { role: string })?.role).toBe('admin');
 
-      const { data: isAdminResult } = await (ctx.adminClient as any).rpc('is_admin', { _user_id: ctx.testUserId });
+      const { data: isAdminResult } = await (ctx.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx.testUserId });
       expect(isAdminResult).toBe(true);
     });
   });
