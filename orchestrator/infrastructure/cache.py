@@ -145,6 +145,11 @@ class EntityExtractor:
         ],
     }
 
+    # Pre-compiled patterns for performance
+    _COMPILED_PATTERNS = {
+        k: [re.compile(p, re.IGNORECASE) for p in v] for k, v in PATTERNS.items()
+    }
+
     @classmethod
     def extract_entities(cls, text: str) -> dict[str, list[str]]:
         """
@@ -156,10 +161,10 @@ class EntityExtractor:
         """
         entities: dict[str, list[str]] = {}
 
-        for entity_type, patterns in cls.PATTERNS.items():
+        for entity_type, patterns in cls._COMPILED_PATTERNS.items():
             matches = []
             for pattern in patterns:
-                found = re.findall(pattern, text, re.IGNORECASE)
+                found = pattern.findall(text)
                 if found:
                     # Handle both string matches and tuple matches from groups
                     matches.extend(found if isinstance(found[0], str) else [m for m in found if m])
