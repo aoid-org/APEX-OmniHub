@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "./apps/omnihub-site/src"),
     },
     // Dedupe React to prevent multiple instances (fixes createContext undefined)
     dedupe: ['react', 'react-dom'],
