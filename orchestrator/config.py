@@ -4,7 +4,6 @@ Configuration management for APEX Orchestrator.
 Uses pydantic-settings for type-safe environment variable loading.
 """
 
-
 from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 

@@ -16,29 +16,22 @@ def test_production_requires_redis_password():
 
     # Test production without password
     with pytest.raises(ValidationError) as excinfo:
-        Settings(
-            environment="production",
-            redis_password=None,
-            **required_env
-        )
+        Settings(environment="production", redis_password=None, **required_env)
     assert "redis_password must be set in production" in str(excinfo.value)
 
     # Test production with empty password
     with pytest.raises(ValidationError) as excinfo:
-        Settings(
-            environment="production",
-            redis_password="",
-            **required_env
-        )
+        Settings(environment="production", redis_password="", **required_env)
     assert "redis_password must be set in production" in str(excinfo.value)
 
     # Test production with password
     settings = Settings(
         environment="production",
         redis_password="secure-password",  # noqa: S106
-        **required_env
+        **required_env,
     )
     assert settings.redis_password.get_secret_value() == "secure-password"
+
 
 def test_development_allows_no_redis_password():
     """Should allow missing redis_password in development."""
@@ -48,9 +41,5 @@ def test_development_allows_no_redis_password():
         "SUPABASE_DB_URL": "postgresql://test",
     }
 
-    settings = Settings(
-        environment="development",
-        redis_password=None,
-        **required_env
-    )
+    settings = Settings(environment="development", redis_password=None, **required_env)
     assert settings.redis_password is None
