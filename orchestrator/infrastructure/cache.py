@@ -242,6 +242,8 @@ class SemanticCacheService:
     def __init__(
         self,
         redis_url: str,
+        redis_password: str | None = None,
+        redis_ssl: bool = False,
         embedding_model: str = "all-MiniLM-L6-v2",
         similarity_threshold: float = 0.85,
         ttl_seconds: int = 86400,  # 24 hours
@@ -251,11 +253,15 @@ class SemanticCacheService:
 
         Args:
             redis_url: Redis connection URL
+            redis_password: Optional Redis password
+            redis_ssl: Whether to use SSL for connection
             embedding_model: Sentence-transformers model name
             similarity_threshold: Minimum cosine similarity for cache hit (0-1)
             ttl_seconds: Default TTL for cached plans
         """
         self.redis_url = redis_url
+        self.redis_password = redis_password
+        self.redis_ssl = redis_ssl
         self.similarity_threshold = similarity_threshold
         self.ttl_seconds = ttl_seconds
 
@@ -280,6 +286,8 @@ class SemanticCacheService:
         # Connect to Redis
         self.redis = await aioredis.from_url(
             self.redis_url,
+            password=self.redis_password,
+            ssl=self.redis_ssl,
             encoding="utf-8",
             decode_responses=True,
         )
