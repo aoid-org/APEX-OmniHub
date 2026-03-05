@@ -94,7 +94,8 @@ export default defineConfig({
     strictPort: true,
   },
   preview: {
-    port: 3000,
+    port: 4173,
+    host: true,
     strictPort: true,
   },
   // @ts-expect-error test is an extension provided by vitest
