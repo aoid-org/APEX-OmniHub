@@ -52,9 +52,6 @@ const createMockEvent = (idPrefix: string, integrationId: string, sourceType: st
   received_at: new Date().toISOString(),
 });
 
-// FIX: PR#611/#614 CI gate failure
-// ROOT CAUSE: `as any` cast violated @typescript-eslint/no-explicit-any, cascading to 4 CI gate failures
-// CHANGE: Parameter typed as OmniLinkIntegration[] to match fetchOmniLinkIntegrations return type
 function setupAndRenderIntegrations(
   integrationsData: OmniLinkIntegration[],
   keyName: string,
