@@ -35,7 +35,7 @@ def test_production_requires_redis_password():
     # Test production with password
     settings = Settings(
         environment="production",
-        redis_password="secure-password",
+        redis_password="secure-password",  # noqa: S106
         **required_env
     )
     assert settings.redis_password.get_secret_value() == "secure-password"
