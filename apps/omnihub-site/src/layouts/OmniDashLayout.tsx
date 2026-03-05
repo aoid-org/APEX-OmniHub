@@ -55,18 +55,19 @@ const SIDEBAR_NAV = APP_REGISTRY.map((entry: AppRegistryEntry) => ({
   label: entry.label,
   icon: NAV_ICON_MAP[entry.iconAssetKey] ?? navOmniboard,
   to: entry.routePath,
-}));
+})).filter((entry) => entry.key === 'omniboard');
 
 export function OmniDashLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const simModeSchema = z.enum(['true', 'false']);
-  const simModeParam = searchParams.get('sim_mode');
-  const demoMode = simModeSchema.safeParse(simModeParam).success
-    ? simModeParam === 'true'
-    : false;
+  const simModeStateSchema = z.object({
+    sim_mode: z.enum(['true', 'false']).default('false'),
+  });
+  const demoMode = simModeStateSchema.parse({
+    sim_mode: searchParams.get('sim_mode') ?? 'false',
+  }).sim_mode === 'true';
   const [ecoAppsVisible, setEcoAppsVisible] = useState(false);
   const [appHealth, setAppHealth] = useState<'green' | 'yellow' | 'red'>('green');
   const [isDarkMode, setIsDarkMode] = useState(true);
