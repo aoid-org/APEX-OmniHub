@@ -189,7 +189,7 @@
   "overrides": {
     "lodash": "^4.17.23",
     "tar": "^7.4.3",
-    "hono": "^4.11.7",
+    "hono": "^4.12.4",
     "serialize-javascript": "^7.0.3"
   },
   "packageManager": "bun@1.2.14"
