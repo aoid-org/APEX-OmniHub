@@ -39,17 +39,29 @@ function Hero() {
               <span>{t('hero.headline.line3', { defaultValue: 'Stay in control.' })}</span>
             </div>
           </h1>
-          <p className="hero__tagline">{t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}</p>
-          <p className="hero__subtagline">
+          <p className="hero__tagline hero__tagline--center">{t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}</p>
+          <p className="hero__subtagline hero__subtagline--center">
             {t('hero.traits', { defaultValue: 'DIRECTABLE \u2022 AUDITABLE \u2022 REVERSIBLE' })}
           </p>
           
           <div className="flex flex-col gap-4 mt-6 mb-6">
             <p className="hero__subtitle">
-              {t('hero.subtitle', { defaultValue: 'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.' })}
+              <span className="hero__sentence-indent">
+                {t('hero.subtitleSentence1', {
+                  defaultValue:
+                    'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface.',
+                })}
+              </span>{' '}
+              {t('hero.subtitleSentence2', { defaultValue: 'Every action is authorized, logged, and reversible.' })}
             </p>
             <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
-              {t('hero.description', { defaultValue: 'OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.' })}
+              <span className="hero__sentence-indent">
+                {t('hero.descriptionSentence1', { defaultValue: 'OmniDash keeps execution in view.' })}
+              </span>{' '}
+              {t('hero.descriptionSentence2', {
+                defaultValue:
+                  'Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.',
+              })}
             </p>
           </div>
           

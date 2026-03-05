@@ -21,6 +21,7 @@ import { OmniPortPage } from "@/pages/OmniPort";
 import { OrchestratorPage } from "@/pages/Orchestrator";
 import { SmartIntegrationsPage } from "@/pages/SmartIntegrations";
 import { TriForcePage } from "@/pages/TriForce";
+import { DemoPage } from "@/pages/Demo";
 
 type AppRoute = {
   readonly path: string;
@@ -54,6 +55,8 @@ const appRoutes: readonly AppRoute[] = [
   { path: "/orchestrator", element: <OrchestratorPage />, isPublic: true },
   { path: "/smart-integrations", element: <SmartIntegrationsPage />, isPublic: true },
   { path: "/tri-force", element: <TriForcePage />, isPublic: true },
+  { path: "/demo", element: <DemoPage />, isPublic: true },
+  { path: "/demo.html", element: <DemoPage />, isPublic: true },
 ];
 
 const omniDashRoutes: readonly AppRoute[] = [
