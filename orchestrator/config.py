@@ -4,7 +4,8 @@ Configuration management for APEX Orchestrator.
 Uses pydantic-settings for type-safe environment variable loading.
 """
 
-from pydantic import Field
+
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -38,7 +39,7 @@ class Settings(BaseSettings):
 
     # Redis Configuration
     redis_url: str = Field(default="redis://localhost:6379", description="Redis connection URL")
-    redis_password: str = Field(default="", description="Redis password")
+    redis_password: SecretStr | None = Field(default=None, description="Redis password")
     redis_ssl: bool = Field(default=False, description="Use SSL for Redis")
 
     # Supabase Configuration
@@ -83,6 +84,15 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def validate_production_config(self) -> "Settings":
+        """Ensure security-sensitive settings are provided in production."""
+        if self.environment == "production" and (
+            not self.redis_password or not self.redis_password.get_secret_value()
+        ):
+            raise ValueError("redis_password must be set in production")
+        return self
 
 
 # Global settings instance

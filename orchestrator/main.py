@@ -113,6 +113,10 @@ async def start_worker() -> None:
         supabase_url=settings.supabase_url,
         supabase_key=activity_key,
         redis_url=settings.redis_url,
+        redis_password=settings.redis_password.get_secret_value()
+        if settings.redis_password
+        else None,
+        redis_ssl=settings.redis_ssl,
     )
     logger.info("✓ Dependencies initialized")
 
@@ -229,7 +233,13 @@ async def run_tests() -> None:
 
     # Test semantic cache
     logger.info("\n--- Testing Semantic Cache ---")
-    cache = SemanticCacheService(redis_url=settings.redis_url)
+    cache = SemanticCacheService(
+        redis_url=settings.redis_url,
+        redis_password=settings.redis_password.get_secret_value()
+        if settings.redis_password
+        else None,
+        redis_ssl=settings.redis_ssl,
+    )
     await cache.initialize()
 
     # Store plan

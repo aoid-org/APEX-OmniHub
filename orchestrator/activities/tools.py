@@ -73,6 +73,8 @@ async def setup_activities(
     supabase_url: str,
     supabase_key: str,
     redis_url: str,
+    redis_password: str | None = None,
+    redis_ssl: bool = False,
 ) -> None:
     """
     Initialize activity dependencies (database provider, Redis, etc.).
@@ -83,6 +85,8 @@ async def setup_activities(
         supabase_url: Supabase project URL
         supabase_key: Supabase service role key
         redis_url: Redis connection URL
+        redis_password: Optional Redis password
+        redis_ssl: Whether to use SSL for Redis connection
     """
     global _semantic_cache, _redis_client
 
@@ -95,6 +99,8 @@ async def setup_activities(
 
     _semantic_cache = SemanticCacheService(
         redis_url=redis_url,
+        redis_password=redis_password,
+        redis_ssl=redis_ssl,
         embedding_model=os.getenv("CACHE_EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
         similarity_threshold=float(os.getenv("CACHE_SIMILARITY_THRESHOLD", "0.85")),
     )
