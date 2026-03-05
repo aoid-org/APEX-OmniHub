@@ -5,10 +5,17 @@
 
 
 /* ===== Grid Shell ===== */
+:root {
+  --bg-primary: #0f304b;
+}
+
 .omnidash-shell {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
-  background: #050505; /* Pitch black / Deep obsidian */
+  background: var(--bg-primary);
+  min-height: 100dvh;
+  height: 100dvh;
+  overscroll-behavior: none;
   color: #e0e7ff;
   overflow: hidden; /* Global overflow hidden to prevent body scroll */
   font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -83,6 +90,18 @@
     inset 0 0 12px rgba(194, 80, 31, 0.06);
 }
 
+
+
+.omnidash-shell button,
+.omnidash-shell a,
+.omnidash-shell input,
+.omnidash-shell [role="button"] {
+  min-height: 44px;
+}
+
+.od-nav-item img.nav-icon {
+  min-width: 24px;
+}
 .od-nav-item img.nav-icon {
   width: 24px;
   height: 24px;
@@ -633,7 +652,12 @@
 /* ===== Responsive — Small Tablet (≤960px) ===== */
 @media (max-width: 960px) {
   .omnidash-shell {
+    display: flex;
+    flex-direction: column;
     grid-template-columns: 1fr;
+    min-height: 100dvh;
+    height: 100dvh;
+    overscroll-behavior: none;
   }
   .od-sidebar {
     display: none;

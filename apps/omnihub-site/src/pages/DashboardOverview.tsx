@@ -134,10 +134,10 @@ export const DashboardOverview = memo(function DashboardOverview({
 
     if (demoMode) {
       setAppHealth('yellow');
-      addTraceLog('Routing through OmniPort edge...');
+      addTraceLog('SIM_MODE_BYPASS: live Edge Functions skipped.');
       window.setTimeout(() => {
         setAppHealth('green');
-        addTraceLog('USO SYNC COMPLETE: ERP DATA HARMONIZED.');
+        addTraceLog('SIM_MODE_SUCCESS_TRACE: deterministic sync resolved in 2500ms.');
         setPrompt('');
       }, 2500);
       return;
