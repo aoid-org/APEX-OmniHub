@@ -146,9 +146,7 @@ class EntityExtractor:
     }
 
     # Pre-compiled patterns for performance
-    _COMPILED_PATTERNS = {
-        k: [re.compile(p, re.IGNORECASE) for p in v] for k, v in PATTERNS.items()
-    }
+    _COMPILED_PATTERNS = {k: [re.compile(p, re.IGNORECASE) for p in v] for k, v in PATTERNS.items()}
 
     @classmethod
     def extract_entities(cls, text: str) -> dict[str, list[str]]:
