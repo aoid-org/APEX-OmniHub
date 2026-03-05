@@ -6,6 +6,7 @@
 import { SessionToken, NormalizationContext } from '../types/connector';
 import { getConnector } from './registry';
 import { generateCorrelationId } from '../utils/correlation';
+import { generateSecureId } from '@/lib/security';
 import { EncryptedTokenStorage } from '../storage/encrypted-storage';
 import { PolicyEngine } from '../policy/policy-engine';
 import { SemanticTranslator } from '../translation/translator';
@@ -329,9 +330,7 @@ export class OmniConnect {
     // State includes correlation ID for tracing and CSRF protection.
     // Use cryptographically strong randomness — Math.random() is predictable
     // and must never be used for CSRF tokens.
-    const nonce = Array.from(crypto.getRandomValues(new Uint8Array(12)))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+    const nonce = generateSecureId().replace(/-/g, '').substring(0, 24);
     return `${correlationId}.${Date.now()}.${nonce}`;
   }
 
