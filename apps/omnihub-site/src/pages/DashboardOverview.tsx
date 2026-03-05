@@ -1,7 +1,7 @@
 /**
  * DashboardOverview - OmniBoard Center Content
  *
- * Hero: Agent (30%, left) | Top 3 (20%, right) | OmniSlate (50%, bottom)
+ * Hero: APEX Agent (25%, left) | OmniSlate (50%, center) | APEX Ecosystems (25%, right)
  * OmniSlate = prompt bar + TTS recording + health-colored context tiles
  *
  * Mic exclusion: when OmniSlate mic is recording, Agent shows "Standby"
@@ -22,11 +22,7 @@ const LOGO = (domain: string) => `https://logo.clearbit.com/${domain}`;
 
 /* ── Data ── */
 
-const OUTCOMES = [
-  { rank: 1, title: 'Close 12 Invoices', tag: 'Finance',  tagColor: '#34d399', metric: '+$24.6K' },
-  { rank: 2, title: 'Sync 48 Leads',     tag: 'Sales',    tagColor: '#38bdf8', metric: '+42' },
-  { rank: 3, title: 'Resolve 7 Tickets', tag: 'Support',  tagColor: '#f97316', metric: '95%' },
-] as const;
+const HIDDEN_APPS = new Set(['OmniBoard', 'OmniPort', 'Maestro']);
 
 interface ContextItem {
   readonly name: string;
@@ -34,7 +30,10 @@ interface ContextItem {
   readonly insight: string;
 }
 
-const INITIAL_CONTEXT: readonly ContextItem[] = APP_REGISTRY.slice(0, 3).map((entry: AppRegistryEntry) => ({
+const INITIAL_CONTEXT: readonly ContextItem[] = APP_REGISTRY
+  .filter((entry: AppRegistryEntry) => !HIDDEN_APPS.has(entry.label))
+  .slice(0, 3)
+  .map((entry: AppRegistryEntry) => ({
   name: entry.label,
   health: entry.healthContext.health,
   insight: entry.healthContext.insight,
@@ -47,13 +46,17 @@ const HC = {
 } as const;
 
 
-const APPS = APP_REGISTRY.map((entry: AppRegistryEntry) => ({
+const APPS = APP_REGISTRY
+  .filter((entry: AppRegistryEntry) => !HIDDEN_APPS.has(entry.label))
+  .map((entry: AppRegistryEntry) => ({
   name: entry.label,
   cat: entry.category,
   logo: LOGO(entry.logoDomain),
   synced: `${entry.dashboard.syncedMinutesAgo}m`,
   status: entry.dashboard.status,
 }));
+
+const ECOSYSTEM = APPS.slice(0, 3);
 
 
 function deriveHealth(items: readonly ContextItem[]): 'green' | 'yellow' | 'red' {
@@ -397,7 +400,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
           </div>
         </motion.div>
 
-        {/* ── RIGHT PANE: Top 3 Outcomes (col-span-3) ── */}
+        {/* ── RIGHT PANE: APEX Ecosystems (col-span-3) ── */}
         <motion.div
           layout
           initial={{ y: 20, opacity: 0 }}
@@ -421,12 +424,12 @@ export const DashboardOverview = memo(function DashboardOverview() {
             style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E")' }}
           />
           <div className="relative z-10 w-full">
-            <div style={{ fontSize: 19, fontWeight: 800, color: '#dfe6fe', marginBottom: 2, letterSpacing: '-0.02em' }}>Top 3 Outcomes</div>
-            <div style={{ fontSize: 11.77, fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Today&apos;s Focus</div>
+            <div style={{ fontSize: 19, fontWeight: 800, color: '#dfe6fe', marginBottom: 2, letterSpacing: '-0.02em' }}>APEX Ecosystems</div>
+            <div style={{ fontSize: 11.77, fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Connected Modules</div>
             <div className="flex flex-col gap-2.5 w-full">
-              {OUTCOMES.map((o) => (
+              {ECOSYSTEM.map((app) => (
                 <motion.div
-                  key={o.rank}
+                  key={app.name}
                   className="flex flex-row items-center justify-between w-full p-3 rounded-xl overflow-hidden gap-2"
                   style={{
                     background: 'rgba(0,0,0,0.20)',
@@ -439,20 +442,19 @@ export const DashboardOverview = memo(function DashboardOverview() {
                   whileHover={{ scale: 1.02, translateX: 4, rotate: 0.5 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {/* Left: Number + truncated text */}
+                  {/* Left: Module + category */}
                   <div className="flex flex-row items-center gap-2 min-w-0 flex-1">
-                    <span className="text-gray-500 font-mono text-xs flex-shrink-0">0{o.rank}</span>
                     <div className="flex flex-col min-w-0">
-                      <span className="text-white text-sm font-semibold truncate">{o.title}</span>
+                      <span className="text-white text-sm font-semibold truncate">{app.name}</span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded w-max mt-0.5" style={{
-                        background: `${o.tagColor}18`, color: o.tagColor, border: `1px solid ${o.tagColor}40`,
+                        background: 'rgba(249,115,22,0.1)', color: '#f97316', border: '1px solid rgba(249,115,22,0.25)',
                         fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
-                      }}>{o.tag}</span>
+                      }}>{app.cat}</span>
                     </div>
                   </div>
-                  {/* Right: Unbreakable value */}
+                  {/* Right: status */}
                   <div className="flex-shrink-0 text-right">
-                    <span className="text-white font-bold text-sm tracking-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{o.metric}</span>
+                    <span className="text-white font-bold text-sm tracking-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{app.status}</span>
                   </div>
                 </motion.div>
               ))}

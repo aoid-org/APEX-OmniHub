@@ -47,3 +47,12 @@ apps/omnihub-site/src/
 ---
 
 **Version:** 1.0.0 | **Date:** 2026-03-01 | **Ref:** APEX System Directive Phase 5
+
+## OmniDash UI Build Protocol (apex-frontend skill alignment)
+
+- Treat `OmniDashLayout.tsx` as immutable shell authority; feature pages extend via routed modal payloads only.
+- Enforce design-token usage (`var(--apex-*)`) for all spacing, radius, colors, and interaction timings.
+- Require interactive states for all controls (`hover`, `focus-visible`, `active`) with deterministic transition curves.
+- Keep accessibility first: semantic landmarks, keyboard navigation continuity, and meaningful ARIA labels.
+- For visual QA, run a single deterministic screenshot pass after layout or styling changes to prevent infinite dynamic loops.
+
