@@ -508,29 +508,45 @@ class AgentWorkflow:
     # OMNITRACE HELPERS (Best-effort telemetry - never breaks workflow)
     # =========================================================================
 
-    async def _omnitrace_record_run_start(self, input_data: dict[str, Any]) -> None:
-        """Record workflow run start via OmniTrace (best-effort)."""
-        try:
-            # Use trace_id from context (passed from frontend) or fallback to workflow_id
-            trace_id = self.workflow_context.get("trace_id", workflow.info().workflow_id)
+    def _get_trace_id(self) -> str:
+        """Get trace_id from context or fallback to workflow_id."""
+        return self.workflow_context.get("trace_id", workflow.info().workflow_id)
 
-            result = await workflow.execute_activity(
-                "omnitrace_record_run_start",
-                args=[
-                    {
-                        "workflow_id": workflow.info().workflow_id,
-                        "trace_id": trace_id,
-                        "user_id": self.user_id,
-                        "input_data": input_data,
-                        "status": "running",
-                    }
-                ],
-                start_to_close_timeout=timedelta(seconds=5),
+    async def _execute_omnitrace_activity(
+        self, activity_name: str, args: dict[str, Any], timeout_seconds: int = 5
+    ) -> Any:
+        """Execute OmniTrace activity with common parameters (best-effort)."""
+        try:
+            # Common arguments
+            args.update(
+                {
+                    "workflow_id": workflow.info().workflow_id,
+                    "trace_id": self._get_trace_id(),
+                }
+            )
+
+            return await workflow.execute_activity(
+                activity_name,
+                args=[args],
+                start_to_close_timeout=timedelta(seconds=timeout_seconds),
                 retry_policy=RetryPolicy(maximum_attempts=1),  # No retries for telemetry
             )
-            self._omnitrace_enabled = result.get("sampled", False)
         except Exception as e:
-            workflow.logger.warning(f"OmniTrace run start failed (ignored): {e}")
+            workflow.logger.warning(f"OmniTrace activity {activity_name} failed (ignored): {e}")
+            return None
+
+    async def _omnitrace_record_run_start(self, input_data: dict[str, Any]) -> None:
+        """Record workflow run start via OmniTrace (best-effort)."""
+        result = await self._execute_omnitrace_activity(
+            "omnitrace_record_run_start",
+            {
+                "user_id": self.user_id,
+                "input_data": input_data,
+                "status": "running",
+            },
+        )
+        if result:
+            self._omnitrace_enabled = result.get("sampled", False)
 
     async def _omnitrace_record_run_complete(
         self, output_data: dict[str, Any] | None, status: str
@@ -538,25 +554,14 @@ class AgentWorkflow:
         """Record workflow run completion via OmniTrace (best-effort)."""
         if not self._omnitrace_enabled:
             return
-        try:
-            # Use trace_id from context (passed from frontend) or fallback to workflow_id
-            trace_id = self.workflow_context.get("trace_id", workflow.info().workflow_id)
 
-            await workflow.execute_activity(
-                "omnitrace_record_run_complete",
-                args=[
-                    {
-                        "workflow_id": workflow.info().workflow_id,
-                        "trace_id": trace_id,
-                        "output_data": output_data,
-                        "status": status,
-                    }
-                ],
-                start_to_close_timeout=timedelta(seconds=5),
-                retry_policy=RetryPolicy(maximum_attempts=1),
-            )
-        except Exception as e:
-            workflow.logger.warning(f"OmniTrace run complete failed (ignored): {e}")
+        await self._execute_omnitrace_activity(
+            "omnitrace_record_run_complete",
+            {
+                "output_data": output_data,
+                "status": status,
+            },
+        )
 
     async def _omnitrace_record_event(
         self,
@@ -569,28 +574,18 @@ class AgentWorkflow:
         """Record workflow event via OmniTrace (best-effort)."""
         if not self._omnitrace_enabled:
             return
-        try:
-            # Use trace_id from context (passed from frontend) or fallback to workflow_id
-            trace_id = self.workflow_context.get("trace_id", workflow.info().workflow_id)
 
-            await workflow.execute_activity(
-                "omnitrace_record_event",
-                args=[
-                    {
-                        "workflow_id": workflow.info().workflow_id,
-                        "trace_id": trace_id,
-                        "event_key": event_key,
-                        "kind": kind,
-                        "name": name,
-                        "latency_ms": latency_ms,
-                        "data": data,
-                    }
-                ],
-                start_to_close_timeout=timedelta(seconds=3),
-                retry_policy=RetryPolicy(maximum_attempts=1),
-            )
-        except Exception as e:
-            workflow.logger.warning(f"OmniTrace event recording failed (ignored): {e}")
+        await self._execute_omnitrace_activity(
+            "omnitrace_record_event",
+            {
+                "event_key": event_key,
+                "kind": kind,
+                "name": name,
+                "latency_ms": latency_ms,
+                "data": data,
+            },
+            timeout_seconds=3,
+        )
 
     async def _mint_pilot_session_if_byom(self, user_id: str, context: dict[str, Any]) -> None:
         """
