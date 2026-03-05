@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ComingSoonPage } from "@/pages/ComingSoon";
 import { HomePage } from "@/pages/Home";
@@ -40,6 +40,7 @@ const createProtectedElement = (element: ReactElement, isPublic = false): ReactE
 const appRoutes: readonly AppRoute[] = [
   { path: "/", element: <HomePage />, isPublic: true },
   { path: "/launch", element: <OnboardingWizard />, isPublic: true },
+  { path: "/auth", element: <LoginPage />, isPublic: true },
   { path: "/login", element: <LoginPage />, isPublic: true },
   { path: "/story", element: <FounderStory />, isPublic: true },
   { path: "/privacy", element: <PrivacyPage />, isPublic: true },
@@ -57,6 +58,16 @@ const appRoutes: readonly AppRoute[] = [
   { path: "/tri-force", element: <TriForcePage />, isPublic: true },
   { path: "/demo", element: <DemoPage />, isPublic: true },
   { path: "/demo.html", element: <DemoPage />, isPublic: true },
+  { path: "/dashboard", element: <OmniDashLayout /> },
+  { path: "/omnitrace", element: <ComingSoonPage title="OmniTrace" desc="Unified tracing, route telemetry, and render diagnostics." />, isPublic: true },
+  { path: "/translation", element: <ComingSoonPage title="Translation" desc="Localization tools and language quality controls." />, isPublic: true },
+  { path: "/integrations", element: <ComingSoonPage title="Integrations" desc="Connected services and data source orchestration." />, isPublic: true },
+  { path: "/automations", element: <ComingSoonPage title="Automations" desc="Workflow automation and task orchestration controls." />, isPublic: true },
+  { path: "/links", element: <ComingSoonPage title="Links" desc="Connection management and integration endpoints." />, isPublic: true },
+  { path: "/files", element: <ComingSoonPage title="Files" desc="Document management and file operations." />, isPublic: true },
+  { path: "/settings", element: <ComingSoonPage title="Settings" desc="Platform configuration and operational preferences." />, isPublic: true },
+  { path: "/health", element: <ComingSoonPage title="Health" desc="System health summary and runtime diagnostics." />, isPublic: true },
+  { path: "/diagnostics", element: <ComingSoonPage title="Diagnostics" desc="Diagnostic tools, logs, and troubleshooting surfaces." />, isPublic: true },
 ];
 
 const omniDashRoutes: readonly AppRoute[] = [
@@ -85,21 +96,28 @@ const omniDashRoutes: readonly AppRoute[] = [
 
 function App() {
   return (
-    <Routes>
-      {appRoutes.map((route) => (
-        <Route
-          key={route.path}
-          path={route.path}
-          element={createProtectedElement(route.element, route.isPublic)}
-        />
-      ))}
-      <Route path="/omnidash" element={createProtectedElement(<OmniDashLayout />)}>
-        {omniDashRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={createProtectedElement(route.element, route.isPublic)} />
+    <BrowserRouter>
+      <div data-testid="app-shell">
+        <Routes>
+        {appRoutes.map((route) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={createProtectedElement(route.element, route.isPublic)}
+          />
         ))}
-      </Route>
-
-    </Routes>
+        <Route path="/omnidash" element={createProtectedElement(<OmniDashLayout />)}>
+          {omniDashRoutes.map((route) => (
+            <Route key={route.path} path={route.path} element={createProtectedElement(route.element, route.isPublic)} />
+          ))}
+        </Route>
+        <Route
+          path="*"
+          element={<ComingSoonPage title="Page Not Found" desc="The requested route is not configured yet. Use Home or OmniDash navigation to continue." />}
+        />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 }
 
