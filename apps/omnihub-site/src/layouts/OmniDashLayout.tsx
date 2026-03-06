@@ -12,7 +12,8 @@ import { Outlet, Link, useLocation, useNavigate, useSearchParams } from 'react-r
 import { supabase } from '@/lib/supabase';
 import { Search, Bell, Shield, ChevronDown, Sun, Moon, X } from 'lucide-react';
 import { DashboardOverview } from '@/pages/DashboardOverview';
-import { UniversalModalEngine } from '../../../../src/components/omnidash/media/UniversalModalEngine';
+import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
+import { useOmniModal } from '../../../../src/stores/omniModalStore';
 import '@/styles/omnidash-layout.css';
 import { z } from 'zod';
 
@@ -60,6 +61,7 @@ const SIDEBAR_NAV = APP_REGISTRY.map((entry: AppRegistryEntry) => ({
 export function OmniDashLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const omniModal = useOmniModal();
   const [searchParams] = useSearchParams();
 
   const simModeStateSchema = z.object({
@@ -156,9 +158,37 @@ export function OmniDashLayout() {
               Zero Trust Active
             </div>
 
-            <button type="button" onClick={() => navigate('/omnidash/omniport')} className="od-connect-ai">Connect AI</button>
+            <button type="button" onClick={(e) => {
+              e.stopPropagation();
+              omniModal.invoke({
+                id: 'connect-ai',
+                provider: 'APEX OmniPort',
+                type: 'oauth',
+                title: 'Connect AI Provider',
+                description: 'Link your AI provider (OpenAI, Anthropic, or Google) for seamless agent integration.',
+                onComplete: async (payload) => { console.warn('AI connected:', payload); },
+                onCancel: () => { console.warn('AI connect dismissed.'); },
+              });
+            }} className="od-connect-ai">Connect AI</button>
 
-            <button type="button" className="od-avatar" aria-label="Notifications">
+            <button type="button" className="od-avatar" aria-label="Notifications" onClick={(e) => {
+              e.stopPropagation();
+              omniModal.invoke({
+                id: 'notifications',
+                provider: 'APEX',
+                type: 'selection',
+                title: 'Notifications',
+                description: 'Recent system notifications and alerts.',
+                schema: { items: [
+                  { id: '1', label: 'Salesforce sync completed — 48 records updated' },
+                  { id: '2', label: 'Security scan passed — Zero Trust Active' },
+                  { id: '3', label: 'Invoice batch #1042 processed successfully' },
+                  { id: '4', label: 'Workflow "Lead Nurture" triggered by new lead' },
+                ]},
+                onComplete: async (payload) => { console.warn('Notification selected:', payload); },
+                onCancel: () => { /* dismiss */ },
+              });
+            }}>
               <Bell className="h-3.5 w-3.5" />
             </button>
 
@@ -202,7 +232,7 @@ export function OmniDashLayout() {
 
 
       {/* ────── GLOBAL MODAL ENGINE ────── */}
-      <UniversalModalEngine />
+      <OmniSpatialHost />
     </div>
   );
 }
