@@ -12,6 +12,7 @@ Update z-index hierarchy comment to include canvas layers
 App.tsx
 Wrap the /omnidash route with <OmniDashProvider> to mount the zustand store above the layout.
 
+
 New File Tree
 apps/omnihub-site/src/
 ├── lib/
@@ -31,6 +32,8 @@ apps/omnihub-site/src/
 │   └── DashboardOverview.tsx    [MODIFY] Becomes canvas widget
 └── styles/
     └── omnidash-layout.css      [MODIFY] Canvas + widget shell styles
+
+    
 IP Moat Enforcement (OMNIDEV-V2 Layer Protocol)
 Layer 1 (Algorithms): ZIndexManager.ts spatial layer math is proprietary — server-side candidates for future trade secret isolation
 Layer 3 (Integration): Native pointer event drag system is deeply integrated with APEX's zustand store pattern — high switching cost
@@ -75,3 +78,4 @@ Manual Verification (User)
 
 After implementation, start the dev server (npm run dev from apps/omnihub-site)
 Navigate to /omnidash
+
