@@ -1,8 +1,11 @@
 /**
  * DashboardOverview - OmniBoard Center Content
  *
- * Hero: APEX Agent (25%, left) | OmniSlate (50%, center) | APEX Ecosystems (25%, right)
- * OmniSlate = prompt bar + TTS recording + health-colored context tiles
+ * Canvas Architecture (DnD-Ready):
+ *   - ZERO CSS Grid. Flexbox + calc() widths only.
+ *   - Hero row: Agent (25%) | OmniSlate (50%) | Ecosystems (25%)
+ *   - Apps row: exactly 4 tiles across, uniform 150px height
+ *   - Gaps: 24px (hero canvas), 16px (apps row)
  *
  * Mic exclusion: when OmniSlate mic is recording, Agent shows "Standby"
  *                when OmniSlate mic stops, Agent returns to "Listening..."
@@ -75,6 +78,25 @@ function deriveHealth(items: readonly ContextItem[]): 'green' | 'yellow' | 'red'
 }
 
 const O = '#c2501f'; // burnt orange
+
+/* ── Shared glass tile style ── */
+const GLASS_TILE = {
+  padding: 24,
+  borderRadius: 24,
+  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  backdropFilter: 'blur(32px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+  border: '1px solid rgba(255, 255, 255, 0.15)',
+  boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 10px 30px rgba(0,0,0,0.2)',
+};
+
+/* ── Noise layer reused across panes ── */
+const NoiseBg = () => (
+  <div
+    className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
+    style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E")' }}
+  />
+);
 
 /* ── Component ── */
 
@@ -202,34 +224,23 @@ export const DashboardOverview = memo(function DashboardOverview({
 
   return (
 
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    /* ═══ APEX CANVAS — fluid DnD drop-zone, Flexbox-only ═══ */
+    <div className="apex-canvas">
 
-      {/* ═══════ HERO TRI-PANE — Kinetic Architecture ═══════ */}
-      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 w-full mt-6 relative z-10">
+      {/* ═══════ HERO ROW — 3 fluid tiles, no CSS Grid ═══════ */}
+      <div className="apex-hero-row">
 
-        {/* ── LEFT PANE: APEX Agent (col-span-3) ── */}
+        {/* ── LEFT PANE: APEX Agent (25%) ── */}
         <motion.div
           layout
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 170, damping: 26, mass: 1 }}
           whileHover={{ scale: 1.01, transition: { type: 'spring', stiffness: 170, damping: 26, mass: 1 } }}
-          className="lg:col-span-3 order-2 lg:order-1 flex flex-col items-center justify-center relative overflow-hidden"
-          style={{
-            padding: 24,
-            borderRadius: 24,
-            backgroundColor: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(32px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 10px 30px rgba(0,0,0,0.2)',
-          }}
+          className="apex-hero-tile apex-hero-tile--sm flex flex-col items-center justify-center relative overflow-hidden"
+          style={GLASS_TILE}
         >
-          {/* SVG Noise Layer */}
-          <div
-            className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
-            style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E")' }}
-          />
+          <NoiseBg />
           {/* APEX Agent - Vertical Widget Layout */}
           <div className="relative z-10 flex flex-col items-center justify-center h-full w-full gap-4">
             {/* Header: Agent label + status */}
@@ -292,29 +303,17 @@ export const DashboardOverview = memo(function DashboardOverview({
           </div>
         </motion.div>
 
-        {/* ── CENTER PANE: OmniSlate (col-span-6) ── */}
+        {/* ── CENTER PANE: OmniSlate (50%) ── */}
         <motion.div
           layout
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 170, damping: 26, mass: 1, delay: 0.05 }}
           whileHover={{ scale: 1.005, transition: { type: 'spring', stiffness: 170, damping: 26, mass: 1 } }}
-          className="lg:col-span-6 order-1 lg:order-2 z-[9999] pointer-events-auto flex flex-col justify-end relative overflow-hidden"
-          style={{
-            padding: 28,
-            borderRadius: 24,
-            backgroundColor: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(32px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 10px 30px rgba(0,0,0,0.2)',
-          }}
+          className="apex-hero-tile apex-hero-tile--lg z-[9999] pointer-events-auto flex flex-col justify-end relative overflow-hidden"
+          style={{ ...GLASS_TILE, padding: 28 }}
         >
-          {/* SVG Noise Layer */}
-          <div
-            className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
-            style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E")' }}
-          />
+          <NoiseBg />
           {/* OmniSLATE badge — top-left */}
           <span style={{ position: 'absolute', top: 0, left: 0, zIndex: 1000, padding: '8px 14px', fontSize: 11.77, fontWeight: 800, color: '#a1a1aa', letterSpacing: '0.15em', textTransform: 'uppercase' }}>OmniSlate</span>
           {/* CleanSlate + Lightbulb — top-right */}
@@ -474,29 +473,17 @@ export const DashboardOverview = memo(function DashboardOverview({
           </div>
         </motion.div>
 
-        {/* ── RIGHT PANE: APEX Ecosystems (col-span-3) ── */}
+        {/* ── RIGHT PANE: APEX Ecosystems (25%) ── */}
         <motion.div
           layout
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 170, damping: 26, mass: 1, delay: 0.1 }}
           whileHover={{ scale: 1.01, transition: { type: 'spring', stiffness: 170, damping: 26, mass: 1 } }}
-          className="lg:col-span-3 order-3 lg:order-3 flex flex-col relative overflow-hidden"
-          style={{
-            padding: 24,
-            borderRadius: 24,
-            backgroundColor: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(32px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 10px 30px rgba(0,0,0,0.2)',
-          }}
+          className="apex-hero-tile apex-hero-tile--sm flex flex-col relative overflow-hidden"
+          style={GLASS_TILE}
         >
-          {/* SVG Noise Layer */}
-          <div
-            className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none"
-            style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E")' }}
-          />
+          <NoiseBg />
           <div className="relative z-10 w-full">
             <div style={{ fontSize: 19, fontWeight: 800, color: '#dfe6fe', marginBottom: 2, letterSpacing: '-0.02em' }}>APEX Ecosystems</div>
             <div style={{ fontSize: 11.77, fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Connected Modules</div>
@@ -538,8 +525,8 @@ export const DashboardOverview = memo(function DashboardOverview({
 
       </div>
 
-      {/* ═══════ INTEGRATED APPS ═══════ */}
-      <div className="apps-hex" style={{ padding: '8px 16px 24px 16px', marginTop: 4 }}>
+      {/* ═══════ INTEGRATED APPS — forced 4-across, uniform 150px height ═══════ */}
+      <div className="apex-apps-section apps-hex">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <span style={{ fontSize: 19.26, fontWeight: 800, color: '#dfe6fe', letterSpacing: '-0.02em' }}>Integrated Apps</span>
@@ -547,17 +534,19 @@ export const DashboardOverview = memo(function DashboardOverview({
           </div>
           <span style={{ fontSize: 12.84, color: '#f97316', cursor: 'pointer', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Manage →</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+
+        {/* 4-across flex row — calc(25% - 12px) forces exactly 4 tiles per row */}
+        <div className="apex-apps-row">
           {APPS.map((app) => (
-            <motion.div 
-              key={app.name} 
+            <motion.div
+              key={app.name}
+              className="apex-app-tile"
               style={{
                 display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px',
                 borderRadius: 16, background: 'rgba(255,255,255,0.02)',
                 border: `1px solid rgba(255,255,255,0.05)`, cursor: 'grab',
                 boxShadow: `inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 15px rgba(0,0,0,0.4)`,
                 touchAction: 'none',
-                height: 92,
                 transition: 'all 0.3s ease-out',
                 position: 'relative'
               }}
@@ -614,13 +603,13 @@ export const DashboardOverview = memo(function DashboardOverview({
                     } : {})
                   }}>{app.status}</span>
                 </div>
-                <div style={{ fontSize: 11.770000000000001, color: '#a1a1aa', marginTop: 4, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{app.cat}</div>
-                {app.synced && <div style={{ fontSize: 11.235000000000001, color: '#71717a', marginTop: 2, fontFamily: 'Space Grotesk, sans-serif' }}>SYNC: {app.synced}</div>}
+                <div style={{ fontSize: 11.77, color: '#a1a1aa', marginTop: 4, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{app.cat}</div>
+                {app.synced && <div style={{ fontSize: 11.24, color: '#71717a', marginTop: 2, fontFamily: 'Space Grotesk, sans-serif' }}>SYNC: {app.synced}</div>}
               </div>
               {app.status === 'Partial' && (
                 <button type="button" style={{
                   position: 'absolute', bottom: 16, right: 16,
-                  fontSize: 10.700000000000001, fontWeight: 800, padding: '6px 14px', borderRadius: 8,
+                  fontSize: 10.70, fontWeight: 800, padding: '6px 14px', borderRadius: 8,
                   background: `rgba(249,115,22,0.1)`, border: `1px solid rgba(249,115,22,0.3)`,
                   color: '#f97316', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: '0.05em'
                 }}>Sync</button>
@@ -630,7 +619,6 @@ export const DashboardOverview = memo(function DashboardOverview({
         </div>
       </div>
 
-      {/* REMOVED: Original APEX Ecosystem — moved above IntegratedApps (Mutation 2) */}
     </div>
   );
 });
