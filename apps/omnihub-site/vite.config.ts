@@ -99,6 +99,10 @@ export default defineConfig({
   },
   // @ts-expect-error test is an extension provided by vitest
   test: {
+    include: [
+      'src/**/*.{test,spec}.?(c|m)[jt]s?(x)',
+      '../../tests/**/*.{test,spec}.?(c|m)[jt]s?(x)',
+    ],
     coverage: {
       reporter: ['text', 'lcov'],
       reportsDirectory: './coverage',
