@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { act } from 'react';
 import type { ReactNode } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
@@ -26,18 +27,18 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-describe.skip('DashboardOverview - OmniBoard Wiring', () => {
+describe('DashboardOverview - OmniBoard Wiring', () => {
   const mockNavigate = vi.fn();
   const setAppHealth = vi.fn();
   const setEcoAppsVisible = vi.fn();
 
   beforeEach(() => {
+    vi.clearAllMocks();
     useOmniModal.setState({
       activeModal: null,
       isOpen: false,
     });
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -57,7 +58,8 @@ describe.skip('DashboardOverview - OmniBoard Wiring', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getAllByText('Orchestrator')[0]);
+    // [0] is the context chip in AgentPane; [1] is the AppTile in the apps row
+    fireEvent.click(screen.getAllByText('Orchestrator')[1]);
 
     const modalState = useOmniModal.getState();
     expect(modalState.isOpen).toBe(true);
@@ -66,7 +68,7 @@ describe.skip('DashboardOverview - OmniBoard Wiring', () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('navigates to omniport when clicking a Live integration tile', () => {
+  it('navigates to fortress route when clicking a Live integration tile', () => {
     render(
       <MemoryRouter>
         <DashboardOverview
@@ -79,9 +81,10 @@ describe.skip('DashboardOverview - OmniBoard Wiring', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getAllByText('Fortress')[0]);
+    // [0] is the context chip in AgentPane; [1] is the AppTile in the apps row
+    fireEvent.click(screen.getAllByText('Fortress')[1]);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/omnidash/omniport');
+    expect(mockNavigate).toHaveBeenCalledWith('/omnidash/fortress');
     const modalState = useOmniModal.getState();
     expect(modalState.isOpen).toBe(false);
   });
@@ -131,9 +134,11 @@ describe.skip('DashboardOverview - OmniBoard Wiring', () => {
     expect(setAppHealth).toHaveBeenCalledWith('yellow');
     expect(screen.getByText('SIM_MODE_BYPASS: live Edge Functions skipped.')).toBeInTheDocument();
 
-    vi.advanceTimersByTime(2500);
+    act(() => {
+      vi.advanceTimersByTime(2500);
+    });
 
     expect(setAppHealth).toHaveBeenLastCalledWith('green');
-    expect(screen.getByText('SIM_MODE_SUCCESS_TRACE: deterministic sync resolved in 2500ms.')).toBeInTheDocument();
+    expect(screen.getByText('SIM_MODE_SUCCESS_TRACE: sync resolved in 2500ms.')).toBeInTheDocument();
   });
 });

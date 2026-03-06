@@ -19,6 +19,7 @@ import {
   useEffect,
 } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Blocks } from 'lucide-react';
 import { useOmniDashAction } from '@/hooks/useOmniDashAction';
 import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';

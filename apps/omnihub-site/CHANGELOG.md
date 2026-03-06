@@ -2,6 +2,39 @@
 
 All notable changes to the APEX OmniHub Marketing Site.
 
+## [1.9.0] - 2026-03-06
+
+### Added
+
+- **`src/stores/omniBoardStore.ts`** (root shared store) — Connector hydration state accessible across all OmniDash surface areas.
+- **`src/omnidash/useOmniDashAction.ts`** (root shared hook) — Universal interaction interceptor wiring OmniDash app triggers to the Universal Modal Engine.
+  - Deterministic `resolveIntentModalType()`: Partial → oauth, spatial appType → spatial, entryUrl → microfrontend, Live SPA → navigate.
+  - Zero-Config OAuth proxy via `supabase.functions.invoke('omnilink-agent')`.
+  - Sanitized payload → `OmniBoardStore` hydration on success.
+  - Router-context-independent: `navigate` is an optional injected parameter.
+
+### Changed
+
+- **`OmniDashLayout.tsx`** v6.0.0 → v6.1.0
+  - Connect AI header button now dispatches `OmniDashIntent({ appKey: 'omniport', dashboardStatus: 'Partial' })` via `useOmniDashAction`.
+  - Notifications bell uses non-reactive `useOmniModal.getState().invoke()` — layout no longer subscribes to modal state.
+  - Removed reactive `useOmniModal()` hook call from component body; modal store access is now dispatch-only.
+
+- **`DashboardOverview.tsx`** — App tile click handler migrated to `useOmniDashAction(navigate)` dispatch; `useNavigate` injected for SPA routing fallback.
+
+- **`Integrations.tsx`** (OmniBoard connector control plane) — OAuth flow dispatched via `useOmniDashAction`; live `useOmniBoard` subscription overlays store status on stale React Query cache; `CONNECTING` state renders spinner and disables action button.
+
+### Fixed
+
+- **Router context crash** — `useOmniDashAction` no longer calls `useNavigate()` internally; callers inject navigate when needed, preventing test failures in Router-less environments.
+- **ESLint zero-warning gate** — `omniBoardStore.ts` `evictConnector` no longer uses eslint-disable comment; replaced with `Object.fromEntries` filter pattern.
+
+### Quality Gates
+
+- TypeScript: 0 errors | ESLint: 0 warnings, 0 errors | Build: passing
+
+---
+
 ## [1.8.0] - 2026-03-01
 
 ### Changed — USO Canon Hero Copy Migration

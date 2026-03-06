@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import VoiceInterface from '@/components/VoiceInterface';
 
@@ -67,23 +67,40 @@ describe('VoiceInterface backoff', () => {
     };
   });
 
-  it.skip('enters degraded mode after retry exhaustion', async () => {
+  it('enters degraded mode after retry exhaustion', async () => {
     render(<VoiceInterface />);
 
     const startButton = screen.getByText(/Start Voice Chat/i);
     fireEvent.click(startButton);
 
+    // startConversation is async (awaits getUserMedia); flush microtask queue
+    // so the initial WebSocket constructor runs before we inspect instances
+    await Promise.resolve();
+    await Promise.resolve();
+
     expect(MockWebSocket.instances.length).toBeGreaterThan(0);
 
-    for (let i = 0; i < 3; i++) {
-      const socket = MockWebSocket.instances[i];
-      socket.triggerError();
-      await vi.runOnlyPendingTimersAsync();
+    // VITE_VOICE_MAX_RETRIES defaults to 3; trigger 2 errors that schedule
+    // reconnect timeouts (attempts 1 and 2), then a 3rd that hits the >= limit
+    // and calls handleDegraded() directly with no further timeout scheduled.
+    for (let i = 0; i < 2; i++) {
+      MockWebSocket.instances[i].triggerError();
+      // Advance time past the backoff window (BASE=500, MAX=10000, JITTER=250)
+      // so the reconnect setTimeout fires and a new WebSocket is created
+      vi.advanceTimersByTime(11_000);
+      // flush the connectVoice async chain (no getUserMedia on reconnect)
+      await Promise.resolve();
     }
 
-    await waitFor(() =>
-      expect(screen.getByText(/Voice connection degraded/i)).toBeInTheDocument()
-    );
+    // Third error: reconnectAttemptsRef = 2 → nextAttempt = 3 >= MAX_RETRIES(3)
+    // → handleDegraded() called synchronously, no new timeout queued
+    MockWebSocket.instances[2].triggerError();
+
+    // Flush React state updates triggered by handleDegraded (setDegradedMode etc.)
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(screen.getByText(/Voice connection degraded/i)).toBeInTheDocument();
   });
 });
 
