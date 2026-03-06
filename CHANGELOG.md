@@ -5,6 +5,42 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-03-06
+
+### Added
+
+- **`src/stores/omniBoardStore.ts`** — New Zustand global store for connector hydration state.
+  - `OmniBoardConnectorRecord` with `id`, `provider`, `appKey`, `status`, `proxyTokenExpiry`, `syncedAt`, `metadata`.
+  - `OmniBoardConnectorStatus`: `'LIVE' | 'CONNECTING' | 'NEEDS_AUTH' | 'ERROR'`.
+  - Actions: `hydrateConnector` (atomic upsert), `setConnectorStatus` (no-op guard for unknown keys), `evictConnector` (explicit cleanup on sign-out/disconnection).
+  - Written exclusively by `useOmniDashAction` after OAuth proxy exchange or spatial app launch.
+
+- **`src/omnidash/useOmniDashAction.ts`** — Universal OmniDash Interaction Interceptor hook.
+  - Accepts `OmniDashIntent` (appKey, provider, label, category, routePath, dashboardStatus, contextData).
+  - Pure `resolveIntentModalType()` function deterministically maps intent to modal directive.
+  - Priority rules: (1) Partial → oauth, (2) spatial appType → spatial renderMode, (3) entryUrl → microfrontend, (4) Live SPA → router navigate.
+  - Zero-Config OAuth: delegates proxy exchange to `supabase.functions.invoke('omnilink-agent')` — no credentials client-side.
+  - Sanitizes backend payloads via `SECRET_KEY_PATTERN` regex before OmniBoard hydration.
+  - `onCancel` cleanly absorbs ABORTED state to `NEEDS_AUTH` — never throws unhandled rejections.
+  - `navigate` injected as optional parameter to maintain Router-context independence in non-routing callers.
+
+### Changed
+
+- **`apps/omnihub-site/src/pages/DashboardOverview.tsx`** — Migrated app-click handler from inline `useOmniModal.invoke()` calls to `useOmniDashAction(navigate)` dispatch pattern.
+- **`apps/omnihub-site/src/layouts/OmniDashLayout.tsx`** — Migrated Connect AI button from inline oauth invocation to `dispatch(OmniDashIntent)`. Notifications bell migrated to non-reactive `useOmniModal.getState().invoke()` pattern.
+- **`apps/omnihub-site/src/components/omnidash/Integrations.tsx`** — Replaced inline `omniModal.invoke()` OAuth calls with `useOmniDashAction` dispatch; added `useOmniBoard` subscription to merge live connector status over stale React Query cache; added `Loader2` spinner for `CONNECTING` state.
+
+### Fixed
+
+- **CI: `useNavigate()` Router context crash** — Removed `useNavigate()` from `useOmniDashAction` hook body; `navigate` is now an optional parameter injected by callers that need routing. `Integrations.tsx` (which only dispatches oauth modals) omits the parameter entirely, eliminating the React Router context requirement in tests without a Router wrapper.
+- **CI: ESLint zero-warning gate** — Replaced destructure pattern with eslint-disable comment in `omniBoardStore.ts` `evictConnector` with a clean `Object.fromEntries(...).filter()` implementation; ESLint warning count restored to 0.
+
+### Quality Gates
+
+- TypeScript: 0 errors | ESLint: 0 warnings, 0 errors | Vitest: all suites pass
+
+---
+
 ## [1.3.9] - 2026-03-03
 
 ### Added

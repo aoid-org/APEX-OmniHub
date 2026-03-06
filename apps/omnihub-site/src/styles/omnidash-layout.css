@@ -1,31 +1,38 @@
-/* OmniDash Layout — Glassmorphism + Hex Grid Shell
+/* OmniDash Layout — Glassmorphism Shell + APEX Canvas (DnD-Ready)
  * Font: Space Grotesk (canonical across all UI copy)
  * Accent: Burnt orange (#c2501f / #f97316) + Navy blue (#0a0e1a)
+ *
+ * ARCHITECTURE CONTRACT:
+ *   - NO display:grid anywhere in dashboard layout classes
+ *   - Flexbox + calc() widths only (deterministic DnD bounding boxes)
+ *   - Hero gaps: 24px  |  Apps row gaps: 16px
  */
 
 
-/* ===== Grid Shell ===== */
+/* ===== Shell (sidebar + main area) ===== */
 :root {
   --bg-primary: #0f304b;
 }
 
 .omnidash-shell {
-  display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  display: flex;
+  flex-direction: row;
   background: var(--bg-primary);
   min-height: 100dvh;
   height: 100dvh;
   overscroll-behavior: none;
   color: #e0e7ff;
-  overflow: hidden; /* Global overflow hidden to prevent body scroll */
+  overflow: hidden;
   font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 /* ===== Left Sidebar ===== */
 .od-sidebar {
-  background: #09090b; /* Slightly elevated from canvas */
-  border-right: 1px solid rgba(255, 255, 255, 0.05); /* Hair-thin border */
+  width: 260px;
+  flex-shrink: 0;
+  background: #09090b;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -48,7 +55,7 @@
 }
 
 .od-sidebar-logo span {
-  font-size: 18.725px; /* 16px * 1.05 = 16.8 -> 17.5 for pop */
+  font-size: 18.725px;
   font-weight: 800;
   letter-spacing: 0.05em;
   background: linear-gradient(135deg, #f97316, #c2501f);
@@ -67,9 +74,9 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  font-size: 15.729000000000001px; /* 14px * 1.05 */
+  font-size: 15.729px;
   font-weight: 600;
-  color: #e0e7ff; /* Higher contrast for SonarQube compliance */
+  color: #e0e7ff;
   cursor: pointer;
   border-radius: 12px;
   transition: all 0.15s;
@@ -83,14 +90,12 @@
 }
 
 .od-nav-item.active {
-  color: #ffffff; /* Max contrast */
+  color: #ffffff;
   background: rgba(194, 80, 31, 0.18);
   border: 1px solid rgba(194, 80, 31, 0.3);
   box-shadow: 0 0 16px rgba(194, 80, 31, 0.12),
     inset 0 0 12px rgba(194, 80, 31, 0.06);
 }
-
-
 
 .omnidash-shell button,
 .omnidash-shell a,
@@ -105,6 +110,7 @@
   border-radius: 5px;
   flex-shrink: 0;
   object-fit: contain;
+  min-width: 24px;
 }
 
 .od-nav-item svg {
@@ -116,8 +122,8 @@
 .od-sidebar-footer {
   padding: 16px 20px;
   border-top: 1px solid rgba(194, 80, 31, 0.1);
-  font-size: 12.305000000000001px; /* 11px * 1.05 */
-  color: #94a3b8; /* Increased contrast from #64748b */
+  font-size: 12.305px;
+  color: #94a3b8;
   line-height: 1.5;
 }
 
@@ -143,7 +149,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .od-content {
@@ -169,7 +176,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 18.725px; /* 16px * 1.05 */
+  font-size: 18.725px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -184,11 +191,10 @@
   height: 38px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  --text-color: #ffffff;
-  color: var(--text-color);
+  background: rgba(30, 41, 59, 0.9);
+  color: #ffffff;
   padding: 0 14px 0 38px;
-  font-size: 15.729000000000001px; /* 14px * 1.05 */
+  font-size: 15.729px;
   font-family: inherit;
   outline: none;
   transition: border-color 0.15s;
@@ -224,12 +230,11 @@
   padding: 0 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(30, 41, 59, 0.9);
   font-size: 13.91px;
   font-family: "Space Grotesk", sans-serif;
   font-weight: 500;
-  --text-color: #e2e8f0;
-  color: var(--text-color);
+  color: #e2e8f0;
   white-space: nowrap;
 }
 
@@ -239,10 +244,9 @@
   gap: 4px;
   padding: 5px 12px;
   border-radius: 10px;
-  font-size: 13.482000000000001px; /* 12px * 1.05 */
-  --text-color: #86efac;
-  color: var(--text-color);
-  background: rgba(52, 211, 153, 0.25);
+  font-size: 13.482px;
+  color: #86efac;
+  background: rgba(4, 60, 45, 0.85);
   border: 1px solid rgba(52, 211, 153, 0.4);
 }
 
@@ -250,10 +254,10 @@
   height: 34px;
   padding: 0 16px;
   border-radius: 17px;
-  background: linear-gradient(135deg, #f97316, #c2501f);
-  --text-color: #ffffff;
-  color: var(--text-color);
-  font-size: 14.552px; /* 13px * 1.05 */
+  background-color: #c2501f;
+  background-image: linear-gradient(135deg, #f97316, #c2501f);
+  color: #ffffff;
+  font-size: 14.552px;
   font-weight: 600;
   font-family: inherit;
   border: none;
@@ -280,11 +284,11 @@
   justify-content: center;
   font-size: 13.91px;
   font-weight: 600;
-  color: #f1f5f9; /* Increased contrast from #94a3b8 */
+  color: #f1f5f9;
   cursor: pointer;
 }
 
-/* ===== Glassmorphism Card (Antigravity Engine) ===== */
+/* ===== Glassmorphism Card ===== */
 .glass {
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(48px);
@@ -317,7 +321,7 @@
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  padding: 16px; /* Tighter padding for cockpit feel */
+  padding: 16px;
 }
 
 /* ===== Outcome Cube ===== */
@@ -338,7 +342,7 @@
   transform: translateY(-2px) scale(1.02);
 }
 
-/* ===== Apps Hex ===== */
+/* ===== Apps Section Container ===== */
 .apps-hex {
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(48px);
@@ -360,7 +364,7 @@
   padding: 20px 24px;
 }
 
-/* ===== Ecosystem Hex ===== */
+/* ===== Ecosystem tile list (inner flex, no grid) ===== */
 .eco-hex {
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(48px);
@@ -380,8 +384,8 @@
     0% 3%
   );
   padding: 20px 24px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
 }
 
@@ -397,6 +401,7 @@
   gap: 8px;
   transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
   position: relative;
+  width: calc(33.333% - 11px); /* 3-across with 16px gaps */
 }
 
 .eco-cube:hover {
@@ -419,7 +424,7 @@
 
 /* ===== Right Sidebar Cards ===== */
 .od-card-title {
-  font-size: 14.98px; /* 13px * 1.05 = 13.65 -> 14 */
+  font-size: 14.98px;
   font-weight: 800;
   color: #94a3b8;
   opacity: 0.8;
@@ -475,7 +480,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 0;
-  font-size: 13.482000000000001px; /* 12px * 1.05 */
+  font-size: 13.482px;
   color: #cbd5e1;
 }
 
@@ -486,9 +491,10 @@
   flex-shrink: 0;
 }
 
+/* Metric pair — Flexbox, not grid */
 .od-metric-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -498,6 +504,7 @@
   border: 1px solid rgba(194, 80, 31, 0.1);
   padding: 10px;
   text-align: center;
+  width: calc(50% - 4px); /* 2-across with 8px gap */
 }
 
 .od-metric-value {
@@ -507,7 +514,7 @@
 }
 
 .od-metric-label {
-  font-size: 12.305000000000001px; /* 11px * 1.05 */
+  font-size: 12.305px;
   color: #94a3b8;
 }
 
@@ -540,11 +547,10 @@
   gap: 4px;
   padding: 3px 10px;
   border-radius: 10px;
-  font-size: 12.305000000000001px; /* 11px * 1.05 */
+  font-size: 12.305px;
   font-weight: 700;
-  background: rgba(52, 211, 153, 0.12);
-  --text-color: #bbf7d0;
-  color: var(--text-color);
+  background: rgba(4, 60, 45, 0.85);
+  color: #bbf7d0;
   border: 1px solid rgba(52, 211, 153, 0.3);
 }
 
@@ -614,12 +620,8 @@
 }
 
 @keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 /* ===== Slate Tile ===== */
@@ -631,10 +633,111 @@
   border: 1px solid;
 }
 
+/* ═══════════════════════════════════════════════════════
+   APEX CANVAS — DnD-Ready Flexbox Architecture
+   Constraint: ZERO display:grid. Flexbox + calc() only.
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Tile noise texture overlay (eliminates inline SVG data URI from TSX) ── */
+.apex-noise-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E");
+}
+
+/* Outer canvas wrapper — fluid drop-zone column */
+.apex-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+/* ── Hero Row: 3 tiles in one flex row, 24px gaps ── */
+.apex-hero-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 24px;
+  width: 100%;
+  margin-top: 24px;
+  position: relative;
+  z-index: 10;
+}
+
+/*
+ * Small tile: 25% of row width
+ * Formula: (100% - 2 × 24px gaps) × 0.25 = 25% - 12px
+ *
+ * DnD Phase 2: flex-shrink:0 + min-width guard prevents ghost collapse.
+ */
+.apex-hero-tile--sm {
+  width: calc(25% - 12px);
+  min-width: calc(25% - 12px);
+  flex-shrink: 0;
+  will-change: transform;
+}
+
+/*
+ * Large tile: 50% of row width
+ * Formula: (100% - 2 × 24px gaps) × 0.50 = 50% - 24px
+ */
+.apex-hero-tile--lg {
+  width: calc(50% - 24px);
+  min-width: calc(50% - 24px);
+  flex-shrink: 0;
+  will-change: transform;
+}
+
+/* ── Apps Section Wrapper ── */
+.apex-apps-section {
+  /* inherits .apps-hex glassmorphism; no extra layout needed */
+}
+
+/* ── Apps Row: exactly 4 tiles across, 16px gaps ── */
+.apex-apps-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+}
+
+/*
+ * App tile: forced 4-across at all desktop/tablet widths ≥ 768px.
+ * Formula: (100% - 3 × 16px gaps) × 0.25 = 25% - 12px
+ *
+ * DnD Phase 2 contract:
+ *   - flex-shrink: 0  → tile never compresses inside flex container
+ *   - min-width: same as width → ghost overlay can't collapse
+ *   - will-change: transform → GPU-composited drag layer, no reflow
+ *   - box-sizing: border-box → padding absorbed inside the calc() width
+ */
+.apex-app-tile {
+  width: calc(25% - 12px);
+  min-width: calc(25% - 12px);
+  height: 150px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  will-change: transform;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+
 /* ===== Responsive — Tablet (≤1200px) ===== */
+/*
+ * Phase 1 DnD contract:
+ *   App tiles HOLD 4-across at 1024px–1200px viewport widths.
+ *   At 1024px with 220px sidebar, content area = 804px.
+ *   calc(25% - 12px) of 804px = 189px × 4 + 48px gaps = 804px ✓
+ *   No app-tile width change at this breakpoint.
+ */
 @media (max-width: 1200px) {
-  .omnidash-shell {
-    grid-template-columns: 220px minmax(0, 1fr);
+  .od-sidebar {
+    width: 220px;
   }
   .od-org-badge,
   .od-sentry-badge {
@@ -644,14 +747,21 @@
     width: 120px;
     height: 120px;
   }
+  /* Hero tiles reflow: sm tiles wrap below lg */
+  .apex-hero-tile--sm {
+    width: calc(50% - 12px);
+  }
+  .apex-hero-tile--lg {
+    width: 100%;
+    order: -1;
+  }
+  /* App tiles: intentionally NOT changed — 4-across holds to 1024px */
 }
 
 /* ===== Responsive — Small Tablet (≤960px) ===== */
 @media (max-width: 960px) {
   .omnidash-shell {
-    display: flex;
     flex-direction: column;
-    grid-template-columns: 1fr;
     min-height: 100dvh;
     height: 100dvh;
     overscroll-behavior: none;
@@ -682,6 +792,27 @@
   }
   .apps-hex {
     padding: 16px !important;
+  }
+  .apex-hero-row {
+    flex-wrap: wrap;
+  }
+  .apex-hero-tile--sm,
+  .apex-hero-tile--lg {
+    width: 100%;
+  }
+}
+
+/* ===== Responsive — Compact Tablet (≤768px) ===== */
+/*
+ * Phase 3 DnD contract:
+ *   Below 768px sidebar is hidden; content = full viewport.
+ *   2-across with calc(50% - 8px) per tile.
+ *   gap: 16px is preserved — DnD library must NOT override it.
+ */
+@media (max-width: 768px) {
+  .apex-app-tile {
+    width: calc(50% - 8px);
+    min-width: calc(50% - 8px);
   }
 }
 
@@ -737,6 +868,11 @@
     font-size: 10px;
     padding: 2px 8px;
   }
+  /* Apps: 1-across on mobile — min-width must match for drag stability */
+  .apex-app-tile {
+    width: 100%;
+    min-width: 100%;
+  }
 }
 
 /* ===== Universal SPA Modal Overlay ===== */
@@ -788,7 +924,7 @@
   border-radius: 50%;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(194, 80, 31, 0.2);
-  color: #cbd5e1; /* Increased contrast from #94a3b8 */
+  color: #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -798,10 +934,9 @@
 }
 
 .od-modal-close:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(127, 29, 29, 0.8);
   border-color: rgba(239, 68, 68, 0.3);
-  --text-color: #ffffff;
-  color: var(--text-color);
+  color: #ffffff;
 }
 
 .center-content-blur {
@@ -821,13 +956,24 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(194, 80, 31, 0.5); /* APEX Orange, muted */
+  background: rgba(194, 80, 31, 0.5);
   border-radius: 4px;
   border: 1px solid rgba(10, 14, 26, 0.5);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(249, 115, 22, 0.8); /* Brighter orange on hover */
+  background: rgba(249, 115, 22, 0.8);
+}
+
+
+/* OmniPortal Z-Index Root */
+#omni-portal-root {
+  position: absolute;
+  z-index: 9999;
+  pointer-events: none;
+}
+#omni-portal-root > * {
+  pointer-events: auto;
 }
 
 
