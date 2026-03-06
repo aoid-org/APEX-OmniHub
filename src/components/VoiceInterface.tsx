@@ -15,7 +15,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
   const { toast } = useToast();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const [_reconnectAttempts, setReconnectAttempts] = useState(0);
   const [degradedMode, setDegradedMode] = useState(false);
   const [degradedReason, setDegradedReason] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -24,6 +24,8 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const networkCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userEndedRef = useRef(false);
+  // Ref mirror so closures always read the current retry count without stale captures
+  const reconnectAttemptsRef = useRef(0);
 
   const MAX_RETRIES = Number(import.meta.env.VITE_VOICE_MAX_RETRIES ?? 3);
   const BASE_RETRY_MS = Number(import.meta.env.VITE_VOICE_RETRY_BASE_MS ?? 500);
@@ -52,6 +54,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
         // Network recovered, attempt reconnection
         logAnalyticsEvent('voice.ws.network_recovered', {});
         setDegradedMode(false);
+        reconnectAttemptsRef.current = 0;
         setReconnectAttempts(0);
         startConversation();
       }
@@ -82,6 +85,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
     userEndedRef.current = false;
     setDegradedMode(false);
     setDegradedReason(null);
+    reconnectAttemptsRef.current = 0;
     setReconnectAttempts(0);
     setIsConnecting(true);
     cleanupTimers();
@@ -90,17 +94,20 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
 
   const scheduleReconnect = (reason: string) => {
     if (userEndedRef.current) return;
-    if (reconnectAttempts >= MAX_RETRIES) {
+    // Increment first via ref (avoids stale closure on state), then gate on MAX_RETRIES
+    const nextAttempt = reconnectAttemptsRef.current + 1;
+    reconnectAttemptsRef.current = nextAttempt;
+    setReconnectAttempts(nextAttempt);
+    if (nextAttempt >= MAX_RETRIES) {
+      // Exhausted all retries — enter degraded mode
       handleDegraded(reason);
       return;
     }
-    const nextAttempt = reconnectAttempts + 1;
     const delay = calculateBackoffDelay(nextAttempt, {
       baseMs: BASE_RETRY_MS,
       maxMs: MAX_RETRY_MS,
       jitterMs: JITTER_MS,
     });
-    setReconnectAttempts(nextAttempt);
     setIsConnecting(true);
     reconnectTimeoutRef.current = setTimeout(() => {
       connectVoice(true);
