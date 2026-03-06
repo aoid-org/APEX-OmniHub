@@ -102,6 +102,17 @@ function HealthIcon({ status }: Readonly<{ status: HealthStatus }>) {
   return <ShieldAlert className="h-3.5 w-3.5 text-slate-500" />;
 }
 
+/** Maps OmniBoard connector status → ConnectorViewModel status. */
+const BOARD_STATUS_MAP: Readonly<Record<string, ConnectorStatus>> = {
+  LIVE: 'LIVE',
+  CONNECTING: 'PARTIAL',
+  NEEDS_AUTH: 'NEEDS_AUTH',
+};
+
+function resolveConnectorButtonLabel(status: ConnectorStatus): string {
+  return status === 'NEEDS_AUTH' ? 'Connect Account' : 'Resolve Connection';
+}
+
 export const Integrations = () => {
   const { user } = useAuth();
   const omniMedia = useOmniMedia();
@@ -159,15 +170,8 @@ export const Integrations = () => {
     return dbModels.map((c) => {
       const boardRecord = boardConnectors[c.appSlug];
       if (!boardRecord) return c;
-      const boardStatus =
-        boardRecord.status === 'LIVE'
-          ? 'LIVE'
-          : boardRecord.status === 'CONNECTING'
-            ? 'PARTIAL'
-            : boardRecord.status === 'NEEDS_AUTH'
-              ? 'NEEDS_AUTH'
-              : 'ERROR';
-      return { ...c, status: boardStatus as ConnectorStatus };
+      const boardStatus: ConnectorStatus = BOARD_STATUS_MAP[boardRecord.status] ?? 'ERROR';
+      return { ...c, status: boardStatus };
     });
   }, [integrationsQuery.data, keysQuery.data, eventsQuery.data, boardConnectors]);
 
@@ -338,11 +342,7 @@ export const Integrations = () => {
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Connecting…
                       </>
-                    ) : connector.status === 'NEEDS_AUTH' ? (
-                      'Connect Account'
-                    ) : (
-                      'Resolve Connection'
-                    )}
+                    ) : resolveConnectorButtonLabel(connector.status)}
                   </Button>
                 )}
               </CardContent>
