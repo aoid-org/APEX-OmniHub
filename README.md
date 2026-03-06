@@ -33,7 +33,7 @@
 
 ## Overview
 
-APEX OmniHub is the first **Universal Sync Orchestrator** for **governed execution** across ALL modern stacks, AI apps, legacy enterprise systems, and Web3 infrastructure. Think "Anti-OS, it is the USO": one place to connect fragmented systems, translate universally, enforce policy, and produce an audit trail you can defend.
+APEX OmniHub is the first **Universal Sync Orchestrator** for **governed execution** across ALL modern stacks, AI apps, legacy enterprise systems, and Web3 infrastructure. Think "Anti-OS", it is a "USO": one place to connect fragmented systems, translate universally, enforce policy, and produce an audit trail you can defend.
 
 The platform relies on a "Holy Trinity" architecture:
 
