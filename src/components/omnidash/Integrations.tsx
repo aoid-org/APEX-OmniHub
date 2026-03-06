@@ -1,12 +1,16 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, CheckCircle2, Clock3, Plug, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock3, Plug, ShieldAlert, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { useOmniModal } from '@/stores/omniModalStore';
 import { useOmniMedia } from '@/stores/omniMediaStore';
+import { useOmniBoard } from '@/stores/omniBoardStore';
+import {
+  useOmniDashAction,
+  type OmniDashIntent,
+} from '@/omnidash/useOmniDashAction';
 import {
   fetchOmniLinkEvents,
   fetchOmniLinkIntegrations,
@@ -100,32 +104,20 @@ function HealthIcon({ status }: Readonly<{ status: HealthStatus }>) {
 
 export const Integrations = () => {
   const { user } = useAuth();
-  const omniModal = useOmniModal();
   const omniMedia = useOmniMedia();
+  const { dispatch } = useOmniDashAction();
+  const boardConnectors = useOmniBoard((s) => s.connectors);
 
   const handleTestModal = () => {
-    // APEX Standard Invocation Pattern — try/catch absorbs user dismissals
-    try {
-      omniModal.invoke({
-        id: 'demo-qb-auth',
-        provider: 'QuickBooks',
-        type: 'oauth',
-        title: 'QuickBooks Data Sync',
-        description: 'Connect APEX OmniHub to QuickBooks to sync ledger data.',
-        onComplete: async (payload) => {
-          console.warn('QuickBooks integration complete:', payload);
-        },
-        onCancel: () => {
-          console.warn('APEX OmniModal: User dismissed the QuickBooks flow.');
-        },
-      });
-    } catch (error: unknown) {
-      const abortError = error as { status?: string } | undefined;
-      if (abortError?.status === 'ABORTED') {
-        return; // Absorb gracefully — no console noise
-      }
-      console.error('APEX OmniModal: Critical failure', error);
-    }
+    const intent: OmniDashIntent = {
+      appKey: 'quickbooks',
+      provider: 'QuickBooks',
+      label: 'QuickBooks',
+      category: 'operations',
+      routePath: '/omnidash/integrations/quickbooks',
+      dashboardStatus: 'Partial',
+    };
+    dispatch(intent);
   };
 
   const handleTestMedia = () => {
@@ -156,14 +148,28 @@ export const Integrations = () => {
     queryFn: () => fetchOmniLinkEvents(user!.id),
   });
 
-  const connectors = useMemo(
-    () => mapConnectorModels(
+  const connectors = useMemo(() => {
+    const dbModels = mapConnectorModels(
       integrationsQuery.data ?? [],
       keysQuery.data ?? [],
       eventsQuery.data ?? [],
-    ),
-    [integrationsQuery.data, keysQuery.data, eventsQuery.data],
-  );
+    );
+    // Merge OmniBoard store state — store wins over stale DB cache for
+    // immediate post-auth reflection without waiting for React Query refetch.
+    return dbModels.map((c) => {
+      const boardRecord = boardConnectors[c.appSlug];
+      if (!boardRecord) return c;
+      const boardStatus =
+        boardRecord.status === 'LIVE'
+          ? 'LIVE'
+          : boardRecord.status === 'CONNECTING'
+            ? 'PARTIAL'
+            : boardRecord.status === 'NEEDS_AUTH'
+              ? 'NEEDS_AUTH'
+              : 'ERROR';
+      return { ...c, status: boardStatus as ConnectorStatus };
+    });
+  }, [integrationsQuery.data, keysQuery.data, eventsQuery.data, boardConnectors]);
 
   const isLoading = integrationsQuery.isLoading || keysQuery.isLoading || eventsQuery.isLoading;
 
@@ -304,28 +310,39 @@ export const Integrations = () => {
                 </div>
                 
                 {connector.status !== 'LIVE' && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 transition-all duration-300"
                     style={{ transitionTimingFunction: 'var(--apex-ease-out-expo)' }}
+                    disabled={boardConnectors[connector.appSlug]?.status === 'CONNECTING'}
                     onClick={(e) => {
                       e.stopPropagation();
-                      omniModal.invoke({
-                        id: `auth-${connector.id}`,
+                      const intent: OmniDashIntent = {
+                        appKey: connector.appSlug,
                         provider: connector.displayName,
-                        type: 'oauth',
-                        title: `${connector.displayName} Authentication`,
-                        description: `Connect APEX OmniHub to ${connector.displayName} to sync ${connector.appSlug} data.`,
-                        onComplete: async (payload) => {
-                          console.warn(`${connector.displayName} integration complete:`, payload);
+                        label: connector.displayName,
+                        category: 'platform',
+                        routePath: `/omnidash/integrations/${connector.id}`,
+                        dashboardStatus: 'Partial',
+                        contextData: {
+                          connectorId: connector.id,
+                          healthStatus: connector.healthStatus,
+                          lastSyncAt: connector.lastSyncAt,
                         },
-                        onCancel: () => {
-                          console.warn(`User dismissed the ${connector.displayName} flow.`);
-                        },
-                      });
+                      };
+                      dispatch(intent);
                     }}
                   >
-                    {connector.status === 'NEEDS_AUTH' ? 'Connect Account' : 'Resolve Connection'}
+                    {boardConnectors[connector.appSlug]?.status === 'CONNECTING' ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Connecting…
+                      </>
+                    ) : connector.status === 'NEEDS_AUTH' ? (
+                      'Connect Account'
+                    ) : (
+                      'Resolve Connection'
+                    )}
                   </Button>
                 )}
               </CardContent>
