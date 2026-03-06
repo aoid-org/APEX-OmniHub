@@ -7,7 +7,7 @@
  * Lucide kept only for header utility icons (Search, Bell, Shield, ChevronDown)
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, type MouseEvent } from 'react';
 import { Outlet, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Search, Bell, Shield, ChevronDown, Sun, Moon, X } from 'lucide-react';
@@ -158,12 +158,12 @@ export function OmniDashLayout() {
               Zero Trust Active
             </div>
 
-            <button type="button" onClick={(e) => {
+            <button type="button" onClick={(e: MouseEvent) => {
               e.stopPropagation();
               handleOAuthConnect('APEX OmniPort', 'platform');
             }} className="od-connect-ai">Connect AI</button>
 
-            <button type="button" className="od-avatar" aria-label="Notifications" onClick={(e) => {
+            <button type="button" className="od-avatar" aria-label="Notifications" onClick={(e: MouseEvent) => {
               e.stopPropagation();
               handleUtilityModal({
                 id: 'notifications',

@@ -94,12 +94,12 @@ interface OmniBoardState {
   clearActiveApp: () => void;
 }
 
-export const useOmniBoard = create<OmniBoardState>((set, get) => ({
+export const useOmniBoard = create<OmniBoardState>((set: (partial: Partial<OmniBoardState> | ((state: OmniBoardState) => Partial<OmniBoardState>)) => void, get: () => OmniBoardState) => ({
   integrations: new Map(),
   activeApp: null,
   isTransitioning: false,
 
-  hydrateIntegration: (payload) => {
+  hydrateIntegration: (payload: { provider: string; data?: Record<string, unknown>; scopes?: string[] }) => {
     const result = HydrationPayloadSchema.safeParse(payload);
     if (!result.success) {
       console.error('[OmniBoard] Invalid hydration payload rejected:', result.error.issues);
@@ -120,22 +120,22 @@ export const useOmniBoard = create<OmniBoardState>((set, get) => ({
       return;
     }
 
-    set((state) => {
+    set((state: OmniBoardState) => {
       const next = new Map(state.integrations);
       next.set(payload.provider, integration);
       return { integrations: next };
     });
   },
 
-  removeIntegration: (provider) => {
-    set((state) => {
+  removeIntegration: (provider: string) => {
+    set((state: OmniBoardState) => {
       const next = new Map(state.integrations);
       next.delete(provider);
       return { integrations: next };
     });
   },
 
-  mountActiveApp: (config) => {
+  mountActiveApp: (config: { id: string; provider: string; renderState: SpatialRenderState; payload: Record<string, unknown> }) => {
     const app: ActiveApp = {
       ...config,
       mountedAt: Date.now(),
@@ -164,7 +164,7 @@ export const useOmniBoard = create<OmniBoardState>((set, get) => ({
     }, 400);
   },
 
-  transitionRenderState: (renderState) => {
+  transitionRenderState: (renderState: SpatialRenderState) => {
     const current = get().activeApp;
     if (!current) return;
 

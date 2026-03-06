@@ -17,6 +17,8 @@ import {
   useCallback,
   useRef,
   useEffect,
+  type ChangeEvent,
+  type FocusEvent,
 } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Blocks } from 'lucide-react';
@@ -714,14 +716,14 @@ const OmniSlatePane = memo(function OmniSlatePane({
           <input
             type="text"
             value={prompt}
-            onChange={e => onPromptChange(e.target.value)}
-            onFocus={e => {
+            onChange={(e: ChangeEvent<HTMLInputElement>) => onPromptChange(e.target.value)}
+            onFocus={(e: FocusEvent<HTMLInputElement>) => {
               e.currentTarget.style.borderColor =
                 'rgba(255,255,255,0.25)';
               e.currentTarget.style.background =
                 'rgba(255,255,255,0.05)';
             }}
-            onBlur={e => {
+            onBlur={(e: FocusEvent<HTMLInputElement>) => {
               e.currentTarget.style.borderColor =
                 'rgba(255,255,255,0.1)';
               e.currentTarget.style.background =
@@ -1110,7 +1112,7 @@ export const DashboardOverview = memo(function DashboardOverview({
         mediaRef.current.stop();
       }
       if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach(t => t.stop());
+        mediaStreamRef.current.getTracks().forEach((t: MediaStreamTrack) => t.stop());
         mediaStreamRef.current = null;
       }
     };
@@ -1126,7 +1128,7 @@ export const DashboardOverview = memo(function DashboardOverview({
   const agentStatus = isRecording ? 'standby' : 'listening';
 
   const addTraceLog = useCallback((message: string) => {
-    setTraceLogs(prev => [message, ...prev].slice(0, 4));
+    setTraceLogs((prev: readonly string[]) => [message, ...prev].slice(0, 4));
   }, []);
 
   const handleCleanSlate = useCallback(() => {
@@ -1135,11 +1137,11 @@ export const DashboardOverview = memo(function DashboardOverview({
   }, []);
 
   const handleToggleInsight = useCallback((name: string) => {
-    setActiveInsight(prev => (prev === name ? null : name));
+    setActiveInsight((prev: string | null) => (prev === name ? null : name));
   }, []);
 
   const handleToggleGlobalInsight = useCallback(() => {
-    setActiveInsight(prev => (prev ? null : '__global__'));
+    setActiveInsight((prev: string | null) => (prev ? null : '__global__'));
   }, []);
 
   const handleCommandSubmit = useCallback(() => {
@@ -1165,7 +1167,7 @@ export const DashboardOverview = memo(function DashboardOverview({
       mediaRef.current.stop();
     }
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(t => t.stop());
+      mediaStreamRef.current.getTracks().forEach((t: MediaStreamTrack) => t.stop());
       mediaStreamRef.current = null;
     }
     if (timerRef.current) {
@@ -1194,7 +1196,7 @@ export const DashboardOverview = memo(function DashboardOverview({
       setIsRecording(true);
       setRecordingDuration(0);
       timerRef.current = setInterval(() => {
-        setRecordingDuration(d => d + 1);
+        setRecordingDuration((d: number) => d + 1);
       }, 1000);
     } catch {
       addTraceLog(
