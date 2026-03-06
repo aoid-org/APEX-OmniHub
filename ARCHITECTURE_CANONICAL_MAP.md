@@ -93,6 +93,44 @@ Also initializes platform services:
 - `/omnidash/approvals`
 - `/omnidash/workflows`
 
+## 3.4 OmniDash Universal Modal Engine (v1.0.0 — 2026-03-06)
+
+The APEX Universal Modal Engine provides a single, idempotent interaction surface for all OmniDash app triggers, connector auth flows, spatial app launches, and microfrontend integrations.
+
+### State Layer
+
+| Module | Path | Role |
+|---|---|---|
+| `omniModalStore` | `src/stores/omniModalStore.ts` | Global modal lifecycle (Zustand + Zod validation) |
+| `omniBoardStore` | `src/stores/omniBoardStore.ts` | Connector hydration state post-auth (Zustand) |
+
+### Interaction Layer
+
+| Module | Path | Role |
+|---|---|---|
+| `useOmniDashAction` | `src/omnidash/useOmniDashAction.ts` | Universal intent dispatcher — formats user action → `OmniModalConfig` |
+| `OmniSpatialHost` | `apps/omnihub-site/src/components/omnidash/OmniSpatialHost.tsx` | Polymorphic renderer (dialog / spatial / sandbox) |
+| `OmniAppShell` | `apps/omnihub-site/src/lib/OmniAppShell.ts` | Shadow DOM custom element for microfrontend CSS/JS isolation |
+
+### Intent Resolution Rules (deterministic, no branches)
+
+1. `dashboardStatus === 'Partial'` → `type: 'oauth'` (authorization required)
+2. `contextData.appType` ∈ `{media, editor, terminal}` → `renderMode: 'spatial'` (GPU canvas)
+3. `contextData.entryUrl` present → `type: 'microfrontend'` (Shadow DOM sandbox)
+4. Live SPA with no contextData signals → `navigate(routePath)` (no modal)
+
+### Zero-Config OAuth Contract
+
+- Client sends intent to `supabase.functions.invoke('omnilink-agent')`.
+- Edge function orchestrates provider handshake server-side.
+- Client receives sanitized session descriptor (no raw credentials ever reach the browser).
+- `sanitizeBackendPayload()` strips any key matching `/^(secret|token|key|password|credential|private|bearer)/i`.
+- Hydrates `omniBoardStore` with `OmniBoardConnectorRecord` on success.
+
+### Non-Reactive Dispatch Pattern
+
+All modal invocations use `useOmniModal.getState().invoke()` — not the reactive `useOmniModal()` hook — to prevent the caller component from re-rendering on modal open/close.
+
 ---
 
 ## 4) API / Edge Architecture

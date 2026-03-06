@@ -34,7 +34,6 @@
  */
 
 import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useOmniModal } from '../stores/omniModalStore';
 import type { OmniModalConfig, ModalType, RenderMode } from '../stores/omniModalStore';
 import { useOmniBoard } from '../stores/omniBoardStore';
@@ -149,16 +148,24 @@ function sanitizeBackendPayload(
  * resolves the correct presentation modality, and orchestrates the full
  * lifecycle: modal invocation → proxy exchange → OmniBoard hydration.
  *
+ * @param navigate — Optional router navigate function. Required only when
+ *   dispatching intents that may result in an internal SPA route change
+ *   (i.e. Live connectors with no contextData). Pass `useNavigate()` from
+ *   the calling component when routing is possible. Omit in contexts where
+ *   only oauth/microfrontend/spatial modals will be dispatched (e.g. Integrations).
+ *
  * Usage:
  * ```tsx
+ * // With routing (DashboardOverview, OmniDashLayout):
+ * const { dispatch } = useOmniDashAction(useNavigate());
+ * // Without routing (Integrations — only dispatches oauth modals):
  * const { dispatch } = useOmniDashAction();
  * dispatch({ appKey: 'quickbooks', provider: 'QuickBooks', ... });
  * ```
  */
-export function useOmniDashAction(): {
+export function useOmniDashAction(navigate?: (path: string) => void): {
   dispatch: (intent: OmniDashIntent) => void;
 } {
-  const navigate = useNavigate();
   const hydrateConnector = useOmniBoard((s) => s.hydrateConnector);
   const setConnectorStatus = useOmniBoard((s) => s.setConnectorStatus);
 
@@ -168,7 +175,7 @@ export function useOmniDashAction(): {
 
       // ─── Router Fallback: internal SPA apps navigate directly ────────────
       if (directive.shouldNavigate) {
-        navigate(intent.routePath);
+        if (navigate) navigate(intent.routePath);
         return;
       }
 

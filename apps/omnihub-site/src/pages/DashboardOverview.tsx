@@ -19,6 +19,7 @@ import {
   useEffect,
 } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Blocks } from 'lucide-react';
 import {
   useOmniDashAction,
@@ -1086,7 +1087,8 @@ export const DashboardOverview = memo(function DashboardOverview({
   ecoAppsVisible,
   setEcoAppsVisible,
 }: DashboardOverviewProps) {
-  const { dispatch } = useOmniDashAction();
+  const navigate = useNavigate();
+  const { dispatch } = useOmniDashAction(navigate);
 
   const [context, setContext] =
     useState<readonly ContextItem[]>(INITIAL_CONTEXT);
