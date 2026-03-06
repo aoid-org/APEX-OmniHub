@@ -12,7 +12,7 @@ function applyThemeToDom(theme: OmniTheme): void {
 }
 
 function resolveInitialTheme(): OmniTheme {
-  if (typeof globalThis.window === "undefined") return "dark";
+  if (globalThis.window === undefined) return "dark";
   const saved = globalThis.localStorage.getItem(THEME_KEY) as OmniTheme | null;
   if (saved === "dark" || saved === "light") return saved;
   const prefersDark = globalThis.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
@@ -23,7 +23,7 @@ export function useOmniTheme() {
   const [theme, setTheme] = useState<OmniTheme>(() => resolveInitialTheme());
 
   useEffect(() => {
-    if (typeof globalThis.window === "undefined") return;
+    if (globalThis.window === undefined) return;
     globalThis.localStorage.setItem(THEME_KEY, theme);
     applyThemeToDom(theme);
   }, [theme]);

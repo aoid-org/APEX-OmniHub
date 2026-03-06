@@ -50,8 +50,8 @@ export function useSystemHealth() {
   }, []);
 
   useEffect(() => {
-    void ping();
-    const id = setInterval(() => { void ping(); }, POLL_INTERVAL_MS);
+    ping().catch(() => { /* fail-silent ping */ });
+    const id = setInterval(() => { ping().catch(() => { /* fail-silent ping */ }); }, POLL_INTERVAL_MS);
     return () => clearInterval(id);
   }, [ping]);
 

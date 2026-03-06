@@ -179,30 +179,30 @@ describe('ZIndexManager.bringToFront', () => {
   });
 
   it('stress: 500 sequential bringToFront calls stay below PIP floor', () => {
-    let layouts: Record<string, { z: number }> = {};
+    const state: Record<string, { z: number }> = {};
     for (let i = 0; i < 10; i++) {
-      layouts[`w-${String(i)}`] = { z: CANVAS_Z_BASE + i };
+      state[`w-${String(i)}`] = { z: CANVAS_Z_BASE + i };
     }
 
     // Simulate 500 clicks cycling through widgets
     for (let click = 0; click < 500; click++) {
       const widgetKey = `w-${String(click % 10)}`;
-      const { newZ, normalized } = bringToFront(widgetKey, layouts);
+      const { newZ, normalized } = bringToFront(widgetKey, state);
 
       if (normalized) {
         // Apply normalization
-        const normalizedZ = normalizeZStack(layouts);
+        const normalizedZ = normalizeZStack(state);
         for (const [id, { z }] of Object.entries(normalizedZ)) {
-          layouts[id] = { z };
+          state[id] = { z };
         }
-        layouts[widgetKey] = { z: newZ };
+        state[widgetKey] = { z: newZ };
       } else {
-        layouts[widgetKey] = { z: newZ };
+        state[widgetKey] = { z: newZ };
       }
     }
 
     // After 500 operations, no z-value should exceed PIP floor (1000)
-    const allZ = Object.values(layouts).map(l => l.z);
+    const allZ = Object.values(state).map(l => l.z);
     expect(Math.max(...allZ)).toBeLessThan(1000);
   });
 });

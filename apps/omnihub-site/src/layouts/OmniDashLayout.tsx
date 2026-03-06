@@ -19,7 +19,7 @@ import { supabase } from '@/lib/supabase';
 import { useOmniTheme } from '@/hooks/useOmniTheme';
 import { Search, Bell, Shield, ChevronDown, Scan, Sun, Moon, X, ChevronRight, Menu, LayoutGrid, Zap, Settings } from 'lucide-react';
 import { DashboardOverview } from '@/pages/DashboardOverview';
-import { UniversalModalEngine } from '../../../../src/components/omnidash/media/UniversalModalEngine';
+import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
 import { useOmniModal } from '../../../../src/stores/omniModalStore';
 import '@/styles/omnidash-layout.css';
 import { useOmniTrace } from '@/hooks/useOmniTrace';
@@ -95,6 +95,12 @@ function Toggle({ checked, onChange }: Readonly<{ checked: boolean; onChange: (v
   );
 }
 
+function healthLabel(status: string): string {
+  if (status === 'healthy') return '100%';
+  if (status === 'degraded') return 'Degraded';
+  return 'Critical';
+}
+
 export function OmniDashLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -145,7 +151,7 @@ export function OmniDashLayout() {
     <div className="omnidash-shell" data-theme={isDark ? 'dark' : 'light'}>
       {/* Mobile overlay for sidebar/widgets drawer */}
       {mobileMenuOpen && (
-        <div className="mobile-overlay" role="button" tabIndex={0} onClick={() => setMobileMenuOpen(null)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') { setMobileMenuOpen(null); } }} aria-label="Close menu" />
+        <button type="button" className="mobile-overlay" onClick={() => setMobileMenuOpen(null)} aria-label="Close menu" />
       )}
 
       {/* ────── LEFT SIDEBAR ────── */}
@@ -229,7 +235,9 @@ export function OmniDashLayout() {
               Zero Trust Active
             </div>
 
-            <button type="button" onClick={() => omniModal.invoke({
+            <button type="button" onClick={(e) => {
+              e.stopPropagation();
+              omniModal.invoke({
               id: 'connect-ai',
               provider: 'APEX OmniPort',
               type: 'oauth',
@@ -237,9 +245,12 @@ export function OmniDashLayout() {
               description: 'Link your AI provider (OpenAI, Anthropic, or Google) for seamless agent integration.',
               onComplete: async (payload) => { console.warn('AI connected:', payload); navigate('/omnidash/omniport'); },
               onCancel: () => { console.warn('AI connect dismissed.'); },
-            })} className="od-connect-ai">Connect AI</button>
+            })
+            }} className="od-connect-ai">Connect AI</button>
 
-            <button type="button" className="od-avatar" aria-label="Notifications" onClick={() => omniModal.invoke({
+            <button type="button" className="od-avatar" aria-label="Notifications" onClick={(e) => {
+              e.stopPropagation();
+              omniModal.invoke({
               id: 'notifications',
               provider: 'APEX',
               type: 'selection',
@@ -253,7 +264,7 @@ export function OmniDashLayout() {
               ]},
               onComplete: async (payload) => { console.warn('Notification selected:', payload); },
               onCancel: () => { /* dismiss */ },
-            })}>
+            })}}>
               <Bell style={{ width: 14, height: 14 }} />
             </button>
 
@@ -296,9 +307,7 @@ export function OmniDashLayout() {
                   </button>
                 </>
               ) : (
-                <div className="app-tile-add"
-                  role="button"
-                  tabIndex={0}
+                <button type="button" className="app-tile-add"
                   onClick={() => omniModal.invoke({
                     id: 'add-apex-app',
                     provider: 'APEX Ecosystem',
@@ -309,12 +318,11 @@ export function OmniDashLayout() {
                     onComplete: async (payload) => { console.warn('App selected:', payload); setConnectedEco(true); },
                     onCancel: () => { console.warn('Add app dismissed.'); },
                   })}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span style={{ fontSize: 20 }}>+</span>
+                  <span style={{ fontSize: 20 }}>+</span>{' '}
                   Add APEX App
-                </div>
+                </button>
               )}
             </div>
           </WidgetShell>
@@ -349,7 +357,7 @@ export function OmniDashLayout() {
                   <div className="od-metric-label">Events Tracked</div>
                 </div>
                 <div className="od-metric-cube">
-                  <div className="od-metric-value" style={{ color: health.status === 'healthy' ? 'var(--health-green)' : health.status === 'degraded' ? 'var(--health-yellow)' : 'var(--health-red)' }}>{health.status === 'healthy' ? '100%' : health.status === 'degraded' ? 'Degraded' : 'Critical'}</div>
+                  <div className="od-metric-value" style={{ color: health.status === 'healthy' ? 'var(--health-green)' : 'var(--health-yellow)' }}>{healthLabel(health.status)}</div>
                   <div className="od-metric-label">System Health</div>
                 </div>
                 <div className="od-metric-cube">
@@ -368,9 +376,9 @@ export function OmniDashLayout() {
           <WidgetShell widgetId={WIDGET_IDS.SECURITY} title="Security Audit">
             <div style={{ padding: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                <Shield style={{ width: 20, height: 20, color: health.status === 'healthy' ? 'var(--health-green)' : health.status === 'degraded' ? 'var(--health-yellow)' : 'var(--health-red)' }} />
+                <Shield style={{ width: 20, height: 20, color: health.status === 'healthy' ? 'var(--health-green)' : 'var(--health-yellow)' }} />
                 <div>
-                  <div style={{ fontSize: 14, color: 'var(--text-heading)' }}>{health.status === 'healthy' ? 'Zero Trust Active' : health.status === 'degraded' ? 'System Degraded' : 'System Critical'}</div>
+                  <div style={{ fontSize: 14, color: 'var(--text-heading)' }}>{health.status === 'healthy' ? 'Zero Trust Active' : 'System Alert'}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{health.status === 'healthy' ? 'All gateways secured' : `${String(health.loopStatuses.filter(s => s.status === 'stale').length)} stale loop(s) detected`}</div>
                 </div>
               </div>
@@ -400,13 +408,18 @@ export function OmniDashLayout() {
 
       {/* ────── APEX ECOSYSTEM OVERFLOW MODAL ────── */}
       {showEcoModal && (
-        <div className="od-modal-overlay" role="button" tabIndex={0} onClick={() => setShowEcoModal(false)} onKeyDown={(e) => { if (e.key === 'Escape') { setShowEcoModal(false); } }} aria-label="Close modal">
-          <div
+        <div className="od-modal-overlay">
+          <button
+            type="button"
+            className="od-modal-backdrop"
+            onClick={() => setShowEcoModal(false)}
+            aria-label="Close modal"
+            style={{ position: 'absolute', inset: 0, background: 'transparent', border: 'none', cursor: 'default' }}
+          />
+          <dialog
+            open
             className="od-modal-content"
             style={{ maxWidth: 700, padding: 32 }}
-            role="dialog"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
           >
             <button
               type="button"
@@ -421,12 +434,12 @@ export function OmniDashLayout() {
                 {/* Ecosystem mock overflow tiles removed as per user request */}
               </div>
             </div>
-          </div>
+          </dialog>
         </div>
       )}
 
-      {/* ────── GLOBAL MODAL ENGINE ────── */}
-      <UniversalModalEngine />
+      {/* ────── GLOBAL OMNIMODAL ENGINE (Unified Spatial Host) ────── */}
+      <OmniSpatialHost />
 
       {/* ────── PiP FLOATING WINDOWS (Layer 5) ────── */}
       <FloatingWindowRenderer />

@@ -48,6 +48,14 @@
   --duration-hover: 150ms;
   --duration-reveal: 220ms;
   --duration-modal: 300ms;
+
+  /* Semantic Z-Index Stack — APEX Stacking Context Hierarchy */
+  --z-index-canvas: 10;
+  --z-index-sticky: 200;
+  --z-index-omniboard: 300;
+  --z-index-backdrop: 400;
+  --z-index-omnimodal: 500;
+  --z-index-toast: 600;
 }
 
 [data-theme="light"] {
@@ -87,6 +95,29 @@
   --duration-hover: 150ms;
   --duration-reveal: 220ms;
   --duration-modal: 300ms;
+
+  /* Semantic Z-Index Stack — APEX Stacking Context Hierarchy */
+  --z-index-canvas: 10;
+  --z-index-sticky: 200;
+  --z-index-omniboard: 300;
+  --z-index-backdrop: 400;
+  --z-index-omnimodal: 500;
+  --z-index-toast: 600;
+}
+
+/* ===== OmniModal Portal Root — Stacking Isolation ===== */
+#omni-portal-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: var(--z-index-omnimodal, 500);
+  pointer-events: none;
+}
+
+#omni-portal-root > * {
+  pointer-events: auto;
 }
 
 /* ===== Global Typography Force ===== */
@@ -436,7 +467,9 @@
   cursor: grab;
   touch-action: none;
   position: relative;
-  transition: all var(--duration-hover) var(--ease-apple);
+  transition: box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 200ms ease;
   transform: translateZ(0);
   will-change: transform, opacity;
   overflow: hidden;
@@ -675,8 +708,9 @@
   animation: health-pulse 2s var(--ease-apple) infinite;
 }
 
-/* OmniSlate drop zone highlight */
+/* OmniSlate drop zone highlight + Premium Activation */
 .omnislate-drop-active {
+  animation: omnislate-pulse-glow 0.8s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate !important;
   border-color: var(--accent) !important;
   box-shadow:
     0 0 30px rgba(249, 115, 22, 0.3),
@@ -1073,42 +1107,7 @@
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ===== OmniSlate Drop Zone — Premium Activation ===== */
-.omnislate-drop-active {
-  animation: omnislate-pulse-glow 0.8s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate !important;
-  border-color: var(--accent) !important;
-}
 
-@keyframes omnislate-pulse-glow {
-  0% {
-    box-shadow:
-      0 0 20px rgba(194, 80, 31, 0.15),
-      inset 0 0 30px rgba(194, 80, 31, 0.03);
-  }
-  100% {
-    box-shadow:
-      0 0 40px rgba(194, 80, 31, 0.3),
-      0 0 80px rgba(194, 80, 31, 0.08),
-      inset 0 0 50px rgba(194, 80, 31, 0.06);
-  }
-}
-
-/* ===== App Tile — Drag States ===== */
-.app-tile {
-  transition: box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
-              transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
-              opacity 200ms ease;
-}
-
-.app-tile:active {
-  cursor: grabbing;
-}
-
-/* During HTML5 drag, the source element gets this state */
-.app-tile[draggable]:active {
-  opacity: 0.6;
-  transform: scale(0.97);
-}
 
 /* ===== Context Brand Icon — Hover Shimmer ===== */
 @keyframes context-icon-shimmer {

@@ -457,7 +457,7 @@ export const DashboardOverview = memo(function DashboardOverview() {
                 <div style={{ fontSize: 13, color: 'var(--text-heading)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.name}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-                    background: app.health === 'green' ? 'var(--health-green)' : app.health === 'yellow' ? 'var(--health-yellow)' : 'var(--health-red)' }} />
+                    background: (() => { if (app.health === 'green') return 'var(--health-green)'; if (app.health === 'yellow') return 'var(--health-yellow)'; return 'var(--health-red)'; })() }} />
                   <span style={{ fontSize: 11, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.cat}</span>
                   <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>· {app.synced}</span>
                 </div>
