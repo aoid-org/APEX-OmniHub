@@ -111,17 +111,19 @@ const BARS = [
    DATA TYPES
    ════════════════════════════════════════════ */
 
+type HealthStatus = 'green' | 'yellow' | 'red';
+
 interface DashboardOverviewProps {
   readonly demoMode: boolean;
-  readonly appHealth: 'green' | 'yellow' | 'red';
-  readonly setAppHealth: (v: 'green' | 'yellow' | 'red') => void;
+  readonly appHealth: HealthStatus;
+  readonly setAppHealth: (v: HealthStatus) => void;
   readonly ecoAppsVisible: boolean;
   readonly setEcoAppsVisible: (v: boolean) => void;
 }
 
 interface ContextItem {
   readonly name: string;
-  readonly health: 'green' | 'yellow' | 'red';
+  readonly health: HealthStatus;
   readonly insight: string;
 }
 
@@ -981,7 +983,7 @@ const SYNC_BTN_STYLE = {
   position: 'absolute' as const,
   bottom: 16,
   right: 16,
-  fontSize: 10.70,
+  fontSize: 10.7,
   fontWeight: 800,
   padding: '6px 14px',
   borderRadius: 8,
