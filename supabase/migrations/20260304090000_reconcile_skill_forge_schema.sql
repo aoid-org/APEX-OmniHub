@@ -46,11 +46,12 @@ CREATE INDEX IF NOT EXISTS idx_user_generated_skills_is_active
 DO $$
 DECLARE
   v_table_name CONSTANT text := 'user_generated_skills';
+  v_schema_name CONSTANT text := 'public';
 BEGIN
   IF NOT EXISTS (
     SELECT 1
     FROM pg_policies
-    WHERE schemaname = 'public'
+    WHERE schemaname = v_schema_name
       AND tablename = v_table_name
       AND policyname = 'Users can view own skills'
   ) THEN
@@ -64,7 +65,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1
     FROM pg_policies
-    WHERE schemaname = 'public'
+    WHERE schemaname = v_schema_name
       AND tablename = v_table_name
       AND policyname = 'Users can insert own skills'
   ) THEN
@@ -78,7 +79,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1
     FROM pg_policies
-    WHERE schemaname = 'public'
+    WHERE schemaname = v_schema_name
       AND tablename = v_table_name
       AND policyname = 'Users can update own skills'
   ) THEN
@@ -93,7 +94,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1
     FROM pg_policies
-    WHERE schemaname = 'public'
+    WHERE schemaname = v_schema_name
       AND tablename = v_table_name
       AND policyname = 'Users can delete own skills'
   ) THEN

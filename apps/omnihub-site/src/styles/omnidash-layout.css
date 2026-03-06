@@ -191,7 +191,7 @@
   height: 38px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(30, 41, 59, 0.9);
   color: #ffffff;
   padding: 0 14px 0 38px;
   font-size: 15.729px;
@@ -230,7 +230,7 @@
   padding: 0 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(30, 41, 59, 0.9);
   font-size: 13.91px;
   font-family: "Space Grotesk", sans-serif;
   font-weight: 500;
@@ -246,7 +246,7 @@
   border-radius: 10px;
   font-size: 13.482px;
   color: #86efac;
-  background: rgba(52, 211, 153, 0.25);
+  background: rgba(4, 60, 45, 0.85);
   border: 1px solid rgba(52, 211, 153, 0.4);
 }
 
@@ -254,7 +254,8 @@
   height: 34px;
   padding: 0 16px;
   border-radius: 17px;
-  background: linear-gradient(135deg, #f97316, #c2501f);
+  background-color: #c2501f;
+  background-image: linear-gradient(135deg, #f97316, #c2501f);
   color: #ffffff;
   font-size: 14.552px;
   font-weight: 600;
@@ -548,7 +549,7 @@
   border-radius: 10px;
   font-size: 12.305px;
   font-weight: 700;
-  background: rgba(52, 211, 153, 0.12);
+  background: rgba(4, 60, 45, 0.85);
   color: #bbf7d0;
   border: 1px solid rgba(52, 211, 153, 0.3);
 }
@@ -933,7 +934,7 @@
 }
 
 .od-modal-close:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(127, 29, 29, 0.8);
   border-color: rgba(239, 68, 68, 0.3);
   color: #ffffff;
 }

@@ -137,7 +137,7 @@ export async function flushQueue(force = false): Promise<void> {
   flushInFlight = false;
 
   if (consecutiveFlushFailures >= DEGRADE_THRESHOLD) {
-    void logAnalyticsEvent('audit.flush.degraded', {
+    logAnalyticsEvent('audit.flush.degraded', {
       failures: consecutiveFlushFailures,
       queueSize: updated.filter((q) => q.status === 'pending').length,
     });
