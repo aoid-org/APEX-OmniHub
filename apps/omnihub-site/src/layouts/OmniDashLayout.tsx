@@ -14,6 +14,7 @@ import { Search, Bell, Shield, ChevronDown, Sun, Moon, X } from 'lucide-react';
 import { DashboardOverview } from '@/pages/DashboardOverview';
 import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
 import { useOmniModal } from '../../../../src/stores/omniModalStore';
+import { useOmniDashAction } from '../../../../src/omnidash/useOmniDashAction';
 import '@/styles/omnidash-layout.css';
 import { z } from 'zod';
 
@@ -61,7 +62,7 @@ const SIDEBAR_NAV = APP_REGISTRY.map((entry: AppRegistryEntry) => ({
 export function OmniDashLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const omniModal = useOmniModal();
+  const { dispatch } = useOmniDashAction(navigate);
   const [searchParams] = useSearchParams();
 
   const simModeStateSchema = z.object({
@@ -160,20 +161,19 @@ export function OmniDashLayout() {
 
             <button type="button" onClick={(e) => {
               e.stopPropagation();
-              omniModal.invoke({
-                id: 'connect-ai',
+              dispatch({
+                appKey: 'omniport',
                 provider: 'APEX OmniPort',
-                type: 'oauth',
-                title: 'Connect AI Provider',
-                description: 'Link your AI provider (OpenAI, Anthropic, or Google) for seamless agent integration.',
-                onComplete: async (payload) => { console.warn('AI connected:', payload); },
-                onCancel: () => { console.warn('AI connect dismissed.'); },
+                label: 'AI Provider',
+                category: 'integration',
+                routePath: '/omnidash/omniport',
+                dashboardStatus: 'Partial',
               });
             }} className="od-connect-ai">Connect AI</button>
 
             <button type="button" className="od-avatar" aria-label="Notifications" onClick={(e) => {
               e.stopPropagation();
-              omniModal.invoke({
+              useOmniModal.getState().invoke({
                 id: 'notifications',
                 provider: 'APEX',
                 type: 'selection',

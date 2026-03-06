@@ -99,9 +99,9 @@ export const useOmniBoard = create<OmniBoardState>((set) => ({
     }),
 
   evictConnector: (appKey) =>
-    set((state) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { [appKey]: _removed, ...rest } = state.connectors;
-      return { connectors: rest };
-    }),
+    set((state) => ({
+      connectors: Object.fromEntries(
+        Object.entries(state.connectors).filter(([k]) => k !== appKey),
+      ),
+    })),
 }));
