@@ -963,3 +963,14 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(249, 115, 22, 0.8);
 }
+
+
+/* OmniPortal Z-Index Root */
+#omni-portal-root {
+  position: absolute;
+  z-index: 9999;
+  pointer-events: none;
+}
+#omni-portal-root > * {
+  pointer-events: auto;
+}

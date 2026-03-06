@@ -1,16 +1,10 @@
-import { memo } from 'react';
-
-interface OmniTraceFeedProps {
-  maxEntries?: number;
-  className?: string;
+/**
+ * OmniTraceFeed - Lightweight trace event feed widget stub.
+ * Satisfies Vite import-analysis during test resolution.
+ * In tests, fully mocked via vi.mock().
+ */
+export function OmniTraceFeed() {
+  return <div data-testid="omni-trace-feed">Trace Feed</div>;
 }
-
-export const OmniTraceFeed = memo(function OmniTraceFeed(
-  _props: OmniTraceFeedProps,
-) {
-  return (
-    <div className="omni-trace-feed" data-testid="omni-trace-feed" />
-  );
-});
 
 export default OmniTraceFeed;
