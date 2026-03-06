@@ -637,6 +637,16 @@
    Constraint: ZERO display:grid. Flexbox + calc() only.
    ═══════════════════════════════════════════════════════ */
 
+/* ── Tile noise texture overlay (eliminates inline SVG data URI from TSX) ── */
+.apex-noise-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E");
+}
+
 /* Outer canvas wrapper — fluid drop-zone column */
 .apex-canvas {
   display: flex;
@@ -659,22 +669,26 @@
 
 /*
  * Small tile: 25% of row width
- * Formula: (100% - 2 gaps) * 0.25 = 25% - 12px
- * Two 24px gaps across 3 tiles = 48px total gap space
- * Each tile absorbs 48/3 * proportion = 12px for 25% tiles, 24px for 50% tile
+ * Formula: (100% - 2 × 24px gaps) × 0.25 = 25% - 12px
+ *
+ * DnD Phase 2: flex-shrink:0 + min-width guard prevents ghost collapse.
  */
 .apex-hero-tile--sm {
   width: calc(25% - 12px);
+  min-width: calc(25% - 12px);
   flex-shrink: 0;
+  will-change: transform;
 }
 
 /*
  * Large tile: 50% of row width
- * Formula: (100% - 2 gaps) * 0.50 = 50% - 24px
+ * Formula: (100% - 2 × 24px gaps) × 0.50 = 50% - 24px
  */
 .apex-hero-tile--lg {
   width: calc(50% - 24px);
+  min-width: calc(50% - 24px);
   flex-shrink: 0;
+  will-change: transform;
 }
 
 /* ── Apps Section Wrapper ── */
@@ -692,21 +706,34 @@
 }
 
 /*
- * App tile: forced 4-across
- * Formula: (100% - 3 gaps) * 0.25 = 25% - 12px
- * Three 16px gaps across 4 tiles = 48px total gap space
- * Each tile = (100% - 48px) * 0.25 = 25% - 12px
+ * App tile: forced 4-across at all desktop/tablet widths ≥ 768px.
+ * Formula: (100% - 3 × 16px gaps) × 0.25 = 25% - 12px
+ *
+ * DnD Phase 2 contract:
+ *   - flex-shrink: 0  → tile never compresses inside flex container
+ *   - min-width: same as width → ghost overlay can't collapse
+ *   - will-change: transform → GPU-composited drag layer, no reflow
+ *   - box-sizing: border-box → padding absorbed inside the calc() width
  */
 .apex-app-tile {
   width: calc(25% - 12px);
+  min-width: calc(25% - 12px);
   height: 150px;
   flex-shrink: 0;
   box-sizing: border-box;
+  will-change: transform;
 }
 
 /* ═══════════════════════════════════════════════════════ */
 
 /* ===== Responsive — Tablet (≤1200px) ===== */
+/*
+ * Phase 1 DnD contract:
+ *   App tiles HOLD 4-across at 1024px–1200px viewport widths.
+ *   At 1024px with 220px sidebar, content area = 804px.
+ *   calc(25% - 12px) of 804px = 189px × 4 + 48px gaps = 804px ✓
+ *   No app-tile width change at this breakpoint.
+ */
 @media (max-width: 1200px) {
   .od-sidebar {
     width: 220px;
@@ -719,7 +746,7 @@
     width: 120px;
     height: 120px;
   }
-  /* Hero tiles reflow: stack sm tiles above lg at tablet */
+  /* Hero tiles reflow: sm tiles wrap below lg */
   .apex-hero-tile--sm {
     width: calc(50% - 12px);
   }
@@ -727,10 +754,7 @@
     width: 100%;
     order: -1;
   }
-  /* Apps: 2-across on tablet */
-  .apex-app-tile {
-    width: calc(50% - 8px);
-  }
+  /* App tiles: intentionally NOT changed — 4-across holds to 1024px */
 }
 
 /* ===== Responsive — Small Tablet (≤960px) ===== */
@@ -774,6 +798,20 @@
   .apex-hero-tile--sm,
   .apex-hero-tile--lg {
     width: 100%;
+  }
+}
+
+/* ===== Responsive — Compact Tablet (≤768px) ===== */
+/*
+ * Phase 3 DnD contract:
+ *   Below 768px sidebar is hidden; content = full viewport.
+ *   2-across with calc(50% - 8px) per tile.
+ *   gap: 16px is preserved — DnD library must NOT override it.
+ */
+@media (max-width: 768px) {
+  .apex-app-tile {
+    width: calc(50% - 8px);
+    min-width: calc(50% - 8px);
   }
 }
 
@@ -829,9 +867,10 @@
     font-size: 10px;
     padding: 2px 8px;
   }
-  /* Apps: 1-across on mobile */
+  /* Apps: 1-across on mobile — min-width must match for drag stability */
   .apex-app-tile {
     width: 100%;
+    min-width: 100%;
   }
 }
 
