@@ -18,10 +18,9 @@ import {
   useRef,
   useEffect,
 } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Blocks } from 'lucide-react';
-import { useOmniModal } from '../../../../src/stores/omniModalStore';
+import { useOmniDashAction } from '@/hooks/useOmniDashAction';
 import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
 import lightbulbIcon from '@/assets/lightbulb-icon.png';
 import {
@@ -1084,8 +1083,7 @@ export const DashboardOverview = memo(function DashboardOverview({
   ecoAppsVisible,
   setEcoAppsVisible,
 }: DashboardOverviewProps) {
-  const navigate = useNavigate();
-  const omniModal = useOmniModal();
+  const { handleAppInteraction } = useOmniDashAction();
 
   const [context, setContext] =
     useState<readonly ContextItem[]>(INITIAL_CONTEXT);
@@ -1212,23 +1210,14 @@ export const DashboardOverview = memo(function DashboardOverview({
 
   const handleAppClick = useCallback(
     (app: AppEntry) => () => {
-      if (app.status === 'Partial') {
-        omniModal.invoke({
-          id: `auth-${app.name.toLowerCase()}`,
-          provider: app.name,
-          type: 'oauth',
-          title: `${app.name} Authentication`,
-          description:
-            `Connect APEX OmniHub to ${app.name}` +
-            ` to sync ${app.cat} data seamlessly.`,
-          onComplete: () => Promise.resolve(),
-          onCancel: () => undefined,
-        });
-      } else {
-        navigate('/omnidash/omniport');
-      }
+      handleAppInteraction({
+        id: app.name.toLowerCase().replace(/\s+/g, '-'),
+        provider: app.name,
+        category: app.cat,
+        status: app.status,
+      });
     },
-    [navigate, omniModal],
+    [handleAppInteraction],
   );
 
   return (
