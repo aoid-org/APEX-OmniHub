@@ -100,9 +100,6 @@
 }
 
 .od-nav-item img.nav-icon {
-  min-width: 24px;
-}
-.od-nav-item img.nav-icon {
   width: 24px;
   height: 24px;
   border-radius: 5px;
@@ -831,4 +828,15 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(249, 115, 22, 0.8); /* Brighter orange on hover */
+}
+
+
+/* OmniPortal Z-Index Root */
+#omni-portal-root {
+  position: absolute;
+  z-index: 9999;
+  pointer-events: none;
+}
+#omni-portal-root > * {
+  pointer-events: auto;
 }

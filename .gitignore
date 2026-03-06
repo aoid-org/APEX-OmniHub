@@ -91,3 +91,4 @@ apps/**/dist/
 final_eslint.json
 security/npm-audit-latest.json
 security/npm-audit-prod.json
+ERRORS.md
