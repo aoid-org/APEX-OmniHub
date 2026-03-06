@@ -117,11 +117,11 @@ interface OmniModalState {
   abortModal: (reason?: string) => void;
 }
 
-export const useOmniModal = create<OmniModalState>((set, get) => ({
+export const useOmniModal = create<OmniModalState>((set: (partial: Partial<OmniModalState>) => void, get: () => OmniModalState) => ({
   activeModal: null,
   isOpen: false,
 
-  invoke: (config) => {
+  invoke: (config: OmniModalConfig) => {
     // Validate at boundary — reject malformed schemas
     const result = OmniModalConfigSchema.safeParse(config);
     if (!result.success) {

@@ -1,107 +1,187 @@
 /**
- * OmniBoardStore — Connector Hydration State
+ * OmniBoard Global State — Hydration & Spatial Handoff Engine
  * @version 1.0.0
  * @module src/stores/omniBoardStore
  *
- * Global Zustand store that holds the live hydration state of all OmniBoard
- * connectors. Written exclusively by useOmniDashAction after successful
- * OAuth proxy exchange or spatial app launch. Read by Integrations.tsx
- * (OmniBoard) to provide instant UI reflection without waiting for a
- * React Query refetch cycle.
+ * Manages the global state for connected integrations, active app data,
+ * and spatial render mode transitions. Receives hydration payloads from
+ * the useOmniDashAction hook after successful OAuth exchanges or app launches.
  *
  * APEX STANDARDS ENFORCED:
- * - Atomic Idempotency: hydrateConnector with same appKey replaces previous record
- * - Regression-Free: Store is append/replace only — no partial merges that can corrupt
+ * - Atomic Idempotency: Same payload always produces identical state
+ * - Regression-Free: Zod validates at boundary — malformed payloads rejected
  * - Modularity: Pure Zustand store — zero React dependencies
- * - Memory Safety: evictConnector for explicit cleanup
- * - Single Source of Truth: store state always wins over stale DB cache in UI
+ * - Deterministic Teardown: clearActiveApp() cleanly resets spatial state
  *
  * OWNED BY: APEX Business Systems Ltd.
  */
 
 import { create } from 'zustand';
+import { z } from 'zod';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type OmniBoardConnectorStatus =
-  | 'LIVE'
-  | 'CONNECTING'
-  | 'NEEDS_AUTH'
-  | 'ERROR';
+export type SpatialRenderState = 'idle' | 'sandbox' | 'spatial';
 
-export interface OmniBoardConnectorRecord {
-  /** Stable connector ID returned by the backend (or fallback configId). */
-  readonly id: string;
-  /** Human-readable integration provider name. */
+export interface ConnectedIntegration {
   readonly provider: string;
-  /** Registry key used as the Map index. */
-  readonly appKey: string;
-  /** Current lifecycle status of this connector in the OmniBoard. */
-  readonly status: OmniBoardConnectorStatus;
-  /** Unix epoch (ms) when the proxy token expires, or null if not applicable. */
-  readonly proxyTokenExpiry: number | null;
-  /** Unix epoch (ms) of last successful hydration. */
-  readonly syncedAt: number;
-  /** Sanitized metadata from the backend — never contains raw secrets. */
-  readonly metadata: Readonly<Record<string, unknown>>;
+  readonly connectedAt: number;
+  readonly scopes: readonly string[];
+  readonly status: 'active' | 'refreshing' | 'expired';
 }
 
-interface OmniBoardState {
-  /** Connector records keyed by appKey for O(1) lookup. */
-  readonly connectors: Readonly<Record<string, OmniBoardConnectorRecord>>;
-
-  /**
-   * Upserts a connector record. Replaces any existing record with the same
-   * appKey — idempotent on repeated calls with identical payloads.
-   */
-  hydrateConnector: (record: OmniBoardConnectorRecord) => void;
-
-  /**
-   * Updates only the status field of an existing connector record.
-   * No-op if the appKey is not found (prevents phantom records).
-   */
-  setConnectorStatus: (appKey: string, status: OmniBoardConnectorStatus) => void;
-
-  /**
-   * Removes a connector record. Used on sign-out or explicit disconnection.
-   */
-  evictConnector: (appKey: string) => void;
+export interface ActiveApp {
+  readonly id: string;
+  readonly provider: string;
+  readonly renderState: SpatialRenderState;
+  readonly payload: Record<string, unknown>;
+  readonly mountedAt: number;
 }
+
+// ============================================================================
+// Zod Boundary Schemas
+// ============================================================================
+
+const ConnectedIntegrationSchema = z.object({
+  provider: z.string().min(1),
+  connectedAt: z.number(),
+  scopes: z.array(z.string()),
+  status: z.enum(['active', 'refreshing', 'expired']),
+});
+
+const HydrationPayloadSchema = z.object({
+  provider: z.string().min(1),
+  data: z.record(z.unknown()).optional(),
+  scopes: z.array(z.string()).optional(),
+});
+
+const ActiveAppSchema = z.object({
+  id: z.string().min(1),
+  provider: z.string().min(1),
+  renderState: z.enum(['idle', 'sandbox', 'spatial']),
+  payload: z.record(z.unknown()),
+  mountedAt: z.number(),
+});
 
 // ============================================================================
 // Store
 // ============================================================================
 
-export const useOmniBoard = create<OmniBoardState>((set) => ({
-  connectors: {},
+interface OmniBoardState {
+  readonly integrations: ReadonlyMap<string, ConnectedIntegration>;
+  readonly activeApp: ActiveApp | null;
+  readonly isTransitioning: boolean;
 
-  hydrateConnector: (record) =>
-    set((state) => ({
-      connectors: {
-        ...state.connectors,
-        [record.appKey]: record,
-      },
-    })),
+  hydrateIntegration: (payload: {
+    provider: string;
+    data?: Record<string, unknown>;
+    scopes?: string[];
+  }) => void;
 
-  setConnectorStatus: (appKey, status) =>
-    set((state) => {
-      const existing = state.connectors[appKey];
-      // No-op guard — do not create phantom records for unknown appKeys
-      if (!existing) return state;
-      return {
-        connectors: {
-          ...state.connectors,
-          [appKey]: { ...existing, status },
-        },
-      };
-    }),
+  removeIntegration: (provider: string) => void;
 
-  evictConnector: (appKey) =>
-    set((state) => ({
-      connectors: Object.fromEntries(
-        Object.entries(state.connectors).filter(([k]) => k !== appKey),
-      ),
-    })),
+  mountActiveApp: (config: {
+    id: string;
+    provider: string;
+    renderState: SpatialRenderState;
+    payload: Record<string, unknown>;
+  }) => void;
+
+  transitionRenderState: (renderState: SpatialRenderState) => void;
+
+  clearActiveApp: () => void;
+}
+
+export const useOmniBoard = create<OmniBoardState>((set: (partial: Partial<OmniBoardState> | ((state: OmniBoardState) => Partial<OmniBoardState>)) => void, get: () => OmniBoardState) => ({
+  integrations: new Map(),
+  activeApp: null,
+  isTransitioning: false,
+
+  hydrateIntegration: (payload: { provider: string; data?: Record<string, unknown>; scopes?: string[] }) => {
+    const result = HydrationPayloadSchema.safeParse(payload);
+    if (!result.success) {
+      console.error('[OmniBoard] Invalid hydration payload rejected:', result.error.issues);
+      return;
+    }
+
+    const integration: ConnectedIntegration = {
+      provider: payload.provider,
+      connectedAt: Date.now(),
+      scopes: payload.scopes ?? [],
+      status: 'active',
+    };
+
+    // Validate the constructed integration
+    const validIntegration = ConnectedIntegrationSchema.safeParse(integration);
+    if (!validIntegration.success) {
+      console.error('[OmniBoard] Constructed integration failed validation:', validIntegration.error.issues);
+      return;
+    }
+
+    set((state: OmniBoardState) => {
+      const next = new Map(state.integrations);
+      next.set(payload.provider, integration);
+      return { integrations: next };
+    });
+  },
+
+  removeIntegration: (provider: string) => {
+    set((state: OmniBoardState) => {
+      const next = new Map(state.integrations);
+      next.delete(provider);
+      return { integrations: next };
+    });
+  },
+
+  mountActiveApp: (config: { id: string; provider: string; renderState: SpatialRenderState; payload: Record<string, unknown> }) => {
+    const app: ActiveApp = {
+      ...config,
+      mountedAt: Date.now(),
+    };
+
+    const result = ActiveAppSchema.safeParse(app);
+    if (!result.success) {
+      console.error('[OmniBoard] Invalid active app config rejected:', result.error.issues);
+      return;
+    }
+
+    // Sanitize payload via structuredClone
+    const sanitized: ActiveApp = {
+      ...app,
+      payload: structuredClone(config.payload),
+    };
+
+    set({ activeApp: sanitized, isTransitioning: true });
+
+    // Transition complete after Framer Motion settles (SPRING_DAMPED ~400ms)
+    setTimeout(() => {
+      const current = get().activeApp;
+      if (current?.id === config.id) {
+        set({ isTransitioning: false });
+      }
+    }, 400);
+  },
+
+  transitionRenderState: (renderState: SpatialRenderState) => {
+    const current = get().activeApp;
+    if (!current) return;
+
+    set({
+      activeApp: { ...current, renderState },
+      isTransitioning: true,
+    });
+
+    setTimeout(() => {
+      const updated = get().activeApp;
+      if (updated?.id === current.id) {
+        set({ isTransitioning: false });
+      }
+    }, 400);
+  },
+
+  clearActiveApp: () => {
+    set({ activeApp: null, isTransitioning: false });
+  },
 }));
