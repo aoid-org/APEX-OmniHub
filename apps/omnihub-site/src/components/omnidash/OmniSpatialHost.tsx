@@ -328,21 +328,13 @@ export function OmniSpatialHost() {
 
     return (
       <Dialog open={isOpen && renderMode === 'dialog'} onOpenChange={handleOpenChange}>
-        {/* Custom explicit backdrop that we fully control to prevent event bubbling issues */}
-        <div 
-          role="button"
-          tabIndex={0}
+        {/* Custom explicit backdrop — native button for cross-device A11y */}
+        <button
+          type="button"
           aria-label="Close modal"
-          className="fixed inset-0 z-[400] bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+          className="fixed inset-0 z-[400] w-full h-full border-none bg-black/80 cursor-default data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
           onClick={(e) => {
-            // Only dismiss if the click was directly on the backdrop, not bubbled from inside the modal
             if (e.target === e.currentTarget && Date.now() - mountTime.current >= 300) {
-              abortModal('USER_DISMISSED');
-            }
-          }}
-          onKeyDown={(e) => {
-            if ((e.key === 'Enter' || e.key === ' ') && Date.now() - mountTime.current >= 300) {
-              e.preventDefault();
               abortModal('USER_DISMISSED');
             }
           }}
