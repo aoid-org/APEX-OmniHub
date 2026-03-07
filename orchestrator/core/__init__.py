@@ -1,5 +1,5 @@
 """Core orchestrator infrastructure: intent registry, shared protocols."""
 
-from core.intent_registry import IntentRegistry, registry
+from core.intent_registry import IntentRegistry, OmniModalPayload, registry
 
-__all__ = ["IntentRegistry", "registry"]
+__all__ = ["IntentRegistry", "OmniModalPayload", "registry"]

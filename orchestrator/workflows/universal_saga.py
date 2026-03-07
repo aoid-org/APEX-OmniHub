@@ -6,8 +6,17 @@ Universal Intent Registry. No rigid if/else routing blocks — the registry
 is the routing table, and the workflow is a pure execution engine.
 
 Architecture:
-    EventEnvelope → extract intentId → registry.resolve_or_offline() →
+    IntentEnvelope dict → extract intentId → registry.resolve_or_offline() →
     → execute_activity(resolved_name) → wrap result in OmniModalSchema → return
+
+Wire format (input dict):
+    {
+        "intent_id": "search_database",
+        "trace_id": "uuid",
+        "tenant_id": "tenant-xyz",
+        "user_id": "user-abc",
+        "payload": { ... activity-specific params ... }
+    }
 
 Determinism:
     - No direct I/O, no random, no system time calls.
@@ -24,7 +33,6 @@ from temporalio.exceptions import ActivityError
 
 with workflow.unsafe.imports_passed_through():
     from core.intent_registry import OmniModalPayload, registry
-    from models.events import EventEnvelope
 
 
 # ============================================================================
@@ -69,34 +77,32 @@ ACTIVITY_TIMEOUT = timedelta(seconds=120)
 
 @workflow.defn(name="UniversalOrchestratorWorkflow")
 class UniversalOrchestratorWorkflow:
-    """Single Temporal Workflow that routes any EventEnvelope to the correct
+    """Single Temporal Workflow that routes any intent envelope to the correct
     Activity via the Universal Intent Registry.
 
-    Input:  EventEnvelope (Pydantic model serialized as dict by Temporal).
+    Input:  dict with keys: intent_id, trace_id, tenant_id, user_id, payload.
     Output: OmniModalSchema-compliant dict for the frontend ModuleRenderer.
     """
 
     @workflow.run
-    async def run(self, envelope_dict: dict[str, Any]) -> dict[str, Any]:
-        # Deserialize the envelope (Temporal passes dicts across the wire)
-        try:
-            envelope = EventEnvelope.model_validate(envelope_dict)
-        except Exception as exc:
+    async def run(self, envelope: dict[str, Any]) -> dict[str, Any]:
+        intent_id = envelope.get("intent_id", "")
+        trace_id = envelope.get("trace_id", "unknown")
+        payload = envelope.get("payload", {})
+
+        if not intent_id:
             workflow.logger.error(
-                "UniversalSaga: envelope validation failed: %s", exc
+                "UniversalSaga: missing intent_id in envelope (trace=%s)", trace_id
             )
             return build_omni_modal_schema(
                 intent_id="unknown",
-                trace_id=envelope_dict.get("correlation_id", "unknown"),
+                trace_id=trace_id,
                 status="error",
-                error=f"EventEnvelope validation failed: {exc}",
+                error="Missing intent_id in workflow input envelope.",
             )
 
-        intent_id = envelope.payload.get("intentId", envelope.event_type.value)
-        trace_id = envelope.correlation_id
-
         workflow.logger.info(
-            "UniversalSaga: processing intentId='%s' trace='%s'",
+            "UniversalSaga: processing intent_id='%s' trace='%s'",
             intent_id,
             trace_id,
         )
@@ -105,9 +111,8 @@ class UniversalOrchestratorWorkflow:
         resolution = registry.resolve_or_offline(intent_id, trace_id)
 
         if isinstance(resolution, OmniModalPayload):
-            # Fail-closed: intent not registered
             workflow.logger.warning(
-                "UniversalSaga: OFFLINE — intentId '%s' not in registry",
+                "UniversalSaga: OFFLINE — intent_id '%s' not in registry",
                 intent_id,
             )
             return build_omni_modal_schema(
@@ -123,7 +128,7 @@ class UniversalOrchestratorWorkflow:
         try:
             result = await workflow.execute_activity(
                 activity_name,
-                envelope.payload,
+                payload,
                 start_to_close_timeout=ACTIVITY_TIMEOUT,
                 retry_policy=ACTIVITY_RETRY_POLICY,
             )

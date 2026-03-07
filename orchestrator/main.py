@@ -56,6 +56,11 @@ from activities.tools import (
 from config import settings
 from metrics import start_metrics_server
 from workflows.agent_saga import AgentWorkflow
+from workflows.universal_saga import UniversalOrchestratorWorkflow
+
+# Seed the intent registry with all known activity→intent mappings.
+# This import has side effects: it populates the registry singleton.
+import core.intents  # noqa: F401
 
 # Configure logging
 logging.basicConfig(
@@ -133,7 +138,7 @@ async def start_worker() -> None:
     worker = Worker(
         client,
         task_queue=settings.temporal_task_queue,
-        workflows=[AgentWorkflow],
+        workflows=[AgentWorkflow, UniversalOrchestratorWorkflow],
         activities=[
             # Planning activities
             check_semantic_cache,
