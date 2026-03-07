@@ -64,61 +64,71 @@ export const BYOMCockpit = memo(function BYOMCockpit() {
         </span>
       </div>
 
-      {loading ? (
-        <div style={{ fontSize: 12, color: '#71717a', textAlign: 'center', padding: 20 }}>
-          Loading providers...
-        </div>
-      ) : connections.length === 0 ? (
-        <div style={{ fontSize: 12, color: '#71717a', textAlign: 'center', padding: 20 }}>
-          No AI providers connected. Use Connect AI to add one.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {connections.map(conn => {
-            const colors = STATUS_COLORS[conn.status];
-            return (
-              <div
-                key={conn.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 14px',
-                  borderRadius: 10,
-                  background: 'rgba(0,0,0,0.2)',
-                  border: '1px solid rgba(255,255,255,0.05)',
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#dfe6fe' }}>
-                    {conn.provider_name}
-                  </div>
-                  {conn.model_id && (
-                    <div style={{ fontSize: 11, color: '#71717a', marginTop: 2 }}>
-                      {conn.model_id}
-                    </div>
-                  )}
-                </div>
-                <span
+      {(() => {
+        if (loading) {
+          return (
+            <div style={{ fontSize: 12, color: '#71717a', textAlign: 'center', padding: 20 }}>
+              Loading providers...
+            </div>
+          );
+        }
+
+        if (connections.length === 0) {
+          return (
+            <div style={{ fontSize: 12, color: '#71717a', textAlign: 'center', padding: 20 }}>
+              No AI providers connected. Use Connect AI to add one.
+            </div>
+          );
+        }
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {connections.map(conn => {
+              const colors = STATUS_COLORS[conn.status];
+              return (
+                <div
+                  key={conn.id}
                   style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    padding: '3px 8px',
-                    borderRadius: 6,
-                    background: colors.bg,
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 14px',
+                    borderRadius: 10,
+                    background: 'rgba(0,0,0,0.2)',
+                    border: '1px solid rgba(255,255,255,0.05)',
                   }}
                 >
-                  {conn.status}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#dfe6fe' }}>
+                      {conn.provider_name}
+                    </div>
+                    {conn.model_id && (
+                      <div style={{ fontSize: 11, color: '#71717a', marginTop: 2 }}>
+                        {conn.model_id}
+                      </div>
+                    )}
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      padding: '3px 8px',
+                      borderRadius: 6,
+                      background: colors.bg,
+                      color: colors.text,
+                      border: `1px solid ${colors.border}`,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    {conn.status}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 });

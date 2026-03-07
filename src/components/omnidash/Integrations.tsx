@@ -159,14 +159,14 @@ export const Integrations = () => {
     return dbModels.map((c) => {
       const boardRecord = boardConnectors?.[c.appSlug];
       if (!boardRecord) return c;
-      const boardStatus =
-        boardRecord.status === 'LIVE'
-          ? 'LIVE'
-          : boardRecord.status === 'CONNECTING'
-            ? 'PARTIAL'
-            : boardRecord.status === 'NEEDS_AUTH'
-              ? 'NEEDS_AUTH'
-              : 'ERROR';
+      let boardStatus = 'ERROR';
+      if (boardRecord.status === 'LIVE') {
+        boardStatus = 'LIVE';
+      } else if (boardRecord.status === 'CONNECTING') {
+        boardStatus = 'PARTIAL';
+      } else if (boardRecord.status === 'NEEDS_AUTH') {
+        boardStatus = 'NEEDS_AUTH';
+      }
       return { ...c, status: boardStatus as ConnectorStatus };
     });
   }, [integrationsQuery.data, keysQuery.data, eventsQuery.data, boardConnectors]);
@@ -333,16 +333,20 @@ export const Integrations = () => {
                       dispatch(intent);
                     }}
                   >
-                    {boardConnectors?.[connector.appSlug]?.status === 'CONNECTING' ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Connecting…
-                      </>
-                    ) : connector.status === 'NEEDS_AUTH' ? (
-                      'Connect Account'
-                    ) : (
-                      'Resolve Connection'
-                    )}
+                    {(() => {
+                      if (boardConnectors?.[connector.appSlug]?.status === 'CONNECTING') {
+                        return (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Connecting…
+                          </>
+                        );
+                      }
+                      if (connector.status === 'NEEDS_AUTH') {
+                        return 'Connect Account';
+                      }
+                      return 'Resolve Connection';
+                    })()}
                   </Button>
                 )}
               </CardContent>

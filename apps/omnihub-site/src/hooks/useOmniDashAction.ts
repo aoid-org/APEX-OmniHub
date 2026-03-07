@@ -34,7 +34,7 @@ interface AppIntent {
   readonly id: string;
   readonly provider: string;
   readonly category: string;
-  readonly status: 'Live' | 'Partial' | string;
+  readonly status: string;
   readonly appType?: 'media' | 'editor' | 'terminal' | 'microfrontend';
   readonly entryUrl?: string;
   readonly contextData?: Record<string, unknown>;
@@ -138,7 +138,6 @@ export function useOmniDashAction(externalNavigate?: NavigateFunction): UseOmniD
   const handleAppLaunch = useCallback((app: AppIntent) => {
     const appType = app.appType ?? 'microfrontend';
 
-    const modalType: ModalType = 'microfrontend';
     const renderState: SpatialRenderState =
       (appType === 'media' || appType === 'editor' || appType === 'terminal')
         ? 'spatial'
@@ -159,7 +158,7 @@ export function useOmniDashAction(externalNavigate?: NavigateFunction): UseOmniD
     omniModal.invoke({
       id: `app-${app.id}`,
       provider: app.provider,
-      type: modalType,
+      type: 'microfrontend',
       title: app.provider,
       description: `${app.provider} — ${app.category}`,
       renderMode: renderState === 'spatial' ? 'spatial' : 'sandbox',
