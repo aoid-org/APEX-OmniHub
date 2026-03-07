@@ -191,7 +191,9 @@
   },
   "overrides": {
     "lodash": "^4.17.23",
-    "tar": "^7.4.3",
+    "tar": "^7.5.8",
+    "rollup": "^4.59.0",
+    "immutable": "^4.3.8",
     "hono": "^4.12.4",
     "serialize-javascript": "^7.0.3"
   },
