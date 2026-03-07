@@ -5,7 +5,8 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.0] - 2026-03-06
+## [1.4.0] - 2026-03-07
+
 ### Fixed
 
 - **sim/metrics.ts** — Adjusted adaptive latency and retry thresholds for CI determinism under `SIM_MODE`.
@@ -16,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`src/stores/omniBoardStore.ts`** — New Zustand global store for connector hydration state.
+
   - `OmniBoardConnectorRecord` with `id`, `provider`, `appKey`, `status`, `proxyTokenExpiry`, `syncedAt`, `metadata`.
   - `OmniBoardConnectorStatus`: `'LIVE' | 'CONNECTING' | 'NEEDS_AUTH' | 'ERROR'`.
   - Actions: `hydrateConnector` (atomic upsert), `setConnectorStatus` (no-op guard for unknown keys), `evictConnector` (explicit cleanup on sign-out/disconnection).
@@ -292,8 +294,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Console logging hardened:** All 36+ `console.log` statements in production source code (`src/omniconnect/`, `src/lib/offline.ts`, `src/lib/omni-sentry.ts`) guarded with `import.meta.env.DEV` — zero information disclosure in production builds
 - **Console.info hardened:** All 6 `console.info` statements in OmniSentry monitoring module guarded for dev-only output
-- **ESLint blanket eslint-disable removed:** Removed '/* eslint-disable no-console */' from `src/lib/omni-sentry.ts`
-- **ESLint config tightened:** Removed overly broad 'src/pages/**/*.tsx' and narrowed exemptions to only infrastructure files with properly guarded logging
+- **ESLint blanket eslint-disable removed:** Removed '/_ eslint-disable no-console _/' from `src/lib/omni-sentry.ts`
+- **ESLint config tightened:** Removed overly broad 'src/pages/\*_/_.tsx' and narrowed exemptions to only infrastructure files with properly guarded logging
 
 #### Test Infrastructure
 
