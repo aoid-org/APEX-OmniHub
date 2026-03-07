@@ -59,39 +59,16 @@ const appRoutes: readonly AppRoute[] = [
   { path: "/demo", element: <DemoPage />, isPublic: true },
   { path: "/demo.html", element: <DemoPage />, isPublic: true },
   { path: "/dashboard", element: <OmniDashLayout /> },
-  { path: "/omnitrace", element: <ComingSoonPage title="OmniTrace" desc="Unified tracing, route telemetry, and render diagnostics." />, isPublic: true },
-  { path: "/translation", element: <ComingSoonPage title="Translation" desc="Localization tools and language quality controls." />, isPublic: true },
-  { path: "/integrations", element: <ComingSoonPage title="Integrations" desc="Connected services and data source orchestration." />, isPublic: true },
-  { path: "/automations", element: <ComingSoonPage title="Automations" desc="Workflow automation and task orchestration controls." />, isPublic: true },
-  { path: "/links", element: <ComingSoonPage title="Links" desc="Connection management and integration endpoints." />, isPublic: true },
-  { path: "/files", element: <ComingSoonPage title="Files" desc="Document management and file operations." />, isPublic: true },
-  { path: "/settings", element: <ComingSoonPage title="Settings" desc="Platform configuration and operational preferences." />, isPublic: true },
-  { path: "/health", element: <ComingSoonPage title="Health" desc="System health summary and runtime diagnostics." />, isPublic: true },
-  { path: "/diagnostics", element: <ComingSoonPage title="Diagnostics" desc="Diagnostic tools, logs, and troubleshooting surfaces." />, isPublic: true },
 ];
 
 const omniDashRoutes: readonly AppRoute[] = [
-  { path: "pipeline", element: <ComingSoonPage title="Pipeline" desc="Sales pipeline and opportunity tracking" /> },
-  { path: "kpis", element: <ComingSoonPage title="KPIs" desc="Key performance indicators and daily metrics" /> },
-  { path: "ops", element: <ComingSoonPage title="Ops" desc="Operations, incidents, and system health" /> },
-  { path: "integrations", element: <ComingSoonPage title="Integrations" desc="Connected services and data sources" /> },
-  { path: "events", element: <ComingSoonPage title="Events" desc="OmniLink event feed and activity log" /> },
-  { path: "entities", element: <ComingSoonPage title="Entities" desc="Managed entities and data objects" /> },
-  { path: "runs", element: <ComingSoonPage title="Runs" desc="Workflow execution history and trace logs" /> },
-  { path: "approvals", element: <ComingSoonPage title="Approvals" desc="MAN Mode approval queue and governance" /> },
+  // Live module pages (rendered in Outlet modal overlay)
   { path: "omniport", element: <OmniPortPage /> },
   { path: "maestro", element: <MaestroPage /> },
   { path: "fortress", element: <FortressPage /> },
   { path: "orchestrator", element: <OrchestratorPage /> },
-  { path: "omniskills", element: <ComingSoonPage title="OmniSkills" desc="Skill management and task orchestration" /> },
-  { path: "physiomni", element: <ComingSoonPage title="PhysiOmni" desc="Physical operations and execution tracking" /> },
-  { path: "audits", element: <ComingSoonPage title="Audits" desc="Governance, compliance, and security gates" /> },
-  { path: "billing", element: <ComingSoonPage title="Billing" desc="Subscription management and usage analytics" /> },
-  { path: "links", element: <ComingSoonPage title="Links" desc="Connection management and integration endpoints" /> },
-  { path: "automations", element: <ComingSoonPage title="Automations" desc="Workflow automation and pipeline orchestration" /> },
-  { path: "workflows", element: <ComingSoonPage title="Workflows" desc="Visual workflow builder and process studio" /> },
-  { path: "files", element: <ComingSoonPage title="Files" desc="Document management and file operations" /> },
-  { path: "settings", element: <ComingSoonPage title="Settings" desc="Platform configuration and preferences" /> },
+  // Coming-soon modules are handled via OmniModal (useOmniDashAction dispatch)
+  // — no route-based ComingSoonPage needed
 ];
 
 function App() {
