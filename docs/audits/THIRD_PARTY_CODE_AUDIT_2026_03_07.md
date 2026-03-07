@@ -615,7 +615,54 @@ Located in `/sandbox/` - Realistic user persona testing:
 | **HIPAA** | Ready | TLS encryption in transit, audit trails, access controls |
 | **PCI-DSS** | Ready | No direct payment processing, PII scanning active |
 
-### 10.7 Performance Characteristics (Orchestrator)
+### 10.7 AI/ML Intelligence Architecture (Deep-Dive Agent Findings)
+
+| Component | Location | Purpose |
+|---|---|---|
+| **CognitionManager** | `src/core/cognition/CognitionManager.ts` (~250 lines) | 3-tier persistent memory: short-term (session cache), medium-term (auto-compression), long-term (brain promotion). Singleton, Zod-validated, token accounting for LLM context windows |
+| **compressionEngine** | `src/core/cognition/compressionEngine.ts` (~280 lines) | Entity extraction (PascalCase, file paths, ALL_CAPS), Jaccard similarity deduplication, primacy-recency compression, TTL-based pruning, HNSW vector search |
+| **OmniRoute** | `src/core/gateway/OmniRoute.ts` | Deterministic task-to-model routing with 100-run reproducibility gate, domain classification (code/data/reasoning/creative), cost estimation, policy override gates |
+| **ModelRegistry** | `src/core/gateway/ModelRegistry.ts` | Multi-provider LLM registry (OpenAI, Anthropic Claude, local models), cost/latency tracking |
+| **MCP Framework** | `src/core/mcp/` (6 modules) | Model Context Protocol: config (Zod-validated), transport (stdio/HTTP), server registry, tool discovery, host manager with approval gating for write/destructive ops, fail-closed semantics |
+| **ApexRealtimeGateway** | `src/core/gateway/ApexRealtimeGateway.ts` (~300 lines) | WebSocket proxy for OpenAI Realtime API, device authentication via TrustTier, ChronosLock idempotency, tool call routing, heartbeat + exponential backoff reconnection |
+| **VisionCacheController** | `src/lib/memory/VisionCacheController.ts` | Vision model output caching with SHA-256 content-hash deduplication |
+| **MemoryClient** | `src/lib/memory/MemoryClient.ts` (~120 lines) | Client SDK for memory store/recall/purge/export |
+
+### 10.8 Zero-Trust Device Security (SpectreHandshake + AegisKernel)
+
+| Component | Lines | Purpose |
+|---|---|---|
+| **SpectreHandshake** | `src/core/security/SpectreHandshake.ts` (~180 lines) | Device authentication from connection headers, TrustTier classification (GOD_MODE > OPERATOR > PERIPHERAL > PUBLIC), fingerprint validation (OS, UA, profile integrity), risk scoring |
+| **AegisKernel** | `src/core/security/AegisKernel.ts` (~220 lines) | Per-tool access control based on TrustTier, stateless authorization kernel, tool capability filtering, deterministic deny-by-default |
+
+### 10.9 Armageddon Test Suite - Level 7 Certification
+
+**Status: CERTIFIED - 0.0000% escape rate**
+
+| Battery | Attack Vectors | Attempts | Escapes |
+|---|---|---|---|
+| Battery 10 | Goal Hijack / PAIR | 10,000 | 0 |
+| Battery 11 | Tool Misuse / SQL / API | 10,000 | 0 |
+| Battery 12 | Memory Poison / VectorDB | 10,000 | 0 |
+| Battery 13 | Supply Chain / Packages | 10,000 | 0 |
+| **TOTAL** | **40,000 adversarial attempts** | **40,000** | **0** |
+
+Run ID: `10efa424-e2e1-4659-b684-f37401f61f2f`
+
+### 10.10 Voice & Real-Time Stack
+
+| Component | Location | Lines | Purpose |
+|---|---|---|---|
+| VoiceInterface | `src/components/VoiceInterface.tsx` | ~280 | Realtime voice capture/playback, WebRTC, state machine (IDLE/LISTENING/PROCESSING/PLAYING) |
+| apex-voice | `supabase/functions/apex-voice/` | ~250 | STT routing, TTS synthesis, WebSocket upgrade |
+| voiceSafety | `supabase/functions/_shared/voiceSafety.ts` | ~150 | Content moderation, PII redaction, safety classification |
+| omniport-voice | `src/omniconnect/ingress/omniport-voice.ts` | ~120 | Audio normalization, codec detection, language detection |
+| RealtimeAudio | `src/utils/RealtimeAudio.ts` | ~180 | Low-level audio playback, stream buffering, sample rate conversion |
+| ClientComputeNode | `src/components/omnidash/media/ClientComputeNode.tsx` | ~200 | GPU-accelerated media processing, WebGL canvas |
+| OmniMediaPlayer | `src/components/omnidash/media/OmniMediaPlayer.tsx` | ~220 | HLS/DASH adaptive streaming, ABR logic, subtitles |
+| EdgeCacheController | `lib/media/EdgeCacheController.ts` | ~250 | 250 MB LRU media cache with localStorage ledger |
+
+### 10.11 Performance Characteristics (Orchestrator)
 
 | Operation | Latency | Notes |
 |---|---|---|
