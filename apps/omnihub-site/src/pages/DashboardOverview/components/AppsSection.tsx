@@ -1,8 +1,10 @@
 import { memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FONT_SG } from '../constants';
 import { APPS } from '../data';
 import type { AppEntry } from '../types';
 import { AppTile } from './AppTile';
+import { useOmniDashAction } from '@/hooks/useOmniDashAction';
 
 interface AppsSectionProps {
   readonly onAppClick: (app: AppEntry) => () => void;
@@ -11,6 +13,9 @@ interface AppsSectionProps {
 export const AppsSection = memo(function AppsSection({
   onAppClick,
 }: AppsSectionProps) {
+  const navigate = useNavigate();
+  const { dispatch } = useOmniDashAction(navigate);
+
   return (
     <div className="apex-apps-section apps-hex">
       <div
@@ -45,7 +50,16 @@ export const AppsSection = memo(function AppsSection({
             ALL SYSTEMS ({APPS.length})
           </span>
         </div>
-        <span
+        <button
+          type="button"
+          onClick={() => dispatch({
+            appKey: 'settings',
+            provider: 'Settings',
+            label: 'Settings',
+            category: 'control-plane',
+            routePath: '/omnidash/settings',
+            dashboardStatus: 'Live',
+          })}
           style={{
             fontSize: 12.84,
             color: '#f97316',
@@ -53,10 +67,14 @@ export const AppsSection = memo(function AppsSection({
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
+            background: 'none',
+            border: 'none',
+            fontFamily: 'inherit',
+            padding: 0,
           }}
         >
-          Manage →
-        </span>
+          Manage \u2192
+        </button>
       </div>
 
       <div className="apex-apps-row">
