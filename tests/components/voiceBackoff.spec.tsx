@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { act } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import VoiceInterface from '@/components/VoiceInterface';
 
@@ -71,12 +72,9 @@ describe('VoiceInterface backoff', () => {
     render(<VoiceInterface />);
 
     const startButton = screen.getByText(/Start Voice Chat/i);
-    fireEvent.click(startButton);
-
-    // startConversation is async (awaits getUserMedia); flush microtask queue
-    // so the initial WebSocket constructor runs before we inspect instances
-    await Promise.resolve();
-    await Promise.resolve();
+    await act(async () => {
+      fireEvent.click(startButton);
+    });
 
     expect(MockWebSocket.instances.length).toBeGreaterThan(0);
 
@@ -84,21 +82,19 @@ describe('VoiceInterface backoff', () => {
     // reconnect timeouts (attempts 1 and 2), then a 3rd that hits the >= limit
     // and calls handleDegraded() directly with no further timeout scheduled.
     for (let i = 0; i < 2; i++) {
-      MockWebSocket.instances[i].triggerError();
-      // Advance time past the backoff window (BASE=500, MAX=10000, JITTER=250)
-      // so the reconnect setTimeout fires and a new WebSocket is created
-      vi.advanceTimersByTime(11_000);
-      // flush the connectVoice async chain (no getUserMedia on reconnect)
-      await Promise.resolve();
+      await act(async () => {
+        MockWebSocket.instances[i].triggerError();
+        // Advance time past the backoff window (BASE=500, MAX=10000, JITTER=250)
+        // so the reconnect setTimeout fires and a new WebSocket is created
+        vi.advanceTimersByTime(11_000);
+      });
     }
 
     // Third error: reconnectAttemptsRef = 2 → nextAttempt = 3 >= MAX_RETRIES(3)
     // → handleDegraded() called synchronously, no new timeout queued
-    MockWebSocket.instances[2].triggerError();
-
-    // Flush React state updates triggered by handleDegraded (setDegradedMode etc.)
-    await Promise.resolve();
-    await Promise.resolve();
+    await act(async () => {
+      MockWebSocket.instances[2].triggerError();
+    });
 
     expect(screen.getByText(/Voice connection degraded/i)).toBeInTheDocument();
   });

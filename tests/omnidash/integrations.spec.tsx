@@ -14,6 +14,19 @@ vi.mock('@/omnidash/omnilink-api', () => ({
   fetchOmniLinkEvents: vi.fn(),
 }));
 
+vi.mock('@/stores/omniBoardStore', () => ({
+  useOmniBoard: (selector: (s: { connectors: Record<string, unknown> }) => unknown) =>
+    selector({ connectors: {} }),
+}));
+
+vi.mock('@/omnidash/useOmniDashAction', () => ({
+  useOmniDashAction: () => ({ dispatch: vi.fn() }),
+}));
+
+vi.mock('@/stores/omniMediaStore', () => ({
+  useOmniMedia: () => ({ loadMedia: vi.fn() }),
+}));
+
 import {
   fetchOmniLinkEvents,
   fetchOmniLinkIntegrations,
