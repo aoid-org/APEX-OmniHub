@@ -108,6 +108,29 @@ class IntentRegistry:
 
         return decorator
 
+    # ── Direct mapping (for pre-existing @activity.defn activities) ───
+
+    def map_intent(self, intent_name: str, activity_name: str) -> None:
+        """Directly map an intentId to a Temporal activity name string.
+
+        Use this for activities already registered with Temporal via
+        ``@activity.defn(name="...")``.  The decorator pattern is preferred
+        for new activities, but this method bridges existing ones.
+
+        Raises ``ValueError`` on duplicate registration.
+        """
+        if intent_name in self._intents:
+            raise ValueError(
+                f"IntentRegistry: duplicate registration for '{intent_name}' — "
+                f"already mapped to activity '{self._intents[intent_name]}'."
+            )
+        self._intents[intent_name] = activity_name
+        logger.info(
+            "IntentRegistry: mapped '%s' → activity '%s'",
+            intent_name,
+            activity_name,
+        )
+
     # ── Resolution ────────────────────────────────────────────────────
 
     def resolve(self, intent_id: str) -> str | None:

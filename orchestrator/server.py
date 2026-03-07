@@ -21,10 +21,15 @@ from temporalio.client import Client
 from uvicorn import Config, Server
 
 from config import settings
+from core.intent_registry import registry
 from metrics import get_metrics_app
 from omniboard.router import router as omniboard_router
 from security.request_signing import SignatureVerificationMiddleware
 from workflows.agent_saga import AgentWorkflow
+from workflows.universal_saga import UniversalOrchestratorWorkflow
+
+# Ensure registry is seeded before any request arrives
+import core.intents  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +106,62 @@ async def create_goal(request: GoalRequest):
 
     except Exception:
         logger.error("Unhandled exception", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error") from None
+
+
+class IntentRequest(BaseModel):
+    intent_id: str
+    trace_id: str
+    tenant_id: str
+    user_id: str
+    payload: dict = {}
+
+
+@app.post("/api/v1/intents", responses={500: {"description": "Internal Server Error"}})
+async def execute_intent(request: IntentRequest):
+    """
+    Execute an intent via the Universal Orchestrator Workflow.
+
+    This endpoint receives intent-based requests from the Edge Function
+    (event-ingress-adapter) and starts the UniversalOrchestratorWorkflow
+    which resolves the activity dynamically via the Intent Registry.
+    """
+    # Fail-closed: reject unregistered intents before hitting Temporal
+    if request.intent_id not in registry:
+        return {
+            "intentId": request.intent_id,
+            "traceId": request.trace_id,
+            "status": "offline",
+            "error": f"Intent '{request.intent_id}' is not registered.",
+            "schemaVersion": "1.0.0",
+        }
+
+    try:
+        client = await Client.connect(
+            os.getenv("TEMPORAL_HOST", "localhost:7233"),
+            namespace=os.getenv("TEMPORAL_NAMESPACE", "default"),
+        )
+
+        workflow_id = f"intent-{request.trace_id}"
+
+        handle = await client.start_workflow(
+            UniversalOrchestratorWorkflow.run,
+            args=[{
+                "intent_id": request.intent_id,
+                "trace_id": request.trace_id,
+                "tenant_id": request.tenant_id,
+                "user_id": request.user_id,
+                "payload": request.payload,
+            }],
+            id=workflow_id,
+            task_queue=os.getenv("TEMPORAL_TASK_QUEUE", "apex-orchestrator"),
+        )
+
+        logger.info("Universal workflow started: %s", handle.id)
+        return {"workflowId": handle.id, "status": "started"}
+
+    except Exception:
+        logger.error("Intent execution failed", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error") from None
 
 

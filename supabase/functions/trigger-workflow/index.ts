@@ -15,6 +15,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { withHttp, jsonResponse } from '../_shared/http.ts';
 import { authenticateUser } from '../_shared/auth.ts';
 import { buildSignedHeaders } from '../_shared/requestSigning.ts';
+import { normalizeToEventEnvelope } from '../_shared/event-ingress-adapter.ts';
 
 /** Workflow request payload structure */
 interface WorkflowRequestPayload {
@@ -214,6 +215,77 @@ serve(
       const payload = ctx.body;
 
       try {
+        // ── Intent-based routing (Universal Orchestrator path) ──────
+        // If the payload contains an intentId (or intent_id), normalize
+        // it via the Event Ingress Adapter and route to /api/v1/intents.
+        const rawBody = ctx.body as Record<string, unknown>;
+        const hasIntentSignal =
+          typeof rawBody.intentId === 'string' ||
+          typeof rawBody.intent_id === 'string' ||
+          typeof rawBody.intent === 'string';
+
+        if (hasIntentSignal) {
+          const envelope = normalizeToEventEnvelope(rawBody, {
+            sourceIp: req.headers.get('x-forwarded-for') ?? undefined,
+            userAgent: req.headers.get('user-agent') ?? undefined,
+            channel: 'api',
+          });
+
+          const orchestratorUrl = resolveOrchestratorUrl();
+          const intentPath = '/api/v1/intents';
+          const intentBody = JSON.stringify({
+            intent_id: envelope.intentId,
+            trace_id: envelope.traceId,
+            tenant_id: envelope.tenantId,
+            user_id: authResult.user.id,
+            payload: envelope.metadata.rawPayload,
+          });
+
+          const signedHeaders = await buildSignedHeaders(
+            'POST',
+            intentPath,
+            intentBody,
+            envelope.traceId,
+          );
+
+          const intentResponse = await fetch(
+            `${orchestratorUrl}${intentPath}`,
+            {
+              method: 'POST',
+              headers: {
+                ...signedHeaders,
+                'X-Idempotency-Key': envelope.idempotencyKey,
+                'X-User-Id': authResult.user.id,
+                'X-Trace-Id': envelope.traceId,
+              },
+              body: intentBody,
+            }
+          );
+
+          if (!intentResponse.ok) {
+            const errorText = await intentResponse.text();
+            console.error(`Intent orchestrator error: ${intentResponse.status}`, errorText);
+            return jsonResponse(
+              { error: 'orchestrator_error', message: 'Failed to execute intent' },
+              502,
+              ctx.corsHeaders
+            );
+          }
+
+          const intentData = await intentResponse.json();
+          return jsonResponse(
+            {
+              workflow_id: intentData.workflowId ?? envelope.traceId,
+              status: 'queued',
+              trace_id: envelope.traceId,
+              intent_id: envelope.intentId,
+            },
+            202,
+            ctx.corsHeaders
+          );
+        }
+
+        // ── Legacy goal-based routing (AgentWorkflow path) ──────────
         // Compute cryptographic seal
         const requestHash = await computeRequestHash(
           payload.query,
