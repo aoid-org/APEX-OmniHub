@@ -70,8 +70,7 @@ describe('encodeAudioForAPI', () => {
 
     for (let i = 0; i < length; i++) {
       const s = Math.max(-1, Math.min(1, input[i]));
-      const expectedValue = s < 0 ? Math.floor(s * 0x8000) : Math.floor(s * 0x7FFF);
-      // Using floor because of the way float to int works in JS assignment to Int16Array
+      // Using Math.trunc because of the way float to int works in JS assignment to Int16Array
       // Actually, JS does truncation (rounding towards zero) for bitwise or assignment?
       // "The assignment of a value to an element of a typed array is performed using the abstract operation SetValueInBuffer"
       // "If type is "Int16", let intValue be 𝔽(toInt16(value))."
