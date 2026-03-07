@@ -15,7 +15,7 @@ import { DashboardOverview } from '@/pages/DashboardOverview';
 import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
 import { BYOMCockpit } from '@/components/byom/BYOMCockpit';
 import { useOmniDashAction, type OmniDashIntent } from '@/hooks/useOmniDashAction';
-import { getModuleContent } from '@/components/omnidash/ModuleRegistry';
+import { hasModuleComponent } from '../components/omnidash/moduleComponents';
 import '@/styles/omnidash-layout.css';
 import { z } from 'zod';
 
@@ -98,7 +98,7 @@ export function OmniDashLayout() {
 
         <nav className="od-nav">
           {SIDEBAR_NAV.map((item) => {
-            const hasModule = getModuleContent(item.key) !== undefined;
+            const hasModule = hasModuleComponent(item.key);
             if (hasModule) {
               return (
                 <button

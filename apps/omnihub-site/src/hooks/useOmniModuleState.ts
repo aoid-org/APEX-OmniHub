@@ -9,13 +9,12 @@
 
 import { useState, useEffect } from 'react';
 import { supabase, hasSupabaseConfig } from '@/lib/supabase';
-import {
-  getModuleContent,
-  type ModuleContent,
-  type ModuleStatItem,
-  type ModuleListItem,
-  type ModuleAction,
-} from '@/components/omnidash/ModuleRegistry';
+import type {
+  ModuleContent,
+  ModuleStatItem,
+  ModuleListItem,
+  ModuleAction,
+} from '../components/omnidash/ModuleRegistry';
 
 export interface OmniModuleState {
   readonly moduleKey: string;
@@ -29,13 +28,12 @@ export interface OmniModuleState {
 }
 
 export function useOmniModuleState(appKey: string): OmniModuleState {
-  const fallback = getModuleContent(appKey);
   const [state, setState] = useState<OmniModuleState>({
     moduleKey: appKey,
-    headline: fallback?.headline ?? '',
-    stats: fallback?.stats ?? [],
-    items: fallback?.items ?? [],
-    actions: fallback?.actions ?? [],
+    headline: '',
+    stats: [],
+    items: [],
+    actions: [],
     loading: true,
     error: null,
     isLive: false,

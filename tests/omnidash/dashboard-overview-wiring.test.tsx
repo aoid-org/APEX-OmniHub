@@ -27,6 +27,21 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+// Stub hasModuleComponent — modules are resolved via Edge Function, not local registry
+vi.mock('../../apps/omnihub-site/src/components/omnidash/moduleComponents', () => ({
+  hasModuleComponent: (key: string) =>
+    ['omniskills', 'physiomni', 'audits', 'links', 'automations', 'workflows', 'files', 'billing', 'settings'].includes(key),
+}));
+
+// Stub Supabase Edge Function (omnilink-port) used by useOmniModuleState
+vi.mock('../../apps/omnihub-site/src/lib/supabase', () => ({
+  hasSupabaseConfig: false,
+  supabase: {
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
+    functions: { invoke: vi.fn().mockResolvedValue({ data: null, error: null }) },
+  },
+}));
+
 describe('DashboardOverview - OmniBoard Wiring', () => {
   const mockNavigate = vi.fn();
   const setAppHealth = vi.fn();

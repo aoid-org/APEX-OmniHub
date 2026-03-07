@@ -42,7 +42,6 @@ function ModuleLoadingFallback() {
 
 interface ModuleRendererProps {
   readonly moduleKey: string;
-  readonly onAction: (payload: Record<string, unknown>) => void;
   readonly onClose: () => void;
 }
 
