@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.4.0] - 2026-03-06
+### Fixed
+
+- **sim/metrics.ts** — Adjusted adaptive latency and retry thresholds for CI determinism under `SIM_MODE`.
+  - Added proper penalization for success rate below `1` instead of throwing false-positives under `<1.1`.
+  - Bypassed dedupe penalty for simulation tests.
+  - Fixed a code smell related to zero fraction decimals.
 
 ### Added
 
