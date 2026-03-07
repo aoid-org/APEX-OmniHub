@@ -18,7 +18,7 @@ import json
 import re
 import sys
 import textwrap
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -87,7 +87,7 @@ def _manifest(name: str, archetype: str) -> dict[str, Any]:
             "health_check_endpoint": "/health",
             "metrics_enabled": True,
         },
-        "created_at": datetime.now(UTC).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "created_by": f"apex-skill-forge v{VERSION}",
     }
 

@@ -54,7 +54,7 @@ export function debugLog({ location, message, data, hypothesisId }: LogData): vo
     const payload = {
       location,
       message,
-      data: { ...(redact(data) as Record<string, unknown>), timestamp: Date.now() },
+      data: { ...redact(data), timestamp: Date.now() },
       timestamp: Date.now(),
       // Use ephemeral IDs if not provided, don't leak hardcoded session
       sessionId: globalThis.crypto?.randomUUID() || 'ephemeral-session',

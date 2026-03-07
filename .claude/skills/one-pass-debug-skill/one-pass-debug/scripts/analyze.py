@@ -7,12 +7,12 @@ Exit: 0=complete, 1=incomplete evidence, 2=system error
 © 2025 APEX Business Systems Ltd. Edmonton, AB, Canada.
 """
 
-import argparse
-import json
 import sys
-from datetime import datetime
+import json
+import argparse
 from pathlib import Path
-
+from datetime import datetime
+from typing import Optional, Dict, List, Any
 
 class DebugAnalyzer:
     """Structures debugging evidence for one-pass resolution."""
@@ -49,11 +49,11 @@ class DebugAnalyzer:
         }
     
     def add_error_evidence(self,
-                          stack_trace: str | None = None,
-                          error_message: str | None = None,
-                          error_code: str | None = None,
-                          file_path: str | None = None,
-                          line_number: int | None = None) -> None:
+                          stack_trace: Optional[str] = None,
+                          error_message: Optional[str] = None,
+                          error_code: Optional[str] = None,
+                          file_path: Optional[str] = None,
+                          line_number: Optional[int] = None) -> None:
         """Phase 2: Collect error evidence."""
         self.evidence["error"] = {
             "stack_trace": stack_trace,
@@ -65,10 +65,10 @@ class DebugAnalyzer:
         }
     
     def add_state_evidence(self,
-                          trigger_input: str | None = None,
-                          environment: dict | None = None,
-                          variable_values: dict | None = None,
-                          external_state: str | None = None) -> None:
+                          trigger_input: Optional[str] = None,
+                          environment: Optional[Dict] = None,
+                          variable_values: Optional[Dict] = None,
+                          external_state: Optional[str] = None) -> None:
         """Phase 2: Collect state evidence."""
         self.evidence["state"] = {
             "trigger_input": trigger_input,
@@ -79,10 +79,10 @@ class DebugAnalyzer:
         }
     
     def add_code_evidence(self,
-                         failing_code: str | None = None,
-                         related_functions: list[str] | None = None,
-                         recent_changes: str | None = None,
-                         reproduction_test: str | None = None) -> None:
+                         failing_code: Optional[str] = None,
+                         related_functions: Optional[List[str]] = None,
+                         recent_changes: Optional[str] = None,
+                         reproduction_test: Optional[str] = None) -> None:
         """Phase 2: Collect code evidence."""
         self.evidence["code"] = {
             "failing_code": failing_code,
@@ -93,10 +93,10 @@ class DebugAnalyzer:
         }
     
     def add_timeline_evidence(self,
-                             first_appeared: str | None = None,
-                             frequency: str | None = None,
-                             trigger_conditions: list[str] | None = None,
-                             non_trigger_conditions: list[str] | None = None) -> None:
+                             first_appeared: Optional[str] = None,
+                             frequency: Optional[str] = None,
+                             trigger_conditions: Optional[List[str]] = None,
+                             non_trigger_conditions: Optional[List[str]] = None) -> None:
         """Phase 2: Collect timeline evidence."""
         self.evidence["timeline"] = {
             "first_appeared": first_appeared,
@@ -108,8 +108,8 @@ class DebugAnalyzer:
     
     def add_hypothesis(self,
                        theory: str,
-                       evidence_for: list[str],
-                       evidence_against: list[str],
+                       evidence_for: List[str],
+                       evidence_against: List[str],
                        verdict: str) -> None:
         """Phase 3: Add a hypothesis to the deduction matrix."""
         self.evidence["hypotheses"].append({
@@ -122,7 +122,7 @@ class DebugAnalyzer:
     def set_root_cause(self, 
                        cause: str,
                        proof: str,
-                       eliminated_alternatives: list[str]) -> None:
+                       eliminated_alternatives: List[str]) -> None:
         """Phase 3: Lock the proven root cause."""
         self.evidence["root_cause"] = {
             "cause": cause,
@@ -135,9 +135,9 @@ class DebugAnalyzer:
                       fix_location: str,
                       fix_action: str,
                       execution_path_verified: bool,
-                      edge_cases_checked: list[str],
+                      edge_cases_checked: List[str],
                       blast_radius: str,
-                      side_effects: list[str]) -> None:
+                      side_effects: List[str]) -> None:
         """Phase 4: Record mental simulation results."""
         self.evidence["simulation"] = {
             "fix_location": fix_location,
@@ -149,7 +149,7 @@ class DebugAnalyzer:
             "complete": execution_path_verified and len(edge_cases_checked) > 0
         }
     
-    def run_preflight(self) -> dict[str, bool]:
+    def run_preflight(self) -> Dict[str, bool]:
         """Phase 5: Run pre-flight checklist."""
         checks = {
             "scope_locked": self.evidence["scope"].get("complete", False),
@@ -182,7 +182,7 @@ class DebugAnalyzer:
             self.run_preflight()
         return all(self.evidence["preflight"].values())
     
-    def get_blocking_items(self) -> list[str]:
+    def get_blocking_items(self) -> List[str]:
         """Get list of items blocking execution."""
         if not self.evidence["preflight"]:
             self.run_preflight()

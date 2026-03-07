@@ -1,4 +1,4 @@
-# Universal Synchronized Orchestrator
+# APEX OmniHub
 
 ```
  █████╗ ██████╗ ███████╗██╗  ██╗  ██████╗ ███╗   ███╗███╗   ██╗██╗██╗  ██╗██╗   ██╗██████╗
@@ -10,34 +10,26 @@
 ```
 
 **INTELLIGENCE DESIGNED.**
-                                                                                                                                            **_Directable • Accountable • Dependable_**
+_Directable • Accountable • Dependable_
 
-**Version:** 1.3.8 | **Release Date:** 2026-03-02
+**Version:** 1.2.1 | **Release Date:** 2026-02-20
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
 [![SonarQube](https://img.shields.io/badge/sonarqube-A-success)]()
-[![Tests](https://img.shields.io/badge/tests-597%2B%20pass-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-597%20pass-brightgreen)]()
 [![Armageddon](https://img.shields.io/badge/armageddon-L7%20CERTIFIED-gold)]()
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 
 ---
 
-## 🚦 Start Here (Canonical Map)
-
-**Before touching code, read the canonical architecture map:**
-
-- [ARCHITECTURE_CANONICAL_MAP.md](./ARCHITECTURE_CANONICAL_MAP.md)
-
----
-
 ## Overview
 
-APEX OmniHub is the first **Universal Sync Orchestrator** for **governed execution** across ALL modern stacks, AI apps, legacy enterprise systems, and Web3 infrastructure. Think "Anti-OS", it is a "USO": one place to connect fragmented systems, translate universally, enforce policy, and produce an audit trail you can defend.
+APEX OmniHub is the enterprise **AI orchestration control plane** for **governed execution** across ALL modern stacks, AI apps, legacy enterprise systems, and Web3 infrastructure. Think "control tower": one place to connect, translate, enforce policy, and produce an audit trail you can defend.
 
 The platform relies on a "Holy Trinity" architecture:
 
-1.  **OmniHub**: The Universal Sync Orchestrator (Logic & Policy).
+1.  **OmniHub**: The Central Control Plane (Logic & Policy).
 2.  **OmniLink**: The Secure Gateway (Connectivity).
 3.  **OmniPort**: The Multimodal Normalizer (Input/Output).
 
@@ -45,20 +37,17 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-02-27)
+## Platform Statistics (Verified)
 
-| Metric                                           | Value                                             |
-| ------------------------------------------------ | ------------------------------------------------- |
-| **Source Files (`src/`)**                        | 297 total files                                   |
-| **TypeScript/TSX (`src/`)**                      | 267 files                                         |
-| **React Components (`src/`)**                    | 134 `.tsx` component files                        |
-| **Page Routes (`src/pages/`)**                   | 27 page files                                     |
-| **Edge Functions (`supabase/functions/`)**       | 22 function directories                           |
-| **Database Migrations (`supabase/migrations/`)** | 50 SQL migration files                            |
-| **CI/CD Workflows (`.github/workflows/`)**       | 12 workflow files                                 |
-| **Test Specs (`tests/` + `e2e/`)**               | 93 test specs (`*.test.ts`, `*.spec.ts`)          |
-| **Custom Hooks (`src/`)**                        | 14 hook files matching `use*.ts*`                 |
-| **Orchestrator (Python)**                        | 84 files (Temporal workers, activities, security) |
+| Metric                  | Value                                     |
+| ----------------------- | ----------------------------------------- |
+| **Source Files**        | 234+ TypeScript/React files               |
+| **React Components**    | 28+ production components                 |
+| **Edge Functions**      | 18 Supabase serverless functions          |
+| **Database Migrations** | 35 versioned SQL schemas                  |
+| **CI/CD Pipelines**     | 10 GitHub Actions workflows               |
+| **Test Files**          | 59 test specifications                    |
+| **Integration Modules** | 4 (Maestro, OmniLink, OmniPort, Supabase) |
 
 ---
 
@@ -89,7 +78,7 @@ A three-tier agent architecture designed to keep unsafe reasoning from reaching 
 - Event sourcing + deterministic replay
 - Saga-style compensation patterns
 - Idempotent task execution
-- Human approval gates (**MAN Mode** - `supabase/migrations/20260108120000_man_mode.sql`)
+- Human approval gates (**MAN Mode** — `supabase/migrations/20260108120000_man_mode.sql`)
 
 ### 3) Fortress Protocol (Security & Compliance)
 
@@ -109,25 +98,16 @@ The "Trinity" connectivity layer:
 - **OmniPort**: The Multimodal Normalizer for standardized I/O and DLQ (`20260124000000_omniport_dlq.sql`).
 - **OmniTrace**: Full replay & tracing capability (`20260125000000_omnitrace_replay.sql`).
 
-### 5) Edge Compute Layer (Media & CORS)
+### 5) Web3-Native Identity (Optional)
 
-Client-side infrastructure for deterministic media delivery:
-
-- **Edge CORS Proxy**: Vercel Edge Function (`api/cors.ts`) with WinterCG-safe header handling and Range passthrough.
-- **LRU Media Cache**: 250 MB ceiling with localStorage ledger eviction (`lib/media/EdgeCacheController.ts`).
-- **Cloudflare Worker**: Stateless CORS proxy at `edge/cors-proxy/edge-cors-proxy.js` for production CDN.
-- **Fail-Safe Design**: Every cache miss gracefully degrades to proxy URL — zero silent failures.
-
-### 6) Web3-Native Identity (Optional)
-
-- SIWE (Sign-In with Ethereum) - `supabase/functions/web3-verify/`
-- NFT verification - `supabase/functions/verify-nft/`
+- SIWE (Sign-In with Ethereum) — `supabase/functions/web3-verify/`
+- NFT verification — `supabase/functions/verify-nft/`
 - Multi-chain support (`20260101000000_create_web3_verification.sql`)
 - Chain transaction logging (`20260109120000_create_chain_tx_log.sql`)
 
 ---
 
-## Edge Functions (22 Directories in Repository)
+## Edge Functions (18 Deployed)
 
 | Function                 | Purpose                    |
 | ------------------------ | -------------------------- |
@@ -147,17 +127,13 @@ Client-side infrastructure for deterministic media delivery:
 ## Repository Layout
 
 ```
-/src                 - OmniDash UI (277 files)
-/src/pages/OmniDash/OmniDashLayout.tsx  -  Shell / layout
-/src/components/omnidash/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
-/src/omnidash/uiRegistry.ts  -   UI registry wiring
-
-
-/supabase/migrations - Database schema (50+ versioned SQL migrations)
-/supabase/functions  - Edge functions (22 serverless endpoints)
-/orchestrator        - Temporal workers and orchestration services (83 files)
-/tests               - Automated test suite (115 files)
-/.github/workflows   - CI/CD workflows (12 pipelines)
+/src                 — OmniDash UI (234 files, 28 components)
+/supabase/migrations — Database schema (35 versioned migrations)
+/supabase/functions  — Edge functions (18 serverless endpoints)
+/orchestrator        — Temporal workers (Python, 55 files)
+/apps/omnihub-site   — Marketing site (Vite)
+/tests               — Test suite (59 specifications)
+/.github/workflows   — CI/CD pipelines (10 workflows)
 ```
 
 ---
@@ -209,7 +185,7 @@ bun test           # Vitest suite
 bun run build      # Production build
 ```
 
-### CI/CD Pipelines (Selected Workflows)
+### CI/CD Pipelines (8 Workflows)
 
 | Workflow                | Trigger         | Purpose                      |
 | ----------------------- | --------------- | ---------------------------- |
@@ -219,7 +195,6 @@ bun run build      # Production build
 | `secret-scanning`       | PR              | Security scanning            |
 | `chaos-simulation-ci`   | Scheduled       | Resilience testing           |
 | `sonarqube-analysis`    | PR              | Code quality audit           |
-| `guardrail-alert`       | CI failure      | Guardrail violation alerting |
 
 ---
 
@@ -227,15 +202,13 @@ bun run build      # Production build
 
 Full documentation is available in the [`docs/`](./docs/) directory.
 
-| Document                                                                                | Description           |
-| --------------------------------------------------------------------------------------- | --------------------- |
-| [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
-| [Launch Readiness](./docs/project-status/LAUNCH_READINESS_v1.0.0.md)                    | Deployment checklist  |
-| [OPS Runbooks](./OPS_RUNBOOKS.md)                                                       | Operations procedures |
-| [Supabase Setup](./SUPABASE_SETUP.md)                                                   | Database config guide |
-| [orchestrator/README](./orchestrator/README.md)                                         | Temporal setup        |
-| [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                                     | Human-in-the-loop     |
-| [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                             | Backend design        |
+| Document                                                                                | Description          |
+| --------------------------------------------------------------------------------------- | -------------------- |
+| [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design        |
+| [Launch Readiness](./docs/project-status/LAUNCH_READINESS_v1.0.0.md)                    | Deployment checklist |
+| [orchestrator/README](./orchestrator/README.md)                                         | Temporal setup       |
+| [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                                     | Human-in-the-loop    |
+| [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                             | Backend design       |
 
 ---
 
@@ -249,17 +222,17 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 
 ### Non-Negotiables
 
-- **No vendor lock-in** - portable adapters, clean interfaces
-- **Single-port integration** - no scattered API calls
-- **Idempotent operations** - safe to re-run, easy rollback
-- **No secrets in code** - env/config only
-- **Observable behavior** - health checks, structured logs
+- **No vendor lock-in** — portable adapters, clean interfaces
+- **Single-port integration** — no scattered API calls
+- **Idempotent operations** — safe to re-run, easy rollback
+- **No secrets in code** — env/config only
+- **Observable behavior** — health checks, structured logs
 
 ---
 
 ## 📄 Documentation
 
-**Proprietary** - © 2026 APEX Business Systems Ltd.
+**Proprietary** — © 2026 APEX Business Systems Ltd.
 
 ---
 

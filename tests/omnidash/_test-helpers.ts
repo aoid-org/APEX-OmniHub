@@ -6,6 +6,7 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
 
 // Environment constants
 export const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'http://localhost:54321';
@@ -19,8 +20,8 @@ export const hasServiceKey = !!SUPABASE_SERVICE_KEY;
  * Test context containing clients and test user info
  */
 export interface OmniDashTestContext {
-  adminClient: SupabaseClient;
-  anonClient: SupabaseClient;
+  adminClient: SupabaseClient<Database>;
+  anonClient: SupabaseClient<Database>;
   testUserId: string;
   testUserEmail: string;
 }
@@ -28,8 +29,8 @@ export interface OmniDashTestContext {
 /**
  * Creates a Supabase admin client (service role)
  */
-export function createAdminClient(): SupabaseClient {
-  return createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+export function createAdminClient(): SupabaseClient<Database> {
+  return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
     auth: { persistSession: false },
   });
 }
@@ -37,8 +38,8 @@ export function createAdminClient(): SupabaseClient {
 /**
  * Creates a Supabase anon client for test user
  */
-export function createAnonClient(): SupabaseClient {
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export function createAnonClient(): SupabaseClient<Database> {
+  return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false },
   });
 }
@@ -77,9 +78,9 @@ export async function setupTestUser(emailPrefix: string): Promise<OmniDashTestCo
  * Cleans up test user and related data
  */
 export async function cleanupTestUser(
-  adminClient: SupabaseClient,
+  adminClient: SupabaseClient<Database>,
   testUserId: string,
-  additionalCleanup?: (client: SupabaseClient, userId: string) => Promise<void>
+  additionalCleanup?: (client: SupabaseClient<Database>, userId: string) => Promise<void>
 ): Promise<void> {
   if (!testUserId) return;
 

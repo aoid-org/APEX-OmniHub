@@ -5,16 +5,8 @@
 
 import { BaseConnector } from './base';
 import { ConnectorConfig, SessionToken, RawEvent, NormalizationContext } from '../types/connector';
-import { CanonicalEvent, EventType, DataClassification } from '../types/canonical';
+import { CanonicalEvent, EventType } from '../types/canonical';
 import { generateCorrelationId } from '../utils/correlation';
-
-// Lightweight auth session storage for PKCE flow
-const authSessionStorage = {
-  _store: new Map<string, string>(),
-  async storeSession(key: string, value: string) { this._store.set(key, value); },
-  async retrieveSession(key: string) { return this._store.get(key) ?? null; },
-  async clearSession(key: string) { this._store.delete(key); },
-};
 
 interface MetaTokenResponse {
   access_token: string;
@@ -52,7 +44,7 @@ export class MetaBusinessConnector extends BaseConnector {
     super('meta_business', config);
   }
 
-  async getAuthUrl(_userId: string, _tenantId: string, state: string): Promise<string> {
+  async getAuthUrl(userId: string, tenantId: string, state: string): Promise<string> {
     // Generate PKCE challenge
     const codeVerifier = this.generateCodeVerifier();
     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
@@ -105,7 +97,7 @@ export class MetaBusinessConnector extends BaseConnector {
   async disconnect(connectorId: string): Promise<void> {
     // Meta doesn't have a revoke endpoint, just clean up local storage
     // The token will naturally expire
-    if (import.meta.env.DEV) console.log(`Disconnecting Meta Business connector: ${connectorId}`);
+    console.log(`Disconnecting Meta Business connector: ${connectorId}`);
   }
 
   async refreshToken(session: SessionToken): Promise<SessionToken> {
@@ -137,7 +129,7 @@ export class MetaBusinessConnector extends BaseConnector {
 
     // Handle Demo Mode
     if (accessToken.startsWith('DEMO_')) {
-      if (import.meta.env.DEV) console.log('Demo mode: MetaBusinessConnector returning mock data.');
+      console.log('Demo mode detected in MetaBusinessConnector. Returning mock data.');
       return [
         {
           id: 'demo_post_1',
@@ -151,7 +143,7 @@ export class MetaBusinessConnector extends BaseConnector {
             likes: { count: 42 },
             comments: { count: 12 },
             shares: { count: 5 }
-          } as Record<string, unknown>,
+          },
           metadata: {
             platform: 'facebook',
             postType: 'status',
@@ -176,7 +168,7 @@ export class MetaBusinessConnector extends BaseConnector {
         id: post.id,
         type: 'post',
         timestamp: post.created_time,
-        data: post as unknown as Record<string, unknown>,
+        data: post,
         metadata: {
           platform: 'facebook',
           postType: post.type
@@ -195,12 +187,11 @@ export class MetaBusinessConnector extends BaseConnector {
     const correlationId = context?.correlationId || generateCorrelationId();
 
     return rawEvents.map(event => {
-      const post = event.data as unknown as MetaPost;
+      const post = event.data as MetaPost;
 
       return {
         eventId: `meta_${event.id}`,
         correlationId,
-        classification: DataClassification.INTERNAL,
         // Explicitly mapping identity from the Sovereign Context
         tenantId: context?.tenantId || 'unknown_tenant',
         userId: context?.userId || 'unknown_user',

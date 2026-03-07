@@ -1,6 +1,6 @@
 interface OAuthIconProps {
-  readonly className?: string;
-  readonly size?: number;
+  className?: string;
+  size?: number;
 }
 
 export function GoogleIcon({ className = '', size = 20 }: OAuthIconProps) {

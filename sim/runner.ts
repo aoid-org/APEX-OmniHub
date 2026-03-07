@@ -10,7 +10,7 @@
  */
 
 import { assertGuardRails } from './guard-rails';
-import { ChaosEngine, type ChaosConfig, type ChaosDecision, DEFAULT_CHAOS_CONFIG } from './chaos-engine';
+import { ChaosEngine, type ChaosConfig, DEFAULT_CHAOS_CONFIG } from './chaos-engine';
 import { getCircuitBreaker, type CircuitBreakerConfig, getAllCircuitStats } from './circuit-breaker';
 import { executeEventIdempotently, clearAllReceipts, getStats as getIdempotencyStats } from './idempotency';
 import { MetricsCollector } from './metrics';
@@ -111,10 +111,10 @@ export interface SimulationResult {
 // ============================================================================
 
 export class SimulationRunner {
-  private readonly config: SimulationConfig;
-  private readonly chaos: ChaosEngine;
-  private readonly metrics: MetricsCollector;
-  private readonly logs: string[] = [];
+  private config: SimulationConfig;
+  private chaos: ChaosEngine;
+  private metrics: MetricsCollector;
+  private logs: string[] = [];
   private startTime: Date | null = null;
 
   constructor(config: SimulationConfig) {
@@ -261,17 +261,16 @@ export class SimulationRunner {
    * Execute single beat
    */
   private async executeBeat(beat: Beat): Promise<BeatResult> {
+    const startTime = Date.now();
     let retries = 0;
     let wasCached = false;
     let lastError: string | undefined;
     const maxRetries = this.config.chaos.maxRetries || 2;
 
-    // Create event ONCE (outside retry loop).
-    // Use beat.number (seeded sequence) instead of Date.now() so the
-    // idempotency key is deterministic across runs with the same seed.
+    // Create event ONCE (outside retry loop)
     const event = createEvent(this.config.tenantId, beat.eventType)
       .correlationId(this.config.runId!)
-      .idempotencyKey(`${this.config.tenantId}-${beat.eventType}-${beat.number}`)
+      .idempotencyKey(`${this.config.tenantId}-${beat.eventType}-${Date.now()}-${beat.number}`)
       .source(beat.app)
       .target(beat.target || 'omnihub')
       .payload(beat.payload)
@@ -281,17 +280,8 @@ export class SimulationRunner {
     // Retries should NOT get new chaos injections
     const chaosDecision = this.chaos.decide(event, beat.number);
 
-    // Build simulated latency from seeded components so scores are
-    // identical across runs that share the same seed.
-    // Start with the chaos-injected delay (applied on attempt 0 only).
-    let simulatedLatencyMs = chaosDecision.shouldDelay ? chaosDecision.delayMs : 0;
-
     // Retry loop
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      // Seeded per-attempt network latency (replaces Math.random()).
-      const networkDelayMs = this.chaos.nextNetworkDelay();
-      simulatedLatencyMs += networkDelayMs;
-
       try {
 
         // Execute with idempotency
@@ -299,17 +289,19 @@ export class SimulationRunner {
         const { wasCached: cached, attemptCount: _attemptCount } = await executeEventIdempotently(
           event,
           async (evt) => {
-            return await this.executeEvent(evt, beat, chaosDecision, attempt, networkDelayMs);
+            return await this.executeEvent(evt, beat, chaosDecision, attempt);
           }
         );
 
         wasCached = cached;
         retries = attempt;
 
-        // Record metrics using seeded simulated latency (deterministic)
+        const latencyMs = Date.now() - startTime;
+
+        // Record metrics
         this.metrics.recordLatency(
           `${beat.app}:${beat.eventType}`,
-          simulatedLatencyMs,
+          latencyMs,
           true,
           retries
         );
@@ -319,7 +311,7 @@ export class SimulationRunner {
         return {
           beat,
           success: true,
-          latencyMs: simulatedLatencyMs,
+          latencyMs,
           retries,
           wasCached,
         };
@@ -330,9 +322,11 @@ export class SimulationRunner {
 
         // If this is the last attempt, fail
         if (attempt >= maxRetries) {
+          const latencyMs = Date.now() - startTime;
+
           this.metrics.recordLatency(
             `${beat.app}:${beat.eventType}`,
-            simulatedLatencyMs,
+            latencyMs,
             false,
             retries
           );
@@ -342,25 +336,25 @@ export class SimulationRunner {
           return {
             beat,
             success: false,
-            latencyMs: simulatedLatencyMs,
+            latencyMs,
             retries,
             wasCached,
             error: lastError,
           };
         }
 
-        // Exponential backoff before retry — seeded jitter, accumulate into simulated latency
-        const backoffMs = this.chaos.calculateRetryDelay(attempt);
-        simulatedLatencyMs += backoffMs;
+        // Exponential backoff before retry
+        const backoffMs = this.chaos.calculateBackoff(attempt);
         await new Promise(resolve => setTimeout(resolve, backoffMs));
       }
     }
 
     // Should never reach here, but TypeScript needs this
+    const latencyMs = Date.now() - startTime;
     return {
       beat,
       success: false,
-      latencyMs: simulatedLatencyMs,
+      latencyMs,
       retries,
       wasCached,
       error: lastError || 'Max retries exceeded',
@@ -373,9 +367,8 @@ export class SimulationRunner {
   private async executeEvent(
     event: EventEnvelope,
     beat: Beat,
-    chaosDecision: ChaosDecision,
-    attempt: number = 0,
-    networkDelayMs: number = 0
+    chaosDecision: unknown,
+    attempt: number = 0
   ): Promise<unknown> {
     // Get circuit breaker for target app
     const targetApp = Array.isArray(beat.target) ? beat.target[0] : (beat.target || 'omnihub');
@@ -410,9 +403,6 @@ export class SimulationRunner {
         return { status: 'ok', dryRun: true };
       }
 
-      // Apply seeded network latency before adapter call (replaces Math.random() in callAppAdapter)
-      await new Promise(resolve => setTimeout(resolve, networkDelayMs));
-
       // Call app adapter (stubbed for now)
       return await this.callAppAdapter(beat.app, event);
     });
@@ -422,8 +412,9 @@ export class SimulationRunner {
    * Call app adapter (stub - would call real adapters)
    */
   private async callAppAdapter(app: AppName, event: EventEnvelope): Promise<unknown> {
-    // Network delay is applied in executeEvent using a seeded value from
-    // chaos.nextNetworkDelay() — no Math.random() here.
+    // Simulate network delay
+    const delay = Math.random() * 100 + 50; // 50-150ms
+    await new Promise(resolve => setTimeout(resolve, delay));
 
     // Return mock response
     return {

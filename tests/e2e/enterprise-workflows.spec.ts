@@ -83,7 +83,7 @@ async function processInParallel<T>(
 
 /** Metrics collector for performance tests */
 class MetricsCollector {
-  private readonly metrics = new Map<string, number[]>();
+  private metrics = new Map<string, number[]>();
 
   record(name: string, value: number): void {
     if (!this.metrics.has(name)) {
@@ -333,8 +333,8 @@ describe('Enterprise Workflow E2E Tests', () => {
         private state: 'closed' | 'open' | 'half-open' = 'closed';
 
         constructor(
-          private readonly threshold: number = 3,
-          private readonly resetTimeout: number = 5000
+          private threshold: number = 3,
+          private resetTimeout: number = 5000
         ) {}
 
         recordFailure() {

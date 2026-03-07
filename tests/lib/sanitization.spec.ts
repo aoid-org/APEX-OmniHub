@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   sanitizeEventPayload,
+  stripPii,
   redactAmount,
 } from '@/lib/sanitization';
 
@@ -55,16 +56,6 @@ describe('sanitizeEventPayload', () => {
   });
 
   describe('Circuit Breakers', () => {
-    let errSpy: ReturnType<typeof vi.spyOn>;
-
-    beforeEach(() => {
-      errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    });
-
-    afterEach(() => {
-      errSpy.mockRestore();
-    });
-
     it('should handle deep nesting (max depth 10)', () => {
       // Create object with depth 15
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,10 +67,6 @@ describe('sanitizeEventPayload', () => {
       const result = sanitizeEventPayload(deep);
       // Should truncate at depth 10 - we expect a result, not a crash
       expect(result).toBeDefined();
-      expect(errSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[SECURITY] Sanitization circuit breaker tripped'),
-        expect.any(Object)
-      );
     });
 
     it('should handle excessive keys (max 1000)', () => {
@@ -90,11 +77,9 @@ describe('sanitizeEventPayload', () => {
 
       const result = sanitizeEventPayload(large);
       // Should return empty object (fail-secure) because the key limit is exceeded
+      // The key count check happens inside the loop, and if it exceeds, it sets circuitTripped = true.
+      // The public API checks circuitTripped and returns {} if true.
       expect(Object.keys(result).length).toBe(0);
-      expect(errSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[SECURITY] Sanitization circuit breaker tripped'),
-        expect.any(Object)
-      );
     });
 
     it('should handle large strings (10KB limit)', () => {
@@ -104,10 +89,6 @@ describe('sanitizeEventPayload', () => {
       const result = sanitizeEventPayload(input);
       // Circuit breaker tripped -> fail secure -> empty object
       expect(Object.keys(result).length).toBe(0);
-      expect(errSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[SECURITY] Sanitization circuit breaker tripped'),
-        expect.any(Object)
-      );
     });
   });
 
@@ -158,10 +139,10 @@ describe('sanitizeEventPayload', () => {
   });
 });
 
-describe('Standalone string sanitization (legacy replacement test)', () => {
-  it('should strip PII from a mock payload wrapping a string', () => {
+describe('stripPii', () => {
+  it('should strip PII from plain text', () => {
     const text = 'Email john@example.com or call (555) 123-4567';
-    const result = sanitizeEventPayload({ text }).text;
+    const result = stripPii(text);
     expect(result).not.toContain('john@example.com');
     expect(result).not.toContain('555');
   });

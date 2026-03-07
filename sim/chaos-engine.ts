@@ -155,8 +155,8 @@ class SeededRandom {
 // ============================================================================
 
 export class ChaosEngine {
-  private readonly config: ChaosConfig;
-  private readonly rng: SeededRandom;
+  private config: ChaosConfig;
+  private rng: SeededRandom;
   private stats: ChaosStats;
   private eventSequence: number = 0;
 
@@ -272,12 +272,17 @@ export class ChaosEngine {
   }
 
   /**
-   * @deprecated Use calculateRetryDelay() instead.
-   * Thin wrapper kept for backwards-compat call sites.
+   * Calculate exponential backoff delay for retry attempt
    */
   calculateBackoff(attempt: number): number {
-    console.warn('calculateBackoff() DEPRECATED - use calculateRetryDelay()');
-    return this.calculateRetryDelay(attempt);
+    const baseDelay = 100; // 100ms base delay
+    const maxDelay = 5000; // 5s max delay
+    const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
+
+    // Add jitter (±25%)
+    const jitter = delay * 0.25 * (this.rng.next() * 2 - 1);
+
+    return Math.round(delay + jitter);
   }
 
   /**
@@ -306,17 +311,7 @@ export class ChaosEngine {
   }
 
   /**
-   * Seeded base network latency for adapter calls (50–150ms).
-   * Uses the same seeded RNG so every run with the same seed produces
-   * identical latency measurements — required for determinism.
-   */
-  nextNetworkDelay(): number {
-    return this.rng.nextInt(50, 150);
-  }
-
-  /**
-   * Canonical retry backoff - uses config.baseBackoffMs (default 500ms)
-   * Exponential + full-range jitter [0, baseBackoffMs]
+   * Calculate retry delay with exponential backoff
    */
   calculateRetryDelay(attempt: number): number {
     if (attempt >= this.config.maxRetries) {

@@ -2,8 +2,6 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import { siteConfig } from '@/content/site';
 import { ReferenceOverlay } from './ReferenceOverlay';
 import { useAuth } from '@/lib/useAuth';
-import { BrandAnthemPlayer } from './BrandAnthemPlayer';
-import { useLocation } from 'react-router-dom';
 
 type LayoutProps = Readonly<{
   children: ReactNode;
@@ -123,27 +121,26 @@ function Nav() {
         </div>
 
         <ul className="nav__links" aria-label="Primary navigation">
-          {siteConfig.nav.links.map((link) => {
-            let customStyle = "";
-            if (link.label === "Tech Specs") {
-              customStyle = "nav__btn-pill nav__btn-pill--orange";
-            } else if (link.label === "Story") {
-              customStyle = "nav__btn-pill nav__btn-pill--navy";
-            }
-            return (
-              <li key={link.href}>
-                <a 
-                  href={link.href} 
-                  className={customStyle || 'nav__link'}
-                >
-                  {link.label}
-                </a>
-              </li>
-            );
-          })}
+          {siteConfig.nav.links.map((link) => (
+            <li key={link.href}>
+              <a href={link.href} className="nav__link">
+                {link.label}
+              </a>
+            </li>
+          ))}
         </ul>
 
         <div className="nav__actions">
+          {isAuthenticated ? (
+            <a href={dashboardUrl} className="btn btn--primary btn--sm">
+              LAUNCH CONSOLE
+            </a>
+          ) : (
+            <a href={siteConfig.nav.loginLink.href} className="btn btn--primary btn--sm">
+              {siteConfig.nav.loginLink.label}
+            </a>
+          )}
+
           <div className="nav__burger" ref={menuRef}>
             <button
               type="button"
@@ -210,16 +207,6 @@ function Nav() {
               </dialog>
             )}
           </div>
-
-          {isAuthenticated ? (
-            <a href={dashboardUrl} className="btn btn--primary btn--sm">
-              LAUNCH CONSOLE
-            </a>
-          ) : (
-            <a href={siteConfig.nav.loginLink.href} className="btn btn--primary btn--sm">
-              {siteConfig.nav.loginLink.label}
-            </a>
-          )}
         </div>
       </div>
     </nav>
@@ -268,9 +255,6 @@ function Footer() {
 }
 
 export function Layout({ children, title }: LayoutProps) {
-  const { pathname } = useLocation();
-  const shouldRenderBrandAnthem = pathname === '/';
-
   useEffect(() => {
     if (title) {
       document.title = `${title} | ${siteConfig.name}`;
@@ -282,7 +266,6 @@ export function Layout({ children, title }: LayoutProps) {
   return (
     <>
       <ReferenceOverlay />
-      {shouldRenderBrandAnthem ? <BrandAnthemPlayer /> : null}
       <Nav />
       <main>{children}</main>
       <Footer />

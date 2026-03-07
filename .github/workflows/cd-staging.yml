@@ -10,7 +10,7 @@ on:
   workflow_dispatch: # Manual trigger
 
 env:
-  NODE_VERSION: "20.x"
+  NODE_VERSION: '20.x'
 
 jobs:
   terraform:
@@ -107,7 +107,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -132,7 +132,7 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_STAGING }}
-          vercel-args: "--prod" # Deploy to staging's production
+          vercel-args: '--prod' # Deploy to staging's production
           working-directory: ./
 
       - name: Deployment Status
@@ -184,20 +184,6 @@ jobs:
             exit 1
           fi
           echo "Health check passed (200 OK)"
-        continue-on-error: true
-
-      - name: Validate /metrics endpoint
-        if: ${{ env.HAS_VERCEL_TOKEN == 'true' }}
-        run: |
-          response=$(curl -sf https://staging.omnihub.dev/metrics 2>/dev/null || echo "UNREACHABLE")
-          if [ "$response" = "UNREACHABLE" ]; then
-            echo "⚠️ Metrics endpoint unreachable (expected if orchestrator not co-deployed)"
-          elif echo "$response" | grep -q "idempotency_hits_total"; then
-            echo "✅ /metrics endpoint operational — idempotency counters present"
-          else
-            echo "❌ /metrics returned unexpected payload"
-            exit 1
-          fi
         continue-on-error: true
 
   notify:

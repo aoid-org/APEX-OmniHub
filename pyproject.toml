@@ -5,11 +5,7 @@ target-version = "py311"
 [tool.ruff.lint]
 # E=pycodestyle, F=pyflakes, I=isort, S=bandit security, C90=complexity, UP=pyupgrade
 select = ["E", "F", "I", "S", "C90", "UP"]
-ignore = ["S101", "E501", "S108", "S110", "E741", "UP036", "S311"]
-
-[tool.ruff.lint.per-file-ignores]
-"**/{tests,scripts,docs,.claude}/**/*.py" = ["S", "E501", "C901"]
-"{tests,scripts,docs,.claude}/**/*.py" = ["S", "E501", "C901"]
+ignore = []
 
 [tool.black]
 line-length = 88

@@ -25,7 +25,7 @@ async function mockEncrypt(
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encoded = textEncoder.encode(data);
   const ciphertext = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: iv as BufferSource },
+    { name: 'AES-GCM', iv },
     key,
     encoded
   );
@@ -38,7 +38,7 @@ async function mockDecrypt(
   key: CryptoKey
 ): Promise<string> {
   const decrypted = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: iv as BufferSource },
+    { name: 'AES-GCM', iv },
     key,
     ciphertext
   );

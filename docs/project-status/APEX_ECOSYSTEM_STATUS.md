@@ -1,11 +1,7 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-03-01 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # APEX Ecosystem Status
 
-**Last Updated:** 2026-03-01
-**Platform Version:** 1.3.4
-**Status:** 🟢 PRODUCTION LIVE
-
----
+**Last Updated:** 2026-02-07
 
 ## Core Systems
 
@@ -16,9 +12,7 @@
 - **Compliance**: GDPR (`../compliance/GDPR_COMPLIANCE.md`), SOC2 (`../compliance/SOC2_READINESS.md`), audit log helper `src/security/auditLog.ts`.
 - **Zero-Trust**: Baseline metrics `src/zero-trust/baseline.ts` + CLI, registry `src/zero-trust/deviceRegistry.ts`, docs `../security/zero-trust-baseline.md` and `../security/device-registry.md`.
 
----
-
-## OmniPort Ingress Engine
+## OmniPort Ingress Engine (NEW)
 
 The proprietary fortified ingress gateway for all input sources.
 
@@ -29,7 +23,7 @@ The proprietary fortified ingress gateway for all input sources.
 | **Metrics** | `src/omniconnect/ingress/omniport-metrics.ts` | ✅ OmniDash Integration |
 | **Voice** | `src/omniconnect/ingress/omniport-voice.ts` | ✅ Natural Language |
 | **DLQ** | `supabase/migrations/20260124000000_omniport_dlq.sql` | ✅ Risk-prioritized |
-| **Tests** | `tests/omniconnect/omniport.spec.ts` | ✅ 27/27 Passing |
+| **Tests** | `tests/omniconnect/omniport.spec.ts` | ✅ 27/27 Passing (timing stabilized) |
 
 **Features:**
 - Zero-Trust Gate with device validation (trusted/suspect/blocked)
@@ -53,36 +47,10 @@ const voiceResult = await processVoiceCommand(transcript, confidence, audioUrl, 
 const metrics = getOmniPortMetrics(60000);
 ```
 
----
+## Remaining TODOs
 
-## Edge Compute Layer (v1.3.8)
+- Move audit log + device registry to persistent storage
+- Wire guardian status into backend health endpoint
+- Align dependency scan workflow in CI
+- Add OmniPort metrics dashboard to OmniDash UI
 
-Deterministic client-side infrastructure for media delivery.
-
-| Component | Location | Status |
-|-----------|----------|--------|
-| **Edge CORS Proxy** | `api/cors.ts` (Vercel Edge Runtime) | ✅ WinterCG-safe, Range passthrough |
-| **LRU Media Cache** | `src/lib/media/EdgeCacheController.ts` | ✅ 250 MB ceiling, localStorage ledger |
-| **Cloudflare Worker** | `edge/cors-proxy/edge-cors-proxy.js` | ✅ Stateless CORS proxy |
-
----
-
-## Idempotency & Observability (v1.3.3)
-
-| Component | Location | Status |
-|-----------|----------|--------|
-| **Prometheus Metrics** | `orchestrator/metrics.py` | ✅ Hit/miss counters, `/metrics` endpoint |
-| **Grafana Dashboard** | `docs/monitoring/idempotency_hitrate.json` | ✅ Hit-rate panel + alert rule |
-| **pg_cron Cleanup** | `supabase/migrations/20260226*_receipt_cleanup.sql` | ✅ Daily 03:00 UTC, 30-day TTL |
-| **Guard Rail Alerting** | `.github/workflows/alert-guard-rail-violation.yml` | ✅ Auto-opens issue + Slack alert |
-
----
-
-## Audit Log & Device Registry
-
-| Component | Location | Status |
-|-----------|----------|--------|
-| **Audit Log Table** | `supabase/migrations/20251218000000_create_audit_logs_table.sql` | ✅ Persistent (Supabase Postgres) |
-| **Device Registry Table** | `supabase/migrations/20251218000001_create_device_registry_table.sql` | ✅ Persistent (Supabase Postgres) |
-| **Audit Log Helper** | `src/security/auditLog.ts` | ✅ Production |
-| **Security Audit Logger** | `src/security/securityAuditLogger.ts` | ✅ Production |

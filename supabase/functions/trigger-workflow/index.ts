@@ -211,7 +211,7 @@ serve(
         );
       }
 
-      const payload = ctx.body;
+      const payload = ctx.body as WorkflowRequestPayload;
 
       try {
         // Compute cryptographic seal

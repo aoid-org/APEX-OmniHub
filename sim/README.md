@@ -2,8 +2,7 @@
 ## Deterministic Chaos Testing for OmniLink-APEX
 
 **Status:** ✅ Production Ready
-**Version:** 1.3.1
-**Updated:** 2026-02-25
+**Version:** 1.0.0
 **Purpose:** Test all 12 APEX apps under realistic chaos conditions
 
 ---
@@ -106,7 +105,7 @@ This framework simulates a **chaotic, non-technical client** (Sarah Martinez) ha
 - p95 latency < 500ms ✅
 - Error rate < 10% ✅
 - Retry rate < 30% ✅
-- Idempotency: `dedupeRate > 0` OR `totalEvents === 0` ✅ (BUG-1 fix: `>= 0` was always true)
+- Idempotency working ✅
 
 ---
 
@@ -145,12 +144,10 @@ console.log(`Passed: ${result.passed}`);
 Same seed = same chaos decisions = same results (reproducible)
 
 ### 2. Idempotency
-Duplicate events → cached response (no duplicate side effects).
-Score passes when `dedupeRate > 0` (actual dedupe hits) or `totalEvents === 0` (no events processed).
+Duplicate events → cached response (no duplicate side effects)
 
 ### 3. Circuit Breakers
-Failures isolated → fast-fail → queue → recover.
-On recovery, all queued events are returned by `flushQueue()` and delivered via `config.onRecover` callback — no events are dropped.
+Failures isolated → fast-fail → queue → recover
 
 ### 4. Chaos Injection
 - 15% duplicates
@@ -278,18 +275,6 @@ npm run sim:dry  # 10x faster (no real calls)
 | Dry run | <10s | 5-8s |
 | Quick test | <2s | 1s |
 | Memory usage | <500MB | 200MB |
-
----
-
-## 📋 Changelog
-
-### v1.3.1 — 2026-02-25
-- **BUG-1 fixed** (`metrics.ts`): Idempotency score now requires `dedupeRate > 0 || totalEvents === 0`. Previous `>= 0` check was always `true`.
-- **BUG-2 fixed** (`chaos-engine.ts`): `calculateBackoff()` is deprecated; routes to config-aware `calculateRetryDelay()` (500ms base, exponential + full jitter). Use `calculateRetryDelay()` directly.
-- **BUG-3 fixed** (`circuit-breaker.ts`): `flushQueue()` now returns `EventEnvelope[]` instead of `void`. Events queued during OPEN state are re-delivered via `config.onRecover` callback on circuit close.
-- **BUG-4 fixed** (`contracts.ts`): `validateEvent()` uses strict `=== null || === undefined` for payload check. `false`, `0`, `""`, `[]` are valid payloads.
-
-### v1.0.0 — Initial release
 
 ---
 

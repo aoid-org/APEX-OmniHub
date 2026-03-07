@@ -45,8 +45,8 @@ const SECURITY_PATTERNS = {
   // API keys/JWT: Bearer tokens and common key patterns
   apiKey: /\b(?:Bearer\s+)?[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g,
 
-  // IPv4 — simplified pattern for PII detection (not strict octet validation)
-  ipv4: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
+  // IPv4
+  ipv4: /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g,
 
   // IPv6 (simplified pattern)
   ipv6: /\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b/g,
@@ -128,16 +128,16 @@ function sanitizeString(text: string, metrics: SanitizationMetrics): string {
   let sanitized = text;
 
   // Tier 1: Security-critical PII (always redact)
-  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.email, REDACTED_MARKER);
-  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.phone, REDACTED_MARKER);
-  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.ssn, REDACTED_MARKER);
-  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.creditCard, REDACTED_MARKER);
-  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.apiKey, REDACTED_MARKER);
-  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.ipv4, REDACTED_MARKER);
-  sanitized = sanitized.replaceAll(SECURITY_PATTERNS.ipv6, REDACTED_MARKER);
+  sanitized = sanitized.replace(SECURITY_PATTERNS.email, REDACTED_MARKER);
+  sanitized = sanitized.replace(SECURITY_PATTERNS.phone, REDACTED_MARKER);
+  sanitized = sanitized.replace(SECURITY_PATTERNS.ssn, REDACTED_MARKER);
+  sanitized = sanitized.replace(SECURITY_PATTERNS.creditCard, REDACTED_MARKER);
+  sanitized = sanitized.replace(SECURITY_PATTERNS.apiKey, REDACTED_MARKER);
+  sanitized = sanitized.replace(SECURITY_PATTERNS.ipv4, REDACTED_MARKER);
+  sanitized = sanitized.replace(SECURITY_PATTERNS.ipv6, REDACTED_MARKER);
 
   // Tier 2: Financial data (bucket)
-  sanitized = sanitized.replaceAll(FINANCIAL_PATTERNS.dollarAmount, BUCKETED_MARKER);
+  sanitized = sanitized.replace(FINANCIAL_PATTERNS.dollarAmount, BUCKETED_MARKER);
 
   return sanitized;
 }

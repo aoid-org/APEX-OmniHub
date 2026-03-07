@@ -95,7 +95,7 @@ describe('IronLawVerifier - Concurrency Handling', () => {
     const securityEvidence = result.evidence.find(e => e.type === 'security_scan');
 
     expect(securityEvidence).toBeDefined();
-    if (securityEvidence?.type === 'security_scan') {
+    if (securityEvidence && securityEvidence.type === 'security_scan') {
         // We injected shadow prompts in every 10th file (0, 10, 20...90) -> 10 files
         expect(securityEvidence.shadowPromptAttempts).toBe(10);
     }

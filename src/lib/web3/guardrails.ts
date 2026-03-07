@@ -143,7 +143,7 @@ export async function verifyAccess(): Promise<{
   // Check wallet verification
   const walletCheck = await verifyWalletIdentity(sessionCheck.userId!);
   if (!walletCheck.verified) {
-    await logSecurityEvent('suspicious_activity', {
+    await logSecurityEvent('wallet_verification_required', {
       userId: sessionCheck.userId,
       reason: walletCheck.error,
     });

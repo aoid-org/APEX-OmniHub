@@ -43,29 +43,28 @@ FOR SELECT
 TO authenticated
 USING (true);
 
--- Helper: idempotently attach a service_role ALL policy to any table.
--- Shared by subsequent migrations — defined once here to avoid duplication.
-CREATE OR REPLACE FUNCTION public.ensure_service_role_policy(p_table text)
-RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE
-  v_policy text := format('%s_all_service_role', p_table);
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public'
-      AND tablename = p_table
-      AND policyname = v_policy
-  ) THEN
-    EXECUTE format(
-      'CREATE POLICY "%s" ON public.%I FOR ALL TO service_role USING (true) WITH CHECK (true);',
-      v_policy, p_table
-    );
-  END IF;
-END $$;
-
 -- Allow service_role full access (for skill registration)
-SELECT public.ensure_service_role_policy('agent_skills');
-SELECT public.ensure_service_role_policy('agent_checkpoints');
+DO $$
+DECLARE
+  table_name text;
+  policy_name text;
+BEGIN
+  FOREACH table_name IN ARRAY ARRAY['agent_skills', 'agent_checkpoints'] LOOP
+    policy_name := format('%s_all_service_role', table_name);
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'public'
+        AND tablename = table_name
+        AND policyname = policy_name
+    ) THEN
+      EXECUTE format(
+        'CREATE POLICY "%s" ON public.%I FOR ALL TO service_role USING (true) WITH CHECK (true);',
+        policy_name,
+        table_name
+      );
+    END IF;
+  END LOOP;
+END $$;
 
 -- Hybrid search RPC function (SECURITY INVOKER)
 CREATE OR REPLACE FUNCTION public.match_skills(

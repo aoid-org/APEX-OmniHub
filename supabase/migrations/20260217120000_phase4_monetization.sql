@@ -18,14 +18,12 @@ create table if not exists public.usage_metering (
 -- RLS: Users can view their own usage
 alter table public.usage_metering enable row level security;
 
-drop policy if exists "Users can view own usage" on public.usage_metering;
 create policy "Users can view own usage"
   on public.usage_metering
   for select
   using (auth.uid() = user_id);
 
 -- Service role can insert (for edge functions)
-drop policy if exists "Service role can insert usage" on public.usage_metering;
 create policy "Service role can insert usage"
   on public.usage_metering
   for insert

@@ -94,7 +94,7 @@ function validateSiweMessage(params: {
  * Extract nonce from verification message
  */
 function extractNonceFromMessage(message: string): string | null {
-  const match = /Nonce:\s*([a-f0-9]+)/i.exec(message);
+  const match = message.match(/Nonce:\s*([a-f0-9]+)/i);
   return match ? match[1] : null;
 }
 
@@ -329,7 +329,7 @@ Deno.serve(async (req) => {
     }
 
     const expirationTime = siweMessage.expirationTime;
-    if (expirationTime?.getTime() !== expiresAt.getTime()) {
+    if (!expirationTime || expirationTime.getTime() !== expiresAt.getTime()) {
       await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
         reason: 'expiration_mismatch',
         nonce: messageNonce,

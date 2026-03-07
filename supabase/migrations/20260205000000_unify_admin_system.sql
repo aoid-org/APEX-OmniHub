@@ -79,40 +79,17 @@ DROP TRIGGER IF EXISTS sync_admin_metadata_insert_trigger ON auth.users;
 DROP TRIGGER IF EXISTS sync_admin_metadata_update_trigger ON auth.users;
 DROP TRIGGER IF EXISTS sync_admin_metadata_trigger ON auth.users;
 
--- INSERT trigger: OLD is not available for INSERT, so fire whenever a new user
--- is created with app_metadata containing admin=true
-CREATE TRIGGER sync_admin_metadata_insert_trigger
-  AFTER INSERT ON auth.users
+CREATE TRIGGER sync_admin_metadata_trigger
+  AFTER INSERT OR UPDATE OF raw_app_meta_data ON auth.users
   FOR EACH ROW
   WHEN (
-    NEW.raw_app_meta_data IS NOT NULL
-  )
-  EXECUTE FUNCTION public.sync_admin_metadata_to_user_roles();
-
-DO $comment$
-BEGIN
-  COMMENT ON TRIGGER sync_admin_metadata_insert_trigger ON auth.users IS
-  'Triggers on user creation to sync admin role to user_roles table';
-EXCEPTION WHEN insufficient_privilege THEN
-  RAISE NOTICE 'Skipping COMMENT ON TRIGGER (not owner of auth.users) — non-blocking';
-END $comment$;
-
--- UPDATE trigger: use OLD vs NEW comparison for performance optimization
-CREATE TRIGGER sync_admin_metadata_update_trigger
-  AFTER UPDATE OF raw_app_meta_data ON auth.users
-  FOR EACH ROW
-  WHEN (
+    -- Only fire if admin flag changed (performance optimization)
     OLD.raw_app_meta_data IS DISTINCT FROM NEW.raw_app_meta_data
   )
   EXECUTE FUNCTION public.sync_admin_metadata_to_user_roles();
 
-DO $comment$
-BEGIN
-  COMMENT ON TRIGGER sync_admin_metadata_update_trigger ON auth.users IS
-  'Triggers on app_metadata changes to sync admin role to user_roles table';
-EXCEPTION WHEN insufficient_privilege THEN
-  RAISE NOTICE 'Skipping COMMENT ON TRIGGER (not owner of auth.users) — non-blocking';
-END $comment$;
+COMMENT ON TRIGGER sync_admin_metadata_trigger ON auth.users IS
+'Triggers on app_metadata changes to sync admin role to user_roles table';
 
 -- ============================================================================
 -- STEP 3: Update claim_admin_access() to explicitly insert into user_roles
@@ -241,8 +218,7 @@ END $$;
 -- ============================================================================
 
 -- To rollback this migration:
--- 1. DROP TRIGGER sync_admin_metadata_insert_trigger ON auth.users;
---    DROP TRIGGER sync_admin_metadata_update_trigger ON auth.users;
+-- 1. DROP TRIGGER sync_admin_metadata_trigger ON auth.users;
 -- 2. DROP FUNCTION sync_admin_metadata_to_user_roles();
 -- 3. Restore original claim_admin_access() from migration 20260128000000
 

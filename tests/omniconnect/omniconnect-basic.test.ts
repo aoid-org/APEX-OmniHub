@@ -139,8 +139,7 @@ describe('OmniConnect Basic Functionality', () => {
     const omniconnect = new OmniConnect(config);
 
     // Mock storage
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const storage = (omniconnect as any).tokenStorage;
+    const storage = (omniconnect as unknown as { tokenStorage: Record<string, unknown> }).tokenStorage;
     vi.spyOn(storage, 'listActive').mockResolvedValue([{ connectorId: 'mock-conn-1', provider: 'mock-provider', createdAt: new Date(), lastSyncAt: new Date() }]);
     vi.spyOn(storage, 'get').mockResolvedValue({
       provider: 'mock-provider',
@@ -209,8 +208,7 @@ describe('OmniConnect Basic Functionality', () => {
     };
 
     // Setup mocks
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const storage = (omniconnect as any).tokenStorage;
+    const storage = (omniconnect as unknown as { tokenStorage: Record<string, unknown> }).tokenStorage;
     vi.spyOn(storage, 'listActive').mockResolvedValue([
       { connectorId: 'mock-conn-1', provider: 'mock-provider' }
     ]);
@@ -266,8 +264,7 @@ describe('OmniConnect Basic Functionality', () => {
       vi.spyOn(storage, 'listActive').mockResolvedValue(connectors);
 
       // Mock syncConnector to take 100ms each
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const syncConnectorSpy = vi.spyOn(omniconnect as any, 'syncConnector').mockImplementation(async () => {
+      const syncConnectorSpy = vi.spyOn(omniconnect as unknown as Record<string, unknown>, 'syncConnector' as never).mockImplementation(async () => {
         await new Promise(resolve => setTimeout(resolve, 100));
         return { eventsProcessed: 10, eventsDelivered: 5 };
       });

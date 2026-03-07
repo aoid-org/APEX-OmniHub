@@ -189,7 +189,7 @@ class VoiceCommandHandler {
     };
 
     this.sessions.set(userId, session);
-    if (import.meta.env.DEV) console.log(`[OmniPort.Voice] Session started for user ${userId}`);
+    console.log(`[OmniPort.Voice] Session started for user ${userId}`);
 
     return session;
   }
@@ -202,7 +202,7 @@ class VoiceCommandHandler {
     if (session) {
       session.isActive = false;
       this.sessions.delete(userId);
-      if (import.meta.env.DEV) console.log(`[OmniPort.Voice] Session ended for user ${userId} (${session.commandCount} commands)`);
+      console.log(`[OmniPort.Voice] Session ended for user ${userId} (${session.commandCount} commands)`);
     }
   }
 

@@ -24,9 +24,8 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./apps/omnihub-site/src/*"]
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "tests"],
-  "exclude": ["tests/contracts"]
+  "include": ["src"]
 }

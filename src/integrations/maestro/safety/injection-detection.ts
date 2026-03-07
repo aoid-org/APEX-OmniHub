@@ -31,13 +31,13 @@ const HIGH_RISK_PATTERNS: Array<{ name: string; pattern: RegExp; score: number }
 
   // Delimiter injection
   { name: 'delimiter_injection', pattern: /\[?(system|user|assistant)\]?\s*:/i, score: 85 },
-  { name: 'xml_injection', pattern: /<\/?(?:system|prompt|instruction|context|role)>/i, score: 85 },
+  { name: 'xml_injection', pattern: /<\/?(?:system|prompt|instruction|context)>/i, score: 85 },
   { name: 'comment_injection', pattern: /(?:\/\*|\*\/|<!--|-->|#\s*system)/i, score: 80 },
 
   // Data exfiltration
-  { name: 'send_to', pattern: /send\s+(?:.*?\s+)?to\s+/i, score: 75 },
-  { name: 'post_to', pattern: /post\s+(?:.*?\s+)?to\s+/i, score: 75 },
-  { name: 'email_to', pattern: /email\s+(?:.*?\s+)?to\s+/i, score: 75 },
+  { name: 'send_to', pattern: /send\s+(it\s+|this\s+|data\s+)?to\s+/i, score: 75 },
+  { name: 'post_to', pattern: /post\s+(it\s+|this\s+|data\s+)?to\s+/i, score: 75 },
+  { name: 'email_to', pattern: /email\s+(it\s+|this\s+|data\s+)?to\s+/i, score: 75 },
 
   // Security bypass
   { name: 'bypass_security', pattern: /bypass\s+(the\s+)?security/i, score: 95 },
@@ -46,14 +46,8 @@ const HIGH_RISK_PATTERNS: Array<{ name: string; pattern: RegExp; score: number }
 
   // Jailbreak attempts
   { name: 'dan_jailbreak', pattern: /\bDAN\b.*mode|do\s+anything\s+now/i, score: 95 },
-  { name: 'developer_mode', pattern: /developer\s+mode/i, score: 90 },
+  { name: 'developer_mode', pattern: /developer\s+mode\s+(enabled|on|activated)/i, score: 90 },
   { name: 'jailbreak', pattern: /\bjailbreak\b/i, score: 90 },
-  { name: 'hypothetical_framing_act', pattern: /act\s+as\s+(?:(?:a|an|my|the)\s+)?(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
-  { name: 'hypothetical_framing_pretend', pattern: /pretend(?:\s+to\s+be)?\s+(?:(?:a|an|my|the)\s+)?(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
-  { name: 'hypothetical_framing_imagine', pattern: /imagine\s+(?:(?:a|an|my|the)\s+)?(?:grandmother|hacker|AI|bot|expert)/i, score: 90 },
-  
-  // Obfuscation and Token Smuggling
-  { name: 'obfuscated_text', pattern: /(?:[a-zA-Z]\W+){8,}[a-zA-Z]/, score: 85 },
 ];
 
 // Medium-risk patterns that may be suspicious but could be legitimate
@@ -61,13 +55,13 @@ const MEDIUM_RISK_PATTERNS: Array<{ name: string; pattern: RegExp; score: number
   // Encoded payloads - base64 detection
   {
     name: 'base64_payload',
-    pattern: /[A-Za-z0-9+/]{30,}={0,2}/,
-    score: 85,
+    pattern: /[A-Za-z0-9+/]{20,}={0,2}/,
+    score: 60,
   },
   // Hex encoded payloads - case-insensitive flag handles case
-  { name: 'hex_payload', pattern: /(?:0x[a-f0-9]{16,}|(?:\\\\?x[a-f0-9]{2}){8,})/i, score: 85 },
+  { name: 'hex_payload', pattern: /(?:0x[a-f0-9]{16,}|\\x[a-f0-9]{2}(?:\\x[a-f0-9]{2}){7,})/i, score: 65 },
   // Unicode escapes - case-insensitive flag handles case
-  { name: 'unicode_escape', pattern: /(?:\\\\?u[0-9a-f]{4}){4,}/i, score: 85 },
+  { name: 'unicode_escape', pattern: /(?:\\u[0-9a-f]{4}){4,}/i, score: 60 },
 ];
 
 /**

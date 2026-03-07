@@ -25,12 +25,10 @@ Compensation Pattern:
 """
 
 import asyncio
-import ipaddress
 import json
 import os
 import time
 from typing import Any
-from urllib.parse import urlparse, urlunparse
 from uuid import uuid4
 
 import instructor
@@ -73,8 +71,6 @@ async def setup_activities(
     supabase_url: str,
     supabase_key: str,
     redis_url: str,
-    redis_password: str | None = None,
-    redis_ssl: bool = False,
 ) -> None:
     """
     Initialize activity dependencies (database provider, Redis, etc.).
@@ -85,8 +81,6 @@ async def setup_activities(
         supabase_url: Supabase project URL
         supabase_key: Supabase service role key
         redis_url: Redis connection URL
-        redis_password: Optional Redis password
-        redis_ssl: Whether to use SSL for Redis connection
     """
     global _semantic_cache, _redis_client
 
@@ -99,8 +93,6 @@ async def setup_activities(
 
     _semantic_cache = SemanticCacheService(
         redis_url=redis_url,
-        redis_password=redis_password,
-        redis_ssl=redis_ssl,
         embedding_model=os.getenv("CACHE_EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
         similarity_threshold=float(os.getenv("CACHE_SIMILARITY_THRESHOLD", "0.85")),
     )
@@ -266,7 +258,7 @@ Output valid JSON matching the PlanStep schema."""
         }
 
     except Exception as e:
-        activity.logger.error(f"Plan generation failed: {e!s}")
+        activity.logger.error(f"Plan generation failed: {str(e)}")
         raise
 
 
@@ -542,38 +534,29 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
     """
     import httpx
 
-    from security.ssrf import validate_url_with_dns_pin_async
+    from security.ssrf import validate_url_async
 
     url = params.get("url")
     method = params.get("method", "POST")
     payload = params.get("payload", {})
 
     try:
-        validated_url = await validate_url_with_dns_pin_async(url)
+        await validate_url_async(url)
     except ValueError as e:
         activity.logger.error(f"Blocked SSRF attempt: {e}")
         return {
             "success": False,
-            "error": f"Security violation: {e!s}",
+            "error": f"Security violation: {str(e)}",
             "status_code": 403,
         }
 
-    request_headers: dict[str, str] = {}
-    parsed = urlparse(validated_url.original_url)
-    request_url = validated_url.original_url
-    if parsed.hostname and not _is_ip_literal(parsed.hostname):
-        pinned_netloc = parsed.netloc.replace(parsed.hostname, validated_url.resolved_ip, 1)
-        request_url = urlunparse(parsed._replace(netloc=pinned_netloc))
-        request_headers["Host"] = validated_url.host_header
+    activity.logger.info(f"Calling webhook: {method} {url}")
 
-    activity.logger.info(f"Calling webhook: {method} {validated_url.original_url}")
-
-    async with httpx.AsyncClient(follow_redirects=False) as client:
-        response = await client.request(  # NOSONAR - URL validated by SSRF guard above
+    async with httpx.AsyncClient() as client:
+        response = await client.request(  # NOSONAR: SSRF risk mitigated by validate_url_async above
             method=method,
-            url=request_url,
+            url=url,
             json=payload,
-            headers=request_headers,
             timeout=15.0,
         )
 
@@ -582,14 +565,6 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
             "status_code": response.status_code,
             "body": response.text,
         }
-
-
-def _is_ip_literal(value: str) -> bool:
-    try:
-        ipaddress.ip_address(value.strip("[]"))
-        return True
-    except ValueError:
-        return False
 
 
 @activity.defn(name="search_youtube")
@@ -680,101 +655,6 @@ async def update_agent_run_completion(params: dict[str, Any]) -> dict[str, Any]:
             "error": error_msg,
             "trace_id": trace_id,
         }
-
-
-# ============================================================================
-# BYOM PILOT SESSION MINTING (Context Binding)
-# ============================================================================
-
-
-@activity.defn(name="mint_pilot_session")
-async def mint_pilot_session(params: dict[str, Any]) -> dict[str, Any]:
-    """
-    Mint a pilot session for BYOM credential binding.
-
-    Called at workflow start when run_context.credential_type == 'byom'.
-    Inserts a new record into pilot_sessions and returns the pilot_session_id
-    for binding to the active AgentRunContext.
-
-    Args:
-        params: {
-            "user_id": "uuid",
-            "tenant_id": "uuid",
-            "connection_id": "uuid (from provider_connections)",
-            "trace_id": "uuid (agent_runs.id)",
-            "model": "gpt-4o",
-            "sovereignty_mode": "standard" | "byom_sovereign" | "strict_region",
-            "policy_snapshot_hash": "sha256-hex-string"
-        }
-
-    Returns:
-        {
-            "success": True,
-            "pilot_session_id": "uuid",
-            "connection_id": "uuid",
-            "expires_at": "iso-timestamp"
-        }
-    """
-    user_id = params.get("user_id")
-    tenant_id = params.get("tenant_id", user_id)
-    connection_id = params.get("connection_id")
-    trace_id = params.get("trace_id")
-    model = params.get("model", "gpt-4o")
-    sovereignty_mode = params.get("sovereignty_mode", "standard")
-    policy_snapshot_hash = params.get("policy_snapshot_hash", "")
-
-    if not connection_id or not trace_id or not user_id:
-        activity.logger.warning("mint_pilot_session: missing required params, skipping")
-        return {"success": False, "error": "Missing connection_id, trace_id, or user_id"}
-
-    activity.logger.info(
-        f"Minting pilot session: user={user_id}, connection={connection_id}, "
-        f"trace={trace_id}, model={model}"
-    )
-
-    try:
-        db = get_database_provider()
-
-        # Verify credential is active
-        connections = await db.select(
-            table="provider_connections",
-            filters={"connection_id": connection_id, "status": "active"},
-            select_fields="connection_id",
-        )
-        if not connections:
-            return {
-                "success": False,
-                "error": f"Connection {connection_id} not found or not active",
-            }
-
-        # Insert pilot session (1-hour expiry)
-        record = {
-            "connection_id": connection_id,
-            "trace_id": trace_id,
-            "user_id": user_id,
-            "tenant_id": tenant_id,
-            "model": model,
-            "sovereignty_mode": sovereignty_mode,
-            "policy_snapshot_hash": policy_snapshot_hash,
-            "expires_at": "now() + interval '1 hour'",
-        }
-
-        created = await db.insert(table="pilot_sessions", record=record)
-        pilot_session_id = created.get("pilot_session_id")
-
-        activity.logger.info(f"✓ Pilot session minted: {pilot_session_id}")
-
-        return {
-            "success": True,
-            "pilot_session_id": pilot_session_id,
-            "connection_id": connection_id,
-            "expires_at": created.get("expires_at"),
-        }
-
-    except Exception as e:
-        error_msg = str(e)
-        activity.logger.error(f"Pilot session mint failed: {error_msg}")
-        return {"success": False, "error": error_msg}
 
 
 # ============================================================================

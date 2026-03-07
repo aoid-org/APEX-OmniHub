@@ -186,23 +186,6 @@ export class IronLawVerifier {
   }
 
   private async verifyTests(task: AgentTask): Promise<TestEvidence> {
-    // FAST_MODE: Skip recursive test execution when running inside vitest
-    if (process.env.APEX_IRON_LAW_FAST_MODE === '1') {
-      const logPath = await writeSecureEvidence(
-        `${task.id}-tests`,
-        'FAST_MODE: skipped test execution',
-        'log'
-      );
-      return {
-        type: 'test_result',
-        timestamp: new Date().toISOString(),
-        exitCode: 0,
-        coverage: 100,
-        logPath,
-        modifiedFiles: task.modifiedFiles,
-      };
-    }
-
     // Execute test suite and collect evidence
     const { execSync } = await import('node:child_process');
 

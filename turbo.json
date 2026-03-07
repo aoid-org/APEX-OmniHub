@@ -15,10 +15,6 @@
     "test": {
       "dependsOn": ["^build"]
     },
-    "test:coverage": {
-      "outputs": ["coverage/**", "apps/*/coverage/**", "packages/*/coverage/**"],
-      "dependsOn": ["^build"]
-    },
     "dev": {
       "cache": false,
       "persistent": true

@@ -80,14 +80,14 @@ export function ManModePage() {
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-success)', display: 'grid', placeItems: 'center', flexShrink: 0, color: 'white', fontWeight: 'bold' }}>1</div>
                   <div>
                     <p className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>Workflow starts automatically</p>
-                    <p className="text-sm text-secondary">A new customer onboarding workflow kicks off - records are created, data flows through the system.</p>
+                    <p className="text-sm text-secondary">A new customer onboarding workflow kicks off — records are created, data flows through the system.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-accent)', display: 'grid', placeItems: 'center', flexShrink: 0, color: 'white', fontWeight: 'bold' }}>2</div>
                   <div>
                     <p className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>A sensitive step is detected</p>
-                    <p className="text-sm text-secondary">The system flags an admin access request as high-risk. <strong>M.A.N.Mode activates</strong> - this step pauses and you're notified instantly.</p>
+                    <p className="text-sm text-secondary">The system flags an admin access request as high-risk. <strong>M.A.N.Mode activates</strong> — this step pauses and you're notified instantly.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -101,7 +101,7 @@ export function ManModePage() {
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-navy)', display: 'grid', placeItems: 'center', flexShrink: 0, color: 'white', fontWeight: 'bold' }}>4</div>
                   <div>
                     <p className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>You review and decide</p>
-                    <p className="text-sm text-secondary">Approve, reject, or modify - right from your device. The workflow resumes instantly with your decision recorded.</p>
+                    <p className="text-sm text-secondary">Approve, reject, or modify — right from your device. The workflow resumes instantly with your decision recorded.</p>
                   </div>
                 </div>
               </div>
@@ -114,7 +114,7 @@ export function ManModePage() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="card p-5 border border-accent/30" style={{ borderColor: 'var(--color-accent)' }}>
                 <div className="text-accent font-bold mb-2">💰 Financial Decisions</div>
-                <p className="text-sm text-secondary">Large transactions, new vendor setups, payroll changes - anything that moves significant money.</p>
+                <p className="text-sm text-secondary">Large transactions, new vendor setups, payroll changes — anything that moves significant money.</p>
               </div>
               <div className="card p-5 border border-accent/30" style={{ borderColor: 'var(--color-accent)' }}>
                 <div className="text-accent font-bold mb-2">🔒 Security Changes</div>
@@ -133,7 +133,7 @@ export function ManModePage() {
 
           {/* CTA */}
           <div className="text-center p-8 bg-surface border border-border rounded-lg">
-            <h3 className="heading-3 mb-4">Directable. Auditable. Reversible.</h3>
+            <h3 className="heading-3 mb-4">Directable. Accountable. Dependable.</h3>
             <p className="text-secondary mb-8 max-w-2xl mx-auto">
               M.A.N.Mode isn't just a feature. It's a safety philosophy. Your automation moves fast, 
               but the important decisions still go through you.

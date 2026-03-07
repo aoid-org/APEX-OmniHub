@@ -13,7 +13,7 @@ export function getAllFiles(dir, exts = ['.md']) {
   list.forEach(file => {
     file = path.join(dir, file);
     const stat = fs.statSync(file);
-    if (stat?.isDirectory()) {
+    if (stat && stat.isDirectory()) {
       results = results.concat(getAllFiles(file, exts));
     } else if (exts.includes(path.extname(file))) {
       results.push(file);

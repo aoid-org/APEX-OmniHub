@@ -34,14 +34,14 @@ export interface BiometricAuthOptions {
  */
 export function isBiometricAuthSupported(): boolean {
   // 1. Check if we're in a browser environment
-  if (globalThis.window === undefined) {
+  if (typeof window === 'undefined') {
     return false; // SSR/Node environment
   }
 
   // 2. Check if WebAuthn API exists (standard location)
   if (
-    typeof globalThis.PublicKeyCredential !== 'function' ||
-    navigator.credentials === undefined
+    typeof window.PublicKeyCredential !== 'function' ||
+    typeof navigator.credentials === 'undefined'
   ) {
     return false;
   }
@@ -58,8 +58,8 @@ export async function isPlatformAuthenticatorAvailable(): Promise<boolean> {
   }
 
   try {
-    // Use standard globalThis.PublicKeyCredential (no casting needed)
-    const available = await globalThis.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    // Use standard window.PublicKeyCredential (no casting needed)
+    const available = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
     return available;
   } catch (error) {
     console.error('[Biometric] Failed to check platform authenticator:', error);

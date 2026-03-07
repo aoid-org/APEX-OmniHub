@@ -31,12 +31,6 @@ CREATE TYPE byom_auth_type AS ENUM (
 -- Connection lifecycle status
 CREATE TYPE byom_status AS ENUM ('active', 'revoked', 'expired', 'rotated');
 
--- Constant: canonical default status.  SQL DDL has no CONST keyword so an
--- IMMUTABLE function serves as the single source-of-truth for DEFAULT / WHERE.
-CREATE FUNCTION public.byom_status_default() RETURNS byom_status
-  LANGUAGE sql IMMUTABLE PARALLEL SAFE
-  AS $$ SELECT 'active'::byom_status $$;
-
 -- Data sovereignty modes
 CREATE TYPE byom_sovereignty_mode AS ENUM (
   'standard',          -- Normal logging (hashes only)
@@ -67,7 +61,7 @@ CREATE TABLE public.provider_connections (
   scopes_or_permissions JSONB DEFAULT '{}',
 
   -- Lifecycle
-  status byom_status DEFAULT public.byom_status_default(),
+  status byom_status DEFAULT 'active',
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
   last_used_at TIMESTAMPTZ,
@@ -81,7 +75,7 @@ CREATE TABLE public.provider_connections (
 -- Partial unique index: only one active connection per provider per user
 CREATE UNIQUE INDEX idx_unique_active_provider_per_user
   ON public.provider_connections (user_id, provider)
-  WHERE status = public.byom_status_default();
+  WHERE status = 'active';
 
 -- Performance indexes
 CREATE INDEX idx_provider_connections_tenant ON public.provider_connections(tenant_id);

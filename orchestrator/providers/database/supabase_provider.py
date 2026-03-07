@@ -35,13 +35,6 @@ ALLOWED_TABLES = frozenset(
         # OmniTrace tables
         "omni_runs",
         "omni_run_events",
-        # BYOM Cockpit tables
-        "provider_connections",
-        "pilot_sessions",
-        # Monetization tables
-        "usage_metering",
-        # Agent execution tables
-        "agent_runs",
     ]
 )
 
@@ -116,7 +109,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
         except DatabaseError:
             raise
         except Exception as e:
-            raise DatabaseError(f"Database insert failed: {e!s}") from e
+            raise DatabaseError(f"Database insert failed: {str(e)}") from e
 
     async def upsert(
         self,
@@ -140,7 +133,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
         except DatabaseError:
             raise
         except Exception as e:
-            raise DatabaseError(f"Database upsert failed: {e!s}") from e
+            raise DatabaseError(f"Database upsert failed: {str(e)}") from e
 
     async def get(self, table: str, query_params: dict[str, Any]) -> list[dict[str, Any]]:
         try:
@@ -159,7 +152,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
         except DatabaseError:
             raise
         except Exception as e:
-            raise DatabaseError(f"Database get failed: {e!s}") from e
+            raise DatabaseError(f"Database get failed: {str(e)}") from e
 
     async def select(
         self,
@@ -196,7 +189,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
         except DatabaseError:
             raise
         except Exception as e:
-            raise DatabaseError(f"Database select failed: {e!s}") from e
+            raise DatabaseError(f"Database select failed: {str(e)}") from e
 
     async def select_one(self, table: str, query_params: dict[str, Any]) -> dict[str, Any]:
         """
@@ -237,7 +230,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
         except Exception as e:
             if isinstance(e, (DatabaseError, NotFoundError)):
                 raise
-            raise DatabaseError(f"Database update failed: {e!s}") from e
+            raise DatabaseError(f"Database update failed: {str(e)}") from e
 
     async def delete(self, table: str, filters: dict[str, Any]) -> int:
         """
@@ -265,7 +258,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
             return len(response.data) if response.data else 0
         except Exception as e:
             # Catch-all for database errors, including DatabaseError
-            raise DatabaseError(f"Database delete failed: {e!s}") from e
+            raise DatabaseError(f"Database delete failed: {str(e)}") from e
 
     async def rpc(self, function_name: str, params: dict[str, Any]) -> Any:
         """
@@ -285,7 +278,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
             response = self.client.rpc(function_name, params).execute()
             return response.data
         except Exception as e:
-            raise DatabaseError(f"RPC call to {function_name} failed: {e!s}") from e
+            raise DatabaseError(f"RPC call to {function_name} failed: {str(e)}") from e
 
 
 # Backwards compatibility alias

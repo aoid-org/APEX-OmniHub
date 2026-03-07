@@ -47,43 +47,18 @@ export async function withTimeout<T>(
 }
 
 /**
- * Result type for safe operations
- */
-export type ParseResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: Error };
-
-/**
- * Safe JSON parse with Result type
- */
-export function tryParse<T>(
-  json: string
-): ParseResult<T> {
-  try {
-    return { success: true, data: JSON.parse(json) };
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    // Log with limited metadata to avoid PII exposure
-    logError(err, {
-      action: 'json_parse_failed',
-      metadata: {
-        inputLength: json.length,
-        preview: json.slice(0, 20) // Reduced to 20 for privacy
-      }
-    });
-    return { success: false, error: err };
-  }
-}
-
-/**
- * Safe JSON parse with fallback (deprecated - use tryParse for better error handling)
+ * Safe JSON parse with fallback
  */
 export function safeParse<T>(
   json: string,
   fallback: T
 ): T {
-  const result = tryParse<T>(json);
-  return result.success ? result.data : fallback;
+  try {
+    return JSON.parse(json);
+  } catch (error) {
+    logError(error as Error, { action: 'json_parse_failed' });
+    return fallback;
+  }
 }
 
 /**

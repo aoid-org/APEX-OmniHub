@@ -37,7 +37,7 @@ serve(async (req) => {
     try {
         // ── JWT Authentication ──────────────────────────────────────
         const authHeader = req.headers.get('Authorization');
-        if (!authHeader?.startsWith('Bearer ')) {
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return new Response(JSON.stringify({ error: 'Missing or malformed Authorization header' }), {
                 status: 401,
                 headers: { 'Content-Type': 'application/json' },

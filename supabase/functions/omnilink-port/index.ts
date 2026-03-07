@@ -151,14 +151,6 @@ function getRequestSize(raw: string): number {
   return textEncoder.encode(raw).length;
 }
 
-function resolvePayloadId(payload: Record<string, unknown>, fallbackIndex: number): string {
-  const candidate = payload.id;
-  if (typeof candidate === 'string' || typeof candidate === 'number') {
-    return String(candidate);
-  }
-  return String(fallbackIndex);
-}
-
 function jsonResponse(data: unknown, status: number, headers: HeadersInit): Response {
   return new Response(JSON.stringify(data), {
     status,
@@ -328,7 +320,7 @@ async function processRequestItem(
     payload.policy = { ...(payload.policy as Record<string, unknown>), require_approval: true };
   }
 
-  const idempotencyKey = `${idempotencyHeader}:${resolvePayloadId(payload, index)}`;
+  const idempotencyKey = `${idempotencyHeader}:${payload.id ?? index}`;
 
   const { data, error } = await serviceClient.rpc('omnilink_ingest', {
     p_api_key_id: apiKey.id,
@@ -647,7 +639,7 @@ Deno.serve(async (req) => {
   }
 
   // Task dispatch routes
-  const taskResponse = routeTaskRequest(route, req, corsHeaders);
+  const taskResponse = await routeTaskRequest(route, req, corsHeaders);
   if (taskResponse) return taskResponse;
 
   // Validate route for batch processing

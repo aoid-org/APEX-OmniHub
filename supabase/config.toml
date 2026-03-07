@@ -39,9 +39,6 @@ verify_jwt = true
 [functions.test-integration]
 verify_jwt = true
 
-[functions.byom-proxy]
-verify_jwt = true
-
 [functions.apex-assistant]
 verify_jwt = true
 

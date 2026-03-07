@@ -40,7 +40,6 @@ dependencies = [
     # Embeddings for semantic cache
     "sentence-transformers>=2.3.0",
     "numpy>=1.26.0",
-    "prometheus-client>=0.20.0",
 ]
 
 [project.optional-dependencies]
@@ -112,7 +111,7 @@ ignore = [
 "workflows/**/*.py" = [
   "C901",  # Complex workflow orchestration is expected
 ]
-"server.py" = ["S104"]  # Allow 0.0.0.0 binding for container deployment
+"main.py" = ["S104"]  # Allow 0.0.0.0 binding for container deployment
 
 [tool.black]
 line-length = 100

@@ -6,11 +6,12 @@ describe('MonitoringQueue', () => {
   const hashFn = (item: string) => simpleHash(item);
 
   beforeEach(() => {
-    queue = new MonitoringQueue(hashFn, 3); // Small max size for testing
+    queue = new MonitoringQueue(3, hashFn); // Small max size for testing
   });
 
   it('should push items and retrieve them on flush', () => {
-    ['a', 'b'].forEach(item => queue.push(item));
+    queue.push('a');
+    queue.push('b');
     expect(queue.size).toBe(2);
 
     const flushed = queue.flush();
@@ -19,7 +20,9 @@ describe('MonitoringQueue', () => {
   });
 
   it('should enforce max entries (circular buffer)', () => {
-    ['a', 'b', 'c'].forEach(item => queue.push(item));
+    queue.push('a');
+    queue.push('b');
+    queue.push('c');
     expect(queue.size).toBe(3);
 
     // Push one more, 'a' should be dropped
@@ -31,7 +34,8 @@ describe('MonitoringQueue', () => {
   });
 
   it('should deduplicate items', () => {
-    ['a', 'a'].forEach(item => queue.push(item)); // Duplicate
+    queue.push('a');
+    queue.push('a'); // Duplicate
 
     expect(queue.size).toBe(1);
     const flushed = queue.flush();
@@ -61,10 +65,15 @@ describe('MonitoringQueue', () => {
 
   it('should handle circular buffer with deduplication correctly', () => {
     // Fill queue
-    ['a', 'b', 'c'].forEach(item => queue.push(item));
+    queue.push('a');
+    queue.push('b');
+    queue.push('c');
 
-    // 'd' evicts 'a' from the circular buffer; 'a' is then re-accepted after eviction
-    ['d', 'a'].forEach(item => queue.push(item));
+    // 'a' is dropped, 'd' is added
+    queue.push('d');
+
+    // 'a' should be gone from seenHashes too, so if we add 'a' again, it should be accepted
+    queue.push('a');
 
     // Expected: c, d, a (since max is 3: b dropped)
     const flushed = queue.flush();

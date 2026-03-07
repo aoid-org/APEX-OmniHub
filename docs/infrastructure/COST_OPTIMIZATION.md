@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Cost Optimization Strategy
 
 **Issue Identified:** Guardian pattern makes 3x LLM calls per request (Input Check + Planner + Output Check)

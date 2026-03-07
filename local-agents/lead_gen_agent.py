@@ -4,13 +4,13 @@ Lead-Gen Agent - Local machine script for lead ingestion and qualification.
 Emits telemetry to OmniHub and executes tasks via OmniLink Port.
 """
 
-import asyncio
-import logging
 import os
 import sys
 import time
-from datetime import UTC, datetime
-from typing import Any
+import logging
+import asyncio
+from datetime import datetime, timezone
+from typing import Dict, Any, List
 
 # Import shared connector
 from omnihub_connector import OmniHubConnector, TaskWorker, load_env_config
@@ -24,7 +24,7 @@ class LeadGenAgent:
 
     def __init__(self, connector: OmniHubConnector):
         self.connector = connector
-        self.qualified_queue: list[dict[str, Any]] = []
+        self.qualified_queue: List[Dict[str, Any]] = []
 
     async def ingest_lead(self, lead_id: str, url: str, role: str, score: float):
         """
@@ -45,7 +45,7 @@ class LeadGenAgent:
                 "url": url,
                 "role": role,
                 "score": score,
-                "ingested_at": datetime.now(UTC).isoformat(),
+                "ingested_at": datetime.now(timezone.utc).isoformat(),
             },
             idempotency_key=f"lead_ingested_{lead_id}",
         )
@@ -65,7 +65,7 @@ class LeadGenAgent:
                 "url": url,
                 "role": role,
                 "score": score,
-                "qualified_at": datetime.now(UTC).isoformat(),
+                "qualified_at": datetime.now(timezone.utc).isoformat(),
             },
             idempotency_key=f"lead_qualified_{lead_id}",
         )
@@ -87,7 +87,7 @@ class LeadGenAgent:
             data={
                 "queue_size": queue_size,
                 "qualified_leads": self.qualified_queue,
-                "seeded_at": datetime.now(UTC).isoformat(),
+                "seeded_at": datetime.now(timezone.utc).isoformat(),
             },
             idempotency_key=f"queue_seeded_{int(time.time())}",
         )
@@ -118,7 +118,7 @@ class LeadGenAgent:
 
 
 # Task handlers
-def handle_echo(task: dict[str, Any]) -> dict[str, Any]:
+def handle_echo(task: Dict[str, Any]) -> Dict[str, Any]:
     """Echo task handler - returns the payload."""
     params = task.get('params', {})
     payload = params.get('payload', {})
@@ -130,14 +130,14 @@ def handle_echo(task: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def handle_refresh_queue(task: dict[str, Any]) -> dict[str, Any]:
+def handle_refresh_queue(task: Dict[str, Any]) -> Dict[str, Any]:
     """Refresh queue task handler - simulates queue refresh."""
     logger.info("Refreshing lead queue")
     # In real implementation, this would refresh from actual data source
     return {
         "action": "refresh_queue",
         "message": "Queue refreshed successfully",
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 

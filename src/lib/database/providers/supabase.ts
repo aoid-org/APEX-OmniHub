@@ -6,6 +6,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/integrations/supabase/types'
 import { createSupabaseClient } from '@/lib/supabase/client'
 import type {
   IDatabase,
@@ -15,13 +16,15 @@ import type {
   DatabaseListResult,
 } from '../interface'
 
+type TableName = keyof Database['public']['Tables']
+
 // ============================================================================
 // SUPABASE PROVIDER
 // ============================================================================
 
 export class SupabaseDatabase implements IDatabase {
-  private readonly client: SupabaseClient
-  private userContext: string | null = null
+  private client: SupabaseClient<Database>
+  private _userContext: string | null = null
   private debug: boolean
 
   constructor(options: {
@@ -142,7 +145,7 @@ export class SupabaseDatabase implements IDatabase {
     try {
       const select = this.formatSelect(options?.select)
       const { data, error } = await this.client
-        .from(table)
+        .from(table as TableName)
         .select(select)
         .eq('id', id)
         .single()
@@ -166,7 +169,7 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseListResult<T>> {
     try {
       const select = this.formatSelect(options?.select)
-      let query = this.client.from(table).select(select, { count: 'exact' })
+      let query = this.client.from(table as TableName).select(select, { count: 'exact' })
 
       query = this.applyOptions(query, options)
 
@@ -192,7 +195,7 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseResult<T>> {
     try {
       const select = this.formatSelect(options?.select)
-      let query = this.client.from(table).select(select)
+      let query = this.client.from(table as TableName).select(select)
 
       query = this.applyOptions(query, options)
 
@@ -221,7 +224,7 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseResult<number>> {
     try {
       let query = this.client
-        .from(table)
+        .from(table as TableName)
         .select('*', { count: 'exact', head: true })
 
       if (options?.filters) {
@@ -253,7 +256,7 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseResult<T>> {
     try {
       const { data: result, error } = await this.client
-        .from(table)
+        .from(table as TableName)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .insert(data as any)
         .select()
@@ -278,7 +281,7 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseListResult<T>> {
     try {
       const { data: result, error } = await this.client
-        .from(table)
+        .from(table as TableName)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .insert(data as any)
         .select()
@@ -303,7 +306,7 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseListResult<T>> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = this.client.from(table).update(data as any)
+      let query = this.client.from(table as TableName).update(data as any)
 
       if (options?.filters) {
         query = this.applyFilters(query, options.filters)
@@ -331,7 +334,7 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseResult<T>> {
     try {
       const { data: result, error } = await this.client
-        .from(table)
+        .from(table as TableName)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .update(data as any)
         .eq('id', id)
@@ -356,7 +359,7 @@ export class SupabaseDatabase implements IDatabase {
     options?: { filters?: QueryFilter[] }
   ): Promise<DatabaseResult<boolean>> {
     try {
-      let query = this.client.from(table).delete()
+      let query = this.client.from(table as TableName).delete()
 
       if (options?.filters) {
         query = this.applyFilters(query, options.filters)
@@ -389,7 +392,7 @@ export class SupabaseDatabase implements IDatabase {
   ): Promise<DatabaseResult<boolean>> {
     try {
       const { error } = await this.client
-        .from(table)
+        .from(table as TableName)
         .delete()
         .eq('id', id)
 
@@ -484,7 +487,7 @@ export class SupabaseDatabase implements IDatabase {
   }
 
   setUserContext(userId: string): void {
-    this.userContext = userId
+    this._userContext = userId
     // In Supabase, RLS is handled automatically via JWT
     // This method is for compatibility with other providers
   }
@@ -611,13 +614,13 @@ export class SupabaseDatabase implements IDatabase {
                   case '!=':
                     return value !== filter.value
                   case '>':
-                    return (value as number) > (filter.value as number)
+                    return value > filter.value
                   case '>=':
-                    return (value as number) >= (filter.value as number)
+                    return value >= filter.value
                   case '<':
-                    return (value as number) < (filter.value as number)
+                    return value < filter.value
                   case '<=':
-                    return (value as number) <= (filter.value as number)
+                    return value <= filter.value
                   case 'in':
                     return Array.isArray(filter.value)
                       ? filter.value.includes(value)

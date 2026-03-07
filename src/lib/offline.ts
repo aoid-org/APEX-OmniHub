@@ -11,12 +11,12 @@ export function setupOfflineListeners(
   onOffline?: () => void
 ): () => void {
   const handleOnline = () => {
-    if (import.meta.env.DEV) console.log('Connection restored');
+    console.log('🟢 Connection restored');
     onOnline?.();
   };
 
   const handleOffline = () => {
-    if (import.meta.env.DEV) console.log('Connection lost');
+    console.log('🔴 Connection lost');
     onOffline?.();
   };
 
@@ -87,7 +87,7 @@ export function queueOfflineRequest(request: () => Promise<unknown>): string {
 export async function processQueuedRequests(): Promise<void> {
   if (!isOnline() || requestQueue.length === 0) return;
 
-  if (import.meta.env.DEV) console.log(`Processing ${requestQueue.length} queued requests...`);
+  console.log(`Processing ${requestQueue.length} queued requests...`);
 
   const now = Date.now();
   const requests = requestQueue.filter(req => !req.nextRetryTime || req.nextRetryTime <= now);
@@ -112,7 +112,7 @@ export async function processQueuedRequests(): Promise<void> {
     results.forEach((result, index) => {
       const item = batch[index];
       if (result.status === 'fulfilled') {
-        if (import.meta.env.DEV) console.log(`Successfully processed queued request ${item.id}`);
+        console.log(`✅ Successfully processed queued request ${item.id}`);
       } else {
         console.error(`❌ Failed to process request ${item.id}:`, result.reason);
 

@@ -7,10 +7,10 @@ export class MonitoringQueue<T> {
   private queue: T[] = [];
   private readonly maxEntries: number;
   private isFlushing = false;
-  private readonly seenHashes = new Set<string>();
+  private seenHashes = new Set<string>();
   private readonly hashFn: (item: T) => string;
 
-  constructor(hashFn: (item: T) => string, maxEntries = 500) {
+  constructor(maxEntries = 500, hashFn: (item: T) => string) {
     this.maxEntries = maxEntries;
     this.hashFn = hashFn;
   }

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2021", "DOM", "DOM.Iterable"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
@@ -18,11 +18,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@/components/ui/*": ["./src/components/ui/*", "../../src/components/ui/*"],
-      "@/stores/*": ["./src/stores/*", "../../src/stores/*"],
-      "@/lib/*": ["./src/lib/*", "../../src/lib/*"],
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "../../packages/core/src"]
+  "include": ["src"]
 }

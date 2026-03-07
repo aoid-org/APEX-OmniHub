@@ -74,7 +74,7 @@ function renderMarkdown(markdown: string): JSX.Element[] {
       return;
     }
 
-    elements.push(<p key={getKey('p', line)}>{line.split('**').join('')}</p>);
+    elements.push(<p key={getKey('p', line)}>{line.replaceAll('**', '')}</p>);
   });
 
   flushList('list-final');

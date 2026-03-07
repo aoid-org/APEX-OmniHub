@@ -69,26 +69,6 @@ test-results/
 concurrency_test_temp/
 
 # ── Root-level CI/build artifacts ────────────────────────────────────────────
-eslint_report*
-eslint_log*
-eslint_out*
+eslint_report*.json
 audit_report.json
-lint_output*
-tsc_report*
-search_results*
 test-output.css
-playwright-report/
-
-# ── Pre-launch hygiene: known CI/test artifacts ──────────────────────────────
-raw_test_output*.txt
-tsc_output*.txt
-test_output*.txt
-test_json*.json
-test_forge_full*.py
-apps/**/dist/
-
-# ── Stale CI artifacts (auto-generated, should never be committed) ───────────
-final_eslint.json
-security/npm-audit-latest.json
-security/npm-audit-prod.json
-ERRORS.md

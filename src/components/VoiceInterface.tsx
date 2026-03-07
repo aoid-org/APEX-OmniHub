@@ -15,7 +15,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
   const { toast } = useToast();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [_reconnectAttempts, setReconnectAttempts] = useState(0);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const [degradedMode, setDegradedMode] = useState(false);
   const [degradedReason, setDegradedReason] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -24,8 +24,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const networkCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userEndedRef = useRef(false);
-  // Ref mirror so closures always read the current retry count without stale captures
-  const reconnectAttemptsRef = useRef(0);
 
   const MAX_RETRIES = Number(import.meta.env.VITE_VOICE_MAX_RETRIES ?? 3);
   const BASE_RETRY_MS = Number(import.meta.env.VITE_VOICE_RETRY_BASE_MS ?? 500);
@@ -52,11 +50,10 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
     networkCheckIntervalRef.current = setInterval(() => {
       if (typeof navigator !== 'undefined' && navigator.onLine && degradedMode && !userEndedRef.current) {
         // Network recovered, attempt reconnection
-        logAnalyticsEvent('voice.ws.network_recovered', {});
+        void logAnalyticsEvent('voice.ws.network_recovered', {});
         setDegradedMode(false);
-        reconnectAttemptsRef.current = 0;
         setReconnectAttempts(0);
-        startConversation();
+        void startConversation();
       }
     }, 5_000); // Check every 5 seconds
   };
@@ -77,7 +74,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
       description: message,
       variant: 'destructive',
     });
-    logAnalyticsEvent('voice.ws.degraded', { message });
+    void logAnalyticsEvent('voice.ws.degraded', { message });
     startNetworkRecoveryCheck(); // Start checking for network recovery
   };
 
@@ -85,7 +82,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
     userEndedRef.current = false;
     setDegradedMode(false);
     setDegradedReason(null);
-    reconnectAttemptsRef.current = 0;
     setReconnectAttempts(0);
     setIsConnecting(true);
     cleanupTimers();
@@ -94,29 +90,26 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
 
   const scheduleReconnect = (reason: string) => {
     if (userEndedRef.current) return;
-    // Increment first via ref (avoids stale closure on state), then gate on MAX_RETRIES
-    const nextAttempt = reconnectAttemptsRef.current + 1;
-    reconnectAttemptsRef.current = nextAttempt;
-    setReconnectAttempts(nextAttempt);
-    if (nextAttempt >= MAX_RETRIES) {
-      // Exhausted all retries — enter degraded mode
+    if (reconnectAttempts >= MAX_RETRIES) {
       handleDegraded(reason);
       return;
     }
+    const nextAttempt = reconnectAttempts + 1;
     const delay = calculateBackoffDelay(nextAttempt, {
       baseMs: BASE_RETRY_MS,
       maxMs: MAX_RETRY_MS,
       jitterMs: JITTER_MS,
     });
+    setReconnectAttempts(nextAttempt);
     setIsConnecting(true);
     reconnectTimeoutRef.current = setTimeout(() => {
-      connectVoice(true);
+      void connectVoice(true);
     }, delay);
     toast({
       title: 'Retrying voice connection',
       description: `Attempt ${nextAttempt}/${MAX_RETRIES} in ${Math.round(delay)}ms`,
     });
-    logAnalyticsEvent('voice.ws.retry.attempt', {
+    void logAnalyticsEvent('voice.ws.retry.attempt', {
       attempt: nextAttempt,
       delay,
     });
@@ -142,7 +135,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
         setReconnectAttempts(0);
         setDegradedMode(false);
         setDegradedReason(null);
-        logAnalyticsEvent('voice.ws.retry.success', { reconnect: isReconnect });
+        void logAnalyticsEvent('voice.ws.retry.success', { reconnect: isReconnect });
 
         recorderRef.current = new AudioRecorder((audioData) => {
           if (ws.readyState === WebSocket.OPEN) {
@@ -186,7 +179,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
           } else if (data.type === 'response.created') {
             onSpeakingChange?.(true);
           } else if (data.type === 'error') {
-            logAnalyticsEvent('voice.ws.error', { error: data.error?.message || 'Unknown error' });
+            void logAnalyticsEvent('voice.ws.error', { error: data.error?.message || 'Unknown error' });
             toast({
               title: 'Voice error',
               description: data.error.message || 'An error occurred',
@@ -194,14 +187,14 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
             });
           }
         } catch (error) {
-          logAnalyticsEvent('voice.ws.message_error', {
+          void logAnalyticsEvent('voice.ws.message_error', {
             error: error instanceof Error ? error.message : 'Unknown error'
           });
         }
       };
 
       ws.onerror = (_error) => {
-        logAnalyticsEvent('voice.ws.error', { error: 'WebSocket error' });
+        void logAnalyticsEvent('voice.ws.error', { error: 'WebSocket error' });
         setIsConnecting(false);
         cleanupTransport();
         scheduleReconnect('Voice service unavailable. Retrying...');
@@ -222,7 +215,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
         }
       };
     } catch (error) {
-      logAnalyticsEvent('voice.ws.start_error', {
+      void logAnalyticsEvent('voice.ws.start_error', {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       setIsConnecting(false);

@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as monitoring from '../../src/lib/monitoring';
 import { _testing } from '../../src/lib/monitoring';
 
-
 // Mock storage adapter to avoid side effects and inspect calls
 // Actually, _testing.storage is a singleton instance. We can spy on it.
 
@@ -13,8 +12,6 @@ describe('monitoring integration', () => {
     _testing.queue.clear();
     if (_testing.logCache) _testing.logCache.clear();
     vi.clearAllMocks();
-
-
 
     // Mock getHealthStatus to be healthy by default
     vi.mock('../../src/lib/omni-sentry', async () => {
@@ -105,7 +102,7 @@ describe('monitoring integration', () => {
   it('should respect storage max limits per key', () => {
     // Write directly to storage to simulate existing data
     // Max for perf_logs is 100
-    const existing = new Array(100).fill({ name: 'old', duration: 0, timestamp: 0 });
+    const existing = Array(100).fill({ name: 'old', duration: 0, timestamp: 0 });
     localStorage.setItem('perf_logs', JSON.stringify(existing));
 
     monitoring.logPerformance({ name: 'new', duration: 100, timestamp: 1 });
@@ -145,7 +142,7 @@ describe('monitoring integration', () => {
 
     // Simulate visibilitychange
     Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
-    globalThis.dispatchEvent(new Event('visibilitychange'));
+    window.dispatchEvent(new Event('visibilitychange'));
 
     expect(_testing.queue.size).toBe(0);
     expect(localStorage.getItem('perf_logs')).not.toBeNull();
@@ -169,11 +166,10 @@ describe('monitoring integration', () => {
     // But logSecurityEvent writes to 'security_logs'.
     // And I made 'security_logs' critical, so it flushes immediate.
 
-    [
-      { key: 'key1', entry: 'a', max: 10 },
-      { key: 'key2', entry: 'b', max: 10 },
-      { key: 'key1', entry: 'c', max: 10 }
-    ].forEach(item => _testing.queue.push(item));
+    // Okay, let's manually push to queue to test grouping if we can access it.
+    _testing.queue.push({ key: 'key1', entry: 'a', max: 10 });
+    _testing.queue.push({ key: 'key2', entry: 'b', max: 10 });
+    _testing.queue.push({ key: 'key1', entry: 'c', max: 10 });
 
     _testing.flushQueue();
 

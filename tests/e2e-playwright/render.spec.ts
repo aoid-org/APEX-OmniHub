@@ -53,7 +53,7 @@ test.describe('Runtime Render Smoke Tests', () => {
   });
 
   test('app renders interactive content', async ({ page }) => {
-    await page.goto('/omnitrace');
+    await page.goto('/');
 
     // Wait for app shell
     await expect(page.locator('[data-testid="app-shell"]')).toBeVisible();
@@ -88,19 +88,15 @@ test.describe('Runtime Render Smoke Tests', () => {
     ).toHaveLength(0);
   });
 
-  test('unknown route renders without fatal errors', async ({ page }) => {
-    // /health was removed — verify the app handles missing routes gracefully
+  test('health page loads successfully', async ({ page }) => {
+    // Health page is a good canary - simpler than dashboard
     await page.goto('/health');
 
     await expect(page.locator('[data-testid="app-shell"]')).toBeVisible();
 
-    // Should render the app shell without fatal errors (404 fallback or config screen)
-    const fatalErrors = consoleErrors.filter((err) =>
-      err.includes('createContext') ||
-      err.includes('ChunkLoadError') ||
-      err.includes('Failed to fetch dynamically imported module')
-    );
-    expect(fatalErrors).toHaveLength(0);
+    // Should render health content
+    const content = await page.content();
+    expect(content.toLowerCase()).toContain('health');
   });
 
   test('auth page loads without errors', async ({ page }) => {

@@ -4,14 +4,14 @@ OmniHub Connector - Shared module for local agent machines
 Provides telemetry emission and task dispatch integration with OmniHub via OmniLink Port.
 """
 
-import asyncio
-import logging
 import os
 import sys
+import json
+import logging
+import asyncio
 import uuid
-from collections.abc import Awaitable, Callable
-from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Dict, Optional, Callable, Awaitable
+from datetime import datetime, timezone
 
 try:
     import aiohttp
@@ -42,7 +42,7 @@ class OmniHubConnector:
         api_key: str,
         source: str,
         worker_id: str,
-        target: str | None = None,
+        target: Optional[str] = None,
     ):
         """
         Initialize OmniHub connector.
@@ -59,7 +59,7 @@ class OmniHubConnector:
         self.source = source
         self.worker_id = worker_id
         self.target = target or source
-        self._session: aiohttp.ClientSession | None = None
+        self._session: Optional[aiohttp.ClientSession] = None
         self._headers = {
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json',
@@ -79,10 +79,10 @@ class OmniHubConnector:
     async def emit_event(
         self,
         event_type: str,
-        data: dict[str, Any],
-        idempotency_key: str | None = None,
-        ts: str | None = None,
-    ) -> dict[str, Any]:
+        data: Dict[str, Any],
+        idempotency_key: Optional[str] = None,
+        ts: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Emit a telemetry event to OmniHub.
 
@@ -99,7 +99,7 @@ class OmniHubConnector:
             idempotency_key = f"{self.source}:{event_type}:{uuid.uuid4()}"
 
         if ts is None:
-            ts = datetime.now(UTC).isoformat()
+            ts = datetime.now(timezone.utc).isoformat()
 
         payload = {
             "specversion": "1.0",
@@ -116,7 +116,7 @@ class OmniHubConnector:
             idempotency_key=idempotency_key,
         )
 
-    async def claim_task(self) -> dict[str, Any] | None:
+    async def claim_task(self) -> Optional[Dict[str, Any]]:
         """
         Attempt to claim one task from OmniHub.
 
@@ -153,9 +153,9 @@ class OmniHubConnector:
         self,
         task_id: str,
         status: str,
-        output: dict[str, Any] | None = None,
-        error_message: str | None = None,
-    ) -> dict[str, Any]:
+        output: Optional[Dict[str, Any]] = None,
+        error_message: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Mark a task as completed.
 
@@ -189,7 +189,7 @@ class OmniHubConnector:
             response.raise_for_status()
             return await response.json()
 
-    async def _check_event_result(self, result: dict[str, Any]) -> bool:
+    async def _check_event_result(self, result: Dict[str, Any]) -> bool:
         """
         Check if event result indicates success or requires retry.
         Returns True if should retry, False if successful.
@@ -214,10 +214,10 @@ class OmniHubConnector:
     async def _post_with_retry(
         self,
         url: str,
-        payload: dict[str, Any],
+        payload: Dict[str, Any],
         idempotency_key: str,
         max_retries: int = 3,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Post with exponential backoff retry logic."""
         headers = {'X-Idempotency-Key': idempotency_key}
         session = self.get_session()
@@ -233,7 +233,7 @@ class OmniHubConnector:
                         return result
                     # Continue to next retry if rate limited
 
-            except (TimeoutError, aiohttp.ClientError) as e:
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                 if attempt < max_retries - 1:
                     backoff = 2 ** attempt
                     logger.warning(f"Request failed (attempt {attempt + 1}/{max_retries}), retrying in {backoff}s: {e}")
@@ -248,7 +248,7 @@ class OmniHubConnector:
 class TaskWorker:
     """Task worker loop that claims and executes tasks."""
 
-    def __init__(self, connector: OmniHubConnector, handlers: dict[str, Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]]):
+    def __init__(self, connector: OmniHubConnector, handlers: Dict[str, Callable[[Dict[str, Any]], Awaitable[Dict[str, Any]]]]):
         """
         Initialize task worker.
 
@@ -261,11 +261,11 @@ class TaskWorker:
         self.handlers = handlers
         self.running = False
 
-    def register_handler(self, action: str, handler: Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]):
+    def register_handler(self, action: str, handler: Callable[[Dict[str, Any]], Awaitable[Dict[str, Any]]]):
         """Register a new async task handler."""
         self.handlers[action] = handler
 
-    async def run(self, poll_interval: int = 5, max_iterations: int | None = None):
+    async def run(self, poll_interval: int = 5, max_iterations: Optional[int] = None):
         """Start the worker loop."""
         self.running = True
         iterations = 0
@@ -304,7 +304,7 @@ class TaskWorker:
         """Stop the worker loop."""
         self.running = False
 
-    async def _execute_task(self, task: dict[str, Any]):
+    async def _execute_task(self, task: Dict[str, Any]):
         """Execute a single task."""
         task_id = task['id']
         params = task.get('params', {})
@@ -345,7 +345,7 @@ class TaskWorker:
             )
 
 
-def load_env_config() -> dict[str, str]:
+def load_env_config() -> Dict[str, str]:
     """Load OmniHub connector config from environment variables."""
     required = ['OMNIHUB_BASE_URL', 'OMNIHUB_API_KEY', 'OMNIHUB_SOURCE', 'OMNIHUB_WORKER_ID']
     config = {}

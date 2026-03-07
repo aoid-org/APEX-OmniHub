@@ -16,7 +16,7 @@ test.describe('Layout safety', () => {
     const wordmarkHeight = await page.$eval('.nav__logo-wordmark', (el) =>
       (el as HTMLElement).getBoundingClientRect().height
     );
-    expect(wordmarkHeight).toBeLessThanOrEqual(50);
+    expect(wordmarkHeight).toBeLessThanOrEqual(28);
 
     const navHeight = await page.$eval('.nav__inner', (el) =>
       (el as HTMLElement).getBoundingClientRect().height

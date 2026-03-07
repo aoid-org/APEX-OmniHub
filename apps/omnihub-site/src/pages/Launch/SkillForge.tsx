@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Zap, ShieldCheck, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -12,19 +11,6 @@ interface Step {
   field: 'intent' | 'trigger' | 'constraints';
   placeholder: string;
 }
-
-const skillForgeRequestSchema = z.object({
-  intent: z.string().min(8).max(300),
-  trigger: z.string().min(8).max(300),
-  constraints: z.string().min(8).max(500),
-});
-
-const forgeResponseSchema = z.object({
-  success: z.literal(true),
-  skill: z.object({
-    name: z.string().min(1),
-  }),
-});
 
 const WIZARD_STEPS: Step[] = [
   {
@@ -63,20 +49,19 @@ export function SkillForge() {
   const progressWidth = (step / 3) * 100;
 
   const handleForge = async () => {
-    const parsed = skillForgeRequestSchema.safeParse(formData);
-    if (!parsed.success) {
-      toast.error('INVALID INPUT', { description: parsed.error.issues[0]?.message ?? 'Please complete all fields.' });
-      return;
-    }
-
     setLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('generate-business-skills', {
-        body: parsed.data,
+        body: {
+          intent: formData.intent,
+          trigger: formData.trigger,
+          constraints: formData.constraints,
+        },
       });
 
       if (error) {
+        // Check for 402 Payment Required (entitlement limit)
         if (error.context?.status === 402) {
           toast.error('SYSTEM OVERLOAD', {
             description: 'Upgrade to Architect Tier to forge more skills.',
@@ -91,19 +76,14 @@ export function SkillForge() {
         return;
       }
 
-      const response = forgeResponseSchema.safeParse(data);
-      if (!response.success) {
-        toast.error('FORGE FAILED', {
-          description: 'Invalid server response received.',
+      if (data?.success) {
+        toast.success('SKILL FORGED', {
+          description: `${data.skill.name} is now operational`,
         });
-        return;
+        setStep(4); // Success state
       }
-
-      toast.success('SKILL FORGED', {
-        description: `${response.data.skill.name} is now operational`,
-      });
-      setStep(4);
-    } catch {
+    } catch (err) {
+      console.error('Forge error:', err);
       toast.error('FORGE FAILED', {
         description: 'An unexpected error occurred',
       });
@@ -116,7 +96,7 @@ export function SkillForge() {
     if (step < 3) {
       setStep(step + 1);
     } else {
-      void handleForge();
+      handleForge();
     }
   };
 
@@ -130,6 +110,7 @@ export function SkillForge() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-950 via-orange-950 to-amber-900 text-white flex flex-col items-center justify-center p-6 font-sans">
       <div className="max-w-2xl w-full space-y-8">
+        {/* Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center p-3 bg-amber-500/20 rounded-full mb-4">
             <Sparkles className="w-8 h-8 text-amber-400" />
@@ -140,6 +121,7 @@ export function SkillForge() {
           </p>
         </div>
 
+        {/* Progress Bar */}
         {step <= 3 && (
           <div className="w-full bg-amber-950/50 rounded-full h-2">
             <motion.div
@@ -151,6 +133,7 @@ export function SkillForge() {
           </div>
         )}
 
+        {/* Wizard Steps */}
         <AnimatePresence mode="wait">
           {step <= 3 ? (
             <motion.div
@@ -161,6 +144,7 @@ export function SkillForge() {
               transition={{ duration: 0.3 }}
               className="bg-black/30 backdrop-blur-sm rounded-lg p-8 space-y-6"
             >
+              {/* Step Icon & Question */}
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-amber-500/10 rounded-lg">
                   <currentStep.icon className="w-6 h-6 text-amber-400" />
@@ -173,6 +157,7 @@ export function SkillForge() {
                 </div>
               </div>
 
+              {/* Input */}
               <textarea
                 autoFocus
                 value={formData[currentStep.field]}
@@ -184,6 +169,7 @@ export function SkillForge() {
                 className="w-full bg-black/50 border border-amber-700/30 rounded-lg px-4 py-3 text-white placeholder-amber-400/40 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
               />
 
+              {/* Next Button */}
               <button
                 onClick={handleNext}
                 disabled={isCurrentFieldEmpty || loading}
@@ -203,6 +189,7 @@ export function SkillForge() {
               </button>
             </motion.div>
           ) : (
+            // Success State (Step 4)
             <motion.div
               key="success"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -230,6 +217,7 @@ export function SkillForge() {
           )}
         </AnimatePresence>
 
+        {/* Footer Hint */}
         {step <= 3 && (
           <p className="text-center text-amber-400/60 text-sm">
             Free tier: 3 skills maximum. Upgrade to Architect Tier for unlimited skills.

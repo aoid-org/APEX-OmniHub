@@ -17,7 +17,7 @@ export function MaestroPage() {
             <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-bold)', letterSpacing: '0.1em', marginBottom: 'var(--space-3)' }}>FROM INTENT TO EXECUTION</div>
             <p style={{ fontSize: 'var(--font-size-lg)', lineHeight: '1.75', margin: 0 }}>
               "When a new customer signs up, create their account in Salesforce, provision their workspace in Slack,
-              and send a welcome email." Maestro makes it happen safely, monitored, and reversible.
+              and send a welcome email." Maestro makes it happen—safely, monitored, and reversible.
             </p>
           </div>
 
@@ -100,13 +100,6 @@ export function MaestroPage() {
                 <p className="text-secondary text-sm">
                   "Extract data from Salesforce, transform it, and load into our warehouse every hour."
                   Maestro handles scheduling, error handling, and monitoring.
-                </p>
-              </div>
-              <div className="card" style={{ padding: 'var(--space-6)' }}>
-                <h4 className="heading-4 mb-3">Compliance Reporting</h4>
-                <p className="text-secondary text-sm">
-                  "Generate audit-ready compliance reports across all integrations every quarter."
-                  Maestro collects evidence, formats reports, and flags gaps automatically.
                 </p>
               </div>
             </div>

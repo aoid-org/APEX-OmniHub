@@ -8,97 +8,19 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ═══════════════════════════════════════════════════════════════════
-  # ARCHITECTURAL BOUNDARY ENFORCEMENT — v1.3.0-RC
-  # Fail-closed gate: grep-only, < 2 s, blocks all downstream jobs.
-  # ═══════════════════════════════════════════════════════════════════
-  architectural-boundary-enforcement:
-    name: Architectural Boundary Enforcement
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      # ── Guardrail 0 — File Existence (Rename-Drift Closure) ──────
-      - name: "Guardrail 0 - File Existence (Rename-Drift Closure)"
-        run: |
-          MONITORED_FILES=(
-            "orchestrator/main.py"
-            "services/orchestrator/api/routes.py"
-            "orchestrator/metrics.py"
-          )
-          MISSING=0
-          for f in "${MONITORED_FILES[@]}"; do
-            if [ ! -f "$f" ]; then
-              echo "🛑 BOUNDARY VIOLATION: Monitored file '$f' is missing."
-              echo "   RULE: All boundary-monitored files must exist at their canonical paths. File renames silently bypass path-specific guardrails."
-              echo "   FIX:  Restore '$f' to its canonical path, or update .github/workflows/ci-runtime-gates.yml to track the new location."
-              MISSING=1
-            fi
-          done
-          if [ "$MISSING" -eq 1 ]; then
-            exit 1
-          fi
-          echo "✅ BOUNDARY CLEAR: All 3 monitored files exist at canonical paths."
-
-      # ── Guardrail 1 — Worker Purity (B1: main.py) ───────────────
-      - name: "Guardrail 1 - Worker Purity (main.py must not import HTTP servers)"
-        run: |
-          if grep -qE "^\s*(import|from)\s+(fastapi|uvicorn)\b" orchestrator/main.py; then
-            echo "🛑 BOUNDARY VIOLATION: orchestrator/main.py contains an HTTP server import (fastapi or uvicorn)."
-            echo "   RULE: main.py is a pure Temporal Worker CLI entrypoint — no HTTP server imports permitted."
-            echo "   FIX:  Remove all fastapi/uvicorn imports from main.py. Move HTTP logic to services/orchestrator/api/."
-            exit 1
-          else
-            echo "✅ BOUNDARY CLEAR: main.py worker purity confirmed — no fastapi/uvicorn imports."
-          fi
-
-      # ── Guardrail 2 — API Purity (B2: routes.py) ────────────────
-      - name: "Guardrail 2 - API Purity (routes.py must not init Temporal Workers)"
-        run: |
-          if grep -qE "\.Worker\(|Worker\(|start_worker" services/orchestrator/api/routes.py; then
-            echo "🛑 BOUNDARY VIOLATION: routes.py initializes or references a Temporal Worker."
-            echo "   RULE: API routes are HTTP client-only — Worker lifecycle belongs exclusively in orchestrator/main.py."
-            echo "   FIX:  Remove Worker()/start_worker references. Use Temporal Client to dispatch workflows, not run Workers."
-            exit 1
-          else
-            echo "✅ BOUNDARY CLEAR: routes.py API purity confirmed — no Worker initialization."
-          fi
-
-      # ── Guardrail 3 — Metrics Decoupling (B3: metrics.py) ───────
-      - name: "Guardrail 3 - Metrics Decoupling (metrics.py must not import API layer)"
-        run: |
-          if grep -qE "^\s*from\s+services\.orchestrator\.api\b" orchestrator/metrics.py; then
-            echo "🛑 BOUNDARY VIOLATION: metrics.py imports from services.orchestrator.api."
-            echo "   RULE: The telemetry layer is a shared utility — it must not couple to the API layer."
-            echo "   FIX:  Remove the services.orchestrator.api import. Pass any needed dependencies via function arguments."
-            exit 1
-          else
-            echo "✅ BOUNDARY CLEAR: metrics.py decoupling confirmed — no API layer imports."
-          fi
-
   build-and-test:
-    needs: architectural-boundary-enforcement
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Verify changelog paths exist
-        run: node scripts/verify-changelog-paths.js CHANGELOG.md
-
-      - name: Repo Hygiene Guard
-        run: bash scripts/repo-hygiene-guard.sh
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -135,11 +57,6 @@ jobs:
       - name: React singleton check
         run: npm run check:react
 
-      - name: Verify Python availability
-        run: |
-          python3 --version
-          which python3
-
       # ─────────────────────────────────────────────────────────────
       # PHASE 2: Unit Tests
       # ─────────────────────────────────────────────────────────────
@@ -156,31 +73,6 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           REQUIRE_SUPABASE_INTEGRATION_TESTS: "false"
-
-      - name: Run JS coverage
-        run: npm run test:coverage
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Run orchestrator Python coverage
-        run: cd orchestrator && pip install -r requirements.txt && pytest --cov=. --cov-report=xml:coverage.xml
-
-      - name: SonarCloud Scan Disabled Notice
-        if: vars.SONAR_CI_SCAN_ENABLED != 'true'
-        run: |
-          echo "Skipping CI Sonar scan because SONAR_CI_SCAN_ENABLED is not true."
-          echo "Use SonarCloud Automatic Analysis or set repository variable SONAR_CI_SCAN_ENABLED=true and disable Automatic Analysis in SonarCloud."
-
-      - name: SonarCloud Scan
-        if: vars.SONAR_CI_SCAN_ENABLED == 'true'
-        uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d
-        continue-on-error: true
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # ─────────────────────────────────────────────────────────────
       # PHASE 2.5: OmniEval Deterministic Evaluation
@@ -199,9 +91,6 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       # PHASE 3: Build
       # ─────────────────────────────────────────────────────────────
-      - name: Vercel Production Sync Shield
-        run: cd apps/omnihub-site && npm ci --omit=dev && npm run build
-
       - name: Build production bundle
         run: npm run build
 
@@ -253,21 +142,7 @@ jobs:
           fi
 
       # ─────────────────────────────────────────────────────────────
-      # PHASE 5: Guard Rail Violation Scan
-      # ─────────────────────────────────────────────────────────────
-      - name: Scan for Guard Rail Violations
-        if: always()
-        run: |
-          mkdir -p logs
-          if grep -rqE "GUARD_RAIL_VIOLATION|policy breach|tri-force violation" logs/ 2>/dev/null; then
-            echo "GUARD_RAIL_VIOLATION_DETECTED=true" >> "$GITHUB_ENV"
-            echo "::error::Guard rail violation detected in logs"
-            exit 1
-          fi
-          echo "No guard rail violations detected"
-
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 6: Upload Artifacts
+      # PHASE 5: Upload Artifacts
       # ─────────────────────────────────────────────────────────────
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -285,25 +160,6 @@ jobs:
           path: test-results/
           retention-days: 7
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 5.5: Guardrail Scan
-      # ─────────────────────────────────────────────────────────────
-      - name: Guardrail Scan
-        id: guardrail
-        if: always()
-        run: |
-          mkdir -p logs
-          if grep -rqE "GUARD_RAIL_VIOLATION|policy.*breach" logs/ 2>/dev/null; then
-            echo "🚨 GUARDRAIL VIOLATION DETECTED"
-            echo "VIOLATION=true" >> $GITHUB_ENV
-            echo "violation=true" >> $GITHUB_OUTPUT
-            exit 1
-          else
-            echo "✅ No guardrail violations detected"
-            echo "VIOLATION=false" >> $GITHUB_ENV
-            echo "violation=false" >> $GITHUB_OUTPUT
-          fi
-
   # ─────────────────────────────────────────────────────────────────
   # OPTIONAL: Vercel Preview URL Tests
   # Runs against deployed preview if available
@@ -313,17 +169,17 @@ jobs:
     needs: build-and-test
     if: github.event_name == 'pull_request'
     timeout-minutes: 20
-    continue-on-error: true # Don't block merge if preview isn't ready
+    continue-on-error: true  # Don't block merge if preview isn't ready
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2

@@ -29,12 +29,6 @@ function SpecSection({ title, description, details }: SpecSectionProps) {
 }
 
 export function TechSpecsPage() {
-  const watchDemoCta = {
-    ...siteConfig.ctas.secondary,
-    label: 'Watch Demo',
-    href: '/demo',
-  };
-
   return (
     <Layout title="Tech Specs">
       <Section>
@@ -62,7 +56,7 @@ export function TechSpecsPage() {
           <div className="mt-8">
             <CTAGroup
               primary={siteConfig.ctas.primary}
-              secondary={watchDemoCta}
+              secondary={siteConfig.ctas.link}
               centered
             />
           </div>

@@ -150,12 +150,12 @@ describe('Rate Limiting', () => {
         checkRateLimit(key, 5, 100);
       }
 
-      // Try at T=50ms (before reset) - increased buffer to avoid timer jitter flakiness
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Try at T=95ms (before reset)
+      await new Promise(resolve => setTimeout(resolve, 95));
       expect(checkRateLimit(key, 5, 100).allowed).toBe(false);
 
-      // Try at T=110ms (after reset) - Wait additional 60ms
-      await new Promise(resolve => setTimeout(resolve, 60));
+      // Try at T=105ms (after reset) - Wait additional 10ms
+      await new Promise(resolve => setTimeout(resolve, 10));
       expect(checkRateLimit(key, 5, 100).allowed).toBe(true);
     });
 

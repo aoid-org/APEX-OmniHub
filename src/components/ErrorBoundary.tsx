@@ -3,7 +3,6 @@ import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { createDebugLogger } from '@/lib/debug-logger';
-import { logError } from '@/lib/monitoring';
 
 interface Props {
   children: ReactNode;
@@ -50,17 +49,17 @@ export class ErrorBoundary extends Component<Props, State> {
     }
     
     // Also use our monitoring system
-    logError(error, {
-      action: 'error_boundary',
-      metadata: {
-        componentStack: errorInfo.componentStack,
-      },
-    }).catch(() => {
-      // Ignore monitoring failures
-    });
+    import('@/lib/monitoring').then(({ logError }) => {
+      logError(error, {
+        action: 'error_boundary',
+        metadata: {
+          componentStack: errorInfo.componentStack,
+        },
+      });
+    }).catch(() => {});
   }
 
-  private readonly handleReset = () => {
+  private handleReset = () => {
     this.setState({ hasError: false, error: null });
   };
 

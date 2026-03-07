@@ -8,7 +8,6 @@ import { waitWithBackoff } from '@/lib/backoff';
 import { Database } from '@/integrations/supabase/types';
 import { TranslatedEvent } from '../translation/translator';
 import { requestOmniLink } from '../../integrations/omnilink';
-import type { LangCode } from '@/i18n/locales';
 
 export interface DeliveryResult {
   eventId: string;
@@ -22,20 +21,18 @@ export interface DeliveryResult {
  * Delivery service for OmniLink integration
  */
 export class OmniLinkDelivery {
-  private readonly maxRetries = 3;
-  private readonly baseDelay = 1000; // 1 second
+  private maxRetries = 3;
+  private baseDelay = 1000; // 1 second
 
   async deliverBatch(
     events: TranslatedEvent[],
     appId: string,
-    correlationId: string,
-    locale?: LangCode
+    correlationId: string
   ): Promise<number> {
-    const localeSuffix = locale ? ` [${locale}]` : '';
     return this.executeBatchDelivery(
       events,
       correlationId,
-      `Delivering ${events.length} events to OmniLink for app ${appId}${localeSuffix}`,
+      `Delivering ${events.length} events to OmniLink for app ${appId}`,
       async (event) => await this.deliverEvent(event, correlationId),
       async (event, error) => {
         console.error(`[${correlationId}] Failed to deliver event ${event.eventId}:`, error);
@@ -59,8 +56,7 @@ export class OmniLinkDelivery {
           body: event,
           headers: {
             'X-Correlation-ID': correlationId,
-            'X-App-ID': event.appId,
-            ...(event.metadata?.locale == null ? {} : { 'Accept-Language': typeof event.metadata.locale === 'string' ? event.metadata.locale : JSON.stringify(event.metadata.locale) }),
+            'X-App-ID': event.appId
           }
         });
         return;
@@ -88,7 +84,7 @@ export class OmniLinkDelivery {
     const failedEvents = await this.fetchPendingDLQEvents(appId);
 
     if (!failedEvents?.length) {
-      if (import.meta.env.DEV) console.log(`[${correlationId}] Retrying failed deliveries for app ${appId}`);
+      console.log(`[${correlationId}] Retrying failed deliveries for app ${appId}`);
       return 0;
     }
 
@@ -116,7 +112,7 @@ export class OmniLinkDelivery {
     processor: (item: T) => Promise<void>,
     errorHandler: (item: T, error: unknown) => Promise<void>
   ): Promise<number> {
-    if (import.meta.env.DEV) console.log(`[${correlationId}] ${startLogMessage}`);
+    console.log(`[${correlationId}] ${startLogMessage}`);
 
     const successCount = await this.processEvents(
       items,
@@ -124,7 +120,7 @@ export class OmniLinkDelivery {
       errorHandler
     );
 
-    if (import.meta.env.DEV) console.log(`[${correlationId}] Processed ${successCount}/${items.length} events successfully`);
+    console.log(`[${correlationId}] Processed ${successCount}/${items.length} events successfully`);
     return successCount;
   }
 
@@ -160,7 +156,7 @@ export class OmniLinkDelivery {
 
     if (dlqError) {
       console.error(`[${correlationId}] Failed to write to DLQ for event ${event.eventId}:`, dlqError);
-    } else if (import.meta.env.DEV) {
+    } else {
       console.log(`[${correlationId}] Event ${event.eventId} written to DLQ`);
     }
   }
@@ -186,7 +182,7 @@ export class OmniLinkDelivery {
     await supabase
       .from('ingress_buffer')
       .update({
-        // NOTE: Update schema to support 'processed' status. Using 'failed' temporarily to satisfy type safety
+        // TODO: Update schema to support 'processed' status. Using 'failed' temporarily to satisfy type safety
         // while ensuring the item is removed from the 'pending' queue.
         status: 'failed',
       })

@@ -94,7 +94,7 @@ export async function cachedFetch<T = unknown>(
   if ((!options?.method || options.method === 'GET') && cache.has(key)) {
     const entry = cache.get(key)!;
     if (now < entry.expiresAt) {
-      return entry.data as T;
+      return entry.data;
     }
     cache.delete(key);
   }
@@ -102,7 +102,7 @@ export async function cachedFetch<T = unknown>(
   // Check for pending request
   if (pendingRequests.has(key)) {
     const pending = pendingRequests.get(key)!;
-    return pending.promise as Promise<T>;
+    return pending.promise;
   }
 
   // Make new request

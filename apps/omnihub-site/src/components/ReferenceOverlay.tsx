@@ -133,7 +133,7 @@ export function ReferenceOverlay() {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           color: '#fff',
           fontSize: '12px',
-          fontFamily: 'Space Grotesk, sans-serif',
+          fontFamily: 'monospace',
           borderRadius: '4px',
           zIndex: CONTROL_PANEL_Z_INDEX,
           pointerEvents: 'auto',

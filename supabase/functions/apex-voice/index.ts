@@ -68,15 +68,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   // Authenticate WebSocket connection before upgrade
-  // Extract Accept-Language for locale-aware responses
-  const acceptLang = req.headers.get("Accept-Language") ?? "en";
-  const clientLang = acceptLang.split(",")[0].split("-")[0].toLowerCase() || "en";
-
   let userId: string;
   try {
     const authResult = await verifyWebSocketAuth(req);
     userId = authResult.user.id;
-    logEvent("log", "authenticated", { userId, lang: clientLang });
+    logEvent("log", "authenticated", { userId });
   } catch (error) {
     if (error instanceof AuthError) {
       logEvent("warn", "authentication_failed", { reason: error.message });
@@ -103,13 +99,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     handshake_ms: 0,
     turn_count: 0,
     last_speech_stop: 0,
-    user_id: userId,
+    user_id: userId
   };
-
-  // Locale-aware system prompt
-  const localizedPrompt = clientLang === "en"
-    ? APEX_SYSTEM_PROMPT
-    : `${APEX_SYSTEM_PROMPT}\nIMPORTANT: Respond in language code "${clientLang}" when the user speaks that language.`;
 
   let openAISocket: WebSocket | null = null;
   let sessionState: Record<string, string> = {};
@@ -129,7 +120,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         type: "session.update",
         session: {
           modalities: ["text", "audio"],
-          instructions: localizedPrompt,
+          instructions: APEX_SYSTEM_PROMPT,
           voice: "alloy",
           input_audio_format: "pcm16",
           output_audio_format: "pcm16",

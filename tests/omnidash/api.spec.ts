@@ -21,21 +21,9 @@ vi.mock('../../src/integrations/supabase/client', () => ({
   },
 }));
 
-interface MockQueryBuilder {
-  select: ReturnType<typeof vi.fn>;
-  eq: ReturnType<typeof vi.fn>;
-  maybeSingle: ReturnType<typeof vi.fn>;
-  insert: ReturnType<typeof vi.fn>;
-  upsert: ReturnType<typeof vi.fn>;
-  update: ReturnType<typeof vi.fn>;
-  in: ReturnType<typeof vi.fn>;
-  single: ReturnType<typeof vi.fn>;
-  order: ReturnType<typeof vi.fn>;
-  limit: ReturnType<typeof vi.fn>;
-}
-
 describe('fetchSettings Performance Optimization', () => {
-  let queryBuilder: MockQueryBuilder;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let queryBuilder: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -53,7 +41,8 @@ describe('fetchSettings Performance Optimization', () => {
       limit: vi.fn().mockResolvedValue({ data: [], error: null }),
     };
 
-    vi.mocked(supabase.from).mockReturnValue(queryBuilder as unknown as ReturnType<typeof supabase.from>);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from as any).mockReturnValue(queryBuilder);
   });
 
   it('verifies explicit column selection in fetchSettings', async () => {

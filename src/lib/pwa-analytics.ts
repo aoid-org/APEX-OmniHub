@@ -96,7 +96,7 @@ export function trackPWAInstalled() {
       userAgent: navigator.userAgent,
     };
 
-    void logAnalyticsEvent('pwa.install.completed', metrics as unknown as Record<string, unknown>);
+    void logAnalyticsEvent('pwa.install.completed', metrics);
 
     // Store install date for future analytics
     try {

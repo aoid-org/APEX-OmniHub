@@ -76,8 +76,6 @@ class TestSemanticCacheService:
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
         cache = SemanticCacheService(
             redis_url=redis_url,
-            redis_password=os.getenv("REDIS_PASSWORD"),
-            redis_ssl=os.getenv("REDIS_SSL", "false").lower() == "true",
             similarity_threshold=0.85,
             ttl_seconds=300,  # 5min for tests
         )

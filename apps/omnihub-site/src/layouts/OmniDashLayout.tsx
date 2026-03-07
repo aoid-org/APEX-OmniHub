@@ -1,233 +1,72 @@
-/**
- * APEX OmniDash Layout - apps/omnihub-site
- * @version 6.0.0 - Custom nav icons, Space Grotesk font, burnt orange accents
- *
- * 2-column CSS Grid: 260px | 1fr
- * Custom APEX-branded 3D nav icons (no Lucide in sidebar)
- * Lucide kept only for header utility icons (Search, Bell, Shield, ChevronDown)
- */
-
-import { useState, useMemo, useCallback, type MouseEvent } from 'react';
-import { Outlet, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { Search, Bell, Shield, ChevronDown, Sun, Moon, X } from 'lucide-react';
-import { DashboardOverview } from '@/pages/DashboardOverview';
-import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
-import { BYOMCockpit } from '@/components/byom/BYOMCockpit';
-import { useOmniDashAction } from '@/hooks/useOmniDashAction';
-import '@/styles/omnidash-layout.css';
-import { z } from 'zod';
-
-// Custom nav icons
-import navOmniboard from '@/assets/nav/omniboard_icon.png';
-import navOmniskills from '@/assets/nav/omniskills_icon.png';
-import navPhysiomni from '@/assets/nav/physiomni_icon.png';
-import navAudits from '@/assets/nav/audits_icon.png';
-import navLinks from '@/assets/nav/links_icon.png';
-import navAutomations from '@/assets/nav/automations_icon.png';
-import navWorkflows from '@/assets/nav/workflows_icon.png';
-import navFiles from '@/assets/nav/files_icon.png';
-import navBilling from '@/assets/nav/billing_icon.png';
-import navSettings from '@/assets/nav/settings_icon.png';
-import apexWordmark from '@/assets/apex_omnihub_wordmark.png';
-import { APP_REGISTRY, type AppRegistryEntry } from '../../../../packages/core/src/registry';
-
-// ────────────────────────────────────────────────
-// Sidebar Navigation Map - custom icon images
-// ────────────────────────────────────────────────
-const NAV_ICON_MAP: Readonly<Record<string, string>> = {
-  omniboard: navOmniboard,
-  omniport: navLinks,
-  maestro: navAutomations,
-  fortress: navAudits,
-  orchestrator: navWorkflows,
-  omniskills: navOmniskills,
-  physiomni: navPhysiomni,
-  audits: navAudits,
-  links: navLinks,
-  automations: navAutomations,
-  workflows: navWorkflows,
-  files: navFiles,
-  billing: navBilling,
-  settings: navSettings,
-};
-
-const SIDEBAR_NAV = APP_REGISTRY.map((entry: AppRegistryEntry) => ({
-  key: entry.key,
-  label: entry.label,
-  icon: NAV_ICON_MAP[entry.iconAssetKey] ?? navOmniboard,
-  to: entry.routePath,
-})).filter((entry) => entry.key === 'omniboard');
+import { LogOut, ShieldCheck, Home } from 'lucide-react';
 
 export function OmniDashLayout() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { handleOAuthConnect, handleUtilityModal } = useOmniDashAction();
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
 
-  const simModeStateSchema = z.object({
-    sim_mode: z.enum(['true', 'false']).default('false'),
-  });
-  const demoMode = simModeStateSchema.parse({
-    sim_mode: searchParams.get('sim_mode') ?? 'false',
-  }).sim_mode === 'true';
-  const [ecoAppsVisible, setEcoAppsVisible] = useState(false);
-  const [appHealth, setAppHealth] = useState<'green' | 'yellow' | 'red'>('green');
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
 
-  const handleLogout = useCallback(async () => {
-    try { await supabase.auth.signOut(); }
-    finally { navigate('/login'); }
-  }, [navigate]);
-
-  const initials = useMemo(() => 'JR', []);
-
-  const activeNav = SIDEBAR_NAV.find(
-    (n) => n.to === location.pathname || (n.to === '/omnidash' && location.pathname === '/omnidash'),
-  )?.key ?? 'omniboard';
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="omnidash-shell">
-      {/* ────── LEFT SIDEBAR ────── */}
-      <aside className="od-sidebar">
-        <div className="od-sidebar-logo">
-          <img src={apexWordmark} alt="APEX OmniHub" style={{ height: 26 }} />
+    <div className="flex min-h-screen bg-[#030303] text-white font-sans">
+      {/* Sidebar */}
+      <aside className="w-64 border-r border-white/10 flex flex-col p-6 hidden md:flex sticky top-0 h-screen">
+        <div className="mb-8">
+          <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+            OmniDash
+          </h1>
         </div>
 
-        <nav className="od-nav">
-          {SIDEBAR_NAV.map((item) => (
-            <Link
-              key={item.key}
-              to={item.to}
-              className={`od-nav-item transition-all duration-300 ease-out hover:translate-x-1 ${activeNav === item.key ? ' active' : ''}`}
-            >
-              <img src={item.icon} alt={item.label} className="nav-icon drop-shadow-md" />
-              <span className="font-bold tracking-tight">{item.label}</span>
-            </Link>
-          ))}
+        <nav className="flex-1 space-y-2">
+          <Link
+            to="/omnidash"
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
+              isActive('/omnidash') ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <Home className="w-4 h-4" />
+            Overview
+          </Link>
+          <Link
+            to="/omnidash/approvals"
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
+              isActive('/omnidash/approvals') ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Approvals
+          </Link>
         </nav>
 
-        <div className="od-sidebar-footer">
-          <div className="od-sentry-status">
-            <span className="od-sentry-dot" />{' '}
-            <span>All Systems Operational</span>
-          </div>
-          <span>{'APEX Business Systems Ltd. \u00B7 OmniDash Platform'}</span>
+        <div className="pt-8 border-t border-white/10">
           <button
             onClick={handleLogout}
-            style={{
-              display: 'block', marginTop: 8, fontSize: 13.375,
-              color: '#64748b', cursor: 'pointer', background: 'none',
-              border: 'none', padding: 0, fontFamily: 'inherit',
-            }}
+            className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-400 hover:text-white transition-colors"
           >
+            <LogOut className="w-4 h-4" />
             Sign Out
           </button>
         </div>
       </aside>
 
-      {/* ────── CENTER COLUMN ────── */}
-      <div className="od-center">
-        <header className="od-header">
-          <div className="od-header-search" style={{ flex: 1, maxWidth: 470 }}>
-            <Search />
-            <input
-              type="search"
-              placeholder="Search workflows, connectors, traces..."
-            />
-          </div>
-
-          <div style={{ flex: 1 }} />
-
-          <div className="od-header-actions">
-            <button 
-              type="button" 
-              className="od-avatar" 
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-
-            <div className="od-org-badge">
-              APEX Business Systems
-              <ChevronDown className="h-3 w-3" />
-            </div>
-
-            <div className="od-sentry-badge">
-              <Shield className="h-3 w-3" />
-              Zero Trust Active
-            </div>
-
-            <button type="button" onClick={(e: MouseEvent) => {
-              e.stopPropagation();
-              handleOAuthConnect('APEX OmniPort', 'platform');
-            }} className="od-connect-ai">Connect AI</button>
-
-            <button type="button" className="od-avatar" aria-label="Notifications" onClick={(e: MouseEvent) => {
-              e.stopPropagation();
-              handleUtilityModal({
-                id: 'notifications',
-                provider: 'APEX',
-                type: 'selection',
-                title: 'Notifications',
-                description: 'Recent system notifications and alerts.',
-                schema: { items: [
-                  { id: '1', label: 'Salesforce sync completed — 48 records updated' },
-                  { id: '2', label: 'Security scan passed — Zero Trust Active' },
-                  { id: '3', label: 'Invoice batch #1042 processed successfully' },
-                  { id: '4', label: 'Workflow "Lead Nurture" triggered by new lead' },
-                ]},
-                onComplete: async (payload) => { console.warn('Notification selected:', payload); },
-              });
-            }}>
-              <Bell className="h-3.5 w-3.5" />
-            </button>
-
-            <div className="od-avatar" title="User">
-              {initials}
-            </div>
-          </div>
-        </header>
-
-        <div className={`od-content ${location.pathname === '/omnidash' ? '' : 'center-content-blur'}`}>
-          {/* Dashboard is PERMANENT in the background */}
-          <DashboardOverview
-            demoMode={demoMode}
-            appHealth={appHealth}
-            setAppHealth={setAppHealth}
-            ecoAppsVisible={ecoAppsVisible}
-            setEcoAppsVisible={setEcoAppsVisible}
-          />
+      {/* Main Content */}
+      <main className="flex-1 overflow-auto">
+        {/* Mobile Header */}
+        <div className="md:hidden border-b border-white/10 p-4 flex justify-between items-center bg-[#030303] sticky top-0 z-10">
+             <h1 className="text-lg font-bold">OmniDash</h1>
+             <button onClick={handleLogout} className="text-gray-400 hover:text-white">
+                <LogOut className="w-5 h-5" />
+             </button>
+             {/* Note: Mobile menu is simplified for now */}
         </div>
-
-        {/* ────── UNIVERSAL SPA MODAL ────── */}
-        {location.pathname !== '/omnidash' && (
-          <div className="od-modal-overlay">
-            <div className="od-modal-content hex-outer">
-              <button 
-                type="button" 
-                className="od-modal-close"
-                onClick={() => navigate('/omnidash')}
-              >
-                <X size={20} />
-              </button>
-              
-              <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto' }}>
-                <Outlet />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ────── RIGHT SIDEBAR: BYOM ────── */}
-      <aside className="od-right-sidebar" style={{ padding: 16, minWidth: 260 }}>
-        <BYOMCockpit />
-      </aside>
-
-      {/* ────── GLOBAL MODAL ENGINE ────── */}
-      <OmniSpatialHost />
+        <Outlet />
+      </main>
     </div>
   );
 }

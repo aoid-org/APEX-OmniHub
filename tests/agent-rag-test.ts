@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
-import { SkillRegistry } from '../supabase/functions/_shared/skill-loader'; // NOSONAR
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SkillRegistry } from '../supabase/functions/_shared/skill-loader';
 import { SkillDefinition } from '../supabase/functions/_shared/types';
 
 // Mock Supabase client
@@ -26,17 +26,14 @@ vi.mock('@supabase/supabase-js', () => ({
   }))
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type MockSupabase = ReturnType<typeof createClient> & { ai: any; rpc: any; from: any };
-
 describe('OmniLink Agentic RAG', () => {
-  let mockSupabase: MockSupabase;
-  let skillRegistry: SkillRegistry; // NOSONAR
+  let mockSupabase: SupabaseClient;
+  let skillRegistry: SkillRegistry;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSupabase = createClient('mock-url', 'mock-key') as unknown as MockSupabase;
-    skillRegistry = new SkillRegistry(mockSupabase); // NOSONAR
+    mockSupabase = createClient('mock-url', 'mock-key');
+    skillRegistry = new SkillRegistry(mockSupabase);
   });
 
   describe('SkillRegistry', () => {
@@ -224,7 +221,7 @@ describe('OmniLink Agentic RAG', () => {
         new Error('AI session unavailable')
       );
 
-      const newRegistry = new SkillRegistry(mockSupabase); // NOSONAR
+      const newRegistry = new SkillRegistry(mockSupabase);
 
       await expect(newRegistry.registerSkill({
         name: 'TestSkill',
@@ -239,7 +236,7 @@ describe('OmniLink Agentic RAG', () => {
         run: vi.fn(() => Promise.reject(new Error('Embedding failed')))
       });
 
-      const newRegistry = new SkillRegistry(mockSupabase); // NOSONAR
+      const newRegistry = new SkillRegistry(mockSupabase);
 
       await expect(newRegistry.registerSkill({
         name: 'TestSkill',

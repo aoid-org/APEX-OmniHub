@@ -75,7 +75,7 @@ async function verifyAdminAccess(
   authHeader: string | null,
   corsHeaders: Record<string, string>
 ): Promise<{ success: true; userId: string } | { success: false; response: Response }> {
-  if (!authHeader?.startsWith('Bearer ')) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return {
       success: false,
       response: new Response(JSON.stringify({

@@ -15,11 +15,8 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { FEATURE_REGISTRY } from '../src/features/registry';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const APP_TSX_PATH = path.resolve(__dirname, '../src/App.tsx');
 
 interface AuditResult {

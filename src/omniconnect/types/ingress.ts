@@ -130,35 +130,6 @@ export const ROS2DeviceSourceSchema = z.object({
 export type ROS2DeviceSource = z.infer<typeof ROS2DeviceSourceSchema>;
 
 /**
- * VisionSource - Image and video frame inputs for OmniVision pipeline
- * @example { type: 'vision', visionContextId: 'vcid-abc123', mimeType: 'image/png', width: 1920, height: 1080, sizeBytes: 2048000 }
- */
-export const VisionSourceSchema = z.object({
-  type: z.literal('vision'),
-  /** Deterministic context ID (SHA-256 hash of image bytes) */
-  visionContextId: z.string().min(1, 'Vision context ID cannot be empty'),
-  /** MIME type of the source media */
-  mimeType: z.string().regex(/^(image|video)\//, 'Must be image/* or video/* MIME type'),
-  /** Frame width in pixels */
-  width: z.number().int().positive('Width must be positive'),
-  /** Frame height in pixels */
-  height: z.number().int().positive('Height must be positive'),
-  /** Size in bytes of the source media */
-  sizeBytes: z.number().int().nonnegative('Size must be non-negative'),
-  /** Whether PII redaction has been applied */
-  redacted: z.boolean().default(false),
-  /** Redaction level applied */
-  redactionLevel: z.enum(['none', 'standard', 'strict']).default('none'),
-  /** Optional OCR-extracted text */
-  ocrText: z.string().optional(),
-  /** Source URL or blob URL */
-  sourceUrl: z.string().optional(),
-  userId: UUIDSchema.optional(),
-});
-
-export type VisionSource = z.infer<typeof VisionSourceSchema>;
-
-/**
  * RawInput - Discriminated union of all input sources
  * Validates at runtime to ensure type-safe processing
  */
@@ -169,7 +140,6 @@ export const RawInputSchema = z.discriminatedUnion('type', [
   ZigbeeDeviceSourceSchema,
   MatterDeviceSourceSchema,
   ROS2DeviceSourceSchema,
-  VisionSourceSchema,
 ]);
 
 export type RawInput = z.infer<typeof RawInputSchema>;
@@ -299,13 +269,6 @@ export function isMatterDeviceSource(input: RawInput): input is MatterDeviceSour
  */
 export function isROS2DeviceSource(input: RawInput): input is ROS2DeviceSource {
   return input.type === 'ros2_device';
-}
-
-/**
- * Type guard to check if input is VisionSource
- */
-export function isVisionSource(input: RawInput): input is VisionSource {
-  return input.type === 'vision';
 }
 
 /**

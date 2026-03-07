@@ -32,7 +32,7 @@ function readRecords(filePath: string): FlagRecord[] {
         return null;
       }
     })
-    .filter((v): v is FlagRecord => Boolean(v?.prompt));
+    .filter((v): v is FlagRecord => Boolean(v && v.prompt));
 }
 
 function main() {

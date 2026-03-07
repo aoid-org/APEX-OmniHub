@@ -222,9 +222,9 @@ interface SimulationResult {
 }
 
 class ChaoticClientSimulator {
-  private readonly supabaseUrl: string;
-  private readonly supabaseKey: string;
-  private readonly results: SimulationResult[] = [];
+  private supabaseUrl: string;
+  private supabaseKey: string;
+  private results: SimulationResult[] = [];
 
   constructor() {
     // These would come from environment in real usage

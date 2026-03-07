@@ -22,11 +22,11 @@ export class PolicyEngine {
   ): Promise<CanonicalEvent[]> {
     const profile = await this.getProfile(appId);
     if (!profile) {
-      if (import.meta.env.DEV) console.log(`[${correlationId}] No policy profile for app ${appId}. Passing through.`);
+      console.log(`[${correlationId}] No policy profile found for app ${appId}. Passing through all events.`);
       return events;
     }
 
-    if (import.meta.env.DEV) console.log(`[${correlationId}] Applying policy filter for app ${appId}, ${events.length} events`);
+    console.log(`[${correlationId}] Applying policy filter for app ${appId}, ${events.length} events`);
 
     const filteredEvents: CanonicalEvent[] = [];
 

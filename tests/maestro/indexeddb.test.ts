@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 // Mock IndexedDB store
 class MockIndexedDBStore<T extends { id: string }> {
-  private readonly data = new Map<string, T>();
+  private data = new Map<string, T>();
 
   async put(item: T): Promise<void> {
     this.data.set(item.id, item);

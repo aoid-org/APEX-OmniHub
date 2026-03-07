@@ -8,13 +8,15 @@ Full context optimization pipeline: analyze -> compress -> verify -> report.
 Exit codes: 0=success, 1=input error, 2=system error
 """
 
+import sys
+import json
 import argparse
 import hashlib
-import json
 import re
-import sys
-from datetime import datetime
+import os
 from pathlib import Path
+from datetime import datetime
+from collections import Counter
 
 # --- PROPRIETARY HEADER -------------------------------------------------------
 APEX_HEADER = "APEX-Memory v2.0.0 | (C) 2025 APEX Business Systems Ltd."
@@ -26,7 +28,7 @@ def count_tokens(text: str) -> int:
     return max(1, int(len(text.split()) * 1.3))
 
 
-def extract_entities(text: str) -> dict:
+def extract_entities(text: str) -> list:
     """Extract named entities using pattern matching (no ML dependencies)."""
     patterns = {
         "file_paths": r'(?:[A-Za-z]:\\|/)[^\s\'"]+|\.\/[^\s\'"]+',
@@ -149,7 +151,7 @@ def semantic_dedup(text: str, threshold: float = 0.8) -> str:
     return "\n".join(kept)
 
 
-def optimize_context(text: str, ratio: int = 5, _max_tokens: int = None) -> dict:
+def optimize_context(text: str, ratio: int = 5, max_tokens: int = None) -> dict:
     """Full APEX-Memory(TM) optimization pipeline."""
     original_tokens = count_tokens(text)
 
@@ -238,7 +240,7 @@ def main():
         print(f"[NO] Read error: {e}", file=sys.stderr)
         sys.exit(2)
 
-    result = optimize_context(text, args.ratio, args.max_tokens)
+    result = optimize_context(text, ratio=args.ratio, max_tokens=args.max_tokens)
 
     if args.json:
         report = {
@@ -270,8 +272,7 @@ def main():
         print(f"  Fact Retain:  {s['fact_retention_pct']}%", file=sys.stderr)
         print(f"  Entities:     {s['entities_extracted']}", file=sys.stderr)
         print(
-            f"  Quality:      {'[OK] PASS' if q['pass'] else '[NO] FAIL'}",
-            file=sys.stderr,
+            f"  Quality:      {'[OK] PASS' if q['pass'] else '[NO] FAIL'}", file=sys.stderr
         )
         print(f"  Hash:         {s['context_hash']}", file=sys.stderr)
         print(f"{'=' * 60}", file=sys.stderr)

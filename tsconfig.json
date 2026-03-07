@@ -4,7 +4,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./apps/omnihub-site/src/*"]
+      "@/*": ["./src/*"]
     },
     "noImplicitAny": true,
     "noUnusedParameters": true,

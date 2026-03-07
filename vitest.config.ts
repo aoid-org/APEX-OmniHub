@@ -1,10 +1,8 @@
 import { defineConfig } from 'vitest/config';
 import path from 'node:path';
 
-// Coverage is opt-in only via `npm run test:coverage`.
-// Default `npm test` / `vitest run` disables coverage to prevent ENOENT
-// on coverage/.tmp race condition (PR#410/413).
-const enableCoverage = process.env.VITEST_COVERAGE === 'true';
+// Detect CI environment to prevent coverage race condition (PR#410/413)
+const isCI = process.env.CI === 'true' || !!process.env.GITHUB_ACTIONS;
 
 export default defineConfig({
   plugins: [],
@@ -45,7 +43,7 @@ export default defineConfig({
       ...(process.env.CI ? ['tests/integration/**', './tests/integration/**'] : [])
     ],
     coverage: {
-      enabled: enableCoverage,
+      enabled: !isCI, // Disable coverage in CI to prevent ENOENT on coverage/.tmp (PR#410/413)
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       reportsDirectory: './coverage',
@@ -67,18 +65,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@omnihub': path.resolve(__dirname, './apps/omnihub-site/src'),
-      'react': path.resolve(__dirname, 'node_modules/react'),
-      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
-      'framer-motion': path.resolve(__dirname, 'node_modules/framer-motion'),
     },
-    dedupe: [
-      'react',
-      'react-dom',
-      'react-router',
-      'react-router-dom',
-      'framer-motion',
-      '@radix-ui/react-slot',
-    ],
   },
 });

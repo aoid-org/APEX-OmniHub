@@ -107,9 +107,9 @@ export function getStorage(): IStorage {
  * Lazy-loaded on first access
  */
 export const storage = new Proxy({} as IStorage, {
-  get(_target, prop) {
+  get(target, prop) {
     const instance = getStorage()
-    return (instance as unknown as Record<string | symbol, unknown>)[prop]
+    return (instance as unknown)[prop]
   },
 })
 

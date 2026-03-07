@@ -25,7 +25,6 @@ import {
   CanonicalEvent,
   EventType,
   ConsentFlags,
-  DataClassification,
   CanonicalDevice,
   DeviceType,
   DeviceProtocol,
@@ -52,7 +51,6 @@ import {
   type ROS2DeviceSource,
 } from '../types/ingress';
 import { TranslatedEvent } from '../translation/translator';
-import { dispatchOutreach, type OutreachPayload } from '../../automation/OutreachDispatcher';
 import { verifyDeviceIntegrity } from '@/zero-trust/baseline';
 import { checkEntitlement } from '@/lib/web3/entitlements';
 
@@ -382,7 +380,7 @@ class OmniPortEngine {
   public initialize(): void {
     if (this.isInitialized) return;
     this.isInitialized = true;
-    if (import.meta.env.DEV) console.log('[OmniPort] Engine initialized');
+    console.log('[OmniPort] Engine initialized');
   }
 
   // ===========================================================================
@@ -523,19 +521,6 @@ class OmniPortEngine {
         ctx.correlationId
       );
 
-      // STEP 5: OUTREACH DISPATCH (if intent is outreach)
-      const intents = canonicalEvent.metadata?.detected_intents;
-      if (Array.isArray(intents) && intents.includes('outreach')) {
-        const outreachPayload: OutreachPayload = {
-          recipientId: ctx.userId ?? 'unknown',
-          channel: 'in-app',
-          subject: 'Automated Outreach',
-          body: JSON.stringify(canonicalEvent.payload),
-        };
-        await dispatchOutreach(outreachPayload, ctx.riskLane);
-        this.log(ctx, 'OUTREACH_DISPATCHED', { riskLane: ctx.riskLane });
-      }
-
       const latencyMs = Date.now() - ctx.startTime;
       this.log(ctx, 'INGEST_ACCEPTED', { latencyMs, riskLane: ctx.riskLane });
 
@@ -622,7 +607,6 @@ class OmniPortEngine {
       provider: 'omniport',
       externalId: eventId,
       eventType: this.mapToEventType(input),
-      classification: DataClassification.INTERNAL,
       timestamp: now,
       consentFlags: this.getDefaultConsentFlags(),
       metadata: {
@@ -965,14 +949,13 @@ class OmniPortEngine {
     // Async logging to avoid blocking the main thread with JSON.stringify and I/O
     Promise.resolve().then(() => {
       try {
-        if (import.meta.env.DEV) {
-          console.log(
-            `[OmniPort] [${correlationId}] [${latencyMs}ms] ${event}`,
-            data ? JSON.stringify(data) : ''
-          );
-        }
-      } catch {
+        console.log(
+          `[OmniPort] [${correlationId}] [${latencyMs}ms] ${event}`,
+          data ? JSON.stringify(data) : ''
+        );
+      } catch (err) {
         // Prevent unhandled rejections from logging failures (e.g. circular refs)
+        console.error('[OmniPort] Async logging failed:', err);
       }
     });
   }

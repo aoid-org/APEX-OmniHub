@@ -84,8 +84,8 @@ export function validateMethod(
 interface SupabaseClient {
     auth: {
         getUser(token: string): Promise<{
-            data: { user: unknown };
-            error: unknown;
+            data: { user: unknown | null };
+            error: unknown | null;
         }>;
     };
 }
