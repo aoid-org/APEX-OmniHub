@@ -10,8 +10,8 @@ Usage: python project-init.py <name> --type <api|cli|lib|frontend> [--lang <pyth
 Exit: 0=success, 1=input error, 2=system error
 """
 
-import sys
 import argparse
+import sys
 from pathlib import Path
 
 TEMPLATES = {

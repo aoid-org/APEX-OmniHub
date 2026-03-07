@@ -9,9 +9,9 @@ Security: Defense-in-depth XSS prevention (SonarQube S5131 compliant)
 """
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, TypedDict
+from typing import Any, TypedDict
 
 from markupsafe import escape
 
@@ -120,7 +120,7 @@ class VerificationEngine:
             HTML-escaped at storage time for defense-in-depth XSS protection.
         """
         # Use timezone-aware datetime (SonarQube S6978 compliance)
-        submitted_at = datetime.now(timezone.utc).isoformat()
+        submitted_at = datetime.now(UTC).isoformat()
 
         # SECURITY FIX (S5131): Sanitize user-controlled data at storage time
         # This ensures data is XSS-safe when retrieved via get_pending_requests()
@@ -163,7 +163,7 @@ class VerificationEngine:
             raise ValueError(f"Request {request_id} not found")
 
         # Use timezone-aware datetime (SonarQube S6978 compliance)
-        approved_at = datetime.now(timezone.utc).isoformat()
+        approved_at = datetime.now(UTC).isoformat()
 
         # SECURITY NOTE: All user-controlled data (request_id, approved_by)
         # is expected to be pre-sanitized by the dashboard layer (escape_html applied)
@@ -207,7 +207,7 @@ class VerificationEngine:
             raise ValueError(f"Request {request_id} not found")
 
         # Use timezone-aware datetime (SonarQube S6978 compliance)
-        rejected_at = datetime.now(timezone.utc).isoformat()
+        rejected_at = datetime.now(UTC).isoformat()
 
         # SECURITY NOTE: All user-controlled data (request_id, rejected_by, reason)
         # is expected to be pre-sanitized by the dashboard layer
@@ -227,7 +227,7 @@ class VerificationEngine:
 
         return result
 
-    def get_pending_requests(self) -> Dict[str, VerificationRequest]:
+    def get_pending_requests(self) -> dict[str, VerificationRequest]:
         """
         Get all pending verification requests.
 
@@ -261,15 +261,15 @@ class VerificationEngine:
         if not approval_file.exists():
             return None
 
-        with open(approval_file, 'r', encoding='utf-8') as f:
+        with open(approval_file, encoding='utf-8') as f:
             return json.load(f)
 
-    def _load_pending(self) -> Dict[str, VerificationRequest]:
+    def _load_pending(self) -> dict[str, VerificationRequest]:
         """Load pending requests from storage"""
-        with open(self.pending_file, 'r', encoding='utf-8') as f:
+        with open(self.pending_file, encoding='utf-8') as f:
             return json.load(f)
 
-    def _save_pending(self, pending: Dict[str, VerificationRequest]) -> None:
+    def _save_pending(self, pending: dict[str, VerificationRequest]) -> None:
         """Save pending requests to storage"""
         with open(self.pending_file, 'w', encoding='utf-8') as f:
             json.dump(pending, f, indent=2)

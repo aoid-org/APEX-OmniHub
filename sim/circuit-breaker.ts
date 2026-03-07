@@ -33,6 +33,9 @@ export interface CircuitBreakerConfig {
 
   /** Circuit breaker name (for logging) */
   name: string;
+
+  /** Optional callback invoked for each queued event on circuit close (re-delivery) */
+  onRecover?: (event: EventEnvelope) => void;
 }
 
 export interface CircuitBreakerStats {
@@ -61,7 +64,7 @@ export interface QueuedEvent {
 // ============================================================================
 
 export class CircuitBreaker {
-  private config: CircuitBreakerConfig;
+  private readonly config: CircuitBreakerConfig;
   private state: CircuitState = 'closed';
   private failures: number = 0;
   private successes: number = 0;
@@ -148,10 +151,12 @@ export class CircuitBreaker {
     this.state = 'open';
     this.lastStateChange = new Date();
 
-    // Schedule transition to half-open
+    // Schedule transition to half-open; unref so the timer doesn't
+    // prevent the Node.js event loop from exiting after a sim run.
     this.openTimer = setTimeout(() => {
       this.halfOpen();
     }, this.config.openTimeout);
+    this.openTimer.unref();
   }
 
   /**
@@ -178,8 +183,11 @@ export class CircuitBreaker {
     this.lastStateChange = new Date();
     this.consecutiveFailures = 0; // Reset
 
-    // Flush queued events
-    this.flushQueue();
+    // Flush queued events - CALLBACK for re-delivery
+    const queuedEvents = this.flushQueue();
+    if (this.config.onRecover) {
+      queuedEvents.forEach(event => this.config.onRecover!(event));
+    }
   }
 
   /**
@@ -223,13 +231,11 @@ export class CircuitBreaker {
   /**
    * Flush queue (process all queued events)
    */
-  private flushQueue(): void {
-    if (this.queue.length === 0) return;
-
-    console.log(`[CircuitBreaker:${this.config.name}] Flushing ${this.queue.length} queued events`);
-
-    // Process queue (in practice, this would trigger event reprocessing)
-    this.queue = []; // Clear queue
+  private flushQueue(): EventEnvelope[] {
+    const events = this.queue.map(q => q.event); // Copy before clear
+    console.log(`[CircuitBreaker:${this.config.name}] Flushing ${events.length} queued events`);
+    this.queue = [];
+    return events; // RETURN for reprocessing
   }
 
   /**
@@ -303,7 +309,7 @@ export class CircuitBreakerError extends Error {
 // ============================================================================
 
 class CircuitBreakerRegistry {
-  private breakers: Map<string, CircuitBreaker> = new Map();
+  private readonly breakers: Map<string, CircuitBreaker> = new Map();
 
   /**
    * Get or create circuit breaker
@@ -372,9 +378,7 @@ class CircuitBreakerRegistry {
 let registry: CircuitBreakerRegistry | null = null;
 
 function getRegistry(): CircuitBreakerRegistry {
-  if (!registry) {
-    registry = new CircuitBreakerRegistry();
-  }
+  registry ??= new CircuitBreakerRegistry();
   return registry;
 }
 

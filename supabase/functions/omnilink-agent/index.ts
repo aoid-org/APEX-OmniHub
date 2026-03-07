@@ -63,8 +63,8 @@ serve(async (req) => {
       return jsonResponse({ error: "bad_request" }, 400, origin);
     }
 
-    const query = body.query as string;
-    const traceId = body.traceId as string;
+    const query = body.query;
+    const traceId = body.traceId;
 
     // 5. Guardian enforcement (toggled via OMNI_GUARDIAN_ENABLED, default true)
     const guardianEnabled = Deno.env.get("OMNI_GUARDIAN_ENABLED") !== "false";
@@ -125,11 +125,14 @@ serve(async (req) => {
     const data = await response.json();
 
     // If orchestrator returned workflowId, update it
-    if (data.workflowId) {
-      await supabase
+    if (data.workflowId && typeof data.workflowId === 'string') {
+      const { error: updateErr } = await supabase
         .from("agent_runs")
         .update({ workflow_id: data.workflowId })
         .eq("id", traceId);
+      if (updateErr) {
+        console.error(`[omnilink-agent] Failed to update workflow_id for run ${traceId}:`, updateErr.message);
+      }
     }
 
     // Return orchestrator response

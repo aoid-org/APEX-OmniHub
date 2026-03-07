@@ -75,7 +75,7 @@ globalThis.addEventListener('fetch', (event) => {
     fetch(request)
       .then((response) => {
         // Cache successful responses
-        if (response && response.status === 200 && response.type !== 'error') {
+        if (response?.status === 200 && response.type !== 'error') {
           // Clone response before caching
           const responseToCache = response.clone();
 
@@ -131,7 +131,17 @@ globalThis.addEventListener('fetch', (event) => {
 
 // Message event - handle client messages
 globalThis.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  // FIX: SonarCloud alert #21 (javascript:S2819)
+  // Verify the origin of the received message to prevent cross-origin attacks.
+  const ALLOWED_ORIGINS = [
+    globalThis.location.origin,
+  ];
+  if (!ALLOWED_ORIGINS.includes(event.origin)) {
+    console.warn('[SW] Rejected message from untrusted origin:', event.origin);
+    return;
+  }
+
+  if (event.data?.type === 'SKIP_WAITING') {
     console.log('[SW] Received SKIP_WAITING message');
     globalThis.skipWaiting();
   }
@@ -187,7 +197,7 @@ globalThis.addEventListener('notificationclick', (event) => {
     url = '/omnitrace';
   } else if (event.action === 'open-integrations') {
     url = '/integrations';
-  } else if (event.notification.data && event.notification.data.url) {
+  } else if (event.notification.data?.url) {
     url = event.notification.data.url;
   }
 

@@ -74,26 +74,31 @@ describe('Wallet Integration Flow', () => {
       connectors: [{ id: 'injected', name: 'MetaMask' }] as unknown,
       connect: vi.fn(),
       isPending: false,
-    } as unknown);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     vi.mocked(useAccount).mockReturnValue({
       address: undefined,
       isConnected: false,
       chainId: undefined,
-    } as unknown);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     vi.mocked(useSignMessage).mockReturnValue({
       signMessageAsync: vi.fn(),
-    } as unknown);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     vi.mocked(useDisconnect).mockReturnValue({
       disconnect: vi.fn(),
-    } as unknown);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     vi.mocked(supabase.auth.getSession).mockResolvedValue({
       data: { session: { user: { id: 'user123' }, access_token: 'token123' } },
       error: null,
-    } as unknown);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
   });
 
   afterEach(() => {
@@ -106,7 +111,8 @@ describe('Wallet Integration Flow', () => {
         address: undefined,
         isConnected: false,
         chainId: undefined,
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       render(
         <Web3Provider>
@@ -122,13 +128,15 @@ describe('Wallet Integration Flow', () => {
         address: mockAddress,
         isConnected: true,
         chainId: 1,
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       vi.mocked(supabase.from).mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       render(
         <Web3Provider>
@@ -150,11 +158,13 @@ describe('Wallet Integration Flow', () => {
         address: mockAddress,
         isConnected: true,
         chainId: 1,
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       vi.mocked(useSignMessage).mockReturnValue({
         signMessageAsync: vi.fn().mockResolvedValue(mockSignature),
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       // Mock nonce request
       global.fetch = vi.fn().mockImplementation((url: string) => {
@@ -193,7 +203,8 @@ describe('Wallet Integration Flow', () => {
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
         update: vi.fn().mockReturnThis(),
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       render(
         <Web3Provider>
@@ -231,11 +242,13 @@ describe('Wallet Integration Flow', () => {
         address: mockAddress,
         isConnected: true,
         chainId: 1,
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       vi.mocked(useSignMessage).mockReturnValue({
         signMessageAsync: vi.fn().mockRejectedValue(new Error('User rejected signature')),
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -253,7 +266,8 @@ describe('Wallet Integration Flow', () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       render(
         <Web3Provider>
@@ -287,7 +301,8 @@ describe('Wallet Integration Flow', () => {
         address: mockAddress,
         isConnected: true,
         chainId: 1,
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       vi.mocked(supabase.from).mockReturnValue({
         select: vi.fn().mockReturnThis(),
@@ -301,7 +316,8 @@ describe('Wallet Integration Flow', () => {
           error: null,
         }),
         update: vi.fn().mockReturnThis(),
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       render(
         <Web3Provider>
@@ -324,11 +340,13 @@ describe('Wallet Integration Flow', () => {
         address: mockAddress,
         isConnected: true,
         chainId: 1,
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       vi.mocked(useDisconnect).mockReturnValue({
         disconnect: mockDisconnect,
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       vi.mocked(supabase.from).mockReturnValue({
         select: vi.fn().mockReturnThis(),
@@ -341,7 +359,8 @@ describe('Wallet Integration Flow', () => {
           error: null,
         }),
         update: vi.fn().mockReturnThis(),
-      } as unknown);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
       render(
         <Web3Provider>

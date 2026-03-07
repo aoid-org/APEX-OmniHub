@@ -1,32 +1,35 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-03-01 -->
+
 # APEX OmniHub Documentation
 
 **Enterprise AI Orchestration Platform**
 
-- **Document Version:** 2.1.0
-- **Last Updated:** 2026-02-20
+- **Document Version:** 2.2.0
+- **Platform Version:** 1.3.8
+- **Last Updated:** 2026-03-01
 - **Audit Baseline:** [Comprehensive Documentation Audit 2026-02-20](audits/COMPREHENSIVE_DOCUMENTATION_AUDIT_2026_02_20.md)
 
 ---
 
-
 ## Quick Navigation
 
-| Category                                          | Description                                |
-| ------------------------------------------------- | ------------------------------------------ |
-| [Platform Modules](#platform-modules)             | Core Omni-\* module documentation          |
-| [Architecture](#architecture)                     | System design and technical specifications |
-| [Project Status](#project-status)                 | Current status and readiness reports       |
-| [Infrastructure](#infrastructure)                 | Deployment, cloud, and DevOps              |
-| [Operations](#operations)                         | Runbooks and operational procedures        |
-| [Security](#security)                             | Security controls and policies             |
-| [Compliance](#compliance)                         | SOC2, GDPR, audit readiness                |
-| [Knowledge](#knowledge)                           | Developer guides and onboarding            |
-| [Quality & Scalability](#quality--scalability)    | QA framework and scaling architecture      |
-| [API & Extensibility](#api--extensibility)        | API docs and plugin architecture           |
-| [Institutional Readiness](#institutional-readiness) | M&A due diligence and valuation          |
-| [Testing](#testing)                               | Test results and simulation                |
-| [Audits](#audits)                                 | Audit reports and remediation              |
+**Start here:** [Canonical Repo Map](../ARCHITECTURE_CANONICAL_MAP.md) — first-stop architecture + infrastructure map.
+
+| Category                                            | Description                                |
+| --------------------------------------------------- | ------------------------------------------ |
+| [Platform Modules](#platform-modules)               | Core Omni-\* module documentation          |
+| [Architecture](#architecture)                       | System design and technical specifications |
+| [Project Status](#project-status)                   | Current status and readiness reports       |
+| [Infrastructure](#infrastructure)                   | Deployment, cloud, and DevOps              |
+| [Operations](#operations)                           | Runbooks and operational procedures        |
+| [Security](#security)                               | Security controls and policies             |
+| [Compliance](#compliance)                           | SOC2, GDPR, audit readiness                |
+| [Knowledge](#knowledge)                             | Developer guides and onboarding            |
+| [Quality & Scalability](#quality--scalability)      | QA framework and scaling architecture      |
+| [API & Extensibility](#api--extensibility)          | API docs and plugin architecture           |
+| [Institutional Readiness](#institutional-readiness) | M&A due diligence and valuation            |
+| [Testing](#testing)                                 | Test results and simulation                |
+| [Audits](#audits)                                   | Audit reports and remediation              |
 
 ---
 
@@ -44,6 +47,7 @@ Core platform components with dedicated documentation:
 | **OmniLink**      | Integration bus                 | [OMNILINK_MANIFESTO_LITE.md](platform/OMNILINK_MANIFESTO_LITE.md) |
 | **OmniBoard**     | Onboarding engine               | [OMNIBOARD.md](platform/OMNIBOARD.md)                             |
 | **OmniLink PWA**  | Mobile PWA capabilities         | [OMNILINK_MOBILE_PWA.md](platform/OMNILINK_MOBILE_PWA.md)         |
+| **OmniSentry**    | Health & monitoring system      | [OMNISENTRY.md](platform/OMNISENTRY.md)                           |
 | **Connector Kit** | Integration adapters            | [CONNECTOR_KIT.md](platform/CONNECTOR_KIT.md)                     |
 
 ---
@@ -52,14 +56,14 @@ Core platform components with dedicated documentation:
 
 System design and technical specifications:
 
-| Document                                                                                 | Description                    |
-| ---------------------------------------------------------------------------------------- | ------------------------------ |
-| [Executive Architecture Summary](architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md)         | High-level technical specs     |
-| [General Tech Specs](architecture/GENERAL_TECH_SPECS.md)                                 | Platform specifications        |
-| [Detailed System Design](architecture/DETAILED_SYSTEM_DESIGN.md)                         | Complete system design         |
-| [OmniLink Portability & SRE](architecture/OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md)      | Integration bus strategy       |
-| [MAN Mode Workflows](architecture/MAN_MODE_WORKFLOW_DIAGRAMS.md)                         | Human-in-the-loop flows        |
-| [Frontend Structure Map](architecture/frontend-map.md)                         | Frontend topology + diagram    |
+| Document                                                                            | Description                 |
+| ----------------------------------------------------------------------------------- | --------------------------- |
+| [Executive Architecture Summary](architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md)    | High-level technical specs  |
+| [General Tech Specs](architecture/GENERAL_TECH_SPECS.md)                            | Platform specifications     |
+| [Detailed System Design](architecture/DETAILED_SYSTEM_DESIGN.md)                    | Complete system design      |
+| [OmniLink Portability & SRE](architecture/OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md) | Integration bus strategy    |
+| [MAN Mode Workflows](architecture/MAN_MODE_WORKFLOW_DIAGRAMS.md)                    | Human-in-the-loop flows     |
+| [Frontend Structure Map](architecture/frontend-map.md)                              | Frontend topology + diagram |
 
 ---
 
@@ -67,11 +71,10 @@ System design and technical specifications:
 
 Current deployment state and ecosystem overview:
 
-| Document                                                                 | Description              |
-| ------------------------------------------------------------------------ | ------------------------ |
-| [Launch Readiness v1.0.0](project-status/LAUNCH_READINESS_v1.0.0.md)     | Release checklist        |
-| [Production Status](project-status/PRODUCTION_STATUS.md)                 | Current deployment state |
-| [Ecosystem Status](project-status/APEX_ECOSYSTEM_STATUS.md)              | Platform overview        |
+| Document                                                    | Description              |
+| ----------------------------------------------------------- | ------------------------ |
+| [Production Status](project-status/PRODUCTION_STATUS.md)    | Current deployment state |
+| [Ecosystem Status](project-status/APEX_ECOSYSTEM_STATUS.md) | Platform overview        |
 
 ---
 
@@ -111,13 +114,12 @@ Deployment, cloud infrastructure, and DevOps:
 
 Operational runbooks and procedures:
 
-| Document                                              | Description               |
-| ----------------------------------------------------- | ------------------------- |
+| Document                                                | Description                     |
+| ------------------------------------------------------- | ------------------------------- |
 | [Operational Excellence](ops/OPERATIONAL_EXCELLENCE.md) | Enterprise operations framework |
-| [Operations Runbook](ops/OPS_RUNBOOK.md)              | Master ops runbook (v2.0) |
-| [Ops Audit](ops/OPS_AUDIT.md)                         | Operations audit          |
-| [Incident Response](ops/INCIDENT_RESPONSE.md)         | Incident handling         |
-| [Adaptive Nightly Eval](ops/adaptive-nightly-eval.md) | Automated evaluation      |
+| [Operations Runbook](ops/OPS_RUNBOOK.md)                | Master ops runbook (v2.0)       |
+| [Incident Response](ops/INCIDENT_RESPONSE.md)           | Incident handling               |
+| [Adaptive Nightly Eval](ops/adaptive-nightly-eval.md)   | Automated evaluation            |
 
 ### Recovery Guides
 
@@ -133,17 +135,17 @@ Operational runbooks and procedures:
 
 Security controls, policies, and hardening:
 
-| Document                                                        | Description            |
-| --------------------------------------------------------------- | ---------------------- |
+| Document                                                                 | Description                   |
+| ------------------------------------------------------------------------ | ----------------------------- |
 | [Security Hardening Checklist](security/SECURITY_HARDENING_CHECKLIST.md) | Enterprise security hardening |
-| [Secrets Manager Setup](security/SECRETS_MANAGER_SETUP.md)      | Secrets management     |
-| [Secrets Inventory](security/SECRETS_INVENTORY_AND_ROTATION.md) | Secret rotation        |
-| [Secret Scanning](security/SECRET_SCANNING.md)                  | Scanning policies      |
-| [Zero Trust Baseline](security/zero-trust-baseline.md)          | Zero trust model       |
-| [Prompt Defense](security/prompt-defense-tuning.md)             | AI security            |
-| [Device Registry](security/device-registry.md)                  | Device management      |
-| [Dependency Scanning](security/dependency-scanning.md)          | Vulnerability scanning |
-| [ENV Exposure Advisory](security/ENV_FILE_EXPOSURE_ADVISORY.md) | Environment security   |
+| [Secrets Manager Setup](security/SECRETS_MANAGER_SETUP.md)               | Secrets management            |
+| [Secrets Inventory](security/SECRETS_INVENTORY_AND_ROTATION.md)          | Secret rotation               |
+| [Secret Scanning](security/SECRET_SCANNING.md)                           | Scanning policies             |
+| [Zero Trust Baseline](security/zero-trust-baseline.md)                   | Zero trust model              |
+| [Prompt Defense](security/prompt-defense-tuning.md)                      | AI security                   |
+| [Device Registry](security/device-registry.md)                           | Device management             |
+| [Dependency Scanning](security/dependency-scanning.md)                   | Vulnerability scanning        |
+| [ENV Exposure Advisory](security/ENV_FILE_EXPOSURE_ADVISORY.md)          | Environment security          |
 
 ---
 
@@ -167,11 +169,11 @@ Regulatory compliance and audit readiness:
 
 Developer resources and engineering principles:
 
-| Document                                           | Description              |
-| -------------------------------------------------- | ------------------------ |
-| [Developer Onboarding](onboarding/DEVELOPER_ONBOARDING.md) | 3-day onboarding guide |
+| Document                                                    | Description               |
+| ----------------------------------------------------------- | ------------------------- |
+| [Developer Onboarding](onboarding/DEVELOPER_ONBOARDING.md)  | 3-day onboarding guide    |
 | [System Knowledge Base](knowledge/SYSTEM_KNOWLEDGE_BASE.md) | Critical system knowledge |
-| [OmniDev Manifesto](knowledge/OMNIDEV_MANIFESTO.md)| Engineering principles   |
+| [OmniDev Manifesto](knowledge/OMNIDEV_MANIFESTO.md)         | Engineering principles    |
 
 ---
 
@@ -179,10 +181,10 @@ Developer resources and engineering principles:
 
 Enterprise quality assurance and scalability architecture:
 
-| Document                                                    | Description                        |
-| ----------------------------------------------------------- | ---------------------------------- |
+| Document                                                              | Description               |
+| --------------------------------------------------------------------- | ------------------------- |
 | [Quality Assurance Framework](quality/QUALITY_ASSURANCE_FRAMEWORK.md) | Multi-layer quality gates |
-| [Scalability Architecture](scalability/SCALABILITY_ARCHITECTURE.md)   | 100K+ user scalability |
+| [Scalability Architecture](scalability/SCALABILITY_ARCHITECTURE.md)   | 100K+ user scalability    |
 
 ---
 
@@ -190,10 +192,10 @@ Enterprise quality assurance and scalability architecture:
 
 API documentation and plugin architecture:
 
-| Document                                                    | Description                        |
-| ----------------------------------------------------------- | ---------------------------------- |
-| [API Extension Guide](api/API_EXTENSION_GUIDE.md)           | REST/WebSocket API documentation   |
-| [Plugin Architecture](extensibility/PLUGIN_ARCHITECTURE.md)  | Secure plugin system               |
+| Document                                                    | Description                      |
+| ----------------------------------------------------------- | -------------------------------- |
+| [API Extension Guide](api/API_EXTENSION_GUIDE.md)           | REST/WebSocket API documentation |
+| [Plugin Architecture](extensibility/PLUGIN_ARCHITECTURE.md) | Secure plugin system             |
 
 ---
 
@@ -201,8 +203,8 @@ API documentation and plugin architecture:
 
 Machine-readable compliance and valuation data:
 
-| Document                                                    | Description                        |
-| ----------------------------------------------------------- | ---------------------------------- |
+| Document                                                               | Description            |
+| ---------------------------------------------------------------------- | ---------------------- |
 | [Institutional Readiness JSON](valuation/INSTITUTIONAL_READINESS.json) | M&A due diligence data |
 | [Platform Valuation Brief](valuation/PLATFORM_VALUATION_BRIEF.md)      | Valuation analysis     |
 
@@ -219,15 +221,15 @@ Test results, simulation, and quality assurance:
 
 ### Chaos Simulation
 
-| Document                                           | Description            |
-| -------------------------------------------------- | ---------------------- |
-| [Simulation Architecture](sim/ARCHITECTURE.md)     | Chaos framework design |
-| [Chaos Delivery](sim/CHAOS_SIMULATION_DELIVERY.md) | Delivery report        |
-| [Simulation Runbook](sim/RUNBOOK.md)               | How to run simulations |
-| [Client Story](sim/CHAOTIC_CLIENT_STORY.md)        | Test scenario          |
+| Document                                                                    | Description              |
+| --------------------------------------------------------------------------- | ------------------------ |
+| [Simulation Architecture](sim/ARCHITECTURE.md)                              | Chaos framework design   |
+| [Chaos Delivery](sim/CHAOS_SIMULATION_DELIVERY.md)                          | Delivery report          |
+| [Simulation Runbook](sim/RUNBOOK.md)                                        | How to run simulations   |
+| [Client Story](sim/CHAOTIC_CLIENT_STORY.md)                                 | Test scenario            |
 | [Chaotic Client Simulation Report](sim/CHAOTIC_CLIENT_SIMULATION_REPORT.md) | User-behavior validation |
-| [Results Report](sim/RESULTS_REPORT.md)            | Simulation results     |
-| [Test Execution](sim/TEST_EXECUTION_REPORT.md)     | Execution details      |
+| [Results Report](sim/RESULTS_REPORT.md)                                     | Simulation results       |
+| [Test Execution](sim/TEST_EXECUTION_REPORT.md)                              | Execution details        |
 
 ---
 
@@ -235,18 +237,12 @@ Test results, simulation, and quality assurance:
 
 Audit reports, remediation, and historical records:
 
-| Document                                                         | Description            |
-| ---------------------------------------------------------------- | ---------------------- |
-| [Platform Audit 2026-01-10](audits/PLATFORM_AUDIT_2026_01_10.md) | Full platform audit    |
-| [Architectural Convergence](audits/ARCHITECTURAL_CONVERGENCE_REPORT_2026_01.md) | Convergence report |
-| [Technical Enhancements](audits/TECHNICAL_ENHANCEMENTS_REPORT_2026_01.md) | Enhancements report |
-| [System Performance Optimization](audits/SYSTEM_PERFORMANCE_OPTIMIZATION_2026-01-30.md) | Performance audit |
-| [Remediation Tracker](audits/REMEDIATION_TRACKER.md)             | Issue tracking         |
-| [Remediation Evidence](audits/REMEDIATION_EVIDENCE.md)           | Fix evidence           |
-| [Battery Test Report](audits/BATTERY_TEST_REPORT.md)             | Stress test results    |
-| [Armageddon Test](audits/ARMAGEDDON_TEST_SUITE_REPORT.md)        | Extreme testing        |
-| [Web3 Integration](audits/WEB3_INTEGRATION_COMPLETE.md)          | Blockchain audit       |
-| [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md) | Voice security         |
+| Document                                                                 | Description      |
+| ------------------------------------------------------------------------ | ---------------- |
+| [Armageddon Test](audits/ARMAGEDDON_TEST_SUITE_REPORT.md)                | Extreme testing  |
+| [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md)         | Voice security   |
+| [CTO Platform Audit 2026-02-27](audits/CTO_PLATFORM_AUDIT_2026_02_27.md) | CTO audit report |
+| [Production Audit 2026-02-14](audits/PRODUCTION_AUDIT_2026_02_14.md)     | Production audit |
 
 ---
 
@@ -278,9 +274,8 @@ docs/
 
 ---
 
-**Last Updated:** February 15, 2026
-**Release:** v1.0.0
-
+**Last Updated:** March 01, 2026
+**Release:** v1.3.8
 
 ## Documentation Governance
 

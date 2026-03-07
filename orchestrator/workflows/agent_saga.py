@@ -38,7 +38,6 @@ Architecture:
 """
 
 import asyncio
-import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -204,7 +203,7 @@ class SagaContext:
             except Exception as e:
                 # Log but continue (best-effort rollback)
                 workflow.logger.error(
-                    f"✗ Compensation failed: {compensation.activity_name} - {str(e)}"
+                    f"✗ Compensation failed: {compensation.activity_name} - {e!s}"
                 )
                 results.append({"step_id": compensation.step_id, "success": False, "error": str(e)})
 
@@ -306,6 +305,9 @@ class AgentWorkflow:
         # OmniTrace: track whether recording is enabled for this run
         self._omnitrace_enabled: bool = False
 
+        # BYOM: pilot session ID (bound when credential_type == 'byom')
+        self._pilot_session_id: str | None = None
+
     # =========================================================================
     # OPERATOR SUPREMACY SIGNALS (MAN Mode 2.0)
     # =========================================================================
@@ -401,11 +403,10 @@ class AgentWorkflow:
         """
         correlation_id = workflow.info().workflow_id
 
-        # Record start time for continue-as-new threshold
+        # Record start time for continue-as-new threshold.
+        # Uses workflow.now() — deterministic Temporal clock, safe for replay.
         if self.start_time is None:
-            import time
-
-            self.start_time = time.time()
+            self.start_time = workflow.now().timestamp()
 
         # Initialize Saga context
         self.saga = SagaContext(workflow_instance=self)
@@ -454,6 +455,9 @@ class AgentWorkflow:
                 }
             )
 
+            # 1c. BYOM: Mint pilot session if credential_type is 'byom'
+            await self._mint_pilot_session_if_byom(user_id, context or {})
+
             # 2. Try semantic cache lookup
             cached_plan = await self._check_semantic_cache(goal)
 
@@ -491,11 +495,11 @@ class AgentWorkflow:
 
         except Exception as e:
             # 6. Workflow failed - trigger Saga rollback
-            workflow.logger.error(f"✗ Workflow failed: {str(e)}")
+            workflow.logger.error(f"✗ Workflow failed: {e!s}")
             workflow_result = await self._handle_failure(str(e))
 
             raise ApplicationError(
-                f"Workflow failed: {str(e)}",
+                f"Workflow failed: {e!s}",
                 non_retryable=True,
                 details=workflow_result,
             ) from e
@@ -504,29 +508,45 @@ class AgentWorkflow:
     # OMNITRACE HELPERS (Best-effort telemetry - never breaks workflow)
     # =========================================================================
 
-    async def _omnitrace_record_run_start(self, input_data: dict[str, Any]) -> None:
-        """Record workflow run start via OmniTrace (best-effort)."""
-        try:
-            # Use trace_id from context (passed from frontend) or fallback to workflow_id
-            trace_id = self.workflow_context.get("trace_id", workflow.info().workflow_id)
+    def _get_trace_id(self) -> str:
+        """Get trace_id from context or fallback to workflow_id."""
+        return self.workflow_context.get("trace_id", workflow.info().workflow_id)
 
-            result = await workflow.execute_activity(
-                "omnitrace_record_run_start",
-                args=[
-                    {
-                        "workflow_id": workflow.info().workflow_id,
-                        "trace_id": trace_id,
-                        "user_id": self.user_id,
-                        "input_data": input_data,
-                        "status": "running",
-                    }
-                ],
-                start_to_close_timeout=timedelta(seconds=5),
+    async def _execute_omnitrace_activity(
+        self, activity_name: str, args: dict[str, Any], timeout_seconds: int = 5
+    ) -> Any:
+        """Execute OmniTrace activity with common parameters (best-effort)."""
+        try:
+            # Common arguments
+            args.update(
+                {
+                    "workflow_id": workflow.info().workflow_id,
+                    "trace_id": self._get_trace_id(),
+                }
+            )
+
+            return await workflow.execute_activity(
+                activity_name,
+                args=[args],
+                start_to_close_timeout=timedelta(seconds=timeout_seconds),
                 retry_policy=RetryPolicy(maximum_attempts=1),  # No retries for telemetry
             )
-            self._omnitrace_enabled = result.get("sampled", False)
         except Exception as e:
-            workflow.logger.warning(f"OmniTrace run start failed (ignored): {e}")
+            workflow.logger.warning(f"OmniTrace activity {activity_name} failed (ignored): {e}")
+            return None
+
+    async def _omnitrace_record_run_start(self, input_data: dict[str, Any]) -> None:
+        """Record workflow run start via OmniTrace (best-effort)."""
+        result = await self._execute_omnitrace_activity(
+            "omnitrace_record_run_start",
+            {
+                "user_id": self.user_id,
+                "input_data": input_data,
+                "status": "running",
+            },
+        )
+        if result:
+            self._omnitrace_enabled = result.get("sampled", False)
 
     async def _omnitrace_record_run_complete(
         self, output_data: dict[str, Any] | None, status: str
@@ -534,25 +554,14 @@ class AgentWorkflow:
         """Record workflow run completion via OmniTrace (best-effort)."""
         if not self._omnitrace_enabled:
             return
-        try:
-            # Use trace_id from context (passed from frontend) or fallback to workflow_id
-            trace_id = self.workflow_context.get("trace_id", workflow.info().workflow_id)
 
-            await workflow.execute_activity(
-                "omnitrace_record_run_complete",
-                args=[
-                    {
-                        "workflow_id": workflow.info().workflow_id,
-                        "trace_id": trace_id,
-                        "output_data": output_data,
-                        "status": status,
-                    }
-                ],
-                start_to_close_timeout=timedelta(seconds=5),
-                retry_policy=RetryPolicy(maximum_attempts=1),
-            )
-        except Exception as e:
-            workflow.logger.warning(f"OmniTrace run complete failed (ignored): {e}")
+        await self._execute_omnitrace_activity(
+            "omnitrace_record_run_complete",
+            {
+                "output_data": output_data,
+                "status": status,
+            },
+        )
 
     async def _omnitrace_record_event(
         self,
@@ -565,28 +574,64 @@ class AgentWorkflow:
         """Record workflow event via OmniTrace (best-effort)."""
         if not self._omnitrace_enabled:
             return
-        try:
-            # Use trace_id from context (passed from frontend) or fallback to workflow_id
-            trace_id = self.workflow_context.get("trace_id", workflow.info().workflow_id)
 
-            await workflow.execute_activity(
-                "omnitrace_record_event",
+        await self._execute_omnitrace_activity(
+            "omnitrace_record_event",
+            {
+                "event_key": event_key,
+                "kind": kind,
+                "name": name,
+                "latency_ms": latency_ms,
+                "data": data,
+            },
+            timeout_seconds=3,
+        )
+
+    async def _mint_pilot_session_if_byom(self, user_id: str, context: dict[str, Any]) -> None:
+        """
+        Mint a pilot session if the run uses a BYOM credential.
+
+        Checks context for credential_type == 'byom'. If present, calls the
+        mint_pilot_session activity and binds the returned pilot_session_id
+        to the workflow context for downstream proxy use.
+        """
+        credential_type = context.get("credential_type", "")
+        if credential_type != "byom":
+            return
+
+        connection_id = context.get("connection_id")
+        if not connection_id:
+            workflow.logger.warning("BYOM credential_type set but no connection_id — skipping mint")
+            return
+
+        try:
+            result = await workflow.execute_activity(
+                "mint_pilot_session",
                 args=[
                     {
-                        "workflow_id": workflow.info().workflow_id,
-                        "trace_id": trace_id,
-                        "event_key": event_key,
-                        "kind": kind,
-                        "name": name,
-                        "latency_ms": latency_ms,
-                        "data": data,
+                        "user_id": user_id,
+                        "tenant_id": context.get("tenant_id", user_id),
+                        "connection_id": connection_id,
+                        "trace_id": workflow.info().workflow_id,
+                        "model": context.get("model", "gpt-4o"),
+                        "sovereignty_mode": context.get("sovereignty_mode", "standard"),
+                        "policy_snapshot_hash": context.get("policy_snapshot_hash", ""),
                     }
                 ],
-                start_to_close_timeout=timedelta(seconds=3),
-                retry_policy=RetryPolicy(maximum_attempts=1),
+                start_to_close_timeout=timedelta(seconds=15),
+                retry_policy=RetryPolicy(maximum_attempts=2),
             )
+
+            if result.get("success"):
+                self._pilot_session_id = result["pilot_session_id"]
+                self.workflow_context["pilot_session_id"] = self._pilot_session_id
+                workflow.logger.info(f"✓ Pilot session minted: {self._pilot_session_id}")
+            else:
+                workflow.logger.warning(f"Pilot session mint failed: {result.get('error')}")
+
         except Exception as e:
-            workflow.logger.warning(f"OmniTrace event recording failed (ignored): {e}")
+            # Best-effort — don't crash the workflow if minting fails
+            workflow.logger.warning(f"Pilot session mint error (non-fatal): {e}")
 
     async def _check_semantic_cache(self, goal: str) -> dict[str, Any] | None:
         """
@@ -812,10 +857,11 @@ class AgentWorkflow:
             workflow.logger.warning(f"  🚫 Step {step_name} cancelled by admin")
             return {"status": "cancelled", "reason": "Cancelled by admin"}
 
-        # Check if admin paused workflow
+        # Check if admin paused workflow.
+        # workflow.sleep() is the deterministic Temporal-safe alternative to asyncio.sleep().
         while self._admin_paused:
             workflow.logger.info("⏸️  Workflow paused, waiting for resume...")
-            await asyncio.sleep(5)
+            await workflow.sleep(timedelta(seconds=5))
 
         workflow.logger.info(f"  ⚙ Starting step: {step_name}")
         self.step_count += 1
@@ -1098,8 +1144,9 @@ class AgentWorkflow:
             )
         )
 
-        # Track execution time for OmniTrace
-        tool_start_time = time.time()
+        # Track execution time for OmniTrace.
+        # workflow.now() is deterministic — safe for Temporal replay.
+        tool_start_time = workflow.now().timestamp()
         attempt = 1  # Could be incremented on retry if needed
 
         try:
@@ -1112,7 +1159,7 @@ class AgentWorkflow:
             )
 
             # Calculate latency
-            latency_ms = int((time.time() - tool_start_time) * 1000)
+            latency_ms = int((workflow.now().timestamp() - tool_start_time) * 1000)
 
             # Record success
             await self._append_event(
@@ -1144,7 +1191,7 @@ class AgentWorkflow:
 
         except ActivityError as e:
             # Calculate latency
-            latency_ms = int((time.time() - tool_start_time) * 1000)
+            latency_ms = int((workflow.now().timestamp() - tool_start_time) * 1000)
 
             # Record failure
             await self._append_event(
@@ -1172,7 +1219,7 @@ class AgentWorkflow:
                 },
             )
 
-            workflow.logger.error(f"  ✗ Failed step: {step_name} - {str(e)}")
+            workflow.logger.error(f"  ✗ Failed step: {step_name} - {e!s}")
             raise
 
     async def _handle_success(self) -> dict[str, Any]:
@@ -1205,14 +1252,16 @@ class AgentWorkflow:
                 )
                 workflow.logger.info(f"✓ Updated agent_runs for trace_id: {trace_id}")
             except Exception as e:
-                workflow.logger.warning(f"Failed to update agent_runs: {str(e)}")
+                workflow.logger.warning(f"Failed to update agent_runs: {e!s}")
 
         await self._append_event(
             WorkflowCompleted(
                 correlation_id=workflow.info().workflow_id,
                 plan_id=self.plan_id,
                 total_steps=len(self.plan_steps),
-                duration_seconds=time.time() - self.start_time if self.start_time else 0.0,
+                duration_seconds=(
+                    workflow.now().timestamp() - self.start_time if self.start_time else 0.0
+                ),
             )
         )
 

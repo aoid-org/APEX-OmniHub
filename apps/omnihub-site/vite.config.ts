@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import { resolve } from 'node:path';
@@ -11,6 +12,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['icon.png'],
       manifest: {
         name: 'APEX OmniHub',
@@ -33,6 +35,9 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 3000000,
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
@@ -57,6 +62,7 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, './src'),
     },
+    dedupe: ['react', 'react-dom'],
   },
   build: {
     outDir: 'dist',
@@ -68,19 +74,6 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
-        manualChunks(id) {
-          // Split React vendor bundle (only if actually imported)
-          if (id.includes('node_modules/react/') || 
-              id.includes('node_modules/react-dom/') ||
-              id.includes('node_modules/scheduler/') ||
-              id.includes('node_modules/react-router-dom/')) {
-            return 'vendor-react';
-          }
-          // All other node_modules go into vendor chunk
-          if (id.includes('node_modules/')) {
-            return 'vendor';
-          }
-        },
       },
     },
     // Performance optimizations
@@ -103,5 +96,12 @@ export default defineConfig({
   preview: {
     port: 3000,
     strictPort: true,
+  },
+  // @ts-expect-error test is an extension provided by vitest
+  test: {
+    coverage: {
+      reporter: ['text', 'lcov'],
+      reportsDirectory: './coverage',
+    },
   },
 });

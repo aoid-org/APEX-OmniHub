@@ -1,6 +1,9 @@
 """
 APEX Orchestrator - Main Entry Point.
 
+Pure Temporal Worker CLI entrypoint. No HTTP server logic.
+HTTP API is served separately via `server.py`.
+
 This script starts the Temporal worker and connects all components:
 - Workflows (AgentWorkflow)
 - Activities (tool execution, caching, database operations)
@@ -9,6 +12,9 @@ This script starts the Temporal worker and connects all components:
 Usage:
     # Start worker
     python main.py worker
+
+    # Start HTTP API server (delegates to server.py)
+    python main.py api
 
     # Submit test workflow
     python main.py submit "Book flight to Paris tomorrow"
@@ -22,16 +28,11 @@ import logging
 import os
 import sys
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 from temporalio.client import Client
+from temporalio.service import TLSConfig
 from temporalio.worker import Worker
-from uvicorn import Config, Server
 
+from activities.iron_law_verify import verify_deductive_path
 from activities.man_mode import (
     check_man_decision,
     create_man_task,
@@ -53,89 +54,8 @@ from activities.tools import (
     setup_activities,
 )
 from config import settings
-from omniboard.router import router as omniboard_router
-from security.request_signing import SignatureVerificationMiddleware
+from metrics import start_metrics_server
 from workflows.agent_saga import AgentWorkflow
-
-# Initialize rate limiter
-limiter = Limiter(key_func=get_remote_address)
-
-
-# FastAPI app for HTTP API
-app = FastAPI(title="APEX Orchestrator API", version="1.0.0")
-
-# Register OmniBoard Router
-app.include_router(omniboard_router)
-
-# Attach rate limiter to app
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-# CORS Middleware - Configure allowed origins from environment
-CORS_ORIGINS = os.environ.get(
-    "CORS_ALLOWED_ORIGINS", "https://apexomnihub.icu,https://www.apexomnihub.icu"
-).split(",")
-
-# HMAC Signature Verification Middleware
-app.add_middleware(SignatureVerificationMiddleware)
-
-# Add CORSMiddleware last so it runs outermost (handles preflight before auth)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-)
-
-
-class GoalRequest(BaseModel):
-    user_id: str
-    user_intent: str
-    trace_id: str
-
-
-@app.post("/api/v1/goals", responses={500: {"description": "Internal Server Error"}})
-async def create_goal(request: GoalRequest):
-    """
-    Create and start a new agent workflow.
-
-    This endpoint receives requests from the Edge Function router
-    and starts Temporal workflows for AI agent orchestration.
-    """
-    try:
-        logger.info("Creating goal workflow")
-
-        # Connect to Temporal
-        client = await Client.connect(
-            os.getenv("TEMPORAL_HOST", "localhost:7233"),
-            namespace=os.getenv("TEMPORAL_NAMESPACE", "default"),
-        )
-
-        # Start workflow with unique ID
-        workflow_id = f"goal-{request.trace_id}"
-
-        # C3: Start workflow via function reference for type safety
-        handle = await client.start_workflow(
-            AgentWorkflow.run,
-            args=[request.user_intent, request.user_id, {"trace_id": request.trace_id}],
-            id=workflow_id,
-            task_queue=os.getenv("TEMPORAL_TASK_QUEUE", "apex-orchestrator"),
-        )
-
-        logger.info("✓ Workflow started")
-        return {"workflowId": handle.id, "status": "started"}
-
-    except Exception as e:
-        logger.error(f"Failed to create goal workflow: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
-
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {"status": "ok"}
-
 
 # Configure logging
 logging.basicConfig(
@@ -143,6 +63,21 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+def _build_temporal_tls_config() -> TLSConfig | bool:
+    if not settings.temporal_tls_enabled:
+        return False
+
+    if not settings.temporal_tls_cert or not settings.temporal_tls_key:
+        raise ValueError("TEMPORAL_TLS_CERT and TEMPORAL_TLS_KEY are required when TLS is enabled")
+
+    with open(settings.temporal_tls_cert, "rb") as cert_file:
+        client_cert = cert_file.read()
+    with open(settings.temporal_tls_key, "rb") as key_file:
+        client_private_key = key_file.read()
+
+    return TLSConfig(client_cert=client_cert, client_private_key=client_private_key)
 
 
 async def start_worker() -> None:
@@ -160,16 +95,28 @@ async def start_worker() -> None:
         Temporal Server → Task Queue → Worker (this process) → Workflows/Activities
     """
     logger.info("🚀 Starting APEX Orchestrator Worker...")
+    start_metrics_server(port=int(os.getenv("METRICS_PORT", "9090")))
     logger.info(f"Environment: {settings.environment}")
     logger.info(f"Temporal: {settings.temporal_host} (namespace={settings.temporal_namespace})")
     logger.info(f"Task Queue: {settings.temporal_task_queue}")
 
     # Initialize activity dependencies
     logger.info("Initializing activity dependencies...")
+    activity_key = settings.supabase_activity_key or settings.supabase_service_role_key
+    if activity_key == settings.supabase_service_role_key:
+        logger.warning(
+            "Using SUPABASE_SERVICE_ROLE_KEY for activities; "
+            "configure SUPABASE_ACTIVITY_KEY for least privilege"
+        )
+
     await setup_activities(
         supabase_url=settings.supabase_url,
-        supabase_key=settings.supabase_service_role_key,
+        supabase_key=activity_key,
         redis_url=settings.redis_url,
+        redis_password=settings.redis_password.get_secret_value()
+        if settings.redis_password
+        else None,
+        redis_ssl=settings.redis_ssl,
     )
     logger.info("✓ Dependencies initialized")
 
@@ -178,6 +125,7 @@ async def start_worker() -> None:
     client = await Client.connect(
         settings.temporal_host,
         namespace=settings.temporal_namespace,
+        tls=_build_temporal_tls_config(),
     )
     logger.info("✓ Connected to Temporal")
 
@@ -207,11 +155,13 @@ async def start_worker() -> None:
             get_man_task,
             check_man_decision,
             notify_man_task,
+            # Iron Law verification (physical AI safety gate)
+            verify_deductive_path,
             # OmniTrace activities
             *get_omnitrace_activities(),
         ],
-        max_concurrent_workflow_tasks=10,
-        max_concurrent_activities=20,
+        max_concurrent_workflow_tasks=settings.temporal_max_workflow_tasks,
+        max_concurrent_activities=settings.temporal_max_activities,
     )
 
     logger.info("✅ Worker started - polling for tasks...")
@@ -233,10 +183,14 @@ async def submit_workflow(goal: str, user_id: str = "test-user") -> None:
     """
     logger.info(f"Submitting workflow: {goal}")
 
+    if user_id == "test-user" and settings.environment.lower() == "production":
+        raise ValueError("submit_workflow requires explicit user_id in production")
+
     # Connect to Temporal
     client = await Client.connect(
         settings.temporal_host,
         namespace=settings.temporal_namespace,
+        tls=_build_temporal_tls_config(),
     )
 
     # Start workflow
@@ -279,7 +233,13 @@ async def run_tests() -> None:
 
     # Test semantic cache
     logger.info("\n--- Testing Semantic Cache ---")
-    cache = SemanticCacheService(redis_url=settings.redis_url)
+    cache = SemanticCacheService(
+        redis_url=settings.redis_url,
+        redis_password=settings.redis_password.get_secret_value()
+        if settings.redis_password
+        else None,
+        redis_ssl=settings.redis_ssl,
+    )
     await cache.initialize()
 
     # Store plan
@@ -302,25 +262,6 @@ async def run_tests() -> None:
     logger.info("\n✅ All tests passed!")
 
 
-async def start_api_server() -> None:
-    """Start FastAPI server for HTTP API."""
-    logger.info("🚀 Starting APEX Orchestrator API Server...")
-    host = os.getenv("API_HOST", "0.0.0.0")
-    port = int(os.getenv("API_PORT", "8000"))
-    logger.info(f"API Server: http://{host}:{port}")
-    logger.info("Health check: http://{host}:{port}/health")
-
-    # Run FastAPI with uvicorn
-    config = Config(
-        app=app,
-        host=host,
-        port=port,
-        log_level=settings.log_level.lower(),
-    )
-    server = Server(config)
-    await server.serve()
-
-
 def main() -> None:
     """Main entry point."""
     if len(sys.argv) < 2:
@@ -337,6 +278,8 @@ def main() -> None:
         asyncio.run(start_worker())
 
     elif command == "api":
+        from server import start_api_server
+
         asyncio.run(start_api_server())
 
     elif command == "submit":
@@ -345,7 +288,8 @@ def main() -> None:
             print('Usage: python main.py submit "Book flight to Paris tomorrow"')
             sys.exit(1)
         goal = sys.argv[2]
-        asyncio.run(submit_workflow(goal))
+        cli_user_id = sys.argv[3] if len(sys.argv) >= 4 else "test-user"
+        asyncio.run(submit_workflow(goal, cli_user_id))
 
     elif command == "test":
         asyncio.run(run_tests())

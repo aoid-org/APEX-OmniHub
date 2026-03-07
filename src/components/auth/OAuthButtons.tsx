@@ -7,8 +7,8 @@ import { GoogleIcon, AppleIcon } from '@/components/icons/OAuthIcons';
 import type { Provider } from '@supabase/supabase-js';
 
 interface OAuthButtonsProps {
-  redirectTo?: string;
-  disabled?: boolean;
+  readonly redirectTo?: string;
+  readonly disabled?: boolean;
 }
 
 export function OAuthButtons({ redirectTo, disabled = false }: OAuthButtonsProps) {

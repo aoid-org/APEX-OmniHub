@@ -4,6 +4,7 @@ import { CTAGroup } from '@/components/CTAGroup';
 import { HeroVisual } from '@/components/HeroVisual';
 import { FeatureHighlightGrid } from '@/components/FeatureHighlightGrid';
 import { siteConfig } from '@/content/site';
+import { useTranslation } from 'react-i18next';
 import {
   IconConnect,
   IconTranslate,
@@ -18,6 +19,8 @@ import {
 } from '@/components/icons';
 
 function Hero() {
+  const { t } = useTranslation();
+
   return (
     <section className="hero hero--mission">
       <div className="hero__background" aria-hidden="true">
@@ -27,22 +30,51 @@ function Hero() {
       </div>
       <div className="container hero__grid">
         <div className="hero__content">
-          <h1 className="heading-hero hero__title" style={{ whiteSpace: 'pre-line' }}>{siteConfig.hero.title}</h1>
-          <p className="hero__tagline">{siteConfig.hero.tagline}</p>
-          <p className="hero__subtagline">
-            {siteConfig.stamp.tagline}
+          <h1 className="heading-hero hero__title flex flex-col items-center lg:items-start w-fit mx-auto lg:mx-0">
+            <div className="flex flex-row gap-[0.5em] justify-center lg:justify-start text-center">
+              <span className="w-min">{t('hero.headline.line1', { defaultValue: 'Connect anything.' })}</span>
+              <span className="w-min">{t('hero.headline.line2', { defaultValue: 'Orchestrate everything.' })}</span>
+            </div>
+            <div className="w-full text-center mt-[0.1em]">
+              <span>{t('hero.headline.line3', { defaultValue: 'Stay in control.' })}</span>
+            </div>
+          </h1>
+          <p className="hero__tagline hero__tagline--center">{t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}</p>
+          <p className="hero__subtagline hero__subtagline--center">
+            {t('hero.traits', { defaultValue: 'DIRECTABLE \u2022 AUDITABLE \u2022 REVERSIBLE' })}
           </p>
-          <p className="hero__subtitle">{siteConfig.hero.subtitle}</p>
-          <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
-            Synchronize everything. Translate between any platforms.
-            OmniHub coordinates AI, enterprise systems, and Web3 through
-            a single controlled port. You own the data. You control the flow.
-          </p>
-          <div className="hero__actions">
-            <CTAGroup
-              primary={siteConfig.ctas.primary}
-              secondary={siteConfig.ctas.secondary}
-            />
+          
+          <div className="flex flex-col gap-4 mt-6 mb-6">
+            <p className="hero__subtitle">
+              <span className="hero__sentence-indent">
+                {t('hero.subtitleSentence1', {
+                  defaultValue:
+                    'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface.',
+                })}
+              </span>{' '}
+              {t('hero.subtitleSentence2', { defaultValue: 'Every action is authorized, logged, and reversible.' })}
+            </p>
+            <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
+              <span className="hero__sentence-indent">
+                {t('hero.descriptionSentence1', { defaultValue: 'OmniDash keeps execution in view.' })}
+              </span>{' '}
+              {t('hero.descriptionSentence2', {
+                defaultValue:
+                  'Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.',
+              })}
+            </p>
+          </div>
+          
+          <div className="flex flex-col items-center lg:items-start gap-4 mt-8">
+            <div className="flex flex-row flex-wrap justify-center lg:justify-start gap-4">
+              <CTAGroup
+                primary={{ label: t('hero.cta.primary', { defaultValue: 'Request Access' }), href: siteConfig.ctas.primary.href }}
+                secondary={{ label: t('hero.cta.secondary', { defaultValue: 'Watch Demo' }), href: siteConfig.ctas.secondary.href }}
+              />
+            </div>
+            <p className="hero__footnote mt-2 text-center lg:text-left" style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+              {t('hero.footnote', { defaultValue: '*Blockchain, wallet, and NFT integrations are optional and disabled by default.' })}
+            </p>
           </div>
         </div>
 
@@ -54,6 +86,8 @@ function Hero() {
     </section>
   );
 }
+
+
 
 function HighlightsSection() {
   const highlightItems = [

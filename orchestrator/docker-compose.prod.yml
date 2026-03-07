@@ -1,0 +1,47 @@
+# docker-compose.prod.yml
+# Production overlay — adds Prometheus scraping for idempotency metrics.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# NOTE: This file *extends* the base docker-compose.yml via merge.
+
+services:
+  # Expose the orchestrator /metrics endpoint explicitly
+  orchestrator:
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+
+  # ── Prometheus ──────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=30d"
+    depends_on:
+      orchestrator:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+volumes:
+  prometheus_data:

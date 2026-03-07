@@ -13,7 +13,13 @@ import { LocalStorageAdapter } from './storage-adapter';
 // Re-export OmniSentry for external access
 export { getHealthStatus, reportError as reportOmniError, withResilience } from './omni-sentry';
 
-let sentry: unknown = null;
+interface SentryLike {
+  init: (config: Record<string, unknown>) => void;
+  captureException: (error: Error, context?: Record<string, unknown>) => void;
+  addBreadcrumb: (breadcrumb: Record<string, unknown>) => void;
+}
+
+let sentry: SentryLike | null = null;
 let sentryInitialized = false;
 
 // Batching configuration
@@ -28,8 +34,9 @@ interface QueuedLog {
 }
 
 const storage = new LocalStorageAdapter();
-const queue = new MonitoringQueue<QueuedLog>(MAX_QUEUE_SIZE, (item) =>
-  simpleHash(`${item.key}:${JSON.stringify(item.entry)}`)
+const queue = new MonitoringQueue<QueuedLog>(
+  (item) => simpleHash(`${item.key}:${JSON.stringify(item.entry)}`),
+  MAX_QUEUE_SIZE,
 );
 
 /**
@@ -41,7 +48,7 @@ const logCache = new Map<string, unknown[]>();
 let cacheSyncInitialized = false;
 
 function initCacheSync() {
-  if (cacheSyncInitialized || typeof window === 'undefined') return;
+  if (cacheSyncInitialized || globalThis.window === undefined) return;
 
   globalThis.window.addEventListener('storage', (event) => {
     // Sync cache when other tabs modify logs
@@ -89,7 +96,7 @@ function setCachedLogs(key: string, logs: unknown[]) {
   }
 }
 
-let flushHandle: unknown | null = null;
+let flushHandle: unknown = null;
 let isIdleCallback = false;
 
 export interface ErrorContext {
@@ -106,7 +113,7 @@ export interface PerformanceEvent {
   metadata?: Record<string, unknown>;
 }
 
-async function ensureSentry() {
+async function ensureSentry(): Promise<SentryLike | null> {
   if (sentryInitialized || sentry) return sentry;
 
   const dsn = import.meta.env.VITE_SENTRY_DSN;
@@ -114,17 +121,15 @@ async function ensureSentry() {
 
   try {
     // Dynamic import from CDN - TypeScript can't resolve these at compile time
-     
-    sentry = await import('https://esm.sh/@sentry/browser@7.120.1');
-     
+    // @ts-expect-error CDN import not resolvable at compile time
+    sentry = (await import('https://esm.sh/@sentry/browser@7.120.1')) as SentryLike;
+    // @ts-expect-error CDN import not resolvable at compile time
     const { BrowserTracing } = await import('https://esm.sh/@sentry/tracing@7.120.1');
 
-     
     sentry.init({
       dsn,
       environment: getEnvironment(),
       release: `${appConfig.name}@${appConfig.version}`,
-       
       integrations: [new BrowserTracing()],
       tracesSampleRate: 0.2,
     });
@@ -264,7 +269,7 @@ export async function logError(error: Error, context?: ErrorContext): Promise<vo
   persistLog('error_logs', entry, 50);
 
   const s = await ensureSentry();
-  if (s?.captureException) {
+  if (s) {
     s.captureException(error, { extra: context });
   }
 }
@@ -291,7 +296,7 @@ export async function logAnalyticsEvent(
   }
 
   const s = await ensureSentry();
-  if (s?.addBreadcrumb) {
+  if (s) {
     s.addBreadcrumb({
       category: 'analytics',
       message: eventName,
@@ -321,7 +326,7 @@ export async function logSecurityEvent(
   persistLog('security_logs', entry, 100);
 
   const s = await ensureSentry();
-  if (s?.addBreadcrumb) {
+  if (s) {
     s.addBreadcrumb({
       category: 'security',
       message: eventType,
@@ -368,11 +373,11 @@ export function initializeMonitoring(): void {
     void ensureSentry();
 
     // Register flush handlers
-    if (typeof window !== 'undefined') {
+    if (globalThis.window !== undefined) {
       const flushHandler = () => flushQueue();
       // Use pagehide for modern browsers as it is more reliable than beforeunload
       window.addEventListener('pagehide', flushHandler);
-      window.addEventListener('visibilitychange', () => {
+      globalThis.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
           flushHandler();
         }

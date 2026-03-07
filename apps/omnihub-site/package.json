@@ -1,7 +1,7 @@
 {
   "name": "omnihub-site",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.3.9",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,16 +10,24 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "smoke": "node scripts/smoke-test.mjs",
-    "test:visual": "playwright test"
+    "test:visual": "playwright test",
+    "i18n:check": "node scripts/i18n-check.mjs"
   },
   "dependencies": {
+    "apex-omnihub": "file:../..",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.34.3",
+    "i18next": "^25.8.13",
+    "i18next-browser-languagedetector": "^8.2.1",
     "lucide-react": "^0.563.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-i18next": "^16.5.4",
     "react-router-dom": "^7.13.0",
     "tailwind-merge": "^3.4.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "vite-plugin-pwa": "^1.2.0",
+    "zustand": "^4.5.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -38,7 +46,9 @@
     "terser": "^5.44.1",
     "typescript": "^5.8.0",
     "typescript-eslint": "^8.52.0",
-    "vite": "^7.2.0",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite": "^7.2.0"
+  },
+  "overrides": {
+    "serialize-javascript": "7.0.3"
   }
 }

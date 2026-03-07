@@ -104,7 +104,7 @@ export const FEATURE_REGISTRY: readonly FeatureDefinition[] = [
   },
   {
     id: 'omnidash-today',
-    path: '/omnidash/today',
+    path: '/omnidash',
     label: 'Today',
     description: 'Daily overview and tasks',
     icon: Calendar,

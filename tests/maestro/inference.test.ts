@@ -200,13 +200,11 @@ describe('MAESTRO Inference Tests', () => {
 
   describe('Error Handling', () => {
     it('should handle null input gracefully', () => {
-      // @ts-expect-error Testing null handling
       expect(() => mockGenerateEmbedding(null)).not.toThrow();
     });
 
     it('should handle undefined input gracefully', () => {
-      // @ts-expect-error Testing undefined handling
-      expect(() => mockGenerateEmbedding(undefined)).not.toThrow();
+      expect(() => mockGenerateEmbedding()).not.toThrow();
     });
   });
 });

@@ -5,6 +5,7 @@
 
 import { Connector, ConnectorConfig, SessionToken, RawEvent, NormalizationContext } from '../types/connector';
 import { CanonicalEvent } from '../types/canonical';
+import { generateSecureId } from '@/lib/security';
 
 export abstract class BaseConnector implements Connector {
   readonly provider: string;
@@ -33,7 +34,7 @@ export abstract class BaseConnector implements Connector {
   abstract validateToken(session: SessionToken): Promise<boolean>;
 
   protected generateConnectorId(userId: string, tenantId: string): string {
-    const uuid = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+    const uuid = generateSecureId();
     return `${this.provider}_${userId}_${tenantId}_${uuid.substring(0, 8)}`;
   }
 

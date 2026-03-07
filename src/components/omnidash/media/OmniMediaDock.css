@@ -1,0 +1,164 @@
+/* ═══════════════════════════════════════════════════════════════
+ * OmniMedia Dock — Glassmorphism PiP Dock Styles
+ * Extends OmniDash design tokens (glass, cube patterns).
+ * ═══════════════════════════════════════════════════════════════ */
+
+/* ===== Dock Container ===== */
+.omni-media-dock {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 320px;
+  z-index: 50;
+  border-radius: 16px;
+  background: rgba(12, 17, 32, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  box-shadow:
+    0 0 30px rgba(56, 189, 248, 0.06),
+    0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: omni-dock-slide-in 0.3s ease-out;
+}
+
+/* ===== Slide-in Animation ===== */
+@keyframes omni-dock-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===== Media Render Area ===== */
+.omni-dock-media {
+  width: 100%;
+  position: relative;
+  background: #000;
+  overflow: hidden;
+}
+
+.omni-dock-media-video {
+  height: 180px;
+}
+
+.omni-dock-media-audio {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.6);
+}
+
+/* ===== Audio Visualizer Placeholder ===== */
+.omni-dock-audio-icon {
+  color: rgba(56, 189, 248, 0.4);
+  animation: omni-dock-pulse 2s ease-in-out infinite;
+}
+
+@keyframes omni-dock-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+/* ===== Control Bar ===== */
+.omni-dock-controls {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.omni-dock-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.omni-dock-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.omni-dock-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.omni-dock-provider {
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== Action Buttons ===== */
+.omni-dock-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.omni-dock-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.omni-dock-btn:hover {
+  background: rgba(56, 189, 248, 0.08);
+  --text-color: #ffffff;
+  color: var(--text-color);
+}
+
+.omni-dock-btn-close:hover {
+  background: rgba(239, 68, 68, 0.1);
+  --text-color: #ffffff;
+  color: var(--text-color);
+}
+
+/* ===== Volume Row ===== */
+.omni-dock-volume-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 2px;
+}
+
+.omni-dock-volume-icon {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  .omni-media-dock {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}

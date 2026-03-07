@@ -37,28 +37,31 @@ export const siteConfig = {
     logo: 'APEX OmniHub',
     links: [
       buildLink('Tech Specs', '/tech-specs'),
+      buildLink('Story', '/story'),
     ],
-    loginLink: buildLink('Login', '/login'),
-    primaryCta: buildLink('Get Started', '/request-access'),
+    loginLink: buildLink('Launch Console', '/login'),
+    primaryCta: buildLink('Request Access', '/request-access'),
   },
   hero: {
     eyebrow: 'APEX OMNIHUB',
-    title: 'Connect anything. Change Anything.\nStay in control.',
+    title: 'Connect anything.\nOrchestrate everything.\nStay in control.',
     tagline: 'YOUR SYSTEMS. YOUR RULES.',
     subtitle:
-      'The AI Operating System for the Physical World. Software agents. Enterprise platforms. Physical AI hardware. Every action governed, audited, and reversible.',
+      'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.',
+    description:
+      'OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.',
   },
   highlights: {
     title: '',
     items: [
       buildItem('The OS governs your chips.', 'OmniHub governs everything that thinks.'),
       buildItem('You own the data.', 'You control the flow. Switch tools without rebuilding.'),
-      buildItem('It sees you.', 'Zero-trust means nothing is invisible. Directable. Accountable. Dependable.'),
+      buildItem('It sees you.', 'Zero-trust means nothing is invisible. Directable. Auditable. Reversible.'),
     ],
   },
   integrations: {
     title: "The Governance Layer for Intelligent Systems",
-    subtitle: 'Adapters stay modular, portable, and optional-by-default. Software, agents, and physical AI — under one control plane.',
+    subtitle: 'Adapters stay modular, portable, and optional-by-default. Software, agents, and physical AI - under one control plane.',
     items: [
       buildItem('Enterprise Systems', 'CRMs, ERPs, ticketing, messaging, storage, data warehouses.'),
       buildItem('AI Apps & Agents', 'Model providers, agent frameworks, RAG pipelines, eval gates.'),
@@ -77,17 +80,17 @@ export const siteConfig = {
   },
   stamp: {
     headline: 'IT SEES YOU.',
-    tagline: 'DIRECTABLE \u2022 ACCOUNTABLE \u2022 DEPENDABLE',
+    tagline: 'DIRECTABLE \u2022 AUDITABLE \u2022 REVERSIBLE',
   },
   ctas: {
-    primary: buildLink('Get Started', '/request-access'),
+    primary: buildLink('Request Access', '/request-access'),
     secondary: buildLink('Watch Demo', '/demo'),
     link: buildLink('Read Tech Specs', '/tech-specs'),
   },
   howItWorks: {
     title: 'How It Works',
     steps: [
-      buildItem('Connect', 'Modular adapters plug into any system—software, agent, or robot.'),
+      buildItem('Connect', 'Modular adapters plug into any system - software, agent, or robot.'),
       buildItem('Translate', 'Canonical, typed semantic events so platforms actually understand each other.'),
       buildItem('Execute', 'Deterministic workflows with biometric gates and full audit trails.'),
     ],
@@ -218,9 +221,10 @@ export const techSpecsConfig = {
 export const demoConfig = {
   title: 'See It In Action',
   subtitle: 'Experience the APEX OmniHub workflow',
-  videoPlaceholder: {
+  video: {
     title: 'Demo Video',
-    description: 'Coming soon - see how APEX OmniHub connects your systems',
+    description: 'See how APEX OmniHub orchestrates your systems in real time',
+    src: '/apex-demo-video.mp4',
   },
   interactivePlaceholder: {
     title: 'Interactive Demo',
@@ -229,12 +233,12 @@ export const demoConfig = {
   cta: {
     title: 'Ready to get started?',
     description: 'Explore the only governed AI operating system.',
-    button: buildLink('Get Started', '/request-access'),
+    button: buildLink('Request Access', '/request-access'),
   },
 } as const;
 
 export const requestAccessConfig = {
-  title: 'Get Started',
+  title: 'Request Access',
   subtitle: 'Deploy Governed Intelligence',
   description: 'We\u2019re onboarding select partners and enterprises into the v1.2.0 ecosystem.',
   fields: {
@@ -243,7 +247,7 @@ export const requestAccessConfig = {
     company: buildField('Company', 'Company name', 100),
     useCase: buildField('Use Case', 'Briefly describe your use case...', 500),
   },
-  submitLabel: 'Get Started',
+  submitLabel: 'Request Access',
   fallbackMessage: 'Having trouble? Email us at',
   fallbackEmail: 'access@apexomnihub.icu',
   successMessage: 'Welcome to the Fortress. We\u2019ll be in touch soon.',

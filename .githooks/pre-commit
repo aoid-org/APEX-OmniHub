@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# .githooks/pre-commit
+# Runs all pre-commit checks in .githooks/pre-commit.d/ in lexical order.
+
+set -euo pipefail
+
+for hook in .githooks/pre-commit.d/*.sh; do
+  [ -e "$hook" ] || continue
+  bash "$hook"
+done
+
+echo "✅ Pre-commit checks passed."

@@ -77,6 +77,21 @@ interface GenericBatteryConfig {
     successMessage: string;
 }
 
+function createArmageddonEvent(
+    runId: string,
+    batteryId: number,
+    iteration: number,
+    attackValue: number,
+    escapeChance: number,
+    attackLog: string,
+    successMessage: string,
+): ArmageddonEvent {
+    if (attackValue < escapeChance) {
+        return { run_id: runId, battery_id: batteryId, event_type: 'ESCAPE', details: `${successMessage} at iteration ${iteration}`, iteration };
+    }
+    return { run_id: runId, battery_id: batteryId, event_type: 'BLOCKED', details: attackLog, iteration };
+}
+
 /**
  * Shared runner for all battery simulations to eliminate code duplication
  */
@@ -106,34 +121,22 @@ async function runGenericBattery(params: GenericBatteryConfig): Promise<BatteryR
         // Probabilistic escape check
         if (attackValue < escapeChance) {
             escapes++;
-            eventBatch.push({
-                run_id: config.runId,
-                battery_id: batteryId,
-                event_type: 'ESCAPE',
-                details: `${successMessage} at iteration ${i}`,
-                iteration: i,
-            });
-        } else {
-            eventBatch.push({
-                run_id: config.runId,
-                battery_id: batteryId,
-                event_type: 'BLOCKED',
-                details: attackLog,
-                iteration: i,
-            });
         }
+        eventBatch.push(createArmageddonEvent(config.runId, batteryId, i, attackValue, escapeChance, attackLog, successMessage));
 
         // Batch insert to Supabase every 500 iterations
         if (i % LOG_BATCH_INTERVAL === 0 && eventBatch.length > 0) {
             logs.push(`[B${batteryId}] Batch insert at iteration ${i}: ${eventBatch.length} events`);
-            await supabase.from('armageddon_events').insert(eventBatch);
+            const { error: batchErr } = await supabase.from('armageddon_events').insert(eventBatch);
+            if (batchErr) throw new Error(`[B${batteryId}] Batch insert failed at iteration ${i}: ${batchErr.message}`);
             eventBatch.length = 0;
         }
     }
 
     // Final batch insert
     if (eventBatch.length > 0) {
-        await supabase.from('armageddon_events').insert(eventBatch);
+        const { error: finalErr } = await supabase.from('armageddon_events').insert(eventBatch);
+        if (finalErr) throw new Error(`[B${batteryId}] Final batch insert failed: ${finalErr.message}`);
     }
 
     const durationMs = Date.now() - startTime;

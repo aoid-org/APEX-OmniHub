@@ -70,7 +70,7 @@ export async function subscribeToPushNotifications(vapidPublicKey: string): Prom
     // Create new subscription
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
     });
 
     void logAnalyticsEvent('push.subscribed', {
@@ -118,18 +118,19 @@ export async function showLocalNotification(payload: NotificationPayload): Promi
   }
 
   const registration = await navigator.serviceWorker.ready;
-  await registration.showNotification(payload.title, {
+  const notificationOptions = {
     body: payload.body,
     icon: payload.icon || '/icons/pwa/icon-192.png',
     badge: payload.badge || '/icons/pwa/icon-96.png',
-    image: payload.image,
     data: payload.data,
-    actions: payload.actions,
     tag: payload.tag,
     requireInteraction: payload.requireInteraction || false,
     vibrate: [200, 100, 200],
     timestamp: Date.now(),
-  });
+    ...(payload.actions ? { actions: payload.actions } : {}),
+    ...(payload.image ? { image: payload.image } : {}),
+  };
+  await registration.showNotification(payload.title, notificationOptions as NotificationOptions);
 
   void logAnalyticsEvent('push.notification.shown', {
     tag: payload.tag,
@@ -145,6 +146,12 @@ export function setupNotificationClickHandler() {
   if (!('serviceWorker' in navigator)) return;
 
   navigator.serviceWorker.addEventListener('message', (event) => {
+    // FIX: Verify message origin — service worker messages have empty origin ('')
+    if (event.origin !== '' && event.origin !== globalThis.location.origin) {
+      console.warn('[Push] Rejected message from untrusted origin:', event.origin);
+      return;
+    }
+
     if (event.data?.type === 'notification-click') {
       const { action, data } = event.data;
 

@@ -19,7 +19,7 @@ import shutil
 import subprocess
 import sys
 import textwrap
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +28,7 @@ COPYRIGHT = "Copyright (c) 2026 APEX Business Systems Ltd. All Rights Reserved."
 
 # Required OmniHub directories (created if missing)
 OMNIHUB_DIRS = ["skills", "config", "dag", "logs"]
+HEALTH_CHECK_FILENAME = "health_checks.py"
 
 
 # ---------------------------------------------------------------------------
@@ -58,10 +59,12 @@ def ensure_omnihub_structure(omnihub_root: Path) -> dict[str, Path]:
     if not structure["catalog"].exists():
         catalog = {
             "version": "1.0.0",
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
             "skills": [],
         }
-        structure["catalog"].write_text(json.dumps(catalog, indent=2) + "\n", encoding="utf-8")
+        structure["catalog"].write_text(
+            json.dumps(catalog, indent=2) + "\n", encoding="utf-8"
+        )
 
     return structure
 
@@ -125,7 +128,7 @@ def preflight_checks(
 # ---------------------------------------------------------------------------
 def install_skill(
     skill_path: Path,
-    omnihub_root: Path,
+    _omnihub_root: Path,
     skill_name: str,
     structure: dict[str, Path],
 ) -> Path:
@@ -140,9 +143,11 @@ def install_skill(
     integration_dir.mkdir(exist_ok=True)
 
     # Generate health_checks.py if not present
-    health_check_path = integration_dir / "health_checks.py"
+    health_check_path = integration_dir / HEALTH_CHECK_FILENAME
     if not health_check_path.exists():
-        health_check_src = skill_path.parent / "omnihub_integration" / "health_checks.py"
+        health_check_src = (
+            skill_path.parent / "omnihub_integration" / HEALTH_CHECK_FILENAME
+        )
         if health_check_src.exists():
             shutil.copy2(health_check_src, health_check_path)
         else:
@@ -213,9 +218,11 @@ def register_in_catalog(
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
 
     # Remove existing entry if present
-    catalog["skills"] = [s for s in catalog.get("skills", []) if s.get("id") != skill_name]
+    catalog["skills"] = [
+        s for s in catalog.get("skills", []) if s.get("id") != skill_name
+    ]
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     entry = {
         "id": skill_name,
         "version": manifest.get("version", "1.0.0"),
@@ -317,6 +324,69 @@ def generate_example_workflow(
     return workflow_path
 
 
+def _handle_preflight(
+    skill_path: Path,
+    omnihub_root: Path,
+    structure: dict[str, Path],
+    skill_name: str,
+    force: bool,
+) -> list[str] | None:
+    """Run preflight checks with force-overwrite handling. Returns errors or None."""
+    target_dir = structure["skills_dir"] / skill_name
+    if target_dir.exists() and force:
+        shutil.rmtree(target_dir)
+        print(f"  ✓ Removed existing: {skill_name}")
+    elif target_dir.exists():
+        errors = preflight_checks(skill_path, omnihub_root, structure)
+        if errors:
+            for e in errors:
+                print(f"  ✗ {e}")
+            return errors
+
+    errors = preflight_checks(skill_path, omnihub_root, structure)
+    errors = [e for e in errors if "Naming conflict" not in e]
+    if errors:
+        for e in errors:
+            print(f"  ✗ {e}")
+        return errors
+    return None
+
+
+def _run_health_check(installed_path: Path) -> str:
+    """Execute health check subprocess. Returns status string."""
+    health_check_path = installed_path / "omnihub_integration" / HEALTH_CHECK_FILENAME
+    try:
+        result = subprocess.run(
+            [sys.executable, str(health_check_path)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(installed_path),
+        )
+        if result.returncode != 0:
+            print(f"  ✗ Health check failed: {result.stderr.strip()}")
+            return "unhealthy"
+        health_result = json.loads(result.stdout)
+        status = health_result.get("status", "unknown")
+        for check, passed in health_result.get("checks", {}).items():
+            icon = "✓" if passed else "✗"
+            print(f"  {icon} {check}: {'PASS' if passed else 'FAIL'}")
+        print(f"  Status: {status.upper()}")
+        return status
+    except Exception as e:
+        print(f"  ⚠ Health check could not run: {e}")
+        return "unknown"
+
+
+def _print_report(report: dict[str, Any]) -> None:
+    """Print the installation summary."""
+    print("\n[OK] Installation complete!\n")
+    print("Next steps:")
+    for i, step in enumerate(report["next_steps"], 1):
+        print(f"  {i}. {step}")
+    print()
+
+
 # ---------------------------------------------------------------------------
 # Main Installation Flow
 # ---------------------------------------------------------------------------
@@ -333,89 +403,41 @@ def install_skill_to_omnihub(
     """
     print("\n[CHECK] Pre-flight checks...")
 
-    # Ensure structure exists
     structure = ensure_omnihub_structure(omnihub_root)
     print(f"  ✓ OmniHub root: {omnihub_root}")
     print(f"  ✓ Structure valid ({', '.join(OMNIHUB_DIRS)})")
 
-    # Load manifest
     manifest_path = skill_path / "MANIFEST.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     skill_name = manifest.get("name", skill_path.name)
-    print(f"  ✓ MANIFEST.json valid")
+    print("  ✓ MANIFEST.json valid")
 
-    # Handle force overwrite
-    target_dir = structure["skills_dir"] / skill_name
-    if target_dir.exists():
-        if force:
-            shutil.rmtree(target_dir)
-            print(f"  ✓ Removed existing: {skill_name}")
-        else:
-            errors = preflight_checks(skill_path, omnihub_root, structure)
-            if errors:
-                for e in errors:
-                    print(f"  ✗ {e}")
-                return {"status": "error", "errors": errors}
-
-    # Run remaining preflight checks
-    errors = preflight_checks(skill_path, omnihub_root, structure)
-    # Filter out naming conflict if we already handled it
-    errors = [e for e in errors if "Naming conflict" not in e]
+    errors = _handle_preflight(skill_path, omnihub_root, structure, skill_name, force)
     if errors:
-        for e in errors:
-            print(f"  ✗ {e}")
         return {"status": "error", "errors": errors}
 
-    print(f"  ✓ No naming conflicts")
+    print("  ✓ No naming conflicts")
     print(f"  ✓ Python {sys.version_info.major}.{sys.version_info.minor} detected")
 
-    # Install
     print(f"\n[INSTALL] Installing skill: {skill_name}")
     installed_path = install_skill(skill_path, omnihub_root, skill_name, structure)
     print(f"  ✓ Copied to: {installed_path}")
 
-    # Health check
-    print(f"\n[HEALTH] Running health check...")
-    health_check_path = installed_path / "omnihub_integration" / "health_checks.py"
-    health_status = "unknown"
+    print("\n[HEALTH] Running health check...")
+    health_status = _run_health_check(installed_path)
 
-    try:
-        result = subprocess.run(
-            [sys.executable, str(health_check_path)],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            cwd=str(installed_path),
-        )
-        if result.returncode == 0:
-            health_result = json.loads(result.stdout)
-            health_status = health_result.get("status", "unknown")
-            for check, passed in health_result.get("checks", {}).items():
-                status_icon = "✓" if passed else "✗"
-                print(f"  {status_icon} {check}: {'PASS' if passed else 'FAIL'}")
-            print(f"  Status: {health_status.upper()}")
-        else:
-            health_status = "unhealthy"
-            print(f"  ✗ Health check failed: {result.stderr.strip()}")
-    except Exception as e:
-        health_status = "unknown"
-        print(f"  ⚠ Health check could not run: {e}")
-
-    # Register in catalog
     if register_catalog:
-        print(f"\n[CATALOG] Registering in catalog...")
+        print("\n[CATALOG] Registering in catalog...")
         register_in_catalog(structure, skill_name, manifest, health_status)
         print(f"  ✓ Updated: {structure['catalog']}")
         print(f"  ✓ Skill ID: {skill_name}")
-        print(f"  ✓ Auto-load: ENABLED")
+        print("  ✓ Auto-load: ENABLED")
 
-    # Generate example workflow
-    print(f"\n[DAG] Generating example workflow...")
+    print("\n[DAG] Generating example workflow...")
     workflow_path = generate_example_workflow(structure, skill_name, manifest)
     print(f"  ✓ Created: {workflow_path}")
 
-    # Summary
-    report = {
+    report: dict[str, Any] = {
         "status": "success",
         "skill_id": skill_name,
         "installed_to": str(installed_path),
@@ -423,19 +445,14 @@ def install_skill_to_omnihub(
         "health_check_result": {"status": health_status},
         "example_workflow": str(workflow_path),
         "next_steps": [
-            f"Review catalog: cat config/skill_catalog.json",
+            "Review catalog: cat config/skill_catalog.json",
             f"Test execution: python skills/{skill_name}/scripts/executor.py",
             f"Deploy workflow: Review dag/example-{skill_name}-workflow.yaml",
             f"Monitor logs: Check logs/skills/{skill_name}/",
         ],
     }
 
-    print(f"\n[OK] Installation complete!\n")
-    print("Next steps:")
-    for i, step in enumerate(report["next_steps"], 1):
-        print(f"  {i}. {step}")
-    print()
-
+    _print_report(report)
     return report
 
 
@@ -448,9 +465,14 @@ def main() -> None:
         description=f"APEX Skill Forge v{VERSION} — OmniHub Direct Installer",
         epilog=COPYRIGHT,
     )
-    parser.add_argument("--skill-path", type=Path, required=True, help="Path to skill directory")
     parser.add_argument(
-        "--omnihub-root", type=Path, required=True, help="Path to APEX-OmniHub repository root"
+        "--skill-path", type=Path, required=True, help="Path to skill directory"
+    )
+    parser.add_argument(
+        "--omnihub-root",
+        type=Path,
+        required=True,
+        help="Path to APEX-OmniHub repository root",
     )
     parser.add_argument(
         "--register-in-catalog",
@@ -458,7 +480,9 @@ def main() -> None:
         default=True,
         help="Register skill in catalog (default: true)",
     )
-    parser.add_argument("--force", action="store_true", help="Force overwrite existing skill")
+    parser.add_argument(
+        "--force", action="store_true", help="Force overwrite existing skill"
+    )
     args = parser.parse_args()
 
     report = install_skill_to_omnihub(

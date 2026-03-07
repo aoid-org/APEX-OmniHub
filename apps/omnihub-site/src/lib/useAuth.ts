@@ -8,11 +8,10 @@ import type { Session } from '@supabase/supabase-js';
  */
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(hasSupabaseConfig);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
-      setLoading(false);
       return;
     }
 

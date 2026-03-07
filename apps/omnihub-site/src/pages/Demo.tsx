@@ -1,50 +1,8 @@
 import { Layout } from '@/components/Layout';
 import { Section, SectionHeader } from '@/components/Section';
 import { CTAGroup } from '@/components/CTAGroup';
+import { DemoVideoPlayer } from '@/components/DemoVideoPlayer';
 import { demoConfig, siteConfig } from '@/content/site';
-
-function VideoPlaceholder() {
-  return (
-    <div
-      className="card"
-      style={{
-        aspectRatio: '16/9',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'var(--color-surface)',
-      }}
-    >
-      <div
-        style={{
-          width: '64px',
-          height: '64px',
-          borderRadius: '50%',
-          backgroundColor: 'var(--color-navy)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 'var(--space-4)',
-        }}
-      >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M8 5v14l11-7L8 5z" fill="white" />
-        </svg>
-      </div>
-      <h3 className="heading-4">{demoConfig.videoPlaceholder.title}</h3>
-      <p className="text-secondary text-sm mt-2">
-        {demoConfig.videoPlaceholder.description}
-      </p>
-    </div>
-  );
-}
 
 function InteractivePlaceholder() {
   return (
@@ -97,8 +55,8 @@ export function DemoPage() {
           title={demoConfig.title}
           subtitle={demoConfig.subtitle}
         />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
-          <VideoPlaceholder />
+        <div className="demo-video demo-copy-font" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
+          <DemoVideoPlayer sourceUrl={demoConfig.video.src} />
           <InteractivePlaceholder />
         </div>
       </Section>

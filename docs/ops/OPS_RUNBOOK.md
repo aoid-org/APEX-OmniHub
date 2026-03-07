@@ -489,6 +489,85 @@ WHERE decision = 'DENY';
 
 ---
 
+---
+
+## Idempotency Hit-Rate Monitoring (v1.3.2+)
+
+### Prometheus Metrics
+
+The orchestrator exposes two counters at `http://<worker>:9090/metrics`:
+
+| Metric | Description |
+|--------|-------------|
+| `idempotency_hits_total` | Replay/duplicate correctly deduplicated |
+| `idempotency_misses_total` | New unique request processed |
+
+**Hit Rate** = `hits / (hits + misses)`. Alert threshold: **< 95% for 5 min**.
+
+### Grafana Dashboard
+
+Import `docs/monitoring/idempotency_hitrate.json` into Grafana. Panels:
+- Hit Rate (%) with red/yellow/green thresholds
+- Hits vs Misses rate over time
+
+### Troubleshooting Low Hit Rate
+
+1. Check Temporal replay history: `tctl workflow show -w <id>`
+2. Verify idempotency keys are stable across retries
+3. Check `idempotency_receipts` table for TTL expiry issues
+
+---
+
+## pg_cron Receipt Cleanup
+
+### Schedule
+
+| Job | Schedule | Target |
+|-----|----------|--------|
+| `clean-expired-receipts` | Daily 03:00 UTC | `idempotency_receipts` where expired + older than 30 days |
+
+### Monitoring
+
+```sql
+-- Check job status
+SELECT * FROM cron.job WHERE jobname = 'clean-expired-receipts';
+
+-- Check recent runs
+SELECT jobid, status, return_message, start_time, end_time
+FROM cron.job_run_details
+WHERE jobid IN (SELECT jobid FROM cron.job WHERE jobname = 'clean-expired-receipts')
+ORDER BY start_time DESC LIMIT 10;
+```
+
+### Rollback
+
+```sql
+-- Run rollback migration
+\i supabase/migrations/20260226000001_rollback_receipt_cleanup.sql
+```
+
+---
+
+## Guard Rail Violation Response
+
+### Detection
+
+CI scans `logs/` for: `GUARD_RAIL_VIOLATION`, `policy breach`, `tri-force violation`.
+
+### Response Procedure
+
+1. Check GitHub Issues labeled `guard-rail-violation`
+2. Review the linked CI run logs
+3. Identify the violating tool/action in OmniPolicy audit trail
+4. Apply corrective policy update
+5. Close issue with root cause analysis
+
+### Slack Alerts
+
+Guard rail violations post to `#platform-alerts` via `SLACK_BOT_TOKEN` secret.
+
+---
+
 **End of OPS RUNBOOK**
 
 For additional support, refer to system architecture documentation or contact the platform team.

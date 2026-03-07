@@ -19,7 +19,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from engine import ProtocolOmegaEngine
 
-
 # Constants (SonarQube compliance - no duplicate literals)
 DANGEROUS_SQL_COMMAND = "DROP TABLE production_users"
 DEMO_USER = "demo-admin"
@@ -51,8 +50,8 @@ def demo_risk_assessment():
     for command, expected_risk in test_commands:
         actual_risk = engine.assess_risk(command)
         status = "✓" if actual_risk == expected_risk else "✗"
-        print("{} Command: {}".format(status, command))
-        print("   Expected: {} | Actual: {}".format(expected_risk, actual_risk))
+        print(f"{status} Command: {command}")
+        print(f"   Expected: {expected_risk} | Actual: {actual_risk}")
 
 
 def demo_approval_workflow():
@@ -68,12 +67,12 @@ def demo_approval_workflow():
         description="Remove old user table before schema migration",
         requested_by=DEMO_USER
     )
-    print("   Request ID: {}".format(request_id))
+    print(f"   Request ID: {request_id}")
 
     # Check pending requests
     print("\n2. Checking pending requests...")
     pending = engine.get_pending_requests()
-    print("   Pending requests: {}".format(len(pending)))
+    print(f"   Pending requests: {len(pending)}")
 
     # Approve the request
     print("\n3. Approving request...")
@@ -100,7 +99,7 @@ def demo_rejection_workflow():
         description="Testing rejection workflow",
         requested_by=DEMO_USER
     )
-    print("   Request ID: {}".format(request_id))
+    print(f"   Request ID: {request_id}")
 
     # Reject the request
     print("\n2. Rejecting request...")
@@ -131,7 +130,7 @@ def demo_multiple_requests():
     for command, description in commands:
         req_id = engine.create_request(command, description, DEMO_USER)
         request_ids.append(req_id)
-        print("   Created request: {} - {}".format(req_id[:8], command))
+        print(f"   Created request: {req_id[:8]} - {command}")
 
     # Show all pending
     print("\n2. All pending requests:")
@@ -148,16 +147,16 @@ def demo_multiple_requests():
         if i % 2 == 0:
             # Even index - approve
             engine.approve_request(req_id, DEMO_APPROVER)
-            print("   ✓ Approved: {}".format(req_id[:8]))
+            print(f"   ✓ Approved: {req_id[:8]}")
         else:
             # Odd index - reject
             engine.reject_request(req_id, DEMO_APPROVER, "Policy violation")
-            print("   ✗ Rejected: {}".format(req_id[:8]))
+            print(f"   ✗ Rejected: {req_id[:8]}")
 
     # Show final stats
     print("\n4. Final statistics:")
     all_pending = engine.get_pending_requests()
-    print("   Remaining pending: {}".format(len(all_pending)))
+    print(f"   Remaining pending: {len(all_pending)}")
 
 
 def interactive_demo():
@@ -194,7 +193,7 @@ def interactive_demo():
             }
 
             risk_display = risk_colors.get(risk_level, risk_level.upper())
-            print("Risk Level: {}".format(risk_display))
+            print(f"Risk Level: {risk_display}")
 
             # Suggest action based on risk
             if risk_level == 'critical':

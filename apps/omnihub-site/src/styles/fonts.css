@@ -1,44 +1,19 @@
 /**
- * Self-Hosted Font Configuration
+ * Shared Font Configuration
  *
- * Uses system font stack with optimized fallbacks.
- * No external font requests - zero Google Fonts dependency.
+ * Uses Space Grotesk as the primary family and applies typography feature settings.
+ * Font assets are loaded via the document stylesheet link in index.html.
  *
- * Benefits:
- * - Faster LCP (no font download blocking render)
- * - Stricter CSP (no external font-src needed)
- * - Privacy-preserving (no third-party requests)
- * - Works offline
  */
+
 
 /* System UI Font Stack - Modern, Professional */
 :root {
-  /* Primary: Inter-like system fonts */
-  --font-sans:
-    "Inter",
-    "SF Pro Display",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    "Helvetica Neue",
-    Arial,
-    sans-serif,
-    "Apple Color Emoji",
-    "Segoe UI Emoji";
+  /* Primary: Space Grotesk - strictly enforced */
+  --font-sans: "Space Grotesk", sans-serif;
 
-  /* Monospace: JetBrains Mono-like system fonts */
-  --font-mono:
-    "JetBrains Mono",
-    "SF Mono",
-    "Fira Code",
-    "Cascadia Code",
-    Consolas,
-    "Liberation Mono",
-    Menlo,
-    Monaco,
-    "Courier New",
-    monospace;
+  /* Monospace: Space Grotesk per user request for ALL TEXT */
+  --font-mono: "Space Grotesk", monospace;
 }
 
 /*
@@ -46,10 +21,8 @@
  * These work with system fonts that support them
  */
 body {
-  font-feature-settings:
-    "kern" 1,      /* Kerning */
-    "liga" 1,      /* Standard ligatures */
-    "calt" 1;      /* Contextual alternates */
+  font-feature-settings: "kern" 1, /* Kerning */ "liga" 1,
+    /* Standard ligatures */ "calt" 1; /* Contextual alternates */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -62,9 +35,5 @@ kbd,
 samp,
 .font-mono {
   font-family: var(--font-mono);
-  font-feature-settings:
-    "kern" 1,
-    "liga" 1,
-    "calt" 1,
-    "zero" 1;      /* Slashed zero */
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "zero" 1; /* Slashed zero */
 }

@@ -1,12 +1,14 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
 import App from './App';
+import './i18n';
 import './styles/globals.css';
 import './styles/theme.css';
 import './styles/components.css';
+import './styles/omnidash-layout.css';
+import { initPWA } from './pwa-init';
 
-// Phase 1: Frontend Ignition Hardening
+// Phase 1: Frontend Ignition Hardening & Service Worker Boot
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
@@ -15,10 +17,11 @@ if (!rootElement) {
   throw new Error("APEX Critical Failure: DOM Root Not Found");
 }
 
+// Boot PWA layer idempotently
+initPWA();
+
 createRoot(rootElement).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <App />
   </StrictMode>
 );

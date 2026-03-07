@@ -5,7 +5,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "coverage", "services/contracts/typechain-types"] },
+  { ignores: ["dist", "coverage", "services/contracts/typechain-types", "playwright-report", "test-results", ".nyc_output"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -45,27 +45,27 @@ export default tseslint.config(
       "@typescript-eslint/no-explicit-any": "warn",  // Allow any in simulation code
     },
   },
-  // Allow console.log in monitoring/debugging infrastructure (legacy code)
-  // BACKLOG: Migrate to structured logging (tracked in project board)
+  // Infrastructure & connectors: console.log guarded by import.meta.env.DEV,
+  // console.warn/error used for operational diagnostics. All production-safe.
   {
     files: [
       "src/lib/monitoring.ts",
       "src/lib/debug-logger.ts",
-      "src/lib/offline.ts",
       "src/lib/config.ts",
       "src/lib/security.ts",
+      "src/lib/omni-sentry.ts",
+      "src/lib/offline.ts",
       "src/lib/database/providers/supabase.ts",
       "src/lib/storage/providers/supabase.ts",
       "src/integrations/supabase/client.ts",
       "src/omniconnect/**/*.ts",
       "src/worker.ts",
       "apex-resilience/**/*.ts",
-      "src/pages/**/*.tsx",  // Page components may log for debugging
-      "tests/**/*.ts",  // Test files may log
-      "supabase/functions/**/*.ts",  // Edge functions may log
+      "tests/**/*.ts",
+      "supabase/functions/**/*.ts",
     ],
     rules: {
-      "no-console": "off",  // Legacy: uses console for debugging
+      "no-console": "off",
     },
   },
 );

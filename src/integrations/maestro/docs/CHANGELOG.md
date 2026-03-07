@@ -6,16 +6,31 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 
 ---
 
-## [Unreleased]
+## [1.1.0] - 2026-02-24
 
 ### Added
-- (Reserved)
+
+- 6 adversarial injection vectors: Base64 encoding, Hex encoding, XML/delimiter boundary escapes, Data Exfiltration, Jailbreak/DAN Role Manipulation, Obfuscation/Token Smuggling
+- `hypothetical_framing` injection pattern (e.g., "hypothetically, if you were to…")
+- `obfuscated_text` injection pattern for zero-width characters and Unicode obfuscation
 
 ### Changed
-- (Reserved)
 
-### Fixed
-- (Reserved)
+- Elevated encoding risk scores from default to 85 (blocking threshold)
+- Widened `developer_mode` regex to catch "Developer Mode", "DAN mode", "jailbreak" variants
+- Added `<role>` to XML delimiter detection list
+- Fixed hex regex to handle JSON-escaped payloads (`\\x` prefix)
+
+### Security
+
+- All 6 new vectors aligned to OWASP LLM Top 10 (LLM01: Prompt Injection)
+- **22/22 execution tests passing** (up from 16)
+
+### Quality Gates
+
+- ESLint: 0 errors
+- TypeScript strict mode: 0 errors
+- Vitest: 22/22 tests passing
 
 ---
 
@@ -24,6 +39,7 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 ### Added
 
 #### Core Framework
+
 - MAESTRO: **Memory Augmented Execution Synchronization To Reproduce Orchestration**
 - Risk-based lane routing (**GREEN / YELLOW / RED / BLOCKED**)
 - Intent validation and execution engine
@@ -31,12 +47,14 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 - MAN (Manual Approval Needed) escalation for high-risk operations
 
 #### Safety Module
+
 - Injection detection with 30+ patterns aligned to OWASP LLM Top 10 themes
 - Input validation with configurable length limits
 - Input sanitization removing dangerous/hidden characters
 - Combined `securityScan()` utility
 
 #### Validation
+
 - Idempotency key validation (64-character SHA-256 hex)
 - Locale tagging support (BCP-47 recommended)
 - Action allowlist enforcement
@@ -44,18 +62,21 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 - Required field validation
 
 #### Audit & Logging
+
 - Risk event logging
 - Risk event querying with filters
 - Aggregated risk statistics
 - Trace ID correlation
 
 #### Documentation
+
 - README (Quick Start + architecture)
 - API reference
 - Security guide with OWASP mapping
 - Incident response procedures
 
 ### Fixed
+
 - Regex hardening (bounded quantifiers where applicable)
 - Reduced cognitive complexity in detection/execution paths (as tracked by static analysis)
 
@@ -64,12 +85,14 @@ The format is based on **Keep a Changelog** and this project adheres to **Semant
 ## Roadmap
 
 ### [1.1.0] - Planned
+
 - Machine-learning-based anomaly detection
 - Custom pattern registration API
 - Real-time alerting integrations
 - Enhanced MAN mode workflow
 
 ### [1.2.0] - Planned
+
 - Multi-language injection detection tuning
 - Context-aware risk scoring
 - Tenant-specific pattern overrides

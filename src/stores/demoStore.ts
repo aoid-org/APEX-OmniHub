@@ -6,6 +6,7 @@
  */
 
 import { create } from 'zustand';
+import { generateSecureId } from '@/lib/security';
 
 // ============================================================================
 // Types
@@ -154,7 +155,7 @@ const seedApprovals: DemoApproval[] = [
 // ============================================================================
 
 function generateId(): string {
-  return `demo-${globalThis.crypto.randomUUID()}`;
+  return `demo-${generateSecureId()}`;
 }
 
 export const useDemoStore = create<DemoStore>((set) => ({

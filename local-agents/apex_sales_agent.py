@@ -10,14 +10,14 @@ from real telephony systems. This is NOT used for any cryptographic or security-
 sensitive operations (tokens, keys, authentication, etc.).
 """
 
+import asyncio
+import logging
 import os
+import random
 import sys
 import time
-import logging
-import random
-import asyncio
-from datetime import datetime, timezone
-from typing import Dict, Any, List
+from datetime import UTC, datetime
+from typing import Any
 
 # Import shared connector
 from omnihub_connector import OmniHubConnector, TaskWorker, load_env_config
@@ -31,7 +31,7 @@ class ApexSalesAgent:
 
     def __init__(self, connector: OmniHubConnector):
         self.connector = connector
-        self.call_queue: List[Dict[str, Any]] = []
+        self.call_queue: list[dict[str, Any]] = []
 
     async def attempt_call(self, lead_id: str, phone: str):
         """
@@ -48,7 +48,7 @@ class ApexSalesAgent:
             data={
                 "lead_id": lead_id,
                 "phone": phone,
-                "attempted_at": datetime.now(timezone.utc).isoformat(),
+                "attempted_at": datetime.now(UTC).isoformat(),
             },
             idempotency_key=f"call_attempted_{lead_id}_{int(time.time())}",
         )
@@ -71,7 +71,7 @@ class ApexSalesAgent:
             data={
                 "lead_id": lead_id,
                 "phone": phone,
-                "connected_at": datetime.now(timezone.utc).isoformat(),
+                "connected_at": datetime.now(UTC).isoformat(),
             },
             idempotency_key=f"call_connected_{lead_id}_{int(time.time())}",
         )
@@ -94,8 +94,8 @@ class ApexSalesAgent:
             data={
                 "lead_id": lead_id,
                 "phone": phone,
-                "booked_at": datetime.now(timezone.utc).isoformat(),
-                "meeting_time": datetime.now(timezone.utc).isoformat(),  # Placeholder
+                "booked_at": datetime.now(UTC).isoformat(),
+                "meeting_time": datetime.now(UTC).isoformat(),  # Placeholder
             },
             idempotency_key=f"meeting_booked_{lead_id}_{int(time.time())}",
         )
@@ -111,7 +111,7 @@ class ApexSalesAgent:
             data={
                 "lead_id": lead_id,
                 "outcome": outcome,
-                "completed_at": datetime.now(timezone.utc).isoformat(),
+                "completed_at": datetime.now(UTC).isoformat(),
             },
             idempotency_key=f"call_completed_{lead_id}_{int(time.time())}",
         )
@@ -127,7 +127,7 @@ class ApexSalesAgent:
                 "phone": phone,
                 "reason": reason,
                 "error_type": "call_failed",
-                "failed_at": datetime.now(timezone.utc).isoformat(),
+                "failed_at": datetime.now(UTC).isoformat(),
             },
             idempotency_key=f"call_failed_{lead_id}_{int(time.time())}",
         )
@@ -151,7 +151,7 @@ class ApexSalesAgent:
 
 
 # Task handlers
-def handle_echo(task: Dict[str, Any]) -> Dict[str, Any]:
+def handle_echo(task: dict[str, Any]) -> dict[str, Any]:
     """Echo task handler."""
     params = task.get('params', {})
     payload = params.get('payload', {})
@@ -163,7 +163,7 @@ def handle_echo(task: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def handle_call_lead(task: Dict[str, Any]) -> Dict[str, Any]:
+def handle_call_lead(task: dict[str, Any]) -> dict[str, Any]:
     """Call lead task handler."""
     params = task.get('params', {})
     payload = params.get('payload', {})
@@ -179,7 +179,7 @@ def handle_call_lead(task: Dict[str, Any]) -> Dict[str, Any]:
         "lead_id": lead_id,
         "phone": phone,
         "message": "Call initiated successfully",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 

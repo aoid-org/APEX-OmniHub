@@ -7,6 +7,19 @@ import { supabase } from '@/integrations/supabase/client';
 
 export type DeviceStatus = 'trusted' | 'suspect' | 'blocked';
 
+export interface DeviceAuthorizationResult {
+  authorized: boolean;
+  reason: string;
+  riskScore: number;
+  deviceId: string;
+}
+
+export interface FingerprintResult {
+  fingerprintValid: boolean;
+  reason: string;
+  mismatchedFields: string[];
+}
+
 export interface DeviceRecord {
   deviceId: string;
   userId: string;
@@ -38,9 +51,16 @@ let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let flushInFlight = false;
 let consecutiveFailures = 0;
 
-// Warm caches opportunistically (non-blocking)
-void loadRegistryFromLocal();
-void loadUpsertQueue();
+// Cache warm via async IIFE (es2020 compat: await inside function, not top-level)
+/** Consumers can optionally await this to guarantee cache is warm before first read */
+export const registryReady = (async () => { // NOSONAR - es2020 target compat
+  try {
+    await loadRegistryFromLocal();
+    await loadUpsertQueue();
+  } catch (err) {
+    console.error('[deviceRegistry] Cache warm failed:', err);
+  }
+})();
 
 async function loadRegistryFromLocal() {
   const stored = await persistentGet<DeviceRecord[]>(REGISTRY_KEY);
@@ -109,11 +129,11 @@ async function fetchRemoteRegistry(userId: string): Promise<DeviceRecord[]> {
       throw new Error(`Failed to fetch device registry: ${error.message}`);
     }
 
-    return (data || []).map((d) => ({
+    return (data || []).map((d: Record<string, unknown>) => ({
       deviceId: d.device_id,
       userId: d.user_id,
       lastSeen: d.last_seen_at,
-      deviceInfo: d.device_fingerprint ? JSON.parse(d.device_fingerprint) : {},
+      deviceInfo: d.device_fingerprint ? JSON.parse(d.device_fingerprint as string) : {},
       status: d.status as DeviceStatus,
     }));
   } catch (error) {
@@ -133,6 +153,67 @@ function scheduleFlush(delay = 0) {
   }, delay);
 }
 
+async function handleUpsertSuccess(item: QueuedUpsert, updated: QueuedUpsert[]): Promise<QueuedUpsert[]> {
+  const next = updated.filter((u) => u.record.deviceId !== item.record.deviceId);
+  consecutiveFailures = 0;
+  await logAnalyticsEvent('device.upsert.success', { deviceId: item.record.deviceId });
+  return next;
+}
+
+async function handleUpsertFailure(item: QueuedUpsert, error: unknown, updated: QueuedUpsert[]): Promise<void> {
+  const attempts = item.attempts + 1;
+  const isTerminal = attempts >= MAX_ATTEMPTS;
+  const delay = calculateBackoffDelay(attempts, {
+    baseMs: BASE_DELAY_MS,
+    maxMs: MAX_DELAY_MS,
+    jitterMs: JITTER_MS,
+  });
+
+  const found = updated.find((u) => u.record.deviceId === item.record.deviceId);
+  if (found) {
+    found.attempts = attempts;
+    found.nextAttemptAt = Date.now() + delay;
+    found.status = isTerminal ? 'failed' : 'pending';
+  }
+
+  consecutiveFailures += 1;
+
+  if (isTerminal) {
+    await logError(error as Error, {
+      action: 'device_upsert_failed_terminal',
+      metadata: { deviceId: item.record.deviceId, attempts },
+    });
+  } else {
+    await logAnalyticsEvent('device.upsert.retry', {
+      deviceId: item.record.deviceId,
+      attempts,
+      delay,
+    });
+  }
+}
+
+function isOffline(): boolean {
+  return typeof navigator !== 'undefined' && !navigator.onLine;
+}
+
+function scheduleRemainingFlush(updated: QueuedUpsert[]) {
+  if (consecutiveFailures >= DEGRADE_THRESHOLD) {
+    logAnalyticsEvent('device.upsert.degraded', {
+      failures: consecutiveFailures,
+      queueSize: updated.filter((u) => u.status === 'pending').length,
+    });
+  }
+
+  if (updated.some((u) => u.status === 'pending')) {
+    const delay = calculateBackoffDelay(1, {
+      baseMs: BASE_DELAY_MS,
+      maxMs: MAX_DELAY_MS,
+      jitterMs: JITTER_MS,
+    });
+    scheduleFlush(delay);
+  }
+}
+
 async function flushUpserts(force = false) {
   if (flushInFlight) return;
   flushInFlight = true;
@@ -143,13 +224,12 @@ async function flushUpserts(force = false) {
   for (const item of queue) {
     if (item.status === 'failed') continue;
     if (!force && item.nextAttemptAt > now) continue;
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    if (isOffline()) {
       scheduleFlush(2_000);
       break;
     }
 
     try {
-      // Write directly to Supabase device_registry table
       const { error } = await supabase
         .from('device_registry')
         .upsert({
@@ -166,60 +246,15 @@ async function flushUpserts(force = false) {
         throw new Error(`Device upsert failed: ${error.message}`);
       }
 
-      updated = updated.filter((u) => u.record.deviceId !== item.record.deviceId);
-      consecutiveFailures = 0;
-      await logAnalyticsEvent('device.upsert.success', { deviceId: item.record.deviceId });
+      updated = await handleUpsertSuccess(item, updated);
     } catch (error) {
-      const attempts = item.attempts + 1;
-      const isTerminal = attempts >= MAX_ATTEMPTS;
-      const delay = calculateBackoffDelay(attempts, {
-        baseMs: BASE_DELAY_MS,
-        maxMs: MAX_DELAY_MS,
-        jitterMs: JITTER_MS,
-      });
-
-      const found = updated.find((u) => u.record.deviceId === item.record.deviceId);
-      if (found) {
-        found.attempts = attempts;
-        found.nextAttemptAt = Date.now() + delay;
-        found.status = isTerminal ? 'failed' : 'pending';
-      }
-
-      consecutiveFailures += 1;
-
-      if (isTerminal) {
-        await logError(error as Error, {
-          action: 'device_upsert_failed_terminal',
-          metadata: { deviceId: item.record.deviceId, attempts },
-        });
-      } else {
-        await logAnalyticsEvent('device.upsert.retry', {
-          deviceId: item.record.deviceId,
-          attempts,
-          delay,
-        });
-      }
+      await handleUpsertFailure(item, error, updated);
     }
   }
 
   await saveUpsertQueue(updated);
   flushInFlight = false;
-
-  if (consecutiveFailures >= DEGRADE_THRESHOLD) {
-    void logAnalyticsEvent('device.upsert.degraded', {
-      failures: consecutiveFailures,
-      queueSize: updated.filter((u) => u.status === 'pending').length,
-    });
-  }
-
-  if (updated.some((u) => u.status === 'pending')) {
-    const delay = calculateBackoffDelay(1, {
-      baseMs: BASE_DELAY_MS,
-      maxMs: MAX_DELAY_MS,
-      jitterMs: JITTER_MS,
-    });
-    scheduleFlush(delay);
-  }
+  scheduleRemainingFlush(updated);
 }
 
 async function upsertLocal(record: DeviceRecord): Promise<DeviceRecord> {
@@ -275,6 +310,7 @@ export async function flushDeviceUpserts(force = false) {
 }
 
 export async function markDeviceTrusted(deviceId: string): Promise<DeviceRecord | undefined> {
+  await loadRegistryFromLocal(); // Defensive lazy load
   const existing = registry.get(deviceId);
   if (!existing) return undefined;
   existing.status = 'trusted';
@@ -288,6 +324,7 @@ export async function markDeviceTrusted(deviceId: string): Promise<DeviceRecord 
 }
 
 export async function markDeviceBlocked(deviceId: string): Promise<DeviceRecord | undefined> {
+  await loadRegistryFromLocal(); // Defensive lazy load
   const existing = registry.get(deviceId);
   if (!existing) return undefined;
   existing.status = 'blocked';
@@ -326,5 +363,127 @@ export function stopBackgroundDeviceSync() {
 
 export async function getUpsertQueueSnapshot(): Promise<QueuedUpsert[]> {
   return loadUpsertQueue().then((items) => [...items]);
+}
+
+// ============================================================================
+// ZERO-TRUST AUTHORIZATION GATE
+// ============================================================================
+
+/**
+ * Deterministic device authorization check.
+ * ONLY 'trusted' devices pass. Everything else is denied.
+ * This is the single enforcement point for device access control.
+ */
+export function isDeviceAuthorized(deviceId: string): DeviceAuthorizationResult {
+  const device = registry.get(deviceId);
+
+  if (!device) {
+    return {
+      authorized: false,
+      reason: 'device_not_found',
+      riskScore: 100,
+      deviceId,
+    };
+  }
+
+  if (device.status === 'blocked') {
+    return {
+      authorized: false,
+      reason: 'device_blocked',
+      riskScore: 100,
+      deviceId,
+    };
+  }
+
+  if (device.status === 'suspect') {
+    return {
+      authorized: false,
+      reason: 'device_suspect',
+      riskScore: 75,
+      deviceId,
+    };
+  }
+
+  if (device.status === 'trusted') {
+    return {
+      authorized: true,
+      reason: 'device_trusted',
+      riskScore: 0,
+      deviceId,
+    };
+  }
+
+  // Fail-closed: any unknown status is denied
+  return {
+    authorized: false,
+    reason: 'unknown_status',
+    riskScore: 100,
+    deviceId,
+  };
+}
+
+/**
+ * Fingerprint integrity validation.
+ * Compares incoming device fingerprint against stored record.
+ * Detects field mutations (OS swap, UA mismatch, field count changes).
+ */
+export function validateDeviceFingerprint(
+  deviceId: string,
+  incomingFingerprint: Record<string, unknown>
+): FingerprintResult {
+  const device = registry.get(deviceId);
+
+  if (!device) {
+    return {
+      fingerprintValid: false,
+      reason: 'device_not_found',
+      mismatchedFields: [],
+    };
+  }
+
+  const storedKeys = Object.keys(device.deviceInfo);
+  const incomingKeys = Object.keys(incomingFingerprint);
+
+  // Field count mismatch = hardware profile spoof
+  if (storedKeys.length !== incomingKeys.length) {
+    return {
+      fingerprintValid: false,
+      reason: 'field_count_mismatch',
+      mismatchedFields: incomingKeys.filter((k) => !storedKeys.includes(k)),
+    };
+  }
+
+  // Field-by-field comparison
+  const mismatched: string[] = [];
+  for (const key of storedKeys) {
+    const storedVal = JSON.stringify(device.deviceInfo[key]);
+    const incomingVal = JSON.stringify(incomingFingerprint[key]);
+    if (storedVal !== incomingVal) {
+      mismatched.push(key);
+    }
+  }
+
+  if (mismatched.length > 0) {
+    return {
+      fingerprintValid: false,
+      reason: 'field_value_mismatch',
+      mismatchedFields: mismatched,
+    };
+  }
+
+  return {
+    fingerprintValid: true,
+    reason: 'fingerprint_matches',
+    mismatchedFields: [],
+  };
+}
+
+/**
+ * Returns risk score 0–100 for a device.
+ * 0 = safe (trusted), 75 = suspect, 100 = blocked/unknown.
+ */
+export function getDeviceRiskScore(deviceId: string): number {
+  const result = isDeviceAuthorized(deviceId);
+  return result.riskScore;
 }
 

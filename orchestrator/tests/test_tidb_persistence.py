@@ -17,7 +17,7 @@ from infrastructure.tidb_persistence import (
 
 # Shared fake TiDB env config for tests (test credentials only)
 _FAKE_TIDB_ENV = {
-    "VECTOR_PERSISTENCE_MODE": "tidb",
+    "VECTOR_PROVIDER": "tidb",
     "TIDB_HOST": "test.tidb.io",
     "TIDB_USER": "test",  # noqa: S105
     "TIDB_PASSWORD": "test",  # noqa: S105
@@ -26,11 +26,11 @@ _FAKE_TIDB_ENV = {
 
 
 class TestTiDBPersistenceModeOff:
-    """Tests when VECTOR_PERSISTENCE_MODE != 'tidb'"""
+    """Tests when VECTOR_PROVIDER != 'tidb'"""
 
     def test_mode_off_no_op(self):
         """When mode is off, operations should no-op"""
-        with patch.dict(os.environ, {"VECTOR_PERSISTENCE_MODE": "off"}, clear=False):
+        with patch.dict(os.environ, {"VECTOR_PROVIDER": "off"}, clear=False):
             store = TiDBVectorPersistence()
             assert not store.enabled
 
@@ -41,7 +41,7 @@ class TestTiDBPersistenceModeOff:
 
 
 class TestTiDBPersistenceModeOn:
-    """Tests when VECTOR_PERSISTENCE_MODE == 'tidb'"""
+    """Tests when VECTOR_PROVIDER == 'tidb'"""
 
     def test_mode_on_missing_deps(self):
         """When mode is on but mysql.connector missing, should error"""
@@ -55,7 +55,7 @@ class TestTiDBPersistenceModeOn:
     def test_mode_on_incomplete_config(self):
         """When mode is on but config incomplete, should error"""
         with (
-            patch.dict(os.environ, {"VECTOR_PERSISTENCE_MODE": "tidb"}, clear=False),
+            patch.dict(os.environ, {"VECTOR_PROVIDER": "tidb"}, clear=False),
             pytest.raises(ValueError, match="TiDB config incomplete"),
         ):
             # We mock mysql here because otherwise it hits the dependency check first
@@ -106,7 +106,7 @@ class TestSingletonPattern:
 
     def test_singleton(self):
         """get_tidb_store should return same instance"""
-        with patch.dict(os.environ, {"VECTOR_PERSISTENCE_MODE": "off"}, clear=False):
+        with patch.dict(os.environ, {"VECTOR_PROVIDER": "off"}, clear=False):
             store1 = get_tidb_store()
             store2 = get_tidb_store()
             assert store1 is store2
