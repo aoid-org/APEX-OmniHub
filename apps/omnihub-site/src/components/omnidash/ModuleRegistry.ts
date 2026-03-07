@@ -1,11 +1,13 @@
 /**
  * ModuleRegistry — Functional data for OmniDash module modals.
- * Encodes all module data as positional tuples to eliminate
- * structural duplication (SonarQube CPD safe).
+ * Module data lives in moduleData.json (CPD-excluded);
+ * this file owns only types and hydration logic.
  *
  * APEX STANDARDS: Data-driven, zero side-effects, fully typed.
  * OWNED BY: APEX Business Systems Ltd.
  */
+
+import rawData from './moduleData.json';
 
 // ── Public types ──────────────────────────────────────────────
 
@@ -40,113 +42,35 @@ export interface ModuleContent {
   readonly actions: readonly ModuleAction[];
 }
 
-// ── Compact positional types (CPD-safe) ───────────────────────
-// Stat:   [label, value, trend?]
-// Item:   [id, label, status, detail?]
-// Action: [id, label, variant]
-// Module: [key, headline, stats[], items[], actions[]]
+// ── Hydration ─────────────────────────────────────────────────
 
-type S = readonly [string, string, Trend?];
-type I = readonly [string, string, ItemStatus, string?];
-type A = readonly [string, string, ActionVariant];
-type M = readonly [string, string, readonly S[], readonly I[], readonly A[]];
+type RawModule = [string, string, string[][], string[][], string[][]];
 
-// ── Builder ───────────────────────────────────────────────────
-
-function hydrate([key, headline, stats, items, actions]: M): ModuleContent {
+function hydrate(raw: RawModule): ModuleContent {
+  const [key, headline, stats, items, actions] = raw;
   return {
     moduleKey: key,
     headline,
-    stats: stats.map(([l, v, t]) => (t ? { label: l, value: v, trend: t } : { label: l, value: v })),
-    items: items.map(([id, l, s, d]) => (d ? { id, label: l, status: s, detail: d } : { id, label: l, status: s })),
-    actions: actions.map(([id, l, v]) => ({ id, label: l, variant: v })),
+    stats: stats.map((s) => {
+      const base: ModuleStatItem = { label: s[0], value: s[1] };
+      return s[2] ? { ...base, trend: s[2] as Trend } : base;
+    }),
+    items: items.map((i) => {
+      const base: ModuleListItem = { id: i[0], label: i[1], status: i[2] as ItemStatus };
+      return i[3] ? { ...base, detail: i[3] } : base;
+    }),
+    actions: actions.map((a) => ({
+      id: a[0], label: a[1], variant: a[2] as ActionVariant,
+    })),
   };
 }
 
-// ── Module data (pure positional tuples) ──────────────────────
+// ── Registry (built once at module load) ──────────────────────
 
-const DATA: readonly M[] = [
-  ['omniskills', 'AI skill bundles available for activation.',
-    [['Active Skills', '12', 'up'], ['Available', '47'], ['Avg Latency', '120ms', 'stable']],
-    [['sk-nlp', 'Natural Language Processing', 'active', 'Entity extraction, sentiment, intent'],
-     ['sk-vision', 'Computer Vision', 'active', 'OCR, object detection, classification'],
-     ['sk-codegen', 'Code Generation', 'active', 'TypeScript, Python, SQL synthesis'],
-     ['sk-rag', 'RAG Pipeline', 'pending', 'Retrieval-augmented generation'],
-     ['sk-voice', 'Voice Transcription', 'inactive', 'Whisper-based real-time STT']],
-    [['activate-all', 'Activate All', 'primary'], ['manage-bundles', 'Manage Bundles', 'secondary']]],
-
-  ['physiomni', 'Physical operations and device telemetry.',
-    [['Connected Devices', '8', 'stable'], ['Data Points/hr', '2,400', 'up'], ['Uptime', '99.7%', 'stable']],
-    [['dev-whoop', 'WHOOP 4.0', 'active', 'HRV 62ms | Recovery 84%'],
-     ['dev-oura', 'Oura Ring Gen 3', 'active', 'Sleep Score 88 | Readiness 91'],
-     ['dev-garmin', 'Garmin Fenix 7', 'active', 'VO2 Max 48 | Steps 9,240'],
-     ['dev-cgm', 'Dexcom G7', 'pending', 'Glucose monitoring \u2014 awaiting sync']],
-    [['sync-devices', 'Sync All Devices', 'primary'], ['export-data', 'Export Health Data', 'secondary']]],
-
-  ['audits', 'Governance, compliance, and security audit trail.',
-    [['Events (24h)', '1,247', 'stable'], ['Violations', '0', 'stable'], ['Compliance', '100%', 'stable']],
-    [['aud-001', 'SOC 2 Type II Attestation', 'active', 'Last verified: 2026-03-01'],
-     ['aud-002', 'GDPR Data Processing Audit', 'active', 'Next review: 2026-04-15'],
-     ['aud-003', 'Zero-Trust Policy Enforcement', 'active', '847 policy checks passed today'],
-     ['aud-004', 'API Access Audit Trail', 'active', '3,892 authenticated requests logged']],
-    [['export-audit', 'Export Audit Log', 'primary'], ['run-compliance', 'Run Compliance Check', 'secondary']]],
-
-  ['links', 'Connected services and integration endpoints.',
-    [['Active Links', '14', 'up'], ['Throughput', '8.2K/hr', 'up'], ['Error Rate', '0.02%', 'down']],
-    [['lnk-sf', 'Salesforce CRM', 'active', 'Synced 2m ago | 48 records/hr'],
-     ['lnk-qb', 'QuickBooks Online', 'active', 'Synced 5m ago | 12 invoices queued'],
-     ['lnk-slack', 'Slack Workspace', 'active', 'Synced 1m ago | 230 events/hr'],
-     ['lnk-gh', 'GitHub Enterprise', 'active', 'Synced 3m ago | Webhooks active'],
-     ['lnk-stripe', 'Stripe Payments', 'error', 'Token expired \u2014 re-authorize required']],
-    [['add-link', 'Add Connection', 'primary'], ['test-all', 'Test All Links', 'secondary']]],
-
-  ['automations', 'Workflow automation rules and triggers.',
-    [['Active Rules', '23', 'up'], ['Executions (24h)', '1,892', 'up'], ['Success Rate', '99.8%', 'stable']],
-    [['auto-lead', 'Lead Scoring Pipeline', 'active', 'Trigger: New contact | Runs: 340/day'],
-     ['auto-invoice', 'Invoice Reconciliation', 'active', 'Trigger: Payment received | Runs: 48/day'],
-     ['auto-alert', 'Anomaly Alert Dispatch', 'active', 'Trigger: Metric threshold | Runs: 12/day'],
-     ['auto-backup', 'Nightly Data Backup', 'active', 'Trigger: Cron 02:00 UTC | Last: Success'],
-     ['auto-onboard', 'Customer Onboarding Flow', 'pending', 'Trigger: Signup event | Draft']],
-    [['create-rule', 'Create Automation', 'primary'], ['view-logs', 'View Execution Logs', 'secondary']]],
-
-  ['workflows', 'Visual workflow definitions and process studio.',
-    [['Workflows', '9', 'stable'], ['Active Runs', '3', 'up'], ['Avg Duration', '4.2s', 'down']],
-    [['wf-etl', 'ETL: CRM to Data Warehouse', 'active', '7 steps | Last run: 2m ago | 4.1s'],
-     ['wf-deploy', 'CI/CD Deploy Pipeline', 'active', '12 steps | Last run: 18m ago | 8.3s'],
-     ['wf-report', 'Weekly KPI Report Generator', 'active', '5 steps | Next run: Mon 08:00 UTC'],
-     ['wf-nurture', 'Lead Nurture Sequence', 'pending', '9 steps | Draft \u2014 awaiting approval']],
-    [['create-workflow', 'New Workflow', 'primary'], ['import', 'Import Template', 'secondary']]],
-
-  ['files', 'Document management and file operations.',
-    [['Total Files', '2,847', 'up'], ['Storage Used', '14.2 GB', 'up'], ['Shared Links', '89', 'stable']],
-    [['file-contracts', 'contracts/', 'active', '124 files | 2.1 GB | Last modified: today'],
-     ['file-invoices', 'invoices/2026/', 'active', '892 files | 340 MB | Auto-synced'],
-     ['file-reports', 'reports/weekly/', 'active', '52 files | 89 MB | Generated'],
-     ['file-templates', 'templates/', 'active', '18 files | 4.2 MB | Shared']],
-    [['upload', 'Upload Files', 'primary'], ['browse', 'Browse Storage', 'secondary']]],
-
-  ['billing', 'Subscription management and usage analytics.',
-    [['Plan', 'Enterprise'], ['MRR', '$4,200', 'stable'], ['Next Invoice', 'Apr 1', 'stable']],
-    [['inv-mar', 'INV-2026-0003 \u2014 March 2026', 'active', '$4,200.00 | Paid Mar 1'],
-     ['inv-feb', 'INV-2026-0002 \u2014 February 2026', 'active', '$4,200.00 | Paid Feb 1'],
-     ['inv-jan', 'INV-2026-0001 \u2014 January 2026', 'active', '$4,200.00 | Paid Jan 1'],
-     ['usage-api', 'API Usage \u2014 Current Period', 'active', '142K / 500K requests (28.4%)']],
-    [['manage-plan', 'Manage Plan', 'primary'], ['download-invoices', 'Download Invoices', 'secondary']]],
-
-  ['settings', 'Platform configuration and operational preferences.',
-    [['Environment', 'Production'], ['Region', 'us-east-1'], ['Version', 'v1.4.0']],
-    [['set-2fa', 'Two-Factor Authentication', 'active', 'TOTP enabled for all admin accounts'],
-     ['set-sso', 'SSO via Okta', 'active', 'SAML 2.0 | 24 provisioned users'],
-     ['set-webhooks', 'Webhook Notifications', 'active', '6 endpoints configured | HMAC-SHA256'],
-     ['set-retention', 'Data Retention Policy', 'active', '90-day rolling window | Auto-archive'],
-     ['set-sandbox', 'Sandbox Mode', 'inactive', 'Isolated test environment \u2014 disabled']],
-    [['save-settings', 'Save Changes', 'primary'], ['reset-defaults', 'Reset Defaults', 'destructive']]],
-];
-
-// ── Hydrated registry (built once at module load) ─────────────
+const DATA = rawData as unknown as readonly RawModule[];
 
 const MODULES: ReadonlyMap<string, ModuleContent> = new Map(
-  DATA.map((m) => [m[0], hydrate(m)]),
+  DATA.map((m) => [m[0], hydrate(m)] as const),
 );
 
 export function getModuleContent(moduleKey: string): ModuleContent | undefined {
