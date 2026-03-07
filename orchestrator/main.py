@@ -32,6 +32,9 @@ from temporalio.client import Client
 from temporalio.service import TLSConfig
 from temporalio.worker import Worker
 
+# Seed the intent registry with all known activity→intent mappings.
+# This import has side effects: it populates the registry singleton.
+import core.intents  # noqa: F401
 from activities.iron_law_verify import verify_deductive_path
 from activities.man_mode import (
     check_man_decision,
@@ -62,10 +65,6 @@ from config import settings
 from metrics import start_metrics_server
 from workflows.agent_saga import AgentWorkflow
 from workflows.universal_saga import UniversalOrchestratorWorkflow
-
-# Seed the intent registry with all known activity→intent mappings.
-# This import has side effects: it populates the registry singleton.
-import core.intents  # noqa: F401
 
 # Configure logging
 logging.basicConfig(

@@ -38,19 +38,19 @@ class OmniModalPayload:
       traceId    — propagated trace identifier for observability.
     """
 
-    intentId: str
+    intent_id: str
     status: str
     data: dict[str, Any] = field(default_factory=dict)
     error: str | None = None
-    traceId: str | None = None
+    trace_id: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "intentId": self.intentId,
+            "intentId": self.intent_id,
             "status": self.status,
             "data": self.data,
             "error": self.error,
-            "traceId": self.traceId,
+            "traceId": self.trace_id,
         }
 
 
@@ -137,7 +137,11 @@ class IntentRegistry:
         """Return the Temporal activity name for `intent_id`, or None."""
         return self._intents.get(intent_id)
 
-    def resolve_or_offline(self, intent_id: str, trace_id: str | None = None) -> str | OmniModalPayload:
+    def resolve_or_offline(
+        self,
+        intent_id: str,
+        trace_id: str | None = None,
+    ) -> str | OmniModalPayload:
         """Resolve the activity name, or return a fail-closed OmniModalPayload.
 
         This is the primary entry point for workflows: it guarantees a
@@ -153,11 +157,14 @@ class IntentRegistry:
             trace_id,
         )
         return OmniModalPayload(
-            intentId=intent_id,
+            intent_id=intent_id,
             status="offline",
-            error=f"Intent '{intent_id}' is not registered in the Universal Intent Registry. "
-            "The orchestrator cannot route this request.",
-            traceId=trace_id,
+            error=(
+                f"Intent '{intent_id}' is not registered in the "
+                "Universal Intent Registry. "
+                "The orchestrator cannot route this request."
+            ),
+            trace_id=trace_id,
         )
 
     # ── Introspection ─────────────────────────────────────────────────

@@ -86,9 +86,7 @@ class UniversalOrchestratorWorkflow:
         try:
             envelope = EventEnvelope.model_validate(envelope_dict)
         except Exception as exc:
-            workflow.logger.error(
-                "UniversalSaga: EventEnvelope validation failed: %s", exc
-            )
+            workflow.logger.error("UniversalSaga: EventEnvelope validation failed: %s", exc)
             return build_omni_modal_schema(
                 intent_id="unknown",
                 trace_id=envelope_dict.get("correlation_id", "unknown"),

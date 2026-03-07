@@ -19,6 +19,8 @@ from temporalio import activity
 
 from core.intent_registry import registry
 
+# ruff: noqa: ARG001  — params is required by the Temporal activity interface contract
+
 
 # ── 1. System Health Check ────────────────────────────────────────────
 # Verifiable via: POST /api/v1/intents { intent_id: "system.health_check" }
