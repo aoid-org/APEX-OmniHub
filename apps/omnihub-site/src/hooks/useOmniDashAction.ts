@@ -16,7 +16,7 @@ import { useCallback, useMemo } from 'react';
 import { useNavigate, type NavigateFunction } from 'react-router-dom';
 import { useOmniModal, type ModalType, type RenderMode } from '../../../../src/stores/omniModalStore';
 import { useOmniBoard, type SpatialRenderState } from '../../../../src/stores/omniBoardStore';
-import { getModuleContent } from '@/components/omnidash/ModuleRegistry';
+import { hasModuleComponent } from '../components/omnidash/moduleComponents';
 
 // ============================================================================
 // Types
@@ -228,9 +228,8 @@ export function useOmniDashAction(externalNavigate?: NavigateFunction): UseOmniD
       return;
     }
 
-    // Modules with ModuleRenderer content open in a functional modal panel
-    const hasModulePanel = getModuleContent(intent.appKey) !== undefined;
-    if (hasModulePanel) {
+    // Modules with a lazy-loaded component open in a functional modal panel
+    if (hasModuleComponent(intent.appKey)) {
       omniModal.invoke({
         id: `module-${intent.appKey}`,
         provider: intent.provider,
