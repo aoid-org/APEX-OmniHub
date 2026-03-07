@@ -108,7 +108,13 @@ async def create_goal(request: GoalRequest):
         raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
-@app.post("/api/v1/intents", responses={500: {"description": "Internal Server Error"}})
+@app.post(
+    "/api/v1/intents",
+    responses={
+        400: {"description": "Invalid JSON body or missing payload.intentId"},
+        500: {"description": "Internal Server Error"},
+    },
+)
 async def execute_intent(request: Request):
     """
     Execute an intent via the Universal Orchestrator Workflow.
