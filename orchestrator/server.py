@@ -11,7 +11,7 @@ Usage:
 import logging
 import os
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -109,30 +109,41 @@ async def create_goal(request: GoalRequest):
         raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
-class IntentRequest(BaseModel):
-    intent_id: str
-    trace_id: str
-    tenant_id: str
-    user_id: str
-    payload: dict = {}
-
-
 @app.post("/api/v1/intents", responses={500: {"description": "Internal Server Error"}})
-async def execute_intent(request: IntentRequest):
+async def execute_intent(request: Request):
     """
     Execute an intent via the Universal Orchestrator Workflow.
 
-    This endpoint receives intent-based requests from the Edge Function
-    (event-ingress-adapter) and starts the UniversalOrchestratorWorkflow
-    which resolves the activity dynamically via the Intent Registry.
+    This endpoint receives a full Python EventEnvelope-compliant JSON body
+    from the edge function (constructed by toPythonEventEnvelope in the
+    event-ingress-adapter). The body is passed through as-is to the
+    UniversalOrchestratorWorkflow, which validates it with Pydantic.
+
+    Wire format: see models.events.EventEnvelope for the full schema.
     """
+    try:
+        envelope_dict = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body") from None
+
+    # Extract intent_id from payload.intentId for early fail-closed check
+    payload = envelope_dict.get("payload", {})
+    intent_id = payload.get("intentId", "")
+    correlation_id = envelope_dict.get("correlation_id", "unknown")
+
+    if not intent_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing payload.intentId in EventEnvelope",
+        )
+
     # Fail-closed: reject unregistered intents before hitting Temporal
-    if request.intent_id not in registry:
+    if intent_id not in registry:
         return {
-            "intentId": request.intent_id,
-            "traceId": request.trace_id,
+            "intentId": intent_id,
+            "traceId": correlation_id,
             "status": "offline",
-            "error": f"Intent '{request.intent_id}' is not registered.",
+            "error": f"Intent '{intent_id}' is not registered.",
             "schemaVersion": "1.0.0",
         }
 
@@ -142,17 +153,12 @@ async def execute_intent(request: IntentRequest):
             namespace=os.getenv("TEMPORAL_NAMESPACE", "default"),
         )
 
-        workflow_id = f"intent-{request.trace_id}"
+        workflow_id = f"intent-{correlation_id}"
 
+        # Pass the raw envelope dict — the workflow validates with Pydantic
         handle = await client.start_workflow(
             UniversalOrchestratorWorkflow.run,
-            args=[{
-                "intent_id": request.intent_id,
-                "trace_id": request.trace_id,
-                "tenant_id": request.tenant_id,
-                "user_id": request.user_id,
-                "payload": request.payload,
-            }],
+            args=[envelope_dict],
             id=workflow_id,
             task_queue=os.getenv("TEMPORAL_TASK_QUEUE", "apex-orchestrator"),
         )

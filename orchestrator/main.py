@@ -53,6 +53,11 @@ from activities.tools import (
     send_email,
     setup_activities,
 )
+from activities.universal_intents import (
+    system_echo,
+    system_health_check,
+    system_list_intents,
+)
 from config import settings
 from metrics import start_metrics_server
 from workflows.agent_saga import AgentWorkflow
@@ -164,6 +169,10 @@ async def start_worker() -> None:
             verify_deductive_path,
             # OmniTrace activities
             *get_omnitrace_activities(),
+            # Universal Intent activities (USO — registry-routable)
+            system_health_check,
+            system_echo,
+            system_list_intents,
         ],
         max_concurrent_workflow_tasks=settings.temporal_max_workflow_tasks,
         max_concurrent_activities=settings.temporal_max_activities,

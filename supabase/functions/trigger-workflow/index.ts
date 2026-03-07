@@ -15,7 +15,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { withHttp, jsonResponse } from '../_shared/http.ts';
 import { authenticateUser } from '../_shared/auth.ts';
 import { buildSignedHeaders } from '../_shared/requestSigning.ts';
-import { normalizeToEventEnvelope } from '../_shared/event-ingress-adapter.ts';
+import { normalizeToEventEnvelope, toPythonEventEnvelope } from '../_shared/event-ingress-adapter.ts';
 
 /** Workflow request payload structure */
 interface WorkflowRequestPayload {
@@ -225,27 +225,26 @@ serve(
           typeof rawBody.intent === 'string';
 
         if (hasIntentSignal) {
-          const envelope = normalizeToEventEnvelope(rawBody, {
+          // 1. Normalize raw payload → TS EventEnvelope (Zod-validated)
+          const tsEnvelope = normalizeToEventEnvelope(rawBody, {
             sourceIp: req.headers.get('x-forwarded-for') ?? undefined,
             userAgent: req.headers.get('user-agent') ?? undefined,
             channel: 'api',
           });
 
+          // 2. Transform TS EventEnvelope → Python EventEnvelope wire format
+          //    This satisfies the full Pydantic model (event_type, source, trace, etc.)
+          const pythonEnvelope = toPythonEventEnvelope(tsEnvelope, authResult.user.id);
+
           const orchestratorUrl = resolveOrchestratorUrl();
           const intentPath = '/api/v1/intents';
-          const intentBody = JSON.stringify({
-            intent_id: envelope.intentId,
-            trace_id: envelope.traceId,
-            tenant_id: envelope.tenantId,
-            user_id: authResult.user.id,
-            payload: envelope.metadata.rawPayload,
-          });
+          const intentBody = JSON.stringify(pythonEnvelope);
 
           const signedHeaders = await buildSignedHeaders(
             'POST',
             intentPath,
             intentBody,
-            envelope.traceId,
+            tsEnvelope.traceId,
           );
 
           const intentResponse = await fetch(
@@ -254,9 +253,9 @@ serve(
               method: 'POST',
               headers: {
                 ...signedHeaders,
-                'X-Idempotency-Key': envelope.idempotencyKey,
+                'X-Idempotency-Key': tsEnvelope.idempotencyKey,
                 'X-User-Id': authResult.user.id,
-                'X-Trace-Id': envelope.traceId,
+                'X-Trace-Id': tsEnvelope.traceId,
               },
               body: intentBody,
             }
@@ -275,10 +274,10 @@ serve(
           const intentData = await intentResponse.json();
           return jsonResponse(
             {
-              workflow_id: intentData.workflowId ?? envelope.traceId,
+              workflow_id: intentData.workflowId ?? tsEnvelope.traceId,
               status: 'queued',
-              trace_id: envelope.traceId,
-              intent_id: envelope.intentId,
+              trace_id: tsEnvelope.traceId,
+              intent_id: tsEnvelope.intentId,
             },
             202,
             ctx.corsHeaders

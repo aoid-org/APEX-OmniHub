@@ -140,3 +140,55 @@ export function normalizeToEventEnvelope(
   // Validate at boundary — fail-closed
   return EventEnvelopeSchema.parse(envelope);
 }
+
+// ─── Python EventEnvelope Wire Format ────────────────────────────────
+// The Python Pydantic EventEnvelope model requires:
+//   - snake_case field names
+//   - event_type: a valid EventType enum string (e.g. "orchestrator:agent.goal_received")
+//   - source: a valid AppName enum string (e.g. "omni-dash")
+//   - trace: { trace_id, span_id, parent_span_id?, baggage? }
+//   - correlation_id, idempotency_key, tenant_id, payload, timestamp
+//
+// This function bridges the TS EventEnvelope → Python EventEnvelope wire format.
+
+/** Valid Python EventType enum values for intent routing */
+const DEFAULT_EVENT_TYPE = "orchestrator:agent.goal_received";
+
+/** Valid Python AppName enum values */
+const DEFAULT_SOURCE_APP = "omni-dash";
+
+/**
+ * Convert a TS EventEnvelope into the Python EventEnvelope Pydantic-compliant
+ * wire format. This is the JSON body sent to POST /api/v1/intents.
+ *
+ * The resulting object satisfies ALL required fields of the Python
+ * models.events.EventEnvelope Pydantic model with frozen=True validation.
+ */
+export function toPythonEventEnvelope(
+  tsEnvelope: EventEnvelope,
+  userId: string,
+): Record<string, unknown> {
+  const spanId = crypto.randomUUID().slice(0, 16);
+
+  return {
+    event_id: tsEnvelope.eventId,
+    correlation_id: tsEnvelope.traceId,
+    idempotency_key: tsEnvelope.idempotencyKey,
+    tenant_id: tsEnvelope.tenantId,
+    event_type: DEFAULT_EVENT_TYPE,
+    payload: {
+      intentId: tsEnvelope.intentId,
+      userId,
+      ...tsEnvelope.metadata.rawPayload,
+    },
+    timestamp: tsEnvelope.timestamp,
+    source: DEFAULT_SOURCE_APP,
+    trace: {
+      trace_id: tsEnvelope.traceId,
+      span_id: spanId,
+      parent_span_id: null,
+      baggage: null,
+    },
+    schema_version: tsEnvelope.schemaVersion,
+  };
+}
