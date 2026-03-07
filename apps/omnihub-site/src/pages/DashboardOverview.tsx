@@ -22,7 +22,7 @@ import {
 } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Blocks } from 'lucide-react';
-import { useOmniDashAction } from '@/hooks/useOmniDashAction';
+import { useOmniDashAction } from '../hooks/useOmniDashAction';
 import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
 import lightbulbIcon from '@/assets/lightbulb-icon.png';
 import {
