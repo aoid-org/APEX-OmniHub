@@ -34,7 +34,7 @@ interface AppIntent {
   readonly id: string;
   readonly provider: string;
   readonly category: string;
-  readonly status: 'Live' | 'Partial' | string;
+  readonly status: string;
   readonly appType?: 'media' | 'editor' | 'terminal' | 'microfrontend';
   readonly entryUrl?: string;
   readonly contextData?: Record<string, unknown>;
@@ -106,7 +106,7 @@ export function useOmniDashAction(): UseOmniDashActionReturn {
    */
   const handleOAuthConnect = useCallback((provider: string, category: string) => {
     omniModal.invoke({
-      id: `auth-${provider.toLowerCase().replace(/\s+/g, '-')}`,
+      id: `auth-${provider.toLowerCase().replaceAll(/\s+/g, '-')}`,
       provider,
       type: 'oauth',
       title: `${provider} Authorization`,
@@ -154,13 +154,11 @@ export function useOmniDashAction(): UseOmniDashActionReturn {
     const appType = app.appType ?? 'microfrontend';
 
     // Determine modal type and render state
-    let modalType: ModalType = 'microfrontend';
-    let renderState: SpatialRenderState = 'sandbox';
-
-    if (appType === 'media' || appType === 'editor' || appType === 'terminal') {
-      modalType = 'microfrontend';
-      renderState = 'spatial';
-    }
+    const modalType: ModalType = 'microfrontend';
+    const renderState: SpatialRenderState =
+      (appType === 'media' || appType === 'editor' || appType === 'terminal')
+        ? 'spatial'
+        : 'sandbox';
 
     // Mount the active app in OmniBoard state
     omniBoard.mountActiveApp({

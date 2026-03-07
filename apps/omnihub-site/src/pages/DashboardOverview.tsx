@@ -1213,7 +1213,7 @@ export const DashboardOverview = memo(function DashboardOverview({
   const handleAppClick = useCallback(
     (app: AppEntry) => () => {
       handleAppInteraction({
-        id: app.name.toLowerCase().replace(/\s+/g, '-'),
+        id: app.name.toLowerCase().replaceAll(/\s+/g, '-'),
         provider: app.name,
         category: app.cat,
         status: app.status,
