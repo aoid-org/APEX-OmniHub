@@ -35,6 +35,7 @@ import { Loader2, ExternalLink, CheckCircle2, Minimize2, Maximize2, X, GripHoriz
 import { motion, AnimatePresence } from 'framer-motion';
 import { SPRING_DAMPED, GPU_STYLE } from '@/lib/motionPresets';
 import { registerOmniAppShell } from '@/lib/OmniAppShell';
+import { ModuleRenderer } from './ModuleRenderer';
 
 // Register the sandbox Custom Element on module load
 registerOmniAppShell();
@@ -167,6 +168,19 @@ function DialogModeRenderer({
             </Button>
           </DialogFooter>
         </div>
+      );
+
+    case 'module':
+      return (
+        <ModuleRenderer
+          moduleKey={
+            typeof modal.contextData?.moduleKey === 'string'
+              ? modal.contextData.moduleKey
+              : modal.id
+          }
+          onAction={onAction}
+          onClose={onClose}
+        />
       );
 
     default:
@@ -341,7 +355,11 @@ export function OmniSpatialHost() {
           data-state={isOpen && renderMode === 'dialog' ? 'open' : 'closed'}
         />
         <DialogContent
-          className="sm:max-w-[425px]"
+          className={
+            activeModal?.type === 'module'
+              ? 'sm:max-w-[560px]'
+              : 'sm:max-w-[425px]'
+          }
           {...(hasDescription ? {} : { 'aria-describedby': undefined })}
           // Hard-disable Radix's unreliable DismissableLayer event tracking
           onInteractOutside={(e) => e.preventDefault()}

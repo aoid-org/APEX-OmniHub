@@ -226,14 +226,24 @@ export function useOmniDashAction(externalNavigate?: NavigateFunction): UseOmniD
       handleOAuthConnect(intent.provider, intent.category);
     } else if (intent.comingSoon) {
       omniModal.invoke({
-        id: `coming-soon-${intent.appKey}`,
+        id: `module-${intent.appKey}`,
         provider: intent.provider,
-        type: 'confirmation',
+        type: 'module',
         title: intent.label,
-        description: `${intent.label} is being integrated with APEX Core modules. This module will be available in a future release.`,
-        contextData: { category: intent.category, appKey: intent.appKey },
-        onComplete: async () => { /* dismissed */ },
-        onCancel: () => { /* dismissed */ },
+        description: `${intent.label} \u2014 ${intent.category}`,
+        contextData: {
+          moduleKey: intent.appKey,
+          category: intent.category,
+        },
+        onComplete: async (data: Record<string, unknown>) => {
+          if (typeof data.action === 'string') {
+            console.warn(
+              `[OmniDash] Module action: ${data.action}`,
+              data,
+            );
+          }
+        },
+        onCancel: () => { /* user dismissed */ },
       });
     } else {
       navigate(intent.routePath);
