@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
                                                                                                                                             **_Directable • Accountable • Dependable_**
 
-**Version:** 1.3.8 | **Release Date:** 2026-03-02
+**Version:** 1.3.9 | **Release Date:** 2026-03-07
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
