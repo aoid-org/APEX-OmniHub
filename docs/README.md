@@ -7,7 +7,7 @@
 - **Document Version:** 2.2.0
 - **Platform Version:** 1.3.8
 - **Last Updated:** 2026-03-01
-- **Audit Baseline:** [Comprehensive Documentation Audit 2026-02-20](audits/COMPREHENSIVE_DOCUMENTATION_AUDIT_2026_02_20.md)
+- **Audit Baseline:** [Full Code Audit 2026-03-06](audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md)
 
 ---
 
@@ -239,10 +239,10 @@ Audit reports, remediation, and historical records:
 
 | Document                                                                 | Description      |
 | ------------------------------------------------------------------------ | ---------------- |
-| [Armageddon Test](audits/ARMAGEDDON_TEST_SUITE_REPORT.md)                | Extreme testing  |
-| [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md)         | Voice security   |
-| [CTO Platform Audit 2026-02-27](audits/CTO_PLATFORM_AUDIT_2026_02_27.md) | CTO audit report |
-| [Production Audit 2026-02-14](audits/PRODUCTION_AUDIT_2026_02_14.md)     | Production audit |
+| [Armageddon Test](audits/ARMAGEDDON_TEST_SUITE_REPORT.md)                             | Extreme testing       |
+| [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md)                      | Voice security        |
+| [Full Code Audit 2026-03-06](audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md)      | Full platform audit   |
+| [Third-Party Code Audit 2026-03-07](audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md)      | Third-party audit     |
 
 ---
 
