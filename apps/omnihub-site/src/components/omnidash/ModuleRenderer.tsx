@@ -29,15 +29,21 @@ const STATUS_COLORS: Readonly<Record<string, string>> = {
   error: '#ef4444',
 };
 
-function StatCard({ stat }: Readonly<{ stat: ModuleStatItem }>) {
-  const trendIcon =
-    stat.trend === 'up' ? '\u2191' :
-    stat.trend === 'down' ? '\u2193' :
-    stat.trend === 'stable' ? '\u2022' : '';
+const TREND_ICONS: Readonly<Record<string, string>> = {
+  up: '\u2191',
+  down: '\u2193',
+  stable: '\u2022',
+};
 
-  const trendColor =
-    stat.trend === 'up' ? '#34d399' :
-    stat.trend === 'down' ? '#ef4444' : '#6b7280';
+const TREND_COLORS: Readonly<Record<string, string>> = {
+  up: '#34d399',
+  down: '#ef4444',
+  stable: '#6b7280',
+};
+
+function StatCard({ stat }: Readonly<{ stat: ModuleStatItem }>) {
+  const trendIcon = stat.trend ? TREND_ICONS[stat.trend] ?? '' : '';
+  const trendColor = stat.trend ? TREND_COLORS[stat.trend] ?? '#6b7280' : '#6b7280';
 
   return (
     <div className="flex flex-col gap-0.5 rounded-lg border border-border/30 px-3 py-2">
