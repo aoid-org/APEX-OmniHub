@@ -20,6 +20,8 @@ from slowapi.util import get_remote_address
 from temporalio.client import Client
 from uvicorn import Config, Server
 
+# Ensure registry is seeded before any request arrives
+import core.intents  # noqa: F401
 from config import settings
 from core.intent_registry import registry
 from metrics import get_metrics_app
@@ -27,9 +29,6 @@ from omniboard.router import router as omniboard_router
 from security.request_signing import SignatureVerificationMiddleware
 from workflows.agent_saga import AgentWorkflow
 from workflows.universal_saga import UniversalOrchestratorWorkflow
-
-# Ensure registry is seeded before any request arrives
-import core.intents  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
