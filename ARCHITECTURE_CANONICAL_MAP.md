@@ -93,24 +93,24 @@ Also initializes platform services:
 - `/omnidash/approvals`
 - `/omnidash/workflows`
 
-## 3.4 OmniDash Universal Modal Engine (v1.0.0 — 2026-03-06)
+## 3.4 OmniDash Universal Modal Engine (v1.0.0 — 2026-03-07)
 
 The APEX Universal Modal Engine provides a single, idempotent interaction surface for all OmniDash app triggers, connector auth flows, spatial app launches, and microfrontend integrations.
 
 ### State Layer
 
-| Module | Path | Role |
-|---|---|---|
+| Module           | Path                           | Role                                              |
+| ---------------- | ------------------------------ | ------------------------------------------------- |
 | `omniModalStore` | `src/stores/omniModalStore.ts` | Global modal lifecycle (Zustand + Zod validation) |
-| `omniBoardStore` | `src/stores/omniBoardStore.ts` | Connector hydration state post-auth (Zustand) |
+| `omniBoardStore` | `src/stores/omniBoardStore.ts` | Connector hydration state post-auth (Zustand)     |
 
 ### Interaction Layer
 
-| Module | Path | Role |
-|---|---|---|
-| `useOmniDashAction` | `src/omnidash/useOmniDashAction.ts` | Universal intent dispatcher — formats user action → `OmniModalConfig` |
-| `OmniSpatialHost` | `apps/omnihub-site/src/components/omnidash/OmniSpatialHost.tsx` | Polymorphic renderer (dialog / spatial / sandbox) |
-| `OmniAppShell` | `apps/omnihub-site/src/lib/OmniAppShell.ts` | Shadow DOM custom element for microfrontend CSS/JS isolation |
+| Module              | Path                                                            | Role                                                                  |
+| ------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `useOmniDashAction` | `src/omnidash/useOmniDashAction.ts`                             | Universal intent dispatcher — formats user action → `OmniModalConfig` |
+| `OmniSpatialHost`   | `apps/omnihub-site/src/components/omnidash/OmniSpatialHost.tsx` | Polymorphic renderer (dialog / spatial / sandbox)                     |
+| `OmniAppShell`      | `apps/omnihub-site/src/lib/OmniAppShell.ts`                     | Shadow DOM custom element for microfrontend CSS/JS isolation          |
 
 ### Intent Resolution Rules (deterministic, no branches)
 
@@ -280,4 +280,3 @@ Any PR that changes one of the following must update this file in the same PR:
 - migration count baseline (optional but preferred)
 - CI workflow topology
 - infrastructure module topology
-
