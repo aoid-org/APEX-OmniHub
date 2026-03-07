@@ -122,33 +122,37 @@ class EntityExtractor:
     """
 
     # Entity patterns (regex-based - simple but fast)
+    # Pre-compiled as class constants to improve performance
     PATTERNS = {
         "DATE": [
-            r"\b(tomorrow|today|yesterday)\b",
-            r"\b\d{1,2}/\d{1,2}/\d{2,4}\b",  # MM/DD/YYYY
-            r"\b\d{4}-\d{2}-\d{2}\b",  # YYYY-MM-DD
-            r"\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}\b",
+            re.compile(r"\b(tomorrow|today|yesterday)\b", re.IGNORECASE),
+            re.compile(r"\b\d{1,2}/\d{1,2}/\d{2,4}\b", re.IGNORECASE),  # MM/DD/YYYY
+            re.compile(r"\b\d{4}-\d{2}-\d{2}\b", re.IGNORECASE),  # YYYY-MM-DD
+            re.compile(
+                r"\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}\b",
+                re.IGNORECASE,
+            ),
         ],
         "LOCATION": [
-            r"\b(paris|london|new york|nyc|tokyo|sydney|berlin|rome)\b",
-            r"\bto\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b",  # "to Paris"
+            re.compile(r"\b(paris|london|new york|nyc|tokyo|sydney|berlin|rome)\b", re.IGNORECASE),
+            re.compile(r"\bto\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b", re.IGNORECASE),  # "to Paris"
         ],
         "PERSON": [
-            r"\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b",  # "John Doe"
+            re.compile(r"\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b", re.IGNORECASE),  # "John Doe"
         ],
         "AMOUNT": [
-            r"\$\d+(?:,\d{3})*(?:\.\d{2})?",  # $1,000.00
-            r"\b\d+\s*(?:dollars?|euros?|pounds?)\b",
+            re.compile(r"\$\d+(?:,\d{3})*(?:\.\d{2})?", re.IGNORECASE),  # $1,000.00
+            re.compile(r"\b\d+\s*(?:dollars?|euros?|pounds?)\b", re.IGNORECASE),
         ],
         "EMAIL": [
-            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+            re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", re.IGNORECASE),
         ],
     }
 
     @classmethod
     def extract_entities(cls, text: str) -> dict[str, list[str]]:
         """
-        Extract entities from text using regex patterns.
+        Extract entities from text using pre-compiled regex patterns.
 
         Returns:
             Dict mapping entity type to list of extracted values
@@ -159,7 +163,8 @@ class EntityExtractor:
         for entity_type, patterns in cls.PATTERNS.items():
             matches = []
             for pattern in patterns:
-                found = re.findall(pattern, text, re.IGNORECASE)
+                # Use pre-compiled pattern.findall for better performance
+                found = pattern.findall(text)
                 if found:
                     # Handle both string matches and tuple matches from groups
                     matches.extend(found if isinstance(found[0], str) else [m for m in found if m])
