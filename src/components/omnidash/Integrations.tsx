@@ -157,7 +157,7 @@ export const Integrations = () => {
     // Merge OmniBoard store state — store wins over stale DB cache for
     // immediate post-auth reflection without waiting for React Query refetch.
     return dbModels.map((c) => {
-      const boardRecord = boardConnectors[c.appSlug];
+      const boardRecord = boardConnectors?.[c.appSlug];
       if (!boardRecord) return c;
       const boardStatus =
         boardRecord.status === 'LIVE'
@@ -314,7 +314,7 @@ export const Integrations = () => {
                     variant="outline"
                     className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 transition-all duration-300"
                     style={{ transitionTimingFunction: 'var(--apex-ease-out-expo)' }}
-                    disabled={boardConnectors[connector.appSlug]?.status === 'CONNECTING'}
+                    disabled={boardConnectors?.[connector.appSlug]?.status === 'CONNECTING'}
                     onClick={(e) => {
                       e.stopPropagation();
                       const intent: OmniDashIntent = {
@@ -333,7 +333,7 @@ export const Integrations = () => {
                       dispatch(intent);
                     }}
                   >
-                    {boardConnectors[connector.appSlug]?.status === 'CONNECTING' ? (
+                    {boardConnectors?.[connector.appSlug]?.status === 'CONNECTING' ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Connecting…

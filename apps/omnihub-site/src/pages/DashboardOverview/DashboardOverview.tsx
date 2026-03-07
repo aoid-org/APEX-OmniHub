@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   useOmniDashAction,
   type OmniDashIntent,
-} from '@/omnidash/useOmniDashAction';
+} from '@/hooks/useOmniDashAction';
 import {
   APP_REGISTRY,
   type AppRegistryEntry,

@@ -7,14 +7,14 @@
  * Lucide kept only for header utility icons (Search, Bell, Shield, ChevronDown)
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, type MouseEvent } from 'react';
 import { Outlet, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Search, Bell, Shield, ChevronDown, Sun, Moon, X } from 'lucide-react';
 import { DashboardOverview } from '@/pages/DashboardOverview';
 import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
 import { BYOMCockpit } from '@/components/byom/BYOMCockpit';
-import { useOmniModal } from '../../../../src/stores/omniModalStore';
+import { useOmniDashAction } from '@/hooks/useOmniDashAction';
 import '@/styles/omnidash-layout.css';
 import { z } from 'zod';
 
@@ -62,7 +62,7 @@ const SIDEBAR_NAV = APP_REGISTRY.map((entry: AppRegistryEntry) => ({
 export function OmniDashLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const omniModal = useOmniModal();
+  const { handleOAuthConnect, handleUtilityModal } = useOmniDashAction();
   const [searchParams] = useSearchParams();
 
   const simModeStateSchema = z.object({
@@ -159,22 +159,14 @@ export function OmniDashLayout() {
               Zero Trust Active
             </div>
 
-            <button type="button" onClick={(e) => {
+            <button type="button" onClick={(e: MouseEvent) => {
               e.stopPropagation();
-              omniModal.invoke({
-                id: 'connect-ai',
-                provider: 'APEX OmniPort',
-                type: 'oauth',
-                title: 'Connect AI Provider',
-                description: 'Link your AI provider (OpenAI, Anthropic, or Google) for seamless agent integration.',
-                onComplete: async (payload) => { console.warn('AI connected:', payload); },
-                onCancel: () => { console.warn('AI connect dismissed.'); },
-              });
+              handleOAuthConnect('APEX OmniPort', 'platform');
             }} className="od-connect-ai">Connect AI</button>
 
-            <button type="button" className="od-avatar" aria-label="Notifications" onClick={(e) => {
+            <button type="button" className="od-avatar" aria-label="Notifications" onClick={(e: MouseEvent) => {
               e.stopPropagation();
-              omniModal.invoke({
+              handleUtilityModal({
                 id: 'notifications',
                 provider: 'APEX',
                 type: 'selection',
@@ -187,7 +179,6 @@ export function OmniDashLayout() {
                   { id: '4', label: 'Workflow "Lead Nurture" triggered by new lead' },
                 ]},
                 onComplete: async (payload) => { console.warn('Notification selected:', payload); },
-                onCancel: () => { /* dismiss */ },
               });
             }}>
               <Bell className="h-3.5 w-3.5" />
@@ -229,8 +220,6 @@ export function OmniDashLayout() {
           </div>
         )}
       </div>
-
-
 
       {/* ────── RIGHT SIDEBAR: BYOM ────── */}
       <aside className="od-right-sidebar" style={{ padding: 16, minWidth: 260 }}>
