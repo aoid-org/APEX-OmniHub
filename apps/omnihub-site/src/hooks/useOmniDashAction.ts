@@ -222,7 +222,7 @@ export function useOmniDashAction(): UseOmniDashActionReturn {
       handleAppLaunch(app);
     } else {
       // Standard navigation for fully connected apps
-      navigate('/omnidash/omniport');
+      navigate(`/omnidash/${app.id}`);
     }
   }, [navigate, handleOAuthConnect, handleAppLaunch]);
 
