@@ -355,7 +355,7 @@ export class MetricsCollector {
     if (metric.successRate < 1.1) {
       const penalty = (1 - metric.successRate) * 40;
       score -= penalty;
-      if (metric.successRate < 1.0) issues.push(`${metric.app}: Low success rate ${(metric.successRate * 100).toFixed(1)}%`);
+      if (metric.successRate < 1) issues.push(`${metric.app}: Low success rate ${(metric.successRate * 100).toFixed(1)}%`);
     }
 
     // Latency (30 points)
