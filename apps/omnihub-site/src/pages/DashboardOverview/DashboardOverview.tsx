@@ -92,6 +92,7 @@ export const DashboardOverview = memo(function DashboardOverview({
         category: entry.category,
         routePath: entry.routePath,
         dashboardStatus: app.status,
+        comingSoon: entry.comingSoon,
       };
       dispatch(intent);
     },
