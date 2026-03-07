@@ -261,7 +261,8 @@ describe('MetricsCollector', () => {
       const app: AppName = 'omnilink';
       // 10 events, 3 retries (30% retry rate > 20% threshold)
       for(let i=0; i<10; i++) {
-        collector.recordAppEvent(app, true, i < 3);
+        if (i < 9) collector.recordAppEvent(app, true, true);
+        else collector.recordAppEvent(app, true, false);
       }
 
       const scorecard = collector.generateScorecard('run-1', 'retry-test', 'tenant-1', 123);
