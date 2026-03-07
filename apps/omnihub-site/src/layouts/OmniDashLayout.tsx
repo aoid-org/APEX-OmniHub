@@ -14,7 +14,8 @@ import { Search, Bell, Shield, ChevronDown, Sun, Moon, X } from 'lucide-react';
 import { DashboardOverview } from '@/pages/DashboardOverview';
 import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
 import { BYOMCockpit } from '@/components/byom/BYOMCockpit';
-import { useOmniDashAction } from '@/hooks/useOmniDashAction';
+import { useOmniDashAction, type OmniDashIntent } from '@/hooks/useOmniDashAction';
+import { getModuleContent } from '@/components/omnidash/ModuleRegistry';
 import '@/styles/omnidash-layout.css';
 import { z } from 'zod';
 
@@ -57,12 +58,13 @@ const SIDEBAR_NAV = APP_REGISTRY.map((entry: AppRegistryEntry) => ({
   label: entry.label,
   icon: NAV_ICON_MAP[entry.iconAssetKey] ?? navOmniboard,
   to: entry.routePath,
-})).filter((entry) => entry.key === 'omniboard');
+  category: entry.category,
+}));
 
 export function OmniDashLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { handleOAuthConnect, handleUtilityModal } = useOmniDashAction();
+  const { handleOAuthConnect, handleUtilityModal, dispatch } = useOmniDashAction();
   const [searchParams] = useSearchParams();
 
   const simModeStateSchema = z.object({
@@ -95,16 +97,42 @@ export function OmniDashLayout() {
         </div>
 
         <nav className="od-nav">
-          {SIDEBAR_NAV.map((item) => (
-            <Link
-              key={item.key}
-              to={item.to}
-              className={`od-nav-item transition-all duration-300 ease-out hover:translate-x-1 ${activeNav === item.key ? ' active' : ''}`}
-            >
-              <img src={item.icon} alt={item.label} className="nav-icon drop-shadow-md" />
-              <span className="font-bold tracking-tight">{item.label}</span>
-            </Link>
-          ))}
+          {SIDEBAR_NAV.map((item) => {
+            const hasModule = getModuleContent(item.key) !== undefined;
+            if (hasModule) {
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={`od-nav-item transition-all duration-300 ease-out hover:translate-x-1 ${activeNav === item.key ? ' active' : ''}`}
+                  onClick={() => {
+                    const intent: OmniDashIntent = {
+                      appKey: item.key,
+                      provider: item.label,
+                      label: item.label,
+                      category: item.category,
+                      routePath: item.to,
+                      dashboardStatus: 'Live',
+                    };
+                    dispatch(intent);
+                  }}
+                >
+                  <img src={item.icon} alt={item.label} className="nav-icon drop-shadow-md" />
+                  <span className="font-bold tracking-tight">{item.label}</span>
+                </button>
+              );
+            }
+            return (
+              <Link
+                key={item.key}
+                to={item.to}
+                className={`od-nav-item transition-all duration-300 ease-out hover:translate-x-1 ${activeNav === item.key ? ' active' : ''}`}
+              >
+                <img src={item.icon} alt={item.label} className="nav-icon drop-shadow-md" />
+                <span className="font-bold tracking-tight">{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="od-sidebar-footer">

@@ -52,13 +52,9 @@ export function useManMode(isDemo: boolean) {
   useEffect(() => {
     // Simulate API delay
     const timer = setTimeout(() => {
-      if (isDemo) {
-        setApprovals(MOCK_APPROVALS);
-      } else {
-        // In real implementation, fetch from API
-        // For now, return empty or mock data
-        setApprovals([]);
-      }
+      // Seed with sample approval tasks for the M.A.N.Mode queue.
+      // Production: replace with live API fetch from /api/man-mode/approvals
+      setApprovals(MOCK_APPROVALS);
       setLoading(false);
     }, 500);
 
