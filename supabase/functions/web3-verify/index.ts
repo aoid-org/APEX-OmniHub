@@ -94,7 +94,7 @@ function validateSiweMessage(params: {
  * Extract nonce from verification message
  */
 function extractNonceFromMessage(message: string): string | null {
-  const match = /Nonce:\s*([a-f0-9]+)/i.exec(message);
+  const match = /Nonce:\s*([a-f0-9]+)\b/i.exec(message);
   return match ? match[1] : null;
 }
 
