@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase';
 import { Search, Bell, Shield, ChevronDown, Sun, Moon, X } from 'lucide-react';
 import { DashboardOverview } from '@/pages/DashboardOverview';
 import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
+import { BYOMCockpit } from '@/components/byom/BYOMCockpit';
 import { useOmniModal } from '../../../../src/stores/omniModalStore';
 import '@/styles/omnidash-layout.css';
 import { z } from 'zod';
@@ -230,6 +231,11 @@ export function OmniDashLayout() {
       </div>
 
 
+
+      {/* ────── RIGHT SIDEBAR: BYOM ────── */}
+      <aside className="od-right-sidebar" style={{ padding: 16, minWidth: 260 }}>
+        <BYOMCockpit />
+      </aside>
 
       {/* ────── GLOBAL MODAL ENGINE ────── */}
       <OmniSpatialHost />
