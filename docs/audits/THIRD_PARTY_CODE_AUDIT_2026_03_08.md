@@ -39,8 +39,9 @@ APEX OmniHub is a **production-grade Universal Sync Orchestrator (USO)** platfor
 | Edge Functions (Supabase) | 21 function directories, 10,307 LOC | `find supabase/functions` |
 | Database Migrations | 54 SQL files, 7,437 LOC | `find supabase/migrations` |
 | Smart Contract | 1 Solidity file, 257 LOC | `contracts/APEXMembershipNFT.sol` |
-| Test Files | 139 total (106 JS/TS + 25 Python + 8 Sim) | Direct file count |
-| Test LOC | 20,122 LOC (JS/TS tests) + 6,154 LOC (sim) | `wc -l` |
+| Test Files | 152 total (125 TS/TSX + 27 Python) | Deep exploration across all dirs |
+| Test LOC | 24,750+ LOC (20,386 TS + 4,364 Python) | `wc -l` |
+| Test Cases | 823+ (560+ TS describe/it + 263+ Python test functions) | Pattern match count |
 | CI/CD Workflows | 13 GitHub Actions workflows | `.github/workflows/` |
 | Terraform IaC | 12 .tf files | `terraform/` |
 | Custom React Hooks | 17 hook files (13 in src/ + 4 in apps/) | `src/hooks/`, `apps/omnihub-site/src/hooks/` |
@@ -209,12 +210,13 @@ APEX OmniHub is a **production-grade Universal Sync Orchestrator (USO)** platfor
 
 | Test Category | Files | LOC | Coverage Area |
 |---------------|-------|-----|---------------|
-| Unit Tests (TS) | 106 | 20,122 | Components, hooks, stores, utilities, core modules |
-| Python Tests | 25 | ~3,000 | Orchestrator, security, caching, models, activities |
-| Simulation Tests | 8 | ~1,200 | Chaos engineering, idempotency, guard rails, metrics |
-| E2E (Playwright) | 5+ | ~2,000 | Route sweep, UI rendering, widget smoke, accessibility |
+| Unit/Integration (TS) | 125 | 20,386 | Components, hooks, stores, utilities, core modules, OmniConnect, Maestro |
+| Python Tests | 27 | 4,364 | Orchestrator, security, caching, models, activities, OmniBoard FSM |
+| Simulation Tests | 7 | ~1,200 | Chaos engineering, idempotency, guard rails, metrics, retry logic |
+| E2E (Playwright) | 8 | ~2,000 | Route sweep, UI rendering, widget smoke, visual regression |
+| Visual Regression | 3 | ~400 | Homepage light/dark, responsive viewports, layout safety |
 | Smart Contract Tests | 1 | ~300 | NFT minting, transfers, access control |
-| **Total** | **139+** | **26,276+** | |
+| **Total** | **152+** | **24,750+** | **823+ test cases** |
 
 ### 5.2 Test Categories (Verified)
 
@@ -230,6 +232,8 @@ APEX OmniHub is a **production-grade Universal Sync Orchestrator (USO)** platfor
 | Smart Contract Tests | `tests/contracts/APEXMembershipNFT.test.ts` | Good |
 | OmniConnect Tests | `tests/omniconnect/` — 9 test files covering auth, encryption, delivery, policy | Strong |
 | Maestro Tests | `tests/maestro/` — 11 test files covering execution, security, E2EE, validation | Strong |
+| Visual Regression | `apps/omnihub-site/tests/visual/` — 3 files, multi-viewport (375/768/1440), 2% pixel tolerance | Excellent |
+| OmniDash Tests | `tests/omnidash/` — 17 test files covering admin, media, modals, routing, widgets | Strong |
 
 ### 5.3 Chaos Engineering Suite
 - **Deterministic Chaos:** Seeded random for reproducible failures (`sim/chaos-engine.ts`)
@@ -487,7 +491,7 @@ This valuation considers:
 
 ## 11. Certification
 
-Based on comprehensive, evidence-backed analysis of 1,471 files totaling 112,197 lines of code across 6 programming languages, 54 database migrations, 21 edge functions, 139+ test files, 13 CI/CD pipelines, and 12 Terraform modules:
+Based on comprehensive, evidence-backed analysis of 1,471 files totaling 112,197 lines of code across 6 programming languages, 54 database migrations, 21 edge functions, 152+ test files (823+ test cases), 13 CI/CD pipelines, and 12 Terraform modules:
 
 **APEX OmniHub v1.4.0 is certified as:**
 
