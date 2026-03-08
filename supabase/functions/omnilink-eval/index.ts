@@ -163,51 +163,7 @@ export default async function handler(req: Request): Promise<Response> {
       }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const results: EvalResponse[] = [];
-
-    if (run_all_active) {
-      // Run evaluation on all active eval cases
-      const { data: evalCases, error: casesError } = await supabase
-        .from('eval_cases')
-        .select('*')
-        .eq('is_active', true);
-
-      if (casesError) throw casesError;
-
-      for (const evalCase of evalCases || []) {
-        const result = await runSingleEvaluation(supabase, evalCase.id);
-        results.push(result);
-      }
-    } else if (eval_case_id) {
-      // Run evaluation on specific case
-      const result = await runSingleEvaluation(supabase, eval_case_id);
-      results.push(result);
-    } else if (custom_message) {
-      // Run evaluation with custom message (create temporary eval case)
-      const tempEvalCase = {
-        name: `temp_eval_${Date.now()}`,
-        description: 'Temporary evaluation case',
-        category: 'general',
-        user_message: custom_message,
-        expected_skills: [],
-        difficulty: 'medium'
-      };
-
-      // Insert temporary eval case
-      const { data: insertedCase, error: insertError } = await supabase
-        .from('eval_cases')
-        .insert(tempEvalCase)
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-
-      const result = await runSingleEvaluation(supabase, insertedCase.id);
-      results.push(result);
-
-      // Clean up temporary case
-      await supabase.from('eval_cases').delete().eq('id', insertedCase.id);
-    }
+    const results = await collectEvalResults(supabase, { eval_case_id, run_all_active, custom_message });
 
     return new Response(JSON.stringify({
       success: true,
@@ -228,6 +184,56 @@ export default async function handler(req: Request): Promise<Response> {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
+}
+
+/** Dispatch to the appropriate eval strategy and collect results. */
+async function collectEvalResults(
+  supabase: SupabaseClient,
+  { eval_case_id, run_all_active, custom_message }: EvalRequest
+): Promise<EvalResponse[]> {
+  const results: EvalResponse[] = [];
+
+  if (run_all_active) {
+    // Run evaluation on all active eval cases
+    const { data: evalCases, error: casesError } = await supabase
+      .from('eval_cases')
+      .select('*')
+      .eq('is_active', true);
+
+    if (casesError) throw casesError;
+
+    for (const evalCase of evalCases || []) {
+      results.push(await runSingleEvaluation(supabase, evalCase.id));
+    }
+  } else if (eval_case_id) {
+    // Run evaluation on specific case
+    results.push(await runSingleEvaluation(supabase, eval_case_id));
+  } else if (custom_message) {
+    // Run evaluation with custom message (create temporary eval case)
+    const tempEvalCase = {
+      name: `temp_eval_${Date.now()}`,
+      description: 'Temporary evaluation case',
+      category: 'general',
+      user_message: custom_message,
+      expected_skills: [],
+      difficulty: 'medium'
+    };
+
+    const { data: insertedCase, error: insertError } = await supabase
+      .from('eval_cases')
+      .insert(tempEvalCase)
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    results.push(await runSingleEvaluation(supabase, insertedCase.id));
+
+    // Clean up temporary case
+    await supabase.from('eval_cases').delete().eq('id', insertedCase.id);
+  }
+
+  return results;
 }
 
 async function runSingleEvaluation(supabase: SupabaseClient, evalCaseId: string): Promise<EvalResponse> {
