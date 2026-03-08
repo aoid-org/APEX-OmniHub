@@ -15,7 +15,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
   const { toast } = useToast();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [_reconnectAttempts, setReconnectAttempts] = useState(0);
   const [degradedMode, setDegradedMode] = useState(false);
   const [degradedReason, setDegradedReason] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -55,7 +54,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
         logAnalyticsEvent('voice.ws.network_recovered', {});
         setDegradedMode(false);
         reconnectAttemptsRef.current = 0;
-        setReconnectAttempts(0);
         startConversation();
       }
     }, 5_000); // Check every 5 seconds
@@ -86,7 +84,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
     setDegradedMode(false);
     setDegradedReason(null);
     reconnectAttemptsRef.current = 0;
-    setReconnectAttempts(0);
     setIsConnecting(true);
     cleanupTimers();
     await connectVoice(false);
@@ -139,7 +136,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
         cleanupTimers(); // Clears network check interval too
         setIsConnected(true);
         setIsConnecting(false);
-        setReconnectAttempts(0);
         setDegradedMode(false);
         setDegradedReason(null);
         logAnalyticsEvent('voice.ws.retry.success', { reconnect: isReconnect });
@@ -244,7 +240,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
     audioContextRef.current = null;
     recorderRef.current = null;
     wsRef.current = null;
-    setReconnectAttempts(0);
     setIsConnected(false);
     setIsConnecting(false);
     onSpeakingChange?.(false);

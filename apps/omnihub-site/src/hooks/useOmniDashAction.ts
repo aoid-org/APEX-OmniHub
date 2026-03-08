@@ -36,7 +36,7 @@ interface AppIntent {
   readonly id: string;
   readonly provider: string;
   readonly category: string;
-  readonly status: 'Live' | 'Partial' | string;
+  readonly status: string;
   readonly appType?: 'media' | 'editor' | 'terminal' | 'microfrontend';
   readonly entryUrl?: string;
   readonly contextData?: Record<string, unknown>;

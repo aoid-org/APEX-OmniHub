@@ -290,9 +290,9 @@ export function useOmniDashAction(navigate?: (path: string) => void): {
         onComplete,
         onCancel,
         priority: directive.type === 'oauth' ? 'high' : 'medium',
-        ...(directive.renderMode !== undefined
-          ? { renderMode: directive.renderMode }
-          : {}),
+        ...(directive.renderMode === undefined
+          ? {}
+          : { renderMode: directive.renderMode }),
       };
 
       // ─── Dispatch to global modal store ──────────────────────────────────

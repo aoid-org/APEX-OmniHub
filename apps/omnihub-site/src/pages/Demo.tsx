@@ -36,12 +36,12 @@ function buttonLabel(running: boolean, allDone: boolean): string {
   return 'Run Sample Workflow';
 }
 
-function WorkflowStepRow({ step, idx, isActive, isDone }: {
+function WorkflowStepRow({ step, idx, isActive, isDone }: Readonly<{
   step: (typeof WORKFLOW_STEPS)[number];
   idx: number;
   isActive: boolean;
   isDone: boolean;
-}) {
+}>) {
   return (
     <div
       style={{
@@ -94,16 +94,18 @@ function InteractiveWorkflowDemo() {
     setCompleted(new Set());
     setActiveStep(0);
 
-    WORKFLOW_STEPS.forEach((step, idx) => {
+    const scheduleStep = (stepId: string, idx: number, isLast: boolean) => {
+      setTimeout(() => setActiveStep(idx), idx * 1200);
       setTimeout(() => {
-        setActiveStep(idx);
-      }, idx * 1200);
-      setTimeout(() => {
-        setCompleted(prev => new Set([...prev, step.id]));
-        if (idx === WORKFLOW_STEPS.length - 1) {
+        setCompleted(prev => new Set([...prev, stepId]));
+        if (isLast) {
           setTimeout(() => { setActiveStep(-1); setRunning(false); }, 800);
         }
       }, idx * 1200 + 900);
+    };
+
+    WORKFLOW_STEPS.forEach((step, idx) => {
+      scheduleStep(step.id, idx, idx === WORKFLOW_STEPS.length - 1);
     });
   }, [running]);
 
