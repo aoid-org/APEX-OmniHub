@@ -273,13 +273,21 @@ The CI pipeline includes a **unique and innovative** architectural boundary enfo
 
 This is **uncommon in the industry** and demonstrates exceptional architectural discipline.
 
-### 6.3 Infrastructure as Code
-- **Terraform Modules:** Vercel, Cloudflare, Upstash (Redis)
-- **Environment:** Staging environment fully configured
+### 6.3 Git Hooks (Pre-Commit / Pre-Push)
+- **Husky Pre-Commit:** Blocks "DEV BYPASS" markers in `apps/omnihub-site/`
+- **Cross-Domain Boundary Check:** Blocks commits modifying both `src/core/` and `apps/omnihub-site/src/pages/` simultaneously — enforces domain isolation
+- **Ruff Python Lint:** Runs `ruff check` and `ruff format --check` on orchestrator code
+- **Pre-Push Research Gate:** Validates `/research` directory exists with PRD documentation
+- **RLS Posture Check:** `scripts/security/check_rls_posture.sh` mandates Row-Level Security for all new tables in migrations
+
+### 6.4 Infrastructure as Code
+- **Terraform Backend:** Terraform Cloud (organization: "omnihub", workspace: "omnihub-staging") with encrypted state
+- **Terraform Modules:** Vercel, Cloudflare (DNS + WAF + Rate Limiting), Upstash (Redis with TLS)
+- **Cloudflare WAF:** Threat score blocking (>14 block, >5 challenge), API rate limiting (200 req/60s general, 50 req/60s for sensitive endpoints)
 - **Docker:** Orchestrator has `Dockerfile` and `docker-compose.yml` (dev + prod)
 - **PM2:** `ecosystem.config.js` for process management
 
-### 6.4 Deployment
+### 6.5 Deployment
 - **Vercel:** Primary frontend deployment with `vercel.json` configuration
 - **Supabase:** Edge functions and database
 - **Hardhat:** Multi-chain smart contract deployment (localhost, Sepolia, Amoy, Mainnet, Polygon)
@@ -358,6 +366,8 @@ This is **uncommon in the industry** and demonstrates exceptional architectural 
 | **Universal Intent Registry** | Registry-routable activity dispatch via intent classification | Innovative |
 | **ChronosLock + Veritas** | Idempotency kernel + output validation layer for deterministic tool execution | Unique |
 | **SpectreHandshake** | Device authentication handshake protocol | Innovative |
+| **Iron Law Resilience Framework** | "No status claim valid without fresh, documented, machine-verifiable evidence" — three-layer defense (deductive, visual, shadow-prompt) with secure evidence storage (SonarQube S5443 compliant) | Unique |
+| **Cross-Domain Boundary Git Hooks** | Pre-commit hooks enforcing architectural domain isolation — blocks commits spanning backend core and UI pages | Very Rare |
 
 ### 8.2 Technology Stack Innovation Rating
 
@@ -451,11 +461,15 @@ This valuation considers:
 
 ### 10.2 Observations (Non-Critical)
 
-1. **Type Safety in Edge Functions:** Some Supabase client usages typed as `unknown` — recommend adding `@supabase/supabase-js` types to edge functions
-2. **Error Boundary Coverage:** `ErrorBoundary.tsx` exists but verify it wraps all route-level components
-3. **Accessibility:** axe-core is in devDependencies but verify comprehensive a11y testing coverage
-4. **Monitoring/Observability:** Prometheus configuration exists (`orchestrator/prometheus.yml`) — ensure Grafana dashboards are configured
-5. **Mobile:** Capacitor configured for iOS/Android but native shell directories suggest early stage — verify build pipeline completeness
+1. **SECURITY.md Incomplete:** `.github/SECURITY.md` contains placeholder `[REPLACE_WITH_SECURITY_INBOX]` — must be replaced with actual security reporting email before production launch
+2. **Type Safety in Edge Functions:** Some Supabase client usages typed as `unknown` — recommend adding `@supabase/supabase-js` types to edge functions
+3. **SonarQube Threshold Overrides:** Duplication override (3% → 12%) and reliability rating override (A → C for new code) in `sonar-project.properties` — should be justified or tightened
+4. **SonarCloud CI Scan Disabled by Default:** Requires `SONAR_CI_SCAN_ENABLED=true` repository variable — ensure enabled in production CI
+5. **Error Boundary Coverage:** `ErrorBoundary.tsx` exists but verify it wraps all route-level components
+6. **Accessibility:** axe-core is in devDependencies but verify comprehensive a11y testing coverage
+7. **Monitoring/Observability:** Prometheus configuration exists (`orchestrator/prometheus.yml`) — ensure Grafana dashboards are configured
+8. **Mobile:** Capacitor configured for iOS/Android but native shell directories suggest early stage — verify build pipeline completeness
+9. **Evidence Storage:** Default path is `/tmp/apex-evidence` — production must configure `APEX_EVIDENCE_STORAGE` for persistent storage (S3/database)
 
 ### 10.3 Recommendations for Value Maximization
 
