@@ -115,7 +115,7 @@ jobs:
       # Turborepo Caching
       # ─────────────────────────────────────────────────────────────
       - name: Cache Turborepo
-        uses: actions/cache@5a3ec84eff668545c2fb2951f7df6b4b4b1e5c0e # v4.2.3
+        uses: actions/cache@v4
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
@@ -185,7 +185,7 @@ jobs:
         run: npm run eval:ci
 
       - name: Upload OmniEval report
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: omnieval-report
@@ -205,7 +205,7 @@ jobs:
       # PHASE 4: Runtime Smoke Tests
       # ─────────────────────────────────────────────────────────────
       - name: Cache Playwright browsers
-        uses: actions/cache@5a3ec84eff668545c2fb2951f7df6b4b4b1e5c0e # v4.2.3
+        uses: actions/cache@v4
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -266,7 +266,7 @@ jobs:
       # PHASE 6: Upload Artifacts
       # ─────────────────────────────────────────────────────────────
       - name: Upload Playwright report
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-report
@@ -274,7 +274,7 @@ jobs:
           retention-days: 7
 
       - name: Upload test screenshots
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-screenshots
@@ -311,7 +311,7 @@ jobs:
         run: npm ci
 
       - name: Cache Playwright browsers
-        uses: actions/cache@5a3ec84eff668545c2fb2951f7df6b4b4b1e5c0e # v4.2.3
+        uses: actions/cache@v4
         id: playwright-cache-preview
         with:
           path: ~/.cache/ms-playwright
@@ -355,7 +355,7 @@ jobs:
           BASE_URL: ${{ steps.vercel-preview.outputs.url }}
 
       - name: Upload preview test artifacts
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: preview-playwright-report
