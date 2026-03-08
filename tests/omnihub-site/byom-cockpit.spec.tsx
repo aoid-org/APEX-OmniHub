@@ -16,9 +16,13 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 // BYOMCockpit imports `supabase` from '@/lib/supabase'.
 // Under root vitest, '@' resolves to './src'; we intercept before the real
 // module is ever loaded via vi.mock hoisting.
-const mockOrder = vi.fn();
-const mockSelect = vi.fn(() => ({ order: mockOrder }));
-const mockFrom = vi.fn(() => ({ select: mockSelect }));
+// vi.hoisted() ensures these are initialised before the hoisted vi.mock factory runs.
+const { mockOrder, mockSelect, mockFrom } = vi.hoisted(() => {
+  const mockOrder = vi.fn();
+  const mockSelect = vi.fn(() => ({ order: mockOrder }));
+  const mockFrom = vi.fn(() => ({ select: mockSelect }));
+  return { mockOrder, mockSelect, mockFrom };
+});
 
 vi.mock('@/lib/supabase', () => ({
   supabase: { from: mockFrom },
