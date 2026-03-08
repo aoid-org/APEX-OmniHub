@@ -17,12 +17,12 @@ describe('encodeAudioForAPI', () => {
   });
 
   it('should correctly encode maximum and minimum values', () => {
-    const input = new Float32Array([1.0, -1.0]);
+    const input = new Float32Array([1, -1]);
     const result = encodeAudioForAPI(input);
     // 1.0 -> 32767 (0x7FFF) -> [0xFF, 0x7F]
     // -1.0 -> -32768 (0x8000) -> [0x00, 0x80]
     // Binary: \xFF\x7F\x00\x80
-    const expectedBinary = String.fromCharCode(0xFF, 0x7F, 0x00, 0x80);
+    const expectedBinary = String.fromCodePoint(0xFF, 0x7F, 0x00, 0x80);
     expect(result).toBe(btoa(expectedBinary));
   });
 
@@ -31,7 +31,7 @@ describe('encodeAudioForAPI', () => {
     const result = encodeAudioForAPI(input);
     // 1.5 -> clamped to 1.0 -> 32767 (0x7FFF) -> [0xFF, 0x7F]
     // -1.5 -> clamped to -1.0 -> -32768 (0x8000) -> [0x00, 0x80]
-    const expectedBinary = String.fromCharCode(0xFF, 0x7F, 0x00, 0x80);
+    const expectedBinary = String.fromCodePoint(0xFF, 0x7F, 0x00, 0x80);
     expect(result).toBe(btoa(expectedBinary));
   });
 
@@ -40,7 +40,7 @@ describe('encodeAudioForAPI', () => {
     const result = encodeAudioForAPI(input);
     // 0.5 -> 0.5 * 32767 = 16383.5 -> 16383 (0x3FFF) -> [0xFF, 0x3F]
     // -0.5 -> -0.5 * 32768 = -16384 (0xC000) -> [0x00, 0xC0]
-    const expectedBinary = String.fromCharCode(0xFF, 0x3F, 0x00, 0xC0);
+    const expectedBinary = String.fromCodePoint(0xFF, 0x3F, 0x00, 0xC0);
     expect(result).toBe(btoa(expectedBinary));
   });
 
@@ -62,7 +62,7 @@ describe('encodeAudioForAPI', () => {
     // Verify some values
     const uint8Array = new Uint8Array(decoded.length);
     for (let i = 0; i < decoded.length; i++) {
-      uint8Array[i] = decoded.charCodeAt(i);
+      uint8Array[i] = decoded.codePointAt(i)!;
     }
 
     const int16Array = new Int16Array(uint8Array.buffer);
