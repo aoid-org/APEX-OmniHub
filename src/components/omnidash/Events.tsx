@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchOmniLinkEvents } from '@/omnidash/omnilink-api';
 import { HiddenValue } from './HiddenMetric';
+import { DragHandle } from './DragHandle';
 import { Activity, RadioReceiver, Clock as ClockIcon, Hash } from 'lucide-react';
 import { Responsive, WidthProvider, Layout } from 'react-grid-layout/legacy';
 import 'react-grid-layout/css/styles.css';
@@ -56,9 +57,7 @@ export const Events = () => {
             {events.map((event) => (
               <div key={event.id}>
                 <div className="border border-white/10 bg-[#1A1F2E]/30 rounded-lg p-3 h-full relative group hover:border-white/20 transition-colors">
-                  <div className="custom-drag-handle absolute top-0 right-0 p-2 h-8 w-8 cursor-grab active:cursor-grabbing text-white/0 group-hover:text-white/30 hover:!text-white/60 transition-colors z-20">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
-                  </div>
+                  <DragHandle className="p-2 h-8 w-8 text-white/0 group-hover:text-white/30 hover:!text-white/60" />
                   <div className="flex items-center justify-between pr-6">
                     <div>
                       <p className="font-semibold"><HiddenValue icon={Activity} value={event.type} /></p>

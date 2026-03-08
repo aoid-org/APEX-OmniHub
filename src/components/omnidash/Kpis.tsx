@@ -9,6 +9,7 @@ import { fetchKpiDaily, upsertKpiDailyEntry } from '@/omnidash/api';
 import { useOmniDashSettings } from '@/omnidash/hooks';
 import { redactKpiDaily, redactAmount } from '@/omnidash/redaction';
 import { HiddenValue } from './HiddenMetric';
+import { DragHandle } from './DragHandle';
 import { LineChart, PlayCircle, AlertTriangle, MonitorPlay, CreditCard, DollarSign, Siren, Clock } from 'lucide-react';
 import { Responsive, WidthProvider, Layout } from 'react-grid-layout/legacy';
 import 'react-grid-layout/css/styles.css';
@@ -105,9 +106,7 @@ export const Kpis = () => {
       >
         <div key="update">
           <Card className="h-full relative group shadow-md border-white/5 bg-[#121622]/50">
-            <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/0 group-hover:text-white/30 hover:text-white/60 transition-colors z-20">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
-            </div>
+            <DragHandle />
             <CardHeader>
               <CardTitle>Update today</CardTitle>
             </CardHeader>
@@ -132,9 +131,7 @@ export const Kpis = () => {
 
         <div key="daily">
           <Card className="h-full flex flex-col relative group shadow-md border-white/5 bg-[#121622]/40">
-            <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/0 group-hover:text-white/30 hover:text-white/60 transition-colors z-20">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
-            </div>
+            <DragHandle />
             <CardHeader>
               <CardTitle>Daily KPIs</CardTitle>
             </CardHeader>

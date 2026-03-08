@@ -18,6 +18,7 @@ import { useOmniDashSettings, useMemoryHealth } from '@/omnidash/hooks';
 import { Incident } from '@/omnidash/types';
 import { format } from 'date-fns';
 import { HiddenValue } from './HiddenMetric';
+import { DragHandle } from './DragHandle';
 import {
   ShieldAlert,
   CheckCircle,
@@ -37,29 +38,6 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
-
-/** Reusable drag handle SVG for grid cards */
-const DragHandle = () => (
-  <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/0 group-hover:text-white/30 hover:text-white/60 transition-colors z-20">
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="9" cy="12" r="1" />
-      <circle cx="9" cy="5" r="1" />
-      <circle cx="9" cy="19" r="1" />
-      <circle cx="15" cy="12" r="1" />
-      <circle cx="15" cy="5" r="1" />
-      <circle cx="15" cy="19" r="1" />
-    </svg>
-  </div>
-);
 
 /** Circuit-breaker status indicator */
 function circuitBreakerStatus(
