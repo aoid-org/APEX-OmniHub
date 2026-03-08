@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Download workflow logs
-        uses: actions/download-artifact@fa0a91b85d4f404e444306af1be6d6ce2894b2ac # v4.1.8
+        uses: actions/download-artifact@v4
         with:
           run-id: ${{ github.event.workflow_run.id }}
           path: logs/

@@ -67,7 +67,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
           path: |
@@ -104,7 +104,7 @@ jobs:
 
       - name: Upload smoke test evidence
         if: always()
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@v4
         with:
           name: quick-smoke-evidence
           path: evidence/latest/
@@ -139,7 +139,7 @@ jobs:
 
       - name: Upload dry run evidence
         if: always()
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@v4
         with:
           name: dry-run-evidence
           path: evidence/latest/
@@ -207,7 +207,7 @@ jobs:
 
       - name: Upload chaos simulation evidence
         if: always()
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@v4
         with:
           name: chaos-simulation-evidence-seed-${{ matrix.seed }}
           path: evidence/latest/
@@ -333,7 +333,7 @@ jobs:
 
       - name: Upload burst test evidence
         if: always()
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@v4
         with:
           name: burst-load-test-evidence
           path: evidence/latest/
@@ -389,7 +389,7 @@ jobs:
 
       - name: Upload determinism evidence
         if: always()
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@v4
         with:
           name: determinism-verification
           path: |
