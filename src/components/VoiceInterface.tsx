@@ -94,7 +94,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
     // Increment first via ref (avoids stale closure on state), then gate on MAX_RETRIES
     const nextAttempt = reconnectAttemptsRef.current + 1;
     reconnectAttemptsRef.current = nextAttempt;
-    setReconnectAttempts(nextAttempt);
     if (nextAttempt >= MAX_RETRIES) {
       // Exhausted all retries — enter degraded mode
       handleDegraded(reason);
@@ -140,7 +139,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
         setDegradedReason(null);
         logAnalyticsEvent('voice.ws.retry.success', { reconnect: isReconnect });
 
-        recorderRef.current = new AudioRecorder((audioData) => {
+        recorderRef.current = new AudioRecorder((audioData: Float32Array) => {
           if (ws.readyState === WebSocket.OPEN) {
             const encoded = encodeAudioForAPI(audioData);
             ws.send(JSON.stringify({
@@ -166,7 +165,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
             const binaryString = atob(data.delta);
             const bytes = new Uint8Array(binaryString.length);
             for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
+              bytes[i] = binaryString.codePointAt(i)!;
             }
             await playAudioData(audioContextRef.current, bytes);
           } else if (data.type === 'response.audio_transcript.delta') {
@@ -281,7 +280,17 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
         </div>
       )}
       <div className="flex items-center gap-2">
-        {!isConnected ? (
+        {isConnected ? (
+          <Button 
+            onClick={endConversation}
+            variant="destructive"
+            size="lg"
+            className="gap-2"
+          >
+            <MicOff className="h-5 w-5" />
+            End Voice Chat
+          </Button>
+        ) : (
           <Button 
             onClick={startConversation}
             disabled={isConnecting}
@@ -300,16 +309,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
                 {degradedMode ? 'Retry Voice' : 'Start Voice Chat'}
               </>
             )}
-          </Button>
-        ) : (
-          <Button 
-            onClick={endConversation}
-            variant="destructive"
-            size="lg"
-            className="gap-2"
-          >
-            <MicOff className="h-5 w-5" />
-            End Voice Chat
           </Button>
         )}
       </div>
