@@ -30,7 +30,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -93,7 +93,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -120,7 +120,7 @@ jobs:
 
       - name: Upload safety results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: safety-report
           path: orchestrator/safety-report.json
@@ -148,7 +148,7 @@ jobs:
 
       - name: Upload bandit results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: bandit-report
           path: orchestrator/bandit-report.json
@@ -160,7 +160,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

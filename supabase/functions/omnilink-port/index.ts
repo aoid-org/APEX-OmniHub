@@ -213,7 +213,7 @@ async function handleKeyCreation(req: Request, corsHeaders: HeadersInit): Promis
     });
 
   if (error) {
-    return jsonResponse({ error: 'server_error', message: error.message }, 500, corsHeaders);
+    return jsonResponse({ error: 'server_error', message: error instanceof Error ? error.message : String(error) }, 500, corsHeaders);
   }
 
   return jsonResponse(
@@ -342,7 +342,7 @@ async function processRequestItem(
   });
 
   if (error) {
-    return { status: 'error', index, error: error.message };
+    return { status: 'error', index, error: error instanceof Error ? error.message : String(error) };
   }
 
   return { status: data.status, record_id: data.record_id, index, retry_after_seconds: data.retry_after_seconds };
@@ -470,7 +470,7 @@ async function handleTaskClaim(req: Request, corsHeaders: HeadersInit): Promise<
   });
 
   if (error) {
-    return jsonResponse({ error: 'claim_failed', message: error.message }, 500, corsHeaders);
+    return jsonResponse({ error: 'claim_failed', message: error instanceof Error ? error.message : String(error) }, 500, corsHeaders);
   }
 
   const result = data as { status: string; task_id?: string; type?: string; params?: unknown; policy?: unknown };
@@ -530,7 +530,7 @@ async function handleTaskComplete(req: Request, corsHeaders: HeadersInit): Promi
   });
 
   if (error) {
-    return jsonResponse({ error: 'complete_failed', message: error.message }, 500, corsHeaders);
+    return jsonResponse({ error: 'complete_failed', message: error instanceof Error ? error.message : String(error) }, 500, corsHeaders);
   }
 
   const result = data as { status: string; final_status?: string };

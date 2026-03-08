@@ -222,7 +222,7 @@ export default async function handler(req: Request): Promise<Response> {
     console.error('Evaluation error:', error);
     return new Response(JSON.stringify({
       error: 'Evaluation failed',
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -335,7 +335,7 @@ async function runSingleEvaluation(supabase: SupabaseClient, evalCaseId: string)
         response_quality: 0,
         security_check_passed: false,
         performance_ms: Date.now() - startTime,
-        error_message: error.message,
+        error_message: error instanceof Error ? error.message : String(error),
         metadata: { error_timestamp: new Date().toISOString() }
       })
       .select()
@@ -353,7 +353,7 @@ async function runSingleEvaluation(supabase: SupabaseClient, evalCaseId: string)
       response_quality: 0,
       security_check_passed: false,
       performance_ms: Date.now() - startTime,
-      agent_response: `Error: ${error.message}`
+      agent_response: `Error: ${error instanceof Error ? error.message : String(error)}`
     };
   }
 }

@@ -33,7 +33,7 @@ export class RateLimiter {
       console.error("[RateLimiter] RPC error:", error);
       // APEX principle: Fail Closed for determinism and security.
       // We throw an Error to prevent unmetered abuse during DB blips.
-      throw new Error(`Rate limit check failed. Failing closed. ${error.message}`);
+      throw new Error(`Rate limit check failed. Failing closed. ${error instanceof Error ? error.message : String(error)}`);
     }
 
     if (allowed === false) {
