@@ -269,7 +269,7 @@ class SemanticCacheService:
         self.ttl_seconds = ttl_seconds
 
         # Redis client (async)
-        self.redis: aioredis.Redis | None = None
+        self.redis: aioredis.Redis[bytes] | None = None  # type: ignore[type-arg]
 
         # Sentence embeddings model (runs locally, no API calls)
         logger.info(f"Loading embedding model: {embedding_model}...")
@@ -390,9 +390,9 @@ class SemanticCacheService:
         )
 
         try:
-            results = await self.redis.ft(self.index_name).search(
+            results = await self.redis.ft(self.index_name).search(  # type: ignore[misc]
                 query,
-                query_params={"vec": embedding_bytes},
+                query_params={"vec": embedding_bytes},  # type: ignore[dict-item]
             )
         except Exception as e:
             logger.error(f"Vector search failed: {e}")

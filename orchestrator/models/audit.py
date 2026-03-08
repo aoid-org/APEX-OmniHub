@@ -312,7 +312,7 @@ class AuditLogger:
         """Store audit event in local file (for development/testing)."""
         import json
 
-        import aiofiles
+        import aiofiles  # type: ignore[import-untyped]
 
         log_file = f"audit_logs_{event.timestamp.date()}.jsonl"
 
