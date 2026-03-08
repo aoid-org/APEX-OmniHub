@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-Please report security issues to [REPLACE_WITH_SECURITY_INBOX].
+Please report security issues to **security@apexbusiness-systems.com**.
 
 ## Response Targets
 

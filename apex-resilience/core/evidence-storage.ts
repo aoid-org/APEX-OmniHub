@@ -1,3 +1,4 @@
+import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as crypto from 'node:crypto';
@@ -69,14 +70,22 @@ export function getSecureEvidenceDir(): string {
     return configuredStorage;
   }
 
-  // Development: Use secure user-specific directory with process isolation
-  const userTempDir = os.tmpdir();
-  const processId = process.pid;
-  const userId = process.getuid?.() ?? 'unknown';
-
-  // Create process-specific subdirectory to prevent conflicts
-  // Format: <tmpdir>/apex-evidence-<uid>-<pid>
-  return path.join(userTempDir, `apex-evidence-${userId}-${processId}`);
+  // Development / CI: Use a project-local directory that is git-ignored.
+  // Falls back to a user-specific temp directory only when running outside
+  // a project working tree (e.g. standalone scripts).
+  const projectRoot = process.env.APEX_PROJECT_ROOT ?? process.cwd();
+  const localDir = path.join(projectRoot, '.apex', 'evidence');
+  // Prefer the project-local path when it is writable; otherwise fall back.
+  try {
+    fs.mkdirSync(localDir, { recursive: true, mode: 0o700 });
+    return localDir;
+  } catch {
+    // Fallback: user-specific temp directory with process isolation
+    const userTempDir = os.tmpdir();
+    const processId = process.pid;
+    const userId = process.getuid?.() ?? 'unknown';
+    return path.join(userTempDir, `apex-evidence-${userId}-${processId}`);
+  }
 }
 
 /**
