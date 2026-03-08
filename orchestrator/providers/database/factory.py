@@ -113,7 +113,7 @@ def get_vector_provider() -> object | None:
     if vector_type == "tidb":
         from infrastructure.tidb_persistence import TiDBVectorPersistence
 
-        _vector_provider = TiDBVectorPersistence()  # type: ignore[no-untyped-call]
+        _vector_provider = TiDBVectorPersistence()
         return _vector_provider
 
     raise ValueError(f"Unknown VECTOR_PROVIDER '{vector_type}'. Supported: 'tidb'.")

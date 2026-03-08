@@ -53,8 +53,8 @@ except ImportError:
         )
     except ImportError:
         # Fallback: define minimal stubs for typing (tests can mock these)
-        IndexDefinition = type("IndexDefinition", (), {})  # type: ignore
-        IndexType = type("IndexType", (), {})  # type: ignore
+        IndexDefinition = type("IndexDefinition", (), {})
+        IndexType = type("IndexType", (), {})
 
 logger = logging.getLogger(__name__)
 
@@ -269,7 +269,7 @@ class SemanticCacheService:
         self.ttl_seconds = ttl_seconds
 
         # Redis client (async)
-        self.redis: aioredis.Redis[bytes] | None = None  # type: ignore[type-arg]
+        self.redis: aioredis.Redis | None = None
 
         # Sentence embeddings model (runs locally, no API calls)
         logger.info(f"Loading embedding model: {embedding_model}...")
@@ -320,7 +320,7 @@ class SemanticCacheService:
 
         try:
             # Check if index exists
-            await self.redis.ft(self.index_name).info()  # type: ignore[no-untyped-call]
+            await self.redis.ft(self.index_name).info()
             logger.info(f"Vector index already exists: {self.index_name}")
             return
         except Exception:  # noqa: S110 - Expected: index may not exist yet
@@ -384,15 +384,15 @@ class SemanticCacheService:
         # Step 3: Vector similarity search
         query = (
             Query("*=>[KNN 1 @embedding $vec AS score]")
-            .return_fields("template_id", "template_text", "plan_steps", "score")  # type: ignore[no-untyped-call]
+            .return_fields("template_id", "template_text", "plan_steps", "score")
             .sort_by("score")
             .dialect(2)
         )
 
         try:
-            results = await self.redis.ft(self.index_name).search(  # type: ignore[misc]
+            results = await self.redis.ft(self.index_name).search(
                 query,
-                query_params={"vec": embedding_bytes},  # type: ignore[dict-item]
+                query_params={"vec": embedding_bytes},
             )
         except Exception as e:
             logger.error(f"Vector search failed: {e}")

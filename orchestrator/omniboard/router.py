@@ -22,7 +22,7 @@ async def start_session(tenant_id: str, trace_id: str) -> FSMContext:
 
 
 SESSION_NOT_FOUND = "Session not found"
-_404_RESPONSE = {404: {"description": SESSION_NOT_FOUND}}
+_404_RESPONSE: dict[int | str, dict[str, Any]] = {404: {"description": SESSION_NOT_FOUND}}
 
 
 @router.post(

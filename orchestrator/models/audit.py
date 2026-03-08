@@ -312,7 +312,7 @@ class AuditLogger:
         """Store audit event in local file (for development/testing)."""
         import json
 
-        import aiofiles  # type: ignore[import-untyped]
+        import aiofiles
 
         log_file = f"audit_logs_{event.timestamp.date()}.jsonl"
 
@@ -426,11 +426,22 @@ async def log_audit_event(
         timestamp=datetime.now(UTC),
         event_sequence=1,  # Would be incremented per correlation_id
         actor_id=actor_id,
+        actor_type="user",
+        actor_ip=None,
+        actor_user_agent=None,
         action=action,
         status=status,
         resource_type=resource_type,
         resource_id=resource_id,
+        resource_owner=None,
         metadata=metadata,
+        data_classification="internal",
+        retention_period_days=2555,
+        integrity_hash=None,
+        previous_hash=None,
+        processed_at=None,
+        storage_location=None,
+        backup_location=None,
     )
 
     # Log the event

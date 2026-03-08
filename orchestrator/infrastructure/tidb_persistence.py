@@ -13,8 +13,8 @@ try:
     import mysql.connector
     from mysql.connector import Error as MySQLError
 except ImportError:
-    mysql = None  # type: ignore
-    MySQLError = Exception  # type: ignore
+    mysql = None
+    MySQLError = Exception
 
 
 class TiDBVectorPersistence:
