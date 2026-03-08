@@ -43,9 +43,12 @@ APEX OmniHub is a **production-grade Universal Sync Orchestrator (USO)** platfor
 | Test LOC | 20,122 LOC (JS/TS tests) + 6,154 LOC (sim) | `wc -l` |
 | CI/CD Workflows | 13 GitHub Actions workflows | `.github/workflows/` |
 | Terraform IaC | 12 .tf files | `terraform/` |
-| Custom React Hooks | 13 hook files | `src/hooks/use*.ts*` |
-| Zustand Stores | 8 state stores | `src/stores/` |
-| Pages/Routes | 22 declared routes | `apps/omnihub-site/src/App.tsx` |
+| Custom React Hooks | 17 hook files (13 in src/ + 4 in apps/) | `src/hooks/`, `apps/omnihub-site/src/hooks/` |
+| Zustand Stores | 8 state stores + 2 React Contexts | `src/stores/`, `src/contexts/` |
+| Pages/Routes | 22 declared routes (18 public + 4 protected) | `apps/omnihub-site/src/App.tsx` |
+| Shadcn/UI Components | 47 pre-built UI components | `src/components/ui/` |
+| i18n Languages | 6 (EN, FR, ES, DE, JA, ZH) | `apps/omnihub-site/src/i18n/locales/` |
+| SEO/PWA | Schema.org, Open Graph, PWA manifest | `index.html` |
 
 ---
 
@@ -325,7 +328,7 @@ This is **uncommon in the industry** and demonstrates exceptional architectural 
 | BYOM Cockpit | FUNCTIONAL | `byom-cockpit/index.ts`, `byom-proxy/index.ts` |
 | Consent Banner | FUNCTIONAL | `ConsentBanner.tsx` |
 | Theme Toggle | FUNCTIONAL | `ThemeToggle.tsx` with next-themes |
-| i18n | FUNCTIONAL | i18next with browser language detection |
+| i18n | FUNCTIONAL | i18next with 6 languages (EN, FR, ES, DE, JA, ZH) + browser detection |
 | PWA Support | FUNCTIONAL | `usePWAInstall.tsx` hook |
 | Mobile (Capacitor) | CONFIGURED | `capacitor.config.ts`, `android/`, `ios/` directories |
 
