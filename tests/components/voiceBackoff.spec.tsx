@@ -68,35 +68,73 @@ describe('VoiceInterface backoff', () => {
     };
   });
 
-  it('enters degraded mode after retry exhaustion', async () => {
+  async function exhaustRetries() {
     render(<VoiceInterface />);
 
-    const startButton = screen.getByText(/Start Voice Chat/i);
     await act(async () => {
-      fireEvent.click(startButton);
+      fireEvent.click(screen.getByText(/Start Voice Chat/i));
     });
 
-    expect(MockWebSocket.instances.length).toBeGreaterThan(0);
-
-    // VITE_VOICE_MAX_RETRIES defaults to 3; trigger 2 errors that schedule
-    // reconnect timeouts (attempts 1 and 2), then a 3rd that hits the >= limit
-    // and calls handleDegraded() directly with no further timeout scheduled.
     for (let i = 0; i < 2; i++) {
       await act(async () => {
         MockWebSocket.instances[i].triggerError();
-        // Advance time past the backoff window (BASE=500, MAX=10000, JITTER=250)
-        // so the reconnect setTimeout fires and a new WebSocket is created
         vi.advanceTimersByTime(11_000);
       });
     }
 
-    // Third error: reconnectAttemptsRef = 2 → nextAttempt = 3 >= MAX_RETRIES(3)
-    // → handleDegraded() called synchronously, no new timeout queued
     await act(async () => {
       MockWebSocket.instances[2].triggerError();
     });
+  }
 
+  it('enters degraded mode after retry exhaustion', async () => {
+    await exhaustRetries();
     expect(screen.getByText(/Voice connection degraded/i)).toBeInTheDocument();
+  });
+
+  it('shows fallback action buttons in degraded mode', async () => {
+    await exhaustRetries();
+    expect(screen.getByText(/Use fallback/i)).toBeInTheDocument();
+    expect(screen.getByText(/Continue offline/i)).toBeInTheDocument();
+  });
+
+  it('shows "Retry Voice" label on the start button when in degraded mode', async () => {
+    await exhaustRetries();
+    // The Retry button inside the degraded banner
+    expect(screen.getAllByRole('button', { name: /Retry/i }).length).toBeGreaterThan(0);
+  });
+
+  it('renders "End Voice Chat" button when connected and allows ending', async () => {
+    render(<VoiceInterface />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByText(/Start Voice Chat/i));
+    });
+
+    const ws = MockWebSocket.instances[0];
+    await act(async () => {
+      ws.readyState = MockWebSocket.OPEN;
+      ws.onopen?.({});
+    });
+
+    expect(screen.getByText(/End Voice Chat/i)).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText(/End Voice Chat/i));
+    });
+
+    expect(screen.getByText(/Start Voice Chat/i)).toBeInTheDocument();
+  });
+
+  it('shows "Connecting..." during connection setup', async () => {
+    render(<VoiceInterface />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByText(/Start Voice Chat/i));
+    });
+
+    // Before ws.onopen fires — should still be connecting
+    expect(screen.getByText(/Connecting\.\.\./i)).toBeInTheDocument();
   });
 });
 
