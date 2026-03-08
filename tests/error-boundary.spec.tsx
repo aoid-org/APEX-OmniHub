@@ -24,7 +24,7 @@ beforeAll(() => { console.error = vi.fn(); });
 afterAll(() => { console.error = originalError; });
 
 // ── Problem child component ──────────────────────────────────────────
-function ThrowingChild({ shouldThrow = true }: { shouldThrow?: boolean }) {
+function ThrowingChild({ shouldThrow = true }: Readonly<{ shouldThrow?: boolean }>) {
   if (shouldThrow) throw new Error('test-error');
   return <div data-testid="child">OK</div>;
 }
