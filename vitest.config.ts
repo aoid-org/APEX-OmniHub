@@ -47,7 +47,8 @@ export default defineConfig({
     coverage: {
       enabled: enableCoverage,
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      // 'lcov' reporter generates coverage/lcov.info consumed by SonarCloud
+      reporter: ['text', 'json', 'html', 'lcov'],
       reportsDirectory: './coverage',
       clean: true,
       exclude: [
@@ -60,7 +61,14 @@ export default defineConfig({
         '.idea/**',
         '.git/**',
         '.cache/**'
-      ]
+      ],
+      // Enforce 80% minimum thresholds — aligned with SonarCloud quality gate
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
+      },
     },
     testTimeout: 30000,
   },
