@@ -108,7 +108,7 @@ interface AlchemyWebhookPayload {
  * Process a single NFT transfer event
  */
 async function processNFTTransfer(
-  supabase: unknown,
+  supabase: ReturnType<typeof createClient>,
   activity: AlchemyNFTActivity,
   membershipNFTAddress: string
 ): Promise<{ success: boolean; reason?: string }> {
@@ -219,7 +219,7 @@ async function processNFTTransfer(
       .from('chain_tx_log')
       .update({
         status: 'failed',
-        metadata: { error: error.message },
+        metadata: { error: error instanceof Error ? error.message : String(error) },
       })
       .eq('id', eventId);
 

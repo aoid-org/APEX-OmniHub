@@ -34,6 +34,7 @@
 
 import { verifyMessage, verifyTypedData } from 'https://esm.sh/viem@2.21.54';
 import { parseSiweMessage } from 'https://esm.sh/viem@2.21.54/siwe';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { handleCors, corsJsonResponse, buildCorsHeaders, isOriginAllowed } from '../_shared/cors.ts';
 import { checkRateLimit, rateLimitExceededResponse, RATE_LIMIT_CONFIGS } from '../_shared/rate-limit.ts';
 import { isValidWalletAddress, isValidSignature, validateRequestBody } from '../_shared/validation.ts';

@@ -80,7 +80,7 @@ export class SkillRegistry {
 
     if (error) {
       console.error('Failed to register skill:', error);
-      throw new Error(`Skill registration failed: ${error.message}`);
+      throw new Error(`Skill registration failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -123,7 +123,7 @@ export class SkillRegistry {
 
     if (error) {
       console.error('Failed to retrieve skills:', error);
-      throw new Error(`Skill retrieval failed: ${error.message}`);
+      throw new Error(`Skill retrieval failed: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     // Convert database results to SkillDefinition format
@@ -146,7 +146,7 @@ export class SkillRegistry {
 
     if (error) {
       console.error('Failed to get all skills:', error);
-      throw new Error(`Failed to retrieve skills: ${error.message}`);
+      throw new Error(`Failed to retrieve skills: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     return (data || []).map((row: Record<string, unknown>) => ({
@@ -168,7 +168,7 @@ export class SkillRegistry {
 
     if (error) {
       console.error('Failed to remove skill:', error);
-      throw new Error(`Skill removal failed: ${error.message}`);
+      throw new Error(`Skill removal failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }
