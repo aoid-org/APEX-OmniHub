@@ -7,7 +7,7 @@
  *  - custom-drag-handle selector required by react-grid-layout
  */
 
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { DragHandle } from '@/components/omnidash/DragHandle';
 

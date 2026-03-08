@@ -9,16 +9,17 @@
  *  - DemoCTA render
  */
 
+import type { ReactNode } from 'react';
 import { fireEvent, render, screen, act } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ── Dependency mocks ───────────────────────────────────────────────────────────
 vi.mock('@/components/Layout', () => ({
-  Layout: ({ children }: { children: React.ReactNode }) => <div data-testid="layout">{children}</div>,
+  Layout: ({ children }: { children: ReactNode }) => <div data-testid="layout">{children}</div>,
 }));
 
 vi.mock('@/components/Section', () => ({
-  Section: ({ children }: { children: React.ReactNode }) => <div data-testid="section">{children}</div>,
+  Section: ({ children }: { children: ReactNode }) => <div data-testid="section">{children}</div>,
   SectionHeader: ({ title, subtitle }: { title: string; subtitle: string }) => (
     <div data-testid="section-header">
       <h1>{title}</h1>
