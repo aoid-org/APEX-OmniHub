@@ -45,6 +45,9 @@ class AuditAction(str, Enum):  # noqa: UP042
     WORKFLOW_COMPLETE = "workflow_complete"
     WORKFLOW_FAIL = "workflow_fail"
 
+    # Data Modification
+    DATA_MODIFY = "data_modify"
+
     # Security
     POLICY_VIOLATION = "policy_violation"
     ACCESS_DENIED = "access_denied"
@@ -77,6 +80,7 @@ class AuditResourceType(str, Enum):  # noqa: UP042
     API_KEY = "api_key"
     POLICY = "policy"
     DATABASE = "database"
+    SECURITY_POLICY = "security_policy"
 
 
 class AuditStatus(str, Enum):  # noqa: UP042
@@ -308,7 +312,7 @@ class AuditLogger:
         """Store audit event in local file (for development/testing)."""
         import json
 
-        import aiofiles
+        import aiofiles  # type: ignore[import-untyped]
 
         log_file = f"audit_logs_{event.timestamp.date()}.jsonl"
 
@@ -374,7 +378,7 @@ async def log_audit_event(
     resource_id: str,
     status: AuditStatus = AuditStatus.SUCCESS,
     metadata: AuditMetadata | None = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> str:
     """
     Convenience function for logging audit events.

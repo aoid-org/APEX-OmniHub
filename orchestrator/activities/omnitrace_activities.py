@@ -136,7 +136,7 @@ async def omnitrace_record_event(params: dict[str, Any]) -> dict[str, Any]:
 # =============================================================================
 
 
-def get_omnitrace_activities() -> list:
+def get_omnitrace_activities() -> list[Any]:
     """Return list of OmniTrace activities for worker registration."""
     return [
         omnitrace_record_run_start,

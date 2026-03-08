@@ -23,6 +23,8 @@ Usage
 
 from __future__ import annotations
 
+from typing import Any
+
 from prometheus_client import Counter, make_asgi_app
 
 # ── Prometheus Counters ──────────────────────────────────────────────
@@ -53,7 +55,7 @@ def record_miss(workflow_type: str = "agent_saga") -> None:
     idempotency_misses.labels(workflow_type=workflow_type).inc()
 
 
-def get_metrics_app():
+def get_metrics_app() -> Any:
     """Return an ASGI app that serves ``/metrics`` in Prometheus format."""
     return make_asgi_app()
 

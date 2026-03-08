@@ -25,9 +25,9 @@ class TiDBVectorPersistence:
     - No-op if disabled or dependencies missing
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.enabled = os.getenv("VECTOR_PROVIDER", "").lower() == "tidb"
-        self.connection = None
+        self.connection: Any = None
 
         if self.enabled:
             if mysql is None:
@@ -58,7 +58,7 @@ class TiDBVectorPersistence:
         if not self.enabled:
             return
 
-        ssl_config = {
+        ssl_config: dict[str, Any] = {
             "ssl_verify_cert": True,
             "ssl_verify_identity": True,
         }
@@ -92,6 +92,7 @@ class TiDBVectorPersistence:
         if not self.connection or not self.connection.is_connected():
             self._connect()
 
+        assert self.connection is not None
         cursor = self.connection.cursor()
         try:
             # REPLACE INTO = idempotent upsert
@@ -120,6 +121,7 @@ class TiDBVectorPersistence:
         if not self.connection or not self.connection.is_connected():
             self._connect()
 
+        assert self.connection is not None
         cursor = self.connection.cursor(dictionary=True)
         try:
             cursor.execute(

@@ -47,7 +47,7 @@ try:
 except ImportError:
     try:
         # Try redis-py v5.x alternate path
-        from redis.commands.search.indexDefinition import (  # type: ignore
+        from redis.commands.search.indexDefinition import (
             IndexDefinition,
             IndexType,
         )
@@ -269,7 +269,7 @@ class SemanticCacheService:
         self.ttl_seconds = ttl_seconds
 
         # Redis client (async)
-        self.redis: aioredis.Redis | None = None
+        self.redis: aioredis.Redis[bytes] | None = None  # type: ignore[type-arg]
 
         # Sentence embeddings model (runs locally, no API calls)
         logger.info(f"Loading embedding model: {embedding_model}...")
@@ -320,7 +320,7 @@ class SemanticCacheService:
 
         try:
             # Check if index exists
-            await self.redis.ft(self.index_name).info()
+            await self.redis.ft(self.index_name).info()  # type: ignore[no-untyped-call]
             logger.info(f"Vector index already exists: {self.index_name}")
             return
         except Exception:  # noqa: S110 - Expected: index may not exist yet
@@ -384,14 +384,14 @@ class SemanticCacheService:
         # Step 3: Vector similarity search
         query = (
             Query("*=>[KNN 1 @embedding $vec AS score]")
-            .return_fields("template_id", "template_text", "plan_steps", "score")
+            .return_fields("template_id", "template_text", "plan_steps", "score")  # type: ignore[no-untyped-call]
             .sort_by("score")
             .dialect(2)
         )
 
         try:
-            results = await self.redis.ft(self.index_name).search(
-                query, query_params={"vec": embedding_bytes}
+            results = await self.redis.ft(self.index_name).search(  # type: ignore[misc]
+                query, query_params={"vec": embedding_bytes}  # type: ignore[dict-item]
             )
         except Exception as e:
             logger.error(f"Vector search failed: {e}")
