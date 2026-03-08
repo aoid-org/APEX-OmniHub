@@ -679,7 +679,12 @@ class AgentWorkflow:
 
     def _build_dag_structure(
         self,
-    ) -> tuple[dict[str, dict[str, Any]], dict[str, list[str]], dict[str, list[str]], dict[str, int]]:
+    ) -> tuple[
+        dict[str, dict[str, Any]],
+        dict[str, list[str]],
+        dict[str, list[str]],
+        dict[str, int],
+    ]:
         """
         Build DAG dependency graph from plan steps.
 

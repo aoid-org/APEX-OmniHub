@@ -106,7 +106,9 @@ def sanitize_for_prompt(text: str, field_name: str = "input") -> str:
     is_injection, pattern = detect_injection(text)
     if is_injection:
         raise PromptInjectionError(
-            f"Potential prompt injection detected in {field_name}", pattern=pattern or "", input_text=text
+            f"Potential prompt injection detected in {field_name}",
+            pattern=pattern or "",
+            input_text=text
         )
 
     # Normalize whitespace
