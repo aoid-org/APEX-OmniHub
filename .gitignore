@@ -95,3 +95,5 @@ final_eslint.json
 security/npm-audit-latest.json
 security/npm-audit-prod.json
 ERRORS.md
+# Claude Code agent worktrees (local only)
+.claude/worktrees/
