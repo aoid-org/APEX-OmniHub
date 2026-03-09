@@ -4,202 +4,274 @@ import * as path from 'node:path';
 import * as crypto from 'node:crypto';
 
 /**
- * Secure Evidence Storage Utility
- * Addresses SonarQube S5443: Using publicly writable directories safely
+ * Secure Evidence Storage — multi-backend adapter
+ *
+ * Backend selection priority (APEX_EVIDENCE_STORAGE):
+ *
+ *   s3://bucket-name[/prefix]   → AWS S3  (production, recommended)
+ *   /absolute/local/path        → local filesystem (dev / CI only)
+ *   <unset>                     → project-local .apex/evidence/ (dev / CI)
  *
  * Security measures implemented:
- * 1. Path traversal prevention via sanitization
- * 2. Restrictive file permissions (0600 - owner read/write only)
- * 3. Restrictive directory permissions (0700 - owner access only)
- * 4. User-specific temporary directory
- * 5. Atomic file operations with exclusive flags
- * 6. Input validation to prevent symlink attacks
+ * 1. Path traversal prevention via allowlist regex on task IDs
+ * 2. Restrictive file permissions (0600) on local writes
+ * 3. Restrictive directory permissions (0700) on local dirs
+ * 4. Atomic file operations with exclusive flags
+ * 5. S3 SSE-S3 server-side encryption enforced at upload
+ * 6. Production-mode warning when local storage is used in a container
+ *
+ * Environment variables:
+ *   APEX_EVIDENCE_STORAGE  — storage target URI (see above)
+ *   APEX_PROJECT_ROOT      — override CWD for local-mode base path
+ *   AWS_REGION             — required when using s3:// backend
+ *   AWS_ACCESS_KEY_ID      — required when using s3:// backend (or IAM role)
+ *   AWS_SECRET_ACCESS_KEY  — required when using s3:// backend (or IAM role)
  */
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const ALLOWED_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 const MAX_ID_LENGTH = 255;
 
+// ─── Validation ───────────────────────────────────────────────────────────────
+
 /**
- * Validates and sanitizes a task ID to prevent path traversal
- * @param taskId - The task ID to validate
- * @returns Sanitized task ID
- * @throws Error if task ID is invalid
+ * Validates and sanitises a task ID to prevent path traversal.
  */
 function validateTaskId(taskId: string): string {
   if (!taskId || typeof taskId !== 'string') {
     throw new Error('Task ID must be a non-empty string');
   }
-
   if (taskId.length > MAX_ID_LENGTH) {
     throw new Error(`Task ID exceeds maximum length of ${MAX_ID_LENGTH}`);
   }
-
-  // Prevent path traversal attacks
   if (taskId.includes('..') || taskId.includes('/') || taskId.includes('\\')) {
     throw new Error('Task ID contains invalid characters (path traversal attempt)');
   }
-
-  // Ensure only alphanumeric, dash, and underscore characters
   if (!ALLOWED_ID_PATTERN.test(taskId)) {
     throw new Error('Task ID contains invalid characters');
   }
-
   return taskId;
 }
 
+// ─── Backend detection ────────────────────────────────────────────────────────
+
+export type EvidenceBackend = 'local' | 's3';
+
 /**
- * Gets the secure evidence directory path
- * Uses process-specific directory to prevent conflicts and attacks
- *
- * Priority:
- * 1. APEX_EVIDENCE_STORAGE environment variable (for production)
- * 2. User-specific temp directory with process isolation
- *
- * @returns Absolute path to evidence directory
+ * Parses APEX_EVIDENCE_STORAGE and returns the active backend type plus
+ * any backend-specific config values.
  */
-export function getSecureEvidenceDir(): string {
-  // Production: Use configured storage (S3, database, etc.)
-  const configuredStorage = process.env.APEX_EVIDENCE_STORAGE;
-  if (configuredStorage) {
-    // Validate it's not a publicly writable directory
-    if (configuredStorage === '/tmp' || configuredStorage.startsWith('/tmp/')) {
+export function resolveEvidenceBackend(): {
+  backend: EvidenceBackend;
+  localPath?: string;
+  s3Bucket?: string;
+  s3Prefix?: string;
+} {
+  const raw = process.env.APEX_EVIDENCE_STORAGE?.trim();
+
+  if (raw?.startsWith('s3://')) {
+    // s3://my-bucket/optional/prefix
+    const withoutScheme = raw.slice(5);
+    const slashIdx = withoutScheme.indexOf('/');
+    const s3Bucket = slashIdx === -1 ? withoutScheme : withoutScheme.slice(0, slashIdx);
+    const s3Prefix = slashIdx === -1 ? '' : withoutScheme.slice(slashIdx + 1).replace(/\/$/, '');
+    if (!s3Bucket) {
+      throw new Error('APEX_EVIDENCE_STORAGE s3:// URI is missing a bucket name');
+    }
+    return { backend: 's3', s3Bucket, s3Prefix };
+  }
+
+  if (raw && raw !== '') {
+    // Explicit local path override
+    if (raw === '/tmp' || raw.startsWith('/tmp/')) {
       console.warn(
-        '⚠️  APEX_EVIDENCE_STORAGE is set to /tmp - this is insecure for production!'
+        '⚠️  APEX_EVIDENCE_STORAGE is set to /tmp — this is insecure for production!'
+          + ' Use an s3:// URI or a persistent volume instead.',
       );
     }
-    return configuredStorage;
+    // Warn when running inside a container (ephemeral disk)
+    if (process.env.KUBERNETES_SERVICE_HOST || process.env.DYNO || process.env.FLY_APP_NAME) {
+      console.warn(
+        '⚠️  APEX_EVIDENCE_STORAGE is a local path but the process appears to be running '
+          + 'inside a container or PaaS dyno. Evidence data WILL be lost on container restart. '
+          + 'Set APEX_EVIDENCE_STORAGE=s3://your-bucket/prefix for durable storage.',
+      );
+    }
+    return { backend: 'local', localPath: raw };
   }
 
-  // Development / CI: Use a project-local directory that is git-ignored.
-  // Falls back to a user-specific temp directory only when running outside
-  // a project working tree (e.g. standalone scripts).
+  // Default dev/CI path
   const projectRoot = process.env.APEX_PROJECT_ROOT ?? process.cwd();
-  const localDir = path.join(projectRoot, '.apex', 'evidence');
-  // Prefer the project-local path when it is writable; otherwise fall back.
-  try {
-    fs.mkdirSync(localDir, { recursive: true, mode: 0o700 });
-    return localDir;
-  } catch {
-    // Fallback: user-specific temp directory with process isolation
-    const userTempDir = os.tmpdir();
-    const processId = process.pid;
-    const userId = process.getuid?.() ?? 'unknown';
-    return path.join(userTempDir, `apex-evidence-${userId}-${processId}`);
-  }
+  const localPath = path.join(projectRoot, '.apex', 'evidence');
+  return { backend: 'local', localPath };
 }
 
+// ─── Local backend ────────────────────────────────────────────────────────────
+
 /**
- * Securely creates the evidence directory with restrictive permissions
- * @param baseDir - Base directory path
- * @returns Absolute path to created directory
+ * Returns the resolved local evidence directory, creating it if necessary.
+ * @deprecated Prefer using the high-level `writeSecureEvidence()` helper.
  */
-export async function createSecureEvidenceDir(baseDir: string): Promise<string> {
-  const fs = await import('node:fs/promises');
+export function getSecureEvidenceDir(): string {
+  const config = resolveEvidenceBackend();
 
-  try {
-    // Create directory with restrictive permissions (0700 - owner only)
-    await fs.mkdir(baseDir, { recursive: true, mode: 0o700 });
-
-    // Verify the directory was created with correct permissions
-    const stats = await fs.stat(baseDir);
-    if (!stats.isDirectory()) {
-      throw new Error(`Path exists but is not a directory: ${baseDir}`);
-    }
-
-    return baseDir;
-  } catch (error) {
+  if (config.backend === 's3') {
     throw new Error(
-      `Failed to create secure evidence directory: ${error instanceof Error ? error.message : String(error)}`
+      'getSecureEvidenceDir() is not applicable when using the S3 backend. '
+        + 'Use writeSecureEvidence() instead.',
     );
   }
+
+  const baseDir = config.localPath!;
+
+  try {
+    fs.mkdirSync(baseDir, { recursive: true, mode: 0o700 });
+    return baseDir;
+  } catch {
+    // Fallback: user-specific temp dir with process isolation
+    const userId = process.getuid?.() ?? 'unknown';
+    const fallback = path.join(os.tmpdir(), `apex-evidence-${userId}-${process.pid}`);
+    fs.mkdirSync(fallback, { recursive: true, mode: 0o700 });
+    return fallback;
+  }
 }
 
+export async function createSecureEvidenceDir(baseDir: string): Promise<string> {
+  const fsp = await import('node:fs/promises');
+  await fsp.mkdir(baseDir, { recursive: true, mode: 0o700 });
+  const stats = await fsp.stat(baseDir);
+  if (!stats.isDirectory()) {
+    throw new Error(`Path exists but is not a directory: ${baseDir}`);
+  }
+  return baseDir;
+}
+
+// ─── S3 backend ───────────────────────────────────────────────────────────────
+
 /**
- * Securely writes evidence to a file with atomic operations
- * Addresses SonarQube S5443 by using restrictive permissions and validation
+ * Writes evidence to an S3 bucket.
  *
- * @param taskId - Task identifier (validated for path traversal)
- * @param content - Evidence content to write
+ * Uses the AWS SDK v3 (@aws-sdk/client-s3) which must be installed:
+ *   npm install @aws-sdk/client-s3
+ *
+ * Server-side encryption (SSE-S3) is enforced on every PutObject call.
+ */
+async function writeS3Evidence(
+  s3Bucket: string,
+  s3Prefix: string,
+  taskId: string,
+  content: string,
+  extension: string,
+): Promise<string> {
+  // Dynamic import so the module is only required when S3 backend is active.
+  // This avoids a hard dependency on @aws-sdk for teams using local storage.
+  let S3Client: typeof import('@aws-sdk/client-s3').S3Client;
+  let PutObjectCommand: typeof import('@aws-sdk/client-s3').PutObjectCommand;
+
+  try {
+    // String-concatenation prevents Vite's import-analysis plugin from attempting to
+    // statically resolve this optional peer dependency at build/test time.
+    // The module is only required at runtime when APEX_EVIDENCE_STORAGE=s3://...
+    const s3SdkId = '@aws-sdk/' + 'client-s3';
+    const s3Module = await import(s3SdkId);
+    S3Client = s3Module.S3Client;
+    PutObjectCommand = s3Module.PutObjectCommand;
+  } catch {
+    throw new Error(
+      'APEX_EVIDENCE_STORAGE is set to an s3:// URI but @aws-sdk/client-s3 is not installed. '
+        + 'Run: npm install @aws-sdk/client-s3',
+    );
+  }
+
+  const region = process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION ?? 'us-east-1';
+  const client = new S3Client({ region });
+
+  const key = [s3Prefix, `${taskId}.${extension}`].filter(Boolean).join('/');
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: s3Bucket,
+      Key: key,
+      Body: content,
+      ContentType: extension === 'json' ? 'application/json' : 'text/plain',
+      ServerSideEncryption: 'AES256', // SSE-S3 enforced
+    }),
+  );
+
+  return `s3://${s3Bucket}/${key}`;
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+/**
+ * Writes evidence using the configured backend (local filesystem or S3).
+ *
+ * @param taskId    - Task identifier; must match [a-zA-Z0-9_-]+
+ * @param content   - Evidence payload (string)
  * @param extension - File extension (default: 'json')
- * @returns Absolute path to written file
+ * @returns         - Absolute local path or s3:// URI of the written object
  */
 export async function writeSecureEvidence(
   taskId: string,
   content: string,
-  extension = 'json'
+  extension = 'json',
 ): Promise<string> {
-  const fs = await import('node:fs/promises');
+  const sanitisedId = validateTaskId(taskId);
+  const config = resolveEvidenceBackend();
 
-  // Validate task ID to prevent path traversal
-  const sanitizedId = validateTaskId(taskId);
+  if (config.backend === 's3') {
+    return writeS3Evidence(config.s3Bucket!, config.s3Prefix!, sanitisedId, content, extension);
+  }
 
-  // Get secure directory
-  const baseDir = getSecureEvidenceDir();
-
-  // Ensure directory exists with secure permissions
-  await createSecureEvidenceDir(baseDir);
-
-  // Generate secure filename
-  const filename = `${sanitizedId}.${extension}`;
+  // ── Local backend ──────────────────────────────────────────────────────
+  const fsp = await import('node:fs/promises');
+  const baseDir = await createSecureEvidenceDir(config.localPath!);
+  const filename = `${sanitisedId}.${extension}`;
   const filepath = path.join(baseDir, filename);
 
-  // Verify the resolved path is still within the base directory (defense in depth)
+  // Defence in depth: verify resolved path stays within base dir
   const resolvedPath = path.resolve(filepath);
   const resolvedBase = path.resolve(baseDir);
   if (!resolvedPath.startsWith(resolvedBase + path.sep)) {
     throw new Error('Attempted path traversal detected');
   }
 
-  try {
-    // Write file atomically with restrictive permissions (0600 - owner read/write only)
-    // Using 'wx' flag ensures exclusive creation (fails if file exists)
-    await fs.writeFile(filepath, content, {
-      mode: 0o600,
-      flag: 'w', // Overwrite if exists (for evidence updates)
-      encoding: 'utf-8',
-    });
+  await fsp.writeFile(filepath, content, {
+    mode: 0o600,
+    flag: 'w',
+    encoding: 'utf-8',
+  });
 
-    return filepath;
-  } catch (error) {
-    throw new Error(
-      `Failed to write evidence file: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
+  return filepath;
 }
 
-/**
- * Generates a secure hash of the evidence content for integrity verification
- * @param content - Evidence content
- * @returns SHA-256 hash of content
- */
+// ─── Utilities ────────────────────────────────────────────────────────────────
+
+/** SHA-256 content hash for integrity verification */
 export function generateEvidenceHash(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 
-/**
- * Cleans up process-specific evidence directory on exit
- * Only removes files created by this process
- */
+/** Cleans up the local evidence directory on process exit (dev/CI only) */
 export async function cleanupEvidenceDir(): Promise<void> {
-  const baseDir = getSecureEvidenceDir();
+  const config = resolveEvidenceBackend();
+  if (config.backend !== 'local') return; // nothing to clean up for S3
 
-  // Only cleanup if using process-specific directory (not production storage)
-  if (!process.env.APEX_EVIDENCE_STORAGE && baseDir.includes(`-${process.pid}`)) {
+  const baseDir = config.localPath!;
+  // Only remove process-isolated directories (contain the PID)
+  if (baseDir.includes(`-${process.pid}`)) {
     try {
-      const fs = await import('node:fs/promises');
-      await fs.rm(baseDir, { recursive: true, force: true });
+      const fsp = await import('node:fs/promises');
+      await fsp.rm(baseDir, { recursive: true, force: true });
     } catch {
-      // Ignore cleanup errors - directory might not exist
+      // Ignore cleanup errors
     }
   }
 }
 
-// Register cleanup on process exit
 if (typeof process !== 'undefined') {
   process.on('exit', () => {
-    // Synchronous cleanup on exit (best effort)
-    cleanupEvidenceDir().catch(() => {
-      // Ignore errors during cleanup
-    });
+    cleanupEvidenceDir().catch(() => {/* ignore */});
   });
 }

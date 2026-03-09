@@ -34,3 +34,9 @@ if (httpProxy) {
     // undici not available — integration tests will skip via DNS failure
   }
 }
+
+// ─── Framer Motion — jsdom DOM-prop bleed prevention ─────────────────────────
+// Delegates to __mocks__/framer-motion.ts (synchronous ESM, no require()).
+// The factory-less call tells Vitest to use the adjacent __mocks__ file,
+// avoiding the async-factory timing race that caused props to bleed through.
+vi.mock('framer-motion');
