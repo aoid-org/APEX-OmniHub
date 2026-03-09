@@ -63,7 +63,7 @@ export const AppTile = memo(function AppTile({ app, onClick }: AppTileProps) {
         <div
           style={{
             fontSize: 10,
-            color: '#5a6478',
+            color: '#7a849a',
             marginTop: 3,
             fontWeight: 800,
             textTransform: 'uppercase',
@@ -76,7 +76,7 @@ export const AppTile = memo(function AppTile({ app, onClick }: AppTileProps) {
           <div
             style={{
               fontSize: 10,
-              color: '#3d4657',
+              color: '#5a6478',
               marginTop: 2,
               fontFamily: FONT_SG,
               letterSpacing: '0.02em',
