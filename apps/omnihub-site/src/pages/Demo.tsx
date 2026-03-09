@@ -94,19 +94,18 @@ function InteractiveWorkflowDemo() {
     setCompleted(new Set());
     setActiveStep(0);
 
-    const scheduleStep = (stepId: string, idx: number, isLast: boolean) => {
+    const scheduleStep = (stepId: string, idx: number) => {
       setTimeout(() => setActiveStep(idx), idx * 1200);
-      setTimeout(() => {
-        setCompleted(prev => new Set([...prev, stepId]));
-        if (isLast) {
-          setTimeout(() => { setActiveStep(-1); setRunning(false); }, 800);
-        }
-      }, idx * 1200 + 900);
+      setTimeout(() => setCompleted(prev => new Set([...prev, stepId])), idx * 1200 + 900);
     };
 
-    WORKFLOW_STEPS.forEach((step, idx) => {
-      scheduleStep(step.id, idx, idx === WORKFLOW_STEPS.length - 1);
-    });
+    WORKFLOW_STEPS.forEach((step, idx) => scheduleStep(step.id, idx));
+
+    const totalTime = (WORKFLOW_STEPS.length - 1) * 1200 + 900 + 800;
+    setTimeout(() => {
+      setActiveStep(-1);
+      setRunning(false);
+    }, totalTime);
   }, [running]);
 
   return (

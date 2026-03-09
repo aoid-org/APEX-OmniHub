@@ -57,14 +57,17 @@ function validateTaskId(taskId: string): string {
  *
  * @returns Absolute path to evidence directory
  */
+let cachedTempDir: string | null = null;
+
 export function getSecureEvidenceDir(): string {
   // Production: Use configured storage (S3, database, etc.)
   const configuredStorage = process.env.APEX_EVIDENCE_STORAGE;
   if (configuredStorage) {
     // Validate it's not a publicly writable directory
-    if (configuredStorage === '/tmp' || configuredStorage.startsWith('/tmp/')) {
-      console.warn(
-        '⚠️  APEX_EVIDENCE_STORAGE is set to /tmp - this is insecure for production!'
+    const tmpBase = os.tmpdir();
+    if (configuredStorage === tmpBase || configuredStorage.startsWith(tmpBase + path.sep)) {
+      throw new Error(
+        'APEX_EVIDENCE_STORAGE cannot be set to a publicly writable directory'
       );
     }
     return configuredStorage;
@@ -80,11 +83,11 @@ export function getSecureEvidenceDir(): string {
     fs.mkdirSync(localDir, { recursive: true, mode: 0o700 });
     return localDir;
   } catch {
-    // Fallback: user-specific temp directory with process isolation
-    const userTempDir = os.tmpdir();
-    const processId = process.pid;
-    const userId = process.getuid?.() ?? 'unknown';
-    return path.join(userTempDir, `apex-evidence-${userId}-${processId}`);
+    // Fallback: user-specific temp directory securely created
+    if (cachedTempDir) return cachedTempDir;
+    const tmpBase = os.tmpdir();
+    cachedTempDir = fs.mkdtempSync(path.join(tmpBase, 'apex-evidence-'));
+    return cachedTempDir;
   }
 }
 

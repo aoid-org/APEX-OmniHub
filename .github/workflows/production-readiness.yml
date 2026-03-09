@@ -34,7 +34,7 @@ jobs:
           bun-version: "1.2.14"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: TypeScript compilation
         run: npx tsc --noEmit
@@ -131,7 +131,7 @@ jobs:
           bun-version: "1.2.14"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build production bundle
         run: npm run build

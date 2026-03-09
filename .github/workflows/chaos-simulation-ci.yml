@@ -60,7 +60,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run simulation unit tests
         run: npm run test:sim
@@ -94,7 +94,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run quick smoke test
         run: npm run sim:quick
@@ -129,7 +129,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run dry simulation
         run: npm run sim:dry
@@ -171,7 +171,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run full chaos simulation (seed ${{ matrix.seed }})
         run: npm run sim:chaos -- --seed ${{ matrix.seed }}
@@ -304,7 +304,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run burst mode (1000 events)
         run: npm run sim:burst
@@ -358,7 +358,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run simulation twice with same seed
         run: |

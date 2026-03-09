@@ -106,7 +106,7 @@ jobs:
           bun-version: "1.2.14"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -201,7 +201,7 @@ jobs:
       # PHASE 3: Build
       # ─────────────────────────────────────────────────────────────
       - name: Vercel Production Sync Shield
-        run: cd apps/omnihub-site && npm ci --omit=dev && npm run build
+        run: cd apps/omnihub-site && npm ci --ignore-scripts --omit=dev && npm run build
 
       - name: Build production bundle
         run: npm run build
@@ -313,7 +313,7 @@ jobs:
           bun-version: "1.2.14"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
