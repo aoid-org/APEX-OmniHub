@@ -71,62 +71,6 @@ const APP_REGISTRY_SOURCE: readonly AppRegistrySeed[] = [
     status: 'Live',
   },
   {
-    key: 'omniport',
-    label: 'OmniPort',
-    routePath: '/omnidash/omniport',
-    category: 'platform',
-    iconAssetKey: 'links',
-    logoDomain: 'cloudflare.com',
-    chaosTarget: true,
-    comingSoon: false,
-    health: 'yellow',
-    insight: 'Throughput elevated; queue depth remains controlled.',
-    syncedMinutesAgo: 2,
-    status: 'Live',
-  },
-  {
-    key: 'maestro',
-    label: 'Maestro',
-    routePath: '/omnidash/maestro',
-    category: 'automation',
-    iconAssetKey: 'automations',
-    logoDomain: 'temporal.io',
-    chaosTarget: true,
-    comingSoon: false,
-    health: 'green',
-    insight: 'Workflow orchestration heartbeat stable across shards.',
-    syncedMinutesAgo: 1,
-    status: 'Live',
-  },
-  {
-    key: 'fortress',
-    label: 'Fortress',
-    routePath: '/omnidash/fortress',
-    category: 'security',
-    iconAssetKey: 'audits',
-    logoDomain: 'supabase.com',
-    chaosTarget: true,
-    comingSoon: false,
-    health: 'green',
-    insight: 'Zero-trust controls passing policy and audit checks.',
-    syncedMinutesAgo: 1,
-    status: 'Live',
-  },
-  {
-    key: 'orchestrator',
-    label: 'Orchestrator',
-    routePath: '/omnidash/orchestrator',
-    category: 'control-plane',
-    iconAssetKey: 'workflows',
-    logoDomain: 'python.org',
-    chaosTarget: true,
-    comingSoon: false,
-    health: 'yellow',
-    insight: 'Planner latency elevated during simulation windows.',
-    syncedMinutesAgo: 3,
-    status: 'Partial',
-  },
-  {
     key: 'omniskills',
     label: 'OmniSkills',
     routePath: '/omnidash/omniskills',
@@ -256,6 +200,6 @@ const APP_REGISTRY_SOURCE: readonly AppRegistrySeed[] = [
 
 export const APP_REGISTRY: readonly AppRegistryEntry[] = APP_REGISTRY_SOURCE.map(createAppRegistryEntry);
 
-if (APP_REGISTRY.length !== 14) {
-  throw new Error(`APP_REGISTRY must contain exactly 14 entries. Found: ${APP_REGISTRY.length}`);
+if (APP_REGISTRY.length !== 10) {
+  throw new Error(`APP_REGISTRY must contain exactly 10 entries. Found: ${APP_REGISTRY.length}`);
 }

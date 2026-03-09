@@ -3,7 +3,7 @@ export const LOGO = (domain: string) =>
   `https://logo.clearbit.com/${domain}`;
 
 /* ── Hidden apps ── */
-export const HIDDEN_APPS = new Set(['OmniBoard', 'OmniPort', 'Maestro']);
+export const HIDDEN_APPS = new Set(['OmniBoard', 'OmniSkills']);
 
 /* ── Framer Motion spring config ── */
 export const SPRING = {
@@ -92,10 +92,10 @@ export const PROMPT_STYLE_BASE = {
   flex: 1,
 };
 
-/* ── Ecosystem row styles ── */
+/* ── Ecosystem row styles — CONTRAST-FIXED ── */
 export const ECO_ROW_STYLE = {
-  background: 'rgba(255,255,255,0.025)',
-  border: '1px solid rgba(255,255,255,0.05)',
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.10)',
   cursor: 'grab',
   touchAction: 'none' as const,
 };
@@ -109,19 +109,19 @@ export const CAT_BADGE_STYLE = {
   letterSpacing: '0.05em',
 };
 
-/* ── App tile styles — refined surfaces ── */
+/* ── App tile styles — CONTRAST-FIXED surfaces ── */
 export const APP_TILE_SURFACE = {
   display: 'flex',
   alignItems: 'center',
   gap: 14,
   padding: '14px 18px',
   borderRadius: 16,
-  background: 'rgba(255,255,255,0.025)',
-  border: '1px solid rgba(255,255,255,0.05)',
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.10)',
   cursor: 'grab',
   boxShadow:
-    'inset 0 1px 0 rgba(255,255,255,0.03),' +
-    ' 0 4px 16px rgba(0,0,0,0.3)',
+    'inset 0 1px 0 rgba(255,255,255,0.06),' +
+    ' 0 4px 16px rgba(0,0,0,0.25)',
   touchAction: 'none' as const,
   transition: 'all 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
   position: 'relative' as const,
@@ -132,10 +132,10 @@ export const APP_LOGO_STYLE = {
   height: 40,
   borderRadius: 10,
   flexShrink: 0,
-  background: 'rgba(6, 10, 19, 0.8)',
+  background: 'rgba(15, 20, 35, 0.9)',
   objectFit: 'contain' as const,
   padding: 5,
-  border: '1px solid rgba(255,255,255,0.08)',
+  border: '1px solid rgba(255,255,255,0.12)',
 };
 
 export const APP_LOGO_FALLBACK = {
@@ -143,8 +143,8 @@ export const APP_LOGO_FALLBACK = {
   height: 40,
   borderRadius: 10,
   flexShrink: 0,
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  background: 'rgba(255,255,255,0.08)',
+  border: '1px solid rgba(255,255,255,0.12)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -153,11 +153,11 @@ export const APP_LOGO_FALLBACK = {
 
 export const APP_TILE_HOVER = {
   scale: 1.02,
-  borderColor: 'rgba(194,80,31,0.25)',
+  borderColor: 'rgba(194,80,31,0.35)',
   boxShadow:
-    'inset 0 1px 0 rgba(255,255,255,0.06),' +
+    'inset 0 1px 0 rgba(255,255,255,0.10),' +
     ' 0 8px 28px rgba(0,0,0,0.4),' +
-    ' 0 0 20px rgba(249,115,22,0.06)',
+    ' 0 0 24px rgba(249,115,22,0.12)',
   translateY: -2,
 };
 

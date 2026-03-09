@@ -6,6 +6,7 @@ import { ComingSoonPage } from "@/pages/ComingSoon";
 import { HomePage } from "@/pages/Home";
 import { OnboardingWizard } from "@/pages/Launch/OnboardingWizard";
 import { OmniDashLayout } from "@/layouts/OmniDashLayout";
+import { OmniDashProvider } from "@/providers/OmniDashProvider";
 import { LoginPage } from "@/pages/Login";
 import { PrivacyPage } from "@/pages/Privacy";
 import { TermsPage } from "@/pages/Terms";
@@ -63,13 +64,7 @@ const appRoutes: readonly AppRoute[] = [
 ];
 
 const omniDashRoutes: readonly AppRoute[] = [
-  // Live module pages (rendered in Outlet modal overlay)
-  { path: "omniport", element: <OmniPortPage /> },
-  { path: "maestro", element: <MaestroPage /> },
-  { path: "fortress", element: <FortressPage /> },
-  { path: "orchestrator", element: <OrchestratorPage /> },
-  // Coming-soon modules are handled via OmniModal (useOmniDashAction dispatch)
-  // — no route-based ComingSoonPage needed
+  // All modules use spatial overlay via OmniModal (useOmniDashAction dispatch)
 ];
 
 function App() {
@@ -85,7 +80,7 @@ function App() {
             element={createProtectedElement(route.element, route.isPublic)}
           />
         ))}
-        <Route path="/omnidash" element={createProtectedElement(<OmniDashLayout />)}>
+        <Route path="/omnidash" element={createProtectedElement(<OmniDashProvider><OmniDashLayout /></OmniDashProvider>)}>
           {omniDashRoutes.map((route) => (
             <Route key={route.path} path={route.path} element={createProtectedElement(route.element, route.isPublic)} />
           ))}
