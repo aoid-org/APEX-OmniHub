@@ -1,13 +1,13 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-03-01 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.0-ACRA-MEMORY | LAST_UPDATED=2026-03-09 -->
 
 # APEX OmniHub Documentation
 
 **Enterprise AI Orchestration Platform**
 
-- **Document Version:** 2.2.0
-- **Platform Version:** 1.3.8
-- **Last Updated:** 2026-03-01
-- **Audit Baseline:** [Full Code Audit 2026-03-06](audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md)
+- **Document Version:** 2.3.0
+- **Platform Version:** 1.4.0
+- **Last Updated:** 2026-03-09
+- **Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
 
@@ -243,6 +243,8 @@ Audit reports, remediation, and historical records:
 | [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md)                      | Voice security        |
 | [Full Code Audit 2026-03-06](audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md)      | Full platform audit   |
 | [Third-Party Code Audit 2026-03-07](audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md)      | Third-party audit     |
+| [Third-Party Code Audit 2026-03-08](audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md)      | Third-party audit     |
+| [**Third-Party Code Audit 2026-03-09 ← CURRENT**](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) | **Latest audit — 94.3/100 (A)** |
 
 ---
 
