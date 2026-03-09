@@ -8,7 +8,7 @@ import httpx
 import redis.asyncio as redis
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 
-from providers.database.factory import get_database_provider
+from providers.database.supabase_provider import get_database_provider
 
 logger = logging.getLogger(__name__)
 
@@ -37,14 +37,14 @@ class OmniBoardService:
                 return json.loads(cached)
 
             db = get_database_provider()
-            res = await db.select(table="provider_registry", select_fields="name")
+            res = await db.query(table="provider_registry", columns=["name"])
             providers = [r["name"] for r in res if "name" in r]
 
             if providers:
                 await redis_client.setex(cache_key, 300, json.dumps(providers))
             return providers
         finally:
-            await redis_client.close()
+            await redis_client.aclose()  # type: ignore[attr-defined]
 
     @classmethod
     async def fuzzy_match_provider(cls, input_text: str) -> list[str]:
@@ -143,9 +143,9 @@ class OmniBoardService:
         Initiates Device Code flow via POST to provider's device_authorization_endpoint.
         """
         db = get_database_provider()
-        res = await db.select(
+        res = await db.query(
             table="provider_registry",
-            select_fields="device_authorization_endpoint",
+            columns=["device_authorization_endpoint"],
             filters={"name": provider},
         )
         if not res or not res[0].get("device_authorization_endpoint"):
@@ -182,7 +182,7 @@ class OmniBoardService:
         try:
             await redis_client.setex(token_ref, 3600, json.dumps(credentials))
         finally:
-            await redis_client.close()
+            await redis_client.aclose()  # type: ignore[attr-defined]
 
         return token_ref
 
@@ -200,13 +200,13 @@ class OmniBoardService:
                 raise ValueError(f"No credentials found at {token_ref}")
             creds = json.loads(creds_json)
         finally:
-            await redis_client.close()
+            await redis_client.aclose()  # type: ignore[attr-defined]
 
         access_token = creds.get("access_token")
 
         db = get_database_provider()
-        res = await db.select(
-            table="provider_registry", select_fields="userinfo_endpoint", filters={"name": provider}
+        res = await db.query(
+            table="provider_registry", columns=["userinfo_endpoint"], filters={"name": provider}
         )
         if not res or not res[0].get("userinfo_endpoint"):
             endpoint = f"https://api.{provider.lower()}.com/v1/userinfo"
@@ -274,7 +274,7 @@ class OmniBoardService:
                 raise ValueError(f"No credentials found at {token_ref}")
             creds = json.loads(creds_json)
         finally:
-            await redis_client.close()
+            await redis_client.aclose()  # type: ignore[attr-defined]
 
         refresh_token = creds.get("refresh_token")
         if not refresh_token:
@@ -286,8 +286,8 @@ class OmniBoardService:
         client_secret = os.environ.get(f"{slug}_CLIENT_SECRET")
 
         db = get_database_provider()
-        res = await db.select(
-            table="provider_registry", select_fields="token_endpoint", filters={"name": provider}
+        res = await db.query(
+            table="provider_registry", columns=["token_endpoint"], filters={"name": provider}
         )
         if not res or not res[0].get("token_endpoint"):
             raise ValueError(f"No token_endpoint found for {provider}")
@@ -313,6 +313,6 @@ class OmniBoardService:
             try:
                 await redis_client.setex(token_ref, 3600, json.dumps(new_creds))
             finally:
-                await redis_client.close()
+                await redis_client.aclose()  # type: ignore[attr-defined]
 
             return token_ref

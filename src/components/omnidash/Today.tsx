@@ -27,35 +27,9 @@ import { useExecute } from "@/hooks/useExecute";
 import { useDemoStore } from "@/stores/demoStore";
 import { OmniTraceFeed } from "@/components/dashboard/OmniTraceFeed";
 import { HiddenMetric } from "./HiddenMetric";
-import { Responsive, WidthProvider, Layout } from "react-grid-layout/legacy";
-import "react-grid-layout/css/styles.css";
-import "react-resizable/css/styles.css";
-
-const ResponsiveGridLayout = WidthProvider(Responsive);
+import { ResponsiveGridLayout, DragHandle, type Layout } from "./gridLayout";
 
 const ApexAgentAvatar = React.lazy(() => import("./ApexAgentAvatar"));
-
-const DragHandle = () => (
-  <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/20 hover:text-white/60 transition-colors z-20">
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="9" cy="12" r="1" />
-      <circle cx="9" cy="5" r="1" />
-      <circle cx="9" cy="19" r="1" />
-      <circle cx="15" cy="12" r="1" />
-      <circle cx="15" cy="5" r="1" />
-      <circle cx="15" cy="19" r="1" />
-    </svg>
-  </div>
-);
 
 interface WidgetCardProps {
   id: string;
@@ -80,7 +54,7 @@ const WidgetCard = ({
 }: WidgetCardProps) => (
   <div key={id}>
     <Card className={`glass-card hover-lift ${bgClass} ${borderClass} rounded-2xl h-full relative`}>
-      <DragHandle />
+      <DragHandle visibilityClass="text-white/20" />
       <CardHeader className="py-3">
         <CardTitle className={`flex items-center gap-2 text-sm ${textClass}`}>
           <Icon className="h-4 w-4" /> {title}
@@ -249,7 +223,7 @@ export const Today = () => {
         {/* APEX AGENT Unified Hero Section */}
         <div key="apex-agent" className="col-span-full h-full">
           <Card className="glass-card animate-in border-[hsl(var(--accent))]/30 rounded-3xl h-full flex flex-col relative overflow-hidden bg-[#0A0D14]/90 shadow-2xl">
-            <DragHandle />
+            <DragHandle visibilityClass="text-white/20" />
 
             <div className="flex flex-col lg:flex-row h-full">
               {/* Left Column: Top 3 Outcomes */}
@@ -503,7 +477,7 @@ export const Today = () => {
         {/* OmniTrace Event Log */}
         <div key="omnitrace">
           <Card className="glass-card hover-lift h-full overflow-hidden relative border border-white/5">
-            <DragHandle />
+            <DragHandle visibilityClass="text-white/20" />
             <div className="h-full overflow-hidden pt-2 pl-2">
               <OmniTraceFeed maxItems={4} />
             </div>

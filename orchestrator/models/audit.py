@@ -312,7 +312,7 @@ class AuditLogger:
         """Store audit event in local file (for development/testing)."""
         import json
 
-        import aiofiles  # type: ignore[import-untyped]
+        import aiofiles
 
         log_file = f"audit_logs_{event.timestamp.date()}.jsonl"
 
@@ -342,18 +342,10 @@ class AuditLogger:
         Returns:
             List of matching audit events
         """
-        from providers.database.factory import get_database_provider
-        from providers.database.supabase_provider import SupabaseDatabaseProvider
+        from providers.database.supabase_provider import get_database_provider
 
         try:
             db = get_database_provider()
-            # In order to use advanced queries like gte/lte, we need the supabase client
-            if not isinstance(db, SupabaseDatabaseProvider):
-                import logging
-
-                logging.error("Advanced query requires SupabaseDatabaseProvider")
-                return []
-
             query = db.client.table("audit_logs").select("*")
 
             if actor_id:

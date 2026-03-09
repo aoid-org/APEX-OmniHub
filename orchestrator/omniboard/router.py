@@ -22,7 +22,7 @@ async def start_session(tenant_id: str, trace_id: str) -> FSMContext:
             f"omni:session:fsm:{context.session_id}", 1800, context.model_dump_json()
         )
     finally:
-        await redis_client.close()
+        await redis_client.aclose()  # type: ignore[attr-defined]
 
     return context
 
@@ -48,13 +48,13 @@ async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
             raise HTTPException(status_code=404, detail=SESSION_NOT_FOUND)
 
         context = FSMContext.model_validate_json(context_json)
-        next_context, message = await OmniBoardFSM.transition(context, event)
+        next_context, message = OmniBoardFSM.transition(context, event)
 
         await redis_client.setex(
             f"omni:session:fsm:{session_id}", 1800, next_context.model_dump_json()
         )
     finally:
-        await redis_client.close()
+        await redis_client.aclose()  # type: ignore[attr-defined]
 
     return {"context": next_context.model_dump(), "message": message}
 
@@ -69,7 +69,7 @@ async def get_status(session_id: str) -> FSMContext:
             raise HTTPException(status_code=404, detail=SESSION_NOT_FOUND)
         return FSMContext.model_validate_json(context_json)
     finally:
-        await redis_client.close()
+        await redis_client.aclose()  # type: ignore[attr-defined]
 
 
 @router.delete("/connection/{connection_id}")
