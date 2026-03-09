@@ -85,6 +85,62 @@ const APP_REGISTRY_SOURCE: readonly AppRegistrySeed[] = [
     status: 'Live',
   },
   {
+    key: 'orchestrator',
+    label: 'Orchestrator',
+    routePath: '/omnidash/orchestrator',
+    category: 'automation',
+    iconAssetKey: 'automations',
+    logoDomain: 'temporal.io',
+    chaosTarget: true,
+    comingSoon: false,
+    health: 'yellow',
+    insight: 'Orchestration pipeline awaiting OAuth credential binding.',
+    syncedMinutesAgo: 10,
+    status: 'Partial',
+  },
+  {
+    key: 'fortress',
+    label: 'Fortress',
+    routePath: '/omnidash/fortress',
+    category: 'security',
+    iconAssetKey: 'audits',
+    logoDomain: 'crowdstrike.com',
+    chaosTarget: true,
+    comingSoon: false,
+    health: 'green',
+    insight: 'Perimeter defense and threat detection nominal.',
+    syncedMinutesAgo: 1,
+    status: 'Live',
+  },
+  {
+    key: 'omniport',
+    label: 'OmniPort',
+    routePath: '/omnidash/omniport',
+    category: 'platform',
+    iconAssetKey: 'links',
+    logoDomain: 'apexomnihub.icu',
+    chaosTarget: false,
+    comingSoon: false,
+    health: 'green',
+    insight: 'Integration gateway channels healthy.',
+    syncedMinutesAgo: 3,
+    status: 'Live',
+  },
+  {
+    key: 'maestro',
+    label: 'Maestro',
+    routePath: '/omnidash/maestro',
+    category: 'operations',
+    iconAssetKey: 'workflows',
+    logoDomain: 'apexomnihub.icu',
+    chaosTarget: false,
+    comingSoon: false,
+    health: 'green',
+    insight: 'Process orchestration engine running within SLA.',
+    syncedMinutesAgo: 2,
+    status: 'Live',
+  },
+  {
     key: 'physiomni',
     label: 'PhysiOmni',
     routePath: '/omnidash/physiomni',
@@ -200,6 +256,6 @@ const APP_REGISTRY_SOURCE: readonly AppRegistrySeed[] = [
 
 export const APP_REGISTRY: readonly AppRegistryEntry[] = APP_REGISTRY_SOURCE.map(createAppRegistryEntry);
 
-if (APP_REGISTRY.length !== 10) {
-  throw new Error(`APP_REGISTRY must contain exactly 10 entries. Found: ${APP_REGISTRY.length}`);
+if (APP_REGISTRY.length !== 14) {
+  throw new Error(`APP_REGISTRY must contain exactly 14 entries. Found: ${APP_REGISTRY.length}`);
 }
