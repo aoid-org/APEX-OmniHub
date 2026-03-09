@@ -72,7 +72,7 @@ jobs:
         run: npm run build
 
       - name: Upload dist artifact
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@v4
         with:
           name: web-dist
           path: dist/
@@ -120,7 +120,7 @@ jobs:
         run: npx cap sync android
 
       - name: Cache Gradle dependencies
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c6158d # v4.2.0
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -135,7 +135,7 @@ jobs:
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@v4
         with:
           name: android-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
@@ -189,25 +189,44 @@ jobs:
         run: npx cap sync ios
 
       - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+        run: |
+          # Use Xcode 16 if available, otherwise fall back to the runner default
+          if [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          else
+            echo "Xcode 16.2 not found; using runner default: $(xcode-select -p)"
+          fi
 
-      - name: Install CocoaPods dependencies
+      # This project uses Swift Package Manager — no CocoaPods / pod install needed.
+      # Capacitor 6 ships an SPM manifest at ios/App/App/Package.swift.
+      - name: Resolve Swift Package Manager dependencies
         working-directory: ios/App
-        run: pod install --repo-update
+        run: |
+          xcodebuild \
+            -project App.xcodeproj \
+            -scheme App \
+            -resolvePackageDependencies \
+            -clonedSourcePackagesDirPath spm-cache
 
       - name: Build iOS (simulator — no signing required)
         working-directory: ios/App
         run: |
           xcodebuild \
-            -workspace App.xcworkspace \
+            -project App.xcodeproj \
             -scheme App \
             -configuration Debug \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -derivedDataPath build/ \
+            -clonedSourcePackagesDirPath spm-cache \
             CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=YES \
             build \
-            | xcpretty --color || (cat /tmp/xcodebuild.log 2>/dev/null; exit 1)
+            2>&1 | tee /tmp/xcodebuild.log | grep -E "error:|warning:|Build (succeeded|FAILED)" || true
+          # Check for build failure in log (grep exits 1 if no match, so use log file)
+          if grep -q "BUILD FAILED" /tmp/xcodebuild.log; then
+            echo "::error::xcodebuild reported BUILD FAILED"
+            exit 1
+          fi
 
       - name: Verify iOS build product
         working-directory: ios/App
