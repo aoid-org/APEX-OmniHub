@@ -322,7 +322,10 @@ class OmniBoardService:
         cls, connection_id: str, tenant_id: str, provider: str, refresh_token: str
     ) -> str:
         """
-        Rotates credentials via OAuth refresh flow: POST to token_endpoint, store new token, update DB expiry.
+                """
+        Rotates credentials via OAuth refresh flow:
+        POST to token_endpoint, store new token, update DB expiry.
+
         """
         db = get_database_provider()
         res = await db.select(
