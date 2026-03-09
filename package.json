@@ -120,6 +120,7 @@
     "react-i18next": "^16.5.4",
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^7.13.0",
+    "reactflow": "^11.11.4",
     "recharts": "^2.15.4",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
@@ -187,6 +188,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.38.0",
     "vite": "^7.2.7",
+    "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.0.16"
   },
   "overrides": {
