@@ -21,29 +21,29 @@ export const EcosystemPane = memo(function EcosystemPane({
         'apex-hero-tile apex-hero-tile--sm' +
         ' flex flex-col relative overflow-hidden'
       }
-      style={{ ...GLASS_TILE, padding: 24 }}
+      style={{ ...GLASS_TILE, padding: 20 }}
     >
       <div className="apex-noise-layer" />
       <div className="relative z-10 w-full">
         <div
           style={{
-            fontSize: 19,
+            fontSize: 17,
             fontWeight: 800,
-            color: '#dfe6fe',
+            color: '#e8ecf4',
             marginBottom: 2,
             letterSpacing: '-0.02em',
           }}
         >
-          APEX Ecosystems
+          APEX Ecosystem
         </div>
         <div
           style={{
-            fontSize: 11.77,
-            fontWeight: 700,
-            color: '#a1a1aa',
+            fontSize: 10,
+            fontWeight: 800,
+            color: '#5a6478',
             textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            marginBottom: 16,
+            letterSpacing: '0.12em',
+            marginBottom: 14,
           }}
         >
           Connected Modules

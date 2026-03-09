@@ -1,15 +1,17 @@
 /**
- * WorkflowBuilder — Visual DAG orchestration canvas using React Flow.
+ * WorkflowBuilder — Visual DAG orchestration canvas.
  *
  * Features:
  * - Skill palette sourced from user_generated_skills
- * - Custom skill nodes with input/output ports
- * - Edge connections for data flow
- * - Save/load/schedule/run controls
- * - Cycle detection blocks save
+ * - Drag-and-drop skill nodes onto an SVG canvas
+ * - Node repositioning via HTML5 drag (canvas-relative coordinates)
+ * - SVG arrows for directed edges with port anchors
+ * - Click-to-connect: select source node → click "→" on target
+ * - Cycle detection blocks save (Kahn's topological sort)
+ * - Save / load / schedule / run controls persisted to Supabase
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,7 +38,18 @@ import {
   Loader2,
   GitBranch,
   Sparkles,
+  Link,
+  Unlink,
 } from 'lucide-react';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const NODE_W = 180;
+const NODE_H = 64;
+const CANVAS_W = 900;
+const CANVAS_H = 520;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -49,6 +62,40 @@ interface SkillRecord {
   is_active: boolean;
 }
 
+interface DragState {
+  nodeId: string;
+  startX: number;
+  startY: number;
+  originX: number;
+  originY: number;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Compute the output port anchor (right-centre) for a node */
+function outputAnchor(node: WorkflowNode) {
+  return {
+    x: node.position.x + NODE_W,
+    y: node.position.y + NODE_H / 2,
+  };
+}
+
+/** Compute the input port anchor (left-centre) for a node */
+function inputAnchor(node: WorkflowNode) {
+  return {
+    x: node.position.x,
+    y: node.position.y + NODE_H / 2,
+  };
+}
+
+/** Cubic bezier path between two points */
+function bezierPath(x1: number, y1: number, x2: number, y2: number): string {
+  const cx = (x1 + x2) / 2;
+  return `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`;
+}
+
 // ---------------------------------------------------------------------------
 // WorkflowBuilder Component
 // ---------------------------------------------------------------------------
@@ -57,14 +104,18 @@ export function WorkflowBuilder() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const canvasRef = useRef<SVGSVGElement>(null);
+  const dragRef = useRef<DragState | null>(null);
 
   const [workflowName, setWorkflowName] = useState('New Workflow');
   const [schedule, setSchedule] = useState('');
   const [nodes, setNodes] = useState<WorkflowNode[]>([]);
   const [edges, setEdges] = useState<WorkflowEdge[]>([]);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
 
-  // Fetch available skills for palette
+  // ── Data fetching ────────────────────────────────────────────────────────
+
   const skills = useQuery<SkillRecord[]>({
     queryKey: ['user-skills', user?.id],
     enabled: !!user,
@@ -81,7 +132,6 @@ export function WorkflowBuilder() {
     },
   });
 
-  // Fetch existing workflows
   const workflows = useQuery({
     queryKey: ['workflows', user?.id],
     enabled: !!user,
@@ -91,16 +141,13 @@ export function WorkflowBuilder() {
     },
   });
 
-  // Save mutation
+  // ── Mutations ────────────────────────────────────────────────────────────
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
       const definition: WorkflowDefinition = { nodes, edges };
-      return saveWorkflow(user.id, {
-        name: workflowName,
-        definition,
-        schedule: schedule || null,
-      });
+      return saveWorkflow(user.id, { name: workflowName, definition, schedule: schedule || null });
     },
     onSuccess: () => {
       toast({ title: 'Workflow Saved', description: 'DAG saved and validated.' });
@@ -111,17 +158,14 @@ export function WorkflowBuilder() {
     },
   });
 
-  // Run mutation
   const runMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
-      // First save
       const wf = await saveWorkflow(user.id, {
         name: workflowName,
         definition: { nodes, edges },
         schedule: schedule || null,
       });
-      // Then create run
       return createWorkflowRun(wf.id, user.id);
     },
     onSuccess: () => {
@@ -133,44 +177,193 @@ export function WorkflowBuilder() {
     },
   });
 
-  // Add skill as node
+  // ── Canvas node drag handlers ────────────────────────────────────────────
+
+  const getSVGPoint = useCallback((clientX: number, clientY: number) => {
+    const svg = canvasRef.current;
+    if (!svg) return { x: 0, y: 0 };
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const svgP = pt.matrixTransform(svg.getScreenCTM()!.inverse());
+    return { x: svgP.x, y: svgP.y };
+  }, []);
+
+  const onNodeMouseDown = useCallback(
+    (e: React.MouseEvent, nodeId: string) => {
+      e.stopPropagation();
+      // If we're in connect-mode, handle connection instead
+      if (connectingFrom !== null) return;
+      const node = nodes.find((n) => n.id === nodeId);
+      if (!node) return;
+      dragRef.current = {
+        nodeId,
+        startX: e.clientX,
+        startY: e.clientY,
+        originX: node.position.x,
+        originY: node.position.y,
+      };
+      setSelectedNode(nodeId);
+    },
+    [nodes, connectingFrom],
+  );
+
+  const onCanvasMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!dragRef.current) return;
+      const { nodeId, startX, startY, originX, originY } = dragRef.current;
+      const svg = canvasRef.current;
+      if (!svg) return;
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return;
+      const scale = ctm.a; // uniform scale
+      const dx = (e.clientX - startX) / scale;
+      const dy = (e.clientY - startY) / scale;
+      setNodes((prev) =>
+        prev.map((n) =>
+          n.id === nodeId
+            ? {
+                ...n,
+                position: {
+                  x: Math.max(0, Math.min(CANVAS_W - NODE_W, originX + dx)),
+                  y: Math.max(0, Math.min(CANVAS_H - NODE_H, originY + dy)),
+                },
+              }
+            : n,
+        ),
+      );
+    },
+    [],
+  );
+
+  const onCanvasMouseUp = useCallback(() => {
+    dragRef.current = null;
+  }, []);
+
+  // ── Canvas click (deselect / complete connection) ────────────────────────
+
+  const onCanvasClick = useCallback(() => {
+    if (connectingFrom) {
+      setConnectingFrom(null);
+    } else {
+      setSelectedNode(null);
+    }
+  }, [connectingFrom]);
+
+  // ── Node actions ─────────────────────────────────────────────────────────
+
   const addSkillNode = useCallback((skill: SkillRecord) => {
+    const col = Math.floor(Math.random() * 3);
+    const row = Math.floor(Math.random() * 4);
     const newNode: WorkflowNode = {
       id: `skill-${skill.id}-${Date.now()}`,
       type: 'skill',
-      position: { x: 200 + nodes.length * 50, y: 100 + nodes.length * 80 },
+      position: {
+        x: 60 + col * (NODE_W + 60),
+        y: 40 + row * (NODE_H + 40),
+      },
       data: { label: skill.name, skillId: skill.id, triggerIntent: skill.trigger_intent },
     };
     setNodes((prev) => [...prev, newNode]);
-  }, [nodes.length]);
+  }, []);
 
-  // Add edge
-  const addEdge = useCallback((sourceId: string, targetId: string) => {
-    const edgeId = `edge-${sourceId}-${targetId}`;
-    if (edges.some((e) => e.id === edgeId)) return;
-    setEdges((prev) => [...prev, { id: edgeId, source: sourceId, target: targetId }]);
-  }, [edges]);
-
-  // Remove node
   const removeNode = useCallback((nodeId: string) => {
     setNodes((prev) => prev.filter((n) => n.id !== nodeId));
     setEdges((prev) => prev.filter((e) => e.source !== nodeId && e.target !== nodeId));
-    if (selectedNode === nodeId) setSelectedNode(null);
-  }, [selectedNode]);
+    setSelectedNode((s) => (s === nodeId ? null : s));
+    setConnectingFrom((c) => (c === nodeId ? null : c));
+  }, []);
 
-  // Remove edge
-  const handleRemoveEdge = useCallback((edgeId: string) => {
+  const handleNodeClick = useCallback(
+    (e: React.MouseEvent, nodeId: string) => {
+      e.stopPropagation();
+      if (connectingFrom === null) {
+        setSelectedNode(nodeId);
+        return;
+      }
+      // Complete the connection
+      if (connectingFrom === nodeId) {
+        setConnectingFrom(null);
+        return;
+      }
+      const edgeId = `edge-${connectingFrom}-${nodeId}`;
+      if (!edges.some((edge) => edge.id === edgeId)) {
+        setEdges((prev) => [
+          ...prev,
+          { id: edgeId, source: connectingFrom, target: nodeId },
+        ]);
+      }
+      setConnectingFrom(null);
+    },
+    [connectingFrom, edges],
+  );
+
+  const toggleConnect = useCallback(
+    (e: React.MouseEvent, nodeId: string) => {
+      e.stopPropagation();
+      setConnectingFrom((prev) => (prev === nodeId ? null : nodeId));
+      setSelectedNode(nodeId);
+    },
+    [],
+  );
+
+  const removeEdge = useCallback((edgeId: string) => {
     setEdges((prev) => prev.filter((e) => e.id !== edgeId));
   }, []);
 
+  // ── Palette drag-to-canvas ───────────────────────────────────────────────
+
+  const onPaletteDragStart = useCallback(
+    (e: React.DragEvent, skill: SkillRecord) => {
+      e.dataTransfer.setData('application/skill-id', skill.id);
+      e.dataTransfer.setData('application/skill-name', skill.name);
+      e.dataTransfer.setData('application/skill-intent', skill.trigger_intent);
+      e.dataTransfer.effectAllowed = 'copy';
+    },
+    [],
+  );
+
+  const onCanvasDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  }, []);
+
+  const onCanvasDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const skillId = e.dataTransfer.getData('application/skill-id');
+      const skillName = e.dataTransfer.getData('application/skill-name');
+      const triggerIntent = e.dataTransfer.getData('application/skill-intent');
+      if (!skillId) return;
+      const { x, y } = getSVGPoint(e.clientX, e.clientY);
+      const newNode: WorkflowNode = {
+        id: `skill-${skillId}-${Date.now()}`,
+        type: 'skill',
+        position: {
+          x: Math.max(0, Math.min(CANVAS_W - NODE_W, x - NODE_W / 2)),
+          y: Math.max(0, Math.min(CANVAS_H - NODE_H, y - NODE_H / 2)),
+        },
+        data: { label: skillName, skillId, triggerIntent },
+      };
+      setNodes((prev) => [...prev, newNode]);
+    },
+    [getSVGPoint],
+  );
+
+  // ── Derived ──────────────────────────────────────────────────────────────
+
   const nodeCount = nodes.length;
   const edgeCount = edges.length;
-
   const hasNodes = nodeCount > 0;
+
+  // Build a node lookup for edge rendering
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+
+  // ── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
-      {/* Header Controls */}
+      {/* ── Header Controls ── */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex items-center gap-3">
           <GitBranch className="h-5 w-5 text-primary" />
@@ -181,7 +374,7 @@ export function WorkflowBuilder() {
             placeholder="Workflow name"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <SkillForgeWidget />
           <Button
             variant="outline"
@@ -211,8 +404,8 @@ export function WorkflowBuilder() {
         </div>
       </div>
 
-      {/* Schedule */}
-      <div className="flex items-center gap-3">
+      {/* ── Schedule + Stats ── */}
+      <div className="flex items-center gap-3 flex-wrap">
         <Input
           value={schedule}
           onChange={(e) => setSchedule(e.target.value)}
@@ -222,12 +415,18 @@ export function WorkflowBuilder() {
         <Badge variant="secondary" className="text-xs whitespace-nowrap">
           {nodeCount} nodes · {edgeCount} edges
         </Badge>
+        {connectingFrom && (
+          <Badge variant="default" className="text-xs animate-pulse whitespace-nowrap">
+            Click a target node to connect
+          </Badge>
+        )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[250px,1fr]">
-        {/* Skill Palette */}
+      {/* ── Main editor (palette + canvas) ── */}
+      <div className="grid gap-4 lg:grid-cols-[220px,1fr]">
+        {/* ── Skill Palette ── */}
         <Card className="glass-card rounded-2xl">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
               Skill Palette
@@ -237,131 +436,241 @@ export function WorkflowBuilder() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <ScrollArea className="h-64 px-3">
+            <ScrollArea className="h-[480px] px-3 pb-3">
               {skills.data?.length === 0 && (
                 <p className="text-xs text-muted-foreground py-4 text-center">
                   No skills yet. Forge one first.
                 </p>
               )}
               {skills.data?.map((skill) => (
-                <button
+                <div
                   key={skill.id}
-                  onClick={() => addSkillNode(skill)}
-                  className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-accent/50 transition-colors flex items-center gap-2 group"
+                  draggable
+                  onDragStart={(e) => onPaletteDragStart(e, skill)}
+                  className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-accent/50 transition-colors flex items-center gap-2 group cursor-grab active:cursor-grabbing mb-1 border border-transparent hover:border-border"
                 >
-                  <Plus className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <Plus className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{skill.name}</p>
                     <p className="text-[10px] text-muted-foreground truncate">
                       {skill.trigger_intent}
                     </p>
                   </div>
-                </button>
+                  <button
+                    type="button"
+                    title="Add to canvas"
+                    onClick={() => addSkillNode(skill)}
+                    className="ml-auto shrink-0 text-muted-foreground hover:text-primary"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               ))}
             </ScrollArea>
           </CardContent>
         </Card>
 
-        {/* Canvas */}
-        <Card className="glass-card rounded-2xl min-h-[400px]">
-          <CardContent className="p-4">
-            {hasNodes ? (
-              <div className="space-y-3">
-                {/* Node list (simplified visual representation) */}
-                {nodes.map((node, idx) => (
-                  <button
-                    type="button"
-                    key={node.id}
-                    className={`w-full text-left flex items-center gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer ${
-                      selectedNode === node.id
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/40'
-                    }`}
-                    onClick={() => setSelectedNode(node.id)}
-                  >
-                    <Badge variant="outline" className="text-[10px] shrink-0">
-                      {idx + 1}
-                    </Badge>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {(node.data as Record<string, string>).label}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground truncate">
-                        {(node.data as Record<string, string>).triggerIntent}
-                      </p>
-                    </div>
-                    <div className="flex gap-1 shrink-0">
-                      {selectedNode && selectedNode !== node.id && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addEdge(selectedNode, node.id);
-                          }}
-                          title="Connect from selected"
-                        >
-                          <GitBranch className="h-3 w-3" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeNode(node.id);
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </button>
-                ))}
+        {/* ── DAG Canvas ── */}
+        <Card className="glass-card rounded-2xl overflow-hidden">
+          <CardContent className="p-0">
+            <svg
+              ref={canvasRef}
+              width="100%"
+              viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
+              className={`w-full bg-[radial-gradient(circle,_hsl(var(--border))_1px,_transparent_1px)] bg-[length:24px_24px] select-none ${connectingFrom ? 'cursor-crosshair' : 'cursor-default'}`}
+              style={{ minHeight: 420 }}
+              onMouseMove={onCanvasMouseMove}
+              onMouseUp={onCanvasMouseUp}
+              onMouseLeave={onCanvasMouseUp}
+              onClick={onCanvasClick}
+              onDragOver={onCanvasDragOver}
+              onDrop={onCanvasDrop}
+            >
+              {/* ── Defs: arrowhead marker ── */}
+              <defs>
+                <marker
+                  id="arrowhead"
+                  markerWidth="10"
+                  markerHeight="7"
+                  refX="10"
+                  refY="3.5"
+                  orient="auto"
+                >
+                  <polygon
+                    points="0 0, 10 3.5, 0 7"
+                    fill="hsl(var(--primary))"
+                    opacity="0.8"
+                  />
+                </marker>
+                <marker
+                  id="arrowhead-muted"
+                  markerWidth="10"
+                  markerHeight="7"
+                  refX="10"
+                  refY="3.5"
+                  orient="auto"
+                >
+                  <polygon
+                    points="0 0, 10 3.5, 0 7"
+                    fill="hsl(var(--muted-foreground))"
+                    opacity="0.5"
+                  />
+                </marker>
+              </defs>
 
-                {/* Edges display */}
-                {edgeCount > 0 && (
-                  <div className="border-t pt-3 mt-3">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Connections</p>
-                    {edges.map((edge) => {
-                      const sourceNode = nodes.find((n) => n.id === edge.source);
-                      const targetNode = nodes.find((n) => n.id === edge.target);
-                      return (
-                        <div key={edge.id} className="flex items-center gap-2 text-xs text-muted-foreground py-1">
-                          <span className="truncate">
-                            {(sourceNode?.data as Record<string, string> | undefined)?.label ?? edge.source}
-                          </span>
-                          <span>→</span>
-                          <span className="truncate">
-                            {(targetNode?.data as Record<string, string> | undefined)?.label ?? edge.target}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-4 w-4 ml-auto"
-                            onClick={() => handleRemoveEdge(edge.id)}
-                          >
-                            <Trash2 className="h-2.5 w-2.5" />
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-72 text-muted-foreground">
-                <GitBranch className="h-12 w-12 mb-4 opacity-30" />
-                <p className="text-sm font-medium">Empty Canvas</p>
-                <p className="text-xs">Add skills from the palette to build your workflow</p>
-              </div>
-            )}
+              {/* ── Edges ── */}
+              {edges.map((edge) => {
+                const src = nodeMap.get(edge.source);
+                const tgt = nodeMap.get(edge.target);
+                if (!src || !tgt) return null;
+                const out = outputAnchor(src);
+                const inp = inputAnchor(tgt);
+                return (
+                  <g key={edge.id}>
+                    {/* Hit-area (wider invisible stroke for easier clicking) */}
+                    <path
+                      d={bezierPath(out.x, out.y, inp.x, inp.y)}
+                      stroke="transparent"
+                      strokeWidth={14}
+                      fill="none"
+                      className="cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); removeEdge(edge.id); }}
+                    />
+                    <path
+                      d={bezierPath(out.x, out.y, inp.x, inp.y)}
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      strokeOpacity={0.75}
+                      fill="none"
+                      markerEnd="url(#arrowhead)"
+                    />
+                  </g>
+                );
+              })}
+
+              {/* ── Empty canvas hint ── */}
+              {!hasNodes && (
+                <text
+                  x={CANVAS_W / 2}
+                  y={CANVAS_H / 2}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className="fill-muted-foreground text-sm"
+                  fontSize={14}
+                >
+                  Drag skills from the palette or click + to add nodes
+                </text>
+              )}
+
+              {/* ── Nodes ── */}
+              {nodes.map((node) => {
+                const label = (node.data as Record<string, string>).label ?? node.id;
+                const intent = (node.data as Record<string, string>).triggerIntent ?? '';
+                const isSelected = selectedNode === node.id;
+                const isSource = connectingFrom === node.id;
+                const isConnectTarget = connectingFrom !== null && connectingFrom !== node.id;
+
+                return (
+                  <g
+                    key={node.id}
+                    transform={`translate(${node.position.x}, ${node.position.y})`}
+                    onMouseDown={(e) => onNodeMouseDown(e, node.id)}
+                    onClick={(e) => handleNodeClick(e, node.id)}
+                    className="cursor-pointer"
+                    style={{ userSelect: 'none' }}
+                  >
+                    {/* Node body */}
+                    <rect
+                      x={0}
+                      y={0}
+                      width={NODE_W}
+                      height={NODE_H}
+                      rx={10}
+                      ry={10}
+                      fill="hsl(var(--card))"
+                      stroke={
+                        isSource
+                          ? 'hsl(var(--primary))'
+                          : isConnectTarget
+                          ? 'hsl(var(--ring))'
+                          : isSelected
+                          ? 'hsl(var(--primary))'
+                          : 'hsl(var(--border))'
+                      }
+                      strokeWidth={isSelected || isSource ? 2 : 1.5}
+                      filter={isSelected ? 'drop-shadow(0 2px 8px hsl(var(--primary)/0.3))' : undefined}
+                    />
+
+                    {/* Input port (left) */}
+                    <circle cx={0} cy={NODE_H / 2} r={5} fill="hsl(var(--border))" stroke="hsl(var(--card))" strokeWidth={2} />
+
+                    {/* Output port (right) */}
+                    <circle cx={NODE_W} cy={NODE_H / 2} r={5} fill="hsl(var(--border))" stroke="hsl(var(--card))" strokeWidth={2} />
+
+                    {/* Label */}
+                    <text
+                      x={12}
+                      y={22}
+                      fontSize={12}
+                      fontWeight={600}
+                      fill="hsl(var(--foreground))"
+                    >
+                      {label.length > 20 ? `${label.slice(0, 19)}…` : label}
+                    </text>
+
+                    {/* Intent subtitle */}
+                    <text
+                      x={12}
+                      y={40}
+                      fontSize={10}
+                      fill="hsl(var(--muted-foreground))"
+                    >
+                      {intent.length > 26 ? `${intent.slice(0, 25)}…` : intent}
+                    </text>
+
+                    {/* Actions (shown on selection) */}
+                    {isSelected && (
+                      <>
+                        {/* Connect button */}
+                        <g
+                          transform={`translate(${NODE_W - 46}, ${NODE_H + 4})`}
+                          onClick={(e) => toggleConnect(e, node.id)}
+                          className="cursor-pointer"
+                        >
+                          <rect x={0} y={0} width={20} height={20} rx={4} fill="hsl(var(--primary))" opacity={0.9} />
+                          {/* Link icon — drawn as simple SVG since Lucide can't render inside <svg> foreign objects */}
+                          <line x1={4} y1={10} x2={16} y2={10} stroke="white" strokeWidth={2} />
+                          <polyline points="11,6 16,10 11,14" stroke="white" strokeWidth={1.5} fill="none" />
+                        </g>
+
+                        {/* Delete button */}
+                        <g
+                          transform={`translate(${NODE_W - 22}, ${NODE_H + 4})`}
+                          onClick={(e) => { e.stopPropagation(); removeNode(node.id); }}
+                          className="cursor-pointer"
+                        >
+                          <rect x={0} y={0} width={20} height={20} rx={4} fill="hsl(var(--destructive))" opacity={0.9} />
+                          <line x1={5} y1={5} x2={15} y2={15} stroke="white" strokeWidth={1.8} />
+                          <line x1={15} y1={5} x2={5} y2={15} stroke="white" strokeWidth={1.8} />
+                        </g>
+                      </>
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
           </CardContent>
         </Card>
       </div>
 
-      {/* Saved Workflows */}
+      {/* ── Legend ── */}
+      <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
+        <span className="flex items-center gap-1"><Link className="h-3 w-3" /> Select a node, then click arrow icon to start connecting</span>
+        <span className="flex items-center gap-1"><Unlink className="h-3 w-3" /> Click an edge to remove it</span>
+        <span className="flex items-center gap-1"><Trash2 className="h-3 w-3" /> Select + X to delete a node</span>
+      </div>
+
+      {/* ── Saved Workflows ── */}
       {workflows.data && workflows.data.length > 0 && (
         <Card className="glass-card rounded-2xl">
           <CardHeader className="pb-3">
@@ -378,6 +687,8 @@ export function WorkflowBuilder() {
                     setNodes(wf.definition.nodes);
                     setEdges(wf.definition.edges);
                     setSchedule(wf.schedule ?? '');
+                    setSelectedNode(null);
+                    setConnectingFrom(null);
                   }}
                 >
                   <div>

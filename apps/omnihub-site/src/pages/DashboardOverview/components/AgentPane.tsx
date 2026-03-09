@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
 import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
-import { SPRING, GLASS_TILE, CTRL_BTN, FONT_SG, BARS } from '../constants';
+import { SPRING, GLASS_TILE, CTRL_BTN, BARS } from '../constants';
 
 interface AgentPaneProps {
   readonly agentStatus: 'listening' | 'standby';
@@ -31,7 +31,7 @@ export const AgentPane = memo(function AgentPane({
         ' flex flex-col items-center justify-center' +
         ' relative overflow-hidden'
       }
-      style={{ ...GLASS_TILE, padding: 24 }}
+      style={{ ...GLASS_TILE, padding: 20 }}
     >
       <div className="apex-noise-layer" />
       <div
@@ -42,10 +42,13 @@ export const AgentPane = memo(function AgentPane({
       >
         <div className="flex items-center gap-2">
           <span
-            className={
-              'text-xs font-extrabold tracking-widest' +
-              ' uppercase text-gray-400'
-            }
+            style={{
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              color: '#8b95a8',
+            }}
           >
             APEX Agent
           </span>
@@ -56,16 +59,24 @@ export const AgentPane = memo(function AgentPane({
 
         <div className="flex flex-col items-center text-center">
           <span
-            className={
-              'text-[10px] font-extrabold text-gray-400' +
-              ' uppercase tracking-widest'
-            }
+            style={{
+              fontSize: 9,
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.15em',
+              color: '#5a6478',
+            }}
           >
             Session
           </span>
           <span
-            className="text-xl font-extrabold text-white"
-            style={{ fontFamily: FONT_SG }}
+            style={{
+              fontFamily: '"JetBrains Mono", monospace',
+              fontSize: 20,
+              fontWeight: 800,
+              color: '#e8ecf4',
+              letterSpacing: '-0.02em',
+            }}
           >
             00:00
           </span>
@@ -82,6 +93,7 @@ export const AgentPane = memo(function AgentPane({
           <div className="agent-orb-glow" />
           <div className="agent-orb-ring" />
           <div className="agent-orb-ring-2" />
+          <div className="agent-orb-ring-3" />
           <div className="agent-orb-avatar">
             <img src={sentinelAvatar} alt="APEX Agent" />
           </div>

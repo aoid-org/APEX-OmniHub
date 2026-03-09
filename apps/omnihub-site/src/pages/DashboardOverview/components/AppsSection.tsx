@@ -27,13 +27,13 @@ export const AppsSection = memo(function AppsSection({
         }}
       >
         <div
-          style={{ display: 'flex', alignItems: 'center', gap: 16 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 12 }}
         >
           <span
             style={{
-              fontSize: 19.26,
+              fontSize: 17,
               fontWeight: 800,
-              color: '#dfe6fe',
+              color: '#e8ecf4',
               letterSpacing: '-0.02em',
             }}
           >
@@ -41,10 +41,11 @@ export const AppsSection = memo(function AppsSection({
           </span>
           <span
             style={{
-              fontSize: 12.84,
-              fontWeight: 700,
-              color: '#a1a1aa',
+              fontSize: 11,
+              fontWeight: 800,
+              color: '#5a6478',
               fontFamily: FONT_SG,
+              letterSpacing: '0.06em',
             }}
           >
             ALL SYSTEMS ({APPS.length})
@@ -61,16 +62,17 @@ export const AppsSection = memo(function AppsSection({
             dashboardStatus: 'Live',
           })}
           style={{
-            fontSize: 12.84,
+            fontSize: 11,
             color: '#f97316',
             cursor: 'pointer',
-            fontWeight: 700,
+            fontWeight: 800,
             textTransform: 'uppercase',
-            letterSpacing: '0.05em',
+            letterSpacing: '0.06em',
             background: 'none',
             border: 'none',
             fontFamily: 'inherit',
             padding: 0,
+            transition: 'opacity 0.2s',
           }}
         >
           Manage \u2192

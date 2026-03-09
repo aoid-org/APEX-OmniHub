@@ -1,7 +1,9 @@
+> **SUPERSEDED** — This audit (2026-03-08, v1.0.0) has been superseded by the updated [Third-Party Code Audit 2026-03-09](THIRD_PARTY_CODE_AUDIT_2026_03_09.md) (v2.0.0, Score: 94.3/100). Refer to the latest report for current metrics, valuation, and findings.
+
 # APEX OmniHub — Third-Party Code Audit & Market Valuation Report
 
 **Audit Date:** 2026-03-08
-**Audit Version:** 1.0.0
+**Audit Version:** 1.0.0 (Superseded — see 2026-03-09)
 **Platform Version:** 1.4.0
 **Auditor Role:** Independent Third-Party Code Auditor & Valuator
 **Classification:** CONFIDENTIAL — For Stakeholders Only

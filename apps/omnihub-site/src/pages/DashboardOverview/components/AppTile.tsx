@@ -19,7 +19,7 @@ interface AppTileProps {
 
 export const AppTile = memo(function AppTile({ app, onClick }: AppTileProps) {
   const isPartial = app.status === 'Partial';
-  const chipPos = { position: 'absolute' as const, top: 16, right: 16 };
+  const chipPos = { position: 'absolute' as const, top: 14, right: 14 };
   const chipStyle = isPartial
     ? { ...chipPos, ...PARTIAL_CHIP }
     : chipPos;
@@ -48,9 +48,9 @@ export const AppTile = memo(function AppTile({ app, onClick }: AppTileProps) {
         >
           <span
             style={{
-              fontSize: 16.05,
+              fontSize: 14,
               fontWeight: 800,
-              color: '#dfe6fe',
+              color: '#e8ecf4',
               letterSpacing: '-0.01em',
             }}
           >
@@ -62,12 +62,12 @@ export const AppTile = memo(function AppTile({ app, onClick }: AppTileProps) {
         </div>
         <div
           style={{
-            fontSize: 11.77,
-            color: '#a1a1aa',
-            marginTop: 4,
+            fontSize: 10,
+            color: '#5a6478',
+            marginTop: 3,
             fontWeight: 800,
             textTransform: 'uppercase',
-            letterSpacing: '0.05em',
+            letterSpacing: '0.06em',
           }}
         >
           {app.cat}
@@ -75,10 +75,11 @@ export const AppTile = memo(function AppTile({ app, onClick }: AppTileProps) {
         {app.synced && (
           <div
             style={{
-              fontSize: 11.24,
-              color: '#71717a',
+              fontSize: 10,
+              color: '#3d4657',
               marginTop: 2,
               fontFamily: FONT_SG,
+              letterSpacing: '0.02em',
             }}
           >
             SYNC: {app.synced}

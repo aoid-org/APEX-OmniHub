@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-03-01 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.0-ACRA-MEMORY | LAST_UPDATED=2026-03-09 -->
 # APEX OmniHub — Production Status
 
 ```
@@ -11,15 +11,15 @@
 E N T E R P R I S E   A I   P L A T F O R M
 ```
 
-| Status      | Architecture                 | Last Audit | Test Coverage             |
-| ----------- | ---------------------------- | ---------- | ------------------------- |
-| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-03-01 | Security regression checks PASS |
+| Status      | Architecture                 | Last Audit | Audit Score | Test Coverage             |
+| ----------- | ---------------------------- | ---------- | ----------- | ------------------------- |
+| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-03-09 | **94.3/100 (A)** | Security regression checks PASS |
 
 ---
 
 ## Executive Summary
 
-APEX OmniHub is **PRODUCTION CERTIFIED** with updated 2026-03-01 audit evidence. The system has graduated from a Web-SaaS model to a **Cyber-Physical Operating System**. The integration of the Device Registry and Biometric Enclaves allows for secure, high-stakes autonomous agent execution in the physical world. v1.3.8 adds the **Edge Compute Layer** — a deterministic LRU media cache (250 MB ceiling) and dual CORS proxy infrastructure (Vercel Edge + Cloudflare Worker).
+APEX OmniHub is **PRODUCTION CERTIFIED** with updated 2026-03-09 third-party audit evidence. The system has graduated from a Web-SaaS model to a **Cyber-Physical Operating System** with a production-grade **Persistent Memory Layer** (ACRA v2.2). v1.4.0 delivers the OmniBoard connector FSM, Universal OmniDash Interaction Interceptor, ACRA v2.2 (pgvector HNSW + pgcrypto + memory quarantine), and persistent circuit breaker state. Third-party audit score: **94.3/100 (A)** — 0 SonarQube issues, 0 CVE high/critical, 0.0% code duplication.
 
 ## Deployment Checklist (Verified)
 
@@ -27,8 +27,8 @@ APEX OmniHub is **PRODUCTION CERTIFIED** with updated 2026-03-01 audit evidence.
 
 - [x] TypeScript compilation: **PASS** (0 errors, strict mode)
 - [x] ESLint: **PASS** (0 errors, 0 warnings)
-- [x] Test suite: **PASS** (597/597, Inc. Chaos & Red Team)
-- [x] Production build: **PASS** (Vite, 3m 9s)
+- [x] Test suite: **PASS** (129 test files, 263+ Python + 455+ TS describe blocks, Inc. Chaos & Red Team)
+- [x] Production build: **PASS** (Vite — bundle verified)
 - [x] Armageddon Level 7: **CERTIFIED** (40,000 iterations, 0.0000% escape rate)
 
 ### Physical Integration (New)
@@ -71,9 +71,10 @@ APEX OmniHub is **PRODUCTION CERTIFIED** with updated 2026-03-01 audit evidence.
 
 ```
 Repository:  apexbusiness-systems/APEX-OmniHub
-Status:      PRODUCTION READY (v1.3.8)
-Type:        Cyber-Physical AI OS
-Updated:     2026-03-01
+Status:      PRODUCTION READY (v1.4.0)
+Type:        Cyber-Physical AI OS + Persistent Memory Platform
+Audit Score: 94.3/100 (A) — Third-Party Verified
+Updated:     2026-03-09
 ```
 
 
