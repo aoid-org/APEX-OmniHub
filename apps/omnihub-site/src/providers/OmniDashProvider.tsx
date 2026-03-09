@@ -10,21 +10,9 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useOmniDash } from '../stores/omniDashStore';
-import { ZIndexManager } from '../lib/ZIndexManager';
-
-// ============================================================================
-// Context Shape
-// ============================================================================
-
-interface OmniDashContextValue {
-  readonly widgetCount: number;
-  readonly hasFloatingWindows: boolean;
-  readonly zManager: ZIndexManager;
-}
-
-const OmniDashContext = createContext<OmniDashContextValue | null>(null);
+import { OmniDashContext, type OmniDashContextValue } from './OmniDashContext';
 
 // ============================================================================
 // Provider
@@ -53,16 +41,4 @@ export function OmniDashProvider({ children }: OmniDashProviderProps) {
       {children}
     </OmniDashContext.Provider>
   );
-}
-
-// ============================================================================
-// Hook
-// ============================================================================
-
-export function useOmniDashContext(): OmniDashContextValue {
-  const ctx = useContext(OmniDashContext);
-  if (!ctx) {
-    throw new Error('[OmniDash] useOmniDashContext must be used within <OmniDashProvider>');
-  }
-  return ctx;
 }
