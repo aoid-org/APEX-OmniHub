@@ -312,7 +312,7 @@ class AuditLogger:
         """Store audit event in local file (for development/testing)."""
         import json
 
-        import aiofiles  # type: ignore[import-untyped]
+        import aiofiles  # type: ignore
 
         log_file = f"audit_logs_{event.timestamp.date()}.jsonl"
 
@@ -373,7 +373,7 @@ class AuditLogger:
             response = query.execute()
             data = response.data
 
-            return [AuditLogEntry(**row) for row in data]
+            return [AuditLogEntry(**(row if isinstance(row, dict) else {})) for row in data]
         except Exception as e:
             import logging
 
