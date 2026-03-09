@@ -321,7 +321,6 @@ class OmniBoardService:
     async def rotate_credentials(
         cls, connection_id: str, tenant_id: str, provider: str, refresh_token: str
     ) -> str:
-        """
                                 # Rotates credentials via OAuth: POST to token_endpoint, update DB
         db = get_database_provider()
         res = await db.select(
