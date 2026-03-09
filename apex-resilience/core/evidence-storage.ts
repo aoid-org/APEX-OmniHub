@@ -170,7 +170,11 @@ async function writeS3Evidence(
   let PutObjectCommand: typeof import('@aws-sdk/client-s3').PutObjectCommand;
 
   try {
-    const s3Module = await import('@aws-sdk/client-s3');
+    // String-concatenation prevents Vite's import-analysis plugin from attempting to
+    // statically resolve this optional peer dependency at build/test time.
+    // The module is only required at runtime when APEX_EVIDENCE_STORAGE=s3://...
+    const s3SdkId = '@aws-sdk/' + 'client-s3';
+    const s3Module = await import(s3SdkId);
     S3Client = s3Module.S3Client;
     PutObjectCommand = s3Module.PutObjectCommand;
   } catch {
