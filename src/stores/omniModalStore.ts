@@ -31,7 +31,8 @@ export type ModalType =
   | 'vision_redact'
   | 'vision_confirm'
   | 'mcp_tool_approve'
-  | 'microfrontend';
+  | 'microfrontend'
+  | 'module';
 
 export type ModalPriority = 'low' | 'medium' | 'high' | 'critical';
 
@@ -65,7 +66,11 @@ export interface ModalAbortError {
 const OmniModalConfigSchema = z.object({
   id: z.string().min(1),
   provider: z.string().min(1),
-  type: z.enum(['oauth', 'form', 'selection', 'confirmation', 'vision_redact', 'vision_confirm', 'mcp_tool_approve', 'microfrontend']),
+  type: z.enum([
+    'oauth', 'form', 'selection', 'confirmation',
+    'vision_redact', 'vision_confirm', 'mcp_tool_approve',
+    'microfrontend', 'module',
+  ]),
   title: z.string().min(1),
   description: z.string().optional(),
   schema: z.record(z.unknown()).optional(),

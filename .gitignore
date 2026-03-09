@@ -1,3 +1,6 @@
+# APEX local evidence storage
+.apex/
+
 # Logs
 logs
 *.log
@@ -93,3 +96,6 @@ security/npm-audit-latest.json
 security/npm-audit-prod.json
 ERRORS.md.vite-react-ssg-temp
 .vite-react-ssg-temp
+ERRORS.md
+# Claude Code agent worktrees (local only)
+.claude/worktrees/

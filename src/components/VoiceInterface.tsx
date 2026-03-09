@@ -15,7 +15,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
   const { toast } = useToast();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [_reconnectAttempts, setReconnectAttempts] = useState(0);
   const [degradedMode, setDegradedMode] = useState(false);
   const [degradedReason, setDegradedReason] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -55,7 +54,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
         logAnalyticsEvent('voice.ws.network_recovered', {});
         setDegradedMode(false);
         reconnectAttemptsRef.current = 0;
-        setReconnectAttempts(0);
         startConversation();
       }
     }, 5_000); // Check every 5 seconds
@@ -86,7 +84,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
     setDegradedMode(false);
     setDegradedReason(null);
     reconnectAttemptsRef.current = 0;
-    setReconnectAttempts(0);
     setIsConnecting(true);
     cleanupTimers();
     await connectVoice(false);
@@ -97,7 +94,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
     // Increment first via ref (avoids stale closure on state), then gate on MAX_RETRIES
     const nextAttempt = reconnectAttemptsRef.current + 1;
     reconnectAttemptsRef.current = nextAttempt;
-    setReconnectAttempts(nextAttempt);
     if (nextAttempt >= MAX_RETRIES) {
       // Exhausted all retries — enter degraded mode
       handleDegraded(reason);
@@ -139,12 +135,11 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
         cleanupTimers(); // Clears network check interval too
         setIsConnected(true);
         setIsConnecting(false);
-        setReconnectAttempts(0);
         setDegradedMode(false);
         setDegradedReason(null);
         logAnalyticsEvent('voice.ws.retry.success', { reconnect: isReconnect });
 
-        recorderRef.current = new AudioRecorder((audioData) => {
+        recorderRef.current = new AudioRecorder((audioData: Float32Array) => {
           if (ws.readyState === WebSocket.OPEN) {
             const encoded = encodeAudioForAPI(audioData);
             ws.send(JSON.stringify({
@@ -170,7 +165,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
             const binaryString = atob(data.delta);
             const bytes = new Uint8Array(binaryString.length);
             for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
+              bytes[i] = binaryString.codePointAt(i)!;
             }
             await playAudioData(audioContextRef.current, bytes);
           } else if (data.type === 'response.audio_transcript.delta') {
@@ -244,7 +239,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
     audioContextRef.current = null;
     recorderRef.current = null;
     wsRef.current = null;
-    setReconnectAttempts(0);
     setIsConnected(false);
     setIsConnecting(false);
     onSpeakingChange?.(false);
@@ -286,7 +280,17 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
         </div>
       )}
       <div className="flex items-center gap-2">
-        {!isConnected ? (
+        {isConnected ? (
+          <Button
+            onClick={endConversation}
+            variant="destructive"
+            size="lg"
+            className="gap-2"
+          >
+            <MicOff className="h-5 w-5" />
+            End Voice Chat
+          </Button>
+        ) : (
           <Button 
             onClick={startConversation}
             disabled={isConnecting}
@@ -305,16 +309,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
                 {degradedMode ? 'Retry Voice' : 'Start Voice Chat'}
               </>
             )}
-          </Button>
-        ) : (
-          <Button 
-            onClick={endConversation}
-            variant="destructive"
-            size="lg"
-            className="gap-2"
-          >
-            <MicOff className="h-5 w-5" />
-            End Voice Chat
           </Button>
         )}
       </div>

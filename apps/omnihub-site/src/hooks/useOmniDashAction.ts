@@ -1,40 +1,42 @@
 /**
- * useOmniDashAction — Universal OmniDash Interaction Interceptor
- * @version 1.0.0
- * @module apps/omnihub-site/src/hooks/useOmniDashAction
+ * useOmniDashAction — Unified action dispatcher for OmniDash
+ * @version 3.0.0
  *
- * Binds to all app interaction triggers within OmniDash and formats user
- * intent into strict OmniModalConfig objects. Handles:
- *  - New connections: type 'oauth' with zero-config proxy exchange
- *  - Installed app launches: type 'microfrontend' or 'spatial' based on payload
- *  - Notification/utility modals: type 'selection', 'confirmation', etc.
+ * Provides two consumption patterns:
+ *   1. Layout usage  → useOmniDashAction()   → { handleOAuthConnect, handleUtilityModal, handleAppLaunch, handleAppInteraction }
+ *   2. Dashboard usage → useOmniDashAction(navigate) → { dispatch }
  *
- * The onComplete callback for OAuth flows executes the secure backend
- * proxy token exchange, then hydrates OmniBoard global state.
- *
- * APEX STANDARDS ENFORCED:
- * - Zero-Config Onboarding: User never sees or touches an API key
- * - Deterministic: No stacking modals, no unhandled promise rejections on abort
- * - Atomic Idempotency: Same intent always produces identical OmniModalConfig
- * - Regression-Free: ABORTED states absorbed silently via onCancel
+ * Deterministic: same intent always produces identical OmniModalConfig.
+ * Regression-Free: ABORTED states absorbed silently via onCancel.
  *
  * OWNED BY: APEX Business Systems Ltd.
  */
 
 import { useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, type NavigateFunction } from 'react-router-dom';
 import { useOmniModal, type ModalType, type RenderMode } from '../../../../src/stores/omniModalStore';
 import { useOmniBoard, type SpatialRenderState } from '../../../../src/stores/omniBoardStore';
+import { hasModuleComponent } from '../components/omnidash/moduleComponents';
 
 // ============================================================================
 // Types
 // ============================================================================
 
+export interface OmniDashIntent {
+  readonly appKey: string;
+  readonly provider: string;
+  readonly label: string;
+  readonly category: string;
+  readonly routePath: string;
+  readonly dashboardStatus: string;
+  readonly comingSoon?: boolean;
+}
+
 interface AppIntent {
   readonly id: string;
   readonly provider: string;
   readonly category: string;
-  readonly status: 'Live' | 'Partial' | string;
+  readonly status: string;
   readonly appType?: 'media' | 'editor' | 'terminal' | 'microfrontend';
   readonly entryUrl?: string;
   readonly contextData?: Record<string, unknown>;
@@ -58,6 +60,7 @@ interface UseOmniDashActionReturn {
   readonly handleUtilityModal: (intent: UtilityModalIntent) => void;
   readonly handleOAuthConnect: (provider: string, category: string) => void;
   readonly handleAppLaunch: (app: AppIntent) => void;
+  readonly dispatch: (intent: OmniDashIntent) => void;
 }
 
 // ============================================================================
@@ -69,10 +72,6 @@ async function executeProxyExchange(
   proxyToken: string,
   context: Record<string, unknown>,
 ): Promise<{ scopes: string[]; data: Record<string, unknown> }> {
-  // The proxy exchange is handled entirely server-side.
-  // The frontend sends the proxy token received from the OAuth consent screen
-  // to our backend, which performs the actual client_secret exchange.
-  // This ensures NO secrets are ever exposed to the client.
   const response = await fetch('/api/omniconnect/exchange', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -91,22 +90,18 @@ async function executeProxyExchange(
 }
 
 // ============================================================================
-// Hook
+// Hook — supports both overload patterns
 // ============================================================================
 
-export function useOmniDashAction(): UseOmniDashActionReturn {
-  const navigate = useNavigate();
+export function useOmniDashAction(externalNavigate?: NavigateFunction): UseOmniDashActionReturn {
+  const internalNavigate = useNavigate();
+  const navigate = externalNavigate ?? internalNavigate;
   const omniModal = useOmniModal();
   const omniBoard = useOmniBoard();
 
-  /**
-   * OAuth connect flow — zero-config onboarding.
-   * Invokes an OAuth modal, captures the proxy token on consent,
-   * executes the backend exchange, and hydrates OmniBoard.
-   */
   const handleOAuthConnect = useCallback((provider: string, category: string) => {
     omniModal.invoke({
-      id: `auth-${provider.toLowerCase().replace(/\s+/g, '-')}`,
+      id: `auth-${provider.toLowerCase().replaceAll(/\s+/g, '-')}`,
       provider,
       type: 'oauth',
       title: `${provider} Authorization`,
@@ -115,7 +110,6 @@ export function useOmniDashAction(): UseOmniDashActionReturn {
       onComplete: async (data: Record<string, unknown>) => {
         const proxyToken = data.proxy_token as string | undefined;
         if (!proxyToken) {
-          // Direct consent without token exchange (e.g. demo/sim mode)
           omniBoard.hydrateIntegration({
             provider,
             data: structuredClone(data),
@@ -124,14 +118,12 @@ export function useOmniDashAction(): UseOmniDashActionReturn {
           return;
         }
 
-        // Execute secure backend proxy exchange
         const result = await executeProxyExchange(
           provider,
           proxyToken,
           (data.context as Record<string, unknown>) ?? {},
         );
 
-        // Hydrate OmniBoard with sanitized integration data
         omniBoard.hydrateIntegration({
           provider,
           data: structuredClone(result.data),
@@ -140,29 +132,20 @@ export function useOmniDashAction(): UseOmniDashActionReturn {
       },
 
       onCancel: () => {
-        // Absorb ABORTED state cleanly — no UI errors
         console.warn(`[OmniDash] ${provider} authorization dismissed by user.`);
       },
     });
   }, [omniModal, omniBoard]);
 
-  /**
-   * App launch flow — for installed/live apps.
-   * Determines render mode from app payload and mounts via OmniBoard + OmniSpatialHost.
-   */
   const handleAppLaunch = useCallback((app: AppIntent) => {
     const appType = app.appType ?? 'microfrontend';
 
-    // Determine modal type and render state
-    let modalType: ModalType = 'microfrontend';
-    let renderState: SpatialRenderState = 'sandbox';
+    const modalType: ModalType = 'microfrontend';
+    const renderState: SpatialRenderState =
+      (appType === 'media' || appType === 'editor' || appType === 'terminal')
+        ? 'spatial'
+        : 'sandbox';
 
-    if (appType === 'media' || appType === 'editor' || appType === 'terminal') {
-      modalType = 'microfrontend';
-      renderState = 'spatial';
-    }
-
-    // Mount the active app in OmniBoard state
     omniBoard.mountActiveApp({
       id: app.id,
       provider: app.provider,
@@ -175,7 +158,6 @@ export function useOmniDashAction(): UseOmniDashActionReturn {
       },
     });
 
-    // Invoke OmniSpatialHost via the modal store
     omniModal.invoke({
       id: `app-${app.id}`,
       provider: app.provider,
@@ -190,7 +172,6 @@ export function useOmniDashAction(): UseOmniDashActionReturn {
       },
 
       onComplete: async (data: Record<string, unknown>) => {
-        // App interaction completed — update OmniBoard payload
         const currentApp = useOmniBoard.getState().activeApp;
         if (currentApp?.id === app.id) {
           omniBoard.mountActiveApp({
@@ -203,33 +184,21 @@ export function useOmniDashAction(): UseOmniDashActionReturn {
       },
 
       onCancel: () => {
-        // Clean teardown — clear active app on user dismissal
         omniBoard.clearActiveApp();
       },
     });
   }, [omniModal, omniBoard]);
 
-  /**
-   * Universal app interaction handler — the primary entry point.
-   * Routes to OAuth connect or app launch based on app status.
-   */
   const handleAppInteraction = useCallback((app: AppIntent) => {
     if (app.status === 'Partial') {
-      // Unconnected integration — trigger OAuth
       handleOAuthConnect(app.provider, app.category);
     } else if (app.appType && app.appType !== 'microfrontend') {
-      // Spatial app — launch in spatial/sandbox mode
       handleAppLaunch(app);
     } else {
-      // Standard navigation for fully connected apps
       navigate(`/omnidash/${app.id}`);
     }
   }, [navigate, handleOAuthConnect, handleAppLaunch]);
 
-  /**
-   * Generic utility modal — for notifications, confirmations, etc.
-   * Passes through to OmniModal with optional custom handlers.
-   */
   const handleUtilityModal = useCallback((intent: UtilityModalIntent) => {
     omniModal.invoke({
       id: intent.id,
@@ -249,10 +218,48 @@ export function useOmniDashAction(): UseOmniDashActionReturn {
     });
   }, [omniModal]);
 
+  /**
+   * Dispatch — used by modularized DashboardOverview.
+   * Translates OmniDashIntent into the appropriate navigation or modal action.
+   */
+  const dispatch = useCallback((intent: OmniDashIntent) => {
+    if (intent.dashboardStatus === 'Partial') {
+      handleOAuthConnect(intent.provider, intent.category);
+      return;
+    }
+
+    // Modules with a lazy-loaded component open in a functional modal panel
+    if (hasModuleComponent(intent.appKey)) {
+      omniModal.invoke({
+        id: `module-${intent.appKey}`,
+        provider: intent.provider,
+        type: 'module',
+        title: intent.label,
+        description: `${intent.label} \u2014 ${intent.category}`,
+        contextData: {
+          moduleKey: intent.appKey,
+          category: intent.category,
+        },
+        onComplete: async (data: Record<string, unknown>) => {
+          if (typeof data.action === 'string') {
+            console.warn(
+              `[OmniDash] Module action: ${data.action}`,
+              data,
+            );
+          }
+        },
+        onCancel: () => { /* user dismissed */ },
+      });
+    } else {
+      navigate(intent.routePath);
+    }
+  }, [navigate, handleOAuthConnect, omniModal]);
+
   return useMemo(() => ({
     handleAppInteraction,
     handleUtilityModal,
     handleOAuthConnect,
     handleAppLaunch,
-  }), [handleAppInteraction, handleUtilityModal, handleOAuthConnect, handleAppLaunch]);
+    dispatch,
+  }), [handleAppInteraction, handleUtilityModal, handleOAuthConnect, handleAppLaunch, dispatch]);
 }

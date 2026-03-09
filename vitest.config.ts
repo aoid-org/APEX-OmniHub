@@ -35,6 +35,8 @@ export default defineConfig({
       'tests/e2e-playwright/**',
       './tests/worldwide-wildcard/playwright/**',
       'tests/worldwide-wildcard/playwright/**',
+      'e2e/**',
+      'apps/omnihub-site/tests/**',
 
       // Explicitly ignore Hardhat
       '**/contracts/**',
@@ -47,7 +49,7 @@ export default defineConfig({
     coverage: {
       enabled: enableCoverage,
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'lcov'],
       reportsDirectory: './coverage',
       clean: true,
       exclude: [
@@ -60,14 +62,35 @@ export default defineConfig({
         '.idea/**',
         '.git/**',
         '.cache/**'
-      ]
+      ],
+      // Coverage thresholds — set at the current baseline to prevent regression.
+      // Current actuals: statements 60.96 %, branches 51.85 %, functions 59.32 %, lines 62.06 %.
+      // Raise these values incrementally as new tests are added.
+      // North-star target: 80 % across all metrics (SonarCloud quality gate).
+      thresholds: {
+        statements: 59,
+        branches: 50,
+        functions: 57,
+        lines: 60,
+      },
     },
     testTimeout: 30000,
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@omnihub': path.resolve(__dirname, './apps/omnihub-site/src'),
+      'react': path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      'framer-motion': path.resolve(__dirname, 'node_modules/framer-motion'),
     },
-    dedupe: ['react', 'react-dom', 'react-router', 'react-router-dom', 'framer-motion'],
+    dedupe: [
+      'react',
+      'react-dom',
+      'react-router',
+      'react-router-dom',
+      'framer-motion',
+      '@radix-ui/react-slot',
+    ],
   },
 });

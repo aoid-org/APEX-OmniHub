@@ -107,7 +107,7 @@ console.log(JSON.stringify(result));
             f"Iron Law verification: device={device_id}, verified={verification_result['verified']}"
         )
 
-        return verification_result
+        return dict(verification_result)
 
     except json.JSONDecodeError as e:
         activity.logger.error(f"Failed to parse Iron Law verification result: {str(e)}")

@@ -45,6 +45,9 @@ class AuditAction(str, Enum):  # noqa: UP042
     WORKFLOW_COMPLETE = "workflow_complete"
     WORKFLOW_FAIL = "workflow_fail"
 
+    # Data Modification
+    DATA_MODIFY = "data_modify"
+
     # Security
     POLICY_VIOLATION = "policy_violation"
     ACCESS_DENIED = "access_denied"
@@ -77,6 +80,7 @@ class AuditResourceType(str, Enum):  # noqa: UP042
     API_KEY = "api_key"
     POLICY = "policy"
     DATABASE = "database"
+    SECURITY_POLICY = "security_policy"
 
 
 class AuditStatus(str, Enum):  # noqa: UP042
@@ -308,7 +312,7 @@ class AuditLogger:
         """Store audit event in local file (for development/testing)."""
         import json
 
-        import aiofiles
+        import aiofiles  # type: ignore[import-untyped]
 
         log_file = f"audit_logs_{event.timestamp.date()}.jsonl"
 
@@ -374,7 +378,7 @@ async def log_audit_event(
     resource_id: str,
     status: AuditStatus = AuditStatus.SUCCESS,
     metadata: AuditMetadata | None = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> str:
     """
     Convenience function for logging audit events.
@@ -422,11 +426,22 @@ async def log_audit_event(
         timestamp=datetime.now(UTC),
         event_sequence=1,  # Would be incremented per correlation_id
         actor_id=actor_id,
+        actor_type="user",
+        actor_ip=None,
+        actor_user_agent=None,
         action=action,
         status=status,
         resource_type=resource_type,
         resource_id=resource_id,
+        resource_owner=None,
         metadata=metadata,
+        data_classification="internal",
+        retention_period_days=2555,
+        integrity_hash=None,
+        previous_hash=None,
+        processed_at=None,
+        storage_location=None,
+        backup_location=None,
     )
 
     # Log the event

@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -91,7 +92,7 @@ class FSMContext(BaseModel):
     provider_hint: str | None = None
     candidates: list[str] = Field(default_factory=list)
     auth_type: AuthType | None = None
-    temp_credentials: dict | None = None  # Ephemeral, moved to Vault ASAP
+    temp_credentials: dict[str, Any] | None = None  # Ephemeral, moved to Vault ASAP
     retry_count: int = 0
 
     # Output
@@ -102,5 +103,5 @@ class FSMEvent(BaseModel):
     """Input event to trigger a transition."""
 
     event_type: str  # e.g., 'USER_INPUT', 'SYSTEM_ERROR', 'PROVIDER_SELECTED'
-    payload: dict = Field(default_factory=dict)
+    payload: dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))

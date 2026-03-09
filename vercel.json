@@ -1,6 +1,6 @@
 {
-  "buildCommand": "cd apps/omnihub-site && npm install --legacy-peer-deps && npm run build",
-  "outputDirectory": "apps/omnihub-site/dist",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "installCommand": "npm install --legacy-peer-deps",
   "framework": "vite",
   "rewrites": [
@@ -15,7 +15,8 @@
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/privacy/", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },
-    { "source": "/terms/", "destination": "/terms.html" }
+    { "source": "/terms/", "destination": "/terms.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -86,11 +87,11 @@
         },
         {
           "key": "Cross-Origin-Opener-Policy",
-          "value": "same-origin"
+          "value": "unsafe-none"
         },
         {
           "key": "Cross-Origin-Resource-Policy",
-          "value": "same-origin"
+          "value": "cross-origin"
         },
         {
           "key": "X-DNS-Prefetch-Control",
