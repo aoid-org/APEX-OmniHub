@@ -22,6 +22,7 @@ import logging
 import os
 import secrets
 import time
+import weakref
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -559,7 +560,7 @@ class OmniTraceRecorder:
 # =============================================================================
 
 # Cache of recorders by workflow_id (weak references would be better in production)
-_recorders: dict[str, OmniTraceRecorder] = {}
+_recorders: weakref.WeakValueDictionary[str, OmniTraceRecorder] = weakref.WeakValueDictionary()
 
 
 def get_omnitrace_recorder(workflow_id: str, trace_id: str) -> OmniTraceRecorder:

@@ -255,39 +255,29 @@ export async function requestMANMode(
  */
 async function performAction(
   intent: MaestroIntent
-): Promise<Record<string, unknown>> {
-  // Mock implementations for allowlisted actions
-  switch (intent.action) {
-    case 'log_message':
-      // eslint-disable-next-line no-console -- intentional logging action
-      console.info('[MAESTRO] INFO:', intent.parameters.message);
-      return { logged: true, timestamp: new Date().toISOString() };
+): Promise<Record<string, unknown> | { ok: boolean; error: string }> {
+  const baseUrl = process.env.NEXT_PUBLIC_ORCHESTRATOR_BASE_URL || process.env.VITE_ORCHESTRATOR_BASE_URL || process.env.ORCHESTRATOR_BASE_URL || 'http://localhost:3000';
 
-    case 'get_status':
-      return { status: 'healthy', timestamp: new Date().toISOString() };
+  try {
+    const response = await fetch(`${baseUrl}/api/maestro/execute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: intent.action,
+        params: intent.parameters,
+        idempotency_key: intent.intent_id,
+      }),
+    });
 
-    case 'list_items':
-      return { items: [], count: 0 };
+    if (!response.ok) {
+      return { ok: false, error: `HTTP status ${response.status}` };
+    }
 
-    case 'read_data':
-      return { data: null, found: false };
-
-    case 'fetch_config':
-      return { config: {}, version: '1.0.0' };
-
-    case 'health_check':
-      return { healthy: true, checks: [] };
-
-    case 'validate_input':
-      return { valid: true, errors: [] };
-
-    case 'compute_hash':
-      return { hash: 'mock-hash', algorithm: 'sha256' };
-
-    case 'format_output':
-      return { formatted: intent.parameters.input || '', format: 'text' };
-
-    default:
-      throw new Error(`Unknown action: ${intent.action}`);
+    return await response.json();
+  } catch (error) {
+    console.error('[MAESTRO] Execution fetch failed:', error);
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
