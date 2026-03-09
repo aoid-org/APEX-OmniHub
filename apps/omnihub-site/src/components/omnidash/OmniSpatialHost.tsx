@@ -178,7 +178,6 @@ function DialogModeRenderer({
               ? modal.contextData.moduleKey
               : modal.id
           }
-          onAction={onAction}
           onClose={onClose}
         />
       );
