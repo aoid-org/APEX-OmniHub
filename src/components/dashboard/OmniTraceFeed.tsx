@@ -5,7 +5,7 @@ interface AuditLog {
   id: string;
   action: string;
   created_at: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export function OmniTraceFeed({ tenantId }: { tenantId?: string }) {
@@ -23,7 +23,7 @@ export function OmniTraceFeed({ tenantId }: { tenantId?: string }) {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
-    let channel: any;
+    let channel: ReturnType<typeof supabase.channel>;
 
     try {
       const channelFilter = tenantId
@@ -55,7 +55,7 @@ export function OmniTraceFeed({ tenantId }: { tenantId?: string }) {
             setStatus('ERROR');
           }
         });
-    } catch (e) {
+    } catch {
       setStatus('ERROR');
     }
 

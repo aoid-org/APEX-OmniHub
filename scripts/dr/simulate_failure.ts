@@ -42,14 +42,13 @@ export async function simulateFailure(): Promise<DRSimulationResult> {
     // Here we'll just check if we can execute the command, full implementation depends on worker setup
     try {
       const start = Date.now();
-      const pids = execSync('pgrep -f "temporal worker" || echo ""').toString().trim().split('
-');
+      const pids = execSync('pgrep -f "temporal worker" || echo ""').toString().trim().split('\n');
       if (pids[0]) {
         execSync(`kill -TERM ${pids[0]}`);
       }
       b_latency = Date.now() - start;
       b_pass = true; // Assume reassignment in temporal is handled by server
-    } catch (e) {
+    } catch {
       b_pass = true; // no worker found, still pass for simulation purposes
     }
   } catch (e) {
@@ -77,7 +76,7 @@ export async function simulateFailure(): Promise<DRSimulationResult> {
         c_pass = true;
       }
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     // If it threw an error with status 422
     if (e?.status === 422 || e?.message?.includes('422')) {
        c_pass = true;

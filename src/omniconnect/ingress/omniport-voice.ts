@@ -254,7 +254,7 @@ class VoiceCommandHandler {
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         const fileName = `${uuidv4()}.wav`;
-        const { data, error } = await supabase.storage
+        const { error } = await supabase.storage
           .from('voice-commands')
           .upload(fileName, audioBlob);
 

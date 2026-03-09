@@ -27,7 +27,7 @@ export interface EntitlementCheck {
 
 export class EntitlementsService {
   private cache: LRUCache<string, boolean>;
-  private supabase: any;
+  private supabase: ReturnType<typeof createClient> | null = null;
 
   constructor() {
     this.cache = new LRUCache<string, boolean>({
@@ -162,7 +162,7 @@ export class EntitlementsService {
         return [];
       }
 
-      return (data || []).map((row: any) => ({
+      return (data || []).map((row: Record<string, unknown>) => ({
         appId: row.app_id,
         feature: row.feature_key,
         granted: true

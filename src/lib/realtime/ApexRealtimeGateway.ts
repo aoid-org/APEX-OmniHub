@@ -43,11 +43,13 @@ export const ApexRealtimeGateway = {
         };
 
         ws.onclose = () => {
-          console.log('[ApexRealtimeGateway] WebSocket closed');
+          // eslint-disable-next-line no-console
+          console.info('[ApexRealtimeGateway] WebSocket closed');
         };
 
         ws.onmessage = (event) => {
-          console.log('[ApexRealtimeGateway] Message received:', event.data);
+          // eslint-disable-next-line no-console
+          console.info('[ApexRealtimeGateway] Message received:', event.data);
         };
       } catch (e) {
         if (!resolved) {
@@ -57,8 +59,6 @@ export const ApexRealtimeGateway = {
         }
       }
     });
-  },
-};
   },
 };
 
