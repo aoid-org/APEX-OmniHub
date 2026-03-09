@@ -192,6 +192,9 @@
   "overrides": {
     "lodash": "^4.17.23",
     "tar": "^7.5.10",
+    "@capacitor/cli": {
+      "tar": "^6.1.11"
+    },
     "hono": "^4.12.4",
     "serialize-javascript": "^7.0.3",
     "rollup": "^4.59.0",
