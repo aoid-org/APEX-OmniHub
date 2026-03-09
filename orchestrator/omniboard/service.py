@@ -8,7 +8,7 @@ import httpx
 import redis.asyncio as redis
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 
-from providers.database.supabase_provider import get_database_provider
+from providers.database.factory import get_database_provider
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,12 @@ class OmniBoardService:
             if cached:
                 return json.loads(cached)
 
-            db = get_database_provider()
-            res = await db.query(table="provider_registry", columns=["name"])
+            from typing import cast
+
+            from providers.database.supabase_provider import SupabaseDatabaseProvider
+
+            db = cast(SupabaseDatabaseProvider, get_database_provider())
+            res = await db.select(table="provider_registry", select_fields="name")
             providers = [r["name"] for r in res if "name" in r]
 
             if providers:
@@ -143,9 +147,9 @@ class OmniBoardService:
         Initiates Device Code flow via POST to provider's device_authorization_endpoint.
         """
         db = get_database_provider()
-        res = await db.query(
+        res = await db.select(
             table="provider_registry",
-            columns=["device_authorization_endpoint"],
+            select_fields="device_authorization_endpoint",
             filters={"name": provider},
         )
         if not res or not res[0].get("device_authorization_endpoint"):
@@ -205,8 +209,8 @@ class OmniBoardService:
         access_token = creds.get("access_token")
 
         db = get_database_provider()
-        res = await db.query(
-            table="provider_registry", columns=["userinfo_endpoint"], filters={"name": provider}
+        res = await db.select(
+            table="provider_registry", select_fields="userinfo_endpoint", filters={"name": provider}
         )
         if not res or not res[0].get("userinfo_endpoint"):
             endpoint = f"https://api.{provider.lower()}.com/v1/userinfo"
@@ -286,8 +290,8 @@ class OmniBoardService:
         client_secret = os.environ.get(f"{slug}_CLIENT_SECRET")
 
         db = get_database_provider()
-        res = await db.query(
-            table="provider_registry", columns=["token_endpoint"], filters={"name": provider}
+        res = await db.select(
+            table="provider_registry", select_fields="token_endpoint", filters={"name": provider}
         )
         if not res or not res[0].get("token_endpoint"):
             raise ValueError(f"No token_endpoint found for {provider}")

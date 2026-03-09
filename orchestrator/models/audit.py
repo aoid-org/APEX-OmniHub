@@ -312,7 +312,7 @@ class AuditLogger:
         """Store audit event in local file (for development/testing)."""
         import json
 
-        import aiofiles
+        import aiofiles  # type: ignore[import-untyped]
 
         log_file = f"audit_logs_{event.timestamp.date()}.jsonl"
 
@@ -342,10 +342,13 @@ class AuditLogger:
         Returns:
             List of matching audit events
         """
-        from providers.database.supabase_provider import get_database_provider
+        from typing import cast
+
+        from providers.database.factory import get_database_provider
+        from providers.database.supabase_provider import SupabaseDatabaseProvider
 
         try:
-            db = get_database_provider()
+            db = cast(SupabaseDatabaseProvider, get_database_provider())
             query = db.client.table("audit_logs").select("*")
 
             if actor_id:

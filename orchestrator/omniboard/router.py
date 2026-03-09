@@ -48,7 +48,7 @@ async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
             raise HTTPException(status_code=404, detail=SESSION_NOT_FOUND)
 
         context = FSMContext.model_validate_json(context_json)
-        next_context, message = OmniBoardFSM.transition(context, event)
+        next_context, message = await OmniBoardFSM.transition(context, event)
 
         await redis_client.setex(
             f"omni:session:fsm:{session_id}", 1800, next_context.model_dump_json()
