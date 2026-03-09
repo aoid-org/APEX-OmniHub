@@ -10,18 +10,7 @@
 
 ## Reporting a Vulnerability
 
-**Please do not open public GitHub issues for security vulnerabilities.**
-
-Report vulnerabilities privately via one of these channels:
-
-1. **GitHub Private Security Advisory** (preferred): Use the "Report a vulnerability" button on the [Security tab](https://github.com/apexbusiness-systems/APEX-OmniHub/security/advisories/new).
-2. **Email**: security@apexbusiness-systems.com — PGP key available on request.
-
-Include in your report:
-- A description of the vulnerability and its potential impact
-- Steps to reproduce or proof-of-concept
-- Affected version(s) and component(s)
-- Any suggested mitigations (optional)
+Please report security issues to **security@apexbusiness-systems.com**.
 
 ## Response Targets
 

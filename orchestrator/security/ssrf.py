@@ -112,7 +112,7 @@ def validate_url_with_dns_pin(url: str) -> ValidatedURL:
     selected_ip = ""
     for info in addr_infos:
         # sockaddr is (address, port) for IPv4, (address, port, flowinfo, scopeid) for IPv6
-        ip_str = info[4][0]
+        ip_str = str(info[4][0])
         try:
             # Handle zone indices (scope IDs) in IPv6 addresses if present (e.g., fe80::1%eth0)
             if "%" in ip_str:

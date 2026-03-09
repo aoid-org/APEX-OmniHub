@@ -67,7 +67,10 @@ jobs:
       - name: Run type checker
         working-directory: orchestrator
         run: |
+          # Strict mode tracks pre-existing errors across third-party stubs.
+          # Run strict as informational; enforce basic type safety as blocking.
           mypy --strict models/ infrastructure/ workflows/ activities/ config.py main.py || true
+          mypy --config-file /dev/null --ignore-missing-imports --follow-imports=silent models/ infrastructure/ workflows/ activities/ config.py main.py
 
       - name: Run tests with coverage
         working-directory: orchestrator

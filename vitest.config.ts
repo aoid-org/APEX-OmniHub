@@ -47,7 +47,6 @@ export default defineConfig({
     coverage: {
       enabled: enableCoverage,
       provider: 'v8',
-      // 'lcov' reporter generates coverage/lcov.info consumed by SonarCloud
       reporter: ['text', 'json', 'html', 'lcov'],
       reportsDirectory: './coverage',
       clean: true,

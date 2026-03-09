@@ -14,7 +14,7 @@ session_store: dict[str, FSMContext] = {}
 
 
 @router.post("/start", response_model=FSMContext)
-async def start_session(tenant_id: str, trace_id: str):
+async def start_session(tenant_id: str, trace_id: str) -> FSMContext:
     """Start a new OmniBoard onboarding session."""
     context = OmniBoardFSM.start_session(tenant_id, trace_id)
     session_store[context.session_id] = context
@@ -22,7 +22,7 @@ async def start_session(tenant_id: str, trace_id: str):
 
 
 SESSION_NOT_FOUND = "Session not found"
-_404_RESPONSE = {404: {"description": SESSION_NOT_FOUND}}
+_404_RESPONSE: dict[int | str, dict[str, Any]] = {404: {"description": SESSION_NOT_FOUND}}
 
 
 @router.post(
@@ -30,7 +30,7 @@ _404_RESPONSE = {404: {"description": SESSION_NOT_FOUND}}
     response_model=dict[str, Any],
     responses=_404_RESPONSE,
 )
-async def next_turn(session_id: str, event: FSMEvent):
+async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
     """
     Process a user turn and advance the FSM.
     Returns the updated context and the system's response message.
@@ -46,7 +46,7 @@ async def next_turn(session_id: str, event: FSMEvent):
 
 
 @router.get("/{session_id}", response_model=FSMContext, responses=_404_RESPONSE)
-async def get_status(session_id: str):
+async def get_status(session_id: str) -> FSMContext:
     """Get current session status."""
     context = session_store.get(session_id)
     if not context:
@@ -55,14 +55,14 @@ async def get_status(session_id: str):
 
 
 @router.delete("/connection/{connection_id}")
-async def disconnect(connection_id: str):
+async def disconnect(connection_id: str) -> dict[str, str]:
     """Disconnect a provider (lifecycle management)."""
     success = OmniBoardService.disconnect_provider(connection_id)
     return {"status": "disconnected" if success else "failed", "connection_id": connection_id}
 
 
 @router.post("/connection/{connection_id}/rotate")
-async def rotate(connection_id: str):
+async def rotate(connection_id: str) -> dict[str, str]:
     """Rotate credentials for a connection."""
     new_ref = OmniBoardService.rotate_credentials(connection_id)
     return {"status": "rotated", "connection_id": connection_id, "new_token_ref": new_ref}

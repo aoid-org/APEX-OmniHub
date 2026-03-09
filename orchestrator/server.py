@@ -73,7 +73,7 @@ class GoalRequest(BaseModel):
 
 
 @app.post("/api/v1/goals", responses={500: {"description": "Internal Server Error"}})
-async def create_goal(request: GoalRequest):
+async def create_goal(request: GoalRequest) -> dict[str, str]:
     """
     Create and start a new agent workflow.
 
@@ -115,7 +115,7 @@ async def create_goal(request: GoalRequest):
         500: {"description": "Internal Server Error"},
     },
 )
-async def execute_intent(request: Request):
+async def execute_intent(request: Request) -> dict[str, str]:
     """
     Execute an intent via the Universal Orchestrator Workflow.
 
@@ -177,7 +177,7 @@ async def execute_intent(request: Request):
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "ok"}
 

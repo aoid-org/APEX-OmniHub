@@ -74,8 +74,8 @@ class OmniBoardService:
 
             if score > 0:
                 # Penalize longer names (tie-breaker)
-                score -= len(provider) * 0.1
-                matches.append((score, provider))
+                final_score: float = score - len(provider) * 0.1
+                matches.append((final_score, provider))
 
         # Sort by score (descending), then provider name (ascending)
         matches.sort(key=lambda x: (-x[0], x[1]))

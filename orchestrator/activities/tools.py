@@ -292,7 +292,7 @@ async def search_database(params: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Query results
     """
-    table = params.get("table")
+    table = str(params.get("table", ""))
     filters = params.get("filters", {})
     select_fields = params.get("select", "*")
     start_time = time.time()
@@ -365,8 +365,8 @@ async def create_record(params: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Created record with ID
     """
-    table = params.get("table")
-    data = params.get("data")
+    table = str(params.get("table", ""))
+    data = dict(params.get("data", {}))
     start_time = time.time()
 
     activity.logger.info(f"Creating record in {table}")
@@ -434,7 +434,7 @@ async def delete_record(params: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Deletion result
     """
-    table = params.get("table")
+    table = str(params.get("table", ""))
     record_id = params.get("id")
     start_time = time.time()
 
@@ -544,7 +544,7 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
 
     from security.ssrf import validate_url_with_dns_pin_async
 
-    url = params.get("url")
+    url = str(params.get("url", ""))
     method = params.get("method", "POST")
     payload = params.get("payload", {})
 

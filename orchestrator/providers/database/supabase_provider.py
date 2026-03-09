@@ -112,7 +112,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
             response = self.client.table(validated_table).insert(record).execute()
             if not response.data:
                 raise DatabaseError(f"Insert failed: No data from {validated_table}")
-            return response.data[0]
+            return response.data[0]  # type: ignore[return-value]
         except DatabaseError:
             raise
         except Exception as e:
@@ -136,7 +136,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
 
             if not response.data:
                 raise DatabaseError(f"Upsert failed: No data from {validated_table}")
-            return response.data[0]
+            return response.data[0]  # type: ignore[return-value]
         except DatabaseError:
             raise
         except Exception as e:
@@ -155,7 +155,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
                 query = query.eq(validated_key, value)
 
             response = query.execute()
-            return response.data
+            return response.data  # type: ignore[return-value]
         except DatabaseError:
             raise
         except Exception as e:
@@ -192,7 +192,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
                     query = query.eq(validated_key, value)
 
             response = query.execute()
-            return response.data or []
+            return response.data or []  # type: ignore[return-value]
         except DatabaseError:
             raise
         except Exception as e:
@@ -233,7 +233,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
             if not response.data:
                 raise NotFoundError(f"No records to update in {validated_table} with {filters}")
 
-            return response.data[0]
+            return response.data[0]  # type: ignore[return-value]
         except Exception as e:
             if isinstance(e, (DatabaseError, NotFoundError)):
                 raise

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ComingSoonPage } from "@/pages/ComingSoon";
 import { HomePage } from "@/pages/Home";
@@ -73,6 +74,7 @@ const omniDashRoutes: readonly AppRoute[] = [
 
 function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <div data-testid="app-shell">
         <Routes>
@@ -95,6 +97,7 @@ function App() {
         </Routes>
       </div>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

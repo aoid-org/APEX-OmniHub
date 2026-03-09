@@ -106,7 +106,9 @@ def sanitize_for_prompt(text: str, field_name: str = "input") -> str:
     is_injection, pattern = detect_injection(text)
     if is_injection:
         raise PromptInjectionError(
-            f"Potential prompt injection detected in {field_name}", pattern=pattern, input_text=text
+            f"Potential prompt injection detected in {field_name}",
+            pattern=pattern or "",
+            input_text=text,
         )
 
     # Normalize whitespace
@@ -149,6 +151,7 @@ def sanitize_context(context: dict[str, Any], max_depth: int = 3) -> dict[str, A
         safe_key = sanitize_for_prompt(str(key), f"context_key:{key}")
 
         # Sanitize value based on type
+        safe_value: Any
         if isinstance(value, str):
             safe_value = sanitize_for_prompt(value, f"context:{key}")
         elif isinstance(value, dict):
