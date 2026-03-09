@@ -111,7 +111,7 @@ jobs:
         run: npm ci --prefer-offline
 
       - name: Download web dist
-        uses: actions/download-artifact@fa0a91b85d4f404e444306234a34290fda2a52a7 # v4.1.8
+        uses: actions/download-artifact@65a823588c7272d4de5f3f47b2b7cc6c65def8e8 # v4.1.7
         with:
           name: web-dist
           path: dist/
@@ -180,7 +180,7 @@ jobs:
         run: npm ci --prefer-offline
 
       - name: Download web dist
-        uses: actions/download-artifact@fa0a91b85d4f404e444306234a34290fda2a52a7 # v4.1.8
+        uses: actions/download-artifact@65a823588c7272d4de5f3f47b2b7cc6c65def8e8 # v4.1.7
         with:
           name: web-dist
           path: dist/
