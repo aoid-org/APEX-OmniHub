@@ -10,11 +10,10 @@
  * All Supabase calls are mocked; no network required.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   MemoryClient,
   type StoreMemoryInput,
-  type RecallOptions,
   type MemoryRecord,
 } from '../../src/lib/memory/MemoryClient';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -39,7 +38,7 @@ function makeSupabaseMock() {
   // Build a chainable builder where terminal calls resolve via spy
   const makeBuilder = (terminalSpy: typeof singleSpy) => {
     const builder: Record<string, unknown> = {};
-    const chain = () => builder;
+    const _chain = () => builder;
 
     builder.select = (..._args: unknown[]) => { selectSpy(..._args); return builder; };
     builder.eq = (..._args: unknown[]) => { eqSpy(..._args); return builder; };
