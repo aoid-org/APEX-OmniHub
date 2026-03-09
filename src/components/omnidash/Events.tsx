@@ -5,12 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchOmniLinkEvents } from '@/omnidash/omnilink-api';
 import { HiddenValue } from './HiddenMetric';
 import { Activity, RadioReceiver, Clock as ClockIcon, Hash } from 'lucide-react';
-import { Responsive, WidthProvider, Layout } from 'react-grid-layout/legacy';
-import 'react-grid-layout/css/styles.css';
-import 'react-resizable/css/styles.css';
+import { ResponsiveGridLayout, type Layout } from './gridLayout';
 import { useState, useMemo } from 'react';
-
-const ResponsiveGridLayout = WidthProvider(Responsive);
 
 export const Events = () => {
   const { user } = useAuth();
