@@ -196,7 +196,9 @@
     "hono": "^4.12.4",
     "serialize-javascript": "^7.0.3",
     "rollup": "^4.59.0",
-    "immutable": "^4.3.8"
+    "immutable": "^4.3.8",
+    "react-router-dom": "^7.13.1",
+    "react-router": "^7.13.1"
   },
   "packageManager": "bun@1.2.14"
 }

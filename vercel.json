@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd apps/omnihub-site && npm install && npm run build",
+  "buildCommand": "cd apps/omnihub-site && npm install --legacy-peer-deps && npm run build",
   "outputDirectory": "apps/omnihub-site/dist",
-  "installCommand": "npm install",
+  "installCommand": "npm install --legacy-peer-deps",
   "framework": "vite",
   "rewrites": [
     { "source": "/demo", "destination": "/demo.html" },
