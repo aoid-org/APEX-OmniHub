@@ -18,10 +18,10 @@ class OmniBoardService:
     Service layer for OmniBoard.
 
     Handles:
-    - Provider Registry Lookup (mocked)
+    - Provider Registry Lookup
     - Fuzzy Matching
-    - Vault Storage (mocked)
-    - OmniPort Registration (mocked)
+    - Vault Storage
+    - OmniPort Registration
     """
 
     @classmethod
@@ -62,7 +62,7 @@ class OmniBoardService:
     ]
 
     @classmethod
-    def fuzzy_match_provider(cls, input_text: str) -> list[str]:
+    async def fuzzy_match_provider(cls, input_text: str) -> list[str]:
         """
         Fuzzy match provider names against query string.
 
@@ -88,7 +88,7 @@ class OmniBoardService:
         query_lower = query_clean.lower()
         matches = []
 
-        known_providers = cls.KNOWN_PROVIDERS
+        known_providers = await cls.get_known_providers()
 
         for provider in known_providers:
             provider_lower = provider.lower()
@@ -114,7 +114,6 @@ class OmniBoardService:
 
         # Sort by score (descending), then provider name (ascending)
         matches.sort(key=lambda x: (-x[0], x[1]))
-
         return [provider for _, provider in matches]
 
     @classmethod
@@ -142,11 +141,35 @@ class OmniBoardService:
         return uri
 
     @classmethod
-    def validate_api_key(cls, _provider: str, api_key: str) -> bool:
+    async def validate_api_key(cls, provider: str, api_key: str) -> bool:
         """
-        MOCK: Validates an API Key format/validity locally if possible.
+        Validates an API Key by calling the provider's userinfo_endpoint.
+        Returns True only if the key is valid (HTTP 200).
         """
-        return bool(api_key and len(api_key) >= 10)
+        if not api_key or len(api_key) < 10:
+            return False
+
+        db = get_database_provider()
+        res = await db.select(
+            table="provider_registry",
+            select_fields="userinfo_endpoint",
+            filters={"name": provider},
+        )
+
+        if not res or not res[0].get("userinfo_endpoint"):
+            endpoint = f"https://api.{provider.lower()}.com/v1/userinfo"
+        else:
+            endpoint = res[0]["userinfo_endpoint"]
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    endpoint, headers={"Authorization": f"Bearer {api_key}"}
+                )
+                return response.status_code == 200
+            except Exception as e:
+                logger.error(f"API key validation failed: {e}")
+                return False
 
     @classmethod
     async def initiate_device_code_flow(cls, provider: str) -> dict[str, str]:
@@ -169,6 +192,7 @@ class OmniBoardService:
 
         slug = provider.upper()
         client_id = os.environ.get(f"{slug}_CLIENT_ID")
+
         if not client_id:
             return {
                 "device_code": "mock_device_123",
@@ -227,6 +251,7 @@ class OmniBoardService:
         res = await db.select(
             table="provider_registry", select_fields="userinfo_endpoint", filters={"name": provider}
         )
+
         if not res or not res[0].get("userinfo_endpoint"):
             endpoint = f"https://api.{provider.lower()}.com/v1/userinfo"
         else:
@@ -247,7 +272,7 @@ class OmniBoardService:
                 ping_ok = False
                 latency_ms = 0
 
-            return {"ping_ok": ping_ok, "latency_ms": latency_ms}
+        return {"ping_ok": ping_ok, "latency_ms": latency_ms}
 
     @classmethod
     async def register_with_omniport(cls, tenant_id: str, provider: str, _token_ref: str) -> str:
@@ -256,6 +281,7 @@ class OmniBoardService:
         """
         db = get_database_provider()
         connection_id = str(uuid.uuid4())
+
         await db.insert(
             table="connections",
             record={
@@ -269,15 +295,79 @@ class OmniBoardService:
         return connection_id
 
     @classmethod
-    def disconnect_provider(cls, connection_id: str) -> bool:
-        """MOCK: Disconnects a provider."""
-        _ = connection_id
-        logger.info("Disconnecting provider connection")
+    async def disconnect_provider(cls, connection_id: str, tenant_id: str, provider: str) -> bool:
+        """
+        Disconnects a provider: sets status='revoked' in DB, deletes Redis token.
+        """
+        logger.info(f"Disconnecting connection {connection_id}")
+
+        db = get_database_provider()
+        await db.update(
+            table="connections",
+            record={"status": "revoked"},
+            filters={"id": connection_id},
+        )
+
+        token_ref = f"omni:vault:creds:{provider}:{tenant_id}"
+        redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])
+        try:
+            await redis_client.delete(token_ref)
+        finally:
+            await redis_client.aclose()  # type: ignore[attr-defined]
+
         return True
 
     @classmethod
-    def rotate_credentials(cls, connection_id: str) -> str:
+    async def rotate_credentials(
+        cls, connection_id: str, tenant_id: str, provider: str, refresh_token: str
+    ) -> str:
         """
-        Mock for credentials rotation.
+        Rotates credentials via OAuth refresh flow: POST to token_endpoint, store new token, update DB expiry.
         """
-        return f"vault://rotated/{connection_id}/token"
+        db = get_database_provider()
+        res = await db.select(
+            table="provider_registry",
+            select_fields="token_endpoint",
+            filters={"name": provider},
+        )
+
+        if not res or not res[0].get("token_endpoint"):
+            token_endpoint = f"https://api.{provider.lower()}.com/oauth/token"
+        else:
+            token_endpoint = res[0]["token_endpoint"]
+
+        slug = provider.upper()
+        client_id = os.environ.get(f"{slug}_CLIENT_ID")
+        client_secret = os.environ.get(f"{slug}_CLIENT_SECRET")
+
+        if not client_id or not client_secret:
+            raise ValueError(f"Missing OAuth credentials for {provider}")
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                token_endpoint,
+                data={
+                    "grant_type": "refresh_token",
+                    "refresh_token": refresh_token,
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                },
+            )
+            response.raise_for_status()
+            new_token_data = response.json()
+
+        token_ref = f"omni:vault:creds:{provider}:{tenant_id}"
+        redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])
+        try:
+            await redis_client.setex(token_ref, 3600, json.dumps(new_token_data))
+        finally:
+            await redis_client.aclose()  # type: ignore[attr-defined]
+
+        await db.update(
+            table="connections",
+            record={"updated_at": "now()"},
+            filters={"id": connection_id},
+        )
+
+        logger.info(f"Rotated credentials for {connection_id}")
+        return token_ref
