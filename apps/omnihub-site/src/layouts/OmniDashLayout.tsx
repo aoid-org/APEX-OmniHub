@@ -14,6 +14,7 @@ import { Search, Bell, Shield, ChevronDown, Sun, Moon, X } from 'lucide-react';
 import { DashboardOverview } from '@/pages/DashboardOverview';
 import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
 import { BYOMCockpit } from '@/components/byom/BYOMCockpit';
+import { SentinelPanel } from '@/components/omnidash/SentinelPanel';
 import { useOmniDashAction, type OmniDashIntent } from '@/hooks/useOmniDashAction';
 import { hasModuleComponent } from '../components/omnidash/moduleComponents';
 import '@/styles/omnidash-layout.css';
@@ -144,9 +145,11 @@ export function OmniDashLayout() {
           <button
             onClick={handleLogout}
             style={{
-              display: 'block', marginTop: 8, fontSize: 13.375,
-              color: '#64748b', cursor: 'pointer', background: 'none',
+              display: 'block', marginTop: 8, fontSize: 11,
+              color: '#5a6478', cursor: 'pointer', background: 'none',
               border: 'none', padding: 0, fontFamily: 'inherit',
+              fontWeight: 600, letterSpacing: '0.03em',
+              transition: 'color 0.2s',
             }}
           >
             Sign Out
@@ -249,9 +252,12 @@ export function OmniDashLayout() {
         )}
       </div>
 
-      {/* ────── RIGHT SIDEBAR: BYOM ────── */}
-      <aside className="od-right-sidebar" style={{ padding: 16, minWidth: 260 }}>
-        <BYOMCockpit />
+      {/* ────── RIGHT SIDEBAR: Sentinel Intel Panel ────── */}
+      <aside className="od-right-sidebar">
+        <SentinelPanel />
+        <div className="sentinel-section">
+          <BYOMCockpit />
+        </div>
       </aside>
 
       {/* ────── GLOBAL MODAL ENGINE ────── */}

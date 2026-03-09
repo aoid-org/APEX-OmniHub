@@ -53,7 +53,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
         ' z-[9999] pointer-events-auto' +
         ' flex flex-col justify-end relative overflow-hidden'
       }
-      style={{ ...GLASS_TILE, padding: 28 }}
+      style={{ ...GLASS_TILE, padding: 24 }}
     >
       <div className="apex-noise-layer" />
 
@@ -64,9 +64,9 @@ export const OmniSlatePane = memo(function OmniSlatePane({
           left: 0,
           zIndex: 1000,
           padding: '8px 14px',
-          fontSize: 11.77,
+          fontSize: 10,
           fontWeight: 800,
-          color: '#a1a1aa',
+          color: '#5a6478',
           letterSpacing: '0.15em',
           textTransform: 'uppercase',
         }}

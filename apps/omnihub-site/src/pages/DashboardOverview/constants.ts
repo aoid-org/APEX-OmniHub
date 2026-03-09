@@ -5,63 +5,63 @@ export const LOGO = (domain: string) =>
 /* ── Hidden apps ── */
 export const HIDDEN_APPS = new Set(['OmniBoard', 'OmniPort', 'Maestro']);
 
-/* ── Framer Motion spring config (reused, no inline duplication) ── */
+/* ── Framer Motion spring config ── */
 export const SPRING = {
   type: 'spring',
-  stiffness: 170,
-  damping: 26,
-  mass: 1,
+  stiffness: 200,
+  damping: 28,
+  mass: 0.8,
 } as const;
 
 /* ── Health colour map ── */
 export const HC = {
   green: {
-    border: 'rgba(52,211,153,0.5)',
-    bg: 'rgba(52,211,153,0.06)',
+    border: 'rgba(52,211,153,0.35)',
+    bg: 'rgba(52,211,153,0.05)',
     text: '#34d399',
-    shadow: '0 0 12px rgba(52,211,153,0.25)',
+    shadow: '0 0 12px rgba(52,211,153,0.15)',
   },
   yellow: {
-    border: 'rgba(250,204,21,0.5)',
-    bg: 'rgba(250,204,21,0.06)',
+    border: 'rgba(250,204,21,0.35)',
+    bg: 'rgba(250,204,21,0.05)',
     text: '#facc15',
-    shadow: '0 0 12px rgba(250,204,21,0.25)',
+    shadow: '0 0 12px rgba(250,204,21,0.15)',
   },
   red: {
-    border: 'rgba(239,68,68,0.5)',
-    bg: 'rgba(239,68,68,0.06)',
+    border: 'rgba(239,68,68,0.35)',
+    bg: 'rgba(239,68,68,0.05)',
     text: '#ef4444',
-    shadow: '0 0 12px rgba(239,68,68,0.25)',
+    shadow: '0 0 12px rgba(239,68,68,0.15)',
   },
 } as const;
 
 /* ── Design tokens ── */
 export const APEX_ORANGE = '#c2501f';
-export const FONT_SG = 'Space Grotesk, sans-serif';
+export const FONT_SG = '"Space Grotesk", sans-serif';
 
-/* ── Shared glass tile surface ── */
+/* ── Shared glass tile surface — refined depth ── */
 export const GLASS_TILE = {
-  borderRadius: 24,
-  backgroundColor: 'rgba(255, 255, 255, 0.08)',
-  backdropFilter: 'blur(32px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-  border: '1px solid rgba(255, 255, 255, 0.15)',
+  borderRadius: 20,
+  backgroundColor: 'rgba(8, 12, 21, 0.65)',
+  backdropFilter: 'blur(40px) saturate(160%)',
+  WebkitBackdropFilter: 'blur(40px) saturate(160%)',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
   boxShadow:
-    'inset 0 1px 1px rgba(255,255,255,0.25),' +
-    ' 0 10px 30px rgba(0,0,0,0.2)',
+    'inset 0 1px 0 rgba(255,255,255,0.05),' +
+    ' 0 8px 32px rgba(0,0,0,0.3)',
 };
 
 /* ── Shared button style variants ── */
 export const CTRL_BTN = {
-  background: 'rgba(249,115,22,0.1)',
-  border: '1px solid rgba(249,115,22,0.3)',
+  background: 'rgba(249,115,22,0.08)',
+  border: '1px solid rgba(249,115,22,0.20)',
   color: '#f97316',
-  transition: 'all 0.2s',
+  transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
 };
 
 export const ORANGE_GHOST = {
-  background: 'rgba(194,80,31,0.06)',
-  border: '1px solid rgba(194,80,31,0.2)',
+  background: 'rgba(194,80,31,0.05)',
+  border: '1px solid rgba(194,80,31,0.15)',
   color: '#f97316',
   cursor: 'pointer',
   fontFamily: 'inherit',
@@ -69,82 +69,82 @@ export const ORANGE_GHOST = {
 
 /* ── Static listening-bar geometry ── */
 export const BARS = [
-  { id: 'b0', h: 6 },
-  { id: 'b1', h: 10 },
-  { id: 'b2', h: 16 },
-  { id: 'b3', h: 10 },
-  { id: 'b4', h: 6 },
+  { id: 'b0', h: 5 },
+  { id: 'b1', h: 9 },
+  { id: 'b2', h: 14 },
+  { id: 'b3', h: 9 },
+  { id: 'b4', h: 5 },
 ] as const;
 
 /* ── Prompt bar style ── */
 export const PROMPT_STYLE_BASE = {
-  height: 44,
+  height: 42,
   borderRadius: 12,
-  padding: '0 20px',
+  padding: '0 18px',
   background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(255,255,255,0.1)',
-  color: '#dfe6fe',
-  fontSize: 15,
+  border: '1px solid rgba(255,255,255,0.08)',
+  color: '#e8ecf4',
+  fontSize: 14,
   outline: 'none',
   fontFamily: 'inherit',
   fontWeight: 500,
-  transition: 'all 0.3s ease',
+  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
   flex: 1,
 };
 
 /* ── Ecosystem row styles ── */
 export const ECO_ROW_STYLE = {
-  background: 'rgba(0,0,0,0.20)',
+  background: 'rgba(255,255,255,0.025)',
   border: '1px solid rgba(255,255,255,0.05)',
   cursor: 'grab',
   touchAction: 'none' as const,
 };
 
 export const CAT_BADGE_STYLE = {
-  background: 'rgba(249,115,22,0.1)',
+  background: 'rgba(249,115,22,0.08)',
   color: '#f97316',
-  border: '1px solid rgba(249,115,22,0.25)',
+  border: '1px solid rgba(249,115,22,0.20)',
   fontWeight: 800,
   textTransform: 'uppercase' as const,
   letterSpacing: '0.05em',
 };
 
-/* ── App tile styles ── */
+/* ── App tile styles — refined surfaces ── */
 export const APP_TILE_SURFACE = {
   display: 'flex',
   alignItems: 'center',
-  gap: 16,
-  padding: '16px 20px',
+  gap: 14,
+  padding: '14px 18px',
   borderRadius: 16,
-  background: 'rgba(255,255,255,0.02)',
+  background: 'rgba(255,255,255,0.025)',
   border: '1px solid rgba(255,255,255,0.05)',
   cursor: 'grab',
   boxShadow:
-    'inset 0 1px 0 rgba(255,255,255,0.05),' +
-    ' 0 4px 15px rgba(0,0,0,0.4)',
+    'inset 0 1px 0 rgba(255,255,255,0.03),' +
+    ' 0 4px 16px rgba(0,0,0,0.3)',
   touchAction: 'none' as const,
-  transition: 'all 0.3s ease-out',
+  transition: 'all 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
   position: 'relative' as const,
 };
 
 export const APP_LOGO_STYLE = {
-  width: 44,
-  height: 44,
-  borderRadius: 12,
+  width: 40,
+  height: 40,
+  borderRadius: 10,
   flexShrink: 0,
-  background: '#09090b',
+  background: 'rgba(6, 10, 19, 0.8)',
   objectFit: 'contain' as const,
-  padding: 6,
-  border: '1px solid rgba(255,255,255,0.1)',
+  padding: 5,
+  border: '1px solid rgba(255,255,255,0.08)',
 };
 
 export const APP_LOGO_FALLBACK = {
-  width: 44,
-  height: 44,
-  borderRadius: 12,
+  width: 40,
+  height: 40,
+  borderRadius: 10,
   flexShrink: 0,
-  background: 'rgba(255,255,255,0.05)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  background: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.08)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -152,30 +152,31 @@ export const APP_LOGO_FALLBACK = {
 };
 
 export const APP_TILE_HOVER = {
-  scale: 1.03,
-  borderColor: 'rgba(255,255,255,0.15)',
+  scale: 1.02,
+  borderColor: 'rgba(194,80,31,0.25)',
   boxShadow:
-    'inset 0 1px 0 rgba(255,255,255,0.1),' +
-    ' 0 8px 25px rgba(0,0,0,0.6)',
+    'inset 0 1px 0 rgba(255,255,255,0.06),' +
+    ' 0 8px 28px rgba(0,0,0,0.4),' +
+    ' 0 0 20px rgba(249,115,22,0.06)',
   translateY: -2,
 };
 
 export const PARTIAL_CHIP = {
-  background: 'rgba(250,204,21,0.12)',
+  background: 'rgba(250,204,21,0.08)',
   color: '#facc15',
-  borderColor: 'rgba(250,204,21,0.3)',
+  borderColor: 'rgba(250,204,21,0.25)',
 };
 
 export const SYNC_BTN_STYLE = {
   position: 'absolute' as const,
-  bottom: 16,
-  right: 16,
-  fontSize: 10.7,
+  bottom: 14,
+  right: 14,
+  fontSize: 10,
   fontWeight: 800,
-  padding: '6px 14px',
+  padding: '5px 12px',
   borderRadius: 8,
-  background: 'rgba(249,115,22,0.1)',
-  border: '1px solid rgba(249,115,22,0.3)',
+  background: 'rgba(249,115,22,0.08)',
+  border: '1px solid rgba(249,115,22,0.20)',
   color: '#f97316',
   cursor: 'pointer',
   fontFamily: 'inherit',
