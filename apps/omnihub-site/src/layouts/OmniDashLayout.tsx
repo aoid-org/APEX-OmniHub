@@ -2,9 +2,9 @@
  * APEX OmniDash Layout - apps/omnihub-site
  * @version 7.0.0 - OmniCanvas spatial windowing + custom nav icons
  *
- * 2-column Flexbox: 260px sidebar | 1fr canvas
- * Right sidebar REMOVED — SentinelPanel now lives as a canvas widget.
+ * 3-column Flexbox: 260px sidebar | 1fr canvas | 280px right sidebar
  * OmniSkills appears in HEADER only (not sidebar, not app grid).
+ * Right sidebar: SentinelPanel (OmniTrace, Security Audit, Analytics, Ops)
  * Custom APEX-branded 3D nav icons (no Lucide in sidebar)
  * Lucide kept only for header utility icons (Search, Bell, Shield, ChevronDown)
  */
@@ -16,6 +16,8 @@ import { Search, Bell, Shield, ChevronDown, Sun, Moon, X, Sparkles } from 'lucid
 import { DashboardOverview } from '@/pages/DashboardOverview';
 import { OmniCanvas } from '@/components/omnidash/OmniCanvas';
 import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
+import { BYOMCockpit } from '@/components/byom/BYOMCockpit';
+import { SentinelPanel } from '@/components/omnidash/SentinelPanel';
 import { useOmniDashAction, type OmniDashIntent } from '@/hooks/useOmniDashAction';
 import { hasModuleComponent } from '../components/omnidash/moduleComponents';
 import '@/styles/omnidash-layout.css';
@@ -279,6 +281,14 @@ export function OmniDashLayout() {
           </div>
         )}
       </div>
+
+      {/* ────── RIGHT SIDEBAR: Sentinel Intel Panel ────── */}
+      <aside className="od-right-sidebar">
+        <SentinelPanel />
+        <div className="sentinel-section">
+          <BYOMCockpit />
+        </div>
+      </aside>
 
       {/* ────── GLOBAL MODAL ENGINE ────── */}
       <OmniSpatialHost />
