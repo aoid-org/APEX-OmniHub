@@ -269,7 +269,7 @@ class SemanticCacheService:
         self.ttl_seconds = ttl_seconds
 
         # Redis client (async)
-        self.redis: aioredis.Redis[bytes] | None = None  # type: ignore[type-arg]
+        self.redis: aioredis.Redis[bytes] | None = None
 
         # Sentence embeddings model (runs locally, no API calls)
         logger.info(f"Loading embedding model: {embedding_model}...")

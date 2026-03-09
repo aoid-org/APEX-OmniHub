@@ -10,55 +10,44 @@ export interface ApprovalTask {
   status: 'PENDING' | 'APPROVED' | 'DENIED';
 }
 
-const MOCK_APPROVALS: ApprovalTask[] = [
-  {
-    id: 'auth-req-001',
-    agent: 'Financial_Agent_v4',
-    risk_class: 'A',
-    confidence_score: 0.95,
-    reasoning: 'Transaction exceeds threshold ($10k)',
-    status: 'PENDING',
-  },
-  {
-    id: 'auth-req-002',
-    agent: 'Security_Bot_Alpha',
-    risk_class: 'B',
-    confidence_score: 0.88,
-    reasoning: 'Unusual login pattern detected',
-    status: 'PENDING',
-  },
-  {
-    id: 'auth-req-003',
-    agent: 'Data_Export_Tool',
-    risk_class: 'C',
-    confidence_score: 0.75,
-    reasoning: 'Bulk export of user data',
-    status: 'PENDING',
-  },
-  {
-    id: 'auth-req-004',
-    agent: 'Deployment_Script',
-    risk_class: 'D',
-    confidence_score: 0.6,
-    reasoning: 'Production deployment triggered outside window',
-    status: 'PENDING',
-  },
-];
 
 export function useManMode(isDemo: boolean) {
   const [approvals, setApprovals] = useState<ApprovalTask[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API delay
-    const timer = setTimeout(() => {
-      // Seed with sample approval tasks for the M.A.N.Mode queue.
-      // Production: replace with live API fetch from /api/man-mode/approvals
-      setApprovals(MOCK_APPROVALS);
-      setLoading(false);
-    }, 500);
+    let mounted = true;
 
-    return () => clearTimeout(timer);
+    const fetchApprovals = async () => {
+      try {
+        const response = await fetch('/api/man-mode/approvals');
+        if (!response.ok) {
+          throw new Error(`HTTP status ${response.status}`);
+        }
+        const data = await response.json();
+        if (mounted) {
+          setApprovals(data);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.warn('[MANMode] Failed to fetch live approvals, keeping current state:', error);
+        // Fallback for tests if needed, but per instructions we keep last known state and log warning.
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    // Initial fetch
+    fetchApprovals();
+
+    // Poll every 10 seconds
+    const interval = setInterval(fetchApprovals, 10000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, [isDemo]);
 
   // Handler functions for approve/deny actions

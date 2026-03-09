@@ -27,6 +27,8 @@ ALLOWED_TABLES = frozenset(
         "user_data",
         "settings",
         "events",
+        "provider_registry",
+        "connections",
         "workflows",
         "workflow_runs",
         # MAN Mode tables
