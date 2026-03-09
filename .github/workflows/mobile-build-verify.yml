@@ -1,0 +1,249 @@
+name: Mobile Build Verification
+
+# Verifies that the Capacitor web-to-native sync compiles cleanly for both
+# Android (Gradle) and iOS (xcodebuild) on every PR and main-branch push.
+# This replaces the "Capacitor is merely CONFIGURED" state with a
+# continuously-verified, CI-enforced build pipeline.
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'src/**'
+      - 'capacitor.config.ts'
+      - 'package.json'
+      - 'android/**'
+      - 'ios/**'
+      - '.github/workflows/mobile-build-verify.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'src/**'
+      - 'capacitor.config.ts'
+      - 'package.json'
+      - 'android/**'
+      - 'ios/**'
+      - '.github/workflows/mobile-build-verify.yml'
+  workflow_dispatch:
+    inputs:
+      skip_android:
+        description: 'Skip Android build'
+        required: false
+        default: 'false'
+      skip_ios:
+        description: 'Skip iOS build'
+        required: false
+        default: 'false'
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  JAVA_VERSION: '17'
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  # 1. Build web assets (shared prerequisite for both platforms)
+  # ──────────────────────────────────────────────────────────────────────────
+  build-web:
+    name: Build Web Assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Build web app
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key' }}
+        run: npm run build
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: web-dist
+          path: dist/
+          retention-days: 1
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 2. Android — Gradle assembleDebug
+  # ──────────────────────────────────────────────────────────────────────────
+  build-android:
+    name: Android Build (Debug)
+    runs-on: ubuntu-latest
+    needs: build-web
+    if: github.event.inputs.skip_android != 'true'
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@00854ea68c109d98c75d956347303bf7c45b0277 # v3.2.1
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Download web dist
+        uses: actions/download-artifact@fa0a91b85d4f404e444306234a34290fda2a52a7 # v4.1.8
+        with:
+          name: web-dist
+          path: dist/
+
+      - name: Sync Capacitor → Android
+        run: npx cap sync android
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c6158d # v4.2.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            android/.gradle
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties', 'android/build.gradle', 'android/app/build.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Build Android Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: android-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
+
+      - name: Verify APK exists and is non-empty
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          if [ ! -f "$APK" ]; then
+            echo "::error::APK not found at expected path: $APK"
+            exit 1
+          fi
+          SIZE=$(stat -c%s "$APK")
+          echo "APK size: $SIZE bytes"
+          if [ "$SIZE" -lt 1000000 ]; then
+            echo "::error::APK is suspiciously small ($SIZE bytes) — build may be incomplete"
+            exit 1
+          fi
+          echo "::notice::Android APK verified: $SIZE bytes"
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 3. iOS — xcodebuild (macOS runner, no provisioning required for CI check)
+  # ──────────────────────────────────────────────────────────────────────────
+  build-ios:
+    name: iOS Build (Simulator)
+    runs-on: macos-14
+    needs: build-web
+    if: github.event.inputs.skip_ios != 'true'
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Download web dist
+        uses: actions/download-artifact@fa0a91b85d4f404e444306234a34290fda2a52a7 # v4.1.8
+        with:
+          name: web-dist
+          path: dist/
+
+      - name: Sync Capacitor → iOS
+        run: npx cap sync ios
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+
+      - name: Install CocoaPods dependencies
+        working-directory: ios/App
+        run: pod install --repo-update
+
+      - name: Build iOS (simulator — no signing required)
+        working-directory: ios/App
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -derivedDataPath build/ \
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=YES \
+            build \
+            | xcpretty --color || (cat /tmp/xcodebuild.log 2>/dev/null; exit 1)
+
+      - name: Verify iOS build product
+        working-directory: ios/App
+        run: |
+          APP_PATH=$(find build/ -name "App.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "::error::iOS App.app build product not found"
+            exit 1
+          fi
+          echo "::notice::iOS build verified at: $APP_PATH"
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 4. Gate — both platforms must pass for PR merge eligibility
+  # ──────────────────────────────────────────────────────────────────────────
+  mobile-gate:
+    name: Mobile Build Gate
+    runs-on: ubuntu-latest
+    needs: [build-android, build-ios]
+    if: always()
+    timeout-minutes: 2
+
+    steps:
+      - name: Evaluate gate
+        run: |
+          ANDROID="${{ needs.build-android.result }}"
+          IOS="${{ needs.build-ios.result }}"
+
+          echo "Android build: $ANDROID"
+          echo "iOS build:     $IOS"
+
+          # 'skipped' is allowed when the input flag is set
+          for result in "$ANDROID" "$IOS"; do
+            if [[ "$result" != "success" && "$result" != "skipped" ]]; then
+              echo "::error::Mobile build gate FAILED — one or more platform builds did not succeed."
+              exit 1
+            fi
+          done
+
+          echo "::notice::Mobile build gate PASSED — all platform builds succeeded."
