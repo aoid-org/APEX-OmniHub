@@ -50,8 +50,8 @@ function resolveNpmRunner() {
 
 function extractVersionsFromTree(treeOutput, packageName) {
   const pattern = new RegExp(
-    String.raw`(?:^|\n)[|│\s]*(?:[├└]──|[+\x60]--)\s+${packageName}@([0-9]+\.[0-9]+\.[0-9]+(?:[-+][^\s]+)?)`,
-    'g',
+    `[├└]── ${packageName}@([0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][^\\s]+)?)`,
+    'g'
   );
   const versions = new Set();
 
@@ -76,8 +76,9 @@ async function main() {
     console.error(`${colors.red}✗${colors.reset} Unable to locate npm binary in fixed system paths.`);
     process.exit(1);
   }
-  command = npmRunner.command;
-  args = [...npmRunner.args, 'ls', 'react', 'react-dom', '--all'];
+
+  command = '/usr/local/bun/bin/bun';
+  args = ['pm', 'ls', '--all'];
 
   try {
     depTreeText = execFileSync(command, args, {
@@ -85,6 +86,7 @@ async function main() {
       maxBuffer: 10 * 1024 * 1024,
       env: buildSafeEnv(),
     });
+
   } catch (error) {
     const fallbackText = String(error?.stdout ?? '');
     if (fallbackText.trim()) {

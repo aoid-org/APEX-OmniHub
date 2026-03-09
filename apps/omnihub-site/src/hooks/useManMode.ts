@@ -50,15 +50,38 @@ export function useManMode(isDemo: boolean) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API delay
-    const timer = setTimeout(() => {
-      // Seed with sample approval tasks for the M.A.N.Mode queue.
-      // Production: replace with live API fetch from /api/man-mode/approvals
-      setApprovals(MOCK_APPROVALS);
-      setLoading(false);
-    }, 500);
+    let mounted = true;
 
-    return () => clearTimeout(timer);
+    const fetchApprovals = async () => {
+      try {
+        const response = await fetch('/api/man-mode/approvals');
+        if (!response.ok) {
+          throw new Error(`HTTP status ${response.status}`);
+        }
+        const data = await response.json();
+        if (mounted) {
+          setApprovals(data);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.warn('[MANMode] Failed to fetch live approvals, keeping current state:', error);
+        // Fallback for tests if needed, but per instructions we keep last known state and log warning.
+        if (mounted && loading) {
+          setLoading(false);
+        }
+      }
+    };
+
+    // Initial fetch
+    fetchApprovals();
+
+    // Poll every 10 seconds
+    const interval = setInterval(fetchApprovals, 10000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, [isDemo]);
 
   // Handler functions for approve/deny actions

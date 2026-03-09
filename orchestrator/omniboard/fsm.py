@@ -42,7 +42,7 @@ class OmniBoardFSM:
         )
 
     @classmethod
-    def transition(cls, context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
+    async def transition(cls, context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
         """
         Execute a state transition based on the current state and input event.
         Returns: (Updated Context, User/System Response Message)
@@ -52,36 +52,36 @@ class OmniBoardFSM:
         try:
             # 1. IDLE_LISTEN -> APP_IDENTIFICATION
             if context.state == OmniBoardState.IDLE_LISTEN:
-                return cls._handle_idle_listen(context, event)
+                return await cls._handle_idle_listen(context, event)
 
             # 2. APP_IDENTIFICATION -> AUTH_SETUP
             if context.state == OmniBoardState.APP_IDENTIFICATION:
-                return cls._handle_app_identification(context, event)
+                return await cls._handle_app_identification(context, event)
 
             # 2b. APP_DISAMBIGUATION -> AUTH_SETUP
             if context.state == OmniBoardState.APP_DISAMBIGUATION:
-                return cls._handle_app_disambiguation(context, event)
+                return await cls._handle_app_disambiguation(context, event)
 
             # 3. AUTH_SETUP -> AUTH_COMPLETE
             if context.state == OmniBoardState.AUTH_SETUP:
-                return cls._handle_auth_setup(context, event)
+                return await cls._handle_auth_setup(context, event)
 
             # 4. AUTH_COMPLETE -> VERIFY_CONNECTION
             if context.state == OmniBoardState.AUTH_COMPLETE:
                 # This state is usually auto-transitioned, but wait for explicit trigger if async
-                return cls._handle_auth_complete(context, event)
+                return await cls._handle_auth_complete(context, event)
 
             # 5. VERIFY_CONNECTION -> REGISTER_CONNECTION
             if context.state == OmniBoardState.VERIFY_CONNECTION:
-                return cls._handle_verify_connection(context, event)
+                return await cls._handle_verify_connection(context, event)
 
             # 6. REGISTER_CONNECTION -> COMPLETION
             if context.state == OmniBoardState.REGISTER_CONNECTION:
-                return cls._handle_register_connection(context, event)
+                return await cls._handle_register_connection(context, event)
 
             # 7. RECOVERY_RETRY logic
             if context.state == OmniBoardState.RECOVERY_RETRY:
-                return cls._handle_recovery(context, event)
+                return await cls._handle_recovery(context, event)
 
             # Default: No transition possible
             return context, "I didn't understand that. Please wait or try again."
@@ -95,7 +95,7 @@ class OmniBoardFSM:
     # --- State Handlers ---
 
     @staticmethod
-    def _handle_idle_listen(context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
+    async def _handle_idle_listen(context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
         user_input = event.payload.get("user_input", "").strip()
         if not user_input:
             return context, "I'm ready to connect a new app. Which app would you like to connect?"
@@ -109,7 +109,9 @@ class OmniBoardFSM:
         return context, f"Searching for '{user_input}'..."
 
     @staticmethod
-    def _handle_app_identification(context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
+    async def _handle_app_identification(
+        context: FSMContext, event: FSMEvent
+    ) -> tuple[FSMContext, str]:
         # Input: Confirmation or Refinement of the app name
         match_found = event.payload.get("match_found", False)
         provider_name = event.payload.get("provider_name")
@@ -133,7 +135,9 @@ class OmniBoardFSM:
         return context, "I couldn't find that app. Could you spell it exactly?"
 
     @staticmethod
-    def _handle_app_disambiguation(context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
+    async def _handle_app_disambiguation(
+        context: FSMContext, event: FSMEvent
+    ) -> tuple[FSMContext, str]:
         # Input: User selects one of the candidates
         user_selection = event.payload.get("user_input", "").strip()
         # Log selection for debug, even if we assume matched event
@@ -157,7 +161,7 @@ class OmniBoardFSM:
         return context, "Please select one of the options or try searching again."
 
     @staticmethod
-    def _handle_auth_setup(context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
+    async def _handle_auth_setup(context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
         # Input: User selects auth method or provides keys
         auth_method = event.payload.get("auth_method")
 
@@ -165,14 +169,14 @@ class OmniBoardFSM:
             context.auth_type = AuthType(auth_method)
             context.state = OmniBoardState.AUTH_COMPLETE
             if context.auth_type == AuthType.OAUTH:
-                auth_url = OmniBoardService.generate_oauth_url(
+                auth_url = await OmniBoardService.generate_oauth_url(
                     context.provider_name or "unknown", context.tenant_id
                 )
                 return context, f"Please click this link to authorize: {auth_url}"
             if context.auth_type == AuthType.API_KEY:
                 return context, "Please enter your API Key."
             if context.auth_type == AuthType.DEVICE_CODE:
-                device_data = OmniBoardService.initiate_device_code_flow(
+                device_data = await OmniBoardService.initiate_device_code_flow(
                     context.provider_name or "unknown"
                 )
                 code = device_data["user_code"]
@@ -187,14 +191,16 @@ class OmniBoardFSM:
         )
 
     @staticmethod
-    def _handle_auth_complete(context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
+    async def _handle_auth_complete(context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
         # Triggered when auth is done (callback received or key entered)
         _ = event
         context.state = OmniBoardState.VERIFY_CONNECTION
         return context, "Authentication received. Verifying connection..."
 
     @staticmethod
-    def _handle_verify_connection(context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
+    async def _handle_verify_connection(
+        context: FSMContext, event: FSMEvent
+    ) -> tuple[FSMContext, str]:
         # Input: Result of the verification attempt
         verified = event.payload.get("verified", False)
 
@@ -212,7 +218,9 @@ class OmniBoardFSM:
         return context, "Verification failed. Please check your credentials and try again."
 
     @staticmethod
-    def _handle_register_connection(context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
+    async def _handle_register_connection(
+        context: FSMContext, event: FSMEvent
+    ) -> tuple[FSMContext, str]:
         # Input: Registration success
         connection_id = event.payload.get("connection_id")
 
@@ -250,7 +258,7 @@ class OmniBoardFSM:
         return context, f"Done. {context.provider_name} is now connected."
 
     @staticmethod
-    def _handle_recovery(context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
+    async def _handle_recovery(context: FSMContext, event: FSMEvent) -> tuple[FSMContext, str]:
         # Reset relative to severity
         _ = event
         context.state = OmniBoardState.IDLE_LISTEN

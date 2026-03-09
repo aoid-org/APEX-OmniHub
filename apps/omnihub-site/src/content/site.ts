@@ -72,10 +72,10 @@ export const siteConfig = {
     title: 'Experience APEX OmniHub Today',
     subtitle: 'Unite. Automate. Excel.',
     items: [
-      buildShowcaseItem('Project Management', '/placeholder-project.png'),
-      buildShowcaseItem('Team Collaboration', '/placeholder-team.png'),
-      buildShowcaseItem('Personal Dashboard', '/placeholder-dashboard.png'),
-      buildShowcaseItem('Process Orchestration', '/placeholder-workflow.png'),
+      buildShowcaseItem('Project Management', '/assets/screenshots/omniboard-connections.png'), // TODO: Replace with actual screenshot before launch.
+      buildShowcaseItem('Team Collaboration', '/assets/screenshots/omniport-dashboard.png'), // TODO: Replace with actual screenshot before launch.
+      buildShowcaseItem('Personal Dashboard', '/assets/screenshots/omnitrace-feed.png'), // TODO: Replace with actual screenshot before launch.
+      buildShowcaseItem('Process Orchestration', '/assets/screenshots/maestro-workflow.png'), // TODO: Replace with actual screenshot before launch.
     ],
   },
   stamp: {

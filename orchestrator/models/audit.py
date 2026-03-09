@@ -319,31 +319,71 @@ class AuditLogger:
         async with aiofiles.open(log_file, "a") as f:
             await f.write(json.dumps(event.model_dump(), default=str) + "\n")
 
-    def query_events(
+    async def query_events(
         self,
-        _actor_id: str | None = None,
-        _action: AuditAction | None = None,
-        _resource_type: AuditResourceType | None = None,
-        _start_date: datetime | None = None,
-        _end_date: datetime | None = None,
-        _limit: int = 100,
+        actor_id: str | None = None,
+        action: AuditAction | None = None,
+        resource_type: AuditResourceType | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        limit: int = 100,
     ) -> list[AuditLogEntry]:
         """
         Query audit events for compliance reporting.
 
         Args:
-            _actor_id: Filter by actor (interface placeholder)
-            _action: Filter by action type (interface placeholder)
-            _resource_type: Filter by resource type (interface placeholder)
-            _start_date: Start date for query (interface placeholder)
-            _end_date: End date for query (interface placeholder)
-            _limit: Maximum results to return (interface placeholder)
+            actor_id: Filter by actor (interface placeholder)
+            action: Filter by action type (interface placeholder)
+            resource_type: Filter by resource type (interface placeholder)
+            start_date: Start date for query (interface placeholder)
+            end_date: End date for query (interface placeholder)
+            limit: Maximum results to return (interface placeholder)
 
         Returns:
             List of matching audit events
         """
-        # Interface placeholder - implementation pending
-        return []
+        from providers.database.factory import get_database_provider
+        from providers.database.supabase_provider import SupabaseDatabaseProvider
+
+        try:
+            db = get_database_provider()
+            # In order to use advanced queries like gte/lte, we need the supabase client
+            if not isinstance(db, SupabaseDatabaseProvider):
+                import logging
+
+                logging.error("Advanced query requires SupabaseDatabaseProvider")
+                return []
+
+            query = db.client.table("audit_logs").select("*")
+
+            if actor_id:
+                query = query.eq("actor_id", actor_id)
+            if action:
+                query = query.eq(
+                    "action", action.value if hasattr(action, "value") else str(action)
+                )
+            if resource_type:
+                query = query.eq(
+                    "resource_type",
+                    resource_type.value if hasattr(resource_type, "value") else str(resource_type),
+                )
+            if start_date:
+                query = query.gte("timestamp", start_date.isoformat())
+            if end_date:
+                query = query.lte("timestamp", end_date.isoformat())
+
+            query = query.limit(limit)
+
+            # Using execute() which returns APIResponse.
+            response = query.execute()
+            data = response.data
+
+            return [AuditLogEntry(**row) for row in data]
+        except Exception as e:
+            import logging
+
+            logging.error(f"Failed to query audit events: {e}")
+            return []
 
     def validate_integrity(self, events: list[AuditLogEntry]) -> bool:
         """
