@@ -1,5 +1,7 @@
+import { HelmetProvider } from 'react-helmet-async';
 import type { ReactElement } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { StaticRouter } from "react-router";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ComingSoonPage } from "@/pages/ComingSoon";
 import { HomePage } from "@/pages/Home";
@@ -95,8 +97,10 @@ const omniDashRoutes: readonly AppRoute[] = [
 ];
 
 function App() {
+  const Router = typeof window === 'undefined' ? StaticRouter : BrowserRouter;
   return (
-    <BrowserRouter>
+    <HelmetProvider>
+      <Router location={typeof window !== 'undefined' ? window.location.pathname : '/'}>
       <div data-testid="app-shell">
         <Routes>
         {appRoutes.map((route) => (
@@ -117,7 +121,8 @@ function App() {
         />
         </Routes>
       </div>
-    </BrowserRouter>
+    </Router>
+    </HelmetProvider>
   );
 }
 

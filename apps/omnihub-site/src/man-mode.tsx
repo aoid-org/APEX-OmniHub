@@ -4,8 +4,11 @@ import { ManModePage } from './pages/ManMode';
 import './styles/theme.css';
 import './styles/components.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ManModePage />
-  </StrictMode>
-);
+if (typeof document !== 'undefined') {
+  if (typeof document !== 'undefined') {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <ManModePage />
+    </StrictMode>
+  );
+}

@@ -32,7 +32,8 @@ export interface OmniAppShellConfig {
 
 const SHELL_TAG = 'omni-app-shell';
 
-class OmniAppShellElement extends HTMLElement {
+const BaseElement = typeof HTMLElement !== 'undefined' ? HTMLElement : class {};
+class OmniAppShellElement extends BaseElement {
   private _shadowRoot: ShadowRoot | null = null;
   private _mounted = false;
 
@@ -175,6 +176,7 @@ class OmniAppShellElement extends HTMLElement {
  * will not re-register if already defined.
  */
 export function registerOmniAppShell(): void {
+  if (typeof customElements === 'undefined') return;
   if (!customElements.get(SHELL_TAG)) {
     customElements.define(SHELL_TAG, OmniAppShellElement);
   }

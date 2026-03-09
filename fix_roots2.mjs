@@ -1,4 +1,8 @@
-import { StrictMode } from 'react';
+import fs from 'fs';
+import path from 'path';
+
+// Re-read main.tsx from original state and fix properly
+let content = `import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
@@ -21,3 +25,8 @@ if (typeof document !== 'undefined') {
     </StrictMode>
   );
 }
+`;
+
+fs.writeFileSync('apps/omnihub-site/src/main.tsx', content);
+
+// And wait! The entry file might be `src/main.tsx` not `apps/omnihub-site/src/main.tsx`. Let's check `vite.config.ts`.

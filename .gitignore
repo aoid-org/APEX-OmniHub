@@ -91,4 +91,5 @@ apps/**/dist/
 final_eslint.json
 security/npm-audit-latest.json
 security/npm-audit-prod.json
-ERRORS.md
+ERRORS.md.vite-react-ssg-temp
+.vite-react-ssg-temp

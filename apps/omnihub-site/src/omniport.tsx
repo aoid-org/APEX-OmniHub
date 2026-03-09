@@ -4,8 +4,11 @@ import { OmniPortPage } from './pages/OmniPort';
 import './styles/theme.css';
 import './styles/components.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <OmniPortPage />
-  </StrictMode>
-);
+if (typeof document !== 'undefined') {
+  if (typeof document !== 'undefined') {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <OmniPortPage />
+    </StrictMode>
+  );
+}

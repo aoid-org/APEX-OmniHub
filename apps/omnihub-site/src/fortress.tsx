@@ -4,8 +4,11 @@ import { FortressPage } from './pages/Fortress';
 import './styles/theme.css';
 import './styles/components.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <FortressPage />
-  </StrictMode>
-);
+if (typeof document !== 'undefined') {
+  if (typeof document !== 'undefined') {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <FortressPage />
+    </StrictMode>
+  );
+}
