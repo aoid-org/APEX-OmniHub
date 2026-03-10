@@ -1,9 +1,19 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.0-ACRA-MEMORY | LAST_UPDATED=2026-03-09 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.1-L10N-PWA-HARDENING | LAST_UPDATED=2026-03-10 -->
 # APEX Ecosystem Status
 
-**Last Updated:** 2026-03-09
-**Platform Version:** 1.4.0
+**Last Updated:** 2026-03-10
+**Platform Version:** 1.4.1
 **Status:** 🟢 PRODUCTION LIVE — Audit Score 94.3/100 (A)
+
+---
+
+
+## Latest Delta (2026-03-10)
+
+- **UI Layer (Marketing Site):** Global language selector finalized as globe dropdown and anchored left of Launch Console/Login CTA on desktop/tablet, with mobile menu parity.
+- **PWA Conversion Surface:** Landing hero includes install node with `beforeinstallprompt` + `appinstalled` event flow and iOS install fallback messaging.
+- **Localization Integrity:** Added missing hero install translation keys across all shipped locales to eliminate raw key leakage in runtime UI.
+- **Brand Token Compliance:** Disabled install CTA state now enforces brand navy token styling instead of browser-default dark text/border behavior.
 
 ---
 

@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.0-ACRA-MEMORY | LAST_UPDATED=2026-03-09 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.1-L10N-PWA-HARDENING | LAST_UPDATED=2026-03-10 -->
 # APEX OmniHub — Production Status
 
 ```
@@ -13,13 +13,13 @@ E N T E R P R I S E   A I   P L A T F O R M
 
 | Status      | Architecture                 | Last Audit | Audit Score | Test Coverage             |
 | ----------- | ---------------------------- | ---------- | ----------- | ------------------------- |
-| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-03-09 | **94.3/100 (A)** | Security regression checks PASS |
+| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-03-10 | **94.3/100 (A)** | Build gates PASS (lint/typecheck/build) |
 
 ---
 
 ## Executive Summary
 
-APEX OmniHub is **PRODUCTION CERTIFIED** with updated 2026-03-09 third-party audit evidence. The system has graduated from a Web-SaaS model to a **Cyber-Physical Operating System** with a production-grade **Persistent Memory Layer** (ACRA v2.2). v1.4.0 delivers the OmniBoard connector FSM, Universal OmniDash Interaction Interceptor, ACRA v2.2 (pgvector HNSW + pgcrypto + memory quarantine), and persistent circuit breaker state. Third-party audit score: **94.3/100 (A)** — 0 SonarQube issues, 0 CVE high/critical, 0.0% code duplication.
+APEX OmniHub is **PRODUCTION CERTIFIED** with maintained 2026-03-09 third-party audit evidence and 2026-03-10 runtime/doc hardening updates. v1.4.1 finalizes multilingual UX + PWA install conversion surface (globe language menu, hero install node, locale key completeness) and eliminates residual non-brand black disabled CTA rendering. Third-party audit score remains **94.3/100 (A)**.
 
 ## Deployment Checklist (Verified)
 
@@ -71,10 +71,10 @@ APEX OmniHub is **PRODUCTION CERTIFIED** with updated 2026-03-09 third-party aud
 
 ```
 Repository:  apexbusiness-systems/APEX-OmniHub
-Status:      PRODUCTION READY (v1.4.0)
+Status:      PRODUCTION READY (v1.4.1)
 Type:        Cyber-Physical AI OS + Persistent Memory Platform
 Audit Score: 94.3/100 (A) — Third-Party Verified
-Updated:     2026-03-09
+Updated:     2026-03-10
 ```
 
 
@@ -85,3 +85,10 @@ Updated:     2026-03-09
 - Production dependency audit (`npm audit --omit=dev`) reports **0 high / 0 critical** vulnerabilities (1 moderate outstanding).
 - Full dependency graph continues to include dev-toolchain advisories and remains tracked as non-launch backlog.
 - Secret scanning now excludes non-production placeholder contexts and no longer fails on binary assets.
+
+
+## 2026-03-10 Build & Documentation Cross-Reference Addendum
+
+- Verified runtime quality gates against current tree state: `bun run lint`, `bun run typecheck`, `bun run build` — all passing.
+- Marketing site release notes synchronized with root changelog for: globe language dropdown placement, hero PWA install node restoration, locale key leak remediation, and navy token enforcement on disabled install CTA.
+- Status docs stamped to v9.1 with date alignment and release version bump to **v1.4.1**.

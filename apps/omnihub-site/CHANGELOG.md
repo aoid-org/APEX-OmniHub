@@ -2,6 +2,30 @@
 
 All notable changes to the APEX OmniHub Marketing Site.
 
+## [1.9.1] - 2026-03-10
+
+### Added
+
+- **PWA install localization keys** in all bundled locales for hero install surface (`hero.cta.install`, `hero.installPromptReady`, `hero.installPromptIOS`, `hero.installPromptFallback`).
+
+### Changed
+
+- **Header language control** switched to globe dropdown UX and positioned left of Launch Console/Login CTA for desktop/tablet while preserving mobile menu access.
+- **Hero install node styling** hardened to explicit brand navy tokens for disabled state text/border/background.
+
+### Fixed
+
+- **Raw key leakage** in hero install CTA/help text when locale keys were absent.
+- **Residual black-style disabled button rendering** caused by user-agent defaults.
+
+### Quality Gates
+
+- Lint: pass (`bun run lint`)
+- Typecheck: pass (`bun run typecheck`)
+- Build: pass (`bun run build`)
+
+---
+
 ## [1.9.0] - 2026-03-06
 
 ### Added

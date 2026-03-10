@@ -1,9 +1,126 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { siteConfig } from '@/content/site';
 import { ReferenceOverlay } from './ReferenceOverlay';
 import { useAuth } from '@/lib/useAuth';
 import { BrandAnthemPlayer } from './BrandAnthemPlayer';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+
+type SupportedLanguage = Readonly<{
+  code: string;
+  label: string;
+}>;
+
+const SUPPORTED_LANGUAGES: readonly SupportedLanguage[] = [
+  { code: 'en-US', label: 'English' },
+  { code: 'es-ES', label: 'Español' },
+  { code: 'fr-FR', label: 'Français' },
+  { code: 'de-DE', label: 'Deutsch' },
+  { code: 'ja-JP', label: '日本語' },
+  { code: 'zh-CN', label: '中文 (简体)' },
+  { code: 'pt-BR', label: 'Português (Brasil)' },
+];
+
+function resolveSupportedLanguage(languageTag: string): string {
+  const normalizedTag = languageTag.toLowerCase();
+  const exactMatch = SUPPORTED_LANGUAGES.find(
+    ({ code }) => code.toLowerCase() === normalizedTag,
+  );
+  if (exactMatch) {
+    return exactMatch.code;
+  }
+
+  const baseLanguage = normalizedTag.split('-')[0];
+  const baseMatch = SUPPORTED_LANGUAGES.find(({ code }) =>
+    code.toLowerCase().startsWith(`${baseLanguage}-`),
+  );
+  return baseMatch?.code ?? 'en-US';
+}
+
+function LanguageSelector({
+  className,
+  onChange,
+}: Readonly<{ className?: string; onChange?: () => void }>) {
+  const { i18n } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const menuId = useId();
+  const selectedLanguage = resolveSupportedLanguage(i18n.resolvedLanguage ?? i18n.language);
+  const selectedLanguageLabel =
+    SUPPORTED_LANGUAGES.find((language) => language.code === selectedLanguage)?.label ??
+    'English';
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (dropdownRef.current?.contains(event.target as Node)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
+
+  const handleLanguageChange = (nextLanguage: string) => {
+    const resolvedLanguage = resolveSupportedLanguage(nextLanguage);
+    void i18n.changeLanguage(resolvedLanguage);
+    globalThis.localStorage.setItem('apex_locale', resolvedLanguage);
+    setIsOpen(false);
+    onChange?.();
+  };
+
+  return (
+    <div
+      className={`language-selector ${className ?? ''}`.trim()}
+      ref={dropdownRef}
+    >
+      <button
+        type="button"
+        className="language-selector__trigger"
+        aria-label="Select site language"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        aria-controls={menuId}
+        onClick={() => setIsOpen((open) => !open)}
+      >
+        <span className="language-selector__globe" aria-hidden="true">🌐</span>
+        <span className="language-selector__current">{selectedLanguageLabel}</span>
+        <span className="language-selector__caret" aria-hidden="true">▾</span>
+      </button>
+      {isOpen && (
+        <ul className="language-selector__menu" role="menu" id={menuId}>
+          {SUPPORTED_LANGUAGES.map((language) => (
+            <li key={language.code} role="none">
+              <button
+                type="button"
+                role="menuitemradio"
+                aria-checked={language.code === selectedLanguage}
+                className={`language-selector__option ${
+                  language.code === selectedLanguage ? 'language-selector__option--active' : ''
+                }`}
+                onClick={() => handleLanguageChange(language.code)}
+              >
+                {language.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 type LayoutProps = Readonly<{
   children: ReactNode;
@@ -144,6 +261,7 @@ function Nav() {
         </ul>
 
         <div className="nav__actions">
+          <LanguageSelector className="language-selector--desktop" />
           <div className="nav__burger" ref={menuRef}>
             <button
               type="button"
@@ -172,6 +290,9 @@ function Nav() {
               >
                 {/* Mobile Menu Content */}
                 <ul className="nav__mobile-links">
+                  <li className="nav__mobile-language">
+                    <LanguageSelector onChange={() => setMenuOpen(false)} />
+                  </li>
                   {siteConfig.nav.links.map((link) => (
                     <li key={link.href}>
                       <a
