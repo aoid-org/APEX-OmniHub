@@ -1,11 +1,8 @@
 """Tests for activities/omnitrace_activities.py."""
 
 from __future__ import annotations
-
-from unittest.mock import AsyncMock, patch
-
+from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
-
 from activities.omnitrace_activities import (
     omnitrace_record_event,
     omnitrace_record_run_complete,
@@ -13,68 +10,49 @@ from activities.omnitrace_activities import (
 )
 
 
+def _recorder(sampled: bool = True) -> MagicMock:
+    r = MagicMock()
+    r.should_record.return_value = sampled
+    r.record_run_start = AsyncMock()
+    r.record_run_complete = AsyncMock()
+    r.record_event = AsyncMock()
+    return r
+
+
+_PATCH = "activities.omnitrace_activities.get_omnitrace_recorder"
+
+
 @pytest.mark.asyncio
 async def test_record_run_start() -> None:
-    with patch("activities.omnitrace_activities.get_database_provider") as mock_db:
-        mock_db.return_value = AsyncMock()
-        mock_db.return_value.upsert = AsyncMock(return_value={"id": "1"})
-        result = await omnitrace_record_run_start(
-            {
-                "run_id": "r1",
-                "workflow_id": "wf-1",
-                "goal": "test",
-                "user_id": "u1",
-            }
+    with patch(_PATCH, return_value=_recorder()):
+        res = await omnitrace_record_run_start(
+            {"workflow_id": "w", "trace_id": "t", "user_id": "u", "input_data": {}}
         )
-    assert result["recorded"] is True
+    assert res["recorded"] is True
 
 
 @pytest.mark.asyncio
 async def test_record_run_complete() -> None:
-    with patch("activities.omnitrace_activities.get_database_provider") as mock_db:
-        mock_db.return_value = AsyncMock()
-        mock_db.return_value.upsert = AsyncMock(return_value={"id": "1"})
-        result = await omnitrace_record_run_complete(
-            {
-                "run_id": "r1",
-                "status": "completed",
-                "result": {"ok": True},
-            }
+    with patch(_PATCH, return_value=_recorder()):
+        res = await omnitrace_record_run_complete(
+            {"workflow_id": "w", "trace_id": "t", "status": "done", "output_data": {}}
         )
-    assert result["recorded"] is True
+    assert res["recorded"] is True
 
 
 @pytest.mark.asyncio
 async def test_record_event() -> None:
-    with patch("activities.omnitrace_activities.get_database_provider") as mock_db:
-        mock_db.return_value = AsyncMock()
-        mock_db.return_value.upsert = AsyncMock(return_value={"id": "1"})
-        result = await omnitrace_record_event(
-            {
-                "run_id": "r1",
-                "event_key": "tool:s1:noop:1",
-                "kind": "tool",
-                "name": "noop",
-                "latency_ms": 42,
-                "data": {},
-            }
+    with patch(_PATCH, return_value=_recorder()):
+        res = await omnitrace_record_event(
+            {"workflow_id": "w", "trace_id": "t", "event_key": "k", "kind": "tool", "name": "n"}
         )
-    assert result["recorded"] is True
+    assert res["recorded"] is True
 
 
 @pytest.mark.asyncio
-async def test_record_event_db_failure_is_best_effort() -> None:
-    with patch("activities.omnitrace_activities.get_database_provider") as mock_db:
-        mock_db.return_value = AsyncMock()
-        mock_db.return_value.upsert = AsyncMock(side_effect=Exception("db down"))
-        result = await omnitrace_record_event(
-            {
-                "run_id": "r1",
-                "event_key": "k",
-                "kind": "tool",
-                "name": "n",
-                "latency_ms": 0,
-                "data": {},
-            }
+async def test_record_event_not_sampled() -> None:
+    with patch(_PATCH, return_value=_recorder(False)):
+        res = await omnitrace_record_event(
+            {"workflow_id": "w", "trace_id": "t", "event_key": "k", "kind": "tool", "name": "n"}
         )
-    assert result["recorded"] is False
+    assert res["recorded"] is False

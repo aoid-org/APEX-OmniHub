@@ -7,10 +7,23 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 # ---------------------------------------------------------------------------
-# Import helpers under a mocked workflow sandbox so Temporal decorators
-# don't blow up outside a real worker.
+# Build a mock for temporalio.workflow that lets decorators pass through,
+# preserving the real AgentWorkflow class and its methods.
 # ---------------------------------------------------------------------------
+
+
+def _passthrough(*args, **kwargs):  # noqa: ANN002, ANN003
+    """Pass-through decorator: preserves the decorated class/function."""
+    if args and callable(args[0]):
+        return args[0]
+    return lambda fn: fn
+
+
 _wf_mock = MagicMock()
+_wf_mock.defn = _passthrough
+_wf_mock.signal = _passthrough
+_wf_mock.query = _passthrough
+_wf_mock.run = _passthrough
 _wf_mock.now.return_value = MagicMock(timestamp=MagicMock(return_value=100.0))
 _wf_mock.info.return_value = MagicMock(
     workflow_id="wf-test-1",
@@ -44,8 +57,7 @@ class TestAppendEvent:
     @pytest.mark.asyncio
     async def test_goal_received_updates_state(self, wf: AgentWorkflow) -> None:
         evt = GoalReceived(correlation_id="c1", goal="greet", user_id="u1")
-        with patch("workflows.agent_saga.workflow.logger"):
-            await wf._append_event(evt)
+        await wf._append_event(evt)
         assert wf.goal == "greet"
         assert wf.user_id == "u1"
         assert len(wf.events) == 1
@@ -56,9 +68,9 @@ class TestAppendEvent:
             correlation_id="c1",
             plan_id="p1",
             steps=[{"id": "s1", "tool": "noop"}],
+            cache_hit=False,
         )
-        with patch("workflows.agent_saga.workflow.logger"):
-            await wf._append_event(evt)
+        await wf._append_event(evt)
         assert wf.plan_id == "p1"
         assert len(wf.plan_steps) == 1
 
@@ -66,10 +78,7 @@ class TestAppendEvent:
     async def test_continue_as_new_at_threshold(self, wf: AgentWorkflow) -> None:
         wf.MAX_HISTORY_SIZE = 2
         evt = GoalReceived(correlation_id="c1", goal="x", user_id="u1")
-        with (
-            patch("workflows.agent_saga.workflow.logger"),
-            patch.object(wf, "_continue_as_new") as mock_can,
-        ):
+        with patch.object(wf, "_continue_as_new") as mock_can:
             await wf._append_event(evt)
             assert mock_can.call_count == 0
             await wf._append_event(evt)
@@ -96,14 +105,9 @@ class TestHandlers:
         wf.plan_id = "p1"
         wf.failed_step_id = "s1"
         wf.saga = AsyncMock()
-        wf.saga.rollback.return_value = {"c1": "ok"}
+        wf.saga.rollback.return_value = [{"c1": "ok"}]
 
-        with (
-            patch("workflows.agent_saga.workflow.execute_activity", new_callable=AsyncMock),
-            patch("workflows.agent_saga.workflow.logger"),
-            patch("workflows.agent_saga.workflow.info") as mi,
-        ):
-            mi.return_value = MagicMock(workflow_id="wf-1")
+        with patch.object(wf, "_omnitrace_record_run_complete", new_callable=AsyncMock):
             result = await wf._handle_failure("boom")
 
         assert result["status"] == "failed"
@@ -115,9 +119,5 @@ class TestContinueAsNew:
         wf.goal = "g"
         wf.user_id = "u"
         wf.step_count = 42
-        with (
-            patch("workflows.agent_saga.workflow.continue_as_new") as mock_can,
-            patch("workflows.agent_saga.workflow.logger"),
-        ):
-            wf._continue_as_new()
-            mock_can.assert_called_once()
+        wf._continue_as_new()
+        _wf_mock.continue_as_new.assert_called_once()

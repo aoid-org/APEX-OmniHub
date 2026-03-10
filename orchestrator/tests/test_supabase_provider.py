@@ -1,11 +1,9 @@
 """Tests for providers/database/supabase_provider.py."""
 
 from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
-
 import pytest
-
+from providers.database.base import DatabaseError
 from providers.database.supabase_provider import (
     SupabaseDatabaseProvider,
     validate_column_name,
@@ -19,9 +17,9 @@ class TestValidateTableName:
         assert validate_table_name(" WORKFLOWS ") == "workflows"
 
     def test_invalid(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(DatabaseError):
             validate_table_name("hacker_table")
-        with pytest.raises(ValueError):
+        with pytest.raises(DatabaseError):
             validate_table_name("")
 
 
@@ -31,7 +29,7 @@ class TestValidateColumnName:
         assert validate_column_name("user_id") == "user_id"
 
     def test_invalid(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(DatabaseError):
             validate_column_name("DROP TABLE")
 
 
@@ -57,7 +55,7 @@ class TestCRUD:
     @pytest.mark.asyncio
     async def test_insert_bad_table(self, provider: tuple) -> None:
         prv, _ = provider
-        with pytest.raises(ValueError):
+        with pytest.raises(DatabaseError):
             await prv.insert("evil_table", {})
 
     @pytest.mark.asyncio

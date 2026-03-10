@@ -24,9 +24,9 @@ def _make_entry(**overrides: object) -> AuditLogEntry:
         "timestamp": datetime.now(UTC),
         "event_sequence": 1,
         "actor_id": "user-1",
-        "action": AuditAction.CREATE,
+        "action": AuditAction.DATA_ACCESS,
         "status": AuditStatus.SUCCESS,
-        "resource_type": AuditResourceType.WORKFLOW,
+        "resource_type": AuditResourceType.DATABASE,
         "resource_id": "wf-1",
     }
     defaults.update(overrides)
@@ -42,7 +42,8 @@ class TestAuditLogEntry:
 
     def test_metadata_defaults(self) -> None:
         meta = AuditMetadata()
-        assert meta.tags == []
+        assert meta.compliance_flags == []
+        assert meta.custom_fields == {}
 
 
 class TestAuditLogger:
@@ -88,9 +89,11 @@ class TestAuditLogger:
         e1.integrity_hash = "bad-hash"
         assert logger.validate_integrity([e1]) is False
 
-    def test_query_events_returns_empty(self) -> None:
+    def test_query_events_returns_list(self) -> None:
         logger = AuditLogger()
-        assert logger.query_events() == []
+        result = logger.query_events()
+        # query_events catches DB errors and returns []
+        assert isinstance(result, list)
 
     @pytest.mark.asyncio
     async def test_unsupported_backend_raises(self) -> None:

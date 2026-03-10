@@ -1,9 +1,7 @@
 """Tests for activities/tools.py."""
 
 from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
 
 
@@ -22,7 +20,6 @@ class TestSearchDatabase:
     @pytest.mark.asyncio
     async def test_missing_table(self) -> None:
         from temporalio.exceptions import ApplicationError
-
         from activities.tools import search_database
 
         with pytest.raises(ApplicationError):
@@ -67,7 +64,7 @@ class TestCallWebhook:
         mock_resp = MagicMock(status_code=200, text="ok")
         with (
             patch("activities.tools.validate_url") as mock_val,
-            patch("activities.tools.httpx.AsyncClient") as mock_httpx,
+            patch("httpx.AsyncClient") as mock_httpx,
         ):
             mock_val.return_value = True
             ctx = MagicMock()
@@ -75,13 +72,8 @@ class TestCallWebhook:
             ctx.__aexit__ = AsyncMock(return_value=False)
             ctx.request = AsyncMock(return_value=mock_resp)
             mock_httpx.return_value = ctx
-
             result = await call_webhook(
-                {
-                    "url": "https://example.com/hook",
-                    "method": "POST",
-                    "body": "{}",
-                }
+                {"url": "https://example.com/hook", "method": "POST", "body": "{}"}
             )
         assert result["success"] is True
 
@@ -90,12 +82,7 @@ class TestCallWebhook:
         from activities.tools import call_webhook
 
         with patch("activities.tools.validate_url", return_value=False):
-            result = await call_webhook(
-                {
-                    "url": "http://169.254.169.254/metadata",
-                    "method": "GET",
-                }
-            )
+            result = await call_webhook({"url": "http://169.254.169.254/metadata", "method": "GET"})
         assert result["success"] is False
 
 
@@ -103,7 +90,6 @@ class TestMintPilotSession:
     @pytest.mark.asyncio
     async def test_missing_params(self) -> None:
         from temporalio.exceptions import ApplicationError
-
         from activities.tools import mint_pilot_session
 
         with pytest.raises(ApplicationError):
