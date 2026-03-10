@@ -5,8 +5,11 @@ import { MockAgent, setGlobalDispatcher } from 'undici';
 // Mock HTMLMediaElement methods not implemented by JSDOM.
 // These stubs prevent "Not implemented: HTMLMediaElement.prototype.pause/play"
 // errors in any component test that mounts audio/video elements (e.g. ClientComputeNode).
-HTMLMediaElement.prototype.pause = vi.fn();
-HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
+// Guard: skip when running in Node environment (no DOM globals).
+if (typeof HTMLMediaElement !== 'undefined') {
+  HTMLMediaElement.prototype.pause = vi.fn();
+  HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
+}
 
 const mockAgent = new MockAgent();
 mockAgent.disableNetConnect(); // Prevent all unmocked test network leakage

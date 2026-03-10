@@ -21,8 +21,9 @@ class TestSearchDatabase:
 
     @pytest.mark.asyncio
     async def test_missing_table(self) -> None:
-        from activities.tools import search_database
         from temporalio.exceptions import ApplicationError
+
+        from activities.tools import search_database
 
         with pytest.raises(ApplicationError):
             await search_database({})
@@ -101,8 +102,9 @@ class TestCallWebhook:
 class TestMintPilotSession:
     @pytest.mark.asyncio
     async def test_missing_params(self) -> None:
-        from activities.tools import mint_pilot_session
         from temporalio.exceptions import ApplicationError
+
+        from activities.tools import mint_pilot_session
 
         with pytest.raises(ApplicationError):
             await mint_pilot_session({})

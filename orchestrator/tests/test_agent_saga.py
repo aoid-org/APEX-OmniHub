@@ -22,9 +22,6 @@ with patch.dict("sys.modules", {"temporalio.workflow": _wf_mock}):
         AgentWorkflow,
         GoalReceived,
         PlanGenerated,
-        ToolResultReceived,
-        WorkflowCompleted,
-        WorkflowFailed,
     )
 
 
