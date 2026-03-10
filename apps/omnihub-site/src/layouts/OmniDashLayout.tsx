@@ -19,6 +19,7 @@ import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
 import { BYOMCockpit } from '@/components/byom/BYOMCockpit';
 import { SentinelPanel } from '@/components/omnidash/SentinelPanel';
 import { useOmniDashAction, type OmniDashIntent } from '@/hooks/useOmniDashAction';
+import { useOmniModal } from '@/stores/omniModalStore';
 import { hasModuleComponent } from '../components/omnidash/moduleComponents';
 import '@/styles/omnidash-layout.css';
 import { z } from 'zod';
@@ -70,7 +71,8 @@ const SIDEBAR_NAV = APP_REGISTRY
 export function OmniDashLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { handleOAuthConnect, handleUtilityModal, dispatch } = useOmniDashAction();
+  const { dispatch } = useOmniDashAction((path) => navigate(path));
+  const invokeModal = useOmniModal((state) => state.invoke);
   const [searchParams] = useSearchParams();
 
   const simModeStateSchema = z.object({
@@ -90,8 +92,10 @@ export function OmniDashLayout() {
 
   const initials = useMemo(() => 'JR', []);
 
+  const isDashboardRootRoute = location.pathname === '/omnidash' || location.pathname === '/dashboard';
+
   const activeNav = SIDEBAR_NAV.find(
-    (n) => n.to === location.pathname || (n.to === '/omnidash' && location.pathname === '/omnidash'),
+    (n) => n.to === location.pathname || (n.to === '/omnidash' && isDashboardRootRoute),
   )?.key ?? 'omniboard';
 
   const handleOmniSkillsClick = useCallback((e: MouseEvent) => {
@@ -221,12 +225,19 @@ export function OmniDashLayout() {
 
             <button type="button" onClick={(e: MouseEvent) => {
               e.stopPropagation();
-              handleOAuthConnect('APEX OmniPort', 'platform');
+              dispatch({
+                appKey: 'omniport',
+                provider: 'APEX OmniPort',
+                label: 'APEX OmniPort',
+                category: 'platform',
+                routePath: '/omnidash/omniport',
+                dashboardStatus: 'Partial',
+              });
             }} className="od-connect-ai">Connect AI</button>
 
             <button type="button" className="od-avatar" aria-label="Notifications" onClick={(e: MouseEvent) => {
               e.stopPropagation();
-              handleUtilityModal({
+              invokeModal({
                 id: 'notifications',
                 provider: 'APEX',
                 type: 'selection',
@@ -250,7 +261,7 @@ export function OmniDashLayout() {
           </div>
         </header>
 
-        <div className={`od-content ${location.pathname === '/omnidash' ? '' : 'center-content-blur'}`}>
+        <div className={`od-content ${isDashboardRootRoute ? '' : 'center-content-blur'}`}>
           {/* Dashboard + OmniCanvas spatial layer */}
           <DashboardOverview
             demoMode={demoMode}
@@ -263,7 +274,7 @@ export function OmniDashLayout() {
         </div>
 
         {/* ────── UNIVERSAL SPA MODAL ────── */}
-        {location.pathname !== '/omnidash' && (
+        {!isDashboardRootRoute && (
           <div className="od-modal-overlay">
             <div className="od-modal-content hex-outer">
               <button

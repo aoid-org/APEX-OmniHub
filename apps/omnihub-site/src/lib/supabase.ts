@@ -13,6 +13,7 @@ const supabaseAnonKey =
 const hasValidSupabaseUrl = /^https?:\/\//i.test(supabaseUrl);
 
 export const hasSupabaseConfig = hasValidSupabaseUrl && supabaseAnonKey.length > 0;
+export const supabaseConfigTraceId = `cfg-${Math.random().toString(36).slice(2, 10)}`;
 
 // Startup guardrail: emit a clear diagnostic when config is absent.
 // Always logs so operators can diagnose missing Vercel env vars without
@@ -22,7 +23,7 @@ if (!hasSupabaseConfig) {
   if (!hasValidSupabaseUrl) missing.push('VITE_SUPABASE_URL');
   if (!supabaseAnonKey) missing.push('VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY)');
   console.error(
-    '[APEX OmniHub] Supabase is not configured. Missing env vars:',
+    `[APEX OmniHub] Supabase is not configured. trace=${supabaseConfigTraceId}. Missing env vars:`,
     missing.join(', '),
     '— Set these in Vercel → Settings → Environment Variables. Auth is disabled until configured.'
   );
@@ -30,5 +31,13 @@ if (!hasSupabaseConfig) {
 
 export const supabase = createClient(
   hasValidSupabaseUrl ? supabaseUrl : 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-anon-key'
+  supabaseAnonKey || 'placeholder-anon-key',
+  {
+    auth: {
+      flowType: 'pkce',
+      persistSession: true,
+      autoRefreshToken: true,
+      storage: typeof globalThis.window === 'undefined' ? undefined : globalThis.window.localStorage,
+    },
+  },
 );

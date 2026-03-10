@@ -1,7 +1,7 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Section } from '@/components/Section';
-import { hasSupabaseConfig, supabase } from '@/lib/supabase';
+import { hasSupabaseConfig, supabase, supabaseConfigTraceId } from '@/lib/supabase';
 import type { Provider } from '@supabase/supabase-js';
 
 const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL ?? '/omnidash';
@@ -15,7 +15,7 @@ export function LoginPage() {
 
   const handleOAuthSignIn = async (provider: Provider) => {
     if (!hasSupabaseConfig) {
-      setError('Login is temporarily unavailable. Please contact support.');
+      setError(`Login is unavailable. Trace: ${supabaseConfigTraceId}`);
       return;
     }
     setOauthLoading(provider);
@@ -54,7 +54,7 @@ export function LoginPage() {
     setError('');
 
     if (!hasSupabaseConfig) {
-      setError('Login is temporarily unavailable. Please contact support.');
+      setError(`Login is unavailable. Trace: ${supabaseConfigTraceId}`);
       return;
     }
 
