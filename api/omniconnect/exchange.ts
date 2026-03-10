@@ -1,0 +1,124 @@
+import { z } from 'zod';
+
+export const config = { runtime: 'edge' };
+
+const corsHeaders: Record<string, string> = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
+};
+
+const requestSchema = z.object({
+  provider: z.string().min(1),
+  proxy_token: z.string().min(1),
+  context: z.record(z.string(), z.unknown()).optional().default({}),
+});
+
+const responseSchema = z.object({
+  scopes: z.array(z.string()).default([]),
+  data: z.record(z.string(), z.unknown()).default({}),
+});
+
+function jsonResponse(status: number, payload: Record<string, unknown>): Response {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+  });
+}
+
+function requiredConfig(): { supabaseUrl: string; publishableKey: string } {
+  const supabaseUrl = process.env['VITE_SUPABASE_URL'] ?? '';
+  const publishableKey =
+    process.env['VITE_SUPABASE_PUBLISHABLE_KEY'] ??
+    process.env['VITE_SUPABASE_ANON_KEY'] ??
+    '';
+
+  if (!supabaseUrl || !publishableKey) {
+    throw new Error('exchange_config_missing');
+  }
+
+  return { supabaseUrl, publishableKey };
+}
+
+export default async function handler(request: Request): Promise<Response> {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  if (request.method !== 'POST') {
+    return jsonResponse(405, { error: 'Method not allowed' });
+  }
+
+  const traceId = crypto.randomUUID();
+
+  try {
+    const parsedBody = requestSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return jsonResponse(400, {
+        error: 'Invalid request body',
+        trace_id: traceId,
+        details: parsedBody.error.flatten(),
+      });
+    }
+
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return jsonResponse(401, { error: 'Missing bearer token', trace_id: traceId });
+    }
+
+    const { supabaseUrl, publishableKey } = requiredConfig();
+    const upstream = await fetch(`${supabaseUrl}/functions/v1/omnilink-agent`, {
+      method: 'POST',
+      headers: {
+        Authorization: authHeader,
+        apikey: publishableKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'oauth_exchange',
+        provider: parsedBody.data.provider,
+        auth_payload: {
+          proxy_token: parsedBody.data.proxy_token,
+          context: parsedBody.data.context,
+        },
+      }),
+    });
+
+    const upstreamJson = (await upstream.json().catch(() => ({}))) as unknown;
+
+    if (!upstream.ok) {
+      return jsonResponse(upstream.status, {
+        error: 'OmniConnect exchange failed',
+        trace_id: traceId,
+        upstream: upstreamJson,
+      });
+    }
+
+    const normalized = responseSchema.safeParse({
+      scopes: (upstreamJson as Record<string, unknown>)['scopes'],
+      data: upstreamJson,
+    });
+
+    if (!normalized.success) {
+      return jsonResponse(502, {
+        error: 'Invalid upstream response schema',
+        trace_id: traceId,
+      });
+    }
+
+    return jsonResponse(200, normalized.data);
+  } catch (error) {
+    if (error instanceof Error && error.message === 'exchange_config_missing') {
+      return jsonResponse(503, {
+        error: 'Exchange API unavailable: missing Supabase configuration',
+        trace_id: traceId,
+      });
+    }
+
+    return jsonResponse(502, {
+      error: 'Exchange API request failed',
+      trace_id: traceId,
+    });
+  }
+}
