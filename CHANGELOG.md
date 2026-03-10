@@ -2,6 +2,21 @@
 All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.4.1] - 2026-03-10
+### Fixed
+- **Marketing Site i18n key leak** — Added missing hero install keys across all shipped locales to prevent raw key rendering (`hero.cta.install`, `hero.installPromptReady`, `hero.installPromptIOS`, `hero.installPromptFallback`).
+- **Landing install CTA theming** — Replaced residual UA-default dark disabled-button rendering with explicit brand navy token styling for text, border, and background.
+
+### Changed
+- **Header language UX** — Standardized to globe-triggered dropdown positioned immediately left of Launch Console/Login CTA on desktop/tablet, with mobile menu parity.
+- **Landing conversion affordance** — Restored PWA install node in hero CTA stack with `beforeinstallprompt` + `appinstalled` lifecycle handling and iOS fallback guidance.
+
+### Verification
+- `bun run lint` ✅
+- `bun run typecheck` ✅
+- `bun run build` ✅
+
+---
 ## [1.4.0] - 2026-03-07
 ### Fixed
 - **sim/metrics.ts** — Adjusted adaptive latency and retry thresholds for CI determinism under `SIM_MODE`.
