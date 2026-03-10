@@ -166,7 +166,7 @@ async function processNFTTransfer(
       if (fromWallets && fromWallets.length > 0) {
         const userIds = fromWallets.map(w => w.user_id);
 
-        // Batch update has_premium_nft to false
+        // Set has_premium_nft to false
         await supabase
           .from('profiles')
           .update({
@@ -175,8 +175,8 @@ async function processNFTTransfer(
           })
           .in('id', userIds);
 
-        for (const userId of userIds) {
-          console.log(`Removed NFT access for user ${userId} (transfer out)`);
+        for (const wallet of fromWallets) {
+          console.log(`Removed NFT access for user ${wallet.user_id} (transfer out)`);
         }
       }
     }
@@ -192,7 +192,7 @@ async function processNFTTransfer(
       if (toWallets && toWallets.length > 0) {
         const userIds = toWallets.map(w => w.user_id);
 
-        // Batch update has_premium_nft to true
+        // Set has_premium_nft to true
         await supabase
           .from('profiles')
           .update({
@@ -201,8 +201,8 @@ async function processNFTTransfer(
           })
           .in('id', userIds);
 
-        for (const userId of userIds) {
-          console.log(`Granted NFT access to user ${userId} (transfer in)`);
+        for (const wallet of toWallets) {
+          console.log(`Granted NFT access to user ${wallet.user_id} (transfer in)`);
         }
       }
     }
