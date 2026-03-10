@@ -20,8 +20,8 @@
 
 import { useEffect, useState, useMemo, useCallback, useRef, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
-import { useOmniModal, resolveRenderMode } from '../../../../../src/stores/omniModalStore';
-import type { OmniModalConfig } from '../../../../../src/stores/omniModalStore';
+import { useOmniModal, resolveRenderMode } from '@/stores/omniModalStore';
+import type { OmniModalConfig } from '@/stores/omniModalStore';
 import {
   Dialog,
   DialogContent,
