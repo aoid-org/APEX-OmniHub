@@ -12,7 +12,7 @@ import pytest
 # ---------------------------------------------------------------------------
 
 
-def _passthrough(*args, **kwargs):  # noqa: ANN002, ANN003
+def _passthrough(*args, **_kwargs):  # noqa: ANN002, ANN003
     """Pass-through decorator: preserves the decorated class/function."""
     if args and callable(args[0]):
         return args[0]

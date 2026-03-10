@@ -1,8 +1,11 @@
 """Tests for activities/iron_law_verify.py."""
 
 from __future__ import annotations
+
 from unittest.mock import AsyncMock, patch
+
 import pytest
+
 from activities.iron_law_verify import verify_deductive_path
 
 

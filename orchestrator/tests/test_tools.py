@@ -1,7 +1,9 @@
 """Tests for activities/tools.py."""
 
 from __future__ import annotations
+
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 
 
@@ -20,6 +22,7 @@ class TestSearchDatabase:
     @pytest.mark.asyncio
     async def test_missing_table(self) -> None:
         from temporalio.exceptions import ApplicationError
+
         from activities.tools import search_database
 
         with pytest.raises(ApplicationError):
@@ -90,6 +93,7 @@ class TestMintPilotSession:
     @pytest.mark.asyncio
     async def test_missing_params(self) -> None:
         from temporalio.exceptions import ApplicationError
+
         from activities.tools import mint_pilot_session
 
         with pytest.raises(ApplicationError):

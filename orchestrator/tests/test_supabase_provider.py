@@ -1,8 +1,11 @@
 """Tests for providers/database/supabase_provider.py."""
 
 from __future__ import annotations
+
 from unittest.mock import MagicMock, patch
+
 import pytest
+
 from providers.database.base import DatabaseError
 from providers.database.supabase_provider import (
     SupabaseDatabaseProvider,

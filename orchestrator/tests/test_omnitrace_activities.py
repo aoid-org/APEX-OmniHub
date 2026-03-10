@@ -1,13 +1,18 @@
 """Tests for activities/omnitrace_activities.py."""
 
 from __future__ import annotations
+
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
+
 from activities.omnitrace_activities import (
     omnitrace_record_event,
     omnitrace_record_run_complete,
     omnitrace_record_run_start,
 )
+
+_PATCH = "activities.omnitrace_activities.get_omnitrace_recorder"
 
 
 def _recorder(sampled: bool = True) -> MagicMock:
@@ -17,9 +22,6 @@ def _recorder(sampled: bool = True) -> MagicMock:
     r.record_run_complete = AsyncMock()
     r.record_event = AsyncMock()
     return r
-
-
-_PATCH = "activities.omnitrace_activities.get_omnitrace_recorder"
 
 
 @pytest.mark.asyncio
