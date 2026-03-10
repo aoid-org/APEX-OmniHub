@@ -1,18 +1,25 @@
 /**
  * APEX OmniDash Layout - apps/omnihub-site
- * @version 6.0.0 - Custom nav icons, Space Grotesk font, burnt orange accents
+ * @version 7.0.0 - OmniCanvas spatial windowing + custom nav icons
  *
- * 2-column CSS Grid: 260px | 1fr
+ * 3-column Flexbox: 260px sidebar | 1fr canvas | 280px right sidebar
+ * OmniSkills appears in HEADER only (not sidebar, not app grid).
+ * Right sidebar: SentinelPanel (OmniTrace, Security Audit, Analytics, Ops)
  * Custom APEX-branded 3D nav icons (no Lucide in sidebar)
  * Lucide kept only for header utility icons (Search, Bell, Shield, ChevronDown)
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, type MouseEvent } from 'react';
 import { Outlet, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { Search, Bell, Shield, ChevronDown, Sun, Moon, X } from 'lucide-react';
+import { Search, Bell, Shield, ChevronDown, Sun, Moon, X, Sparkles } from 'lucide-react';
 import { DashboardOverview } from '@/pages/DashboardOverview';
-import { UniversalModalEngine } from '../../../../src/components/omnidash/media/UniversalModalEngine';
+import { OmniCanvas } from '@/components/omnidash/OmniCanvas';
+import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
+import { BYOMCockpit } from '@/components/byom/BYOMCockpit';
+import { SentinelPanel } from '@/components/omnidash/SentinelPanel';
+import { useOmniDashAction, type OmniDashIntent } from '@/hooks/useOmniDashAction';
+import { hasModuleComponent } from '../components/omnidash/moduleComponents';
 import '@/styles/omnidash-layout.css';
 import { z } from 'zod';
 
@@ -32,13 +39,10 @@ import { APP_REGISTRY, type AppRegistryEntry } from '../../../../packages/core/s
 
 // ────────────────────────────────────────────────
 // Sidebar Navigation Map - custom icon images
+// OmniSkills is EXCLUDED from sidebar — it appears in header only
 // ────────────────────────────────────────────────
 const NAV_ICON_MAP: Readonly<Record<string, string>> = {
   omniboard: navOmniboard,
-  omniport: navLinks,
-  maestro: navAutomations,
-  fortress: navAudits,
-  orchestrator: navWorkflows,
   omniskills: navOmniskills,
   physiomni: navPhysiomni,
   audits: navAudits,
@@ -50,16 +54,23 @@ const NAV_ICON_MAP: Readonly<Record<string, string>> = {
   settings: navSettings,
 };
 
-const SIDEBAR_NAV = APP_REGISTRY.map((entry: AppRegistryEntry) => ({
-  key: entry.key,
-  label: entry.label,
-  icon: NAV_ICON_MAP[entry.iconAssetKey] ?? navOmniboard,
-  to: entry.routePath,
-})).filter((entry) => entry.key === 'omniboard');
+/** Keys excluded from sidebar nav (OmniSkills is header-only) */
+const SIDEBAR_EXCLUDED = new Set(['omniskills']);
+
+const SIDEBAR_NAV = APP_REGISTRY
+  .filter((entry: AppRegistryEntry) => !SIDEBAR_EXCLUDED.has(entry.key))
+  .map((entry: AppRegistryEntry) => ({
+    key: entry.key,
+    label: entry.label,
+    icon: NAV_ICON_MAP[entry.iconAssetKey] ?? navOmniboard,
+    to: entry.routePath,
+    category: entry.category,
+  }));
 
 export function OmniDashLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { handleOAuthConnect, handleUtilityModal, dispatch } = useOmniDashAction();
   const [searchParams] = useSearchParams();
 
   const simModeStateSchema = z.object({
@@ -83,6 +94,19 @@ export function OmniDashLayout() {
     (n) => n.to === location.pathname || (n.to === '/omnidash' && location.pathname === '/omnidash'),
   )?.key ?? 'omniboard';
 
+  const handleOmniSkillsClick = useCallback((e: MouseEvent) => {
+    e.stopPropagation();
+    const intent: OmniDashIntent = {
+      appKey: 'omniskills',
+      provider: 'OmniSkills',
+      label: 'OmniSkills',
+      category: 'platform',
+      routePath: '/omnidash/omniskills',
+      dashboardStatus: 'Live',
+    };
+    dispatch(intent);
+  }, [dispatch]);
+
   return (
     <div className="omnidash-shell">
       {/* ────── LEFT SIDEBAR ────── */}
@@ -92,16 +116,42 @@ export function OmniDashLayout() {
         </div>
 
         <nav className="od-nav">
-          {SIDEBAR_NAV.map((item) => (
-            <Link
-              key={item.key}
-              to={item.to}
-              className={`od-nav-item transition-all duration-300 ease-out hover:translate-x-1 ${activeNav === item.key ? ' active' : ''}`}
-            >
-              <img src={item.icon} alt={item.label} className="nav-icon drop-shadow-md" />
-              <span className="font-bold tracking-tight">{item.label}</span>
-            </Link>
-          ))}
+          {SIDEBAR_NAV.map((item) => {
+            const hasModule = hasModuleComponent(item.key);
+            if (hasModule) {
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={`od-nav-item transition-all duration-300 ease-out hover:translate-x-1 ${activeNav === item.key ? ' active' : ''}`}
+                  onClick={() => {
+                    const intent: OmniDashIntent = {
+                      appKey: item.key,
+                      provider: item.label,
+                      label: item.label,
+                      category: item.category,
+                      routePath: item.to,
+                      dashboardStatus: 'Live',
+                    };
+                    dispatch(intent);
+                  }}
+                >
+                  <img src={item.icon} alt={item.label} className="nav-icon drop-shadow-md" />
+                  <span className="font-bold tracking-tight">{item.label}</span>
+                </button>
+              );
+            }
+            return (
+              <Link
+                key={item.key}
+                to={item.to}
+                className={`od-nav-item transition-all duration-300 ease-out hover:translate-x-1 ${activeNav === item.key ? ' active' : ''}`}
+              >
+                <img src={item.icon} alt={item.label} className="nav-icon drop-shadow-md" />
+                <span className="font-bold tracking-tight">{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="od-sidebar-footer">
@@ -113,9 +163,11 @@ export function OmniDashLayout() {
           <button
             onClick={handleLogout}
             style={{
-              display: 'block', marginTop: 8, fontSize: 13.375,
-              color: '#64748b', cursor: 'pointer', background: 'none',
+              display: 'block', marginTop: 8, fontSize: 11,
+              color: '#5a6478', cursor: 'pointer', background: 'none',
               border: 'none', padding: 0, fontFamily: 'inherit',
+              fontWeight: 600, letterSpacing: '0.03em',
+              transition: 'color 0.2s',
             }}
           >
             Sign Out
@@ -137,9 +189,9 @@ export function OmniDashLayout() {
           <div style={{ flex: 1 }} />
 
           <div className="od-header-actions">
-            <button 
-              type="button" 
-              className="od-avatar" 
+            <button
+              type="button"
+              className="od-avatar"
               onClick={() => setIsDarkMode(!isDarkMode)}
               title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
@@ -156,9 +208,39 @@ export function OmniDashLayout() {
               Zero Trust Active
             </div>
 
-            <button type="button" onClick={() => navigate('/omnidash/omniport')} className="od-connect-ai">Connect AI</button>
+            {/* OmniSkills — header-only access */}
+            <button
+              type="button"
+              className="od-omniskills-btn"
+              onClick={handleOmniSkillsClick}
+              title="OmniSkills"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              OmniSkills
+            </button>
 
-            <button type="button" className="od-avatar" aria-label="Notifications">
+            <button type="button" onClick={(e: MouseEvent) => {
+              e.stopPropagation();
+              handleOAuthConnect('APEX OmniPort', 'platform');
+            }} className="od-connect-ai">Connect AI</button>
+
+            <button type="button" className="od-avatar" aria-label="Notifications" onClick={(e: MouseEvent) => {
+              e.stopPropagation();
+              handleUtilityModal({
+                id: 'notifications',
+                provider: 'APEX',
+                type: 'selection',
+                title: 'Notifications',
+                description: 'Recent system notifications and alerts.',
+                schema: { items: [
+                  { id: '1', label: 'Salesforce sync completed — 48 records updated' },
+                  { id: '2', label: 'Security scan passed — Zero Trust Active' },
+                  { id: '3', label: 'Invoice batch #1042 processed successfully' },
+                  { id: '4', label: 'Workflow "Lead Nurture" triggered by new lead' },
+                ]},
+                onComplete: async (payload) => { console.warn('Notification selected:', payload); },
+              });
+            }}>
               <Bell className="h-3.5 w-3.5" />
             </button>
 
@@ -169,7 +251,7 @@ export function OmniDashLayout() {
         </header>
 
         <div className={`od-content ${location.pathname === '/omnidash' ? '' : 'center-content-blur'}`}>
-          {/* Dashboard is PERMANENT in the background */}
+          {/* Dashboard + OmniCanvas spatial layer */}
           <DashboardOverview
             demoMode={demoMode}
             appHealth={appHealth}
@@ -177,20 +259,21 @@ export function OmniDashLayout() {
             ecoAppsVisible={ecoAppsVisible}
             setEcoAppsVisible={setEcoAppsVisible}
           />
+          <OmniCanvas />
         </div>
 
         {/* ────── UNIVERSAL SPA MODAL ────── */}
         {location.pathname !== '/omnidash' && (
           <div className="od-modal-overlay">
             <div className="od-modal-content hex-outer">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="od-modal-close"
                 onClick={() => navigate('/omnidash')}
               >
                 <X size={20} />
               </button>
-              
+
               <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto' }}>
                 <Outlet />
               </div>
@@ -199,10 +282,16 @@ export function OmniDashLayout() {
         )}
       </div>
 
-
+      {/* ────── RIGHT SIDEBAR: Sentinel Intel Panel ────── */}
+      <aside className="od-right-sidebar">
+        <SentinelPanel />
+        <div className="sentinel-section">
+          <BYOMCockpit />
+        </div>
+      </aside>
 
       {/* ────── GLOBAL MODAL ENGINE ────── */}
-      <UniversalModalEngine />
+      <OmniSpatialHost />
     </div>
   );
 }

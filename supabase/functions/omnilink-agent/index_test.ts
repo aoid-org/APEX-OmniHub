@@ -7,6 +7,7 @@
  */
 
 import { checkRequest } from "./guardian.ts";
+import { isValidUUID } from "../_shared/validation.ts";
 
 function assert(condition: boolean, msg: string): void {
   if (!condition) throw new Error(`Assertion failed: ${msg}`);
@@ -53,11 +54,21 @@ Deno.test("validation: traceId must be string type", () => {
 });
 
 Deno.test("validation: valid body passes type checks", () => {
-  const body = { query: "Search orders", traceId: "trace-123" };
+  const body = {
+    query: "Search orders",
+    traceId: "550e8400-e29b-41d4-a716-446655440000",
+  };
   assert(
-    typeof body.query === "string" && typeof body.traceId === "string",
+    typeof body.query === "string" &&
+      typeof body.traceId === "string" &&
+      isValidUUID(body.traceId),
     "valid body should pass type checks",
   );
+});
+
+Deno.test("validation: traceId must be a valid UUID", () => {
+  const body = { query: "hello", traceId: "not-a-uuid" };
+  assert(!isValidUUID(body.traceId), "invalid UUID should fail check");
 });
 
 Deno.test("validation: missing query fails", () => {

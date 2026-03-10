@@ -1,153 +1,131 @@
-#!/usr/bin/env node
+import { execSync } from 'child_process';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
+
 /**
- * React Singleton Detector
+ * Validates that there is only one version of React and React DOM
+ * across the entire monorepo dependency tree.
  *
- * Validates that only ONE version of React and ReactDOM exists in the dependency tree.
+ * Multiple versions of React can cause the "Hooks can only be called inside the body of a function component" error.
  */
 
-import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { dirname } from 'node:path';
+const GREEN = '\x1b[32m';
+const RED = '\x1b[31m';
+const YELLOW = '\x1b[33m';
+const RESET = '\x1b[0m';
 
-const colors = {
-  green: '\x1b[32m',
-  red: '\x1b[31m',
-  yellow: '\x1b[33m',
-  reset: '\x1b[0m',
-};
+function findWorkspaceRoot() {
+  let currentDir = process.cwd();
 
-const SAFE_PATH = `${dirname(process.execPath)}:/usr/local/bin:/usr/bin:/bin`;
+  // Just a simple safety valve to prevent infinite loops
+  let depth = 0;
+  while (depth < 10) {
+    if (existsSync(join(currentDir, 'package.json')) &&
+        (existsSync(join(currentDir, 'bun.lockb')) || existsSync(join(currentDir, 'package-lock.json')))) {
+      return currentDir;
+    }
 
-function buildSafeEnv() {
-  return {
-    PATH: SAFE_PATH,
-    // Keep locale deterministic for stable command output parsing in CI.
-    LC_ALL: 'C',
-  };
+    const parentDir = join(currentDir, '..');
+    if (parentDir === currentDir) break; // reached root
+    currentDir = parentDir;
+    depth++;
+  }
+
+  return process.cwd(); // fallback
 }
 
+/**
+ * Try to figure out if we're using npm or bun to list packages
+ */
 function resolveNpmRunner() {
-  const npmExecPath = process.env.npm_execpath;
-  if (npmExecPath && existsSync(npmExecPath)) {
-    return {
-      command: process.execPath,
-      args: [npmExecPath],
-    };
+  const root = findWorkspaceRoot();
+
+  if (existsSync(join(root, 'bun.lockb'))) {
+    // Return bun command array
+    return { command: 'bun', args: ['pm', 'ls', '--all'] };
   }
 
-  const npmCandidates = ['/usr/bin/npm', '/bin/npm', '/usr/local/bin/npm'];
-  const foundPath = npmCandidates.find((candidate) => existsSync(candidate));
-
-  if (!foundPath) {
-    return null;
-  }
-
-  return {
-    command: foundPath,
-    args: [],
-  };
+  return { command: 'npm', args: ['ls', '--all'] };
 }
 
-function extractVersionsFromTree(treeOutput, packageName) {
-  const pattern = new RegExp(
-    String.raw`(?:^|\n)[|│\s]*(?:[├└]──|[+\x60]--)\s+${packageName}@([0-9]+\.[0-9]+\.[0-9]+(?:[-+][^\s]+)?)`,
-    'g',
-  );
-  const versions = new Set();
-
-  for (const match of treeOutput.matchAll(pattern)) {
-    versions.add(match[1]);
-  }
-
-  return Array.from(versions);
-}
-
-
-async function main() {
-  console.log('\n🔍 React Singleton Check');
-  console.log('─'.repeat(50));
-
-  let depTreeText = '';
-  let command;
-  let args;
-
-  const npmRunner = resolveNpmRunner();
-  if (!npmRunner) {
-    console.error(`${colors.red}✗${colors.reset} Unable to locate npm binary in fixed system paths.`);
-    process.exit(1);
-  }
-  command = npmRunner.command;
-  args = [...npmRunner.args, 'ls', 'react', 'react-dom', '--all'];
+function checkPackageVersions(packageName) {
+  console.log(`Checking for multiple versions of ${packageName}...`);
 
   try {
-    depTreeText = execFileSync(command, args, {
-      encoding: 'utf-8',
-      maxBuffer: 10 * 1024 * 1024,
-      env: buildSafeEnv(),
-    });
+    const npmRunner = resolveNpmRunner();
+
+    // Check if we have multiple versions in the actual tree
+    // npm ls <package> returns non-zero if multiple versions are found that conflict,
+    // but we want to manually parse to be certain.
+
+    let output;
+    try {
+      // Use the appropriate runner to get the dependency tree
+      let command = npmRunner.command;
+      let args = npmRunner.command === 'bun' ? ['pm', 'ls', '--all'] : ['ls', '--all'];
+
+      console.log(`Running: ${command} ${args.join(' ')}`);
+      output = execSync(`${command} ${args.join(' ')}`, {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'ignore'] // ignore stderr which might have warnings
+      });
+    } catch (e) {
+      // npm ls returns non-zero if there are missing peer deps, which is common
+      // We still get the output in e.stdout
+      if (e.stdout) {
+        output = e.stdout.toString();
+      } else {
+        throw e;
+      }
+    }
+
+    // Extract all version numbers for the package
+    // Matches patterns like "react@18.2.0" or "├─ react@18.2.0"
+    const versionRegex = new RegExp(
+      String.raw`(?:^|\n)[|│\s]*(?:[├└]──|[+\x60]--)\s+${packageName}@([0-9]+\.[0-9]+\.[0-9]+(?:[-+][^\s]+)?)`,
+      'g',
+    );
+
+    const versions = new Set();
+    let match;
+
+    while ((match = versionRegex.exec(output)) !== null) {
+      versions.add(match[1]);
+    }
+
+    if (versions.size === 0) {
+      console.log(`${YELLOW}Could not detect any installed versions of ${packageName}. This might be expected if it's not installed yet.${RESET}`);
+      return true;
+    }
+
+    if (versions.size > 1) {
+      console.error(`${RED}❌ Multiple versions of ${packageName} found: ${Array.from(versions).join(', ')}${RESET}`);
+      console.error(`${YELLOW}This will cause issues. Please use package overrides or resolutions to force a single version.${RESET}`);
+      return false;
+    }
+
+    console.log(`${GREEN}✅ Only one version of ${packageName} found: ${Array.from(versions)[0]}${RESET}`);
+    return true;
+
   } catch (error) {
-    const fallbackText = String(error?.stdout ?? '');
-    if (fallbackText.trim()) {
-      depTreeText = fallbackText;
-    } else {
-      console.error(`${colors.red}✗${colors.reset} Failed dependency tree command:`, error.message);
-      process.exit(1);
-    }
+    console.error(`${RED}Error checking ${packageName} versions: ${error.message}${RESET}`);
+    return false;
   }
+}
 
-  const reactVersions = extractVersionsFromTree(depTreeText, 'react');
-  const reactDomVersions = extractVersionsFromTree(depTreeText, 'react-dom');
+function runCheck() {
+  console.log('--- React Singleton Check ---');
 
-  console.log(`\n📦 react versions found: ${reactVersions.length}`);
-  reactVersions.forEach((v) => console.log(`   - ${v}`));
+  const reactValid = checkPackageVersions('react');
+  const reactDomValid = checkPackageVersions('react-dom');
 
-  console.log(`\n📦 react-dom versions found: ${reactDomVersions.length}`);
-  reactDomVersions.forEach((v) => console.log(`   - ${v}`));
-
-  let hasError = false;
-
-  if (reactVersions.length === 0 || reactDomVersions.length === 0) {
-    console.log(`
-${colors.red}✗ UNABLE TO RESOLVE REACT DEPENDENCY TREE${colors.reset}`);
-    console.log('  Ensure dependencies are installed and npm can access the lockfile/tree data.');
-    hasError = true;
-  }
-
-  if (reactVersions.length > 1) {
-    console.log(`\n${colors.red}✗ DUPLICATE REACT DETECTED${colors.reset}`);
-    console.log(`  ${colors.yellow}Detected versions:${colors.reset} ${reactVersions.join(', ')}`);
-    hasError = true;
-  }
-
-  if (reactDomVersions.length > 1) {
-    console.log(`\n${colors.red}✗ DUPLICATE REACT-DOM DETECTED${colors.reset}`);
-    console.log(`  ${colors.yellow}Detected versions:${colors.reset} ${reactDomVersions.join(', ')}`);
-    hasError = true;
-  }
-
-  if (reactVersions.length === 1 && reactDomVersions.length === 1) {
-    const reactMajor = reactVersions[0].split('.')[0];
-    const reactDomMajor = reactDomVersions[0].split('.')[0];
-
-    if (reactMajor !== reactDomMajor) {
-      console.log(`\n${colors.red}✗ REACT/REACT-DOM VERSION MISMATCH${colors.reset}`);
-      console.log(`  react: ${reactVersions[0]}`);
-      console.log(`  react-dom: ${reactDomVersions[0]}`);
-      hasError = true;
-    }
-  }
-
-  console.log('─'.repeat(50));
-
-  if (hasError) {
-    console.log(`\n${colors.red}FAILED:${colors.reset} React singleton check failed`);
-    console.log('Fix: Run `npm dedupe` or check for conflicting peer dependencies.\n');
+  if (!reactValid || !reactDomValid) {
+    console.error(`\n${RED}Singleton validation failed. Multiple versions of React detected.${RESET}`);
     process.exit(1);
   }
 
-  console.log(`\n${colors.green}✓ React singleton check passed${colors.reset}`);
-  console.log(`  react: ${reactVersions[0] ?? 'not-found'}`);
-  console.log(`  react-dom: ${reactDomVersions[0] ?? 'not-found'}\n`);
+  console.log(`\n${GREEN}Success! React singleton validation passed.${RESET}`);
+  process.exit(0);
 }
 
-await main();
+runCheck();

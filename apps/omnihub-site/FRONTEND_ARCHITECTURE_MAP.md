@@ -1,6 +1,8 @@
 # APEX OmniHub — Frontend Architecture Map
 
-> **Strictly Enforced Rule**: `apps/omnihub-site/` is the **sole routing environment** for the APEX OmniHub Synchronized Orchestrator (SO). Imports from the legacy root `src/` directory are **strictly forbidden**. `OmniDashLayout.tsx` is the canonical shell; `DashboardOverview.tsx` is the canonical data view.
+> **Strictly Enforced Rule**: `apps/omnihub-site/` is the **sole routing environment** for the APEX OmniHub Synchronized Orchestrator (SO). `OmniDashLayout.tsx` is the canonical shell; `DashboardOverview.tsx` is the canonical data view.
+>
+> **Shared Platform Layer Exception**: Root `src/stores/` and `src/omnidash/` contain platform-level Zustand stores and universal hooks that are intentionally shared across all APEX surface areas. Imports from these specific directories into `apps/omnihub-site/` are permitted and expected. Feature-specific page components, legacy UI components, and duplicate layout files from root `src/` remain forbidden.
 
 ---
 
@@ -37,16 +39,33 @@ apps/omnihub-site/src/
 2. All subroutes (`/omnidash/omniport`, `/omnidash/maestro`, etc.) render inside the modal `<Outlet />`.
 3. Dashboard stays visible behind the modal blur when subroutes are active.
 
+## OmniDash Universal Modal Engine
+
+All OmniDash interaction triggers route through the Universal Modal Engine rather than ad-hoc inline `invoke()` calls.
+
+| Surface | Invocation Pattern |
+|---|---|
+| App tile clicks (`DashboardOverview`) | `useOmniDashAction(navigate)` dispatch |
+| Connector auth buttons (`Integrations`) | `useOmniDashAction()` dispatch (no navigate) |
+| Header utility buttons (Connect AI) | `useOmniDashAction(navigate)` dispatch |
+| Utility modals (Notifications) | `useOmniModal.getState().invoke()` direct (non-reactive) |
+
+**Non-Reactive Rule**: Modal state is accessed exclusively via `useOmniModal.getState().invoke()` in event handlers — never via the reactive `useOmniModal()` hook subscription in layout/shell components. This prevents ghost re-renders on modal open/close.
+
+**OmniBoard Hydration**: After successful OAuth proxy exchange, `useOmniDashAction` upserts an `OmniBoardConnectorRecord` into `omniBoardStore`. `Integrations.tsx` subscribes to `useOmniBoard` to merge live status over stale React Query cache, giving instant UI reflection without a full refetch cycle.
+
 ## Forbidden Patterns
 
-- ❌ Importing from `../../src/` into `apps/omnihub-site/`
+- ❌ Importing feature-specific pages or legacy UI from root `src/components/` or `src/pages/`
 - ❌ Adding an `<Route index>` for `DashboardOverview` in `App.tsx`
 - ❌ Creating duplicate layout/dashboard components in the root `src/`
 - ❌ Using `OMNIDASH_FLAG` feature toggles (SO is always on)
+- ❌ Inline `omniModal.invoke()` calls in layout or page components (use `useOmniDashAction` dispatch)
+- ❌ Subscribing layout/shell components to modal state via reactive `useOmniModal()` hook
 
 ---
 
-**Version:** 1.0.0 | **Date:** 2026-03-01 | **Ref:** APEX System Directive Phase 5
+**Version:** 1.1.0 | **Date:** 2026-03-06 | **Ref:** APEX System Directive Phase 5 — Universal Modal Engine
 
 ## OmniDash UI Build Protocol (apex-frontend skill alignment)
 

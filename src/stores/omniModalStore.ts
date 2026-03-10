@@ -1,6 +1,6 @@
 /**
  * OmniModal Global State — "The Invisible Hand"
- * @version 1.1.0
+ * @version 2.0.0
  * @module src/stores/omniModalStore
  *
  * APEX STANDARDS ENFORCED:
@@ -9,6 +9,7 @@
  * - Single-Modal: invoke() replaces previous modal — no stacking
  * - Modularity: Pure Zustand store — zero React dependencies
  * - Overload-Free: close() resolves, abortModal() rejects — deterministic teardown
+ * - Intent-Driven: resolveRenderMode() deterministically maps intent → modality
  * - Promise Safety: abortModal rejects with { status: "ABORTED" } —
  *   callers MUST wrap invoke() in try/catch to absorb user dismissals
  *
@@ -29,7 +30,13 @@ export type ModalType =
   | 'confirmation'
   | 'vision_redact'
   | 'vision_confirm'
-  | 'mcp_tool_approve';
+  | 'mcp_tool_approve'
+  | 'microfrontend'
+  | 'module';
+
+export type ModalPriority = 'low' | 'medium' | 'high' | 'critical';
+
+export type RenderMode = 'dialog' | 'spatial' | 'sandbox' | 'toast';
 
 export interface OmniModalConfig {
   readonly id: string;
@@ -41,6 +48,10 @@ export interface OmniModalConfig {
   readonly contextData?: Record<string, unknown>;
   readonly onComplete: (data: Record<string, unknown>) => Promise<void>;
   readonly onCancel?: () => void;
+  /** Intent-driven routing — optional, defaults inferred from type */
+  readonly intentAction?: string;
+  readonly priority?: ModalPriority;
+  readonly renderMode?: RenderMode;
 }
 
 export interface ModalAbortError {
@@ -55,14 +66,49 @@ export interface ModalAbortError {
 const OmniModalConfigSchema = z.object({
   id: z.string().min(1),
   provider: z.string().min(1),
-  type: z.enum(['oauth', 'form', 'selection', 'confirmation', 'vision_redact', 'vision_confirm', 'mcp_tool_approve']),
+  type: z.enum([
+    'oauth', 'form', 'selection', 'confirmation',
+    'vision_redact', 'vision_confirm', 'mcp_tool_approve',
+    'microfrontend', 'module',
+  ]),
   title: z.string().min(1),
   description: z.string().optional(),
   schema: z.record(z.unknown()).optional(),
   contextData: z.record(z.unknown()).optional(),
   onComplete: z.function(),
   onCancel: z.function().optional(),
+  intentAction: z.string().optional(),
+  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+  renderMode: z.enum(['dialog', 'spatial', 'sandbox', 'toast']).optional(),
 });
+
+// ============================================================================
+// Intent Decision Engine — deterministic render mode resolution
+// ============================================================================
+
+/**
+ * Deterministic decision engine: maps (type, priority, renderMode, contextData)
+ * to a final RenderMode. Explicit renderMode always wins. Otherwise, infer
+ * from type and contextData.appType.
+ *
+ * This is a pure function — no side effects, fully testable.
+ */
+export function resolveRenderMode(config: OmniModalConfig): RenderMode {
+  // 1. Explicit override always wins
+  if (config.renderMode) return config.renderMode;
+
+  // 2. Microfrontend type → sandbox
+  if (config.type === 'microfrontend') return 'sandbox';
+
+  // 3. Spatial appTypes (media, editor, terminal) → spatial
+  const appType = config.contextData?.appType as string | undefined;
+  if (appType === 'media' || appType === 'editor' || appType === 'terminal') {
+    return 'spatial';
+  }
+
+  // 4. Default → dialog (oauth, form, selection, confirmation, etc.)
+  return 'dialog';
+}
 
 // ============================================================================
 // Store
@@ -76,11 +122,11 @@ interface OmniModalState {
   abortModal: (reason?: string) => void;
 }
 
-export const useOmniModal = create<OmniModalState>((set, get) => ({
+export const useOmniModal = create<OmniModalState>((set: (partial: Partial<OmniModalState>) => void, get: () => OmniModalState) => ({
   activeModal: null,
   isOpen: false,
 
-  invoke: (config) => {
+  invoke: (config: OmniModalConfig) => {
     // Validate at boundary — reject malformed schemas
     const result = OmniModalConfigSchema.safeParse(config);
     if (!result.success) {

@@ -31,7 +31,7 @@ type MockSupabase = ReturnType<typeof createClient> & { ai: any; rpc: any; from:
 
 describe('OmniLink Agentic RAG', () => {
   let mockSupabase: MockSupabase;
-  let skillRegistry: SkillRegistry;
+  let skillRegistry: SkillRegistry; // NOSONAR
 
   beforeEach(() => {
     vi.clearAllMocks();

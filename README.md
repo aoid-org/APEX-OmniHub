@@ -10,9 +10,9 @@
 ```
 
 **INTELLIGENCE DESIGNED.**
-                                                                                                                                            _Directable • Accountable • Dependable_
+**_Directable • Accountable • Dependable_**
 
-**Version:** 1.3.8 | **Release Date:** 2026-03-02
+**Version:** 1.4.0 | **Release Date:** 2026-03-07
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
@@ -33,7 +33,7 @@
 
 ## Overview
 
-APEX OmniHub is the first **Universal Sync Orchestrator** for **governed execution** across ALL modern stacks, AI apps, legacy enterprise systems, and Web3 infrastructure. Think "Anti-OS, it is the USO": one place to connect fragmented systems, translate universally, enforce policy, and produce an audit trail you can defend.
+APEX OmniHub is the first **Universal Sync Orchestrator** for **governed execution** across ALL modern stacks, AI apps, legacy enterprise systems, and Web3 infrastructure. Think "Anti-OS", it is a "USO": one place to connect fragmented systems, translate universally, enforce policy, and produce an audit trail you can defend.
 
 The platform relies on a "Holy Trinity" architecture:
 

@@ -255,6 +255,28 @@ export function LoginPage() {
             </button>
           </div>
 
+          {import.meta.env.VITE_CONNECT_AI_ENABLED === 'true' && (
+            <button
+              type="button"
+              className="btn btn--secondary"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                width: '100%',
+                marginTop: 12,
+              }}
+              disabled={isLoading || oauthLoading !== null}
+              onClick={() => handleOAuthSignIn('azure' as Parameters<typeof handleOAuthSignIn>[0])}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M11.4 2L2 8.5l5.3 4.7L2 22h9.4l9.6-10L11.4 2z" fill="#00A4EF" />
+              </svg>
+              Connect AI
+            </button>
+          )}
+
           <p className="text-muted mt-8" style={{ fontSize: 'var(--font-size-sm)' }}>
             Don&apos;t have an account?{' '}
             <a href="/request-access" style={{ color: 'var(--color-accent)' }}>

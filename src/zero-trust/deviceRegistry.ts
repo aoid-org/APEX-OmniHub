@@ -198,7 +198,7 @@ function isOffline(): boolean {
 
 function scheduleRemainingFlush(updated: QueuedUpsert[]) {
   if (consecutiveFailures >= DEGRADE_THRESHOLD) {
-    void logAnalyticsEvent('device.upsert.degraded', {
+    logAnalyticsEvent('device.upsert.degraded', {
       failures: consecutiveFailures,
       queueSize: updated.filter((u) => u.status === 'pending').length,
     });

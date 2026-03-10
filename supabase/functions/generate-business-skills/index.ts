@@ -94,17 +94,52 @@ async function handleSkillForge(
   // Generate Skill (Mocked for deterministic testing)
   const skillName = `skill_${crypto.randomUUID()}`;
 
-  const mockedSkill: SkillDefinition = {
-    name: skillName,
-    description: intent,
-    instructions: [
-      `Trigger when: ${trigger}`,
-      `Apply constraints: ${constraints}`,
-      'Execute business automation workflow',
-      'Return structured result to OmniHub orchestrator',
-    ],
-    required_apis: ['omnihub_core', 'user_context_api'],
-  };
+  let mockedSkill: SkillDefinition;
+
+  try {
+    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!anthropicApiKey) {
+      throw new Error('ANTHROPIC_API_KEY missing');
+    }
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': anthropicApiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 1024,
+        system: "Output a valid SkillDefinition JSON with fields: id, name, intent, trigger, constraints (array), instructions (array min 3 items). Do not wrap in markdown or include extra text.",
+        messages: [
+          {
+            role: 'user',
+            content: JSON.stringify({ intent, trigger, constraints }),
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Anthropic API error:', errText);
+      throw new Error('Anthropic API failed');
+    }
+
+    const data = await response.json();
+    const resultText = data.content[0].text;
+
+    mockedSkill = JSON.parse(resultText);
+    mockedSkill.name = skillName; // ensure unique name
+  } catch (error) {
+    console.error('Failed to generate skill with Anthropic:', error);
+    return new Response(
+      JSON.stringify({ error: 'UNPROCESSABLE_ENTITY', message: 'Failed to generate skill JSON' }),
+      { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
 
   // Persist to Database
   const { error: insertError } = await client

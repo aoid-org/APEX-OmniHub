@@ -6,14 +6,25 @@
  * For horizontally scaled environments, this should be replaced with a distributed cache like Redis.
  */
 
-export class AuthSessionStorage {
-  // Using a Map for in-memory storage.
-  // Marked as readonly as the reference never changes.
-  private readonly storage = new Map<string, string>();
-  private readonly timeouts = new Map<string, NodeJS.Timeout>();
+import Redis from 'ioredis';
 
-  // 15 minutes TTL for auth sessions
-  private readonly TTL_MS = 15 * 60 * 1000;
+export class AuthSessionStorage {
+  private redis: Redis | null = null;
+  private readonly TTL_SECONDS = 15 * 60; // 15 minutes TTL
+
+  constructor() {
+    // Attempt to initialize Redis from environment
+    const redisUrl = process.env.UPSTASH_REDIS_URL || process.env.REDIS_URL;
+    if (redisUrl) {
+      this.redis = new Redis(redisUrl);
+    } else {
+      console.warn('No REDIS_URL provided for AuthSessionStorage');
+    }
+  }
+
+  private getKey(state: string): string {
+    return `omni:oauth:session:${state}`;
+  }
 
   /**
    * Store the code verifier associated with a specific state.
@@ -21,23 +32,14 @@ export class AuthSessionStorage {
    * @param codeVerifier The PKCE code verifier to store.
    */
   async storeSession(state: string, codeVerifier: string): Promise<void> {
-    // Clear any existing session for this state to reset timer
-    await this.clearSession(state);
+    if (!this.redis) return;
 
-    this.storage.set(state, codeVerifier);
-
-    // Set TTL to prevent memory leaks
-    const timeout = setTimeout(() => {
-      this.storage.delete(state);
-      this.timeouts.delete(state);
-    }, this.TTL_MS);
-
-    // Verify if unref is available (Node.js specific) to prevent keeping process alive
-    if (timeout.unref) {
-      timeout.unref();
+    try {
+      const key = this.getKey(state);
+      await this.redis.setex(key, this.TTL_SECONDS, codeVerifier);
+    } catch (e) {
+      console.error('Failed to store session in Redis:', e);
     }
-
-    this.timeouts.set(state, timeout);
   }
 
   /**
@@ -46,7 +48,15 @@ export class AuthSessionStorage {
    * @returns The code verifier if found, otherwise null.
    */
   async retrieveSession(state: string): Promise<string | null> {
-    return this.storage.get(state) || null;
+    if (!this.redis) return null;
+
+    try {
+      const key = this.getKey(state);
+      return await this.redis.get(key);
+    } catch (e) {
+      console.error('Failed to retrieve session from Redis:', e);
+      return null;
+    }
   }
 
   /**
@@ -54,12 +64,13 @@ export class AuthSessionStorage {
    * @param state The state parameter to clear.
    */
   async clearSession(state: string): Promise<void> {
-    this.storage.delete(state);
+    if (!this.redis) return;
 
-    const timeout = this.timeouts.get(state);
-    if (timeout) {
-      clearTimeout(timeout);
-      this.timeouts.delete(state);
+    try {
+      const key = this.getKey(state);
+      await this.redis.del(key);
+    } catch (e) {
+      console.error('Failed to clear session in Redis:', e);
     }
   }
 }

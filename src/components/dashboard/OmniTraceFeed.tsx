@@ -1,91 +1,92 @@
-/**
- * OmniTraceFeed — High-density realtime trace timeline widget.
- * Displays latest trace events with smooth entry animations.
- */
+import React, { useEffect, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
-import { useOmniTrace, type TraceEvent } from '@/hooks/useOmniTrace';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Activity, Clock, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+interface AuditLog {
+  id: string;
+  action: string;
+  created_at: string;
+  [key: string]: unknown;
+}
 
-const STATUS_STYLES: Record<string, string> = {
-  SUCCESS: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30',
-  FAILED: 'bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30',
-  PENDING: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30',
-};
+export function OmniTraceFeed({ tenantId }: { tenantId?: string }) {
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [status, setStatus] = useState<'CONNECTING' | 'SUBSCRIBED' | 'ERROR'>('CONNECTING');
 
-const KIND_LABELS: Record<string, string> = {
-  tool: '🔧',
-  model: '🧠',
-  policy: '🛡️',
-  cache: '💾',
-  system: '⚙️',
-};
+  useEffect(() => {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-function TraceEventRow({ event }: Readonly<{ event: TraceEvent }>) {
-  const statusStyle = STATUS_STYLES[event.kind === 'system' ? 'PENDING' : 'SUCCESS'] ?? STATUS_STYLES.PENDING;
-  const kindLabel = KIND_LABELS[event.kind] ?? '📌';
-  const latencyDisplay = event.latency_ms === null ? '—' : `${event.latency_ms}ms`;
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn('Supabase env vars missing for OmniTraceFeed');
+      setStatus('ERROR');
+      return;
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    let channel: ReturnType<typeof supabase.channel>;
+
+    try {
+      const channelFilter = tenantId
+        ? `tenant_id=eq.${tenantId}`
+        : undefined;
+
+      channel = supabase
+        .channel('omnitrace-feed')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'audit_log',
+            filter: channelFilter
+          },
+          (payload) => {
+            const newLog = payload.new as AuditLog;
+            setLogs((prev) => {
+              const updated = [newLog, ...prev];
+              return updated.slice(0, 50); // Cap at 50 items
+            });
+          }
+        )
+        .subscribe((status: string) => {
+          if (status === 'SUBSCRIBED') {
+            setStatus('SUBSCRIBED');
+          } else if (status === 'CHANNEL_ERROR') {
+            setStatus('ERROR');
+          }
+        });
+    } catch {
+      setStatus('ERROR');
+    }
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [tenantId]);
 
   return (
-    <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors animate-in slide-in-from-top-1 duration-300">
-      <span className="text-base flex-shrink-0" title={event.kind}>
-        {kindLabel}
-      </span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{event.name}</p>
-        <p className="text-xs text-muted-foreground truncate">
-          {event.workflow_id.slice(0, 12)}… · {event.event_key}
-        </p>
+    <div data-testid="omni-trace-feed" className="omni-trace-feed">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-bold">Trace Feed</h3>
+        {status === 'CONNECTING' && <span className="text-sm text-gray-500">Connecting... ⌛</span>}
+        {status === 'SUBSCRIBED' && <span className="text-sm text-green-500 font-bold bg-green-100 px-2 py-1 rounded">Live</span>}
+        {status === 'ERROR' && <span className="text-sm text-red-500">Disconnected</span>}
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0', statusStyle)}>
-          {event.kind}
-        </Badge>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Clock className="h-3 w-3" />
-          {latencyDisplay}
-        </div>
-      </div>
+      <ul className="space-y-2">
+        {logs.map(log => (
+          <li key={log.id} className="text-sm border-b pb-1">
+            <span className="font-mono text-xs text-gray-500 mr-2">
+              {new Date(log.created_at || Date.now()).toLocaleTimeString()}
+            </span>
+            {log.action}
+          </li>
+        ))}
+        {logs.length === 0 && <li className="text-sm text-gray-400">No events yet</li>}
+      </ul>
     </div>
   );
 }
 
-interface OmniTraceFeedProps {
-  workflowId?: string;
-  maxItems?: number;
-}
-
-export function OmniTraceFeed({ workflowId, maxItems = 15 }: Readonly<OmniTraceFeedProps>) {
-  const { traces, isTracing } = useOmniTrace(workflowId);
-  const displayTraces = traces.slice(0, maxItems);
-
-  return (
-    <Card className="glass-card rounded-2xl">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Activity className="h-4 w-4 text-primary" />
-          OmniTrace
-          {isTracing && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
-          <Badge variant="secondary" className="text-[10px] ml-auto">
-            {traces.length} events
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        {displayTraces.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            No trace events yet. Run a workflow to see activity here.
-          </div>
-        ) : (
-          <div className="divide-y divide-border/40 px-2">
-            {displayTraces.map((event) => (
-              <TraceEventRow key={event.id} event={event} />
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+export default OmniTraceFeed;

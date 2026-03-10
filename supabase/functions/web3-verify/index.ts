@@ -34,10 +34,15 @@
 
 import { verifyMessage, verifyTypedData } from 'https://esm.sh/viem@2.21.54';
 import { parseSiweMessage } from 'https://esm.sh/viem@2.21.54/siwe';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { handleCors, corsJsonResponse, buildCorsHeaders, isOriginAllowed } from '../_shared/cors.ts';
 import { checkRateLimit, rateLimitExceededResponse, RATE_LIMIT_CONFIGS } from '../_shared/rate-limit.ts';
 import { isValidWalletAddress, isValidSignature, validateRequestBody } from '../_shared/validation.ts';
 import { createSupabaseClient, authenticateUser, createAuthErrorResponse, createMethodNotAllowedResponse, createInternalErrorResponse } from '../_shared/auth.ts';
+import type { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+
+/** Typed Supabase client — eliminates `unknown` casts in audit helpers. */
+type SupabaseInstance = ReturnType<typeof createClient>;
 
 /**
  * Resolve origin from a URI string
@@ -94,7 +99,7 @@ function validateSiweMessage(params: {
  * Extract nonce from verification message
  */
 function extractNonceFromMessage(message: string): string | null {
-  const match = /Nonce:\s*([a-f0-9]+)/i.exec(message);
+  const match = /Nonce:\s*([a-f0-9]+)\b/i.exec(message);
   return match ? match[1] : null;
 }
 
@@ -102,7 +107,7 @@ function extractNonceFromMessage(message: string): string | null {
  * Log audit event
  */
 async function logAuditEvent(
-  supabase: unknown,
+  supabase: SupabaseInstance,
   userId: string,
   action: string,
   walletAddress: string,
@@ -398,7 +403,7 @@ Deno.serve(async (req) => {
       console.error('Signature verification error:', error);
       await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
         reason: 'signature_verification_error',
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       });
 
       return corsJsonResponse({ error: 'verification_failed', message: 'Signature verification failed' }, 400);

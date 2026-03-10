@@ -108,7 +108,7 @@ interface AlchemyWebhookPayload {
  * Process a single NFT transfer event
  */
 async function processNFTTransfer(
-  supabase: unknown,
+  supabase: ReturnType<typeof createClient>,
   activity: AlchemyNFTActivity,
   membershipNFTAddress: string
 ): Promise<{ success: boolean; reason?: string }> {
@@ -164,16 +164,18 @@ async function processNFTTransfer(
         .eq('wallet_address', normalizedFrom);
 
       if (fromWallets && fromWallets.length > 0) {
-        for (const wallet of fromWallets) {
-          // Set has_premium_nft to false
-          await supabase
-            .from('profiles')
-            .update({
-              has_premium_nft: false,
-              nft_verified_at: new Date().toISOString(),
-            })
-            .eq('id', wallet.user_id);
+        const userIds = fromWallets.map(w => w.user_id);
 
+        // Set has_premium_nft to false
+        await supabase
+          .from('profiles')
+          .update({
+            has_premium_nft: false,
+            nft_verified_at: new Date().toISOString(),
+          })
+          .in('id', userIds);
+
+        for (const wallet of fromWallets) {
           console.log(`Removed NFT access for user ${wallet.user_id} (transfer out)`);
         }
       }
@@ -188,16 +190,18 @@ async function processNFTTransfer(
         .eq('wallet_address', normalizedTo);
 
       if (toWallets && toWallets.length > 0) {
-        for (const wallet of toWallets) {
-          // Set has_premium_nft to true
-          await supabase
-            .from('profiles')
-            .update({
-              has_premium_nft: true,
-              nft_verified_at: new Date().toISOString(),
-            })
-            .eq('id', wallet.user_id);
+        const userIds = toWallets.map(w => w.user_id);
 
+        // Set has_premium_nft to true
+        await supabase
+          .from('profiles')
+          .update({
+            has_premium_nft: true,
+            nft_verified_at: new Date().toISOString(),
+          })
+          .in('id', userIds);
+
+        for (const wallet of toWallets) {
           console.log(`Granted NFT access to user ${wallet.user_id} (transfer in)`);
         }
       }
@@ -219,7 +223,7 @@ async function processNFTTransfer(
       .from('chain_tx_log')
       .update({
         status: 'failed',
-        metadata: { error: error.message },
+        metadata: { error: error instanceof Error ? error.message : String(error) },
       })
       .eq('id', eventId);
 
