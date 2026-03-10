@@ -107,8 +107,8 @@ export function getPostLoginDestination(options: PostLoginDestinationOptions): s
 
   // PRIORITY 1: Honor intended destination if accessible
   if (intendedDestination) {
-    // Clean and validate destination
-    const cleanDest = intendedDestination.split('?')[0]; // Remove query params for validation
+    // Clean and validate destination (strip query params and fragments)
+    const cleanDest = intendedDestination.split('?')[0].split('#')[0];
 
     if (canAccessRoute(cleanDest, options)) {
       // User can access intended destination - preserve full URL with query params
