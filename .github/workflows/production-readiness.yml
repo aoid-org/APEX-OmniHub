@@ -51,6 +51,9 @@ jobs:
       - name: Documentation drift check
         run: npm run docs:check
 
+      - name: Vercel SPA Rewrite Check
+        run: cd apps/omnihub-site && node scripts/check-vercel-spa-rewrite.mjs
+
       - name: Guardrail - No TS suppression in config files
         run: |
           if grep -r "@ts-ignore\|@ts-expect-error" vitest.config.ts vite.config.ts 2>/dev/null; then
