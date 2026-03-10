@@ -64,15 +64,23 @@ class OmniBoardService:
     # Optimized lookup structures (cached)
     _LOWER_PROVIDERS_CACHE: list[tuple[str, str]] | None = None
     _EXACT_MATCH_DICT: dict[str, str] | None = None
+    _LAST_KNOWN_PROVIDERS_ID: int | None = None
 
     @classmethod
     def _get_optimized_providers(cls) -> tuple[list[tuple[str, str]], dict[str, str]]:
         """
         Returns pre-calculated lowercase provider mappings and exact match dictionary.
+        Detects if KNOWN_PROVIDERS has been replaced (e.g., in tests) and refreshes cache.
         """
-        if cls._LOWER_PROVIDERS_CACHE is None or cls._EXACT_MATCH_DICT is None:
+        current_id = id(cls.KNOWN_PROVIDERS)
+        if (
+            cls._LOWER_PROVIDERS_CACHE is None
+            or cls._EXACT_MATCH_DICT is None
+            or current_id != cls._LAST_KNOWN_PROVIDERS_ID
+        ):
             cls._LOWER_PROVIDERS_CACHE = [(p.lower(), p) for p in cls.KNOWN_PROVIDERS]
             cls._EXACT_MATCH_DICT = dict(cls._LOWER_PROVIDERS_CACHE)
+            cls._LAST_KNOWN_PROVIDERS_ID = current_id
         return cls._LOWER_PROVIDERS_CACHE, cls._EXACT_MATCH_DICT
 
     @classmethod
