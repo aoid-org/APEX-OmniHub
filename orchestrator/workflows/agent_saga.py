@@ -38,6 +38,7 @@ Architecture:
 """
 
 import asyncio
+import inspect as _inspect
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -1441,8 +1442,6 @@ class AgentWorkflow:
 
 # Apply Temporal decorator post-definition so that the bare class remains
 # importable when temporalio.workflow is mocked in unit tests.
-import inspect as _inspect
-
 _decorated = workflow.defn(AgentWorkflow)  # type: ignore[misc]
 if _inspect.isclass(_decorated):
     AgentWorkflow = _decorated  # type: ignore[misc]
