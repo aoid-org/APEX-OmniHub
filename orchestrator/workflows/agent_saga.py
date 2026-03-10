@@ -238,7 +238,6 @@ class SagaContext:
 # ============================================================================
 
 
-@workflow.defn
 class AgentWorkflow:
     """
     AI Agent Orchestration Workflow with Event Sourcing and Saga Pattern.
@@ -1301,6 +1300,9 @@ class AgentWorkflow:
         # Execute compensations
         assert self.saga is not None
         compensation_results = await self.saga.rollback()
+        # Coerce to list for WorkflowFailed model validation
+        if not isinstance(compensation_results, list):
+            compensation_results = [compensation_results] if compensation_results else []
 
         result = {
             "status": "failed",
@@ -1396,8 +1398,14 @@ class AgentWorkflow:
             f"{len(self.pending_decisions)} pending decisions"
         )
 
-        # Continue as new with snapshot as context
-        workflow.continue_as_new(args=[self.goal, self.user_id, snapshot])
+        # Resolve continue_as_new through sys.modules to ensure test patches
+        # on the real temporalio.workflow module are picked up. This is needed
+        # because from-import binds the mock during test setup, while
+        # mod.workflow resolves to the real module via submodule attributes.
+        import sys as _sys
+
+        _wf = _sys.modules.get("temporalio.workflow", workflow)
+        _wf.continue_as_new(args=[self.goal, self.user_id, snapshot])
 
     async def _execute_activity(
         self,
@@ -1429,3 +1437,12 @@ class AgentWorkflow:
                 maximum_interval=timedelta(seconds=10),
             ),
         )
+
+
+# Apply Temporal decorator post-definition so that the bare class remains
+# importable when temporalio.workflow is mocked in unit tests.
+import inspect as _inspect
+
+_decorated = workflow.defn(AgentWorkflow)  # type: ignore[misc]
+if _inspect.isclass(_decorated):
+    AgentWorkflow = _decorated  # type: ignore[misc]

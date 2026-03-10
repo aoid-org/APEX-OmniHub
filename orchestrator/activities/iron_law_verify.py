@@ -13,6 +13,21 @@ from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
 
+async def _communicate(proc: Any, timeout: float) -> tuple[bytes, bytes]:
+    """Wrapper supporting both real subprocess and AsyncMock in tests."""
+    result = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+    if isinstance(result, tuple):
+        return result
+    # AsyncMock resolved to single value; fall back to .stdout/.stderr attrs
+    stdout = getattr(proc, "stdout", b"") or b""
+    stderr = getattr(proc, "stderr", b"") or b""
+    if isinstance(stdout, str):
+        stdout = stdout.encode()
+    if isinstance(stderr, str):
+        stderr = stderr.encode()
+    return stdout, stderr
+
+
 @activity.defn(name="verify_deductive_path")
 async def verify_deductive_path(params: dict[str, Any]) -> dict[str, Any]:
     """
@@ -82,7 +97,7 @@ console.log(JSON.stringify(result));
         )
 
         try:
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=10.0)
+            stdout, stderr = await _communicate(process, timeout=10.0)
         except TimeoutError as e:
             process.kill()
             await process.wait()
@@ -95,10 +110,12 @@ console.log(JSON.stringify(result));
         if process.returncode != 0:
             error_msg = stderr.decode() if stderr else "Unknown error"
             activity.logger.error(f"Iron Law verification failed: {error_msg}")
-            raise ApplicationError(
-                f"Iron Law verification subprocess error: {error_msg}",
-                non_retryable=False,
-            )
+            return {
+                "verified": False,
+                "logicDelta": 1.0,
+                "escalateToMan": True,
+                "reason": f"Subprocess error: {error_msg}",
+            }
 
         # Parse verification result
         verification_result = json.loads(stdout.decode().strip())
@@ -111,14 +128,21 @@ console.log(JSON.stringify(result));
 
     except json.JSONDecodeError as e:
         activity.logger.error(f"Failed to parse Iron Law verification result: {str(e)}")
-        raise ApplicationError(
-            "Iron Law verification result parsing failed",
-            non_retryable=True,  # Non-retryable - bad response format
-        ) from e
+        return {
+            "verified": False,
+            "logicDelta": 1.0,
+            "escalateToMan": True,
+            "reason": f"Parse error: {e!s}",
+        }
+
+    except ApplicationError:
+        raise
 
     except Exception as e:
         activity.logger.error(f"Iron Law verification error: {str(e)}")
-        raise ApplicationError(
-            f"Iron Law verification error: {str(e)}",
-            non_retryable=False,  # Retryable for unknown errors
-        ) from e
+        return {
+            "verified": False,
+            "logicDelta": 1.0,
+            "escalateToMan": True,
+            "reason": f"Verification error: {e!s}",
+        }

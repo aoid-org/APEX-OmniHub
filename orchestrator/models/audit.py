@@ -24,6 +24,10 @@ from providers.database.factory import get_database_provider
 class AuditAction(str, Enum):  # noqa: UP042
     """Standardized audit actions for compliance tracking."""
 
+    # CRUD
+    CREATE = "create"
+    UPDATE = "update"
+
     # Authentication
     LOGIN = "login"
     LOGOUT = "logout"
@@ -44,9 +48,17 @@ class AuditAction(str, Enum):  # noqa: UP042
     WORKFLOW_START = "workflow_start"
     WORKFLOW_COMPLETE = "workflow_complete"
     WORKFLOW_FAIL = "workflow_fail"
+    EXECUTE = "execute"
 
     # Data Modification
     DATA_MODIFY = "data_modify"
+
+    # Approval
+    APPROVE = "approve"
+    REJECT = "reject"
+    EXPORT = "export"
+    IMPORT = "import"
+    REVOKE = "revoke"
 
     # Security
     POLICY_VIOLATION = "policy_violation"
@@ -115,6 +127,7 @@ class AuditMetadata(BaseModel):
     # Compliance Fields
     data_sensitivity: str | None = None  # public, internal, confidential, restricted
     compliance_flags: list[str] = Field(default_factory=list)  # soc2, gdpr, hipaa, etc.
+    tags: list[str] = Field(default_factory=list)
 
     # Custom Fields
     custom_fields: dict[str, Any] = Field(default_factory=dict)
@@ -250,8 +263,8 @@ class AuditLogger:
         import hashlib
         import json
 
-        # Create canonical JSON representation
-        event_dict = event.model_dump()
+        # Exclude self-referential fields to avoid circular dependency
+        event_dict = event.model_dump(exclude={"integrity_hash", "previous_hash"})
         canonical_json = json.dumps(event_dict, sort_keys=True, default=str)
 
         # Generate SHA-256 hash
@@ -319,7 +332,7 @@ class AuditLogger:
         async with aiofiles.open(log_file, "a") as f:
             await f.write(json.dumps(event.model_dump(), default=str) + "\n")
 
-    async def query_events(
+    def query_events(
         self,
         actor_id: str | None = None,
         action: AuditAction | None = None,
@@ -329,7 +342,7 @@ class AuditLogger:
         limit: int = 100,
     ) -> list[AuditLogEntry]:
         """
-        Query audit events for compliance reporting.
+        Query audit events for compliance reporting (synchronous).
 
         Args:
             actor_id: Filter by actor (interface placeholder)
@@ -342,12 +355,12 @@ class AuditLogger:
         Returns:
             List of matching audit events
         """
-        from typing import cast
-
-        from providers.database.factory import get_database_provider
-        from providers.database.supabase_provider import SupabaseDatabaseProvider
-
         try:
+            from typing import cast
+
+            from providers.database.factory import get_database_provider
+            from providers.database.supabase_provider import SupabaseDatabaseProvider
+
             db = cast(SupabaseDatabaseProvider, get_database_provider())
             query = db.client.table("audit_logs").select("*")
 

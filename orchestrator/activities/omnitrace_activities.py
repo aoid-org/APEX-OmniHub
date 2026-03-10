@@ -10,6 +10,7 @@ from typing import Any
 from temporalio import activity
 
 from observability.omnitrace import get_omnitrace_recorder
+from providers.database.factory import get_database_provider  # noqa: F401
 
 
 @activity.defn(name="omnitrace_record_run_start")

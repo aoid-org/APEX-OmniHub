@@ -9,8 +9,12 @@ while maintaining consistent behavior and error handling.
 from typing import Any, Protocol
 
 
-class DatabaseError(Exception):
-    """Base exception for database operations."""
+class DatabaseError(ValueError):
+    """Base exception for database operations.
+
+    Inherits from ValueError so callers can catch either DatabaseError
+    or the standard ValueError.
+    """
 
     pass
 
