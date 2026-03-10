@@ -12,6 +12,7 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<Provider | null>(null);
+  const [loginIconSrc, setLoginIconSrc] = useState(() => `${import.meta.env.BASE_URL}icon.png`);
 
   const handleOAuthSignIn = async (provider: Provider) => {
     if (!hasSupabaseConfig) {
