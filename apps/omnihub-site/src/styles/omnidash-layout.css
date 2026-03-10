@@ -91,6 +91,7 @@
   border-right: 1px solid var(--od-border-subtle);
   display: flex;
   flex-direction: column;
+  min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
@@ -260,11 +261,16 @@
 .od-center {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   overflow: hidden;
   flex: 1;
   min-width: 0;
   position: relative;
   z-index: 1;
+}
+
+.od-right {
+  min-width: 0;
 }
 
 .od-content {
@@ -1148,12 +1154,8 @@
   }
 }
 
-
-/* ═══════════════════════════════════════════════════════
-   RESPONSIVE — Small Tablet (≤960px)
-   ═══════════════════════════════════════════════════════ */
-
-@media (max-width: 960px) {
+/* ===== Responsive — Small Tablet (≤768px) ===== */
+@media (max-width: 768px) {
   .omnidash-shell {
     flex-direction: column;
     min-height: 100dvh;
