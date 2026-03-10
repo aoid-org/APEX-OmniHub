@@ -12,6 +12,7 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<Provider | null>(null);
+  const [loginIconSrc, setLoginIconSrc] = useState(() => `${import.meta.env.BASE_URL}icon.png`);
 
   const handleOAuthSignIn = async (provider: Provider) => {
     if (!hasSupabaseConfig) {
@@ -130,28 +131,23 @@ export function LoginPage() {
     <Layout title="Log In">
       <Section>
         <div style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto' }}>
-          <div
+          <img
+            src={loginIconSrc}
+            alt="APEX OmniHub icon"
+            onError={() => {
+              if (loginIconSrc !== `${import.meta.env.BASE_URL}apex-badge.png`) {
+                setLoginIconSrc(`${import.meta.env.BASE_URL}apex-badge.png`);
+              }
+            }}
             style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--color-accent)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              width: '72px',
+              height: '72px',
+              borderRadius: '18px',
+              objectFit: 'cover',
+              display: 'block',
               margin: '0 auto var(--space-6)',
             }}
-          >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="8" r="4" stroke="white" strokeWidth="2" />
-              <path
-                d="M4 20c0-4 4-6 8-6s8 2 8 6"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
+          />
           <h1 className="heading-2">Welcome Back</h1>
           <p className="text-secondary mt-2">Sign in to your APEX OmniHub account</p>
 
