@@ -82,3 +82,67 @@ class DatabaseProvider(Protocol):
             DatabaseError: For database errors
         """
         ...
+
+    async def upsert(
+        self,
+        table: str,
+        record: dict[str, Any],
+        conflict_columns: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Insert or update a record on conflict.
+
+        Args:
+            table: Table name
+            record: Record data
+            conflict_columns: Columns to check for conflicts
+
+        Returns:
+            The upserted record
+        """
+        ...
+
+    async def update(
+        self,
+        table: str,
+        updates: dict[str, Any],
+        filters: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Update records matching filters.
+
+        Args:
+            table: Table name
+            updates: Fields to update
+            filters: Match criteria
+
+        Returns:
+            The updated record
+        """
+        ...
+
+    async def get(self, table: str, query_params: dict[str, Any]) -> list[dict[str, Any]]:
+        """
+        Get records matching query parameters.
+
+        Args:
+            table: Table name
+            query_params: Field-value equality filters
+
+        Returns:
+            List of matching records
+        """
+        ...
+
+    async def rpc(self, function_name: str, params: dict[str, Any]) -> Any:
+        """
+        Call a database RPC function.
+
+        Args:
+            function_name: Name of the function
+            params: Function parameters
+
+        Returns:
+            Function result
+        """
+        ...

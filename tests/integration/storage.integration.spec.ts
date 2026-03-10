@@ -205,7 +205,7 @@ suite('Storage Integration Tests', () => {
       expect(signedUrl).toMatch(/^https?:\/\//)
 
       // Signed URL should be accessible
-      const response = await fetch(signedUrl!)
+      const response = await fetch(signedUrl as string)
       expect(response.ok).toBe(true)
 
       const text = await response.text()

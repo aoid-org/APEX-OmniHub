@@ -29,6 +29,7 @@ import {
 } from '../../ui/dialog';
 import { Button } from '../../ui/button';
 import { Loader2, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { ModuleRenderer } from '../../../../apps/omnihub-site/src/components/omnidash/ModuleRenderer';
 
 export function UniversalModalEngine() {
   const { activeModal, isOpen, close, abortModal } = useOmniModal();
@@ -178,6 +179,19 @@ export function UniversalModalEngine() {
               </Button>
             </DialogFooter>
           </div>
+        );
+
+      case 'module':
+        return (
+          <ModuleRenderer
+            moduleKey={
+              typeof activeModal.contextData?.moduleKey === 'string'
+                ? activeModal.contextData.moduleKey
+                : activeModal.id
+            }
+            onAction={handleAction}
+            onClose={close}
+          />
         );
 
       default:

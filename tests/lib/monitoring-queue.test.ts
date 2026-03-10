@@ -63,11 +63,8 @@ describe('MonitoringQueue', () => {
     // Fill queue
     ['a', 'b', 'c'].forEach(item => queue.push(item));
 
-    // 'a' is dropped, 'd' is added
-    queue.push('d');
-
-    // 'a' should be gone from seenHashes too, so if we add 'a' again, it should be accepted
-    queue.push('a');
+    // 'd' evicts 'a' from the circular buffer; 'a' is then re-accepted after eviction
+    ['d', 'a'].forEach(item => queue.push(item));
 
     // Expected: c, d, a (since max is 3: b dropped)
     const flushed = queue.flush();

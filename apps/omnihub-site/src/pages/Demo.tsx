@@ -1,28 +1,142 @@
+import { useState, useCallback } from 'react';
 import { Layout } from '@/components/Layout';
 import { Section, SectionHeader } from '@/components/Section';
 import { CTAGroup } from '@/components/CTAGroup';
 import { DemoVideoPlayer } from '@/components/DemoVideoPlayer';
 import { demoConfig, siteConfig } from '@/content/site';
 
-function InteractivePlaceholder() {
+const WORKFLOW_STEPS = [
+  { id: 'connect', label: 'Connect Salesforce', detail: 'OAuth handshake with CRM adapter' },
+  { id: 'translate', label: 'Translate Events', detail: 'Map lead data to canonical OmniHub schema' },
+  { id: 'execute', label: 'Execute Workflow', detail: 'Create Slack channel + send welcome email' },
+  { id: 'audit', label: 'Log & Verify', detail: 'Immutable audit trail with cryptographic receipt' },
+] as const;
+
+function stepBorderColor(isActive: boolean, isDone: boolean): string {
+  if (isActive) return 'var(--color-accent)';
+  if (isDone) return 'var(--color-success, #34d399)';
+  return 'var(--color-border)';
+}
+
+function stepBackground(isActive: boolean, isDone: boolean): string {
+  if (isActive) return 'rgba(249,115,22,0.08)';
+  if (isDone) return 'rgba(52,211,153,0.06)';
+  return 'transparent';
+}
+
+function badgeBackground(isActive: boolean, isDone: boolean): string {
+  if (isDone) return 'var(--color-success, #34d399)';
+  if (isActive) return 'var(--color-accent)';
+  return 'var(--color-surface)';
+}
+
+function buttonLabel(running: boolean, allDone: boolean): string {
+  if (running) return 'Running Workflow...';
+  if (allDone) return 'Run Again';
+  return 'Run Sample Workflow';
+}
+
+function WorkflowStepRow({ step, idx, isActive, isDone }: Readonly<{
+  step: (typeof WORKFLOW_STEPS)[number];
+  idx: number;
+  isActive: boolean;
+  isDone: boolean;
+}>) {
+  return (
+    <div
+      style={{
+        display: 'flex', alignItems: 'center', gap: 'var(--space-4)',
+        padding: 'var(--space-4)',
+        borderRadius: 'var(--border-radius-md)',
+        border: `1px solid ${stepBorderColor(isActive, isDone)}`,
+        backgroundColor: stepBackground(isActive, isDone),
+        transition: 'all 0.3s ease',
+      }}
+    >
+      <div style={{
+        width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+        display: 'grid', placeItems: 'center',
+        fontSize: 'var(--font-size-sm)', fontWeight: 'bold',
+        background: badgeBackground(isActive, isDone),
+        color: (isDone || isActive) ? 'white' : 'var(--color-text-muted)',
+        transition: 'all 0.3s ease',
+      }}>
+        {isDone ? '\u2713' : idx + 1}
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 600, color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)' }}>
+          {step.label}
+        </div>
+        <div className="text-muted text-sm" style={{ marginTop: 2 }}>
+          {step.detail}
+        </div>
+      </div>
+      {isActive && (
+        <div style={{
+          width: 16, height: 16, borderRadius: '50%',
+          border: '2px solid var(--color-accent)',
+          borderTopColor: 'transparent',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+      )}
+    </div>
+  );
+}
+
+function InteractiveWorkflowDemo() {
+  const [activeStep, setActiveStep] = useState(-1);
+  const [completed, setCompleted] = useState<ReadonlySet<string>>(new Set());
+  const [running, setRunning] = useState(false);
+
+  const runWorkflow = useCallback(() => {
+    if (running) return;
+    setRunning(true);
+    setCompleted(new Set());
+    setActiveStep(0);
+
+    const scheduleStep = (stepId: string, idx: number, isLast: boolean) => {
+      setTimeout(() => setActiveStep(idx), idx * 1200);
+      setTimeout(() => {
+        setCompleted(prev => new Set([...prev, stepId]));
+        if (isLast) {
+          setTimeout(() => { setActiveStep(-1); setRunning(false); }, 800);
+        }
+      }, idx * 1200 + 900);
+    };
+
+    WORKFLOW_STEPS.forEach((step, idx) => {
+      scheduleStep(step.id, idx, idx === WORKFLOW_STEPS.length - 1);
+    });
+  }, [running]);
+
   return (
     <div className="card" style={{ padding: 'var(--space-8)' }}>
       <h3 className="heading-4">{demoConfig.interactivePlaceholder.title}</h3>
       <p className="text-secondary mt-2">
         {demoConfig.interactivePlaceholder.description}
       </p>
-      <div
-        style={{
-          marginTop: 'var(--space-6)',
-          padding: 'var(--space-6)',
-          backgroundColor: 'var(--color-surface)',
-          borderRadius: 'var(--border-radius-md)',
-          border: '1px dashed var(--color-border)',
-          textAlign: 'center',
-        }}
-      >
-        <p className="text-muted text-sm">Interactive demo coming soon</p>
+
+      <div style={{ marginTop: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        {WORKFLOW_STEPS.map((step, idx) => (
+          <WorkflowStepRow
+            key={step.id}
+            step={step}
+            idx={idx}
+            isActive={activeStep === idx}
+            isDone={completed.has(step.id)}
+          />
+        ))}
       </div>
+
+      <button
+        type="button"
+        className="btn btn--primary"
+        style={{ marginTop: 'var(--space-6)', width: '100%' }}
+        onClick={runWorkflow}
+        disabled={running}
+      >
+        {buttonLabel(running, completed.size === WORKFLOW_STEPS.length)}
+      </button>
     </div>
   );
 }
@@ -57,7 +171,7 @@ export function DemoPage() {
         />
         <div className="demo-video demo-copy-font" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
           <DemoVideoPlayer sourceUrl={demoConfig.video.src} />
-          <InteractivePlaceholder />
+          <InteractiveWorkflowDemo />
         </div>
       </Section>
       <DemoCTA />

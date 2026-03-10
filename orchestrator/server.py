@@ -11,7 +11,7 @@ Usage:
 import logging
 import os
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -20,11 +20,15 @@ from slowapi.util import get_remote_address
 from temporalio.client import Client
 from uvicorn import Config, Server
 
+# Ensure registry is seeded before any request arrives
+import core.intents  # noqa: F401
 from config import settings
+from core.intent_registry import registry
 from metrics import get_metrics_app
 from omniboard.router import router as omniboard_router
 from security.request_signing import SignatureVerificationMiddleware
 from workflows.agent_saga import AgentWorkflow
+from workflows.universal_saga import UniversalOrchestratorWorkflow
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +73,7 @@ class GoalRequest(BaseModel):
 
 
 @app.post("/api/v1/goals", responses={500: {"description": "Internal Server Error"}})
-async def create_goal(request: GoalRequest):
+async def create_goal(request: GoalRequest) -> dict[str, str]:
     """
     Create and start a new agent workflow.
 
@@ -104,8 +108,76 @@ async def create_goal(request: GoalRequest):
         raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
+@app.post(
+    "/api/v1/intents",
+    responses={
+        400: {"description": "Invalid JSON body or missing payload.intentId"},
+        500: {"description": "Internal Server Error"},
+    },
+)
+async def execute_intent(request: Request) -> dict[str, str]:
+    """
+    Execute an intent via the Universal Orchestrator Workflow.
+
+    This endpoint receives a full Python EventEnvelope-compliant JSON body
+    from the edge function (constructed by toPythonEventEnvelope in the
+    event-ingress-adapter). The body is passed through as-is to the
+    UniversalOrchestratorWorkflow, which validates it with Pydantic.
+
+    Wire format: see models.events.EventEnvelope for the full schema.
+    """
+    try:
+        envelope_dict = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body") from None
+
+    # Extract intent_id from payload.intentId for early fail-closed check
+    payload = envelope_dict.get("payload", {})
+    intent_id = payload.get("intentId", "")
+    correlation_id = envelope_dict.get("correlation_id", "unknown")
+
+    if not intent_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing payload.intentId in EventEnvelope",
+        )
+
+    # Fail-closed: reject unregistered intents before hitting Temporal
+    if intent_id not in registry:
+        return {
+            "intentId": intent_id,
+            "traceId": correlation_id,
+            "status": "offline",
+            "error": f"Intent '{intent_id}' is not registered.",
+            "schemaVersion": "1.0.0",
+        }
+
+    try:
+        client = await Client.connect(
+            os.getenv("TEMPORAL_HOST", "localhost:7233"),
+            namespace=os.getenv("TEMPORAL_NAMESPACE", "default"),
+        )
+
+        workflow_id = f"intent-{correlation_id}"
+
+        # Pass the raw envelope dict — the workflow validates with Pydantic
+        handle = await client.start_workflow(
+            UniversalOrchestratorWorkflow.run,
+            args=[envelope_dict],
+            id=workflow_id,
+            task_queue=os.getenv("TEMPORAL_TASK_QUEUE", "apex-orchestrator"),
+        )
+
+        logger.info("Universal workflow started: %s", handle.id)
+        return {"workflowId": handle.id, "status": "started"}
+
+    except Exception:
+        logger.error("Intent execution failed", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error") from None
+
+
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "ok"}
 

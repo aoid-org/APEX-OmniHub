@@ -32,6 +32,9 @@ from temporalio.client import Client
 from temporalio.service import TLSConfig
 from temporalio.worker import Worker
 
+# Seed the intent registry with all known activity→intent mappings.
+# This import has side effects: it populates the registry singleton.
+import core.intents  # noqa: F401
 from activities.iron_law_verify import verify_deductive_path
 from activities.man_mode import (
     check_man_decision,
@@ -53,9 +56,15 @@ from activities.tools import (
     send_email,
     setup_activities,
 )
+from activities.universal_intents import (
+    system_echo,
+    system_health_check,
+    system_list_intents,
+)
 from config import settings
 from metrics import start_metrics_server
 from workflows.agent_saga import AgentWorkflow
+from workflows.universal_saga import UniversalOrchestratorWorkflow
 
 # Configure logging
 logging.basicConfig(
@@ -133,7 +142,7 @@ async def start_worker() -> None:
     worker = Worker(
         client,
         task_queue=settings.temporal_task_queue,
-        workflows=[AgentWorkflow],
+        workflows=[AgentWorkflow, UniversalOrchestratorWorkflow],
         activities=[
             # Planning activities
             check_semantic_cache,
@@ -159,6 +168,10 @@ async def start_worker() -> None:
             verify_deductive_path,
             # OmniTrace activities
             *get_omnitrace_activities(),
+            # Universal Intent activities (USO — registry-routable)
+            system_health_check,
+            system_echo,
+            system_list_intents,
         ],
         max_concurrent_workflow_tasks=settings.temporal_max_workflow_tasks,
         max_concurrent_activities=settings.temporal_max_activities,

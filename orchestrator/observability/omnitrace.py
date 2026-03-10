@@ -22,6 +22,7 @@ import logging
 import os
 import secrets
 import time
+import weakref
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -559,7 +560,7 @@ class OmniTraceRecorder:
 # =============================================================================
 
 # Cache of recorders by workflow_id (weak references would be better in production)
-_recorders: dict[str, OmniTraceRecorder] = {}
+_recorders: weakref.WeakValueDictionary[str, OmniTraceRecorder] = weakref.WeakValueDictionary()
 
 
 def get_omnitrace_recorder(workflow_id: str, trace_id: str) -> OmniTraceRecorder:
@@ -591,7 +592,7 @@ def clear_recorder(workflow_id: str) -> None:
 # =============================================================================
 
 
-def trace_tool_execution(step_id: str, tool_name: str, attempt: int = 1):
+def trace_tool_execution(step_id: str, tool_name: str, attempt: int = 1) -> type:
     """
     Decorator/context manager for tracing tool execution.
 
@@ -612,12 +613,17 @@ def trace_tool_execution(step_id: str, tool_name: str, attempt: int = 1):
             self.start_time: float = 0
             self.recorder: OmniTraceRecorder | None = None
 
-        async def __aenter__(self):
+        async def __aenter__(self) -> "TraceContext":
             self.start_time = time.time()
             self.recorder = get_omnitrace_recorder(self.workflow_id, self.trace_id)
             return self
 
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
+        async def __aexit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: Any,
+        ) -> None:
             if self.recorder is None:
                 return
 

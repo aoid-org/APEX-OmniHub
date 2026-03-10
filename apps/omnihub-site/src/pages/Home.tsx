@@ -4,6 +4,7 @@ import { CTAGroup } from '@/components/CTAGroup';
 import { HeroVisual } from '@/components/HeroVisual';
 import { FeatureHighlightGrid } from '@/components/FeatureHighlightGrid';
 import { siteConfig } from '@/content/site';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   IconConnect,
@@ -17,6 +18,103 @@ import {
   IconIntegrations,
   IconAnalytics,
 } from '@/components/icons';
+
+
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+};
+
+
+function isBeforeInstallPromptEvent(event: Event): event is BeforeInstallPromptEvent {
+  return (
+    'prompt' in event &&
+    typeof (event as BeforeInstallPromptEvent).prompt === 'function' &&
+    'userChoice' in event
+  );
+}
+
+function PWAInstallNode() {
+  const { t } = useTranslation();
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState<boolean>(() =>
+    globalThis.window !== undefined &&
+    globalThis.window.matchMedia('(display-mode: standalone)').matches,
+  );
+
+  const isIOS = useMemo(() => {
+    if (globalThis.window === undefined) {
+      return false;
+    }
+
+    const userAgent = globalThis.navigator.userAgent.toLowerCase();
+    return /iphone|ipad|ipod/.test(userAgent);
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      if (isBeforeInstallPromptEvent(event)) {
+        setDeferredPrompt(event);
+      }
+    };
+
+    const handleInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+    };
+
+    globalThis.window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    globalThis.window.addEventListener('appinstalled', handleInstalled);
+
+    return () => {
+      globalThis.window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      globalThis.window.removeEventListener('appinstalled', handleInstalled);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) {
+      return;
+    }
+
+    await deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+
+    if (outcome === 'accepted') {
+      setIsInstalled(true);
+    }
+
+    setDeferredPrompt(null);
+  };
+
+  if (isInstalled) {
+    return null;
+  }
+
+  return (
+    <div className="hero__install-node">
+      <button
+        type="button"
+        className="btn btn--secondary btn--sm hero__install-btn"
+        onClick={() => void handleInstall()}
+        disabled={!deferredPrompt}
+      >
+        {t('hero.cta.install', { defaultValue: 'Install App' })}
+      </button>
+      <p className="hero__install-help">
+        {deferredPrompt
+          ? t('hero.installPromptReady', { defaultValue: 'Install OmniHub for one-tap launch and push updates.' })
+          : isIOS
+            ? t('hero.installPromptIOS', { defaultValue: 'On iOS: Share → Add to Home Screen to install OmniHub.' })
+            : t('hero.installPromptFallback', { defaultValue: 'Install becomes available once your browser meets PWA criteria.' })}
+      </p>
+    </div>
+  );
+}
 
 function Hero() {
   const { t } = useTranslation();
@@ -72,6 +170,7 @@ function Hero() {
                 secondary={{ label: t('hero.cta.secondary', { defaultValue: 'Watch Demo' }), href: siteConfig.ctas.secondary.href }}
               />
             </div>
+            <PWAInstallNode />
             <p className="hero__footnote mt-2 text-center lg:text-left" style={{ fontSize: '0.75rem', opacity: 0.7 }}>
               {t('hero.footnote', { defaultValue: '*Blockchain, wallet, and NFT integrations are optional and disabled by default.' })}
             </p>

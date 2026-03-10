@@ -477,6 +477,10 @@ async function main() {
 }
 
 // Run if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+const fileUrl = import.meta.url;
+if (
+  fileUrl.endsWith(path.basename(process.argv[1])) || 
+  process.argv[1].endsWith(path.basename(new URL(fileUrl).pathname))
+) {
   main();
 }

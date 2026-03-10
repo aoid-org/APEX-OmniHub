@@ -162,7 +162,7 @@ class SagaContext:
                 f"✓ Registered compensation: {compensation_activity} (stack size={stack_size})"
             )
 
-        return result
+        return dict(result)
 
     async def rollback(self) -> list[dict[str, Any]]:
         """
@@ -472,6 +472,7 @@ class AgentWorkflow:
                         steps=cached_plan["steps"],
                         cache_hit=True,
                         template_id=cached_plan.get("template_id"),
+                        estimated_duration_seconds=None,
                     )
                 )
             else:
@@ -483,6 +484,8 @@ class AgentWorkflow:
                         plan_id=plan["plan_id"],
                         steps=plan["steps"],
                         cache_hit=False,
+                        template_id=None,
+                        estimated_duration_seconds=None,
                     )
                 )
 
@@ -500,8 +503,8 @@ class AgentWorkflow:
 
             raise ApplicationError(
                 f"Workflow failed: {e!s}",
+                workflow_result,
                 non_retryable=True,
-                details=workflow_result,
             ) from e
 
     # =========================================================================
@@ -510,7 +513,7 @@ class AgentWorkflow:
 
     def _get_trace_id(self) -> str:
         """Get trace_id from context or fallback to workflow_id."""
-        return self.workflow_context.get("trace_id", workflow.info().workflow_id)
+        return str(self.workflow_context.get("trace_id", workflow.info().workflow_id))
 
     async def _execute_omnitrace_activity(
         self, activity_name: str, args: dict[str, Any], timeout_seconds: int = 5
@@ -662,7 +665,7 @@ class AgentWorkflow:
 
         The activity also stores the plan in semantic cache for future hits.
         """
-        return await workflow.execute_activity(
+        result = await workflow.execute_activity(
             "generate_plan_with_llm",
             args=[goal, context],
             start_to_close_timeout=timedelta(seconds=30),
@@ -672,10 +675,16 @@ class AgentWorkflow:
                 backoff_coefficient=2.0,
             ),
         )
+        return dict(result)
 
     def _build_dag_structure(
         self,
-    ) -> tuple[dict[str, dict], dict[str, list[str]], dict[str, list[str]], dict[str, int]]:
+    ) -> tuple[
+        dict[str, dict[str, Any]],
+        dict[str, list[str]],
+        dict[str, list[str]],
+        dict[str, int],
+    ]:
         """
         Build DAG dependency graph from plan steps.
 
@@ -721,7 +730,7 @@ class AgentWorkflow:
         }
 
     async def _execute_dag_level(
-        self, ready_queue: list[str], step_lookup: dict[str, dict], level: int
+        self, ready_queue: list[str], step_lookup: dict[str, dict[str, Any]], level: int
     ) -> list[tuple[str, Any]]:
         """
         Execute all steps at a given DAG level in parallel.
@@ -794,7 +803,7 @@ class AgentWorkflow:
 
         # Find all steps with no dependencies (ready to execute)
         ready_queue = [step_id for step_id, degree in in_degree.items() if degree == 0]
-        executed = set()
+        executed: set[str] = set()
         level = 1
 
         workflow.logger.info(
@@ -942,6 +951,7 @@ class AgentWorkflow:
                     step_id=step_id,
                     success=True,
                     result=deferred_result,
+                    error=None,
                 )
             )
             return deferred_result
@@ -1031,6 +1041,7 @@ class AgentWorkflow:
                     step_id=step_id,
                     success=True,  # Step completed (deferred), not failed
                     result=deferred_result,
+                    error=None,
                 )
             )
 
@@ -1113,6 +1124,7 @@ class AgentWorkflow:
                             step_id=step_id,
                             success=True,
                             result=deferred_result,
+                            error=None,
                         )
                     )
 
@@ -1150,6 +1162,7 @@ class AgentWorkflow:
         attempt = 1  # Could be incremented on retry if needed
 
         try:
+            assert self.saga is not None
             result = await self.saga.execute_with_compensation(
                 activity_name=step["tool"],
                 activity_input=step.get("input", {}),
@@ -1169,6 +1182,7 @@ class AgentWorkflow:
                     step_id=step_id,
                     success=True,
                     result=result,
+                    error=None,
                 )
             )
 
@@ -1200,6 +1214,7 @@ class AgentWorkflow:
                     tool_name=step["tool"],
                     step_id=step_id,
                     success=False,
+                    result=None,
                     error=str(e),
                 )
             )
@@ -1262,6 +1277,7 @@ class AgentWorkflow:
                 duration_seconds=(
                     workflow.now().timestamp() - self.start_time if self.start_time else 0.0
                 ),
+                final_result=self.step_results,
             )
         )
 
@@ -1283,6 +1299,7 @@ class AgentWorkflow:
         workflow.logger.error(f"✗ Handling workflow failure: {error_message}")
 
         # Execute compensations
+        assert self.saga is not None
         compensation_results = await self.saga.rollback()
 
         result = {

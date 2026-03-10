@@ -172,9 +172,21 @@ class OmniBoardFSM:
             if context.auth_type == AuthType.API_KEY:
                 return context, "Please enter your API Key."
             if context.auth_type == AuthType.DEVICE_CODE:
-                device_data = OmniBoardService.initiate_device_code_flow(
-                    context.provider_name or "unknown"
+                import asyncio
+
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                if loop.is_running():
+                    import nest_asyncio
+
+                    nest_asyncio.apply()
+                device_data = loop.run_until_complete(
+                    OmniBoardService.initiate_device_code_flow(context.provider_name or "unknown")
                 )
+
                 code = device_data["user_code"]
                 uri = device_data["verification_uri"]
                 return context, f"Please visit {uri} and enter code: {code}"

@@ -237,16 +237,49 @@ class VoiceCommandHandler {
    */
   public async quickCommand(
     transcript: string,
+    audioBlob: Blob,
     userId?: string,
     confidence: number = 0.95
   ): Promise<VoiceCommandResult> {
-    const dummyAudioUrl = `https://storage.apex.local/audio/${uuidv4()}.wav`;
     const estimatedDurationMs = Math.max(1000, transcript.split(' ').length * 300);
+
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+    let audioUrl = '';
+
+    if (supabaseUrl && supabaseKey) {
+      try {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const fileName = `${uuidv4()}.wav`;
+        const { error } = await supabase.storage
+          .from('voice-commands')
+          .upload(fileName, audioBlob);
+
+        if (error) {
+          console.error('Failed to upload audio to Supabase:', error);
+          throw new Error('Supabase storage upload failed');
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('voice-commands')
+          .getPublicUrl(fileName);
+
+        audioUrl = urlData.publicUrl;
+      } catch (e) {
+        console.error('Error in Supabase storage operation:', e);
+        throw e;
+      }
+    } else {
+      throw new Error('Supabase credentials missing for audio upload');
+    }
 
     return this.processCommand(
       transcript,
       confidence,
-      dummyAudioUrl,
+      audioUrl,
       estimatedDurationMs,
       userId
     );
@@ -363,9 +396,10 @@ export async function processVoiceCommand(
  */
 export async function quickVoiceCommand(
   transcript: string,
+  audioBlob: Blob,
   userId?: string
 ): Promise<VoiceCommandResult> {
-  return omniPortVoice.quickCommand(transcript, userId);
+  return omniPortVoice.quickCommand(transcript, audioBlob, userId);
 }
 
 /**

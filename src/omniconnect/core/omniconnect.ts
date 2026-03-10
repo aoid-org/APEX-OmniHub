@@ -330,7 +330,7 @@ export class OmniConnect {
     // State includes correlation ID for tracing and CSRF protection.
     // Use cryptographically strong randomness — Math.random() is predictable
     // and must never be used for CSRF tokens.
-    const nonce = generateSecureId().replace(/-/g, '').substring(0, 24);
+    const nonce = generateSecureId().replaceAll('-', '').substring(0, 24);
     return `${correlationId}.${Date.now()}.${nonce}`;
   }
 
