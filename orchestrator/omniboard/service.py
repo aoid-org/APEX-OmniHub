@@ -61,6 +61,28 @@ class OmniBoardService:
         "Salesforce",
     ]
 
+    # Optimized lookup structures (cached)
+    _LOWER_PROVIDERS_CACHE: list[tuple[str, str]] | None = None
+    _EXACT_MATCH_DICT: dict[str, str] | None = None
+    _LAST_KNOWN_PROVIDERS_ID: int | None = None
+
+    @classmethod
+    def _get_optimized_providers(cls) -> tuple[list[tuple[str, str]], dict[str, str]]:
+        """
+        Returns pre-calculated lowercase provider mappings and exact match dictionary.
+        Detects if KNOWN_PROVIDERS has been replaced (e.g., in tests) and refreshes cache.
+        """
+        current_id = id(cls.KNOWN_PROVIDERS)
+        if (
+            cls._LOWER_PROVIDERS_CACHE is None
+            or cls._EXACT_MATCH_DICT is None
+            or current_id != cls._LAST_KNOWN_PROVIDERS_ID
+        ):
+            cls._LOWER_PROVIDERS_CACHE = [(p.lower(), p) for p in cls.KNOWN_PROVIDERS]
+            cls._EXACT_MATCH_DICT = dict(cls._LOWER_PROVIDERS_CACHE)
+            cls._LAST_KNOWN_PROVIDERS_ID = current_id
+        return cls._LOWER_PROVIDERS_CACHE, cls._EXACT_MATCH_DICT
+
     @classmethod
     def fuzzy_match_provider(cls, input_text: str) -> list[str]:
         """
@@ -88,17 +110,27 @@ class OmniBoardService:
         query_lower = query_clean.lower()
         matches = []
 
-        known_providers = cls.KNOWN_PROVIDERS
+        lower_providers, exact_dict = cls._get_optimized_providers()
 
-        for provider in known_providers:
-            provider_lower = provider.lower()
+        # 1. Check for O(1) Exact match
+        if query_lower in exact_dict:
+            provider = exact_dict[query_lower]
+            # Exact match score = 1000
+            final_score: float = 1000 - len(provider) * 0.1
+            matches.append((final_score, provider))
+            # If we only wanted THE exact match we could return here,
+            # but the original logic continues to find other partial matches.
+            # To maintain EXACT original behavior, we skip the exact match in the loop below.
+
+        for provider_lower, provider in lower_providers:
             score = 0
 
-            # Exact match
+            # Skip if we already handled it as exact match
             if provider_lower == query_lower:
-                score = 1000
+                continue
+
             # Starts with query
-            elif provider_lower.startswith(query_lower):
+            if provider_lower.startswith(query_lower):
                 score = 500
             # Contains query
             elif query_lower in provider_lower:
@@ -109,7 +141,7 @@ class OmniBoardService:
 
             if score > 0:
                 # Penalize longer names (tie-breaker)
-                final_score: float = score - len(provider) * 0.1
+                final_score = score - len(provider) * 0.1
                 matches.append((final_score, provider))
 
         # Sort by score (descending), then provider name (ascending)
@@ -269,9 +301,13 @@ class OmniBoardService:
         return connection_id
 
     @classmethod
-    def disconnect_provider(cls, connection_id: str) -> bool:
+    def disconnect_provider(
+        cls, connection_id: str, tenant_id: str | None = None, provider: str | None = None
+    ) -> bool:
         """MOCK: Disconnects a provider."""
         _ = connection_id
+        _ = tenant_id
+        _ = provider
         logger.info("Disconnecting provider connection")
         return True
 
