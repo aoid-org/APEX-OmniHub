@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
 import { createAnonClient } from "../_shared/supabaseClient.ts";
 import { buildSignedHeaders } from "../_shared/requestSigning.ts";
+import { isValidUUID } from "../_shared/validation.ts";
 import { checkRequest } from "./guardian.ts";
 
 /** Build a JSON response with CORS headers. */
@@ -59,7 +60,11 @@ serve(async (req) => {
     }
 
     // 4. Validate required fields
-    if (typeof body.query !== "string" || typeof body.traceId !== "string") {
+    if (
+      typeof body.query !== "string" ||
+      typeof body.traceId !== "string" ||
+      !isValidUUID(body.traceId)
+    ) {
       return jsonResponse({ error: "bad_request" }, 400, origin);
     }
 
