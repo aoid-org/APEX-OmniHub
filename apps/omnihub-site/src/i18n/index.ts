@@ -15,6 +15,7 @@ import esES from './locales/es-ES.json';
 import deDE from './locales/de-DE.json';
 import jaJP from './locales/ja-JP.json';
 import zhCN from './locales/zh-CN.json';
+import ptBR from './locales/pt-BR.json';
 
 const isProd = import.meta.env.PROD;
 
@@ -29,8 +30,9 @@ i18n
       'de-DE': { translation: deDE },
       'ja-JP': { translation: jaJP },
       'zh-CN': { translation: zhCN },
+      'pt-BR': { translation: ptBR },
     },
-    supportedLngs: ['en-US', 'fr-FR', 'es-ES', 'de-DE', 'ja-JP', 'zh-CN'],
+    supportedLngs: ['en-US', 'fr-FR', 'es-ES', 'de-DE', 'ja-JP', 'zh-CN', 'pt-BR'],
     fallbackLng: 'en-US',
     interpolation: {
       escapeValue: false, // React handles XSS
