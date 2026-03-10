@@ -164,16 +164,18 @@ async function processNFTTransfer(
         .eq('wallet_address', normalizedFrom);
 
       if (fromWallets && fromWallets.length > 0) {
-        for (const wallet of fromWallets) {
-          // Set has_premium_nft to false
-          await supabase
-            .from('profiles')
-            .update({
-              has_premium_nft: false,
-              nft_verified_at: new Date().toISOString(),
-            })
-            .eq('id', wallet.user_id);
+        const userIds = fromWallets.map(w => w.user_id);
 
+        // Set has_premium_nft to false
+        await supabase
+          .from('profiles')
+          .update({
+            has_premium_nft: false,
+            nft_verified_at: new Date().toISOString(),
+          })
+          .in('id', userIds);
+
+        for (const wallet of fromWallets) {
           console.log(`Removed NFT access for user ${wallet.user_id} (transfer out)`);
         }
       }
@@ -188,16 +190,18 @@ async function processNFTTransfer(
         .eq('wallet_address', normalizedTo);
 
       if (toWallets && toWallets.length > 0) {
-        for (const wallet of toWallets) {
-          // Set has_premium_nft to true
-          await supabase
-            .from('profiles')
-            .update({
-              has_premium_nft: true,
-              nft_verified_at: new Date().toISOString(),
-            })
-            .eq('id', wallet.user_id);
+        const userIds = toWallets.map(w => w.user_id);
 
+        // Set has_premium_nft to true
+        await supabase
+          .from('profiles')
+          .update({
+            has_premium_nft: true,
+            nft_verified_at: new Date().toISOString(),
+          })
+          .in('id', userIds);
+
+        for (const wallet of toWallets) {
           console.log(`Granted NFT access to user ${wallet.user_id} (transfer in)`);
         }
       }
