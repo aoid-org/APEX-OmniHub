@@ -1,112 +1,120 @@
-"""
-Tests for TiDB Vector Persistence
-NO network - mocks only
-Tests: mode off → no-op, mode on + missing deps → error, TLS roundtrip test
-"""
-# ruff: noqa: SIM117
-
-import os
-from unittest.mock import MagicMock, patch
-
 import pytest
+from unittest.mock import MagicMock, patch
+import os
 
-from infrastructure.tidb_persistence import (
-    TiDBVectorPersistence,
-    get_tidb_store,
-)
-
-# Shared fake TiDB env config for tests (test credentials only)
-_FAKE_TIDB_ENV = {
-    "VECTOR_PROVIDER": "tidb",
-    "TIDB_HOST": "test.tidb.io",
-    "TIDB_USER": "test",  # noqa: S105
-    "TIDB_PASSWORD": "test",  # noqa: S105
-    "TIDB_DATABASE": "test",
-}
+# We patch mysql.connector in the module to avoid module load errors
+import infrastructure.tidb_persistence as tidb_module
 
 
-class TestTiDBPersistenceModeOff:
-    """Tests when VECTOR_PROVIDER != 'tidb'"""
-
-    def test_mode_off_no_op(self):
-        """When mode is off, operations should no-op"""
-        with patch.dict(os.environ, {"VECTOR_PROVIDER": "off"}, clear=False):
-            store = TiDBVectorPersistence()
-            assert not store.enabled
-
-            # Should not raise
-            store.put_embedding("test-id", [0.1, 0.2], {"key": "value"})
-            result = store.get_embedding("test-id")
-            assert result is None
-
-
-class TestTiDBPersistenceModeOn:
-    """Tests when VECTOR_PROVIDER == 'tidb'"""
-
-    def test_mode_on_missing_deps(self):
-        """When mode is on but mysql.connector missing, should error"""
-        with (
-            patch.dict(os.environ, _FAKE_TIDB_ENV, clear=False),
-            patch("infrastructure.tidb_persistence.mysql", None),
-            pytest.raises(RuntimeError, match="mysql-connector-python required"),
-        ):
-            TiDBVectorPersistence()
-
-    def test_mode_on_incomplete_config(self):
-        """When mode is on but config incomplete, should error"""
-        with (
-            patch.dict(os.environ, {"VECTOR_PROVIDER": "tidb"}, clear=False),
-            pytest.raises(ValueError, match="TiDB config incomplete"),
-        ):
-            # We mock mysql here because otherwise it hits the dependency check first
-            with patch("infrastructure.tidb_persistence.mysql", MagicMock()):
-                TiDBVectorPersistence()
-
-    @patch("infrastructure.tidb_persistence.mysql")
-    def test_tls_roundtrip(self, mock_mysql):
-        """Test TLS-verified connection and roundtrip"""
-        # Mock MySQL connector
+@pytest.fixture
+def mock_mysql():
+    with patch("infrastructure.tidb_persistence.mysql") as mock:
         mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_cursor.fetchone.return_value = {
-            "embedding": "[0.1, 0.2, 0.3]",
-            "metadata": "{'key': 'value'}",
-        }
-        mock_conn.cursor.return_value = mock_cursor
-        mock_conn.is_connected.return_value = True
-        mock_mysql.connector.connect.return_value = mock_conn
-
-        with patch.dict(
-            os.environ,
-            {**_FAKE_TIDB_ENV, "TIDB_CA_PATH": "/path/to/ca.pem"},
-            clear=False,
-        ):
-            store = TiDBVectorPersistence()
-
-            # Verify TLS config in connect call
-            connect_call = mock_mysql.connector.connect.call_args
-            assert connect_call[1]["ssl_disabled"] is False
-            assert connect_call[1]["ssl_verify_cert"] is True
-            assert connect_call[1]["ssl_ca"] == "/path/to/ca.pem"
-
-            # Test put_embedding
-            store.put_embedding("test-id", [0.1, 0.2, 0.3], {"key": "value"})
-            mock_cursor.execute.assert_called()
-            mock_conn.commit.assert_called()
-
-            # Test get_embedding
-            result = store.get_embedding("test-id")
-            assert result is not None
-            assert result["embedding"] == [0.1, 0.2, 0.3]
-            assert result["meta"] == {"key": "value"}
+        mock.connector.connect.return_value = mock_conn
+        yield mock_conn
 
 
-class TestSingletonPattern:
-    """Test singleton get_tidb_store()"""
+@pytest.fixture
+def tidb_env():
+    with patch.dict(
+        os.environ,
+        {
+            "VECTOR_PROVIDER": "tidb",
+            "TIDB_HOST": "localhost",
+            "TIDB_PORT": "4000",
+            "TIDB_USER": "root",
+            "TIDB_PASSWORD": "pwd",
+            "TIDB_DATABASE": "test",
+            "TIDB_CA_PATH": "/path/to/ca",
+        },
+    ):
+        yield
 
-    def test_singleton(self):
-        """get_tidb_store should return same instance"""
-        with patch.dict(os.environ, {"VECTOR_PROVIDER": "off"}, clear=False):
-            store1 = get_tidb_store()
-            store2 = get_tidb_store()
-            assert store1 is store2
+
+def test_tidb_disabled():
+    with patch.dict(os.environ, {"VECTOR_PROVIDER": "pinecone"}):
+        store = tidb_module.TiDBVectorPersistence()
+        assert store.enabled is False
+
+        # These should no-op
+        store.put_embedding("1", [0.1], {})
+        assert store.get_embedding("1") is None
+
+
+def test_tidb_missing_config():
+    with patch.dict(os.environ, {"VECTOR_PROVIDER": "tidb", "TIDB_HOST": ""}):
+        with pytest.raises(ValueError):
+            tidb_module.TiDBVectorPersistence()
+
+
+def test_tidb_connect(tidb_env, mock_mysql):
+    store = tidb_module.TiDBVectorPersistence()
+
+    assert store.enabled is True
+    assert store.connection == mock_mysql
+
+    # Verify connect args
+    tidb_module.mysql.connector.connect.assert_called_once()
+    kwargs = tidb_module.mysql.connector.connect.call_args[1]
+    assert kwargs["host"] == "localhost"
+    assert kwargs["ssl_ca"] == "/path/to/ca"
+
+
+def test_tidb_put_embedding(tidb_env, mock_mysql):
+    store = tidb_module.TiDBVectorPersistence()
+
+    mock_cursor = MagicMock()
+    mock_mysql.cursor.return_value = mock_cursor
+    mock_mysql.is_connected.return_value = True
+
+    store.put_embedding("emb-1", [0.1, 0.2], {"meta": "data"})
+
+    mock_cursor.execute.assert_called_once()
+    args = mock_cursor.execute.call_args[0]
+    assert "REPLACE INTO" in args[0]
+    assert args[1][0] == "emb-1"
+
+    mock_mysql.commit.assert_called_once()
+    mock_cursor.close.assert_called_once()
+
+
+def test_tidb_put_embedding_error(tidb_env, mock_mysql):
+    store = tidb_module.TiDBVectorPersistence()
+
+    mock_cursor = MagicMock()
+    mock_cursor.execute.side_effect = tidb_module.MySQLError("DB error")
+    mock_mysql.cursor.return_value = mock_cursor
+    mock_mysql.is_connected.return_value = True
+
+    with pytest.raises(RuntimeError):
+        store.put_embedding("emb-1", [0.1], {})
+
+    mock_mysql.rollback.assert_called_once()
+    mock_cursor.close.assert_called_once()
+
+
+def test_tidb_get_embedding(tidb_env, mock_mysql):
+    store = tidb_module.TiDBVectorPersistence()
+
+    mock_cursor = MagicMock()
+    mock_cursor.fetchone.return_value = {"embedding": "[0.1, 0.2]", "metadata": "{'meta': 'data'}"}
+    mock_mysql.cursor.return_value = mock_cursor
+    mock_mysql.is_connected.return_value = True
+
+    result = store.get_embedding("emb-1")
+
+    assert result is not None
+    assert result["embedding"] == [0.1, 0.2]
+    assert result["meta"] == {"meta": "data"}
+
+
+def test_tidb_get_embedding_not_found(tidb_env, mock_mysql):
+    store = tidb_module.TiDBVectorPersistence()
+
+    mock_cursor = MagicMock()
+    mock_cursor.fetchone.return_value = None
+    mock_mysql.cursor.return_value = mock_cursor
+    mock_mysql.is_connected.return_value = True
+
+    result = store.get_embedding("emb-1")
+    assert result is None

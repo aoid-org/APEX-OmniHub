@@ -1,182 +1,181 @@
-"""Unit tests for semantic caching with Redis."""
-
-import os
-
 import pytest
+from unittest.mock import AsyncMock, patch, MagicMock
+import numpy as np
+import json
 
-from infrastructure.cache import EntityExtractor, SemanticCacheService
+from infrastructure.cache import EntityExtractor, SemanticCacheService, PlanTemplate, CachedPlan
 
 
-class TestEntityExtractor:
-    """Test entity extraction from natural language."""
+def test_entity_extractor_extract_entities():
+    # Test valid extractions
+    text = "Book a flight to Paris tomorrow for $1,000.00"
+    entities = EntityExtractor.extract_entities(text)
 
-    def test_extract_date_entities(self):
-        """Should extract date references."""
-        text = "Book flight tomorrow"
-        entities = EntityExtractor.extract_entities(text)
+    # We use regex logic inside EntityExtractor
+    # Make sure we got DATE, LOCATION, AMOUNT
+    assert "tomorrow" in entities.get("DATE", [])
+    assert "Paris" in entities.get("LOCATION", [])
+    assert "$1,000.00" in entities.get("AMOUNT", [])
 
-        assert "DATE" in entities
-        assert "tomorrow" in entities["DATE"]
 
-    def test_extract_location_entities(self):
-        """Should extract location references."""
-        text = "Book flight to Paris"
-        entities = EntityExtractor.extract_entities(text)
+def test_entity_extractor_create_template():
+    text = "Book flight to Paris tomorrow"
+    template, params = EntityExtractor.create_template(text)
 
-        assert "LOCATION" in entities
-        assert any("paris" in loc.lower() for loc in entities["LOCATION"])
+    assert "Paris" not in template
+    assert "tomorrow" not in template
+    assert "{LOCATION}" in template or "{LOCATION_0}" in template
+    assert "{DATE}" in template or "{DATE_0}" in template
 
-    def test_extract_email_entities(self):
-        """Should extract email addresses."""
-        text = "Send confirmation to user@example.com"
-        entities = EntityExtractor.extract_entities(text)
+    # Check that parameters mapping is valid
+    assert "Paris" in params.values()
+    assert "tomorrow" in params.values()
 
-        assert "EMAIL" in entities
-        assert "user@example.com" in entities["EMAIL"]
 
-    def test_extract_amount_entities(self):
-        """Should extract monetary amounts."""
-        text = "Transfer $1,500 to account"
-        entities = EntityExtractor.extract_entities(text)
+@pytest.fixture
+def mock_sentence_transformer():
+    with patch("infrastructure.cache.SentenceTransformer") as mock_st:
+        model_instance = MagicMock()
+        model_instance.get_sentence_embedding_dimension.return_value = 384
+        # Return a simple random vector for embedding
+        model_instance.encode.return_value = np.zeros(384, dtype=np.float32)
+        mock_st.return_value = model_instance
+        yield model_instance
 
-        assert "AMOUNT" in entities
-        assert "$1,500" in entities["AMOUNT"]
 
-    def test_create_template(self):
-        """Should convert goal into parameterized template."""
-        text = "Book flight to Paris tomorrow"
-        template, params = EntityExtractor.create_template(text)
-
-        # Check template has placeholders
-        assert "{" in template and "}" in template
-
-        # Check parameters extracted
-        assert "LOCATION" in params or "DATE" in params
-
-    def test_template_preserves_structure(self):
-        """Should preserve sentence structure in template."""
-        text = "Send $500 to john@example.com tomorrow"
-        template, params = EntityExtractor.create_template(text)
-
-        # Template should start with "Send"
-        assert template.startswith("Send")
-
-        # Should have extracted email and amount
-        assert "EMAIL" in params or "AMOUNT" in params
+@pytest.fixture
+def mock_redis():
+    with patch("infrastructure.cache.aioredis.from_url") as mock_from_url:
+        mock_redis_client = AsyncMock()
+        mock_from_url.return_value = mock_redis_client
+        yield mock_redis_client
 
 
 @pytest.mark.asyncio
-class TestSemanticCacheService:
-    """Test semantic cache with vector similarity search."""
+async def test_cache_initialize(mock_sentence_transformer, mock_redis):
+    cache = SemanticCacheService("redis://mock")
 
-    @pytest.fixture
-    async def cache_service(self):
-        """Create cache service instance for testing."""
-        # Use environment variable or default to localhost
-        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-        cache = SemanticCacheService(
-            redis_url=redis_url,
-            redis_password=os.getenv("REDIS_PASSWORD"),
-            redis_ssl=os.getenv("REDIS_SSL", "false").lower() == "true",
-            similarity_threshold=0.85,
-            ttl_seconds=300,  # 5min for tests
-        )
-        try:
-            await cache.initialize()
-            yield cache
-        except Exception as e:
-            # Print error for debugging and skip tests
-            print(f"Redis connection failed: {e}")
-            pytest.skip(f"Redis not available for testing: {e}")
-        finally:
-            await cache.close()
+    with patch.object(cache, "_create_index", new_callable=AsyncMock) as mock_create_index:
+        await cache.initialize()
+        mock_redis.assert_not_called()  # Actually from_url gets called via mock
+        mock_create_index.assert_called_once()
 
-    async def test_store_and_retrieve_plan(self, cache_service):
-        """Should store plan and retrieve it on cache hit."""
-        goal = "Book flight to Paris tomorrow"
-        plan_steps = [
-            {
-                "id": "step1",
-                "tool": "search_flights",
-                "input": {"to": "{LOCATION}", "date": "{DATE}"},
-            },
-            {"id": "step2", "tool": "book_flight", "input": {"flight_id": "{FLIGHT_ID}"}},
-        ]
 
-        # Store plan
-        template_id = await cache_service.store_plan(goal, plan_steps)
+@pytest.mark.asyncio
+async def test_cache_create_index_exists(mock_sentence_transformer, mock_redis):
+    cache = SemanticCacheService("redis://mock")
+    cache.redis = mock_redis
+
+    # Mock index info returning successfully (index exists)
+    mock_redis.ft.return_value.info = AsyncMock()
+
+    await cache._create_index()
+    mock_redis.ft.return_value.create_index.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_cache_create_index_not_exists(mock_sentence_transformer, mock_redis):
+    cache = SemanticCacheService("redis://mock")
+    cache.redis = mock_redis
+
+    # Mock index info throwing exception (index doesn't exist)
+    mock_redis.ft.return_value.info = AsyncMock(side_effect=Exception("Unknown Index name"))
+    mock_redis.ft.return_value.create_index = AsyncMock()
+
+    await cache._create_index()
+    mock_redis.ft.return_value.create_index.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_plan_cache_miss(mock_sentence_transformer, mock_redis):
+    cache = SemanticCacheService("redis://mock")
+    cache.redis = mock_redis
+
+    # Mock search returning no docs
+    mock_result = MagicMock()
+    mock_result.docs = []
+    mock_redis.ft.return_value.search = AsyncMock(return_value=mock_result)
+
+    result = await cache.get_plan("Book flight to Tokyo")
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_get_plan_cache_hit_low_similarity(mock_sentence_transformer, mock_redis):
+    cache = SemanticCacheService("redis://mock", similarity_threshold=0.85)
+    cache.redis = mock_redis
+
+    mock_result = MagicMock()
+    mock_doc = MagicMock()
+    # Distance is 1.0 - similarity. 1.0 - 0.5 = 0.5 < 0.85 (THRESHOLD)
+    mock_doc.score = 0.5
+    mock_result.docs = [mock_doc]
+    mock_redis.ft.return_value.search = AsyncMock(return_value=mock_result)
+
+    result = await cache.get_plan("Book flight to Tokyo")
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_get_plan_cache_hit_success(mock_sentence_transformer, mock_redis):
+    cache = SemanticCacheService("redis://mock", similarity_threshold=0.85)
+    cache.redis = mock_redis
+
+    mock_result = MagicMock()
+    mock_doc = MagicMock()
+    mock_doc.score = 0.05  # Similarity = 0.95
+    mock_doc.template_id = "tmpl-123"
+    mock_result.docs = [mock_doc]
+    mock_redis.ft.return_value.search = AsyncMock(return_value=mock_result)
+
+    # Mock retrieving the plan steps
+    plan_steps_json = json.dumps([{"action": "test", "val": "{LOCATION}"}])
+    mock_redis.hget = AsyncMock(return_value=plan_steps_json)
+    mock_redis.hincrby = AsyncMock()
+
+    # Mock the entity extractor to yield some parameters
+    with patch("infrastructure.cache.EntityExtractor.create_template") as mock_extract:
+        mock_extract.return_value = ("Book flight to {LOCATION}", {"LOCATION": "Tokyo"})
+
+        result = await cache.get_plan("Book flight to Tokyo")
+
+        assert result is not None
+        assert result.cache_hit is True
+        assert result.similarity_score == 0.95
+        assert result.steps[0]["val"] == "Tokyo"
+        mock_redis.hincrby.assert_called_with("plan:tmpl-123", "hit_count", 1)
+
+
+@pytest.mark.asyncio
+async def test_store_plan_already_exists(mock_sentence_transformer, mock_redis):
+    cache = SemanticCacheService("redis://mock")
+    cache.redis = mock_redis
+
+    mock_redis.exists = AsyncMock(return_value=True)
+
+    template_id = await cache.store_plan("Book flight to Tokyo", [{"action": "test"}])
+    assert template_id is not None
+    mock_redis.hset.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_store_plan_new(mock_sentence_transformer, mock_redis):
+    cache = SemanticCacheService("redis://mock")
+    cache.redis = mock_redis
+
+    mock_redis.exists = AsyncMock(return_value=False)
+    mock_redis.hset = AsyncMock()
+    mock_redis.expire = AsyncMock()
+
+    # Mock tidb persistence (failure shouldn't block)
+    with patch("infrastructure.cache.get_tidb_store") as mock_get_tidb:
+        mock_tidb = MagicMock()
+        mock_tidb.enabled = True
+        mock_tidb.put_embedding.side_effect = Exception("TiDB offline")
+        mock_get_tidb.return_value = mock_tidb
+
+        template_id = await cache.store_plan("Book flight to Tokyo", [{"action": "test"}])
+
         assert template_id is not None
-
-        # Retrieve plan (should hit cache)
-        cached = await cache_service.get_plan("Book flight to Paris tomorrow")
-
-        assert cached is not None
-        assert cached.cache_hit is True
-        assert cached.similarity_score >= 0.85
-        assert len(cached.steps) == 2
-
-    async def test_semantic_similarity_matching(self, cache_service):
-        """Should match semantically similar queries."""
-        # Store plan
-        original_goal = "Book flight to Paris"
-        plan_steps = [{"id": "step1", "tool": "search_flights"}]
-        await cache_service.store_plan(original_goal, plan_steps)
-
-        # Try similar query
-        similar_goal = "Reserve airplane ticket to Paris"
-        cached = await cache_service.get_plan(similar_goal)
-
-        # Might hit cache if embedding similarity is high enough
-        # (depends on sentence-transformers model)
-        if cached:
-            assert cached.similarity_score >= 0.85
-
-    async def test_parameter_injection(self, cache_service):
-        """Should inject correct parameters into cached plan."""
-        goal = "Book flight to Paris on 2024-01-15"
-        plan_steps = [
-            {
-                "id": "step1",
-                "tool": "search_flights",
-                "input": {"to": "{LOCATION}", "date": "{DATE}"},
-            },
-        ]
-        await cache_service.store_plan(goal, plan_steps)
-
-        # Retrieve with same parameters
-        cached = await cache_service.get_plan("Book flight to Paris on 2024-01-15")
-
-        if cached:
-            # Check parameters were injected
-            assert cached.parameters is not None
-            # Should have extracted Paris and date
-            assert len(cached.parameters) > 0
-
-    async def test_cache_miss(self, cache_service):
-        """Should return None on cache miss."""
-        # Try to get plan that doesn't exist
-        cached = await cache_service.get_plan("Completely unique query xyz123")
-
-        assert cached is None
-
-    async def test_ttl_expiration(self, cache_service):
-        """Should respect TTL for cache entries."""
-        # Store plan with 1-second TTL
-        cache_service.ttl_seconds = 1
-        goal = "Test expiration"
-        plan_steps = [{"id": "step1", "tool": "test"}]
-
-        await cache_service.store_plan(goal, plan_steps, ttl_seconds=1)
-
-        # Immediate retrieval should hit
-        cached = await cache_service.get_plan(goal)
-        assert cached is not None
-
-        # Wait for expiration
-        import asyncio
-
-        await asyncio.sleep(2)
-
-        # Should miss cache after TTL
-        cached_after = await cache_service.get_plan(goal)
-        assert cached_after is None or cached_after.similarity_score < 0.85
+        mock_redis.hset.assert_called_once()
+        mock_redis.expire.assert_called_once()

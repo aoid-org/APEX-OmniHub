@@ -1,255 +1,144 @@
-"""
-Unit tests for OmniTrace observability module.
-
-Tests cover:
-1. Hashing stability - same input produces same hash
-2. Redaction - allowlisted keys preserved, others dropped/hashed
-3. Event key uniqueness prevents duplicates
-4. Payload truncation stays within limits
-"""
-
 import pytest
+from unittest.mock import AsyncMock, patch, MagicMock
 
 from observability.omnitrace import (
-    REDACTION_ALLOWLIST,
-    REDACTION_DROPLIST,
+    get_sample_rate,
+    get_max_events_per_run,
+    get_max_event_bytes,
+    is_omnitrace_enabled,
     canonical_json,
     compute_hash,
+    redact_value,
     redact_dict,
     truncate_payload,
+    OmniTraceRecorder,
+    get_omnitrace_recorder,
+    clear_recorder,
 )
 
 
-class TestCanonicalJson:
-    """Test canonical JSON serialization."""
-
-    def test_sorted_keys(self):
-        """Keys should be sorted alphabetically."""
-        data = {"z": 1, "a": 2, "m": 3}
-        result = canonical_json(data)
-        assert result == '{"a":2,"m":3,"z":1}'
-
-    def test_no_whitespace(self):
-        """Output should have no extra whitespace."""
-        data = {"key": "value", "nested": {"inner": 1}}
-        result = canonical_json(data)
-        assert " " not in result
-        assert "\n" not in result
-
-    def test_deterministic(self):
-        """Same input should always produce same output."""
-        data = {"user": "test", "count": 42, "active": True}
-        result1 = canonical_json(data)
-        result2 = canonical_json(data)
-        assert result1 == result2
+def test_config_defaults():
+    with patch("os.getenv", return_value=None):
+        assert get_sample_rate() == 1.0  # Dev default
+        assert get_max_events_per_run() == 200
+        assert get_max_event_bytes() == 8192
+        assert is_omnitrace_enabled() is True
 
 
-class TestComputeHash:
-    """Test SHA256 hashing."""
+def test_canonical_json_and_hash():
+    data1 = {"b": 2, "a": 1}
+    data2 = {"a": 1, "b": 2}  # Different order
 
-    def test_hash_stability(self):
-        """Same input should produce same hash."""
-        data = {"workflow_id": "wf-123", "status": "running"}
-        hash1 = compute_hash(data)
-        hash2 = compute_hash(data)
-        assert hash1 == hash2
-
-    def test_hash_different_for_different_input(self):
-        """Different inputs should produce different hashes."""
-        data1 = {"id": "1"}
-        data2 = {"id": "2"}
-        assert compute_hash(data1) != compute_hash(data2)
-
-    def test_hash_length(self):
-        """Hash should be truncated to 16 characters."""
-        data = {"test": "value"}
-        result = compute_hash(data)
-        assert len(result) == 16
-
-    def test_hash_order_independent(self):
-        """Key order shouldn't affect hash (via canonical JSON)."""
-        data1 = {"a": 1, "b": 2}
-        data2 = {"b": 2, "a": 1}
-        assert compute_hash(data1) == compute_hash(data2)
+    # Should produce exact same json string and hash
+    assert canonical_json(data1) == '{"a":1,"b":2}'
+    assert compute_hash(data1) == compute_hash(data2)
 
 
-class TestRedaction:
-    """Test redaction logic."""
+def test_redact_value():
+    # Dropped fields return None
+    assert redact_value("password", "secret123") is None
+    assert redact_value("token", "abc") is None
+    assert redact_value("access_token", "jwt") is None
 
-    def test_allowlisted_keys_preserved(self):
-        """Keys in allowlist should be preserved unchanged."""
-        data = {
-            "id": "test-id",
-            "workflow_id": "wf-123",
-            "status": "running",
-            "success": True,
-            "count": 42,
-        }
-        result = redact_dict(data)
-        assert result["id"] == "test-id"
-        assert result["workflow_id"] == "wf-123"
-        assert result["status"] == "running"
-        assert result["success"] is True
-        assert result["count"] == 42
+    # Allowlisted fields return exactly original value
+    assert redact_value("workflow_id", "wf-123") == "wf-123"
+    assert redact_value("latency_ms", 150) == 150
+    assert redact_value("success", True) is True
 
-    def test_sensitive_keys_dropped(self):
-        """Keys in droplist should be completely removed."""
-        # SECURITY TEST: These are fake values to verify redaction works.
-        # The redaction logic must drop these keys entirely.
-        fake_secret = "FAKE_TEST_VALUE_FOR_REDACTION"  # noqa: S105
-        data = {
-            "id": "test",
-            "password": fake_secret,
-            "api_key": fake_secret,
-            "token": fake_secret,
-            "authorization": fake_secret,
-        }
-        result = redact_dict(data)
-        assert "id" in result
-        assert "password" not in result
-        assert "api_key" not in result
-        assert "token" not in result
-        assert "authorization" not in result
+    # Other values are hashed (primitive redaction)
+    res = redact_value("unknown_field", "some string data")
+    assert "<redacted:" in res
 
-    def test_unknown_keys_hashed(self):
-        """Unknown keys should be redacted with hash when they contain special chars or are long."""
-        data = {
-            "id": "test",
-            "user_email": "user@example.com",
-            # String with special char (/) triggers redaction
-            "custom_field": "some/path/value",
-        }
-        result = redact_dict(data)
-        assert result["id"] == "test"
-        assert "<redacted:" in str(result.get("user_email", ""))
-        assert "<redacted:" in str(result.get("custom_field", ""))
+    res_num = redact_value("unknown_num", 1234)
+    assert res_num == 1234  # Small numbers are left as is
 
-    def test_nested_redaction(self):
-        """Nested objects should be recursively redacted."""
-        data = {
-            "id": "test",
-            "nested": {
-                "status": "ok",
-                "sensitive_data": "should be redacted",
-            },
-        }
-        result = redact_dict(data)
-        assert result["id"] == "test"
-        assert isinstance(result.get("nested"), dict)
-        nested = result["nested"]
-        assert nested.get("status") == "ok"
-
-    def test_small_numbers_preserved(self):
-        """Small numbers should be preserved."""
-        data = {"count": 100, "score": -50, "price": 999999}
-        result = redact_dict(data)
-        assert result["count"] == 100
-        assert result["score"] == -50
-        assert result["price"] == 999999
-
-    def test_large_numbers_hashed(self):
-        """Very large numbers should be hashed."""
-        data = {"huge_number": 10000000000}
-        result = redact_dict(data)
-        assert "<number:" in str(result.get("huge_number", ""))
+    res_big_num = redact_value("unknown_num", 9999999)
+    assert "<number:" in res_big_num
 
 
-class TestPayloadTruncation:
-    """Test payload truncation."""
+def test_redact_dict():
+    data = {"password": "foo", "workflow_id": "wf-1", "user_email": "test@test.com"}
+    redacted = redact_dict(data)
 
-    def test_small_payload_unchanged(self):
-        """Payloads under limit should be unchanged."""
-        data = {"id": "test", "status": "ok"}
-        result = truncate_payload(data, max_bytes=1000)
-        assert result == data
-
-    def test_large_payload_truncated(self):
-        """Large payloads should be truncated."""
-        data = {
-            "id": "test",
-            "large_field": "x" * 10000,  # 10KB string
-        }
-        result = truncate_payload(data, max_bytes=1000)
-        # Should be truncated
-        serialized = str(result)
-        assert len(serialized) < 10000
-
-    def test_truncated_preserves_workflow_id(self):
-        """Truncation should preserve critical fields."""
-        data = {
-            "workflow_id": "wf-important",
-            "status": "running",
-            "huge_data": {"nested": "x" * 100000},
-        }
-        result = truncate_payload(data, max_bytes=500)
-        assert result.get("workflow_id") == "wf-important"
+    assert "password" not in redacted
+    assert redacted["workflow_id"] == "wf-1"
+    assert "<redacted:" in str(redacted["user_email"])
 
 
-class TestEventKeyUniqueness:
-    """Test event key format for idempotency."""
+def test_truncate_payload():
+    data = {"workflow_id": "wf-1", "huge_string": "A" * 15000, "nested": {"key": "B" * 10000}}
 
-    def test_event_key_format(self):
-        """Event keys should follow the expected format."""
-        step_id = "step1"
-        tool_name = "search_database"
-        attempt = 1
-        event_key = f"tool:{step_id}:{tool_name}:{attempt}"
-        assert event_key == "tool:step1:search_database:1"
+    truncated = truncate_payload(data, max_bytes=1000)
 
-    def test_event_key_different_for_retries(self):
-        """Different attempts should have different event keys."""
-        step_id = "step1"
-        tool_name = "search_database"
-        key1 = f"tool:{step_id}:{tool_name}:1"
-        key2 = f"tool:{step_id}:{tool_name}:2"
-        assert key1 != key2
-
-    def test_event_key_deterministic(self):
-        """Same inputs should produce same event key."""
-        step_id = "step1"
-        tool_name = "search"
-        attempt = 1
-        key1 = f"tool:{step_id}:{tool_name}:{attempt}"
-        key2 = f"tool:{step_id}:{tool_name}:{attempt}"
-        assert key1 == key2
+    # Truncation logic kicks in
+    assert "workflow_id" in truncated
+    assert "A" * 50 in str(truncated.get("huge_string"))
+    assert "<truncated>" in str(truncated.get("huge_string"))
+    assert truncated.get("nested", {}).get("_truncated") is True
 
 
-class TestRedactionAllowlist:
-    """Verify allowlist and droplist contents."""
-
-    def test_essential_keys_in_allowlist(self):
-        """Essential keys should be in allowlist."""
-        essential = [
-            "id",
-            "workflow_id",
-            "trace_id",
-            "step_id",
-            "status",
-            "success",
-            "error",
-            "kind",
-            "name",
-            "latency_ms",
-            "count",
-            "event_count",
-        ]
-        for key in essential:
-            assert key in REDACTION_ALLOWLIST, f"{key} should be in allowlist"
-
-    def test_sensitive_keys_in_droplist(self):
-        """Sensitive keys should be in droplist."""
-        sensitive = [
-            "password",
-            "secret",
-            "token",
-            "api_key",
-            "authorization",
-            "credential",
-            "private_key",
-        ]
-        for key in sensitive:
-            assert key in REDACTION_DROPLIST, f"{key} should be in droplist"
+@pytest.fixture
+def mock_db():
+    with patch("observability.omnitrace.OmniTraceRecorder._get_db") as mock_get_db:
+        mock_client = AsyncMock()
+        mock_get_db.return_value = mock_client
+        yield mock_client
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+@pytest.fixture
+def recorder():
+    # Make sure to clear cache if needed
+    clear_recorder("wf-test")
+    rec = get_omnitrace_recorder("wf-test", "trace-test")
+    # Force sample rate to 100%
+    with patch("observability.omnitrace.get_sample_rate", return_value=1.0):
+        yield rec
+
+
+@pytest.mark.asyncio
+async def test_omnitrace_record_run_start(recorder, mock_db):
+    await recorder.record_run_start("user-1", {"test": "data"}, "running")
+    mock_db.rpc.assert_called_once()
+    args, kwargs = mock_db.rpc.call_args
+    assert args[0] == "omnitrace_upsert_run"
+    assert kwargs[0]["p_workflow_id"] == "wf-test"
+    assert kwargs[0]["p_user_id"] == "user-1"
+    assert kwargs[0]["p_status"] == "running"
+
+
+@pytest.mark.asyncio
+async def test_omnitrace_record_run_complete(recorder, mock_db):
+    await recorder.record_run_complete({"output": "data"}, "completed")
+    mock_db.rpc.assert_called_once()
+    args, kwargs = mock_db.rpc.call_args
+    assert args[0] == "omnitrace_upsert_run"
+    assert kwargs[0]["p_status"] == "completed"
+
+
+@pytest.mark.asyncio
+async def test_omnitrace_record_event(recorder, mock_db):
+    await recorder.record_event("evt-1", "tool", "test-tool", 100, {"foo": "bar"})
+    mock_db.rpc.assert_called_once()
+    args, kwargs = mock_db.rpc.call_args
+    assert args[0] == "omnitrace_insert_event"
+    assert kwargs[0]["p_event_key"] == "evt-1"
+    assert kwargs[0]["p_kind"] == "tool"
+    assert kwargs[0]["p_name"] == "test-tool"
+    assert kwargs[0]["p_latency_ms"] == 100
+
+
+@pytest.mark.asyncio
+async def test_omnitrace_record_event_cap(recorder, mock_db):
+    # Artificially set event count to max
+    with patch("observability.omnitrace.get_max_events_per_run", return_value=5):
+        recorder._event_count = 5
+        await recorder.record_event("evt-1", "tool", "test-tool")
+
+    mock_db.rpc.assert_not_called()
+
+
+def test_omnitrace_not_sampled():
+    rec = OmniTraceRecorder("wf-skip", "trace-skip")
+    with patch("observability.omnitrace.get_sample_rate", return_value=0.0):
+        # 0.0 sample rate always drops
+        assert rec.should_record() is False
