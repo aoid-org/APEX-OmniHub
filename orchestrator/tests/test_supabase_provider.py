@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -19,9 +19,9 @@ class TestValidateTableName:
         assert validate_table_name(" WORKFLOWS ") == "workflows"
 
     def test_invalid(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             validate_table_name("hacker_table")
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             validate_table_name("")
 
 
@@ -31,7 +31,7 @@ class TestValidateColumnName:
         assert validate_column_name("user_id") == "user_id"
 
     def test_invalid(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             validate_column_name("DROP TABLE")
 
 
@@ -57,7 +57,7 @@ class TestCRUD:
     @pytest.mark.asyncio
     async def test_insert_bad_table(self, provider: tuple) -> None:
         prv, _ = provider
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             await prv.insert("evil_table", {})
 
     @pytest.mark.asyncio
