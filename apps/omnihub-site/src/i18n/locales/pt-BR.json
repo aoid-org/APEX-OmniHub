@@ -1,0 +1,22 @@
+{
+  "hero": {
+    "headline": {
+      "line1": "Connect anything.",
+      "line2": "Orchestrate everything.",
+      "line3": "Stay in control."
+    },
+    "tagline": "YOUR SYSTEMS. YOUR RULES.",
+    "traits": "DIRECTABLE • AUDITABLE • REVERSIBLE",
+    "subtitle": "The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.",
+    "description": "OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.",
+    "cta": {
+      "primary": "Request Access",
+      "secondary": "Watch Demo"
+    },
+    "footnote": "*Blockchain, wallet, and NFT integrations are optional and disabled by default.",
+    "subtitleSentence1": "The Anti-OS: Universal Sync Orchestrator (USO).",
+    "subtitleSentence2": "Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.",
+    "descriptionSentence1": "OmniDash keeps execution in view.",
+    "descriptionSentence2": "Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell."
+  }
+}

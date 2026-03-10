@@ -1,5 +1,5 @@
 /**
- * PATCH 3: Post-Login Routing Tests
+ * Post-Login Routing Tests
  *
  * Tests intelligent routing after authentication:
  * - Deep-link preservation
@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { getPostLoginDestination, requiresPaidAccess, requiresAdminAccess } from '@/utils/postLoginRouter';
+import { getPostLoginDestination, requiresPaidAccess, requiresAdminAccess } from '../../src/utils/postLoginRouter';
 
 describe('getPostLoginDestination', () => {
   describe('Default routing (no intended destination)', () => {
@@ -157,6 +157,41 @@ describe('getPostLoginDestination', () => {
 
       expect(destination).toBe('/omnidash/pipeline/item/123');
     });
+
+    it('should correctly handle URL fragments in intended destination', () => {
+      const destination = getPostLoginDestination({
+        isAdmin: false,
+        isPaid: false,
+        tier: 'free',
+        intendedDestination: '/dashboard#settings',
+      });
+
+      // Should be blocked and redirected to pricing, not allowed through
+      expect(destination).toMatch(/^\/pricing\?reason=premium/);
+      expect(destination).toContain('return=%2Fdashboard%23settings');
+    });
+
+    it('should preserve complex query params and fragments together', () => {
+      const destination = getPostLoginDestination({
+        isAdmin: false,
+        isPaid: true,
+        tier: 'pro',
+        intendedDestination: '/dashboard?tab=settings&view=advanced#api-keys',
+      });
+
+      expect(destination).toBe('/dashboard?tab=settings&view=advanced#api-keys');
+    });
+
+    it('should treat unknown routes as public', () => {
+      const destination = getPostLoginDestination({
+        isAdmin: false,
+        isPaid: false,
+        tier: 'free',
+        intendedDestination: '/some-random-public-page',
+      });
+
+      expect(destination).toBe('/some-random-public-page');
+    });
   });
 });
 
@@ -173,7 +208,7 @@ describe('requiresPaidAccess', () => {
     expect(requiresPaidAccess('/files')).toBe(true);
   });
 
-  it('should return true for /omnidash', () => {
+  it('should return false for /omnidash', () => {
     expect(requiresPaidAccess('/omnidash')).toBe(false);
   });
 

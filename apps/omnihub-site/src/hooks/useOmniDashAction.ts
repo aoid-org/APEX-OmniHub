@@ -14,7 +14,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { useNavigate, type NavigateFunction } from 'react-router-dom';
-import { useOmniModal, type ModalType, type RenderMode } from '../../../../src/stores/omniModalStore';
+import { useOmniModal, type ModalType, type RenderMode } from '@/stores/omniModalStore';
 import { useOmniBoard, type SpatialRenderState } from '../../../../src/stores/omniBoardStore';
 import { hasModuleComponent } from '../components/omnidash/moduleComponents';
 
