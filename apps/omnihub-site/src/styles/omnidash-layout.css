@@ -28,6 +28,7 @@
   border-right: 1px solid rgba(255, 255, 255, 0.05); /* Hair-thin border */
   display: flex;
   flex-direction: column;
+  min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -145,8 +146,13 @@
 .od-center {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   overflow: hidden;
   width: 100%;
+}
+
+.od-right {
+  min-width: 0;
 }
 
 .od-content {
@@ -649,8 +655,8 @@
   }
 }
 
-/* ===== Responsive — Small Tablet (≤960px) ===== */
-@media (max-width: 960px) {
+/* ===== Responsive — Small Tablet (≤768px) ===== */
+@media (max-width: 768px) {
   .omnidash-shell {
     display: flex;
     flex-direction: column;
