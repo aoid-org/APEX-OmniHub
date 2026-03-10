@@ -12,7 +12,6 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<Provider | null>(null);
-  const [loginIconSrc, setLoginIconSrc] = useState(() => `${import.meta.env.BASE_URL}icon.png`);
 
   const handleOAuthSignIn = async (provider: Provider) => {
     if (!hasSupabaseConfig) {
@@ -132,13 +131,8 @@ export function LoginPage() {
       <Section>
         <div style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto' }}>
           <img
-            src={loginIconSrc}
+            src="/icon.png"
             alt="APEX OmniHub icon"
-            onError={() => {
-              if (loginIconSrc !== `${import.meta.env.BASE_URL}apex-badge.png`) {
-                setLoginIconSrc(`${import.meta.env.BASE_URL}apex-badge.png`);
-              }
-            }}
             style={{
               width: '72px',
               height: '72px',
