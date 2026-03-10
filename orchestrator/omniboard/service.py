@@ -301,9 +301,13 @@ class OmniBoardService:
         return connection_id
 
     @classmethod
-    def disconnect_provider(cls, connection_id: str) -> bool:
+    def disconnect_provider(
+        cls, connection_id: str, tenant_id: str | None = None, provider: str | None = None
+    ) -> bool:
         """MOCK: Disconnects a provider."""
         _ = connection_id
+        _ = tenant_id
+        _ = provider
         logger.info("Disconnecting provider connection")
         return True
 
