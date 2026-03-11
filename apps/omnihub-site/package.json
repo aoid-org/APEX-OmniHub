@@ -11,7 +11,8 @@
     "lint": "eslint src --ext .ts,.tsx",
     "smoke": "node scripts/smoke-test.mjs",
     "test:visual": "playwright test",
-    "i18n:check": "node scripts/i18n-check.mjs"
+    "i18n:check": "node scripts/i18n-check.mjs",
+    "ci:validate": "bun install && bun lint && bun typecheck && bun run build"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.0",
