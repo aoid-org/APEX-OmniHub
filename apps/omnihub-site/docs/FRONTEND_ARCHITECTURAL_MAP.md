@@ -1,7 +1,7 @@
 # FRONTEND_ARCHITECTURAL_MAP
 
 - **Document ID:** APEX-FE-MAP-2026-03-11
-- **Version:** 1.0.0
+- **Version:** 1.1.0
 - **Effective Date (UTC):** 2026-03-11
 - **Repository:** `APEX-OmniHub`
 - **Workspace:** `apps/omnihub-site`
@@ -58,12 +58,23 @@ Define canonical frontend ownership for OmniDash, OmniBoard, OmniMedia, OmniModa
 3. **Spatial app types (`media|editor|terminal`)** → OmniSpatial render mode.
 4. **Microfrontend apps (`entryUrl`)** → sandbox mode.
 
-## 6) Known Technical Debt
+## 6) Relevance Matrix (Current)
+
+| Surface | Path Pattern | Relevance | Policy |
+|---|---|---|---|
+| Canonical OmniDash shell/runtime | `apps/omnihub-site/src/layouts/*`, `apps/omnihub-site/src/components/omnidash/*`, `apps/omnihub-site/src/stores/*` | **Active** | Primary implementation target |
+| Shared OmniDash orchestration hook | `src/omnidash/useOmniDashAction.ts` | **Active (shared)** | Keep until full bounded-context migration lands |
+| Root OmniDash UI components (legacy area) | `src/components/omnidash/*` | **Transitional / partially active** | Do not add new product logic here; migrate to app-local ownership |
+
+## 7) Known Technical Debt
 
 - Dual-surface module ownership remains (root `src/` + app-local `apps/omnihub-site/src/`).
 - Full migration to a single bounded context under `features/omnidash` is pending.
 
-## 7) Changelog
+## 8) Changelog
+
+### 1.1.0 — 2026-03-11
+- Added explicit relevance matrix to classify active vs transitional OmniDash surfaces.
 
 ### 1.0.0 — 2026-03-11
 - Introduced canonical frontend architecture map.

@@ -1,7 +1,7 @@
 # OmniDash System Audit
 
 - **Document ID:** ODH-AUDIT-2026-03-11
-- **Version:** 2.0.0
+- **Version:** 2.1.0
 - **Effective Date (UTC):** 2026-03-11
 - **Status:** Approved for implementation tracking
 - **Owner:** APEX Staff Engineering
@@ -43,7 +43,15 @@ This audit covers end-to-end frontend integration and runtime wiring for:
 2. **Bounded-context migration remains incomplete** (`features/omnidash` target architecture not fully enacted).
 3. **Documentation-to-code drift risk** remains unless architectural map and audit are updated per release.
 
-## 5) Governance / Update Policy
+## 5) File Relevance Decision
+
+The files visible under `src/components/omnidash/*` are **not all obsolete**, but they are a mixed transitional surface.
+
+- **Still relevant (runtime-shared):** shared orchestration and selected reusable Omni components.
+- **Should be treated as transitional:** root-level UI modules that duplicate app-local ownership.
+- **Target state:** app-local OmniDash ownership under `apps/omnihub-site/src/*` for all frontend runtime concerns.
+
+## 6) Governance / Update Policy
 
 - Update this document on every OmniDash architecture-impacting PR.
 - Bump **minor version** for additive changes; **major** for ownership/path model shifts.
