@@ -1,11 +1,13 @@
 import type { ReactElement } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ComingSoonPage } from "@/pages/ComingSoon";
 import { HomePage } from "@/pages/Home";
 import { OnboardingWizard } from "@/pages/Launch/OnboardingWizard";
-import { OmniDashLayout } from "@/layouts/OmniDashLayout";
+import { SkillForge } from "@/pages/Launch/SkillForge";
+import { OmniDashLayout } from "@/layouts/OmniDash-new";
 import { OmniDashProvider } from "@/providers/OmniDashProvider";
 import { LoginPage } from "@/pages/Login";
 import { PrivacyPage } from "@/pages/Privacy";
@@ -60,10 +62,10 @@ const appRoutes: readonly AppRoute[] = [
   { path: "/tri-force", element: <TriForcePage />, isPublic: true },
   { path: "/demo", element: <DemoPage />, isPublic: true },
   { path: "/demo.html", element: <DemoPage />, isPublic: true },
-  { path: "/dashboard", element: <OmniDashLayout /> },
 ];
 
 const omniDashRoutes: readonly AppRoute[] = [
+  { path: "skill-forge", element: <SkillForge /> },
   // All modules use spatial overlay via OmniModal (useOmniDashAction dispatch)
 ];
 
@@ -80,6 +82,14 @@ function App() {
             element={createProtectedElement(route.element, route.isPublic)}
           />
         ))}
+        <Route
+          path="/dashboard"
+          element={createProtectedElement(<Navigate to="/omnidash" replace />, false)}
+        />
+        <Route
+          path="/skill-forge"
+          element={createProtectedElement(<Navigate to="/omnidash/skill-forge" replace />, false)}
+        />
         <Route path="/omnidash" element={createProtectedElement(<OmniDashProvider><OmniDashLayout /></OmniDashProvider>)}>
           {omniDashRoutes.map((route) => (
             <Route key={route.path} path={route.path} element={createProtectedElement(route.element, route.isPublic)} />
@@ -91,6 +101,7 @@ function App() {
         />
         </Routes>
       </div>
+      <Analytics />
     </BrowserRouter>
     </ErrorBoundary>
   );

@@ -9,7 +9,7 @@
  * Lucide kept only for header utility icons (Search, Bell, Shield, ChevronDown)
  */
 
-import { useState, useMemo, useCallback, type MouseEvent } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Outlet, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Search, Bell, Shield, ChevronDown, Sun, Moon, X, Sparkles } from 'lucide-react';
@@ -19,7 +19,7 @@ import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
 import { GlobalMediaDock } from '@/components/omnidash/media/GlobalMediaDock';
 import { BYOMCockpit } from '@/components/byom/BYOMCockpit';
 import { SentinelPanel } from '@/components/omnidash/SentinelPanel';
-import { useOmniDashAction, type OmniDashIntent } from '@/hooks/useOmniDashAction';
+import { useOmniDashAction } from '@/hooks/useOmniDashAction';
 import { useOmniModal } from '@/stores/omniModalStore';
 import { hasModuleComponent } from '../components/omnidash/moduleComponents';
 import '@/styles/omnidash-layout.css';
@@ -37,13 +37,13 @@ import navFiles from '@/assets/nav/files_icon.png';
 import navBilling from '@/assets/nav/billing_icon.png';
 import navSettings from '@/assets/nav/settings_icon.png';
 import apexWordmark from '@/assets/apex_omnihub_wordmark.png';
-import { APP_REGISTRY, type AppRegistryEntry } from '../../../../packages/core/src/registry';
+import { APP_REGISTRY } from '../../../../packages/core/src/registry';
 
 // ────────────────────────────────────────────────
 // Sidebar Navigation Map - custom icon images
 // OmniSkills is EXCLUDED from sidebar — it appears in header only
 // ────────────────────────────────────────────────
-const NAV_ICON_MAP: Readonly<Record<string, string>> = {
+const NAV_ICON_MAP = {
   omniboard: navOmniboard,
   omniskills: navOmniskills,
   physiomni: navPhysiomni,
@@ -60,8 +60,8 @@ const NAV_ICON_MAP: Readonly<Record<string, string>> = {
 const SIDEBAR_EXCLUDED = new Set(['omniskills']);
 
 const SIDEBAR_NAV = APP_REGISTRY
-  .filter((entry: AppRegistryEntry) => !SIDEBAR_EXCLUDED.has(entry.key))
-  .map((entry: AppRegistryEntry) => ({
+  .filter((entry) => !SIDEBAR_EXCLUDED.has(entry.key))
+  .map((entry) => ({
     key: entry.key,
     label: entry.label,
     icon: NAV_ICON_MAP[entry.iconAssetKey] ?? navOmniboard,
@@ -83,7 +83,7 @@ export function OmniDashLayout() {
     sim_mode: searchParams.get('sim_mode') ?? 'false',
   }).sim_mode === 'true';
   const [ecoAppsVisible, setEcoAppsVisible] = useState(false);
-  const [appHealth, setAppHealth] = useState<'green' | 'yellow' | 'red'>('green');
+  const [appHealth, setAppHealth] = useState('green');
   const [isDarkMode, setIsDarkMode] = useState(true);
 
   const handleLogout = useCallback(async () => {
@@ -99,9 +99,9 @@ export function OmniDashLayout() {
     (n) => n.to === location.pathname || (n.to === '/omnidash' && isDashboardRootRoute),
   )?.key ?? 'omniboard';
 
-  const handleOmniSkillsClick = useCallback((e: MouseEvent) => {
+  const handleOmniSkillsClick = useCallback((e) => {
     e.stopPropagation();
-    const intent: OmniDashIntent = {
+    const intent = {
       appKey: 'omniskills',
       provider: 'OmniSkills',
       label: 'OmniSkills',
@@ -130,7 +130,7 @@ export function OmniDashLayout() {
                   type="button"
                   className={`od-nav-item transition-all duration-300 ease-out hover:translate-x-1 ${activeNav === item.key ? ' active' : ''}`}
                   onClick={() => {
-                    const intent: OmniDashIntent = {
+                    const intent = {
                       appKey: item.key,
                       provider: item.label,
                       label: item.label,
@@ -224,7 +224,7 @@ export function OmniDashLayout() {
               OmniSkills
             </button>
 
-            <button type="button" onClick={(e: MouseEvent) => {
+            <button type="button" onClick={(e) => {
               e.stopPropagation();
               dispatch({
                 appKey: 'omniport',
@@ -236,7 +236,7 @@ export function OmniDashLayout() {
               });
             }} className="od-connect-ai">Connect AI</button>
 
-            <button type="button" className="od-avatar" aria-label="Notifications" onClick={(e: MouseEvent) => {
+            <button type="button" className="od-avatar" aria-label="Notifications" onClick={(e) => {
               e.stopPropagation();
               invokeModal({
                 id: 'notifications',

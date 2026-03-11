@@ -19,5 +19,5 @@ export interface AppEntry {
   readonly cat: string;
   readonly logo: string;
   readonly synced: string;
-  readonly status: string;
+  readonly status: 'Live' | 'Partial';
 }
