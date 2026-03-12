@@ -9,6 +9,9 @@ on:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: production-readiness-${{ github.ref }}
   cancel-in-progress: true
@@ -64,6 +67,7 @@ jobs:
 
   security-gates:
     name: Security Gates
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -89,21 +93,32 @@ jobs:
             echo "Using incremental secret scan from ${BASE_REF} to ${HEAD_REF}."
           fi
 
+      - name: Install TruffleHog binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
+          trufflehog --version
+
       - name: Secret scanning with TruffleHog (commit range)
         if: steps.trufflehog-range.outputs.use_range == 'true'
-        uses: trufflesecurity/trufflehog@6961f2bace57ab32b23b3ba40f8f420f6bc7e004
-        with:
-          path: ./
-          base: ${{ steps.trufflehog-range.outputs.base_ref }}
-          head: ${{ steps.trufflehog-range.outputs.head_ref }}
-          extra_args: --only-verified --exclude-paths .trufflehog-exclude-paths.txt
+        shell: bash
+        run: |
+          set -euo pipefail
+          trufflehog git file://. \
+            --since-commit "${{ steps.trufflehog-range.outputs.base_ref }}" \
+            --branch "${{ steps.trufflehog-range.outputs.head_ref }}" \
+            --only-verified \
+            --exclude-paths .trufflehog-exclude-paths.txt
 
       - name: Secret scanning with TruffleHog (full repository fallback)
         if: steps.trufflehog-range.outputs.use_range == 'false'
-        uses: trufflesecurity/trufflehog@6961f2bace57ab32b23b3ba40f8f420f6bc7e004
-        with:
-          path: ./
-          extra_args: --only-verified --exclude-paths .trufflehog-exclude-paths.txt
+        shell: bash
+        run: |
+          set -euo pipefail
+          trufflehog filesystem . \
+            --only-verified \
+            --exclude-paths .trufflehog-exclude-paths.txt
 
       - name: npm audit for critical vulnerabilities
         run: |
@@ -155,8 +170,8 @@ jobs:
       - name: Check all gates passed
         run: |
           if [ "${{ needs.quality-gates.result }}" != "success" ] || \
-             [ "${{ needs.security-gates.result }}" != "success" ] || \
-             [ "${{ needs.smoke-tests.result }}" != "success" ]; then
+             { [ "${{ needs.security-gates.result }}" != "success" ] && [ "${{ needs.security-gates.result }}" != "skipped" ]; } || \
+             { [ "${{ needs.smoke-tests.result }}" != "success" ] && [ "${{ needs.smoke-tests.result }}" != "skipped" ]; }; then
             echo "❌ Production readiness gate FAILED"
             echo "Quality Gates: ${{ needs.quality-gates.result }}"
             echo "Security Gates: ${{ needs.security-gates.result }}"

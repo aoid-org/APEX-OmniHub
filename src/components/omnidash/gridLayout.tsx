@@ -3,14 +3,7 @@ import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
-export type LayoutItem = {
-  i: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  isResizable?: boolean;
-};
+export { type Layout } from 'react-grid-layout/legacy';
 
 const ResponsiveWithWidth = WidthProvider(Responsive);
 
@@ -25,6 +18,11 @@ export function ResponsiveGridLayout({
     ? `responsive-grid-layout ${className}`
     : 'responsive-grid-layout';
 
+/**
+ * Responsive-only layout wrapper (non-draggable, non-resizable).
+ * Prevents interference with OmniCanvas global drag/pan interactions.
+ */
+export function ResponsiveGridLayout(props: ResponsiveProps): JSX.Element {
   return (
     <div className={wrapperClassName}>
       <ResponsiveWithWidth className={className} {...props}>
