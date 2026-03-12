@@ -19,7 +19,7 @@
  */
 
 import { create } from 'zustand';
-import { ZIndexManager, Z_FLOATING } from '../lib/ZIndexManager';
+import { ZIndexManager } from '../lib/ZIndexManager';
 
 // ============================================================================
 // Types
@@ -250,4 +250,4 @@ export const useOmniDash = create<OmniDashState>((set, get) => {
   };
 });
 
-export { Z_FLOATING };
+export { Z_FLOATING } from '../lib/ZIndexManager';

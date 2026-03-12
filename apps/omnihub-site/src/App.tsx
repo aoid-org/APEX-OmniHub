@@ -63,10 +63,6 @@ const appRoutes: readonly AppRoute[] = [
   { path: "/dashboard", element: <OmniDashLayout /> },
 ];
 
-const omniDashRoutes: readonly AppRoute[] = [
-  // All modules use spatial overlay via OmniModal (useOmniDashAction dispatch)
-];
-
 function App() {
   return (
     <ErrorBoundary>
@@ -80,11 +76,7 @@ function App() {
             element={createProtectedElement(route.element, route.isPublic)}
           />
         ))}
-        <Route path="/omnidash" element={createProtectedElement(<OmniDashProvider><OmniDashLayout /></OmniDashProvider>)}>
-          {omniDashRoutes.map((route) => (
-            <Route key={route.path} path={route.path} element={createProtectedElement(route.element, route.isPublic)} />
-          ))}
-        </Route>
+        <Route path="/omnidash" element={createProtectedElement(<OmniDashProvider><OmniDashLayout /></OmniDashProvider>)} />
         <Route
           path="*"
           element={<ComingSoonPage title="Page Not Found" desc="The requested route is not configured yet. Use Home or OmniDash navigation to continue." />}

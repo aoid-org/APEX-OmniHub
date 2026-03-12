@@ -11,7 +11,7 @@ from .service import OmniBoardService
 router = APIRouter(prefix="/omniboard", tags=["omniboard"])
 
 
-@router.post("/start", response_model=FSMContext)
+@router.post("/start")
 async def start_session(tenant_id: str, trace_id: str) -> FSMContext:
     """Start a new OmniBoard onboarding session."""
     context = OmniBoardFSM.start_session(tenant_id, trace_id)
@@ -33,7 +33,6 @@ _404_RESPONSE: dict[int | str, dict[str, Any]] = {404: {"description": SESSION_N
 
 @router.post(
     "/{session_id}/next",
-    response_model=dict[str, Any],
     responses=_404_RESPONSE,
 )
 async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
@@ -59,7 +58,7 @@ async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
     return {"context": next_context.model_dump(), "message": message}
 
 
-@router.get("/{session_id}", response_model=FSMContext, responses=_404_RESPONSE)
+@router.get("/{session_id}", responses=_404_RESPONSE)
 async def get_status(session_id: str) -> FSMContext:
     """Get current session status."""
     redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])

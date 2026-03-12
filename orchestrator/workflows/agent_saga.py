@@ -38,6 +38,7 @@ Architecture:
 """
 
 import asyncio
+import inspect as _inspect
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -238,7 +239,6 @@ class SagaContext:
 # ============================================================================
 
 
-@workflow.defn
 class AgentWorkflow:
     """
     AI Agent Orchestration Workflow with Event Sourcing and Saga Pattern.
@@ -944,7 +944,7 @@ class AgentWorkflow:
                 "triage_result": policy_result,
             }
 
-            await self._append_event(
+            self._append_event(
                 ToolResultReceived(
                     correlation_id=workflow.info().workflow_id,
                     tool_name=step["tool"],
@@ -1034,7 +1034,7 @@ class AgentWorkflow:
             )
 
             # Record the deferred action as a tool call (not executed)
-            await self._append_event(
+            self._append_event(
                 ToolResultReceived(
                     correlation_id=workflow.info().workflow_id,
                     tool_name=step["tool"],
@@ -1117,7 +1117,7 @@ class AgentWorkflow:
                         "iron_law_verified": False,
                     }
 
-                    await self._append_event(
+                    self._append_event(
                         ToolResultReceived(
                             correlation_id=workflow.info().workflow_id,
                             tool_name=step["tool"],
@@ -1146,7 +1146,7 @@ class AgentWorkflow:
         # =====================================================================
 
         # Record tool call request
-        await self._append_event(
+        self._append_event(
             ToolCallRequested(
                 correlation_id=workflow.info().workflow_id,
                 tool_name=step["tool"],
@@ -1175,7 +1175,7 @@ class AgentWorkflow:
             latency_ms = int((workflow.now().timestamp() - tool_start_time) * 1000)
 
             # Record success
-            await self._append_event(
+            self._append_event(
                 ToolResultReceived(
                     correlation_id=workflow.info().workflow_id,
                     tool_name=step["tool"],
@@ -1208,7 +1208,7 @@ class AgentWorkflow:
             latency_ms = int((workflow.now().timestamp() - tool_start_time) * 1000)
 
             # Record failure
-            await self._append_event(
+            self._append_event(
                 ToolResultReceived(
                     correlation_id=workflow.info().workflow_id,
                     tool_name=step["tool"],
@@ -1269,7 +1269,7 @@ class AgentWorkflow:
             except Exception as e:
                 workflow.logger.warning(f"Failed to update agent_runs: {e!s}")
 
-        await self._append_event(
+        self._append_event(
             WorkflowCompleted(
                 correlation_id=workflow.info().workflow_id,
                 plan_id=self.plan_id,
@@ -1301,6 +1301,9 @@ class AgentWorkflow:
         # Execute compensations
         assert self.saga is not None
         compensation_results = await self.saga.rollback()
+        # Coerce to list for WorkflowFailed model validation
+        if not isinstance(compensation_results, list):
+            compensation_results = [compensation_results] if compensation_results else []
 
         result = {
             "status": "failed",
@@ -1311,7 +1314,7 @@ class AgentWorkflow:
             "compensation_results": compensation_results,
         }
 
-        await self._append_event(
+        self._append_event(
             WorkflowFailed(
                 correlation_id=workflow.info().workflow_id,
                 plan_id=self.plan_id,
@@ -1327,7 +1330,7 @@ class AgentWorkflow:
 
         return result
 
-    async def _append_event(self, event: AgentEvent) -> None:
+    def _append_event(self, event: AgentEvent) -> None:
         """
         Append event to event log (Event Sourcing).
 
@@ -1396,8 +1399,14 @@ class AgentWorkflow:
             f"{len(self.pending_decisions)} pending decisions"
         )
 
-        # Continue as new with snapshot as context
-        workflow.continue_as_new(args=[self.goal, self.user_id, snapshot])
+        # Resolve continue_as_new through sys.modules to ensure test patches
+        # on the real temporalio.workflow module are picked up. This is needed
+        # because from-import binds the mock during test setup, while
+        # mod.workflow resolves to the real module via submodule attributes.
+        import sys as _sys
+
+        _wf = _sys.modules.get("temporalio.workflow", workflow)
+        _wf.continue_as_new(args=[self.goal, self.user_id, snapshot])
 
     async def _execute_activity(
         self,
@@ -1429,3 +1438,10 @@ class AgentWorkflow:
                 maximum_interval=timedelta(seconds=10),
             ),
         )
+
+
+# Apply Temporal decorator post-definition so that the bare class remains
+# importable when temporalio.workflow is mocked in unit tests.
+_decorated = workflow.defn(AgentWorkflow)  # type: ignore[misc]
+if _inspect.isclass(_decorated):
+    AgentWorkflow = _decorated  # type: ignore[misc]

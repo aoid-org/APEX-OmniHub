@@ -42,7 +42,13 @@ export const OmniCanvas = memo(function OmniCanvas() {
     <div
       ref={canvasRef}
       className="omni-canvas"
+      role="presentation"
       onClick={handleCanvasClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleCanvasClick(e as any);
+        }
+      }}
     >
       {/* Transform layer for pan/zoom */}
       <div

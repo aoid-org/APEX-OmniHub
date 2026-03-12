@@ -41,8 +41,7 @@ function PWAInstallNode() {
   const { t } = useTranslation();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState<boolean>(() =>
-    globalThis.window !== undefined &&
-    globalThis.window.matchMedia('(display-mode: standalone)').matches,
+    globalThis.window?.matchMedia('(display-mode: standalone)')?.matches ?? false
   );
 
   const isIOS = useMemo(() => {
@@ -95,6 +94,13 @@ function PWAInstallNode() {
     return null;
   }
 
+  let installHelpText = t('hero.installPromptFallback', { defaultValue: 'Install becomes available once your browser meets PWA criteria.' });
+  if (deferredPrompt) {
+    installHelpText = t('hero.installPromptReady', { defaultValue: 'Install OmniHub for one-tap launch and push updates.' });
+  } else if (isIOS) {
+    installHelpText = t('hero.installPromptIOS', { defaultValue: 'On iOS: Share → Add to Home Screen to install OmniHub.' });
+  }
+
   return (
     <div className="hero__install-node">
       <button
@@ -106,11 +112,7 @@ function PWAInstallNode() {
         {t('hero.cta.install', { defaultValue: 'Install App' })}
       </button>
       <p className="hero__install-help">
-        {deferredPrompt
-          ? t('hero.installPromptReady', { defaultValue: 'Install OmniHub for one-tap launch and push updates.' })
-          : isIOS
-            ? t('hero.installPromptIOS', { defaultValue: 'On iOS: Share → Add to Home Screen to install OmniHub.' })
-            : t('hero.installPromptFallback', { defaultValue: 'Install becomes available once your browser meets PWA criteria.' })}
+        {installHelpText}
       </p>
     </div>
   );

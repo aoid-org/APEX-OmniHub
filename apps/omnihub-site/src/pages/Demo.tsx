@@ -94,12 +94,21 @@ function InteractiveWorkflowDemo() {
     setCompleted(new Set());
     setActiveStep(0);
 
+    const finishWorkflow = () => {
+      setActiveStep(-1);
+      setRunning(false);
+    };
+
     const scheduleStep = (stepId: string, idx: number, isLast: boolean) => {
       setTimeout(() => setActiveStep(idx), idx * 1200);
       setTimeout(() => {
-        setCompleted(prev => new Set([...prev, stepId]));
+        setCompleted(prev => {
+          const next = new Set(prev);
+          next.add(stepId);
+          return next;
+        });
         if (isLast) {
-          setTimeout(() => { setActiveStep(-1); setRunning(false); }, 800);
+          setTimeout(finishWorkflow, 800);
         }
       }, idx * 1200 + 900);
     };
