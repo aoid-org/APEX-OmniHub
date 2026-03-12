@@ -1,10 +1,10 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-03-01 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-12 -->
 # APEX-OmniHub Technical Architecture Specification
 
 **Document Owner:** CTO & Chief Platform Architect
-**Last Updated:** 2026-03-01
+**Last Updated:** 2026-03-12
 **Status:** Production
-**Version:** 2.2 (Edge Compute Update)
+**Version:** 1.4.0
 
 ---
 
@@ -117,5 +117,5 @@ graph TD
 
 ---
 
-**Document Version:** 2.2
-**Last Audit:** 2026-03-01
+**Document Version:** 1.4.0
+**Last Audit:** 2026-03-12
