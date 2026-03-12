@@ -22,7 +22,9 @@ from typing import Any
 # Import shared connector
 from omnihub_connector import OmniHubConnector, TaskWorker, load_env_config
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -132,6 +134,11 @@ class ApexSalesAgent:
             idempotency_key=f"call_failed_{lead_id}_{int(time.time())}",
         )
 
+    async def _delayed_attempt_call(self, delay: float, lead_id: str, phone: str):
+        """Wait for delay before attempting call."""
+        await asyncio.sleep(delay)
+        await self.attempt_call(lead_id, phone)
+
     async def simulate_outbound_session(self, count: int = 10):
         """Simulate outbound calling session."""
         logger.info(f"Simulating outbound session with {count} calls")
@@ -141,11 +148,12 @@ class ApexSalesAgent:
             lead_id = f"lead_sales_{int(time.time())}_{i}"
             phone = f"+1555000{i:04d}"
 
-            # Create background task for each call workflow
-            tasks.append(asyncio.create_task(self.attempt_call(lead_id, phone)))
-            await asyncio.sleep(0.2)  # Small delay between starting calls
+            # Create background task for each call workflow with staggered delay
+            tasks.append(
+                asyncio.create_task(self._delayed_attempt_call(i * 0.2, lead_id, phone))
+            )
 
-        # Wait for all calls to complete
+        # Wait for all calls to complete concurrently
         if tasks:
             await asyncio.gather(*tasks)
 
@@ -153,8 +161,8 @@ class ApexSalesAgent:
 # Task handlers
 def handle_echo(task: dict[str, Any]) -> dict[str, Any]:
     """Echo task handler."""
-    params = task.get('params', {})
-    payload = params.get('payload', {})
+    params = task.get("params", {})
+    payload = params.get("payload", {})
     logger.info(f"Echo task: {payload}")
     return {
         "action": "echo",
@@ -165,10 +173,10 @@ def handle_echo(task: dict[str, Any]) -> dict[str, Any]:
 
 def handle_call_lead(task: dict[str, Any]) -> dict[str, Any]:
     """Call lead task handler."""
-    params = task.get('params', {})
-    payload = params.get('payload', {})
-    lead_id = payload.get('lead_id', 'unknown')
-    phone = payload.get('phone', '+15550000000')
+    params = task.get("params", {})
+    payload = params.get("payload", {})
+    lead_id = payload.get("lead_id", "unknown")
+    phone = payload.get("phone", "+15550000000")
 
     logger.info(f"Calling lead {lead_id} at {phone}")
 
@@ -202,39 +210,39 @@ async def main():
 
     # Initialize connector
     connector = OmniHubConnector(
-        base_url=config['OMNIHUB_BASE_URL'],
-        api_key=config['OMNIHUB_API_KEY'],
-        source=config['OMNIHUB_SOURCE'],
-        worker_id=config['OMNIHUB_WORKER_ID'],
-        target='apex-sales',  # Only claim tasks targeted to apex-sales
+        base_url=config["OMNIHUB_BASE_URL"],
+        api_key=config["OMNIHUB_API_KEY"],
+        source=config["OMNIHUB_SOURCE"],
+        worker_id=config["OMNIHUB_WORKER_ID"],
+        target="apex-sales",  # Only claim tasks targeted to apex-sales
     )
 
     # Initialize agent
     agent = ApexSalesAgent(connector)
 
     # Run mode selection
-    mode = os.getenv('APEX_SALES_MODE', 'simulate')
+    mode = os.getenv("APEX_SALES_MODE", "simulate")
 
     try:
-        if mode == 'simulate':
+        if mode == "simulate":
             print("\nMode: SIMULATE - Running one-time outbound session simulation")
             await agent.simulate_outbound_session(count=10)
             print("\nSimulation complete. Check OmniDash at /omnidash/local-agents")
 
-        elif mode == 'worker':
+        elif mode == "worker":
             print("\nMode: WORKER - Starting task worker loop")
             print("Press Ctrl+C to stop")
 
             # Register task handlers
             handlers = {
-                'echo': handle_echo,
-                'call_lead': handle_call_lead,
+                "echo": handle_echo,
+                "call_lead": handle_call_lead,
             }
 
             worker = TaskWorker(connector, handlers)
             await worker.run(poll_interval=5)
 
-        elif mode == 'hybrid':
+        elif mode == "hybrid":
             print("\nMode: HYBRID - Running simulation + worker loop")
 
             # Start simulation task
@@ -242,14 +250,16 @@ async def main():
 
             print("\nStarting task worker loop (press Ctrl+C to stop)")
             handlers = {
-                'echo': handle_echo,
-                'call_lead': handle_call_lead,
+                "echo": handle_echo,
+                "call_lead": handle_call_lead,
             }
 
             worker = TaskWorker(connector, handlers)
 
             # Run worker loop
-            worker_task = asyncio.create_task(worker.run(poll_interval=5, max_iterations=12))
+            worker_task = asyncio.create_task(
+                worker.run(poll_interval=5, max_iterations=12)
+            )
 
             # Wait for both (or just worker if simulation ends early)
             await asyncio.gather(sim_task, worker_task)
@@ -265,7 +275,7 @@ async def main():
         await connector.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
