@@ -1,6 +1,7 @@
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 # We have to patch workflow context before importing AgentWorkflow
 from temporalio import workflow as temporal_workflow
