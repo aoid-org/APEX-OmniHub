@@ -3,7 +3,14 @@ import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
-export { type Layout } from 'react-grid-layout/legacy';
+export type LayoutItem = {
+  i: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  isResizable?: boolean;
+};
 
 const ResponsiveWithWidth = WidthProvider(Responsive);
 

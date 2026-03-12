@@ -19,6 +19,12 @@ import {
 import { detectInjection } from '../safety/injection-detection';
 import { logRiskEvent } from '../safety/risk-events';
 
+type FetchFn = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
+interface ExecutionOptions {
+  fetchFn?: FetchFn;
+}
+
 // Custom action registry
 const customActions = new Set<string>();
 
