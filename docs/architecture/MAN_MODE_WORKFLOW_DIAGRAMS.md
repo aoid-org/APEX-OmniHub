@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-12 -->
 # MAN Mode Workflow Diagrams
 
 > Manual Assistance Needed (MAN) Mode - Visual Architecture Reference
@@ -371,6 +371,7 @@ flowchart LR
 |---------|------|---------|
 | 1.0.0 | 2026-01-08 | Initial MAN Mode implementation |
 | 1.0.1 | 2026-01-09 | Performance optimizations, GIN indexes, diagram documentation |
+| 1.4.0 | 2026-03-12 | Alignment with package version |
 
 ---
 

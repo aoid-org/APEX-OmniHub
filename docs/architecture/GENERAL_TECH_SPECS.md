@@ -1,9 +1,9 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
-# 🛠️ TECHNICAL SPECIFICATIONS: Temporal Platform v1.0.0
+<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-12 -->
+# 🛠️ TECHNICAL SPECIFICATIONS: Temporal Platform v1.4.0
 
 ## 1. Core Architecture (OMEGA Pattern)
 
-The APEX OmniHub v1.0.0 operates on the **OMEGA Architecture**, a high-availability event-driven system designed for autonomous AI agent orchestration.
+The APEX OmniHub v1.4.0 operates on the **OMEGA Architecture**, a high-availability event-driven system designed for autonomous AI agent orchestration.
 
 ### 1.1 Orchestration Layer
 *   **Engine**: Temporal.io Server (v1.24.2)
