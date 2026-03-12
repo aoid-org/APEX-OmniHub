@@ -98,15 +98,17 @@ jobs:
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.2.14"
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -127,13 +129,13 @@ jobs:
       # PHASE 1: Static Analysis
       # ─────────────────────────────────────────────────────────────
       - name: TypeScript type check
-        run: npm run typecheck
+        run: bun run typecheck
 
       - name: ESLint
-        run: npm run lint
+        run: bun run lint
 
       - name: React singleton check
-        run: npm run check:react
+        run: bun run check:react
 
       - name: Verify Python availability
         run: |
@@ -150,7 +152,7 @@ jobs:
           echo "✅ Vitest cache cleared"
 
       - name: Run unit tests
-        run: npm test
+        run: bun run test
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -158,7 +160,7 @@ jobs:
           REQUIRE_SUPABASE_INTEGRATION_TESTS: "false"
 
       - name: Run JS coverage
-        run: npm run test:coverage
+        run: bun run test:coverage
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -187,7 +189,7 @@ jobs:
       # PHASE 2.5: OmniEval Deterministic Evaluation
       # ─────────────────────────────────────────────────────────────
       - name: Run OmniEval (deterministic eval gate)
-        run: npm run eval:ci
+        run: bun run eval:ci
 
       - name: Upload OmniEval report
         uses: actions/upload-artifact@v4
@@ -201,10 +203,10 @@ jobs:
       # PHASE 3: Build
       # ─────────────────────────────────────────────────────────────
       - name: Vercel Production Sync Shield
-        run: cd apps/omnihub-site && npm ci --omit=dev && npm run build
+        run: cd apps/omnihub-site && bun install --frozen-lockfile --omit=dev && bun run build
 
       - name: Build production bundle
-        run: npm run build
+        run: bun run build
 
       # ─────────────────────────────────────────────────────────────
       # PHASE 4: Runtime Smoke Tests
@@ -230,18 +232,18 @@ jobs:
 
       - name: Start preview server
         run: |
-          npm run preview -- --host --port 4173 &
+          bun run preview -- --host --port 4173 &
           echo $! > preview.pid
           # Wait for server to be ready
           npx wait-on http://localhost:4173 --timeout 30000
 
       - name: Run asset access tests
-        run: npm run test:assets
+        run: bun run test:assets
         env:
           BASE_URL: http://localhost:4173
 
       - name: Run Playwright render tests
-        run: npm run test:e2e
+        run: bun run test:e2e
         env:
           BASE_URL: http://localhost:4173
 
@@ -305,15 +307,17 @@ jobs:
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.2.14"
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
@@ -346,7 +350,7 @@ jobs:
 
       - name: Run asset tests against preview
         if: steps.vercel-preview.outputs.url != ''
-        run: npm run test:assets
+        run: bun run test:assets
         continue-on-error: true
         env:
           BASE_URL: ${{ steps.vercel-preview.outputs.url }}
@@ -354,7 +358,7 @@ jobs:
 
       - name: Run Playwright tests against preview
         if: steps.vercel-preview.outputs.url != ''
-        run: npm run test:e2e
+        run: bun run test:e2e
         continue-on-error: true
         env:
           BASE_URL: ${{ steps.vercel-preview.outputs.url }}

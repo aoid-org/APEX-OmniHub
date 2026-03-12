@@ -95,14 +95,16 @@ jobs:
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: '20'
-          cache: 'npm'
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run npm audit
         run: |
-          echo "Running npm security audit (production dependencies only)..."
+          echo "Running bun security audit (production dependencies only)..."
           npm audit --omit=dev --audit-level=high
           if [ $? -ne 0 ]; then
             echo "::error::High severity vulnerabilities found in production dependencies. Run 'npm audit fix' to resolve."
@@ -140,10 +142,12 @@ jobs:
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: '20'
-          cache: 'npm'
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: TypeScript type check
         run: npx tsc --noEmit
@@ -155,7 +159,7 @@ jobs:
           echo "✅ Vitest cache cleared"
 
       - name: Run tests
-        run: npm run test
+        run: bun run test
 
       - name: Build verification
-        run: npm run build
+        run: bun run build

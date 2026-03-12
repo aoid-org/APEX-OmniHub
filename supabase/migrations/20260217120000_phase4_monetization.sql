@@ -32,7 +32,7 @@ create policy "Service role can insert usage"
   with check (true); -- Service role bypasses RLS anyway, but good to be explicit if using role
 
 -- Indexes for aggregation queries
-create index idx_usage_metering_tenant_timestamp 
+create index if not exists idx_usage_metering_tenant_timestamp
   on public.usage_metering(tenant_id, timestamp);
 
 -- 2. Rate Limiting Helper (Simple Sliding Window via DB)
