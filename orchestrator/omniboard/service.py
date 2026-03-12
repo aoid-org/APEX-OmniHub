@@ -118,10 +118,10 @@ class OmniBoardService:
 
             # Skip if we already handled it as exact match
             if provider_lower == query_lower:
-                continue
+                score = 1000
 
             # Starts with query
-            if provider_lower.startswith(query_lower):
+            elif provider_lower.startswith(query_lower):
                 score = 500
             # Contains query
             elif query_lower in provider_lower:
