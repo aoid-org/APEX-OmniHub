@@ -21,6 +21,7 @@ interface ApiKeyRecord {
   key_hash: string;
   key_prefix: string;
   scopes: OmniLinkScopes;
+  integrations?: { status: string } | { status: string }[];
 }
 
 function parseBearerToken(req: Request): string | null {
@@ -103,7 +104,7 @@ async function loadApiKey(token: string, supabase = createServiceClient()): Prom
   const prefix = parts[1];
   const { data, error } = await supabase
     .from('omnilink_api_keys')
-    .select('id, tenant_id, integration_id, key_hash, key_prefix, scopes')
+    .select('id, tenant_id, integration_id, key_hash, key_prefix, scopes, integrations(status)')
     .eq('key_prefix', prefix)
     .is('revoked_at', null);
 
@@ -114,12 +115,7 @@ async function loadApiKey(token: string, supabase = createServiceClient()): Prom
   for (const record of data as ApiKeyRecord[]) {
     const recordBytes = hexToBytes(record.key_hash);
     if (timingSafeEqual(recordBytes, hashedBytes)) {
-      const { data: integration } = await supabase
-        .from('integrations')
-        .select('status')
-        .eq('id', record.integration_id)
-        .maybeSingle();
-
+      const integration = Array.isArray(record.integrations) ? record.integrations[0] : record.integrations;
       if (integration?.status && integration.status !== 'active') {
         return null;
       }
