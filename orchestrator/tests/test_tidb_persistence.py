@@ -70,7 +70,7 @@ class TestTiDBPersistenceModeOn:
         mock_cursor = MagicMock()
         mock_cursor.fetchone.return_value = {
             "embedding": "[0.1, 0.2, 0.3]",
-            "metadata": "{'key': 'value'}",
+            "metadata": '{"key": "value"}',
         }
         mock_conn.cursor.return_value = mock_cursor
         mock_conn.is_connected.return_value = True
