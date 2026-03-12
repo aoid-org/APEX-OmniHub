@@ -5,7 +5,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ComingSoonPage } from "@/pages/ComingSoon";
 import { HomePage } from "@/pages/Home";
 import { OnboardingWizard } from "@/pages/Launch/OnboardingWizard";
-import CathedralDash from "@/layouts/CathedralDash";
+import { OmniDashLayout } from "@/layouts/OmniDashLayout";
 import { OmniDashProvider } from "@/providers/OmniDashProvider";
 import { LoginPage } from "@/pages/Login";
 import { PrivacyPage } from "@/pages/Privacy";
@@ -60,7 +60,7 @@ const appRoutes: readonly AppRoute[] = [
   { path: "/tri-force", element: <TriForcePage />, isPublic: true },
   { path: "/demo", element: <DemoPage />, isPublic: true },
   { path: "/demo.html", element: <DemoPage />, isPublic: true },
-  { path: "/dashboard", element: <CathedralDash /> },
+  { path: "/dashboard", element: <OmniDashLayout /> },
 ];
 
 function App() {
@@ -76,7 +76,7 @@ function App() {
             element={createProtectedElement(route.element, route.isPublic)}
           />
         ))}
-        <Route path="/omnidash" element={createProtectedElement(<OmniDashProvider><CathedralDash /></OmniDashProvider>)} />
+        <Route path="/omnidash" element={createProtectedElement(<OmniDashProvider><OmniDashLayout /></OmniDashProvider>)} />
         <Route
           path="*"
           element={<ComingSoonPage title="Page Not Found" desc="The requested route is not configured yet. Use Home or OmniDash navigation to continue." />}
