@@ -14,7 +14,7 @@ from activities.tools import (
     mint_pilot_session,
     check_semantic_cache,
     setup_activities,
-    
+    )
 
 
 @pytest.fixture(autouse=True)
