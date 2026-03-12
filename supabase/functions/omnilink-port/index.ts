@@ -566,22 +566,21 @@ async function handleEventBatchRequest(
   const serviceClient = createServiceClient();
 
   try {
-    const results = [];
-
     const normalizedItems = isOmniPort
       ? items.map((item) => omniPortEnvelope(item as SOmniPortInput))
       : items;
 
-    for (const [index, item] of normalizedItems.entries()) {
-      const result = await processRequestItem(item, index, {
-        route: targetRoute,
-        apiKey,
-        constraints,
-        idempotencyHeader,
-        serviceClient,
-      });
-      results.push(result);
-    }
+    const results = await Promise.all(
+      normalizedItems.map((item, index) =>
+        processRequestItem(item, index, {
+          route: targetRoute,
+          apiKey,
+          constraints,
+          idempotencyHeader,
+          serviceClient,
+        })
+      )
+    );
 
     const statusCode = determineStatusCode(results);
 
