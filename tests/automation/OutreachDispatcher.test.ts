@@ -45,7 +45,7 @@ describe('OutreachDispatcher', () => {
       expect(queue).toHaveLength(0);
 
       // 3. Dispatch a new item to verify the queueIDCounter was reset properly
-      const newItem = await dispatchOutreach(mockPayload, 'RED');
+      await dispatchOutreach(mockPayload, 'RED');
       queue = getOutreachQueue();
 
       expect(queue).toHaveLength(1);
