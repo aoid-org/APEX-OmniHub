@@ -5,6 +5,7 @@ Optional persistence hook for embeddings
 Requires TLS verification, only enabled if VECTOR_PROVIDER == "tidb"
 """
 
+import json
 import os
 from typing import Any
 
@@ -101,7 +102,7 @@ class TiDBVectorPersistence:
                 REPLACE INTO vector_embeddings (id, embedding, metadata, updated_at)
                 VALUES (%s, %s, %s, NOW())
                 """,
-                (embedding_id, str(embedding), str(metadata)),
+                (embedding_id, json.dumps(embedding), json.dumps(metadata)),
             )
             self.connection.commit()
         except MySQLError as e:
@@ -130,12 +131,10 @@ class TiDBVectorPersistence:
             )
             result = cursor.fetchone()
             if result:
-                # Parse embedding string back to list
-                import ast
-
+                # Parse JSON string back to list/dict
                 return {
-                    "embedding": ast.literal_eval(result["embedding"]),
-                    "meta": ast.literal_eval(result["metadata"]),
+                    "embedding": json.loads(result["embedding"]),
+                    "meta": json.loads(result["metadata"]),
                 }
             return None
         except MySQLError as e:
