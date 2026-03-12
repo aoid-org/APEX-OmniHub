@@ -1,34 +1,50 @@
 /**
- * Shared react-grid-layout primitives for OmniDash widgets.
+ * OmniDash responsive layout primitives.
  *
- * Centralises the WidthProvider setup, CSS side-effects, and the reusable
- * DragHandle SVG so individual tab components don't duplicate them.
+ * IMPORTANT: OmniDash now runs inside the global OmniCanvas drag/zoom system.
+ * This wrapper intentionally disables react-grid-layout dragging/resizing so
+ * card-level interactions never steal pointer events from the canvas host.
  */
-import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
+import { Responsive, WidthProvider, type ResponsiveProps } from 'react-grid-layout/legacy';
+import type { JSX } from 'react';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
 export { type Layout } from 'react-grid-layout/legacy';
 
-/** Pre-wired responsive grid ready for use in every OmniDash tab. */
-export const ResponsiveGridLayout = WidthProvider(Responsive);
+const BaseResponsiveGridLayout = WidthProvider(Responsive);
+
+/**
+ * Responsive-only layout wrapper (non-draggable, non-resizable).
+ * Prevents interference with OmniCanvas global drag/pan interactions.
+ */
+export function ResponsiveGridLayout(props: ResponsiveProps): JSX.Element {
+  return (
+    <BaseResponsiveGridLayout
+      {...props}
+      isDraggable={false}
+      isResizable={false}
+      draggableHandle={undefined}
+      draggableCancel="*"
+      useCSSTransforms={false}
+      compactType="vertical"
+      preventCollision={false}
+    />
+  );
+}
 
 interface DragHandleProps {
-  /** Tailwind classes that control the initial & hover visibility of the handle.
-   *  - Cards with a `group` parent can use `text-white/0 group-hover:text-white/30`
-   *    (handle invisible until the card is hovered).
-   *  - Cards without `group` should use `text-white/20` (always slightly visible).
-   *  Defaults to the group-aware variant.
-   */
+  /** Optional visibility classes for decorative drag affordance. */
   visibilityClass?: string;
 }
 
-/** Six-dot drag handle rendered in the top-right corner of every grid card. */
+/** Decorative six-dot handle retained for visual continuity (not interactive). */
 export const DragHandle = ({
   visibilityClass = 'text-white/0 group-hover:text-white/30',
-}: DragHandleProps) => (
+}: DragHandleProps): JSX.Element => (
   <div
-    className={`custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing ${visibilityClass} hover:text-white/60 transition-colors z-20`}
+    className={`absolute top-0 right-0 p-3 h-10 w-10 pointer-events-none ${visibilityClass} hover:text-white/60 transition-colors z-20`}
+    aria-hidden="true"
   >
     <svg
       width="12"
