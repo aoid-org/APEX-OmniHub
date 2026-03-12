@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, spyOn, afterEach } from 'bun:test';
+import { describe, test, expect, beforeEach, vi, afterEach } from 'vitest';
 import {
   dispatchOutreach,
   getOutreachQueue,
@@ -13,13 +13,13 @@ describe('OutreachDispatcher', () => {
     body: 'Test Message',
   };
 
-  let warnSpy: ReturnType<typeof spyOn>;
+  let warnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Start with a clean queue
     clearOutreachQueue();
     // Stub out sendOutreach logs during the test
-    warnSpy = spyOn(console, 'warn').mockImplementation(() => {});
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -53,8 +53,8 @@ describe('OutreachDispatcher', () => {
 
       // The format is `outreach-${Date.now()}-${queueIdCounter}`.
       // Both before and after reset should end with `-1` since queueIdCounter starts at 0 and increments.
-      expect(firstIdBeforeReset.endsWith('-1')).toBeTrue();
-      expect(firstIdAfterReset.endsWith('-1')).toBeTrue();
+      expect(firstIdBeforeReset.endsWith('-1')).toBe(true);
+      expect(firstIdAfterReset.endsWith('-1')).toBe(true);
 
       // They might not be strictly identical if Date.now() ticked over, but the suffix proves reset.
       expect(firstIdBeforeReset).not.toEqual(firstIdAfterReset + 'x'); // Dummy assertion, the suffix check is the real one
