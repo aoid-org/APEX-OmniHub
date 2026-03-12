@@ -37,7 +37,6 @@ import { useCallback } from 'react';
 import { useOmniModal } from '../stores/omniModalStore';
 import type { OmniModalConfig, ModalType, RenderMode } from '../stores/omniModalStore';
 import { useOmniBoard } from '../stores/omniBoardStore';
-import type { OmniBoardConnectorRecord } from '../stores/omniBoardStore';
 import { supabase } from '../integrations/supabase/client';
 import type { AppRegistryCategory } from '../../packages/core/src/registry';
 
@@ -166,8 +165,8 @@ function sanitizeBackendPayload(
 export function useOmniDashAction(navigate?: (path: string) => void): {
   dispatch: (intent: OmniDashIntent) => void;
 } {
-  const hydrateConnector = useOmniBoard((s) => s.hydrateConnector);
-  const setConnectorStatus = useOmniBoard((s) => s.setConnectorStatus);
+  const hydrateIntegration = useOmniBoard((s) => s.hydrateIntegration);
+  const mountActiveApp = useOmniBoard((s) => s.mountActiveApp);
 
   const dispatch = useCallback(
     (intent: OmniDashIntent): void => {
@@ -188,9 +187,6 @@ export function useOmniDashAction(navigate?: (path: string) => void): {
       const onComplete = async (
         payload: Record<string, unknown>,
       ): Promise<void> => {
-        // Optimistic status update — immediate UI feedback before round-trip
-        setConnectorStatus(intent.appKey, 'CONNECTING');
-
         try {
           if (directive.type === 'oauth') {
             // ── OAuth Proxy Exchange ──────────────────────────────────────
@@ -213,47 +209,25 @@ export function useOmniDashAction(navigate?: (path: string) => void): {
             const responseData = (data ?? {}) as Record<string, unknown>;
             const sanitizedMeta = sanitizeBackendPayload(responseData);
 
-            const connectorRecord: OmniBoardConnectorRecord = {
-              id:
-                typeof responseData.connector_id === 'string'
-                  ? responseData.connector_id
-                  : configId,
-              provider: intent.provider,
-              appKey: intent.appKey,
-              status: 'LIVE',
-              proxyTokenExpiry:
-                typeof responseData.expires_at === 'number'
-                  ? responseData.expires_at
-                  : null,
-              syncedAt: Date.now(),
-              metadata: sanitizedMeta,
-            };
-
-            // Map sanitized payload directly to OmniBoard global state
-            hydrateConnector(connectorRecord);
+            hydrateIntegration({
+              provider: intent.appKey,
+              data: sanitizedMeta,
+              scopes: [],
+            });
           } else {
-            // ── Spatial / Microfrontend Launch ────────────────────────────
-            // No backend exchange needed — the app is already Live.
-            // Hydrate the store to reflect the launch event for observability.
-            const connectorRecord: OmniBoardConnectorRecord = {
+            const renderState = directive.renderMode === 'spatial' ? 'spatial' : 'sandbox';
+            mountActiveApp({
               id: configId,
               provider: intent.provider,
-              appKey: intent.appKey,
-              status: 'LIVE',
-              proxyTokenExpiry: null,
-              syncedAt: Date.now(),
-              metadata: {
+              renderState,
+              payload: {
                 launchedAt: Date.now(),
-                renderMode: directive.renderMode ?? 'sandbox',
-                launchPayload: sanitizeBackendPayload(payload),
+                routePath: intent.routePath,
+                contextData: sanitizeBackendPayload(payload),
               },
-            };
-
-            hydrateConnector(connectorRecord);
+            });
           }
         } catch (err: unknown) {
-          // Deterministic error state — never throw unhandled rejections
-          setConnectorStatus(intent.appKey, 'ERROR');
           console.error(
             `[OmniDashAction] ${intent.provider} exchange failed:`,
             err,
@@ -261,11 +235,8 @@ export function useOmniDashAction(navigate?: (path: string) => void): {
         }
       };
 
-      // ─── onCancel: Clean ABORTED absorption ──────────────────────────────
-      // Resets any optimistic CONNECTING state. Never throws. Callers are
-      // shielded from the { status: 'ABORTED' } rejection by this handler.
       const onCancel = (): void => {
-        setConnectorStatus(intent.appKey, 'NEEDS_AUTH');
+        console.warn(`[OmniDashAction] ${intent.provider} flow cancelled by user.`);
       };
 
       // ─── Build OmniModalConfig ────────────────────────────────────────────
@@ -300,7 +271,7 @@ export function useOmniDashAction(navigate?: (path: string) => void): {
       // to the modal store, preventing unnecessary re-renders on open/close.
       useOmniModal.getState().invoke(config);
     },
-    [navigate, hydrateConnector, setConnectorStatus],
+    [navigate, hydrateIntegration, mountActiveApp],
   );
 
   return { dispatch };

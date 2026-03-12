@@ -16,6 +16,7 @@ import { Search, Bell, Shield, ChevronDown, Sun, Moon, X, Sparkles } from 'lucid
 import { DashboardOverview } from '@/pages/DashboardOverview';
 import { OmniCanvas } from '@/components/omnidash/OmniCanvas';
 import { OmniSpatialHost } from '@/components/omnidash/OmniSpatialHost';
+import { GlobalMediaDock } from '@/components/omnidash/media/GlobalMediaDock';
 import { BYOMCockpit } from '@/components/byom/BYOMCockpit';
 import { SentinelPanel } from '@/components/omnidash/SentinelPanel';
 import { useOmniDashAction, type OmniDashIntent } from '@/hooks/useOmniDashAction';
@@ -303,6 +304,7 @@ export function OmniDashLayout() {
 
       {/* ────── GLOBAL MODAL ENGINE ────── */}
       <OmniSpatialHost />
+      <GlobalMediaDock />
     </div>
   );
 }

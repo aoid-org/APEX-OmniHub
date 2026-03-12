@@ -22,6 +22,30 @@ import { logRiskEvent } from '../safety/risk-events';
 // Custom action registry
 const customActions = new Set<string>();
 
+export interface ExecutionEngineOptions {
+  readonly fetchFn?: typeof fetch;
+}
+
+export class ExecutionEngine {
+  private readonly fetchFn: typeof fetch;
+
+  constructor(options: ExecutionEngineOptions = {}) {
+    this.fetchFn = options.fetchFn ?? globalThis.fetch;
+  }
+
+  async executeIntent(intent: MaestroIntent): Promise<ExecutionResult> {
+    return executeIntent(intent, this.fetchFn);
+  }
+
+  async executeBatch(intents: MaestroIntent[]): Promise<ExecutionResult[]> {
+    return executeBatch(intents, this.fetchFn);
+  }
+}
+
+export function createExecutionEngine(options: ExecutionEngineOptions = {}): ExecutionEngine {
+  return new ExecutionEngine(options);
+}
+
 /**
  * Check if an action is allowlisted
  */
@@ -135,7 +159,8 @@ export async function validateIntent(
  * Execute a validated intent
  */
 export async function executeIntent(
-  intent: MaestroIntent
+  intent: MaestroIntent,
+  fetchFn: typeof fetch = globalThis.fetch,
 ): Promise<ExecutionResult> {
   // First validate the intent
   const validation = await validateIntent(intent);
@@ -185,7 +210,7 @@ export async function executeIntent(
 
   // Execute the action (mock execution for now)
   try {
-    const outcome = await performAction(intent);
+    const outcome = await performAction(intent.action, intent.parameters, fetchFn);
     return {
       success: true,
       intent_id: intent.intent_id,
@@ -206,7 +231,8 @@ export async function executeIntent(
  * Execute a batch of intents, stopping on RED lane detection
  */
 export async function executeBatch(
-  intents: MaestroIntent[]
+  intents: MaestroIntent[],
+  fetchFn: typeof fetch = globalThis.fetch,
 ): Promise<ExecutionResult[]> {
   const results: ExecutionResult[] = [];
 
@@ -220,7 +246,7 @@ export async function executeBatch(
   }
 
   for (const intent of intents) {
-    const result = await executeIntent(intent);
+    const result = await executeIntent(intent, fetchFn);
     results.push(result);
 
     // Stop batch on RED lane
@@ -254,20 +280,21 @@ export async function requestMANMode(
  * Perform the actual action (mock implementation)
  */
 async function performAction(
-  intent: MaestroIntent
+  action: string,
+  params: unknown,
+  fetchFn: typeof fetch = globalThis.fetch,
 ): Promise<Record<string, unknown> | { ok: boolean; error: string }> {
   const baseUrl = process.env.NEXT_PUBLIC_ORCHESTRATOR_BASE_URL || process.env.VITE_ORCHESTRATOR_BASE_URL || process.env.ORCHESTRATOR_BASE_URL || 'http://localhost:3000';
 
   try {
-    const response = await fetch(`${baseUrl}/api/maestro/execute`, {
+    const response = await fetchFn(`${baseUrl}/api/maestro/execute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        action: intent.action,
-        params: intent.parameters,
-        idempotency_key: intent.intent_id,
+        action,
+        params,
       }),
     });
 
