@@ -47,7 +47,7 @@ jobs:
 
       - name: Run linters
         run: |
-          npm run lint:py
+          bun run lint:py
 
       - name: Check portability guardrails
         run: |

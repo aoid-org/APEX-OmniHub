@@ -60,16 +60,16 @@ jobs:
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'bun'
 
       - name: Install dependencies
-        run: npm ci --prefer-offline
+        run: bun install --frozen-lockfile --prefer-offline
 
       - name: Build web app
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key' }}
-        run: npm run build
+        run: bun run build
 
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
@@ -96,7 +96,7 @@ jobs:
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'bun'
 
       - name: Setup Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
@@ -108,7 +108,7 @@ jobs:
         uses: android-actions/setup-android@00854ea68c109d98c75d956347303bf7c45b0277 # v3.2.1
 
       - name: Install dependencies
-        run: npm ci --prefer-offline
+        run: bun install --frozen-lockfile --prefer-offline
 
       - name: Download web dist
         uses: actions/download-artifact@v4
@@ -174,10 +174,10 @@ jobs:
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'bun'
 
       - name: Install dependencies
-        run: npm ci --prefer-offline
+        run: bun install --frozen-lockfile --prefer-offline
 
       - name: Download web dist
         uses: actions/download-artifact@v4

@@ -29,7 +29,7 @@ jobs:
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: "20"
-          cache: "npm"
+          cache: "bun"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -37,7 +37,7 @@ jobs:
           bun-version: "1.2.14"
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: TypeScript compilation
         run: npx tsc --noEmit
@@ -46,13 +46,13 @@ jobs:
         run: npx eslint . --max-warnings 0
 
       - name: React singleton check
-        run: npm run check:react
+        run: bun run check:react
 
       - name: Run tests
-        run: npm run test
+        run: bun run test
 
       - name: Documentation drift check
-        run: npm run docs:check
+        run: bun run docs:check
 
       - name: Vercel SPA Rewrite Check
         run: cd apps/omnihub-site && node scripts/check-vercel-spa-rewrite.mjs
@@ -120,9 +120,9 @@ jobs:
             --only-verified \
             --exclude-paths .trufflehog-exclude-paths.txt
 
-      - name: npm audit for critical vulnerabilities
+      - name: bun audit for critical vulnerabilities
         run: |
-          npm audit --audit-level=critical || exit 1
+          bun audit --audit-level=critical || exit 1
 
       - name: Security posture check
         run: |
@@ -141,7 +141,7 @@ jobs:
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: "20"
-          cache: "npm"
+          cache: "bun"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -149,16 +149,16 @@ jobs:
           bun-version: "1.2.14"
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build production bundle
-        run: npm run build
+        run: bun run build
 
       - name: Install Playwright
         run: npx playwright install chromium
 
       - name: Run E2E smoke tests
-        run: npm run test:e2e
+        run: bun run test:e2e
 
   readiness-summary:
     name: Production Readiness Summary
