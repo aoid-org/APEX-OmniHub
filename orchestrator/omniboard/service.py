@@ -112,6 +112,7 @@ class OmniBoardService:
 
         known_providers = await cls.get_known_providers()
 
+        lower_providers = [(p.lower(), p) for p in known_providers]
         for provider_lower, provider in lower_providers:
             score = 0
 
