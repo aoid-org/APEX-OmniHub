@@ -27,7 +27,7 @@ import { useExecute } from "@/hooks/useExecute";
 import { useDemoStore } from "@/stores/demoStore";
 import { OmniTraceFeed } from "@/components/dashboard/OmniTraceFeed";
 import { HiddenMetric } from "./HiddenMetric";
-import { ResponsiveGridLayout, DragHandle, type Layout } from "./gridLayout";
+import { ResponsiveGridLayout, DragHandle, type Layout } from "./GridLayout";
 
 const ApexAgentAvatar = React.lazy(() => import("./ApexAgentAvatar"));
 
