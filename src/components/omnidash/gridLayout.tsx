@@ -1,76 +1,67 @@
-import React from 'react';
+/**
+ * OmniDash responsive layout primitives.
+ *
+ * IMPORTANT: OmniDash now runs inside the global OmniCanvas drag/zoom system.
+ * This wrapper intentionally disables react-grid-layout dragging/resizing so
+ * card-level interactions never steal pointer events from the canvas host.
+ */
+import { Responsive, WidthProvider, type ResponsiveProps } from 'react-grid-layout/legacy';
+import type { JSX } from 'react';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 
-export type LayoutItem = {
-  i: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  isResizable?: boolean;
-};
+export { type Layout } from 'react-grid-layout/legacy';
 
-export type Layout = LayoutItem[];
+const BaseResponsiveGridLayout = WidthProvider(Responsive);
 
-type ResponsiveGridLayoutProps = React.HTMLAttributes<HTMLDivElement> & {
-  children?: React.ReactNode;
-  layouts?: Partial<Record<string, Layout>>;
-  breakpoints?: Record<string, number>;
-  cols?: Record<string, number>;
-  rowHeight?: number;
-  onLayoutChange?: (currentLayout: Layout, allLayouts: Partial<Record<string, Layout>>) => void;
-  draggableHandle?: string;
-  margin?: [number, number];
-};
-
-export const ResponsiveGridLayout: React.FC<ResponsiveGridLayoutProps> = ({
-  className,
-  children,
-  layouts,
-  onLayoutChange,
-  breakpoints: _breakpoints,
-  cols: _cols,
-  rowHeight: _rowHeight,
-  draggableHandle: _draggableHandle,
-  margin: _margin,
-  ...rest
-}) => {
-  React.useEffect(() => {
-    if (!onLayoutChange) {
-      return;
-    }
-    const current = layouts?.lg ?? [];
-    onLayoutChange(current, layouts ?? {});
-  }, [layouts, onLayoutChange]);
-
+/**
+ * Responsive-only layout wrapper (non-draggable, non-resizable).
+ * Prevents interference with OmniCanvas global drag/pan interactions.
+ */
+export function ResponsiveGridLayout(props: ResponsiveProps): JSX.Element {
   return (
-    <div
-      data-testid="responsive-grid"
-      className={['responsive-grid-layout', className].filter(Boolean).join(' ')}
-      {...rest}
-    >
-      {children}
-    </div>
+    <BaseResponsiveGridLayout
+      {...props}
+      isDraggable={false}
+      isResizable={false}
+      draggableHandle={undefined}
+      draggableCancel="*"
+      useCSSTransforms={false}
+      compactType="vertical"
+      preventCollision={false}
+    />
   );
-};
+}
 
-type DragHandleProps = React.HTMLAttributes<HTMLDivElement> & {
-  className?: string;
+interface DragHandleProps {
+  /** Optional visibility classes for decorative drag affordance. */
   visibilityClass?: string;
-};
+}
 
-export const DragHandle: React.FC<DragHandleProps> = ({
-  className,
-  visibilityClass,
-  children,
-  ...rest
-}) => (
+/** Decorative six-dot handle retained for visual continuity (not interactive). */
+export const DragHandle = ({
+  visibilityClass = 'text-white/0 group-hover:text-white/30',
+}: DragHandleProps): JSX.Element => (
   <div
-    className={['drag-handle custom-drag-handle', visibilityClass, className].filter(Boolean).join(' ')}
-    aria-label="drag handle"
-    role="button"
-    tabIndex={0}
-    {...rest}
+    className={`absolute top-0 right-0 p-3 h-10 w-10 pointer-events-none ${visibilityClass} hover:text-white/60 transition-colors z-20`}
+    aria-hidden="true"
   >
-    {children ?? '⠿'}
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="9" cy="12" r="1" />
+      <circle cx="9" cy="5" r="1" />
+      <circle cx="9" cy="19" r="1" />
+      <circle cx="15" cy="12" r="1" />
+      <circle cx="15" cy="5" r="1" />
+      <circle cx="15" cy="19" r="1" />
+    </svg>
   </div>
 );
