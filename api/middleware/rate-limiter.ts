@@ -7,7 +7,7 @@
 import { kv } from '@vercel/kv';
 
 export async function rateLimitMiddleware(request: Request) {
-  const ip = request.headers.get("x-real-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown_ip";
+  const ip = request.headers.get("x-real-ip") ?? request.headers.get("x-forwarded-for")?.split(",").pop()?.trim() ?? "unknown_ip";
 
   try {
     // FAIL-CLOSED: Nullish coalescing directly to false.
