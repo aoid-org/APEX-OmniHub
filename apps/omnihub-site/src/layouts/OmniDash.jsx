@@ -408,6 +408,63 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }) => {
   );
 };
 
+// ─── Data Management Hook ─────────────────────────────────────────────────────
+const INITIAL_METRICS = [
+  {val:"0",label:"Events Tracked",color:T.t1},
+  {val:"100%",label:"System Health",color:T.green},
+  {val:"1 loop",label:"Guardian Loops",color:T.warn},
+  {val:"Clean",label:"Stale Checks",color:T.green},
+];
+
+const INITIAL_TRACES = [
+  {color:T.green,  text:"Salesforce sync completed — 48 records"},
+  {color:T.warn,   text:"Invoice batch #1042 processed"},
+  {color:T.warn,   text:'Workflow "Lead Nurture" triggered'},
+  {color:T.purple, text:"QuickBooks reconciliation done"},
+  {color:T.green,  text:"Ticket #7291 auto-resolved by agent"},
+];
+
+const useOmniDashData = (ops) => {
+  const [metrics, setMetrics] = useState(INITIAL_METRICS);
+  const [traces, setTraces] = useState(INITIAL_TRACES);
+  const [securityCheckTime, setSecurityCheckTime] = useState(new Date().toLocaleTimeString());
+  const [isScanning, setIsScanning] = useState(false);
+
+  useEffect(() => {
+    if (!ops.demo) return;
+    const interval = setInterval(() => {
+      setMetrics(prev => {
+        const newEvents = parseInt(prev[0].val.replace(/,/g, '')) + Math.floor(Math.random() * 5);
+        return [
+          { ...prev[0], val: newEvents.toLocaleString() },
+          prev[1],
+          { ...prev[2], val: `${Math.floor(newEvents / 50) + 1} loops` },
+          prev[3],
+        ];
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [ops.demo]);
+
+  const runScan = useCallback(() => {
+    if (isScanning) return;
+    setIsScanning(true);
+    setTimeout(() => {
+      setSecurityCheckTime(new Date().toLocaleTimeString());
+      setIsScanning(false);
+    }, 1500);
+  }, [isScanning]);
+
+  const replayWorkflows = useCallback(() => {
+    setTraces(prev => [
+      { color: T.cyan, text: "Replaying historical workflows..." },
+      ...prev.slice(0, 4)
+    ]);
+  }, []);
+
+  return { metrics, traces, securityCheckTime, isScanning, runScan, replayWorkflows };
+};
+
 // ─── Widget: APEX Agent ───────────────────────────────────────────────────────
 const AgentWidget = ({ tick }) => {
   const secs = tick * 2;
@@ -555,7 +612,7 @@ const SLATE_SUGGESTIONS = [
   "Pull Salesforce pipeline for this week and draft an exec summary.",
 ];
 
-const OmniSlateWidget = () => {
+const OmniSlateWidget = ({ ops }) => {
   const [input, setInput] = useState("");
   const [suggIdx, setSuggIdx] = useState(0);
   const [suggVisible, setSuggVisible] = useState(true);
@@ -580,10 +637,12 @@ const OmniSlateWidget = () => {
     const q = input.trim(); setInput(""); setLoading(true);
     setMessages(m => [...m, {role:"user", text:q}]);
     setTimeout(() => {
-      setMessages(m => [...m, {role:"assistant", text:`Analyzing: "${q}" — Guardian audit passed. Agent response queued.`}]);
+      const modeContext = ops.guardian ? "Guardian audit passed." : "Guardian deactivated.";
+      const liveContext = ops.live ? " Live data fetched." : "";
+      setMessages(m => [...m, {role:"assistant", text:`Analyzing: "${q}" — ${modeContext}${liveContext} Agent response queued.`}]);
       setLoading(false);
     }, 900);
-  }, [input]);
+  }, [input, ops]);
 
   const fillSuggestion = () => setInput(SLATE_SUGGESTIONS[suggIdx]);
 
@@ -708,32 +767,41 @@ const OmniSlateWidget = () => {
 };
 
 // ─── Widget: APEX Ecosystem ───────────────────────────────────────────────────
-const EcosystemWidget = () => (
-  <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
-    <div style={{ padding:"14px 16px 10px", borderBottom:`1px solid ${T.border}` }}>
-      <SectionLabel>APEX Ecosystem</SectionLabel>
-    </div>
-    <div style={{ padding:"14px", flex:1 }}>
-      <button style={{
-        width:"100%", padding:"20px 16px",
-        background:`${T.surface}`,
-        border:`1px dashed ${T.orange}44`,
-        borderRadius:14, color:T.orange, fontSize:15.1, fontWeight:600,
-        cursor:"pointer", transition:"all .2s",
-        display:"flex",alignItems:"center",justifyContent:"center",gap:10,
-        letterSpacing:"0.01em",
-      }}>
-        <span style={{
-          width:22,height:22,borderRadius:6,
-          background:`${T.orange}22`,border:`1px solid ${T.orange}55`,
-          display:"flex",alignItems:"center",justifyContent:"center",
-          fontSize:17.3,color:T.orange,
-        }}>+</span>
-        Add APEX App
-      </button>
-    </div>
-  </GlassCard>
-);
+const EcosystemWidget = () => {
+  const [adding, setAdding] = useState(false);
+  const handleAdd = () => {
+    if (adding) return;
+    setAdding(true);
+    setTimeout(() => setAdding(false), 600);
+  };
+  return (
+    <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+      <div style={{ padding:"14px 16px 10px", borderBottom:`1px solid ${T.border}` }}>
+        <SectionLabel>APEX Ecosystem</SectionLabel>
+      </div>
+      <div style={{ padding:"14px", flex:1 }}>
+        <button onClick={handleAdd} style={{
+          width:"100%", padding:"20px 16px",
+          background:`${T.surface}`,
+          border:`1px dashed ${T.orange}44`,
+          borderRadius:14, color:T.orange, fontSize:15.1, fontWeight:600,
+          cursor: adding ? "default" : "pointer", transition:"all .2s",
+          display:"flex",alignItems:"center",justifyContent:"center",gap:10,
+          letterSpacing:"0.01em",
+          opacity: adding ? 0.6 : 1,
+        }}>
+          <span style={{
+            width:22,height:22,borderRadius:6,
+            background:`${T.orange}22`,border:`1px solid ${T.orange}55`,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            fontSize:17.3,color:T.orange,
+          }}>+</span>
+          {adding ? "Connecting..." : "Add APEX App"}
+        </button>
+      </div>
+    </GlassCard>
+  );
+};
 
 // ─── Widget: Integrated Apps ──────────────────────────────────────────────────
 const IntegratedAppsWidget = () => (
@@ -768,7 +836,7 @@ const IntegratedAppsWidget = () => (
 );
 
 // ─── Right Panel Sections ─────────────────────────────────────────────────────
-const SecurityPanel = ({ tick }) => {
+const SecurityPanel = ({ tick, securityCheckTime, isScanning, runScan }) => {
   const pls = tick%2===0;
   return (
     <GlassCard style={{ padding:"14px 14px 12px" }}>
@@ -785,33 +853,29 @@ const SecurityPanel = ({ tick }) => {
           <div style={{fontSize:10.8,color:T.t2}}>All gateways secured</div>
         </div>
       </div>
-      <div style={{fontSize:9.8,color:T.t3}}>LAST CHECK: {new Date().toLocaleTimeString()}</div>
-      <button style={{
+      <div style={{fontSize:9.8,color:T.t3}}>LAST CHECK: {securityCheckTime}</div>
+      <button onClick={runScan} disabled={isScanning} style={{
         marginTop:10,width:"100%",padding:"8px",
         background:T.surface,border:`1px solid ${T.border}`,
-        borderRadius:10,color:T.t1,fontSize:13,cursor:"pointer",fontWeight:500,
+        borderRadius:10,color:T.t1,fontSize:13,cursor: isScanning ? "default" : "pointer",fontWeight:500,
         display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+        opacity: isScanning ? 0.7 : 1,
       }}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-        Scan Now
+        {isScanning ? "Scanning..." : "Scan Now"}
       </button>
     </GlassCard>
   );
 };
 
-const AnalyticsPanel = () => (
+const AnalyticsPanel = ({ metrics }) => (
   <GlassCard style={{ padding:"14px" }}>
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
       <IconBadge idx={0} size={19} />
       <SectionLabel>Analytics</SectionLabel>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-      {[
-        {val:"0",label:"Events Tracked",color:T.t1},
-        {val:"100%",label:"System Health",color:T.green},
-        {val:"1 loop",label:"Guardian Loops",color:T.warn},
-        {val:"Clean",label:"Stale Checks",color:T.green},
-      ].map((s,i) => (
+      {metrics.map((s,i) => (
         <div key={i} style={{
           background:T.surface,border:`1px solid ${T.border}`,
           borderRadius:10,padding:"10px 10px",textAlign:"center",
@@ -824,22 +888,14 @@ const AnalyticsPanel = () => (
   </GlassCard>
 );
 
-const TRACE_EVENTS = [
-  {color:T.green,  text:"Salesforce sync completed — 48 records"},
-  {color:T.warn,   text:"Invoice batch #1042 processed"},
-  {color:T.warn,   text:'Workflow "Lead Nurture" triggered'},
-  {color:T.purple, text:"QuickBooks reconciliation done"},
-  {color:T.green,  text:"Ticket #7291 auto-resolved by agent"},
-];
-
-const OmniTracePanel = () => (
+const OmniTracePanel = ({ traces, replayWorkflows }) => (
   <GlassCard style={{ padding:"14px" }}>
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
       <IconBadge idx={7} size={19} />
       <SectionLabel>OmniTrace</SectionLabel>
     </div>
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
-      {TRACE_EVENTS.map((e,i) => (
+      {traces.map((e,i) => (
         <div key={i} style={{display:"flex",alignItems:"flex-start",gap:8}}>
           <div style={{
             width:7,height:7,borderRadius:"50%",background:e.color,
@@ -849,7 +905,7 @@ const OmniTracePanel = () => (
         </div>
       ))}
     </div>
-    <button style={{
+    <button onClick={replayWorkflows} style={{
       marginTop:12,width:"100%",padding:"8px",
       background:T.surface,border:`1px solid ${T.border}`,
       borderRadius:10,color:T.t2,fontSize:11.9,cursor:"pointer",fontWeight:600,
@@ -906,6 +962,8 @@ export default function OmniDashShell() {
   const [ops, setOps] = useState({ demo:true, autoPilot:false, guardian:true, live:false });
   const [isDark, setIsDark] = useState(true);
 
+  const dashData = useOmniDashData(ops);
+
   useEffect(() => {
     const id = setInterval(() => setTick(t => t+1), 500);
     return () => clearInterval(id);
@@ -961,7 +1019,7 @@ export default function OmniDashShell() {
           {/* Primary 3-column grid — fixed height ~3 ecosystem tiles tall */}
           <div style={{ display:"grid", gridTemplateColumns:"220px 1fr 220px", gap:14, height:300 }}>
             <AgentWidget tick={tick} />
-            <OmniSlateWidget />
+            <OmniSlateWidget ops={ops} />
             <EcosystemWidget />
           </div>
 
@@ -998,9 +1056,9 @@ export default function OmniDashShell() {
           overflowY:"auto", padding:"14px 12px",
           display:"flex", flexDirection:"column", gap:12,
         }}>
-          <SecurityPanel tick={tick} />
-          <AnalyticsPanel />
-          <OmniTracePanel />
+          <SecurityPanel tick={tick} securityCheckTime={dashData.securityCheckTime} isScanning={dashData.isScanning} runScan={dashData.runScan} />
+          <AnalyticsPanel metrics={dashData.metrics} />
+          <OmniTracePanel traces={dashData.traces} replayWorkflows={dashData.replayWorkflows} />
           <OpsControlsPanel ops={ops} setOps={setOps} />
         </div>
       </div>
