@@ -202,9 +202,8 @@ async function collectEvalResults(
 
     if (casesError) throw casesError;
 
-    for (const evalCase of evalCases || []) {
-      results.push(await runSingleEvaluation(supabase, evalCase.id));
-    }
+    const evalPromises = (evalCases || []).map(evalCase => runSingleEvaluation(supabase, evalCase.id));
+    results.push(...(await Promise.all(evalPromises)));
   } else if (eval_case_id) {
     // Run evaluation on specific case
     results.push(await runSingleEvaluation(supabase, eval_case_id));
