@@ -58,6 +58,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -91,6 +94,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -125,6 +131,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -166,6 +175,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -298,6 +310,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -351,6 +366,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
         run: bun install --frozen-lockfile
 

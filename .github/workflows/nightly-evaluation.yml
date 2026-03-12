@@ -39,6 +39,9 @@ jobs:
       with:
         node-version: '20'
 
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: "1.2.14"
     - name: Install dependencies
       if: steps.usage-check.outputs.should_run == 'true'
       run: bun install --frozen-lockfile

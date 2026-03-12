@@ -61,6 +61,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
         run: bun install --frozen-lockfile --prefer-offline
 
@@ -105,6 +108,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@00854ea68c109d98c75d956347303bf7c45b0277 # v3.2.1
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
         run: bun install --frozen-lockfile --prefer-offline
 
@@ -173,6 +179,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
         run: bun install --frozen-lockfile --prefer-offline
 

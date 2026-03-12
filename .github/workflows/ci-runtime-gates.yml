@@ -104,6 +104,9 @@ jobs:
         with:
           bun-version: "1.2.14"
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
         run: bun install --frozen-lockfile
         env:
@@ -310,6 +313,9 @@ jobs:
         with:
           bun-version: "1.2.14"
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
