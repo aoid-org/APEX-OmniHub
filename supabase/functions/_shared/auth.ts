@@ -94,7 +94,7 @@ export async function authenticateUser(authHeader: string | null, supabase: Retu
  * @returns Client IP address
  */
 export function getClientIP(req: Request): string {
-  return req.headers.get('x-forwarded-for')?.split(',')[0] ||
+  return req.headers.get('x-forwarded-for')?.split(',').pop()?.trim() ||
          req.headers.get('x-real-ip') ||
          req.headers.get('cf-connecting-ip') ||
          'unknown';

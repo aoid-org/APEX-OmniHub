@@ -227,7 +227,7 @@ serve(
         if (hasIntentSignal) {
           // 1. Normalize raw payload → TS EventEnvelope (Zod-validated)
           const tsEnvelope = normalizeToEventEnvelope(rawBody, {
-            sourceIp: req.headers.get('x-forwarded-for') ?? undefined,
+            sourceIp: req.headers.get('x-real-ip') ?? req.headers.get('x-forwarded-for')?.split(',').pop()?.trim() ?? undefined,
             userAgent: req.headers.get('user-agent') ?? undefined,
             channel: 'api',
           });

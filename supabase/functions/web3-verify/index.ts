@@ -425,7 +425,7 @@ Deno.serve(async (req) => {
       .eq('chain_id', resolvedChainId);
 
     // Get client metadata
-    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] ||
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',').pop()?.trim() ||
       req.headers.get('x-real-ip') ||
       'unknown';
     const userAgent = req.headers.get('user-agent') || 'unknown';
