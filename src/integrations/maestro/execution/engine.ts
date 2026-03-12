@@ -19,6 +19,12 @@ import {
 import { detectInjection } from '../safety/injection-detection';
 import { logRiskEvent } from '../safety/risk-events';
 
+type FetchFn = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
+interface ExecutionOptions {
+  fetchFn?: FetchFn;
+}
+
 // Custom action registry
 const customActions = new Set<string>();
 
@@ -135,7 +141,8 @@ export async function validateIntent(
  * Execute a validated intent
  */
 export async function executeIntent(
-  intent: MaestroIntent
+  intent: MaestroIntent,
+  options: ExecutionOptions = {}
 ): Promise<ExecutionResult> {
   // First validate the intent
   const validation = await validateIntent(intent);
@@ -185,7 +192,8 @@ export async function executeIntent(
 
   // Execute the action (mock execution for now)
   try {
-    const outcome = await performAction(intent);
+    const fetchFn = options.fetchFn ?? globalThis.fetch.bind(globalThis);
+    const outcome = await performAction(intent, fetchFn);
     return {
       success: true,
       intent_id: intent.intent_id,
@@ -206,7 +214,8 @@ export async function executeIntent(
  * Execute a batch of intents, stopping on RED lane detection
  */
 export async function executeBatch(
-  intents: MaestroIntent[]
+  intents: MaestroIntent[],
+  options: ExecutionOptions = {}
 ): Promise<ExecutionResult[]> {
   const results: ExecutionResult[] = [];
 
@@ -220,7 +229,7 @@ export async function executeBatch(
   }
 
   for (const intent of intents) {
-    const result = await executeIntent(intent);
+    const result = await executeIntent(intent, options);
     results.push(result);
 
     // Stop batch on RED lane
@@ -254,12 +263,13 @@ export async function requestMANMode(
  * Perform the actual action (mock implementation)
  */
 async function performAction(
-  intent: MaestroIntent
+  intent: MaestroIntent,
+  fetchFn: FetchFn
 ): Promise<Record<string, unknown> | { ok: boolean; error: string }> {
   const baseUrl = process.env.NEXT_PUBLIC_ORCHESTRATOR_BASE_URL || process.env.VITE_ORCHESTRATOR_BASE_URL || process.env.ORCHESTRATOR_BASE_URL || 'http://localhost:3000';
 
   try {
-    const response = await fetch(`${baseUrl}/api/maestro/execute`, {
+    const response = await fetchFn(`${baseUrl}/api/maestro/execute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
