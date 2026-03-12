@@ -1,8 +1,8 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
-
 from activities.tools import (
     search_database,
     create_record,
@@ -14,8 +14,7 @@ from activities.tools import (
     mint_pilot_session,
     check_semantic_cache,
     setup_activities,
-    _semantic_cache,
-)
+    
 
 
 @pytest.fixture(autouse=True)
