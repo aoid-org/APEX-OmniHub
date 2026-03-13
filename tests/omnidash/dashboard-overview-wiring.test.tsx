@@ -8,7 +8,7 @@ import { act } from 'react';
 import type { ReactNode } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
-import { DashboardOverview } from '../../apps/omnihub-site/src/pages/DashboardOverview';
+import { DashboardOverview } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/DashboardOverview';
 import { useOmniModal } from '../../src/stores/omniModalStore';
 
 
@@ -64,7 +64,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 // Stub hasModuleComponent — modules are resolved via Edge Function, not local registry
-vi.mock('../../apps/omnihub-site/src/components/omnidash/moduleComponents', () => ({
+vi.mock('../../apps/omnihub-site/dashboard/components/moduleComponents', () => ({
   hasModuleComponent: (key: string) =>
     ['omniskills', 'physiomni', 'audits', 'links', 'automations', 'workflows', 'files', 'billing', 'settings'].includes(key),
 }));

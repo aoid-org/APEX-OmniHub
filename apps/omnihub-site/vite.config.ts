@@ -60,6 +60,10 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+<<<<<<< Updated upstream
+=======
+      '@/dashboard': resolve(__dirname, './dashboard'),
+>>>>>>> Stashed changes
       '@': resolve(__dirname, './src'),
     },
     dedupe: ['react', 'react-dom'],
