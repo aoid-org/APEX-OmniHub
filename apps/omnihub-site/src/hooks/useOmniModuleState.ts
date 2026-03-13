@@ -14,7 +14,7 @@ import type {
   ModuleStatItem,
   ModuleListItem,
   ModuleAction,
-} from '../components/omnidash/ModuleRegistry';
+} from '@/dashboard/components/ModuleRegistry';
 
 export interface OmniModuleState {
   readonly moduleKey: string;

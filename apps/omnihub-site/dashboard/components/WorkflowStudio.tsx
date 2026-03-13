@@ -3,7 +3,7 @@
  */
 
 import { WorkflowBuilder } from '@/components/workflows/WorkflowBuilder';
-import { OmniTraceFeed } from '@/components/dashboard/OmniTraceFeed';
+import { OmniTraceFeed } from '@/dashboard/components/OmniTraceFeed';
 
 export function WorkflowStudio() {
   return (

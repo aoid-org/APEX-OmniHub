@@ -1,0 +1,81 @@
+{
+  "name": "apex-dash-creator",
+  "version": "2.0.0",
+  "codename": "GOD_MODE",
+  "edition": "universal",
+  "description": "God-Mode Dashboard Intelligence Engine — Universal LLM Edition. 20x upgrade with omniscient UI/UX debug protocol, render pathology engine, data pipeline debugger, interaction fault tracer, responsive collapse auditor, and full-stack visualization mastery. Inject SKILL.md into any LLM system prompt for instant expert activation.",
+  "author": "APEX Business Systems Ltd.",
+  "license": "Proprietary",
+  "archetype": "Hybrid (Domain + Guardian + Transformer)",
+  "mode": "universal",
+  "llm_agnostic": true,
+  "safety_aware": true,
+  "target_model": "any",
+  "compatible_models": ["claude", "gpt-4", "gemini", "mistral", "llama", "deepseek", "any"],
+  "install_method": "Inject SKILL.md as system prompt or prepend to context window",
+  "supersedes": "apex-dashboard-creator v1.0.0 (universal)",
+  "triggers": [
+    "create dashboard", "build dashboard", "design dashboard", "dashboard UI",
+    "dashboard UX", "data visualization", "KPI dashboard", "analytics screen",
+    "BI dashboard", "executive dashboard", "sales dashboard", "marketing dashboard",
+    "financial dashboard", "product dashboard", "operations dashboard",
+    "chart bug", "chart not rendering", "chart blank", "chart wrong data",
+    "dashboard slow", "dashboard performance", "dashboard debug",
+    "chart tooltip broken", "filter not working", "drill-down broken",
+    "dashboard layout broken", "chart overflow", "dashboard mobile broken",
+    "responsive dashboard", "dark mode dashboard", "chart library",
+    "dashboard React", "dashboard Recharts", "dashboard Tremor", "dashboard D3",
+    "dashboard Grafana", "dashboard Streamlit", "dashboard Tableau", "dashboard Power BI",
+    "dashboard audit", "dashboard critique", "dashboard rebuild",
+    "KPI card", "sparkline", "funnel chart", "cohort heatmap", "choropleth",
+    "dashboard accessibility", "WCAG dashboard", "chart render performance"
+  ],
+  "sections": {
+    "A": "Architecture Engine",
+    "B": "Audit and Rebuild",
+    "C": "Visualization Matrix",
+    "D": "Stack Oracle",
+    "E": "Design System Engine",
+    "F": "Dashboard Debug Protocol (GOD MODE)",
+    "G": "A11Y Fortress",
+    "H": "Performance Profiler"
+  },
+  "debug_domains": [
+    "F.1: Layout Engine",
+    "F.2: Data Pipeline Debugger",
+    "F.3: Interaction Fault Tracer",
+    "F.4: Render Pathology Engine",
+    "F.5: Responsive Collapse Auditor",
+    "F.6: Debug Output Format"
+  ],
+  "uncertainty_format": "[UNCERTAIN: reason] | Options: A=[option], B=[option]",
+  "unverified_format": "[UNVERIFIED: data model assumed as X] — confirm before finalizing",
+  "context_block_format": "### Context Block:\nType: [type]\nContent: [content]",
+  "files": {
+    "core": "SKILL.md",
+    "manifest": "MANIFEST.json",
+    "references": [
+      "references/dashboard-taxonomy.md",
+      "references/design-system-tokens.md",
+      "references/viz-library-index.md",
+      "references/ux-laws-antipatterns.md"
+    ],
+    "templates": [
+      "templates/quick-start-dashboard.md"
+    ]
+  },
+  "rubric": {
+    "max_score": 100,
+    "pass_threshold": 85,
+    "dimensions": {
+      "information_hierarchy": 15,
+      "chart_appropriateness": 15,
+      "debug_completeness": 15,
+      "design_system_fidelity": 15,
+      "component_completeness": 10,
+      "accessibility": 15,
+      "performance": 10,
+      "responsiveness": 5
+    }
+  }
+}

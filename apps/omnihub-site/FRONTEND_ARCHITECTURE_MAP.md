@@ -11,14 +11,13 @@
 ```
 apps/omnihub-site/src/
 ├── App.tsx                          ← SO Router (single source of truth)
-├── layouts/
-│   └── OmniDashLayout.tsx           ← Canonical Shell (3-column grid)
+├── dashboard/
+│   └── OmniDashShell.tsx            ← Canonical Shell (unified component)
 │       ├── Sidebar (left)           ← Nav icons, links, sentry status
-│       ├── Center Column            ← DashboardOverview (permanent) + Outlet (modal)
-│       └── Right Sidebar            ← Ops Controls, OmniTrace, Analytics, Security
+│       ├── Main Canvas (center)     ← Core dashboard metrics and integrations
+│       └── Right Panel              ← Ops Controls, OmniTrace, Analytics, Security
 ├── pages/
 │   ├── Home.tsx                     ← Marketing landing (apexomnihub.icu/)
-│   ├── DashboardOverview.tsx        ← Canonical data view (embedded in layout)
 │   ├── Login.tsx                    ← Authentication
 │   └── [Feature Pages]              ← OmniPort, Maestro, Fortress, etc.
 └── content/
@@ -27,15 +26,14 @@ apps/omnihub-site/src/
 
 ## Rendering Architecture
 
-| Component           | Location                      | Render Pattern                                    |
-| ------------------- | ----------------------------- | ------------------------------------------------- |
-| `OmniDashLayout`    | `layouts/OmniDashLayout.tsx`  | Parent shell — always mounted at `/omnidash`      |
-| `DashboardOverview` | `pages/DashboardOverview.tsx` | Hardcoded inside layout center column (permanent) |
-| Subroute pages      | `pages/*.tsx`                 | Rendered via `<Outlet />` inside modal overlay    |
+| Component       | Location                      | Render Pattern                                                |
+| --------------- | ----------------------------- | ------------------------------------------------------------- |
+| `OmniDashShell` | `dashboard/OmniDashShell.tsx` | Parent shell — always mounted at `/omnidash` and `/dashboard` |
+| Subroute pages  | `pages/*.tsx`                 | Rendered via `<Outlet />` inside modal overlay                |
 
 ## Routing Rules
 
-1. `OmniDashLayout` owns the `DashboardOverview` payload directly. **No index route.**
+1. `OmniDashShell` is the unified layout and dashboard UI component. **No index route.**
 2. All subroutes (`/omnidash/omniport`, `/omnidash/maestro`, etc.) render inside the modal `<Outlet />`.
 3. Dashboard stays visible behind the modal blur when subroutes are active.
 
@@ -43,12 +41,12 @@ apps/omnihub-site/src/
 
 All OmniDash interaction triggers route through the Universal Modal Engine rather than ad-hoc inline `invoke()` calls.
 
-| Surface | Invocation Pattern |
-|---|---|
-| App tile clicks (`DashboardOverview`) | `useOmniDashAction(navigate)` dispatch |
-| Connector auth buttons (`Integrations`) | `useOmniDashAction()` dispatch (no navigate) |
-| Header utility buttons (Connect AI) | `useOmniDashAction(navigate)` dispatch |
-| Utility modals (Notifications) | `useOmniModal.getState().invoke()` direct (non-reactive) |
+| Surface                                 | Invocation Pattern                                       |
+| --------------------------------------- | -------------------------------------------------------- |
+| App tile clicks (`DashboardOverview`)   | `useOmniDashAction(navigate)` dispatch                   |
+| Connector auth buttons (`Integrations`) | `useOmniDashAction()` dispatch (no navigate)             |
+| Header utility buttons (Connect AI)     | `useOmniDashAction(navigate)` dispatch                   |
+| Utility modals (Notifications)          | `useOmniModal.getState().invoke()` direct (non-reactive) |
 
 **Non-Reactive Rule**: Modal state is accessed exclusively via `useOmniModal.getState().invoke()` in event handlers — never via the reactive `useOmniModal()` hook subscription in layout/shell components. This prevents ghost re-renders on modal open/close.
 
@@ -74,4 +72,3 @@ All OmniDash interaction triggers route through the Universal Modal Engine rathe
 - Require interactive states for all controls (`hover`, `focus-visible`, `active`) with deterministic transition curves.
 - Keep accessibility first: semantic landmarks, keyboard navigation continuity, and meaningful ARIA labels.
 - For visual QA, run a single deterministic screenshot pass after layout or styling changes to prevent infinite dynamic loops.
-

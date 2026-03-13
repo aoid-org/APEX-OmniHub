@@ -18,7 +18,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useOmniModal } from '../../../stores/omniModalStore';
+import { useOmniModal } from '@/stores/omniModalStore';
 import {
   Dialog,
   DialogContent,
@@ -26,10 +26,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '../../ui/dialog';
-import { Button } from '../../ui/button';
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, CheckCircle2 } from 'lucide-react';
-import { ModuleRenderer } from '../../../../apps/omnihub-site/src/components/omnidash/ModuleRenderer';
+import { ModuleRenderer } from '../ModuleRenderer';
 
 export function UniversalModalEngine() {
   const { activeModal, isOpen, close, abortModal } = useOmniModal();
