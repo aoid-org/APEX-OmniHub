@@ -46,7 +46,7 @@ export const OmniCanvas = memo(function OmniCanvas() {
       onClick={handleCanvasClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-          handleCanvasClick(e as any);
+          handleCanvasClick(e as unknown as MouseEvent);
         }
       }}
     >

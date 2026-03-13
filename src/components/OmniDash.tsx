@@ -559,7 +559,7 @@ const OmniSlateWidget = () => {
   const [input, setInput] = useState<string>("");
   const [suggIdx, setSuggIdx] = useState<number>(0);
   const [suggVisible, setSuggVisible] = useState<boolean>(true);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const endRef = useRef(null);
 
@@ -903,7 +903,7 @@ const OpsControlsPanel = ({ ops, setOps }: OpsControlsPanelProps) => (
 export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);
   const [activeNav, setActiveNav] = useState<string>("OmniBoard");
-  const [ops, setOps] = useState<any>({ demo:true, autoPilot:false, guardian:true, live:false });
+  const [ops, setOps] = useState<{demo: boolean; autoPilot: boolean; guardian: boolean; live: boolean}>({ demo:true, autoPilot:false, guardian:true, live:false });
   const [isDark, setIsDark] = useState<boolean>(true);
 
   useEffect(() => {
