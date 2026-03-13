@@ -339,20 +339,22 @@ export function OmniSpatialHost() {
   const renderDialogMode = () => {
     const hasDescription = Boolean(activeModal?.description);
 
+    const dialogOpen = isOpen && renderMode === 'dialog';
     return (
-      <Dialog open={isOpen && renderMode === 'dialog'} onOpenChange={handleOpenChange}>
-        {/* Custom explicit backdrop — native button for cross-device A11y */}
-        <button
-          type="button"
-          aria-label="Close modal"
-          className="fixed inset-0 z-[400] w-full h-full border-none bg-black/80 cursor-default data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && Date.now() - mountTime.current >= 300) {
-              abortModal('USER_DISMISSED');
-            }
-          }}
-          data-state={isOpen && renderMode === 'dialog' ? 'open' : 'closed'}
-        />
+      <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+        {/* Custom explicit backdrop — only rendered when modal is open to avoid blocking page interactions */}
+        {dialogOpen && (
+          <button
+            type="button"
+            aria-label="Close modal"
+            className="fixed inset-0 z-[400] w-full h-full border-none bg-black/80 cursor-default animate-in fade-in-0"
+            onClick={(e) => {
+              if (e.target === e.currentTarget && Date.now() - mountTime.current >= 300) {
+                abortModal('USER_DISMISSED');
+              }
+            }}
+          />
+        )}
         <DialogContent
           className={
             activeModal?.type === 'module'

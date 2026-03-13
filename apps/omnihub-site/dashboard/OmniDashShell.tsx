@@ -1299,7 +1299,7 @@ export default function OmniDashShell() {
           overflowY:"auto", padding:"14px 12px",
           display:"flex", flexDirection:"column", gap:12,
         }}>
-          <SecurityPanel tick={tick} />
+          <SecurityPanel />
           <AnalyticsPanel />
           <OmniTracePanel />
           <OpsControlsPanel ops={ops} setOps={setOps} />
