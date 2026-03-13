@@ -189,7 +189,6 @@ export function UniversalModalEngine() {
                 ? activeModal.contextData.moduleKey
                 : activeModal.id
             }
-            onAction={handleAction}
             onClose={close}
           />
         );

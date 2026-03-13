@@ -28,7 +28,7 @@ import {
   Shield,
   Activity,
 } from 'lucide-react';
-import { ResponsiveGridLayout, DragHandle, type Layout } from './gridLayout';
+import { ResponsiveGridLayout, DragHandle, type Layout } from './GridLayout';
 
 /** Circuit-breaker status indicator */
 function circuitBreakerStatus(

@@ -1,5 +1,8 @@
 # APEX OmniHub — Canonical Infrastructure & Architecture Map
 
+> **Version:** 1.1.0 — 2026-03-13
+> **Last updated:** 2026-03-13 — OmniDash real-data layer, asset pipeline fix, OmniBoardStore connector types
+>
 > **Purpose:** This is the first-stop map for both humans and agents. It documents the current repository build layout, runtime topology, and ownership boundaries as they exist now.
 >
 > **Read this first, then branch into module docs.**
@@ -93,7 +96,7 @@ Also initializes platform services:
 - `/omnidash/approvals`
 - `/omnidash/workflows`
 
-## 3.4 OmniDash Universal Modal Engine (v1.0.0 — 2026-03-07)
+## 3.4 OmniDash Universal Modal Engine (v1.1.0 — 2026-03-13)
 
 The APEX Universal Modal Engine provides a single, idempotent interaction surface for all OmniDash app triggers, connector auth flows, spatial app launches, and microfrontend integrations.
 
@@ -102,7 +105,7 @@ The APEX Universal Modal Engine provides a single, idempotent interaction surfac
 | Module           | Path                           | Role                                              |
 | ---------------- | ------------------------------ | ------------------------------------------------- |
 | `omniModalStore` | `src/stores/omniModalStore.ts` | Global modal lifecycle (Zustand + Zod validation) |
-| `omniBoardStore` | `src/stores/omniBoardStore.ts` | Connector hydration state post-auth (Zustand)     |
+| `omniBoardStore` | `src/stores/omniBoardStore.ts` | Connector hydration state post-auth (Zustand) — exports `OmniBoardConnectorRecord`, `ConnectorStatus`, `hydrateConnector`, `setConnectorStatus` |
 
 ### Interaction Layer
 
@@ -130,6 +133,27 @@ The APEX Universal Modal Engine provides a single, idempotent interaction surfac
 ### Non-Reactive Dispatch Pattern
 
 All modal invocations use `useOmniModal.getState().invoke()` — not the reactive `useOmniModal()` hook — to prevent the caller component from re-rendering on modal open/close.
+
+---
+
+## 3.5 OmniDash Shell Data Layer (v1.0.0 — 2026-03-13)
+
+The `apps/omnihub-site/dashboard/` directory contains the OmniDashShell and its dedicated data layer. All files use site-local `@/lib/supabase` to avoid cross-layer `@/` alias conflicts with root `src/`.
+
+### Dashboard Layer File Map
+
+| Path | Role |
+| ---- | ---- |
+| `dashboard/OmniDashShell.tsx` | Main shell component — wired to `useLayoutPersistence` + `useDashboardData` |
+| `dashboard/types/dashboard.types.ts` | Shared types: `DashboardNavSection`, `OmniDashOpsState`, `KpiSummary`, `PaneDescriptor`, `PersistedLayoutState` |
+| `dashboard/hooks/useLayoutPersistence.ts` | Persists `activeNav`, `isDark`, `ops` to `localStorage` (key: `omnidash:layout:v1`) |
+| `dashboard/hooks/useDashboardData.ts` | Fetches settings, KPI, incidents, memory health from Supabase via site-local client |
+| `dashboard/hooks/usePaneRegistration.ts` | Registers panes with `omniDashStore` (OmniCanvas) — `openPane`, `closePane`, `focusPane`, `useAutoPane` |
+| `dashboard/handlers/dashboardHandlers.ts` | Action handlers: `handleToggleDemoMode`, `handleToggleFreezeMode`, `handleReportIncident`, `handleUpsertKpi` |
+
+### Asset Pipeline
+
+All brand assets are imported as ES modules from `src/assets/omnidash/` via relative path `../../../src/assets/omnidash/` from the dashboard directory. No base64 embedding — assets are code-split by Vite into `dist/assets/png/`.
 
 ---
 

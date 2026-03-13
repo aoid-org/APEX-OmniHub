@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   useOmniDashAction,
   type OmniDashIntent,
+  type OmniDashConnectStatus,
 } from '@/hooks/useOmniDashAction';
 import {
   APP_REGISTRY,
@@ -91,7 +92,7 @@ export const DashboardOverview = memo(function DashboardOverview({
         label: app.name,
         category: entry.category,
         routePath: entry.routePath,
-        dashboardStatus: app.status,
+        dashboardStatus: app.status as OmniDashConnectStatus,
         comingSoon: entry.comingSoon,
       };
       dispatch(intent);

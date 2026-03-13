@@ -38,7 +38,7 @@ interface FetchListOptions {
 
 async function fetchList<T>(userId: string, opts: FetchListOptions): Promise<T[]> {
   let query = supabase
-    .from(opts.table)
+    .from(opts.table as string)
     .select('*')
     .eq(opts.userColumn, userId)
     .order(opts.orderBy, { ascending: false });

@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchOmniLinkEvents } from '@/omnidash/omnilink-api';
 import { HiddenValue } from './HiddenMetric';
 import { Activity, RadioReceiver, Clock as ClockIcon, Hash } from 'lucide-react';
-import { ResponsiveGridLayout, type Layout } from './gridLayout';
+import { ResponsiveGridLayout, type Layout } from './GridLayout';
 import { useState, useMemo } from 'react';
 
 export const Events = () => {

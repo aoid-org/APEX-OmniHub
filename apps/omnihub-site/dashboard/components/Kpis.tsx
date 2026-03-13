@@ -10,7 +10,7 @@ import { useOmniDashSettings } from '@/omnidash/hooks';
 import { redactKpiDaily, redactAmount } from '@/omnidash/redaction';
 import { HiddenValue } from './HiddenMetric';
 import { LineChart, PlayCircle, AlertTriangle, MonitorPlay, CreditCard, DollarSign, Siren, Clock } from 'lucide-react';
-import { ResponsiveGridLayout, type Layout } from './gridLayout';
+import { ResponsiveGridLayout, type Layout } from './GridLayout';
 
 const today = () => new Date().toISOString().slice(0, 10);
 

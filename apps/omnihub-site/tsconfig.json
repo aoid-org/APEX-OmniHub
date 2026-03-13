@@ -21,9 +21,12 @@
       "@/components/ui/*": ["./src/components/ui/*", "../../src/components/ui/*"],
       "@/stores/*": ["./src/stores/*", "../../src/stores/*"],
       "@/lib/*": ["./src/lib/*", "../../src/lib/*"],
+      "@/hooks/*": ["./src/hooks/*", "../../src/hooks/*"],
+      "@/contexts/*": ["./src/contexts/*", "../../src/contexts/*"],
+      "@/omnidash/*": ["./src/omnidash/*", "../../src/omnidash/*"],
       "@/dashboard/*": ["./dashboard/*", "../../dashboard/*"],
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*", "../../src/*"]
     }
   },
-  "include": ["src", "../../packages/core/src"]
+  "include": ["src", "dashboard", "../../packages/core/src"]
 }
