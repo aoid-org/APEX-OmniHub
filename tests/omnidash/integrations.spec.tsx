@@ -15,8 +15,8 @@ vi.mock('@/omnidash/omnilink-api', () => ({
 }));
 
 vi.mock('@/stores/omniBoardStore', () => ({
-  useOmniBoard: (selector: (s: { connectors: Record<string, unknown> }) => unknown) =>
-    selector({ connectors: {} }),
+  useOmniBoard: (selector: (s: { connectors: Map<string, unknown> }) => unknown) =>
+    selector({ connectors: new Map() }),
 }));
 
 vi.mock('@/omnidash/useOmniDashAction', () => ({

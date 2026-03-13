@@ -83,12 +83,19 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       '@omnihub': path.resolve(__dirname, './apps/omnihub-site/src'),
       'react': path.resolve(__dirname, 'node_modules/react'),
+      'react/jsx-runtime': path.resolve(__dirname, 'node_modules/react/jsx-runtime'),
+      'react/jsx-dev-runtime': path.resolve(__dirname, 'node_modules/react/jsx-dev-runtime'),
       'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      'react-dom/client': path.resolve(__dirname, 'node_modules/react-dom/client'),
       'framer-motion': path.resolve(__dirname, 'node_modules/framer-motion'),
+      // Force site-scoped packages to use root node_modules (React 18) in tests
+      // Prevents CJS require('react') in site node_modules from loading React 19
+      'lucide-react': path.resolve(__dirname, 'node_modules/lucide-react'),
     },
     dedupe: [
       'react',
       'react-dom',
+      'lucide-react',
       'react-router',
       'react-router-dom',
       'framer-motion',
