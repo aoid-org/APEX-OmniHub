@@ -78,6 +78,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      'dashboard': path.resolve(__dirname, './apps/omnihub-site/dashboard'),
+      '@/dashboard': path.resolve(__dirname, './apps/omnihub-site/dashboard'),
       '@': path.resolve(__dirname, './src'),
       '@omnihub': path.resolve(__dirname, './apps/omnihub-site/src'),
       'react': path.resolve(__dirname, 'node_modules/react'),
