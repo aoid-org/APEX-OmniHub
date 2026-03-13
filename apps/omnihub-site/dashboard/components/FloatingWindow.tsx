@@ -21,8 +21,8 @@ import {
 } from 'react';
 import { motion } from 'framer-motion';
 import { X, PictureInPicture2 } from 'lucide-react';
-import { useOmniDash, Z_FLOATING, type FloatingWindowConfig } from '../../stores/omniDashStore';
-import { GPU_STYLE, SPRING_DAMPED } from '../../lib/motionPresets';
+import { useOmniDash, Z_FLOATING, type FloatingWindowConfig } from '@/stores/omniDashStore';
+import { GPU_STYLE, SPRING_DAMPED } from '@/lib/motionPresets';
 
 // ============================================================================
 // Component

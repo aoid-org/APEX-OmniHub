@@ -18,7 +18,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useOmniModal } from '../../../stores/omniModalStore';
+import { useOmniModal } from '../@/stores/omniModalStore';
 import {
   Dialog,
   DialogContent,

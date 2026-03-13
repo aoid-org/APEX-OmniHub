@@ -6,8 +6,8 @@
  */
 
 import { memo, useState, useCallback } from 'react';
-import { Button } from '../../../../../../src/components/ui/button';
-import { DialogFooter } from '../../../../../../src/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { DialogFooter } from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
 import type { OmniModuleState } from '@/hooks/useOmniModuleState';
 import { triggerModuleAction } from '@/hooks/useOmniModuleState';

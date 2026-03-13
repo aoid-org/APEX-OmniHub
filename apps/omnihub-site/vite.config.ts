@@ -61,6 +61,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
+      '@/dashboard': resolve(__dirname, './dashboard'),
     },
     dedupe: ['react', 'react-dom'],
   },

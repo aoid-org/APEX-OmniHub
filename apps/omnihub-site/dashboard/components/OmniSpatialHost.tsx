@@ -29,8 +29,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '../../../../../src/components/ui/dialog';
-import { Button } from '../../../../../src/components/ui/button';
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, CheckCircle2, Minimize2, Maximize2, X, GripHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SPRING_DAMPED, GPU_STYLE } from '@/lib/motionPresets';

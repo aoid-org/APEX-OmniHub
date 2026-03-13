@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import PersonaModal from '@/components/omnidash/PersonaModal';
+import PersonaModal from '@/dashboard/components/PersonaModal';
 import { AGENT_PREFS_STORAGE_KEY, readAgentPrefs, writeAgentPrefs, type AgentPersona } from '@/omnidash/agentPrefs';
-import { OmniDashTopHeader } from '@/components/omnidash/TopHeader';
+import { OmniDashTopHeader } from '@/dashboard/components/TopHeader';
 
 describe('Persona system', () => {
   it('persists selected persona into apex.agent.prefs.v1', () => {

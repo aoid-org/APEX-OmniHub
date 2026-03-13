@@ -22,8 +22,8 @@ import {
 } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Minus, Maximize2, Minimize2, X, GripHorizontal } from 'lucide-react';
-import { useOmniDash, type WidgetConfig } from '../../stores/omniDashStore';
-import { GPU_STYLE, SPRING_NATURAL } from '../../lib/motionPresets';
+import { useOmniDash, type WidgetConfig } from '@/stores/omniDashStore';
+import { GPU_STYLE, SPRING_NATURAL } from '@/lib/motionPresets';
 
 // ============================================================================
 // Component

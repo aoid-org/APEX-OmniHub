@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { HiddenMetric } from '@/components/omnidash/HiddenMetric';
+import { HiddenMetric } from '@/dashboard/components/HiddenMetric';
 import { Activity } from 'lucide-react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import userEvent from '@testing-library/user-event';

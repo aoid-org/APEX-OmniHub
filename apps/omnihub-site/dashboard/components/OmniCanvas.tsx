@@ -16,10 +16,10 @@
  */
 
 import { memo, useCallback, useRef, type MouseEvent } from 'react';
-import { useOmniDash } from '../../stores/omniDashStore';
+import { useOmniDash } from '@/stores/omniDashStore';
 import { WidgetShell } from './WidgetShell';
 import { FloatingWindow } from './FloatingWindow';
-import { GPU_STYLE } from '../../lib/motionPresets';
+import { GPU_STYLE } from '@/lib/motionPresets';
 
 export const OmniCanvas = memo(function OmniCanvas() {
   const widgets = useOmniDash(s => s.widgets);
@@ -42,7 +42,13 @@ export const OmniCanvas = memo(function OmniCanvas() {
     <div
       ref={canvasRef}
       className="omni-canvas"
+      role="presentation"
       onClick={handleCanvasClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleCanvasClick(e as any);
+        }
+      }}
     >
       {/* Transform layer for pan/zoom */}
       <div

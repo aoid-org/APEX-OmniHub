@@ -10,7 +10,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { OmniMediaPlayer } from '@/components/omnidash/media/OmniMediaPlayer';
+import { OmniMediaPlayer } from '@/dashboard/components/media/OmniMediaPlayer';
 import { useOmniMedia, type MediaPayload } from '@/stores/omniMediaStore';
 
 const MOCK_EMBED: MediaPayload = {

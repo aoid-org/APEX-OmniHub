@@ -21,6 +21,7 @@
       "@/components/ui/*": ["./src/components/ui/*", "../../src/components/ui/*"],
       "@/stores/*": ["./src/stores/*", "../../src/stores/*"],
       "@/lib/*": ["./src/lib/*", "../../src/lib/*"],
+      "@/dashboard/*": ["./dashboard/*", "../../dashboard/*"],
       "@/*": ["./src/*"]
     }
   },

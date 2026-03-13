@@ -10,7 +10,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { UniversalModalEngine } from '@/components/omnidash/media/UniversalModalEngine';
+import { UniversalModalEngine } from '@/dashboard/components/media/UniversalModalEngine';
 import { useOmniModal } from '@/stores/omniModalStore';
 
 // Polyfill window.PointerEvent for Radix UI Dialog
