@@ -476,7 +476,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
           { id: 'llama', label: 'Llama 3 (Meta)', description: 'Open-source self-hosted inference' },
         ],
       },
-      onComplete: async (_result: Record<string, unknown>) => { console.info('[OmniHub] AI provider connected'); },
+      onComplete: async (_result: Record<string, unknown>) => {},
       onCancel: () => {},
     });
   };
@@ -1078,7 +1078,7 @@ const EcosystemWidget = () => {
           { id: 'physiomni', label: 'PhysiOmni — Health & Wellness AI', category: 'operations' },
         ],
       },
-      onComplete: async (_result: Record<string, unknown>) => { console.info('[OmniHub] APEX app connected'); },
+      onComplete: async (_result: Record<string, unknown>) => {},
       onCancel: () => {},
     });
   };
@@ -1138,7 +1138,7 @@ const IntegratedAppsWidget = () => {
       title: 'Connect Integration',
       description: 'Choose a third-party application to connect to your APEX workspace.',
       schema: { items: INTEGRATIONS },
-      onComplete: async (_result: Record<string, unknown>) => { console.info('[OmniHub] Integration connected'); },
+      onComplete: async (_result: Record<string, unknown>) => {},
       onCancel: () => {},
     });
   };
