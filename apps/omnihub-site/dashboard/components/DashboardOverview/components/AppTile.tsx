@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue } from 'framer-motion';
 import { Blocks } from 'lucide-react';
 import {
   FONT_SG,
@@ -24,15 +24,19 @@ export const AppTile = memo(function AppTile({ app, onClick }: AppTileProps) {
     ? { ...chipPos, ...PARTIAL_CHIP }
     : chipPos;
 
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
   return (
     <motion.div
       className="apex-app-tile"
-      style={APP_TILE_SURFACE}
+      style={{ ...APP_TILE_SURFACE, x, y }}
       drag
-      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-      dragElastic={0.1}
+      dragMomentum={false}
+      dragElastic={0.05}
       whileHover={APP_TILE_HOVER}
-      whileTap={{ scale: 0.98, cursor: 'grabbing' }}
+      whileDrag={{ scale: 1.04, zIndex: 200, cursor: 'grabbing' }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
     >
       {app.logo ? (

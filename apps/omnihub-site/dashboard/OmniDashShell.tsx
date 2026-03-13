@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, useMotionValue } from 'framer-motion';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useDashboardData } from "./hooks/useDashboardData";
-import { useOmniModal } from '@/stores/omniModalStore';
+import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
+import { supabase } from '@/lib/supabase';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, ReactNode, Dispatch, SetStateAction } from "react";
@@ -66,6 +68,7 @@ interface OmniDashHeaderProps {
   tick: number;
   isDark: boolean;
   setIsDark: Dispatch<SetStateAction<boolean>>;
+  invoke: (config: OmniModalConfig) => void;
 }
 
 interface AgentWidgetProps {
@@ -228,6 +231,27 @@ const SectionLabel = ({ children }: SectionLabelProps) => (
   }}>{children}</div>
 );
 
+// ─── DraggableWidget — free-position drag wrapper (stays where dropped) ───────
+interface DraggableWidgetProps {
+  children: ReactNode;
+  style?: CSSProperties;
+}
+const DraggableWidget = ({ children, style = {} }: DraggableWidgetProps) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  return (
+    <motion.div
+      drag
+      dragMomentum={false}
+      dragElastic={0.05}
+      style={{ ...style, x, y, position: 'relative', zIndex: 'auto' as unknown as number }}
+      whileDrag={{ scale: 1.015, zIndex: 999, cursor: 'grabbing' }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const NAV = [
   { label:"OmniBoard",   iconIdx:0, active:true  },
@@ -342,6 +366,18 @@ const NAV_MODULE_KEY: Record<string, string> = {
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
 const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
   const { invoke } = useOmniModal();
+  const [signingOut, setSigningOut] = useState<boolean>(false);
+
+  const handleSignOut = useCallback(async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+      window.location.href = '/login';
+    } catch {
+      setSigningOut(false);
+    }
+  }, [signingOut]);
 
   const handleNav = (label: string) => {
     setActiveNav(label);
@@ -380,20 +416,28 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
         </div>
         <div style={{ fontSize:10.8, color:T.t3 }}>APEX Business Systems Ltd.</div>
         <div style={{ fontSize:9.8, color:T.t4, marginTop:2 }}>Edmonton, AB · Canada</div>
-        <button style={{
-          marginTop:12, width:"100%",
-          display:"flex", alignItems:"center", justifyContent:"center", gap:7,
-          padding:"7px 0", borderRadius:10,
-          background:"rgba(249,115,22,0.06)", border:`1px solid ${T.orange}26`,
-          color:"rgba(249,115,22,0.75)", fontSize:11.9, fontWeight:600, cursor:"pointer",
-          letterSpacing:"0.04em", transition:"all .18s",
-        }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
+        <button
+          onClick={handleSignOut}
+          disabled={signingOut}
+          style={{
+            marginTop:12, width:"100%",
+            display:"flex", alignItems:"center", justifyContent:"center", gap:7,
+            padding:"7px 0", borderRadius:10,
+            background:"rgba(249,115,22,0.06)", border:`1px solid ${T.orange}26`,
+            color: signingOut ? T.t3 : "rgba(249,115,22,0.75)",
+            fontSize:11.9, fontWeight:600, cursor: signingOut ? "not-allowed" : "pointer",
+            letterSpacing:"0.04em", transition:"all .18s",
+            opacity: signingOut ? 0.6 : 1,
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+            style={{ animation: signingOut ? "spin 1s linear infinite" : "none" }}>
+            {signingOut
+              ? <><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></>
+              : <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>
+            }
           </svg>
-          Sign Out
+          {signingOut ? "Signing out…" : "Sign Out"}
         </button>
       </div>
     </div>
@@ -401,9 +445,62 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
 };
 
 // ─── Shell: Header ────────────────────────────────────────────────────────────
-const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
+const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps) => {
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
   const pulse = tick % 2 === 0;
+
+  const handleOmniSkills = () => {
+    invoke({
+      id: 'header-omniskills',
+      provider: 'omnidash',
+      type: 'module',
+      title: 'OmniSkills',
+      contextData: { moduleKey: 'omniskills' },
+      onComplete: async () => {},
+      onCancel: () => {},
+    });
+  };
+
+  const handleConnectAI = () => {
+    invoke({
+      id: 'header-connect-ai',
+      provider: 'omnidash',
+      type: 'selection',
+      title: 'Connect AI Provider',
+      description: 'Select an AI provider to integrate with your APEX workspace.',
+      schema: {
+        items: [
+          { id: 'claude', label: 'Claude (Anthropic)', description: 'World-class reasoning and coding' },
+          { id: 'gpt4', label: 'GPT-4o (OpenAI)', description: 'Multimodal frontier model' },
+          { id: 'gemini', label: 'Gemini Ultra (Google)', description: 'Multi-step reasoning at scale' },
+          { id: 'llama', label: 'Llama 3 (Meta)', description: 'Open-source self-hosted inference' },
+        ],
+      },
+      onComplete: async (_result: Record<string, unknown>) => { console.info('[OmniHub] AI provider connected'); },
+      onCancel: () => {},
+    });
+  };
+
+  const handleBell = () => {
+    invoke({
+      id: 'header-notifications',
+      provider: 'omnidash',
+      type: 'selection',
+      title: 'Notifications',
+      description: 'Recent activity across your APEX workspace.',
+      schema: {
+        items: [
+          { id: 'n1', label: 'Salesforce sync completed — 48 records updated', badge: 'INFO' },
+          { id: 'n2', label: 'Invoice batch #1042 processed — $24,500 billed', badge: 'SUCCESS' },
+          { id: 'n3', label: 'Workflow "Lead Nurture" triggered for 12 contacts', badge: 'INFO' },
+          { id: 'n4', label: 'Guardian audit passed — 0 anomalies detected', badge: 'SUCCESS' },
+          { id: 'n5', label: 'New integration available: Stripe Billing v3', badge: 'NEW' },
+        ],
+      },
+      onComplete: async () => {},
+      onCancel: () => {},
+    });
+  };
   return (
     <div style={{
       height:58, flexShrink:0,
@@ -424,12 +521,13 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
       </div>
 
       {/* OmniSkills */}
-      <button style={{
+      <button onClick={handleOmniSkills} style={{
         display:"flex", alignItems:"center", gap:7, flexShrink:0,
         background:T.card, border:`1px solid ${T.border}`,
         borderRadius:10, padding:"0 11px", height:44,
         color:T.t1, fontSize:13, cursor:"pointer", fontWeight:500,
         whiteSpace:"nowrap", marginRight:10,
+        transition:"border-color .15s, background .15s",
       }}>
         <IconBadge idx={0} size={17} />
         OmniSkills
@@ -455,19 +553,52 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
       {/* Right actions — functional buttons */}
       <div style={{display:"flex", alignItems:"center", gap:8, flexShrink:0}}>
         {/* Org Selector */}
-        <button onClick={() =>setOrgOpen(!orgOpen)} style={{
-          display:"flex", alignItems:"center", gap:6,
-          background:T.card, border:`1px solid ${T.border}`,
-          borderRadius:10, padding:"0 10px", height:34,
-          color:T.t1, fontSize:12.4, cursor:"pointer", fontWeight:500,
-          whiteSpace:"nowrap", maxWidth:170, overflow:"hidden",
-        }}>
-          <img src={IMG_BADGE} alt="Org Badge" style={{width:16,height:16,objectFit:"contain",flexShrink:0}} />
-          <span style={{
-            maxWidth:105, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
-          }}>APEX Business Systems</span>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
+        <div style={{ position:"relative" }}>
+          <button onClick={() => setOrgOpen(o => !o)} style={{
+            display:"flex", alignItems:"center", gap:6,
+            background:T.card, border:`1px solid ${orgOpen ? T.orange+"66" : T.border}`,
+            borderRadius:10, padding:"0 10px", height:34,
+            color:T.t1, fontSize:12.4, cursor:"pointer", fontWeight:500,
+            whiteSpace:"nowrap", maxWidth:170, overflow:"hidden",
+            transition:"border-color .15s",
+          }}>
+            <img src={IMG_BADGE} alt="Org Badge" style={{width:16,height:16,objectFit:"contain",flexShrink:0}} />
+            <span style={{ maxWidth:105, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>APEX Business Systems</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              style={{ transition:"transform .2s", transform: orgOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+          {orgOpen && (
+            <div style={{
+              position:"absolute", top:"calc(100% + 6px)", right:0, zIndex:200,
+              background:T.card, border:`1px solid ${T.border}`,
+              borderRadius:12, minWidth:210, overflow:"hidden",
+              boxShadow:`0 8px 32px rgba(0,0,0,.5)`,
+              animation:"apexFadeIn .15s ease",
+            }}>
+              <div style={{ padding:"10px 14px 8px", borderBottom:`1px solid ${T.border}` }}>
+                <div style={{ fontSize:11.9, fontWeight:700, color:T.t1 }}>APEX Business Systems</div>
+                <div style={{ fontSize:10.3, color:T.t3, marginTop:2 }}>Edmonton, AB · Enterprise</div>
+              </div>
+              {[
+                { label:"Workspace Settings", icon:"⚙️", action: () => { setOrgOpen(false); invoke({ id:'org-settings', provider:'omnidash', type:'module', title:'Settings', contextData:{ moduleKey:'settings' }, onComplete: async () => {}, onCancel: () => {} }); } },
+                { label:"Billing & Plans", icon:"💳", action: () => { setOrgOpen(false); invoke({ id:'org-billing', provider:'omnidash', type:'module', title:'Billing', contextData:{ moduleKey:'billing' }, onComplete: async () => {}, onCancel: () => {} }); } },
+                { label:"Invite Members", icon:"👥", action: () => { setOrgOpen(false); invoke({ id:'org-invite', provider:'omnidash', type:'form', title:'Invite Team Member', schema: { fields: [{ key:'email', label:'Email Address', type:'email', placeholder:'teammate@company.com', required:true }, { key:'role', label:'Role', type:'text', placeholder:'e.g. Admin, Viewer' }] }, onComplete: async () => {}, onCancel: () => {} }); } },
+              ].map(item => (
+                <button key={item.label} onClick={item.action} style={{
+                  display:"flex", alignItems:"center", gap:10,
+                  width:"100%", padding:"9px 14px", textAlign:"left",
+                  background:"none", border:"none", cursor:"pointer",
+                  color:T.t1, fontSize:13.5, transition:"background .12s",
+                }}>
+                  <span style={{ fontSize:15 }}>{item.icon}</span>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Zero Trust */}
         <div style={{
@@ -487,12 +618,13 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
         </div>
 
         {/* Connect AI */}
-        <button style={{
+        <button onClick={handleConnectAI} style={{
           background:`linear-gradient(135deg, ${T.orange} 0%, ${T.orangeDim} 100%)`,
           border:"none", borderRadius:10, padding:"0 13px", height:34,
           color:"#fff", fontSize:12.4, fontWeight:700,
           cursor:"pointer", boxShadow:`0 4px 16px ${T.orange}44`,
           whiteSpace:"nowrap",
+          transition:"opacity .15s",
         }}>
           Connect AI
         </button>
@@ -523,11 +655,12 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
         </button>
 
         {/* Bell */}
-        <button style={{
+        <button onClick={handleBell} style={{
           width:34, height:34, borderRadius:9, flexShrink:0,
           background:T.card, border:`1px solid ${T.border}`,
           display:"flex", alignItems:"center", justifyContent:"center",
           cursor:"pointer", color:T.t2, position:"relative",
+          transition:"border-color .15s",
         }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -932,10 +1065,20 @@ const EcosystemWidget = () => {
     invoke({
       id: 'ecosystem-add-apex-app',
       provider: 'omnidash',
-      type: 'form',
+      type: 'selection',
       title: 'Connect APEX App',
-      description: 'Select an APEX module to integrate into your ecosystem.',
-      onComplete: async () => {},
+      description: 'Select an APEX module to activate in your ecosystem.',
+      schema: {
+        items: [
+          { id: 'omniskills', label: 'OmniSkills — AI Skill Orchestration', category: 'platform' },
+          { id: 'orchestrator', label: 'Orchestrator — Temporal Workflows', category: 'automation' },
+          { id: 'fortress', label: 'Fortress — Zero-Trust Security', category: 'security' },
+          { id: 'omniport', label: 'OmniPort — Integration Gateway', category: 'platform' },
+          { id: 'maestro', label: 'Maestro — Operations Intelligence', category: 'operations' },
+          { id: 'physiomni', label: 'PhysiOmni — Health & Wellness AI', category: 'operations' },
+        ],
+      },
+      onComplete: async (_result: Record<string, unknown>) => { console.info('[OmniHub] APEX app connected'); },
       onCancel: () => {},
     });
   };
@@ -974,6 +1117,19 @@ const EcosystemWidget = () => {
 const IntegratedAppsWidget = () => {
   const { invoke } = useOmniModal();
 
+  const INTEGRATIONS = [
+    { id: 'salesforce', label: 'Salesforce CRM — Real-time pipeline sync' },
+    { id: 'slack', label: 'Slack — Team notifications & alerts' },
+    { id: 'quickbooks', label: 'QuickBooks — Accounting & invoicing' },
+    { id: 'github', label: 'GitHub — Code repositories & CI/CD' },
+    { id: 'stripe', label: 'Stripe — Payment processing & billing' },
+    { id: 'google-workspace', label: 'Google Workspace — Docs, Sheets, Drive' },
+    { id: 'hubspot', label: 'HubSpot — Marketing & lead management' },
+    { id: 'jira', label: 'Jira — Project tracking & sprints' },
+    { id: 'shopify', label: 'Shopify — E-commerce storefront' },
+    { id: 'twilio', label: 'Twilio — SMS, calls & communications' },
+  ];
+
   const handleConnectApp = (slot: number) => {
     invoke({
       id: `integrated-app-connect-${slot}`,
@@ -981,7 +1137,8 @@ const IntegratedAppsWidget = () => {
       type: 'selection',
       title: 'Connect Integration',
       description: 'Choose a third-party application to connect to your APEX workspace.',
-      onComplete: async () => {},
+      schema: { items: INTEGRATIONS },
+      onComplete: async (_result: Record<string, unknown>) => { console.info('[OmniHub] Integration connected'); },
       onCancel: () => {},
     });
   };
@@ -1201,6 +1358,7 @@ const OpsControlsPanel = ({ ops, setOps }: OpsControlsPanelProps) => (
 export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);
   const { activeNav, setActiveNav, isDark, setIsDark, ops, setOps } = useLayoutPersistence();
+  const { invoke } = useOmniModal();
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
   useDashboardData();
@@ -1231,7 +1389,7 @@ export default function OmniDashShell() {
         input { font-family:'Space Grotesk',sans-serif; }
       `}</style>
 
-      <OmniDashHeader tick={tick} isDark={isDark} setIsDark={setIsDark} />
+      <OmniDashHeader tick={tick} isDark={isDark} setIsDark={setIsDark} invoke={invoke} />
 
       <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
         <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />
@@ -1261,13 +1419,13 @@ export default function OmniDashShell() {
           <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
           {/* Primary 3-column grid — fixed height ~3 ecosystem tiles tall */}
           <div style={{ display:"grid", gridTemplateColumns:"220px 1fr 220px", gap:14, height:300 }}>
-            <AgentWidget tick={tick} />
-            <OmniSlateWidget />
-            <EcosystemWidget />
+            <DraggableWidget><AgentWidget tick={tick} /></DraggableWidget>
+            <DraggableWidget><OmniSlateWidget /></DraggableWidget>
+            <DraggableWidget><EcosystemWidget /></DraggableWidget>
           </div>
 
           {/* Integrated Apps row */}
-          <IntegratedAppsWidget />
+          <DraggableWidget><IntegratedAppsWidget /></DraggableWidget>
 
           {/* APEX-OmniHub wordmark watermark — above grid, below content */}
           <div style={{
@@ -1299,10 +1457,10 @@ export default function OmniDashShell() {
           overflowY:"auto", padding:"14px 12px",
           display:"flex", flexDirection:"column", gap:12,
         }}>
-          <SecurityPanel />
-          <AnalyticsPanel />
-          <OmniTracePanel />
-          <OpsControlsPanel ops={ops} setOps={setOps} />
+          <DraggableWidget><SecurityPanel /></DraggableWidget>
+          <DraggableWidget><AnalyticsPanel /></DraggableWidget>
+          <DraggableWidget><OmniTracePanel /></DraggableWidget>
+          <DraggableWidget><OpsControlsPanel ops={ops} setOps={setOps} /></DraggableWidget>
         </div>
       </div>
 
