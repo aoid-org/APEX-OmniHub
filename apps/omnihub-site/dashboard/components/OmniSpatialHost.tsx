@@ -48,6 +48,112 @@ registerOmniAppShell();
 const SPATIAL_SPRING = { type: 'spring' as const, mass: 0.5, damping: 25, stiffness: 300, restDelta: 0.001 };
 
 // ============================================================================
+// Sub-Components: Form Modal (schema-driven field renderer)
+// ============================================================================
+
+interface FormField {
+  key?: string;
+  label?: string;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+}
+
+function FormModalRenderer({
+  modal,
+  isProcessing,
+  onAction,
+  onClose,
+}: Readonly<{
+  modal: OmniModalConfig;
+  isProcessing: boolean;
+  onAction: (payload: Record<string, unknown>) => void;
+  onClose: () => void;
+}>) {
+  const [formValues, setFormValues] = useState<Record<string, string>>({});
+
+  const schemaFields = modal.schema?.fields as ReadonlyArray<FormField> | undefined;
+
+  // Default fields when no schema provided
+  const defaultFields: FormField[] = [
+    { key: 'name', label: 'Name', type: 'text', placeholder: 'Enter name…' },
+    { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Enter description…' },
+  ];
+
+  const fields = (schemaFields && schemaFields.length > 0) ? schemaFields : defaultFields;
+
+  const handleChange = (key: string, value: string) => {
+    setFormValues(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSubmit = () => {
+    onAction({ status: 'submitted', data: formValues });
+  };
+
+  return (
+    <div className="py-4">
+      <div className="space-y-4">
+        {fields.map((field, idx) => {
+          const key = field.key ?? String(idx);
+          const label = field.label ?? `Field ${idx + 1}`;
+          const type = field.type ?? 'text';
+          const placeholder = field.placeholder ?? '';
+          const inputClass =
+            'w-full rounded-lg border border-border/50 bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground';
+          return (
+            <div key={key} className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">
+                {label}
+                {field.required && <span className="text-destructive ml-1">*</span>}
+              </label>
+              {type === 'textarea' ? (
+                <textarea
+                  className={`${inputClass} min-h-[80px] resize-none`}
+                  placeholder={placeholder}
+                  value={formValues[key] ?? ''}
+                  onChange={e => handleChange(key, e.target.value)}
+                  disabled={isProcessing}
+                />
+              ) : type === 'select' && modal.schema?.options ? (
+                <select
+                  className={inputClass}
+                  value={formValues[key] ?? ''}
+                  onChange={e => handleChange(key, e.target.value)}
+                  disabled={isProcessing}
+                >
+                  <option value="">Select…</option>
+                  {(modal.schema.options as ReadonlyArray<{ value: string; label: string }>).map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type={type}
+                  className={inputClass}
+                  placeholder={placeholder}
+                  value={formValues[key] ?? ''}
+                  onChange={e => handleChange(key, e.target.value)}
+                  disabled={isProcessing}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <DialogFooter className="mt-6">
+        <Button variant="outline" onClick={onClose} disabled={isProcessing}>
+          Cancel
+        </Button>
+        <Button onClick={handleSubmit} disabled={isProcessing}>
+          {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Submit
+        </Button>
+      </DialogFooter>
+    </div>
+  );
+}
+
+// ============================================================================
 // Sub-Components: Dialog Mode
 // ============================================================================
 
@@ -87,26 +193,12 @@ function DialogModeRenderer({
 
     case 'form':
       return (
-        <div className="py-4">
-          <div className="p-6 border border-dashed rounded-lg bg-muted/30 text-center text-sm text-muted-foreground">
-            <p className="mb-2 font-medium">Dynamic Form Renderer</p>
-            <p className="text-xs">
-              Schema-driven fields will be generated from the connector&apos;s JSON schema.
-            </p>
-          </div>
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={onClose} disabled={isProcessing}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => onAction({ status: 'submitted' })}
-              disabled={isProcessing}
-            >
-              {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirm
-            </Button>
-          </DialogFooter>
-        </div>
+        <FormModalRenderer
+          modal={modal}
+          isProcessing={isProcessing}
+          onAction={onAction}
+          onClose={onClose}
+        />
       );
 
     case 'selection':
@@ -339,20 +431,22 @@ export function OmniSpatialHost() {
   const renderDialogMode = () => {
     const hasDescription = Boolean(activeModal?.description);
 
+    const dialogOpen = isOpen && renderMode === 'dialog';
     return (
-      <Dialog open={isOpen && renderMode === 'dialog'} onOpenChange={handleOpenChange}>
-        {/* Custom explicit backdrop — native button for cross-device A11y */}
-        <button
-          type="button"
-          aria-label="Close modal"
-          className="fixed inset-0 z-[400] w-full h-full border-none bg-black/80 cursor-default data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && Date.now() - mountTime.current >= 300) {
-              abortModal('USER_DISMISSED');
-            }
-          }}
-          data-state={isOpen && renderMode === 'dialog' ? 'open' : 'closed'}
-        />
+      <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+        {/* Custom explicit backdrop — only rendered when modal is open to avoid blocking page interactions */}
+        {dialogOpen && (
+          <button
+            type="button"
+            aria-label="Close modal"
+            className="fixed inset-0 z-[400] w-full h-full border-none bg-black/80 cursor-default animate-in fade-in-0"
+            onClick={(e) => {
+              if (e.target === e.currentTarget && Date.now() - mountTime.current >= 300) {
+                abortModal('USER_DISMISSED');
+              }
+            }}
+          />
+        )}
         <DialogContent
           className={
             activeModal?.type === 'module'

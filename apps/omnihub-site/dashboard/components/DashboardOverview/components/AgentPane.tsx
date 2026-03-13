@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
 import { SPRING, GLASS_TILE, CTRL_BTN, BARS } from '../constants';
@@ -18,6 +18,21 @@ export const AgentPane = memo(function AgentPane({
         borderColor: 'rgba(250,204,21,0.2)',
       }
     : undefined;
+
+  const [elapsed, setElapsed] = useState<number>(0);
+  const [isRunning, setIsRunning] = useState<boolean>(!isStandby);
+
+  useEffect(() => {
+    if (!isRunning) return undefined;
+    const id = setInterval(() => setElapsed(s => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [isRunning]);
+
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const ss = String(elapsed % 60).padStart(2, '0');
+
+  const handlePlay = () => setIsRunning(true);
+  const handlePause = () => setIsRunning(false);
 
   return (
     <motion.div
@@ -78,7 +93,7 @@ export const AgentPane = memo(function AgentPane({
               letterSpacing: '-0.02em',
             }}
           >
-            00:00
+            {mm}:{ss}
           </span>
         </div>
 
@@ -102,11 +117,17 @@ export const AgentPane = memo(function AgentPane({
         <div className="flex flex-row items-center justify-center gap-3">
           <button
             title="Play"
+            onClick={handlePlay}
+            disabled={isRunning}
             className={
               'w-8 h-8 rounded-full flex' +
               ' items-center justify-center cursor-pointer'
             }
-            style={CTRL_BTN}
+            style={{
+              ...CTRL_BTN,
+              opacity: isRunning ? 0.4 : 1,
+              cursor: isRunning ? 'not-allowed' : 'pointer',
+            }}
           >
             <svg
               width="12"
@@ -119,11 +140,17 @@ export const AgentPane = memo(function AgentPane({
           </button>
           <button
             title="Pause"
+            onClick={handlePause}
+            disabled={!isRunning}
             className={
               'w-8 h-8 rounded-full flex' +
               ' items-center justify-center cursor-pointer'
             }
-            style={CTRL_BTN}
+            style={{
+              ...CTRL_BTN,
+              opacity: !isRunning ? 0.4 : 1,
+              cursor: !isRunning ? 'not-allowed' : 'pointer',
+            }}
           >
             <svg
               width="12"
@@ -138,8 +165,8 @@ export const AgentPane = memo(function AgentPane({
         </div>
 
         <div className="mt-1 text-xs flex items-center gap-2">
-          {isStandby ? (
-            <span className="text-yellow-400">⏸ Standby</span>
+          {isStandby || !isRunning ? (
+            <span className="text-yellow-400">⏸ {isStandby ? 'Standby' : 'Paused'}</span>
           ) : (
             <>
               {BARS.map(bar => (

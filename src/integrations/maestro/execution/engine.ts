@@ -22,7 +22,41 @@ import { logRiskEvent } from '../safety/risk-events';
 type FetchFn = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 interface ExecutionOptions {
+  baseUrl?: string;
   fetchFn?: FetchFn;
+}
+
+/**
+ * Resolve the full execute URL from options, environment, or browser same-origin.
+ * Resolution order:
+ *   a. options.baseUrl
+ *   b. NEXT_PUBLIC_ORCHESTRATOR_BASE_URL | VITE_ORCHESTRATOR_BASE_URL | ORCHESTRATOR_BASE_URL
+ *   c. browser same-origin /api/maestro/execute
+ *   d. throw — no localhost fallback allowed in server/test paths
+ */
+function resolveExecuteUrl(options: ExecutionOptions): string {
+  const EXECUTE_PATH = '/api/maestro/execute';
+
+  if (options.baseUrl) {
+    return options.baseUrl.replace(/\/+$/, '') + EXECUTE_PATH;
+  }
+
+  const envBase =
+    (typeof process !== 'undefined' &&
+      (process.env['NEXT_PUBLIC_ORCHESTRATOR_BASE_URL'] ||
+        process.env['VITE_ORCHESTRATOR_BASE_URL'] ||
+        process.env['ORCHESTRATOR_BASE_URL'])) ||
+    '';
+
+  if (envBase) {
+    return envBase.replace(/\/+$/, '') + EXECUTE_PATH;
+  }
+
+  if (typeof window !== 'undefined') {
+    return EXECUTE_PATH;
+  }
+
+  throw new Error('MAESTRO orchestrator base URL is not configured');
 }
 
 // Custom action registry
@@ -190,10 +224,9 @@ export async function executeIntent(
     };
   }
 
-  // Execute the action (mock execution for now)
+  // Execute the action
   try {
-    const fetchFn = options.fetchFn ?? globalThis.fetch.bind(globalThis);
-    const outcome = await performAction(intent, fetchFn);
+    const outcome = await performAction(intent, options);
     return {
       success: true,
       intent_id: intent.intent_id,
@@ -260,16 +293,18 @@ export async function requestMANMode(
 }
 
 /**
- * Perform the actual action (mock implementation)
+ * Perform the actual action — throws on transport failure or non-OK HTTP response.
  */
 async function performAction(
   intent: MaestroIntent,
-  fetchFn: FetchFn
-): Promise<Record<string, unknown> | { ok: boolean; error: string }> {
-  const baseUrl = process.env.NEXT_PUBLIC_ORCHESTRATOR_BASE_URL || process.env.VITE_ORCHESTRATOR_BASE_URL || process.env.ORCHESTRATOR_BASE_URL || 'http://localhost:3000';
+  options: ExecutionOptions
+): Promise<Record<string, unknown>> {
+  const fetchFn = options.fetchFn ?? globalThis.fetch.bind(globalThis);
+  const url = resolveExecuteUrl(options);
 
+  let response: Response;
   try {
-    const response = await fetchFn(`${baseUrl}/api/maestro/execute`, {
+    response = await fetchFn(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -277,17 +312,16 @@ async function performAction(
       body: JSON.stringify({
         action: intent.action,
         params: intent.parameters,
-        idempotency_key: intent.intent_id,
+        idempotency_key: intent.idempotency_key,
       }),
     });
-
-    if (!response.ok) {
-      return { ok: false, error: `HTTP status ${response.status}` };
-    }
-
-    return await response.json();
   } catch (error) {
-    console.error('[MAESTRO] Execution fetch failed:', error);
-    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    throw error instanceof Error ? error : new Error(String(error));
   }
+
+  if (!response.ok) {
+    throw new Error(`HTTP status ${response.status}`);
+  }
+
+  return response.json() as Promise<Record<string, unknown>>;
 }
