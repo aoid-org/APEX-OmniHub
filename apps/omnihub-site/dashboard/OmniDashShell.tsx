@@ -380,11 +380,11 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
       borderBottom:`1px solid ${T.border}`,
       backdropFilter:"blur(20px)",
       display:"flex", alignItems:"center",
-      padding:"0 12px 0 8px", gap:10,
+      padding:"0 20px 0 12px", gap:0,
       zIndex:100,
     }}>
       {/* Wordmark */}
-      <div style={{ flexShrink:0, display:"flex", alignItems:"center" }}>
+      <div style={{ flexShrink:0, display:"flex", alignItems:"center", marginRight:10 }}>
         <img
           src={IMG_WORDMARK}
           alt="APEX-OmniHub"
@@ -398,18 +398,19 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
         background:T.card, border:`1px solid ${T.border}`,
         borderRadius:10, padding:"0 11px", height:44,
         color:T.t1, fontSize:13, cursor:"pointer", fontWeight:500,
-        whiteSpace:"nowrap",
+        whiteSpace:"nowrap", marginRight:10,
       }}>
         <IconBadge idx={0} size={17} />
         OmniSkills
       </button>
 
-      {/* Search - CENTERED */}
-      <div style={{ flex:1, display:"flex", justifyContent:"center" }}>
+      {/* Search — takes all remaining center space, max 360px */}
+      <div style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
         <div style={{
           display:"flex", alignItems:"center", gap:9,
           background:T.card, border:`1px solid ${T.border}`,
-          borderRadius:10, padding:"0 12px", width:220, height:44,
+          borderRadius:10, padding:"0 12px",
+          width:"100%", maxWidth:360, height:44,
           color:T.t2, fontSize:13,
         }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -420,8 +421,8 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
         </div>
       </div>
 
-      {/* Right actions */}
-      <div style={{display:"flex", alignItems:"center", gap:6, flexShrink:0}}>
+      {/* Right actions — functional buttons */}
+      <div style={{display:"flex", alignItems:"center", gap:8, flexShrink:0}}>
         {/* Org Selector */}
         <button onClick={() =>setOrgOpen(!orgOpen)} style={{
           display:"flex", alignItems:"center", gap:6,
@@ -465,9 +466,12 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
           Connect AI
         </button>
 
+        {/* Divider — separates action buttons from icon tray */}
+        <div style={{ width:1, height:28, background:T.border, flexShrink:0, marginLeft:2, marginRight:2 }} />
+
         {/* Theme Toggle — Sun/Moon */}
         <button onClick={() => setIsDark(d => !d)} style={{
-          width:32, height:32, borderRadius:9, flexShrink:0,
+          width:34, height:34, borderRadius:9, flexShrink:0,
           background:T.card, border:`1px solid ${T.border}`,
           display:"flex", alignItems:"center", justifyContent:"center",
           cursor:"pointer", color: isDark ? T.warn : T.blue,
@@ -489,7 +493,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
 
         {/* Bell */}
         <button style={{
-          width:32, height:32, borderRadius:9, flexShrink:0,
+          width:34, height:34, borderRadius:9, flexShrink:0,
           background:T.card, border:`1px solid ${T.border}`,
           display:"flex", alignItems:"center", justifyContent:"center",
           cursor:"pointer", color:T.t2, position:"relative",
@@ -502,11 +506,12 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
 
         {/* Avatar */}
         <div style={{
-          width:32, height:32, borderRadius:9, flexShrink:0,
+          width:34, height:34, borderRadius:9, flexShrink:0,
           background:`linear-gradient(135deg,${T.blue},${T.orange})`,
           display:"flex",alignItems:"center",justifyContent:"center",
           color:"#fff",fontSize:11.9,fontWeight:800,
           boxShadow:`0 2px 8px ${T.blue}44`,
+          cursor:"pointer",
         }}>JR</div>
       </div>
     </div>
@@ -515,15 +520,27 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
 
 // ─── Widget: APEX Agent ───────────────────────────────────────────────────────
 const AgentWidget = ({ tick }: AgentWidgetProps) => {
-  const secs = tick * 2;
-  const mm = String(Math.floor(secs/60)).padStart(2,"0");
-  const ss = String(secs % 60).padStart(2,"0");
+  const [elapsed, setElapsed] = useState<number>(0);
+  const [isRunning, setIsRunning] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (!isRunning) return undefined;
+    const id = setInterval(() => setElapsed(s => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [isRunning]);
+
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
+  const ss = String(elapsed % 60).padStart(2, "0");
+
+  const handlePlayPause = () => setIsRunning(r => !r);
+  const handleReset = () => { setElapsed(0); setIsRunning(false); };
+
   return (
     <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
       {/* Header — unified 44px */}
       <div style={{ height:44, padding:"0 16px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
         <SectionLabel>APEX Agent</SectionLabel>
-        <StatusDot color={T.green} />
+        <StatusDot color={isRunning ? T.green : T.warn} />
       </div>
 
       {/* Session Timer — compact */}
@@ -628,25 +645,45 @@ const AgentWidget = ({ tick }: AgentWidgetProps) => {
         </div>
       </div>
 
-      {/* Controls — always visible, pinned to bottom */}
-      <div style={{ display:"flex", justifyContent:"center", gap:12, padding:"12px 16px 16px", flexShrink:0 }}>
-        <button style={{
-          width:40, height:40, borderRadius:12,
-          border:`1px solid ${T.orange}66`,
-          background:`${T.orange}18`,
-          display:"flex",alignItems:"center",justifyContent:"center",
-          cursor:"pointer", color:T.orange,
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      {/* Controls — Start/Pause + Reset, pinned to bottom */}
+      <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:10, padding:"12px 16px 16px", flexShrink:0 }}>
+        {/* Play / Pause */}
+        <button
+          onClick={handlePlayPause}
+          title={isRunning ? "Pause" : "Start"}
+          style={{
+            width:44, height:44, borderRadius:12,
+            border:`1px solid ${T.orange}88`,
+            background: isRunning ? `${T.orange}28` : `${T.orange}18`,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            cursor:"pointer", color:T.orange,
+            boxShadow: isRunning ? `0 0 10px ${T.orange}44` : "none",
+            transition:"all .2s",
+          }}
+        >
+          {isRunning
+            ? <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            : <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          }
         </button>
-        <button style={{
-          width:40, height:40, borderRadius:12,
-          border:`1px solid ${T.border}`,
-          background:T.surface,
-          display:"flex",alignItems:"center",justifyContent:"center",
-          cursor:"pointer", color:T.t2,
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        {/* Reset */}
+        <button
+          onClick={handleReset}
+          title="Reset"
+          style={{
+            height:44, borderRadius:12, padding:"0 14px",
+            border:`1px solid ${T.border}`,
+            background:T.surface,
+            display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+            cursor:"pointer", color:T.t2,
+            fontSize:11.4, fontWeight:600, letterSpacing:"0.04em",
+            transition:"all .2s",
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/>
+          </svg>
+          RES.
         </button>
       </div>
     </GlassCard>
@@ -800,16 +837,37 @@ const OmniSlateWidget = () => {
             outline:"none", transition:"border-color .15s",
           }}
         />
-        <button onClick={send} style={{
+        {/* Play / Stop icon buttons only — no text labels */}
+        <button onClick={send} title="Execute" style={{
+          width:44, height:44, borderRadius:12, flexShrink:0,
           background:`linear-gradient(135deg,${T.orange},${T.orangeDim})`,
-          border:"none", borderRadius:12, padding:"11px 22px",
-          color:"#fff", fontSize:14.1, fontWeight:700, cursor:"pointer",
+          border:"none", cursor:"pointer",
+          display:"flex", alignItems:"center", justifyContent:"center",
           boxShadow:`0 4px 14px ${T.orange}44`,
-          whiteSpace:"nowrap",
-        }}>Execute</button>
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
+        <button title="Stop" style={{
+          width:44, height:44, borderRadius:12, flexShrink:0,
+          background:T.surface,
+          border:`1px solid ${T.border}`,
+          cursor:"pointer",
+          display:"flex", alignItems:"center", justifyContent:"center",
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill={T.t2}><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </button>
       </div>
     </GlassCard>
   );
+};
+
+// ─── Shared tile dimensions (used by both APEX Ecosystem and Integrated Apps)
+const APP_TILE_STYLE: React.CSSProperties = {
+  borderRadius:14,
+  padding:"18px 14px",
+  display:"flex", flexDirection:"row", alignItems:"center", justifyContent:"center", gap:10,
+  cursor:"pointer", transition:"all .2s",
+  minHeight:72,
 };
 
 // ─── Widget: APEX Ecosystem ───────────────────────────────────────────────────
@@ -819,20 +877,22 @@ const EcosystemWidget = () => (
       <SectionLabel>APEX Ecosystem</SectionLabel>
     </div>
     <div style={{ padding:"14px", flex:1 }}>
+      {/* APEX app tile — brilliant accent treatment */}
       <button style={{
-        width:"100%", padding:"20px 16px",
-        background:`${T.surface}`,
-        border:`1px dashed ${T.orange}44`,
-        borderRadius:14, color:T.orange, fontSize:15.1, fontWeight:600,
-        cursor:"pointer", transition:"all .2s",
-        display:"flex",alignItems:"center",justifyContent:"center",gap:10,
-        letterSpacing:"0.01em",
+        ...APP_TILE_STYLE,
+        width:"100%",
+        background:`linear-gradient(135deg, ${T.orange}28 0%, ${T.orange}14 100%)`,
+        border:`1px solid ${T.orange}66`,
+        boxShadow:`0 0 18px ${T.orange}22, inset 0 1px 0 ${T.orange}22`,
+        color:T.orange,
+        fontWeight:700, fontSize:14.6, letterSpacing:"0.01em",
       }}>
         <span style={{
-          width:22,height:22,borderRadius:6,
-          background:`${T.orange}22`,border:`1px solid ${T.orange}55`,
-          display:"flex",alignItems:"center",justifyContent:"center",
-          fontSize:17.3,color:T.orange,
+          width:26, height:26, borderRadius:7,
+          background:`${T.orange}30`, border:`1.5px solid ${T.orange}77`,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:18, color:T.orange, flexShrink:0,
+          boxShadow:`0 0 8px ${T.orange}44`,
         }}>+</span>
         Add APEX App
       </button>
@@ -846,15 +906,14 @@ const IntegratedAppsWidget = () => (
     <div style={{ marginBottom:10 }}>
       <SectionLabel>Integrated Apps</SectionLabel>
     </div>
-    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10 }}>
-      {[1,2,3].map(i => (
+    {/* 4 columns — same tile size as EcosystemWidget tiles */}
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10 }}>
+      {[1,2,3,4].map(i => (
         <div key={`integrated-app-ph-${i}`} style={{
+          ...APP_TILE_STYLE,
           background:T.surface,
           border:`1px dashed ${T.border}`,
-          borderRadius:14, padding:"20px 16px",
-          display:"flex", flexDirection:"row", alignItems:"center", justifyContent:"center", gap:10,
-          opacity:0.4, cursor:"pointer",
-          transition:"opacity .2s",
+          opacity:0.45,
         }}>
           <div style={{
             width:22, height:22, borderRadius:6,
@@ -865,7 +924,7 @@ const IntegratedAppsWidget = () => (
           }}>
             <div style={{width:10,height:10,borderRadius:2,background:"rgba(255,255,255,0.20)"}} />
           </div>
-          <div style={{fontSize:14.1,color:T.t3,letterSpacing:"0.04em",textTransform:"uppercase",fontWeight:600}}>Awaiting</div>
+          <div style={{fontSize:13,color:T.t3,letterSpacing:"0.04em",textTransform:"uppercase",fontWeight:600}}>Awaiting</div>
         </div>
       ))}
     </div>
