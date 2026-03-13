@@ -27,7 +27,7 @@ export const OMNIDASH_COLUMNS = {
 } as const;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function handleError<T>(promise: Promise<any>, context: string): Promise<T> {
+async function handleError<T>(promise: PromiseLike<any>, context: string): Promise<T> {
   const { data, error } = await promise;
   if (error) {
     logError(error as Error, { action: `omnidash_${context}` });
@@ -381,24 +381,26 @@ export async function fetchMemoryHealthStats(
     .eq('tenant_id', userId)
     .gt('attempt_count', 1);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const d = data as Record<string, any> | null;
   return {
-    total_memories: data?.total_memories ?? 0,
-    episodic_count: data?.episodic_count ?? 0,
-    semantic_count: data?.semantic_count ?? 0,
-    procedural_count: data?.procedural_count ?? 0,
-    preference_count: data?.preference_count ?? 0,
-    embedded_count: data?.embedded_count ?? 0,
-    expired_count: data?.expired_count ?? 0,
-    pending_reembed_count: data?.pending_reembed_count ?? 0,
-    avg_importance: data?.avg_importance ?? 0,
-    avg_trust_score: data?.avg_trust_score ?? 0,
-    avg_access_count: data?.avg_access_count ?? 0,
-    latest_memory_at: data?.latest_memory_at ?? null,
-    oldest_memory_at: data?.oldest_memory_at ?? null,
+    total_memories: d?.total_memories ?? 0,
+    episodic_count: d?.episodic_count ?? 0,
+    semantic_count: d?.semantic_count ?? 0,
+    procedural_count: d?.procedural_count ?? 0,
+    preference_count: d?.preference_count ?? 0,
+    embedded_count: d?.embedded_count ?? 0,
+    expired_count: d?.expired_count ?? 0,
+    pending_reembed_count: d?.pending_reembed_count ?? 0,
+    avg_importance: d?.avg_importance ?? 0,
+    avg_trust_score: d?.avg_trust_score ?? 0,
+    avg_access_count: d?.avg_access_count ?? 0,
+    latest_memory_at: d?.latest_memory_at ?? null,
+    oldest_memory_at: d?.oldest_memory_at ?? null,
     current_embedding_model:
-      data?.current_embedding_model ?? null,
+      d?.current_embedding_model ?? null,
     poisoned_candidate_count:
-      data?.poisoned_candidate_count ?? 0,
+      d?.poisoned_candidate_count ?? 0,
     dedup_attempts: dedupCount ?? 0,
   };
 }

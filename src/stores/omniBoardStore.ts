@@ -25,11 +25,23 @@ import { z } from 'zod';
 
 export type SpatialRenderState = 'idle' | 'sandbox' | 'spatial';
 
+export type ConnectorStatus = 'LIVE' | 'CONNECTING' | 'ERROR' | 'NEEDS_AUTH';
+
 export interface ConnectedIntegration {
   readonly provider: string;
   readonly connectedAt: number;
   readonly scopes: readonly string[];
   readonly status: 'active' | 'refreshing' | 'expired';
+}
+
+export interface OmniBoardConnectorRecord {
+  readonly id: string;
+  readonly provider: string;
+  readonly appKey: string;
+  readonly status: ConnectorStatus;
+  readonly proxyTokenExpiry: number | null;
+  readonly syncedAt: number;
+  readonly metadata: Record<string, unknown>;
 }
 
 export interface ActiveApp {
@@ -71,6 +83,7 @@ const ActiveAppSchema = z.object({
 
 interface OmniBoardState {
   readonly integrations: ReadonlyMap<string, ConnectedIntegration>;
+  readonly connectors: ReadonlyMap<string, OmniBoardConnectorRecord>;
   readonly activeApp: ActiveApp | null;
   readonly isTransitioning: boolean;
 
@@ -81,6 +94,12 @@ interface OmniBoardState {
   }) => void;
 
   removeIntegration: (provider: string) => void;
+
+  /** Upserts a connector record keyed by appKey. */
+  hydrateConnector: (record: OmniBoardConnectorRecord) => void;
+
+  /** Updates the status of an existing connector by appKey. */
+  setConnectorStatus: (appKey: string, status: ConnectorStatus) => void;
 
   mountActiveApp: (config: {
     id: string;
@@ -96,6 +115,7 @@ interface OmniBoardState {
 
 export const useOmniBoard = create<OmniBoardState>((set: (partial: Partial<OmniBoardState> | ((state: OmniBoardState) => Partial<OmniBoardState>)) => void, get: () => OmniBoardState) => ({
   integrations: new Map(),
+  connectors: new Map(),
   activeApp: null,
   isTransitioning: false,
 
@@ -132,6 +152,24 @@ export const useOmniBoard = create<OmniBoardState>((set: (partial: Partial<OmniB
       const next = new Map(state.integrations);
       next.delete(provider);
       return { integrations: next };
+    });
+  },
+
+  hydrateConnector: (record: OmniBoardConnectorRecord) => {
+    set((state: OmniBoardState) => {
+      const next = new Map(state.connectors);
+      next.set(record.appKey, structuredClone(record) as OmniBoardConnectorRecord);
+      return { connectors: next };
+    });
+  },
+
+  setConnectorStatus: (appKey: string, status: ConnectorStatus) => {
+    set((state: OmniBoardState) => {
+      const existing = state.connectors.get(appKey);
+      if (!existing) return {};
+      const next = new Map(state.connectors);
+      next.set(appKey, { ...existing, status });
+      return { connectors: next };
     });
   },
 

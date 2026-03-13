@@ -479,7 +479,7 @@ export const Today = () => {
           <Card className="glass-card hover-lift h-full overflow-hidden relative border border-white/5">
             <DragHandle visibilityClass="text-white/20" />
             <div className="h-full overflow-hidden pt-2 pl-2">
-              <OmniTraceFeed maxItems={4} />
+              <OmniTraceFeed />
             </div>
           </Card>
         </div>

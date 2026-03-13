@@ -130,9 +130,9 @@ async function fetchRemoteRegistry(userId: string): Promise<DeviceRecord[]> {
     }
 
     return (data || []).map((d: Record<string, unknown>) => ({
-      deviceId: d.device_id,
-      userId: d.user_id,
-      lastSeen: d.last_seen_at,
+      deviceId: d.device_id as string,
+      userId: d.user_id as string,
+      lastSeen: d.last_seen_at as string,
       deviceInfo: d.device_fingerprint ? JSON.parse(d.device_fingerprint as string) : {},
       status: d.status as DeviceStatus,
     }));

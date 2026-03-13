@@ -5,7 +5,11 @@
  * This wrapper intentionally disables react-grid-layout dragging/resizing so
  * card-level interactions never steal pointer events from the canvas host.
  */
-import { Responsive, WidthProvider, type ResponsiveProps } from 'react-grid-layout/legacy';
+import {
+  Responsive,
+  WidthProvider,
+  type LegacyResponsiveReactGridLayoutProps as ResponsiveProps,
+} from 'react-grid-layout/legacy';
 import type { JSX } from 'react';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -18,7 +22,7 @@ const BaseResponsiveGridLayout = WidthProvider(Responsive);
  * Responsive-only layout wrapper (non-draggable, non-resizable).
  * Prevents interference with OmniCanvas global drag/pan interactions.
  */
-export function ResponsiveGridLayout(props: ResponsiveProps): JSX.Element {
+export function ResponsiveGridLayout(props: Omit<ResponsiveProps, 'width'> & { width?: number }): JSX.Element {
   return (
     <BaseResponsiveGridLayout
       {...props}
