@@ -24,6 +24,7 @@
 
     "baseUrl": ".",
     "paths": {
+      "@/dashboard/*": ["./apps/omnihub-site/dashboard/*"],
       "@/*": ["./apps/omnihub-site/src/*"]
     }
   },

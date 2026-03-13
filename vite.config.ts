@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => ({
   ],
   resolve: {
     alias: {
+      "@/dashboard": path.resolve(__dirname, "./apps/omnihub-site/dashboard"),
       "@": path.resolve(__dirname, "./apps/omnihub-site/src"),
     },
     // Dedupe React to prevent multiple instances (fixes createContext undefined)

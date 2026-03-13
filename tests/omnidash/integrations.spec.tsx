@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Integrations from '@/components/omnidash/Integrations';
+import Integrations from '@/dashboard/components/Integrations';
 import type { OmniLinkIntegration } from '@/omnidash/types';
 
 vi.mock('@/contexts/AuthContext', () => ({

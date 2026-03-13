@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Bot, ChevronDown, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { NotificationCenter } from '@/components/omnidash/NotificationCenter';
+import { NotificationCenter } from '@/dashboard/components/NotificationCenter';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import PersonaModal from '@/components/omnidash/PersonaModal';
+import PersonaModal from '@/dashboard/components/PersonaModal';
 import { type AgentPersona, readAgentPrefs, writeAgentPrefs } from '@/omnidash/agentPrefs';
 
 const ORG_BADGE_STORAGE_KEY = 'apex.org.badge.v1';

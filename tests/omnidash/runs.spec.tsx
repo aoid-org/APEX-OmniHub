@@ -14,7 +14,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-vi.mock('@/components/omnidash/Runs', () => ({
+vi.mock('@/dashboard/components/Runs', () => ({
   Runs: vi.fn(() => <div data-testid="runs-page">Runs Page</div>),
   default: vi.fn(() => <div data-testid="runs-page">Runs Page</div>),
 }));
@@ -62,7 +62,7 @@ describe('Runs component tests', () => {
   });
 
   it('should render mock Runs component', async () => {
-    const { Runs } = await import('@/components/omnidash/Runs');
+    const { Runs } = await import('@/dashboard/components/Runs');
     renderWithProviders(<Runs />);
     expect(screen.getByTestId('runs-page')).toBeInTheDocument();
   });

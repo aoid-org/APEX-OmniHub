@@ -66,7 +66,7 @@ vi.mock('@/stores/demoStore', () => ({
   useDemoStore: () => ({ tasks: [] }),
 }));
 
-vi.mock('@/components/dashboard/OmniTraceFeed', () => ({
+vi.mock('@/dashboard/components/OmniTraceFeed', () => ({
   OmniTraceFeed: () => <div data-testid="omnitrace-feed">Feed</div>,
 }));
 
@@ -74,7 +74,7 @@ vi.mock('./HiddenMetric', () => ({
   HiddenMetric: ({ value }: { value: string }) => <span>{value}</span>,
 }));
 
-vi.mock('@/components/omnidash/HiddenMetric', () => ({
+vi.mock('@/dashboard/components/HiddenMetric', () => ({
   HiddenMetric: ({ value }: { value: string }) => <span>{value}</span>,
 }));
 
@@ -105,7 +105,7 @@ describe('Today widget', () => {
   });
 
   it('renders without crashing', async () => {
-    const { Today } = await import('@/components/omnidash/Today');
+    const { Today } = await import('@/dashboard/components/Today');
     const Wrapper = createWrapper();
     const { container } = render(
       <Wrapper>
@@ -116,7 +116,7 @@ describe('Today widget', () => {
   });
 
   it('renders the responsive grid container', async () => {
-    const { Today } = await import('@/components/omnidash/Today');
+    const { Today } = await import('@/dashboard/components/Today');
     const Wrapper = createWrapper();
     render(
       <Wrapper>
@@ -127,7 +127,7 @@ describe('Today widget', () => {
   });
 
   it('renders the Top 3 Outcomes heading', async () => {
-    const { Today } = await import('@/components/omnidash/Today');
+    const { Today } = await import('@/dashboard/components/Today');
     const Wrapper = createWrapper();
     render(
       <Wrapper>
@@ -138,7 +138,7 @@ describe('Today widget', () => {
   });
 
   it('exports a default export', async () => {
-    const mod = await import('@/components/omnidash/Today');
+    const mod = await import('@/dashboard/components/Today');
     expect(mod.default).toBeDefined();
     expect(mod.Today).toBeDefined();
   });

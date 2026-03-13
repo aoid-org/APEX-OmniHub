@@ -48,12 +48,12 @@ vi.mock('@/lib/monitoring', () => ({
 }));
 
 // Mock heavy widget dependencies to isolate rendering behaviour
-vi.mock('@/components/omnidash/Today', () => ({
+vi.mock('@/dashboard/components/Today', () => ({
   Today: vi.fn(() => <div data-testid="omnidash-today">Today Widget</div>),
   default: vi.fn(() => <div data-testid="omnidash-today">Today Widget</div>),
 }));
 
-vi.mock('@/components/dashboard/OmniTraceFeed', () => ({
+vi.mock('@/dashboard/components/OmniTraceFeed', () => ({
   OmniTraceFeed: vi.fn(() => <div data-testid="omni-trace-feed">Trace Feed</div>),
   default: vi.fn(() => <div data-testid="omni-trace-feed">Trace Feed</div>),
 }));
@@ -72,7 +72,7 @@ vi.mock('@/hooks/useExecute', () => ({
 
 // ─── Imports (post-mock) ───────────────────────────────────────────────────
 
-import { Today } from '@/components/omnidash/Today';
+import { Today } from '@/dashboard/components/Today';
 
 // ─── Typed helpers ─────────────────────────────────────────────────────────
 
@@ -153,7 +153,7 @@ describe('OmniDash Widgets Chaos Battery', () => {
   describe('concurrent widget rendering', () => {
     it('renders Today and OmniTraceFeed together without act() warnings', async () => {
       // Importing after mock registration
-      const { OmniTraceFeed } = await import('@/components/dashboard/OmniTraceFeed');
+      const { OmniTraceFeed } = await import('@/dashboard/components/OmniTraceFeed');
 
       renderWithProviders(
         <div data-testid="widget-container">
@@ -199,7 +199,7 @@ describe('OmniDash Widgets Chaos Battery', () => {
   describe('graceful error handling', () => {
     it('does not crash when Today mock throws on first render', async () => {
       // Override Today mock to throw once, then recover
-      const { Today: MockedToday } = await import('@/components/omnidash/Today');
+      const { Today: MockedToday } = await import('@/dashboard/components/Today');
       vi.mocked(MockedToday)
         .mockImplementationOnce(() => { throw new Error('Simulated crash'); })
         .mockImplementation(() => <div data-testid="omnidash-today">Recovered</div>);
