@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useDashboardData } from "./hooks/useDashboardData";
+import { useOmniModal } from '@/stores/omniModalStore';
+import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, ReactNode, Dispatch, SetStateAction } from "react";
@@ -325,8 +327,37 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
   );
 };
 
+// ─── Module key map: sidebar label → omniModalStore module key
+const NAV_MODULE_KEY: Record<string, string> = {
+  PhysiOmni:   'physiomni',
+  Audits:      'audits',
+  Links:       'links',
+  Automations: 'automations',
+  Workflows:   'workflows',
+  Files:       'files',
+  Billing:     'billing',
+  Settings:    'settings',
+};
+
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
 const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
+  const { invoke } = useOmniModal();
+
+  const handleNav = (label: string) => {
+    setActiveNav(label);
+    const moduleKey = NAV_MODULE_KEY[label];
+    if (!moduleKey) return; // OmniBoard — stays on main canvas
+    invoke({
+      id: `nav-module-${moduleKey}`,
+      provider: 'omnidash',
+      type: 'module',
+      title: label,
+      contextData: { moduleKey },
+      onComplete: async () => { setActiveNav('OmniBoard'); },
+      onCancel: () => { setActiveNav('OmniBoard'); },
+    });
+  };
+
   return (
     <div style={{
       width:228, flexShrink:0,
@@ -338,7 +369,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
       overflowY:"auto",
     }}>
       {NAV.map((n) => (
-        <NavItem key={n.label} n={n} isActive={activeNav===n.label} onClick={() =>setActiveNav(n.label)} />
+        <NavItem key={n.label} n={n} isActive={activeNav===n.label} onClick={() => handleNav(n.label)} />
       ))}
 
       {/* Status Footer */}
@@ -519,7 +550,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark }: OmniDashHeaderProps) => {
 };
 
 // ─── Widget: APEX Agent ───────────────────────────────────────────────────────
-const AgentWidget = ({ tick }: AgentWidgetProps) => {
+const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
   const [elapsed, setElapsed] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(true);
 
@@ -704,6 +735,7 @@ const OmniSlateWidget = () => {
   const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const pendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Cycle suggestion every 4s with fade
   useEffect(() => {
@@ -721,11 +753,24 @@ const OmniSlateWidget = () => {
     if (!input.trim()) return;
     const q = input.trim(); setInput(""); setLoading(true);
     setMessages(m => [...m, {role:"user", text:q}]);
-    setTimeout(() => {
+    pendingRef.current = setTimeout(() => {
       setMessages(m => [...m, {role:"assistant", text:`Analyzing: "${q}" — Guardian audit passed. Agent response queued.`}]);
       setLoading(false);
+      pendingRef.current = null;
     }, 900);
   }, [input]);
+
+  const stop = useCallback(() => {
+    if (pendingRef.current) {
+      clearTimeout(pendingRef.current);
+      pendingRef.current = null;
+    }
+    setLoading(false);
+    setMessages(m => m.length > 0 && m[m.length - 1].role === 'user'
+      ? [...m, {role:"assistant", text:"— Response stopped by user."}]
+      : m
+    );
+  }, []);
 
   const fillSuggestion = () => setInput(SLATE_SUGGESTIONS[suggIdx]);
 
@@ -747,11 +792,14 @@ const OmniSlateWidget = () => {
             background:`${T.orange}15`,border:`1px solid ${T.orange}44`,
             borderRadius:8,padding:"3px 10px",cursor:"pointer",
           }}>CleanSlate</button>
-          <button style={{
-            width:26,height:26,borderRadius:8,
-            background:`${T.orange}22`,border:`1px solid ${T.orange}44`,
-            color:T.orange,cursor:"pointer",fontSize:14.1,display:"flex",alignItems:"center",justifyContent:"center",
-          }}>💡</button>
+          <button
+            onClick={fillSuggestion}
+            title="Fill suggestion"
+            style={{
+              width:26,height:26,borderRadius:8,
+              background:`${T.orange}22`,border:`1px solid ${T.orange}44`,
+              color:T.orange,cursor:"pointer",fontSize:14.1,display:"flex",alignItems:"center",justifyContent:"center",
+            }}>💡</button>
         </div>
       </div>
 
@@ -847,14 +895,20 @@ const OmniSlateWidget = () => {
         }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         </button>
-        <button title="Stop" style={{
-          width:44, height:44, borderRadius:12, flexShrink:0,
-          background:T.surface,
-          border:`1px solid ${T.border}`,
-          cursor:"pointer",
-          display:"flex", alignItems:"center", justifyContent:"center",
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill={T.t2}><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        <button
+          onClick={stop}
+          title="Stop"
+          disabled={!loading}
+          style={{
+            width:44, height:44, borderRadius:12, flexShrink:0,
+            background: loading ? `${T.orange}12` : T.surface,
+            border:`1px solid ${loading ? T.orange+"55" : T.border}`,
+            cursor: loading ? "pointer" : "not-allowed",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            transition:"all .2s",
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill={loading ? T.orange : T.t3}><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
         </button>
       </div>
     </GlassCard>
@@ -871,14 +925,29 @@ const APP_TILE_STYLE: React.CSSProperties = {
 };
 
 // ─── Widget: APEX Ecosystem ───────────────────────────────────────────────────
-const EcosystemWidget = () => (
+const EcosystemWidget = () => {
+  const { invoke } = useOmniModal();
+
+  const handleAddApp = () => {
+    invoke({
+      id: 'ecosystem-add-apex-app',
+      provider: 'omnidash',
+      type: 'form',
+      title: 'Connect APEX App',
+      description: 'Select an APEX module to integrate into your ecosystem.',
+      onComplete: async () => {},
+      onCancel: () => {},
+    });
+  };
+
+  return (
   <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
     <div style={{ padding:"14px 16px 10px", borderBottom:`1px solid ${T.border}` }}>
       <SectionLabel>APEX Ecosystem</SectionLabel>
     </div>
     <div style={{ padding:"14px", flex:1 }}>
       {/* APEX app tile — brilliant accent treatment */}
-      <button style={{
+      <button onClick={handleAddApp} style={{
         ...APP_TILE_STYLE,
         width:"100%",
         background:`linear-gradient(135deg, ${T.orange}28 0%, ${T.orange}14 100%)`,
@@ -898,10 +967,26 @@ const EcosystemWidget = () => (
       </button>
     </div>
   </GlassCard>
-);
+  );
+};
 
 // ─── Widget: Integrated Apps ──────────────────────────────────────────────────
-const IntegratedAppsWidget = () => (
+const IntegratedAppsWidget = () => {
+  const { invoke } = useOmniModal();
+
+  const handleConnectApp = (slot: number) => {
+    invoke({
+      id: `integrated-app-connect-${slot}`,
+      provider: 'omnidash',
+      type: 'selection',
+      title: 'Connect Integration',
+      description: 'Choose a third-party application to connect to your APEX workspace.',
+      onComplete: async () => {},
+      onCancel: () => {},
+    });
+  };
+
+  return (
   <GlassCard style={{ padding:"16px" }}>
     <div style={{ marginBottom:10 }}>
       <SectionLabel>Integrated Apps</SectionLabel>
@@ -909,12 +994,19 @@ const IntegratedAppsWidget = () => (
     {/* 4 columns — same tile size as EcosystemWidget tiles */}
     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10 }}>
       {[1,2,3,4].map(i => (
-        <div key={`integrated-app-ph-${i}`} style={{
-          ...APP_TILE_STYLE,
-          background:T.surface,
-          border:`1px dashed ${T.border}`,
-          opacity:0.45,
-        }}>
+        <button
+          key={`integrated-app-ph-${i}`}
+          onClick={() => handleConnectApp(i)}
+          title="Connect app"
+          style={{
+            ...APP_TILE_STYLE,
+            background:T.surface,
+            border:`1px dashed ${T.border}`,
+            opacity:0.55,
+            cursor:"pointer",
+            transition:"opacity .2s, border-color .2s",
+          }}
+        >
           <div style={{
             width:22, height:22, borderRadius:6,
             background:"rgba(255,255,255,0.06)",
@@ -925,14 +1017,26 @@ const IntegratedAppsWidget = () => (
             <div style={{width:10,height:10,borderRadius:2,background:"rgba(255,255,255,0.20)"}} />
           </div>
           <div style={{fontSize:13,color:T.t3,letterSpacing:"0.04em",textTransform:"uppercase",fontWeight:600}}>Awaiting</div>
-        </div>
+        </button>
       ))}
     </div>
   </GlassCard>
-);
+  );
+};
 
 // ─── Right Panel Sections ─────────────────────────────────────────────────────
-const SecurityPanel = ({ tick: _tick }: { tick?: number }) => {
+const SecurityPanel = () => {
+  const [scanning, setScanning] = useState<boolean>(false);
+  const [lastCheck, setLastCheck] = useState<string>(new Date().toLocaleTimeString());
+
+  const handleScan = () => {
+    if (scanning) return;
+    setScanning(true);
+    setTimeout(() => {
+      setScanning(false);
+      setLastCheck(new Date().toLocaleTimeString());
+    }, 1800);
+  };
 
   return (
     <GlassCard style={{ padding:"14px 14px 12px" }}>
@@ -943,21 +1047,31 @@ const SecurityPanel = ({ tick: _tick }: { tick?: number }) => {
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
         <div style={{display:"flex",flexDirection:"column",gap:3}}>
           <div style={{display:"flex",alignItems:"center",gap:7}}>
-            <StatusDot color={T.green} />
-            <div style={{fontSize:14.1,fontWeight:600,color:T.t1}}>Zero Trust Active</div>
+            <StatusDot color={scanning ? T.warn : T.green} />
+            <div style={{fontSize:14.1,fontWeight:600,color:T.t1}}>{scanning ? "Scanning…" : "Zero Trust Active"}</div>
           </div>
-          <div style={{fontSize:10.8,color:T.t2}}>All gateways secured</div>
+          <div style={{fontSize:10.8,color:T.t2}}>{scanning ? "Running gateway audit" : "All gateways secured"}</div>
         </div>
       </div>
-      <div style={{fontSize:9.8,color:T.t3}}>LAST CHECK: {new Date().toLocaleTimeString()}</div>
-      <button style={{
-        marginTop:10,width:"100%",padding:"8px",
-        background:T.surface,border:`1px solid ${T.border}`,
-        borderRadius:10,color:T.t1,fontSize:13,cursor:"pointer",fontWeight:500,
-        display:"flex",alignItems:"center",justifyContent:"center",gap:6,
-      }}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-        Scan Now
+      <div style={{fontSize:9.8,color:T.t3}}>LAST CHECK: {lastCheck}</div>
+      <button
+        onClick={handleScan}
+        disabled={scanning}
+        style={{
+          marginTop:10,width:"100%",padding:"8px",
+          background: scanning ? `${T.warn}18` : T.surface,
+          border:`1px solid ${scanning ? T.warn+"55" : T.border}`,
+          borderRadius:10,color: scanning ? T.warn : T.t1,fontSize:13,
+          cursor: scanning ? "not-allowed" : "pointer",fontWeight:500,
+          display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+          transition:"all .2s",
+        }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          style={{ animation: scanning ? "spin 1s linear infinite" : "none" }}>
+          <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+        </svg>
+        {scanning ? "Scanning…" : "Scan Now"}
       </button>
     </GlassCard>
   );
@@ -996,7 +1110,22 @@ const TRACE_EVENTS = [
   {color:T.green,  text:"Ticket #7291 auto-resolved by agent"},
 ];
 
-const OmniTracePanel = () => (
+const OmniTracePanel = () => {
+  const { invoke } = useOmniModal();
+
+  const handleReplay = () => {
+    invoke({
+      id: 'omnitrace-replay-workflows',
+      provider: 'omnidash',
+      type: 'module',
+      title: 'Workflows',
+      contextData: { moduleKey: 'workflows' },
+      onComplete: async () => {},
+      onCancel: () => {},
+    });
+  };
+
+  return (
   <GlassCard style={{ padding:"14px" }}>
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
       <IconBadge idx={7} size={19} />
@@ -1013,14 +1142,19 @@ const OmniTracePanel = () => (
         </div>
       ))}
     </div>
-    <button style={{
-      marginTop:12,width:"100%",padding:"8px",
-      background:T.surface,border:`1px solid ${T.border}`,
-      borderRadius:10,color:T.t2,fontSize:11.9,cursor:"pointer",fontWeight:600,
-      letterSpacing:"0.04em",
-    }}>+ REPLAY WORKFLOWS</button>
+    <button
+      onClick={handleReplay}
+      style={{
+        marginTop:12,width:"100%",padding:"8px",
+        background:T.surface,border:`1px solid ${T.border}`,
+        borderRadius:10,color:T.t2,fontSize:11.9,cursor:"pointer",fontWeight:600,
+        letterSpacing:"0.04em",
+        transition:"border-color .2s, color .2s",
+      }}
+    >+ REPLAY WORKFLOWS</button>
   </GlassCard>
-);
+  );
+};
 
 const Toggle = ({ label, sublabel, value, onChange, color = T.orange }: ToggleProps) => (
   <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"7px 0" }}>
@@ -1193,6 +1327,9 @@ export default function OmniDashShell() {
           <span style={{display:"flex",alignItems:"center",gap:5,color:T.green}}><StatusDot color={T.green} pulse={false} />Zero Trust: ON</span>
         </div>
       </div>
+
+      {/* OmniSpatialHost — universal modal engine, portal-mounted */}
+      <OmniSpatialHost />
     </div>
   );
 }
