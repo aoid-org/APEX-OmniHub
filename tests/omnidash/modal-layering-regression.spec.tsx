@@ -10,17 +10,15 @@
  * 5. Tailwind config maps bg-background / text-foreground to CSS vars
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, cleanup, act } from '@testing-library/react';
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import {
   Dialog,
   DialogContent,
-  DialogOverlay,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { useOmniModal } from '@/stores/omniModalStore';
 
 // Polyfill PointerEvent for Radix UI Dialog in jsdom
 if (!(globalThis as Record<string, unknown>).PointerEvent) {
