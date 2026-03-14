@@ -1088,18 +1088,22 @@
   z-index: 10;
 }
 
-/* Small tile: 25% */
+/* Small tile: 25% — capped height prevents pushing Apps section off-screen */
 .apex-hero-tile--sm {
   width: calc(25% - 10px);
   min-width: calc(25% - 10px);
+  max-height: 420px;
+  overflow-y: auto;
   flex-shrink: 0;
   will-change: transform;
 }
 
-/* Large tile: 50% */
+/* Large tile: 50% — capped height prevents pushing Apps section off-screen */
 .apex-hero-tile--lg {
   width: calc(50% - 20px);
   min-width: calc(50% - 20px);
+  max-height: 420px;
+  overflow-y: auto;
   flex-shrink: 0;
   will-change: transform;
 }
