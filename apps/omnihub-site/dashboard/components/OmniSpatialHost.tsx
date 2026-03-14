@@ -439,7 +439,7 @@ export function OmniSpatialHost() {
           <button
             type="button"
             aria-label="Close modal"
-            className="fixed inset-0 z-[400] w-full h-full border-none bg-black/80 cursor-default animate-in fade-in-0"
+            className="fixed inset-0 z-[9000] w-full h-full border-none bg-black/60 cursor-default animate-in fade-in-0"
             onClick={(e) => {
               if (e.target === e.currentTarget && Date.now() - mountTime.current >= 300) {
                 abortModal('USER_DISMISSED');
@@ -450,8 +450,8 @@ export function OmniSpatialHost() {
         <DialogContent
           className={
             activeModal?.type === 'module'
-              ? 'sm:max-w-[560px]'
-              : 'sm:max-w-[425px]'
+              ? 'z-[9001] sm:max-w-[560px]'
+              : 'z-[9001] sm:max-w-[425px]'
           }
           {...(hasDescription ? {} : { 'aria-describedby': undefined })}
           // Hard-disable Radix's unreliable DismissableLayer event tracking

@@ -51,7 +51,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
       className={
         'apex-hero-tile apex-hero-tile--lg' +
         ' z-[9999] pointer-events-auto' +
-        ' flex flex-col justify-end relative overflow-hidden'
+        ' flex flex-col justify-end relative overflow-y-auto overflow-x-hidden'
       }
       style={{ ...GLASS_TILE, padding: 24 }}
     >

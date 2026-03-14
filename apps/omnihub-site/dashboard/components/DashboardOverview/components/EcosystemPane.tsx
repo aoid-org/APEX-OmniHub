@@ -19,7 +19,7 @@ export const EcosystemPane = memo(function EcosystemPane({
       whileHover={{ scale: 1.01, transition: SPRING }}
       className={
         'apex-hero-tile apex-hero-tile--sm' +
-        ' flex flex-col relative overflow-hidden'
+        ' flex flex-col relative overflow-y-auto overflow-x-hidden'
       }
       style={{ ...GLASS_TILE, padding: 20 }}
     >

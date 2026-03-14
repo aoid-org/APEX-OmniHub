@@ -1,3 +1,48 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * shadcn/ui Design Tokens for OmniDash
+ *
+ * OmniDash is a dark-themed dashboard. These variables power
+ * Radix UI Dialog, AlertDialog, Popover, and all shadcn/ui
+ * primitives used by OmniSpatialHost and its modal system.
+ *
+ * Values are HSL channels (no hsl() wrapper) — Tailwind adds the wrapper
+ * via theme config: `hsl(var(--background))`.
+ */
+
+@layer base {
+  :root {
+    --background: 222 47% 6%;
+    --foreground: 216 20% 92%;
+
+    --card: 222 47% 8%;
+    --card-foreground: 216 20% 92%;
+
+    --popover: 222 47% 8%;
+    --popover-foreground: 216 20% 92%;
+
+    --primary: 24 76% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 216 20% 92%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 20 76% 44%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 24 76% 50%;
+
+    --radius: 0.5rem;
+  }
+}
