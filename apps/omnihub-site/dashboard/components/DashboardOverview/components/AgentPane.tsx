@@ -44,7 +44,7 @@ export const AgentPane = memo(function AgentPane({
       className={
         'apex-hero-tile apex-hero-tile--sm' +
         ' flex flex-col items-center justify-center' +
-        ' relative overflow-hidden'
+        ' relative overflow-y-auto overflow-x-hidden'
       }
       style={{ ...GLASS_TILE, padding: 20 }}
     >
