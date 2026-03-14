@@ -70,6 +70,12 @@ globalThis.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Never intercept hashed asset requests — let them go to network directly.
+  // Cached HTML must never be served for CSS/JS asset URLs.
+  if (url.pathname.startsWith('/assets/')) {
+    return;
+  }
+
   // Strategy: Network-first with cache fallback
   event.respondWith(
     fetch(request)

@@ -16,6 +16,11 @@
     { "source": "/privacy/", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },
     { "source": "/terms/", "destination": "/terms.html" },
+    { "source": "/assets/:path*", "status": 404 },
+    { "source": "/favicon:path*", "status": 404 },
+    { "source": "/manifest.webmanifest", "status": 404 },
+    { "source": "/robots.txt", "status": 404 },
+    { "source": "/sw.js", "status": 404 },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
