@@ -12,14 +12,13 @@ export const EcosystemPane = memo(function EcosystemPane({
 }: EcosystemPaneProps) {
   return (
     <motion.div
-      layout
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ ...SPRING, delay: 0.1 }}
       whileHover={{ scale: 1.01, transition: SPRING }}
       className={
         'apex-hero-tile apex-hero-tile--sm' +
-        ' flex flex-col relative overflow-y-auto overflow-x-hidden'
+        ' flex flex-col relative overflow-hidden'
       }
       style={{ ...GLASS_TILE, padding: 20 }}
     >
@@ -66,7 +65,7 @@ export const EcosystemPane = memo(function EcosystemPane({
                   top: 0,
                   bottom: 0,
                 }}
-                dragElastic={0.4}
+                dragElastic={0.05}
                 whileHover={{ scale: 1.02, translateX: 4, rotate: 0.5 }}
                 whileTap={{ scale: 0.98 }}
               >
