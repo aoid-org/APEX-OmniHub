@@ -43,7 +43,6 @@ export const OmniSlatePane = memo(function OmniSlatePane({
 
   return (
     <motion.div
-      layout
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ ...SPRING, delay: 0.05 }}
@@ -51,7 +50,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
       className={
         'apex-hero-tile apex-hero-tile--lg' +
         ' z-[9999] pointer-events-auto' +
-        ' flex flex-col justify-end relative overflow-y-auto overflow-x-hidden'
+        ' flex flex-col justify-end relative overflow-hidden'
       }
       style={{ ...GLASS_TILE, padding: 24 }}
     >
@@ -125,7 +124,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
         )}
       </div>
 
-      <div className="relative z-10 flex flex-col gap-3">
+      <div className="relative z-10 flex flex-col gap-3" style={{ minWidth: 0 }}>
         {activeInsight === '__global__' && (
           <div
             style={{
@@ -156,6 +155,9 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               gap: 8,
               flexWrap: 'wrap',
               marginBottom: 8,
+              maxHeight: 80,
+              overflowY: 'auto',
+              minHeight: 0,
             }}
           >
             <AnimatePresence>
@@ -261,6 +263,10 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               color: traceColor,
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+              minWidth: 0,
             }}
           >
             {traceLogs[0]}

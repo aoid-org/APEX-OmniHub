@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, useMotionValue } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useDashboardData } from "./hooks/useDashboardData";
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
@@ -231,26 +231,7 @@ const SectionLabel = ({ children }: SectionLabelProps) => (
   }}>{children}</div>
 );
 
-// ─── DraggableWidget — free-position drag wrapper (stays where dropped) ───────
-interface DraggableWidgetProps {
-  children: ReactNode;
-  style?: CSSProperties;
-}
-const DraggableWidget = ({ children, style = {} }: DraggableWidgetProps) => {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  return (
-    <motion.div
-      drag
-      dragMomentum={false}
-      dragElastic={0.05}
-      style={{ ...style, x, y, position: 'relative', zIndex: 'auto' as unknown as number }}
-      whileDrag={{ scale: 1.015, zIndex: 999, cursor: 'grabbing' }}
-    >
-      {children}
-    </motion.div>
-  );
-};
+// DraggableWidget is imported from ./DraggableWidget (extracted for testability).
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const NAV = [
@@ -996,6 +977,7 @@ const OmniSlateWidget = () => {
           <span style={{
             fontSize:13, color:T.t2, lineHeight:1.4,
             overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+            minWidth: 0,
           }}>{SLATE_SUGGESTIONS[suggIdx]}</span>
           <svg style={{flexShrink:0,marginLeft:"auto"}} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.orange} strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>

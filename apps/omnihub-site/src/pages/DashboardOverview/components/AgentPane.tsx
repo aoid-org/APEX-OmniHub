@@ -21,7 +21,6 @@ export const AgentPane = memo(function AgentPane({
 
   return (
     <motion.div
-      layout
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={SPRING}
@@ -29,7 +28,7 @@ export const AgentPane = memo(function AgentPane({
       className={
         'apex-hero-tile apex-hero-tile--sm' +
         ' flex flex-col items-center justify-center' +
-        ' relative overflow-y-auto overflow-x-hidden'
+        ' relative overflow-hidden'
       }
       style={{ ...GLASS_TILE, padding: 20 }}
     >
