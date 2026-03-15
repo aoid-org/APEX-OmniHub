@@ -1,4 +1,3 @@
-<<<<<<< ours
 import { useState, useEffect, useCallback, useRef } from "react";
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
@@ -7,6 +6,12 @@ import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 import { supabase } from '@/lib/supabase';
 
+import imgBadge from "../../../src/assets/omnidash/apex-badge.png";
+import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
+import imgAvatar from "../../../src/assets/omnidash/avatar-default.png";
+import imgIcons from "../../../src/assets/omnidash/icons.png";
+import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
+
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, ReactNode, Dispatch, SetStateAction } from "react";
 
@@ -14,26 +19,12 @@ interface AppIconProps {
   idx: number;
   size?: number;
   style?: CSSProperties;
-=======
-import React, { useState, useEffect, useRef, useCallback } from "react";
-
-// ─── TypeScript Interfaces ────────────────────────────────────────────────────
-interface AppIconProps {
-  idx: number;
-  size: number;
-  style?: React.CSSProperties;
->>>>>>> theirs
 }
 
 interface IconBadgeProps {
   idx: number;
-<<<<<<< ours
   size?: number;
   style?: CSSProperties;
-=======
-  size: number;
-  style?: React.CSSProperties;
->>>>>>> theirs
 }
 
 interface StatusDotProps {
@@ -42,19 +33,11 @@ interface StatusDotProps {
 }
 
 interface GlassCardProps {
-<<<<<<< ours
-  children: ReactNode;
+  children?: ReactNode;
   style?: CSSProperties;
-=======
-  children?: React.ReactNode;
-  style?: React.CSSProperties;
->>>>>>> theirs
   glow?: boolean;
   onClick?: () => void;
 }
-
-<<<<<<< ours
-// BadgeProps reserved for future inline badge variants
 
 interface SectionLabelProps {
   children: ReactNode;
@@ -68,19 +51,10 @@ interface NavEntry {
 
 interface NavItemProps {
   n: NavEntry;
-=======
-interface SectionLabelProps {
-  children: React.ReactNode;
-}
-
-interface NavItemProps {
-  n: { label: string; iconIdx: number; active: boolean };
->>>>>>> theirs
   isActive: boolean;
   onClick: () => void;
 }
 
-<<<<<<< ours
 interface OpsState {
   demo: boolean;
   autoPilot: boolean;
@@ -89,25 +63,17 @@ interface OpsState {
 }
 
 import type { DashboardNavSection } from "./types/dashboard.types";
+
 interface OmniDashSidebarProps {
   activeNav: string;
-  setActiveNav: (nav: string) => void;
-=======
-interface OmniDashSidebarProps {
-  activeNav: string;
-  setActiveNav: React.Dispatch<React.SetStateAction<string>>;
->>>>>>> theirs
+  setActiveNav: Dispatch<SetStateAction<string>>;
 }
 
 interface OmniDashHeaderProps {
   tick: number;
   isDark: boolean;
-<<<<<<< ours
   setIsDark: Dispatch<SetStateAction<boolean>>;
   invoke: (config: OmniModalConfig) => void;
-=======
-  setIsDark: React.Dispatch<React.SetStateAction<boolean>>;
->>>>>>> theirs
 }
 
 interface AgentWidgetProps {
@@ -116,31 +82,16 @@ interface AgentWidgetProps {
 
 interface ToggleProps {
   label: string;
-<<<<<<< ours
-  sublabel: string;
-=======
   sublabel?: string;
->>>>>>> theirs
   value: boolean;
   onChange: (v: boolean) => void;
   color?: string;
 }
 
 interface OpsControlsPanelProps {
-<<<<<<< ours
   ops: OpsState;
   setOps: Dispatch<SetStateAction<OpsState>>;
 }
-import imgBadge from "../../../src/assets/omnidash/apex-badge.png";
-import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
-import imgAvatar from "../../../src/assets/omnidash/avatar-default.png";
-import imgIcons from "../../../src/assets/omnidash/icons.png";
-import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
-=======
-  ops: { demo: boolean; autoPilot: boolean; guardian: boolean; live: boolean };
-  setOps: React.Dispatch<React.SetStateAction<{ demo: boolean; autoPilot: boolean; guardian: boolean; live: boolean }>>;
-}
->>>>>>> theirs
 
 // ─── APEX Brand Assets ────────────────────────────────────────────────────────
 const IMG_BADGE = imgBadge;
