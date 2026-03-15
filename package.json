@@ -62,8 +62,24 @@
     "audit:features": "tsx scripts/audit-features.ts",
     "apple:secret": "tsx scripts/generate-apple-secret.ts",
     "readiness:generate": "node scripts/generate-readiness-report.mjs",
-    "postinstall": "bash scripts/install-githooks.sh 2>/dev/null || true"
+    "postinstall": "bash scripts/install-githooks.sh 2>/dev/null || true",
+    "bundle:analyze": "bun run build && open dist/stats.html",
+    "bundle:check": "bun run build && size-limit"
   },
+  "size-limit": [
+    {
+      "name": "Initial JS bundle (gzipped)",
+      "path": "dist/assets/js/index-*.js",
+      "gzip": true,
+      "limit": "800 KB"
+    },
+    {
+      "name": "Vendor React chunk",
+      "path": "dist/assets/js/react-vendor-*.js",
+      "gzip": true,
+      "limit": "150 KB"
+    }
+  ],
   "dependencies": {
     "@capacitor/android": "^6.2.1",
     "@capacitor/core": "^6.2.1",
@@ -150,6 +166,7 @@
     "@nomicfoundation/hardhat-verify": "^2.0.12",
     "@openzeppelin/contracts": "^5.1.0",
     "@playwright/test": "^1.57.0",
+    "@size-limit/file": "^12.0.1",
     "@tailwindcss/typography": "^0.5.16",
     "@temporalio/activity": "^1.14.1",
     "@temporalio/client": "^1.14.1",
@@ -187,6 +204,8 @@
     "pixelmatch": "^5.3.0",
     "pngjs": "^7.0.0",
     "postcss": "^8.5.6",
+    "rollup-plugin-visualizer": "^7.0.1",
+    "size-limit": "^12.0.1",
     "snyk": "^1.1297.3",
     "solidity-coverage": "^0.8.14",
     "tailwindcss": "^3.4.17",

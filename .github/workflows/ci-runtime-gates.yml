@@ -208,6 +208,25 @@ jobs:
       - name: Build production bundle
         run: bun run build
 
+      - name: Bundle size check
+        run: |
+          bunx size-limit --json > bundle-size.json || {
+            echo "::error::Bundle size exceeds limits. Run 'bun run bundle:analyze' locally."
+            cat bundle-size.json
+            exit 1
+          }
+          echo "✅ Bundle size within limits"
+
+      - name: Upload bundle stats
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bundle-stats
+          path: |
+            dist/stats.html
+            bundle-size.json
+          retention-days: 30
+
       # ─────────────────────────────────────────────────────────────
       # PHASE 4: Runtime Smoke Tests
       # ─────────────────────────────────────────────────────────────
