@@ -60,7 +60,8 @@
     "apex:deploy": "./apex-resilience/scripts/deploy.sh",
     "apex:test": "vitest run apex-resilience/tests/",
     "audit:features": "tsx scripts/audit-features.ts",
-    "apple:secret": "tsx scripts/generate-apple-secret.ts"
+    "apple:secret": "tsx scripts/generate-apple-secret.ts",
+    "readiness:generate": "node scripts/generate-readiness-report.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.1",
