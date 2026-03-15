@@ -4,7 +4,7 @@
 name: Production Readiness Gate
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 on:
   pull_request:

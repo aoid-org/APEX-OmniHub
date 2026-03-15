@@ -6,7 +6,7 @@ name: Mobile Build Verification
 # continuously-verified, CI-enforced build pipeline.
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 on:
   push:
