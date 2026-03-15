@@ -41,6 +41,7 @@ from temporalio import activity
 from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event
 from providers.database.factory import get_database_provider
 from security.prompt_sanitizer import PromptInjectionError, create_safe_user_message
+from security.ssrf import validate_url_with_dns_pin_async
 
 # Canonical set of allowed tools (must match registered Temporal activities)
 ALLOWED_TOOLS = frozenset(
@@ -541,8 +542,6 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
         Webhook response
     """
     import httpx
-
-    from security.ssrf import validate_url_with_dns_pin_async
 
     url = str(params.get("url", ""))
     method = params.get("method", "POST")

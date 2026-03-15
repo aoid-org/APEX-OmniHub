@@ -84,7 +84,7 @@ class OmniBoardService:
         return cls._LOWER_PROVIDERS_CACHE, cls._EXACT_MATCH_DICT
 
     @classmethod
-    async def fuzzy_match_provider(cls, input_text: str) -> list[str]:
+    def fuzzy_match_provider(cls, input_text: str) -> list[str]:
         """
         Fuzzy match provider names against query string.
 
