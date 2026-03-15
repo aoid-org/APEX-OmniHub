@@ -9,7 +9,29 @@ Covers:
 
 from __future__ import annotations
 
+import sys
+
 import pytest
+
+# Capture the real metrics module at import time, before test_server.py can replace
+# sys.modules["metrics"] with a MagicMock at its own module level.
+import metrics as _real_metrics_module  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _restore_real_metrics_module() -> None:
+    """
+    Ensure each test uses the real metrics module, not the MagicMock that
+    test_server.py installs via ``sys.modules["metrics"] = MagicMock(...)``
+    at module level (which runs during pytest collection, before any tests run).
+    """
+    original = sys.modules.get("metrics")
+    sys.modules["metrics"] = _real_metrics_module
+    yield
+    if original is not None:
+        sys.modules["metrics"] = original
+    else:
+        sys.modules.pop("metrics", None)
 
 # ── Unit Tests ───────────────────────────────────────────────────────
 
