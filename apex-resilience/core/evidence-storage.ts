@@ -84,10 +84,12 @@ export function resolveEvidenceBackend(): {
 
   if (raw && raw !== '') {
     // Explicit local path override
-    if (raw === '/tmp' || raw.startsWith('/tmp/')) {
-      console.warn(
-        '⚠️  APEX_EVIDENCE_STORAGE is set to /tmp — this is insecure for production!'
-          + ' Use an s3:// URI or a persistent volume instead.',
+    // Reject publicly writable directories (e.g. /tmp) — they are insecure for evidence storage.
+    const tmpDir = os.tmpdir();
+    if (raw === tmpDir || raw.startsWith(tmpDir + path.sep) || raw === '/tmp' || raw.startsWith('/tmp/')) {
+      throw new Error(
+        `APEX_EVIDENCE_STORAGE is set to a publicly writable directory (${raw}). `
+          + 'Use an s3:// URI or a private persistent volume instead.',
       );
     }
     // Warn when running inside a container (ephemeral disk)

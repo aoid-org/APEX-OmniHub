@@ -45,6 +45,23 @@ export default tseslint.config(
       "@typescript-eslint/no-explicit-any": "warn",  // Allow any in simulation code
     },
   },
+  // Lock 2: Ban hardcoded Omnidash app names in OmniDash surfaces.
+  // All mapping must derive from src/contracts/omnidash.contract.ts or APP_REGISTRY.
+  {
+    files: [
+      "apps/omnihub-site/src/pages/DashboardOverview/**/*.tsx",
+      "apps/omnihub-site/src/layouts/OmniDash*.tsx",
+      "src/components/OmniDash*.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": ["error",
+        {
+          selector: "Literal[value=/^(OmniBoard|OmniPort|Maestro|Fortress|Orchestrator|OmniSkills|PhysiOmni|Audits|Links|Automations|Workflows|Files|Billing|Settings)$/]",
+          message: "Hardcoded app name detected. Import from src/contracts/omnidash.contract.ts instead.",
+        },
+      ],
+    },
+  },
   // Infrastructure & connectors: console.log guarded by import.meta.env.DEV,
   // console.warn/error used for operational diagnostics. All production-safe.
   {

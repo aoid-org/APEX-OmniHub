@@ -1,0 +1,24 @@
+# Omnidash Contract Surfaces — Owner review required before merge.
+# Lock 5: CODEOWNERS enforcement for all contract-critical Omnidash files.
+
+# Contract (single source of truth)
+src/contracts/omnidash*                                       @apexbusiness-systems/core-owners
+
+# Registry (existing app registry)
+packages/core/src/registry*                                   @apexbusiness-systems/core-owners
+
+# Layout (sidebar + shell)
+apps/omnihub-site/src/layouts/OmniDashLayout.tsx              @apexbusiness-systems/core-owners
+
+# Dashboard (tiles + canvas)
+apps/omnihub-site/src/pages/DashboardOverview/                @apexbusiness-systems/core-owners
+
+# Stores (state management)
+src/stores/omniModalStore.ts                                  @apexbusiness-systems/core-owners
+src/stores/omniBoardStore.ts                                  @apexbusiness-systems/core-owners
+
+# Styles (layout CSS)
+apps/omnihub-site/src/styles/omnidash-layout.css              @apexbusiness-systems/core-owners
+
+# Action hook (intent dispatcher)
+src/omnidash/useOmniDashAction.ts                             @apexbusiness-systems/core-owners

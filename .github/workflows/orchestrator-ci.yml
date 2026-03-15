@@ -46,8 +46,9 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Run linters
+        working-directory: orchestrator
         run: |
-          python -m pip install ruff && python -m ruff check .
+          python -m ruff check . && python -m ruff format --check .
 
       - name: Check portability guardrails
         run: |
