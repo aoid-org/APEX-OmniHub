@@ -89,6 +89,19 @@ jobs:
           path: |
             build-artifacts/sbom-npm.cdx.json
             build-artifacts/sbom-python.cdx.json
+      - name: Get package version
+        run: echo "npm_package_version=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+      - name: Attach SBOM to GitHub Release (on main push)
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.npm_package_version }}
+          files: |
+            build-artifacts/sbom-npm.cdx.json
+            build-artifacts/sbom-python.cdx.json
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   sonarcloud-gate:
     if: vars.SONAR_PROJECT_KEY != ''
