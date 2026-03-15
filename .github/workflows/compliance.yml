@@ -76,7 +76,7 @@ jobs:
       - uses: actions/setup-node@v4 # v4.1.0
         with:
           node-version: "20"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.12"
       - run: mkdir -p build-artifacts
@@ -109,7 +109,6 @@ jobs:
             -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }} \
             -Dsonar.qualitygate.wait=true
         env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   ruff-gate:
@@ -121,7 +120,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           token: ${{ github.token }}
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.12"
       - run: pip install ruff

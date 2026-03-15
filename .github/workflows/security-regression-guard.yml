@@ -18,8 +18,6 @@ on:
 
 # Job-level permissions (preferred over workflow-level per SonarQube S6770)
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   security-invariants:

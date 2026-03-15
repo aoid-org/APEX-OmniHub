@@ -39,8 +39,6 @@ concurrency:
   group: mobile-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   NODE_VERSION: '20'
   JAVA_VERSION: '17'
 

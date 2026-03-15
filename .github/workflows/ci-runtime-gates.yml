@@ -110,7 +110,6 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
         env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
@@ -164,7 +163,7 @@ jobs:
         run: bun run test:coverage
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 

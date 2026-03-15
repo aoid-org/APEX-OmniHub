@@ -63,5 +63,4 @@ jobs:
             :rotating_light: *Guard Rail Violation* detected in `${{ github.event.workflow_run.head_branch }}`
             Run: ${{ github.event.workflow_run.html_url }}
         env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
