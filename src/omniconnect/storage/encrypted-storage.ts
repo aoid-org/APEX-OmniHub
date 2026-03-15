@@ -29,7 +29,7 @@ function getKeyHex(): string {
     throw new Error(`CRITICAL: Missing ${KEY_ENV_VAR}. Storage cannot operate.`);
   }
   if (keyHex.length !== 64) {
-    throw new Error(`CRITICAL: ${KEY_ENV_VAR} must be a 32-byte (64-char) hex string.`);
+    throw new Error(`CRITICAL: ${KEY_ENV_VAR} must be a 32-byte hex string (64 hex characters).`);
   }
   return keyHex;
 }

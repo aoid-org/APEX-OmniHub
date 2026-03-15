@@ -202,7 +202,7 @@ export class OmniLinkDelivery {
     await supabase
       .from('ingress_buffer')
       .update({
-        status: 'processed',
+        status: 'failed',
         processed_at: new Date().toISOString(),
       })
       .eq('id', id);
