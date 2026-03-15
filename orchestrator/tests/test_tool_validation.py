@@ -47,7 +47,7 @@ class TestAllowedTools:
             "call_webhook",
             "search_youtube",
             "update_agent_run_completion",
-            "mint_pilot_session"
+            "mint_pilot_session",
         }
         assert expected == set(tools.TOOL_REGISTRY.keys())
 
