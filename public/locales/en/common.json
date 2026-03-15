@@ -1,0 +1,28 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "logout": "Sign out",
+    "home": "Home"
+  },
+  "common": {
+    "loading": "Loading\u2026",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "confirm": "Confirm",
+    "close": "Close"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "email": "Email address",
+    "password": "Password"
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "unauthorized": "You do not have permission to view this page",
+    "serverError": "A server error occurred \u2014 please try again"
+  }
+}
