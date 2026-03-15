@@ -1,9 +1,9 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # APEX OmniHub E2E Test Results Report
 
-**Date:** March 15, 2026 (Updated)
+**Date:** January 23, 2026 (Updated)
 **Branch:** `claude/setup-dev-testing-infra-C70aY`
-**Commit:** `acb1a09`
+**Commit:** `ba13559`
 **Test Framework:** Vitest 4.0.17
 
 ---
@@ -12,15 +12,11 @@
 
 | Metric | Value |
 |--------|-------|
-| **Total Tests (Vitest)** | 1542 |
-| **Passed (Vitest)** | 1542 |
-| **Skipped (Vitest)** | 85 |
-| **Test Files (Vitest)** | 140 |
-| **Total Tests (Pytest)** | 243 |
-| **Passed (Pytest)** | 243 |
-| **Skipped (Pytest)** | 20 |
+| **Total Tests** | 99 |
+| **Passed** | 96 |
+| **Skipped** | 3 |
 | **Failed** | 0 |
-| **Pass Rate** | 100% |
+| **Pass Rate** | 96.9% |
 | **TypeScript Errors** | 0 |
 | **Build Status** | Success |
 | **Build Time** | 13.15s |
@@ -295,26 +291,6 @@ dist/assets/js/types-*.js              52.92 kB │ gzip: 11.95 kB
 | React | 18.3.1 |
 | TypeScript | 5.8.3 |
 | Vite | 7.2.7 |
-
----
-
----
-
-## March 2026 Results (v1.4.2)
-
-**Date:** 2026-03-15
-**Commit:** `acb1a09`
-**Previous Notable Commits:** `95da798` (idempotent orchestration), `364a927` (omnidash spatial wiring)
-
-| Framework | Passed | Skipped | Test Files | Failed |
-|-----------|--------|---------|------------|--------|
-| Vitest    | 1542   | 85      | 140        | 0      |
-| Pytest    | 243    | 20      | —          | 0      |
-| **Total** | **1785** | **105** | —        | **0**  |
-
-**Build:** Clean
-**TypeScript:** Clean
-**ESLint:** Clean
 
 ---
 

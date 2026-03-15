@@ -25,8 +25,7 @@ def is_stub_function(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
 
     # Ignore @abstractmethod decorated functions
     is_abstract = any(
-        isinstance(d, ast.Name) and d.id == "abstractmethod"
-        for d in node.decorator_list
+        isinstance(d, ast.Name) and d.id == "abstractmethod" for d in node.decorator_list
     )
 
     return (is_pass or is_ellipsis) and not is_abstract
@@ -47,9 +46,7 @@ def check_file_for_stubs(filepath: str) -> list[str]:
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 if is_stub_function(node):
-                    errors.append(
-                        f"❌ Stub found in {filepath}:{node.lineno} - '{node.name}'"
-                    )
+                    errors.append(f"❌ Stub found in {filepath}:{node.lineno} - '{node.name}'")
     except Exception as e:
         errors.append(f"⚠️ Parse error {filepath}: {e}")
 

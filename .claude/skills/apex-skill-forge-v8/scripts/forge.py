@@ -339,16 +339,12 @@ def create_skill(name: str, archetype: str, output_path: Path) -> bool:
     """
     # Validate name
     if not NAME_PATTERN.match(name):
-        print(
-            f"ERROR: Invalid name '{name}'. Must be kebab-case: ^[a-z0-9]+(-[a-z0-9]+)*$"
-        )
+        print(f"ERROR: Invalid name '{name}'. Must be kebab-case: ^[a-z0-9]+(-[a-z0-9]+)*$")
         return False
 
     # Validate archetype
     if archetype not in VALID_ARCHETYPES:
-        print(
-            f"ERROR: Invalid archetype '{archetype}'. Must be one of: {VALID_ARCHETYPES}"
-        )
+        print(f"ERROR: Invalid archetype '{archetype}'. Must be one of: {VALID_ARCHETYPES}")
         return False
 
     skill_dir = output_path / name
@@ -365,9 +361,7 @@ def create_skill(name: str, archetype: str, output_path: Path) -> bool:
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
     )
     (skill_dir / "README.md").write_text(_readme(name, archetype), encoding="utf-8")
-    (scripts_dir / "executor.py").write_text(
-        _executor(name, archetype), encoding="utf-8"
-    )
+    (scripts_dir / "executor.py").write_text(_executor(name, archetype), encoding="utf-8")
     (scripts_dir / "__init__.py").write_text(
         f'# {name} executor\n"""{COPYRIGHT}"""\n', encoding="utf-8"
     )

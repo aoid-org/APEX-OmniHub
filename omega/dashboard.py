@@ -17,10 +17,7 @@ except ImportError:
 
     class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
         """Fallback ThreadingHTTPServer for older Python versions"""
-
         daemon_threads = True
-
-
 from typing import Any
 
 from markupsafe import escape
@@ -80,9 +77,9 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802
         """Handle GET requests"""
-        if self.path == "/api/pending":
+        if self.path == '/api/pending':
             self._handle_get_pending()
-        elif self.path == "/":
+        elif self.path == '/':
             self._serve_dashboard()
         else:
             self._send_error(404, "Not Found")
@@ -90,13 +87,13 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:  # noqa: N802
         """Handle POST requests"""
         try:
-            content_length = int(self.headers.get("Content-Length", 0))
+            content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
-            data = json.loads(post_data.decode("utf-8"))
+            data = json.loads(post_data.decode('utf-8'))
 
-            if self.path == "/api/approve":
+            if self.path == '/api/approve':
                 self._handle_approve(data)
-            elif self.path == "/api/reject":
+            elif self.path == '/api/reject':
                 self._handle_reject(data)
             else:
                 self._send_error(404, "Not Found")
@@ -108,10 +105,10 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
     def _serve_dashboard(self) -> None:
         """Serve the dashboard HTML"""
         self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("X-Frame-Options", "DENY")
-        self.send_header("Content-Security-Policy", "default-src 'self'")
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('X-Frame-Options', 'DENY')
+        self.send_header('Content-Security-Policy', "default-src 'self'")
         self.end_headers()
 
         html_content = """
@@ -127,7 +124,7 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
         </body>
         </html>
         """
-        self.wfile.write(html_content.encode("utf-8"))
+        self.wfile.write(html_content.encode('utf-8'))
 
     def _handle_get_pending(self) -> None:
         """
@@ -158,7 +155,7 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
             ValueError: If request ID is invalid
         """
         # Validate alphanumeric + hyphens only
-        if not request_id or not all(c.isalnum() or c == "-" for c in request_id):
+        if not request_id or not all(c.isalnum() or c == '-' for c in request_id):
             raise ValueError("Invalid request ID format")
         if len(request_id) > 64:
             raise ValueError("Request ID too long")
@@ -178,7 +175,7 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
             ValueError: If username is invalid
         """
         # Validate alphanumeric + common username chars only
-        if not username or not all(c.isalnum() or c in "._-@" for c in username):
+        if not username or not all(c.isalnum() or c in '._-@' for c in username):
             raise ValueError("Invalid username format")
         if len(username) > 100:
             raise ValueError("Username too long")
@@ -187,8 +184,8 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
     def _handle_approve(self, data: dict[str, str]) -> None:
         """Handle approval request"""
         # SECURITY FIX (S5131): Validate and escape all user-controlled data
-        request_id = escape_html(self._sanitize_request_id(data.get("request_id", "")))
-        approved_by = escape_html(self._sanitize_username(data.get("approved_by", "")))
+        request_id = escape_html(self._sanitize_request_id(data.get('request_id', '')))
+        approved_by = escape_html(self._sanitize_username(data.get('approved_by', '')))
 
         result = self.engine.approve_request(request_id, approved_by)
         self._send_json(result)
@@ -196,9 +193,9 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
     def _handle_reject(self, data: dict[str, str]) -> None:
         """Handle rejection request"""
         # SECURITY FIX (S5131): Validate and escape all user-controlled data
-        request_id = escape_html(self._sanitize_request_id(data.get("request_id", "")))
-        rejected_by = escape_html(self._sanitize_username(data.get("rejected_by", "")))
-        reason = escape_html(data.get("reason", ""))
+        request_id = escape_html(self._sanitize_request_id(data.get('request_id', '')))
+        rejected_by = escape_html(self._sanitize_username(data.get('rejected_by', '')))
+        reason = escape_html(data.get('reason', ''))
 
         result = self.engine.reject_request(request_id, rejected_by, reason)
         self._send_json(result)
@@ -211,26 +208,26 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
         being passed to this method. Double-sanitization for defense-in-depth.
         """
         self.send_response(200)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('X-Content-Type-Options', 'nosniff')
         self.end_headers()
 
         # Double-sanitize for defense-in-depth (data already sanitized in engine)
         # This ensures SonarQube's taint tracking recognizes the sanitization
         safe_data = sanitize_data_recursive(data)
         json_data = json.dumps(safe_data, indent=2)
-        self.wfile.write(json_data.encode("utf-8"))
+        self.wfile.write(json_data.encode('utf-8'))
 
     def _send_error(self, code: int, message: str) -> None:
         """Send error response"""
         self.send_response(code)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('X-Content-Type-Options', 'nosniff')
         self.end_headers()
 
         # Escape error message to prevent XSS
-        error_data = json.dumps({"error": escape_html(message)})
-        self.wfile.write(error_data.encode("utf-8"))
+        error_data = json.dumps({'error': escape_html(message)})
+        self.wfile.write(error_data.encode('utf-8'))
 
 
 def start_dashboard(port: int = 8080) -> None:
@@ -246,7 +243,7 @@ def start_dashboard(port: int = 8080) -> None:
         - Use TLS certificates from Let's Encrypt or your CA
         - Configure proper firewall rules to restrict access
     """
-    server = ThreadingHTTPServer(("localhost", port), VerificationDashboardHandler)
+    server = ThreadingHTTPServer(('localhost', port), VerificationDashboardHandler)
     print(f"APEX Verification Dashboard running on http://localhost:{port}")
     print("SECURITY: For production, deploy behind HTTPS reverse proxy")
     print("Press Ctrl+C to stop")
@@ -257,5 +254,5 @@ def start_dashboard(port: int = 8080) -> None:
         server.shutdown()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     start_dashboard()

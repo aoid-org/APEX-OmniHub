@@ -18,12 +18,7 @@ def test_guard_rail_violation_detected():
             f.write("INFO: Done\n")
 
         result = subprocess.run(
-            [
-                "grep",
-                "-rqE",
-                "GUARD_RAIL_VIOLATION|policy breach|tri-force violation",
-                tmpdir,
-            ],
+            ["grep", "-rqE", "GUARD_RAIL_VIOLATION|policy breach|tri-force violation", tmpdir],
             capture_output=True,
         )
         assert result.returncode == 0, "Expected grep to find GUARD_RAIL_VIOLATION"
@@ -37,12 +32,7 @@ def test_policy_breach_detected():
             f.write("WARN: policy breach on tool=delete_record\n")
 
         result = subprocess.run(
-            [
-                "grep",
-                "-rqE",
-                "GUARD_RAIL_VIOLATION|policy breach|tri-force violation",
-                tmpdir,
-            ],
+            ["grep", "-rqE", "GUARD_RAIL_VIOLATION|policy breach|tri-force violation", tmpdir],
             capture_output=True,
         )
         assert result.returncode == 0
@@ -56,12 +46,7 @@ def test_no_false_positive_on_clean_logs():
             f.write("INFO: All checks passed\nINFO: Build succeeded\n")
 
         result = subprocess.run(
-            [
-                "grep",
-                "-rqE",
-                "GUARD_RAIL_VIOLATION|policy breach|tri-force violation",
-                tmpdir,
-            ],
+            ["grep", "-rqE", "GUARD_RAIL_VIOLATION|policy breach|tri-force violation", tmpdir],
             capture_output=True,
         )
         assert result.returncode == 1, "Expected no match on clean logs"

@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-EDGE-COMPUTE | LAST_UPDATED=2026-03-01 -->
 # OmniDash (Founder/Sales Dashboard)
 
 ## Setup
@@ -54,7 +54,7 @@ Based on `src/pages/OmniDash/Today.tsx` and database schema.
 - **Security**: Row Level Security (RLS) enabled on all widgets.
 - **Edge Functions**: Secure invocation via `supabase/functions/execute-automation`.
 
-## OmniMedia Engine (v1.4.2)
+## OmniMedia Engine (v1.3.8)
 
 Media playback and caching subsystem integrated into the OmniDash UI.
 

@@ -135,11 +135,7 @@ def execute(input_context: dict[str, Any]) -> dict[str, Any]:
     idem_key = _idempotency_key(input_context)
 
     logs.append(
-        {
-            "level": "info",
-            "msg": f"Starting {execution_id} [key={idem_key}]",
-            "ts": time.time(),
-        }
+        {"level": "info", "msg": f"Starting {execution_id} [key={idem_key}]", "ts": time.time()}
     )
 
     # Set timeout (Unix only — graceful fallback on Windows)
@@ -152,9 +148,7 @@ def execute(input_context: dict[str, Any]) -> dict[str, Any]:
         result = _do_execute(parameters, context)
         elapsed = (time.monotonic() - start) * 1000
 
-        logs.append(
-            {"level": "info", "msg": f"Completed in {elapsed:.1f}ms", "ts": time.time()}
-        )
+        logs.append({"level": "info", "msg": f"Completed in {elapsed:.1f}ms", "ts": time.time()})
 
         return {
             "result": result,
@@ -174,27 +168,15 @@ def execute(input_context: dict[str, Any]) -> dict[str, Any]:
 
     except _TimeoutError:
         elapsed = (time.monotonic() - start) * 1000
-        logs.append(
-            {
-                "level": "error",
-                "msg": f"Timeout after {elapsed:.1f}ms",
-                "ts": time.time(),
-            }
-        )
+        logs.append({"level": "error", "msg": f"Timeout after {elapsed:.1f}ms", "ts": time.time()})
         return {
             "result": None,
-            "context_updates": {
-                "last_skill": "apex-skill-forge",
-                "last_status": "timeout",
-            },
+            "context_updates": {"last_skill": "apex-skill-forge", "last_status": "timeout"},
             "metadata": {
                 "execution_time_ms": round(elapsed, 2),
                 "node_status": "timeout",
                 "logs": logs,
-                "error": {
-                    "type": "TimeoutError",
-                    "message": f"Exceeded {timeout_ms}ms",
-                },
+                "error": {"type": "TimeoutError", "message": f"Exceeded {timeout_ms}ms"},
                 "idempotency_key": idem_key,
                 "recoverable": True,
             },
@@ -205,10 +187,7 @@ def execute(input_context: dict[str, Any]) -> dict[str, Any]:
         logs.append({"level": "error", "msg": str(exc), "ts": time.time()})
         return {
             "result": None,
-            "context_updates": {
-                "last_skill": "apex-skill-forge",
-                "last_status": "error",
-            },
+            "context_updates": {"last_skill": "apex-skill-forge", "last_status": "error"},
             "metadata": {
                 "execution_time_ms": round(elapsed, 2),
                 "node_status": "error",
