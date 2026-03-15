@@ -18,6 +18,7 @@ from markupsafe import escape
 
 class VerificationRequest(TypedDict):
     """Verification request data structure"""
+
     request_id: str
     task_description: str
     modified_files: list[str]
@@ -28,6 +29,7 @@ class VerificationRequest(TypedDict):
 
 class VerificationResult(TypedDict):
     """Verification result data structure"""
+
     request_id: str
     status: str
     approved_by: str
@@ -101,7 +103,7 @@ class VerificationEngine:
         request_id: str,
         task_description: str,
         modified_files: list[str],
-        evidence_path: str
+        evidence_path: str,
     ) -> VerificationRequest:
         """
         Create a new verification request.
@@ -125,12 +127,12 @@ class VerificationEngine:
         # SECURITY FIX (S5131): Sanitize user-controlled data at storage time
         # This ensures data is XSS-safe when retrieved via get_pending_requests()
         request: VerificationRequest = {
-            'request_id': request_id,
-            'task_description': _sanitize_for_storage(task_description),
-            'modified_files': _sanitize_for_storage(modified_files),
-            'evidence_path': evidence_path,
-            'submitted_at': submitted_at,
-            'status': 'pending'
+            "request_id": request_id,
+            "task_description": _sanitize_for_storage(task_description),
+            "modified_files": _sanitize_for_storage(modified_files),
+            "evidence_path": evidence_path,
+            "submitted_at": submitted_at,
+            "status": "pending",
         }
 
         # Add to pending requests
@@ -140,11 +142,7 @@ class VerificationEngine:
 
         return request
 
-    def approve_request(
-        self,
-        request_id: str,
-        approved_by: str
-    ) -> VerificationResult:
+    def approve_request(self, request_id: str, approved_by: str) -> VerificationResult:
         """
         Approve a verification request.
 
@@ -168,11 +166,11 @@ class VerificationEngine:
         # SECURITY NOTE: All user-controlled data (request_id, approved_by)
         # is expected to be pre-sanitized by the dashboard layer (escape_html applied)
         result: VerificationResult = {
-            'request_id': request_id,
-            'status': 'approved',
-            'approved_by': approved_by,
-            'approved_at': approved_at,
-            'rejection_reason': ''
+            "request_id": request_id,
+            "status": "approved",
+            "approved_by": approved_by,
+            "approved_at": approved_at,
+            "rejection_reason": "",
         }
 
         # Remove from pending and save approval
@@ -183,10 +181,7 @@ class VerificationEngine:
         return result
 
     def reject_request(
-        self,
-        request_id: str,
-        rejected_by: str,
-        reason: str
+        self, request_id: str, rejected_by: str, reason: str
     ) -> VerificationResult:
         """
         Reject a verification request.
@@ -213,11 +208,11 @@ class VerificationEngine:
         # is expected to be pre-sanitized by the dashboard layer
         # (escape_html applied before passing to this method)
         result: VerificationResult = {
-            'request_id': request_id,
-            'status': 'rejected',
-            'approved_by': rejected_by,  # Reuse field for rejector
-            'approved_at': rejected_at,
-            'rejection_reason': reason
+            "request_id": request_id,
+            "status": "rejected",
+            "approved_by": rejected_by,  # Reuse field for rejector
+            "approved_at": rejected_at,
+            "rejection_reason": reason,
         }
 
         # Remove from pending and save rejection
@@ -245,7 +240,9 @@ class VerificationEngine:
         """
         # Data is pre-sanitized at storage time - safe to return
         # SonarQube: Data was sanitized in create_verification_request() before storage
-        return self._load_pending()  # NOSONAR - Data pre-sanitized with markupsafe.escape
+        return (
+            self._load_pending()
+        )  # NOSONAR - Data pre-sanitized with markupsafe.escape
 
     def get_approval(self, request_id: str) -> VerificationResult | None:
         """
@@ -261,23 +258,23 @@ class VerificationEngine:
         if not approval_file.exists():
             return None
 
-        with open(approval_file, encoding='utf-8') as f:
+        with open(approval_file, encoding="utf-8") as f:
             return json.load(f)
 
     def _load_pending(self) -> dict[str, VerificationRequest]:
         """Load pending requests from storage"""
-        with open(self.pending_file, encoding='utf-8') as f:
+        with open(self.pending_file, encoding="utf-8") as f:
             return json.load(f)
 
     def _save_pending(self, pending: dict[str, VerificationRequest]) -> None:
         """Save pending requests to storage"""
-        with open(self.pending_file, 'w', encoding='utf-8') as f:
+        with open(self.pending_file, "w", encoding="utf-8") as f:
             json.dump(pending, f, indent=2)
 
     def _save_approval(self, request_id: str, result: VerificationResult) -> None:
         """Save approval/rejection result"""
         approval_file = self.approvals_dir / f"{request_id}.json"
-        with open(approval_file, 'w', encoding='utf-8') as f:
+        with open(approval_file, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2)
 
 
@@ -287,10 +284,10 @@ def demo_workflow() -> None:
 
     # Create a verification request
     request = engine.create_verification_request(
-        request_id='task-demo-001',
-        task_description='Refactor authentication module',
-        modified_files=['src/auth/login.ts', 'src/auth/session.ts'],
-        evidence_path='/tmp/apex-evidence/task-demo-001.json'
+        request_id="task-demo-001",
+        task_description="Refactor authentication module",
+        modified_files=["src/auth/login.ts", "src/auth/session.ts"],
+        evidence_path="/tmp/apex-evidence/task-demo-001.json",
     )
 
     print(f"Created request: {request['request_id']}")
@@ -298,8 +295,7 @@ def demo_workflow() -> None:
 
     # Simulate approval (in real usage, this comes from HTTP API)
     result = engine.approve_request(
-        request_id='task-demo-001',
-        approved_by='admin@apex.local'
+        request_id="task-demo-001", approved_by="admin@apex.local"
     )
 
     print("\nApproval result:")
@@ -308,5 +304,5 @@ def demo_workflow() -> None:
     print(f"  Approved at: {result['approved_at']}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     demo_workflow()

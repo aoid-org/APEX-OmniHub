@@ -119,7 +119,10 @@ def _d03_io_schema(skill_path: Path) -> tuple[float, str]:
             executor_path = skill_path / "scripts" / "executor.py"
             if executor_path.exists():
                 exec_content = executor_path.read_text(encoding="utf-8")
-                if "input_context: dict" in exec_content or "input_context: Dict" in exec_content:
+                if (
+                    "input_context: dict" in exec_content
+                    or "input_context: Dict" in exec_content
+                ):
                     score = min(10.0, score + 1.0)
 
             parts = []
@@ -197,7 +200,9 @@ def _d06_usage_examples(skill_path: Path) -> tuple[float, str]:
                 score += 1.5
             if has_import:
                 score += 1.5
-            return round(min(10.0, score), 1), "OK" if score >= 9.0 else "Add more examples"
+            return round(
+                min(10.0, score), 1
+            ), "OK" if score >= 9.0 else "Add more examples"
 
     return 0.0, "No documentation"
 
@@ -208,9 +213,13 @@ def _d07_failure_modes(skill_path: Path) -> tuple[float, str]:
         doc_path = skill_path / doc_name
         if doc_path.exists():
             content = doc_path.read_text(encoding="utf-8")
-            has_troubleshooting = "Troubleshooting" in content or "troubleshoot" in content.lower()
+            has_troubleshooting = (
+                "Troubleshooting" in content or "troubleshoot" in content.lower()
+            )
             has_error_table = "Symptom" in content and "Fix" in content
-            has_fails = "Fails When" in content or "Fails when" in content or "[X]" in content
+            has_fails = (
+                "Fails When" in content or "Fails when" in content or "[X]" in content
+            )
 
             score = 5.0
             if has_troubleshooting:
@@ -219,7 +228,9 @@ def _d07_failure_modes(skill_path: Path) -> tuple[float, str]:
                 score += 2.0
             if has_fails:
                 score += 1.0
-            return round(min(10.0, score), 1), "OK" if score >= 9.0 else "Expand failure docs"
+            return round(
+                min(10.0, score), 1
+            ), "OK" if score >= 9.0 else "Expand failure docs"
 
     return 0.0, "No documentation"
 
@@ -256,7 +267,9 @@ def _d09_script_determinism(skill_path: Path) -> tuple[float, str]:
 
     content = executor_path.read_text(encoding="utf-8")
     has_execute = "def execute(" in content
-    has_main = 'if __name__ == "__main__"' in content or "if __name__ == '__main__'" in content
+    has_main = (
+        'if __name__ == "__main__"' in content or "if __name__ == '__main__'" in content
+    )
     has_return_dict = "-> dict" in content or "-> Dict" in content
 
     score = 4.0
@@ -266,7 +279,9 @@ def _d09_script_determinism(skill_path: Path) -> tuple[float, str]:
         score += 1.5
     if has_return_dict:
         score += 1.5
-    return round(min(10.0, score), 1), "OK" if score >= 9.0 else "Missing execute() or __main__"
+    return round(
+        min(10.0, score), 1
+    ), "OK" if score >= 9.0 else "Missing execute() or __main__"
 
 
 def _d10_dependencies(skill_path: Path) -> tuple[float, str]:
@@ -324,7 +339,8 @@ def _d10_dependencies(skill_path: Path) -> tuple[float, str]:
 def _d11_license_copyright(skill_path: Path) -> tuple[float, str]:
     """D11: License + copyright present."""
     has_license = any(
-        (skill_path / name).exists() for name in ["LICENSE", "LICENSE.md", "LICENSE.txt"]
+        (skill_path / name).exists()
+        for name in ["LICENSE", "LICENSE.md", "LICENSE.txt"]
     )
 
     # Check for copyright in any doc
@@ -383,7 +399,9 @@ DIMENSIONS = [
 ]
 
 
-def audit_skill(skill_path: Path, threshold: float = DEFAULT_THRESHOLD) -> dict[str, Any]:
+def audit_skill(
+    skill_path: Path, threshold: float = DEFAULT_THRESHOLD
+) -> dict[str, Any]:
     """
     Run 12-dimension audit on a skill directory.
 
@@ -424,7 +442,10 @@ def main() -> None:
     )
     parser.add_argument("skill_path", type=Path, help="Path to skill directory")
     parser.add_argument(
-        "--threshold", type=float, default=DEFAULT_THRESHOLD, help="Pass threshold (default: 9.5)"
+        "--threshold",
+        type=float,
+        default=DEFAULT_THRESHOLD,
+        help="Pass threshold (default: 9.5)",
     )
     parser.add_argument("--verbose", action="store_true", help="Print detailed output")
     args = parser.parse_args()
@@ -436,10 +457,18 @@ def main() -> None:
         print(f"  APEX 12-Dimension Audit — {args.skill_path.name}")
         print(f"{'=' * 60}\n")
         for dim in report.get("dimensions", []):
-            status = "[OK]" if dim["score"] >= 9.0 else "[!!]" if dim["score"] >= 7.0 else "[FAIL]"
+            status = (
+                "[OK]"
+                if dim["score"] >= 9.0
+                else "[!!]"
+                if dim["score"] >= 7.0
+                else "[FAIL]"
+            )
             print(f"  {status} {dim['dimension']}: {dim['score']}/10 — {dim['detail']}")
         print(f"\n  {'─' * 50}")
-        print(f"  AVERAGE: {report['average_score']}/10 (threshold: {report['threshold']})")
+        print(
+            f"  AVERAGE: {report['average_score']}/10 (threshold: {report['threshold']})"
+        )
         print(f"  VERDICT: {report['verdict']}")
         print()
     else:

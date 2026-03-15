@@ -19,17 +19,21 @@ except ImportError:
     print("ERROR: aiohttp library not found. Install with: pip install aiohttp")
     sys.exit(1)
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
 class OmniHubEventRejectedException(Exception):
     """Raised when an event is rejected by OmniHub."""
+
     pass
 
 
 class OmniHubRetryExhaustedException(Exception):
     """Raised when retry attempts are exhausted."""
+
     pass
 
 
@@ -54,15 +58,15 @@ class OmniHubConnector:
             worker_id: Unique worker identifier for this machine
             target: Optional target filter for task claiming (defaults to source)
         """
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.source = source
         self.worker_id = worker_id
         self.target = target or source
         self._session: aiohttp.ClientSession | None = None
         self._headers = {
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json',
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
         }
 
     def get_session(self) -> aiohttp.ClientSession:
@@ -137,11 +141,11 @@ class OmniHubConnector:
                 response.raise_for_status()
                 result = await response.json()
 
-                if result.get('status') == 'no_tasks':
+                if result.get("status") == "no_tasks":
                     return None
 
-                if result.get('status') == 'claimed':
-                    return result.get('task')
+                if result.get("status") == "claimed":
+                    return result.get("task")
 
                 logger.warning(f"Unexpected claim response: {result}")
                 return None
@@ -166,7 +170,9 @@ class OmniHubConnector:
             error_message: Optional error message (for failed tasks)
         """
         if status not in ("succeeded", "failed"):
-            raise ValueError(f"Invalid status: {status}. Must be 'succeeded' or 'failed'")
+            raise ValueError(
+                f"Invalid status: {status}. Must be 'succeeded' or 'failed'"
+            )
 
         payload = {
             "task_id": task_id,
@@ -194,17 +200,17 @@ class OmniHubConnector:
         Check if event result indicates success or requires retry.
         Returns True if should retry, False if successful.
         """
-        if not result.get('results') or not isinstance(result['results'], list):
+        if not result.get("results") or not isinstance(result["results"], list):
             return False  # Success
 
-        first_result = result['results'][0]
-        status = first_result.get('status')
+        first_result = result["results"][0]
+        status = first_result.get("status")
 
-        if status in ('queued', 'ingested', 'duplicate'):
+        if status in ("queued", "ingested", "duplicate"):
             return False  # Success
 
-        if status == 'rate_limited':
-            retry_after = first_result.get('retry_after_seconds', 2)
+        if status == "rate_limited":
+            retry_after = first_result.get("retry_after_seconds", 2)
             logger.warning(f"Rate limited, retrying after {retry_after}s")
             await asyncio.sleep(retry_after)
             return True  # Should retry
@@ -219,12 +225,14 @@ class OmniHubConnector:
         max_retries: int = 3,
     ) -> dict[str, Any]:
         """Post with exponential backoff retry logic."""
-        headers = {'X-Idempotency-Key': idempotency_key}
+        headers = {"X-Idempotency-Key": idempotency_key}
         session = self.get_session()
 
         for attempt in range(max_retries):
             try:
-                async with session.post(url, json=payload, headers=headers, timeout=10) as response:
+                async with session.post(
+                    url, json=payload, headers=headers, timeout=10
+                ) as response:
                     response.raise_for_status()
                     result = await response.json()
 
@@ -235,8 +243,10 @@ class OmniHubConnector:
 
             except (TimeoutError, aiohttp.ClientError) as e:
                 if attempt < max_retries - 1:
-                    backoff = 2 ** attempt
-                    logger.warning(f"Request failed (attempt {attempt + 1}/{max_retries}), retrying in {backoff}s: {e}")
+                    backoff = 2**attempt
+                    logger.warning(
+                        f"Request failed (attempt {attempt + 1}/{max_retries}), retrying in {backoff}s: {e}"
+                    )
                     await asyncio.sleep(backoff)
                 else:
                     logger.error(f"Request failed after {max_retries} attempts: {e}")
@@ -248,7 +258,11 @@ class OmniHubConnector:
 class TaskWorker:
     """Task worker loop that claims and executes tasks."""
 
-    def __init__(self, connector: OmniHubConnector, handlers: dict[str, Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]]):
+    def __init__(
+        self,
+        connector: OmniHubConnector,
+        handlers: dict[str, Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]],
+    ):
         """
         Initialize task worker.
 
@@ -261,7 +275,11 @@ class TaskWorker:
         self.handlers = handlers
         self.running = False
 
-    def register_handler(self, action: str, handler: Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]):
+    def register_handler(
+        self,
+        action: str,
+        handler: Callable[[dict[str, Any]], Awaitable[dict[str, Any]]],
+    ):
         """Register a new async task handler."""
         self.handlers[action] = handler
 
@@ -270,7 +288,9 @@ class TaskWorker:
         self.running = True
         iterations = 0
 
-        logger.info(f"TaskWorker starting (worker_id={self.connector.worker_id}, target={self.connector.target})")
+        logger.info(
+            f"TaskWorker starting (worker_id={self.connector.worker_id}, target={self.connector.target})"
+        )
 
         while self.running:
             if max_iterations is not None and iterations >= max_iterations:
@@ -306,9 +326,9 @@ class TaskWorker:
 
     async def _execute_task(self, task: dict[str, Any]):
         """Execute a single task."""
-        task_id = task['id']
-        params = task.get('params', {})
-        action = params.get('action', 'unknown')
+        task_id = task["id"]
+        params = task.get("params", {})
+        action = params.get("action", "unknown")
 
         handler = self.handlers.get(action)
 
@@ -316,7 +336,7 @@ class TaskWorker:
             logger.warning(f"No handler for action '{action}', marking as failed")
             await self.connector.complete_task(
                 task_id=task_id,
-                status='failed',
+                status="failed",
                 error_message=f"No handler registered for action '{action}'",
             )
             return
@@ -332,7 +352,7 @@ class TaskWorker:
             logger.info(f"Task {task_id} succeeded")
             await self.connector.complete_task(
                 task_id=task_id,
-                status='succeeded',
+                status="succeeded",
                 output=output,
             )
 
@@ -340,14 +360,19 @@ class TaskWorker:
             logger.error(f"Task {task_id} failed: {e}", exc_info=True)
             await self.connector.complete_task(
                 task_id=task_id,
-                status='failed',
+                status="failed",
                 error_message=str(e),
             )
 
 
 def load_env_config() -> dict[str, str]:
     """Load OmniHub connector config from environment variables."""
-    required = ['OMNIHUB_BASE_URL', 'OMNIHUB_API_KEY', 'OMNIHUB_SOURCE', 'OMNIHUB_WORKER_ID']
+    required = [
+        "OMNIHUB_BASE_URL",
+        "OMNIHUB_API_KEY",
+        "OMNIHUB_SOURCE",
+        "OMNIHUB_WORKER_ID",
+    ]
     config = {}
 
     for var in required:
@@ -359,13 +384,15 @@ def load_env_config() -> dict[str, str]:
     return config
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Example usage
     def main():
         print("OmniHub Connector - Shared Module")
         print("Import this module from your local agent scripts.")
         print("\nExample:")
-        print("  from omnihub_connector import OmniHubConnector, TaskWorker, load_env_config")
+        print(
+            "  from omnihub_connector import OmniHubConnector, TaskWorker, load_env_config"
+        )
         print("  config = load_env_config()")
         print("  connector = OmniHubConnector(**config)")
         print("  await connector.emit_event('test_event', {'foo': 'bar'})")

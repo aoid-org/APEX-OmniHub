@@ -58,6 +58,7 @@ REQUIREMENTS = {
     ],
 }
 
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--type", required=True, choices=sorted(REQUIREMENTS.keys()))
@@ -84,6 +85,7 @@ def main() -> int:
 
     print(f"PASS: {p} looks like a valid '{args.type}' artifact.")
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -250,8 +250,12 @@ def main():
         description="Initialize production-ready project (APEX Business Systems Ltd.)"
     )
     parser.add_argument("name", help="Project name")
-    parser.add_argument("--type", choices=["api", "cli", "lib", "frontend"], default="api")
-    parser.add_argument("--lang", choices=["python", "typescript", "go"], default="python")
+    parser.add_argument(
+        "--type", choices=["api", "cli", "lib", "frontend"], default="api"
+    )
+    parser.add_argument(
+        "--lang", choices=["python", "typescript", "go"], default="python"
+    )
     parser.add_argument("--output", type=Path, default=Path.cwd())
     args = parser.parse_args()
 
