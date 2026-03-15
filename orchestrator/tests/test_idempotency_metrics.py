@@ -33,6 +33,7 @@ def _restore_real_metrics_module() -> None:
     else:
         sys.modules.pop("metrics", None)
 
+
 # ── Unit Tests ───────────────────────────────────────────────────────
 
 

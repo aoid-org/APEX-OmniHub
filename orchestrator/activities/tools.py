@@ -35,22 +35,17 @@ from urllib.parse import urlparse, urlunparse
 from uuid import uuid4
 
 import instructor
+import jsonschema
 from litellm import acompletion
 from pydantic import BaseModel
 from temporalio import activity
 
+from activities.tool_registry import TOOL_REGISTRY, resolve_tool_name
 from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event
 from providers.database.base import DatabaseError
 from providers.database.factory import get_database_provider
 from security.prompt_sanitizer import PromptInjectionError, create_safe_user_message
 from security.ssrf import validate_url_with_dns_pin_async
-
-# Canonical set of allowed tools (must match registered Temporal activities)
-# Central Tool Registry
-from activities.tool_registry import TOOL_REGISTRY, resolve_tool_name  # noqa: E402
-from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event  # noqa: E402
-from providers.database.factory import get_database_provider  # noqa: E402
-from security.prompt_sanitizer import PromptInjectionError, create_safe_user_message  # noqa: E402
 
 # Global service instances (initialized in setup_activities())
 _semantic_cache = None  # SemanticCacheService instance

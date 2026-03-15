@@ -30,6 +30,7 @@ def reset_db_provider() -> None:
     """Reset database provider singleton before each test to prevent state bleed."""
     try:
         from providers.database.factory import reset_database_provider
+
         reset_database_provider()
     except ImportError:
         pass

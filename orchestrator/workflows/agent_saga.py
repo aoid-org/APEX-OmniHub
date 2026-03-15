@@ -731,9 +731,7 @@ class AgentWorkflow:
         """
         input_payload = step.get("input", {}) or {}
         resource = (
-            input_payload.get("table")
-            or input_payload.get("resource")
-            or input_payload.get("to")
+            input_payload.get("table") or input_payload.get("resource") or input_payload.get("to")
         )
         data_class = input_payload.get("data_class") or input_payload.get("classification")
 
