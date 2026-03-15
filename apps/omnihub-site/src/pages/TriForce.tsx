@@ -1,4 +1,5 @@
 import { Layout } from '@/components/Layout';
+import { SEOMeta } from '@/components/SEOMeta';
 import { Section, SectionHeader } from '@/components/Section';
 import { IconConnect, IconTranslate, IconExecute } from '@/components/icons';
 import {
@@ -75,6 +76,7 @@ const technicalSpecs = [
 export function TriForcePage() {
   return (
     <Layout title="Tri-Force Protocol">
+      <SEOMeta title="Tri-Force Protocol" description="The Tri-Force Protocol provides sub-10ms stateless risk classification for every AI agent action — GREEN, YELLOW, or RED lane routing." canonical="https://apexomnihub.icu/tri-force" />
       <Section>
         <SectionHeader
           title="Tri-Force Protocol"

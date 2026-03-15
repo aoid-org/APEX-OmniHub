@@ -1,5 +1,6 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
+import { SEOMeta } from '@/components/SEOMeta';
 import { Section } from '@/components/Section';
 import { hasSupabaseConfig, supabase, supabaseConfigTraceId } from '@/lib/supabase';
 import type { Provider } from '@supabase/supabase-js';
@@ -128,6 +129,7 @@ export function LoginPage() {
 
   return (
     <Layout title="Log In">
+      <SEOMeta title="Sign In" description="Sign in to APEX OmniHub." noIndex={true} />
       <Section>
         <div style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto' }}>
           <img

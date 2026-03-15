@@ -20,7 +20,7 @@ export interface HealthCheckResult {
 export async function runHealthCheck(): Promise<HealthCheckResult> {
   try {
     // Call the edge function to run server-side health checks
-    const { data, error } = await supabase.functions.invoke('supabase_healthcheck');
+    const { data, error } = await supabase.functions.invoke('platform-health');
 
     if (error) {
       logError(error, { action: 'health_check_failed' });

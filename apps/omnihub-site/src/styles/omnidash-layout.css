@@ -268,10 +268,6 @@
   z-index: 1;
 }
 
-.od-right {
-  min-width: 0;
-}
-
 .od-content {
   flex: 1;
   overflow-y: auto;
@@ -1407,6 +1403,16 @@
 
 .omni-canvas-inner > * {
   pointer-events: auto;
+}
+
+/* Ensure all widget descendants receive pointer events — fixes drag after ModuleRenderer injection */
+.widget-shell * {
+  pointer-events: auto;
+}
+
+/* Constrain widget control buttons — prevent global min-height:44px from overriding widget-btn layout */
+.widget-shell .widget-btn {
+  min-height: 24px;
 }
 
 
