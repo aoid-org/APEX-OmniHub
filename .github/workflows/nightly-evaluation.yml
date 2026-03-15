@@ -1,5 +1,8 @@
 name: Nightly Agent Evaluation
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   schedule:
     # Run every night at 2 AM UTC
@@ -26,6 +29,7 @@ jobs:
     - name: Check system usage
       id: usage-check
       env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         USAGE_LOOKBACK_HOURS: ${{ github.event.inputs.lookback_hours || 24 }}

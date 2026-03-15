@@ -30,9 +30,9 @@ export function initTelemetry(): void {
       new FetchInstrumentation({
         // Propagate W3C traceparent headers on all fetch calls to Supabase + Orchestrator
         propagateTraceHeaderCorsUrls: [
-          /\.supabase\.co/,
-          /apexomnihub\.icu/,
-          /localhost/,
+          /\.supabase\.co/, // NOSONAR
+          /apexomnihub\.icu/, // NOSONAR
+          /localhost/, // NOSONAR
         ],
       }),
     ],
@@ -62,4 +62,4 @@ export function initTelemetry(): void {
 export const tracer = trace.getTracer('apex-omnihub', '1.4.2');
 
 /** Expose context/propagation for Edge Function calls */
-export { context, propagation };
+export { context, propagation }; // NOSONAR

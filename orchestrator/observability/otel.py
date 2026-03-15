@@ -24,15 +24,16 @@ def init_otel(service_name: str = "apex-orchestrator") -> trace.Tracer:
 
     otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 
-    resource  = Resource(attributes={SERVICE_NAME: service_name})
-    provider  = TracerProvider(resource=resource)
+    resource = Resource(attributes={SERVICE_NAME: service_name})
+    provider = TracerProvider(resource=resource)
 
     if otlp_endpoint:
         try:
             from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
                 OTLPSpanExporter,
             )
-            exporter  = OTLPSpanExporter(endpoint=otlp_endpoint)
+
+            exporter = OTLPSpanExporter(endpoint=otlp_endpoint)
             processor = BatchSpanProcessor(exporter)
             provider.add_span_processor(processor)
             logger.info("OTel traces → %s", otlp_endpoint)

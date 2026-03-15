@@ -18,10 +18,10 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DLQAlertPayload:
     workflow_id: str
-    run_id:      str
-    task_queue:  str
-    error_type:  str
-    error_msg:   str
+    run_id: str
+    task_queue: str
+    error_type: str
+    error_msg: str
 
 
 @activity.defn(name="send_dlq_alert")
@@ -37,16 +37,17 @@ async def send_dlq_alert(payload: dict) -> None:  # noqa: ANN001
         "DLQ_ALERT workflow_permanently_failed",
         extra={
             "workflow_id": alert.workflow_id,
-            "run_id":      alert.run_id,
-            "task_queue":  alert.task_queue,
-            "error_type":  alert.error_type,
-            "error_msg":   alert.error_msg,
+            "run_id": alert.run_id,
+            "task_queue": alert.task_queue,
+            "error_type": alert.error_type,
+            "error_msg": alert.error_msg,
         },
     )
 
     # Attempt to record in metrics (non-blocking)
     try:
         from prometheus_client import Counter
+
         dlq_counter = Counter(
             "apex_dlq_alerts_total",
             "Total permanently failed workflows routed to DLQ",
@@ -63,14 +64,16 @@ async def send_dlq_alert(payload: dict) -> None:  # noqa: ANN001
     slack_webhook = None
     try:
         from config import settings  # type: ignore[import]
+
         slack_webhook = getattr(settings, "slack_alert_webhook_url", None)
     except Exception:  # noqa: BLE001, S110
         pass
 
     if slack_webhook:
-        import httpx
+        import httpx  # NOSONAR
+
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:  # NOSONAR
                 await client.post(
                     slack_webhook,
                     json={

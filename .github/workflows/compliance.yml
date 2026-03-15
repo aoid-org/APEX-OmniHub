@@ -1,5 +1,8 @@
 name: compliance
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   pull_request:
   push:
@@ -109,6 +112,7 @@ jobs:
             -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }} \
             -Dsonar.qualitygate.wait=true
         env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   ruff-gate:

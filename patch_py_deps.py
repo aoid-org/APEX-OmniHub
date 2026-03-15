@@ -1,6 +1,6 @@
 import sys
 
-with open('orchestrator/pyproject.toml', 'r') as f:
+with open("orchestrator/pyproject.toml", "r") as f:
     content = f.read()
 
 deps_old = """    "numpy>=1.26.0",
@@ -20,5 +20,5 @@ if deps_old in content:
 else:
     print("Could not find the dependency block to patch")
 
-with open('orchestrator/pyproject.toml', 'w') as f:
+with open("orchestrator/pyproject.toml", "w") as f:
     f.write(content)
