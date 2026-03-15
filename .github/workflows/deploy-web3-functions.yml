@@ -56,7 +56,7 @@ jobs:
           supabase functions deploy web3-verify
           supabase functions deploy alchemy-webhook
           supabase functions deploy verify-nft
-          supabase functions deploy supabase_healthcheck
+          supabase functions deploy platform-health
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -109,7 +109,7 @@ jobs:
 
           # 3. Construct URL
           FUNCTIONS_URL="https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1"
-          URL="${FUNCTIONS_URL}/supabase_healthcheck"
+          URL="${FUNCTIONS_URL}/platform-health"
 
           echo "Testing endpoint: ${URL}"
 

@@ -1,0 +1,86 @@
+# APEX OmniHub — Local Development Stack
+# Boots all three services with a single command.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up
+#   docker compose -f docker-compose.dev.yml up orchestrator  # single service
+#
+# Prerequisites:
+#   - Docker Desktop or Docker Engine + Compose v2
+#   - .env.local file with Supabase credentials (see .env.example)
+#   - supabase CLI installed for local Supabase (optional — use cloud project instead)
+
+services:
+  # ── Frontend (Vite dev server) ─────────────────────────────────────────────
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install -g bun && bun install && bun run dev"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env.local
+    depends_on:
+      - orchestrator
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Temporal Worker (Python orchestrator) ──────────────────────────────────
+  orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    command: python main.py worker
+    volumes:
+      - ./orchestrator:/app
+    environment:
+      - TEMPORAL_HOST=temporal:7233
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=INFO
+    env_file:
+      - .env.local
+    depends_on:
+      temporal:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Temporal Server ─────────────────────────────────────────────────────────
+  temporal:
+    image: temporalio/auto-setup:1.24
+    ports:
+      - "7233:7233"
+      - "8233:8233"  # Temporal Web UI
+    environment:
+      - DB=sqlite
+    healthcheck:
+      test: ["CMD", "tctl", "cluster", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── Redis (semantic cache) ──────────────────────────────────────────────────
+  redis:
+    image: redis/redis-stack-server:7.2.0-v9
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:

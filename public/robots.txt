@@ -1,6 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /omnidash
 Disallow: /dashboard
+Disallow: /settings
+Disallow: /admin
+Disallow: /api/
 Disallow: /links
 Disallow: /files
 Disallow: /automations

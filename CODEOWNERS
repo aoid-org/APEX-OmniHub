@@ -1,24 +1,34 @@
-# Omnidash Contract Surfaces — Owner review required before merge.
-# Lock 5: CODEOWNERS enforcement for all contract-critical Omnidash files.
+# APEX OmniHub — Code Ownership Map
+# These owners are requested for review automatically when the listed
+# paths are modified. Set in: GitHub → Settings → Branches → Branch protection.
+#
+# Format: path  @owner1 @owner2
 
-# Contract (single source of truth)
-src/contracts/omnidash*                                       @apexbusiness-systems/core-owners
+# Global fallback — CTO reviews everything that doesn't match a specific rule
+*                                     @apexbusiness-systems
 
-# Registry (existing app registry)
-packages/core/src/registry*                                   @apexbusiness-systems/core-owners
+# Core orchestration — highest risk surface
+orchestrator/workflows/               @apexbusiness-systems
+orchestrator/activities/              @apexbusiness-systems
+orchestrator/security/                @apexbusiness-systems
 
-# Layout (sidebar + shell)
-apps/omnihub-site/src/layouts/OmniDashLayout.tsx              @apexbusiness-systems/core-owners
+# Database migrations — irreversible changes
+supabase/migrations/                  @apexbusiness-systems
 
-# Dashboard (tiles + canvas)
-apps/omnihub-site/src/pages/DashboardOverview/                @apexbusiness-systems/core-owners
+# Security-critical code
+src/security/                         @apexbusiness-systems
+src/zero-trust/                       @apexbusiness-systems
+.github/workflows/                    @apexbusiness-systems
 
-# Stores (state management)
-src/stores/omniModalStore.ts                                  @apexbusiness-systems/core-owners
-src/stores/omniBoardStore.ts                                  @apexbusiness-systems/core-owners
+# Valuation and compliance documents — must be accurate
+docs/valuation/                       @apexbusiness-systems
+docs/compliance/                      @apexbusiness-systems
+docs/security/                        @apexbusiness-systems
 
-# Styles (layout CSS)
-apps/omnihub-site/src/styles/omnidash-layout.css              @apexbusiness-systems/core-owners
+# Infrastructure as code
+terraform/                            @apexbusiness-systems
 
-# Action hook (intent dispatcher)
-src/omnidash/useOmniDashAction.ts                             @apexbusiness-systems/core-owners
+# Dependency changes — security review required
+package.json                          @apexbusiness-systems
+bun.lockb                             @apexbusiness-systems
+orchestrator/pyproject.toml           @apexbusiness-systems

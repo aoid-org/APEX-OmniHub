@@ -87,6 +87,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
 
       - name: Verify changelog paths exist
         run: node scripts/verify-changelog-paths.js CHANGELOG.md
@@ -128,6 +130,14 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       # PHASE 1: Static Analysis
       # ─────────────────────────────────────────────────────────────
+      - name: Validate commit messages
+        if: github.event_name == 'pull_request'
+        run: |
+          # Only validate the HEAD commit, not the full PR range.
+          # Historical commits from other contributors may use non-conventional
+          # formats (GitHub UI defaults, emoji prefixes, etc.) and cannot be amended.
+          bunx commitlint --last --verbose
+
       - name: TypeScript type check
         run: bun run typecheck
 
@@ -208,27 +218,45 @@ jobs:
       - name: Build production bundle
         run: bun run build
 
+      - name: Bundle size check
+        run: |
+          bunx size-limit --json > bundle-size.json || {
+            echo "::error::Bundle size exceeds limits. Run 'bun run bundle:analyze' locally."
+            cat bundle-size.json
+            exit 1
+          }
+          echo "✅ Bundle size within limits"
+
+      - name: Upload bundle stats
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bundle-stats
+          path: |
+            dist/stats.html
+            bundle-size.json
+          retention-days: 30
+
       # ─────────────────────────────────────────────────────────────
       # PHASE 4: Runtime Smoke Tests
       # ─────────────────────────────────────────────────────────────
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
-      - name: Install Playwright browsers
+      - name: Install Playwright Chromium
         timeout-minutes: 5
         run: |
-          # Install browsers without system dependencies
-          # GitHub Actions runners already have most required libraries
-          npx playwright install chromium
-
-          # Verify installation
-          npx playwright --version
+          # CI runs chromium-only (see playwright.config.ts for rationale)
+          # Firefox/WebKit require OS packages unavailable on GitHub Actions runners
+          ./node_modules/.bin/playwright install --with-deps chromium
 
       - name: Start preview server
         run: |
@@ -319,24 +347,21 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache-preview
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
-      - name: Install Playwright browsers
+      - name: Install Playwright Chromium
         timeout-minutes: 5
         run: |
-          # Install browsers without system dependencies
-          # GitHub Actions runners already have most required libraries
-          npx playwright install chromium
-
-          # Verify installation
-          npx playwright --version
+          ./node_modules/.bin/playwright install --with-deps chromium
 
       - name: Wait for Vercel Preview
         uses: patrickedqvist/wait-for-vercel-preview@06c79330064b0e6ef7a2574603b62d3c98789125 # v1.3.2

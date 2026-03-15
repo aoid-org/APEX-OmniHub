@@ -8,13 +8,60 @@ import { defineConfig, devices } from '@playwright/test';
  * - React context duplication (createContext errors)
  * - 401/403 on manifest.webmanifest
  * - Blank page deployments
+ *
+ * CI runs chromium-only for reliability (Firefox/WebKit require OS-level
+ * dependencies that aren't available on all CI runners). Full cross-browser
+ * testing runs locally.
  */
+
+const isCI = !!process.env.CI;
+
+const allProjects = [
+  // ── Desktop ───────────────────────────────────────────────────────────
+  {
+    name: 'chromium',
+    use: { ...devices['Desktop Chrome'] },
+  },
+  {
+    name: 'firefox',
+    use: { ...devices['Desktop Firefox'] },
+  },
+
+  // ── Mobile — primary OmniLink targets ────────────────────────────────
+  {
+    name: 'mobile-chrome',
+    use: {
+      ...devices['Pixel 7'],
+      viewport: { width: 393, height: 851 },
+    },
+  },
+  {
+    name: 'mobile-safari',
+    use: {
+      ...devices['iPhone 14'],
+      viewport: { width: 390, height: 844 },
+    },
+  },
+
+  // ── Tablet ────────────────────────────────────────────────────────────
+  {
+    name: 'tablet-ipad',
+    use: { ...devices['iPad Pro 11'] },
+  },
+];
+
+// CI: chromium-based projects only (chromium + mobile-chrome)
+// Local: all browsers including Firefox and WebKit
+const ciProjects = allProjects.filter((p) =>
+  ['chromium', 'mobile-chrome'].includes(p.name),
+);
+
 export default defineConfig({
   testDir: './tests/e2e-playwright',
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  forbidOnly: isCI,
+  retries: isCI ? 2 : 0,
+  workers: isCI ? 1 : undefined,
   reporter: 'html',
 
   // Fast timeout for smoke tests
@@ -29,12 +76,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
+  projects: isCI ? ciProjects : allProjects,
 
   // Start preview server before running tests (only if BASE_URL not provided)
   // In CI, the workflow manages the server manually
