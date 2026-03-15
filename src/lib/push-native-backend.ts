@@ -2,8 +2,7 @@
  * Register device token with Supabase backend
  */
 export async function registerTokenWithBackend(token: string, platform: string): Promise<void> {
-    const mod = await import('@/lib/supabase/client');
-    const supabase = mod.createSupabaseClient({ url: '', apiKey: '' });
+    const { supabase } = await import('@/integrations/supabase/client');
 
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
