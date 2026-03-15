@@ -48,6 +48,9 @@ npm run smoke
 
 ```
 apps/omnihub-site/
+├── dashboard/          # Unified OmniDash Domain
+│   ├── OmniDashShell.tsx
+│   └── components/     # Consolidated widgets (58 files)
 ├── src/
 │   ├── components/     # UI components (13 files)
 │   │   ├── Layout.tsx          # Nav + Footer wrapper, burger menu, theme toggle
@@ -87,15 +90,15 @@ apps/omnihub-site/
 
 ## Pages
 
-| Route | Description | Sections |
-|-------|-------------|----------|
-| `/` or `/index.html` | Landing page | Hero, Features, Tri-Force, Orchestrator, Fortress, MAN Mode, Capabilities, CTA |
-| `/demo` or `/demo.html` | Demo video/interactive | Video placeholder, Interactive demo |
-| `/tech-specs` or `/tech-specs.html` | Technical specifications | 6 spec sections with details |
-| `/request-access` or `/request-access.html` | Early access form | Form with anti-abuse protection |
-| `/login` or `/login.html` | Login page | Authentication interface |
-| `/privacy` or `/privacy.html` | Privacy Policy | 10 legal sections |
-| `/terms` or `/terms.html` | Terms of Service | 13 legal sections |
+| Route                                       | Description              | Sections                                                                       |
+| ------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------ |
+| `/` or `/index.html`                        | Landing page             | Hero, Features, Tri-Force, Orchestrator, Fortress, MAN Mode, Capabilities, CTA |
+| `/demo` or `/demo.html`                     | Demo video/interactive   | Video placeholder, Interactive demo                                            |
+| `/tech-specs` or `/tech-specs.html`         | Technical specifications | 6 spec sections with details                                                   |
+| `/request-access` or `/request-access.html` | Early access form        | Form with anti-abuse protection                                                |
+| `/login` or `/login.html`                   | Login page               | Authentication interface                                                       |
+| `/privacy` or `/privacy.html`               | Privacy Policy           | 10 legal sections                                                              |
+| `/terms` or `/terms.html`                   | Terms of Service         | 13 legal sections                                                              |
 
 ## Routing
 
@@ -109,9 +112,11 @@ The marketing site supports both **clean URLs** (e.g., `/demo`) and **portable .
 ## Themes
 
 ### White Fortress (Default)
+
 Premium, high-whitespace design with crisp typography. Engineer-focused aesthetic with subtle grid texture.
 
 ### Night Watch (Toggle)
+
 Control-room aesthetic with restrained dark palette. No neon. Professional and readable.
 
 Toggle via the **[ WHITE FORTRESS ] [ NIGHT WATCH ]** segmented control in navigation. Preference persists in localStorage.
@@ -134,35 +139,37 @@ All marketing copy lives in `src/content/site.ts`:
 
 ```typescript
 // Hero section
-siteConfig.hero.title      // "Intelligence Designed"
-siteConfig.hero.tagline    // "It Sees You"
+siteConfig.hero.title; // "Intelligence Designed"
+siteConfig.hero.tagline; // "It Sees You"
 
 // Feature highlights
-siteConfig.highlights      // AI-Powered Automation, Smart Integrations, Advanced Analytics
+siteConfig.highlights; // AI-Powered Automation, Smart Integrations, Advanced Analytics
 
 // Navigation
-siteConfig.nav.links       // Features, Solutions, Integrations, Pricing
+siteConfig.nav.links; // Features, Solutions, Integrations, Pricing
 ```
 
 ### Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_ENABLE_REQUEST_ACCESS` | No | `true` to enable Supabase |
-| `VITE_SUPABASE_URL` | If enabled | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | If enabled | Supabase anonymous key |
+| Variable                     | Required   | Description               |
+| ---------------------------- | ---------- | ------------------------- |
+| `VITE_ENABLE_REQUEST_ACCESS` | No         | `true` to enable Supabase |
+| `VITE_SUPABASE_URL`          | If enabled | Supabase project URL      |
+| `VITE_SUPABASE_ANON_KEY`     | If enabled | Supabase anonymous key    |
 
 ### Supabase Integration
 
 The form works without Supabase (falls back to mailto). To enable database storage:
 
 1. **Apply migration**:
+
    ```bash
    supabase db push
    # Or run: supabase/migrations/20250111000000_create_access_requests.sql
    ```
 
 2. **Set environment variables**:
+
    ```bash
    VITE_ENABLE_REQUEST_ACCESS=true
    VITE_SUPABASE_URL=https://xxx.supabase.co
@@ -179,6 +186,7 @@ The form works without Supabase (falls back to mailto). To enable database stora
 ### Headers (A+ Grade)
 
 All security headers are pre-configured in `vercel.json`. See `docs/headers.md` for:
+
 - IONOS/Apache configuration
 - Nginx configuration
 - Netlify configuration
@@ -198,17 +206,18 @@ frame-ancestors 'none';
 
 ### Anti-Abuse Measures
 
-| Protection | Description |
-|------------|-------------|
-| Honeypot | Hidden field traps bots |
-| Timing Check | Rejects submissions < 3 seconds |
-| Rate Limiting | 5-minute cooldown per browser |
+| Protection       | Description                        |
+| ---------------- | ---------------------------------- |
+| Honeypot         | Hidden field traps bots            |
+| Timing Check     | Rejects submissions < 3 seconds    |
+| Rate Limiting    | 5-minute cooldown per browser      |
 | Input Validation | Strict length limits, sanitization |
-| XSS Prevention | No user input rendered as HTML |
+| XSS Prevention   | No user input rendered as HTML     |
 
 ### HSTS Preload
 
 Site is configured for HSTS preload. After deployment:
+
 1. Verify at https://hstspreload.org/
 2. Submit for preload list inclusion
 
@@ -241,15 +250,16 @@ http://localhost:3000/?ref=night
 
 **Keyboard Controls:**
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+O` | Toggle overlay visibility |
-| `Shift+Up` | Increase opacity (+5%) |
-| `Shift+Down` | Decrease opacity (-5%) |
+| Shortcut     | Action                    |
+| ------------ | ------------------------- |
+| `Ctrl+O`     | Toggle overlay visibility |
+| `Shift+Up`   | Increase opacity (+5%)    |
+| `Shift+Down` | Decrease opacity (-5%)    |
 
 **Reference Images:**
 
 Place design reference images in `public/reference/`:
+
 - `home-light.png` - Light theme (White Fortress) reference
 - `home-night.png` - Dark theme (Night Watch) reference
 
@@ -277,6 +287,7 @@ npm run test:visual
 ```
 
 Visual tests check:
+
 - White Fortress theme at 1024x1536
 - Night Watch theme at 1196x2048
 - Theme toggle functionality
@@ -324,13 +335,13 @@ Remove `preload` from HSTS header before submitting to preload list.
 
 ## Performance
 
-| Metric | Target | Actual |
-|--------|--------|--------|
-| Total JS (gzipped) | < 100 KB | ~96 KB |
-| Total CSS (gzipped) | < 10 KB | ~6.4 KB |
-| LCP | < 2.5s | < 1s |
-| FID | < 100ms | < 50ms |
-| Build Time | < 10s | ~3s |
+| Metric              | Target   | Actual  |
+| ------------------- | -------- | ------- |
+| Total JS (gzipped)  | < 100 KB | ~96 KB  |
+| Total CSS (gzipped) | < 10 KB  | ~6.4 KB |
+| LCP                 | < 2.5s   | < 1s    |
+| FID                 | < 100ms  | < 50ms  |
+| Build Time          | < 10s    | ~3s     |
 
 ## Contributing
 
