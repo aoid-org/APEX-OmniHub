@@ -1,10 +1,12 @@
 import { Layout } from '@/components/Layout';
+import { SEOMeta } from '@/components/SEOMeta';
 import { Section, SectionHeader } from '@/components/Section';
 import { siteConfig } from '@/content/site';
 
 export function FortressPage() {
   return (
     <Layout title="Fortress Protocol">
+      <SEOMeta title="Fortress Security Protocol" description="Enterprise-grade zero-trust security with RLS on every table, JWT-scoped access, and automated vulnerability scanning." canonical="https://apexomnihub.icu/fortress" />
       <Section>
         <SectionHeader
           title="Fortress Protocol"
