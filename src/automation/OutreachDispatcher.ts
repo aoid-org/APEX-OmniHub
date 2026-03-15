@@ -8,6 +8,7 @@
  */
 
 import type { RiskLane } from '../omniconnect/types/ingress';
+import { requestOmniLink } from '../integrations/omnilink';
 
 export interface OutreachPayload {
   readonly recipientId: string;
@@ -37,12 +38,10 @@ function generateId(): string {
 }
 
 async function sendOutreach(payload: OutreachPayload): Promise<void> {
-  // In production, this would call the actual delivery service
-  // For now, log the dispatch
-  console.warn('[OutreachDispatcher] SENT:', {
-    channel: payload.channel,
-    recipientId: payload.recipientId,
-    subject: payload.subject,
+  await requestOmniLink({
+    path: '/outreach/send',
+    method: 'POST',
+    body: payload,
   });
 }
 

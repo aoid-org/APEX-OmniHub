@@ -77,8 +77,24 @@ export class OmniLinkDelivery {
     throw lastError || new Error('Delivery failed with unknown error');
   }
 
-  async getDeliveryStatus(_eventId: string): Promise<DeliveryResult | null> {
-    return null;
+  async getDeliveryStatus(eventId: string): Promise<DeliveryResult | null> {
+    const { data, error } = await supabase
+      .from('ingress_buffer')
+      .select('id, status, retry_count, error_reason, processed_at, created_at')
+      .eq('correlation_id', eventId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) return null;
+
+    return {
+      eventId,
+      success: data.status === 'processed',
+      attempts: (data.retry_count ?? 0) + 1,
+      error: data.error_reason ?? undefined,
+      deliveredAt: data.processed_at ? new Date(data.processed_at) : undefined,
+    };
   }
 
   async retryFailedDeliveries(appId: string): Promise<number> {
@@ -186,9 +202,8 @@ export class OmniLinkDelivery {
     await supabase
       .from('ingress_buffer')
       .update({
-        // NOTE: Update schema to support 'processed' status. Using 'failed' temporarily to satisfy type safety
-        // while ensuring the item is removed from the 'pending' queue.
-        status: 'failed',
+        status: 'processed',
+        processed_at: new Date().toISOString(),
       })
       .eq('id', id);
   }

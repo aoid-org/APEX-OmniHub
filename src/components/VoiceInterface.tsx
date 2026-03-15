@@ -30,9 +30,12 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onTranscript, onSpeakin
   const BASE_RETRY_MS = Number(import.meta.env.VITE_VOICE_RETRY_BASE_MS ?? 500);
   const MAX_RETRY_MS = Number(import.meta.env.VITE_VOICE_RETRY_MAX_MS ?? 10_000);
   const JITTER_MS = Number(import.meta.env.VITE_VOICE_RETRY_JITTER_MS ?? 250);
-  const WS_URL =
-    import.meta.env.VITE_VOICE_WS_URL ??
-    `wss://wwajmaohwcbooljdureo.supabase.co/functions/v1/apex-voice`;
+  const WS_URL = (() => {
+    if (import.meta.env.VITE_VOICE_WS_URL) return import.meta.env.VITE_VOICE_WS_URL as string;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+    if (!supabaseUrl) throw new Error('[VoiceInterface] VITE_SUPABASE_URL is not set');
+    return `${supabaseUrl.replace(/^https?/, 'wss')}/functions/v1/apex-voice`;
+  })();
 
   const cleanupTimers = () => {
     if (reconnectTimeoutRef.current) {
