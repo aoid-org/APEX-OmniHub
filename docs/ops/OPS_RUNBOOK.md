@@ -1,3 +1,7 @@
+> **DEPRECATED** — This runbook has been superseded by [OPS_RUNBOOK_v1.3.8.md](./OPS_RUNBOOK_v1.3.8.md).
+> Retained for historical reference only. Last active: 2026-01-25.
+> Current version: v1.4.2 (2026-03-15)
+
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # APEX OmniHub OPS RUNBOOK
 

@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
 # Disaster Recovery Runbook
 
 ## Critical Services

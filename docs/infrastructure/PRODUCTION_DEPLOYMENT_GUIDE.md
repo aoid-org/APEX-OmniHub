@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
 # PRODUCTION DEPLOYMENT GUIDE
 **Step-by-Step Deployment Manual**
 
@@ -17,8 +17,8 @@ Run these commands to verify readiness:
 ```bash
 # 1. Verify staging tests passing
 cd /path/to/APEX-OmniHub
-npm run test:unit        # Should pass (55+ tests)
-npm run test:integration # Should pass (80+ tests)
+npm run test:unit        # Should pass (1542 vitest tests)
+npm run test:integration # Should pass (243 pytest tests)
 npm run test:e2e        # Should pass (10+ tests)
 
 # 2. Verify no security vulnerabilities
@@ -596,6 +596,6 @@ curl https://omnihub.dev/health | jq '.status' | grep "healthy"
 ---
 
 **Document Status:** ✅ READY FOR EXECUTION
-**Last Updated:** 2026-01-03
+**Last Updated:** 2026-03-15
 **Owner:** DevOps Team
 **Next Steps:** Execute production deployment (after approval)

@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
 # OMNiLiNK MANIFESTO (LITE)
 
 ## 1. Purpose
@@ -29,14 +29,14 @@ This document explains **why** the port exists and **how** to use it safely.
 
 _Fill per app when you drop this file in._
 
-- **APP_NAME:** {{APP_NAME}}  
-- **Primary role:** {{one‑liner about app’s domain}}  
-- **OMNiLiNK role:**  
-  - Publishes: {{e.g. call events, bookings, alerts}}  
-  - Consumes: {{e.g. customer status, global settings}}
+- **APP_NAME:** APEX OmniHub
+- **Primary role:** Universal Sync Orchestrator for governed execution across AI, enterprise, and Web3 stacks
+- **OMNiLiNK role:**
+  - Publishes: orchestration events, policy verdicts, audit logs
+  - Consumes: connector status, global settings, entitlement updates
 
-- **Port location:** `{{e.g. src/integrations/omnlink/}}`  
-- **Main entry:** `{{e.g. OmniLinkAdapter.ts}}`  
+- **Port location:** `src/omniconnect/omnilink-port.ts`
+- **Main entry:** `omnilink-port.ts`  
 - **Key methods:** `isEnabled()`, `sendEvent(...)`, `syncOnce()` (if used)
 
 ## 4. How to Enable OMNiLiNK (For Admins)
@@ -50,8 +50,8 @@ _Fill per app when you drop this file in._
 
 3. **Deploy / restart** the app.  
 4. **Run the healthcheck**:
-   - CLI: `{{e.g. npm run omnlink:health}}`  
-   - or HTTP: `{{e.g. https://your-app.com/health/omnlink}}`
+   - CLI: `bun run omnilink:health`
+   - or HTTP: `https://your-app.com/health/omnilink`
 
 5. Confirm the healthcheck reports OMNiLiNK as **enabled/ok**.
 
@@ -68,9 +68,9 @@ If something is wrong, set `OMNILINK_ENABLED=false`, redeploy, and the app will 
 
 ## 6. Engineer Reference
 
-- **Adapter module:** `{{path}}`  
-- **Types:** `{{path}}`  
-- **Tests:** `{{path(s)}}`  
-- **Healthcheck:** `{{endpoint or CLI command}}`  
+- **Adapter module:** `src/omniconnect/omnilink-port.ts`
+- **Types:** `src/omniconnect/types/connector.ts`
+- **Tests:** `tests/omnilink-port.test.ts`, `tests/omnilink-scopes.test.ts`, `tests/omniconnect/omnilink-delivery.test.ts`
+- **Healthcheck:** `bun run omnilink:health`  
 
 Keep this section in sync when you update the OMNiLiNK port.
