@@ -75,7 +75,17 @@ export const DEMO_ACTIVITY_FEED = Array.from({ length: 12 }, (_, i) => ({
   status:    i === 3 ? ('warning' as const) : ('success' as const),
 }));
 
-export const isDemoMode = (): boolean =>
-  import.meta.env.VITE_DEMO_MODE === 'true' ||
-  !import.meta.env.VITE_SUPABASE_URL ||
-  import.meta.env.VITE_SUPABASE_URL === 'https://placeholder.supabase.co';
+/**
+ * Returns true when OmniDash should display seeded demo data
+ * instead of live Supabase queries.
+ *
+ * Activates when VITE_DEMO_MODE=true is set, or when Supabase
+ * credentials are absent or are the placeholder values used in CI.
+ */
+export function isDemoMode(): boolean {
+  const demoFlag    = import.meta.env.VITE_DEMO_MODE === 'true';
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
+  const missingCreds =
+    !supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co';
+  return demoFlag || missingCreds;
+}
