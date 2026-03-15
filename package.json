@@ -65,7 +65,11 @@
     "postinstall": "bash scripts/install-githooks.sh 2>/dev/null || true",
     "bundle:analyze": "bun run build && open dist/stats.html",
     "bundle:check": "bun run build && size-limit",
-    "build:seo": "node scripts/generate-sitemap.mjs && vite build"
+    "build:seo": "node scripts/generate-sitemap.mjs && vite build",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish",
+    "release": "bun run build && bun run changeset:publish"
   },
   "size-limit": [
     {
@@ -157,6 +161,8 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.8.3",
     "@capacitor/cli": "^6.2.1",
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.30.0",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^9.39.2",
