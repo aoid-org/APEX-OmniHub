@@ -56,7 +56,7 @@ jobs:
 
       - name: Notify Slack
         if: steps.check.outputs.violation_detected == 'true' && env.SLACK_BOT_TOKEN != ''
-        uses: slackapi/slack-github-action@v1.27.0
+        uses: slackapi/slack-github-action@v3.0.1
         with:
           channel-id: platform-alerts
           slack-message: |
