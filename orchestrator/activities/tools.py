@@ -1,5 +1,3 @@
-import contextlib
-
 """
 Temporal Activities for Tool Execution and External I/O.
 
@@ -26,27 +24,28 @@ Compensation Pattern:
 - Best-effort rollback (log failures but don't block)
 """
 
-import asyncio  # noqa: E402
-import ipaddress  # noqa: E402
-import json  # noqa: E402
-import os  # noqa: E402
-import time  # noqa: E402
-from typing import Any  # noqa: E402
-from urllib.parse import urlparse, urlunparse  # noqa: E402
-from uuid import uuid4  # noqa: E402
+import asyncio
+import contextlib
+import ipaddress
+import json
+import os
+import time
+from typing import Any
+from urllib.parse import urlparse, urlunparse
+from uuid import uuid4
 
-import instructor  # noqa: E402
-import jsonschema  # noqa: E402
-from litellm import acompletion  # noqa: E402
-from pydantic import BaseModel  # noqa: E402
-from temporalio import activity  # noqa: E402
+import instructor
+import jsonschema
+from litellm import acompletion
+from pydantic import BaseModel
+from temporalio import activity
 
-# Canonical set of allowed tools (must match registered Temporal activities)
-# Central Tool Registry
-from activities.tool_registry import TOOL_REGISTRY, resolve_tool_name  # noqa: E402
-from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event  # noqa: E402
-from providers.database.factory import get_database_provider  # noqa: E402
-from security.prompt_sanitizer import PromptInjectionError, create_safe_user_message  # noqa: E402
+from activities.tool_registry import TOOL_REGISTRY, resolve_tool_name
+from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event
+from providers.database.base import DatabaseError
+from providers.database.factory import get_database_provider
+from security.prompt_sanitizer import PromptInjectionError, create_safe_user_message
+from security.ssrf import validate_url_with_dns_pin_async
 
 # Global service instances (initialized in setup_activities())
 _semantic_cache = None  # SemanticCacheService instance
@@ -615,11 +614,6 @@ async def send_email(params: dict[str, Any]) -> dict[str, Any]:
 
     idempotency_key = f"{workflow_id}:{step_id}:send_email"
 
-    import json  # noqa: E402
-
-    from providers.database.base import DatabaseError
-    from providers.database.factory import get_database_provider  # noqa: E402
-
     db = get_database_provider()
 
     # Check if a successful execution already exists
@@ -688,10 +682,6 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
 
     import httpx
     from temporalio import activity  # noqa: E402
-
-    from providers.database.base import DatabaseError
-    from providers.database.factory import get_database_provider  # noqa: E402
-    from security.ssrf import validate_url_with_dns_pin_async
 
     url = str(params.get("url", ""))
     method = params.get("method", "POST")

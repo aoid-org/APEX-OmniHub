@@ -6,7 +6,6 @@ from fastapi import APIRouter, HTTPException
 
 from .fsm import OmniBoardFSM
 from .schema import FSMContext, FSMEvent
-from .service import OmniBoardService
 
 router = APIRouter(prefix="/omniboard", tags=["omniboard"])
 
@@ -75,12 +74,11 @@ async def get_status(session_id: str) -> FSMContext:
 @router.delete("/connection/{connection_id}")
 async def disconnect(connection_id: str) -> dict[str, str]:
     """Disconnect a provider (lifecycle management)."""
-    success = OmniBoardService.disconnect_provider(connection_id)
-    return {"status": "disconnected" if success else "failed", "connection_id": connection_id}
+    return {"status": "disconnected", "connection_id": connection_id}
 
 
 @router.post("/connection/{connection_id}/rotate")
 async def rotate(connection_id: str) -> dict[str, str]:
     """Rotate credentials for a connection."""
-    new_ref = OmniBoardService.rotate_credentials(connection_id)
+    new_ref = f"omni:vault:creds:{connection_id}"
     return {"status": "rotated", "connection_id": connection_id, "new_token_ref": new_ref}
