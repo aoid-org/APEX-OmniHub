@@ -1,0 +1,34 @@
+# APEX OmniHub — Code Ownership Map
+# These owners are requested for review automatically when the listed
+# paths are modified. Set in: GitHub → Settings → Branches → Branch protection.
+#
+# Format: path  @owner1 @owner2
+
+# Global fallback — CTO reviews everything that doesn't match a specific rule
+*                                     @apexbusiness-systems
+
+# Core orchestration — highest risk surface
+orchestrator/workflows/               @apexbusiness-systems
+orchestrator/activities/              @apexbusiness-systems
+orchestrator/security/                @apexbusiness-systems
+
+# Database migrations — irreversible changes
+supabase/migrations/                  @apexbusiness-systems
+
+# Security-critical code
+src/security/                         @apexbusiness-systems
+src/zero-trust/                       @apexbusiness-systems
+.github/workflows/                    @apexbusiness-systems
+
+# Valuation and compliance documents — must be accurate
+docs/valuation/                       @apexbusiness-systems
+docs/compliance/                      @apexbusiness-systems
+docs/security/                        @apexbusiness-systems
+
+# Infrastructure as code
+terraform/                            @apexbusiness-systems
+
+# Dependency changes — security review required
+package.json                          @apexbusiness-systems
+bun.lockb                             @apexbusiness-systems
+orchestrator/pyproject.toml           @apexbusiness-systems
