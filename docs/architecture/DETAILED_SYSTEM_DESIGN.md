@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-12 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-15 -->
 # APEX / OmniHub — Technical Specification & Architecture
 
 ## Overview
