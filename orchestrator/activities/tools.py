@@ -1,5 +1,3 @@
-import contextlib
-
 """
 Temporal Activities for Tool Execution and External I/O.
 
@@ -618,11 +616,6 @@ async def send_email(params: dict[str, Any]) -> dict[str, Any]:
         step_id = params.get("step_id", "test-step")
 
     idempotency_key = f"{workflow_id}:{step_id}:send_email"
-
-    import json  # noqa: E402
-
-    from providers.database.base import DatabaseError
-    from providers.database.factory import get_database_provider  # noqa: E402
 
     db = get_database_provider()
 

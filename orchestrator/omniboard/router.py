@@ -6,7 +6,6 @@ from fastapi import APIRouter, HTTPException
 
 from .fsm import OmniBoardFSM
 from .schema import FSMContext, FSMEvent
-from .service import OmniBoardService
 
 router = APIRouter(prefix="/omniboard", tags=["omniboard"])
 

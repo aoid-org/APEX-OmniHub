@@ -24,10 +24,21 @@ def _mock_heavy_deps():
     ]:
         if mod_name not in sys.modules:
             stubs[mod_name] = sys.modules[mod_name] = MagicMock()
+
+    # Snapshot activities modules before reload
+    saved = {k: v for k, v in sys.modules.items() if k.startswith("activities")}
+
     yield
+
     for mod_name, mock in stubs.items():
         if sys.modules.get(mod_name) is mock:
             del sys.modules[mod_name]
+
+    # Restore original activities modules to prevent downstream pollution
+    for key in list(sys.modules):
+        if key.startswith("activities"):
+            del sys.modules[key]
+    sys.modules.update(saved)
 
 
 def _load_tools():
