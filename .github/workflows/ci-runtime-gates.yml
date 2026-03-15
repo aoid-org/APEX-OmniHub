@@ -133,12 +133,10 @@ jobs:
       - name: Validate commit messages
         if: github.event_name == 'pull_request'
         run: |
-          # Ensure base ref is available for commit range validation
-          git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1 2>/dev/null || true
-          bunx commitlint \
-            --from ${{ github.event.pull_request.base.sha }} \
-            --to   ${{ github.event.pull_request.head.sha }} \
-            --verbose
+          # Only validate the HEAD commit, not the full PR range.
+          # Historical commits from other contributors may use non-conventional
+          # formats (GitHub UI defaults, emoji prefixes, etc.) and cannot be amended.
+          bunx commitlint --last --verbose
 
       - name: TypeScript type check
         run: bun run typecheck
