@@ -4,7 +4,13 @@ import {
   captureOmnidashScreenshots,
 } from './helpers/omnidash-helpers';
 
+// Screenshot-only tests require a stable authenticated preview URL.
+// In CI, Supabase is not configured and there is no persistent preview URL,
+// so these tests are skipped to avoid false failures.
+const isCI = !!process.env.CI;
+
 test.describe('OmniDash UI Screenshots', () => {
+  test.skip(isCI, 'Screenshot capture skipped in CI — requires authenticated preview URL');
   test('capture desktop screenshots', async ({ browser }) => {
     const context = await setupOmnidashContext(browser, {
       viewport: { width: 1440, height: 900 },

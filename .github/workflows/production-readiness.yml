@@ -161,8 +161,25 @@ jobs:
       - name: Install Playwright
         run: npx playwright install chromium
 
+      - name: Start preview server
+        run: npm run preview &
+
+      - name: Wait for preview server
+        run: |
+          echo "Waiting for preview server on port 4173..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:4173 > /dev/null 2>&1; then
+              echo "✅ Preview server ready"
+              break
+            fi
+            echo "  attempt $i/30, retrying in 2s..."
+            sleep 2
+          done
+
       - name: Run E2E smoke tests
         run: bun run test:e2e
+        env:
+          BASE_URL: http://localhost:4173
 
   readiness-summary:
     name: Production Readiness Summary
