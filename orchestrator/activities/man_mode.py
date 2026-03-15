@@ -19,19 +19,31 @@ Why Activities (not direct calls in workflows):
 """
 
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Literal
 
+from pydantic import BaseModel, Field
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-from models.man_mode import (
+
+class PolicyDecision(BaseModel):
+    """Unified policy decision surface."""
+
+    decision: Literal["ALLOW", "DEFER", "DENY"]
+    lane: Literal["GREEN", "YELLOW", "RED", "BLOCKED"]
+    reason: str
+    policy_source: Literal["omnipolicy", "man_policy", "iron_law"]
+    required_scopes: list[str] = Field(default_factory=list)
+
+
+from models.man_mode import (  # noqa: E402
     ActionIntent,
     ManTaskDecision,
     ManTaskStatus,
     create_idempotency_key,
 )
-from policies.man_policy import ManPolicy
-from providers.database.factory import get_database_provider
+from policies.man_policy import ManPolicy  # noqa: E402
+from providers.database.factory import get_database_provider  # noqa: E402
 
 # ============================================================================
 # RISK TRIAGE ACTIVITY
