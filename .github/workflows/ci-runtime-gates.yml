@@ -242,24 +242,27 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       # PHASE 4: Runtime Smoke Tests
       # ─────────────────────────────────────────────────────────────
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright browsers
         timeout-minutes: 5
         run: |
-          # Use bunx to match the @playwright/test version from bun.lockb
-          # npx can resolve a different Playwright CLI version, causing browser path mismatches
-          bunx playwright install --with-deps chromium firefox webkit
+          # Use the exact playwright binary from node_modules to guarantee version match
+          # bunx/npx can resolve a different playwright CLI version, causing browser path mismatches
+          ./node_modules/.bin/playwright install --with-deps chromium firefox webkit
 
           # Verify installation
-          bunx playwright --version
+          echo "Installed Playwright version: ${{ steps.playwright-version.outputs.version }}"
+          ls ~/.cache/ms-playwright/ || true
 
       - name: Start preview server
         run: |
@@ -350,24 +353,21 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache-preview
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright browsers
         timeout-minutes: 5
         run: |
-          # Use bunx to match the @playwright/test version from bun.lockb
-          # npx can resolve a different Playwright CLI version, causing browser path mismatches
-          bunx playwright install --with-deps chromium firefox webkit
-
-          # Verify installation
-          bunx playwright --version
+          ./node_modules/.bin/playwright install --with-deps chromium firefox webkit
 
       - name: Wait for Vercel Preview
         uses: patrickedqvist/wait-for-vercel-preview@06c79330064b0e6ef7a2574603b62d3c98789125 # v1.3.2
