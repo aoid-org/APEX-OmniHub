@@ -1,20 +1,18 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from temporalio import activity
 from temporalio.exceptions import ApplicationError
+
 from activities.tools import (
-    search_database,
+    call_webhook,
     create_record,
     delete_record,
-    send_email,
-    call_webhook,
-    search_youtube,
-    update_agent_run_completion,
     mint_pilot_session,
-    check_semantic_cache,
-    setup_activities,
-    )
+    search_database,
+    search_youtube,
+    send_email,
+    update_agent_run_completion,
+)
 
 
 @pytest.fixture(autouse=True)

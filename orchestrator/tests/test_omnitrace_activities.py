@@ -1,13 +1,13 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 from temporalio import activity
-from typing import Any
 
 from activities.omnitrace_activities import (
-    omnitrace_record_run_start,
-    omnitrace_record_run_complete,
-    omnitrace_record_event,
     get_omnitrace_activities,
+    omnitrace_record_event,
+    omnitrace_record_run_complete,
+    omnitrace_record_run_start,
 )
 
 

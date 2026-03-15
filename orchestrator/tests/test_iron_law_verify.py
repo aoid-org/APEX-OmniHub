@@ -1,11 +1,12 @@
 import asyncio
 import json
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from temporalio.exceptions import ApplicationError
-from activities.iron_law_verify import verify_deductive_path
+import pytest
 from temporalio import activity
+from temporalio.exceptions import ApplicationError
+
+from activities.iron_law_verify import verify_deductive_path
 
 
 class MockProcess:
@@ -57,7 +58,7 @@ async def test_iron_law_verify_success():
 @pytest.mark.asyncio
 async def test_iron_law_verify_timeout():
     params = {"intent": "test"}
-    # Force a timeout by sleeping longer than the 10.0s timeout, but we can simulate the TimeoutError directly
+    # Simulate the TimeoutError directly instead of sleeping past the 10.0s timeout.
 
     with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec:
         mock_process = MagicMock()

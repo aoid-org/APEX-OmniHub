@@ -1,12 +1,13 @@
-import pytest
 from unittest.mock import MagicMock, patch
 
-from providers.database.supabase_provider import (
-    validate_table_name,
-    validate_column_name,
-    SupabaseDatabaseProvider,
-)
+import pytest
+
 from providers.database.base import DatabaseError, NotFoundError
+from providers.database.supabase_provider import (
+    SupabaseDatabaseProvider,
+    validate_column_name,
+    validate_table_name,
+)
 
 
 def test_validate_table_name_success():

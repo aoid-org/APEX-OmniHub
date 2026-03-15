@@ -1,12 +1,8 @@
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-# We have to patch workflow context before importing AgentWorkflow
-from temporalio import workflow as temporal_workflow
-
-# Mock the current temporal workflow context things that agent_saga.py uses globally
+# Mock the current temporal workflow context before importing AgentWorkflow
 with (
     patch("temporalio.workflow.now") as mock_now,
     patch("temporalio.workflow.info") as mock_info,
@@ -17,15 +13,10 @@ with (
     mock_now.return_value = MagicMock(timestamp=MagicMock(return_value=123456789.0))
     mock_info.return_value = MagicMock(workflow_id="wf-test-123")
 
-    from workflows.agent_saga import (
+    from workflows.agent_saga import (  # noqa: E402
         AgentWorkflow,
-        AgentEvent,
         GoalReceived,
         PlanGenerated,
-        ToolCallRequested,
-        ToolResultReceived,
-        WorkflowFailed,
-        WorkflowCompleted,
     )
 
 
@@ -182,12 +173,9 @@ async def test_handle_success(agent_workflow):
             "workflows.agent_saga.workflow.execute_activity", new_callable=AsyncMock
         ) as mock_execute,
         patch("workflows.agent_saga.workflow.logger"),
+        patch("workflows.agent_saga.workflow.info") as mock_info,
+        patch("workflows.agent_saga.workflow.now") as mock_now,
     ):
-        # We need info().search_attributes to have trace_id
-        with (
-            patch("workflows.agent_saga.workflow.info") as mock_info,
-            patch("workflows.agent_saga.workflow.now") as mock_now,
-        ):
             mock_info.return_value = MagicMock(
                 workflow_id="wf-1", search_attributes={"trace_id": ["trace-1"]}
             )
@@ -238,10 +226,6 @@ def test_continue_as_new_snapshot(agent_workflow):
         agent_workflow._continue_as_new()
 
         mock_continue_builtin.assert_called_once()
-        args = mock_continue_builtin.call_args[1].get(
-            "args",
-            mock_continue_builtin.call_args[0][0] if mock_continue_builtin.call_args[0] else None,
-        )  # Handle kwargs too
 
         # Based on workflow.continue_as_new(args=[self.goal, self.user_id, snapshot])
         if "args" in mock_continue_builtin.call_args[1]:
@@ -252,7 +236,7 @@ def test_continue_as_new_snapshot(agent_workflow):
                 passed_args = mock_continue_builtin.call_args[1]["args"]
             elif (
                 len(mock_continue_builtin.call_args[0]) > 0
-                and type(mock_continue_builtin.call_args[0][0]) == list
+                and isinstance(mock_continue_builtin.call_args[0][0], list)
             ):
                 passed_args = mock_continue_builtin.call_args[0][0]
             else:

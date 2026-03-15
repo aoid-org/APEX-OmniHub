@@ -1,20 +1,22 @@
-import pytest
 import sys
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 # Mock slowapi to avoid ModuleNotFoundError and Starlette crash when running tests locally
-class DummyRateLimitExceeded(Exception):
+class DummyRateLimitExceededError(Exception):
     pass
 
 
 sys.modules["slowapi"] = MagicMock(_rate_limit_exceeded_handler=MagicMock())
-sys.modules["slowapi.errors"] = MagicMock(RateLimitExceeded=DummyRateLimitExceeded)
+sys.modules["slowapi.errors"] = MagicMock(RateLimitExceeded=DummyRateLimitExceededError)
 sys.modules["slowapi.util"] = MagicMock()
 sys.modules["metrics"] = MagicMock(get_metrics_app=MagicMock(return_value=MagicMock()))
 
-from fastapi.testclient import TestClient
-from server import app
+from fastapi.testclient import TestClient  # noqa: E402
+
+from server import app  # noqa: E402
 
 client = TestClient(app)
 

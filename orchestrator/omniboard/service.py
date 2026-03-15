@@ -352,7 +352,9 @@ class OmniBoardService:
         cls, connection_id: str, tenant_id: str, provider: str, refresh_token: str
     ) -> str:
         """
-        Rotates credentials via OAuth refresh flow: POST to token_endpoint, store new token, update DB expiry.
+        Rotates credentials via OAuth refresh flow.
+
+        POSTs to token_endpoint, stores new token in Redis, updates DB expiry.
         """
         db = get_database_provider()
         res = await db.select(

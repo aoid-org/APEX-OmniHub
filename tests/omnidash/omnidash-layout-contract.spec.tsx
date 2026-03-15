@@ -5,8 +5,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactNode } from 'react';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { APP_REGISTRY } from '../../packages/core/src/registry';
 import { OMNIDASH_CONTRACT, OMNIDASH_APP_COUNT } from '../../src/contracts/omnidash.contract';
 
