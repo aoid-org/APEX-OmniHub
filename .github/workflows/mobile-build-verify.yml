@@ -5,6 +5,9 @@ name: Mobile Build Verification
 # This replaces the "Capacitor is merely CONFIGURED" state with a
 # continuously-verified, CI-enforced build pipeline.
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches: [main, master]

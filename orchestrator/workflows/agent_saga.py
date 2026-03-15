@@ -312,7 +312,7 @@ class AgentWorkflow:
         self._cancelled_steps: set[str] = set()
 
         # Continue-as-new threshold
-        self.MAX_HISTORY_SIZE = 40000
+        self.MAX_HISTORY_SIZE = 1000
         self.step_count = 0
         self.start_time: float | None = None
         self.workflow_context: dict[str, Any] = {}
@@ -730,9 +730,7 @@ class AgentWorkflow:
         Build bounded policy context for OmniPolicy evaluation.
         """
         input_payload = step.get("input", {}) or {}
-        resource = (
-            input_payload.get("table") or input_payload.get("resource") or input_payload.get("to")
-        )
+        resource = input_payload.get("table") or input_payload.get("resource")
         data_class = input_payload.get("data_class") or input_payload.get("classification")
 
         return {
@@ -744,11 +742,6 @@ class AgentWorkflow:
             "action": step.get("name") or step.get("action") or step.get("tool"),
             "resource": resource,
             "data_class": data_class,
-            "sensitivity": step.get("sensitivity"),
-            "context": {
-                "goal": self.goal,
-                "user_id": self.user_id,
-            },
         }
 
     async def _execute_dag_level(
@@ -1333,9 +1326,6 @@ class AgentWorkflow:
             "compensation_results": compensation_results,
         }
 
-        comp_results_list: list[dict[str, Any]] | None = (
-            compensation_results if isinstance(compensation_results, list) else None
-        )
         await self._append_event(
             WorkflowFailed(
                 correlation_id=workflow.info().workflow_id,
@@ -1343,7 +1333,7 @@ class AgentWorkflow:
                 failed_step_id=self.failed_step_id,
                 error_message=error_message,
                 compensation_executed=True,
-                compensation_results=comp_results_list,
+                compensation_results=compensation_results,
             )
         )
 

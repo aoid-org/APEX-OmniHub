@@ -30,7 +30,6 @@ jobs:
       - name: Terraform Init
         run: terraform init -backend=false
         env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
       - name: Terraform Validate

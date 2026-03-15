@@ -30,7 +30,7 @@ def test_initialization(agent_workflow):
     assert agent_workflow.step_results == {}
     assert len(agent_workflow.events) == 0
     assert agent_workflow.saga is None
-    assert agent_workflow.MAX_HISTORY_SIZE == 40000
+    assert agent_workflow.MAX_HISTORY_SIZE == 1000
 
 
 @pytest.mark.asyncio
@@ -48,7 +48,10 @@ async def test_append_event_goal_received(agent_workflow):
 @pytest.mark.asyncio
 async def test_append_event_plan_generated(agent_workflow):
     event = PlanGenerated(
-        correlation_id="corr-1", plan_id="plan-1", steps=[{"id": "step1", "tool": "test_tool"}]
+        correlation_id="corr-1",
+        plan_id="plan-1",
+        steps=[{"id": "step1", "tool": "test_tool"}],
+        cache_hit=False,
     )
 
     with patch("workflows.agent_saga.workflow.logger"):
@@ -121,26 +124,29 @@ def test_build_policy_ctx(agent_workflow):
     agent_workflow.goal = "test goal"
     agent_workflow.user_id = "user1"
 
-    step = {"tool": "send_email", "input": {"to": "test@test.com"}, "sensitivity": "HIGH"}
+    step = {"tool": "send_email", "input": {"table": "emails"}, "name": "send_email"}
 
     with patch("workflows.agent_saga.workflow.info") as mock_info:
         mock_info.return_value = MagicMock(workflow_id="wf-test-123")
         ctx = agent_workflow._build_policy_ctx(step, "step1")
 
     assert ctx["action"] == "send_email"
-    assert ctx["resource"] == "test@test.com"
-    assert ctx["sensitivity"] == "HIGH"
-    assert ctx["context"]["goal"] == "test goal"
-    assert ctx["context"]["user_id"] == "user1"
+    assert ctx["resource"] == "emails"
+    assert ctx["tool"] == "send_email"
+    assert ctx["user_id"] == "user1"
+    assert ctx["step_id"] == "step1"
 
 
 @pytest.mark.asyncio
 async def test_omnitrace_record_run_complete(agent_workflow):
+    # Enable OmniTrace so the method doesn't short-circuit
     agent_workflow._omnitrace_enabled = True
+
     with (
         patch(
             "workflows.agent_saga.workflow.execute_activity", new_callable=AsyncMock
         ) as mock_execute,
+        patch("workflows.agent_saga.workflow.logger"),
         patch("workflows.agent_saga.workflow.info") as mock_info,
     ):
         mock_info.return_value = MagicMock(workflow_id="wf-test-123")
@@ -154,11 +160,14 @@ async def test_omnitrace_record_run_complete(agent_workflow):
 
 @pytest.mark.asyncio
 async def test_omnitrace_record_event(agent_workflow):
+    # Enable OmniTrace so the method doesn't short-circuit
     agent_workflow._omnitrace_enabled = True
+
     with (
         patch(
             "workflows.agent_saga.workflow.execute_activity", new_callable=AsyncMock
         ) as mock_execute,
+        patch("workflows.agent_saga.workflow.logger"),
         patch("workflows.agent_saga.workflow.info") as mock_info,
     ):
         mock_info.return_value = MagicMock(workflow_id="wf-test-123")
@@ -207,9 +216,9 @@ async def test_handle_failure(agent_workflow):
     agent_workflow.plan_id = "plan-1"
     agent_workflow.failed_step_id = "step1"
 
-    # Mock saga rollback
+    # Mock saga rollback — compensation_results must be list[dict] per WorkflowFailed schema
     agent_workflow.saga = AsyncMock()
-    agent_workflow.saga.rollback.return_value = {"comp1": "success"}
+    agent_workflow.saga.rollback.return_value = [{"comp1": "success"}]
 
     with (
         patch("workflows.agent_saga.workflow.execute_activity", new_callable=AsyncMock),
@@ -223,7 +232,7 @@ async def test_handle_failure(agent_workflow):
         assert result["status"] == "failed"
         assert result["error"] == "test error"
         assert result["compensation_executed"] is True
-        assert result["compensation_results"] == {"comp1": "success"}
+        assert result["compensation_results"] == [{"comp1": "success"}]
 
 
 def test_continue_as_new_snapshot(agent_workflow):

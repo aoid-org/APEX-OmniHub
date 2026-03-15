@@ -1,5 +1,4 @@
 import { Layout } from '@/components/Layout';
-import { SEOMeta } from '@/components/SEOMeta';
 import { Section, SectionHeader } from '@/components/Section';
 import { CTAGroup } from '@/components/CTAGroup';
 import { techSpecsConfig, siteConfig } from '@/content/site';
@@ -38,7 +37,6 @@ export function TechSpecsPage() {
 
   return (
     <Layout title="Tech Specs">
-      <SEOMeta title="Technical Specifications" description="Deep dive into APEX OmniHub's architecture: Temporal.io orchestration, Supabase backend, zero-trust RLS, and Tri-Force agent governance." canonical="https://apexomnihub.icu/tech-specs" />
       <Section>
         <SectionHeader
           title={techSpecsConfig.title}

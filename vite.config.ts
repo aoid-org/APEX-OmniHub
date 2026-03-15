@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
-import { visualizer } from "rollup-plugin-visualizer";
 import path from "node:path";
 
 // https://vitejs.dev/config/
@@ -18,13 +17,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    react(),
-    mode !== 'test' && visualizer({
-      filename: 'dist/stats.html',
-      gzipSize: true,
-      brotliSize: true,
-    }),
-  ].filter(Boolean),
+    react()
+  ],
   resolve: {
     alias: {
       "dashboard": path.resolve(__dirname, "./apps/omnihub-site/dashboard"),
@@ -86,20 +80,6 @@ export default defineConfig(({ mode }) => ({
           // Supabase chunk - only create if module is actually included
           if (id.includes('node_modules/@supabase/')) {
             return 'supabase-vendor';
-          }
-          // Charts — only loaded on dashboard routes
-          if (id.includes('node_modules/recharts/') ||
-              id.includes('node_modules/reactflow/')) {
-            return 'vendor-charts';
-          }
-          // Animations — separate chunk
-          if (id.includes('node_modules/framer-motion/')) {
-            return 'vendor-motion';
-          }
-          // i18n — separate chunk
-          if (id.includes('node_modules/i18next/') ||
-              id.includes('node_modules/react-i18next/')) {
-            return 'vendor-i18n';
           }
         },
         // Optimize chunk file names with content hash for better caching

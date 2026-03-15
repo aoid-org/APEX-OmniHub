@@ -1,5 +1,4 @@
 import { Layout } from '@/components/Layout';
-import { SEOMeta } from '@/components/SEOMeta';
 import { Section } from '@/components/Section';
 import { CTAGroup } from '@/components/CTAGroup';
 import { HeroVisual } from '@/components/HeroVisual';
@@ -463,11 +462,6 @@ function CTASection() {
 export function HomePage() {
   return (
     <Layout>
-      <SEOMeta
-        title="AI Orchestration Platform"
-        description="APEX OmniHub is the enterprise AI governance platform for governed execution across AI agents, legacy systems, and Web3. Directable. Accountable. Dependable."
-        canonical="https://apexomnihub.icu"
-      />
       <Hero />
       <HighlightsSection />
       <TriForceSection />

@@ -1,13 +1,10 @@
 import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getOmniDashApp } from '@/contracts/omnidash.contract';
 import { FONT_SG } from '../constants';
 import { APPS } from '../data';
 import type { AppEntry } from '../types';
 import { AppTile } from './AppTile';
 import { useOmniDashAction } from '@/hooks/useOmniDashAction';
-
-const SETTINGS_APP = getOmniDashApp('settings')!;
 
 interface AppsSectionProps {
   readonly onAppClick: (app: AppEntry) => () => void;
@@ -57,12 +54,12 @@ export const AppsSection = memo(function AppsSection({
         <button
           type="button"
           onClick={() => dispatch({
-            appKey: SETTINGS_APP.id,
-            provider: SETTINGS_APP.title,
-            label: SETTINGS_APP.title,
-            category: SETTINGS_APP.category,
-            routePath: SETTINGS_APP.route,
-            dashboardStatus: SETTINGS_APP.integrationStatus,
+            appKey: 'settings',
+            provider: 'Settings',
+            label: 'Settings',
+            category: 'control-plane',
+            routePath: '/omnidash/settings',
+            dashboardStatus: 'Live',
           })}
           style={{
             fontSize: 11,

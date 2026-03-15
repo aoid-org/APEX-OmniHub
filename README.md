@@ -170,31 +170,19 @@ Client-side infrastructure for deterministic media delivery:
 - Python 3.10+
 - Docker & Docker Compose
 
-### Full Stack — One Command (Recommended)
-
-```bash
-cp .env.example .env.local  # Fill in your Supabase credentials
-docker compose -f docker-compose.dev.yml up
-```
-
-This starts: Frontend (port 8080) + Temporal worker + Temporal UI (port 8233) + Redis.
-Supabase runs in the cloud — point `.env.local` to your Supabase project.
-
-### Manual Setup (alternative)
-
-#### 1) Install dependencies
+### 1) Install dependencies
 
 ```bash
 bun install
 ```
 
-#### 2) Run OmniDash (main UI)
+### 2) Run OmniDash (main UI)
 
 ```bash
 bun run dev
 ```
 
-#### 3) Run the Orchestrator (Temporal)
+### 3) Run the Orchestrator (Temporal)
 
 ```bash
 cd orchestrator
@@ -202,7 +190,7 @@ pip install -r requirements.txt
 python -m main
 ```
 
-### Docker (production compose)
+### 4) Docker (production compose)
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d

@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { Layout } from '@/components/Layout';
-import { SEOMeta } from '@/components/SEOMeta';
 import { Section, SectionHeader } from '@/components/Section';
 import { CTAGroup } from '@/components/CTAGroup';
 import { DemoVideoPlayer } from '@/components/DemoVideoPlayer';
@@ -165,11 +164,6 @@ function DemoCTA() {
 export function DemoPage() {
   return (
     <Layout title="Demo">
-      <SEOMeta
-        title="Live Demo"
-        description="See APEX OmniHub in action — AI agent orchestration, Tri-Force governance, and real-time workflow execution in a 3-minute interactive demo."
-        canonical="https://apexomnihub.icu/demo"
-      />
       <Section>
         <SectionHeader
           title={demoConfig.title}

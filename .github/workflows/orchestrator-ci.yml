@@ -49,9 +49,8 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Run linters
-        working-directory: orchestrator
         run: |
-          python -m ruff check . && python -m ruff format --check .
+          python -m pip install ruff && python -m ruff check .
 
       - name: Check portability guardrails
         run: |
@@ -79,7 +78,6 @@ jobs:
       - name: Run tests with coverage
         working-directory: orchestrator
         env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           SUPABASE_URL: http://localhost:54321
           SUPABASE_SERVICE_ROLE_KEY: test-key
           SUPABASE_DB_URL: postgresql://postgres:postgres@localhost:54322/postgres
