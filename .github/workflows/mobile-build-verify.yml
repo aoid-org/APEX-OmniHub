@@ -115,7 +115,7 @@ jobs:
         run: bun install --frozen-lockfile --prefer-offline
 
       - name: Download web dist
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: web-dist
           path: dist/
@@ -186,7 +186,7 @@ jobs:
         run: bun install --frozen-lockfile --prefer-offline
 
       - name: Download web dist
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: web-dist
           path: dist/
