@@ -9,19 +9,19 @@
 ## Canonical Component Hierarchy
 
 ```
-apps/omnihub-site/src/
-├── App.tsx                          ← SO Router (single source of truth)
-├── dashboard/
-│   └── OmniDashShell.tsx            ← Canonical Shell (unified component)
-│       ├── Sidebar (left)           ← Nav icons, links, sentry status
-│       ├── Main Canvas (center)     ← Core dashboard metrics and integrations
-│       └── Right Panel              ← Ops Controls, OmniTrace, Analytics, Security
-├── pages/
-│   ├── Home.tsx                     ← Marketing landing (apexomnihub.icu/)
-│   ├── Login.tsx                    ← Authentication
-│   └── [Feature Pages]              ← OmniPort, Maestro, Fortress, etc.
-└── content/
-    └── site.ts                      ← All marketing copy (single source)
+apps/omnihub-site/
+├── dashboard/                       ← Unified Dashboard Domain
+│   ├── OmniDashShell.tsx            ← Canonical Shell (unified component)
+│   └── components/                  ← Consolidated OmniDash widgets
+├── src/                             ← Core Site Infrastructure
+│   ├── App.tsx                      ← SO Router (single source of truth)
+│   ├── pages/
+│   │   ├── Home.tsx                 ← Marketing landing (apexomnihub.icu/)
+│   │   ├── Login.tsx                ← Authentication
+│   │   └── [Feature Pages]          ← OmniPort, Maestro, Fortress, etc.
+│   └── content/
+│       └── site.ts                  ← All marketing copy (single source)
+└── ...
 ```
 
 ## Rendering Architecture

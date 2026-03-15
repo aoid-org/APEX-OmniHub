@@ -109,11 +109,11 @@ The APEX Universal Modal Engine provides a single, idempotent interaction surfac
 
 ### Interaction Layer
 
-| Module              | Path                                                            | Role                                                                  |
-| ------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `useOmniDashAction` | `src/omnidash/useOmniDashAction.ts`                             | Universal intent dispatcher — formats user action → `OmniModalConfig` |
-| `OmniSpatialHost`   | `apps/omnihub-site/src/components/omnidash/OmniSpatialHost.tsx` | Polymorphic renderer (dialog / spatial / sandbox)                     |
-| `OmniAppShell`      | `apps/omnihub-site/src/lib/OmniAppShell.ts`                     | Shadow DOM custom element for microfrontend CSS/JS isolation          |
+| Module              | Path                                                         | Role                                                                  |
+| ------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `useOmniDashAction` | `src/omnidash/useOmniDashAction.ts`                          | Universal intent dispatcher — formats user action → `OmniModalConfig` |
+| `OmniSpatialHost`   | `apps/omnihub-site/dashboard/components/OmniSpatialHost.tsx` | Polymorphic renderer (dialog / spatial / sandbox)                     |
+| `OmniAppShell`      | `apps/omnihub-site/src/lib/OmniAppShell.ts`                  | Shadow DOM custom element for microfrontend CSS/JS isolation          |
 
 ### Intent Resolution Rules (deterministic, no branches)
 
@@ -266,9 +266,10 @@ NPM scripts in `package.json` define gate commands:
 
 ## 9) Current Build Snapshot (from direct repository inspection)
 
-- `src/` files: **319**
-- `src/pages/` files (max depth 2): **23**
-- `src/components/**/*.tsx`: **98**
+- `src/` files: **221** (legacy OmniDash components purged)
+- `apps/omnihub-site/dashboard/components/` files: **58** (consolidated)
+- `src/pages/` files (max depth 2): **18**
+- `src/components/**/*.tsx`: **42**
 - `supabase/functions/` directories: **22**
 - `supabase/migrations/*.sql`: **51**
 - test spec files in `tests/` + `e2e/`: **99**
