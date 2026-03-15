@@ -123,7 +123,9 @@ def test_build_policy_ctx(agent_workflow):
 
     step = {"tool": "send_email", "input": {"to": "test@test.com"}, "sensitivity": "HIGH"}
 
-    ctx = agent_workflow._build_policy_ctx(step, "step1")
+    with patch("workflows.agent_saga.workflow.info") as mock_info:
+        mock_info.return_value = MagicMock(workflow_id="wf-test-123")
+        ctx = agent_workflow._build_policy_ctx(step, "step1")
 
     assert ctx["action"] == "send_email"
     assert ctx["resource"] == "test@test.com"
@@ -134,9 +136,14 @@ def test_build_policy_ctx(agent_workflow):
 
 @pytest.mark.asyncio
 async def test_omnitrace_record_run_complete(agent_workflow):
-    with patch(
-        "workflows.agent_saga.workflow.execute_activity", new_callable=AsyncMock
-    ) as mock_execute:
+    agent_workflow._omnitrace_enabled = True
+    with (
+        patch(
+            "workflows.agent_saga.workflow.execute_activity", new_callable=AsyncMock
+        ) as mock_execute,
+        patch("workflows.agent_saga.workflow.info") as mock_info,
+    ):
+        mock_info.return_value = MagicMock(workflow_id="wf-test-123")
         await agent_workflow._omnitrace_record_run_complete({"result": "ok"}, "success")
 
         mock_execute.assert_called_once()
@@ -147,9 +154,14 @@ async def test_omnitrace_record_run_complete(agent_workflow):
 
 @pytest.mark.asyncio
 async def test_omnitrace_record_event(agent_workflow):
-    with patch(
-        "workflows.agent_saga.workflow.execute_activity", new_callable=AsyncMock
-    ) as mock_execute:
+    agent_workflow._omnitrace_enabled = True
+    with (
+        patch(
+            "workflows.agent_saga.workflow.execute_activity", new_callable=AsyncMock
+        ) as mock_execute,
+        patch("workflows.agent_saga.workflow.info") as mock_info,
+    ):
+        mock_info.return_value = MagicMock(workflow_id="wf-test-123")
         await agent_workflow._omnitrace_record_event(
             event_key="evt-1", kind="tool", name="test-tool", latency_ms=100, data={"foo": "bar"}
         )

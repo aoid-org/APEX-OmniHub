@@ -25,6 +25,7 @@ Compensation Pattern:
 """
 
 import asyncio
+import contextlib
 import ipaddress
 import json
 import os
@@ -39,6 +40,7 @@ from pydantic import BaseModel
 from temporalio import activity
 
 from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event
+from providers.database.base import DatabaseError
 from providers.database.factory import get_database_provider
 from security.prompt_sanitizer import PromptInjectionError, create_safe_user_message
 from security.ssrf import validate_url_with_dns_pin_async
