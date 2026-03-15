@@ -43,6 +43,13 @@ from providers.database.factory import get_database_provider
 from security.prompt_sanitizer import PromptInjectionError, create_safe_user_message
 
 # Canonical set of allowed tools (must match registered Temporal activities)
+
+# Valid compensation activities mapped to their corresponding forward tools
+ALLOWED_COMPENSATIONS: dict[str, str] = {
+    "create_record": "delete_record",
+    "call_webhook": "call_webhook",  # Webhooks might have reversal webhooks
+}
+
 ALLOWED_TOOLS = frozenset(
     {
         "search_database",
@@ -242,7 +249,6 @@ Output valid JSON matching the PlanStep schema."""
         # Resolve aliases and validate tools
         for step in plan.steps:
             step.tool = _TOOL_ALIASES.get(step.tool, step.tool)
-
         invalid_tools = [s.tool for s in plan.steps if s.tool not in ALLOWED_TOOLS]
         if invalid_tools:
             from temporalio.exceptions import ApplicationError
@@ -251,6 +257,28 @@ Output valid JSON matching the PlanStep schema."""
                 f"Plan contains unknown tools: {invalid_tools}",
                 non_retryable=True,
             )
+
+        # SECURITY: Validate compensations to prevent injection of arbitrary activities
+        invalid_compensations = []
+        for step in plan.steps:
+            if step.compensation:
+                # Resolve compensation alias
+                step.compensation = _TOOL_ALIASES.get(step.compensation, step.compensation)
+                if step.compensation not in ALLOWED_TOOLS:
+                    invalid_compensations.append(f"{step.compensation} (not an allowed tool)")
+                elif step.tool in ALLOWED_COMPENSATIONS and step.compensation != ALLOWED_COMPENSATIONS[step.tool]:
+                    invalid_compensations.append(f"{step.compensation} (not allowed for {step.tool})")
+                elif step.tool not in ALLOWED_COMPENSATIONS:
+                    invalid_compensations.append(f"{step.compensation} (tool {step.tool} does not support compensation)")
+
+        if invalid_compensations:
+            from temporalio.exceptions import ApplicationError
+
+            raise ApplicationError(
+                f"Plan contains invalid compensations: {invalid_compensations}",
+                non_retryable=True,
+            )
+
 
         # Store in semantic cache for future hits
         if _semantic_cache:
@@ -525,38 +553,88 @@ async def send_email(params: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+
 @activity.defn(name="call_webhook")
 async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
     """
-    Call external webhook.
-
-    Args:
-        params: {
-            "url": "https://api.example.com/webhook",
-            "method": "POST",
-            "payload": {...}
-        }
-
-    Returns:
-        Webhook response
+    Call external webhook. Durable idempotency protection included.
     """
     import httpx
-
+    import json
+    import asyncio
+    from urllib.parse import urlparse, urlunparse
+    from temporalio import activity
     from security.ssrf import validate_url_with_dns_pin_async
+    from providers.database.factory import get_database_provider
+    from providers.database.base import DatabaseError
 
     url = str(params.get("url", ""))
     method = params.get("method", "POST")
     payload = params.get("payload", {})
 
+    # Generate idempotency key based on workflow and step
+    info = activity.info()
+    workflow_id = info.workflow_id
+    # Ensure idempotency key is unique to the attempt to call this specific tool instance
+    # The saga execution passes step_id through info.activity_id or it can be derived
+    step_id = params.get("step_id", info.activity_id)
+
+    idempotency_key = f"{workflow_id}:{step_id}:call_webhook"
+
+    db = get_database_provider()
+
+    # Check if a successful execution already exists
+    try:
+        existing = await db.select(
+            table="idempotency_ledger",
+            filters={"idempotency_key": idempotency_key},
+        )
+        if existing and existing[0].get("status") == "completed":
+            activity.logger.info(f"Webhook already executed successfully. Returning stored result. Key: {idempotency_key}")
+            return json.loads(existing[0].get("result_payload", "{}"))
+        elif existing and existing[0].get("status") == "pending":
+            # Concurrent execution or failed attempt that left a pending record
+            pass
+    except DatabaseError as e:
+        activity.logger.warning(f"Failed to check idempotency ledger: {e}")
+        # Continue execution if ledger is unavailable to maintain availability
+
+    # Insert pending record
+    try:
+        await db.upsert(
+            table="idempotency_ledger",
+            record={
+                "idempotency_key": idempotency_key,
+                "status": "pending",
+                "workflow_id": workflow_id,
+                "tool_name": "call_webhook"
+            },
+            conflict_columns=["idempotency_key"]
+        )
+    except DatabaseError as e:
+        activity.logger.warning(f"Failed to insert pending idempotency record: {e}")
+
     try:
         validated_url = await validate_url_with_dns_pin_async(url)
     except ValueError as e:
         activity.logger.error(f"Blocked SSRF attempt: {e}")
-        return {
+        result = {
             "success": False,
             "error": f"Security violation: {e!s}",
             "status_code": 403,
         }
+
+        # Record failure
+        try:
+            await db.update(
+                table="idempotency_ledger",
+                updates={"status": "failed", "result_payload": json.dumps(result)},
+                filters={"idempotency_key": idempotency_key}
+            )
+        except Exception:
+            pass
+
+        return result
 
     request_headers: dict[str, str] = {}
     parsed = urlparse(validated_url.original_url)
@@ -569,22 +647,51 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
     activity.logger.info(f"Calling webhook: {method} {validated_url.original_url}")
 
     async with httpx.AsyncClient(follow_redirects=False) as client:
-        response = await client.request(  # NOSONAR - URL validated by SSRF guard above
-            method=method,
-            url=request_url,
-            json=payload,
-            headers=request_headers,
-            timeout=15.0,
-        )
+        try:
+            response = await client.request(  # NOSONAR - URL validated by SSRF guard above
+                method=method,
+                url=request_url,
+                json=payload,
+                headers=request_headers,
+                timeout=15.0,
+            )
 
-        return {
-            "success": response.status_code < 400,
-            "status_code": response.status_code,
-            "body": response.text,
-        }
+            result = {
+                "success": response.status_code < 400,
+                "status_code": response.status_code,
+                "body": response.text,
+            }
 
+            # Record success
+            try:
+                await db.update(
+                    table="idempotency_ledger",
+                    updates={"status": "completed", "result_payload": json.dumps(result)},
+                    filters={"idempotency_key": idempotency_key}
+                )
+            except Exception as e:
+                activity.logger.warning(f"Failed to record webhook success in ledger: {e}")
+
+            return result
+
+        except Exception as e:
+            result = {
+                "success": False,
+                "error": str(e)
+            }
+            # Record failure
+            try:
+                await db.update(
+                    table="idempotency_ledger",
+                    updates={"status": "failed", "result_payload": json.dumps(result)},
+                    filters={"idempotency_key": idempotency_key}
+                )
+            except Exception:
+                pass
+            raise
 
 def _is_ip_literal(value: str) -> bool:
+
     try:
         ipaddress.ip_address(value.strip("[]"))
         return True

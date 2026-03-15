@@ -93,15 +93,29 @@ async def create_goal(request: GoalRequest) -> dict[str, str]:
         workflow_id = f"goal-{request.trace_id}"
 
         # C3: Start workflow via function reference for type safety
-        handle = await client.start_workflow(
-            AgentWorkflow.run,
-            args=[request.user_intent, request.user_id, {"trace_id": request.trace_id}],
-            id=workflow_id,
-            task_queue=os.getenv("TEMPORAL_TASK_QUEUE", "apex-orchestrator"),
-        )
+        try:
+            handle = await client.start_workflow(
+                AgentWorkflow.run,
+                args=[request.user_intent, request.user_id, {"trace_id": request.trace_id}],
+                id=workflow_id,
+                task_queue=os.getenv("TEMPORAL_TASK_QUEUE", "apex-orchestrator"),
+            )
+            logger.info("✓ Workflow started")
+            return {"workflowId": handle.id, "status": "started"}
 
-        logger.info("✓ Workflow started")
-        return {"workflowId": handle.id, "status": "started"}
+        except Exception as e:
+            # Handle Temporal workflow already started error safely
+            # We catch generically but check class name because temporalio exceptions
+            # might be nested or we want to avoid strict import dependency issues here
+            if type(e).__name__ == "WorkflowExecutionAlreadyStartedError":
+                logger.info(f"Workflow {workflow_id} already started")
+                # Return 409 Conflict with the workflow ID to restore request-boundary idempotency
+                from fastapi.responses import JSONResponse
+                return JSONResponse(
+                    status_code=409,
+                    content={"workflowId": workflow_id, "status": "already_started"}
+                )
+            raise
 
     except Exception:
         logger.error("Unhandled exception", exc_info=True)

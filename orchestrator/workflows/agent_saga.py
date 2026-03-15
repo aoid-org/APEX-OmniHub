@@ -115,6 +115,7 @@ class SagaContext:
     compensation_stack: list[CompensationStep] = field(default_factory=list)
     rollback_executed: bool = False
 
+
     async def execute_with_compensation(
         self,
         activity_name: str,
@@ -125,21 +126,21 @@ class SagaContext:
     ) -> dict[str, Any]:
         """
         Execute activity and register compensation on success.
-
-        Args:
-            activity_name: Activity to execute
-            activity_input: Activity input params
-            compensation_activity: Compensation activity name (if any)
-            compensation_input: Compensation input (can use {result.field} placeholders)
-            step_id: Step ID for tracking
-
-        Returns:
-            Activity result
-
-        Raises:
-            ActivityError: If activity fails after retries
         """
+        # Double check compensation validity just in case
+        if compensation_activity:
+            with workflow.unsafe.imports_passed_through():
+                from activities.tools import ALLOWED_TOOLS, ALLOWED_COMPENSATIONS
+
+            if compensation_activity not in ALLOWED_TOOLS:
+                workflow.logger.error(f"Blocked invalid compensation activity: {compensation_activity}")
+                compensation_activity = None
+            elif activity_name not in ALLOWED_COMPENSATIONS or ALLOWED_COMPENSATIONS[activity_name] != compensation_activity:
+                workflow.logger.error(f"Blocked invalid compensation mapping: {activity_name} -> {compensation_activity}")
+                compensation_activity = None
+
         # Execute main activity
+
         result = await self.workflow_instance._execute_activity(
             activity_name, activity_input, step_id
         )

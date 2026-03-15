@@ -44,6 +44,7 @@ ALLOWED_TABLES = frozenset(
         "usage_metering",
         # Agent execution tables
         "agent_runs",
+        "idempotency_ledger",
     ]
 )
 
@@ -124,7 +125,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
         self,
         table: str,
         record: dict[str, Any],
-        _conflict_columns: list[str] | None = None,
+        conflict_columns: list[str] | None = None,
     ) -> dict[str, Any]:
         """
         Perform an upsert (insert or update on conflict).
@@ -133,7 +134,13 @@ class SupabaseDatabaseProvider(DatabaseProvider):
             # SECURITY: Validate table name against allowlist
             validated_table = validate_table_name(table)
 
-            query = self.client.table(validated_table).upsert(record)
+            upsert_kwargs = {}
+            if conflict_columns:
+                # SECURITY: Validate conflict column names
+                valid_conflict_columns = [validate_column_name(col) for col in conflict_columns]
+                upsert_kwargs["on_conflict"] = ",".join(valid_conflict_columns)
+
+            query = self.client.table(validated_table).upsert(record, **upsert_kwargs)
             response = query.execute()
 
             if not response.data:
