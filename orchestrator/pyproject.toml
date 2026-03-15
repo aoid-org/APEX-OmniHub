@@ -35,6 +35,7 @@ dependencies = [
     "asyncpg>=0.29.0",
 
     # Utilities
+    "aiofiles>=23.2.0",
     "python-dotenv>=1.0.0",
     "httpx>=0.26.0",
     "tenacity>=8.2.0",

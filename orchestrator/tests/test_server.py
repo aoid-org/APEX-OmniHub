@@ -12,8 +12,7 @@ class DummyRateLimitExceededError(Exception):
 sys.modules["slowapi"] = MagicMock(_rate_limit_exceeded_handler=MagicMock())
 sys.modules["slowapi.errors"] = MagicMock(RateLimitExceeded=DummyRateLimitExceededError)
 sys.modules["slowapi.util"] = MagicMock()
-# Do NOT mock the metrics module — it uses real prometheus_client which is available,
-# and mocking it pollutes sys.modules for downstream tests (test_idempotency_metrics).
+sys.modules["metrics"] = MagicMock(get_metrics_app=MagicMock(return_value=MagicMock()))
 
 from fastapi.testclient import TestClient  # noqa: E402
 
