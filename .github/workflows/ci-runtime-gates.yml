@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4 # v4.2.2
 
       # ── Guardrail 0 — File Existence (Rename-Drift Closure) ──────
       - name: "Guardrail 0 - File Existence (Rename-Drift Closure)"
@@ -86,7 +86,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4 # v4.2.2
 
       - name: Verify changelog paths exist
         run: node scripts/verify-changelog-paths.js CHANGELOG.md
@@ -95,7 +95,7 @@ jobs:
         run: bash scripts/repo-hygiene-guard.sh
 
       - name: Setup Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        uses: actions/setup-node@v4 # v4.1.0
         with:
           node-version: "20"
 
@@ -110,6 +110,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
         env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
@@ -173,14 +174,10 @@ jobs:
       - name: SonarCloud Scan
         if: vars.SONAR_CI_SCAN_ENABLED != 'false'
         uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d
-        # continue-on-error: true because SonarCloud Automatic Analysis is currently enabled
-        # for this project. Running both CI analysis and Automatic Analysis simultaneously
-        # causes exit code 3. To switch fully to CI-based scanning (recommended):
-        #   1. Go to SonarCloud → Project Settings → Analysis Method
-        #   2. Disable "Automatic Analysis"
-        #   3. Change continue-on-error to false
-        # Until then, the scan runs and uploads coverage data but does not block the build.
-        continue-on-error: true
+        # ACTION REQUIRED before merging: Disable SonarCloud Automatic Analysis in the
+        # SonarCloud dashboard: Project Settings → Analysis Method → disable Automatic Analysis.
+        # Once disabled, remove this comment. The gate will then block on quality gate failures.
+        # continue-on-error was removed — this gate now BLOCKS merges on quality gate failure.
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -297,14 +294,16 @@ jobs:
     needs: build-and-test
     if: github.event_name == 'pull_request'
     timeout-minutes: 20
-    continue-on-error: true # Don't block merge if preview isn't ready
+    # continue-on-error removed — preview smoke failures now block merges.
+    # If Vercel preview deployment is not available, the patrickedqvist/wait-for-vercel-preview
+    # step handles the graceful fallback via its own continue-on-error.
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4 # v4.2.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        uses: actions/setup-node@v4 # v4.1.0
         with:
           node-version: "20"
 

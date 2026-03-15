@@ -32,13 +32,6 @@ provider "cloudflare" {
   api_token = var.cloudflare_api_token
 }
 
-# ── Variables ─────────────────────────────────────────────────────────────────
-variable "vercel_api_token"     { sensitive = true }
-variable "vercel_team_id"       {}
-variable "cloudflare_api_token" { sensitive = true }
-variable "cloudflare_zone_id"   {}
-variable "domain"               { default = "apexomnihub.icu" }
-
 # ── Vercel Project ────────────────────────────────────────────────────────────
 resource "vercel_project" "omnihub" {
   name      = "apex-omnihub"
