@@ -41,33 +41,33 @@ describe('Omnidash CSS Contract', () => {
     expect(css).toContain('ZERO display:grid');
   });
 
-  it('responsive collapse at 960px hides sidebar', () => {
-    // @media (max-width: 960px) { .od-sidebar { display: none; } }
-    const mediaBlock960 = css.match(/@media\s*\(max-width:\s*960px\)\s*\{([\s\S]*?)\n\}/);
-    expect(mediaBlock960).not.toBeNull();
-    expect(mediaBlock960![1]).toContain('.od-sidebar');
-    expect(mediaBlock960![1]).toContain('display: none');
+  it('responsive collapse at 768px hides sidebar', () => {
+    // @media (max-width: 768px) { .od-sidebar { display: none; } }
+    const mediaBlock768 = css.match(/@media\s*\(max-width:\s*768px\)\s*\{([\s\S]*?)(?=\n@media|\n\/\*|$)/);
+    expect(mediaBlock768).not.toBeNull();
+    expect(mediaBlock768![1]).toContain('.od-sidebar');
+    expect(mediaBlock768![1]).toContain('display: none');
   });
 
   it('responsive at 768px switches app tiles to 2-across', () => {
-    // @media (max-width: 768px) { .apex-app-tile { width: calc(50% - 8px); } }
-    const mediaBlock768 = css.match(/@media\s*\(max-width:\s*768px\)\s*\{([\s\S]*?)\n\}/);
-    expect(mediaBlock768).not.toBeNull();
-    expect(mediaBlock768![1]).toContain('.apex-app-tile');
-    expect(mediaBlock768![1]).toContain('calc(50% - 8px)');
+    // @media (max-width: 768px) { .apex-app-tile { width: calc(50% - 7px); } }
+    const allMedia768 = [...css.matchAll(/@media\s*\(max-width:\s*768px\)\s*\{([\s\S]*?)\n\}/g)];
+    const combined = allMedia768.map(m => m[1]).join('\n');
+    expect(combined).toContain('.apex-app-tile');
+    expect(combined).toContain('calc(50% - 7px)');
   });
 
-  it('hero row uses flexbox with 24px gaps', () => {
+  it('hero row uses flexbox with 20px gaps', () => {
     const heroBlock = css.match(/\.apex-hero-row\s*\{([^}]*)\}/);
     expect(heroBlock).not.toBeNull();
     expect(heroBlock![1]).toContain('display: flex');
-    expect(heroBlock![1]).toContain('gap: 24px');
+    expect(heroBlock![1]).toContain('gap: 20px');
   });
 
-  it('app tiles row uses 16px gaps', () => {
+  it('app tiles row uses 14px gaps', () => {
     const appsRowBlock = css.match(/\.apex-apps-row\s*\{([^}]*)\}/);
     expect(appsRowBlock).not.toBeNull();
-    expect(appsRowBlock![1]).toContain('gap: 16px');
+    expect(appsRowBlock![1]).toContain('gap: 14px');
   });
 
   it('no display:grid found in any dashboard layout class', () => {

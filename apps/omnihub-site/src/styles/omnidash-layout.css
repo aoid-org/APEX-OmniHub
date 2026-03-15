@@ -268,10 +268,6 @@
   z-index: 1;
 }
 
-.od-right {
-  min-width: 0;
-}
-
 .od-content {
   flex: 1;
   overflow-y: auto;
