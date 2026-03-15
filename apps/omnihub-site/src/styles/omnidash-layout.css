@@ -1409,6 +1409,16 @@
   pointer-events: auto;
 }
 
+/* Ensure all widget descendants receive pointer events — fixes drag after ModuleRenderer injection */
+.widget-shell * {
+  pointer-events: auto;
+}
+
+/* Constrain widget control buttons — prevent global min-height:44px from overriding widget-btn layout */
+.widget-shell .widget-btn {
+  min-height: 24px;
+}
+
 
 /* ═══════════════════════════════════════════════════════
    WIDGET SHELL — Draggable, resizable widget exoskeleton
