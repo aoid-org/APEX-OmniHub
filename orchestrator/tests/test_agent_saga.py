@@ -176,18 +176,18 @@ async def test_handle_success(agent_workflow):
         patch("workflows.agent_saga.workflow.info") as mock_info,
         patch("workflows.agent_saga.workflow.now") as mock_now,
     ):
-            mock_info.return_value = MagicMock(
-                workflow_id="wf-1", search_attributes={"trace_id": ["trace-1"]}
-            )
-            mock_now.return_value = MagicMock(timestamp=MagicMock(return_value=123.0))
+        mock_info.return_value = MagicMock(
+            workflow_id="wf-1", search_attributes={"trace_id": ["trace-1"]}
+        )
+        mock_now.return_value = MagicMock(timestamp=MagicMock(return_value=123.0))
 
-            result = await agent_workflow._handle_success()
+        result = await agent_workflow._handle_success()
 
-            assert result["status"] == "success"
-            assert result["steps_executed"] == 1
+        assert result["status"] == "success"
+        assert result["steps_executed"] == 1
 
-            # Should have called update_agent_run_completion AND omnitrace activity
-            assert mock_execute.call_count >= 1
+        # Should have called update_agent_run_completion AND omnitrace activity
+        assert mock_execute.call_count >= 1
 
 
 @pytest.mark.asyncio
@@ -234,9 +234,8 @@ def test_continue_as_new_snapshot(agent_workflow):
             assert len(mock_continue_builtin.call_args[0]) >= 1
             if "args=" in str(mock_continue_builtin.call_args):
                 passed_args = mock_continue_builtin.call_args[1]["args"]
-            elif (
-                len(mock_continue_builtin.call_args[0]) > 0
-                and isinstance(mock_continue_builtin.call_args[0][0], list)
+            elif len(mock_continue_builtin.call_args[0]) > 0 and isinstance(
+                mock_continue_builtin.call_args[0][0], list
             ):
                 passed_args = mock_continue_builtin.call_args[0][0]
             else:
