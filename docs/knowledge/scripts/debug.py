@@ -221,7 +221,9 @@ def extract_stack_trace(content: str) -> list[str]:
     return relevant[:5]  # Top 5 relevant lines
 
 
-def print_analysis(error_input: str, language: str, matches: list[dict], stack_lines: list[str]):
+def print_analysis(
+    error_input: str, language: str, matches: list[dict], stack_lines: list[str]
+):
     """Print formatted analysis."""
     print(f"\n{'═' * 60}")
     print("  OMNIDEV DEBUG ANALYSIS")
@@ -264,14 +266,18 @@ def main():
         description="OmniDev Debug Assistant (APEX Business Systems Ltd.)",
         epilog="Analyzes errors and provides targeted fixes.",
     )
-    parser.add_argument("input", nargs="?", help="Error message, log file path, or '-' for stdin")
+    parser.add_argument(
+        "input", nargs="?", help="Error message, log file path, or '-' for stdin"
+    )
     parser.add_argument(
         "--lang",
         "-l",
         choices=["javascript", "python", "go", "rust", "java"],
         help="Force language detection",
     )
-    parser.add_argument("--version", "-v", action="version", version=f"OmniDev Debug v{VERSION}")
+    parser.add_argument(
+        "--version", "-v", action="version", version=f"OmniDev Debug v{VERSION}"
+    )
     args = parser.parse_args()
 
     # Get input

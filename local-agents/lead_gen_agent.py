@@ -15,7 +15,9 @@ from typing import Any
 # Import shared connector
 from omnihub_connector import OmniHubConnector, TaskWorker, load_env_config
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -70,12 +72,14 @@ class LeadGenAgent:
             idempotency_key=f"lead_qualified_{lead_id}",
         )
 
-        self.qualified_queue.append({
-            "lead_id": lead_id,
-            "url": url,
-            "role": role,
-            "score": score,
-        })
+        self.qualified_queue.append(
+            {
+                "lead_id": lead_id,
+                "url": url,
+                "role": role,
+                "score": score,
+            }
+        )
 
     async def seed_queue(self):
         """Emit queue seeding event with current queue size."""
@@ -107,7 +111,9 @@ class LeadGenAgent:
             role = roles[i % len(roles)]
             score = 0.5 + (i % 5) * 0.1  # Scores from 0.5 to 0.9
 
-            tasks.append(asyncio.create_task(self.ingest_lead(lead_id, url, role, score)))
+            tasks.append(
+                asyncio.create_task(self.ingest_lead(lead_id, url, role, score))
+            )
             await asyncio.sleep(0.1)  # Small delay to avoid overwhelming
 
         # Wait for all ingestion tasks
@@ -120,8 +126,8 @@ class LeadGenAgent:
 # Task handlers
 def handle_echo(task: dict[str, Any]) -> dict[str, Any]:
     """Echo task handler - returns the payload."""
-    params = task.get('params', {})
-    payload = params.get('payload', {})
+    params = task.get("params", {})
+    payload = params.get("payload", {})
     logger.info(f"Echo task: {payload}")
     return {
         "action": "echo",
@@ -160,52 +166,54 @@ async def main():
 
     # Initialize connector
     connector = OmniHubConnector(
-        base_url=config['OMNIHUB_BASE_URL'],
-        api_key=config['OMNIHUB_API_KEY'],
-        source=config['OMNIHUB_SOURCE'],
-        worker_id=config['OMNIHUB_WORKER_ID'],
-        target='lead-gen',  # Only claim tasks targeted to lead-gen
+        base_url=config["OMNIHUB_BASE_URL"],
+        api_key=config["OMNIHUB_API_KEY"],
+        source=config["OMNIHUB_SOURCE"],
+        worker_id=config["OMNIHUB_WORKER_ID"],
+        target="lead-gen",  # Only claim tasks targeted to lead-gen
     )
 
     # Initialize agent
     agent = LeadGenAgent(connector)
 
     # Run mode selection
-    mode = os.getenv('LEAD_GEN_MODE', 'simulate')
+    mode = os.getenv("LEAD_GEN_MODE", "simulate")
 
     try:
-        if mode == 'simulate':
+        if mode == "simulate":
             print("\nMode: SIMULATE - Running one-time ingestion simulation")
             await agent.simulate_ingestion(count=14)
             print("\nSimulation complete. Check OmniDash at /omnidash/local-agents")
 
-        elif mode == 'worker':
+        elif mode == "worker":
             print("\nMode: WORKER - Starting task worker loop")
             print("Press Ctrl+C to stop")
 
             # Register task handlers
             handlers = {
-                'echo': handle_echo,
-                'refresh_queue': handle_refresh_queue,
+                "echo": handle_echo,
+                "refresh_queue": handle_refresh_queue,
             }
 
             worker = TaskWorker(connector, handlers)
             await worker.run(poll_interval=5)
 
-        elif mode == 'hybrid':
+        elif mode == "hybrid":
             print("\nMode: HYBRID - Running simulation + worker loop")
 
             sim_task = asyncio.create_task(agent.simulate_ingestion(count=14))
 
             print("\nStarting task worker loop (press Ctrl+C to stop)")
             handlers = {
-                'echo': handle_echo,
-                'refresh_queue': handle_refresh_queue,
+                "echo": handle_echo,
+                "refresh_queue": handle_refresh_queue,
             }
 
             worker = TaskWorker(connector, handlers)
 
-            worker_task = asyncio.create_task(worker.run(poll_interval=5, max_iterations=12))
+            worker_task = asyncio.create_task(
+                worker.run(poll_interval=5, max_iterations=12)
+            )
 
             await asyncio.gather(sim_task, worker_task)
 
@@ -220,7 +228,7 @@ async def main():
         await connector.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
