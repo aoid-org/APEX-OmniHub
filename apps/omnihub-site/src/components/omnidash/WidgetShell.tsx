@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Minus, Maximize2, Minimize2, X, GripHorizontal } from 'lucide-react';
 import { useOmniDash, type WidgetConfig } from '../../stores/omniDashStore';
 import { GPU_STYLE, SPRING_NATURAL } from '../../lib/motionPresets';
+import { ModuleRenderer } from './ModuleRenderer';
 
 // ============================================================================
 // Component
@@ -218,18 +219,7 @@ export const WidgetShell = memo(function WidgetShell({ widget }: WidgetShellProp
           {/* ── Content Area ── */}
           <div className="widget-content">
             <div className="widget-content-inner">
-              {/* Widget content is rendered by OmniCanvas via component registry */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '100%',
-                color: 'var(--od-text-tertiary)',
-                fontSize: 13,
-                fontWeight: 600,
-              }}>
-                {widget.component}
-              </div>
+              <ModuleRenderer moduleKey={widget.component} onClose={handleClose} />
             </div>
           </div>
 
