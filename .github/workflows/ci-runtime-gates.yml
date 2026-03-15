@@ -253,7 +253,7 @@ jobs:
         run: |
           # Install browsers without system dependencies
           # GitHub Actions runners already have most required libraries
-          npx playwright install chromium
+          npx playwright install chromium firefox webkit
 
           # Verify installation
           npx playwright --version
@@ -361,7 +361,7 @@ jobs:
         run: |
           # Install browsers without system dependencies
           # GitHub Actions runners already have most required libraries
-          npx playwright install chromium
+          npx playwright install chromium firefox webkit
 
           # Verify installation
           npx playwright --version

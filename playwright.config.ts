@@ -30,9 +30,36 @@ export default defineConfig({
   },
 
   projects: [
+    // ── Desktop ───────────────────────────────────────────────────────────
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+
+    // ── Mobile — primary OmniLink targets ────────────────────────────────
+    {
+      name: 'mobile-chrome',
+      use: {
+        ...devices['Pixel 7'],
+        viewport: { width: 393, height: 851 },
+      },
+    },
+    {
+      name: 'mobile-safari',
+      use: {
+        ...devices['iPhone 14'],
+        viewport: { width: 390, height: 844 },
+      },
+    },
+
+    // ── Tablet ────────────────────────────────────────────────────────────
+    {
+      name: 'tablet-ipad',
+      use: { ...devices['iPad Pro 11'] },
     },
   ],
 
