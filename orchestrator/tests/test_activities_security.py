@@ -28,16 +28,22 @@ def mock_dependencies():
         "numpy": MagicMock(),
     }
 
-    # Ensure activities.tools is re-imported with mocks
-    if "activities.tools" in sys.modules:
-        del sys.modules["activities.tools"]
+    # Snapshot ALL activities.* modules so we can restore them after the test
+    saved_modules = {k: v for k, v in sys.modules.items() if k.startswith("activities")}
+
+    # Remove activities.tools so it gets freshly imported under our mocked deps
+    for key in list(sys.modules):
+        if key.startswith("activities"):
+            del sys.modules[key]
 
     with patch.dict(sys.modules, modules):
         yield
 
-    # Cleanup: remove activities.tools so subsequent tests re-import it with real deps
-    if "activities.tools" in sys.modules:
-        del sys.modules["activities.tools"]
+    # Restore the original module references to prevent downstream test pollution
+    for key in list(sys.modules):
+        if key.startswith("activities"):
+            del sys.modules[key]
+    sys.modules.update(saved_modules)
 
 
 @pytest.mark.asyncio
@@ -75,7 +81,7 @@ async def test_call_webhook_valid_url():
         mock_client = mock_client_cls.return_value.__aenter__.return_value
         mock_client.request.return_value = MagicMock(status_code=200, text="OK")
 
-        with patch("security.ssrf.validate_url_with_dns_pin_async") as mock_validate:
+        with patch("activities.tools.validate_url_with_dns_pin_async") as mock_validate:
             mock_validate.return_value = ValidatedURL(
                 original_url="https://example.com/webhook",
                 resolved_ip="resolved-target.example",
@@ -116,7 +122,7 @@ async def test_call_webhook_redirects_not_followed():
             headers={"Location": "http://127.0.0.1/internal"},  # NOSONAR
         )
 
-        with patch("security.ssrf.validate_url_with_dns_pin_async") as mock_validate:
+        with patch("activities.tools.validate_url_with_dns_pin_async") as mock_validate:
             mock_validate.return_value = ValidatedURL(
                 original_url="https://example.com/redirect",
                 resolved_ip="resolved-target.example",
