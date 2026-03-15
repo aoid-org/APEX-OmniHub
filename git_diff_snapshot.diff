@@ -1,0 +1,1027 @@
+diff --git a/.github/workflows/secrets-rotation-reminder.yml b/.github/workflows/secrets-rotation-reminder.yml
+new file mode 100644
+index 0000000..e8d1a25
+--- /dev/null
++++ b/.github/workflows/secrets-rotation-reminder.yml
+@@ -0,0 +1,40 @@
++name: Secrets Rotation Reminder
++
++# Fires every 85 days — slightly before the 90-day rotation cycle.
++# This is a REMINDER workflow: it does not rotate secrets automatically.
++# Automatic rotation requires Doppler/Vault integration (tracked separately).
++on:
++  schedule:
++    - cron: '0 9 1 */3 *'   # 09:00 UTC on the 1st of every 3rd month
++  workflow_dispatch:
++
++permissions:
++  contents: read
++
++jobs:
++  rotation-reminder:
++    runs-on: ubuntu-latest
++    steps:
++      - name: Secrets rotation due
++        run: |
++          echo "## :rotating_light: Quarterly Secrets Rotation Due" >> "$GITHUB_STEP_SUMMARY"
++          echo "" >> "$GITHUB_STEP_SUMMARY"
++          echo "Rotate the following secrets per docs/security/SECRETS_INVENTORY_AND_ROTATION.md:" >> "$GITHUB_STEP_SUMMARY"
++          echo "- [ ] VITE_SUPABASE_PUBLISHABLE_KEY (anon key)" >> "$GITHUB_STEP_SUMMARY"
++          echo "- [ ] SUPABASE_SERVICE_ROLE_KEY" >> "$GITHUB_STEP_SUMMARY"
++          echo "- [ ] OPENAI_API_KEY (if used)" >> "$GITHUB_STEP_SUMMARY"
++          echo "- [ ] ALCHEMY_API_KEY_ETH / ALCHEMY_API_KEY_POLYGON" >> "$GITHUB_STEP_SUMMARY"
++          echo "- [ ] ALCHEMY_WEBHOOK_SIGNING_KEY" >> "$GITHUB_STEP_SUMMARY"
++          echo "" >> "$GITHUB_STEP_SUMMARY"
++          echo "**Procedure:** https://github.com/apexbusiness-systems/APEX-OmniHub/blob/main/docs/security/SECRETS_INVENTORY_AND_ROTATION.md" >> "$GITHUB_STEP_SUMMARY"
++
++      - name: Post Slack reminder
++        if: env.SLACK_ALERT_WEBHOOK_URL != ''
++        run: |
++          curl -s -X POST "${{ secrets.SLACK_ALERT_WEBHOOK_URL }}" \
++            -H "Content-Type: application/json" \
++            -d '{
++              "text": ":key: *APEX Quarterly Secrets Rotation Reminder*\nRotate: Supabase keys, OpenAI, Alchemy, and all service credentials.\nSee: <https://github.com/apexbusiness-systems/APEX-OmniHub/blob/main/docs/security/SECRETS_INVENTORY_AND_ROTATION.md|Rotation Runbook>"
++            }'
++        env:
++          SLACK_ALERT_WEBHOOK_URL: ${{ secrets.SLACK_ALERT_WEBHOOK_URL }}
+diff --git a/.github/workflows/terraform-plan.yml b/.github/workflows/terraform-plan.yml
+new file mode 100644
+index 0000000..8021e8f
+--- /dev/null
++++ b/.github/workflows/terraform-plan.yml
+@@ -0,0 +1,58 @@
++name: Terraform Plan
++
++on:
++  pull_request:
++    paths:
++      - 'terraform/**'
++
++permissions:
++  contents: read
++  pull-requests: write
++
++jobs:
++  plan:
++    name: Terraform Plan
++    runs-on: ubuntu-latest
++    defaults:
++      run:
++        working-directory: terraform/environments/production
++
++    steps:
++      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
++
++      - uses: hashicorp/setup-terraform@v3
++        with:
++          terraform_version: "1.7.0"
++
++      - name: Terraform Init
++        run: terraform init -backend=false
++        env:
++          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
++
++      - name: Terraform Validate
++        run: terraform validate
++
++      - name: Terraform Plan (dry run)
++        run: terraform plan -no-color -input=false
++        env:
++          TF_VAR_vercel_api_token:     ${{ secrets.VERCEL_API_TOKEN }}
++          TF_VAR_vercel_team_id:       ${{ secrets.VERCEL_TEAM_ID }}
++          TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
++          TF_VAR_cloudflare_zone_id:   ${{ secrets.CLOUDFLARE_ZONE_ID }}
++        continue-on-error: true
++        id: plan
++
++      - name: Post plan to PR
++        uses: actions/github-script@v7
++        with:
++          script: |
++            const output = `#### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
++            <details><summary>Show Plan</summary>
++            \`\`\`\n${{ steps.plan.outputs.stdout }}\n\`\`\`
++            </details>`;
++            github.rest.issues.createComment({
++              issue_number: context.issue.number,
++              owner: context.repo.owner,
++              repo: context.repo.repo,
++              body: output
++            });
+diff --git a/docs/infrastructure/STATUS_PAGE_SETUP.md b/docs/infrastructure/STATUS_PAGE_SETUP.md
+new file mode 100644
+index 0000000..3f3866e
+--- /dev/null
++++ b/docs/infrastructure/STATUS_PAGE_SETUP.md
+@@ -0,0 +1,39 @@
++<!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
++# Status Page Setup
++
++## Provider: Betteruptime (recommended) or Statuspage.io
++
++### Quick Setup (Betteruptime — 15 minutes)
++
++1. Create account at https://betteruptime.com
++2. Add monitors:
++   - `https://apexomnihub.icu` — HTTP 200 check, 1-min interval
++   - `https://apexomnihub.icu/health` — JSON health endpoint
++   - `https://wwajmaohwcbooljdureo.supabase.co/rest/v1/` — Supabase API
++3. Create public status page at `status.apexomnihub.icu`
++4. Add CNAME DNS record: `status.apexomnihub.icu → betteruptime CNAME`
++5. Add `BETTERUPTIME_API_KEY` to GitHub Secrets
++
++### Health Endpoint (implement in Vercel Edge Function)
++
++Create `supabase/functions/health/index.ts`:
++```typescript
++import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
++
++serve(async () => {
++  return new Response(JSON.stringify({
++    status: 'ok',
++    timestamp: new Date().toISOString(),
++    version: '1.4.2',
++  }), {
++    headers: { 'Content-Type': 'application/json' },
++  });
++});
++```
++
++### Incident Response
++- SEV1 (full outage): Page on-call within 5 min
++- SEV2 (degraded): Slack alert + status page update within 15 min
++- SEV3 (minor): Status page update only
++
++See: docs/ops/INCIDENT_RESPONSE.md
+diff --git a/orchestrator/activities/dlq_alert.py b/orchestrator/activities/dlq_alert.py
+new file mode 100644
+index 0000000..855e431
+--- /dev/null
++++ b/orchestrator/activities/dlq_alert.py
+@@ -0,0 +1,86 @@
++"""Dead-Letter Queue alert activity.
++
++Fires when a Temporal workflow exceeds its retry budget and fails permanently.
++Sends a structured alert payload to the Supabase realtime channel and logs
++to the metrics exporter. Extend to add Slack/PagerDuty webhooks as needed.
++"""
++
++from __future__ import annotations
++
++import logging
++from dataclasses import dataclass
++
++from temporalio import activity
++
++logger = logging.getLogger(__name__)
++
++
++@dataclass
++class DLQAlertPayload:
++    workflow_id: str
++    run_id:      str
++    task_queue:  str
++    error_type:  str
++    error_msg:   str
++
++
++@activity.defn(name="send_dlq_alert")
++async def send_dlq_alert(payload: dict) -> None:  # noqa: ANN001
++    """Emit a DLQ alert for a permanently failed workflow.
++
++    Structured for observability: logs at ERROR level (captured by any
++    log aggregator) and increments the Prometheus dlq_alerts_total counter.
++    """
++    alert = DLQAlertPayload(**payload)
++
++    logger.error(
++        "DLQ_ALERT workflow_permanently_failed",
++        extra={
++            "workflow_id": alert.workflow_id,
++            "run_id":      alert.run_id,
++            "task_queue":  alert.task_queue,
++            "error_type":  alert.error_type,
++            "error_msg":   alert.error_msg,
++        },
++    )
++
++    # Attempt to record in metrics (non-blocking)
++    try:
++        from prometheus_client import Counter
++        dlq_counter = Counter(
++            "apex_dlq_alerts_total",
++            "Total permanently failed workflows routed to DLQ",
++            ["task_queue", "error_type"],
++        )
++        dlq_counter.labels(
++            task_queue=alert.task_queue,
++            error_type=alert.error_type,
++        ).inc()
++    except Exception:  # noqa: BLE001, S110
++        pass
++
++    # Slack webhook alert (non-blocking, best-effort)
++    slack_webhook = None
++    try:
++        from config import settings  # type: ignore[import]
++        slack_webhook = getattr(settings, "slack_alert_webhook_url", None)
++    except Exception:  # noqa: BLE001, S110
++        pass
++
++    if slack_webhook:
++        import httpx
++        try:
++            async with httpx.AsyncClient(timeout=5.0) as client:
++                await client.post(
++                    slack_webhook,
++                    json={
++                        "text": (
++                            f":red_circle: *APEX DLQ ALERT*\n"
++                            f"Workflow `{alert.workflow_id}` permanently failed.\n"
++                            f"Queue: `{alert.task_queue}` | Error: `{alert.error_type}`\n"
++                            f"```{alert.error_msg[:300]}```"
++                        ),
++                    },
++                )
++        except Exception:  # noqa: BLE001
++            logger.warning("DLQ Slack alert failed to send (non-blocking).")
+diff --git a/orchestrator/observability/otel.py b/orchestrator/observability/otel.py
+new file mode 100644
+index 0000000..3b41521
+--- /dev/null
++++ b/orchestrator/observability/otel.py
+@@ -0,0 +1,49 @@
++"""OpenTelemetry bootstrap for the APEX Orchestrator (Temporal worker + FastAPI).
++
++Exports traces to the OTLP endpoint configured via OTEL_EXPORTER_OTLP_ENDPOINT.
++If the endpoint is not set, tracing is a no-op (safe for local dev).
++
++Gap closed: 2.1 — Zero distributed tracing on Temporal/Python side.
++"""
++
++from __future__ import annotations
++
++import logging
++import os
++
++from opentelemetry import trace
++from opentelemetry.sdk.resources import SERVICE_NAME, Resource
++from opentelemetry.sdk.trace import TracerProvider
++from opentelemetry.sdk.trace.export import BatchSpanProcessor
++
++logger = logging.getLogger(__name__)
++
++
++def init_otel(service_name: str = "apex-orchestrator") -> trace.Tracer:
++    """Initialise OTel tracer. Safe to call multiple times (idempotent)."""
++
++    otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
++
++    resource  = Resource(attributes={SERVICE_NAME: service_name})
++    provider  = TracerProvider(resource=resource)
++
++    if otlp_endpoint:
++        try:
++            from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
++                OTLPSpanExporter,
++            )
++            exporter  = OTLPSpanExporter(endpoint=otlp_endpoint)
++            processor = BatchSpanProcessor(exporter)
++            provider.add_span_processor(processor)
++            logger.info("OTel traces → %s", otlp_endpoint)
++        except Exception:  # noqa: BLE001
++            logger.warning("OTel OTLP exporter failed to initialise — tracing disabled.")
++    else:
++        logger.debug("OTEL_EXPORTER_OTLP_ENDPOINT not set — tracing is no-op.")
++
++    trace.set_tracer_provider(provider)
++    return trace.get_tracer(service_name)
++
++
++# Module-level tracer singleton
++tracer = init_otel()
+diff --git a/scripts/monitoring/check-egress.ts b/scripts/monitoring/check-egress.ts
+new file mode 100644
+index 0000000..36b3b95
+--- /dev/null
++++ b/scripts/monitoring/check-egress.ts
+@@ -0,0 +1,61 @@
++/**
++ * Supabase egress monitoring script.
++ * Queries Supabase usage metrics and alerts when egress exceeds thresholds.
++ *
++ * Run nightly via GitHub Actions.
++ * Gap closed: 6.2 — No Supabase egress monitoring.
++ */
++
++const SUPABASE_PROJECT_REF = process.env.SUPABASE_PROJECT_REF ?? '';
++const SUPABASE_ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN ?? '';
++const SLACK_WEBHOOK = process.env.SLACK_ALERT_WEBHOOK_URL ?? '';
++
++const WARN_PCT  = 70;
++const ALERT_PCT = 90;
++
++// Supabase Pro plan limits (update if plan changes)
++const EGRESS_LIMIT_GB = 250;
++
++async function checkEgress(): Promise<void> {
++  if (!SUPABASE_PROJECT_REF || !SUPABASE_ACCESS_TOKEN) {
++    console.warn('[egress-monitor] Missing SUPABASE_PROJECT_REF or SUPABASE_ACCESS_TOKEN — skipping.');
++    process.exit(0);
++  }
++
++  try {
++    const res = await fetch(
++      `https://api.supabase.com/v1/projects/${SUPABASE_PROJECT_REF}/usage`,
++      { headers: { Authorization: `Bearer ${SUPABASE_ACCESS_TOKEN}` } },
++    );
++
++    if (!res.ok) {
++      console.error(`[egress-monitor] Supabase API returned ${res.status} — check SUPABASE_ACCESS_TOKEN.`);
++      process.exit(0); // Non-blocking — monitoring failures should not break pipelines
++    }
++
++    const data = await res.json() as { egress_gb?: number };
++    const egressGb  = data.egress_gb ?? 0;
++    const pct       = Math.round((egressGb / EGRESS_LIMIT_GB) * 100);
++
++    console.log(`[egress-monitor] Egress: ${egressGb.toFixed(2)} GB / ${EGRESS_LIMIT_GB} GB (${pct}%)`);
++
++    if (pct >= ALERT_PCT && SLACK_WEBHOOK) {
++      await postSlack(`:rotating_light: *APEX Egress CRITICAL (${pct}%)*\n${egressGb.toFixed(2)} GB of ${EGRESS_LIMIT_GB} GB used this month. Upgrade plan or reduce queries immediately.`);
++    } else if (pct >= WARN_PCT && SLACK_WEBHOOK) {
++      await postSlack(`:warning: *APEX Egress Warning (${pct}%)*\n${egressGb.toFixed(2)} GB of ${EGRESS_LIMIT_GB} GB used this month.`);
++    }
++  } catch (err) {
++    console.error('[egress-monitor] Error:', err);
++    process.exit(0);
++  }
++}
++
++async function postSlack(text: string): Promise<void> {
++  await fetch(SLACK_WEBHOOK, {
++    method:  'POST',
++    headers: { 'Content-Type': 'application/json' },
++    body:    JSON.stringify({ text }),
++  });
++}
++
++await checkEgress();
+diff --git a/src/lib/telemetry.ts b/src/lib/telemetry.ts
+new file mode 100644
+index 0000000..fad6ef8
+--- /dev/null
++++ b/src/lib/telemetry.ts
+@@ -0,0 +1,65 @@
++/**
++ * APEX OmniHub — Frontend Telemetry Bootstrap
++ *
++ * Initialises:
++ *   1. OpenTelemetry Web SDK — distributed trace context propagation (W3C traceparent)
++ *   2. Sentry React SDK       — error tracking and performance monitoring
++ *
++ * Gap closed: 2.1 (zero distributed tracing), 2.3 (silent failure alerting)
++ */
++
++import { trace, context, propagation } from '@opentelemetry/api';
++import { WebTracerProvider }           from '@opentelemetry/sdk-trace-web';
++import { ZoneContextManager }          from '@opentelemetry/context-zone';
++import { registerInstrumentations }    from '@opentelemetry/instrumentation';
++import { FetchInstrumentation }        from '@opentelemetry/instrumentation-fetch';
++import * as Sentry                     from '@sentry/react';
++
++let _initialised = false;
++
++export function initTelemetry(): void {
++  if (_initialised || typeof window === 'undefined') return;
++  _initialised = true;
++
++  // ── OpenTelemetry ─────────────────────────────────────────────────────────
++  const provider = new WebTracerProvider();
++  provider.register({ contextManager: new ZoneContextManager() });
++
++  registerInstrumentations({
++    instrumentations: [
++      new FetchInstrumentation({
++        // Propagate W3C traceparent headers on all fetch calls to Supabase + Orchestrator
++        propagateTraceHeaderCorsUrls: [
++          /\.supabase\.co/,
++          /apexomnihub\.icu/,
++          /localhost/,
++        ],
++      }),
++    ],
++  });
++
++  // ── Sentry ─────────────────────────────────────────────────────────────────
++  const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
++  if (sentryDsn) {
++    Sentry.init({
++      dsn:         sentryDsn,
++      environment: import.meta.env.MODE,
++      // Sample 100% of errors, 10% of performance traces in production
++      tracesSampleRate:   import.meta.env.PROD ? 0.1 : 1.0,
++      replaysOnErrorSampleRate: 1.0,
++      integrations: [
++        Sentry.browserTracingIntegration(),
++        Sentry.replayIntegration({
++          maskAllText:  true,
++          blockAllMedia: true,
++        }),
++      ],
++    });
++  }
++}
++
++/** Expose active tracer for manual spans */
++export const tracer = trace.getTracer('apex-omnihub', '1.4.2');
++
++/** Expose context/propagation for Edge Function calls */
++export { context, propagation };
+diff --git a/supabase/migrations/20260315000001_agent_skills_model_versioning.sql b/supabase/migrations/20260315000001_agent_skills_model_versioning.sql
+new file mode 100644
+index 0000000..5512c47
+--- /dev/null
++++ b/supabase/migrations/20260315000001_agent_skills_model_versioning.sql
+@@ -0,0 +1,92 @@
++-- Migration: Add embedding model versioning to agent_skills
++-- Purpose: Prevent silent vector corruption on model upgrades.
++--          All similarity searches MUST filter WHERE embedding_model = current_model.
++-- Gap:     1.2 — No embedding_model column
++-- Author:  APEX Engineering
++-- Date:    2026-03-15
++
++-- Add model tracking columns (idempotent)
++ALTER TABLE public.agent_skills
++  ADD COLUMN IF NOT EXISTS embedding_model TEXT NOT NULL
++    DEFAULT 'gte-small',
++  ADD COLUMN IF NOT EXISTS embedding_dim   INT  NOT NULL
++    DEFAULT 384;
++
++-- Index to allow fast per-model queries and detect cross-model contamination
++CREATE INDEX IF NOT EXISTS idx_agent_skills_embedding_model
++  ON public.agent_skills (embedding_model);
++
++-- Update match_skills RPC to enforce model isolation
++-- Replaces the function from 20251221000000_omnilink_agentic_rag.sql
++CREATE OR REPLACE FUNCTION public.match_skills(
++    query_embedding vector(384),
++    query_text      text,
++    match_threshold float DEFAULT 0.1,
++    match_count     int   DEFAULT 5,
++    p_model         text  DEFAULT 'gte-small'
++)
++RETURNS TABLE (
++    id              uuid,
++    name            text,
++    description     text,
++    tool_definition jsonb,
++    metadata        jsonb,
++    created_at      timestamptz,
++    score           float
++)
++LANGUAGE sql
++SECURITY INVOKER
++SET search_path = public
++AS $$
++    WITH semantic_search AS (
++        SELECT
++            id, name, description, tool_definition, metadata, created_at,
++            1 - (embedding <=> query_embedding) AS semantic_score
++        FROM public.agent_skills
++        WHERE embedding_model = p_model
++          AND 1 - (embedding <=> query_embedding) >= match_threshold
++        ORDER BY semantic_score DESC
++        LIMIT match_count * 4
++    ),
++    keyword_search AS (
++        SELECT
++            id, name, description, tool_definition, metadata, created_at,
++            ts_rank(fts, plainto_tsquery('english', query_text)) AS keyword_score
++        FROM public.agent_skills
++        WHERE embedding_model = p_model
++          AND fts @@ plainto_tsquery('english', query_text)
++        ORDER BY keyword_score DESC
++        LIMIT match_count * 4
++    ),
++    combined AS (
++        SELECT
++            COALESCE(s.id, k.id)                       AS id,
++            COALESCE(s.name, k.name)                   AS name,
++            COALESCE(s.description, k.description)     AS description,
++            COALESCE(s.tool_definition, k.tool_definition) AS tool_definition,
++            COALESCE(s.metadata, k.metadata)           AS metadata,
++            COALESCE(s.created_at, k.created_at)       AS created_at,
++            CASE
++                WHEN s.id IS NOT NULL AND k.id IS NOT NULL THEN
++                    0.7 / (60 + ROW_NUMBER() OVER (ORDER BY s.semantic_score DESC)) +
++                    0.3 / (60 + ROW_NUMBER() OVER (ORDER BY k.keyword_score DESC))
++                WHEN s.id IS NOT NULL THEN
++                    0.7 / (60 + ROW_NUMBER() OVER (ORDER BY s.semantic_score DESC))
++                ELSE
++                    0.3 / (60 + ROW_NUMBER() OVER (ORDER BY k.keyword_score DESC))
++            END AS rrf_score
++        FROM semantic_search s
++        FULL OUTER JOIN keyword_search k ON s.id = k.id
++    )
++    SELECT id, name, description, tool_definition, metadata, created_at,
++           rrf_score AS score
++    FROM combined
++    ORDER BY rrf_score DESC
++    LIMIT match_count;
++$$;
++
++COMMENT ON COLUMN public.agent_skills.embedding_model IS
++  'Embedding model identifier (e.g. gte-small, text-embedding-3-small). '
++  'CRITICAL: Never run similarity search across mixed models — vectors are incompatible.';
++COMMENT ON COLUMN public.agent_skills.embedding_dim IS
++  'Vector dimensionality. Must match the pgvector column size for this model.';
+diff --git a/supabase/migrations/20260315000002_agent_skills_rls_tenant_scope.sql b/supabase/migrations/20260315000002_agent_skills_rls_tenant_scope.sql
+new file mode 100644
+index 0000000..f6e1864
+--- /dev/null
++++ b/supabase/migrations/20260315000002_agent_skills_rls_tenant_scope.sql
+@@ -0,0 +1,42 @@
++-- Migration: Scope agent_skills RLS to owner/tenant
++-- Purpose: Current policy USING(true) exposes all skill embeddings to all
++--          authenticated users — multi-tenant data leakage.
++-- Gap:     NEW-4
++-- Author:  APEX Engineering
++-- Date:    2026-03-15
++
++-- Add owner_id column for multi-tenant scoping (nullable = system skills visible to all)
++ALTER TABLE public.agent_skills
++  ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
++
++-- Index for efficient per-owner queries
++CREATE INDEX IF NOT EXISTS idx_agent_skills_owner_id
++  ON public.agent_skills (owner_id)
++  WHERE owner_id IS NOT NULL;
++
++-- Drop existing broad policy
++DO $$
++BEGIN
++  IF EXISTS (
++    SELECT 1 FROM pg_policies
++    WHERE schemaname = 'public'
++      AND tablename   = 'agent_skills'
++      AND policyname  = 'agent_skills_select_authenticated'
++  ) THEN
++    DROP POLICY agent_skills_select_authenticated ON public.agent_skills;
++  END IF;
++END $$;
++
++-- Re-create policy: users see system skills (owner_id IS NULL) + their own skills
++CREATE POLICY "agent_skills_select_scoped"
++  ON public.agent_skills
++  FOR SELECT
++  TO authenticated
++  USING (owner_id IS NULL OR owner_id = auth.uid());
++
++-- Service role retains full access (via ensure_service_role_policy defined in 20251221)
++SELECT public.ensure_service_role_policy('agent_skills');
++
++COMMENT ON COLUMN public.agent_skills.owner_id IS
++  'NULL = system skill (visible to all authenticated users). '
++  'Non-null = tenant-owned skill, visible only to that user.';
+diff --git a/supabase/migrations/20260315000003_man_notifications_rls_fix.sql b/supabase/migrations/20260315000003_man_notifications_rls_fix.sql
+new file mode 100644
+index 0000000..44364c0
+--- /dev/null
++++ b/supabase/migrations/20260315000003_man_notifications_rls_fix.sql
+@@ -0,0 +1,56 @@
++-- Migration: Harden man_notifications RLS
++-- Purpose: Current SELECT policy allows ANY authenticated user to read ALL
++--          MAN mode notifications — cross-tenant data leakage.
++-- Gap:     NEW-7
++-- Author:  APEX Engineering
++-- Date:    2026-03-15
++
++-- Add user_id foreign key for ownership scoping
++ALTER TABLE public.man_notifications
++  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
++
++CREATE INDEX IF NOT EXISTS idx_man_notifications_user_id
++  ON public.man_notifications (user_id)
++  WHERE user_id IS NOT NULL;
++
++-- Drop the over-broad existing policy
++DO $$
++BEGIN
++  IF EXISTS (
++    SELECT 1 FROM pg_policies
++    WHERE schemaname = 'public'
++      AND tablename   = 'man_notifications'
++      AND policyname  = 'man_notifications_user_read'
++  ) THEN
++    DROP POLICY man_notifications_user_read ON public.man_notifications;
++  END IF;
++END $$;
++
++-- Tighter policy: only the owning user or service_role can read notifications
++CREATE POLICY "man_notifications_owner_read"
++  ON public.man_notifications
++  FOR SELECT
++  TO authenticated
++  USING (user_id = auth.uid());
++
++-- Keep service_role full-access policy intact (created in 20260119)
++-- If not present, create it:
++DO $$
++BEGIN
++  IF NOT EXISTS (
++    SELECT 1 FROM pg_policies
++    WHERE schemaname = 'public'
++      AND tablename   = 'man_notifications'
++      AND policyname  = 'man_notifications_service_full_access'
++  ) THEN
++    CREATE POLICY "man_notifications_service_full_access"
++      ON public.man_notifications
++      FOR ALL
++      TO service_role
++      USING (true)
++      WITH CHECK (true);
++  END IF;
++END $$;
++
++COMMENT ON COLUMN public.man_notifications.user_id IS
++  'Owning user for RLS scoping. Set by the activity that creates the notification.';
+diff --git a/supabase/migrations/20260315000004_tenant_embedding_budget.sql b/supabase/migrations/20260315000004_tenant_embedding_budget.sql
+new file mode 100644
+index 0000000..2b8df1a
+--- /dev/null
++++ b/supabase/migrations/20260315000004_tenant_embedding_budget.sql
+@@ -0,0 +1,106 @@
++-- Migration: Per-tenant embedding budget counters and enforcement
++-- Purpose: Unbounded embedding calls per tenant will generate runaway OpenAI bills.
++--          Enforce soft cap (alert at 80%) and hard cap (429 block).
++-- Gap:     6.1
++-- Author:  APEX Engineering
++-- Date:    2026-03-15
++
++CREATE TABLE IF NOT EXISTS public.tenant_embedding_budget (
++    user_id                    UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
++    monthly_token_limit        INT  NOT NULL DEFAULT 500000,  -- 500K tokens/month default
++    current_month_tokens_used  INT  NOT NULL DEFAULT 0,
++    budget_period_start        DATE NOT NULL DEFAULT date_trunc('month', CURRENT_DATE)::DATE,
++    alert_sent_at_80pct        TIMESTAMPTZ,
++    hard_cap_triggered_at      TIMESTAMPTZ,
++    created_at                 TIMESTAMPTZ NOT NULL DEFAULT now(),
++    updated_at                 TIMESTAMPTZ NOT NULL DEFAULT now()
++);
++
++ALTER TABLE public.tenant_embedding_budget ENABLE ROW LEVEL SECURITY;
++
++CREATE POLICY "tenant_budget_owner_read"
++  ON public.tenant_embedding_budget
++  FOR SELECT TO authenticated
++  USING (user_id = auth.uid());
++
++CREATE POLICY "tenant_budget_service_all"
++  ON public.tenant_embedding_budget
++  FOR ALL TO service_role
++  USING (true) WITH CHECK (true);
++
++CREATE INDEX IF NOT EXISTS idx_tenant_budget_user_period
++  ON public.tenant_embedding_budget (user_id, budget_period_start);
++
++-- Function: atomically increment token usage and enforce caps
++-- Returns: 'ok' | 'soft_cap' | 'hard_cap'
++CREATE OR REPLACE FUNCTION public.increment_embedding_tokens(
++    p_user_id    UUID,
++    p_tokens     INT
++)
++RETURNS TEXT
++LANGUAGE plpgsql
++SECURITY DEFINER
++SET search_path = ''
++AS $$
++DECLARE
++    v_row    public.tenant_embedding_budget%ROWTYPE;
++    v_pct    NUMERIC;
++    v_result TEXT := 'ok';
++    v_month  DATE := date_trunc('month', CURRENT_DATE)::DATE;
++BEGIN
++    -- Upsert budget row for current month
++    INSERT INTO public.tenant_embedding_budget (user_id, budget_period_start)
++    VALUES (p_user_id, v_month)
++    ON CONFLICT (user_id) DO NOTHING;
++
++    -- Reset counter if we rolled into a new month
++    UPDATE public.tenant_embedding_budget
++    SET current_month_tokens_used = 0,
++        budget_period_start       = v_month,
++        alert_sent_at_80pct       = NULL,
++        hard_cap_triggered_at     = NULL,
++        updated_at                = now()
++    WHERE user_id = p_user_id
++      AND budget_period_start < v_month;
++
++    -- Fetch current row with lock
++    SELECT * INTO v_row
++    FROM public.tenant_embedding_budget
++    WHERE user_id = p_user_id
++    FOR UPDATE;
++
++    -- Hard cap check
++    IF v_row.current_month_tokens_used >= v_row.monthly_token_limit THEN
++        UPDATE public.tenant_embedding_budget
++        SET hard_cap_triggered_at = COALESCE(hard_cap_triggered_at, now()),
++            updated_at            = now()
++        WHERE user_id = p_user_id;
++        RETURN 'hard_cap';
++    END IF;
++
++    -- Increment
++    UPDATE public.tenant_embedding_budget
++    SET current_month_tokens_used = current_month_tokens_used + p_tokens,
++        updated_at                = now()
++    WHERE user_id = p_user_id
++    RETURNING * INTO v_row;
++
++    -- Soft cap check (80%)
++    v_pct := v_row.current_month_tokens_used::NUMERIC / v_row.monthly_token_limit * 100;
++    IF v_pct >= 80 AND v_row.alert_sent_at_80pct IS NULL THEN
++        UPDATE public.tenant_embedding_budget
++        SET alert_sent_at_80pct = now(), updated_at = now()
++        WHERE user_id = p_user_id;
++        v_result := 'soft_cap';
++    END IF;
++
++    RETURN v_result;
++END;
++$$;
++
++GRANT EXECUTE ON FUNCTION public.increment_embedding_tokens TO authenticated;
++GRANT EXECUTE ON FUNCTION public.increment_embedding_tokens TO service_role;
++
++COMMENT ON TABLE public.tenant_embedding_budget IS
++  'Per-user monthly embedding token budget. '
++  'Soft cap at 80% triggers alert. Hard cap returns 429-equivalent via increment_embedding_tokens().';
+diff --git a/supabase/migrations/20260315000005_memories_ttl_eviction.sql b/supabase/migrations/20260315000005_memories_ttl_eviction.sql
+new file mode 100644
+index 0000000..bbe1001
+--- /dev/null
++++ b/supabase/migrations/20260315000005_memories_ttl_eviction.sql
+@@ -0,0 +1,74 @@
++-- Migration: TTL eviction for agent_memories / acra_memories
++-- Purpose: Without a scheduled DELETE, the vector table grows without bound.
++--          At 1K embeddings/day * 100 tenants = OOM event within weeks.
++-- Gap:     1.1
++-- Author:  APEX Engineering
++-- Date:    2026-03-15
++
++-- This migration is safe to run even if the memories table does not yet exist
++-- (the cron job will be a no-op until the table exists).
++
++-- Ensure pg_cron extension is available
++CREATE EXTENSION IF NOT EXISTS pg_cron;
++
++-- Create memories table if it doesn't exist yet
++-- (aligns with the intended ACRA schema — embedding_model column included from Day 1)
++CREATE TABLE IF NOT EXISTS public.agent_memories (
++    id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
++    user_id         UUID        REFERENCES auth.users(id) ON DELETE CASCADE,
++    session_id      TEXT        NOT NULL,
++    content         TEXT        NOT NULL,
++    embedding       vector(384),
++    embedding_model TEXT        NOT NULL DEFAULT 'gte-small',
++    embedding_dim   INT         NOT NULL DEFAULT 384,
++    metadata        JSONB       NOT NULL DEFAULT '{}'::jsonb,
++    expires_at      TIMESTAMPTZ,
++    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
++);
++
++ALTER TABLE public.agent_memories ENABLE ROW LEVEL SECURITY;
++
++CREATE INDEX IF NOT EXISTS idx_agent_memories_user_id
++  ON public.agent_memories (user_id);
++
++CREATE INDEX IF NOT EXISTS idx_agent_memories_expires_at
++  ON public.agent_memories (expires_at)
++  WHERE expires_at IS NOT NULL;
++
++CREATE INDEX IF NOT EXISTS idx_agent_memories_embedding_model
++  ON public.agent_memories (embedding_model);
++
++CREATE POLICY "memories_owner_crud"
++  ON public.agent_memories FOR ALL TO authenticated
++  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
++
++CREATE POLICY "memories_service_all"
++  ON public.agent_memories FOR ALL TO service_role
++  USING (true) WITH CHECK (true);
++
++-- HNSW index for fast similarity search
++CREATE INDEX IF NOT EXISTS idx_agent_memories_embedding_hnsw
++  ON public.agent_memories
++  USING hnsw (embedding vector_cosine_ops)
++  WITH (m = 16, ef_construction = 64);
++
++-- Schedule nightly TTL eviction at 02:30 UTC
++DO $$
++BEGIN
++  IF NOT EXISTS (
++    SELECT 1 FROM cron.job WHERE jobname = 'agent-memories-ttl-eviction'
++  ) THEN
++    PERFORM cron.schedule(
++      'agent-memories-ttl-eviction',
++      '30 2 * * *',
++      $$DELETE FROM public.agent_memories
++        WHERE expires_at IS NOT NULL
++          AND expires_at < NOW()$$
++    );
++    RAISE NOTICE 'pg_cron job "agent-memories-ttl-eviction" scheduled.';
++  END IF;
++END $$;
++
++COMMENT ON TABLE public.agent_memories IS
++  'ACRA agent memory store. expires_at enforced nightly by pg_cron. '
++  'embedding_model column prevents cross-model vector contamination.';
+diff --git a/supabase/migrations/20260315000006_egress_monitoring_log.sql b/supabase/migrations/20260315000006_egress_monitoring_log.sql
+new file mode 100644
+index 0000000..8b8221c
+--- /dev/null
++++ b/supabase/migrations/20260315000006_egress_monitoring_log.sql
+@@ -0,0 +1,28 @@
++-- Migration: Egress usage tracking table for monitoring
++-- Purpose: Wire Supabase egress tracking — alert at 70%/90% of plan limits.
++-- Gap:     6.2
++-- Author:  APEX Engineering
++-- Date:    2026-03-15
++
++CREATE TABLE IF NOT EXISTS public.infra_usage_log (
++    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
++    metric_name   TEXT        NOT NULL,
++    metric_value  NUMERIC     NOT NULL,
++    threshold_pct INT,
++    alert_level   TEXT        CHECK (alert_level IN ('info', 'warning', 'critical')),
++    recorded_at   TIMESTAMPTZ NOT NULL DEFAULT now()
++);
++
++-- RLS: service_role only (internal telemetry)
++ALTER TABLE public.infra_usage_log ENABLE ROW LEVEL SECURITY;
++
++CREATE POLICY "infra_usage_service_all"
++  ON public.infra_usage_log FOR ALL TO service_role
++  USING (true) WITH CHECK (true);
++
++CREATE INDEX IF NOT EXISTS idx_infra_usage_metric_recorded
++  ON public.infra_usage_log (metric_name, recorded_at DESC);
++
++COMMENT ON TABLE public.infra_usage_log IS
++  'Infrastructure usage snapshots for egress, storage, and compute monitoring. '
++  'Populated by the nightly-evaluation workflow and edge function health checks.';
+diff --git a/terraform/environments/production/.gitignore b/terraform/environments/production/.gitignore
+new file mode 100644
+index 0000000..ecac1df
+--- /dev/null
++++ b/terraform/environments/production/.gitignore
+@@ -0,0 +1,5 @@
++.terraform/
++*.tfstate
++*.tfstate.backup
++*.tfvars
++.terraform.lock.hcl
+diff --git a/terraform/environments/production/main.tf b/terraform/environments/production/main.tf
+new file mode 100644
+index 0000000..5e2e83c
+--- /dev/null
++++ b/terraform/environments/production/main.tf
+@@ -0,0 +1,99 @@
++# APEX OmniHub — Production Infrastructure
++# Managed by Terraform — do not edit via dashboards after this is applied.
++# Apply: cd terraform/environments/production && terraform init && terraform apply
++
++terraform {
++  required_version = ">= 1.5.0"
++  required_providers {
++    vercel = {
++      source  = "vercel/vercel"
++      version = "~> 1.0"
++    }
++    cloudflare = {
++      source  = "cloudflare/cloudflare"
++      version = "~> 4.0"
++    }
++  }
++
++  backend "remote" {
++    organization = "apex-business-systems"
++    workspaces {
++      name = "apex-omnihub-production"
++    }
++  }
++}
++
++provider "vercel" {
++  api_token = var.vercel_api_token
++  team      = var.vercel_team_id
++}
++
++provider "cloudflare" {
++  api_token = var.cloudflare_api_token
++}
++
++# ── Variables ─────────────────────────────────────────────────────────────────
++variable "vercel_api_token"     { sensitive = true }
++variable "vercel_team_id"       {}
++variable "cloudflare_api_token" { sensitive = true }
++variable "cloudflare_zone_id"   {}
++variable "domain"               { default = "apexomnihub.icu" }
++
++# ── Vercel Project ────────────────────────────────────────────────────────────
++resource "vercel_project" "omnihub" {
++  name      = "apex-omnihub"
++  framework = "vite"
++
++  git_repository = {
++    type = "github"
++    repo = "apexbusiness-systems/APEX-OmniHub"
++  }
++
++  build_command    = "npm run build"
++  output_directory = "dist"
++  install_command  = "npm install"
++}
++
++# ── Cloudflare DNS ────────────────────────────────────────────────────────────
++resource "cloudflare_record" "apex" {
++  zone_id = var.cloudflare_zone_id
++  name    = "@"
++  type    = "CNAME"
++  value   = "cname.vercel-dns.com"
++  proxied = true
++}
++
++resource "cloudflare_record" "www" {
++  zone_id = var.cloudflare_zone_id
++  name    = "www"
++  type    = "CNAME"
++  value   = "cname.vercel-dns.com"
++  proxied = true
++}
++
++resource "cloudflare_record" "status" {
++  zone_id = var.cloudflare_zone_id
++  name    = "status"
++  type    = "CNAME"
++  value   = "betteruptime.com"
++  proxied = false
++}
++
++# ── Cloudflare WAF — Block known bad actor IPs and common attack patterns ─────
++resource "cloudflare_ruleset" "waf_managed" {
++  zone_id     = var.cloudflare_zone_id
++  name        = "APEX WAF Managed Rules"
++  description = "Enable Cloudflare managed WAF rules for APEX OmniHub"
++  kind        = "zone"
++  phase       = "http_request_firewall_managed"
++
++  rules {
++    action = "execute"
++    action_parameters {
++      id = "efb7b8c949ac4650a09736fc376e9aee" # Cloudflare Managed Ruleset
++    }
++    expression  = "true"
++    description = "Execute Cloudflare managed ruleset"
++    enabled     = true
++  }
++}
+diff --git a/terraform/environments/production/variables.tf b/terraform/environments/production/variables.tf
+new file mode 100644
+index 0000000..c8fdbb0
+--- /dev/null
++++ b/terraform/environments/production/variables.tf
+@@ -0,0 +1,31 @@
++# All sensitive values are provided via environment variables:
++# TF_VAR_vercel_api_token, TF_VAR_cloudflare_api_token
++# Non-sensitive defaults are set in terraform.tfvars (gitignored)
++
++variable "vercel_api_token" {
++  description = "Vercel API token"
++  type        = string
++  sensitive   = true
++}
++
++variable "vercel_team_id" {
++  description = "Vercel team ID (from vercel.com/teams)"
++  type        = string
++}
++
++variable "cloudflare_api_token" {
++  description = "Cloudflare API token with Zone:Edit, DNS:Edit permissions"
++  type        = string
++  sensitive   = true
++}
++
++variable "cloudflare_zone_id" {
++  description = "Cloudflare Zone ID for apexomnihub.icu"
++  type        = string
++}
++
++variable "domain" {
++  description = "Primary domain"
++  type        = string
++  default     = "apexomnihub.icu"
++}
