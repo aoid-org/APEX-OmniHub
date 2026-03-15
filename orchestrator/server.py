@@ -111,9 +111,10 @@ async def create_goal(request: GoalRequest) -> dict[str, str]:
                 logger.info(f"Workflow {workflow_id} already started")
                 # Return 409 Conflict with the workflow ID to restore request-boundary idempotency
                 from fastapi.responses import JSONResponse
+
                 return JSONResponse(
                     status_code=409,
-                    content={"workflowId": workflow_id, "status": "already_started"}
+                    content={"workflowId": workflow_id, "status": "already_started"},
                 )
             raise
 
