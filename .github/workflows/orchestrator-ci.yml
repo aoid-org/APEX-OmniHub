@@ -47,7 +47,7 @@ jobs:
 
       - name: Run linters
         run: |
-          bun run lint:py
+          python -m pip install ruff && python -m ruff check .
 
       - name: Check portability guardrails
         run: |
