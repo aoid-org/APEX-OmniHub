@@ -56,7 +56,11 @@ export type OmniDashConnectStatus = 'Live' | 'Partial';
  * Constructed by caller components from AppRegistry entries or OmniLink
  * connector records — never manually created inside the hook itself.
  */
-export interface OmniDashIntent {
+export type OmniDashIntentSource = 'module' | 'integration';
+
+export interface BaseOmniDashIntent {
+  readonly source: OmniDashIntentSource;
+
   /** Registry key for the app/connector (slugified, unique). */
   readonly appKey: string;
   /** Human-readable provider name used in modal titles. */
@@ -78,7 +82,18 @@ export interface OmniDashIntent {
   readonly contextData?: Readonly<Record<string, unknown>>;
   /** Whether the app is coming soon (UI-only gate, no modal dispatched). */
   readonly comingSoon?: boolean;
+
 }
+
+export interface InternalModuleIntent extends BaseOmniDashIntent {
+  readonly source: 'module';
+}
+
+export interface ExternalIntegrationIntent extends BaseOmniDashIntent {
+  readonly source: 'integration';
+}
+
+export type OmniDashIntent = InternalModuleIntent | ExternalIntegrationIntent;
 
 // ============================================================================
 // Internal — Deterministic Modal Type Resolution
@@ -121,7 +136,14 @@ function resolveIntentModalType(intent: OmniDashIntent): ResolvedModalDirective 
   }
 
   // Rule 4: Internal SPA app — navigate via router, no modal required
-  return { type: 'form', shouldNavigate: true };
+
+  // Rule 4: Internal SPA app — navigate via router, no modal required
+  if (intent.source === 'module') {
+    return { type: 'form', shouldNavigate: true };
+  }
+
+  // Fallback for integrations without explicit modal directive — prevent internal routing
+  return { type: 'oauth', shouldNavigate: false };
 }
 
 // ============================================================================

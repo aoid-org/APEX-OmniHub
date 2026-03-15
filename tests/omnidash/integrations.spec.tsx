@@ -2,13 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Integrations from '@/dashboard/components/Integrations';
-import type { OmniLinkIntegration } from '@/omnidash/types';
+import type { OmniLinkIntegration } from '../../src/omnidash/types';
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'u-1', email: 'admin@apex.test' } }),
 }));
 
-vi.mock('@/omnidash/omnilink-api', () => ({
+vi.mock('../../src/omnidash/omnilink-api', () => ({
   fetchOmniLinkIntegrations: vi.fn(),
   fetchOmniLinkKeys: vi.fn(),
   fetchOmniLinkEvents: vi.fn(),
@@ -31,7 +31,7 @@ import {
   fetchOmniLinkEvents,
   fetchOmniLinkIntegrations,
   fetchOmniLinkKeys,
-} from '@/omnidash/omnilink-api';
+} from '../../src/omnidash/omnilink-api';
 
 const mockedIntegrations = vi.mocked(fetchOmniLinkIntegrations);
 const mockedKeys = vi.mocked(fetchOmniLinkKeys);

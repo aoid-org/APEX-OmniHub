@@ -10,9 +10,9 @@ import {
   type OmniDashConnectStatus,
 } from '@/hooks/useOmniDashAction';
 import {
-  APP_REGISTRY,
-  type AppRegistryEntry,
-} from '../../../../../packages/core/src/registry';
+  EXTERNAL_INTEGRATIONS,
+  type ExternalIntegrationEntry,
+} from '../../../../../packages/core/src/omniBoardIntegrations';
 import type { DashboardOverviewProps, ContextItem, AppEntry } from './types';
 import { INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from './data';
 import { useAgentRecording } from './hooks/useAgentRecording';
@@ -84,14 +84,15 @@ export const DashboardOverview = memo(function DashboardOverview({
 
   const handleAppClick = useCallback(
     (app: AppEntry) => () => {
-      const entry = APP_REGISTRY.find((e: AppRegistryEntry) => e.label === app.name);
+      const entry = EXTERNAL_INTEGRATIONS.find((e: ExternalIntegrationEntry) => e.label === app.name);
       if (!entry) return;
       const intent: OmniDashIntent = {
+        source: 'integration',
         appKey: entry.key,
         provider: app.name,
         label: app.name,
         category: entry.category,
-        routePath: entry.routePath,
+        routePath: '', // Integrations do not have internal routePath
         dashboardStatus: app.status as OmniDashConnectStatus,
         comingSoon: entry.comingSoon,
       };
