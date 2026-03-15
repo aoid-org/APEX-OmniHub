@@ -130,14 +130,20 @@ class SagaContext:
         # Double check compensation validity just in case
         if compensation_activity:
             with workflow.unsafe.imports_passed_through():
-                from activities.tools import ALLOWED_TOOLS, ALLOWED_COMPENSATIONS
+                from activities.tool_registry import TOOL_REGISTRY, resolve_tool_name, get_tool_contract
 
-            if compensation_activity not in ALLOWED_TOOLS:
-                workflow.logger.error(f"Blocked invalid compensation activity: {compensation_activity}")
+            # Resolve tool
+            canonical_tool = resolve_tool_name(activity_name)
+            canonical_comp = resolve_tool_name(compensation_activity)
+
+            if not canonical_comp:
+                workflow.logger.error(f"Blocked invalid compensation activity (unknown): {compensation_activity}")
                 compensation_activity = None
-            elif activity_name not in ALLOWED_COMPENSATIONS or ALLOWED_COMPENSATIONS[activity_name] != compensation_activity:
-                workflow.logger.error(f"Blocked invalid compensation mapping: {activity_name} -> {compensation_activity}")
-                compensation_activity = None
+            elif canonical_tool and canonical_tool in TOOL_REGISTRY:
+                contract = TOOL_REGISTRY[canonical_tool]
+                if not contract.compensable or canonical_comp not in contract.compensation_tools_allowed:
+                    workflow.logger.error(f"Blocked invalid compensation mapping: {activity_name} -> {compensation_activity}")
+                    compensation_activity = None
 
         # Execute main activity
 
