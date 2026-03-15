@@ -251,18 +251,14 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
-      - name: Install Playwright browsers
+      - name: Install Playwright Chromium
         timeout-minutes: 5
         run: |
-          # Use the exact playwright binary from node_modules to guarantee version match
-          # bunx/npx can resolve a different playwright CLI version, causing browser path mismatches
-          ./node_modules/.bin/playwright install --with-deps chromium firefox webkit
-
-          # Verify installation
-          echo "Installed Playwright version: ${{ steps.playwright-version.outputs.version }}"
-          ls ~/.cache/ms-playwright/ || true
+          # CI runs chromium-only (see playwright.config.ts for rationale)
+          # Firefox/WebKit require OS packages unavailable on GitHub Actions runners
+          ./node_modules/.bin/playwright install --with-deps chromium
 
       - name: Start preview server
         run: |
@@ -362,12 +358,12 @@ jobs:
         id: playwright-cache-preview
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
-      - name: Install Playwright browsers
+      - name: Install Playwright Chromium
         timeout-minutes: 5
         run: |
-          ./node_modules/.bin/playwright install --with-deps chromium firefox webkit
+          ./node_modules/.bin/playwright install --with-deps chromium
 
       - name: Wait for Vercel Preview
         uses: patrickedqvist/wait-for-vercel-preview@06c79330064b0e6ef7a2574603b62d3c98789125 # v1.3.2
