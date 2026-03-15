@@ -96,6 +96,23 @@ jobs:
       - name: Repo Hygiene Guard
         run: bash scripts/repo-hygiene-guard.sh
 
+      - name: Lint commit messages
+        if: github.event_name == 'pull_request'
+        run: |
+          # Ensure base ref is available for commit range validation
+          # Use the true merge-base of the PR branch against the target branch so
+          # that commits already in main (brought in via "Merge branch 'main' into
+          # <pr-branch>" merges) are never re-validated.  This is more reliable
+          # than github.event.pull_request.base.sha when the sprint branch contains
+          # merge-back commits from an older tip of main.
+          npm install --no-save @commitlint/cli @commitlint/config-conventional
+          MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
+          echo "Linting commits from merge-base ${MERGE_BASE} to HEAD"
+          npx @commitlint/cli \
+            --from "${MERGE_BASE}" \
+            --to HEAD \
+            --verbose
+
       - name: Setup Node.js
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
