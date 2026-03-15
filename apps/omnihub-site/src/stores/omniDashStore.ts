@@ -211,7 +211,10 @@ export const useOmniDash = create<OmniDashState>((set, get) => {
         id,
         title: structuredClone(title),
         component: structuredClone(component),
-        position: position ? structuredClone(position) : { x: window.innerWidth - 360, y: window.innerHeight - 280 },
+        position: position ? structuredClone(position) : {
+          x: (typeof window !== 'undefined' ? window.innerWidth : 1280) - 360,
+          y: (typeof window !== 'undefined' ? window.innerHeight : 800) - 280,
+        },
         size: { ...DEFAULT_FLOATING_SIZE },
       };
       const next = new Map(get().floatingWindows);
