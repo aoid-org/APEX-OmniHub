@@ -30,14 +30,15 @@ module.exports = {
   ],
 
   rules: {
-    // Downgrade length rules from error → warn so that verbose sprint commit
-    // bodies and Claude session URL footers never block CI.
-    'header-max-length': [1, 'warn', 150],
-    'subject-max-length': [1, 'warn', 150],
-    'footer-max-line-length': [1, 'warn', 300],
-    'body-max-line-length': [1, 'warn', 300],
+    // Severity 1 = warn, 2 = error.  applicable must be 'always' or 'never'.
+    // Downgrade length rules to warn so verbose sprint commit bodies and
+    // Claude session URL footers never block CI.
+    'header-max-length': [1, 'always', 150],
+    'subject-max-length': [1, 'always', 150],
+    'footer-max-line-length': [1, 'always', 300],
+    'body-max-line-length': [1, 'always', 300],
 
     // sentence-case subjects are common in squash-merge PR titles — warn only.
-    'subject-case': [1, 'warn', 'never', ['pascal-case', 'upper-case']],
+    'subject-case': [1, 'never', ['pascal-case', 'upper-case']],
   },
 };
