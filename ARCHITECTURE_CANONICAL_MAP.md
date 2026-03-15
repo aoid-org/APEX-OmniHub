@@ -1,7 +1,7 @@
 # APEX OmniHub — Canonical Infrastructure & Architecture Map
 
-> **Version:** 1.1.0 — 2026-03-13
-> **Last updated:** 2026-03-13 — OmniDash real-data layer, asset pipeline fix, OmniBoardStore connector types
+> **Version:** 1.1.1 — 2026-03-15
+> **Last updated:** 2026-03-15 — OmniDash Spatial Wiring fixes (WidgetShell, FloatingWindow, OmniSpatialHost, omniDashStore)
 >
 > **Purpose:** This is the first-stop map for both humans and agents. It documents the current repository build layout, runtime topology, and ownership boundaries as they exist now.
 >
