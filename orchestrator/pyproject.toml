@@ -150,9 +150,11 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
-  "S101",  # assert is expected in pytest tests
-  "S110",  # try-except-pass in chaos tests is intentional
-  "S311",  # pseudo-random in tests is fine (not crypto)
+  "S101",   # assert is expected in pytest tests
+  "S110",   # try-except-pass in chaos tests is intentional
+  "S311",   # pseudo-random in tests is fine (not crypto)
+  "SIM117", # nested with-statements improve test readability (setup vs assertion)
+  "E501",   # test strings/comments may legitimately exceed 100 chars
 ]
 "workflows/**/*.py" = [
   "C901",  # Complex workflow orchestration is expected
