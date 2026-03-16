@@ -1334,9 +1334,9 @@
 }
 
 .od-modal-close:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #fecaca;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fef2f2;
 }
 
 .center-content-blur {
@@ -1514,9 +1514,9 @@
 }
 
 .widget-btn-close:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.25);
-  color: #fecaca;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fef2f2;
 }
 
 /* Widget content area */
@@ -1641,9 +1641,9 @@
   height: 32px;
   padding: 0 14px;
   border-radius: var(--od-radius-sm);
-  background: rgba(168, 85, 247, 0.08);
-  border: 1px solid rgba(168, 85, 247, 0.20);
-  color: #e9d5ff;
+  background: rgba(168, 85, 247, 0.10);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  color: #f3e8ff;
   font-size: 11px;
   font-weight: 700;
   font-family: inherit;
