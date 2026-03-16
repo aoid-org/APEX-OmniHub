@@ -188,8 +188,8 @@ async def test_call_webhook_ssrf_records_failure_in_ledger():
         ),
     ):
         result = await call_webhook(
-            {"url": "http://10.0.0.1", "step_id": "s1"}
-        )  # private IP for SSRF test
+            {"url": "https://198.51.100.1", "step_id": "s1"}  # RFC 5737 TEST-NET-2
+        )
 
     assert result["success"] is False
     assert result["status_code"] == 403
