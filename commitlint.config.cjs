@@ -30,6 +30,11 @@ module.exports = {
   ],
 
   rules: {
+    'type-enum': [
+      2,
+      'always',
+      ['feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'chore', 'revert'],
+    ],
     // Severity 1 = warn, 2 = error.  applicable must be 'always' or 'never'.
     // Downgrade length rules to warn so verbose sprint commit bodies and
     // Claude session URL footers never block CI.
