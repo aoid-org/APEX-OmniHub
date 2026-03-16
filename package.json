@@ -212,7 +212,7 @@
     "hardhat-gas-reporter": "^1.0.10",
     "js-yaml": "^4.1.1",
     "jsdom": "^26.0.0",
-    "pixelmatch": "^5.3.0",
+    "pixelmatch": "^7.1.0",
     "pngjs": "^7.0.0",
     "postcss": "^8.5.6",
     "rollup-plugin-visualizer": "^7.0.1",
