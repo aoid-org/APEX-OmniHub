@@ -127,7 +127,7 @@ export function OnboardingWizard() {
         updateSession({ skills: data.skills });
         setStep(2);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Analysis failed:', error);
       toast.error('Analysis failed. Please try again.');
     } finally {
