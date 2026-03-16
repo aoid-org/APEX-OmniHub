@@ -47,6 +47,12 @@ def _load_tools():
     return importlib.import_module("activities.tools")
 
 
+def _load_tool_registry():
+    """Import activities.tool_registry directly (bypass __init__.py)."""
+    sys.modules.pop("activities.tool_registry", None)
+    return importlib.import_module("activities.tool_registry")
+
+
 class TestAllowedTools:
     def test_canonical_tools_defined(self):
         tools = _load_tools()
@@ -78,3 +84,45 @@ class TestAllowedTools:
         for contract in tools.TOOL_REGISTRY.values():
             for alias in contract.aliases:
                 assert tools.resolve_tool_name(alias) in tools.TOOL_REGISTRY
+
+
+class TestResolveToolNameCoverage:
+    """Direct coverage tests for lines 160, 164, 168-169 in tool_registry.py."""
+
+    def test_resolve_tool_name_canonical_returns_name(self):
+        """Line 160: name directly in TOOL_REGISTRY returns name."""
+        tr = _load_tool_registry()
+        result = tr.resolve_tool_name("search_database")
+        assert result == "search_database"
+
+    def test_resolve_tool_name_alias_returns_canonical(self):
+        """Line 164: alias resolution returns canonical name."""
+        tr = _load_tool_registry()
+        result = tr.resolve_tool_name("webhook")
+        assert result == "call_webhook"
+
+    def test_resolve_tool_name_unknown_returns_none(self):
+        """resolve_tool_name returns None for unknown names."""
+        tr = _load_tool_registry()
+        result = tr.resolve_tool_name("totally_unknown_tool")
+        assert result is None
+
+    def test_get_tool_contract_canonical(self):
+        """Line 168-169: get_tool_contract returns contract for known tool."""
+        tr = _load_tool_registry()
+        contract = tr.get_tool_contract("search_database")
+        assert contract is not None
+        assert contract.canonical_name == "search_database"
+
+    def test_get_tool_contract_via_alias(self):
+        """Line 168-169: get_tool_contract resolves alias and returns contract."""
+        tr = _load_tool_registry()
+        contract = tr.get_tool_contract("webhook")
+        assert contract is not None
+        assert contract.canonical_name == "call_webhook"
+
+    def test_get_tool_contract_unknown_returns_none(self):
+        """Line 168-169 (else branch): get_tool_contract returns None for unknowns."""
+        tr = _load_tool_registry()
+        contract = tr.get_tool_contract("nonexistent_tool")
+        assert contract is None

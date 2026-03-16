@@ -1,7 +1,7 @@
 # APEX OmniHub — Canonical Infrastructure & Architecture Map
 
-> **Version:** 1.1.1 — 2026-03-15
-> **Last updated:** 2026-03-15 — OmniDash Spatial Wiring fixes (WidgetShell, FloatingWindow, OmniSpatialHost, omniDashStore)
+> **Version:** 1.1.2 — 2026-03-16
+> **Last updated:** 2026-03-16 — Orchestrator idempotency guard extraction; test coverage improvements (177 tests passing, 4 modules at 100%)
 >
 > **Purpose:** This is the first-stop map for both humans and agents. It documents the current repository build layout, runtime topology, and ownership boundaries as they exist right now — not as designed, as shipped.
 >
@@ -309,11 +309,12 @@ These are source-verified bugs present in HEAD `fe4688a7`. Each has a prescribed
 `orchestrator/` is a dedicated Python service using Temporal patterns:
 
 - `orchestrator/workflows/` — durable workflow definitions
-- `orchestrator/activities/` — tool execution with audit trails
+- `orchestrator/activities/` — tool execution with audit trails; shared `_idempotency_guard()` helper centralizes idempotency-check logic across all activity implementations
 - `orchestrator/security/` — Guardian policy evaluation (Tri-Force layer 1)
 - `orchestrator/models/` — domain models
 - `orchestrator/infrastructure/` — cache / infrastructure modules
 - `orchestrator/policies/` — policy definitions
+- `orchestrator/tests/` — Python test suite (**177 tests passing**); key coverage: `iron_law_verify` 100%, `omnitrace_activities` 100%, `universal_intents` 100%, `core/intents` 100%, `tools.py` 73%
 
 Integrates with the frontend through API/event contracts via `trigger-workflow` edge function.
 
@@ -349,11 +350,12 @@ Selected workflows:
 
 | Surface | Location | Count |
 |---|---|---|
-| Domain-partitioned unit/integration | `tests/` | ~80 specs |
+| Domain-partitioned unit/integration | `tests/` | ~84 specs |
 | Browser E2E (Playwright) | `tests/visual/`, `tests/routes/`, `e2e/` | ~22 specs |
 | Simulation / stress | `sim/`, `tests/worldwide-wildcard/` | — |
 | Resilience laws / benchmarks | `apex-resilience/tests/` | — |
-| **Total spec files** | `tests/` + `e2e/` | **102** |
+| Orchestrator Python tests | `orchestrator/tests/` | **177 passed** |
+| **Total TypeScript spec files** | `tests/` + `e2e/` | **106** |
 
 Gate commands (from root `package.json`):
 
@@ -366,7 +368,7 @@ bun run build         # Vite production build
 
 ---
 
-## 10) Current Build Snapshot (verified at HEAD `fe4688a7`, 2026-03-15)
+## 10) Current Build Snapshot (verified at HEAD, 2026-03-16)
 
 | Metric | Value |
 |---|---|
@@ -377,7 +379,9 @@ bun run build         # Vite production build
 | `apps/omnihub-site/src/pages/` pages | 28 |
 | Supabase edge function directories | 22 |
 | Supabase migration SQL files | 58 |
-| Test spec files (`tests/` + `e2e/`) | 102 |
+| TypeScript test spec files (`tests/` + `e2e/`) | 106 |
+| Orchestrator Python tests (passed) | 177 |
+| Orchestrator Python source files | 83 |
 | GitHub Actions workflow files | 14 |
 | OmniDash registered modules | 9 |
 | Registered SPA routes | 21 (+ `*` fallback) |
@@ -417,4 +421,4 @@ Any PR that modifies any of the following **must** update this file in the same 
 
 *APEX Business Systems Ltd. · Edmonton, AB, Canada*
 *© 2026 — Proprietary. All rights reserved.*
-*Audited at HEAD `fe4688a7` · 2026-03-15*
+*Updated 2026-03-16 — Orchestrator idempotency guard extraction + coverage improvements*

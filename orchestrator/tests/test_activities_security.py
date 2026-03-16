@@ -139,3 +139,20 @@ async def test_call_webhook_redirects_not_followed():
             assert result["status_code"] == 302
             mock_client_cls.assert_called_once_with(follow_redirects=False)
             mock_client.request.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_evaluate_policy_activity_delegates_to_evaluate_policy():
+    """Line 17 in activities/omni_policy.py: verify evaluate_policy_activity calls evaluate_policy."""
+    from unittest.mock import AsyncMock
+
+    with patch("activities.omni_policy.evaluate_policy", new_callable=AsyncMock) as mock_eval:
+        mock_eval.return_value = {"allowed": True, "lane": "GREEN"}
+
+        from activities.omni_policy import evaluate_policy_activity
+
+        ctx = {"tool": "search_database", "actor": "user-123"}
+        result = await evaluate_policy_activity(ctx)
+
+        mock_eval.assert_called_once_with(ctx)
+        assert result == {"allowed": True, "lane": "GREEN"}
