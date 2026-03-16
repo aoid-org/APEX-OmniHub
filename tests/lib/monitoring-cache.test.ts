@@ -1,4 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { setupMonitoringTestEnv } from './monitoring-test-helper';
+
+// Must run before importing monitoring
+setupMonitoringTestEnv();
+
 import { logError, clearLogs, _testing } from '../../src/lib/monitoring';
 
 describe('monitoring - in-memory cache', () => {
@@ -36,9 +41,6 @@ describe('monitoring - in-memory cache', () => {
 
     await logError(new Error('test error'));
 
-    // Force flush (logError triggers persistLog which might queue or directWrite depending on criticality)
-    // logError is critical, so it directWrites immediately.
-
     // Cache should have the log
     const cached = getCachedLogs('error_logs');
     expect(cached.length).toBeGreaterThan(0);
@@ -60,7 +62,7 @@ describe('monitoring - in-memory cache', () => {
     const newValue = JSON.stringify(otherTabLogs);
     localStorage.setItem('error_logs', newValue);
 
-    // Trigger storage event (JSDOM does not auto-trigger this on same-window writes, and we need to simulate it)
+    // Trigger storage event
     globalThis.dispatchEvent(new StorageEvent('storage', {
       key: 'error_logs',
       newValue: newValue,
@@ -88,7 +90,11 @@ describe('monitoring - in-memory cache', () => {
   });
 
   it('should handle malformed JSON in storage event', () => {
-    const { logCache } = _testing;
+    const { logCache, getCachedLogs } = _testing;
+
+    // Populate cache first
+    getCachedLogs('error_logs');
+    expect(logCache.has('error_logs')).toBe(true);
 
     // Trigger storage event with bad JSON
     globalThis.dispatchEvent(new StorageEvent('storage', {
