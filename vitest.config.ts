@@ -69,9 +69,9 @@ export default defineConfig({
       // North-star target: 80 % across all metrics (SonarCloud quality gate).
       thresholds: {
         statements: 65,
-        branches: 57,
+        branches: 60,
         functions: 65,
-        lines: 67,
+        lines: 68,
       },
     },
     testTimeout: 30000,
