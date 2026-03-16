@@ -91,7 +91,7 @@ class TestRiskTriageActivity:
 
     @pytest.fixture(autouse=True)
     def load_mod(self):
-        self.mod, self.AppError = _load_man_mode_activities()
+        self.mod, self.app_error = _load_man_mode_activities()
 
     @pytest.mark.asyncio
     async def test_green_tool_returns_green_lane(self):
@@ -119,12 +119,12 @@ class TestRiskTriageActivity:
 
     @pytest.mark.asyncio
     async def test_missing_workflow_id_raises_application_error(self):
-        with pytest.raises(self.AppError):
+        with pytest.raises(self.app_error):
             await self.mod.risk_triage({"tool_name": "search"})
 
     @pytest.mark.asyncio
     async def test_empty_dict_raises_application_error(self):
-        with pytest.raises(self.AppError):
+        with pytest.raises(self.app_error):
             await self.mod.risk_triage({})
 
     @pytest.mark.asyncio
@@ -142,7 +142,7 @@ class TestRiskTriageActivity:
     @pytest.mark.asyncio
     async def test_failure_logs_error(self):
         self.mod.activity.logger.error.reset_mock()
-        with pytest.raises(self.AppError):
+        with pytest.raises(self.app_error):
             await self.mod.risk_triage({"not_a_valid_key": True})
         self.mod.activity.logger.error.assert_called_once()
 
@@ -158,7 +158,7 @@ class TestRiskTriageActivity:
         """Validation failures should raise non-retryable ApplicationError."""
         try:
             await self.mod.risk_triage({})
-        except self.AppError as e:
+        except self.app_error as e:
             assert e.non_retryable is True
         else:
             pytest.fail("Should have raised ApplicationError")
@@ -174,7 +174,7 @@ class TestCreateManTaskActivity:
 
     @pytest.fixture(autouse=True)
     def load_mod(self):
-        self.mod, self.AppError = _load_man_mode_activities()
+        self.mod, self.app_error = _load_man_mode_activities()
 
     def _params(self, **overrides):
         base = {
@@ -244,7 +244,7 @@ class TestCreateManTaskActivity:
         mock_db = _make_db()
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
 
-        with pytest.raises((self.AppError, KeyError)):
+        with pytest.raises((self.app_error, KeyError)):
             await self.mod.create_man_task({"intent": {"tool_name": "x"}})
 
     @pytest.mark.asyncio
@@ -253,7 +253,7 @@ class TestCreateManTaskActivity:
         mock_db.upsert = AsyncMock(side_effect=Exception("Connection timeout"))
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
 
-        with pytest.raises(self.AppError) as exc_info:
+        with pytest.raises(self.app_error) as exc_info:
             await self.mod.create_man_task(self._params())
 
         assert exc_info.value.non_retryable is False
@@ -261,10 +261,10 @@ class TestCreateManTaskActivity:
     @pytest.mark.asyncio
     async def test_application_error_from_db_re_raised_unchanged(self):
         mock_db = _make_db()
-        mock_db.upsert = AsyncMock(side_effect=self.AppError("already exists", non_retryable=True))
+        mock_db.upsert = AsyncMock(side_effect=self.app_error("already exists", non_retryable=True))
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
 
-        with pytest.raises(self.AppError) as exc_info:
+        with pytest.raises(self.app_error) as exc_info:
             await self.mod.create_man_task(self._params())
 
         assert exc_info.value.non_retryable is True
@@ -312,7 +312,7 @@ class TestResolveManTaskActivity:
 
     @pytest.fixture(autouse=True)
     def load_mod(self):
-        self.mod, self.AppError = _load_man_mode_activities()
+        self.mod, self.app_error = _load_man_mode_activities()
 
     def _params(self, status="APPROVED", **overrides):
         base = {
@@ -349,7 +349,7 @@ class TestResolveManTaskActivity:
         mock_db = _make_db()
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
 
-        with pytest.raises(self.AppError) as exc_info:
+        with pytest.raises(self.app_error) as exc_info:
             await self.mod.resolve_man_task(self._params(status="PENDING"))
 
         assert exc_info.value.non_retryable is True
@@ -383,7 +383,7 @@ class TestResolveManTaskActivity:
         mock_db.update = AsyncMock(side_effect=Exception("record not found in table"))
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
 
-        with pytest.raises(self.AppError) as exc_info:
+        with pytest.raises(self.app_error) as exc_info:
             await self.mod.resolve_man_task(self._params())
 
         assert exc_info.value.non_retryable is True
@@ -394,7 +394,7 @@ class TestResolveManTaskActivity:
         mock_db.update = AsyncMock(side_effect=Exception("Connection reset by peer"))
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
 
-        with pytest.raises(self.AppError) as exc_info:
+        with pytest.raises(self.app_error) as exc_info:
             await self.mod.resolve_man_task(self._params())
 
         assert exc_info.value.non_retryable is False
@@ -402,10 +402,10 @@ class TestResolveManTaskActivity:
     @pytest.mark.asyncio
     async def test_application_error_re_raised_unchanged(self):
         mock_db = _make_db()
-        mock_db.update = AsyncMock(side_effect=self.AppError("conflict", non_retryable=True))
+        mock_db.update = AsyncMock(side_effect=self.app_error("conflict", non_retryable=True))
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
 
-        with pytest.raises(self.AppError) as exc_info:
+        with pytest.raises(self.app_error) as exc_info:
             await self.mod.resolve_man_task(self._params())
 
         assert exc_info.value.non_retryable is True
@@ -436,7 +436,7 @@ class TestResolveManTaskActivity:
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
         self.mod.activity.logger.error.reset_mock()
 
-        with pytest.raises(self.AppError):
+        with pytest.raises(self.app_error):
             await self.mod.resolve_man_task(self._params())
 
         self.mod.activity.logger.error.assert_called_once()
@@ -462,7 +462,7 @@ class TestGetManTaskActivity:
 
     @pytest.fixture(autouse=True)
     def load_mod(self):
-        self.mod, self.AppError = _load_man_mode_activities()
+        self.mod, self.app_error = _load_man_mode_activities()
 
     @pytest.mark.asyncio
     async def test_lookup_by_task_id_found(self):
@@ -502,7 +502,7 @@ class TestGetManTaskActivity:
         mock_db = _make_db()
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
 
-        with pytest.raises(self.AppError) as exc_info:
+        with pytest.raises(self.app_error) as exc_info:
             await self.mod.get_man_task({})
 
         assert exc_info.value.non_retryable is True
@@ -513,7 +513,7 @@ class TestGetManTaskActivity:
         mock_db.get = AsyncMock(side_effect=Exception("DB unavailable"))
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
 
-        with pytest.raises(self.AppError) as exc_info:
+        with pytest.raises(self.app_error) as exc_info:
             await self.mod.get_man_task({"task_id": str(uuid4())})
 
         assert exc_info.value.non_retryable is False
@@ -521,10 +521,10 @@ class TestGetManTaskActivity:
     @pytest.mark.asyncio
     async def test_application_error_re_raised(self):
         mock_db = _make_db()
-        mock_db.get = AsyncMock(side_effect=self.AppError("custom", non_retryable=True))
+        mock_db.get = AsyncMock(side_effect=self.app_error("custom", non_retryable=True))
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
 
-        with pytest.raises(self.AppError) as exc_info:
+        with pytest.raises(self.app_error) as exc_info:
             await self.mod.get_man_task({"task_id": str(uuid4())})
 
         assert exc_info.value.non_retryable is True
@@ -585,7 +585,7 @@ class TestCheckManDecisionActivity:
 
     @pytest.fixture(autouse=True)
     def load_mod(self):
-        self.mod, self.AppError = _load_man_mode_activities()
+        self.mod, self.app_error = _load_man_mode_activities()
 
     @pytest.mark.asyncio
     async def test_task_not_found_returns_decided_false(self):
@@ -678,7 +678,7 @@ class TestCheckManDecisionActivity:
         mock_db.get = AsyncMock(side_effect=Exception("Timeout"))
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
 
-        with pytest.raises(self.AppError):
+        with pytest.raises(self.app_error):
             await self.mod.check_man_decision({"task_id": str(uuid4())})
 
     @pytest.mark.asyncio
@@ -686,7 +686,7 @@ class TestCheckManDecisionActivity:
         mock_db = _make_db()
         self.mod.get_database_provider = MagicMock(return_value=mock_db)
 
-        with pytest.raises(self.AppError):
+        with pytest.raises(self.app_error):
             await self.mod.check_man_decision({})
 
     @pytest.mark.asyncio

@@ -80,7 +80,7 @@ class TestConfigModuleImport:
         """Settings class should be importable directly."""
         from config import Settings
 
-        assert Settings is not None
+        assert isinstance(Settings, type)
 
 
 # ---------------------------------------------------------------------------
@@ -162,7 +162,7 @@ class TestRedisDefaults:
 
     def test_redis_password_is_secret_str(self):
         """redis_password should be a SecretStr when provided."""
-        s = make_settings(REDIS_PASSWORD="supersecret")  # noqa: S106
+        s = make_settings(REDIS_PASSWORD="supersecret")  # noqa: S106  # NOSONAR
         assert s.redis_password is not None
         # SecretStr.get_secret_value() returns the raw value
         assert s.redis_password.get_secret_value() == "supersecret"
@@ -248,7 +248,7 @@ class TestLLMDefaults:
 
     def test_default_llm_temperature(self):
         s = make_settings()
-        assert s.default_llm_temperature == 0.0
+        assert s.default_llm_temperature == pytest.approx(0.0)
 
     def test_llm_model_env_override(self):
         s = make_settings(DEFAULT_LLM_MODEL="gpt-4o")
@@ -269,7 +269,7 @@ class TestCacheDefaults:
 
     def test_cache_similarity_threshold_default(self):
         s = make_settings()
-        assert s.cache_similarity_threshold == 0.85
+        assert s.cache_similarity_threshold == pytest.approx(0.85)
 
     def test_cache_ttl_seconds_default(self):
         s = make_settings()
@@ -288,11 +288,11 @@ class TestCacheDefaults:
 class TestManModeDefaults:
     def test_man_mode_blocking_threshold_default(self):
         s = make_settings()
-        assert s.man_mode_blocking_threshold == 0.90
+        assert s.man_mode_blocking_threshold == pytest.approx(0.90)
 
     def test_man_mode_blocking_threshold_env_override(self):
         s = make_settings(MAN_MODE_BLOCKING_THRESHOLD="0.75")
-        assert s.man_mode_blocking_threshold == 0.75
+        assert s.man_mode_blocking_threshold == pytest.approx(0.75)
 
 
 # ---------------------------------------------------------------------------

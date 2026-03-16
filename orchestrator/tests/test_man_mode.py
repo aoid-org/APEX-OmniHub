@@ -41,12 +41,12 @@ def _load_man_mode_activities():
     temporal_exceptions_mod = types.ModuleType("temporalio.exceptions")
 
     # activity.defn — identity decorator at import time; logger is a MagicMock
-    temporal_activity_mod.defn = lambda name=None, **kw: lambda f: f
+    temporal_activity_mod.defn = lambda _name=None, **_kw: lambda f: f
     temporal_activity_mod.logger = MagicMock()
 
     # ApplicationError — must be a real exception class so raise works
     class ApplicationError(Exception):
-        def __init__(self, msg="", non_retryable=False, **kw):
+        def __init__(self, msg="", non_retryable=False, **_kw):
             super().__init__(msg)
             self.non_retryable = non_retryable
 
