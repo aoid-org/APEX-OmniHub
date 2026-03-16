@@ -163,8 +163,8 @@ class VerificationEngine:
         # Use timezone-aware datetime (SonarQube S6978 compliance)
         approved_at = datetime.now(UTC).isoformat()
 
-        # SECURITY NOTE: All user-controlled data (request_id, approved_by)
-        # is expected to be pre-sanitized by the dashboard layer (escape_html applied)
+        # SECURITY NOTE: request_id and approved_by are whitelist-validated by
+        # the dashboard layer. They are stored here but NOT reflected in HTTP responses.
         result: VerificationResult = {
             "request_id": request_id,
             "status": "approved",
@@ -204,9 +204,8 @@ class VerificationEngine:
         # Use timezone-aware datetime (SonarQube S6978 compliance)
         rejected_at = datetime.now(UTC).isoformat()
 
-        # SECURITY NOTE: All user-controlled data (request_id, rejected_by, reason)
-        # is expected to be pre-sanitized by the dashboard layer
-        # (escape_html applied before passing to this method)
+        # SECURITY NOTE: request_id, rejected_by, and reason are whitelist-validated
+        # by the dashboard layer. They are stored here but NOT reflected in HTTP responses.
         result: VerificationResult = {
             "request_id": request_id,
             "status": "rejected",
