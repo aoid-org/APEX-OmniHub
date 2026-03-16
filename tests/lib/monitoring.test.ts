@@ -118,18 +118,18 @@ describe('monitoring integration', () => {
 
   it('should use requestIdleCallback if available', () => {
     const requestIdleCallbackMock = vi.fn();
-    const global = globalThis as unknown as Record<string, unknown>;
-    const originalRIC = global.requestIdleCallback;
-    global.requestIdleCallback = requestIdleCallbackMock;
+    const globalObj = globalThis as unknown as Record<string, unknown>;
+    const originalRIC = globalObj.requestIdleCallback as ((cb: () => void) => void) | undefined;
+    globalObj.requestIdleCallback = requestIdleCallbackMock;
 
     monitoring.logPerformance({ name: 'test', duration: 100, timestamp: 1 });
 
     expect(requestIdleCallbackMock).toHaveBeenCalled();
 
     if (originalRIC) {
-      global.requestIdleCallback = originalRIC;
+      globalObj.requestIdleCallback = originalRIC;
     } else {
-      delete global.requestIdleCallback;
+      delete globalObj.requestIdleCallback;
     }
   });
 
