@@ -116,7 +116,10 @@ jobs:
           pip install -e .
           # safety 3.x: --severity and --save-json flags do not exist.
           # Capture JSON to file; non-zero exit means vulnerabilities found.
-          safety check --output json > safety-report.json 2>&1 || {
+          # --ignore 86338: CVE-2025-69872 diskcache pickle deserialization —
+          #   transitive dep from instructor, no fixed version exists (<=5.6.3),
+          #   only exploitable if attacker can write to on-disk cache directory.
+          safety check --output json --ignore 86338 > safety-report.json 2>&1 || {
             echo "::error::Safety found vulnerabilities in Python dependencies — see safety-report artifact."
             cat safety-report.json
             exit 1
