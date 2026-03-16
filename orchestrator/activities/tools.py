@@ -53,6 +53,59 @@ _redis_client = None
 
 
 # ============================================================================
+# SHARED IDEMPOTENCY GUARD
+# ============================================================================
+
+
+async def _idempotency_guard(
+    db: Any,
+    idempotency_key: str,
+    tool_name: str,
+    workflow_id: str,
+) -> dict[str, Any] | None:
+    """
+    Check the idempotency ledger and insert a pending record if not found.
+
+    Returns the stored result dict if the key already completed successfully,
+    or None if execution should proceed.  Errors are swallowed and logged so
+    that ledger unavailability never blocks the actual work.
+    """
+    try:
+        existing = await db.select(
+            table="idempotency_ledger",
+            filters={"idempotency_key": idempotency_key},
+        )
+        if existing and existing[0].get("status") == "completed":
+            activity.logger.info(
+                "%s already executed successfully. Returning stored result. Key: %s",
+                tool_name,
+                idempotency_key,
+            )
+            return json.loads(existing[0].get("result_payload", "{}"))
+        # "pending" status: concurrent execution or failed attempt — fall through
+    except DatabaseError as e:
+        activity.logger.warning("Failed to check idempotency ledger for %s: %s", tool_name, e)
+
+    try:
+        await db.upsert(
+            table="idempotency_ledger",
+            record={
+                "idempotency_key": idempotency_key,
+                "status": "pending",
+                "workflow_id": workflow_id,
+                "tool_name": tool_name,
+            },
+            conflict_columns=["idempotency_key"],
+        )
+    except DatabaseError as e:
+        activity.logger.warning(
+            "Failed to insert pending idempotency record for %s: %s", tool_name, e
+        )
+
+    return None
+
+
+# ============================================================================
 # ACTIVITY SETUP
 # ============================================================================
 
@@ -616,37 +669,9 @@ async def send_email(params: dict[str, Any]) -> dict[str, Any]:
 
     db = get_database_provider()
 
-    # Check if a successful execution already exists
-    try:
-        existing = await db.select(
-            table="idempotency_ledger",
-            filters={"idempotency_key": idempotency_key},
-        )
-        if existing and existing[0].get("status") == "completed":
-            activity.logger.info(
-                f"Email already sent successfully. Returning stored result. Key: {idempotency_key}"
-            )
-            return json.loads(existing[0].get("result_payload", "{}"))
-        if existing and existing[0].get("status") == "pending":
-            # Concurrent execution or failed attempt that left a pending record
-            pass
-    except DatabaseError as e:
-        activity.logger.warning(f"Failed to check idempotency ledger for send_email: {e}")
-
-    # Insert pending record
-    try:
-        await db.upsert(
-            table="idempotency_ledger",
-            record={
-                "idempotency_key": idempotency_key,
-                "status": "pending",
-                "workflow_id": workflow_id,
-                "tool_name": "send_email",
-            },
-            conflict_columns=["idempotency_key"],
-        )
-    except DatabaseError as e:
-        activity.logger.warning(f"Failed to insert pending idempotency record for send_email: {e}")
+    cached = await _idempotency_guard(db, idempotency_key, "send_email", workflow_id)
+    if cached is not None:
+        return cached
 
     activity.logger.info(f"Sending email to: {to}")
 
@@ -678,10 +703,7 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
     """
     Call external webhook. Durable idempotency protection included.
     """
-    import json  # noqa: E402
-
     import httpx
-    from temporalio import activity  # noqa: E402
 
     url = str(params.get("url", ""))
     method = params.get("method", "POST")
@@ -703,38 +725,9 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
 
     db = get_database_provider()
 
-    # Check if a successful execution already exists
-    try:
-        existing = await db.select(
-            table="idempotency_ledger",
-            filters={"idempotency_key": idempotency_key},
-        )
-        if existing and existing[0].get("status") == "completed":
-            activity.logger.info(
-                f"Webhook already executed. Returning stored result. Key: {idempotency_key}"
-            )
-            return json.loads(existing[0].get("result_payload", "{}"))
-        if existing and existing[0].get("status") == "pending":
-            # Concurrent execution or failed attempt that left a pending record
-            pass
-    except DatabaseError as e:
-        activity.logger.warning(f"Failed to check idempotency ledger: {e}")
-        # Continue execution if ledger is unavailable to maintain availability
-
-    # Insert pending record
-    try:
-        await db.upsert(
-            table="idempotency_ledger",
-            record={
-                "idempotency_key": idempotency_key,
-                "status": "pending",
-                "workflow_id": workflow_id,
-                "tool_name": "call_webhook",
-            },
-            conflict_columns=["idempotency_key"],
-        )
-    except DatabaseError as e:
-        activity.logger.warning(f"Failed to insert pending idempotency record: {e}")
+    cached = await _idempotency_guard(db, idempotency_key, "call_webhook", workflow_id)
+    if cached is not None:
+        return cached
 
     try:
         validated_url = await validate_url_with_dns_pin_async(url)

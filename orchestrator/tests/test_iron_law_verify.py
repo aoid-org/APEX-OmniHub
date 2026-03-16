@@ -1,4 +1,9 @@
-import asyncio
+"""
+Tests for activities/iron_law_verify.py — 100% line coverage.
+
+All subprocess interactions are mocked so no Node.js installation is required.
+"""
+
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -8,93 +13,133 @@ from temporalio.exceptions import ApplicationError
 
 from activities.iron_law_verify import verify_deductive_path
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-class MockProcess:
-    def __init__(self, stdout_data=b"", stderr_data=b"", returncode=0, sleep_delay=0):
-        self._stdout_data = stdout_data
-        self._stderr_data = stderr_data
-        self.returncode = returncode
-        self.sleep_delay = sleep_delay
+_VERIFIED_OK = json.dumps(
+    {"verified": True, "logicDelta": 0.1, "escalateToMan": False, "reason": "Deductive path verified"}
+).encode()
 
-    async def communicate(self):
-        if self.sleep_delay > 0:
-            await asyncio.sleep(self.sleep_delay)
-        return self._stdout_data, self._stderr_data
+_VERIFIED_FAIL = json.dumps(
+    {"verified": False, "logicDelta": 0.9, "escalateToMan": True, "reason": "threshold exceeded"}
+).encode()
 
-    def kill(self):
-        pass
 
-    async def wait(self):
-        pass
+def _proc(returncode: int = 0, stdout: bytes = b"", stderr: bytes = b"") -> MagicMock:
+    p = MagicMock()
+    p.returncode = returncode
+    p.communicate = AsyncMock(return_value=(stdout, stderr))
+    p.kill = MagicMock()
+    p.wait = AsyncMock()
+    return p
+
+
+@pytest.fixture(autouse=True)
+def _mock_logger():
+    with patch.object(activity, "logger", MagicMock()):
+        yield
+
+
+# ---------------------------------------------------------------------------
+# Happy paths
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_iron_law_verify_success_verified_true():
+    """Subprocess returns verified=True — full param set."""
+    proc = _proc(stdout=_VERIFIED_OK)
+    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=proc):
+        result = await verify_deductive_path(
+            {
+                "intent": "open_door",
+                "target_state": {"door": "open"},
+                "device_id": "door-123",
+                "workflow_id": "wf-123",
+            }
+        )
+    assert result["verified"] is True
+    assert result["logicDelta"] == pytest.approx(0.1)
+    assert result["escalateToMan"] is False
 
 
 @pytest.mark.asyncio
-async def test_iron_law_verify_success():
-    params = {
-        "intent": "open_door",
-        "target_state": {"door": "open"},
-        "device_id": "door-123",
-        "workflow_id": "wf-123",
-    }
+async def test_iron_law_verify_success_verified_false():
+    """Subprocess returns verified=False with escalate flag."""
+    proc = _proc(stdout=_VERIFIED_FAIL)
+    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=proc):
+        result = await verify_deductive_path({"intent": "x", "device_id": "d", "workflow_id": "w"})
+    assert result["verified"] is False
+    assert result["escalateToMan"] is True
 
-    expected_result = {
-        "verified": True,
-        "logicDelta": 0.1,
-        "escalateToMan": False,
-        "reason": "Deductive path verified",
-    }
 
-    mock_process = MockProcess(stdout_data=json.dumps(expected_result).encode(), returncode=0)
+@pytest.mark.asyncio
+async def test_iron_law_verify_empty_params():
+    """Defaults are used when the params dict is empty."""
+    proc = _proc(stdout=_VERIFIED_OK)
+    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=proc):
+        result = await verify_deductive_path({})
+    assert "verified" in result
 
-    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec:
-        mock_exec.return_value = mock_process
-        # Mock temporal logger to avoid context errors without an active context
-        with patch.object(activity, "logger", MagicMock()):
-            result = await verify_deductive_path(params)
-            assert result["verified"] is True
-            assert result["logicDelta"] == 0.1
 
+# ---------------------------------------------------------------------------
+# Error paths
+# ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
 async def test_iron_law_verify_timeout():
-    params = {"intent": "test"}
-    # Simulate the TimeoutError directly instead of sleeping past the 10.0s timeout.
+    """Subprocess times out → ApplicationError(non_retryable=False)."""
+    proc = MagicMock()
+    proc.communicate = AsyncMock(side_effect=TimeoutError("timed out"))
+    proc.kill = MagicMock()
+    proc.wait = AsyncMock()
 
-    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec:
-        mock_process = MagicMock()
-        mock_process.communicate = AsyncMock(side_effect=TimeoutError("timeout"))
-        mock_process.wait = AsyncMock()
-        mock_exec.return_value = mock_process
+    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=proc):
+        with pytest.raises(ApplicationError) as exc_info:
+            await verify_deductive_path({"intent": "x", "device_id": "d", "workflow_id": "w"})
 
-        with patch.object(activity, "logger", MagicMock()):
-            with pytest.raises(ApplicationError) as exc_info:
-                await verify_deductive_path(params)
-            assert "timeout" in str(exc_info.value).lower()
+    assert "timeout" in str(exc_info.value).lower()
+    assert exc_info.value.non_retryable is False
+    proc.kill.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_iron_law_verify_subprocess_error():
-    params = {"intent": "test"}
-    mock_process = MockProcess(stderr_data=b"SyntaxError", returncode=1)
+async def test_iron_law_verify_subprocess_error_with_stderr():
+    """Non-zero return code with stderr → ApplicationError(non_retryable=False)."""
+    proc = _proc(returncode=1, stderr=b"SyntaxError: unexpected token")
+    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=proc):
+        with pytest.raises(ApplicationError) as exc_info:
+            await verify_deductive_path({"intent": "x", "device_id": "d", "workflow_id": "w"})
+    assert "SyntaxError" in str(exc_info.value)
+    assert exc_info.value.non_retryable is False
 
-    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec:
-        mock_exec.return_value = mock_process
 
-        with patch.object(activity, "logger", MagicMock()):
-            with pytest.raises(ApplicationError) as exc_info:
-                await verify_deductive_path(params)
-            assert "SyntaxError" in str(exc_info.value)
+@pytest.mark.asyncio
+async def test_iron_law_verify_subprocess_error_empty_stderr():
+    """Non-zero return code with empty stderr → error still raised."""
+    proc = _proc(returncode=2, stderr=b"")
+    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=proc):
+        with pytest.raises(ApplicationError) as exc_info:
+            await verify_deductive_path({"intent": "x", "device_id": "d", "workflow_id": "w"})
+    assert exc_info.value.non_retryable is False
 
 
 @pytest.mark.asyncio
 async def test_iron_law_verify_json_decode_error():
-    params = {"intent": "test"}
-    mock_process = MockProcess(stdout_data=b"invalid json", returncode=0)
+    """Invalid JSON from subprocess → ApplicationError(non_retryable=True)."""
+    proc = _proc(returncode=0, stdout=b"not-json-at-all!!!")
+    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=proc):
+        with pytest.raises(ApplicationError) as exc_info:
+            await verify_deductive_path({"intent": "x", "device_id": "d", "workflow_id": "w"})
+    assert "parsing failed" in str(exc_info.value).lower()
+    assert exc_info.value.non_retryable is True
 
-    with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec:
-        mock_exec.return_value = mock_process
 
-        with patch.object(activity, "logger", MagicMock()):
-            with pytest.raises(ApplicationError) as exc_info:
-                await verify_deductive_path(params)
-            assert "parsing failed" in str(exc_info.value).lower()
+@pytest.mark.asyncio
+async def test_iron_law_verify_generic_os_error():
+    """OS-level failure launching subprocess → ApplicationError(non_retryable=False)."""
+    with patch("asyncio.create_subprocess_exec", side_effect=OSError("no such file: /usr/bin/node")):
+        with pytest.raises(ApplicationError) as exc_info:
+            await verify_deductive_path({"intent": "x", "device_id": "d", "workflow_id": "w"})
+    assert exc_info.value.non_retryable is False
+    assert "no such file" in str(exc_info.value).lower()
