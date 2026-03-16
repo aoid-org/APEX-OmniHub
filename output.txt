@@ -1,6 +1,6 @@
 PHASE 1 CHECKPOINT
 Status: BLOCKED
-Evidence: The report references tests/test_config.py, tests/test_omnitrace_extended.py, tests/test_core_intents.py, tests/test_man_mode_activities.py, tests/test_omni_policy.py, tests/test_tools_extended.py, tests/test_universal_saga.py, but these files do not exist in the current checkout at HEAD 057d56755c38358f1aa474a5cb570fc27e45b85c.
+Evidence: The report references orchestrator/tests/test_config.py, orchestrator/tests/test_omnitrace_extended.py, orchestrator/tests/test_cache.py, orchestrator/tests/test_core_intents.py, orchestrator/tests/test_man_mode_activities.py, orchestrator/tests/test_omni_policy.py, orchestrator/tests/test_tools_extended.py, orchestrator/tests/test_universal_saga.py, but these files do not exist in the current checkout at HEAD 057d56755c38358f1aa474a5cb570fc27e45b85c.
 Files touched: none
 Next step: align the repository to the exact PR #836 head and rerun report matching.
 
@@ -11,6 +11,7 @@ Branch: jules-6010341123279573954-905b31e0
 Mismatch evidence:
 - orchestrator/tests/test_config.py does not exist
 - orchestrator/tests/test_omnitrace_extended.py does not exist
+- orchestrator/tests/test_cache.py does not exist
 - orchestrator/tests/test_core_intents.py does not exist
 - orchestrator/tests/test_man_mode_activities.py does not exist
 - orchestrator/tests/test_omni_policy.py does not exist
