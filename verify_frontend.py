@@ -1,6 +1,5 @@
 from playwright.sync_api import sync_playwright
 
-
 def verify_dashboard(page):
     print("Navigating to http://localhost:8080/omnidash...")
     page.goto("http://localhost:8080/omnidash", wait_until="networkidle")
@@ -8,7 +7,7 @@ def verify_dashboard(page):
     # Wait for the tiles to render
     print("Waiting for connector tiles...")
     try:
-        page.wait_for_selector(".apex-canvas", timeout=10000)
+        page.wait_for_selector('.apex-canvas', timeout=10000)
     except Exception as e:
         print(f"Error waiting for canvas: {e}")
 
@@ -24,7 +23,6 @@ def verify_dashboard(page):
 
     page.screenshot(path="integrations_page.png", full_page=True)
     print("Saved integrations_page.png")
-
 
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)

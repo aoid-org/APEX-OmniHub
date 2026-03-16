@@ -20,9 +20,7 @@ class TestFSMStartSession:
         trace_id = "trace-456"
         session_id = "session-789"
 
-        result = fsm.start_session(
-            tenant_id=tenant_id, trace_id=trace_id, session_id=session_id
-        )
+        result = fsm.start_session(tenant_id=tenant_id, trace_id=trace_id, session_id=session_id)
 
         assert result["session_id"] == session_id
         assert result["tenant_id"] == tenant_id
@@ -195,12 +193,8 @@ class TestDeterminism:
         now = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
 
         # Run transition twice with same inputs
-        result1 = fsm.transition(
-            current_state=state, event="ONBOARD_START", payload={}, now=now
-        )
-        result2 = fsm.transition(
-            current_state=state, event="ONBOARD_START", payload={}, now=now
-        )
+        result1 = fsm.transition(current_state=state, event="ONBOARD_START", payload={}, now=now)
+        result2 = fsm.transition(current_state=state, event="ONBOARD_START", payload={}, now=now)
 
         # Results should be identical
         assert result1 == result2
@@ -221,12 +215,8 @@ class TestDeterminism:
         now1 = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
         now2 = datetime(2026, 1, 2, 12, 0, 0, tzinfo=UTC)
 
-        result1 = fsm.transition(
-            current_state=state, event="ONBOARD_START", payload={}, now=now1
-        )
-        result2 = fsm.transition(
-            current_state=state, event="ONBOARD_START", payload={}, now=now2
-        )
+        result1 = fsm.transition(current_state=state, event="ONBOARD_START", payload={}, now=now1)
+        result2 = fsm.transition(current_state=state, event="ONBOARD_START", payload={}, now=now2)
 
         assert result1["last_updated"] == "2026-01-01T12:00:00+00:00"
         assert result2["last_updated"] == "2026-01-02T12:00:00+00:00"

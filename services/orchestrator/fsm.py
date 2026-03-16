@@ -20,9 +20,7 @@ class FSM:
     Protocol: Deterministic, Pure Functions, No Side Effects.
     """
 
-    def start_session(
-        self, tenant_id: str, trace_id: str, session_id: str
-    ) -> dict[str, Any]:
+    def start_session(self, tenant_id: str, trace_id: str, session_id: str) -> dict[str, Any]:
         """
         Initializes a new user session.
 
