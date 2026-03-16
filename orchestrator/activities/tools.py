@@ -588,6 +588,63 @@ async def delete_record(params: dict[str, Any]) -> dict[str, Any]:
         return {"success": False, "error": error_msg}
 
 
+async def _idempotency_guard(
+    params: dict[str, Any],
+    tool_name: str,
+    db: Any,  # noqa: ANN401
+) -> tuple[str, dict[str, Any] | None]:
+    """Shared idempotency check for durable activities.
+
+    Returns ``(idempotency_key, cached_result_or_None)``.  When
+    ``cached_result`` is not ``None`` the caller should return it
+    immediately (the operation already completed successfully).
+    """
+    try:
+        if not hasattr(activity, "info"):
+            raise RuntimeError("mocked")
+        info = activity.info()
+        workflow_id = info.workflow_id
+        step_id = params.get("step_id", info.activity_id)
+    except Exception:
+        workflow_id = "test-workflow"
+        step_id = params.get("step_id", "test-step")
+
+    idempotency_key = f"{workflow_id}:{step_id}:{tool_name}"
+
+    # Check for a prior successful execution
+    try:
+        existing = await db.select(
+            table="idempotency_ledger",
+            filters={"idempotency_key": idempotency_key},
+        )
+        if existing and existing[0].get("status") == "completed":
+            activity.logger.info(
+                f"{tool_name} already executed. Returning stored result. Key: {idempotency_key}"
+            )
+            return idempotency_key, json.loads(existing[0].get("result_payload", "{}"))
+        if existing and existing[0].get("status") == "pending":
+            pass
+    except DatabaseError as e:
+        activity.logger.warning(f"Failed to check idempotency ledger for {tool_name}: {e}")
+
+    # Insert pending record
+    try:
+        await db.upsert(
+            table="idempotency_ledger",
+            record={
+                "idempotency_key": idempotency_key,
+                "status": "pending",
+                "workflow_id": workflow_id,
+                "tool_name": tool_name,
+            },
+            conflict_columns=["idempotency_key"],
+        )
+    except DatabaseError as e:
+        activity.logger.warning(f"Failed to insert pending idempotency record for {tool_name}: {e}")
+
+    return idempotency_key, None
+
+
 @activity.defn(name="send_email")
 async def send_email(params: dict[str, Any]) -> dict[str, Any]:
     """
@@ -600,53 +657,10 @@ async def send_email(params: dict[str, Any]) -> dict[str, Any]:
     _subject = params.get("subject", "Welcome!")
     _body = params.get("body", "Hello world")
 
-    # Generate idempotency key based on workflow and step
-    try:
-        if not hasattr(activity, "info"):
-            raise RuntimeError("mocked")
-        info = activity.info()
-        workflow_id = info.workflow_id
-        step_id = params.get("step_id", info.activity_id)
-    except Exception:
-        # Fallback for testing environments without temporal context
-        workflow_id = "test-workflow"
-        step_id = params.get("step_id", "test-step")
-
-    idempotency_key = f"{workflow_id}:{step_id}:send_email"
-
     db = get_database_provider()
-
-    # Check if a successful execution already exists
-    try:
-        existing = await db.select(
-            table="idempotency_ledger",
-            filters={"idempotency_key": idempotency_key},
-        )
-        if existing and existing[0].get("status") == "completed":
-            activity.logger.info(
-                f"Email already sent successfully. Returning stored result. Key: {idempotency_key}"
-            )
-            return json.loads(existing[0].get("result_payload", "{}"))
-        if existing and existing[0].get("status") == "pending":
-            # Concurrent execution or failed attempt that left a pending record
-            pass
-    except DatabaseError as e:
-        activity.logger.warning(f"Failed to check idempotency ledger for send_email: {e}")
-
-    # Insert pending record
-    try:
-        await db.upsert(
-            table="idempotency_ledger",
-            record={
-                "idempotency_key": idempotency_key,
-                "status": "pending",
-                "workflow_id": workflow_id,
-                "tool_name": "send_email",
-            },
-            conflict_columns=["idempotency_key"],
-        )
-    except DatabaseError as e:
-        activity.logger.warning(f"Failed to insert pending idempotency record for send_email: {e}")
+    idempotency_key, cached = await _idempotency_guard(params, "send_email", db)
+    if cached is not None:
+        return cached
 
     activity.logger.info(f"Sending email to: {to}")
 
@@ -687,54 +701,10 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
     method = params.get("method", "POST")
     payload = params.get("payload", {})
 
-    # Generate idempotency key based on workflow and step
-    try:
-        if not hasattr(activity, "info"):
-            raise RuntimeError("mocked")
-        info = activity.info()
-        workflow_id = info.workflow_id
-        step_id = params.get("step_id", info.activity_id)
-    except Exception:
-        # Fallback for testing environments without temporal context
-        workflow_id = "test-workflow"
-        step_id = params.get("step_id", "test-step")
-
-    idempotency_key = f"{workflow_id}:{step_id}:call_webhook"
-
     db = get_database_provider()
-
-    # Check if a successful execution already exists
-    try:
-        existing = await db.select(
-            table="idempotency_ledger",
-            filters={"idempotency_key": idempotency_key},
-        )
-        if existing and existing[0].get("status") == "completed":
-            activity.logger.info(
-                f"Webhook already executed. Returning stored result. Key: {idempotency_key}"
-            )
-            return json.loads(existing[0].get("result_payload", "{}"))
-        if existing and existing[0].get("status") == "pending":
-            # Concurrent execution or failed attempt that left a pending record
-            pass
-    except DatabaseError as e:
-        activity.logger.warning(f"Failed to check idempotency ledger: {e}")
-        # Continue execution if ledger is unavailable to maintain availability
-
-    # Insert pending record
-    try:
-        await db.upsert(
-            table="idempotency_ledger",
-            record={
-                "idempotency_key": idempotency_key,
-                "status": "pending",
-                "workflow_id": workflow_id,
-                "tool_name": "call_webhook",
-            },
-            conflict_columns=["idempotency_key"],
-        )
-    except DatabaseError as e:
-        activity.logger.warning(f"Failed to insert pending idempotency record: {e}")
+    idempotency_key, cached = await _idempotency_guard(params, "call_webhook", db)
+    if cached is not None:
+        return cached
 
     try:
         validated_url = await validate_url_with_dns_pin_async(url)
