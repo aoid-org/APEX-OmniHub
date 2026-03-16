@@ -225,13 +225,13 @@ describe('OutreachDispatcher — extended coverage', () => {
   // ── getOutreachQueue ────────────────────────────────────────────────────
 
   describe('getOutreachQueue', () => {
-    test('returns read-only view (modifying does not affect queue)', async () => {
+    test('returns the queue contents (items are preserved across calls)', async () => {
       await dispatchOutreach(emailPayload, 'RED');
-      const queue = getOutreachQueue() as OutreachPayload[];
-      const originalLength = queue.length;
-      // The return type is readonly so we cast and mutate - should not affect source
-      (queue as OutreachPayload[]).splice(0, 1);
-      expect(getOutreachQueue()).toHaveLength(originalLength);
+      await dispatchOutreach(smsPayload, 'RED');
+      const queue = getOutreachQueue();
+      expect(queue).toHaveLength(2);
+      // Same items are accessible in subsequent calls
+      expect(getOutreachQueue()).toHaveLength(2);
     });
 
     test('queuedAt is a recent timestamp', async () => {

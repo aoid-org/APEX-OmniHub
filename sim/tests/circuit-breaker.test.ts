@@ -187,7 +187,6 @@ describe('CircuitBreaker', () => {
     cb.reset();
     expect(cb.getState()).toBe('closed');
     // A success on a closed circuit should NOT re-close (no state change date from close guard)
-    const statsBefore = cb.getStats();
     await succeedN(cb, 1);
     // lastStateChange remains what it was set to by reset()
     expect(cb.getState()).toBe('closed');
