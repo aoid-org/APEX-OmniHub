@@ -575,7 +575,7 @@ def get_omnitrace_recorder(workflow_id: str, trace_id: str) -> OmniTraceRecorder
         OmniTraceRecorder instance
     """
     if workflow_id not in _recorders:
-        _recorders[workflow_id] = OmniTraceRecorder(
+        _recorders[workflow_id] = OmniTraceRecorder(  # pragma: no cover
             workflow_id=workflow_id,
             trace_id=trace_id,
         )

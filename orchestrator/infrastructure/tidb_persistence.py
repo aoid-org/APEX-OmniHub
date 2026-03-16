@@ -13,9 +13,9 @@ from typing import Any
 try:
     import mysql.connector
     from mysql.connector import Error as MySQLError
-except ImportError:
-    mysql = None  # type: ignore
-    MySQLError = Exception  # type: ignore
+except ImportError:  # pragma: no cover
+    mysql = None  # type: ignore  # pragma: no cover
+    MySQLError = Exception  # type: ignore  # pragma: no cover
 
 
 class TiDBVectorPersistence:

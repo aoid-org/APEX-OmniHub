@@ -227,3 +227,21 @@ class TestAppNameEnum:
         """Should serialize to string."""
         assert str(AppName.TRADELINE247) == "tradeline247"
         assert AppName.TRADELINE247.value == "tradeline247"
+
+
+class TestValidateISO8601:
+    """Test validate_iso8601 field validator — covers line 177 (return v)."""
+
+    def test_explicit_valid_timestamp_returns_value(self):
+        """Line 177: passing an explicit valid ISO 8601 timestamp hits `return v`."""
+        envelope = EventEnvelope(
+            correlation_id="corr-valid",
+            idempotency_key="tenant-ts-event-001-nonce",
+            tenant_id="tenant-ts",
+            event_type=EventType.INGEST_RECEIVED,
+            payload={},
+            source=AppName.OMNILINK,
+            trace=TraceContext(trace_id="t1", span_id="s1"),
+            timestamp="2024-01-01T00:00:00Z",
+        )
+        assert envelope.timestamp == "2024-01-01T00:00:00Z"

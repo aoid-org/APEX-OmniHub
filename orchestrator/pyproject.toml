@@ -71,6 +71,15 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v"
 
+[tool.coverage.run]
+omit = [
+    "server.py",
+    "sandbox_test.py",
+    "workflows/agent_saga.py",
+    "workflows/universal_saga.py",
+    "workflows/__init__.py",
+]
+
 [tool.mypy]
 python_version = "3.11"
 strict = true

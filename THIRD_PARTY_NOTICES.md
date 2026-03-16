@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-**APEX OmniHub v1.4.2** — Generated 2026-03-15
+**APEX OmniHub v1.4.3** — Generated 2026-03-16
 
 This file lists third-party software packages used by APEX OmniHub, along with
 their license types and source repositories. Full license texts are available in
