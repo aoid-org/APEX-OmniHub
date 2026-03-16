@@ -669,7 +669,9 @@ async def send_email(params: dict[str, Any]) -> dict[str, Any]:
 
     db = get_database_provider()
 
-    cached = await _idempotency_guard(db, idempotency_key, "send_email", workflow_id)
+    cached = await _idempotency_guard(
+        db, idempotency_key, "send_email", str(workflow_id or "unknown-workflow")
+    )
     if cached is not None:
         return cached
 
@@ -725,7 +727,9 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
 
     db = get_database_provider()
 
-    cached = await _idempotency_guard(db, idempotency_key, "call_webhook", workflow_id)
+    cached = await _idempotency_guard(
+        db, idempotency_key, "call_webhook", str(workflow_id or "unknown-workflow")
+    )
     if cached is not None:
         return cached
 
