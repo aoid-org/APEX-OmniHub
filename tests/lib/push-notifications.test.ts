@@ -6,9 +6,9 @@ import * as monitoring from '../../src/lib/monitoring';
 const logAnalyticsEventSpy = vi.spyOn(monitoring, 'logAnalyticsEvent').mockImplementation(() => Promise.resolve());
 
 describe('setupNotificationClickHandler', () => {
-  let messageHandler: ((event: any) => void) | null = null;
+  let messageHandler: ((event: { origin: string; data: unknown; source: unknown }) => void) | null = null;
   const originalLocation = globalThis.location;
-  const originalServiceWorker = globalThis.ServiceWorker;
+  const originalServiceWorker = (globalThis as unknown as { ServiceWorker: unknown }).ServiceWorker;
   const originalNavigator = globalThis.navigator;
 
   beforeEach(() => {
@@ -17,7 +17,7 @@ describe('setupNotificationClickHandler', () => {
 
     // Mock navigator.serviceWorker
     const mockServiceWorkerContainer = {
-      addEventListener: vi.fn((type, handler) => {
+      addEventListener: vi.fn((type: string, handler: (event: { origin: string; data: unknown; source: unknown }) => void) => {
         if (type === 'message') {
           messageHandler = handler;
         }
@@ -45,8 +45,7 @@ describe('setupNotificationClickHandler', () => {
     });
 
     // Mock ServiceWorker class
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const MockSW = function() {};
+    const MockSW = function(this: unknown) {};
     Object.defineProperty(globalThis, 'ServiceWorker', {
       configurable: true,
       value: MockSW,
@@ -85,7 +84,8 @@ describe('setupNotificationClickHandler', () => {
     if (!messageHandler) throw new Error('Handler not registered');
 
     // Create a mock ServiceWorker instance
-    const mockSW = new (globalThis as any).ServiceWorker();
+    const ServiceWorkerClass = (globalThis as unknown as { ServiceWorker: new () => ServiceWorker }).ServiceWorker;
+    const mockSW = new ServiceWorkerClass();
 
     const event = {
       origin: '',
@@ -102,7 +102,8 @@ describe('setupNotificationClickHandler', () => {
     setupNotificationClickHandler();
     if (!messageHandler) throw new Error('Handler not registered');
 
-    const mockSW = new (globalThis as any).ServiceWorker();
+    const ServiceWorkerClass = (globalThis as unknown as { ServiceWorker: new () => ServiceWorker }).ServiceWorker;
+    const mockSW = new ServiceWorkerClass();
 
     const event = {
       origin: 'null',
