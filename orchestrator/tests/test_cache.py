@@ -245,7 +245,7 @@ class TestEntityExtractorExtra:
     def test_create_template_multiple_same_type(self):
         """Multiple entities of the same type get indexed placeholders."""
         text = "Transfer $100 and $200 to account"
-        template, params = EntityExtractor.create_template(text)
+        template, _ = EntityExtractor.create_template(text)
         # Should have at least one AMOUNT placeholder
         assert "{" in template
 
@@ -535,7 +535,6 @@ class TestSemanticCacheServiceMocked:
         call_args = mock_redis.expire.call_args
         assert call_args[0][1] == 999
 
-    pass  # sync tests moved to TestSemanticCacheSyncMethods below
 
 
 # ---------------------------------------------------------------------------

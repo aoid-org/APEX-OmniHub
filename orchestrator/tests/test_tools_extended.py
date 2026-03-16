@@ -187,7 +187,7 @@ async def test_call_webhook_ssrf_records_failure_in_ledger():
             side_effect=ValueError("internal IP blocked"),
         ),
     ):
-        result = await call_webhook({"url": "http://10.0.0.1", "step_id": "s1"})
+        result = await call_webhook({"url": "http://10.0.0.1", "step_id": "s1"})  # NOSONAR
 
     assert result["success"] is False
     assert result["status_code"] == 403
@@ -204,7 +204,7 @@ async def test_call_webhook_http_client_exception_recorded_and_raised():
 
     validated = MagicMock()
     validated.original_url = "https://api.example.com"
-    validated.resolved_ip = "1.2.3.4"
+    validated.resolved_ip = "1.2.3.4"  # NOSONAR
     validated.host_header = "api.example.com"
 
     with patch("activities.tools.get_database_provider", return_value=db):
@@ -235,8 +235,8 @@ async def test_call_webhook_ip_literal_hostname_no_pinning():
     db.update = AsyncMock()
 
     validated = MagicMock()
-    validated.original_url = "https://1.2.3.4/path"
-    validated.resolved_ip = "1.2.3.4"
+    validated.original_url = "https://1.2.3.4/path"  # NOSONAR
+    validated.resolved_ip = "1.2.3.4"  # NOSONAR
     validated.host_header = ""
 
     with patch("activities.tools.get_database_provider", return_value=db):
@@ -255,7 +255,7 @@ async def test_call_webhook_ip_literal_hostname_no_pinning():
                 mock_client.request = AsyncMock(return_value=mock_resp)
                 mock_client_cls.return_value = mock_client
 
-                result = await call_webhook({"url": "https://1.2.3.4/path", "step_id": "s1"})
+                result = await call_webhook({"url": "https://1.2.3.4/path", "step_id": "s1"})  # NOSONAR
 
     assert result["success"] is True
 
@@ -1010,7 +1010,7 @@ async def test_call_webhook_no_activity_info_attr_falls_back():
 
     validated = MagicMock()
     validated.original_url = "https://example.com"
-    validated.resolved_ip = "1.2.3.4"
+    validated.resolved_ip = "1.2.3.4"  # NOSONAR
     validated.host_header = "example.com"
 
     mock_activity_mod = MagicMock(spec=[])
@@ -1085,7 +1085,7 @@ async def test_call_webhook_with_activity_info_success():
 
     validated = MagicMock()
     validated.original_url = "https://api.example.com"
-    validated.resolved_ip = "1.2.3.4"
+    validated.resolved_ip = "1.2.3.4"  # NOSONAR
     validated.host_header = "api.example.com"
 
     mock_resp = MagicMock()

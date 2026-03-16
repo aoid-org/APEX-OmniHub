@@ -376,7 +376,7 @@ class TestEvaluatePolicy:
         """evaluate_policy passes user_id from ctx to audit log."""
         audit_calls = []
 
-        async def fake_audit(**kwargs):
+        async def fake_audit(**kwargs):  # NOSONAR
             audit_calls.append(kwargs)
             return "log-id"
 
@@ -402,7 +402,7 @@ class TestEvaluatePolicy:
         """evaluate_policy defaults actor_id to 'unknown' when user_id missing."""
         audit_calls = []
 
-        async def fake_audit(**kwargs):
+        async def fake_audit(**kwargs):  # NOSONAR
             audit_calls.append(kwargs)
             return "log-id"
 
@@ -425,7 +425,7 @@ class TestEvaluatePolicy:
     async def test_evaluate_policy_suppresses_audit_log_errors(self):
         """Audit log failures must not propagate — policy result still returned."""
 
-        async def failing_audit(**_kwargs):
+        async def failing_audit(**_kwargs):  # NOSONAR
             msg = "DB connection failed"
             raise RuntimeError(msg)
 

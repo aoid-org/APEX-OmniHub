@@ -59,15 +59,15 @@ class TestGetSampleRate:
 
     def test_explicit_rate_overrides_default(self, monkeypatch):
         monkeypatch.setenv("OMNITRACE_SAMPLE_RATE", "0.5")
-        assert get_sample_rate() == 0.5
+        assert get_sample_rate() == pytest.approx(0.5)
 
     def test_rate_clamped_to_zero(self, monkeypatch):
         monkeypatch.setenv("OMNITRACE_SAMPLE_RATE", "-1.0")
-        assert get_sample_rate() == 0.0
+        assert get_sample_rate() == pytest.approx(0.0)
 
     def test_rate_clamped_to_one(self, monkeypatch):
         monkeypatch.setenv("OMNITRACE_SAMPLE_RATE", "2.0")
-        assert get_sample_rate() == 1.0
+        assert get_sample_rate() == pytest.approx(1.0)
 
     def test_invalid_rate_falls_back_to_default(self, monkeypatch):
         monkeypatch.setenv("OMNITRACE_SAMPLE_RATE", "not-a-number")
@@ -78,11 +78,11 @@ class TestGetSampleRate:
 
     def test_zero_rate_valid(self, monkeypatch):
         monkeypatch.setenv("OMNITRACE_SAMPLE_RATE", "0.0")
-        assert get_sample_rate() == 0.0
+        assert get_sample_rate() == pytest.approx(0.0)
 
     def test_one_rate_valid(self, monkeypatch):
         monkeypatch.setenv("OMNITRACE_SAMPLE_RATE", "1.0")
-        assert get_sample_rate() == 1.0
+        assert get_sample_rate() == pytest.approx(1.0)
 
 
 # =============================================================================
@@ -214,7 +214,7 @@ class TestRedactValueBranches:
 
     def test_dict_value_recursed(self):
         """Dict value should be recursively redacted."""
-        result = redact_value("meta", {"status": "ok", "password": "x"}, depth=0)
+        result = redact_value("meta", {"status": "ok", "password": "x"}, depth=0)  # NOSONAR
         assert isinstance(result, dict)
         assert "status" in result
         assert "password" not in result
@@ -325,7 +325,7 @@ class TestRedactPrimitive:
 
     def test_float_in_range_preserved(self):
         result = _redact_primitive(3.14)
-        assert result == 3.14
+        assert result == pytest.approx(3.14)
 
     def test_float_out_of_range_hashed(self):
         result = _redact_primitive(1e12)
@@ -339,20 +339,20 @@ class TestRedactPrimitive:
 
 class TestRedactDictEdgeCases:
     def test_non_dict_returns_empty(self):
-        result = redact_dict("not a dict")  # type: ignore[arg-type]
+        result = redact_dict("not a dict")  # type: ignore[arg-type]  # NOSONAR
         assert result == {}
 
     def test_none_returns_empty(self):
-        result = redact_dict(None)  # type: ignore[arg-type]
+        result = redact_dict(None)  # type: ignore[arg-type]  # NOSONAR
         assert result == {}
 
     def test_list_returns_empty(self):
-        result = redact_dict([1, 2, 3])  # type: ignore[arg-type]
+        result = redact_dict([1, 2, 3])  # type: ignore[arg-type]  # NOSONAR
         assert result == {}
 
     def test_dropped_keys_excluded_from_result(self):
         """Keys in droplist should not appear in result (value=None filtered)."""
-        data = {"id": "test", "password": "secret", "status": "ok"}
+        data = {"id": "test", "password": "secret", "status": "ok"}  # NOSONAR
         result = redact_dict(data)
         assert "password" not in result
         assert result["id"] == "test"
@@ -504,26 +504,26 @@ class TestOmniTraceRecorderHandleError:
 
     def test_increments_error_count(self):
         recorder = OmniTraceRecorder(workflow_id="wf-err", trace_id="t-err")
-        recorder._handle_error("test_op", Exception("boom"))
+        recorder._handle_error("test_op", RuntimeError("boom"))
         assert recorder._error_count == 1
 
     def test_logs_only_first_error(self):
         recorder = OmniTraceRecorder(workflow_id="wf-err2", trace_id="t-err2")
         with patch("observability.omnitrace.logger") as mock_logger:
-            recorder._handle_error("op1", Exception("first"))
-            recorder._handle_error("op2", Exception("second"))
+            recorder._handle_error("op1", RuntimeError("first"))
+            recorder._handle_error("op2", RuntimeError("second"))
             # Warning logged only once
             assert mock_logger.warning.call_count == 1
 
     def test_sets_error_logged_flag(self):
         recorder = OmniTraceRecorder(workflow_id="wf-err3", trace_id="t-err3")
-        recorder._handle_error("op", Exception("err"))
+        recorder._handle_error("op", RuntimeError("err"))
         assert recorder._error_logged is True
 
     def test_multiple_errors_count_all(self):
         recorder = OmniTraceRecorder(workflow_id="wf-err4", trace_id="t-err4")
         for i in range(5):
-            recorder._handle_error("op", Exception(f"err {i}"))
+            recorder._handle_error("op", RuntimeError(f"err {i}"))
         assert recorder._error_count == 5
 
 
@@ -595,7 +595,7 @@ class TestOmniTraceRecorderRecordRunStart:
 
         await recorder.record_run_start(
             user_id=None,
-            input_data={"workflow_id": "wf-1", "password": "s3cr3t"},
+            input_data={"workflow_id": "wf-1", "password": "s3cr3t"},  # NOSONAR
         )
 
         call_kwargs = mock_db.rpc.call_args.args[1]
@@ -923,7 +923,7 @@ class TestTraceToolExecution:
         ctx = trace_ctx_class(workflow_id=wf_id, trace_id="t-trace-s1")
 
         async with ctx:
-            pass
+            ...  # execute context manager side effects only
 
         mock_db.rpc.assert_called_once()
         call_payload = mock_db.rpc.call_args.args[1]
@@ -1017,7 +1017,7 @@ class TestTraceToolExecution:
         trace_ctx_class = trace_tool_execution("stepX", "search", attempt=2)
         ctx = trace_ctx_class(workflow_id=wf_id, trace_id="t-retry")
         async with ctx:
-            pass
+            ...  # execute context manager side effects only
 
         call_payload = mock_db.rpc.call_args.args[1]
         assert call_payload["p_event_key"] == "tool:stepX:search:2"

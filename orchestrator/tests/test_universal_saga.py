@@ -88,7 +88,7 @@ def test_retry_policy_config():
 
     assert ACTIVITY_RETRY_POLICY.maximum_attempts == 3
     assert ACTIVITY_RETRY_POLICY.initial_interval == timedelta(seconds=1)
-    assert ACTIVITY_RETRY_POLICY.backoff_coefficient == 2.0
+    assert ACTIVITY_RETRY_POLICY.backoff_coefficient == pytest.approx(2.0)
     assert ACTIVITY_RETRY_POLICY.maximum_interval == timedelta(seconds=30)
 
 

@@ -173,8 +173,6 @@ class TestTiDBPutEmbeddingReconnect:
             # Simulate disconnection by making is_connected return False
             store.connection.is_connected.return_value = False
             # Replace _connect with a mock that restores connection
-            original_connect = store._connect
-
             def fake_connect():
                 store.connection = mock_conn
                 mock_conn.is_connected.return_value = True
