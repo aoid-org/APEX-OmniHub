@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { BrainCircuit, Sparkles, ArrowRight, Target, Wallet, Lock, CheckCircle2 } from 'lucide-react';
@@ -47,6 +47,47 @@ export function OnboardingWizard() {
     sessionStorage.setItem('omnihub_onboarding', JSON.stringify(sessionData));
   }, [sessionData]);
 
+  const handleFinalActivation = useCallback(async (tier: 'BASIC' | 'PRO') => {
+    if (isActivating) return;
+    setIsActivating(true);
+
+    try {
+      if (tier === 'BASIC') {
+        const { error } = await supabase.functions.invoke('activate-client', {
+          body: { tier: 'BASIC', skills: sessionData.skills.filter(s => s.tier === 'CORE') }
+        });
+
+        if (error) throw error;
+
+        sessionStorage.removeItem('omnihub_onboarding');
+        navigate('/omnidash?onboarded=true');
+
+      } else if (tier === 'PRO') {
+        const returnUrl = new URL(window.location.origin);
+
+        const { data, error } = await supabase.functions.invoke('create-checkout', {
+          body: {
+            tier: 'PRO',
+            skills: sessionData.skills,
+            returnUrl: returnUrl.toString()
+          }
+        });
+
+        if (error) throw error;
+
+        if (data?.url) {
+          window.location.href = data.url; // Redirect to Stripe
+        } else {
+          throw new Error('No checkout URL returned');
+        }
+      }
+    } catch (error: unknown) {
+      console.error("Activation failed:", error);
+      toast.error(error instanceof Error ? error.message : "Activation failed. Please try again.");
+      setIsActivating(false);
+    }
+  }, [isActivating, navigate, sessionData.skills]);
+
   // Handle OAuth Return or step sync
   useEffect(() => {
     const checkAuth = async () => {
@@ -63,7 +104,7 @@ export function OnboardingWizard() {
       }
     };
     checkAuth();
-  }, [step, sessionData.selectedTier]);
+  }, [step, sessionData.selectedTier, isActivating, handleFinalActivation]);
 
   const updateSession = (updates: Partial<OnboardingState>) => {
     setSessionData(prev => ({ ...prev, ...updates }));
@@ -129,8 +170,8 @@ export function OnboardingWizard() {
 
       // Successfully authenticated
       setStep(4);
-    } catch (err: any) {
-      toast.error(err.message || 'Authentication failed');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Authentication failed');
     } finally {
       setAuthState(prev => ({ ...prev, isLoading: false }));
     }
@@ -146,47 +187,6 @@ export function OnboardingWizard() {
         redirectTo: returnUrl.toString(),
       }
     });
-  };
-
-  const handleFinalActivation = async (tier: 'BASIC' | 'PRO') => {
-    if (isActivating) return;
-    setIsActivating(true);
-
-    try {
-      if (tier === 'BASIC') {
-        const { error } = await supabase.functions.invoke('activate-client', {
-          body: { tier: 'BASIC', skills: sessionData.skills.filter(s => s.tier === 'CORE') }
-        });
-
-        if (error) throw error;
-
-        sessionStorage.removeItem('omnihub_onboarding');
-        navigate('/omnidash?onboarded=true');
-
-      } else if (tier === 'PRO') {
-        const returnUrl = new URL(window.location.origin);
-
-        const { data, error } = await supabase.functions.invoke('create-checkout', {
-          body: {
-            tier: 'PRO',
-            skills: sessionData.skills,
-            returnUrl: returnUrl.toString()
-          }
-        });
-
-        if (error) throw error;
-
-        if (data?.url) {
-          window.location.href = data.url; // Redirect to Stripe
-        } else {
-          throw new Error('No checkout URL returned');
-        }
-      }
-    } catch (error: any) {
-      console.error("Activation failed:", error);
-      toast.error(error.message || "Activation failed. Please try again.");
-      setIsActivating(false);
-    }
   };
 
   return (

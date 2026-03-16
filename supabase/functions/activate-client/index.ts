@@ -4,7 +4,7 @@ import { buildCorsHeaders, handlePreflight, corsErrorResponse } from "../_shared
 
 interface RequestBody {
   tier: 'BASIC';
-  skills: any[];
+  skills: Record<string, unknown>[];
 }
 
 serve(async (req) => {

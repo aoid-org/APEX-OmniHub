@@ -14,7 +14,7 @@ const stripe = new Stripe(stripeSecretKey ?? '', {
 
 interface RequestBody {
   tier: 'PRO';
-  skills: any[];
+  skills: Record<string, unknown>[];
   returnUrl: string;
 }
 
