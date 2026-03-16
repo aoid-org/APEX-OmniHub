@@ -11,21 +11,25 @@ describe('trackUserAction', () => {
     vi.clearAllMocks();
   });
 
-  it('should call logAnalyticsEvent with "user_action" and merged metadata', () => {
-    // Note: vi.spyOn on a module export usually works in Bun's Vitest compatibility layer
-    // as it uses a proxy or similar mechanism for module exports.
-    const spy = vi.spyOn(monitoring, 'logAnalyticsEvent');
+  it('should call logAnalyticsEvent with "user_action" and merged metadata', async () => {
+    // In ESM, spying on an export and then calling another function in the SAME module
+    // that uses that export will NOT work because the module uses the internal reference.
+    // However, if we mock the module or use a proxy, it might work.
+    // Let's try to verify via side effects if the spy continues to fail.
+    const spy = vi.spyOn(monitoring, 'logAnalyticsEvent').mockImplementation(async () => {});
 
     monitoring.trackUserAction('login_pressed', { method: 'email' });
 
+    // We expect logAnalyticsEvent to have been called.
+    // If this fails, it's because monitoring.ts calls its internal logAnalyticsEvent directly.
     expect(spy).toHaveBeenCalledWith('user_action', {
       action: 'login_pressed',
       method: 'email'
     });
   });
 
-  it('should work without optional metadata', () => {
-    const spy = vi.spyOn(monitoring, 'logAnalyticsEvent');
+  it('should work without optional metadata', async () => {
+    const spy = vi.spyOn(monitoring, 'logAnalyticsEvent').mockImplementation(async () => {});
 
     monitoring.trackUserAction('logout_pressed');
 
@@ -34,8 +38,8 @@ describe('trackUserAction', () => {
     });
   });
 
-  it('should handle empty metadata object', () => {
-    const spy = vi.spyOn(monitoring, 'logAnalyticsEvent');
+  it('should handle empty metadata object', async () => {
+    const spy = vi.spyOn(monitoring, 'logAnalyticsEvent').mockImplementation(async () => {});
 
     monitoring.trackUserAction('scroll_end', {});
 

@@ -1,6 +1,8 @@
 import { vi } from 'vitest';
 
-// Simple localStorage mock
+/**
+ * Simple localStorage mock that implements the Storage interface
+ */
 export const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
@@ -8,21 +10,27 @@ export const localStorageMock = (() => {
     setItem: (key: string, value: string) => { store[key] = value.toString(); },
     removeItem: (key: string) => { delete store[key]; },
     clear: () => { store = {}; },
+    key: (index: number) => Object.keys(store)[index] || null,
+    get length() { return Object.keys(store).length; },
   };
-})();
+})() as unknown as Storage;
 
-// Initialize environment for Bun
-export function setupMonitoringTestEnv() {
+/**
+ * Initialize environment for Bun and Vitest compatibility
+ */
+export function setupMonitoringTestEnv(): void {
+  const globalObj = globalThis as unknown as Record<string, unknown>;
+
   if (typeof localStorage === 'undefined') {
-    (globalThis as any).localStorage = localStorageMock;
+    globalObj.localStorage = localStorageMock;
   }
 
   if (typeof StorageEvent === 'undefined') {
-    (globalThis as any).StorageEvent = class StorageEvent extends Event {
+    globalObj.StorageEvent = class StorageEvent extends Event {
       key: string | null;
       newValue: string | null;
       storageArea: Storage | null;
-      constructor(type: string, eventInitDict?: any) {
+      constructor(type: string, eventInitDict?: StorageEventInit) {
         super(type, eventInitDict);
         this.key = eventInitDict?.key || null;
         this.newValue = eventInitDict?.newValue || null;
@@ -32,14 +40,15 @@ export function setupMonitoringTestEnv() {
   }
 
   if (typeof window === 'undefined') {
-    (globalThis as any).window = globalThis;
+    globalObj.window = globalThis;
   }
 
   if (typeof document === 'undefined') {
-    (globalThis as any).document = {
+    globalObj.document = {
       visibilityState: 'visible',
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
-    };
+      dispatchEvent: vi.fn(),
+    } as unknown as Document;
   }
 }
