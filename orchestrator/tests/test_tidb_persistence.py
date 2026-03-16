@@ -144,12 +144,11 @@ class TestTiDBConnectDisabled:
 class TestTiDBConnectError:
     """Test connection error path."""
 
+    @patch("infrastructure.tidb_persistence.MySQLError", new=Exception)
     @patch("infrastructure.tidb_persistence.mysql")
     def test_connect_raises_on_mysql_error(self, mock_mysql):
         """_connect wraps MySQLError in RuntimeError."""
-        from mysql.connector import Error as RealMySQLError
-
-        mock_mysql.connector.connect.side_effect = RealMySQLError("connection refused")
+        mock_mysql.connector.connect.side_effect = Exception("connection refused")
 
         with patch.dict(os.environ, _FAKE_TIDB_ENV, clear=False):
             with pytest.raises(RuntimeError, match="TiDB connection failed"):
@@ -182,14 +181,13 @@ class TestTiDBPutEmbeddingReconnect:
             store.put_embedding("id1", [0.1], {"k": "v"})
             store._connect.assert_called_once()
 
+    @patch("infrastructure.tidb_persistence.MySQLError", new=Exception)
     @patch("infrastructure.tidb_persistence.mysql")
     def test_put_embedding_mysql_error_rolls_back(self, mock_mysql):
         """put_embedding rolls back on MySQLError and raises RuntimeError."""
-        from mysql.connector import Error as RealMySQLError
-
         mock_conn = MagicMock()
         mock_cursor = MagicMock()
-        mock_cursor.execute.side_effect = RealMySQLError("query failed")
+        mock_cursor.execute.side_effect = Exception("query failed")
         mock_conn.cursor.return_value = mock_cursor
         mock_conn.is_connected.return_value = True
         mock_mysql.connector.connect.return_value = mock_conn
@@ -253,14 +251,13 @@ class TestTiDBGetEmbeddingReconnect:
             result = store.get_embedding("nonexistent")
             assert result is None
 
+    @patch("infrastructure.tidb_persistence.MySQLError", new=Exception)
     @patch("infrastructure.tidb_persistence.mysql")
     def test_get_embedding_mysql_error_raises(self, mock_mysql):
         """get_embedding raises RuntimeError on MySQLError."""
-        from mysql.connector import Error as RealMySQLError
-
         mock_conn = MagicMock()
         mock_cursor = MagicMock()
-        mock_cursor.execute.side_effect = RealMySQLError("read failed")
+        mock_cursor.execute.side_effect = Exception("read failed")
         mock_conn.cursor.return_value = mock_cursor
         mock_conn.is_connected.return_value = True
         mock_mysql.connector.connect.return_value = mock_conn
