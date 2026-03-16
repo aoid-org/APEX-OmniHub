@@ -26,8 +26,8 @@ DO $$ BEGIN
     IF EXISTS (
         SELECT 1 FROM pg_policies
         WHERE schemaname = 'public'
-          AND tablename  = 'man_notifications'
-          AND policyname = 'man_notifications_user_read'
+          AND tablename  = 'man_notifications' -- NOSONAR: SQL has no constant mechanism; literal repetition is idiomatic
+          AND policyname = 'man_notifications_user_read' -- NOSONAR
     ) THEN
         DROP POLICY man_notifications_user_read
             ON public.man_notifications;
@@ -39,7 +39,7 @@ DO $$ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_policies
         WHERE schemaname = 'public'
-          AND tablename  = 'man_notifications'
+          AND tablename  = 'man_notifications' -- NOSONAR
           AND policyname = 'man_notifications_owner_read'
     ) THEN
         CREATE POLICY "man_notifications_owner_read"
