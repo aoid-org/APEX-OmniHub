@@ -356,7 +356,7 @@ async def test_mint_pilot_session_inactive_connection():
     """No active connection found → error without inserting session."""
     with patch("activities.tools.get_database_provider") as mock_provider:
         db = AsyncMock()
-        db.select.return_value = []  # empty = not found / inactive
+        db.select.return_value = []
         mock_provider.return_value = db
 
         result = await mint_pilot_session(
