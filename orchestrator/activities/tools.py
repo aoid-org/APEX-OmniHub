@@ -658,7 +658,7 @@ async def send_email(params: dict[str, Any]) -> dict[str, Any]:
         if not hasattr(activity, "info"):
             raise RuntimeError("mocked")
         info = activity.info()
-        workflow_id = info.workflow_id
+        workflow_id = info.workflow_id or ""
         step_id = params.get("step_id", info.activity_id)
     except Exception:
         # Fallback for testing environments without temporal context
@@ -714,7 +714,7 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
         if not hasattr(activity, "info"):
             raise RuntimeError("mocked")
         info = activity.info()
-        workflow_id = info.workflow_id
+        workflow_id = info.workflow_id or ""
         step_id = params.get("step_id", info.activity_id)
     except Exception:
         # Fallback for testing environments without temporal context
