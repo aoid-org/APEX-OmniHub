@@ -272,6 +272,5 @@ class TestCodeQuality:
             assert has_implementation, "_store_supabase is still a placeholder"
 
 
-
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
