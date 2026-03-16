@@ -122,9 +122,10 @@ jobs:
             --only-verified \
             --exclude-paths .trufflehog-exclude-paths.txt
 
-      - name: npm audit for critical vulnerabilities
+      - name: npm audit for high and critical vulnerabilities
         run: |
-          npm audit --audit-level=critical || exit 1
+          # Block on HIGH (CVSS >= 7.0) and CRITICAL vulnerabilities.
+          npm audit --audit-level=high || exit 1
 
       - name: Security posture check
         run: |
