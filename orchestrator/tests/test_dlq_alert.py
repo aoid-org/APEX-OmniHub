@@ -7,6 +7,7 @@ including all error-handling paths.
 from __future__ import annotations
 
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -37,6 +38,34 @@ def payload_dict() -> dict[str, str]:
 @pytest.fixture()
 def alert(payload_dict: dict[str, str]) -> DLQAlertPayload:
     return DLQAlertPayload(**payload_dict)
+
+
+def _make_mock_config(webhook_url: str | None) -> MagicMock:
+    """Build a mock ``config`` module with the given webhook URL."""
+    mock_settings = MagicMock()
+    mock_settings.slack_alert_webhook_url = webhook_url
+    mock_config = MagicMock()
+    mock_config.settings = mock_settings
+    return mock_config
+
+
+def _make_mock_client(
+    post_side_effect: Any = None,  # noqa: ANN401
+    post_fn: Any = None,  # noqa: ANN401
+) -> tuple[AsyncMock, AsyncMock]:
+    """Return ``(mock_http_client, mock_client_ctx)`` for httpx patching."""
+    mock_http_client = AsyncMock()
+    if post_fn is not None:
+        mock_http_client.post = post_fn
+    elif post_side_effect is not None:
+        mock_http_client.post = AsyncMock(side_effect=post_side_effect)
+    else:
+        mock_http_client.post = AsyncMock(return_value=AsyncMock())
+
+    mock_ctx = AsyncMock()
+    mock_ctx.__aenter__ = AsyncMock(return_value=mock_http_client)
+    mock_ctx.__aexit__ = AsyncMock(return_value=False)
+    return mock_http_client, mock_ctx
 
 
 # ---------------------------------------------------------------------------
@@ -137,8 +166,6 @@ class TestIncrementPrometheusCounter:
             caplog.at_level(logging.DEBUG, logger="activities.dlq_alert"),
         ):
             _increment_prometheus_counter(alert)
-        # No exception raised; debug log may or may not appear depending on
-        # import path, but the function must complete without raising.
 
     def test_handles_counter_exception_silently(
         self, alert: DLQAlertPayload, caplog: pytest.LogCaptureFixture
@@ -166,16 +193,11 @@ class TestPostSlackWebhook:
     async def test_no_op_when_config_import_fails(self, alert: DLQAlertPayload) -> None:
         """If config cannot be imported, function returns silently."""
         with patch.dict("sys.modules", {"config": None}):
-            # Should not raise
             await _post_slack_webhook(alert)
 
     @pytest.mark.asyncio
     async def test_no_op_when_webhook_url_is_none(self, alert: DLQAlertPayload) -> None:
-        mock_settings = MagicMock()
-        mock_settings.slack_alert_webhook_url = None
-        mock_config = MagicMock()
-        mock_config.settings = mock_settings
-
+        mock_config = _make_mock_config(webhook_url=None)
         with (
             patch.dict("sys.modules", {"config": mock_config}),
             patch("httpx.AsyncClient") as mock_client_cls,
@@ -185,53 +207,32 @@ class TestPostSlackWebhook:
 
     @pytest.mark.asyncio
     async def test_posts_message_when_webhook_url_set(self, alert: DLQAlertPayload) -> None:
-        mock_settings = MagicMock()
-        mock_settings.slack_alert_webhook_url = "https://hooks.slack.com/test"
-        mock_config = MagicMock()
-        mock_config.settings = mock_settings
-
-        mock_response = AsyncMock()
-        mock_http_client = AsyncMock()
-        mock_http_client.post = AsyncMock(return_value=mock_response)
-        mock_client_ctx = AsyncMock()
-        mock_client_ctx.__aenter__ = AsyncMock(return_value=mock_http_client)
-        mock_client_ctx.__aexit__ = AsyncMock(return_value=False)
+        mock_config = _make_mock_config("https://hooks.slack.com/test")
+        mock_http_client, mock_ctx = _make_mock_client()
 
         with (
             patch.dict("sys.modules", {"config": mock_config}),
-            patch("httpx.AsyncClient", return_value=mock_client_ctx),
+            patch("httpx.AsyncClient", return_value=mock_ctx),
         ):
             await _post_slack_webhook(alert)
 
         mock_http_client.post.assert_awaited_once()
         call_kwargs = mock_http_client.post.call_args
-        assert (
-            "https://hooks.slack.com/test" in call_kwargs.args
-            or call_kwargs.kwargs.get("url") == "https://hooks.slack.com/test"
-            or call_kwargs.args[0] == "https://hooks.slack.com/test"
-        )
+        assert call_kwargs.args[0] == "https://hooks.slack.com/test"
 
     @pytest.mark.asyncio
     async def test_message_contains_workflow_id(self, alert: DLQAlertPayload) -> None:
-        mock_settings = MagicMock()
-        mock_settings.slack_alert_webhook_url = "https://hooks.slack.com/test"
-        mock_config = MagicMock()
-        mock_config.settings = mock_settings
-
+        mock_config = _make_mock_config("https://hooks.slack.com/test")
         posted_json: dict = {}
 
-        async def capture_post(_url: str, **kwargs: object) -> None:
+        def capture_post(_url: str, **kwargs: object) -> None:
             posted_json.update(kwargs.get("json", {}))  # type: ignore[arg-type]
 
-        mock_http_client = AsyncMock()
-        mock_http_client.post = capture_post
-        mock_client_ctx = AsyncMock()
-        mock_client_ctx.__aenter__ = AsyncMock(return_value=mock_http_client)
-        mock_client_ctx.__aexit__ = AsyncMock(return_value=False)
+        mock_http_client, mock_ctx = _make_mock_client(post_fn=capture_post)
 
         with (
             patch.dict("sys.modules", {"config": mock_config}),
-            patch("httpx.AsyncClient", return_value=mock_client_ctx),
+            patch("httpx.AsyncClient", return_value=mock_ctx),
         ):
             await _post_slack_webhook(alert)
 
@@ -247,50 +248,35 @@ class TestPostSlackWebhook:
             error_type="BigError",
             error_msg="x" * 500,
         )
-        mock_settings = MagicMock()
-        mock_settings.slack_alert_webhook_url = "https://hooks.slack.com/test"
-        mock_config = MagicMock()
-        mock_config.settings = mock_settings
-
+        mock_config = _make_mock_config("https://hooks.slack.com/test")
         posted_json: dict = {}
 
-        async def capture_post(_url: str, **kwargs: object) -> None:
+        def capture_post(_url: str, **kwargs: object) -> None:
             posted_json.update(kwargs.get("json", {}))  # type: ignore[arg-type]
 
-        mock_http_client = AsyncMock()
-        mock_http_client.post = capture_post
-        mock_client_ctx = AsyncMock()
-        mock_client_ctx.__aenter__ = AsyncMock(return_value=mock_http_client)
-        mock_client_ctx.__aexit__ = AsyncMock(return_value=False)
+        mock_http_client, mock_ctx = _make_mock_client(post_fn=capture_post)
 
         with (
             patch.dict("sys.modules", {"config": mock_config}),
-            patch("httpx.AsyncClient", return_value=mock_client_ctx),
+            patch("httpx.AsyncClient", return_value=mock_ctx),
         ):
             await _post_slack_webhook(long_alert)
 
         text = posted_json.get("text", "")
-        # The embedded error message is capped at 300 chars
         assert "x" * 301 not in text
 
     @pytest.mark.asyncio
     async def test_logs_warning_on_httpx_failure(
         self, alert: DLQAlertPayload, caplog: pytest.LogCaptureFixture
     ) -> None:
-        mock_settings = MagicMock()
-        mock_settings.slack_alert_webhook_url = "https://hooks.slack.com/fail"
-        mock_config = MagicMock()
-        mock_config.settings = mock_settings
-
-        mock_http_client = AsyncMock()
-        mock_http_client.post = AsyncMock(side_effect=Exception("network timeout"))
-        mock_client_ctx = AsyncMock()
-        mock_client_ctx.__aenter__ = AsyncMock(return_value=mock_http_client)
-        mock_client_ctx.__aexit__ = AsyncMock(return_value=False)
+        mock_config = _make_mock_config("https://hooks.slack.com/fail")
+        _mock_http_client, mock_ctx = _make_mock_client(
+            post_side_effect=Exception("network timeout"),
+        )
 
         with (
             patch.dict("sys.modules", {"config": mock_config}),
-            patch("httpx.AsyncClient", return_value=mock_client_ctx),
+            patch("httpx.AsyncClient", return_value=mock_ctx),
             caplog.at_level(logging.WARNING, logger="activities.dlq_alert"),
         ):
             await _post_slack_webhook(alert)
@@ -300,9 +286,8 @@ class TestPostSlackWebhook:
     @pytest.mark.asyncio
     async def test_no_op_when_getattr_returns_none(self, alert: DLQAlertPayload) -> None:
         """settings exists but slack_alert_webhook_url attribute absent."""
-        mock_settings = object()  # plain object, no slack_alert_webhook_url attr
         mock_config = MagicMock()
-        mock_config.settings = mock_settings
+        mock_config.settings = object()
 
         with (
             patch.dict("sys.modules", {"config": mock_config}),
