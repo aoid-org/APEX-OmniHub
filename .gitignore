@@ -53,6 +53,7 @@ cache/
 typechain-types/
 coverage/
 coverage.json
+.coverage
 
 # Python
 __pycache__/

@@ -202,6 +202,52 @@ class TestNotifyManTask:
             assert record["idempotency_key"] == "man_notify:task-abc:slack"
 
 
+class TestNotifyManTaskExceptions:
+    """Test exception handling in notify_man_task — lines 87-91."""
+
+    @pytest.mark.asyncio
+    async def test_application_error_is_reraised(self):
+        """Line 87-88: ApplicationError should be re-raised directly."""
+        from temporalio.exceptions import ApplicationError
+
+        from activities.notify_man_task import notify_man_task
+
+        mock_db = AsyncMock()
+        mock_db.upsert = AsyncMock(side_effect=ApplicationError("DB constraint failed"))
+
+        params = {
+            "task_id": "task-err",
+            "workflow_id": "wf-err",
+            "channels": ["realtime"],
+            "message": "Test",
+        }
+
+        with patch("activities.notify_man_task.get_database_provider", return_value=mock_db):
+            with pytest.raises(ApplicationError, match="DB constraint failed"):
+                await notify_man_task(params)
+
+    @pytest.mark.asyncio
+    async def test_generic_exception_wrapped_in_application_error(self):
+        """Lines 89-94: generic Exception is wrapped in ApplicationError."""
+        from temporalio.exceptions import ApplicationError
+
+        from activities.notify_man_task import notify_man_task
+
+        mock_db = AsyncMock()
+        mock_db.upsert = AsyncMock(side_effect=RuntimeError("network timeout"))
+
+        params = {
+            "task_id": "task-net",
+            "workflow_id": "wf-net",
+            "channels": ["email"],
+            "message": "Test",
+        }
+
+        with patch("activities.notify_man_task.get_database_provider", return_value=mock_db):
+            with pytest.raises(ApplicationError, match="Notification error"):
+                await notify_man_task(params)
+
+
 class TestContinueAsNew:
     """Test continue-as-new snapshot/restore."""
 

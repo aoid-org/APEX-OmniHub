@@ -1,5 +1,8 @@
 # APEX Orchestrator - Architecture Deep Dive
 
+**Last Updated**: 2026-03-16
+**Version**: v1.3.0
+
 ## Executive Summary
 
 The APEX Orchestrator is a production-grade AI agent orchestration platform implementing:
@@ -284,7 +287,34 @@ class CriticalFlightBooking:
 - Workflow history provides audit trail of coordination
 - Cross-region coordination via Temporal's global state
 
-### 5. TypeScript ↔ Python Bridge
+### 5. Shared Idempotency Guard (activities/tools.py)
+
+Activities that produce irreversible side effects (email sends, webhook calls) use a shared helper to prevent duplicate execution on Temporal replay.
+
+**`_idempotency_guard()` — shared helper (added 2026-03-16):**
+```python
+async def _idempotency_guard(
+    db: Any,
+    idempotency_key: str,
+    tool_name: str,
+    workflow_id: str,
+) -> dict[str, Any] | None:
+```
+
+**Decision table:**
+
+| Ledger state | Action |
+|---|---|
+| No record exists | Insert `status="pending"`, return `None` (proceed) |
+| `status="completed"` | Return stored `result_payload` (skip re-execution) |
+| `status="pending"` | Return `None` (concurrent execution — proceed, last write wins) |
+| `DatabaseError` on check or insert | Swallow error, return `None` (ledger unavailability never blocks work) |
+
+**Key**: The guard is called before any side effect. After success, the caller updates the ledger record to `status="completed"` with the result payload. Both `send_email` and `call_webhook` delegate to this helper — replacing ~55 lines of duplicated logic each.
+
+**Idempotency key format**: `{workflow_id}:{step_id}:{tool_name}`
+
+### 7. TypeScript ↔ Python Bridge
 
 **EventEnvelope (Wire Format):**
 
@@ -493,19 +523,19 @@ histogram_quantile(0.95, sum(rate(workflow_duration_seconds_bucket[5m])) by (le)
 
 ## Future Enhancements
 
-### Phase 2 (Q2 2024)
+### Phase 2 (Near-term)
 - [ ] GraphQL API for workflow management
 - [ ] Real-time workflow progress updates (WebSocket)
 - [ ] Advanced plan templates (conditional branches)
 - [ ] LLM-based entity extraction (replace regex)
 
-### Phase 3 (Q3 2024)
+### Phase 3 (Mid-term)
 - [ ] Multi-tenancy with resource isolation
 - [ ] Workflow versioning and migration
 - [ ] A/B testing for plan optimization
 - [ ] Auto-scaling based on queue depth
 
-### Phase 4 (Q4 2024)
+### Phase 4 (Long-term)
 - [ ] Workflow composition (nested workflows)
 - [ ] Event-driven triggers (Kafka/SNS)
 - [ ] Cost optimization (cache prewarming)
