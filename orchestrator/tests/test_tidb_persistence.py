@@ -172,6 +172,7 @@ class TestTiDBPutEmbeddingReconnect:
             store = TiDBVectorPersistence()
             # Simulate disconnection by making is_connected return False
             store.connection.is_connected.return_value = False
+
             # Replace _connect with a mock that restores connection
             def fake_connect():
                 store.connection = mock_conn

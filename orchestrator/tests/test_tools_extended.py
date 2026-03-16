@@ -255,7 +255,9 @@ async def test_call_webhook_ip_literal_hostname_no_pinning():
                 mock_client.request = AsyncMock(return_value=mock_resp)
                 mock_client_cls.return_value = mock_client
 
-                result = await call_webhook({"url": "https://1.2.3.4/path", "step_id": "s1"})  # NOSONAR
+                result = await call_webhook(
+                    {"url": "https://1.2.3.4/path", "step_id": "s1"}
+                )  # NOSONAR
 
     assert result["success"] is True
 

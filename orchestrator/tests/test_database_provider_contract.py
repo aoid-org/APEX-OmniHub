@@ -317,7 +317,11 @@ class TestGetVectorProvider:
             mock_instance = MagicMock()
             with patch.dict(
                 "sys.modules",
-                {"infrastructure.tidb_persistence": MagicMock(TiDBVectorPersistence=lambda: mock_instance)},
+                {
+                    "infrastructure.tidb_persistence": MagicMock(
+                        TiDBVectorPersistence=lambda: mock_instance
+                    )
+                },
             ):
                 r1 = get_vector_provider()
                 r2 = get_vector_provider()
