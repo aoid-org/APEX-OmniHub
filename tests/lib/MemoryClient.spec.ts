@@ -266,6 +266,28 @@ describe('MemoryClient.recall()', () => {
     });
   });
 
+  it('calls touch_memories RPC with multiple IDs when multiple memories returned', async () => {
+    const row2 = { ...SAMPLE_MEMORY_ROW, id: 'mem-002' };
+    const { client, spies } = makeRecallMock([SAMPLE_MEMORY_ROW, row2]);
+
+    const mc = new MemoryClient(client, TENANT_ID, USER_ID);
+    await mc.recall();
+
+    expect(spies.rpcSpy).toHaveBeenCalledWith('touch_memories', {
+      memory_ids: ['mem-001', 'mem-002'],
+    });
+  });
+
+  it('does NOT call touch_memories RPC when no memories are returned', async () => {
+    const { client, spies } = makeRecallMock([]);
+
+    const mc = new MemoryClient(client, TENANT_ID, USER_ID);
+    await mc.recall();
+
+    const rpcCalls = spies.rpcSpy.mock.calls.map((c) => c[0]);
+    expect(rpcCalls).not.toContain('touch_memories');
+  });
+
   it('calls set_ef_search RPC when efSearch option is provided', async () => {
     const { client, spies } = makeRecallMock([]);
 
