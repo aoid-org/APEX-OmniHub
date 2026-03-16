@@ -102,14 +102,14 @@ class TestRegisterIntentDuplicate:
         reg = IntentRegistry()
 
         @reg.register_intent("test.action")
-        def my_activity(payload):
-            ...  # placeholder activity for registration test
+        def my_activity(payload): ...  # placeholder activity for registration test
 
         with pytest.raises(ValueError, match="duplicate registration"):
 
             @reg.register_intent("test.action")
-            def another_activity(payload):
-                ...  # placeholder activity for duplicate-registration test
+            def another_activity(
+                payload,
+            ): ...  # placeholder activity for duplicate-registration test
 
 
 class TestMapIntentDuplicate:

@@ -536,7 +536,6 @@ class TestSemanticCacheServiceMocked:
         assert call_args[0][1] == 999
 
 
-
 # ---------------------------------------------------------------------------
 # Sync methods on SemanticCacheService (outside asyncio class to avoid warnings)
 # ---------------------------------------------------------------------------

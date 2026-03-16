@@ -18,7 +18,12 @@ from activities.iron_law_verify import verify_deductive_path
 # ---------------------------------------------------------------------------
 
 _VERIFIED_OK = json.dumps(
-    {"verified": True, "logicDelta": 0.1, "escalateToMan": False, "reason": "Deductive path verified"}
+    {
+        "verified": True,
+        "logicDelta": 0.1,
+        "escalateToMan": False,
+        "reason": "Deductive path verified",
+    }
 ).encode()
 
 _VERIFIED_FAIL = json.dumps(
@@ -44,6 +49,7 @@ def _mock_logger():
 # ---------------------------------------------------------------------------
 # Happy paths
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_iron_law_verify_success_verified_true():
@@ -85,6 +91,7 @@ async def test_iron_law_verify_empty_params():
 # ---------------------------------------------------------------------------
 # Error paths
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_iron_law_verify_timeout():
@@ -138,7 +145,9 @@ async def test_iron_law_verify_json_decode_error():
 @pytest.mark.asyncio
 async def test_iron_law_verify_generic_os_error():
     """OS-level failure launching subprocess → ApplicationError(non_retryable=False)."""
-    with patch("asyncio.create_subprocess_exec", side_effect=OSError("no such file: /usr/bin/node")):
+    with patch(
+        "asyncio.create_subprocess_exec", side_effect=OSError("no such file: /usr/bin/node")
+    ):
         with pytest.raises(ApplicationError) as exc_info:
             await verify_deductive_path({"intent": "x", "device_id": "d", "workflow_id": "w"})
     assert exc_info.value.non_retryable is False
