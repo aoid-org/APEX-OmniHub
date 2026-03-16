@@ -147,6 +147,7 @@ class TestTiDBConnectError:
     @patch("infrastructure.tidb_persistence.mysql")
     def test_connect_raises_on_mysql_error(self, mock_mysql):
         """_connect wraps MySQLError in RuntimeError."""
+        pytest.importorskip("mysql.connector")
         from mysql.connector import Error as RealMySQLError
 
         mock_mysql.connector.connect.side_effect = RealMySQLError("connection refused")
@@ -185,6 +186,7 @@ class TestTiDBPutEmbeddingReconnect:
     @patch("infrastructure.tidb_persistence.mysql")
     def test_put_embedding_mysql_error_rolls_back(self, mock_mysql):
         """put_embedding rolls back on MySQLError and raises RuntimeError."""
+        pytest.importorskip("mysql.connector")
         from mysql.connector import Error as RealMySQLError
 
         mock_conn = MagicMock()
@@ -256,6 +258,7 @@ class TestTiDBGetEmbeddingReconnect:
     @patch("infrastructure.tidb_persistence.mysql")
     def test_get_embedding_mysql_error_raises(self, mock_mysql):
         """get_embedding raises RuntimeError on MySQLError."""
+        pytest.importorskip("mysql.connector")
         from mysql.connector import Error as RealMySQLError
 
         mock_conn = MagicMock()

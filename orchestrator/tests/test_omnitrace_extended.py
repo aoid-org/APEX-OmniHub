@@ -339,7 +339,7 @@ class TestRedactPrimitive:
 
 class TestRedactDictEdgeCases:
     def test_non_dict_returns_empty(self):
-        result = redact_dict({"test": "not a dict"})  # type: ignore[arg-type]
+        result = redact_dict("not a dict")  # NOSONAR  # type: ignore[arg-type]
         assert result == {}
 
     def test_none_returns_empty(self):
@@ -347,7 +347,7 @@ class TestRedactDictEdgeCases:
         assert result == {}
 
     def test_list_returns_empty(self):
-        result = redact_dict({"test": [1, 2, 3]})  # type: ignore[arg-type]
+        result = redact_dict([1, 2, 3])  # NOSONAR  # type: ignore[arg-type]
         assert result == {}
 
     def test_dropped_keys_excluded_from_result(self):
