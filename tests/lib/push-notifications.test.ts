@@ -5,6 +5,13 @@ import * as monitoring from '../../src/lib/monitoring';
 // Manual mock for monitoring
 const logAnalyticsEventSpy = vi.spyOn(monitoring, 'logAnalyticsEvent').mockImplementation(() => Promise.resolve());
 
+/**
+ * Mock ServiceWorker class for instanceof checks in tests
+ */
+class MockServiceWorker {
+  // Empty class implementation for mocking purposes
+}
+
 describe('setupNotificationClickHandler', () => {
   let messageHandler: ((event: { origin: string; data: unknown; source: unknown }) => void) | null = null;
   const originalLocation = globalThis.location;
@@ -44,11 +51,10 @@ describe('setupNotificationClickHandler', () => {
       },
     });
 
-    // Mock ServiceWorker class
-    const MockSW = function(this: unknown) {};
+    // Mock ServiceWorker global
     Object.defineProperty(globalThis, 'ServiceWorker', {
       configurable: true,
-      value: MockSW,
+      value: MockServiceWorker,
     });
   });
 
