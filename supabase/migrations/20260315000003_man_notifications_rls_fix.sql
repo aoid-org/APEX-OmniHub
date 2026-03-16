@@ -21,25 +21,27 @@ CREATE INDEX IF NOT EXISTS idx_man_notifications_user_id
     ON public.man_notifications (user_id)
     WHERE user_id IS NOT NULL;
 
--- Drop the over-broad SELECT policy
-DO $$ BEGIN
+-- Manage RLS policies in a single block to avoid literal duplication
+DO $$
+DECLARE
+    _tbl CONSTANT TEXT := 'man_notifications';
+BEGIN
+    -- Drop the over-broad SELECT policy
     IF EXISTS (
         SELECT 1 FROM pg_policies
         WHERE schemaname = 'public'
-          AND tablename  = 'man_notifications' -- NOSONAR: SQL has no constant mechanism; literal repetition is idiomatic
-          AND policyname = 'man_notifications_user_read' -- NOSONAR
+          AND tablename  = _tbl
+          AND policyname = 'man_notifications_user_read'
     ) THEN
         DROP POLICY man_notifications_user_read
             ON public.man_notifications;
     END IF;
-END $$;
 
--- Scoped policy: only the owning user can read their notifications
-DO $$ BEGIN
+    -- Scoped policy: only the owning user can read their notifications
     IF NOT EXISTS (
         SELECT 1 FROM pg_policies
         WHERE schemaname = 'public'
-          AND tablename  = 'man_notifications' -- NOSONAR
+          AND tablename  = _tbl
           AND policyname = 'man_notifications_owner_read'
     ) THEN
         CREATE POLICY "man_notifications_owner_read"
@@ -48,14 +50,12 @@ DO $$ BEGIN
             TO authenticated
             USING (user_id = auth.uid());
     END IF;
-END $$;
 
--- Ensure service_role full-access policy exists
-DO $$ BEGIN
+    -- Ensure service_role full-access policy exists
     IF NOT EXISTS (
         SELECT 1 FROM pg_policies
         WHERE schemaname = 'public'
-          AND tablename  = 'man_notifications'
+          AND tablename  = _tbl
           AND policyname = 'man_notifications_service_full_access'
     ) THEN
         CREATE POLICY "man_notifications_service_full_access"
