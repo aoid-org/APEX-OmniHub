@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { setupMonitoringTestEnv } from './monitoring-test-helper';
 
 // Must run before importing monitoring
@@ -11,7 +11,6 @@ describe('monitoring - in-memory cache', () => {
     localStorage.clear();
     _testing.logCache.clear();
     _testing.queue.clear();
-    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -40,6 +39,9 @@ describe('monitoring - in-memory cache', () => {
     const { getCachedLogs } = _testing;
 
     await logError(new Error('test error'));
+
+    // Force flush (logError triggers persistLog which might queue or directWrite depending on criticality)
+    // logError is critical, so it directWrites immediately.
 
     // Cache should have the log
     const cached = getCachedLogs('error_logs');

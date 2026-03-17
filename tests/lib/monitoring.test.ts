@@ -7,6 +7,7 @@ setupMonitoringTestEnv();
 import * as monitoring from '../../src/lib/monitoring';
 import { _testing } from '../../src/lib/monitoring';
 import * as omniSentry from '../../src/lib/omni-sentry';
+import type { HealthStatus } from '../../src/lib/omni-sentry';
 
 describe('monitoring integration', () => {
   beforeEach(() => {
@@ -26,7 +27,7 @@ describe('monitoring integration', () => {
         uptime: 0,
       },
       diagnostics: [],
-    });
+    } as HealthStatus);
   });
 
   afterEach(() => {
