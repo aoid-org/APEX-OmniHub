@@ -146,10 +146,25 @@ export function setupNotificationClickHandler() {
   if (!('serviceWorker' in navigator)) return;
 
   navigator.serviceWorker.addEventListener('message', (event) => {
-    // FIX: Verify message origin — service worker messages have empty origin ('')
-    if (event.origin !== '' && event.origin !== globalThis.location.origin) {
+    // Verify message origin
+    // Service worker messages often have an empty origin ('') or 'null'
+    const trustedOrigins = [globalThis.location.origin, '', 'null'];
+    const isTrustedOrigin = trustedOrigins.includes(event.origin);
+
+    if (!isTrustedOrigin) {
       console.warn('[Push] Rejected message from untrusted origin:', event.origin);
       return;
+    }
+
+    // For empty/null origins, verify that the source is actually a ServiceWorker
+    if ((event.origin === '' || event.origin === 'null') && event.source) {
+      const isSW = ('ServiceWorker' in globalThis && event.source instanceof ServiceWorker) ||
+                   ('scriptURL' in event.source);
+
+      if (!isSW) {
+        console.warn('[Push] Rejected message from untrusted source:', event.source);
+        return;
+      }
     }
 
     if (event.data?.type === 'notification-click') {
