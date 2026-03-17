@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOmniMedia } from '@/stores/omniMediaStore';
-import { useOmniBoard } from '@/stores/omniBoardStore';
+import { useOmniBoard } from '../../../../src/stores/omniBoardStore';
 import {
   useOmniDashAction,
   type OmniDashIntent,

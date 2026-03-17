@@ -14,7 +14,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@omnihub/lib/supabase';
 
 // ── Result type ───────────────────────────────────────────────────────────────
 

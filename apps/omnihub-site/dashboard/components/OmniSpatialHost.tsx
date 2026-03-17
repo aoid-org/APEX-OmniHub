@@ -33,8 +33,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, CheckCircle2, Minimize2, Maximize2, X, GripHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SPRING_DAMPED, GPU_STYLE } from '@/lib/motionPresets';
-import { registerOmniAppShell } from '@/lib/OmniAppShell';
+import { SPRING_DAMPED, GPU_STYLE } from '../../src/lib/motionPresets';
+import { registerOmniAppShell } from '../../src/lib/OmniAppShell';
 import { ModuleRenderer } from './ModuleRenderer';
 
 // Register the sandbox Custom Element on module load

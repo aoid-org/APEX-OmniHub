@@ -37,6 +37,8 @@ export default defineConfig({
       'tests/worldwide-wildcard/playwright/**',
       'e2e/**',
       'apps/omnihub-site/tests/**',
+      'e2e/**',
+      'apps/omnihub-site/tests/**',
 
       // Explicitly ignore Hardhat
       '**/contracts/**',

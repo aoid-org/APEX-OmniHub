@@ -15,8 +15,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/lib/useAuth';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '../../src/lib/useAuth';
+import { supabase } from '../../src/lib/supabase';
 import type { KpiSummary } from '../types/dashboard.types';
 import { EMPTY_KPI_SUMMARY } from '../types/dashboard.types';
 

@@ -1,4 +1,4 @@
-import { useOmniModuleState } from '@/hooks/useOmniModuleState';
+import { useOmniModuleState } from '../../../src/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 
 interface Props {
@@ -10,14 +10,21 @@ export default function AuditsModule({ onClose }: Props) {
 
   return (
     <ModuleShell state={state} onClose={onClose}>
-      <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
-          Compliance Status
+      <div className="flex flex-col gap-4">
+        <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+            Audit Coverage
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="h-2 w-2 rounded-full bg-green-400" />
+            <span className="text-muted-foreground">SOC2 controls active</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-xs">
-          <span className="inline-block h-2 w-2 rounded-full bg-green-400" />
-          <span className="text-foreground font-medium">GDPR Art. 30 compliant</span>
-          <span className="ml-auto text-muted-foreground">Last verified: 2h ago</span>
+
+        <div className="flex justify-end">
+          <button className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-1.5 rounded-md text-sm font-medium transition-colors">
+            Run Audit
+          </button>
         </div>
       </div>
     </ModuleShell>

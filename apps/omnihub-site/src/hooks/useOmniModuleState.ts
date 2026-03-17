@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { supabase, hasSupabaseConfig } from '@/lib/supabase';
+import { supabase, hasSupabaseConfig } from '../lib/supabase';
 import type {
   ModuleContent,
   ModuleStatItem,

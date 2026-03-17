@@ -1,4 +1,4 @@
-import { useOmniModuleState } from '@/hooks/useOmniModuleState';
+import { useOmniModuleState } from '../../../src/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 
 interface Props {

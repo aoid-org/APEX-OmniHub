@@ -1,10 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useOmniDashAction } from '../src/hooks/useOmniDashAction';
+import PersonaModal from "./components/PersonaModal";
+import ApexAgentAvatar from "./components/ApexAgentAvatar";
+import { useNavigate } from 'react-router-dom';
+
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
+import { APPS } from '@/dashboard/components/DashboardOverview/data';
 import { useDashboardData } from "./hooks/useDashboardData";
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../src/lib/supabase';
 
 import imgBadge from "../../../src/assets/omnidash/apex-badge.png";
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
@@ -360,10 +366,25 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
     }
   }, [signingOut]);
 
+  const navigate = useNavigate();
+  const { dispatch } = useOmniDashAction(navigate);
+
   const handleNav = (label: string) => {
     setActiveNav(label);
     const moduleKey = NAV_MODULE_KEY[label];
-    if (!moduleKey) return; // OmniBoard — stays on main canvas
+    if (!moduleKey) {
+      // OmniBoard flow
+      dispatch({
+        appKey: 'omniboard',
+        provider: 'OmniBoard',
+        label: 'OmniBoard',
+        category: 'control-plane',
+        routePath: '/omnidash',
+        dashboardStatus: 'Live',
+        source: 'module'
+      });
+      return;
+    }
     invoke({
       id: `nav-module-${moduleKey}`,
       provider: 'omnidash',
@@ -427,6 +448,8 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
 
 // ─── Shell: Header ────────────────────────────────────────────────────────────
 const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps) => {
+  const navigate = useNavigate();
+  const { dispatch } = useOmniDashAction(navigate);
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
   const pulse = tick % 2 === 0;
 
@@ -443,22 +466,14 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
   };
 
   const handleConnectAI = () => {
-    invoke({
-      id: 'header-connect-ai',
-      provider: 'omnidash',
-      type: 'selection',
-      title: 'Connect AI Provider',
-      description: 'Select an AI provider to integrate with your APEX workspace.',
-      schema: {
-        items: [
-          { id: 'claude', label: 'Claude (Anthropic)', description: 'World-class reasoning and coding' },
-          { id: 'gpt4', label: 'GPT-4o (OpenAI)', description: 'Multimodal frontier model' },
-          { id: 'gemini', label: 'Gemini Ultra (Google)', description: 'Multi-step reasoning at scale' },
-          { id: 'llama', label: 'Llama 3 (Meta)', description: 'Open-source self-hosted inference' },
-        ],
-      },
-      onComplete: async (_result: Record<string, unknown>) => {},
-      onCancel: () => {},
+    dispatch({
+      appKey: 'omniskills',
+      provider: 'OmniSkills',
+      label: 'OmniSkills',
+      category: 'platform',
+      routePath: '/omnidash/omniskills',
+      dashboardStatus: 'Partial',
+      source: 'integration'
     });
   };
 
@@ -667,6 +682,10 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
 const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
   const [elapsed, setElapsed] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(true);
+  const [personaOpen, setPersonaOpen] = useState(false);
+  const [persona, setPersona] = useState<AgentPersona>(() => {
+    return (localStorage.getItem('apex_persona') as AgentPersona) || 'Navigator';
+  });
 
   useEffect(() => {
     if (!isRunning) return undefined;
@@ -679,6 +698,12 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
 
   const handlePlayPause = () => setIsRunning(r => !r);
   const handleReset = () => { setElapsed(0); setIsRunning(false); };
+
+  const handlePersonaSelect = (p: AgentPersona) => {
+    setPersona(p);
+    localStorage.setItem('apex_persona', p);
+    setPersonaOpen(false);
+  };
 
   return (
     <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
@@ -785,7 +810,8 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
             border:`2px solid ${T.orange}55`,
             boxShadow:`0 0 14px ${T.orange}28, 0 0 28px ${T.orange}12`,
           }}>
-            <img src={IMG_AVATAR} alt="APEX Agent" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+            <ApexAgentAvatar size="lg" onClick={() => setPersonaOpen(true)} showStatus={false} />
+            <PersonaModal isOpen={personaOpen} currentPersona={persona} onClose={() => setPersonaOpen(false)} onSelect={handlePersonaSelect} />
           </div>
         </div>
       </div>
@@ -1050,14 +1076,7 @@ const EcosystemWidget = () => {
       title: 'Connect APEX App',
       description: 'Select an APEX module to activate in your ecosystem.',
       schema: {
-        items: [
-          { id: 'omniskills', label: 'OmniSkills — AI Skill Orchestration', category: 'platform' },
-          { id: 'orchestrator', label: 'Orchestrator — Temporal Workflows', category: 'automation' },
-          { id: 'fortress', label: 'Fortress — Zero-Trust Security', category: 'security' },
-          { id: 'omniport', label: 'OmniPort — Integration Gateway', category: 'platform' },
-          { id: 'maestro', label: 'Maestro — Operations Intelligence', category: 'operations' },
-          { id: 'physiomni', label: 'PhysiOmni — Health & Wellness AI', category: 'operations' },
-        ],
+        items: APPS.map(app => ({ id: app.name.toLowerCase().replace(/ /g, '-'), label: app.name, category: app.cat })),
       },
       onComplete: async (_result: Record<string, unknown>) => {},
       onCancel: () => {},

@@ -9,8 +9,8 @@ import { memo, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
-import type { OmniModuleState } from '@/hooks/useOmniModuleState';
-import { triggerModuleAction } from '@/hooks/useOmniModuleState';
+import type { OmniModuleState } from '../../../src/hooks/useOmniModuleState';
+import { triggerModuleAction } from '../../../src/hooks/useOmniModuleState';
 
 const STATUS_COLORS: Readonly<Record<string, string>> = {
   active: '#34d399',
@@ -39,7 +39,7 @@ interface ModuleShellProps {
 
 export const ModuleShell = memo(function ModuleShell({
   state,
-  onClose,
+  _onClose,
   children,
 }: ModuleShellProps) {
   const [selectedItems, setSelectedItems] = useState<ReadonlySet<string>>(new Set());
@@ -166,9 +166,7 @@ export const ModuleShell = memo(function ModuleShell({
 
       {/* Actions */}
       <DialogFooter className="gap-2 pt-2">
-        <Button variant="outline" onClick={onClose}>
-          Close
-        </Button>
+
         {state.actions.map((action) => (
           <Button
             key={action.id}
