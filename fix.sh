@@ -1,1 +1,0 @@
-sed -i 's|import { useOmniBoard } from '\'''../../src/stores/omniBoardStore'\''';|import { useOmniBoard } from '\'''../../../src/stores/omniBoardStore'\''';|g' apps/omnihub-site/dashboard/components/Integrations.tsx
