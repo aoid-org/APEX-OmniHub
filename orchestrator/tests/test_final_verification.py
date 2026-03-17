@@ -271,17 +271,6 @@ class TestCodeQuality:
 
             assert has_implementation, "_store_supabase is still a placeholder"
 
-    def test_imports_sorted(self):
-        """Code should pass import sorting (Ruff/isort)."""
-        # This would run ruff check --select I in CI
-        # For now, we check manually that files have reasonable import blocks
-        pass
-
-    def test_no_unused_imports(self):
-        """Code should have no unused imports."""
-        # This would run ruff check --select F401 in CI
-        pass
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
