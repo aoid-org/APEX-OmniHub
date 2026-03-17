@@ -6,6 +6,32 @@ import { cn } from "@/lib/utils";
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
 
+const SAFE_TOKEN_FALLBACK = "value";
+
+function sanitizeChartId(value: string): string {
+  const sanitized = value.replace(/[^a-zA-Z0-9_-]/g, "");
+  return sanitized || "chart";
+}
+
+function sanitizeCssVarName(value: string): string {
+  const sanitized = value
+    .replace(/[^a-zA-Z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return sanitized || SAFE_TOKEN_FALLBACK;
+}
+
+function sanitizeColorValue(value?: string): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  const isHex = /^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(trimmed);
+  const isRgb = /^rgba?\(\s*(\d{1,3}\s*,\s*){2}\d{1,3}(\s*,\s*(0|1|0?\.\d+))?\s*\)$/.test(trimmed);
+  const isHsl = /^hsla?\(\s*\d{1,3}(\.\d+)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(\s*,\s*(0|1|0?\.\d+))?\s*\)$/.test(trimmed);
+  const isVar = /^var\(--[a-zA-Z0-9_-]+\)$/.test(trimmed);
+  const isKeyword = /^(transparent|currentColor|inherit|initial|unset|white|black|red|green|blue|yellow|orange|purple|pink|gray|grey|cyan|magenta|lime|maroon|navy|olive|teal|silver|aqua|fuchsia)$/i.test(trimmed);
+  return isHex || isRgb || isHsl || isVar || isKeyword ? trimmed : null;
+}
+
 export type ChartConfig = {
   [k in string]: {
     label?: React.ReactNode;
@@ -37,8 +63,8 @@ const ChartContainer = React.forwardRef<
   }
 >(({ id, className, children, config, ...props }, ref) => {
   const uniqueId = React.useId();
-  const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
-  const safeChartId = chartId.replace(/[^a-zA-Z0-9-_]/g, "");
+  const resolvedId = id || uniqueId.replace(/:/g, "");
+  const chartId = `chart-${sanitizeChartId(resolvedId)}`;
 
   const contextValue = React.useMemo(() => ({ config }), [config]);
 
@@ -62,36 +88,39 @@ const ChartContainer = React.forwardRef<
 ChartContainer.displayName = "Chart";
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const colorConfig = Object.entries(config).filter(([_, config]) => config.theme || config.color);
+  const colorConfig = Object.entries(config).filter(([, itemConfig]) => itemConfig.theme || itemConfig.color);
 
   if (!colorConfig.length) {
     return null;
   }
 
-  const safeId = id.replace(/[^a-zA-Z0-9-_]/g, "");
+  const css = Object.entries(THEMES)
+    .map(([theme, prefix]) => {
+      const declarations = colorConfig
+        .map(([key, itemConfig]) => {
+          const rawColor = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
+          const safeColor = sanitizeColorValue(rawColor);
+          if (!safeColor) return null;
+          const safeKey = sanitizeCssVarName(key);
+          return `  --color-${safeKey}: ${safeColor};`;
+        })
+        .filter(Boolean)
+        .join("\n");
 
-  return (
-    <style>
-      {Object.entries(THEMES)
-        .map(
-          ([theme, prefix]) => `
-${prefix} [data-chart="${safeId}"] {
-${colorConfig
-                .map(([key, itemConfig]) => {
-                  const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-                  const safeKey = key.replace(/[^a-zA-Z0-9-_]/g, "");
-                  if (!color) return null;
-                  const safeColor = color.replace(/[;}]/g, "").replace(/<\/style>/gi, "");
-                  return `  --color-${safeKey}: ${safeColor};`;
-                })
-                .filter(Boolean)
-                .join("\n")}
-}
-`,
-        )
-        .join("\n")}
-    </style>
-  );
+      if (!declarations) {
+        return null;
+      }
+
+      return `${prefix} [data-chart="${id}"] {\n${declarations}\n}`;
+    })
+    .filter(Boolean)
+    .join("\n");
+
+  if (!css) {
+    return null;
+  }
+
+  return <style dangerouslySetInnerHTML={{ __html: css }} />;
 };
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
