@@ -14,8 +14,8 @@ try:
     import mysql.connector
     from mysql.connector import Error as MySQLError
 except ImportError:  # pragma: no cover
-    mysql = None  # type: ignore  # pragma: no cover
-    MySQLError = Exception  # type: ignore  # pragma: no cover
+    mysql = None   # pragma: no cover
+    MySQLError = Exception   # pragma: no cover
 
 
 class TiDBVectorPersistence:

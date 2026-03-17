@@ -238,7 +238,7 @@ class AuditLogger:
             event.previous_hash = self._integrity_chain[-1]
 
         # Store the event
-        self._store_event(event)
+        await self._store_event(event)
 
         # Update integrity chain
         self._integrity_chain.append(event.integrity_hash)
@@ -260,9 +260,9 @@ class AuditLogger:
     async def _store_event(self, event: AuditLogEntry) -> None:
         """Store audit event (implementation depends on backend)."""
         if self.storage_backend == "supabase":
-            self._store_supabase(event)
+            await self._store_supabase(event)
         elif self.storage_backend == "file":
-            self._store_file(event)
+            await self._store_file(event)
         else:
             raise ValueError(f"Unsupported storage backend: {self.storage_backend}")
 
@@ -280,7 +280,7 @@ class AuditLogger:
             event_dict = event.model_dump(mode="json")
 
             # Store in audit_logs table
-            db.insert(
+            await db.insert(
                 table="audit_logs",
                 record=event_dict,
             )
@@ -317,7 +317,7 @@ class AuditLogger:
         log_file = f"audit_logs_{event.timestamp.date()}.jsonl"
 
         async with aiofiles.open(log_file, "a") as f:
-            f.write(json.dumps(event.model_dump(), default=str) + "\n")
+            await f.write(json.dumps(event.model_dump(), default=str) + "\n")
 
     async def query_events(
         self,
@@ -433,7 +433,7 @@ async def log_audit_event(
         Audit log entry ID
 
     Example:
-        log_audit_event(
+        await log_audit_event(
             actor_id="user_123",
             action=AuditAction.LOGIN,
             resource_type=AuditResourceType.USER,
@@ -480,4 +480,4 @@ async def log_audit_event(
     )
 
     # Log the event
-    return audit_logger.log_event(event)
+    return await audit_logger.log_event(event)

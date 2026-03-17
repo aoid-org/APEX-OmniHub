@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 import redis.asyncio as redis
-from authlib.integrations.httpx_client import AsyncOAuth2Client
+from authlib.integrations.httpx_client import AsyncOAuth2Client  # type: ignore
 
 from providers.database.factory import get_database_provider
 
@@ -334,7 +334,7 @@ class OmniBoardService:
         db = get_database_provider()
         await db.update(
             table="connections",
-            record={"status": "revoked"},
+            updates={"status": "revoked"},
             filters={"id": connection_id},
         )
 
@@ -397,7 +397,7 @@ class OmniBoardService:
 
         await db.update(
             table="connections",
-            record={"updated_at": "now()"},
+            updates={"updated_at": "now()"},
             filters={"id": connection_id},
         )
 
