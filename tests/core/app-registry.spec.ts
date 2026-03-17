@@ -52,8 +52,8 @@ describe('Omnidash contract', () => {
   });
 
   it('has matching app keys between registry and contract', () => {
-    const registryKeys = APP_REGISTRY.map(e => e.key).sort();
-    const contractIds = OMNIDASH_CONTRACT.map(a => a.id).sort();
+    const registryKeys = APP_REGISTRY.map(e => e.key).sort((a, b) => a.localeCompare(b));
+    const contractIds = OMNIDASH_CONTRACT.map(a => a.id).sort((a, b) => a.localeCompare(b));
     expect(registryKeys).toEqual(contractIds);
   });
 });
