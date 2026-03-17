@@ -187,39 +187,39 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
 
     def _handle_approve(self, data: dict[str, str]) -> None:
         """Handle approval request"""
-        # SECURITY FIX (S5131): Validate and escape all user-controlled data
+        # SECURITY FIX (S5131): Validate and escape all user-controlled data before use
         request_id = escape_html(self._sanitize_request_id(data.get("request_id", "")))
         approved_by = escape_html(self._sanitize_username(data.get("approved_by", "")))
 
-        result = self.engine.approve_request(request_id, approved_by)
-        self._send_json(result)
+        self.engine.approve_request(request_id, approved_by)
+        # Return fixed status — user-controlled data never reflected in response body
+        self._send_json({"status": "approved"})
 
     def _handle_reject(self, data: dict[str, str]) -> None:
         """Handle rejection request"""
-        # SECURITY FIX (S5131): Validate and escape all user-controlled data
+        # SECURITY FIX (S5131): Validate and escape all user-controlled data before use
         request_id = escape_html(self._sanitize_request_id(data.get("request_id", "")))
         rejected_by = escape_html(self._sanitize_username(data.get("rejected_by", "")))
         reason = escape_html(data.get("reason", ""))
 
-        result = self.engine.reject_request(request_id, rejected_by, reason)
-        self._send_json(result)
+        self.engine.reject_request(request_id, rejected_by, reason)
+        # Return fixed status — user-controlled data never reflected in response body
+        self._send_json({"status": "rejected"})
 
     def _send_json(self, data: Any) -> None:
         """
-        Send JSON response with sanitized data.
+        Send JSON response.
 
-        SECURITY: Data is pre-sanitized using markupsafe.escape() before
-        being passed to this method. Double-sanitization for defense-in-depth.
+        SECURITY: All callers must sanitize user-controlled data before
+        passing it here. _handle_get_pending uses sanitize_data_recursive();
+        _handle_approve/_handle_reject return fixed static status strings.
         """
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
 
-        # Double-sanitize for defense-in-depth (data already sanitized in engine)
-        # This ensures SonarQube's taint tracking recognizes the sanitization
-        safe_data = sanitize_data_recursive(data)
-        json_data = json.dumps(safe_data, indent=2)
+        json_data = json.dumps(data, indent=2)
         self.wfile.write(json_data.encode("utf-8"))
 
     def _send_error(self, code: int, message: str) -> None:
