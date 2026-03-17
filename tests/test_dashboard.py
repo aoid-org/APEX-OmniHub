@@ -62,9 +62,7 @@ def _make_post_handler(
     return h
 
 
-# ──────────────────────────────────────────────
-# Unit: escape_html
-# ──────────────────────────────────────────────
+# --- Unit: escape_html ---
 class TestEscapeHtml:
     """escape_html must neutralize XSS payloads via markupsafe."""
 
@@ -87,9 +85,7 @@ class TestEscapeHtml:
         assert escape_html("") == ""
 
 
-# ──────────────────────────────────────────────
-# Unit: sanitize_data_recursive
-# ──────────────────────────────────────────────
+# --- Unit: sanitize_data_recursive ---
 class TestSanitizeDataRecursive:
     """Recursive sanitizer must escape strings at every nesting depth."""
 
@@ -115,9 +111,7 @@ class TestSanitizeDataRecursive:
         assert result["a"][0]["b"] == "&lt;x&gt;"
 
 
-# ──────────────────────────────────────────────
-# Unit: _sanitize_request_id
-# ──────────────────────────────────────────────
+# --- Unit: _sanitize_request_id ---
 class TestSanitizeRequestId:
     """Request ID validation rejects XSS payloads and over-length values."""
 
@@ -141,9 +135,7 @@ class TestSanitizeRequestId:
             h._sanitize_request_id("a" * 65)
 
 
-# ──────────────────────────────────────────────
-# Unit: _sanitize_username
-# ──────────────────────────────────────────────
+# --- Unit: _sanitize_username ---
 class TestSanitizeUsername:
     """Username validation rejects XSS payloads and over-length values."""
 
@@ -289,9 +281,7 @@ class TestDoPostDispatch:
         h.send_response.assert_called_with(400)
 
 
-# ──────────────────────────────────────────────
-# Unit: _send_json and _send_error
-# ──────────────────────────────────────────────
+# --- Unit: _send_json and _send_error ---
 class TestResponseHelpers:
     """Response helpers sanitize output and set security headers."""
 

@@ -1332,7 +1332,7 @@
 .od-modal-close:hover {
   background: rgba(239, 68, 68, 0.15);
   border-color: rgba(239, 68, 68, 0.4);
-  color: #fef2f2;
+  color: #ffffff;
 }
 
 .center-content-blur {
@@ -1522,7 +1522,7 @@
 .widget-btn-close:hover {
   background: rgba(239, 68, 68, 0.15);
   border-color: rgba(239, 68, 68, 0.35);
-  color: #fef2f2;
+  color: #ffffff;
 }
 
 /* Widget content area */
@@ -1649,7 +1649,7 @@
   border-radius: var(--od-radius-sm);
   background: rgba(168, 85, 247, 0.10);
   border: 1px solid rgba(168, 85, 247, 0.25);
-  color: #f3e8ff;
+  color: #ffffff;
   font-size: 11px;
   font-weight: 700;
   font-family: inherit;

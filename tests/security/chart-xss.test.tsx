@@ -1,18 +1,16 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it, beforeEach } from "vitest";
 import { ChartContainer } from "@/components/ui/chart";
-import * as React from "react";
 
 class ResizeObserverMock {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe() { /* mock */ }
+  unobserve() { /* mock */ }
+  disconnect() { /* mock */ }
 }
 
 describe("ChartStyle Security", () => {
   beforeEach(() => {
-    // @ts-expect-error ResizeObserver not in jsdom
-    global.ResizeObserver = ResizeObserverMock;
+    (globalThis as any).ResizeObserver = ResizeObserverMock;
   });
 
   it("should sanitize chart id to prevent XSS", () => {
@@ -27,8 +25,8 @@ describe("ChartStyle Security", () => {
       </ChartContainer>,
     );
 
-    const chartDiv = container.querySelector("[data-chart]");
-    const dataChart = chartDiv?.getAttribute("data-chart") ?? "";
+    const chartDiv = container.querySelector<HTMLElement>("[data-chart]");
+    const dataChart = chartDiv?.dataset.chart ?? "";
     expect(dataChart).not.toContain('"');
     expect(dataChart).not.toContain("<");
     expect(dataChart).not.toContain(">");

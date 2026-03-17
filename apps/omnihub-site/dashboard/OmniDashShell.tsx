@@ -868,16 +868,18 @@ const OmniSlateWidget = () => {
   const endRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Cycle suggestion every 4s with fade
-  useEffect(() => {
-    const id = setInterval(() => {
-      setSuggVisible(false);
-      setTimeout(() => {
-        setSuggIdx(i => (i + 1) % SLATE_SUGGESTIONS.length);
-        setSuggVisible(true);
-      }, 400);
-    }, 4000);
-    return () => clearInterval(id);
+  const cycleSuggestion = useCallback(() => {
+    setSuggVisible(false);
+    setTimeout(() => {
+      setSuggIdx((i) => (i + 1) % SLATE_SUGGESTIONS.length);
+      setSuggVisible(true);
+    }, 400);
   }, []);
+
+  useEffect(() => {
+    const id = setInterval(cycleSuggestion, 4000);
+    return () => clearInterval(id);
+  }, [cycleSuggestion]);
 
   const send = useCallback(async () => {
     if (!input.trim()) return;
