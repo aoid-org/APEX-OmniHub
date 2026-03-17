@@ -14,6 +14,9 @@ vi.mock('@/lib/security', () => ({
   startGuardianLoops: vi.fn(),
 }));
 
+// RFC 5737 TEST-NET-1 — reserved for documentation/examples, never routable.
+const TEST_IP = '192.0.2.1';
+
 describe('risk-events', () => {
   beforeEach(() => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -33,7 +36,7 @@ describe('risk-events', () => {
         event_type: 'injection_attempt',
         risk_lane: 'RED',
         tenant_id: 'tenant-xyz',
-        details: { ip: '1.2.3.4', pattern: 'IGNORE' },
+        details: { ip: TEST_IP, pattern: 'IGNORE' },
         trace_id: 'trace-abc',
       });
 
@@ -41,7 +44,7 @@ describe('risk-events', () => {
       expect(event.tenant_id).toBe('tenant-xyz');
       expect(event.event_type).toBe('injection_attempt');
       expect(event.risk_lane).toBe('RED');
-      expect(event.details).toEqual({ ip: '1.2.3.4', pattern: 'IGNORE' });
+      expect(event.details).toEqual({ ip: TEST_IP, pattern: 'IGNORE' });
       expect(event.trace_id).toBe('trace-abc');
       expect(typeof event.created_at).toBe('string');
       // created_at should be a valid ISO string
@@ -135,7 +138,7 @@ describe('risk-events', () => {
         limit: 10,
         riskLane: 'RED',
         eventType: 'injection_attempt',
-        since: new Date(Date.now() - 3600_000),
+        since: new Date(Date.now() - 3_600_000),
       });
       expect(Array.isArray(result)).toBe(true);
     });
@@ -155,7 +158,7 @@ describe('risk-events', () => {
 
   describe('getRiskStats', () => {
     it('returns zeroed stats with all lanes present', async () => {
-      const timeWindow = { start: new Date(Date.now() - 3600_000), end: new Date() };
+      const timeWindow = { start: new Date(Date.now() - 3_600_000), end: new Date() };
       const stats = await getRiskStats('tenant-xyz', timeWindow);
 
       expect(stats.total).toBe(0);

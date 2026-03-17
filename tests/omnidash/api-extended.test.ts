@@ -271,7 +271,7 @@ describe('aggregateUsageMetering', () => {
     const result = aggregateUsageMetering(rows);
     expect(result).toHaveLength(2);
     // sorted by request_count descending (both are 1, so order may vary)
-    const providers = result.map((r) => r.provider).sort();
+    const providers = result.map((r) => r.provider).sort((a, b) => a.localeCompare(b));
     expect(providers).toEqual(['anthropic', 'openai']);
   });
 

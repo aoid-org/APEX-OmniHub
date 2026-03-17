@@ -33,6 +33,26 @@ import type { EventEnvelope } from '../contracts';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/**
+ * Runs `fn` with SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY unset and
+ * SIM_MODE=false, then restores the original env values.
+ */
+async function withMissingCredentials(fn: () => Promise<void>): Promise<void> {
+  const origSim = process.env.SIM_MODE;
+  const origUrl = process.env.SUPABASE_URL;
+  const origKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  process.env.SIM_MODE = 'false';
+  delete process.env.SUPABASE_URL;
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  try {
+    await fn();
+  } finally {
+    process.env.SIM_MODE = origSim;
+    if (origUrl !== undefined) process.env.SUPABASE_URL = origUrl;
+    if (origKey !== undefined) process.env.SUPABASE_SERVICE_ROLE_KEY = origKey;
+  }
+}
+
 function makeEnvelope(id = 'evt-1', options: { withDelay?: boolean } = {}): EventEnvelope {
   return {
     eventId: id,
@@ -354,20 +374,10 @@ describe('Idempotency Engine — extended coverage', () => {
 
   describe('persistToDatabase — missing credentials', () => {
     it('returns 0 when Supabase credentials are missing (non-SIM_MODE)', async () => {
-      const origSim = process.env.SIM_MODE;
-      const origUrl = process.env.SUPABASE_URL;
-      const origKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      process.env.SIM_MODE = 'false';
-      delete process.env.SUPABASE_URL;
-      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-      try {
+      await withMissingCredentials(async () => {
         const count = await persistToDatabase();
         expect(count).toBe(0);
-      } finally {
-        process.env.SIM_MODE = origSim;
-        if (origUrl !== undefined) process.env.SUPABASE_URL = origUrl;
-        if (origKey !== undefined) process.env.SUPABASE_SERVICE_ROLE_KEY = origKey;
-      }
+      });
     });
   });
 
@@ -375,20 +385,10 @@ describe('Idempotency Engine — extended coverage', () => {
 
   describe('loadFromDatabase — missing credentials', () => {
     it('returns 0 when Supabase credentials are missing', async () => {
-      const origSim = process.env.SIM_MODE;
-      const origUrl = process.env.SUPABASE_URL;
-      const origKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      process.env.SIM_MODE = 'false';
-      delete process.env.SUPABASE_URL;
-      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-      try {
+      await withMissingCredentials(async () => {
         const count = await loadFromDatabase();
         expect(count).toBe(0);
-      } finally {
-        process.env.SIM_MODE = origSim;
-        if (origUrl !== undefined) process.env.SUPABASE_URL = origUrl;
-        if (origKey !== undefined) process.env.SUPABASE_SERVICE_ROLE_KEY = origKey;
-      }
+      });
     });
   });
 
@@ -396,20 +396,10 @@ describe('Idempotency Engine — extended coverage', () => {
 
   describe('cleanupDatabaseExpired — missing credentials', () => {
     it('returns 0 when Supabase credentials are missing', async () => {
-      const origSim = process.env.SIM_MODE;
-      const origUrl = process.env.SUPABASE_URL;
-      const origKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      process.env.SIM_MODE = 'false';
-      delete process.env.SUPABASE_URL;
-      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-      try {
+      await withMissingCredentials(async () => {
         const count = await cleanupDatabaseExpired();
         expect(count).toBe(0);
-      } finally {
-        process.env.SIM_MODE = origSim;
-        if (origUrl !== undefined) process.env.SUPABASE_URL = origUrl;
-        if (origKey !== undefined) process.env.SUPABASE_SERVICE_ROLE_KEY = origKey;
-      }
+      });
     });
   });
 });
