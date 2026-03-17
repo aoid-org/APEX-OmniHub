@@ -5,6 +5,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ComingSoonPage } from "@/pages/ComingSoon";
 import { HomePage } from "@/pages/Home";
 import { OnboardingWizard } from "@/pages/Launch/OnboardingWizard";
+import { SkillForge } from "@/pages/Launch/SkillForge";
 import OmniDashShell from "@/dashboard/OmniDashShell";
 import { OmniDashProvider } from "@/providers/OmniDashProvider";
 import { LoginPage } from "@/pages/Login";
