@@ -141,8 +141,9 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
         """
         # Get pending requests (data pre-sanitized at storage with markupsafe.escape)
         pending = self.engine.get_pending_requests()
-        # Double-sanitize before HTTP send for defense-in-depth
-        self._send_json(pending)  # NOSONAR - Data sanitized at storage and output
+        # SECURITY (S5131): Explicit sanitization in this code path for SonarQube taint tracking
+        safe_pending = sanitize_data_recursive(pending)
+        self._send_json(safe_pending)
 
     def _sanitize_request_id(self, request_id: str) -> str:
         """
@@ -257,5 +258,10 @@ def start_dashboard(port: int = 8080) -> None:
         server.shutdown()
 
 
-if __name__ == "__main__":
+def _main() -> None:
+    """Entry point when module is executed directly."""
     start_dashboard()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    _main()
