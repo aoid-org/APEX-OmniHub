@@ -83,7 +83,7 @@ ${colorConfig
                   const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
                   const safeKey = key.replace(/[^a-zA-Z0-9-_]/g, "");
                   if (!color) return null;
-                  const safeColor = color.replace(/[;}]/g, "").replace(/<\/style>/gi, "");
+                  const safeColor = color.replace(/[;{}]/g, "").replace(/<\/style>/gi, "");
                   return `  --color-${safeKey}: ${safeColor};`;
                 })
                 .filter(Boolean)

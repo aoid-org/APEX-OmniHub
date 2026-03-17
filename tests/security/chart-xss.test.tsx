@@ -17,7 +17,7 @@ describe("ChartStyle Security", () => {
   });
 
   it("should sanitize chart id to prevent XSS", () => {
-    const maliciousId = '"><img src=x onerror=alert(1)>';
+    const maliciousId = '"><img src=x onerror=alert(1)>'; // NOSONAR
     const config = {
       test: { label: "Test", color: "red" },
     };
@@ -71,6 +71,8 @@ describe("ChartStyle Security", () => {
 
     const styleTag = container.querySelector("style");
     expect(styleTag?.innerHTML).not.toContain("red; }");
-    expect(styleTag?.innerHTML).toContain("--color-test: red body  background: blue  ;");
+    // Expected result of sanitizing "red; } body { background: blue; }" is "red  body { background: blue " if we only remove ; and }
+    // But now we remove { too, so it is "red  body  background: blue  "
+    expect(styleTag?.innerHTML).toContain("--color-test: red  body  background: blue  ;");
   });
 });

@@ -34,7 +34,7 @@ describe('MemoryClient.touch_memories_bulk() logic coverage', () => {
       rpc: rpcSpy,
     } as unknown as SupabaseClient;
 
-    mc = new MemoryClient(supabaseMock, 'tenant-1', 'user-1');
+    mc = new MemoryClient(supabaseMock, 'tenant-1', 'user-1'); // NOSONAR
   });
 
   it('should call touch_memories_bulk when recall returns memories', async () => {
@@ -42,7 +42,7 @@ describe('MemoryClient.touch_memories_bulk() logic coverage', () => {
 
     expect(results).toHaveLength(2);
     expect(rpcSpy).toHaveBeenCalledWith('touch_memories_bulk', {
-      memory_ids: ['mem-1', 'mem-2'],
+      memory_ids: ['mem-1', 'mem-2'], // NOSONAR
     });
   });
 
@@ -60,6 +60,9 @@ describe('MemoryClient.touch_memories_bulk() logic coverage', () => {
     const results = await mc.recall();
 
     expect(results).toHaveLength(0);
-    expect(rpcSpy).not.toHaveBeenCalledWith('touch_memories_bulk', expect.anything());
+    // Explicitly check for no calls with the RPC name
+    const calls = rpcSpy.mock.calls;
+    const touchCalls = calls.filter(call => call[0] === 'touch_memories_bulk');
+    expect(touchCalls).toHaveLength(0);
   });
 });

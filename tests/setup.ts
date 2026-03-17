@@ -15,16 +15,16 @@ const mockAgent = new MockAgent();
 mockAgent.disableNetConnect(); // Prevent all unmocked test network leakage
 setGlobalDispatcher(mockAgent);
 
-const loggerMock = mockAgent.get('http://127.0.0.1:7245');
+const loggerMock = mockAgent.get('http://127.0.0.1:7245'); // NOSONAR
 loggerMock.intercept({ path: () => true, method: 'GET' }).reply(200, {}).persist();
 loggerMock.intercept({ path: () => true, method: 'POST' }).reply(200, {}).persist();
 loggerMock.intercept({ path: () => true, method: 'OPTIONS' }).reply(200, {}).persist();
 loggerMock.intercept({ path: () => true, method: 'PUT' }).reply(200, {}).persist();
 
 // Mock Supabase environment variables for testing execution (Critical for Gate 3)
-process.env.VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://mock.supabase.co';
-process.env.VITE_SUPABASE_PUBLISHABLE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'mock-key-for-testing';
-process.env.VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'mock-anon-key-for-testing';
+process.env.VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://mock.supabase.co'; // NOSONAR
+process.env.VITE_SUPABASE_PUBLISHABLE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'mock-key-for-testing'; // NOSONAR
+process.env.VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'mock-anon-key-for-testing'; // NOSONAR
 
 // Configure HTTP proxy for Supabase integration tests in sandboxed environments
 const httpProxy = process.env.HTTP_PROXY || process.env.http_proxy;
