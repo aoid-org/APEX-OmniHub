@@ -29,6 +29,29 @@ from markupsafe import escape
 from omega.engine import VerificationEngine
 
 
+def sanitize_data_recursive(data: Any) -> Any:
+    """
+    Recursively sanitize a data structure for safe HTTP output.
+
+    Uses markupsafe.escape() — a SonarQube-recognised sanitizer — to break
+    the taint chain on every string value before serialisation.  Non-string
+    primitives pass through unchanged.
+
+    Args:
+        data: dict, list, str, or primitive value from user-controlled source.
+
+    Returns:
+        Deep copy with every string HTML-escaped.
+    """
+    if isinstance(data, dict):
+        return {key: sanitize_data_recursive(value) for key, value in data.items()}
+    if isinstance(data, list):
+        return [sanitize_data_recursive(item) for item in data]
+    if isinstance(data, str):
+        return str(escape(data))
+    return data
+
+
 def escape_html(text: str) -> str:
     """
     Escape HTML special characters to prevent XSS attacks.
@@ -44,30 +67,6 @@ def escape_html(text: str) -> str:
         static analysis as a trusted sanitization function.
     """
     return str(escape(text))
-
-
-def sanitize_data_recursive(data: Any) -> Any:
-    """
-    Recursively sanitize data structure to prevent XSS attacks.
-
-    Args:
-        data: Data to sanitize (dict, list, str, or primitive)
-
-    Returns:
-        Sanitized data with all strings HTML-escaped using markupsafe
-
-    Security:
-        Uses markupsafe.escape() directly for SonarQube taint tracking.
-        This ensures the static analysis can verify sanitization in the data flow.
-    """
-    if isinstance(data, dict):
-        return {key: sanitize_data_recursive(value) for key, value in data.items()}
-    if isinstance(data, list):
-        return [sanitize_data_recursive(item) for item in data]
-    if isinstance(data, str):
-        # Use markupsafe.escape directly for SonarQube recognition
-        return str(escape(data))
-    return data
 
 
 class VerificationDashboardHandler(BaseHTTPRequestHandler):
@@ -133,16 +132,15 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
         """
         Handle request to get pending verifications.
 
-        Security (S5131 Compliance):
-            All user-controlled data is sanitized using markupsafe.escape() in:
-            1. create_verification_request() - sanitizes task_description & modified_files
-            2. sanitize_data_recursive() - double-sanitization before HTTP send
-            This provides defense-in-depth XSS protection.
+        Security (S5131): sanitize_data_recursive() uses markupsafe.escape() —
+        a SonarQube-recognised sanitizer — to break the taint chain on all
+        string values before they reach the HTTP response.  Combined with
+        Content-Type: application/json + X-Content-Type-Options: nosniff
+        this provides defense-in-depth XSS protection.
         """
-        # Get pending requests (data pre-sanitized at storage with markupsafe.escape)
         pending = self.engine.get_pending_requests()
-        # Double-sanitize before HTTP send for defense-in-depth
-        self._send_json(pending)  # NOSONAR - Data sanitized at storage and output
+        safe_pending = sanitize_data_recursive(pending)
+        self._send_json(safe_pending)
 
     def _sanitize_request_id(self, request_id: str) -> str:
         """
@@ -257,5 +255,10 @@ def start_dashboard(port: int = 8080) -> None:
         server.shutdown()
 
 
-if __name__ == "__main__":
+def _main() -> None:
+    """Entry point when module is executed directly."""
     start_dashboard()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    _main()
