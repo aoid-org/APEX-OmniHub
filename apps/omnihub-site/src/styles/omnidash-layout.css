@@ -268,6 +268,10 @@
   z-index: 1;
 }
 
+.od-right {
+  min-width: 0;
+}
+
 .od-content {
   flex: 1;
   overflow-y: auto;
@@ -1330,9 +1334,9 @@
 }
 
 .od-modal-close:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #fecaca;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ffffff;
 }
 
 .center-content-blur {
@@ -1403,16 +1407,6 @@
 
 .omni-canvas-inner > * {
   pointer-events: auto;
-}
-
-/* Ensure all widget descendants receive pointer events — fixes drag after ModuleRenderer injection */
-.widget-shell * {
-  pointer-events: auto;
-}
-
-/* Constrain widget control buttons — prevent global min-height:44px from overriding widget-btn layout */
-.widget-shell .widget-btn {
-  min-height: 24px;
 }
 
 
@@ -1520,9 +1514,9 @@
 }
 
 .widget-btn-close:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.25);
-  color: #fecaca;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #ffffff;
 }
 
 /* Widget content area */
@@ -1647,9 +1641,9 @@
   height: 32px;
   padding: 0 14px;
   border-radius: var(--od-radius-sm);
-  background: rgba(168, 85, 247, 0.08);
-  border: 1px solid rgba(168, 85, 247, 0.20);
-  color: #e9d5ff;
+  background: rgba(168, 85, 247, 0.10);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  color: #ffffff;
   font-size: 11px;
   font-weight: 700;
   font-family: inherit;

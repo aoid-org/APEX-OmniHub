@@ -21,9 +21,9 @@ def test_cleanup_targets_only_expired():
     # Simulated row states
     rows = [
         {"id": 1, "expired": True, "age_days": 31},  # should delete
-        {"id": 2, "expired": True, "age_days": 5},  # should keep (too recent)
-        {"id": 3, "expired": False, "age_days": 60},  # should keep (not expired)
-        {"id": 4, "expired": False, "age_days": 1},  # should keep
+        {"id": 2, "expired": True, "age_days": 5},    # should keep (too recent)
+        {"id": 3, "expired": False, "age_days": 60},   # should keep (not expired)
+        {"id": 4, "expired": False, "age_days": 1},    # should keep
     ]
 
     to_delete = [r for r in rows if r["expired"] and r["age_days"] > 30]

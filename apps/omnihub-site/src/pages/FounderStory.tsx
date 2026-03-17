@@ -1,7 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
-import { SEOMeta } from '@/components/SEOMeta';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -235,7 +234,6 @@ const FounderStory = memo(function FounderStory() {
 
   return (
     <Layout title="Founder's Story">
-      <SEOMeta title="Our Story" description="From enterprise IT to AI governance — the journey behind APEX OmniHub and the vision for accountable AI orchestration." canonical="https://apexomnihub.icu/story" />
       <ReadingProgress />
 
       <section className="relative min-h-screen flex flex-col justify-end overflow-hidden px-6 pb-20 pt-[calc(60px+3rem)]" aria-labelledby="founder-story-title">

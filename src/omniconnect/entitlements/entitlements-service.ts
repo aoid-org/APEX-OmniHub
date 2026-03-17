@@ -63,11 +63,9 @@ export class EntitlementsService {
 
     try {
       const { data, error } = await this.supabase
-        .from('tenant_entitlements')
+        .from('user_subscriptions')
         .select('id')
-        .eq('tenant_id', tenantId)
         .eq('user_id', userId)
-        .eq('app_id', appId)
         .eq('feature_key', feature)
         .limit(1);
 

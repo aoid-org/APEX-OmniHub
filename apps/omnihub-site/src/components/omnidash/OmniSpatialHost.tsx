@@ -34,7 +34,6 @@ import { Button } from '../../../../../src/components/ui/button';
 import { Loader2, ExternalLink, CheckCircle2, Minimize2, Maximize2, X, GripHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SPRING_DAMPED, GPU_STYLE } from '@/lib/motionPresets';
-import { Z_MODAL } from '@/lib/ZIndexManager';
 import { registerOmniAppShell } from '@/lib/OmniAppShell';
 import { ModuleRenderer } from './ModuleRenderer';
 
@@ -490,7 +489,7 @@ export function OmniSpatialHost() {
     return (
       <AnimatePresence>
         {isOpen && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: Z_MODAL, pointerEvents: 'none' }}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-index-omnimodal, 500)' as unknown as number, pointerEvents: 'none' }}>
             {/* BACKDROP */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -593,7 +592,7 @@ export function OmniSpatialHost() {
       <div
         style={{
           position: 'fixed', inset: 0,
-          zIndex: Z_MODAL,
+          zIndex: 'var(--z-index-omnimodal, 500)' as unknown as number,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
         data-testid="omni-sandbox-overlay"

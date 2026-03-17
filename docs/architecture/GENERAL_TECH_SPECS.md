@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-12 -->
 # 🛠️ TECHNICAL SPECIFICATIONS: Temporal Platform v1.4.0
 
 ## 1. Core Architecture (OMEGA Pattern)

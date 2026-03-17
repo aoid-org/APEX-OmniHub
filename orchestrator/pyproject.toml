@@ -35,7 +35,6 @@ dependencies = [
     "asyncpg>=0.29.0",
 
     # Utilities
-    "aiofiles>=23.2.0",
     "python-dotenv>=1.0.0",
     "httpx>=0.26.0",
     "tenacity>=8.2.0",
@@ -70,15 +69,6 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v"
-
-[tool.coverage.run]
-omit = [
-    "server.py",
-    "sandbox_test.py",
-    "workflows/agent_saga.py",
-    "workflows/universal_saga.py",
-    "workflows/__init__.py",
-]
 
 [tool.mypy]
 python_version = "3.11"
@@ -159,11 +149,9 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
-  "S101",   # assert is expected in pytest tests
-  "S110",   # try-except-pass in chaos tests is intentional
-  "S311",   # pseudo-random in tests is fine (not crypto)
-  "SIM117", # nested with-statements improve test readability (setup vs assertion)
-  "E501",   # test strings/comments may legitimately exceed 100 chars
+  "S101",  # assert is expected in pytest tests
+  "S110",  # try-except-pass in chaos tests is intentional
+  "S311",  # pseudo-random in tests is fine (not crypto)
 ]
 "workflows/**/*.py" = [
   "C901",  # Complex workflow orchestration is expected

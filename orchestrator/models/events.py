@@ -244,7 +244,7 @@ class PlanGenerated(AgentEvent):
 
     plan_id: str = Field(..., description="Unique plan identifier")
     steps: list[dict[str, Any]] = Field(..., description="Execution steps (DAG nodes)")
-    cache_hit: bool = Field(False, description="True if plan came from semantic cache")
+    cache_hit: bool = Field(..., description="True if plan came from semantic cache")
     template_id: str | None = Field(None, description="Plan template ID (if cache hit)")
     estimated_duration_seconds: int | None = Field(None, description="Estimated execution time")
 

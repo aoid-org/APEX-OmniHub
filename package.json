@@ -1,7 +1,7 @@
 {
   "name": "apex-omnihub",
   "private": true,
-  "version": "1.4.2",
+  "version": "1.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -60,32 +60,8 @@
     "apex:deploy": "./apex-resilience/scripts/deploy.sh",
     "apex:test": "vitest run apex-resilience/tests/",
     "audit:features": "tsx scripts/audit-features.ts",
-    "apple:secret": "tsx scripts/generate-apple-secret.ts",
-    "readiness:generate": "node scripts/generate-readiness-report.mjs",
-    "postinstall": "bash scripts/install-githooks.sh 2>/dev/null || true",
-    "bundle:analyze": "bun run build && open dist/stats.html",
-    "bundle:check": "bun run build && size-limit",
-    "build:seo": "node scripts/generate-sitemap.mjs && vite build",
-    "changeset": "changeset",
-    "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish",
-    "release": "bun run build && bun run changeset:publish",
-    "prebuild": "node scripts/generate-sitemap.mjs"
+    "apple:secret": "tsx scripts/generate-apple-secret.ts"
   },
-  "size-limit": [
-    {
-      "name": "Initial JS bundle (gzipped)",
-      "path": "dist/assets/js/index-*.js",
-      "gzip": true,
-      "limit": "800 KB"
-    },
-    {
-      "name": "Vendor React chunk",
-      "path": "dist/assets/js/react-vendor-*.js",
-      "gzip": true,
-      "limit": "150 KB"
-    }
-  ],
   "dependencies": {
     "@capacitor/android": "^6.2.1",
     "@capacitor/core": "^6.2.1",
@@ -162,12 +138,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.8.3",
     "@capacitor/cli": "^6.2.1",
-    "@changesets/changelog-github": "^0.6.0",
-    "@changesets/cli": "^2.30.0",
-    "@commitlint/cli": "^20.5.0",
-    "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^9.39.2",
-    "@lhci/cli": "^0.15.1",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-ignition": "^0.15.8",
@@ -177,7 +148,6 @@
     "@nomicfoundation/hardhat-verify": "^2.0.12",
     "@openzeppelin/contracts": "^5.1.0",
     "@playwright/test": "^1.57.0",
-    "@size-limit/file": "^12.0.1",
     "@tailwindcss/typography": "^0.5.16",
     "@temporalio/activity": "^1.14.1",
     "@temporalio/client": "^1.14.1",
@@ -215,8 +185,6 @@
     "pixelmatch": "^5.3.0",
     "pngjs": "^7.0.0",
     "postcss": "^8.5.6",
-    "rollup-plugin-visualizer": "^7.0.1",
-    "size-limit": "^12.0.1",
     "snyk": "^1.1297.3",
     "solidity-coverage": "^0.8.14",
     "tailwindcss": "^3.4.17",

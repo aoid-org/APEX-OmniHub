@@ -2,6 +2,9 @@
 export const LOGO = (domain: string) =>
   `https://logo.clearbit.com/${domain}`;
 
+/* ── Hidden apps ── */
+export const HIDDEN_APPS = new Set(['OmniBoard', 'OmniSkills']);
+
 /* ── Framer Motion spring config ── */
 export const SPRING = {
   type: 'spring',

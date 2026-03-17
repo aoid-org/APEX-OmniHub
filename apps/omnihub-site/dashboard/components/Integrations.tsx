@@ -117,7 +117,6 @@ export const Integrations = () => {
 
   const handleTestModal = () => {
     const intent: OmniDashIntent = {
-      source: 'integration',
       appKey: 'quickbooks',
       provider: 'QuickBooks',
       label: 'QuickBooks',
@@ -319,7 +318,6 @@ export const Integrations = () => {
                     onClick={(e) => {
                       e.stopPropagation();
                       const intent: OmniDashIntent = {
-                        source: 'integration',
                         appKey: connector.appSlug,
                         provider: connector.displayName,
                         label: connector.displayName,

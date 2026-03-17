@@ -206,8 +206,8 @@ const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) =
   }} />
 );
 
-const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => (
-  <div onClick={onClick} onKeyDown={(e) => { if (onClick && (e.key === 'Enter' || e.key === ' ')) onClick(); }} role={onClick ? "button" : "presentation"} tabIndex={onClick ? 0 : undefined} style={{
+const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => {
+  const cardStyle: CSSProperties = {
     background: T.card,
     border: `1px solid ${glow ? T.borderGlow : T.border}`,
     borderRadius: 16,
@@ -217,10 +217,22 @@ const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps
     backdropFilter: "blur(12px)",
     transition: "all .2s ease",
     ...style,
-  }} >
-    {children}
-  </div>
-);
+  };
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} style={{ ...cardStyle, cursor: "pointer" }}>
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <div style={cardStyle}>
+      {children}
+    </div>
+  );
+};
 
 
 
@@ -280,6 +292,11 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
       return `drop-shadow(0 0 1px ${T.orange}55) brightness(0.9)`;
     };
 
+    const resolveState = (active: boolean, hover: boolean, map: { active: string; hover: string; base: string }) => {
+      if (active) return map.active;
+      if (hover) return map.hover;
+      return map.base;
+    };
   return (
     <button
       onClick={onClick}
@@ -292,8 +309,8 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
         transition:"all .18s ease",
         fontSize:14.1,
         // ── OmniBoard baseline applied to every tile ──────────────────────
-        border: `1px solid ${isActive ? borderColors.active : hov ? borderColors.hover : borderColors.base}`,
-        background: `linear-gradient(100deg, ${T.orange}${isActive ? bgOpacities.active : hov ? bgOpacities.hover : bgOpacities.base} 0%, ${T.card} 60%)`,
+        border: `1px solid ${resolveState(isActive, hov, borderColors)}`,
+        background: `linear-gradient(100deg, ${T.orange}${resolveState(isActive, hov, bgOpacities)} 0%, ${T.card} 60%)`,
         color: isActive ? T.t1 : T.t2,
         fontWeight: isActive ? 600 : 400,
         boxShadow: resolveShadow(isActive, hov),
@@ -354,7 +371,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
     setSigningOut(true);
     try {
       await supabase.auth.signOut();
-      window.location.href = '/login';
+      globalThis.location.href = '/login';
     } catch {
       setSigningOut(false);
     }
@@ -879,7 +896,7 @@ const OmniSlateWidget = () => {
       pendingRef.current = null;
     }
     setLoading(false);
-    setMessages(m => m.length > 0 && m[m.length - 1].role === 'user'
+    setMessages(m => m.length > 0 && m.at(-1)?.role === 'user'
       ? [...m, {role:"assistant", text:"— Response stopped by user."}]
       : m
     );
@@ -921,8 +938,8 @@ const OmniSlateWidget = () => {
         {messages.length === 0 && (
           <div style={{ flex:1 }} />
         )}
-        {messages.map((m,i) => (
-          <div key={i} style={{
+        {messages.map((m) => (
+          <div key={`${m.role}-${m.text.slice(0, 32)}`} style={{
             display:"flex", gap:10, justifyContent: m.role==="user"?"flex-end":"flex-start",
             animation:"apexFadeIn .3s ease",
           }}>
@@ -1086,7 +1103,7 @@ const EcosystemWidget = () => {
           display:"flex", alignItems:"center", justifyContent:"center",
           fontSize:18, color:T.orange, flexShrink:0,
           boxShadow:`0 0 8px ${T.orange}44`,
-        }}>+</span>
+        }}>+</span>{" "}
         Add APEX App
       </button>
     </div>
@@ -1270,8 +1287,8 @@ const OmniTracePanel = () => {
       <SectionLabel>OmniTrace</SectionLabel>
     </div>
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
-      {TRACE_EVENTS.map((e, index) => (
-        <div key={`trace-${index}`} style={{display:"flex",alignItems:"flex-start",gap:8}}>
+      {TRACE_EVENTS.map((e) => (
+        <div key={`trace-${e.text.slice(0, 24)}`} style={{display:"flex",alignItems:"flex-start",gap:8}}>
           <div style={{
             width:7,height:7,borderRadius:"50%",background:e.color,
             boxShadow:`0 0 6px ${e.color}`,flexShrink:0,marginTop:4,

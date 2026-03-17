@@ -110,17 +110,16 @@ describe('DashboardOverview - OmniBoard Wiring', () => {
     );
 
     // [0] is the context chip in AgentPane; [1] is the AppTile in the apps row
-    const qbElements = screen.getAllByText('QuickBooks');
-    fireEvent.click(qbElements[qbElements.length - 1]);
+    fireEvent.click(screen.getAllByText('Orchestrator')[1]);
 
     const modalState = useOmniModal.getState();
     expect(modalState.isOpen).toBe(true);
     expect(modalState.activeModal?.type).toBe('oauth');
-    expect(modalState.activeModal?.provider).toBe('QuickBooks');
+    expect(modalState.activeModal?.provider).toBe('Orchestrator');
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('triggers UniversalModalEngine oauth flow when clicking a Live integration tile (since integrations do not route internally)', () => {
+  it('navigates to fortress route when clicking a Live integration tile', () => {
     render(
       <MemoryRouter>
         <DashboardOverview
@@ -134,13 +133,11 @@ describe('DashboardOverview - OmniBoard Wiring', () => {
     );
 
     // [0] is the context chip in AgentPane; [1] is the AppTile in the apps row
-    const slackElements = screen.getAllByText('Slack');
-    fireEvent.click(slackElements[slackElements.length - 1]);
+    fireEvent.click(screen.getAllByText('Fortress')[1]);
 
-    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith('/omnidash/fortress');
     const modalState = useOmniModal.getState();
-    expect(modalState.isOpen).toBe(true);
-    expect(modalState.activeModal?.type).toBe('oauth');
+    expect(modalState.isOpen).toBe(false);
   });
 
   it('sim_mode=false queues prompt and does not flip health state', () => {

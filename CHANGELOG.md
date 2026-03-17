@@ -2,32 +2,6 @@
 All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [1.4.3] - 2026-03-16
-
-### Fixed
-- **Idempotency Guard Extraction** — Extracted shared `_idempotency_guard()` helper in `orchestrator/activities/tools.py`, eliminating duplicated idempotency-check logic that was replicated across multiple activity implementations. All callers now delegate to the single authoritative implementation.
-- **SonarCloud Quality Gate** — Resolved 0% duplications on new code: added `.claude/**` to both `sonar.cpd.exclusions` and `sonar.coverage.exclusions` in `sonar-project.properties`, preventing developer-tooling scripts from triggering false-positive CPD or coverage failures.
-
-### Added
-- **`tests/test_core_intents.py`** — New test module providing 100% coverage of `orchestrator/core/intents`.
-- **`tests/test_tools_extended.py`** — Extended coverage suite for `orchestrator/activities/tools.py`; combined with existing tests brings module coverage to 73%.
-- **`tests/test_universal_intents.py`** — New test module achieving 100% coverage of the universal intent mapping layer.
-- **`tests/test_iron_law_verify.py`** (improved) — Rewritten to achieve 100% branch and statement coverage of `iron_law_verify`.
-
-### Quality Gates
-- Orchestrator Python tests: **177 passed**, 0 failed
-- Coverage — `iron_law_verify`: 100% | `omnitrace_activities`: 100% | `universal_intents`: 100% | `core/intents`: 100% | `tools.py`: 73%
-- SonarCloud: 0% duplications on new code ✅ | 100% coverage on new code ✅ | Quality Gate: **PASSED**
-
----
-
-## [1.4.2] - 2026-03-15
-### Fixed
-- **OmniDash Spatial Wiring** — Wired ModuleRenderer into WidgetShell and FloatingWindow to render live content instead of string keys.
-- **SSR Compatibility** — Guarded `window` access in `openFloating()` to prevent ReferenceError during SSR.
-- **Z-Index Fix** — Fixed Spatial/Sandbox z-index stacking by using `Z_MODAL` instead of unparseable CSS variable, ensuring overlays render above PiP windows.
-
 ## [1.4.1] - 2026-03-10
 ### Fixed
 - **Marketing Site i18n key leak** — Added missing hero install keys across all shipped locales to prevent raw key rendering (`hero.cta.install`, `hero.installPromptReady`, `hero.installPromptIOS`, `hero.installPromptFallback`).

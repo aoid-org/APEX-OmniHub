@@ -65,7 +65,7 @@ def demo_approval_workflow():
     request_id = engine.create_request(
         command=DANGEROUS_SQL_COMMAND,  # Using constant
         description="Remove old user table before schema migration",
-        requested_by=DEMO_USER,
+        requested_by=DEMO_USER
     )
     print(f"   Request ID: {request_id}")
 
@@ -77,13 +77,13 @@ def demo_approval_workflow():
     # Approve the request
     print("\n3. Approving request...")
     result = engine.approve_request(request_id, DEMO_APPROVER)
-    print("   Status: {}".format(result["status"]))
-    print("   Approved by: {}".format(result["approved_by"]))
+    print("   Status: {}".format(result['status']))
+    print("   Approved by: {}".format(result['approved_by']))
 
     # Verify approval
     print("\n4. Verifying approval status...")
     status = engine.get_request_status(request_id)
-    print("   Final status: {}".format(status["status"]))
+    print("   Final status: {}".format(status['status']))
 
 
 def demo_rejection_workflow():
@@ -97,17 +97,19 @@ def demo_rejection_workflow():
     request_id = engine.create_request(
         command=DANGEROUS_SQL_COMMAND,  # Using constant (third usage)
         description="Testing rejection workflow",
-        requested_by=DEMO_USER,
+        requested_by=DEMO_USER
     )
     print(f"   Request ID: {request_id}")
 
     # Reject the request
     print("\n2. Rejecting request...")
     result = engine.reject_request(
-        request_id, DEMO_APPROVER, "Command too dangerous for production environment"
+        request_id,
+        DEMO_APPROVER,
+        "Command too dangerous for production environment"
     )
-    print("   Status: {}".format(result["status"]))
-    print("   Rejection reason: {}".format(result["rejection_reason"]))
+    print("   Status: {}".format(result['status']))
+    print("   Rejection reason: {}".format(result['rejection_reason']))
 
 
 def demo_multiple_requests():
@@ -134,7 +136,7 @@ def demo_multiple_requests():
     print("\n2. All pending requests:")
     pending = engine.get_pending_requests()
     for req_id in pending:
-        print("   - {} ({})".format(req_id[:8], pending[req_id]["risk_level"]))
+        print("   - {} ({})".format(req_id[:8], pending[req_id]['risk_level']))
 
     # Approve some, reject others
     print("\n3. Processing requests...")
@@ -171,7 +173,7 @@ def interactive_demo():
             command = input("Command > ").strip()
 
             # Check for exit condition (proper conditional, not always true)
-            if command.lower() in ["quit", "exit", "q"]:
+            if command.lower() in ['quit', 'exit', 'q']:
                 print("Exiting interactive demo...")
                 break
 
@@ -184,21 +186,21 @@ def interactive_demo():
 
             # Color-coded output based on risk
             risk_colors = {
-                "critical": "🔴 CRITICAL",
-                "high": "🟠 HIGH",
-                "medium": "🟡 MEDIUM",
-                "low": "🟢 LOW",
+                'critical': '🔴 CRITICAL',
+                'high': '🟠 HIGH',
+                'medium': '🟡 MEDIUM',
+                'low': '🟢 LOW'
             }
 
             risk_display = risk_colors.get(risk_level, risk_level.upper())
             print(f"Risk Level: {risk_display}")
 
             # Suggest action based on risk
-            if risk_level == "critical":
+            if risk_level == 'critical':
                 print("⚠️  This command requires immediate human approval!")
-            elif risk_level == "high":
+            elif risk_level == 'high':
                 print("⚠️  This command requires human approval.")
-            elif risk_level == "medium":
+            elif risk_level == 'medium':
                 print("ℹ️  This command should be reviewed.")
             else:
                 print("✓ This command appears safe.")
@@ -239,7 +241,7 @@ def main():
     response = input("\nRun interactive demo? (y/n): ").strip().lower()
 
     # Proper conditional (not always true)
-    if response in ["y", "yes"]:
+    if response in ['y', 'yes']:
         interactive_demo()
     else:
         print("\nDemo complete. Thank you!")
@@ -249,5 +251,5 @@ def main():
     print("=" * 60 + "\n")
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

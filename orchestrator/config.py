@@ -77,15 +77,6 @@ class Settings(BaseSettings):
         default=1000, description="Max events before continue-as-new"
     )
 
-    slack_alert_webhook_url: str | None = Field(
-        default=None,
-        description=(
-            "Slack incoming webhook URL for DLQ and critical "
-            "failure alerts. Set SLACK_ALERT_WEBHOOK_URL "
-            "environment variable to enable."
-        ),
-    )
-
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

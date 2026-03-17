@@ -119,29 +119,14 @@ orchestrator/
 │   └── agent_saga.py       # AgentWorkflow with Event Sourcing + Saga
 ├── activities/              # Temporal activities
 │   ├── __init__.py
-│   ├── tools.py            # Tool execution, idempotency guard, Supabase integration
-│   ├── iron_law_verify.py  # Deductive path verification (subprocess → Node.js)
-│   ├── universal_intents.py # USO system activities (health_check, echo, list)
-│   └── omnitrace_activities.py # Omnitrace workflow activities
-├── core/                    # Core registry and intent routing
-│   ├── intent_registry.py  # IntentRegistry singleton
-│   └── intents.py          # Bridge mappings (14 tool + 3 USO intents)
-├── policies/                # MAN Mode risk policy engine
-├── security/                # SSRF guard, prompt sanitizer, request signing
-├── tests/                   # Comprehensive test suite (390 tests collected)
+│   └── tools.py            # Tool execution, Supabase integration
+├── tests/                   # Comprehensive test suite
 │   ├── conftest.py         # Pytest fixtures
-│   ├── test_models.py      # Model validation tests (16)
-│   ├── test_cache.py       # Semantic cache tests
-│   ├── test_man_mode.py    # MAN Mode policies (38)
-│   ├── test_tools.py       # Tool activities (25)
-│   ├── test_tools_extended.py  # Extended tools coverage (22) — added 2026-03-16
-│   ├── test_iron_law_verify.py # Iron Law verification (7) — added 2026-03-16
-│   ├── test_universal_intents.py # USO activities (11) — added 2026-03-16
-│   ├── test_core_intents.py    # Intent registry bridge (4) — added 2026-03-16
-│   └── ...                 # 20+ additional test files
+│   ├── test_models.py      # Model validation tests
+│   └── test_cache.py       # Semantic cache tests
 ├── config.py                # Configuration management
 ├── main.py                  # Entry point
-├── pyproject.toml           # Dependencies, ruff/black/mypy config
+├── pyproject.toml           # Dependencies
 ├── Dockerfile               # Production Docker image
 ├── docker-compose.yml       # Local development stack
 └── README.md                # This file
@@ -149,19 +134,11 @@ orchestrator/
 
 ## 🧪 Testing
 
-**Current status (2026-03-16)**: 366 tests passing, 390 collected, 20 skipped (require external services).
-
 ### Unit Tests
 
 ```bash
-# Run all unit tests (no external services required)
-pytest tests/ -v
-
-# Run specific suites
-pytest tests/test_models.py tests/test_tools.py tests/test_man_mode.py -v
-
-# Run with coverage
-pytest tests/ --cov=. --cov-report=term-missing
+# Run unit tests only
+pytest tests/test_models.py tests/test_cache.py
 ```
 
 ### Integration Tests
@@ -386,23 +363,6 @@ Redis VSS: Find similar templates (cosine similarity)
   ↓
 Cache Hit: Inject parameters → Execute
 ```
-
-### Idempotency Guard
-
-Activities with irreversible side effects (`send_email`, `call_webhook`) use a shared `_idempotency_guard()` helper to prevent duplicate execution on Temporal replay:
-
-```python
-# Key format: {workflow_id}:{step_id}:{tool_name}
-idempotency_key = f"{workflow_id}:{step_id}:send_email"
-cached = await _idempotency_guard(db, idempotency_key, "send_email", workflow_id)
-if cached is not None:
-    return cached  # Already executed — return stored result
-
-# ... perform side effect ...
-# Record completion in idempotency_ledger table
-```
-
-The guard checks the `idempotency_ledger` table, inserts a `pending` record, and returns any previously stored `completed` result. Database errors are swallowed so ledger unavailability never blocks the actual work.
 
 ## 🤝 Contributing
 

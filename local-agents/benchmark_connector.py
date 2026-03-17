@@ -28,9 +28,7 @@ except ImportError:
     from omnihub_connector import OmniHubConnector
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("benchmark")
 
 # Global state for the mock server
@@ -49,7 +47,7 @@ async def mock_events_handler(request):
         # Read body to consume stream
         await request.json()
         headers = request.headers
-        idempotency_key = headers.get("X-Idempotency-Key")
+        idempotency_key = headers.get('X-Idempotency-Key')
 
         if not idempotency_key:
             return web.json_response({"error": "Missing Idempotency Key"}, status=400)
@@ -57,22 +55,21 @@ async def mock_events_handler(request):
         if idempotency_key not in requests_seen:
             requests_seen.add(idempotency_key)
             # Simulate rate limit
-            return web.json_response(
-                {
-                    "results": [
-                        {
-                            "status": "rate_limited",
-                            "retry_after_seconds": RETRY_DELAY,
-                            "message": "Simulated rate limit",
-                        }
-                    ]
-                }
-            )
+            return web.json_response({
+                "results": [{
+                    "status": "rate_limited",
+                    "retry_after_seconds": RETRY_DELAY,
+                    "message": "Simulated rate limit"
+                }]
+            })
         else:
             # Success on retry
-            return web.json_response(
-                {"results": [{"status": "ingested", "id": str(uuid.uuid4())}]}
-            )
+            return web.json_response({
+                "results": [{
+                    "status": "ingested",
+                    "id": str(uuid.uuid4())
+                }]
+            })
     except Exception as e:
         logger.error(f"Server error: {e}")
         return web.json_response({"error": str(e)}, status=500)
@@ -80,17 +77,17 @@ async def mock_events_handler(request):
 
 def find_free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("", 0))
+        s.bind(('', 0))
         return s.getsockname()[1]
 
 
 async def start_mock_server(port):
     """Starts a local aiohttp server."""
     app = web.Application()
-    app.router.add_post("/omnilink-port/events", mock_events_handler)
+    app.router.add_post('/omnilink-port/events', mock_events_handler)
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "localhost", port)
+    site = web.TCPSite(runner, 'localhost', port)
     await site.start()
     return runner
 
@@ -108,7 +105,7 @@ async def run_benchmark():
         base_url=base_url,
         api_key="mock-key",
         source="benchmark",
-        worker_id="bench-worker",
+        worker_id="bench-worker"
     )
 
     # We want to measure the time it takes to complete all tasks.
@@ -119,7 +116,9 @@ async def run_benchmark():
         key = f"bench_{uuid.uuid4()}"
         try:
             await connector.emit_event(
-                event_type="benchmark_event", data={"index": i}, idempotency_key=key
+                event_type="benchmark_event",
+                data={"index": i},
+                idempotency_key=key
             )
             return "success"
         except Exception as e:

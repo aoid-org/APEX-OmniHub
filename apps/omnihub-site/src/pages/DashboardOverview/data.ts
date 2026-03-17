@@ -1,20 +1,22 @@
 import {
-  EXTERNAL_INTEGRATIONS,
-  type ExternalIntegrationEntry,
-} from '../../../../../packages/core/src/omniBoardIntegrations';
-import { LOGO } from './constants';
+  APP_REGISTRY,
+  type AppRegistryEntry,
+} from '../../../../../packages/core/src/registry';
+import { LOGO, HIDDEN_APPS } from './constants';
 import type { ContextItem, AppEntry } from './types';
 
-export const INITIAL_CONTEXT: readonly ContextItem[] = EXTERNAL_INTEGRATIONS
+export const INITIAL_CONTEXT: readonly ContextItem[] = APP_REGISTRY
+  .filter((e: AppRegistryEntry) => !HIDDEN_APPS.has(e.label))
   .slice(0, 3)
-  .map((e: ExternalIntegrationEntry) => ({
+  .map((e: AppRegistryEntry) => ({
     name: e.label,
     health: e.healthContext.health,
     insight: e.healthContext.insight,
   }));
 
-export const APPS: readonly AppEntry[] = EXTERNAL_INTEGRATIONS
-  .map((e: ExternalIntegrationEntry) => ({
+export const APPS: readonly AppEntry[] = APP_REGISTRY
+  .filter((e: AppRegistryEntry) => !HIDDEN_APPS.has(e.label))
+  .map((e: AppRegistryEntry) => ({
     name: e.label,
     cat: e.category,
     logo: LOGO(e.logoDomain),

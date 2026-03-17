@@ -1,10 +1,8 @@
 import { Layout, Section, SectionHeader, BulletItem, BulletList } from '@/components';
-import { SEOMeta } from '@/components/SEOMeta';
 
 export function OmniPortPage() {
   return (
     <Layout title="OmniPort">
-      <SEOMeta title="OmniPort Universal Connector" description="Single-port protocol translation for Salesforce, HubSpot, Slack, and 50+ integrations through canonical schema normalization." canonical="https://apexomnihub.icu/omniport" />
       <Section>
         <SectionHeader title="OmniPort" subtitle="Single ingress/egress gateway for simplified security and total observability" />
 

@@ -14,7 +14,6 @@ os.environ["SUPABASE_URL"] = "http://localhost:54321"
 os.environ["SUPABASE_SERVICE_ROLE_KEY"] = "test-key"
 os.environ["SUPABASE_DB_URL"] = "postgresql://postgres:postgres@localhost:54322/postgres"
 os.environ["REDIS_URL"] = "redis://localhost:6379"
-os.environ.setdefault("UPSTASH_REDIS_URL", "redis://localhost:6379")
 
 
 @pytest.fixture(scope="session")
@@ -23,17 +22,6 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
-
-
-@pytest.fixture(autouse=True)
-def reset_db_provider() -> None:
-    """Reset database provider singleton before each test to prevent state bleed."""
-    try:
-        from providers.database.factory import reset_database_provider
-
-        reset_database_provider()
-    except ImportError:
-        pass
 
 
 @pytest_asyncio.fixture

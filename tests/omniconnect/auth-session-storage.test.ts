@@ -1,20 +1,16 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { AuthSessionStorage } from '@/omniconnect/storage/auth-session-storage';
 
-// Mock ioredis so that if the constructor ever reaches the require() path,
-// it gets a no-op stub instead of a real TCP connection.
+// We need to mock ioredis for tests
+
 vi.mock('ioredis', () => {
-  const store = new Map<string, string>();
-  class RedisMock {
-    constructor(_url?: string) { /* no-op: no real connection */ }
+  const store = new Map();
+  const RedisMock = class {
     async setex(key: string, _ttl: number, val: string) { store.set(key, val); }
-    async get(key: string) { return store.get(key) ?? null; }
-    async del(key: string) { store.delete(key); return 1; }
-    on(_event: string, _fn?: unknown) { return this; }
-    quit() { return Promise.resolve('OK'); }
-    disconnect() {}
-  }
-  return { default: RedisMock, Redis: RedisMock };
+    async get(key: string) { return store.get(key) || null; }
+    async del(key: string) { store.delete(key); }
+  };
+  return { default: RedisMock };
 });
 
 
@@ -22,25 +18,17 @@ describe('AuthSessionStorage', () => {
   const mockState = 'test-state-123';
   const mockVerifier = 'test-verifier-abc';
   let authSessionStorage: AuthSessionStorage;
-  const originalRedisUrl = process.env.UPSTASH_REDIS_URL;
-  const originalRedisUrl2 = process.env.REDIS_URL;
+  const originalEnv = process.env.UPSTASH_REDIS_URL;
 
   beforeEach(async () => {
-    // Unset Redis env vars so AuthSessionStorage uses InMemorySessionStorage.
-    // This prevents ioredis from attempting a real DNS lookup (EAI_AGAIN) in CI.
-    // The storage interface behaves identically regardless of delegate implementation.
-    delete process.env.UPSTASH_REDIS_URL;
-    delete process.env.REDIS_URL;
+    process.env.UPSTASH_REDIS_URL = 'redis://mock';
     authSessionStorage = new AuthSessionStorage();
     await authSessionStorage.clearSession(mockState);
     vi.useRealTimers();
   });
 
   afterEach(() => {
-    if (originalRedisUrl !== undefined) process.env.UPSTASH_REDIS_URL = originalRedisUrl;
-    else delete process.env.UPSTASH_REDIS_URL;
-    if (originalRedisUrl2 !== undefined) process.env.REDIS_URL = originalRedisUrl2;
-    else delete process.env.REDIS_URL;
+    process.env.UPSTASH_REDIS_URL = originalEnv;
   });
 
 

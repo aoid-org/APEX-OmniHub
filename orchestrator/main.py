@@ -35,7 +35,6 @@ from temporalio.worker import Worker
 # Seed the intent registry with all known activity→intent mappings.
 # This import has side effects: it populates the registry singleton.
 import core.intents  # noqa: F401
-from activities.dlq_alert import send_dlq_alert
 from activities.iron_law_verify import verify_deductive_path
 from activities.man_mode import (
     check_man_decision,
@@ -167,8 +166,6 @@ async def start_worker() -> None:
             notify_man_task,
             # Iron Law verification (physical AI safety gate)
             verify_deductive_path,
-            # DLQ alert activity (permanently failed workflows)
-            send_dlq_alert,
             # OmniTrace activities
             *get_omnitrace_activities(),
             # Universal Intent activities (USO — registry-routable)

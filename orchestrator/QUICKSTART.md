@@ -115,7 +115,7 @@ Submitting workflow: Book flight to Paris tomorrow and email confirmation to tes
 Waiting for result...
 ✅ Workflow completed: {
   "status": "completed",
-  "plan_id": "plan_20260316_abc123",
+  "plan_id": "plan_20240115_abc123",
   "steps_executed": 3,
   "results": {...}
 }

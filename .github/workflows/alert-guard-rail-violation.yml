@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Download workflow logs
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           run-id: ${{ github.event.workflow_run.id }}
           path: logs/
@@ -56,7 +56,7 @@ jobs:
 
       - name: Notify Slack
         if: steps.check.outputs.violation_detected == 'true' && env.SLACK_BOT_TOKEN != ''
-        uses: slackapi/slack-github-action@v3.0.1
+        uses: slackapi/slack-github-action@v1.27.0
         with:
           channel-id: platform-alerts
           slack-message: |

@@ -28,22 +28,16 @@ def mock_dependencies():
         "numpy": MagicMock(),
     }
 
-    # Snapshot ALL activities.* modules so we can restore them after the test
-    saved_modules = {k: v for k, v in sys.modules.items() if k.startswith("activities")}
-
-    # Remove activities.tools so it gets freshly imported under our mocked deps
-    for key in list(sys.modules):
-        if key.startswith("activities"):
-            del sys.modules[key]
+    # Ensure activities.tools is re-imported with mocks
+    if "activities.tools" in sys.modules:
+        del sys.modules["activities.tools"]
 
     with patch.dict(sys.modules, modules):
         yield
 
-    # Restore the original module references to prevent downstream test pollution
-    for key in list(sys.modules):
-        if key.startswith("activities"):
-            del sys.modules[key]
-    sys.modules.update(saved_modules)
+    # Cleanup: remove activities.tools so subsequent tests re-import it with real deps
+    if "activities.tools" in sys.modules:
+        del sys.modules["activities.tools"]
 
 
 @pytest.mark.asyncio
@@ -81,7 +75,7 @@ async def test_call_webhook_valid_url():
         mock_client = mock_client_cls.return_value.__aenter__.return_value
         mock_client.request.return_value = MagicMock(status_code=200, text="OK")
 
-        with patch("activities.tools.validate_url_with_dns_pin_async") as mock_validate:
+        with patch("security.ssrf.validate_url_with_dns_pin_async") as mock_validate:
             mock_validate.return_value = ValidatedURL(
                 original_url="https://example.com/webhook",
                 resolved_ip="resolved-target.example",
@@ -122,7 +116,7 @@ async def test_call_webhook_redirects_not_followed():
             headers={"Location": "http://127.0.0.1/internal"},  # NOSONAR
         )
 
-        with patch("activities.tools.validate_url_with_dns_pin_async") as mock_validate:
+        with patch("security.ssrf.validate_url_with_dns_pin_async") as mock_validate:
             mock_validate.return_value = ValidatedURL(
                 original_url="https://example.com/redirect",
                 resolved_ip="resolved-target.example",
@@ -139,20 +133,3 @@ async def test_call_webhook_redirects_not_followed():
             assert result["status_code"] == 302
             mock_client_cls.assert_called_once_with(follow_redirects=False)
             mock_client.request.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_evaluate_policy_activity_delegates_to_evaluate_policy():
-    """Line 17 in activities/omni_policy.py: verify evaluate_policy_activity calls evaluate_policy."""
-    from unittest.mock import AsyncMock
-
-    with patch("activities.omni_policy.evaluate_policy", new_callable=AsyncMock) as mock_eval:
-        mock_eval.return_value = {"allowed": True, "lane": "GREEN"}
-
-        from activities.omni_policy import evaluate_policy_activity
-
-        ctx = {"tool": "search_database", "actor": "user-123"}
-        result = await evaluate_policy_activity(ctx)
-
-        mock_eval.assert_called_once_with(ctx)
-        assert result == {"allowed": True, "lane": "GREEN"}

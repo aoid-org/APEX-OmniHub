@@ -250,8 +250,8 @@ class AuditLogger:
         import hashlib
         import json
 
-        # Create canonical JSON representation (exclude mutable hash fields)
-        event_dict = event.model_dump(exclude={"integrity_hash", "processed_at"})
+        # Create canonical JSON representation
+        event_dict = event.model_dump()
         canonical_json = json.dumps(event_dict, sort_keys=True, default=str)
 
         # Generate SHA-256 hash

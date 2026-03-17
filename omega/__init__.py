@@ -13,10 +13,10 @@ from omega.dashboard import start_dashboard
 from omega.engine import VerificationEngine, VerificationRequest, VerificationResult
 
 __all__ = [
-    "VerificationEngine",
-    "VerificationRequest",
-    "VerificationResult",
-    "start_dashboard",
+    'VerificationEngine',
+    'VerificationRequest',
+    'VerificationResult',
+    'start_dashboard',
 ]
 
-__version__ = "1.0.0"
+__version__ = '1.0.0'

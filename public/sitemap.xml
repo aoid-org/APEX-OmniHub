@@ -2,50 +2,26 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://apexomnihub.icu/</loc>
+    <lastmod>2025-01-09T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <lastmod>2026-03-16</lastmod>
   </url>
   <url>
-    <loc>https://apexomnihub.icu/tech-specs</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-    <lastmod>2026-03-16</lastmod>
-  </url>
-  <url>
-    <loc>https://apexomnihub.icu/demo</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-    <lastmod>2026-03-16</lastmod>
-  </url>
-  <url>
-    <loc>https://apexomnihub.icu/tri-force</loc>
+    <loc>https://apexomnihub.icu/auth</loc>
+    <lastmod>2025-01-09T00:00:00+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
-    <lastmod>2026-03-16</lastmod>
   </url>
   <url>
-    <loc>https://apexomnihub.icu/fortress</loc>
-    <changefreq>monthly</changefreq>
+    <loc>https://apexomnihub.icu/dashboard</loc>
+    <lastmod>2025-01-09T00:00:00+00:00</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
-    <lastmod>2026-03-16</lastmod>
   </url>
   <url>
-    <loc>https://apexomnihub.icu/omniport</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-    <lastmod>2026-03-16</lastmod>
-  </url>
-  <url>
-    <loc>https://apexomnihub.icu/story</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-    <lastmod>2026-03-16</lastmod>
-  </url>
-  <url>
-    <loc>https://apexomnihub.icu/request-access</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-    <lastmod>2026-03-16</lastmod>
+    <loc>https://apexomnihub.icu/privacy</loc>
+    <lastmod>2025-10-03</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
   </url>
 </urlset>

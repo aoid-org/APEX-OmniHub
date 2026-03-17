@@ -220,5 +220,5 @@ statsd.histogram('temporal.workflow.duration', duration_ms)
 
 ---
 
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-01-04
 **Maintained By:** APEX DevOps Team

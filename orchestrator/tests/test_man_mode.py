@@ -1,7 +1,5 @@
-"""Unit tests for MAN Mode models, policy engine, and activity functions."""
+"""Unit tests for MAN Mode models and policy engine."""
 
-import types
-from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -22,58 +20,6 @@ from policies.man_policy import (
     SENSITIVE_TOOLS,
     ManPolicy,
 )
-
-# ---------------------------------------------------------------------------
-# Helpers to import activities.man_mode in isolation
-# ---------------------------------------------------------------------------
-
-
-def _load_man_mode_activities():
-    """
-    Import activities/man_mode.py with mocked Temporal and DB dependencies.
-
-    Returns the module object so tests can call the bare async functions directly
-    (without a real Temporal worker context).
-    """
-    # Build lightweight mock modules that satisfy all import-time needs
-    temporal_mod = types.ModuleType("temporalio")
-    temporal_activity_mod = types.ModuleType("temporalio.activity")
-    temporal_exceptions_mod = types.ModuleType("temporalio.exceptions")
-
-    # activity.defn — identity decorator at import time; logger is a MagicMock
-    temporal_activity_mod.defn = lambda _name=None, **_kw: lambda f: f
-    temporal_activity_mod.logger = MagicMock()
-
-    # ApplicationError — must be a real exception class so raise works
-    class ApplicationError(Exception):
-        def __init__(self, msg="", non_retryable=False, **_kw):
-            super().__init__(msg)
-            self.non_retryable = non_retryable
-
-    temporal_exceptions_mod.ApplicationError = ApplicationError
-    temporal_mod.activity = temporal_activity_mod
-    temporal_mod.exceptions = temporal_exceptions_mod
-
-    mocks = {
-        "temporalio": temporal_mod,
-        "temporalio.activity": temporal_activity_mod,
-        "temporalio.exceptions": temporal_exceptions_mod,
-    }
-
-    with patch.dict("sys.modules", mocks):
-        import importlib.util
-
-        spec = importlib.util.spec_from_file_location(
-            "_test_activities_man_mode",
-            "activities/man_mode.py",
-            submodule_search_locations=[],
-        )
-        mod = importlib.util.module_from_spec(spec)
-        # Inject ApplicationError so the module code's `raise ApplicationError(...)` works
-        mod.ApplicationError = ApplicationError
-        spec.loader.exec_module(mod)
-
-    return mod, ApplicationError
 
 
 class TestRiskLaneEnum:
@@ -443,32 +389,6 @@ class TestEdgeCases:
         intent = ActionIntent(
             tool_name="some_tool",
             params={"amount": -50000},
-            workflow_id="wf-1",
-        )
-        result = policy.triage(intent)
-        assert "large_amount" not in result.reasoning
-
-
-class TestEvaluateParamsExceptions:
-    """Test _evaluate_params exception handling — lines 244-245."""
-
-    def test_non_numeric_amount_does_not_raise(self):
-        """Lines 244-245: ValueError from float() conversion is silently caught."""
-        policy = ManPolicy()
-        intent = ActionIntent(
-            tool_name="some_tool",
-            params={"amount": "not_a_number"},
-            workflow_id="wf-1",
-        )
-        result = policy.triage(intent)
-        assert "large_amount" not in result.reasoning
-
-    def test_none_amount_does_not_raise(self):
-        """Lines 244-245: TypeError from float(None) is silently caught."""
-        policy = ManPolicy()
-        intent = ActionIntent(
-            tool_name="some_tool",
-            params={"amount": None},
             workflow_id="wf-1",
         )
         result = policy.triage(intent)

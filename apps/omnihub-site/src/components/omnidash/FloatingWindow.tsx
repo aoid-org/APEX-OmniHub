@@ -23,7 +23,6 @@ import { motion } from 'framer-motion';
 import { X, PictureInPicture2 } from 'lucide-react';
 import { useOmniDash, Z_FLOATING, type FloatingWindowConfig } from '../../stores/omniDashStore';
 import { GPU_STYLE, SPRING_DAMPED } from '../../lib/motionPresets';
-import { ModuleRenderer } from './ModuleRenderer';
 
 // ============================================================================
 // Component
@@ -121,7 +120,17 @@ export const FloatingWindow = memo(function FloatingWindow({ config }: FloatingW
 
       {/* ── Content ── */}
       <div className="floating-content">
-        <ModuleRenderer moduleKey={config.component} onClose={handleClose} />
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          color: 'var(--od-text-tertiary)',
+          fontSize: 12,
+          fontWeight: 600,
+        }}>
+          {config.component}
+        </div>
       </div>
     </motion.div>
   );

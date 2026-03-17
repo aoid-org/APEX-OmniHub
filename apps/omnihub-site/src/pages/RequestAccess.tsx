@@ -21,7 +21,6 @@ import {
   type ChangeEvent,
 } from 'react';
 import { Layout } from '@/components/Layout';
-import { SEOMeta } from '@/components/SEOMeta';
 import { Section, SectionHeader } from '@/components/Section';
 import { requestAccessConfig } from '@/content/site';
 
@@ -497,7 +496,6 @@ export function RequestAccessPage(): JSX.Element {
   if (isSuccess) {
     return (
       <Layout title="Request Access">
-        <SEOMeta title="Request Access" description="Request early access to APEX OmniHub — the enterprise AI governance platform." canonical="https://apexomnihub.icu/request-access" />
         <Section>
           <div
             style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}
@@ -550,7 +548,6 @@ export function RequestAccessPage(): JSX.Element {
   // Form state - show input form
   return (
     <Layout title="Request Access">
-      <SEOMeta title="Request Access" description="Request early access to APEX OmniHub — the enterprise AI governance platform." canonical="https://apexomnihub.icu/request-access" />
       <Section>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <SectionHeader

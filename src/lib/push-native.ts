@@ -60,8 +60,9 @@ export async function initializeNativePush(config: PushNotificationConfig): Prom
 
             // Register token with backend
             try {
-                        const { registerTokenWithBackend } = await import('./push-native-backend');
-                await registerTokenWithBackend(token.value, Capacitor.getPlatform());
+                // NOTE: registerTokenWithBackend needs to be defined elsewhere or imported.
+                // For example, it could be a function that interacts with Supabase.
+                // Example: await registerTokenWithBackend(token.value, Capacitor.getPlatform());
             } catch (error) {
                 console.error('[PushNative] Failed to register token with backend:', error);
             }
