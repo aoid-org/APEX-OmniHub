@@ -52,7 +52,7 @@ function resolveExecuteUrl(options: ExecutionOptions): string {
     return envBase.replace(/\/+$/, '') + EXECUTE_PATH; // NOSONAR
   }
 
-  if (typeof globalThis.window !== 'undefined') {
+  if (typeof window !== 'undefined') { // NOSONAR
     return EXECUTE_PATH;
   }
 
