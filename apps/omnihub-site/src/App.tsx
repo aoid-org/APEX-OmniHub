@@ -6,6 +6,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ComingSoonPage } from "@/pages/ComingSoon";
 import { HomePage } from "@/pages/Home";
 import { OnboardingWizard } from "@/pages/Launch/OnboardingWizard";
+import { SkillForge } from "@/pages/Launch/SkillForge";
 import OmniDashShell from "@/dashboard/OmniDashShell";
 import { OmniDashProvider } from "@/providers/OmniDashProvider";
 import { LoginPage } from "@/pages/Login";
@@ -50,6 +51,7 @@ const createProtectedElement = (element: ReactElement, isPublic = false, routeNa
 const appRoutes: readonly AppRoute[] = [
   { path: "/", element: <HomePage />, isPublic: true, routeName: "Home" },
   { path: "/launch", element: <OnboardingWizard />, isPublic: true, routeName: "Launch" },
+  { path: "/skill-forge", element: <SkillForge />, isPublic: false, routeName: "SkillForge" },
   { path: "/auth", element: <LoginPage />, isPublic: true, routeName: "Auth" },
   { path: "/login", element: <LoginPage />, isPublic: true, routeName: "Login" },
   { path: "/story", element: <FounderStory />, isPublic: true, routeName: "Founder Story" },
