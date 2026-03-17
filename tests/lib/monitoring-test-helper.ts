@@ -1,19 +1,37 @@
 import { vi } from 'vitest';
 
 /**
+ * In-memory storage for the localStorage mock
+ */
+const store: Record<string, string> = {};
+
+/**
  * Simple localStorage mock that implements the Storage interface
  */
-export const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => { store[key] = value.toString(); },
-    removeItem: (key: string) => { delete store[key]; },
-    clear: () => { store = {}; },
-    key: (index: number) => Object.keys(store)[index] || null,
-    get length() { return Object.keys(store).length; },
-  };
-})() as unknown as Storage;
+export const localStorageMock: Storage = {
+  getItem: (key: string): string | null => store[key] || null,
+  setItem: (key: string, value: string): void => {
+    store[key] = value.toString();
+  },
+  removeItem: (key: string): void => {
+    delete store[key];
+  },
+  clear: (): void => {
+    Object.keys(store).forEach(key => delete store[key]);
+  },
+  key: (index: number): string | null => Object.keys(store)[index] || null,
+  get length(): number {
+    return Object.keys(store).length;
+  },
+};
+
+/**
+ * Interface for RequestIdleCallback deadline
+ */
+interface MockIdleDeadline {
+  readonly didTimeout: boolean;
+  timeRemaining: () => number;
+}
 
 /**
  * Initialize environment for Bun and Vitest compatibility
@@ -46,9 +64,18 @@ export function setupMonitoringTestEnv(): void {
   if (typeof document === 'undefined') {
     globalObj.document = {
       visibilityState: 'visible',
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
+      addEventListener: vi.fn() as unknown as (type: string, listener: EventListenerOrEventListenerObject) => void,
+      removeEventListener: vi.fn() as unknown as (type: string, listener: EventListenerOrEventListenerObject) => void,
+      dispatchEvent: vi.fn() as unknown as (event: Event) => boolean,
     } as unknown as Document;
+  }
+
+  if (typeof globalObj.requestIdleCallback !== 'function') {
+    globalObj.requestIdleCallback = (cb: (deadline: MockIdleDeadline) => void) => {
+      return setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 10 }), 0);
+    };
+    globalObj.cancelIdleCallback = (handle: number) => {
+      clearTimeout(handle);
+    };
   }
 }

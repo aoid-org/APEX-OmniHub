@@ -4,30 +4,28 @@ import { setupMonitoringTestEnv } from './monitoring-test-helper';
 // Must run before importing monitoring
 setupMonitoringTestEnv();
 
-import * as monitoring from '../../src/lib/monitoring';
+import { trackUserAction, _testing } from '../../src/lib/monitoring';
 
 describe('trackUserAction integration', () => {
   beforeEach(() => {
     localStorage.clear();
-    monitoring._testing.logCache.clear();
-    monitoring._testing.queue.clear();
+    _testing.logCache.clear();
+    _testing.queue.clear();
     vi.clearAllMocks();
   });
 
-  it('should delegate to logAnalyticsEvent', async () => {
-    // We use a broader expectation to avoid strict argument matching if metadata objects differ by reference.
-    const spy = vi.spyOn(monitoring, 'logAnalyticsEvent');
+  it('should delegate to logAnalyticsEvent with "user_action" and correctly merged metadata', async () => {
+    // trackUserAction calls _testing.logAnalyticsEvent internally.
+    // By spying on _testing.logAnalyticsEvent, we can catch the intra-module call.
+    const spy = vi.spyOn(_testing, 'logAnalyticsEvent');
 
-    monitoring.trackUserAction('test_action', { key: 'value' });
+    trackUserAction('login_pressed', { method: 'email' });
+
+    // In CI (optimized ESM), we add a tiny wait to ensure the async call has been initiated
+    // even though spies usually catch the invocation immediately.
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     expect(spy).toHaveBeenCalled();
-  });
-
-  it('should include action in metadata', async () => {
-    const spy = vi.spyOn(monitoring, 'logAnalyticsEvent');
-
-    monitoring.trackUserAction('login_pressed', { method: 'email' });
-
     expect(spy).toHaveBeenCalledWith('user_action', expect.objectContaining({
       action: 'login_pressed',
       method: 'email'
@@ -35,9 +33,11 @@ describe('trackUserAction integration', () => {
   });
 
   it('should work without optional metadata', async () => {
-    const spy = vi.spyOn(monitoring, 'logAnalyticsEvent');
+    const spy = vi.spyOn(_testing, 'logAnalyticsEvent');
 
-    monitoring.trackUserAction('logout_pressed');
+    trackUserAction('logout_pressed');
+
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     expect(spy).toHaveBeenCalledWith('user_action', expect.objectContaining({
       action: 'logout_pressed'
@@ -45,9 +45,11 @@ describe('trackUserAction integration', () => {
   });
 
   it('should handle empty metadata object', async () => {
-    const spy = vi.spyOn(monitoring, 'logAnalyticsEvent');
+    const spy = vi.spyOn(_testing, 'logAnalyticsEvent');
 
-    monitoring.trackUserAction('scroll_end', {});
+    trackUserAction('scroll_end', {});
+
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     expect(spy).toHaveBeenCalledWith('user_action', expect.objectContaining({
       action: 'scroll_end'
