@@ -1,69 +1,76 @@
-import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
-import * as React from "react";
+import { describe, expect, it, beforeEach } from "vitest";
 import { ChartContainer } from "@/components/ui/chart";
-import type { ChartConfig } from "@/components/ui/chart";
+import * as React from "react";
+
+// Mock ResizeObserver which is missing in JSDOM but required by Recharts
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
 
 describe("ChartStyle Security", () => {
+  beforeEach(() => {
+    // @ts-ignore
+    global.ResizeObserver = ResizeObserverMock;
+  });
+
   it("should sanitize chart id to prevent XSS", () => {
-    const config: ChartConfig = {
-      value: { color: "#ff0000" },
+    const maliciousId = '"><img src=x onerror=alert(1)>';
+    const config = {
+      test: { label: "Test", color: "red" },
     };
 
-    // XSS payload as chart id
     const { container } = render(
-      <ChartContainer id={'"><script>alert(1)</script>'} config={config}>
-        <></>
-      </ChartContainer>,
+      <ChartContainer id={maliciousId} config={config}>
+        <div />
+      </ChartContainer>
     );
 
-    const style = container.querySelector("style");
-    expect(style).not.toBeNull();
-    const html = style?.innerHTML ?? "";
-    // The raw XSS payload characters must not appear in the emitted CSS
-    expect(html).not.toContain("<script>");
-    expect(html).not.toContain("alert(1)");
-    expect(html).not.toContain("</script>");
+    const styleTag = container.querySelector("style");
+    expect(styleTag).toBeDefined();
+    // The malicious characters should be stripped
+    expect(styleTag?.innerHTML).not.toContain('">');
+    expect(styleTag?.innerHTML).not.toContain('<img');
+
+    // The div should also have a sanitized data-chart attribute
+    const chartDiv = container.querySelector("[data-chart]");
+    expect(chartDiv?.getAttribute("data-chart")).toBe("chart-imgsrcxonerroralert1");
   });
 
   it("should sanitize config keys to prevent CSS injection", () => {
-    const config: ChartConfig = {
-      // Key contains } and CSS payload that would break out of CSS block if unsanitized
-      "key}body{background:red;--x": { color: "#00ff00" },
+    const maliciousKey = "test; } body { background: red; }";
+    const config = {
+      [maliciousKey]: { label: "Test", color: "red" },
     };
 
     const { container } = render(
-      <ChartContainer id="safe-id" config={config}>
-        <></>
-      </ChartContainer>,
+      <ChartContainer config={config}>
+        <div />
+      </ChartContainer>
     );
 
-    const style = container.querySelector("style");
-    expect(style).not.toBeNull();
-    const html = style?.innerHTML ?? "";
-    // The injection payload must not appear in the CSS variable name
-    expect(html).not.toContain("body{");
-    expect(html).not.toContain("background:red");
+    const styleTag = container.querySelector("style");
+    // Malicious characters should be stripped from the variable name
+    expect(styleTag?.innerHTML).not.toContain("test; }");
+    expect(styleTag?.innerHTML).toContain("--color-testbodybackgroundred");
   });
 
   it("should sanitize color values to prevent breaking out of CSS rules", () => {
-    const config: ChartConfig = {
-      value: { color: "red; } body { background: url(evil)" },
+    const maliciousColor = "red; } body { background: blue; }";
+    const config = {
+      test: { label: "Test", color: maliciousColor },
     };
 
     const { container } = render(
-      <ChartContainer id="safe-id" config={config}>
-        <></>
-      </ChartContainer>,
+      <ChartContainer config={config}>
+        <div />
+      </ChartContainer>
     );
 
-    const style = container.querySelector("style");
-    // Either the style is null (no valid declarations) or it doesn't contain the injection
-    if (style) {
-      const html = style.innerHTML;
-      expect(html).not.toContain("url(");
-      expect(html).not.toContain("body {");
-      expect(html).not.toContain("background:");
-    }
+    const styleTag = container.querySelector("style");
+    expect(styleTag?.innerHTML).not.toContain("red; }");
+    expect(styleTag?.innerHTML).toContain("--color-test: red body  background: blue  ;");
   });
 });

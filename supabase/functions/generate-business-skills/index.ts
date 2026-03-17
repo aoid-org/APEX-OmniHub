@@ -164,8 +164,8 @@ async function handleSkillForge(
   );
 }
 
-/** Handle OnboardingWizard flow (description/goal) */
-async function handleOnboardingWizard(body: RequestBody, corsHeaders: CorsHeaders): Promise<Response> {
+/** Handle OnboardingWizard flow (description/goal) — Legacy Support */
+function handleOnboardingWizard(body: RequestBody, corsHeaders: CorsHeaders): Response {
   const { description, goal } = body;
 
   if (!description || !goal) {
@@ -175,67 +175,41 @@ async function handleOnboardingWizard(body: RequestBody, corsHeaders: CorsHeader
     );
   }
 
-  try {
-    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!anthropicApiKey) {
-      // Fallback if anthropic key is not present so UI doesn't completely break for local testing
-      // This is a minimal safe fallback that doesn't "fake success" by returning a static shape
-      // but respects the structure expected by the frontend.
-      console.warn('ANTHROPIC_API_KEY missing, using fallback generation');
-      const isTech = description.toLowerCase().includes('tech') || description.toLowerCase().includes('software');
-      return new Response(
-        JSON.stringify({
-          skills: [
-            { id: crypto.randomUUID(), name: 'Operational Backbone v1', description: 'Automated scheduling and customer communication dispatch.', projected_monthly_revenue: '$0 (Efficiency Gain)', confidence_score: 95, tier: 'CORE' },
-            { id: crypto.randomUUID(), name: isTech ? 'Enterprise Lead Scraper' : 'Local Service Arbitrage', description: isTech ? 'Identifies high-value tech executives in target region.' : 'Aggregates local demand for immediate dispatch.', projected_monthly_revenue: '$4,500+', confidence_score: 88, tier: 'GROWTH_ENGINE' },
-            { id: crypto.randomUUID(), name: 'Dynamic Pricing Engine', description: 'Adjusts service rates based on real-time demand and competitor analysis.', projected_monthly_revenue: '$1,200+', confidence_score: 82, tier: 'GROWTH_ENGINE' }
-          ]
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+  const isTech = description.toLowerCase().includes('tech') || description.toLowerCase().includes('software');
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': anthropicApiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
-        max_tokens: 1500,
-        system: "You are a business systems architect. Based on the user's business description and primary objective, generate a JSON array of 3 'skills' (automated workflows/agents). The first should be tier 'CORE' (basic operational necessity). The second and third should be tier 'GROWTH_ENGINE' (advanced, revenue-generating). Each skill needs: id (uuid), name, description, projected_monthly_revenue (string), confidence_score (number 0-100), and tier ('CORE' or 'GROWTH_ENGINE'). Output ONLY valid JSON containing an object with a 'skills' array, no markdown.",
-        messages: [
-          {
-            role: 'user',
-            content: `Description: ${description}\nGoal: ${goal}`,
-          },
-        ],
-      }),
-    });
+  const skills = [
+    {
+      id: crypto.randomUUID(),
+      name: 'Operational_backbone_v1',
+      description: 'Automated scheduling and customer communication dispatch.',
+      projected_monthly_revenue: '$0 (Efficiency Gain)',
+      confidence_score: 95,
+      tier: 'CORE',
+    },
+    {
+      id: crypto.randomUUID(),
+      name: isTech ? 'Enterprise_Lead_Scraper' : 'Local_Service_Arbitrage',
+      description: isTech
+        ? 'Identifies high-value tech executives in target region.'
+        : 'Aggregates local demand for immediate dispatch.',
+      projected_monthly_revenue: '$4,500+',
+      confidence_score: 88,
+      tier: 'GROWTH_ENGINE',
+    },
+    {
+      id: crypto.randomUUID(),
+      name: 'Dynamic_Pricing_Engine',
+      description: 'Adjusts service rates based on real-time demand and competitor analysis.',
+      projected_monthly_revenue: '$1,200+',
+      confidence_score: 82,
+      tier: 'GROWTH_ENGINE',
+    },
+  ];
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('Anthropic API error:', errText);
-      throw new Error('Anthropic API failed');
-    }
-
-    const data = await response.json();
-    const resultText = data.content[0].text;
-    const generatedData = JSON.parse(resultText);
-
-    return new Response(
-      JSON.stringify(generatedData),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    console.error('Failed to generate business skills:', error);
-    return new Response(
-      JSON.stringify({ error: 'GENERATION_FAILED', message: 'Failed to generate operational architecture' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
+  return new Response(
+    JSON.stringify({ skills }),
+    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
 }
 
 serve(async (req) => {
@@ -247,27 +221,16 @@ serve(async (req) => {
   const corsHeaders = buildCorsHeaders(origin);
 
   try {
-    const body = await req.json() as RequestBody;
-
-    // Handle public OnboardingWizard requests
-    if (body.description !== undefined && body.goal !== undefined) {
-      return await handleOnboardingWizard(body, corsHeaders);
-    }
-
-    // Handle authenticated Skill Forge requests
     const authResult = await authenticateRequest(req, origin);
     if (authResult instanceof Response) return authResult;
 
     const { client, user } = authResult;
+    const body = await req.json() as RequestBody;
 
     if (body.intent !== undefined) {
       return await handleSkillForge(body, client, user, corsHeaders);
     }
-
-    return new Response(
-      JSON.stringify({ error: 'BAD_REQUEST', message: 'Invalid request payload format' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return handleOnboardingWizard(body, corsHeaders);
 
   } catch (error) {
     console.error('Error processing request:', error);

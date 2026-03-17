@@ -38,16 +38,6 @@ if (httpProxy) {
   }
 }
 
-if (typeof globalThis.ResizeObserver === "undefined") {
-  class ResizeObserverMock {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  }
-  // @ts-expect-error test shim for jsdom
-  globalThis.ResizeObserver = ResizeObserverMock;
-}
-
 // ─── Framer Motion — jsdom DOM-prop bleed prevention ─────────────────────────
 // Delegates to __mocks__/framer-motion.ts (synchronous ESM, no require()).
 // The factory-less call tells Vitest to use the adjacent __mocks__ file,

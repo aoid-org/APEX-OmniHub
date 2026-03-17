@@ -169,11 +169,11 @@ export class MemoryClient {
       throw new Error(`Memory recall failed: ${error.message}`);
     }
 
-    // Touch accessed memories
+    // Touch accessed memories in bulk
     const rows = (data ?? []) as unknown as ReadonlyArray<Record<string, unknown>>;
     const ids = rows.map((m) => m.id as string);
     if (ids.length > 0) {
-      await this.supabase.rpc('touch_memories', {
+      await this.supabase.rpc('touch_memories_bulk', {
         memory_ids: ids,
       });
     }
