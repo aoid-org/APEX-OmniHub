@@ -4,16 +4,16 @@
 
 **Enterprise AI Orchestration Platform**
 
-- **Document Version:** 2.3.1
+- **Document Version:** 2.3.2
 - **Platform Version:** 1.4.1
-- **Last Updated:** 2026-03-10
+- **Last Updated:** 2026-03-16
 - **Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
 
 ## Quick Navigation
 
-**Start here:** [Canonical Repo Map](../ARCHITECTURE_CANONICAL_MAP.md) — first-stop architecture + infrastructure map.
+**Start here:** [Canonical Repo Map](architecture/ARCHITECTURE_CANONICAL_MAP.md) — first-stop architecture + infrastructure map.
 
 | Category                                            | Description                                |
 | --------------------------------------------------- | ------------------------------------------ |
@@ -82,17 +82,18 @@ Current deployment state and ecosystem overview:
 
 Deployment, cloud infrastructure, and DevOps:
 
-| Document                                                               | Description         |
-| ---------------------------------------------------------------------- | ------------------- |
-| [Production Deployment](infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md) | Deployment guide    |
-| [CI/CD Pipeline](infrastructure/CICD_PIPELINE_DESIGN.md)               | Pipeline design     |
-| [CI Runtime Gates](infrastructure/CI_RUNTIME_GATES.md)                 | Quality gates       |
-| [Disaster Recovery](infrastructure/DISASTER_RECOVERY_PLAN.md)          | DR procedures       |
-| [Cloud Agnostic](infrastructure/CLOUD_AGNOSTIC_ARCHITECTURE.md)        | Multi-cloud support |
-| [Observability Stack](infrastructure/OBSERVABILITY_STACK_SETUP.md)     | Monitoring setup    |
-| [Blockchain Config](infrastructure/BLOCKCHAIN_CONFIG.md)               | Web3 configuration  |
-| [Cost Optimization](infrastructure/COST_OPTIMIZATION.md)               | Cost management     |
-| [Backup Verification](infrastructure/BACKUP_VERIFICATION.md)           | Backup procedures   |
+| Document                                                               | Description                    |
+| ---------------------------------------------------------------------- | ------------------------------ |
+| [Production Deployment](infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md) | Deployment guide               |
+| [CI/CD Pipeline](infrastructure/CICD_PIPELINE_DESIGN.md)               | Pipeline design                |
+| [CI Runtime Gates](infrastructure/CI_RUNTIME_GATES.md)                 | Quality gates                  |
+| [Disaster Recovery](infrastructure/DISASTER_RECOVERY_PLAN.md)          | DR procedures                  |
+| [Cloud Agnostic](infrastructure/CLOUD_AGNOSTIC_ARCHITECTURE.md)        | Multi-cloud support            |
+| [Supabase Setup Guide](infrastructure/SUPABASE_SETUP.md)               | Supabase project configuration |
+| [Observability Stack](infrastructure/OBSERVABILITY_STACK_SETUP.md)     | Monitoring setup               |
+| [Blockchain Config](infrastructure/BLOCKCHAIN_CONFIG.md)               | Web3 configuration             |
+| [Cost Optimization](infrastructure/COST_OPTIMIZATION.md)               | Cost management                |
+| [Backup Verification](infrastructure/BACKUP_VERIFICATION.md)           | Backup procedures              |
 
 ### Deployment Paths
 
@@ -114,12 +115,15 @@ Deployment, cloud infrastructure, and DevOps:
 
 Operational runbooks and procedures:
 
-| Document                                                | Description                     |
-| ------------------------------------------------------- | ------------------------------- |
-| [Operational Excellence](ops/OPERATIONAL_EXCELLENCE.md) | Enterprise operations framework |
-| [Operations Runbook](ops/OPS_RUNBOOK.md)                | Master ops runbook (v2.0)       |
-| [Incident Response](ops/INCIDENT_RESPONSE.md)           | Incident handling               |
-| [Adaptive Nightly Eval](ops/adaptive-nightly-eval.md)   | Automated evaluation            |
+| Document                                                   | Description                         |
+| ---------------------------------------------------------- | ----------------------------------- |
+| [Operational Excellence](ops/OPERATIONAL_EXCELLENCE.md)    | Enterprise operations framework     |
+| [Operations Runbook](ops/OPS_RUNBOOK.md)                   | Master ops runbook (v2.0)           |
+| [Operations Runbook v1.3.8](ops/OPS_RUNBOOK_v1.3.8.md)     | Omnicognition/OmniRoute ops runbook |
+| [CI Guardrails Runbook](ops/OPS_RUNBOOKS_CI_GUARDRAILS.md) | Guardrail failure remediation       |
+| [OmniDash RCA](ops/omnidash-asset-rca.md)                  | Historic Incident RCA               |
+| [Incident Response](ops/INCIDENT_RESPONSE.md)              | Incident handling                   |
+| [Adaptive Nightly Eval](ops/adaptive-nightly-eval.md)      | Automated evaluation                |
 
 ### Recovery Guides
 
@@ -128,6 +132,7 @@ Operational runbooks and procedures:
 | [DR Runbook](guides/DR_RUNBOOK.md)                       | Disaster recovery       |
 | [Web3 Verification](guides/WEB3_VERIFICATION_RUNBOOK.md) | Blockchain verification |
 | [Native Push Setup](guides/NATIVE_PUSH_SETUP.md)         | Push notification setup |
+| [APEX Recon Engine V2](guides/APEX_RECON_ENGINE_V2.html) | Recon Engine Docs       |
 
 ---
 
@@ -162,6 +167,7 @@ Regulatory compliance and audit readiness:
 | [OmniLink Hybrid Certification](compliance/OMNILINK_HYBRID_CERTIFICATION.md) | Mobile/Hybrid certification |
 | [Privacy Policy](compliance/PRIVACY_POLICY.md)                               | Privacy policy template     |
 | [Terms of Service](compliance/TERMS_OF_SERVICE.md)                           | Terms of service template   |
+| [Third Party Notices](compliance/THIRD_PARTY_NOTICES.md)                     | Open source attributions    |
 
 ---
 
@@ -237,13 +243,13 @@ Test results, simulation, and quality assurance:
 
 Audit reports, remediation, and historical records:
 
-| Document                                                                 | Description      |
-| ------------------------------------------------------------------------ | ---------------- |
-| [Armageddon Test](audits/ARMAGEDDON_TEST_SUITE_REPORT.md)                             | Extreme testing       |
-| [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md)                      | Voice security        |
-| [Full Code Audit 2026-03-06](audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md)      | Full platform audit   |
-| [Third-Party Code Audit 2026-03-07](audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md)      | Third-party audit     |
-| [Third-Party Code Audit 2026-03-08](audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md)      | Third-party audit     |
+| Document                                                                                       | Description                     |
+| ---------------------------------------------------------------------------------------------- | ------------------------------- |
+| [Armageddon Test](audits/ARMAGEDDON_TEST_SUITE_REPORT.md)                                      | Extreme testing                 |
+| [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md)                               | Voice security                  |
+| [Full Code Audit 2026-03-06](audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md)               | Full platform audit             |
+| [Third-Party Code Audit 2026-03-07](audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md)               | Third-party audit               |
+| [Third-Party Code Audit 2026-03-08](audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md)               | Third-party audit               |
 | [**Third-Party Code Audit 2026-03-09 ← CURRENT**](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) | **Latest audit — 94.3/100 (A)** |
 
 ---
@@ -276,7 +282,7 @@ docs/
 
 ---
 
-**Last Updated:** March 01, 2026
+**Last Updated:** March 16, 2026
 **Release:** v1.3.8
 
 ## Documentation Governance

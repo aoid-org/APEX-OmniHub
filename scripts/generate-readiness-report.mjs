@@ -18,20 +18,20 @@ import { execSync } from 'node:child_process';
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
 // Values injected by CI via env vars (with safe fallbacks for local runs)
-const coveragePct   = parseFloat(process.env.CI_COVERAGE_LINES  ?? '0')  || null;
+const coveragePct   = Number.parseFloat(process.env.CI_COVERAGE_LINES  ?? '0')  || null;
 const sonarGrade    = process.env.CI_SONAR_GRADE                          ?? 'PENDING';
-const lintErrors    = parseInt(process.env.CI_LINT_ERRORS        ?? '0')  || 0;
+const lintErrors    = Number.parseInt(process.env.CI_LINT_ERRORS        ?? '0')  || 0;
 
 // Count actual files for metrics
 const countFiles = (dir, ext) => {
   try {
-    return parseInt(execSync(`find ${dir} -name "*.${ext}" 2>/dev/null | wc -l`).toString().trim());
+    return Number.parseInt(execSync(`find ${dir} -name "*.${ext}" 2>/dev/null | wc -l`).toString().trim()) // NOSONAR;
   } catch { return 0; }
 };
 
 const migrationCount  = countFiles('supabase/migrations', 'sql');
-const testSpecCount   = parseInt(execSync(`find tests -name "*.test.ts" -o -name "*.spec.ts" 2>/dev/null | wc -l`).toString().trim()) || 0;
-const edgeFnCount     = parseInt(execSync(`ls supabase/functions/ 2>/dev/null | grep -v .gitkeep | wc -l`).toString().trim()) || 0;
+const testSpecCount   = Number.parseInt(execSync(`find tests -name "*.test.ts" -o -name "*.spec.ts" 2>/dev/null | wc -l`).toString().trim()) || 0 // NOSONAR;
+const edgeFnCount     = Number.parseInt(execSync(`ls supabase/functions/ 2>/dev/null | grep -v .gitkeep | wc -l`).toString().trim()) || 0;
 
 const report = {
   _meta: {

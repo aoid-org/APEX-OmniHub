@@ -21,37 +21,37 @@ describe('rateLimitMiddleware', () => {
     vi.mocked(kv.checkLimit).mockResolvedValue(true);
     const request = new Request('https://example.com', {
       headers: {
-        'x-real-ip': '1.2.3.4',
-        'x-forwarded-for': '5.6.7.8',
+        'x-real-ip': '192.0.2.1',
+        'x-forwarded-for': '198.51.100.1',
       },
     });
 
     await rateLimitMiddleware(request);
-    expect(kv.checkLimit).toHaveBeenCalledWith('1.2.3.4');
+    expect(kv.checkLimit).toHaveBeenCalledWith('192.0.2.1');
   });
 
   it('should use the last IP from x-forwarded-for if x-real-ip is not provided', async () => {
     vi.mocked(kv.checkLimit).mockResolvedValue(true);
     const request = new Request('https://example.com', {
       headers: {
-        'x-forwarded-for': '9.9.9.9, 10.0.0.1',
+        'x-forwarded-for': '203.0.113.1, 192.0.2.2',
       },
     });
 
     await rateLimitMiddleware(request);
-    expect(kv.checkLimit).toHaveBeenCalledWith('10.0.0.1');
+    expect(kv.checkLimit).toHaveBeenCalledWith('192.0.2.2');
   });
 
   it('should trim the IP address from x-forwarded-for', async () => {
     vi.mocked(kv.checkLimit).mockResolvedValue(true);
     const request = new Request('https://example.com', {
       headers: {
-        'x-forwarded-for': '9.9.9.9,  10.0.0.1  ',
+        'x-forwarded-for': '203.0.113.1,  192.0.2.2  ',
       },
     });
 
     await rateLimitMiddleware(request);
-    expect(kv.checkLimit).toHaveBeenCalledWith('10.0.0.1');
+    expect(kv.checkLimit).toHaveBeenCalledWith('192.0.2.2');
   });
 
   it('should use "unknown_ip" if no headers are provided', async () => {

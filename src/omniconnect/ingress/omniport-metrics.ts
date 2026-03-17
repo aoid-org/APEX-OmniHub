@@ -190,7 +190,7 @@ class MetricsCollector {
         : 0;
     const p95LatencyMs =
       latencies.length > 0
-        ? latencies[Math.floor(latencies.length * 0.95)] || latencies[latencies.length - 1]
+        ? latencies[Math.floor(latencies.length * 0.95)] || latencies.at(-1)
         : 0;
 
     return {
