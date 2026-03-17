@@ -43,7 +43,7 @@ def make_settings(**env_overrides):
         # Re-import Settings fresh so it picks up the current env
         from config import Settings
 
-        return Settings()
+        return Settings(_env_file=None)
     finally:
         # Restore old values
         for k, old_v in old.items():
@@ -91,7 +91,8 @@ class TestConfigModuleImport:
 class TestTemporalDefaults:
     """Temporal settings should have sensible defaults."""
 
-    def test_temporal_host_default(self):
+    def test_temporal_host_default(self, monkeypatch):
+        monkeypatch.delenv("TEMPORAL_HOST", raising=False)
         s = make_settings()
         assert s.temporal_host == "localhost:7233"
 

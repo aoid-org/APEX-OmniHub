@@ -7,22 +7,33 @@ import { cn } from "@/lib/utils";
 const THEMES = { light: "", dark: ".dark" } as const;
 
 function sanitizeChartId(value: string): string {
-  return value.replace(/[^a-zA-Z0-9_-]/g, "") || "chart";
+  return value.replaceAll(/[^a-zA-Z0-9_-]/g, "") || "chart";
 }
 
 function sanitizeCssVarName(value: string): string {
-  return value.replace(/[^a-zA-Z0-9_-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "value";
+  return value.replaceAll(/[^a-zA-Z0-9_-]/g, "-").replaceAll(/-+/g, "-").replaceAll(/^-|-$/g, "") || "value";
 }
+
+const HEX_RE = /^#[0-9a-fA-F]{3,8}$/;
+const RGB_RE = /^rgba?\([^)]+\)$/;
+const HSL_RE = /^hsla?\([^)]+\)$/;
+const VAR_RE = /^var\(--[a-zA-Z0-9_-]+\)$/;
+const NAMED_COLORS = new Set([
+  "transparent", "currentcolor", "inherit", "initial", "unset",
+  "white", "black", "red", "green", "blue", "yellow", "orange",
+  "purple", "pink", "gray", "grey", "cyan", "magenta", "lime",
+  "maroon", "navy", "olive", "teal", "silver", "aqua", "fuchsia",
+]);
 
 function sanitizeColorValue(value?: string): string | null {
   if (!value) return null;
   const v = value.trim();
   const safe =
-    /^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(v) ||
-    /^rgba?\(\s*(\d{1,3}\s*,\s*){2}\d{1,3}(\s*,\s*(0|1|0?\.\d+))?\s*\)$/.test(v) ||
-    /^hsla?\(\s*\d{1,3}(\.\d+)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(\s*,\s*(0|1|0?\.\d+))?\s*\)$/.test(v) ||
-    /^var\(--[a-zA-Z0-9_-]+\)$/.test(v) ||
-    /^(transparent|currentColor|inherit|initial|unset|white|black|red|green|blue|yellow|orange|purple|pink|gray|grey|cyan|magenta|lime|maroon|navy|olive|teal|silver|aqua|fuchsia)$/i.test(v);
+    HEX_RE.test(v) ||
+    RGB_RE.test(v) ||
+    HSL_RE.test(v) ||
+    VAR_RE.test(v) ||
+    NAMED_COLORS.has(v.toLowerCase());
   return safe ? v : null;
 }
 
@@ -57,7 +68,7 @@ const ChartContainer = React.forwardRef<
   }
 >(({ id, className, children, config, ...props }, ref) => {
   const uniqueId = React.useId();
-  const chartId = `chart-${sanitizeChartId(id || uniqueId.replace(/:/g, ""))}`;
+  const chartId = `chart-${sanitizeChartId(id || uniqueId.replaceAll(":", ""))}`;
 
   const contextValue = React.useMemo(() => ({ config }), [config]);
 
