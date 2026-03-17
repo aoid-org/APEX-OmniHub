@@ -195,7 +195,7 @@ jobs:
           python-version: "3.11"
 
       - name: Run orchestrator Python coverage
-        run: cd orchestrator && pip install -r requirements.txt && pytest --cov=. --cov-report=xml:coverage.xml
+        run: cd orchestrator && pip install -r requirements.txt && pytest --cov=. --cov=../omega --cov-report=xml:coverage.xml
 
       - name: SonarCloud Scan
         if: vars.SONAR_CI_SCAN_ENABLED != 'false'
