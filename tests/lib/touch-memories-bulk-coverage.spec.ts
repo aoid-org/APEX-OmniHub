@@ -24,7 +24,7 @@ describe('MemoryClient.touch_memories_bulk() logic coverage', () => {
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
-      then: vi.fn((resolve: (val: { data: { id: string }[]; error: null }) => void) => resolve({ data: [{ id: 'mem-1' }, { id: 'mem-2' }], error: null })),
+      then: vi.fn((resolve: (v: unknown) => unknown) => resolve({ data: [{ id: 'mem-1' }, { id: 'mem-2' }], error: null })),
     };
 
     fromSpy = vi.fn().mockReturnValue(builder);
@@ -48,13 +48,14 @@ describe('MemoryClient.touch_memories_bulk() logic coverage', () => {
 
   it('should not call touch_memories_bulk when recall returns no memories', async () => {
     // Override builder to return empty data
-    fromSpy.mockReturnValue({
+    const emptyBuilder: MockBuilder = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
-      then: (resolve: (val: { data: never[]; error: null }) => void) => resolve({ data: [], error: null }),
-    } as unknown as MockBuilder);
+      then: vi.fn((resolve: (v: unknown) => unknown) => resolve({ data: [], error: null })),
+    };
+    fromSpy.mockReturnValue(emptyBuilder);
 
     const results = await mc.recall();
 

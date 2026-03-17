@@ -27,7 +27,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCockpitCrypto } from "../_shared/cockpit-crypto.ts";
-import { handlePreflight, buildCorsHeaders } from "../_shared/cors.ts";
 import type {
   ByomProvider,
   ByomAuditMetadata,
@@ -76,10 +75,14 @@ const VALID_PROVIDERS: ReadonlySet<ByomProvider> = new Set<ByomProvider>([
 serve(async (req: Request) => {
   // CORS preflight
   if (req.method === "OPTIONS") {
-    return handlePreflight(req);
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
+        "Access-Control-Allow-Headers": "authorization, content-type",
+      },
+    });
   }
-
-  const origin = req.headers.get("origin");
 
   const url = new URL(req.url);
   const path = url.pathname;
@@ -87,7 +90,7 @@ serve(async (req: Request) => {
   // ── Auth check ──────────────────────────────────────────
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
-    return jsonResponse({ error: "Missing Authorization header" }, 401, origin);
+    return jsonResponse({ error: "Missing Authorization header" }, 401);
   }
 
   const {
@@ -96,7 +99,7 @@ serve(async (req: Request) => {
   } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
 
   if (authError || !user) {
-    return jsonResponse({ error: "Unauthorized" }, 401, origin);
+    return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
   // Tenant ID: from user metadata or fallback to user.id
@@ -105,22 +108,22 @@ serve(async (req: Request) => {
   // ── Route dispatch ──────────────────────────────────────
   try {
     if (path === "/byom/key/connect" && req.method === "POST") {
-      return await handleConnect(req, user.id, tenantId, origin);
+      return await handleConnect(req, user.id, tenantId);
     }
     if (path === "/byom/key/rotate" && req.method === "POST") {
-      return await handleRotate(req, user.id, tenantId, origin);
+      return await handleRotate(req, user.id, tenantId);
     }
     if (path === "/byom/key/revoke" && req.method === "POST") {
-      return await handleRevoke(req, user.id, tenantId, origin);
+      return await handleRevoke(req, user.id, tenantId);
     }
     if (path === "/byom/connections" && req.method === "GET") {
-      return await handleListConnections(user.id, origin);
+      return await handleListConnections(user.id);
     }
 
-    return jsonResponse({ error: "Not found" }, 404, origin);
+    return jsonResponse({ error: "Not found" }, 404);
   } catch (error) {
     console.error("[byom-cockpit] Unhandled error:", error);
-    return jsonResponse({ error: "Internal server error" }, 500, origin);
+    return jsonResponse({ error: "Internal server error" }, 500);
   }
 });
 
@@ -131,8 +134,7 @@ serve(async (req: Request) => {
 async function handleConnect(
   req: Request,
   userId: string,
-  tenantId: string,
-  origin: string | null
+  tenantId: string
 ): Promise<Response> {
   const body = await req.json();
   const { provider, auth_type, api_key } = body;
@@ -141,12 +143,12 @@ async function handleConnect(
   if (!provider || !auth_type || !api_key) {
     return jsonResponse(
       { error: "Missing required fields: provider, auth_type, api_key" },
-      400, origin
+      400
     );
   }
 
   if (!VALID_PROVIDERS.has(provider)) {
-    return jsonResponse({ error: `Invalid provider: ${provider}` }, 400, origin);
+    return jsonResponse({ error: `Invalid provider: ${provider}` }, 400);
   }
 
   // Regex format check (early rejection)
@@ -154,7 +156,7 @@ async function handleConnect(
   if (pattern && !pattern.test(api_key)) {
     return jsonResponse(
       { error: `Invalid API key format for ${provider}` },
-      400, origin
+      400
     );
   }
 
@@ -166,7 +168,7 @@ async function handleConnect(
         error: "Invalid credential",
         details: probeResult.reason,
       },
-      401, origin
+      401
     );
   }
 
@@ -186,7 +188,7 @@ async function handleConnect(
         details: "Revoke existing connection before adding a new one",
         existing_connection_id: existing.connection_id,
       },
-      409, origin
+      409
     );
   }
 
@@ -213,7 +215,7 @@ async function handleConnect(
 
   if (insertError) {
     console.error("[byom-cockpit] Insert error:", insertError);
-    return jsonResponse({ error: "Failed to store connection" }, 500, origin);
+    return jsonResponse({ error: "Failed to store connection" }, 500);
   }
 
   // ── Audit log (NO SECRETS) ──────────────────────────────
@@ -223,7 +225,7 @@ async function handleConnect(
     auth_type,
   });
 
-  return jsonResponse({ status: "connected", connection }, 201, origin);
+  return jsonResponse({ status: "connected", connection }, 201);
 }
 
 // ──────────────────────────────────────────────────────────
@@ -233,8 +235,7 @@ async function handleConnect(
 async function handleRotate(
   req: Request,
   userId: string,
-  tenantId: string,
-  origin: string | null
+  tenantId: string
 ): Promise<Response> {
   const body = await req.json();
   const { connection_id, new_api_key } = body;
@@ -242,7 +243,7 @@ async function handleRotate(
   if (!connection_id || !new_api_key) {
     return jsonResponse(
       { error: "Missing required fields: connection_id, new_api_key" },
-      400, origin
+      400
     );
   }
 
@@ -256,7 +257,7 @@ async function handleRotate(
     .single();
 
   if (fetchError || !connection) {
-    return jsonResponse({ error: "Active connection not found" }, 404, origin);
+    return jsonResponse({ error: "Active connection not found" }, 404);
   }
 
   const provider = connection.provider as ByomProvider;
@@ -266,7 +267,7 @@ async function handleRotate(
   if (pattern && !pattern.test(new_api_key)) {
     return jsonResponse(
       { error: `Invalid API key format for ${provider}` },
-      400, origin
+      400
     );
   }
 
@@ -275,7 +276,7 @@ async function handleRotate(
   if (!probeResult.valid) {
     return jsonResponse(
       { error: "New credential invalid", details: probeResult.reason },
-      401, origin
+      401
     );
   }
 
@@ -298,7 +299,7 @@ async function handleRotate(
 
   if (updateError) {
     console.error("[byom-cockpit] Rotate error:", updateError);
-    return jsonResponse({ error: "Failed to rotate credential" }, 500, origin);
+    return jsonResponse({ error: "Failed to rotate credential" }, 500);
   }
 
   // ── Audit log ───────────────────────────────────────────
@@ -313,7 +314,7 @@ async function handleRotate(
     connection_id,
     key_hint: newHint,
     rotation_version: newVersion,
-  }, 200, origin);
+  });
 }
 
 // ──────────────────────────────────────────────────────────
@@ -323,14 +324,13 @@ async function handleRotate(
 async function handleRevoke(
   req: Request,
   userId: string,
-  tenantId: string,
-  origin: string | null
+  tenantId: string
 ): Promise<Response> {
   const body = await req.json();
   const { connection_id } = body;
 
   if (!connection_id) {
-    return jsonResponse({ error: "Missing connection_id" }, 400, origin);
+    return jsonResponse({ error: "Missing connection_id" }, 400);
   }
 
   // Verify ownership before revocation
@@ -343,7 +343,7 @@ async function handleRevoke(
     .single();
 
   if (!connection) {
-    return jsonResponse({ error: "Active connection not found" }, 404, origin);
+    return jsonResponse({ error: "Active connection not found" }, 404);
   }
 
   const { error } = await supabase
@@ -354,7 +354,7 @@ async function handleRevoke(
 
   if (error) {
     console.error("[byom-cockpit] Revoke error:", error);
-    return jsonResponse({ error: "Failed to revoke connection" }, 500, origin);
+    return jsonResponse({ error: "Failed to revoke connection" }, 500);
   }
 
   await auditLog(userId, tenantId, "byom.disconnect", {
@@ -362,14 +362,14 @@ async function handleRevoke(
     status: "revoked",
   });
 
-  return jsonResponse({ status: "revoked", connection_id }, 200, origin);
+  return jsonResponse({ status: "revoked", connection_id });
 }
 
 // ──────────────────────────────────────────────────────────
 // GET /byom/connections
 // ──────────────────────────────────────────────────────────
 
-async function handleListConnections(_userId: string, origin: string | null): Promise<Response> {
+async function handleListConnections(_userId: string): Promise<Response> {
   // Use the safe view (excludes credential_ciphertext)
   const { data: connections, error } = await supabase
     .from("user_provider_connections_safe")
@@ -377,10 +377,10 @@ async function handleListConnections(_userId: string, origin: string | null): Pr
 
   if (error) {
     console.error("[byom-cockpit] List error:", error);
-    return jsonResponse({ error: "Failed to fetch connections" }, 500, origin);
+    return jsonResponse({ error: "Failed to fetch connections" }, 500);
   }
 
-  return jsonResponse({ connections: connections ?? [] }, 200, origin);
+  return jsonResponse({ connections: connections ?? [] });
 }
 
 // ──────────────────────────────────────────────────────────
@@ -484,13 +484,12 @@ async function auditLog(
 // Helpers
 // ──────────────────────────────────────────────────────────
 
-function jsonResponse(data: unknown, status = 200, requestOrigin: string | null = null): Response {
-  const corsHeaders = buildCorsHeaders(requestOrigin);
+function jsonResponse(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
-      ...corsHeaders,
       "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
     },
   });
 }
