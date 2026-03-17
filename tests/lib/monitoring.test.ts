@@ -16,7 +16,17 @@ describe('monitoring integration', () => {
     vi.clearAllMocks();
 
     // Mock getHealthStatus to be healthy by default
-    vi.spyOn(omniSentry, 'getHealthStatus').mockReturnValue({ status: 'healthy' } as any);
+    vi.spyOn(omniSentry, 'getHealthStatus').mockReturnValue({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      metrics: {
+        errorRate: 0,
+        circuitState: 'closed',
+        memoryUsage: 0,
+        uptime: 0,
+      },
+      diagnostics: [],
+    });
   });
 
   afterEach(() => {
@@ -70,7 +80,7 @@ describe('monitoring integration', () => {
     expect(localStorage.getItem('perf_logs')).toBeNull();
     expect(setTimeoutSpy).toHaveBeenCalled();
 
-    const callback = setTimeoutSpy.mock.calls[0][0] as Function;
+    const callback = setTimeoutSpy.mock.calls[0][0] as () => void;
     callback();
 
     const stored = JSON.parse(localStorage.getItem('perf_logs') || '[]');
@@ -108,17 +118,18 @@ describe('monitoring integration', () => {
 
   it('should use requestIdleCallback if available', () => {
     const requestIdleCallbackMock = vi.fn();
-    const originalRIC = (globalThis as any).requestIdleCallback;
-    (globalThis as any).requestIdleCallback = requestIdleCallbackMock;
+    const global = globalThis as unknown as Record<string, unknown>;
+    const originalRIC = global.requestIdleCallback;
+    global.requestIdleCallback = requestIdleCallbackMock;
 
     monitoring.logPerformance({ name: 'test', duration: 100, timestamp: 1 });
 
     expect(requestIdleCallbackMock).toHaveBeenCalled();
 
     if (originalRIC) {
-      (globalThis as any).requestIdleCallback = originalRIC;
+      global.requestIdleCallback = originalRIC;
     } else {
-      delete (globalThis as any).requestIdleCallback;
+      delete global.requestIdleCallback;
     }
   });
 
@@ -130,7 +141,7 @@ describe('monitoring integration', () => {
     monitoring.logPerformance({ name: 'test', duration: 100, timestamp: 1 });
     expect(_testing.queue.size).toBe(1);
 
-    const visibilityListener = addEventListenerSpy.mock.calls.find(call => call[0] === 'visibilitychange')?.[1] as Function;
+    const visibilityListener = addEventListenerSpy.mock.calls.find(call => call[0] === 'visibilitychange')?.[1] as (() => void) | undefined;
 
     if (visibilityListener) {
       Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
