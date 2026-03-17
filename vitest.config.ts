@@ -53,7 +53,8 @@ export default defineConfig({
       reportsDirectory: './coverage',
       clean: true,
       exclude: [
-        'apex-resilience/**',
+        'apex-resilience/scripts/**',
+        'apex-resilience/tests/**',
         '**/iron-law.spec.ts',
         '**/contracts/**',
         'tests/contracts/**',
