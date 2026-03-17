@@ -87,7 +87,7 @@ describe('OmniSupportWidget', () => {
       fireEvent.click(screen.getByRole('button'));
       // Click the X close button
       const buttons = screen.getAllByRole('button');
-      const closeBtn = buttons.find((b) => b.querySelector('svg') !== null && b !== buttons[buttons.length - 1]);
+      const closeBtn = buttons.find((b) => b.querySelector('svg') !== null && b !== buttons.at(-1));
       if (closeBtn) fireEvent.click(closeBtn);
       expect(screen.queryByText('Support')).not.toBeInTheDocument();
     });

@@ -197,7 +197,7 @@ describe('SkillForgeWidget (OmniSkills)', () => {
       });
       // Click the last Forge Skill button (footer action, not the trigger)
       const forgeButtons = screen.getAllByRole('button', { name: /forge skill/i });
-      fireEvent.click(forgeButtons[forgeButtons.length - 1]);
+      fireEvent.click(forgeButtons.at(-1));
       await waitFor(() => {
         expect(mockMutate).toHaveBeenCalled();
       });

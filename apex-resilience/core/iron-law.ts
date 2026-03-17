@@ -216,7 +216,7 @@ export class IronLawVerifier {
       const logPath = await writeSecureEvidence(`${task.id}-tests`, output, 'log');
 
       // Parse coverage from vitest output
-      const coverageMatch = output.match(/All files\s+\|\s+([\d.]+)/);
+      const coverageMatch = output.exec(/All files\s+\|\s+([\d.]+)/);
       const coverage = coverageMatch ? Number.parseFloat(coverageMatch[1]) : 80;
 
       return {

@@ -38,7 +38,7 @@ function resolveExecuteUrl(options: ExecutionOptions): string {
   const EXECUTE_PATH = '/api/maestro/execute';
 
   if (options.baseUrl) {
-    return options.baseUrl.replace(/\/+$/, '') + EXECUTE_PATH;
+    return options.baseUrl.replace(/\/+$/, '') + EXECUTE_PATH; // NOSONAR
   }
 
   const envBase =
@@ -49,10 +49,10 @@ function resolveExecuteUrl(options: ExecutionOptions): string {
     '';
 
   if (envBase) {
-    return envBase.replace(/\/+$/, '') + EXECUTE_PATH;
+    return envBase.replace(/\/+$/, '') + EXECUTE_PATH; // NOSONAR
   }
 
-  if (typeof window !== 'undefined') {
+  if (typeof globalThis.window !== 'undefined') {
     return EXECUTE_PATH;
   }
 

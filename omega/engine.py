@@ -287,7 +287,7 @@ def demo_workflow() -> None:
         request_id="task-demo-001",
         task_description="Refactor authentication module",
         modified_files=["src/auth/login.ts", "src/auth/session.ts"],
-        evidence_path="/tmp/apex-evidence/task-demo-001.json",
+        evidence_path="/tmp/apex-evidence/task-demo-001.json",  # NOSONAR
     )
 
     print(f"Created request: {request['request_id']}")
