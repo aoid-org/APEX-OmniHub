@@ -255,15 +255,37 @@ describe('MemoryClient.recall()', () => {
     expect(results[0]).toEqual(SAMPLE_MEMORY_RECORD);
   });
 
-  it('calls touch_memory RPC for each returned memory', async () => {
+  it('calls touch_memories RPC for returned memories', async () => {
     const { client, spies } = makeRecallMock([SAMPLE_MEMORY_ROW]);
 
     const mc = new MemoryClient(client, TENANT_ID, USER_ID);
     await mc.recall();
 
-    expect(spies.rpcSpy).toHaveBeenCalledWith('touch_memory', {
-      memory_id: SAMPLE_MEMORY_ROW.id,
+    expect(spies.rpcSpy).toHaveBeenCalledWith('touch_memories', {
+      memory_ids: [SAMPLE_MEMORY_ROW.id],
     });
+  });
+
+  it('calls touch_memories RPC with multiple IDs when multiple memories returned', async () => {
+    const row2 = { ...SAMPLE_MEMORY_ROW, id: 'mem-002' };
+    const { client, spies } = makeRecallMock([SAMPLE_MEMORY_ROW, row2]);
+
+    const mc = new MemoryClient(client, TENANT_ID, USER_ID);
+    await mc.recall();
+
+    expect(spies.rpcSpy).toHaveBeenCalledWith('touch_memories', {
+      memory_ids: ['mem-001', 'mem-002'],
+    });
+  });
+
+  it('does NOT call touch_memories RPC when no memories are returned', async () => {
+    const { client, spies } = makeRecallMock([]);
+
+    const mc = new MemoryClient(client, TENANT_ID, USER_ID);
+    await mc.recall();
+
+    const rpcCalls = spies.rpcSpy.mock.calls.map((c) => c[0]);
+    expect(rpcCalls).not.toContain('touch_memories');
   });
 
   it('calls set_ef_search RPC when efSearch option is provided', async () => {
@@ -519,9 +541,9 @@ describe('MemoryClient — operation sequences', () => {
       })
       .mockReturnValue(recallBuilder);
 
-    // RPC: touch_memory + purge_user_memories
+    // RPC: touch_memories + purge_user_memories
     spies.rpcSpy
-      .mockResolvedValueOnce({ data: null, error: null }) // touch_memory
+      .mockResolvedValueOnce({ data: null, error: null }) // touch_memories
       .mockResolvedValueOnce({ data: 1, error: null });   // purge_user_memories
 
     const mc = new MemoryClient(client, TENANT_ID, USER_ID);
