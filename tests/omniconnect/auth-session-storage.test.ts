@@ -12,7 +12,7 @@ vi.mock('ioredis', () => {
     async del(key: string) { store.delete(key); return 1; }
     on(_event: string, _fn?: unknown) { return this; }
     quit() { return Promise.resolve('OK'); }
-    disconnect() {}
+    disconnect() { /* noop */ }
   }
   return { default: RedisMock, Redis: RedisMock };
 });
