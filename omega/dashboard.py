@@ -30,6 +30,29 @@ from markupsafe import escape
 from omega.engine import VerificationEngine
 
 
+def sanitize_data_recursive(data: Any) -> Any:
+    """
+    Recursively sanitize a data structure for safe HTTP output.
+
+    Uses markupsafe.escape() — a SonarQube-recognised sanitizer — to break
+    the taint chain on every string value before serialisation.  Non-string
+    primitives pass through unchanged.
+
+    Args:
+        data: dict, list, str, or primitive value from user-controlled source.
+
+    Returns:
+        Deep copy with every string HTML-escaped.
+    """
+    if isinstance(data, dict):
+        return {key: sanitize_data_recursive(value) for key, value in data.items()}
+    if isinstance(data, list):
+        return [sanitize_data_recursive(item) for item in data]
+    if isinstance(data, str):
+        return str(escape(data))
+    return data
+
+
 class VerificationDashboardHandler(BaseHTTPRequestHandler):
     """HTTP request handler for verification dashboard"""
 
@@ -93,12 +116,13 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
         """
         Handle request to get pending verifications.
 
-        Security (S5131): User-controlled string fields (task_description,
-        modified_files, etc.) are escaped with markupsafe.escape() before
-        inclusion in the response, breaking the taint chain.
+        Security (S5131): sanitize_data_recursive() uses markupsafe.escape() —
+        a SonarQube-recognised sanitizer — to break the taint chain on all
+        string values before they reach the HTTP response.  Combined with
+        Content-Type: application/json + X-Content-Type-Options: nosniff
+        this provides defense-in-depth XSS protection.
         """
         pending = self.engine.get_pending_requests()
-        # SECURITY (S5131): Explicit sanitization in this code path for SonarQube taint tracking
         safe_pending = sanitize_data_recursive(pending)
         self._send_json(safe_pending)
 
