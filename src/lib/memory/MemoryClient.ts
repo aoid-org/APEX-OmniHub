@@ -172,9 +172,9 @@ export class MemoryClient {
     // Touch accessed memories
     const rows = (data ?? []) as unknown as ReadonlyArray<Record<string, unknown>>;
     const ids = rows.map((m) => m.id as string);
-    for (const id of ids) {
-      await this.supabase.rpc('touch_memory', {
-        memory_id: id,
+    if (ids.length > 0) {
+      await this.supabase.rpc('touch_memories', {
+        memory_ids: ids,
       });
     }
 
