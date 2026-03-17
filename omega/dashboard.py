@@ -46,30 +46,6 @@ def escape_html(text: str) -> str:
     return str(escape(text))
 
 
-def sanitize_data_recursive(data: Any) -> Any:
-    """
-    Recursively sanitize data structure to prevent XSS attacks.
-
-    Args:
-        data: Data to sanitize (dict, list, str, or primitive)
-
-    Returns:
-        Sanitized data with all strings HTML-escaped using markupsafe
-
-    Security:
-        Uses markupsafe.escape() directly for SonarQube taint tracking.
-        This ensures the static analysis can verify sanitization in the data flow.
-    """
-    if isinstance(data, dict):
-        return {key: sanitize_data_recursive(value) for key, value in data.items()}
-    if isinstance(data, list):
-        return [sanitize_data_recursive(item) for item in data]
-    if isinstance(data, str):
-        # Use markupsafe.escape directly for SonarQube recognition
-        return str(escape(data))
-    return data
-
-
 class VerificationDashboardHandler(BaseHTTPRequestHandler):
     """HTTP request handler for verification dashboard"""
 
@@ -141,8 +117,9 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
         """
         # Get pending requests (data pre-sanitized at storage with markupsafe.escape)
         pending = self.engine.get_pending_requests()
-        # Double-sanitize before HTTP send for defense-in-depth
-        self._send_json(pending)  # NOSONAR - Data sanitized at storage and output
+        # SECURITY (S5131): Explicit sanitization in this code path for SonarQube taint tracking
+        safe_pending = sanitize_data_recursive(pending)
+        self._send_json(safe_pending)
 
     def _sanitize_request_id(self, request_id: str) -> str:
         """
@@ -204,12 +181,7 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
         self._send_json(result)
 
     def _send_json(self, data: Any) -> None:
-        """
-        Send JSON response with sanitized data.
-
-        SECURITY: Data is pre-sanitized using markupsafe.escape() before
-        being passed to this method. Double-sanitization for defense-in-depth.
-        """
+        """Send JSON response. Content-Type application/json + nosniff prevents XSS (S5131)."""
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("X-Content-Type-Options", "nosniff")
@@ -257,5 +229,10 @@ def start_dashboard(port: int = 8080) -> None:
         server.shutdown()
 
 
-if __name__ == "__main__":
+def _main() -> None:
+    """Entry point when module is executed directly."""
     start_dashboard()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    _main()
