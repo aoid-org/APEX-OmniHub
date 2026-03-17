@@ -46,36 +46,60 @@ export function OnboardingWizard() {
   };
 
   const activateSystem = async (tier: 'BASIC' | 'PRO') => {
-    // 1. Persist the generated SKILL.md files to the user's secure storage
-    // 2. Wire them to the Agent Orchestrator
-    // 3. Process Payment if PRO
-
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-        // Handle unauthenticated state - maybe redirect to login or force auth before this step?
-        // Ideally the wizard should be behind auth or create a temp user.
-        // For now, we assume user is logged in or we handle the error.
-        console.error("User not authenticated");
-        alert("Please log in to activate your system.");
-        navigate('/login');
-        return;
+      console.error("User not authenticated");
+      alert("Please log in to activate your system.");
+      navigate('/login');
+      return;
     }
 
+    // PRO tier: redirect to Stripe Checkout
+    if (tier === 'PRO') {
+      try {
+        const { data, error } = await supabase.functions.invoke('create-checkout', {
+          body: {
+            tier: 'PRO',
+            skills: proposedSkills.filter(s => s.tier === 'GROWTH_ENGINE' || s.tier === 'CORE'),
+            returnUrl: window.location.origin,
+          },
+        });
+
+        if (error) {
+          console.error('Checkout session failed:', error);
+          alert('Payment setup failed. Please try again.');
+          return;
+        }
+
+        if (data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+
+        console.error('No checkout URL returned');
+        alert('Payment setup failed. Please try again.');
+      } catch (err) {
+        console.error('Checkout error:', err);
+        alert('Payment setup failed. Please try again.');
+      }
+      return;
+    }
+
+    // BASIC tier: activate directly (free)
     const { error } = await supabase.from('user_entitlements').insert({
       user_id: user.id,
       tier,
-      active_skills: proposedSkills.filter(s => tier === 'PRO' || s.tier === 'CORE')
+      active_skills: proposedSkills.filter(s => s.tier === 'CORE')
     });
 
     if (error) {
-        console.error("Failed to save entitlements:", error);
-        alert("Activation failed. Please try again.");
-        return;
+      console.error("Failed to save entitlements:", error);
+      alert("Activation failed. Please try again.");
+      return;
     }
 
-    // Redirect to OmniDash via Router
     navigate('/omnidash');
   };
 
