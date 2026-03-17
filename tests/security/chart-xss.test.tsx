@@ -10,7 +10,7 @@ class ResizeObserverMock {
 
 describe("ChartStyle Security", () => {
   beforeEach(() => {
-    (globalThis as any).ResizeObserver = ResizeObserverMock;
+    (globalThis as unknown as { ResizeObserver: typeof ResizeObserverMock }).ResizeObserver = ResizeObserverMock;
   });
 
   it("should sanitize chart id to prevent XSS", () => {
