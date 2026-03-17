@@ -49,7 +49,7 @@ export default defineConfig({
     coverage: {
       enabled: enableCoverage,
       provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
+      reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
       reportsDirectory: './coverage',
       clean: true,
       exclude: [
@@ -61,7 +61,28 @@ export default defineConfig({
         // Excluding them keeps coverage metrics focused on src/sim/packages.
         'tests/omnidash/_test-helpers.ts',
         'tests/triforce/helpers/**',
+        'tests/triforce/__helpers__/**',
         'tests/worldwide-wildcard/runner/**',
+        'tests/integration/setup-helpers.ts',
+        // Asset files — binaries have no executable lines.
+        '**/*.png',
+        '**/*.jpg',
+        '**/*.jpeg',
+        '**/*.gif',
+        '**/*.svg',
+        '**/*.ico',
+        // External-service provider implementations require live connections to test.
+        // Unit tests mock the IDatabase/IStorage interfaces; these concrete wrappers
+        // are integration-tested in the orchestrator's pytest suite, not vitest.
+        'src/lib/database/providers/**',
+        'src/lib/storage/providers/**',
+        'src/lib/realtime/**',
+        'src/lib/media/**',
+        // Supabase auto-generated types and client bootstrap — no testable logic.
+        'src/integrations/supabase/**',
+        'src/integrations/omniport/**',
+        // Web3/blockchain entitlements — tested via hardhat, not vitest.
+        'src/lib/web3/**',
         'node_modules/**',
         'dist/**',
         '.idea/**',
