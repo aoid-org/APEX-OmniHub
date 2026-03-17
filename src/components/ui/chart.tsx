@@ -11,7 +11,7 @@ function sanitizeChartId(value: string): string {
 }
 
 function sanitizeCssVarName(value: string): string {
-  return value.replaceAll(/[^a-zA-Z0-9_-]/g, "-").replaceAll(/-+/g, "-").replaceAll(/^-|-$/g, "") || "value";
+  return value.replaceAll(/[^a-zA-Z0-9_-]/g, "-").replaceAll(/-+/g, "-").replaceAll(/(^-)|(-$)/g, "") || "value";
 }
 
 const HEX_RE = /^#[0-9a-fA-F]{3,8}$/;
@@ -169,7 +169,7 @@ const ChartTooltipContent = React.forwardRef<
       const itemConfig = getPayloadConfigFromPayload(config, item, key);
       const value =
         !labelKey && typeof label === "string"
-          ? config[label as keyof typeof config]?.label || label
+          ? config[label]?.label || label
           : itemConfig?.label;
 
       if (labelFormatter) {
