@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it, beforeEach } from "vitest";
-import { ChartContainer } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartStyle } from '../../src/components/ui/chart';
 
 class ResizeObserverMock {
   observe() { /* mock */ }
