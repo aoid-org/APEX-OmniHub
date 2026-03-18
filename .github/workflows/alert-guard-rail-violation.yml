@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Download workflow logs
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           run-id: ${{ github.event.workflow_run.id }}
           path: logs/
@@ -33,7 +33,7 @@ jobs:
 
       - name: Open GitHub Issue
         if: steps.check.outputs.violation_detected == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const run = context.payload.workflow_run;
@@ -56,7 +56,7 @@ jobs:
 
       - name: Notify Slack
         if: steps.check.outputs.violation_detected == 'true' && env.SLACK_BOT_TOKEN != ''
-        uses: slackapi/slack-github-action@v3.0.1
+        uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95 # v3.0.1
         with:
           channel-id: platform-alerts
           slack-message: |

@@ -46,7 +46,7 @@ export interface LayerEntry {
 // ============================================================================
 
 export class ZIndexManager {
-  private layers: Map<string, LayerEntry> = new Map();
+  private readonly layers: Map<string, LayerEntry> = new Map();
   private counter = Z_BASE;
 
   /** Register a new widget and return its initial z-index. */
