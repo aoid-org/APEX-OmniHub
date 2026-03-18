@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
@@ -65,7 +65,7 @@ function checkPackageVersions(packageName) {
       let args = npmRunner.command === 'bun' ? ['pm', 'ls', '--all'] : ['ls', '--all'];
 
       console.log(`Running: ${command} ${args.join(' ')}`);
-      output = execSync(`${command} ${args.join(' ')}`, { // NOSONAR
+      output = execSync(`${command} ${args.join(' ')}`, {
         encoding: 'utf8',
         stdio: ['pipe', 'pipe', 'ignore'] // ignore stderr which might have warnings
       });

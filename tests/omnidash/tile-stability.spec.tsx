@@ -121,7 +121,7 @@ describe('BUG FAMILY A — Spatial Resistance: Drag Threshold', () => {
     );
     const widget = container.querySelector('[data-drag-active]');
     expect(widget).not.toBeNull();
-    expect(widget!.dataset.dragActive).toBe('false');
+    expect(widget!.getAttribute('data-drag-active')).toBe('false');
   });
 
   it('DraggableWidget does NOT activate drag when pointer moves < 8px from origin (edge contact resistance)', () => {
@@ -138,7 +138,7 @@ describe('BUG FAMILY A — Spatial Resistance: Drag Threshold', () => {
     fireEvent.pointerDown(widget, { clientX: 200, clientY: 200 });
     fireEvent.pointerMove(widget, { clientX: 205, clientY: 200 }); // 5px — incidental contact
 
-    expect(widget.dataset.dragActive).toBe('false');
+    expect(widget.getAttribute('data-drag-active')).toBe('false');
   });
 
   it('DraggableWidget activates drag only after pointer crosses >= 8px spatial threshold', () => {
@@ -161,7 +161,7 @@ describe('BUG FAMILY A — Spatial Resistance: Drag Threshold', () => {
     const moveEvt = new MouseEvent('pointermove', { bubbles: true, cancelable: true, clientX: 210, clientY: 200 });
     act(() => { widget.dispatchEvent(moveEvt); });
 
-    expect(widget.dataset.dragActive).toBe('true');
+    expect(widget.getAttribute('data-drag-active')).toBe('true');
   });
 
   it('DraggableWidget resets drag-active to false after pointer release', () => {
@@ -181,10 +181,10 @@ describe('BUG FAMILY A — Spatial Resistance: Drag Threshold', () => {
     const moveEvt = new MouseEvent('pointermove', { bubbles: true, cancelable: true, clientX: 215, clientY: 200 });
     act(() => { widget.dispatchEvent(moveEvt); });
 
-    expect(widget.dataset.dragActive).toBe('true');
+    expect(widget.getAttribute('data-drag-active')).toBe('true');
 
     fireEvent.pointerUp(widget);
-    expect(widget.dataset.dragActive).toBe('false');
+    expect(widget.getAttribute('data-drag-active')).toBe('false');
   });
 
   it('EcosystemPane outer tile does NOT have layout-cascade overflow (uses overflow-hidden)', () => {

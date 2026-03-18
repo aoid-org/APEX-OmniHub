@@ -85,7 +85,7 @@ async def test_log_event_supabase(logger):
         assert entry.integrity_hash is not None
         assert entry.processed_at is not None
         mock_db.insert.assert_called_once()
-        _, kwargs = mock_db.insert.call_args
+        args, kwargs = mock_db.insert.call_args
         assert kwargs["table"] == "audit_logs"
         assert kwargs["record"]["id"] == "123"
 

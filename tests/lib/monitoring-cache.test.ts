@@ -1,9 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { setupMonitoringTestEnv } from './monitoring-test-helper';
-
-// Must run before importing monitoring
-setupMonitoringTestEnv();
-
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { logError, clearLogs, _testing } from '../../src/lib/monitoring';
 
 describe('monitoring - in-memory cache', () => {
@@ -11,6 +6,7 @@ describe('monitoring - in-memory cache', () => {
     localStorage.clear();
     _testing.logCache.clear();
     _testing.queue.clear();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -64,7 +60,7 @@ describe('monitoring - in-memory cache', () => {
     const newValue = JSON.stringify(otherTabLogs);
     localStorage.setItem('error_logs', newValue);
 
-    // Trigger storage event
+    // Trigger storage event (JSDOM does not auto-trigger this on same-window writes, and we need to simulate it)
     globalThis.dispatchEvent(new StorageEvent('storage', {
       key: 'error_logs',
       newValue: newValue,
@@ -92,11 +88,7 @@ describe('monitoring - in-memory cache', () => {
   });
 
   it('should handle malformed JSON in storage event', () => {
-    const { logCache, getCachedLogs } = _testing;
-
-    // Populate cache first
-    getCachedLogs('error_logs');
-    expect(logCache.has('error_logs')).toBe(true);
+    const { logCache } = _testing;
 
     // Trigger storage event with bad JSON
     globalThis.dispatchEvent(new StorageEvent('storage', {

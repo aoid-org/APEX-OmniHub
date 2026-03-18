@@ -180,7 +180,7 @@ class OmniBoardFSM:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
                 if loop.is_running():
-                    import nest_asyncio  # type: ignore
+                    import nest_asyncio
 
                     nest_asyncio.apply()
                 device_data = loop.run_until_complete(

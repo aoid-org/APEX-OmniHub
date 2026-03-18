@@ -70,8 +70,6 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v"
-# Add repo root so tests can import top-level packages (e.g. omega.dashboard)
-pythonpath = [".."]
 
 [tool.coverage.run]
 omit = [
@@ -166,7 +164,6 @@ ignore = [
   "S311",   # pseudo-random in tests is fine (not crypto)
   "SIM117", # nested with-statements improve test readability (setup vs assertion)
   "E501",   # test strings/comments may legitimately exceed 100 chars
-  "I001",   # import sort order: omega/ is a sibling package added via pythonpath
 ]
 "workflows/**/*.py" = [
   "C901",  # Complex workflow orchestration is expected

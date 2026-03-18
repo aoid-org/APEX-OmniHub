@@ -212,8 +212,8 @@ export const useOmniDash = create<OmniDashState>((set, get) => {
         title: structuredClone(title),
         component: structuredClone(component),
         position: position ? structuredClone(position) : {
-          x: (typeof window !== 'undefined' ? globalThis.window.innerWidth : 1280) - 360,
-          y: (typeof window !== 'undefined' ? globalThis.window.innerHeight : 800) - 280,
+          x: (typeof window !== 'undefined' ? window.innerWidth : 1280) - 360,
+          y: (typeof window !== 'undefined' ? window.innerHeight : 800) - 280,
         },
         size: { ...DEFAULT_FLOATING_SIZE },
       };

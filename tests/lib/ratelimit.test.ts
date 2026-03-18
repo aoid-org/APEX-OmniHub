@@ -141,14 +141,6 @@ describe('Rate Limiting', () => {
   });
 
   describe('Tier 3: Security & Performance', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
     it('prevents timing attacks on window reset', async () => {
       const key = testKey('timing-attack');
       usedKeys.push(key);
@@ -158,18 +150,16 @@ describe('Rate Limiting', () => {
         checkRateLimit(key, 5, 100);
       }
 
-      // Try at T=80ms (before reset) - increased buffer to avoid timer jitter flakiness
-      // We use 80ms instead of 50ms so that slow test environments don't accidentally exceed the 100ms limit before the line executes.
-      await vi.advanceTimersByTimeAsync(80);
+      // Try at T=50ms (before reset) - increased buffer to avoid timer jitter flakiness
+      await new Promise(resolve => setTimeout(resolve, 50));
       expect(checkRateLimit(key, 5, 100).allowed).toBe(false);
 
-      // Try at T=110ms (after reset) - Wait additional 100ms to avoid CI timer jitter
-      await vi.advanceTimersByTimeAsync(100);
+      // Try at T=110ms (after reset) - Wait additional 60ms
+      await new Promise(resolve => setTimeout(resolve, 60));
       expect(checkRateLimit(key, 5, 100).allowed).toBe(true);
     });
 
     it('handles concurrent requests correctly', async () => {
-      vi.useRealTimers(); // Concurrency test needs real event loop macrotasking
       const key = testKey('concurrent');
       usedKeys.push(key);
 
@@ -188,7 +178,6 @@ describe('Rate Limiting', () => {
     });
 
     it('prevents memory leak with many unique keys', async () => {
-      vi.useFakeTimers();
       const keys = Array.from({ length: 100 }, (_, i) => testKey(`user-${i}`));
 
       // Create 100 entries with 50ms window
@@ -198,15 +187,13 @@ describe('Rate Limiting', () => {
       });
 
       // Wait for expiration
-      await vi.advanceTimersByTimeAsync(100);
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Note: We cannot verify Map size here as it is not exported.
       // But we verify the code handles high volume without error.
       const triggerKey = testKey('trigger');
       usedKeys.push(triggerKey);
       expect(checkRateLimit(triggerKey, 5, 1000).allowed).toBe(true);
-      
-      vi.useRealTimers();
     });
 
     it('completes in <1ms for typical requests', () => {

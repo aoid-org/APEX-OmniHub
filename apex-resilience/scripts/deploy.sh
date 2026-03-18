@@ -32,7 +32,7 @@ echo "📋 Step 2: Checking dependencies..."
 
 if ! npm list @playwright/test > /dev/null 2>&1; then
   echo "⚠️  Installing missing dependencies..."
-  npm install --ignore-scripts --save-dev @playwright/test axe-core pixelmatch pngjs
+  npm install --save-dev @playwright/test axe-core pixelmatch pngjs
 fi
 
 echo "✅ Dependencies verified"

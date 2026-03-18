@@ -34,7 +34,7 @@ describe('Error Handling E2E Tests', () => {
       }
 
       // Final delay should not exceed max
-      expect(delays.at(-1)).toBeLessThanOrEqual(10000);
+      expect(delays[delays.length - 1]).toBeLessThanOrEqual(10000);
     });
 
     it('applies jitter within bounds', async () => {

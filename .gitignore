@@ -52,7 +52,6 @@ artifacts/
 cache/
 typechain-types/
 coverage/
-!coverage/coverage-summary.json
 coverage.json
 .coverage
 

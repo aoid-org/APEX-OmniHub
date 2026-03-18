@@ -343,7 +343,7 @@ export function trackUserAction(
   action: string,
   metadata?: Record<string, unknown>
 ): void {
-  void _testing.logAnalyticsEvent('user_action', { action, ...metadata });
+  void logAnalyticsEvent('user_action', { action, ...metadata });
 }
 
 /**
@@ -476,7 +476,6 @@ export function clearLogs(): void {
 
 // Export for testing
 export const _testing = {
-  logAnalyticsEvent,
   flushQueue,
   queue,
   storage,

@@ -12,7 +12,7 @@ class ResizeObserverMock {
 
 describe("ChartStyle Security", () => {
   beforeEach(() => {
-    // @ts-ignore
+    // @ts-expect-error - Mock ResizeObserver for JSDOM
     global.ResizeObserver = ResizeObserverMock;
   });
 
@@ -71,8 +71,14 @@ describe("ChartStyle Security", () => {
 
     const styleTag = container.querySelector("style");
     expect(styleTag?.innerHTML).not.toContain("red; }");
-    // Expected result of sanitizing "red; } body { background: blue; }" is "red  body { background: blue " if we only remove ; and }
-    // But now we remove { too, so it is "red  body  background: blue  "
-    expect(styleTag?.innerHTML).toContain("--color-test: red  body  background: blue  ;");
+
+    // Let's use a more robust check that doesn't depend on exact whitespace
+    const sanitizedCss = styleTag?.innerHTML || "";
+    expect(sanitizedCss).toContain("--color-test:");
+    expect(sanitizedCss).toContain("red");
+    expect(sanitizedCss).toContain("body");
+    expect(sanitizedCss).toContain("background: blue");
+    expect(sanitizedCss).not.toContain("; }");
+    expect(sanitizedCss).not.toContain("{");
   });
 });

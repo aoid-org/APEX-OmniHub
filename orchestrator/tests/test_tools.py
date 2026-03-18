@@ -119,7 +119,7 @@ async def test_call_webhook_success():
     ) as mock_validate:
         validated = MagicMock()
         validated.original_url = "https://api.example.com"
-        validated.resolved_ip = "192.0.2.1"
+        validated.resolved_ip = "1.2.3.4"
         validated.host_header = "api.example.com"
         mock_validate.return_value = validated
 
@@ -136,7 +136,7 @@ async def test_call_webhook_success():
 
 @pytest.mark.asyncio
 async def test_call_webhook_ssrf_blocked():
-    params = {"url": "http://169.254.169.254"}  # NOSONAR
+    params = {"url": "http://169.254.169.254"}
 
     with patch(
         "activities.tools.validate_url_with_dns_pin_async", new_callable=AsyncMock

@@ -91,12 +91,12 @@ const SURFACE_RULES: readonly SurfaceRule[] = [
 
 function getChangedFiles(): string[] {
   try {
-    const diff = execSync('git diff --name-only HEAD~1', { encoding: 'utf-8' }); // NOSONAR
+    const diff = execSync('git diff --name-only HEAD~1', { encoding: 'utf-8' });
     return diff.trim().split('\n').filter(Boolean);
   } catch {
     // Fallback: diff against staging
     try {
-      const diff = execSync('git diff --cached --name-only', { encoding: 'utf-8' }); // NOSONAR
+      const diff = execSync('git diff --cached --name-only', { encoding: 'utf-8' });
       return diff.trim().split('\n').filter(Boolean);
     } catch {
       console.error('ERROR: Cannot determine changed files. Run from a git repository.');

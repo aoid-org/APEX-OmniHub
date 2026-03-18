@@ -10,7 +10,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 export const createEslintConfig = (options = {}) => {
   const { ignores = ['dist', 'node_modules'] } = options;
 
-  return tseslint.config([
+  return tseslint.config(
     { ignores },
     {
       extends: [js.configs.recommended, ...tseslint.configs.recommended],
@@ -59,5 +59,5 @@ export const createEslintConfig = (options = {}) => {
       },
     }
 
-  ]);
+  );
 };

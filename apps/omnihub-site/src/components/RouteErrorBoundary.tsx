@@ -41,7 +41,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
     });
   }
 
-  private readonly handleReset = (): void => {
+  private handleReset = (): void => {
     this.setState({ hasError: false, error: null, errorInfo: null });
   };
 

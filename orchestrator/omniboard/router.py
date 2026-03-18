@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 import redis.asyncio as redis
 from fastapi import APIRouter, HTTPException
@@ -9,7 +10,7 @@ from .schema import FSMContext, FSMEvent
 router = APIRouter(prefix="/omniboard", tags=["omniboard"])
 
 
-@router.post("/start")
+@router.post("/start", response_model=FSMContext)
 async def start_session(tenant_id: str, trace_id: str) -> FSMContext:
     """Start a new OmniBoard onboarding session."""
     context = OmniBoardFSM.start_session(tenant_id, trace_id)
@@ -26,14 +27,15 @@ async def start_session(tenant_id: str, trace_id: str) -> FSMContext:
 
 
 SESSION_NOT_FOUND = "Session not found"
-_404_RESPONSE: dict[int | str, dict] = {404: {"description": SESSION_NOT_FOUND}}
+_404_RESPONSE: dict[int | str, dict[str, Any]] = {404: {"description": SESSION_NOT_FOUND}}
 
 
 @router.post(
     "/{session_id}/next",
+    response_model=dict[str, Any],
     responses=_404_RESPONSE,
 )
-async def next_turn(session_id: str, event: FSMEvent) -> dict:
+async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
     """
     Process a user turn and advance the FSM.
     Returns the updated context and the system's response message.
@@ -56,7 +58,7 @@ async def next_turn(session_id: str, event: FSMEvent) -> dict:
     return {"context": next_context.model_dump(), "message": message}
 
 
-@router.get("/{session_id}", responses=_404_RESPONSE)
+@router.get("/{session_id}", response_model=FSMContext, responses=_404_RESPONSE)
 async def get_status(session_id: str) -> FSMContext:
     """Get current session status."""
     redis_client = redis.from_url(os.environ["UPSTASH_REDIS_URL"])

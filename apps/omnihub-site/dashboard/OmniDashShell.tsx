@@ -207,7 +207,7 @@ const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) =
 );
 
 const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => (
-  <button onClick={onClick} onKeyDown={(e) => { if (onClick && (e.key === 'Enter' || e.key === ' ')) onClick(); }} role={onClick ? "button" : "presentation"} tabIndex={onClick ? 0 : undefined} style={{
+  <div onClick={onClick} onKeyDown={(e) => { if (onClick && (e.key === 'Enter' || e.key === ' ')) onClick(); }} role={onClick ? "button" : "presentation"} tabIndex={onClick ? 0 : undefined} style={{
     background: T.card,
     border: `1px solid ${glow ? T.borderGlow : T.border}`,
     borderRadius: 16,
@@ -219,7 +219,7 @@ const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps
     ...style,
   }} >
     {children}
-  </button>
+  </div>
 );
 
 

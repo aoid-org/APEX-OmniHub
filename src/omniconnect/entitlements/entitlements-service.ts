@@ -26,8 +26,8 @@ export interface EntitlementCheck {
 }
 
 export class EntitlementsService {
-  private readonly cache: LRUCache<string, boolean>;
-  private readonly supabase: ReturnType<typeof createClient> | null = null;
+  private cache: LRUCache<string, boolean>;
+  private supabase: ReturnType<typeof createClient> | null = null;
 
   constructor() {
     this.cache = new LRUCache<string, boolean>({

@@ -163,8 +163,8 @@ class VerificationEngine:
         # Use timezone-aware datetime (SonarQube S6978 compliance)
         approved_at = datetime.now(UTC).isoformat()
 
-        # SECURITY NOTE: request_id and approved_by are whitelist-validated by
-        # the dashboard layer. They are stored here but NOT reflected in HTTP responses.
+        # SECURITY NOTE: All user-controlled data (request_id, approved_by)
+        # is expected to be pre-sanitized by the dashboard layer (escape_html applied)
         result: VerificationResult = {
             "request_id": request_id,
             "status": "approved",
@@ -204,8 +204,9 @@ class VerificationEngine:
         # Use timezone-aware datetime (SonarQube S6978 compliance)
         rejected_at = datetime.now(UTC).isoformat()
 
-        # SECURITY NOTE: request_id, rejected_by, and reason are whitelist-validated
-        # by the dashboard layer. They are stored here but NOT reflected in HTTP responses.
+        # SECURITY NOTE: All user-controlled data (request_id, rejected_by, reason)
+        # is expected to be pre-sanitized by the dashboard layer
+        # (escape_html applied before passing to this method)
         result: VerificationResult = {
             "request_id": request_id,
             "status": "rejected",
@@ -286,7 +287,7 @@ def demo_workflow() -> None:
         request_id="task-demo-001",
         task_description="Refactor authentication module",
         modified_files=["src/auth/login.ts", "src/auth/session.ts"],
-        evidence_path="/tmp/apex-evidence/task-demo-001.json",  # NOSONAR
+        evidence_path="/tmp/apex-evidence/task-demo-001.json",
     )
 
     print(f"Created request: {request['request_id']}")

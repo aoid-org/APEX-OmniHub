@@ -21,8 +21,8 @@ export class BatchProcessor<T, R> {
       maxWaitMs?: number;
     } = {}
   ) {
-    this.options.maxBatchSize ??= 10;
-    this.options.maxWaitMs ??= 50;
+    this.options.maxBatchSize = options.maxBatchSize || 10;
+    this.options.maxWaitMs = options.maxWaitMs || 50;
   }
 
   /**

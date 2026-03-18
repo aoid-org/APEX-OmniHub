@@ -58,9 +58,7 @@ describe('Platform Scalability Benchmarks', () => {
     const result = await runLoadTest(1000, 10, 50);
 
     expect(result.successRate).toBeGreaterThanOrEqual(0.99);
-    expect(result.p95LatencyMs).toBeLessThan(500); // APEX-FIX: Relaxed from 200ms to 500ms to allow for CI CPU jitter
-    expect(result.throughputRps).toBeGreaterThan(100); // APEX-FIX: Reduce from 500 to 100 to allow slow CI CPU scaling
-    expect(result.p95LatencyMs).toBeLessThan(500); // APEX-FIX: Relaxed from 200ms to 500ms to allow for CI CPU jitter
+    expect(result.p95LatencyMs).toBeLessThan(200);
     expect(result.throughputRps).toBeGreaterThan(500);
   }, 60000);
 
@@ -70,10 +68,10 @@ describe('Platform Scalability Benchmarks', () => {
 
     const scalingFactor = scaled.throughputRps / baseline.throughputRps;
     // FIX: CI Quality Gate flaky failure (v1.3.5)
-    // ROOT CAUSE: setTimeout-based simulation has high variance on shared runners under load
-    // CHANGE: Adjusted floor to 1.2 to validate directional scaling without triggering false positives on slow CI nodes
-    expect(scalingFactor).toBeGreaterThan(1.2);
-    expect(scalingFactor).toBeLessThan(20); // APEX-FIX: Reduce upper bound to 20 for CI burst scaling
+    // ROOT CAUSE: setTimeout-based simulation has ±10% throughput variance on shared runners
+    // CHANGE: 3–7 range validates scaling efficiency with CI jitter margin (theoretical max 5.0, observed up to 6.6)
+    expect(scalingFactor).toBeGreaterThan(3);
+    expect(scalingFactor).toBeLessThan(7);
   }, 120000);
 
   it('connection pool prevents resource exhaustion', () => {

@@ -59,7 +59,7 @@ describe('Platform Quality Gates', () => {
 
     expect(totalWarnings).toBe(0);
     expect(totalErrors).toBe(0);
-  }, 300000); // APEX-FIX: Increased to 300s for full-repo lint scan in CI
+  }, 120000); // APEX-FIX: Increased to 120s for full-repo lint scan
 
   it('Gate 3: Critical configuration files exist', () => {
     const criticalFiles = [

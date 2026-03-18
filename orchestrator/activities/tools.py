@@ -35,7 +35,7 @@ from urllib.parse import urlparse, urlunparse
 from uuid import uuid4
 
 import instructor
-import jsonschema  # type: ignore
+import jsonschema
 from litellm import acompletion
 from pydantic import BaseModel
 from temporalio import activity

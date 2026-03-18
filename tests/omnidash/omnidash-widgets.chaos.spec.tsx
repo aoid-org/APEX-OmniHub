@@ -226,7 +226,7 @@ describe('OmniDash Widgets Chaos Battery', () => {
         // Use getAllByTestId to handle any residual DOM from the first render
         const elements = screen.getAllByTestId('omnidash-today');
         expect(elements.length).toBeGreaterThanOrEqual(1);
-        expect(elements.at(-1)).toBeInTheDocument();
+        expect(elements[elements.length - 1]).toBeInTheDocument();
       });
     });
   });

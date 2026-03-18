@@ -1,4 +1,4 @@
-const fs = require('node:fs');
+const fs = require('fs');
 const path = 'apps/omnihub-site/src/pages/DashboardOverview/DashboardOverview.tsx';
 let content = fs.readFileSync(path, 'utf8');
 

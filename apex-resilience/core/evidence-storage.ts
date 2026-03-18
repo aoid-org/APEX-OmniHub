@@ -86,7 +86,7 @@ export function resolveEvidenceBackend(): {
     // Explicit local path override
     // Reject publicly writable directories (e.g. /tmp) — they are insecure for evidence storage.
     const tmpDir = os.tmpdir();
-    if (raw === tmpDir || raw.startsWith(tmpDir + path.sep) || raw === '/tmp' || raw.startsWith('/tmp/')) { // NOSONAR
+    if (raw === tmpDir || raw.startsWith(tmpDir + path.sep) || raw === '/tmp' || raw.startsWith('/tmp/')) {
       throw new Error(
         `APEX_EVIDENCE_STORAGE is set to a publicly writable directory (${raw}). `
           + 'Use an s3:// URI or a private persistent volume instead.',

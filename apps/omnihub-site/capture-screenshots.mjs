@@ -39,5 +39,5 @@ await page.screenshot({
 });
 console.log('Captured: Header Close-up (Dark Theme)');
 
-browser.close();
+await browser.close();
 console.log(`All screenshots captured successfully in ${screenshotsDir}!`);
