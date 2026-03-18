@@ -106,36 +106,44 @@ function FormModalRenderer({
                 {label}
                 {field.required && <span className="text-destructive ml-1">*</span>}
               </label>
-              {type === 'textarea' ? (
-                <textarea
-                  className={`${inputClass} min-h-[80px] resize-none`}
-                  placeholder={placeholder}
-                  value={formValues[key] ?? ''}
-                  onChange={e => handleChange(key, e.target.value)}
-                  disabled={isProcessing}
-                />
-              ) : type === 'select' && modal.schema?.options ? (
-                <select
-                  className={inputClass}
-                  value={formValues[key] ?? ''}
-                  onChange={e => handleChange(key, e.target.value)}
-                  disabled={isProcessing}
-                >
-                  <option value="">Select…</option>
-                  {(modal.schema.options as ReadonlyArray<{ value: string; label: string }>).map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type={type}
-                  className={inputClass}
-                  placeholder={placeholder}
-                  value={formValues[key] ?? ''}
-                  onChange={e => handleChange(key, e.target.value)}
-                  disabled={isProcessing}
-                />
-              )}
+              {(() => {
+                if (type === 'textarea') {
+                  return (
+                    <textarea
+                      className={`${inputClass} min-h-[80px] resize-none`}
+                      placeholder={placeholder}
+                      value={formValues[key] ?? ''}
+                      onChange={e => handleChange(key, e.target.value)}
+                      disabled={isProcessing}
+                    />
+                  );
+                }
+                if (type === 'select' && modal.schema?.options) {
+                  return (
+                    <select
+                      className={inputClass}
+                      value={formValues[key] ?? ''}
+                      onChange={e => handleChange(key, e.target.value)}
+                      disabled={isProcessing}
+                    >
+                      <option value="">Select…</option>
+                      {(modal.schema.options as ReadonlyArray<{ value: string; label: string }>).map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  );
+                }
+                return (
+                  <input
+                    type={type}
+                    className={inputClass}
+                    placeholder={placeholder}
+                    value={formValues[key] ?? ''}
+                    onChange={e => handleChange(key, e.target.value)}
+                    disabled={isProcessing}
+                  />
+                );
+              })()}
             </div>
           );
         })}

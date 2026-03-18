@@ -976,7 +976,7 @@ const OmniSlateWidget = () => {
           <span style={{
             fontSize:13, color:T.t2, lineHeight:1.4,
             overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
-            minWidth: 0,
+            flex:1, minWidth: 0,
           }}>{SLATE_SUGGESTIONS[suggIdx]}</span>
           <svg style={{flexShrink:0,marginLeft:"auto"}} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.orange} strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>

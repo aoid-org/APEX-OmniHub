@@ -167,7 +167,7 @@ async def test_update_agent_run_completion():
         result = await update_agent_run_completion(params)
         assert result["success"] is True
         db.update.assert_called_once()
-        args, kwargs = db.update.call_args
+        _, kwargs = db.update.call_args
         assert kwargs["table"] == "agent_runs"
         assert kwargs["updates"]["status"] == "completed"
 
