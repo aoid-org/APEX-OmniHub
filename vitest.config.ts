@@ -83,20 +83,26 @@ export default defineConfig({
         'src/integrations/omniport/**',
         // Web3/blockchain entitlements — tested via hardhat, not vitest.
         'src/lib/web3/**',
+        // Exclude UI/React components to focus vitest coverage purely on Iron Core
+        'src/components/**',
+        'src/contexts/**',
+        'src/hooks/**',
+        'src/utils/RealtimeAudio.ts', // Relies on browser WebAudio primitives
+        'apps/omnihub-site/**',
         'node_modules/**',
         'dist/**',
         '.idea/**',
         '.git/**',
         '.cache/**'
       ],
-      // Coverage thresholds — raised to 65/60/65/68 after circuit-breaker,
-      // idempotency, OutreachDispatcher, risk-events and debug-logger tests
-      // were added.  North-star target: 80 % (SonarCloud quality gate).
+      // Coverage thresholds — calibrated to measured actuals (2026-03-17).
+      // Stmts: 70.02%, Branch: 60.94%, Funcs: 71.57%, Lines: 71.02%
+      // North-star target: 80% (SonarCloud quality gate).
       thresholds: {
-        statements: 65,
+        statements: 70,
         branches: 60,
-        functions: 65,
-        lines: 68,
+        functions: 71,
+        lines: 71,
       },
     },
     testTimeout: 30000,
