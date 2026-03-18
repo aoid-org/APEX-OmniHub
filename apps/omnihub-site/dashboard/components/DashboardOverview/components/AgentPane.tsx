@@ -1,7 +1,7 @@
 import { memo, useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
-import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
-import { useOmniDash } from '@/stores/omniDashStore';
+import sentinelAvatar from '../../../../src/assets/sentinel-avatar-icon.png';
+import { useOmniDash } from '../../../../src/stores/omniDashStore';
 import { SPRING, GLASS_TILE, CTRL_BTN, BARS } from '../constants';
 
 const WIDGET_ID = 'agent-pane';
@@ -37,13 +37,14 @@ export const AgentPane = memo(function AgentPane({
     openWidget(WIDGET_ID, 'APEX Agent', 'agentPane', { x: 0, y: 0 }, { width: 280, height: 360 });
   }, [openWidget]);
 
+  const pos = widgetState?.position;
   // Sync motion values from store when store position changes
   useEffect(() => {
-    if (widgetState) {
-      x.set(widgetState.position.x);
-      y.set(widgetState.position.y);
+    if (pos) {
+      x.set(pos.x);
+      y.set(pos.y);
     }
-  }, [widgetState?.position.x, widgetState?.position.y, x, y]);
+  }, [pos, x, y]);
 
   useEffect(() => {
     if (!isRunning) return undefined;

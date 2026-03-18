@@ -131,6 +131,7 @@ export default defineConfig({
       'react-router-dom',
       'framer-motion',
       '@radix-ui/react-slot',
+      'zustand',
     ],
   },
 });

@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
-import { useOmniDash } from '@/stores/omniDashStore';
+import { useOmniDash } from '../../../../src/stores/omniDashStore';
 import { SPRING, GLASS_TILE, FONT_SG, ECO_ROW_STYLE, CAT_BADGE_STYLE } from '../constants';
 import { ECOSYSTEM } from '../data';
 
@@ -26,13 +26,14 @@ export const EcosystemPane = memo(function EcosystemPane({
     openWidget(WIDGET_ID, 'APEX Ecosystem', 'ecosystemPane', { x: 0, y: 0 }, { width: 280, height: 360 });
   }, [openWidget]);
 
+  const pos = widgetState?.position;
   // Sync motion values from store when store position changes
   useEffect(() => {
-    if (widgetState) {
-      motionX.set(widgetState.position.x);
-      motionY.set(widgetState.position.y);
+    if (pos) {
+      motionX.set(pos.x);
+      motionY.set(pos.y);
     }
-  }, [widgetState?.position.x, widgetState?.position.y, motionX, motionY]);
+  }, [pos, motionX, motionY]);
 
   const handleDragEnd = () => {
     moveWidget(WIDGET_ID, { x: motionX.get(), y: motionY.get() });

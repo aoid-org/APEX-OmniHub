@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
 import { Blocks } from 'lucide-react';
-import { useOmniDash } from '@/stores/omniDashStore';
+import { useOmniDash } from '../../../../src/stores/omniDashStore';
 import {
   FONT_SG,
   APP_TILE_SURFACE,
@@ -39,13 +39,14 @@ export const AppTile = memo(function AppTile({ app, onClick }: AppTileProps) {
     openWidget(widgetId, app.name, 'appTile', { x: 0, y: 0 }, { width: 280, height: 80 });
   }, [widgetId, app.name, openWidget]);
 
+  const pos = widgetState?.position;
   // Sync motion values from store when store position changes
   useEffect(() => {
-    if (widgetState) {
-      x.set(widgetState.position.x);
-      y.set(widgetState.position.y);
+    if (pos) {
+      x.set(pos.x);
+      y.set(pos.y);
     }
-  }, [widgetState?.position.x, widgetState?.position.y, x, y]);
+  }, [pos, x, y]);
 
   return (
     <div ref={canvasRef} style={{ position: 'relative' }}>

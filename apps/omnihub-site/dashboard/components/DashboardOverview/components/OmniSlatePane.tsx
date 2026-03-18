@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
-import lightbulbIcon from '@/assets/lightbulb-icon.png';
-import { useOmniDash } from '@/stores/omniDashStore';
+import lightbulbIcon from '../../../../src/assets/lightbulb-icon.png';
+import { useOmniDash } from '../../../../src/stores/omniDashStore';
 import { SPRING, GLASS_TILE, HC, ORANGE_GHOST, APEX_ORANGE, PROMPT_STYLE_BASE } from '../constants';
 import type { ContextItem } from '../types';
 import { ContextTile } from './ContextTile';
@@ -57,13 +57,14 @@ export const OmniSlatePane = memo(function OmniSlatePane({
     openWidget(WIDGET_ID, 'OmniSlate', 'omniSlatePane', { x: 0, y: 0 }, { width: 600, height: 400 });
   }, [openWidget]);
 
+  const pos = widgetState?.position;
   // Sync motion values from store when store position changes
   useEffect(() => {
-    if (widgetState) {
-      motionX.set(widgetState.position.x);
-      motionY.set(widgetState.position.y);
+    if (pos) {
+      motionX.set(pos.x);
+      motionY.set(pos.y);
     }
-  }, [widgetState?.position.x, widgetState?.position.y, motionX, motionY]);
+  }, [pos, motionX, motionY]);
 
   const handleDragEnd = () => {
     moveWidget(WIDGET_ID, { x: motionX.get(), y: motionY.get() });
