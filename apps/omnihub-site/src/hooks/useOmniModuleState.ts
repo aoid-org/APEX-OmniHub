@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase, hasSupabaseConfig } from '@/lib/supabase';
+import { getModuleContent } from '@/dashboard/components/ModuleRegistry';
 import type {
   ModuleContent,
   ModuleStatItem,
@@ -27,24 +28,35 @@ export interface OmniModuleState {
   readonly isLive: boolean;
 }
 
-export function useOmniModuleState(appKey: string): OmniModuleState {
-  const [state, setState] = useState<OmniModuleState>({
+// ROOT CAUSE FIX: Build initial state from registry so the fallback path
+// always renders real data (stats, items, actions) rather than empty arrays.
+function registryStateFor(appKey: string): OmniModuleState {
+  const reg = getModuleContent(appKey);
+  return {
     moduleKey: appKey,
-    headline: '',
-    stats: [],
-    items: [],
-    actions: [],
+    headline: reg?.headline ?? '',
+    stats: reg?.stats ?? [],
+    items: reg?.items ?? [],
+    actions: reg?.actions ?? [],
     loading: true,
     error: null,
     isLive: false,
-  });
+  };
+}
+
+export function useOmniModuleState(appKey: string): OmniModuleState {
+  // Initialise directly from registry — widgets render immediately with real data.
+  const [state, setState] = useState<OmniModuleState>(() => registryStateFor(appKey));
 
   useEffect(() => {
+    // Re-seed from registry when the key changes.
+    setState(registryStateFor(appKey));
+
     let cancelled = false;
 
     async function fetchLiveState() {
       if (!hasSupabaseConfig) {
-        // No backend configured — use registry data directly
+        // No backend — registry data is already loaded; just clear the loading flag.
         if (!cancelled) {
           setState(prev => ({ ...prev, loading: false, isLive: false }));
         }
@@ -65,12 +77,12 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
         if (cancelled) return;
 
         if (error || !data) {
-          // Backend unavailable — fall back silently to registry data
+          // Backend unavailable — registry data already in state; just clear loading.
           setState(prev => ({ ...prev, loading: false, isLive: false }));
           return;
         }
 
-        // Merge live data with registry structure
+        // Merge live data over registry baseline.
         const live = data as Partial<ModuleContent>;
         setState(prev => ({
           ...prev,
