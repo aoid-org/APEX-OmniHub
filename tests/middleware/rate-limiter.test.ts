@@ -64,4 +64,41 @@ describe('rateLimitMiddleware', () => {
     await rateLimitMiddleware(request);
     expect(mockKv.checkLimit).toHaveBeenCalledWith('unknown_ip');
   });
+
+  it('should return 429 when rate limit is exceeded', async () => {
+    vi.mocked(mockKv.checkLimit).mockResolvedValue(false);
+    const request = new Request('https://example.com', {
+      headers: { 'x-real-ip': '192.0.2.1' },
+    });
+
+    const response = await rateLimitMiddleware(request);
+    expect(response).not.toBeNull();
+    expect(response!.status).toBe(429);
+    const body = await response!.json();
+    expect(body.error).toContain('Rate Limit Exceeded');
+  });
+
+  it('should fail-closed with 429 when checkLimit returns null', async () => {
+    vi.mocked(mockKv.checkLimit).mockResolvedValue(null);
+    const request = new Request('https://example.com', {
+      headers: { 'x-real-ip': '192.0.2.1' },
+    });
+
+    const response = await rateLimitMiddleware(request);
+    expect(response).not.toBeNull();
+    expect(response!.status).toBe(429);
+  });
+
+  it('should fail-closed with 503 when KV throws an error', async () => {
+    vi.mocked(mockKv.checkLimit).mockRejectedValue(new Error('KV subsystem failure'));
+    const request = new Request('https://example.com', {
+      headers: { 'x-real-ip': '192.0.2.1' },
+    });
+
+    const response = await rateLimitMiddleware(request);
+    expect(response).not.toBeNull();
+    expect(response!.status).toBe(503);
+    const body = await response!.json();
+    expect(body.error).toContain('Service Unavailable');
+  });
 });

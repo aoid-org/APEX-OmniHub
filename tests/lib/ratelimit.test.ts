@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { checkRateLimit, clearRateLimit } from '@/lib/ratelimit';
+import { checkRateLimit, clearRateLimit } from '../../src/lib/ratelimit';
 
 describe('Rate Limiting', () => {
   let counter = 0;

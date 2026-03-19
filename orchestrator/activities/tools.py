@@ -800,7 +800,6 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
 
 
 def _is_ip_literal(value: str) -> bool:
-
     try:
         ipaddress.ip_address(value.strip("[]"))
         return True

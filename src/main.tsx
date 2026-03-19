@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { Analytics } from '@vercel/analytics/react';
 import './index.css';
 import '../apps/omnihub-site/src/i18n';
 import '../apps/omnihub-site/src/styles/globals.css';
@@ -17,5 +18,6 @@ if (!rootElement) {
 createRoot(rootElement).render(
   <StrictMode>
     <App />
+    <Analytics />
   </StrictMode>
 );

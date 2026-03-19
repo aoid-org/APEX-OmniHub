@@ -9,7 +9,7 @@ Covers:
 
 from __future__ import annotations
 
-import subprocess
+import re
 from pathlib import Path
 
 # ── Helpers ──────────────────────────────────────────────────────────
@@ -22,12 +22,22 @@ def _run_guardrail_scan(logs_dir: str) -> tuple[bool, int]:
 
     Returns (violation_detected, exit_code).
     """
-    result = subprocess.run(  # noqa: S603
-        ["grep", "-rqE", GREP_PATTERN, logs_dir],  # noqa: S607
-        capture_output=True,
-        text=True,
-    )
-    return result.returncode == 0, result.returncode
+    pattern = re.compile(GREP_PATTERN)
+    logs_path = Path(logs_dir)
+    found = False
+
+    for file in logs_path.rglob("*"):
+        if file.is_file():
+            try:
+                content = file.read_text(encoding="utf-8", errors="ignore")
+                if pattern.search(content):
+                    found = True
+                    break
+            except Exception:
+                pass
+
+    exit_code = 0 if found else 1
+    return found, exit_code
 
 
 # ── Tests ────────────────────────────────────────────────────────────

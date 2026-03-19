@@ -100,13 +100,9 @@ function FormModalRenderer({
           const placeholder = field.placeholder ?? '';
           const inputClass =
             'w-full rounded-lg border border-border/50 bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground';
-          return (
-            <div key={key} className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">
-                {label}
-                {field.required && <span className="text-destructive ml-1">*</span>}
-              </label>
-              {type === 'textarea' ? (
+          const renderFieldInput = () => {
+            if (type === 'textarea') {
+              return (
                 <textarea
                   className={`${inputClass} min-h-[80px] resize-none`}
                   placeholder={placeholder}
@@ -114,7 +110,10 @@ function FormModalRenderer({
                   onChange={e => handleChange(key, e.target.value)}
                   disabled={isProcessing}
                 />
-              ) : type === 'select' && modal.schema?.options ? (
+              );
+            }
+            if (type === 'select' && modal.schema?.options) {
+              return (
                 <select
                   className={inputClass}
                   value={formValues[key] ?? ''}
@@ -126,16 +125,26 @@ function FormModalRenderer({
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
-              ) : (
-                <input
-                  type={type}
-                  className={inputClass}
-                  placeholder={placeholder}
-                  value={formValues[key] ?? ''}
-                  onChange={e => handleChange(key, e.target.value)}
-                  disabled={isProcessing}
-                />
-              )}
+              );
+            }
+            return (
+              <input
+                type={type}
+                className={inputClass}
+                placeholder={placeholder}
+                value={formValues[key] ?? ''}
+                onChange={e => handleChange(key, e.target.value)}
+                disabled={isProcessing}
+              />
+            );
+          };
+          return (
+            <div key={key} className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">
+                {label}
+                {field.required && <span className="text-destructive ml-1">*</span>}
+              </label>
+              {renderFieldInput()}
             </div>
           );
         })}
