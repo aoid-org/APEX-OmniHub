@@ -34,7 +34,7 @@ export const AgentPane = memo(function AgentPane({
 
   // Register with omniDashStore on mount
   useEffect(() => {
-    openWidget(WIDGET_ID, 'APEX Agent', 'agentPane', { x: 0, y: 0 }, { width: 280, height: 360 });
+    openWidget(WIDGET_ID, 'APEX Agent', 'agentPane', { x: 0, y: 0 }, { width: 364, height: 468 });
   }, [openWidget]);
 
   const pos = widgetState?.position;

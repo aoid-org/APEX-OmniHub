@@ -36,7 +36,7 @@ export const AppTile = memo(function AppTile({ app, onClick }: AppTileProps) {
 
   // Register with omniDashStore on mount
   useEffect(() => {
-    openWidget(widgetId, app.name, 'appTile', { x: 0, y: 0 }, { width: 280, height: 80 });
+    openWidget(widgetId, app.name, 'appTile', { x: 0, y: 0 }, { width: 364, height: 104 });
   }, [widgetId, app.name, openWidget]);
 
   const pos = widgetState?.position;

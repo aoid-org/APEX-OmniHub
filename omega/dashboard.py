@@ -140,8 +140,7 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
         this provides defense-in-depth XSS protection.
         """
         pending = self.engine.get_pending_requests()
-        safe_pending = sanitize_data_recursive(pending)
-        self._send_json(safe_pending)
+        self._send_json(pending)
 
     def _sanitize_request_id(self, request_id: str) -> str:
         """
@@ -217,7 +216,9 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
 
-        json_data = json.dumps(data, indent=2)
+        # Sanitize all outgoing JSON structures via markupsafe to defensively clear SonarQube XSS Taint blocks
+        safe_data = sanitize_data_recursive(data)
+        json_data = json.dumps(safe_data, indent=2)
         self.wfile.write(json_data.encode("utf-8"))
 
     def _send_error(self, code: int, message: str) -> None:

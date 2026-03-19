@@ -54,7 +54,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
 
   // Register with omniDashStore on mount
   useEffect(() => {
-    openWidget(WIDGET_ID, 'OmniSlate', 'omniSlatePane', { x: 0, y: 0 }, { width: 600, height: 400 });
+    openWidget(WIDGET_ID, 'OmniSlate', 'omniSlatePane', { x: 0, y: 0 }, { width: 780, height: 520 });
   }, [openWidget]);
 
   const pos = widgetState?.position;
