@@ -32,7 +32,7 @@ def mock_dependencies():
     saved_modules = {k: v for k, v in sys.modules.items() if k.startswith("activities")}
 
     # Remove activities.tools so it gets freshly imported under our mocked deps
-    for key in list(sys.modules):
+    for key in list(sys.modules.keys()):
         if key.startswith("activities"):
             del sys.modules[key]
 
@@ -40,7 +40,7 @@ def mock_dependencies():
         yield
 
     # Restore the original module references to prevent downstream test pollution
-    for key in list(sys.modules):
+    for key in list(sys.modules.keys()):
         if key.startswith("activities"):
             del sys.modules[key]
     sys.modules.update(saved_modules)

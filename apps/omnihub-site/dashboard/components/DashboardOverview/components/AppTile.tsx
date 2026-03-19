@@ -25,7 +25,7 @@ export const AppTile = memo(function AppTile({ app, onClick }: AppTileProps) {
     ? { ...chipPos, ...PARTIAL_CHIP }
     : chipPos;
 
-  const widgetId = `app-tile-${app.name.toLowerCase().replace(/\s+/g, '-')}`;
+  const widgetId = `app-tile-${app.name.toLowerCase().split(' ').join('-')}`;
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const { openWidget, moveWidget, focusWidget } = useOmniDash();

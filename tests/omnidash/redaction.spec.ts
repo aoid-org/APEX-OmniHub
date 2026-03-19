@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { redactPipeline, redactPipelineDisplay, redactNotes, redactAmount, anonymizeValue, redactTodayItems, redactKpiDaily } from '@/omnidash/redaction';
-import { PipelineItem } from '@/omnidash/types';
+import { redactPipeline, redactPipelineDisplay, redactNotes, redactAmount, anonymizeValue, redactTodayItems, redactKpiDaily } from '../../src/omnidash/redaction';
+import { PipelineItem } from '../../src/omnidash/types';
 
 const baseItem: PipelineItem = {
   id: '1',

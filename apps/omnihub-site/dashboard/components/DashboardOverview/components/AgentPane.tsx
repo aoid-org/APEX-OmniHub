@@ -177,8 +177,8 @@ export const AgentPane = memo(function AgentPane({
               }
               style={{
                 ...CTRL_BTN,
-                opacity: !isRunning ? 0.4 : 1,
-                cursor: !isRunning ? 'not-allowed' : 'pointer',
+                opacity: isRunning ? 1 : 0.4,
+                cursor: isRunning ? 'pointer' : 'not-allowed',
               }}
             >
               <svg

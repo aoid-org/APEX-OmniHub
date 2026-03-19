@@ -353,7 +353,7 @@ class TestProductionValidator:
 
     def test_production_with_redis_password_ok(self):
         """Production env with redis_password should succeed."""
-        s = make_settings(ENVIRONMENT="production", REDIS_PASSWORD="secure-pass")  # noqa: S106
+        s = make_settings(ENVIRONMENT="production", REDIS_PASSWORD="secure-pass")  # noqa: S106  # NOSONAR
         assert s.environment == "production"
         assert s.redis_password is not None
         assert s.redis_password.get_secret_value() == "secure-pass"
