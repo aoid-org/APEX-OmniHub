@@ -1417,11 +1417,15 @@ export default function OmniDashShell() {
           }} />
           {/* Content — sits above blueprint grid */}
           <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
-          {/* Primary 3-column grid — fixed height ~3 ecosystem tiles tall */}
-          <div style={{ display:"grid", gridTemplateColumns:"220px 1fr 220px", gap:14, height:300 }}>
-            <DraggableWidget><AgentWidget tick={tick} /></DraggableWidget>
-            <DraggableWidget><OmniSlateWidget /></DraggableWidget>
-            <DraggableWidget><EcosystemWidget /></DraggableWidget>
+          {/* Primary 3-column grid — fixed height, overflow-isolated cells.
+              FIX Bug 3+4: minHeight:0 enforces the CSS grid row height contract.
+              Each DraggableWidget gets height+overflow:hidden so no child
+              (including OmniSlate chat history) can blow out the row or
+              dislodge sibling tiles. */}
+          <div style={{ display:"grid", gridTemplateColumns:"220px 1fr 220px", gap:14, height:300, minHeight:0 }}>
+            <DraggableWidget style={{ height:"100%", overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
+            <DraggableWidget style={{ height:"100%", overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
+            <DraggableWidget style={{ height:"100%", overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
           </div>
 
           {/* Integrated Apps row */}
