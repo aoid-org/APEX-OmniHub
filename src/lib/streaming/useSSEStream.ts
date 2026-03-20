@@ -9,7 +9,7 @@
  * @license Proprietary - APEX Business Systems Ltd.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, type MutableRefObject } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 // ============================================================================
@@ -130,6 +130,61 @@ async function consumeSSEStream(
 }
 
 // ============================================================================
+// Stream executor (extracted to avoid deep nesting inside useCallback)
+// ============================================================================
+
+async function executeStream(
+  endpoint: string,
+  input: string,
+  controller: AbortController,
+  options: StreamOptions | undefined,
+  onToken: (payload: string) => void,
+  mountedRef: MutableRefObject<boolean>,
+  setIsStreaming: (v: boolean) => void,
+  setError: (v: string | null) => void,
+  abortRef: MutableRefObject<AbortController | null>,
+): Promise<void> {
+  try {
+    const headers = await buildRequestHeaders(options?.headers);
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ input }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Stream request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Response body is not readable.');
+    }
+
+    const accumulated = await consumeSSEStream(reader, onToken);
+
+    if (mountedRef.current) {
+      setIsStreaming(false);
+    }
+    options?.onComplete?.(accumulated);
+  } catch (err: unknown) {
+    if (err instanceof DOMException && err.name === 'AbortError') return;
+    const streamError = err instanceof Error ? err : new Error(String(err));
+    if (mountedRef.current) {
+      setError(streamError.message);
+      setIsStreaming(false);
+    }
+    options?.onError?.(streamError);
+  } finally {
+    if (abortRef.current === controller) {
+      abortRef.current = null;
+    }
+  }
+}
+
+// ============================================================================
 // Hook
 // ============================================================================
 
@@ -185,51 +240,14 @@ export function useSSEStream(): UseSSEStreamReturn {
         return;
       }
 
-      (async () => {
-        try {
-          const headers = await buildRequestHeaders(options?.headers);
-
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ input }),
-            signal: controller.signal,
-          });
-
-          if (!response.ok) {
-            throw new Error(`Stream request failed: ${response.status} ${response.statusText}`);
-          }
-
-          const reader = response.body?.getReader();
-          if (!reader) {
-            throw new Error('Response body is not readable.');
-          }
-
-          const accumulated = await consumeSSEStream(reader, (payload) => {
-            if (mountedRef.current) {
-              setTokens((prev) => prev + payload);
-            }
-            options?.onToken?.(payload);
-          });
-
-          if (mountedRef.current) {
-            setIsStreaming(false);
-          }
-          options?.onComplete?.(accumulated);
-        } catch (err: unknown) {
-          if (err instanceof DOMException && err.name === 'AbortError') return;
-          const streamError = err instanceof Error ? err : new Error(String(err));
-          if (mountedRef.current) {
-            setError(streamError.message);
-            setIsStreaming(false);
-          }
-          options?.onError?.(streamError);
-        } finally {
-          if (abortRef.current === controller) {
-            abortRef.current = null;
-          }
+      const handleToken = (payload: string) => {
+        if (mountedRef.current) {
+          setTokens((prev) => prev + payload);
         }
-      })();
+        options?.onToken?.(payload);
+      };
+
+      executeStream(endpoint, input, controller, options, handleToken, mountedRef, setIsStreaming, setError, abortRef);
     },
     [],
   );

@@ -63,9 +63,8 @@ export function timingSafeEqual(a: string, b: string): boolean {
       mismatch |= ac ^ bc;
     }
     // Always returns false for length mismatch, but takes constant time
-    // relative to the longer input.
-    // mismatch is used only to prevent timing side-channel; discard explicitly
-    return mismatch === mismatch && false;
+    // relative to the longer input. mismatch is always >= 1 here.
+    return mismatch === 0;
   }
 
   let mismatch = 0;
