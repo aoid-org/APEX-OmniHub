@@ -241,7 +241,44 @@ async function proxyWithRedirects(
 // Main handler
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Edge Cost Telemetry
+// ---------------------------------------------------------------------------
+
+/** Configurable cost rate: micro-dollars per millisecond of compute */
+const EDGE_COST_RATE_MICROS = 0.0125; // ~$0.045/hr continuous
+
+function generateEdgeRequestId(): string {
+  const ts = Date.now().toString(36);
+  const rand = Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(36)).join('').slice(0, 8);
+  return `edge-${ts}-${rand}`;
+}
+
+function addTelemetryHeaders(
+  response: Response,
+  requestId: string,
+  durationMs: number,
+): Response {
+  const costMicros = Math.round(durationMs * EDGE_COST_RATE_MICROS * 1000) / 1000;
+  const headers = new Headers(response.headers);
+  headers.set('X-APEX-Edge-Duration-Ms', String(Math.round(durationMs * 1000) / 1000));
+  headers.set('X-APEX-Edge-Cost-Micros', String(costMicros));
+  headers.set('X-APEX-Request-Id', requestId);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Main handler
+// ---------------------------------------------------------------------------
+
 export default async function handler(request: Request): Promise<Response> {
+  const requestId = generateEdgeRequestId();
+  const startTime = performance.now();
+
   if (request.method === 'OPTIONS') {
     return new Response(null, { headers: CORS_HEADERS });
   }
@@ -270,12 +307,14 @@ export default async function handler(request: Request): Promise<Response> {
   }
 
   try {
-    return await proxyWithRedirects(
+    const response = await proxyWithRedirects(
       validation.url,
       request.method,
       buildProxyHeaders(request),
       allowlist,
     );
+    const durationMs = performance.now() - startTime;
+    return addTelemetryHeaders(response, requestId, durationMs);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown proxy error';
     return errorResponse(502, `Proxy fetch failed: ${message}`);
