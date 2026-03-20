@@ -1370,9 +1370,11 @@
    ═══════════════════════════════════════════════════════ */
 
 #omni-portal-root {
-  position: absolute;
-  z-index: 9999;
+  position: fixed;
+    inset: 0;
+  z-index: 9000;
   pointer-events: none;
+    isolation: isolate;
 }
 
 #omni-portal-root > * {
@@ -1391,14 +1393,16 @@
 .omni-canvas {
   position: relative;
   width: 100%;
-  min-height: 200px;
-  flex-shrink: 0;
+    flex: 1 1 0;
+  min-height: 0;
+    overflow: hidden;
 }
 
 .omni-canvas-inner {
   position: absolute;
   inset: 0;
   pointer-events: none;
+    contain: layout style;
 }
 
 .omni-canvas-inner > * {
@@ -1462,6 +1466,7 @@
   cursor: grab;
   flex-shrink: 0;
   min-height: 36px;
+    touch-action: none;
 }
 
 .widget-titlebar:active {
@@ -1546,6 +1551,7 @@
   height: 16px;
   cursor: se-resize;
   z-index: 10;
+    touch-action: none;
 }
 
 .widget-resize-handle::after {
@@ -1605,6 +1611,7 @@
   border-bottom: 1px solid var(--od-border-subtle);
   cursor: grab;
   min-height: 28px;
+    touch-action: none;
 }
 
 .floating-titlebar:active {
