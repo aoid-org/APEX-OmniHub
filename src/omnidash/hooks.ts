@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -113,4 +114,81 @@ export function useMemoryHealth() {
   });
 
   return query;
+}
+
+// ============================================================================
+// Real-time Supabase Channel Bindings (Phase 1 — USO Gateway)
+// ============================================================================
+
+/**
+ * Tables that OmniDash subscribes to for real-time Postgres changes.
+ * Maps to the OMNIDASH_COLUMNS definitions in api.ts.
+ */
+const OMNIDASH_REALTIME_TABLES = [
+  'omnidash_settings',
+  'omnidash_today_items',
+  'omnidash_pipeline_items',
+  'omnidash_kpi_daily',
+  'omnidash_incidents',
+] as const;
+
+type OmniDashTable = typeof OMNIDASH_REALTIME_TABLES[number];
+
+/**
+ * useRealtimeOmniDash — Binds OmniDash UI to supabase.channel() for
+ * real-time Postgres changes. Automatically invalidates TanStack Query
+ * caches when the database changes, ensuring the UI stays synchronized
+ * without polling.
+ *
+ * APEX STANDARDS:
+ * - Uses Supabase Realtime channels (not polling)
+ * - Invalidates specific query keys (not full cache flush)
+ * - Cleans up subscriptions on unmount
+ * - Idempotent: multiple mounts don't create duplicate channels
+ */
+export function useRealtimeOmniDash() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channelName = `omnidash-realtime-${user.id}`;
+    const channel = supabase.channel(channelName);
+
+    // Map table changes to TanStack Query invalidations
+    const tableQueryKeyMap: Record<OmniDashTable, string[]> = {
+      omnidash_settings: ['omnidash-settings', user.id],
+      omnidash_today_items: ['omnidash-today-items', user.id],
+      omnidash_pipeline_items: ['omnidash-pipeline-items', user.id],
+      omnidash_kpi_daily: ['omnidash-kpi-daily', user.id],
+      omnidash_incidents: ['omnidash-incidents', user.id],
+    };
+
+    // Subscribe to all OmniDash tables
+    for (const table of OMNIDASH_REALTIME_TABLES) {
+      channel.on(
+        'postgres_changes' as 'system',
+        {
+          event: '*',
+          schema: 'public',
+          table,
+          filter: `user_id=eq.${user.id}`,
+        } as Record<string, string>,
+        () => {
+          // Invalidate the specific query cache for this table
+          const queryKey = tableQueryKeyMap[table];
+          if (queryKey) {
+            queryClient.invalidateQueries({ queryKey });
+          }
+        },
+      );
+    }
+
+    channel.subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
 }

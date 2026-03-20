@@ -31,6 +31,8 @@ interface AccessProviderProps {
 export function AccessProvider({ children, initialScopes = ['public'] }: AccessProviderProps) {
   const [isDemo, setIsDemo] = useState<boolean>(() => {
     if (globalThis.window === undefined) return false;
+    // Environment override: VITE_OMNI_DEMO_MODE forces demo mode on (USO Phase 5)
+    if (import.meta.env?.VITE_OMNI_DEMO_MODE === 'true') return true;
     return localStorage.getItem(DEMO_MODE_KEY) === 'true';
   });
 
