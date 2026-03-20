@@ -7,11 +7,10 @@ on:
       - main
       - release/*
 
-permissions:
-  contents: read
-
 jobs:
   legal-drift-gate:
+    permissions:
+      contents: read
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
@@ -25,6 +24,8 @@ jobs:
       - run: node scripts/compliance/check_legal_drift.mjs
 
   retention-evidence-gate:
+    permissions:
+      contents: read
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
@@ -43,6 +44,8 @@ jobs:
           path: build-artifacts/retention-evidence.json
 
   claims-proof-gate:
+    permissions:
+      contents: read
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
@@ -56,6 +59,8 @@ jobs:
       - run: node scripts/compliance/check_claims_proof.mjs
 
   rls-posture-gate:
+    permissions:
+      contents: read
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
@@ -105,6 +110,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   sonarcloud-gate:
+    permissions:
+      contents: read
     if: vars.SONAR_PROJECT_KEY != ''
     runs-on: ubuntu-latest
     steps:
@@ -158,6 +165,8 @@ jobs:
           add-paths: "docs/valuation/INSTITUTIONAL_READINESS.json"
 
   ruff-gate:
+    permissions:
+      contents: read
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
