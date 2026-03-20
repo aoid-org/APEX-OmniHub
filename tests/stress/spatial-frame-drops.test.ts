@@ -18,6 +18,20 @@ import { QuadTree } from '@/lib/spatial/QuadTree';
 // Test Helpers
 // ============================================================================
 
+/**
+ * Seeded pseudo-random number generator (mulberry32).
+ * Deterministic and avoids Math.random() weak-crypto warnings.
+ */
+function createSeededRandom(seed: number): () => number {
+  let s = seed | 0;
+  return () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 /** Simulates a 4x4 matrix3d (column-major) for CSS transform */
 function createIdentityMatrix(): number[] {
   // prettier-ignore
@@ -66,6 +80,7 @@ function multiplyMatrices(a: number[], b: number[]): number[] {
 
 describe('QuadTree Performance', () => {
   it('should insert 10,000 entities within 100ms', () => {
+    const rand = createSeededRandom(1);
     const tree = new QuadTree<string>(
       { x: 0, y: 0, width: 10000, height: 10000 },
       64,
@@ -76,8 +91,8 @@ describe('QuadTree Performance', () => {
 
     for (let i = 0; i < 10_000; i++) {
       tree.insert({
-        x: Math.random() * 10000,
-        y: Math.random() * 10000,
+        x: rand() * 10000,
+        y: rand() * 10000,
         data: `entity-${i}`,
       });
     }
@@ -88,6 +103,7 @@ describe('QuadTree Performance', () => {
   });
 
   it('should query a 100x100 region from 10,000 entities within 5ms', () => {
+    const rand = createSeededRandom(2);
     const tree = new QuadTree<string>(
       { x: 0, y: 0, width: 10000, height: 10000 },
       64,
@@ -96,8 +112,8 @@ describe('QuadTree Performance', () => {
 
     for (let i = 0; i < 10_000; i++) {
       tree.insert({
-        x: Math.random() * 10000,
-        y: Math.random() * 10000,
+        x: rand() * 10000,
+        y: rand() * 10000,
         data: `entity-${i}`,
       });
     }
@@ -114,6 +130,7 @@ describe('QuadTree Performance', () => {
   });
 
   it('should handle 1,000 rapid insert-query cycles under 500ms', () => {
+    const rand = createSeededRandom(3);
     const tree = new QuadTree<string>(
       { x: 0, y: 0, width: 5000, height: 5000 },
       32,
@@ -125,15 +142,15 @@ describe('QuadTree Performance', () => {
     for (let cycle = 0; cycle < 1_000; cycle++) {
       // Insert
       tree.insert({
-        x: Math.random() * 5000,
-        y: Math.random() * 5000,
+        x: rand() * 5000,
+        y: rand() * 5000,
         data: `entity-${cycle}`,
       });
 
       // Query
       tree.query({
-        x: Math.random() * 4900,
-        y: Math.random() * 4900,
+        x: rand() * 4900,
+        y: rand() * 4900,
         width: 100,
         height: 100,
       });
@@ -145,6 +162,7 @@ describe('QuadTree Performance', () => {
   });
 
   it('should maintain O(log n) query time as entities scale', () => {
+    const rand = createSeededRandom(4);
     const sizes = [100, 1_000, 5_000, 10_000];
     const queryTimes: number[] = [];
 
@@ -157,8 +175,8 @@ describe('QuadTree Performance', () => {
 
       for (let i = 0; i < size; i++) {
         tree.insert({
-          x: Math.random() * 10000,
-          y: Math.random() * 10000,
+          x: rand() * 10000,
+          y: rand() * 10000,
           data: `e-${i}`,
         });
       }
@@ -167,8 +185,8 @@ describe('QuadTree Performance', () => {
       const start = performance.now();
       for (let q = 0; q < 100; q++) {
         tree.query({
-          x: Math.random() * 9900,
-          y: Math.random() * 9900,
+          x: rand() * 9900,
+          y: rand() * 9900,
           width: 100,
           height: 100,
         });
@@ -189,12 +207,13 @@ describe('QuadTree Performance', () => {
 
 describe('Matrix3d Composition Performance', () => {
   it('should compose 10,000 matrix transformations within 50ms', () => {
+    const rand = createSeededRandom(5);
     let matrix = createIdentityMatrix();
     const start = performance.now();
 
     for (let i = 0; i < 10_000; i++) {
-      const dx = Math.random() * 2 - 1;
-      const dy = Math.random() * 2 - 1;
+      const dx = rand() * 2 - 1;
+      const dy = rand() * 2 - 1;
       matrix = translateMatrix(matrix, dx, dy);
     }
 
@@ -279,10 +298,11 @@ describe('Combined Spatial Engine Stress', () => {
     );
 
     // Populate with 500 entities (typical dashboard widget count)
+    const rand = createSeededRandom(6);
     for (let i = 0; i < 500; i++) {
       tree.insert({
-        x: Math.random() * 1920,
-        y: Math.random() * 1080,
+        x: rand() * 1920,
+        y: rand() * 1080,
         data: { id: `widget-${i}`, element: `div-${i}` },
       });
     }

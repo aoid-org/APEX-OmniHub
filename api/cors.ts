@@ -250,7 +250,7 @@ const EDGE_COST_RATE_MICROS = 0.0125; // ~$0.045/hr continuous
 
 function generateEdgeRequestId(): string {
   const ts = Date.now().toString(36);
-  const rand = Math.random().toString(36).slice(2, 8);
+  const rand = Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(36)).join('').slice(0, 8);
   return `edge-${ts}-${rand}`;
 }
 

@@ -185,7 +185,7 @@ export class EdgeCostTracker {
 
 function generateRequestId(): string {
   const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).slice(2, 8);
+  const random = Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(36)).join('').slice(0, 8);
   return `edge-${timestamp}-${random}`;
 }
 

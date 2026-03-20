@@ -58,7 +58,7 @@ function getDefaultEndpoint(): string {
     (typeof import.meta !== 'undefined' && (import.meta as unknown as Record<string, Record<string, string>>).env?.VITE_SUPABASE_URL) ?? '';
   if (!base) return '';
   // Supabase edge functions live at <project-url>/functions/v1/<fn-name>
-  return `${base.replace(/\/+$/, '')}/functions/v1/apex-assistant`;
+  return `${base.replace(/\/{1,10}$/, '')}/functions/v1/apex-assistant`;
 }
 
 // ============================================================================
