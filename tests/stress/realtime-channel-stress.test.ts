@@ -11,7 +11,7 @@
  * @license Proprietary - APEX Business Systems Ltd.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 // ============================================================================
 // Mock Supabase Channel
