@@ -62,7 +62,7 @@
     "audit:features": "tsx scripts/audit-features.ts",
     "apple:secret": "tsx scripts/generate-apple-secret.ts",
     "readiness:generate": "node scripts/generate-readiness-report.mjs",
-    "postinstall": "bash scripts/install-githooks.sh 2>/dev/null || true",
+    "postinstall": "node scripts/patch-capacitor-tar.cjs && bash scripts/install-githooks.sh 2>/dev/null || true",
     "bundle:analyze": "bun run build && open dist/stats.html",
     "bundle:check": "bun run build && size-limit",
     "build:seo": "node scripts/generate-sitemap.mjs && vite build",
