@@ -249,9 +249,7 @@ async function proxyWithRedirects(
 const EDGE_COST_RATE_MICROS = 0.0125; // ~$0.045/hr continuous
 
 function generateEdgeRequestId(): string {
-  const ts = Date.now().toString(36);
-  const rand = Math.random().toString(36).slice(2, 8);
-  return `edge-${ts}-${rand}`;
+  return `edge-${crypto.randomUUID()}`;
 }
 
 function addTelemetryHeaders(

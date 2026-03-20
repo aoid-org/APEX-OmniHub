@@ -76,8 +76,8 @@ describe('QuadTree Performance', () => {
 
     for (let i = 0; i < 10_000; i++) {
       tree.insert({
-        x: Math.random() * 10000,
-        y: Math.random() * 10000,
+        x: Math.random() * 10000, // NOSONAR
+        y: Math.random() * 10000, // NOSONAR
         data: `entity-${i}`,
       });
     }
@@ -96,8 +96,8 @@ describe('QuadTree Performance', () => {
 
     for (let i = 0; i < 10_000; i++) {
       tree.insert({
-        x: Math.random() * 10000,
-        y: Math.random() * 10000,
+        x: Math.random() * 10000, // NOSONAR
+        y: Math.random() * 10000, // NOSONAR
         data: `entity-${i}`,
       });
     }
@@ -125,15 +125,15 @@ describe('QuadTree Performance', () => {
     for (let cycle = 0; cycle < 1_000; cycle++) {
       // Insert
       tree.insert({
-        x: Math.random() * 5000,
-        y: Math.random() * 5000,
+        x: Math.random() * 5000, // NOSONAR
+        y: Math.random() * 5000, // NOSONAR
         data: `entity-${cycle}`,
       });
 
       // Query
       tree.query({
-        x: Math.random() * 4900,
-        y: Math.random() * 4900,
+        x: Math.random() * 4900, // NOSONAR
+        y: Math.random() * 4900, // NOSONAR
         width: 100,
         height: 100,
       });
@@ -157,8 +157,8 @@ describe('QuadTree Performance', () => {
 
       for (let i = 0; i < size; i++) {
         tree.insert({
-          x: Math.random() * 10000,
-          y: Math.random() * 10000,
+          x: Math.random() * 10000, // NOSONAR
+          y: Math.random() * 10000, // NOSONAR
           data: `e-${i}`,
         });
       }
@@ -167,8 +167,8 @@ describe('QuadTree Performance', () => {
       const start = performance.now();
       for (let q = 0; q < 100; q++) {
         tree.query({
-          x: Math.random() * 9900,
-          y: Math.random() * 9900,
+          x: Math.random() * 9900, // NOSONAR
+          y: Math.random() * 9900, // NOSONAR
           width: 100,
           height: 100,
         });
@@ -193,8 +193,8 @@ describe('Matrix3d Composition Performance', () => {
     const start = performance.now();
 
     for (let i = 0; i < 10_000; i++) {
-      const dx = Math.random() * 2 - 1;
-      const dy = Math.random() * 2 - 1;
+      const dx = Math.random() * 2 - 1; // NOSONAR
+      const dy = Math.random() * 2 - 1; // NOSONAR
       matrix = translateMatrix(matrix, dx, dy);
     }
 
@@ -281,8 +281,8 @@ describe('Combined Spatial Engine Stress', () => {
     // Populate with 500 entities (typical dashboard widget count)
     for (let i = 0; i < 500; i++) {
       tree.insert({
-        x: Math.random() * 1920,
-        y: Math.random() * 1080,
+        x: Math.random() * 1920, // NOSONAR
+        y: Math.random() * 1080, // NOSONAR
         data: { id: `widget-${i}`, element: `div-${i}` },
       });
     }
