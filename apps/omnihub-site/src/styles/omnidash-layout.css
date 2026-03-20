@@ -1370,9 +1370,11 @@
    ═══════════════════════════════════════════════════════ */
 
 #omni-portal-root {
-  position: absolute;
+  position: fixed;
+    inset: 0;
   z-index: 9999;
   pointer-events: none;
+    isolation: isolate;
 }
 
 #omni-portal-root > * {
