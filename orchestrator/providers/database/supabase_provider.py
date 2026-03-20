@@ -140,7 +140,7 @@ class SupabaseDatabaseProvider(DatabaseProvider):
                 valid_conflict_columns = [validate_column_name(col) for col in conflict_columns]
                 upsert_kwargs["on_conflict"] = ",".join(valid_conflict_columns)
 
-            query = self.client.table(validated_table).upsert(record, **upsert_kwargs)
+            query = self.client.table(validated_table).upsert(record, **upsert_kwargs)  # type: ignore
             response = query.execute()
 
             if not response.data:

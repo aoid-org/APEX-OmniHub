@@ -111,7 +111,7 @@ describe('DashboardOverview - OmniBoard Wiring', () => {
 
     // [0] is the context chip in AgentPane; [1] is the AppTile in the apps row
     const qbElements = screen.getAllByText('QuickBooks');
-    fireEvent.click(qbElements[qbElements.length - 1]);
+    fireEvent.click(qbElements.at(-1)!);
 
     const modalState = useOmniModal.getState();
     expect(modalState.isOpen).toBe(true);
@@ -135,7 +135,7 @@ describe('DashboardOverview - OmniBoard Wiring', () => {
 
     // [0] is the context chip in AgentPane; [1] is the AppTile in the apps row
     const slackElements = screen.getAllByText('Slack');
-    fireEvent.click(slackElements[slackElements.length - 1]);
+    fireEvent.click(slackElements.at(-1)!);
 
     expect(mockNavigate).not.toHaveBeenCalled();
     const modalState = useOmniModal.getState();

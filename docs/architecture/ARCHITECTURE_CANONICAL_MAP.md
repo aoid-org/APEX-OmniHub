@@ -27,23 +27,93 @@ APEX OmniHub is a **polyglot platform monorepo** with five primary execution pla
 
 ### Root-level high-signal directories
 
-| Directory | Purpose |
-|---|---|
-| `apps/omnihub-site/` | Marketing site + OmniDash SPA — **sole Vercel build target** |
-| `src/` | Legacy OmniDash UI layer + shared platform stores (283 total files, 250 TS/TSX) |
-| `supabase/functions/` | Serverless edge endpoints (22 directories) |
-| `supabase/migrations/` | Postgres schema evolution (**58 SQL migrations**) |
-| `orchestrator/` | Python Temporal workers / activities / workflows |
-| `tests/` + `e2e/` | Test suites — unit, integration, security, e2e (102 spec files) |
-| `.github/workflows/` | CI/CD and security workflows (14 YAML files) |
-| `terraform/` | Cloud modules (`vercel`, `cloudflare`, `upstash`) + env configs |
-| `docs/` | Architecture, infra, security, operations, quality, audits |
-| `api/` | Vercel edge API surface (`cors.ts`, `middleware/`) |
-| `android/` + `ios/` | Capacitor mobile shells |
-| `contracts/` | On-chain contract workflow (`scripts/hardhat/`) |
-| `edge/cors-proxy/` | Cloudflare Worker CORS proxy |
-| `sim/` | Chaos simulation suite |
-| `apex-resilience/` | Resilience law + benchmark tests |
+Entry:
+
+- `src/main.tsx` mounts `App`.
+- `src/App.tsx` composes global providers and route tree:
+  - React Query
+  - ErrorBoundary
+  - BrowserRouter
+  - Auth provider
+  - Locale provider
+  - Web3 provider
+  - Global media dock (`GlobalMediaDock`)
+
+Also initializes platform services:
+
+- monitoring (`lib/monitoring`)
+- security (`lib/security`)
+- configuration logging (`lib/config`)
+- lazy boot of PWA analytics, biometric auth, push notifications.
+
+## 3.2 Route strategy (as implemented now)
+
+`src/App.tsx` currently declares explicit route entries (not generated at runtime from a single registry for all app routes). It includes:
+
+- public routes: `/privacy`, `/health`
+- mobile-gated paid routes: `/translation`, `/agent`, `/settings`, `/omnitrace`
+- mobile-gated dashboard routes: `/links`, `/files`, `/automations`, `/apex`, `/todos`, `/diagnostics`
+- app pages under `/apps/*`
+- fallback `*` → `NotFound`
+
+## 3.3 OmniDash registry surface
+
+`src/omnidash/uiRegistry.ts` defines OmniDash-specific registry objects:
+
+- `HEADER_ACTIONS` (`connect-ai`, `persona`)
+- `OMNIDASH_UI_REGISTRY.navItems` from `OMNIDASH_NAV_ITEMS`
+- `OMNIDASH_UI_REGISTRY.routes` generated from nav items
+
+`src/omnidash/types.ts` defines canonical nav list for OmniDash panels:
+
+- `/omnidash`
+- `/omnidash/pipeline`
+- `/omnidash/kpis`
+- `/omnidash/ops`
+- `/omnidash/integrations`
+- `/omnidash/events`
+- `/omnidash/entities`
+- `/omnidash/runs`
+- `/omnidash/approvals`
+- `/omnidash/workflows`
+
+## 3.4 OmniDash Universal Modal Engine (v1.1.0 — 2026-03-13)
+
+The APEX Universal Modal Engine provides a single, idempotent interaction surface for all OmniDash app triggers, connector auth flows, spatial app launches, and microfrontend integrations.
+
+### State Layer
+
+| Module           | Path                           | Role                                              |
+| ---------------- | ------------------------------ | ------------------------------------------------- |
+| `omniModalStore` | `src/stores/omniModalStore.ts` | Global modal lifecycle (Zustand + Zod validation) |
+| `omniBoardStore` | `src/stores/omniBoardStore.ts` | Connector hydration state post-auth (Zustand) — exports `OmniBoardConnectorRecord`, `ConnectorStatus`, `hydrateConnector`, `setConnectorStatus` |
+
+### Interaction Layer
+
+| Module              | Path                                                         | Role                                                                  |
+| ------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `useOmniDashAction` | `src/omnidash/useOmniDashAction.ts`                          | Universal intent dispatcher — formats user action → `OmniModalConfig` |
+| `OmniSpatialHost`   | `apps/omnihub-site/dashboard/components/OmniSpatialHost.tsx` | Polymorphic renderer (dialog / spatial / sandbox)                     |
+| `OmniAppShell`      | `apps/omnihub-site/src/lib/OmniAppShell.ts`                  | Shadow DOM custom element for microfrontend CSS/JS isolation          |
+
+### Intent Resolution Rules (deterministic, no branches)
+
+1. `dashboardStatus === 'Partial'` → `type: 'oauth'` (authorization required)
+2. `contextData.appType` ∈ `{media, editor, terminal}` → `renderMode: 'spatial'` (GPU canvas)
+3. `contextData.entryUrl` present → `type: 'microfrontend'` (Shadow DOM sandbox)
+4. Live SPA with no contextData signals → `navigate(routePath)` (no modal)
+
+### Zero-Config OAuth Contract
+
+- Client sends intent to `supabase.functions.invoke('omnilink-agent')`.
+- Edge function orchestrates provider handshake server-side.
+- Client receives sanitized session descriptor (no raw credentials ever reach the browser).
+- `sanitizeBackendPayload()` strips any key matching `/^(secret|token|key|password|credential|private|bearer)/i`.
+- Hydrates `omniBoardStore` with `OmniBoardConnectorRecord` on success.
+
+### Non-Reactive Dispatch Pattern
+
+All modal invocations use `useOmniModal.getState().invoke()` — not the reactive `useOmniModal()` hook — to prevent the caller component from re-rendering on modal open/close.
 
 ---
 
@@ -348,14 +418,14 @@ Selected workflows:
 
 ## 9) Testing Architecture
 
-| Surface | Location | Count |
-|---|---|---|
-| Domain-partitioned unit/integration | `tests/` | ~84 specs |
-| Browser E2E (Playwright) | `tests/visual/`, `tests/routes/`, `e2e/` | ~22 specs |
-| Simulation / stress | `sim/`, `tests/worldwide-wildcard/` | — |
-| Resilience laws / benchmarks | `apex-resilience/tests/` | — |
-| Orchestrator Python tests | `orchestrator/tests/` | **177 passed** |
-| **Total TypeScript spec files** | `tests/` + `e2e/` | **106** |
+- `src/` files: **221** (legacy OmniDash components purged)
+- `apps/omnihub-site/dashboard/components/` files: **58** (consolidated)
+- `src/pages/` files (max depth 2): **18**
+- `src/components/**/*.tsx`: **42**
+- `supabase/functions/` directories: **22**
+- `supabase/migrations/*.sql`: **51**
+- test spec files in `tests/` + `e2e/`: **99**
+- GitHub workflow YAML files: **13**
 
 Gate commands (from root `package.json`):
 

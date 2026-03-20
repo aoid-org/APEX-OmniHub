@@ -73,7 +73,7 @@ describe('Omnidash CSS Contract', () => {
   it('no display:grid found in any dashboard layout class', () => {
     // Architecture contract: no grid anywhere in dashboard layout
     // Exclude comments and check only CSS rules
-    const rules = css.replace(/\/\*[\s\S]*?\*\//g, ''); // Strip comments
+    const rules = css.replaceAll(/\/\*[\s\S]*?\*\//g, ''); // Strip comments
     const gridMatches = rules.match(/\.(od-|omnidash-|apex-)[^{]*\{[^}]*display:\s*grid/g);
     expect(gridMatches).toBeNull();
   });

@@ -1,6 +1,7 @@
-import { memo } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
 import { Blocks } from 'lucide-react';
+import { useOmniDash } from '../../../../src/stores/omniDashStore';
 import {
   FONT_SG,
   APP_TILE_SURFACE,
@@ -24,77 +25,107 @@ export const AppTile = memo(function AppTile({ app, onClick }: AppTileProps) {
     ? { ...chipPos, ...PARTIAL_CHIP }
     : chipPos;
 
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
+  const widgetId = `app-tile-${app.name.toLowerCase().split(' ').join('-')}`;
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  const { openWidget, moveWidget, focusWidget } = useOmniDash();
+  const widgetState = useOmniDash(s => s.widgets.get(widgetId));
+
+  const x = useMotionValue(widgetState?.position.x ?? 0);
+  const y = useMotionValue(widgetState?.position.y ?? 0);
+
+  // Register with omniDashStore on mount
+  useEffect(() => {
+    openWidget(widgetId, app.name, 'appTile', { x: 0, y: 0 }, { width: 364, height: 104 });
+  }, [widgetId, app.name, openWidget]);
+
+  const pos = widgetState?.position;
+  // Sync motion values from store when store position changes
+  useEffect(() => {
+    if (pos) {
+      x.set(pos.x);
+      y.set(pos.y);
+    }
+  }, [pos, x, y]);
 
   return (
-    <motion.div
-      className="apex-app-tile"
-      style={{ ...APP_TILE_SURFACE, x, y }}
-      drag
-      dragMomentum={false}
-      dragElastic={0.05}
-      whileHover={APP_TILE_HOVER}
-      whileDrag={{ scale: 1.04, zIndex: 200, cursor: 'grabbing' }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-    >
-      {app.logo ? (
-        <img src={app.logo} alt={app.name} style={APP_LOGO_STYLE} />
-      ) : (
-        <div style={APP_LOGO_FALLBACK}>
-          <Blocks size={20} strokeWidth={2.5} />
-        </div>
-      )}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-        >
-          <span
-            style={{
-              fontSize: 14,
-              fontWeight: 800,
-              color: '#e8ecf4',
-              letterSpacing: '-0.01em',
-            }}
+    <div ref={canvasRef} style={{ position: 'relative' }}>
+      <motion.div
+        className="apex-app-tile"
+        style={{
+          ...APP_TILE_SURFACE,
+          x,
+          y,
+          zIndex: widgetState?.zIndex ?? 100,
+          touchAction: 'none',
+        }}
+        drag
+        dragMomentum={false}
+        dragConstraints={canvasRef}
+        onPointerDown={() => focusWidget(widgetId)}
+        onDragEnd={() => moveWidget(widgetId, { x: x.get(), y: y.get() })}
+        whileHover={APP_TILE_HOVER}
+        whileDrag={{ scale: 1.04, cursor: 'grabbing' }}
+        whileTap={{ scale: 0.98 }}
+        onClick={onClick}
+      >
+        {app.logo ? (
+          <img src={app.logo} alt={app.name} style={APP_LOGO_STYLE} />
+        ) : (
+          <div style={APP_LOGO_FALLBACK}>
+            <Blocks size={20} strokeWidth={2.5} />
+          </div>
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: 8 }}
           >
-            {app.name}
-          </span>
-          <span className="chip-live" style={chipStyle}>
-            {app.status}
-          </span>
-        </div>
-        <div
-          style={{
-            fontSize: 10,
-            color: '#7a849a',
-            marginTop: 3,
-            fontWeight: 800,
-            textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-          }}
-        >
-          {app.cat}
-        </div>
-        {app.synced && (
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                color: '#e8ecf4',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {app.name}
+            </span>
+            <span className="chip-live" style={chipStyle}>
+              {app.status}
+            </span>
+          </div>
           <div
             style={{
               fontSize: 10,
-              color: '#5a6478',
-              marginTop: 2,
-              fontFamily: FONT_SG,
-              letterSpacing: '0.02em',
+              color: '#7a849a',
+              marginTop: 3,
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
             }}
           >
-            SYNC: {app.synced}
+            {app.cat}
           </div>
+          {app.synced && (
+            <div
+              style={{
+                fontSize: 10,
+                color: '#5a6478',
+                marginTop: 2,
+                fontFamily: FONT_SG,
+                letterSpacing: '0.02em',
+              }}
+            >
+              SYNC: {app.synced}
+            </div>
+          )}
+        </div>
+        {isPartial && (
+          <button type="button" style={SYNC_BTN_STYLE}>
+            Sync
+          </button>
         )}
-      </div>
-      {isPartial && (
-        <button type="button" style={SYNC_BTN_STYLE}>
-          Sync
-        </button>
-      )}
-    </motion.div>
+      </motion.div>
+    </div>
   );
 });

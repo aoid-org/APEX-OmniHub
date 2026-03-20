@@ -35,7 +35,7 @@ from urllib.parse import urlparse, urlunparse
 from uuid import uuid4
 
 import instructor
-import jsonschema
+import jsonschema  # type: ignore
 from litellm import acompletion
 from pydantic import BaseModel
 from temporalio import activity
@@ -800,7 +800,6 @@ async def call_webhook(params: dict[str, Any]) -> dict[str, Any]:
 
 
 def _is_ip_literal(value: str) -> bool:
-
     try:
         ipaddress.ip_address(value.strip("[]"))
         return True

@@ -206,8 +206,8 @@ const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) =
   }} />
 );
 
-const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => (
-  <div onClick={onClick} onKeyDown={(e) => { if (onClick && (e.key === 'Enter' || e.key === ' ')) onClick(); }} role={onClick ? "button" : "presentation"} tabIndex={onClick ? 0 : undefined} style={{
+const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => {
+  const cardStyle: CSSProperties = {
     background: T.card,
     border: `1px solid ${glow ? T.borderGlow : T.border}`,
     borderRadius: 16,
@@ -217,10 +217,22 @@ const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps
     backdropFilter: "blur(12px)",
     transition: "all .2s ease",
     ...style,
-  }} >
-    {children}
-  </div>
-);
+  };
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} style={{ ...cardStyle, cursor: "pointer" }}>
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <div style={cardStyle}>
+      {children}
+    </div>
+  );
+};
 
 
 
@@ -280,6 +292,11 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
       return `drop-shadow(0 0 1px ${T.orange}55) brightness(0.9)`;
     };
 
+    const resolveState = (active: boolean, hover: boolean, map: { active: string; hover: string; base: string }) => {
+      if (active) return map.active;
+      if (hover) return map.hover;
+      return map.base;
+    };
   return (
     <button
       onClick={onClick}
@@ -292,8 +309,8 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
         transition:"all .18s ease",
         fontSize:14.1,
         // ── OmniBoard baseline applied to every tile ──────────────────────
-        border: `1px solid ${isActive ? borderColors.active : hov ? borderColors.hover : borderColors.base}`,
-        background: `linear-gradient(100deg, ${T.orange}${isActive ? bgOpacities.active : hov ? bgOpacities.hover : bgOpacities.base} 0%, ${T.card} 60%)`,
+        border: `1px solid ${resolveState(isActive, hov, borderColors)}`,
+        background: `linear-gradient(100deg, ${T.orange}${resolveState(isActive, hov, bgOpacities)} 0%, ${T.card} 60%)`,
         color: isActive ? T.t1 : T.t2,
         fontWeight: isActive ? 600 : 400,
         boxShadow: resolveShadow(isActive, hov),
@@ -354,7 +371,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
     setSigningOut(true);
     try {
       await supabase.auth.signOut();
-      window.location.href = '/login';
+      globalThis.location.href = '/login';
     } catch {
       setSigningOut(false);
     }
@@ -851,16 +868,18 @@ const OmniSlateWidget = () => {
   const endRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Cycle suggestion every 4s with fade
-  useEffect(() => {
-    const id = setInterval(() => {
-      setSuggVisible(false);
-      setTimeout(() => {
-        setSuggIdx(i => (i + 1) % SLATE_SUGGESTIONS.length);
-        setSuggVisible(true);
-      }, 400);
-    }, 4000);
-    return () => clearInterval(id);
+  const cycleSuggestion = useCallback(() => {
+    setSuggVisible(false);
+    setTimeout(() => {
+      setSuggIdx((i) => (i + 1) % SLATE_SUGGESTIONS.length);
+      setSuggVisible(true);
+    }, 400);
   }, []);
+
+  useEffect(() => {
+    const id = setInterval(cycleSuggestion, 4000);
+    return () => clearInterval(id);
+  }, [cycleSuggestion]);
 
   const send = useCallback(async () => {
     if (!input.trim()) return;
@@ -879,7 +898,7 @@ const OmniSlateWidget = () => {
       pendingRef.current = null;
     }
     setLoading(false);
-    setMessages(m => m.length > 0 && m[m.length - 1].role === 'user'
+    setMessages(m => m.length > 0 && m.at(-1)?.role === 'user'
       ? [...m, {role:"assistant", text:"— Response stopped by user."}]
       : m
     );
@@ -921,8 +940,8 @@ const OmniSlateWidget = () => {
         {messages.length === 0 && (
           <div style={{ flex:1 }} />
         )}
-        {messages.map((m,i) => (
-          <div key={i} style={{
+        {messages.map((m) => (
+          <div key={`${m.role}-${m.text.slice(0, 32)}`} style={{
             display:"flex", gap:10, justifyContent: m.role==="user"?"flex-end":"flex-start",
             animation:"apexFadeIn .3s ease",
           }}>
@@ -976,7 +995,7 @@ const OmniSlateWidget = () => {
           <span style={{
             fontSize:13, color:T.t2, lineHeight:1.4,
             overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
-            minWidth: 0,
+            flex:1, minWidth: 0,
           }}>{SLATE_SUGGESTIONS[suggIdx]}</span>
           <svg style={{flexShrink:0,marginLeft:"auto"}} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.orange} strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
@@ -1086,7 +1105,7 @@ const EcosystemWidget = () => {
           display:"flex", alignItems:"center", justifyContent:"center",
           fontSize:18, color:T.orange, flexShrink:0,
           boxShadow:`0 0 8px ${T.orange}44`,
-        }}>+</span>
+        }}>+</span>{" "}
         Add APEX App
       </button>
     </div>
@@ -1270,8 +1289,8 @@ const OmniTracePanel = () => {
       <SectionLabel>OmniTrace</SectionLabel>
     </div>
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
-      {TRACE_EVENTS.map((e, index) => (
-        <div key={`trace-${index}`} style={{display:"flex",alignItems:"flex-start",gap:8}}>
+      {TRACE_EVENTS.map((e) => (
+        <div key={`trace-${e.text.slice(0, 24)}`} style={{display:"flex",alignItems:"flex-start",gap:8}}>
           <div style={{
             width:7,height:7,borderRadius:"50%",background:e.color,
             boxShadow:`0 0 6px ${e.color}`,flexShrink:0,marginTop:4,
@@ -1398,11 +1417,15 @@ export default function OmniDashShell() {
           }} />
           {/* Content — sits above blueprint grid */}
           <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
-          {/* Primary 3-column grid — fixed height ~3 ecosystem tiles tall */}
-          <div style={{ display:"grid", gridTemplateColumns:"220px 1fr 220px", gap:14, height:300 }}>
-            <DraggableWidget><AgentWidget tick={tick} /></DraggableWidget>
-            <DraggableWidget><OmniSlateWidget /></DraggableWidget>
-            <DraggableWidget><EcosystemWidget /></DraggableWidget>
+          {/* Primary 3-column grid — fixed height, overflow-isolated cells.
+              FIX Bug 3+4: minHeight:0 enforces the CSS grid row height contract.
+              Each DraggableWidget gets height+overflow:hidden so no child
+              (including OmniSlate chat history) can blow out the row or
+              dislodge sibling tiles. */}
+          <div style={{ display:"grid", gridTemplateColumns:"220px 1fr 220px", gap:14, height:300, minHeight:0 }}>
+            <DraggableWidget style={{ height:"100%", overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
+            <DraggableWidget style={{ height:"100%", overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
+            <DraggableWidget style={{ height:"100%", overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
           </div>
 
           {/* Integrated Apps row */}

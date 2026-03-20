@@ -37,7 +37,7 @@ jobs:
           node-version: "20"
       - run: node scripts/compliance/generate_retention_evidence.mjs
       - run: node scripts/compliance/check_retention_consistency.mjs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: retention-evidence
           path: build-artifacts/retention-evidence.json
@@ -77,14 +77,14 @@ jobs:
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: "20"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
       - run: mkdir -p build-artifacts
       - run: npx @cyclonedx/cyclonedx-npm@4.1.2 --package-lock-only --output-file build-artifacts/sbom-npm.cdx.json
       - run: pip install cyclonedx-bom
       - run: cyclonedx-py environment --output-format JSON --output-file build-artifacts/sbom-python.cdx.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: sbom-artifacts
           path: |
@@ -94,7 +94,7 @@ jobs:
         run: echo "npm_package_version=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
       - name: Attach SBOM to GitHub Release (on main push)
         if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
         with:
           tag_name: v${{ env.npm_package_version }}
           files: |
@@ -135,7 +135,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: "1.2.14"
       - run: bun install --frozen-lockfile
@@ -146,7 +146,7 @@ jobs:
       - name: Regenerate readiness report
         run: bun run readiness:generate
       - name: Commit updated report
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5
         with:
           commit_message: "chore: auto-update INSTITUTIONAL_READINESS.json [skip ci]"
           file_pattern: "docs/valuation/INSTITUTIONAL_READINESS.json"
@@ -159,7 +159,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           token: ${{ github.token }}
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
       - run: pip install ruff
