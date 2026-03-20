@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "generated": "2026-03-15T16:26:28.978Z",
+    "generated": "2026-03-20T21:56:40.187Z",
     "generated_by": "scripts/generate-readiness-report.mjs",
     "schema": "institutional-readiness-v2",
     "warning": "Auto-generated from repo state. DO NOT edit manually. Re-run the script.",
@@ -49,10 +49,10 @@
       "multi_region_roadmap": "2026-Q4"
     },
     "repository_metrics": {
-      "database_migrations": 61,
-      "edge_functions": 22,
-      "test_specs": 102,
-      "as_of": "2026-03-15"
+      "database_migrations": 69,
+      "edge_functions": 25,
+      "test_specs": 113,
+      "as_of": "2026-03-20"
     }
   },
   "security": {
