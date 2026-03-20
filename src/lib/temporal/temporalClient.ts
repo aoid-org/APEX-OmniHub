@@ -46,8 +46,7 @@ let _clientPromise: Promise<Client> | null = null;
 async function getClient(): Promise<Client> {
   if (_client) return _client;
 
-  if (!_clientPromise) {
-    _clientPromise = (async () => {
+  _clientPromise ??= (async () => {
       const address =
         process.env.TEMPORAL_ADDRESS || 'localhost:7233';
       const namespace =
@@ -62,7 +61,6 @@ async function getClient(): Promise<Client> {
 
       return _client;
     })();
-  }
 
   return _clientPromise;
 }

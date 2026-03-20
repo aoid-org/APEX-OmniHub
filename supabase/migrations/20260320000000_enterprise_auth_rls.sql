@@ -92,7 +92,21 @@ ALTER TABLE public.enterprise_tenants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tenant_memberships ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
--- 4. RLS Policies — enterprise_tenants
+-- 4. Helper function: Get tenant IDs where current user is admin
+-- ---------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION public.admin_tenant_ids()
+RETURNS SETOF uuid
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+AS $$
+  SELECT tenant_id FROM public.tenant_memberships
+  WHERE user_id = auth.uid() AND role = 'admin';
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 5. RLS Policies — enterprise_tenants
 -- ---------------------------------------------------------------------------
 
 -- Policy: Users can SELECT tenants they belong to
@@ -112,14 +126,11 @@ CREATE POLICY enterprise_tenants_update_admin
   ON public.enterprise_tenants
   FOR UPDATE
   USING (
-    id IN (
-      SELECT tenant_id FROM public.tenant_memberships
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    id IN (SELECT public.admin_tenant_ids())
   );
 
 -- ---------------------------------------------------------------------------
--- 5. RLS Policies — tenant_memberships
+-- 6. RLS Policies — tenant_memberships
 -- ---------------------------------------------------------------------------
 
 -- Policy: Users can see their own memberships
@@ -133,10 +144,7 @@ CREATE POLICY tenant_memberships_select_admin
   ON public.tenant_memberships
   FOR SELECT
   USING (
-    tenant_id IN (
-      SELECT tenant_id FROM public.tenant_memberships
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    tenant_id IN (SELECT public.admin_tenant_ids())
   );
 
 -- Policy: Tenant admins can INSERT new memberships in their tenant
@@ -144,10 +152,7 @@ CREATE POLICY tenant_memberships_insert_admin
   ON public.tenant_memberships
   FOR INSERT
   WITH CHECK (
-    tenant_id IN (
-      SELECT tenant_id FROM public.tenant_memberships
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    tenant_id IN (SELECT public.admin_tenant_ids())
   );
 
 -- Policy: Tenant admins can UPDATE memberships in their tenant
@@ -156,10 +161,7 @@ CREATE POLICY tenant_memberships_update_admin
   ON public.tenant_memberships
   FOR UPDATE
   USING (
-    tenant_id IN (
-      SELECT tenant_id FROM public.tenant_memberships
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    tenant_id IN (SELECT public.admin_tenant_ids())
   );
 
 -- Policy: Tenant admins can DELETE memberships in their tenant
@@ -169,14 +171,11 @@ CREATE POLICY tenant_memberships_delete
   FOR DELETE
   USING (
     user_id = auth.uid()
-    OR tenant_id IN (
-      SELECT tenant_id FROM public.tenant_memberships
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    OR tenant_id IN (SELECT public.admin_tenant_ids())
   );
 
 -- ---------------------------------------------------------------------------
--- 6. Helper function: Get current user's tenant ID
+-- 7. Helper function: Get current user's tenant ID
 -- ---------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION public.current_tenant_id()
@@ -191,7 +190,7 @@ AS $$
 $$;
 
 -- ---------------------------------------------------------------------------
--- 7. Grant permissions
+-- 8. Grant permissions
 -- ---------------------------------------------------------------------------
 
 GRANT SELECT ON public.enterprise_tenants TO authenticated;
