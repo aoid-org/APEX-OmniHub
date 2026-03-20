@@ -77,7 +77,7 @@ function copyStylesheets(source: Document, target: Document): void {
 
 export function useDocumentPiP(): UseDocumentPiPReturn {
   const isSupported =
-    typeof globalThis.window !== 'undefined' &&
+    globalThis.window !== undefined &&
     'documentPictureInPicture' in globalThis;
 
   const [pipWindow, setPiPWindow] = useState<Window | null>(null);
