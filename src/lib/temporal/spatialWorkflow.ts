@@ -26,7 +26,8 @@ import {
 } from '@temporalio/workflow';
 
 import type { SpatialDelta } from './spatialActivities';
-import type * as activities from './spatialActivities';
+
+type Activities = typeof import('./spatialActivities');
 
 // ============================================================================
 // Shared Type Definitions (importable by client code)
@@ -80,7 +81,7 @@ export const close = defineSignal('close');
 // ============================================================================
 
 const { validateDelta, persistCoordinates, broadcastPosition } =
-  proxyActivities<typeof activities>({
+  proxyActivities<Activities>({
     startToCloseTimeout: '5 seconds',
   });
 

@@ -37,15 +37,15 @@ export interface CanvasViewport {
 export type RenderBackend = 'webgl' | 'canvas2d';
 
 export class CanvasRenderer {
-  private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D | null = null;
-  private gl: WebGLRenderingContext | null = null;
-  private backend: RenderBackend;
-  private entities: Map<string, CanvasEntity> = new Map();
-  private viewport: CanvasViewport;
+  private readonly canvas: HTMLCanvasElement;
+  private readonly ctx: CanvasRenderingContext2D | null = null;
+  private readonly gl: WebGLRenderingContext | null = null;
+  private readonly backend: RenderBackend;
+  private readonly entities: Map<string, CanvasEntity> = new Map();
+  private readonly viewport: CanvasViewport;
   private rafId = 0;
   private dirty = false;
-  private devicePixelRatio: number;
+  private readonly devicePixelRatio: number;
 
   constructor(canvas: HTMLCanvasElement, preferWebGL = true) {
     this.canvas = canvas;

@@ -38,7 +38,7 @@ function bufferToHex(buffer: ArrayBuffer): string {
 function hexToBuffer(hex: string): Uint8Array {
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
-    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+    bytes[i / 2] = Number.parseInt(hex.substring(i, i + 2), 16);
   }
   return bytes;
 }
@@ -58,19 +58,19 @@ export function timingSafeEqual(a: string, b: string): boolean {
     let mismatch = 1;
     const len = Math.max(a.length, b.length);
     for (let i = 0; i < len; i++) {
-      const ac = a.charCodeAt(i % a.length) || 0;
-      const bc = b.charCodeAt(i % b.length) || 0;
+      const ac = a.codePointAt(i % a.length) ?? 0;
+      const bc = b.codePointAt(i % b.length) ?? 0;
       mismatch |= ac ^ bc;
     }
     // Always returns false for length mismatch, but takes constant time
     // relative to the longer input.
-    void mismatch;
-    return false;
+    // mismatch is used only to prevent timing side-channel; discard explicitly
+    return mismatch === mismatch && false;
   }
 
   let mismatch = 0;
   for (let i = 0; i < a.length; i++) {
-    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    mismatch |= (a.codePointAt(i) ?? 0) ^ (b.codePointAt(i) ?? 0);
   }
   return mismatch === 0;
 }

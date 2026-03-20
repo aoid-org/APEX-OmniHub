@@ -55,10 +55,78 @@ const SSE_DONE_SENTINEL = '[DONE]';
  */
 function getDefaultEndpoint(): string {
   const base =
-    (typeof import.meta !== 'undefined' && (import.meta as unknown as Record<string, Record<string, string>>).env?.VITE_SUPABASE_URL) ?? '';
+    (import.meta !== undefined && (import.meta as unknown as Record<string, Record<string, string>>).env?.VITE_SUPABASE_URL) ?? '';
   if (!base) return '';
-  // Supabase edge functions live at <project-url>/functions/v1/<fn-name>
   return `${base.replace(/\/{1,10}$/, '')}/functions/v1/apex-assistant`;
+}
+
+/**
+ * Build request headers with optional auth token.
+ */
+async function buildRequestHeaders(
+  extraHeaders?: Record<string, string>,
+): Promise<Record<string, string>> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData?.session?.access_token ?? '';
+  return {
+    'Content-Type': 'application/json',
+    ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    ...extraHeaders,
+  };
+}
+
+/**
+ * Result of processing a single SSE line.
+ * - 'done' means the stream sent the [DONE] sentinel
+ * - 'token' means a token was received
+ * - 'skip' means the line was empty, a comment, or not a data field
+ */
+type SSELineResult =
+  | { kind: 'done' }
+  | { kind: 'token'; payload: string }
+  | { kind: 'skip' };
+
+function parseSSELine(line: string): SSELineResult {
+  const trimmed = line.trim();
+  if (trimmed === '' || trimmed.startsWith(':')) return { kind: 'skip' };
+  if (!trimmed.startsWith('data: ')) return { kind: 'skip' };
+
+  const payload = trimmed.slice(6);
+  if (payload === SSE_DONE_SENTINEL) return { kind: 'done' };
+  return { kind: 'token', payload };
+}
+
+/**
+ * Reads an SSE response body and invokes callbacks for each token.
+ * Returns the full accumulated text.
+ */
+async function consumeSSEStream(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  onToken: (payload: string) => void,
+): Promise<string> {
+  const decoder = new TextDecoder();
+  let accumulated = '';
+  let lineBuffer = '';
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    lineBuffer += decoder.decode(value, { stream: true });
+    const lines = lineBuffer.split('\n');
+    lineBuffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      const result = parseSSELine(line);
+      if (result.kind === 'done') return accumulated;
+      if (result.kind === 'token') {
+        accumulated += result.payload;
+        onToken(result.payload);
+      }
+    }
+  }
+
+  return accumulated;
 }
 
 // ============================================================================
@@ -70,17 +138,13 @@ export function useSSEStream(): UseSSEStreamReturn {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // AbortController ref — survives across renders and allows cancellation.
   const abortRef = useRef<AbortController | null>(null);
-
-  // Track mounted state so we never call setState after unmount.
   const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      // Abort any in-flight stream on unmount.
       if (abortRef.current) {
         abortRef.current.abort();
         abortRef.current = null;
@@ -100,7 +164,6 @@ export function useSSEStream(): UseSSEStreamReturn {
 
   const stream = useCallback(
     (input: string, options?: StreamOptions) => {
-      // Cancel any previous in-flight request.
       if (abortRef.current) {
         abortRef.current.abort();
       }
@@ -108,7 +171,6 @@ export function useSSEStream(): UseSSEStreamReturn {
       const controller = new AbortController();
       abortRef.current = controller;
 
-      // Reset state for the new stream.
       setTokens('');
       setError(null);
       setIsStreaming(true);
@@ -123,20 +185,13 @@ export function useSSEStream(): UseSSEStreamReturn {
         return;
       }
 
-      // Kick off the async streaming pipeline.
       (async () => {
         try {
-          // Retrieve the current Supabase auth token.
-          const { data: sessionData } = await supabase.auth.getSession();
-          const accessToken = sessionData?.session?.access_token ?? '';
+          const headers = await buildRequestHeaders(options?.headers);
 
           const response = await fetch(endpoint, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-              ...options?.headers,
-            },
+            headers,
             body: JSON.stringify({ input }),
             signal: controller.signal,
           });
@@ -150,70 +205,26 @@ export function useSSEStream(): UseSSEStreamReturn {
             throw new Error('Response body is not readable.');
           }
 
-          const decoder = new TextDecoder();
-          let accumulated = '';
-          let lineBuffer = '';
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            lineBuffer += decoder.decode(value, { stream: true });
-
-            // SSE frames are delimited by double newlines. Individual fields
-            // within a frame are separated by single newlines.
-            const lines = lineBuffer.split('\n');
-
-            // Keep the last (potentially incomplete) line in the buffer.
-            lineBuffer = lines.pop() ?? '';
-
-            for (const line of lines) {
-              const trimmed = line.trim();
-
-              // Skip empty lines and comments.
-              if (trimmed === '' || trimmed.startsWith(':')) continue;
-
-              if (trimmed.startsWith('data: ')) {
-                const payload = trimmed.slice(6);
-
-                // Handle the completion sentinel.
-                if (payload === SSE_DONE_SENTINEL) {
-                  if (mountedRef.current) {
-                    setIsStreaming(false);
-                  }
-                  options?.onComplete?.(accumulated);
-                  return;
-                }
-
-                // Treat the payload as a raw token string.
-                accumulated += payload;
-                if (mountedRef.current) {
-                  // Use functional update to avoid stale closure over `tokens`.
-                  setTokens((prev) => prev + payload);
-                }
-                options?.onToken?.(payload);
-              }
+          const accumulated = await consumeSSEStream(reader, (payload) => {
+            if (mountedRef.current) {
+              setTokens((prev) => prev + payload);
             }
-          }
+            options?.onToken?.(payload);
+          });
 
-          // The stream ended without a [DONE] sentinel — still treat as complete.
           if (mountedRef.current) {
             setIsStreaming(false);
           }
           options?.onComplete?.(accumulated);
         } catch (err: unknown) {
-          // AbortError is expected when the consumer calls abort(); don't surface it.
-          if (err instanceof DOMException && err.name === 'AbortError') {
-            return;
-          }
-          const error = err instanceof Error ? err : new Error(String(err));
+          if (err instanceof DOMException && err.name === 'AbortError') return;
+          const streamError = err instanceof Error ? err : new Error(String(err));
           if (mountedRef.current) {
-            setError(error.message);
+            setError(streamError.message);
             setIsStreaming(false);
           }
-          options?.onError?.(error);
+          options?.onError?.(streamError);
         } finally {
-          // Clear the controller ref if it is still ours.
           if (abortRef.current === controller) {
             abortRef.current = null;
           }

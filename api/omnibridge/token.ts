@@ -122,43 +122,76 @@ async function sha256Hex(input: string): Promise<string> {
 /*  Handler                                                                   */
 /* -------------------------------------------------------------------------- */
 
+interface CredentialFields {
+  grantType: string | null;
+  clientId: string | null;
+  clientSecret: string | null;
+}
+
+/**
+ * Parse client credentials from the request body.
+ * Supports both form-urlencoded and JSON content types.
+ */
+async function parseCredentials(request: Request): Promise<CredentialFields> {
+  const contentType = request.headers.get('Content-Type') ?? '';
+
+  if (contentType.includes('application/x-www-form-urlencoded')) {
+    const formData = await request.formData();
+    return {
+      grantType: formData.get('grant_type') as string | null,
+      clientId: formData.get('client_id') as string | null,
+      clientSecret: formData.get('client_secret') as string | null,
+    };
+  }
+
+  const body = (await request.json()) as Record<string, unknown>;
+  return {
+    grantType: typeof body.grant_type === 'string' ? body.grant_type : null,
+    clientId: typeof body.client_id === 'string' ? body.client_id : null,
+    clientSecret: typeof body.client_secret === 'string' ? body.client_secret : null,
+  };
+}
+
+/**
+ * Load and parse M2M client records from environment.
+ */
+function loadM2MClients(): M2MClientRecord[] | null {
+  const clientsJson = process.env['OMNIBRIDGE_M2M_CLIENTS'];
+  if (!clientsJson) {
+    console.error('[omnibridge/token] OMNIBRIDGE_M2M_CLIENTS env var not configured');
+    return null;
+  }
+
+  try {
+    const clients = JSON.parse(clientsJson) as M2MClientRecord[];
+    if (!Array.isArray(clients)) return null;
+    return clients;
+  } catch {
+    console.error('[omnibridge/token] OMNIBRIDGE_M2M_CLIENTS is not valid JSON array');
+    return null;
+  }
+}
+
 export default async function handler(request: Request): Promise<Response> {
-  // Only POST allowed
   if (request.method !== 'POST') {
     return jsonResponse(405, { error: 'method_not_allowed' });
   }
 
-  // Rate limiting
   pruneRateBuckets();
   const clientIp = extractClientIp(request);
   if (!checkRateLimit(clientIp)) {
     return jsonResponse(429, { error: 'rate_limit_exceeded' });
   }
 
-  // Parse request body (application/x-www-form-urlencoded or JSON)
-  let grantType: string | null = null;
-  let clientId: string | null = null;
-  let clientSecret: string | null = null;
-
-  const contentType = request.headers.get('Content-Type') ?? '';
-
+  let credentials: CredentialFields;
   try {
-    if (contentType.includes('application/x-www-form-urlencoded')) {
-      const formData = await request.formData();
-      grantType = formData.get('grant_type') as string | null;
-      clientId = formData.get('client_id') as string | null;
-      clientSecret = formData.get('client_secret') as string | null;
-    } else {
-      const body = (await request.json()) as Record<string, unknown>;
-      grantType = typeof body.grant_type === 'string' ? body.grant_type : null;
-      clientId = typeof body.client_id === 'string' ? body.client_id : null;
-      clientSecret = typeof body.client_secret === 'string' ? body.client_secret : null;
-    }
+    credentials = await parseCredentials(request);
   } catch {
     return jsonResponse(400, { error: 'invalid_request', error_description: 'Malformed request body' });
   }
 
-  // Validate grant_type
+  const { grantType, clientId, clientSecret } = credentials;
+
   if (grantType !== 'client_credentials') {
     return jsonResponse(400, {
       error: 'unsupported_grant_type',
@@ -166,7 +199,6 @@ export default async function handler(request: Request): Promise<Response> {
     });
   }
 
-  // Validate required fields
   if (!clientId || !clientSecret) {
     return jsonResponse(400, {
       error: 'invalid_request',
@@ -174,44 +206,29 @@ export default async function handler(request: Request): Promise<Response> {
     });
   }
 
-  // Load registered M2M clients from env
-  const clientsJson = process.env['OMNIBRIDGE_M2M_CLIENTS'];
-  if (!clientsJson) {
-    console.error('[omnibridge/token] OMNIBRIDGE_M2M_CLIENTS env var not configured');
+  const clients = loadM2MClients();
+  if (!clients) {
     return jsonResponse(500, { error: 'server_error', error_description: 'Token service misconfigured' });
   }
 
-  let clients: M2MClientRecord[];
-  try {
-    clients = JSON.parse(clientsJson) as M2MClientRecord[];
-    if (!Array.isArray(clients)) throw new Error('Expected array');
-  } catch {
-    console.error('[omnibridge/token] OMNIBRIDGE_M2M_CLIENTS is not valid JSON array');
-    return jsonResponse(500, { error: 'server_error', error_description: 'Token service misconfigured' });
-  }
-
-  // Find matching client
   const matchedClient = clients.find((c) => c.client_id === clientId);
   if (!matchedClient) {
     return jsonResponse(401, { error: 'invalid_client', error_description: 'Unknown client' });
   }
 
-  // Hash the provided secret and compare to stored hash (timing-safe)
   const providedHash = await sha256Hex(clientSecret);
   if (!timingSafeEqual(providedHash, matchedClient.client_secret_hash)) {
     return jsonResponse(401, { error: 'invalid_client', error_description: 'Invalid credentials' });
   }
 
-  // Load JWT signing secret
   const jwtSecret = process.env['OMNIBRIDGE_JWT_SECRET'];
   if (!jwtSecret) {
     console.error('[omnibridge/token] OMNIBRIDGE_JWT_SECRET env var not configured');
     return jsonResponse(500, { error: 'server_error', error_description: 'Token service misconfigured' });
   }
 
-  // Generate JWT (15-minute expiry)
   const now = Math.floor(Date.now() / 1000);
-  const expiresIn = 900; // 15 minutes
+  const expiresIn = 900;
 
   const claims: M2MClaims = {
     sub: matchedClient.client_id,

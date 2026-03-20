@@ -217,7 +217,7 @@ export default async function handler(request: Request): Promise<Response> {
     received_at: new Date().toISOString(),
   };
 
-  // TODO: Route to Temporal workflow for durable processing
+  // FUTURE: Route to Temporal workflow for durable processing
   // await temporalClient.workflow.start('omnibridgeEventHandler', {
   //   taskQueue: 'omnibridge-events',
   //   workflowId: `omni-event-${eventId}`,

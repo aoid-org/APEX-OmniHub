@@ -41,10 +41,10 @@ function base64urlEncode(input: string): string {
   // TextEncoder produces UTF-8 bytes; btoa expects latin1 chars
   const bytes = encoder.encode(input);
   let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  for (const byte of bytes) {
+    binary += String.fromCodePoint(byte);
   }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/={1,2}$/, '');
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/={1,2}$/, '');
 }
 
 /**
@@ -52,17 +52,17 @@ function base64urlEncode(input: string): string {
  */
 function base64urlEncodeBytes(bytes: Uint8Array): string {
   let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  for (const byte of bytes) {
+    binary += String.fromCodePoint(byte);
   }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/={1,2}$/, '');
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/={1,2}$/, '');
 }
 
 /**
  * Base64url-decode to a string.
  */
 function base64urlDecode(input: string): string {
-  let base64 = input.replace(/-/g, '+').replace(/_/g, '/');
+  let base64 = input.replaceAll('-', '+').replaceAll('_', '/');
   // Restore padding
   while (base64.length % 4 !== 0) {
     base64 += '=';
@@ -70,7 +70,7 @@ function base64urlDecode(input: string): string {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
+    bytes[i] = binary.codePointAt(i)!;
   }
   return new TextDecoder().decode(bytes);
 }
@@ -79,14 +79,14 @@ function base64urlDecode(input: string): string {
  * Base64url-decode to a Uint8Array.
  */
 function base64urlDecodeBytes(input: string): Uint8Array {
-  let base64 = input.replace(/-/g, '+').replace(/_/g, '/');
+  let base64 = input.replaceAll('-', '+').replaceAll('_', '/');
   while (base64.length % 4 !== 0) {
     base64 += '=';
   }
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
+    bytes[i] = binary.codePointAt(i)!;
   }
   return bytes;
 }
@@ -113,13 +113,13 @@ async function importSigningKey(secret: string): Promise<CryptoKey> {
  */
 export async function generateM2MToken(claims: M2MClaims, secret: string): Promise<string> {
   if (!claims.sub || !claims.tenant_id || !Array.isArray(claims.scopes)) {
-    throw new Error('M2M token generation requires sub, tenant_id, and scopes');
+    throw new TypeError('M2M token generation requires sub, tenant_id, and scopes');
   }
   if (!claims.iat || !claims.exp) {
-    throw new Error('M2M token generation requires iat and exp');
+    throw new TypeError('M2M token generation requires iat and exp');
   }
   if (claims.exp <= claims.iat) {
-    throw new Error('Token expiration must be after issued-at time');
+    throw new TypeError('Token expiration must be after issued-at time');
   }
 
   const payloadB64 = base64urlEncode(JSON.stringify(claims));

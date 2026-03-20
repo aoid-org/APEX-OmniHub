@@ -58,7 +58,7 @@ export interface VerificationResult {
 /** Base64url-decode a string to a Uint8Array (edge-compatible, no Buffer). */
 function base64UrlDecode(input: string): Uint8Array {
   // Convert base64url to standard base64
-  let base64 = input.replace(/-/g, '+').replace(/_/g, '/');
+  let base64 = input.replaceAll('-', '+').replaceAll('_', '/');
   // Pad to multiple of 4
   const pad = base64.length % 4;
   if (pad === 2) base64 += '==';
@@ -67,7 +67,7 @@ function base64UrlDecode(input: string): Uint8Array {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
+    bytes[i] = binary.codePointAt(i)!;
   }
   return bytes;
 }
@@ -75,10 +75,10 @@ function base64UrlDecode(input: string): Uint8Array {
 /** Encode a Uint8Array to base64url string. */
 function base64UrlEncode(bytes: Uint8Array): string {
   let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  for (const byte of bytes) {
+    binary += String.fromCodePoint(byte);
   }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/={1,2}$/, '');
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/={1,2}$/, '');
 }
 
 /** Parse the payload segment of a JWT into a typed object. */
@@ -123,7 +123,7 @@ async function verifyHS256Signature(
 
   let mismatch = 0;
   for (let i = 0; i < computedSignature.length; i++) {
-    mismatch |= computedSignature.charCodeAt(i) ^ signatureB64.charCodeAt(i);
+    mismatch |= (computedSignature.codePointAt(i) ?? 0) ^ (signatureB64.codePointAt(i) ?? 0);
   }
   return mismatch === 0;
 }
@@ -176,7 +176,7 @@ export async function verifySupabaseJWT(token: string): Promise<VerificationResu
     }
 
     // --- Signature verification ---
-    const secret = typeof globalThis.process !== 'undefined'
+    const secret = globalThis.process !== undefined
       ? (globalThis.process as NodeJS.Process).env?.SUPABASE_JWT_SECRET
       : undefined;
 
@@ -224,7 +224,7 @@ export async function verifySupabaseJWT(token: string): Promise<VerificationResu
 export function extractBearerToken(request: Request): string | null {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader) return null;
-  const match = authHeader.match(/^Bearer\s+(\S+)$/i);
+  const match = /^Bearer\s+(\S+)$/i.exec(authHeader);
   return match?.[1] ?? null;
 }
 

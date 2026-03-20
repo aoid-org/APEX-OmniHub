@@ -93,7 +93,7 @@ export function useSpatialEngine(options: SpatialEngineOptions = {}): SpatialEng
     worldBounds = DEFAULT_WORLD_BOUNDS,
     minScale = 0.1,
     maxScale = 5.0,
-    zoomSensitivity = 0.001,
+    zoomSensitivity = 1e-3,
   } = options;
 
   const transformRef = useRef<SpatialTransform>({ tx: 0, ty: 0, scale: 1 });
