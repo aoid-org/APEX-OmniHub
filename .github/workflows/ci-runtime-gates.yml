@@ -2,7 +2,7 @@ name: CI Runtime Gates
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, chore/readiness-report-auto-update]
   pull_request:
     branches: [main, master]
   workflow_dispatch:
