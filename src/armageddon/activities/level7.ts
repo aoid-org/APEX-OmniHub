@@ -234,3 +234,51 @@ export async function runBattery13SupplyChain(config: Level7Config): Promise<Bat
         ],
     });
 }
+
+/**
+ * Battery 14: Real-time Channel Stress Simulation
+ * Simulates adversarial attacks against Supabase real-time channels
+ * including channel flooding, subscription bombing, and message injection
+ */
+export async function runBattery14RealtimeChannelStress(config: Level7Config): Promise<BatteryResult> {
+    return runGenericBattery({
+        batteryId: 14,
+        config,
+        escapeChance: BASE_ESCAPE_PROBABILITY * (1 - 0.88), // 88% defense
+        successMessage: 'Realtime channel breach succeeded',
+        attackVectors: [
+            'Channel flood (10k subscriptions/sec)',
+            'Message injection via forged JWT',
+            'Subscription bombing (rapid subscribe/unsubscribe)',
+            'Broadcast amplification attack',
+            'Presence state poisoning',
+            'Channel name enumeration',
+            'Filter bypass via malformed SQL predicates',
+            'Cross-tenant channel leakage',
+        ],
+    });
+}
+
+/**
+ * Battery 15: Spatial UI Frame Drop Simulation
+ * Simulates adversarial attacks targeting the QuadTree spatial engine
+ * and matrix3d rendering pipeline to cause frame drops and UI freezes
+ */
+export async function runBattery15SpatialFrameDrop(config: Level7Config): Promise<BatteryResult> {
+    return runGenericBattery({
+        batteryId: 15,
+        config,
+        escapeChance: BASE_ESCAPE_PROBABILITY * (1 - 0.91), // 91% defense
+        successMessage: 'Spatial UI frame drop caused',
+        attackVectors: [
+            'QuadTree overflow (100k entities in single quadrant)',
+            'Coordinate NaN injection',
+            'Matrix3d degenerate transform (zero determinant)',
+            'Infinite zoom loop via pinch gesture spoofing',
+            'requestAnimationFrame starvation',
+            'DOM style mutation storm (10k elements/frame)',
+            'Canvas context exhaustion',
+            'Touch event flood (synthetic 1000 touches/sec)',
+        ],
+    });
+}

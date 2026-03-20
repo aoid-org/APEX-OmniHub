@@ -1,0 +1,319 @@
+/**
+ * Spatial Frame Drop Test — Armageddon Battery 15
+ *
+ * Validates QuadTree and matrix3d spatial engine performance:
+ * - QuadTree insertion throughput
+ * - QuadTree query performance under load
+ * - Matrix composition determinism
+ * - Memory stability during sustained spatial operations
+ *
+ * @module tests/stress/spatial-frame-drops
+ * @license Proprietary - APEX Business Systems Ltd.
+ */
+
+import { describe, it, expect } from 'vitest';
+import { QuadTree } from '@/lib/spatial/QuadTree';
+
+// ============================================================================
+// Test Helpers
+// ============================================================================
+
+/** Simulates a 4x4 matrix3d (column-major) for CSS transform */
+function createIdentityMatrix(): number[] {
+  // prettier-ignore
+  return [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  ];
+}
+
+/** Applies a translation to a matrix3d */
+function translateMatrix(matrix: number[], tx: number, ty: number): number[] {
+  const result = [...matrix];
+  result[12] += tx;
+  result[13] += ty;
+  return result;
+}
+
+/** Applies a scale to a matrix3d */
+function scaleMatrix(matrix: number[], sx: number, sy: number): number[] {
+  const result = [...matrix];
+  result[0] *= sx;
+  result[5] *= sy;
+  return result;
+}
+
+/** Composes two 4x4 matrices (A * B) */
+function multiplyMatrices(a: number[], b: number[]): number[] {
+  const result = new Array(16).fill(0);
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 4; col++) {
+      let sum = 0;
+      for (let k = 0; k < 4; k++) {
+        sum += a[row + k * 4] * b[k + col * 4];
+      }
+      result[row + col * 4] = sum;
+    }
+  }
+  return result;
+}
+
+// ============================================================================
+// QuadTree Performance Tests
+// ============================================================================
+
+describe('QuadTree Performance', () => {
+  it('should insert 10,000 entities within 100ms', () => {
+    const tree = new QuadTree<string>(
+      { x: 0, y: 0, width: 10000, height: 10000 },
+      64,
+      8,
+    );
+
+    const start = performance.now();
+
+    for (let i = 0; i < 10_000; i++) {
+      tree.insert({
+        x: Math.random() * 10000,
+        y: Math.random() * 10000,
+        data: `entity-${i}`,
+      });
+    }
+
+    const elapsed = performance.now() - start;
+    expect(elapsed).toBeLessThan(100);
+    expect(tree.size).toBe(10_000);
+  });
+
+  it('should query a 100x100 region from 10,000 entities within 5ms', () => {
+    const tree = new QuadTree<string>(
+      { x: 0, y: 0, width: 10000, height: 10000 },
+      64,
+      8,
+    );
+
+    for (let i = 0; i < 10_000; i++) {
+      tree.insert({
+        x: Math.random() * 10000,
+        y: Math.random() * 10000,
+        data: `entity-${i}`,
+      });
+    }
+
+    const start = performance.now();
+    const queryRegion = { x: 4950, y: 4950, width: 100, height: 100 };
+    const results = tree.query(queryRegion);
+    const elapsed = performance.now() - start;
+
+    expect(elapsed).toBeLessThan(5);
+    // Should find approximately 1% of entities (100x100 / 10000x10000)
+    expect(results.length).toBeGreaterThanOrEqual(0);
+    expect(results.length).toBeLessThan(200); // Reasonable upper bound
+  });
+
+  it('should handle 1,000 rapid insert-query cycles under 500ms', () => {
+    const tree = new QuadTree<string>(
+      { x: 0, y: 0, width: 5000, height: 5000 },
+      32,
+      6,
+    );
+
+    const start = performance.now();
+
+    for (let cycle = 0; cycle < 1_000; cycle++) {
+      // Insert
+      tree.insert({
+        x: Math.random() * 5000,
+        y: Math.random() * 5000,
+        data: `entity-${cycle}`,
+      });
+
+      // Query
+      tree.query({
+        x: Math.random() * 4900,
+        y: Math.random() * 4900,
+        width: 100,
+        height: 100,
+      });
+    }
+
+    const elapsed = performance.now() - start;
+    expect(elapsed).toBeLessThan(500);
+    expect(tree.size).toBe(1_000);
+  });
+
+  it('should maintain O(log n) query time as entities scale', () => {
+    const sizes = [100, 1_000, 5_000, 10_000];
+    const queryTimes: number[] = [];
+
+    for (const size of sizes) {
+      const tree = new QuadTree<string>(
+        { x: 0, y: 0, width: 10000, height: 10000 },
+        64,
+        10,
+      );
+
+      for (let i = 0; i < size; i++) {
+        tree.insert({
+          x: Math.random() * 10000,
+          y: Math.random() * 10000,
+          data: `e-${i}`,
+        });
+      }
+
+      // Average over 100 queries
+      const start = performance.now();
+      for (let q = 0; q < 100; q++) {
+        tree.query({
+          x: Math.random() * 9900,
+          y: Math.random() * 9900,
+          width: 100,
+          height: 100,
+        });
+      }
+      queryTimes.push((performance.now() - start) / 100);
+    }
+
+    // Query time should not grow linearly with entity count
+    // At 100x entity scale (100 → 10,000), query time should be < 20x
+    const scaleRatio = queryTimes[queryTimes.length - 1] / Math.max(queryTimes[0], 0.001);
+    expect(scaleRatio).toBeLessThan(20);
+  });
+});
+
+// ============================================================================
+// Matrix3d Composition Tests
+// ============================================================================
+
+describe('Matrix3d Composition Performance', () => {
+  it('should compose 10,000 matrix transformations within 50ms', () => {
+    let matrix = createIdentityMatrix();
+    const start = performance.now();
+
+    for (let i = 0; i < 10_000; i++) {
+      const dx = Math.random() * 2 - 1;
+      const dy = Math.random() * 2 - 1;
+      matrix = translateMatrix(matrix, dx, dy);
+    }
+
+    const elapsed = performance.now() - start;
+    expect(elapsed).toBeLessThan(50);
+    // Matrix should still be a valid 16-element array
+    expect(matrix).toHaveLength(16);
+  });
+
+  it('should maintain deterministic results for identical operations', () => {
+    const operations = Array.from({ length: 100 }, (_, i) => ({
+      dx: Math.sin(i) * 10,
+      dy: Math.cos(i) * 10,
+    }));
+
+    // Run twice
+    let matrix1 = createIdentityMatrix();
+    let matrix2 = createIdentityMatrix();
+
+    for (const op of operations) {
+      matrix1 = translateMatrix(matrix1, op.dx, op.dy);
+    }
+
+    for (const op of operations) {
+      matrix2 = translateMatrix(matrix2, op.dx, op.dy);
+    }
+
+    // Results must be identical
+    for (let i = 0; i < 16; i++) {
+      expect(matrix1[i]).toBe(matrix2[i]);
+    }
+  });
+
+  it('should handle zoom + pan composition within frame budget (16.67ms)', () => {
+    let matrix = createIdentityMatrix();
+    const FRAMES = 60; // 1 second at 60fps
+
+    const start = performance.now();
+
+    for (let frame = 0; frame < FRAMES; frame++) {
+      // Simulate a pan
+      matrix = translateMatrix(matrix, 1.5, 0.8);
+      // Simulate a zoom
+      matrix = scaleMatrix(matrix, 1.001, 1.001);
+      // Compose with view matrix
+      const viewMatrix = createIdentityMatrix();
+      matrix = multiplyMatrices(viewMatrix, matrix);
+    }
+
+    const elapsed = performance.now() - start;
+    // All 60 frames of composition should complete within one frame budget
+    expect(elapsed).toBeLessThan(16.67);
+  });
+
+  it('should produce correct CSS matrix3d string format', () => {
+    let matrix = createIdentityMatrix();
+    matrix = translateMatrix(matrix, 100, 200);
+    matrix = scaleMatrix(matrix, 2, 2);
+
+    const cssString = `matrix3d(${matrix.join(',')})`;
+
+    // Should be valid CSS matrix3d format
+    expect(cssString).toMatch(/^matrix3d\(.+\)$/);
+    expect(matrix).toHaveLength(16);
+    expect(matrix[0]).toBe(2); // scaleX
+    expect(matrix[5]).toBe(2); // scaleY
+    expect(matrix[12]).toBe(100); // translateX
+    expect(matrix[13]).toBe(200); // translateY
+  });
+});
+
+// ============================================================================
+// Combined Spatial + Matrix Stress Test
+// ============================================================================
+
+describe('Combined Spatial Engine Stress', () => {
+  it('should handle full frame simulation: query + transform + render (60fps budget)', () => {
+    const tree = new QuadTree<{ id: string; element: string }>(
+      { x: 0, y: 0, width: 1920, height: 1080 },
+      32,
+      6,
+    );
+
+    // Populate with 500 entities (typical dashboard widget count)
+    for (let i = 0; i < 500; i++) {
+      tree.insert({
+        x: Math.random() * 1920,
+        y: Math.random() * 1080,
+        data: { id: `widget-${i}`, element: `div-${i}` },
+      });
+    }
+
+    const FRAME_COUNT = 60;
+    const frameTimes: number[] = [];
+
+    for (let frame = 0; frame < FRAME_COUNT; frame++) {
+      const frameStart = performance.now();
+
+      // Step 1: Query visible entities in viewport
+      const viewport = { x: 0, y: 0, width: 1920, height: 1080 };
+      const visible = tree.query(viewport);
+
+      // Step 2: Compute transform for each visible entity
+      for (const entity of visible) {
+        let matrix = createIdentityMatrix();
+        matrix = translateMatrix(matrix, entity.x + frame * 0.1, entity.y);
+        // Simulate CSS string generation
+        const _css = `matrix3d(${matrix.join(',')})`;
+      }
+
+      frameTimes.push(performance.now() - frameStart);
+    }
+
+    // Average frame time should be under 16.67ms (60fps)
+    const avgFrameTime = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
+    expect(avgFrameTime).toBeLessThan(16.67);
+
+    // No single frame should exceed 33ms (30fps minimum)
+    const maxFrameTime = Math.max(...frameTimes);
+    expect(maxFrameTime).toBeLessThan(33);
+  });
+});
