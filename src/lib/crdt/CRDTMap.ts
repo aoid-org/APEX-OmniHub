@@ -149,7 +149,7 @@ export class CRDTMap<K extends string, V> {
     for (const [key, otherEntry] of other._entries) {
       const localEntry = next.get(key);
 
-      if (!localEntry) {
+      if (localEntry === undefined) {
         // Key only exists in other — take it as-is
         next.set(key, {
           register: LWWRegister.fromJSON(otherEntry.register.toJSON()),
@@ -162,10 +162,10 @@ export class CRDTMap<K extends string, V> {
         const mergedRegister = localEntry.register.merge(otherEntry.register);
 
         // Determine winning tombstone
-        let tombstone = localEntry.tombstone || otherEntry.tombstone;
         let tombstoneTimestamp = localEntry.tombstoneTimestamp;
         let tombstonePeerId = localEntry.tombstonePeerId;
 
+        let tombstone: boolean;
         if (otherEntry.tombstoneTimestamp > localEntry.tombstoneTimestamp) {
           tombstoneTimestamp = otherEntry.tombstoneTimestamp;
           tombstonePeerId = otherEntry.tombstonePeerId;

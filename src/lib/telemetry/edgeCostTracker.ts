@@ -66,9 +66,9 @@ const TELEMETRY_HEADERS = {
 // ============================================================================
 
 export class EdgeCostTracker {
-  private config: EdgeCostConfig;
+  private readonly config: EdgeCostConfig;
   private entries: EdgeRequestMetrics[];
-  private activeRequests: Map<string, { startTime: number; endpoint: string }>;
+  private readonly activeRequests: Map<string, { startTime: number; endpoint: string }>;
 
   constructor(config?: Partial<EdgeCostConfig>) {
     this.config = { ...DEFAULT_CONFIG, ...config };

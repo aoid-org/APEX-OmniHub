@@ -68,7 +68,7 @@ export class TemporalEventCache {
   private events: TemporalEvent[];
   private cursor: number;
   private _hydrated: boolean;
-  private listeners: Set<EventListener>;
+  private readonly listeners: Set<EventListener>;
   private replayTimer: ReturnType<typeof setInterval> | null;
 
   constructor() {
@@ -190,9 +190,7 @@ let _instance: TemporalEventCache | null = null;
  * Use this in demo mode to ensure a single cache across the app.
  */
 export function getDemoEventCache(): TemporalEventCache {
-  if (!_instance) {
-    _instance = new TemporalEventCache();
-  }
+  _instance ??= new TemporalEventCache();
   return _instance;
 }
 
@@ -201,7 +199,7 @@ export function getDemoEventCache(): TemporalEventCache {
  */
 export function isDemoModeActive(): boolean {
   return (
-    typeof import.meta !== 'undefined' &&
+    import.meta !== undefined &&
     import.meta.env?.VITE_OMNI_DEMO_MODE === 'true'
   );
 }

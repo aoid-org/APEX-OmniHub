@@ -50,7 +50,7 @@ const DEFAULT_MAX_DEPTH = 8;
  * @typeParam T - The type of data associated with each point.
  */
 export class QuadTree<T> {
-  private points: Point<T>[] = [];
+  private readonly points: Point<T>[] = [];
   private northWest: QuadTree<T> | null = null;
   private northEast: QuadTree<T> | null = null;
   private southWest: QuadTree<T> | null = null;
@@ -116,8 +116,7 @@ export class QuadTree<T> {
       return result;
     }
 
-    for (let i = 0; i < this.points.length; i++) {
-      const p = this.points[i];
+    for (const p of this.points) {
       if (this.containsPoint(range, p)) {
         result.push(p);
       }
@@ -205,8 +204,7 @@ export class QuadTree<T> {
     const existing = this.points.slice();
     this.points.length = 0;
 
-    for (let i = 0; i < existing.length; i++) {
-      const p = existing[i];
+    for (const p of existing) {
       const inserted =
         this.northWest.insert(p) ||
         this.northEast.insert(p) ||

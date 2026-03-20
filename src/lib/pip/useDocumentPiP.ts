@@ -77,8 +77,8 @@ function copyStylesheets(source: Document, target: Document): void {
 
 export function useDocumentPiP(): UseDocumentPiPReturn {
   const isSupported =
-    typeof window !== 'undefined' &&
-    'documentPictureInPicture' in window;
+    globalThis.window !== undefined &&
+    'documentPictureInPicture' in globalThis;
 
   const [pipWindow, setPiPWindow] = useState<Window | null>(null);
   const [isPiPActive, setIsPiPActive] = useState(false);
@@ -113,7 +113,7 @@ export function useDocumentPiP(): UseDocumentPiPReturn {
       try {
         // The documentPictureInPicture API is not yet in lib.dom.d.ts, so we
         // cast through the global to access it.
-        const dpip = (window as unknown as Record<string, unknown>)['documentPictureInPicture'] as {
+        const dpip = (globalThis as unknown as Record<string, unknown>)['documentPictureInPicture'] as {
           requestWindow: (opts?: { width?: number; height?: number }) => Promise<Window>;
         };
 
