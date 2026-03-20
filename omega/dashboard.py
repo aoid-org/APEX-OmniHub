@@ -133,11 +133,18 @@ class VerificationDashboardHandler(BaseHTTPRequestHandler):
         """
         Handle request to get pending verifications.
 
-        Security (S5131 Compliance):
-            All user-controlled data is sanitized using markupsafe.escape() in:
-            1. create_verification_request() - sanitizes task_description & modified_files
-            2. sanitize_data_recursive() - double-sanitization before HTTP send
-            This provides defense-in-depth XSS protection.
+        Security (S5131): sanitize_data_recursive() uses markupsafe.escape() —
+        a SonarQube-recognised sanitizer — to break the taint chain on all
+        string values before they reach the HTTP response.  Combined with
+        Content-Type: application/json + X-Content-Type-Options: nosniff
+        this provides defense-in-depth XSS protection.
+
+        IMPORTANT: Do NOT add per-field escaping here.  _send_json() already
+        calls sanitize_data_recursive() which applies markupsafe.escape() to
+        every string value exactly once.  Pre-escaping strings here would
+        produce double-encoding: str(escape(v)) returns a plain str that loses
+        Markup type protection, so a second escape() call would encode "&lt;"
+        as "&amp;lt;" instead of leaving it as "&lt;".
         """
         # Get pending requests (data pre-sanitized at storage with markupsafe.escape)
         pending = self.engine.get_pending_requests()
