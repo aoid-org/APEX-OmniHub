@@ -196,7 +196,7 @@ export default async function handler(request: Request): Promise<Response> {
   // Idempotency check
   if (ingestPayload.idempotency_key) {
     if (isDuplicate(ingestPayload.idempotency_key)) {
-      console.log(
+      console.warn(
         `[omnibridge/ingest] Duplicate event skipped: idempotency_key=${ingestPayload.idempotency_key}, event_id=${eventId}`,
       );
       // Return success — the original event was already processed
@@ -225,7 +225,7 @@ export default async function handler(request: Request): Promise<Response> {
   // });
 
   // For now, log the sanitized event for observability
-  console.log(`[omnibridge/ingest] Event received:`, JSON.stringify(sanitizedEvent));
+  console.warn(`[omnibridge/ingest] Event received:`, JSON.stringify(sanitizedEvent));
 
   return jsonResponse(200, { received: true, event_id: eventId });
 }
