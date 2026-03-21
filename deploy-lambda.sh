@@ -12,7 +12,7 @@ set -euo pipefail
 echo "[APEX] Initializing Cloud Deployment..."
 
 # ── Load .env if present ──────────────────────────────────────────────
-if [ -f "$(dirname "$0")/.env" ]; then
+if [[ -f "$(dirname "$0")/.env" ]]; then
   echo "[APEX] Loading environment from .env..."
   set -a
   # shellcheck disable=SC1091
@@ -21,11 +21,11 @@ if [ -f "$(dirname "$0")/.env" ]; then
 fi
 
 # ── Validate required environment variables ───────────────────────────
-if [ -z "${VITE_SUPABASE_URL:-}" ]; then
+if [[ -z "${VITE_SUPABASE_URL:-}" ]]; then
   echo "[APEX] ERROR: VITE_SUPABASE_URL is not set." >&2
   exit 1
 fi
-if [ -z "${VITE_SUPABASE_ANON_KEY:-}" ]; then
+if [[ -z "${VITE_SUPABASE_ANON_KEY:-}" ]]; then
   echo "[APEX] ERROR: VITE_SUPABASE_ANON_KEY is not set." >&2
   exit 1
 fi
@@ -50,7 +50,7 @@ echo "[APEX] Deploying OmniHubWorkerStack..."
 bun x cdk deploy --require-approval never --outputs-file cdk-outputs.json
 
 # ── Extract outputs ───────────────────────────────────────────────────
-if [ -f cdk-outputs.json ]; then
+if [[ -f cdk-outputs.json ]]; then
   LAMBDA_ARN=$(python3 -c "
 import json, sys
 with open('cdk-outputs.json') as f:
@@ -63,13 +63,13 @@ for stack in data.values():
 print('')
 " 2>/dev/null || echo "")
 
-  if [ -n "$LAMBDA_ARN" ]; then
+  if [[ -n "$LAMBDA_ARN" ]]; then
     echo "[APEX] Lambda ARN: $LAMBDA_ARN"
     echo "[APEX] Function Name: OmniHubWorkerLambda"
 
     # Update .env with the function name
     ENV_FILE="$(dirname "$0")/../../.env"
-    if [ -f "$ENV_FILE" ]; then
+    if [[ -f "$ENV_FILE" ]]; then
       if grep -q "^AWS_LAMBDA_FUNCTION_NAME=" "$ENV_FILE"; then
         sed -i "s|^AWS_LAMBDA_FUNCTION_NAME=.*|AWS_LAMBDA_FUNCTION_NAME=OmniHubWorkerLambda|" "$ENV_FILE"
       else
