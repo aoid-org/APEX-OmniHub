@@ -1,0 +1,6 @@
+{
+  "app": "npx ts-node --esm cdk.ts",
+  "context": {
+    "@aws-cdk/core:stackRelativeExports": true
+  }
+}
