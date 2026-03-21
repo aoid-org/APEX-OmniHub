@@ -180,7 +180,7 @@
     "@size-limit/file": "^12.0.1",
     "@tailwindcss/typography": "^0.5.16",
     "@temporalio/activity": "^1.14.1",
-    "@temporalio/client": "^1.14.1",
+    "@temporalio/client": "^1.15.0",
     "@temporalio/worker": "^1.14.1",
     "@temporalio/workflow": "^1.14.1",
     "@testing-library/dom": "^10.4.1",
