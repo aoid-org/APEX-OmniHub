@@ -60,6 +60,14 @@ export interface TaskStatusUpdate {
   readonly timestamp: string;
 }
 
+export interface WorkflowCompleteEvent {
+  readonly workflowId: string;
+  readonly functionName: string;
+  readonly cost: number;
+  readonly worker: string;
+  readonly completedAt: string;
+}
+
 /**
  * Mutable token buffer — NOT tracked by Zustand equality checks.
  * This prevents React re-renders on every incoming token.
@@ -99,6 +107,8 @@ interface OmniGatewayState {
   readonly taskStatus: TaskStatusUpdate | null;
   /** Connected agent count from gateway */
   readonly connectedAgents: number;
+  /** Latest workflow completion event */
+  readonly workflowComplete: WorkflowCompleteEvent | null;
 
   // -- Actions --
 
@@ -154,6 +164,7 @@ export const useOmniGateway = create<OmniGatewayState>((set, get) => ({
   telemetry: null,
   taskStatus: null,
   connectedAgents: 0,
+  workflowComplete: null,
 
   connect: (endpoint: string, authToken?: string) => {
     // Tear down existing connection
@@ -272,6 +283,19 @@ export const useOmniGateway = create<OmniGatewayState>((set, get) => ({
         set({ connectedAgents: data.count });
       } catch {
         // Malformed agent data — ignore silently
+      }
+    });
+
+    // ------------------------------------------------------------------
+    // Workflow completion — Lambda async activity callback
+    // ------------------------------------------------------------------
+
+    es.addEventListener('workflow_complete', (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data) as WorkflowCompleteEvent;
+        set({ workflowComplete: data });
+      } catch {
+        // Malformed workflow complete event — ignore silently
       }
     });
   },

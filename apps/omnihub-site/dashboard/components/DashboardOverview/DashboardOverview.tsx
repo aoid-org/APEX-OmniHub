@@ -2,7 +2,7 @@
  * DashboardOverview — OmniBoard Centre Content (thin orchestrator)
  */
 
-import { memo, useState, useCallback, useEffect } from 'react';
+import { memo, useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   useOmniDashAction,
@@ -13,6 +13,8 @@ import {
   APP_REGISTRY,
   type AppRegistryEntry,
 } from '../../../../../packages/core/src/registry';
+import { triggerAsyncLambdaDemo } from '@/omnihub-gateway/mcp-client';
+import { useOmniGateway } from '@/stores/omniGatewayStore';
 import type { DashboardOverviewProps, ContextItem, AppEntry } from './types';
 import { INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from './data';
 import { useAgentRecording } from './hooks/useAgentRecording';
@@ -37,6 +39,10 @@ export const DashboardOverview = memo(function DashboardOverview({
     useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
   const [traceLogs, setTraceLogs] = useState<readonly string[]>([]);
+  const [lambdaDispatching, setLambdaDispatching] = useState(false);
+
+  const workflowComplete = useOmniGateway((s) => s.workflowComplete);
+  const prevWorkflowCompleteRef = useRef(workflowComplete);
 
   const addTraceLog = useCallback((message: string) => {
     setTraceLogs(prev => [message, ...prev].slice(0, 4));
@@ -44,6 +50,16 @@ export const DashboardOverview = memo(function DashboardOverview({
 
   const { isRecording, recordingDuration, handleToggleRecording } =
     useAgentRecording(addTraceLog);
+
+  // Listen for SSE workflow_complete events and append to trace log
+  useEffect(() => {
+    if (workflowComplete && workflowComplete !== prevWorkflowCompleteRef.current) {
+      prevWorkflowCompleteRef.current = workflowComplete;
+      addTraceLog(
+        `WORKFLOW_COMPLETE: ${workflowComplete.workflowId.slice(0, 20)}... | cost=$${workflowComplete.cost.toFixed(4)} | worker=${workflowComplete.worker}`,
+      );
+    }
+  }, [workflowComplete, addTraceLog]);
 
   useEffect(() => {
     setEcoAppsVisible(ECOSYSTEM.length > 0);
@@ -81,6 +97,23 @@ export const DashboardOverview = memo(function DashboardOverview({
     addTraceLog(`QUEUED: ${prompt.trim()}`);
     setPrompt('');
   }, [addTraceLog, demoMode, prompt, setAppHealth]);
+
+  const handleRunLambda = useCallback(async () => {
+    if (lambdaDispatching) return;
+    setLambdaDispatching(true);
+    addTraceLog('DISPATCHING: Lambda async orchestration via Temporal...');
+    try {
+      const result = await triggerAsyncLambdaDemo(
+        { taskData: { operation: 'heavy-compute', demo: true, ts: Date.now() } },
+        'demo-jwt-token',
+      );
+      addTraceLog(`DISPATCHED: ${result.workflowId.slice(0, 24)}...`);
+    } catch (err) {
+      addTraceLog(`ERROR: ${err instanceof Error ? err.message : 'Lambda dispatch failed'}`);
+    } finally {
+      setLambdaDispatching(false);
+    }
+  }, [lambdaDispatching, addTraceLog]);
 
   const handleAppClick = useCallback(
     (app: AppEntry) => () => {
@@ -121,6 +154,31 @@ export const DashboardOverview = memo(function DashboardOverview({
           onToggleRecording={handleToggleRecording}
         />
         <EcosystemPane ecoAppsVisible={ecoAppsVisible} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
+        <button
+          type="button"
+          onClick={handleRunLambda}
+          disabled={lambdaDispatching}
+          style={{
+            padding: '10px 24px',
+            borderRadius: 12,
+            background: lambdaDispatching
+              ? 'rgba(194,80,31,0.15)'
+              : 'linear-gradient(135deg, #f97316, #c2501f)',
+            border: '1px solid rgba(194,80,31,0.3)',
+            color: lambdaDispatching ? '#94a3b8' : '#fff',
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: lambdaDispatching ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+            letterSpacing: '0.03em',
+            boxShadow: lambdaDispatching ? 'none' : '0 0 20px rgba(194,80,31,0.25)',
+            transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
+          {lambdaDispatching ? 'Dispatching...' : 'Run Lambda Orchestrator'}
+        </button>
       </div>
       <AppsSection onAppClick={handleAppClick} />
     </div>
