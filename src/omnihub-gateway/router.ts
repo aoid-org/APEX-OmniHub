@@ -164,7 +164,7 @@ export function broadcastWorkflowComplete(
   return sseManager.broadcast('workflow_complete', {
     workflowId,
     functionName,
-    cost: 0.00,
+    cost: 0,
     worker: 'AWS_LAMBDA',
     completedAt: new Date().toISOString(),
   });
