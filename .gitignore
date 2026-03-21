@@ -1,6 +1,9 @@
 # APEX local evidence storage
 .apex/
 
+# CDK build output
+cdk.out/
+
 # Logs
 logs
 *.log
