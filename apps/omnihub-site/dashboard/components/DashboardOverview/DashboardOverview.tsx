@@ -87,6 +87,7 @@ export const DashboardOverview = memo(function DashboardOverview({
       const entry = APP_REGISTRY.find((e: AppRegistryEntry) => e.label === app.name);
       if (!entry) return;
       const intent: OmniDashIntent = {
+        source: 'internal' as const,
         appKey: entry.key,
         provider: app.name,
         label: app.name,

@@ -1,5 +1,8 @@
-import { useOmniModuleState } from '@/hooks/useOmniModuleState';
+import { useOmniModuleState, triggerModuleAction } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
+import { useState, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 interface Props {
   readonly onClose: () => void;
@@ -15,12 +18,53 @@ export default function FilesModule({ onClose }: Props) {
   const totalFiles = totalFilesStat?.value ?? '—';
 
   // Parse a rough percentage from "14.2 GB" for progress bar (registry cap: 100 GB)
-  const usedGB = parseFloat(storageUsed.replace(/[^0-9.]/g, '')) || 0;
+  const usedGB = Number.parseFloat(storageUsed.replaceAll(/[^0-9.]/g, '')) || 0;
   const capGB = 100;
   const pct = Math.min(100, Math.round((usedGB / capGB) * 100));
 
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const toastId = toast.loading(`Uploading ${file.name}...`);
+    try {
+      const { error } = await supabase.storage
+        .from('omnidash-files')
+        .upload(`${Date.now()}-${file.name}`, file);
+
+      if (error) throw error;
+      toast.success('File uploaded successfully', { id: toastId });
+      // Call standard OmniDash action to track intent/analytics behind the scenes
+      void triggerModuleAction('files', 'upload', [file.name]);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Upload failed', { id: toastId });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <ModuleShell state={state} onClose={onClose}>
+      <input 
+        type="file" 
+        className="hidden" 
+        ref={fileInputRef} 
+        onChange={handleUpload} 
+        disabled={uploading} 
+      />
+      
+      {/* Expose method to trigger the file picker from within ModuleShell actions */}
+      <script>{`
+        window.triggerOmniFilesUpload = () => {
+          const input = document.querySelector('input[type="file"]');
+          if (input) input.click();
+        };
+      `}</script>
       {!state.loading && (
         <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">

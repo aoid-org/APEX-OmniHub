@@ -42,7 +42,7 @@ interface KpiDaily {
   ops_sev1_incidents: number | null;
 }
 
-interface Incident {
+export interface Incident {
   id: string;
   severity: 'sev1' | 'sev2' | 'sev3';
   status: 'open' | 'resolved' | 'monitoring';
@@ -123,19 +123,21 @@ export function useDashboardData(): DashboardData {
 
         if (cancelled) return;
 
-        if (settingsRes.status === 'fulfilled' && !settingsRes.value.error) {
-          setSettings(settingsRes.value.data as OmniDashSettings | null);
-        }
-        if (kpiRes.status === 'fulfilled' && !kpiRes.value.error) {
-          setKpiHistory((kpiRes.value.data ?? []) as KpiDaily[]);
-        }
-        if (incidentsRes.status === 'fulfilled' && !incidentsRes.value.error) {
-          setOpenIncidents((incidentsRes.value.data ?? []) as Incident[]);
-        }
-        if (memRes.status === 'fulfilled' && !memRes.value.error) {
-          setMemoryHealth(memRes.value.data as MemoryHealthStats | null);
-        }
-      } catch (err) {
+        const extract = <T,>(res: PromiseSettledResult<{ data: unknown; error: unknown }>) => 
+          res.status === 'fulfilled' && !res.value.error ? res.value.data as T : undefined;
+
+        const sData = extract<OmniDashSettings>(settingsRes);
+        if (sData) setSettings(sData);
+
+        const kData = extract<KpiDaily[]>(kpiRes);
+        if (kData) setKpiHistory(kData);
+
+        const iData = extract<Incident[]>(incidentsRes);
+        if (iData) setOpenIncidents(iData);
+
+        const mData = extract<MemoryHealthStats>(memRes);
+        if (mData) setMemoryHealth(mData);
+      } catch (err: unknown) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
         }

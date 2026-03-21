@@ -66,7 +66,7 @@ export const DashboardOverview = memo(function DashboardOverview({
     setActiveInsight(prev => (prev ? null : '__global__'));
   }, []);
 
-  const handleCommandSubmit = useCallback(() => {
+  const handleCommandSubmit = useCallback(async () => {
     if (!prompt.trim()) return;
     if (demoMode) {
       setAppHealth('yellow');
@@ -78,9 +78,24 @@ export const DashboardOverview = memo(function DashboardOverview({
       }, 2500);
       return;
     }
+    
     addTraceLog(`QUEUED: ${prompt.trim()}`);
+    setAppHealth('yellow');
+    
+    try {
+      const response = await invokeMcpIntent({ prompt: prompt.trim(), context: context as Record<string, unknown> });
+      
+      const reply = response.reply || 'Sync complete.';
+      addTraceLog(`AGENT: ${reply}`);
+      setAppHealth('green');
+    } catch (err: unknown) {
+      console.error('[OmniSlate] mcp-client invocation failed:', err);
+      addTraceLog(`OFFLINE_FALLBACK: ${err instanceof Error ? err.message : 'Agent unreachable.'}`);
+      setAppHealth('red');
+    }
+    
     setPrompt('');
-  }, [addTraceLog, demoMode, prompt, setAppHealth]);
+  }, [addTraceLog, demoMode, prompt, setAppHealth, context]);
 
   const handleAppClick = useCallback(
     (app: AppEntry) => () => {
