@@ -56,6 +56,18 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/privacy", element: <PrivacyPage />, isPublic: true, routeName: "Privacy" },
   { path: "/terms", element: <TermsPage />, isPublic: true, routeName: "Terms" },
   { path: "/request-access", element: <RequestAccessPage />, isPublic: true, routeName: "Request Access" },
+  { path: "/advanced-analytics", element: <AdvancedAnalyticsPage />, isPublic: true, routeName: "Advanced Analytics" },
+  { path: "/ai-automation", element: <AiAutomationPage />, isPublic: true, routeName: "AI Automation" },
+  { path: "/fortress", element: <FortressPage />, isPublic: true, routeName: "Fortress" },
+  { path: "/maestro", element: <MaestroPage />, isPublic: true, routeName: "Maestro" },
+  { path: "/man-mode", element: <ManModePage />, isPublic: true, routeName: "MAN Mode" },
+  { path: "/omniport", element: <OmniPortPage />, isPublic: true, routeName: "OmniPort" },
+  { path: "/orchestrator", element: <OrchestratorPage />, isPublic: true, routeName: "Orchestrator" },
+  { path: "/smart-integrations", element: <SmartIntegrationsPage />, isPublic: true, routeName: "Smart Integrations" },
+  { path: "/tri-force", element: <TriForcePage />, isPublic: true, routeName: "Tri-Force" },
+  { path: "/demo", element: <DemoPage />, isPublic: true, routeName: "Demo" },
+  { path: "/demo.html", element: <DemoPage />, isPublic: true, routeName: "Demo" },
+  { path: "/dashboard", element: <OmniDashProvider><OmniDashShell /></OmniDashProvider>, routeName: "Dashboard" },
 ];
 
 function App() {
