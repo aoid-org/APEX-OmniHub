@@ -17,6 +17,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'node:path';
+import { execSync } from 'node:child_process';
 import type { Construct } from 'constructs';
 
 export class OmniHubWorkerStack extends cdk.Stack {
@@ -45,7 +46,6 @@ export class OmniHubWorkerStack extends cdk.Stack {
           local: {
             tryBundle(outputDir: string): boolean {
               // esbuild bundles locally for fast iteration
-              const { execSync } = require('node:child_process');
               execSync(
                 `esbuild ${path.join(__dirname, 'worker.ts')} --bundle --platform=node --target=node20 --outfile=${path.join(outputDir, 'worker.js')} --external:@temporalio/client --external:@supabase/supabase-js`,
                 { stdio: 'inherit' },
