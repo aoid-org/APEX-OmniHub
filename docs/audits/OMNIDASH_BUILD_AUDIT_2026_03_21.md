@@ -75,6 +75,33 @@ The following directory is a **mirror copy** of `apps/omnihub-site/dashboard/com
 
 **Status:** Not imported by any runtime code. Referenced only by 2 tests that verify both copies stay in sync. Canonical imports go to `@/dashboard/components/`.
 
+### Dead Dashboard Components (10 files, zero imports)
+
+The following components exist under `apps/omnihub-site/dashboard/components/` but are **never imported by OmniDashShell or any other component**:
+
+| Component | File | Notes |
+|-----------|------|-------|
+| Approvals | `Approvals.tsx` | Man-mode approval UI — fully implemented, never mounted |
+| Entities | `Entities.tsx` | Entity management panel — never mounted |
+| Events | `Events.tsx` | Event stream panel, uses GridLayout — never mounted |
+| Kpis | `Kpis.tsx` | KPI metrics panel, uses GridLayout — never mounted |
+| LocalAgents | `LocalAgents.tsx` | Local agent listing — never mounted |
+| Ops | `Ops.tsx` | Operations panel, uses GridLayout — never mounted |
+| Pipeline | `Pipeline.tsx` | Pipeline visualization — never mounted |
+| Runs | `Runs.tsx` | Run execution history — never mounted |
+| Tasks | `Tasks.tsx` | Task management — never mounted |
+| Today | `Today.tsx` | Daily summary panel, uses GridLayout — never mounted |
+
+### Dead Handler File
+
+`apps/omnihub-site/dashboard/handlers/dashboardHandlers.ts` exports 4 handlers — **zero imports anywhere**:
+- `handleToggleDemoMode()` — toggles demo mode in Supabase
+- `handleToggleFreezeMode()` — toggles freeze mode
+- `handleReportIncident()` — inserts incident into database
+- `handleUpsertKpi()` — upserts KPI records
+
+All 4 functions are fully implemented with Supabase calls but completely unwired.
+
 ### Unwired Provider
 
 | Provider | File | Issue |
@@ -132,6 +159,8 @@ All fixes verified — zero regressions.
 4. Consolidate duplicate component trees: make `apps/omnihub-site/src/components/omnidash/` a re-export barrel from `@/dashboard/components/` or delete it
 5. Either consume `OmniDashContext` or remove the provider/context layer
 6. Remove or route `pages/DashboardOverview` — currently orphaned
+7. Wire or remove 10 dead dashboard components (Approvals, Entities, Events, Kpis, LocalAgents, Ops, Pipeline, Runs, Tasks, Today)
+8. Wire or remove `dashboardHandlers.ts` — 4 fully-implemented Supabase handlers with zero consumers
 
 ### Priority 3 (Harden)
 7. Implement `/api/mcp-proxy` endpoint for stdio MCP server support
