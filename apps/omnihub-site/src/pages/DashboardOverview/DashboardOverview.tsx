@@ -15,6 +15,7 @@ import {
 } from '../../../../../packages/core/src/omniBoardIntegrations';
 import type { DashboardOverviewProps, ContextItem, AppEntry } from './types';
 import { INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from './data';
+import { invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { useAgentRecording } from './hooks/useAgentRecording';
 import { AgentPane } from './components/AgentPane';
 import { OmniSlatePane } from './components/OmniSlatePane';

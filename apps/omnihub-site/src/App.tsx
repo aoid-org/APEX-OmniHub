@@ -70,7 +70,7 @@ const appRoutes: readonly AppRoute[] = [
   { path: "/tri-force", element: <TriForcePage />, isPublic: true, routeName: "Tri-Force" },
   { path: "/demo", element: <DemoPage />, isPublic: true, routeName: "Demo" },
   { path: "/demo.html", element: <DemoPage />, isPublic: true, routeName: "Demo" },
-  { path: "/dashboard", element: <OmniDashShell />, routeName: "Dashboard" },
+  { path: "/dashboard", element: <OmniDashProvider><OmniDashShell /></OmniDashProvider>, routeName: "Dashboard" },
 ];
 
 function App() {
