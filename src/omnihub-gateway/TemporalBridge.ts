@@ -415,7 +415,7 @@ export async function registerAgentViaWorkflow(
         args: [{ card, updatedAt: new Date().toISOString() }],
       });
       return { workflowId: wfId, registered: true };
-    } catch (updateErr) {
+    } catch {
       return { workflowId: wfId, registered: false };
     }
   }
