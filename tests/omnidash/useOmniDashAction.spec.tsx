@@ -15,10 +15,11 @@ vi.mock('@/stores/omniModalStore', () => ({
 }));
 
 describe('useOmniDashAction', () => {
-  it('navigates internally when source is "module"', () => {
+  it('opens module modal (no navigation) when source is "module"', () => {
     const mockNavigate = vi.fn();
     const mockHydrateConnector = vi.fn();
     const mockSetConnectorStatus = vi.fn();
+    const mockInvoke = vi.fn();
 
     vi.mocked(useOmniBoard).mockImplementation((selector) => {
       const state = {
@@ -27,6 +28,8 @@ describe('useOmniDashAction', () => {
       };
       return selector(state);
     });
+
+    vi.mocked(useOmniModal.getState).mockReturnValue({ invoke: mockInvoke });
 
     const { result } = renderHook(() => useOmniDashAction(mockNavigate));
 
@@ -40,7 +43,12 @@ describe('useOmniDashAction', () => {
       dashboardStatus: 'Live',
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/omnidash/fortress');
+    // SPA: modules open as modals within OmniDash, never navigate
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(mockInvoke).toHaveBeenCalled();
+    const invokedConfig = mockInvoke.mock.calls[0][0];
+    expect(invokedConfig.type).toBe('module');
+    expect(invokedConfig.provider).toBe('Fortress');
   });
 
   it('dispatches modal invoke when source is "integration"', () => {
