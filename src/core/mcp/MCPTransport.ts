@@ -244,5 +244,9 @@ export function createTransport(
         options.endpoint,
         options.headers ?? {},
       );
+    default: {
+      const _exhaustive: never = transportType;
+      throw new Error(`Unsupported MCP transport type: ${_exhaustive}`);
+    }
   }
 }

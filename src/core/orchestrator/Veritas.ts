@@ -97,6 +97,9 @@ export function validate(
 ): ValidationResult {
   const validator = VALIDATORS[toolName];
   if (!validator) {
+    if (typeof console !== 'undefined') {
+      console.warn(`[Veritas] No validator registered for tool "${toolName}" — passing by open-world default`);
+    }
     return { valid: true };
   }
   return validator(result);
