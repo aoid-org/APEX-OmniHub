@@ -1,50 +1,51 @@
-import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Plug, Activity, Mic, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCapabilities, type Capabilities } from '@/hooks/useCapabilities';
+import { useOmniModal } from '../stores/omniModalStore';
+import type { OmniModalConfig } from '../stores/omniModalStore';
 
 interface NavItem {
-  path: string;
+  moduleKey: string;
   label: string;
   icon: React.ElementType;
   capability?: keyof Capabilities;
 }
 
 /**
- * MobileBottomNav - Touch-friendly bottom navigation for mobile/tablet
- * Modern, minimalist design with clear visual hierarchy
+ * MobileBottomNav — Touch-friendly bottom navigation for mobile/tablet.
+ * All items dispatch module modals within OmniDash.
+ * No route navigation — single page app architecture.
  */
 export function MobileBottomNav() {
-  const location = useLocation();
   const { capabilities } = useCapabilities();
 
   const navItems: NavItem[] = [
     {
-      path: '/omnidash',
+      moduleKey: 'dashboard',
       label: 'Dash',
       icon: LayoutDashboard,
       capability: 'canViewOmniDash',
     },
     {
-      path: '/integrations',
+      moduleKey: 'integrations',
       label: 'Connect',
       icon: Plug,
       capability: 'canManageIntegrations',
     },
     {
-      path: '/omnitrace',
+      moduleKey: 'omnitrace',
       label: 'Trace',
       icon: Activity,
       capability: 'canViewOmniTrace',
     },
     {
-      path: '/agent',
+      moduleKey: 'agent',
       label: 'Agent',
       icon: Mic,
       capability: 'canUseVoiceAgent',
     },
     {
-      path: '/settings',
+      moduleKey: 'settings',
       label: 'Settings',
       icon: Settings,
     },
@@ -56,8 +57,17 @@ export function MobileBottomNav() {
     return capabilities[item.capability];
   });
 
-  const isActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  const openModule = (moduleKey: string, title: string) => {
+    const config: OmniModalConfig = {
+      id: `mobile-${moduleKey}-${Date.now()}`,
+      provider: 'OmniDash',
+      type: 'module',
+      title,
+      description: `${title} module`,
+      contextData: { moduleKey },
+      onComplete: async () => { /* module handles its own actions */ },
+    };
+    useOmniModal.getState().invoke(config);
   };
 
   return (
@@ -65,34 +75,23 @@ export function MobileBottomNav() {
       <div className="flex items-center justify-around h-16 px-2">
         {visibleItems.map((item) => {
           const Icon = item.icon;
-          const active = isActive(item.path);
 
           return (
-            <Link
-              key={item.path}
-              to={item.path}
+            <button
+              key={item.moduleKey}
+              onClick={() => openModule(item.moduleKey, item.label)}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all',
                 'min-w-[64px] touch-manipulation',
-                active
-                  ? 'text-primary bg-primary/10'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               )}
               aria-label={item.label}
             >
-              <Icon
-                className={cn(
-                  'w-5 h-5 transition-transform',
-                  active && 'scale-110'
-                )}
-              />
-              <span className={cn(
-                'text-[10px] font-medium transition-all',
-                active && 'text-primary'
-              )}>
+              <Icon className="w-5 h-5 transition-transform" />
+              <span className="text-[10px] font-medium transition-all">
                 {item.label}
               </span>
-            </Link>
+            </button>
           );
         })}
       </div>
