@@ -87,6 +87,9 @@
     }
   ],
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.63",
+    "@ai-sdk/openai": "^3.0.47",
+    "@ai-sdk/react": "^3.0.136",
     "@capacitor/android": "^6.2.1",
     "@capacitor/core": "^6.2.1",
     "@capacitor/device": "^6.0.3",
@@ -125,6 +128,7 @@
     "@types/react-grid-layout": "^2.1.0",
     "@types/uuid": "^10.0.0",
     "@vercel/analytics": "^2.0.1",
+    "ai": "^6.0.134",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

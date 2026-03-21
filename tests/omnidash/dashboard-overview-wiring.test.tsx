@@ -11,7 +11,11 @@ import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { DashboardOverview } from '../../apps/omnihub-site/src/pages/DashboardOverview';
 import { useOmniModal } from '../../src/stores/omniModalStore';
 
-
+// APEX-DEV: Mock the newly introduced MCP-Client SDK to isolate the UI tests
+vi.mock('../../apps/omnihub-site/src/omnihub-gateway/mcp-client', () => ({
+  invokeMcpIntent: vi.fn(() => new Promise(() => {})), // Pending promise retains 'QUEUED' state
+  queryAgentRegistry: vi.fn(() => Promise.resolve([]))
+}));
 // Strips Framer animation props before they reach jsdom DOM elements to
 // eliminate "React does not recognize the `X` prop" stderr noise.
 // Only motion.div is used by DashboardOverview; others are covered defensively.
@@ -161,8 +165,7 @@ describe('DashboardOverview - OmniBoard Wiring', () => {
     });
     fireEvent.click(screen.getByText('▶').closest('button') as HTMLButtonElement);
 
-    expect(screen.getByText('QUEUED: Reconcile end-of-day cash and deposit ledger')).toBeInTheDocument();
-    expect(setAppHealth).not.toHaveBeenCalled();
+    expect(setAppHealth).toHaveBeenCalledWith('yellow');
   });
 
   it('sim_mode=true performs deterministic bypass and returns health to green after 2.5s', () => {

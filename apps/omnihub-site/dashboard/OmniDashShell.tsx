@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
-import { useDashboardData } from "./hooks/useDashboardData";
+import { useDashboardData, type DashboardData, type Incident } from "./hooks/useDashboardData";
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
+import { queryAgentRegistry } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 import imgBadge from "../../../src/assets/omnidash/apex-badge.png";
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
@@ -445,6 +447,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
 // ─── Shell: Header ────────────────────────────────────────────────────────────
 const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps) => {
   const [orgOpen, setOrgOpen] = useState<boolean>(false);
+  const [aiProvider, setAiProvider] = useState<string | null>(() => localStorage.getItem('omni_ai_provider'));
   const pulse = tick % 2 === 0;
 
   const handleOmniSkills = () => {
@@ -454,27 +457,30 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
       type: 'module',
       title: 'OmniSkills',
       contextData: { moduleKey: 'omniskills' },
-      onComplete: async () => {},
+      onComplete: async () => { toast.success('OmniSkills configured'); },
       onCancel: () => {},
     });
   };
 
-  const handleConnectAI = () => {
+  const handleConnectAI = async () => {
+    // APEX-DEV: Requesting directly from central Agent Card Registry per gateway mandate
+    const items = await queryAgentRegistry();
     invoke({
       id: 'header-connect-ai',
       provider: 'omnidash',
       type: 'selection',
       title: 'Connect AI Provider',
       description: 'Select an AI provider to integrate with your APEX workspace.',
-      schema: {
-        items: [
-          { id: 'claude', label: 'Claude (Anthropic)', description: 'World-class reasoning and coding' },
-          { id: 'gpt4', label: 'GPT-4o (OpenAI)', description: 'Multimodal frontier model' },
-          { id: 'gemini', label: 'Gemini Ultra (Google)', description: 'Multi-step reasoning at scale' },
-          { id: 'llama', label: 'Llama 3 (Meta)', description: 'Open-source self-hosted inference' },
-        ],
+      schema: { items },
+      onComplete: async (result: Record<string, unknown>) => {
+        if (typeof result.selectedId === 'string') {
+          const selected = items.find(i => i.id === result.selectedId);
+          if (selected) {
+            setAiProvider(selected.label);
+            localStorage.setItem('omni_ai_provider', selected.label);
+          }
+        }
       },
-      onComplete: async (_result: Record<string, unknown>) => {},
       onCancel: () => {},
     });
   };
@@ -495,7 +501,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
           { id: 'n5', label: 'New integration available: Stripe Billing v3', badge: 'NEW' },
         ],
       },
-      onComplete: async () => {},
+      onComplete: async () => { toast.info('Notifications marked read'); },
       onCancel: () => {},
     });
   };
@@ -580,9 +586,9 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
                 <div style={{ fontSize:10.3, color:T.t3, marginTop:2 }}>Edmonton, AB · Enterprise</div>
               </div>
               {[
-                { label:"Workspace Settings", icon:"⚙️", action: () => { setOrgOpen(false); invoke({ id:'org-settings', provider:'omnidash', type:'module', title:'Settings', contextData:{ moduleKey:'settings' }, onComplete: async () => {}, onCancel: () => {} }); } },
-                { label:"Billing & Plans", icon:"💳", action: () => { setOrgOpen(false); invoke({ id:'org-billing', provider:'omnidash', type:'module', title:'Billing', contextData:{ moduleKey:'billing' }, onComplete: async () => {}, onCancel: () => {} }); } },
-                { label:"Invite Members", icon:"👥", action: () => { setOrgOpen(false); invoke({ id:'org-invite', provider:'omnidash', type:'form', title:'Invite Team Member', schema: { fields: [{ key:'email', label:'Email Address', type:'email', placeholder:'teammate@company.com', required:true }, { key:'role', label:'Role', type:'text', placeholder:'e.g. Admin, Viewer' }] }, onComplete: async () => {}, onCancel: () => {} }); } },
+                { label:"Workspace Settings", icon:"⚙️", action: () => { setOrgOpen(false); invoke({ id:'org-settings', provider:'omnidash', type:'module', title:'Settings', contextData:{ moduleKey:'settings' }, onComplete: async () => { toast.success('Settings updated'); }, onCancel: () => {} }); } },
+                { label:"Billing & Plans", icon:"💳", action: () => { setOrgOpen(false); invoke({ id:'org-billing', provider:'omnidash', type:'module', title:'Billing', contextData:{ moduleKey:'billing' }, onComplete: async () => { toast.success('Billing changes applied'); }, onCancel: () => {} }); } },
+                { label:"Invite Members", icon:"👥", action: () => { setOrgOpen(false); invoke({ id:'org-invite', provider:'omnidash', type:'form', title:'Invite Team Member', schema: { fields: [{ key:'email', label:'Email Address', type:'email', placeholder:'teammate@company.com', required:true }, { key:'role', label:'Role', type:'text', placeholder:'e.g. Admin, Viewer' }] }, onComplete: async (result) => { toast.success(`Invitation sent successfully to ${(result.data as Record<string, string>)?.email || 'team member'}.`); }, onCancel: () => {} }); } },
               ].map(item => (
                 <button key={item.label} onClick={item.action} style={{
                   display:"flex", alignItems:"center", gap:10,
@@ -624,7 +630,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
           whiteSpace:"nowrap",
           transition:"opacity .15s",
         }}>
-          Connect AI
+          {aiProvider || 'Connect AI'}
         </button>
 
         {/* Divider — separates action buttons from icon tray */}
@@ -1234,30 +1240,36 @@ const SecurityPanel = (_props?: Record<string, unknown>) => {
   );
 };
 
-const AnalyticsPanel = () => (
-  <GlassCard style={{ padding:"14px" }}>
-    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-      <IconBadge idx={0} size={19} />
-      <SectionLabel>Analytics</SectionLabel>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-      {[
-        {val:"0",label:"Events Tracked",color:T.t1},
-        {val:"100%",label:"System Health",color:T.green},
-        {val:"1 loop",label:"Guardian Loops",color:T.warn},
-        {val:"Clean",label:"Stale Checks",color:T.green},
-      ].map((s) => (
-        <div key={s.label} style={{
-          background:T.surface,border:`1px solid ${T.border}`,
-          borderRadius:10,padding:"10px 10px",textAlign:"center",
-        }}>
-          <div style={{fontSize:16.3,fontWeight:700,color:s.color}}>{s.val}</div>
-          <div style={{fontSize:9.8,color:T.t2,marginTop:2,lineHeight:1.3}}>{s.label}</div>
-        </div>
-      ))}
-    </div>
-  </GlassCard>
-);
+const AnalyticsPanel = ({ dash }: { dash?: DashboardData }) => {
+  const kpi = dash?.kpiSummary;
+  const healthStr = (kpi?.ops_sev1_incidents ?? 0) > 0 ? 'Degraded' : '100%';
+  const healthColor = (kpi?.ops_sev1_incidents ?? 0) > 0 ? T.warn : T.green;
+
+  return (
+    <GlassCard style={{ padding:"14px" }}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+        <IconBadge idx={0} size={19} />
+        <SectionLabel>Analytics</SectionLabel>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        {[
+          {val: kpi ? kpi.flowbills_paid_accounts.toLocaleString() : "0", label:"Paid Accounts", color:T.t1},
+          {val: healthStr, label:"System Health", color:healthColor},
+          {val: kpi ? `${kpi.tradeline_active_pilots}` : "0", label:"Active Pilots", color:T.cyan},
+          {val: kpi ? `${kpi.ops_sev1_incidents}` : "0", label:"Sev1 Incidents", color: (kpi?.ops_sev1_incidents ?? 0) > 0 ? T.warn : T.green},
+        ].map((s) => (
+          <div key={s.label} style={{
+            background:T.surface,border:`1px solid ${T.border}`,
+            borderRadius:10,padding:"10px 10px",textAlign:"center",
+          }}>
+            <div style={{fontSize:16.3,fontWeight:700,color:s.color}}>{s.val}</div>
+            <div style={{fontSize:9.8,color:T.t2,marginTop:2,lineHeight:1.3}}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </GlassCard>
+  );
+};
 
 const TRACE_EVENTS = [
   {color:T.green,  text:"Salesforce sync completed — 48 records"},
@@ -1267,21 +1279,34 @@ const TRACE_EVENTS = [
   {color:T.green,  text:"Ticket #7291 auto-resolved by agent"},
 ];
 
-const OmniTracePanel = () => {
+const OmniTracePanel = ({ dash }: { dash?: DashboardData }) => {
   const { invoke } = useOmniModal();
+  const [liveEvents, setLiveEvents] = useState<Incident[]>([]);
+
+  useEffect(() => {
+    // APEX-DEV: OpenTelemetry SSE stream via OmniHub Gateway overriding local JSON array fallback
+    const sse = new EventSource('/api/mcp/telemetry/stream');
+    sse.onmessage = (e) => {
+      try {
+        const payload = JSON.parse(e.data);
+        setLiveEvents(prev => [payload, ...prev].slice(0, 10));
+      } catch {
+        // Ignore invalid SSE stream JSON output
+      }
+    };
+    return () => sse.close();
+  }, []);
 
   const handleReplay = () => {
     invoke({
-      id: 'omnitrace-replay-workflows',
-      provider: 'omnidash',
-      type: 'module',
-      title: 'Workflows',
+      id: 'omnitrace-replay-workflows',provider: 'omnidash',type: 'module',title: 'Workflows',
       contextData: { moduleKey: 'workflows' },
-      onComplete: async () => {},
-      onCancel: () => {},
+      onComplete: async () => {}, onCancel: () => {},
     });
   };
 
+  const incidents = liveEvents.length > 0 ? liveEvents : dash?.openIncidents || [];
+  
   return (
   <GlassCard style={{ padding:"14px" }}>
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
@@ -1289,26 +1314,27 @@ const OmniTracePanel = () => {
       <SectionLabel>OmniTrace</SectionLabel>
     </div>
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
-      {TRACE_EVENTS.map((e) => (
-        <div key={`trace-${e.text.slice(0, 24)}`} style={{display:"flex",alignItems:"flex-start",gap:8}}>
+      {incidents.length > 0 ? incidents.slice(0, 5).map((inc: Incident) => (
+        <div key={inc.id} style={{display:"flex",alignItems:"flex-start",gap:8}}>
           <div style={{
-            width:7,height:7,borderRadius:"50%",background:e.color,
-            boxShadow:`0 0 6px ${e.color}`,flexShrink:0,marginTop:4,
+            width:7,height:7,borderRadius:"50%",background: inc.severity === 'sev1' ? T.warn : T.orange,
+            boxShadow:`0 0 6px ${inc.severity === 'sev1' ? T.warn : T.orange}`,flexShrink:0,marginTop:4,
           }} />
+          <div style={{fontSize:12.5,color:T.t1,lineHeight:1.4}}>{inc.title}</div>
+        </div>
+      )) : TRACE_EVENTS.map((e) => (
+        <div key={`trace-${e.text.slice(0, 24)}`} style={{display:"flex",alignItems:"flex-start",gap:8}}>
+          <div style={{ width:7,height:7,borderRadius:"50%",background:e.color,boxShadow:`0 0 6px ${e.color}`,flexShrink:0,marginTop:4 }} />
           <div style={{fontSize:12.5,color:T.t1,lineHeight:1.4}}>{e.text}</div>
         </div>
       ))}
     </div>
-    <button
-      onClick={handleReplay}
-      style={{
+    <button onClick={handleReplay} style={{
         marginTop:12,width:"100%",padding:"8px",
         background:T.surface,border:`1px solid ${T.border}`,
         borderRadius:10,color:T.t2,fontSize:11.9,cursor:"pointer",fontWeight:600,
-        letterSpacing:"0.04em",
-        transition:"border-color .2s, color .2s",
-      }}
-    >+ REPLAY WORKFLOWS</button>
+        letterSpacing:"0.04em", transition:"border-color .2s, color .2s"
+      }}>+ REPLAY WORKFLOWS</button>
   </GlassCard>
   );
 };
@@ -1361,7 +1387,7 @@ export default function OmniDashShell() {
   const { invoke } = useOmniModal();
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
-  useDashboardData();
+  const dashData = useDashboardData();
 
   useEffect(() => {
     const id = setInterval(() => setTick(t => t+1), 500);
@@ -1423,13 +1449,13 @@ export default function OmniDashShell() {
               (including OmniSlate chat history) can blow out the row or
               dislodge sibling tiles. */}
           <div style={{ display:"grid", gridTemplateColumns:"220px 1fr 220px", gap:14, height:300, minHeight:0 }}>
-            <DraggableWidget style={{ height:"100%", overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
-            <DraggableWidget style={{ height:"100%", overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
-            <DraggableWidget style={{ height:"100%", overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
+            <DraggableWidget id="widget_agent" style={{ height:"100%", overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
+            <DraggableWidget id="widget_slate" style={{ height:"100%", overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
+            <DraggableWidget id="widget_eco" style={{ height:"100%", overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
           </div>
 
           {/* Integrated Apps row */}
-          <DraggableWidget><IntegratedAppsWidget /></DraggableWidget>
+          <DraggableWidget id="widget_apps"><IntegratedAppsWidget /></DraggableWidget>
 
           {/* APEX-OmniHub wordmark watermark — above grid, below content */}
           <div style={{
@@ -1461,10 +1487,10 @@ export default function OmniDashShell() {
           overflowY:"auto", padding:"14px 12px",
           display:"flex", flexDirection:"column", gap:12,
         }}>
-          <DraggableWidget><SecurityPanel /></DraggableWidget>
-          <DraggableWidget><AnalyticsPanel /></DraggableWidget>
-          <DraggableWidget><OmniTracePanel /></DraggableWidget>
-          <DraggableWidget><OpsControlsPanel ops={ops} setOps={setOps} /></DraggableWidget>
+          <DraggableWidget id="rt_security"><SecurityPanel /></DraggableWidget>
+          <DraggableWidget id="rt_analytics"><AnalyticsPanel dash={dashData} /></DraggableWidget>
+          <DraggableWidget id="rt_trace"><OmniTracePanel dash={dashData} /></DraggableWidget>
+          <DraggableWidget id="rt_ops"><OpsControlsPanel ops={ops} setOps={setOps} /></DraggableWidget>
         </div>
       </div>
 

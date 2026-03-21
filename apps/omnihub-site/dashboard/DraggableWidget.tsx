@@ -12,7 +12,7 @@
  * starts tracking. A sub-8 px wiggle is absorbed with zero displacement.
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
 import type { ReactNode, CSSProperties } from 'react';
 
@@ -20,15 +20,33 @@ import type { ReactNode, CSSProperties } from 'react';
 export const DRAG_THRESHOLD_PX = 8;
 
 interface DraggableWidgetProps {
+  id?: string;
   children: ReactNode;
   style?: CSSProperties;
 }
 
-export const DraggableWidget = ({ children, style = {} }: DraggableWidgetProps) => {
+export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetProps) => {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const [dragActive, setDragActive] = useState(false);
   const originRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    if (id) {
+      const saved = localStorage.getItem(`omni_widget_pos_${id}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+            x.set(parsed.x);
+            y.set(parsed.y);
+          }
+        } catch {
+          // Ignore parse errors from invalid localStorage payload
+        }
+      }
+    }
+  }, [id, x, y]);
 
   const handlePointerDown = useCallback((e: { clientX: number; clientY: number }) => {
     originRef.current = { x: e.clientX, y: e.clientY };
@@ -50,6 +68,17 @@ export const DraggableWidget = ({ children, style = {} }: DraggableWidgetProps) 
     setDragActive(false);
   }, []);
 
+  const handleDragEnd = useCallback(() => {
+    const SNAP = 20;
+    const finalX = Math.round(x.get() / SNAP) * SNAP;
+    const finalY = Math.round(y.get() / SNAP) * SNAP;
+    x.set(finalX);
+    y.set(finalY);
+    if (id) {
+      localStorage.setItem(`omni_widget_pos_${id}`, JSON.stringify({ x: finalX, y: finalY }));
+    }
+  }, [id, x, y]);
+
   return (
     <motion.div
       drag={dragActive}
@@ -61,6 +90,7 @@ export const DraggableWidget = ({ children, style = {} }: DraggableWidgetProps) 
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onDragEnd={handleDragEnd}
     >
       {children}
     </motion.div>

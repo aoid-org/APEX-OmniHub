@@ -22,6 +22,7 @@ import { useEffect, useState, useMemo, useCallback, useRef, type CSSProperties }
 import { createPortal } from 'react-dom';
 import { useOmniModal, resolveRenderMode } from '@/stores/omniModalStore';
 import type { OmniModalConfig } from '@/stores/omniModalStore';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -410,6 +411,7 @@ export function OmniSpatialHost() {
         `[OmniModal] Failed to process ${activeModal.provider} action:`,
         err,
       );
+      toast.error(err instanceof Error ? err.message : "Action failed. Please try again.");
     } finally {
       setIsProcessing(false);
     }
