@@ -251,7 +251,7 @@ export async function dispatchA2ATask(
         state: (typed['state'] as string) ?? 'working',
         artifacts: (typed['artifacts'] as Array<Record<string, unknown>>) ?? [],
         metadata: {
-          ...((typed['metadata'] as Record<string, unknown>) ?? {}),
+          ...(typed['metadata'] as Record<string, unknown> | undefined),
           workflowRunning: true,
         },
         workflowId: wfId,
