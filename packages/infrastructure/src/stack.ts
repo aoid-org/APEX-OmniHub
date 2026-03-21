@@ -17,8 +17,11 @@
 import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import type { Construct } from 'constructs';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export class OmniHubWorkerStack extends cdk.Stack {
   public readonly workerLambda: lambda.Function;
