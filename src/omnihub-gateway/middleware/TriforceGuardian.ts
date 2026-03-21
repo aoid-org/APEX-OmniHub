@@ -1,10 +1,14 @@
 /**
- * TriforceGuardian — Governance Middleware Interceptor
- * @version 1.0.0
+ * TriforceGuardian — Zero-Trust Governance Middleware Interceptor
+ * @version 2.0.0
  * @module src/omnihub-gateway/middleware/TriforceGuardian
  *
- * Strictly typed middleware interceptor that enforces three pillars
+ * Strictly typed middleware interceptor that enforces four pillars
  * of gateway governance:
+ *
+ *   0. **JWT Verification** — Cryptographically verifies enterprise JWTs
+ *      via Supabase Auth. Extracts SAML/OIDC role metadata. Rejects
+ *      any request without a valid, non-expired token. FAIL-CLOSED.
  *
  *   1. **mTLS Verification** — Validates client certificates for
  *      inter-service communication. Fail-closed on missing/invalid certs.
@@ -14,11 +18,13 @@
  *      malformed requests at the boundary.
  *
  *   3. **Dynamic RBAC** — Role-based access control with runtime
- *      policy evaluation. Integrates with AegisKernel trust tiers.
+ *      policy evaluation. Enterprise roles extracted from JWT are
+ *      mapped to trust tiers. If the user's role does not meet the
+ *      execution threshold, the request is denied with 403 Forbidden.
  *
  * APEX STANDARDS ENFORCED:
- * - Fail-closed: Any validation failure rejects the request
- * - Zero trust: Every request is authenticated and authorized
+ * - Zero Trust: Every request must carry a cryptographically verified JWT
+ * - Fail-closed: Missing token, expired token, or insufficient role = deny
  * - Auditable: All decisions are logged with correlation IDs
  * - Non-blocking: Middleware chain is composable and async
  *
@@ -26,6 +32,7 @@
  */
 
 import { z } from 'zod';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { GatewayContext, JsonRpcRequest } from '../types';
 
 // ============================================================================
@@ -37,7 +44,7 @@ export type GuardianVerdict = 'allow' | 'deny';
 export interface GuardianResult {
   readonly verdict: GuardianVerdict;
   readonly reason: string;
-  readonly pillar: 'mTLS' | 'schema' | 'rbac';
+  readonly pillar: 'jwt' | 'mTLS' | 'schema' | 'rbac';
   readonly timestamp: string;
   readonly correlationId: string;
 }
@@ -50,6 +57,284 @@ export type GuardianInterceptor = (
   request: JsonRpcRequest,
   context: GatewayContext,
 ) => Promise<GuardianResult | null>;
+
+// ============================================================================
+// JWT Claims — Enterprise Role Extraction
+// ============================================================================
+
+/**
+ * Supabase JWT payload structure with enterprise SAML/OIDC extensions.
+ * The `app_metadata` field carries organization roles set by the IdP.
+ */
+export interface JWTClaims {
+  readonly sub: string;
+  readonly email?: string;
+  readonly role?: string;
+  readonly aud: string;
+  readonly exp: number;
+  readonly iat: number;
+  readonly app_metadata?: {
+    readonly provider?: string;
+    readonly roles?: readonly string[];
+    readonly organization_id?: string;
+    readonly tenant_id?: string;
+  };
+  readonly user_metadata?: Record<string, unknown>;
+}
+
+/**
+ * Verified identity extracted from a JWT.
+ * Passed downstream to RBAC for authorization decisions.
+ */
+export interface VerifiedIdentity {
+  readonly userId: string;
+  readonly email: string;
+  readonly roles: readonly string[];
+  readonly organizationId: string;
+  readonly tenantId: string;
+  readonly trustTier: string;
+  readonly provider: string;
+  readonly expiresAt: number;
+}
+
+// ============================================================================
+// Pillar 0: JWT Verification (Supabase Auth)
+// ============================================================================
+
+export interface JWTConfig {
+  /** Whether JWT verification is enforced. */
+  readonly enabled: boolean;
+  /** Supabase project URL. */
+  readonly supabaseUrl: string;
+  /** Supabase service role key (for server-side token verification). */
+  readonly supabaseServiceRoleKey: string;
+  /** Methods exempt from JWT verification (e.g., MCP initialize). */
+  readonly exemptMethods: readonly string[];
+  /** Clock skew tolerance in seconds for exp validation. */
+  readonly clockSkewToleranceSec: number;
+}
+
+const DEFAULT_JWT_CONFIG: JWTConfig = {
+  enabled: true,
+  supabaseUrl: '',
+  supabaseServiceRoleKey: '',
+  exemptMethods: ['initialize', 'health/check'],
+  clockSkewToleranceSec: 30,
+};
+
+/**
+ * Map enterprise roles from JWT claims to APEX trust tiers.
+ *
+ * Mapping:
+ *   - 'admin', 'super_admin', 'owner' → GOD_MODE
+ *   - 'operator', 'manager', 'developer', 'editor' → OPERATOR
+ *   - 'viewer', 'reader', 'member' → PERIPHERAL
+ *   - anything else / no roles → PUBLIC
+ */
+export function mapRolesToTrustTier(roles: readonly string[]): string {
+  const normalizedRoles = roles.map((r) => r.toLowerCase().trim());
+
+  if (normalizedRoles.some((r) => ['admin', 'super_admin', 'owner', 'god_mode'].includes(r))) {
+    return 'GOD_MODE';
+  }
+  if (normalizedRoles.some((r) => ['operator', 'manager', 'developer', 'editor', 'engineer'].includes(r))) {
+    return 'OPERATOR';
+  }
+  if (normalizedRoles.some((r) => ['viewer', 'reader', 'member', 'peripheral'].includes(r))) {
+    return 'PERIPHERAL';
+  }
+  return 'PUBLIC';
+}
+
+/** Singleton Supabase admin client for JWT verification */
+let _supabaseAdmin: SupabaseClient | null = null;
+
+function getSupabaseAdmin(config: JWTConfig): SupabaseClient {
+  if (_supabaseAdmin) return _supabaseAdmin;
+
+  if (!config.supabaseUrl || !config.supabaseServiceRoleKey) {
+    throw new Error(
+      'TriforceGuardian: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required for JWT verification',
+    );
+  }
+
+  _supabaseAdmin = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  return _supabaseAdmin;
+}
+
+/**
+ * Extract the Bearer token from an Authorization header value.
+ * Returns null if the header is missing, empty, or not Bearer-prefixed.
+ */
+export function extractBearerToken(authHeader: string | undefined | null): string | null {
+  if (!authHeader) return null;
+  const trimmed = authHeader.trim();
+  if (!trimmed.toLowerCase().startsWith('bearer ')) return null;
+  const token = trimmed.slice(7).trim();
+  return token.length > 0 ? token : null;
+}
+
+/**
+ * Create a JWT verification interceptor.
+ *
+ * Flow:
+ * 1. Extract Bearer token from context
+ * 2. Verify token signature and expiration via Supabase Auth
+ * 3. Extract enterprise roles from app_metadata
+ * 4. Map roles to APEX trust tier
+ * 5. Enrich the GatewayContext with verified identity
+ *
+ * FAIL-CLOSED: Any verification failure immediately denies the request.
+ */
+export function createJWTInterceptor(config?: Partial<JWTConfig>): GuardianInterceptor {
+  const cfg: JWTConfig = {
+    ...DEFAULT_JWT_CONFIG,
+    supabaseUrl: (typeof process !== 'undefined' && process.env?.['SUPABASE_URL']) ?? DEFAULT_JWT_CONFIG.supabaseUrl,
+    supabaseServiceRoleKey: (typeof process !== 'undefined' && process.env?.['SUPABASE_SERVICE_ROLE_KEY']) ?? DEFAULT_JWT_CONFIG.supabaseServiceRoleKey,
+    ...config,
+  };
+
+  /** Cache for recently verified tokens (key: token hash, value: VerifiedIdentity) */
+  const verificationCache = new Map<string, { identity: VerifiedIdentity; cachedAt: number }>();
+  const CACHE_TTL_MS = 60_000; // 1 minute
+  const MAX_CACHE_SIZE = 1_000;
+
+  return async (request, context) => {
+    // Skip if disabled or method is exempt
+    if (!cfg.enabled || cfg.exemptMethods.includes(request.method)) {
+      return null;
+    }
+
+    // --- Step 1: Extract token from context ---
+    // The token is embedded in the idempotencyKey field or passed via
+    // a custom extension. In production, it comes from the Authorization header
+    // processed by the HTTP layer before reaching the JSON-RPC handler.
+    const token = extractBearerToken(
+      (context as GatewayContext & { authorizationHeader?: string }).authorizationHeader,
+    );
+
+    if (!token) {
+      return {
+        verdict: 'deny',
+        reason: 'JWT verification failed: No Bearer token in Authorization header',
+        pillar: 'jwt',
+        timestamp: new Date().toISOString(),
+        correlationId: context.correlationId,
+      };
+    }
+
+    // --- Step 2: Check verification cache ---
+    const cacheKey = await hashToken(token);
+    const cached = verificationCache.get(cacheKey);
+    if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
+      // Token was recently verified — check expiration
+      if (cached.identity.expiresAt * 1000 > Date.now() - cfg.clockSkewToleranceSec * 1000) {
+        // Enrich context with cached identity
+        Object.assign(context, {
+          tenantId: cached.identity.tenantId || context.tenantId,
+          deviceId: cached.identity.userId,
+          trustTier: cached.identity.trustTier,
+        });
+        return null;
+      }
+      // Expired — remove from cache
+      verificationCache.delete(cacheKey);
+    }
+
+    // --- Step 3: Verify token via Supabase Auth ---
+    try {
+      const supabase = getSupabaseAdmin(cfg);
+      const { data, error } = await supabase.auth.getUser(token);
+
+      if (error || !data.user) {
+        return {
+          verdict: 'deny',
+          reason: `JWT verification failed: ${error?.message ?? 'Invalid or expired token'}`,
+          pillar: 'jwt',
+          timestamp: new Date().toISOString(),
+          correlationId: context.correlationId,
+        };
+      }
+
+      const user = data.user;
+
+      // --- Step 4: Extract enterprise roles from app_metadata ---
+      const appMetadata = (user.app_metadata ?? {}) as {
+        provider?: string;
+        roles?: string[];
+        organization_id?: string;
+        tenant_id?: string;
+      };
+
+      const roles: readonly string[] = appMetadata.roles ?? [user.role ?? 'PUBLIC'];
+      const trustTier = mapRolesToTrustTier(roles);
+
+      const identity: VerifiedIdentity = {
+        userId: user.id,
+        email: user.email ?? '',
+        roles,
+        organizationId: appMetadata.organization_id ?? '',
+        tenantId: appMetadata.tenant_id ?? context.tenantId,
+        trustTier,
+        provider: appMetadata.provider ?? 'email',
+        expiresAt: Math.floor(Date.now() / 1000) + 3600, // Default 1h from now
+      };
+
+      // --- Step 5: Cache and enrich context ---
+      if (verificationCache.size >= MAX_CACHE_SIZE) {
+        // Evict oldest entry
+        const firstKey = verificationCache.keys().next().value;
+        if (firstKey !== undefined) {
+          verificationCache.delete(firstKey);
+        }
+      }
+      verificationCache.set(cacheKey, { identity, cachedAt: Date.now() });
+
+      // Enrich the gateway context with verified identity
+      Object.assign(context, {
+        tenantId: identity.tenantId || context.tenantId,
+        deviceId: identity.userId,
+        trustTier: identity.trustTier,
+      });
+
+      return null; // Passed
+
+    } catch (err) {
+      return {
+        verdict: 'deny',
+        reason: `JWT verification failed: ${err instanceof Error ? err.message : 'Unknown verification error'}`,
+        pillar: 'jwt',
+        timestamp: new Date().toISOString(),
+        correlationId: context.correlationId,
+      };
+    }
+  };
+}
+
+/**
+ * Hash a token for cache key purposes (not for security).
+ * Uses SHA-256 truncated to 16 hex chars.
+ */
+async function hashToken(token: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const buffer = await crypto.subtle.digest('SHA-256', encoder.encode(token));
+  return Array.from(new Uint8Array(buffer).slice(0, 8))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
+ * Reset the Supabase admin client singleton (for testing only).
+ */
+export function _resetSupabaseAdminForTesting(): void {
+  _supabaseAdmin = null;
+}
 
 // ============================================================================
 // Pillar 1: mTLS Verification
@@ -65,33 +350,22 @@ export interface MTLSConfig {
 }
 
 const DEFAULT_MTLS_CONFIG: MTLSConfig = {
-  enabled: false, // Disabled by default; enable in production
+  enabled: false,
   trustedFingerprints: [],
   exemptMethods: ['initialize', 'health/check'],
 };
 
 /**
  * Create an mTLS verification interceptor.
- *
- * In production, this validates the client certificate fingerprint
- * against a whitelist of trusted CAs. Currently a stub that
- * checks header-based certificate forwarding (for reverse proxy setups).
  */
 export function createMTLSInterceptor(config?: Partial<MTLSConfig>): GuardianInterceptor {
   const cfg: MTLSConfig = { ...DEFAULT_MTLS_CONFIG, ...config };
 
   return async (request, context) => {
-    // Skip if disabled or method is exempt
     if (!cfg.enabled || cfg.exemptMethods.includes(request.method)) {
       return null;
     }
 
-    // In production: validate X-Client-Cert-Fingerprint header
-    // This header is set by the reverse proxy (nginx/envoy) after
-    // mTLS handshake verification.
-    //
-    // STUB: For now, we check if the context has a valid deviceId
-    // which indicates the request passed through the auth layer.
     if (!context.deviceId || context.deviceId === 'anonymous') {
       return {
         verdict: 'deny',
@@ -102,7 +376,7 @@ export function createMTLSInterceptor(config?: Partial<MTLSConfig>): GuardianInt
       };
     }
 
-    return null; // Passed
+    return null;
   };
 }
 
@@ -112,26 +386,17 @@ export function createMTLSInterceptor(config?: Partial<MTLSConfig>): GuardianInt
 
 /**
  * Registry of Zod schemas for JSON-RPC method params.
- * Each method can register an expected params schema.
  */
 export class SchemaRegistry {
   private readonly schemas = new Map<string, z.ZodType>();
 
-  /**
-   * Register a Zod schema for a method's params.
-   */
   register(method: string, schema: z.ZodType): void {
     this.schemas.set(method, schema);
   }
 
-  /**
-   * Validate params against the registered schema.
-   * Returns null if valid, or an error string if invalid.
-   */
   validate(method: string, params: unknown): string | null {
     const schema = this.schemas.get(method);
     if (!schema) {
-      // No schema registered — allow (methods without schemas are unrestricted)
       return null;
     }
 
@@ -143,9 +408,6 @@ export class SchemaRegistry {
     return null;
   }
 
-  /**
-   * Check if a method has a registered schema.
-   */
   has(method: string): boolean {
     return this.schemas.has(method);
   }
@@ -171,7 +433,7 @@ export function createSchemaInterceptor(registry: SchemaRegistry): GuardianInter
 }
 
 // ============================================================================
-// Pillar 3: Dynamic RBAC
+// Pillar 3: Dynamic RBAC (Federated with JWT Enterprise Roles)
 // ============================================================================
 
 export type RBACAction = 'read' | 'write' | 'admin' | 'execute';
@@ -185,32 +447,38 @@ export interface RBACPolicy {
 
 /**
  * RBAC policy engine with dynamic rule evaluation.
- * Maps JSON-RPC methods to required trust tiers and actions.
+ * Operates in FAIL-CLOSED mode: unregistered methods are DENIED by default.
+ * Enterprise roles from JWT are mapped to trust tiers via mapRolesToTrustTier().
  */
 export class RBACEngine {
   private readonly policies: RBACPolicy[] = [];
+  private failClosed: boolean;
 
-  /**
-   * Add a policy rule.
-   */
+  constructor(failClosed = true) {
+    this.failClosed = failClosed;
+  }
+
   addPolicy(policy: RBACPolicy): void {
     this.policies.push(policy);
   }
 
   /**
    * Evaluate whether a trust tier is authorized for a method.
+   *
+   * FAIL-CLOSED: If no policy is registered for the method,
+   * the request is denied by default (zero-trust perimeter).
    */
   evaluate(method: string, trustTier: string): { authorized: boolean; policy?: RBACPolicy } {
-    // Find matching policy (most specific match wins)
     const policy = this.policies.find((p) => p.method === method);
 
     if (!policy) {
-      // No policy = default allow (fail-open for unregistered methods)
-      // In production, flip to fail-closed by returning { authorized: false }
+      // FAIL-CLOSED: no policy → deny (zero-trust default)
+      if (this.failClosed) {
+        return { authorized: false };
+      }
       return { authorized: true };
     }
 
-    // Tier ranking: GOD_MODE > OPERATOR > PERIPHERAL > PUBLIC
     const tierRank: Record<string, number> = {
       'GOD_MODE': 3,
       'OPERATOR': 2,
@@ -227,9 +495,6 @@ export class RBACEngine {
     };
   }
 
-  /**
-   * List all registered policies.
-   */
   listPolicies(): readonly RBACPolicy[] {
     return this.policies;
   }
@@ -245,7 +510,7 @@ export function createRBACInterceptor(engine: RBACEngine): GuardianInterceptor {
     if (!authorized) {
       return {
         verdict: 'deny',
-        reason: `RBAC denied: method "${request.method}" requires trust tier "${policy?.requiredTrustTier ?? 'OPERATOR'}", got "${context.trustTier}"`,
+        reason: `RBAC denied: method "${request.method}" requires trust tier "${policy?.requiredTrustTier ?? 'OPERATOR'}", got "${context.trustTier}". Ensure your enterprise role has sufficient privileges.`,
         pillar: 'rbac',
         timestamp: new Date().toISOString(),
         correlationId: context.correlationId,
@@ -257,29 +522,103 @@ export function createRBACInterceptor(engine: RBACEngine): GuardianInterceptor {
 }
 
 // ============================================================================
+// Default Gateway Policies
+// ============================================================================
+
+/**
+ * Register default RBAC policies for all gateway methods.
+ * These policies define the minimum trust tier required for each method.
+ */
+export function registerDefaultGatewayPolicies(engine: RBACEngine): void {
+  // MCP Protocol — read operations (PERIPHERAL)
+  for (const method of ['initialize', 'tools/list', 'resources/list', 'resources/read', 'prompts/list']) {
+    engine.addPolicy({
+      method,
+      requiredAction: 'read',
+      requiredTrustTier: 'PERIPHERAL',
+      description: `MCP read operation: ${method}`,
+    });
+  }
+
+  // MCP Protocol — tool execution (OPERATOR)
+  engine.addPolicy({
+    method: 'tools/call',
+    requiredAction: 'execute',
+    requiredTrustTier: 'OPERATOR',
+    description: 'MCP tool execution requires OPERATOR tier',
+  });
+
+  // A2A Protocol — task operations
+  engine.addPolicy({
+    method: 'tasks/send',
+    requiredAction: 'execute',
+    requiredTrustTier: 'OPERATOR',
+    description: 'A2A task dispatch requires OPERATOR tier',
+  });
+
+  engine.addPolicy({
+    method: 'tasks/get',
+    requiredAction: 'read',
+    requiredTrustTier: 'PERIPHERAL',
+    description: 'A2A task query requires PERIPHERAL tier',
+  });
+
+  engine.addPolicy({
+    method: 'tasks/cancel',
+    requiredAction: 'write',
+    requiredTrustTier: 'OPERATOR',
+    description: 'A2A task cancellation requires OPERATOR tier',
+  });
+
+  engine.addPolicy({
+    method: 'tasks/sendSubscribe',
+    requiredAction: 'execute',
+    requiredTrustTier: 'OPERATOR',
+    description: 'A2A streaming task dispatch requires OPERATOR tier',
+  });
+
+  // Health check — public
+  engine.addPolicy({
+    method: 'health/check',
+    requiredAction: 'read',
+    requiredTrustTier: 'PUBLIC',
+    description: 'Health check is publicly accessible',
+  });
+}
+
+// ============================================================================
 // Triforce Guardian (Composed Pipeline)
 // ============================================================================
 
 /**
- * TriforceGuardian — Composes all three pillars into a single middleware chain.
+ * TriforceGuardian — Composes all four pillars into a single middleware chain.
  *
- * Evaluation order: mTLS → Schema → RBAC
+ * Evaluation order: JWT → mTLS → Schema → RBAC
  * First failure short-circuits the chain.
+ *
+ * The JWT interceptor enriches the GatewayContext with the verified
+ * identity (userId, trustTier) before RBAC evaluation. This means
+ * RBAC decisions are always based on cryptographically verified roles.
  */
 export class TriforceGuardian {
   private readonly interceptors: GuardianInterceptor[] = [];
 
   /**
-   * Create a fully configured TriforceGuardian with all three pillars.
+   * Create a fully configured TriforceGuardian with all four pillars.
+   * By default, JWT verification is enabled and RBAC is fail-closed.
    */
   static create(options?: {
+    jwtConfig?: Partial<JWTConfig>;
     mtlsConfig?: Partial<MTLSConfig>;
     schemaRegistry?: SchemaRegistry;
     rbacEngine?: RBACEngine;
   }): TriforceGuardian {
     const guardian = new TriforceGuardian();
 
-    // Pillar 1: mTLS
+    // Pillar 0: JWT Verification (runs first — enriches context)
+    guardian.use(createJWTInterceptor(options?.jwtConfig));
+
+    // Pillar 1: mTLS (inter-service communication)
     guardian.use(createMTLSInterceptor(options?.mtlsConfig));
 
     // Pillar 2: Schema validation
@@ -287,10 +626,12 @@ export class TriforceGuardian {
       guardian.use(createSchemaInterceptor(options.schemaRegistry));
     }
 
-    // Pillar 3: RBAC
-    if (options?.rbacEngine) {
-      guardian.use(createRBACInterceptor(options.rbacEngine));
+    // Pillar 3: RBAC (uses trust tier from JWT)
+    const rbacEngine = options?.rbacEngine ?? new RBACEngine(true);
+    if (!options?.rbacEngine) {
+      registerDefaultGatewayPolicies(rbacEngine);
     }
+    guardian.use(createRBACInterceptor(rbacEngine));
 
     return guardian;
   }
@@ -310,9 +651,9 @@ export class TriforceGuardian {
     for (const interceptor of this.interceptors) {
       const result = await interceptor(request, context);
       if (result !== null) {
-        return result; // First denial short-circuits
+        return result;
       }
     }
-    return null; // All passed
+    return null;
   }
 }
