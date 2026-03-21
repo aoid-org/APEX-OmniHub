@@ -61,37 +61,6 @@ Comprehensive audit of the APEX-OmniHub build targeting dead features, unwired l
 
 **Impact:** `canvasOffset` and `canvasScale` state slices are always at default `{x:0,y:0}` and `1` respectively. OmniCanvas reads these values but they never change.
 
-### Completely Dead Stores (Zero Consumers)
-
-| Store | File | Actions | State Slices | Status |
-|-------|------|---------|-------------|--------|
-| `omniVisionStore` | `src/stores/omniVisionStore.ts` | 6 (submitFrame, recordResult, setRedactionLevel, clearActiveFrame, clearHistory, setError) | 7 (status, activeFrame, lastResult, history, redactionLevel, framesProcessed, lastError) | **ZERO consumers** — safe to delete |
-| `omniCognitionStore` | `src/stores/omniCognitionStore.ts` | 5 (recordAction, promoteToBrain, compress, loadState, sync) | 6 (status, recentActions, brainFacts, tokenEstimate, activeSessionCount, lastCompression) | **ZERO consumers** — store wrapper orphaned (underlying CognitionManager has tests) |
-
-### Dead Actions Across Active Stores (41 total)
-
-| Store | Dead Actions |
-|-------|-------------|
-| `omniBoardStore` | `hydrateIntegration`, `removeIntegration`, `mountActiveApp`, `transitionRenderState`, `clearActiveApp` (5) |
-| `omniGatewayStore` | `clearTokens` (1) |
-| `omniMediaStore` | `play`, `pause`, `togglePlay`, `setVolume`, `close` (5) |
-| `omniModalStore` | `close`, `abortModal` (2) |
-| `demoStore` | `addEntity`, `updateEntity`, `deleteEntity`, `addTask`, `updateTask`, `addEvent`, `approveItem`, `rejectItem` (8) |
-| `notificationStore` | `pushNotification` (1) |
-| `userRoleStore` | `setRole`, `clear` (2) |
-| `omniDashStore` | `minimiseWidget`, `maximiseWidget`, `restoreWidget`, `openFloating`, `panCanvas`, `zoomCanvas`, `resetCanvas` (7) |
-
-### Dead State Slices
-
-| Store | Dead Slices |
-|-------|------------|
-| `omniBoardStore` | `integrations`, `activeApp`, `isTransitioning` |
-| `userRoleStore` | `role`, `hydrated` |
-
-### Latent Auth Context Issue
-
-The 10 dead dashboard components (Approvals, Entities, Events, Kpis, Ops, Pipeline, Runs, Tasks, Today, Integrations) import `useAuth()` from `@/contexts/AuthContext` — but `AuthProvider` is **never mounted** in the app. These components are dead (never rendered), so no runtime crash occurs. However, re-activating any of them without mounting `AuthProvider` will cause an immediate error. Active components use `@/lib/useAuth` (standalone hook) and `ProtectedRoute` uses Supabase directly.
-
 ### Dead/Orphaned Pages
 
 | Component | File | Issue |
@@ -106,58 +75,11 @@ The following directory is a **mirror copy** of `apps/omnihub-site/dashboard/com
 
 **Status:** Not imported by any runtime code. Referenced only by 2 tests that verify both copies stay in sync. Canonical imports go to `@/dashboard/components/`.
 
-### Dead Dashboard Components (10 files, zero imports)
-
-The following components exist under `apps/omnihub-site/dashboard/components/` but are **never imported by OmniDashShell or any other component**:
-
-| Component | File | Notes |
-|-----------|------|-------|
-| Approvals | `Approvals.tsx` | Man-mode approval UI — fully implemented, never mounted |
-| Entities | `Entities.tsx` | Entity management panel — never mounted |
-| Events | `Events.tsx` | Event stream panel, uses GridLayout — never mounted |
-| Kpis | `Kpis.tsx` | KPI metrics panel, uses GridLayout — never mounted |
-| LocalAgents | `LocalAgents.tsx` | Local agent listing — never mounted |
-| Ops | `Ops.tsx` | Operations panel, uses GridLayout — never mounted |
-| Pipeline | `Pipeline.tsx` | Pipeline visualization — never mounted |
-| Runs | `Runs.tsx` | Run execution history — never mounted |
-| Tasks | `Tasks.tsx` | Task management — never mounted |
-| Today | `Today.tsx` | Daily summary panel, uses GridLayout — never mounted |
-
-### Dead Handler File
-
-`apps/omnihub-site/dashboard/handlers/dashboardHandlers.ts` exports 4 handlers — **zero imports anywhere**:
-- `handleToggleDemoMode()` — toggles demo mode in Supabase
-- `handleToggleFreezeMode()` — toggles freeze mode
-- `handleReportIncident()` — inserts incident into database
-- `handleUpsertKpi()` — upserts KPI records
-
-All 4 functions are fully implemented with Supabase calls but completely unwired.
-
 ### Unwired Provider
 
 | Provider | File | Issue |
 |----------|------|-------|
 | `OmniDashProvider` | `apps/omnihub-site/src/providers/OmniDashProvider.tsx` | Mounted in App.tsx, provides `widgetCount`, `hasFloatingWindows`, `zManager` — but zero consumers. All components access zustand store directly via `useOmniDash()`. |
-
----
-
-## BROKEN NAVIGATION LINKS (8 total)
-
-### AppSidebar — 3 broken links + 1 settings link
-- **File:** `src/components/AppSidebar.tsx:5-10`
-- `/links` — no route exists, hits ComingSoonPage
-- `/files` — no route exists, hits ComingSoonPage
-- `/automations` — no route exists, hits ComingSoonPage
-- `/settings` (line 56) — no route exists, hits ComingSoonPage
-
-### MobileBottomNav — 4 broken links
-- **File:** `src/components/MobileBottomNav.tsx:21-51`
-- `/integrations` — no route, capability-gated (`canManageIntegrations`)
-- `/omnitrace` — no route, capability-gated (`canViewOmniTrace`)
-- `/agent` — no route, capability-gated (`canUseVoiceAgent`)
-- `/settings` — no route, no capability gate
-
-**Impact:** Users clicking these nav items see "Page Not Found" fallback. These are core dashboard nav items — not edge-case pages.
 
 ---
 
@@ -210,8 +132,6 @@ All fixes verified — zero regressions.
 4. Consolidate duplicate component trees: make `apps/omnihub-site/src/components/omnidash/` a re-export barrel from `@/dashboard/components/` or delete it
 5. Either consume `OmniDashContext` or remove the provider/context layer
 6. Remove or route `pages/DashboardOverview` — currently orphaned
-7. Wire or remove 10 dead dashboard components (Approvals, Entities, Events, Kpis, LocalAgents, Ops, Pipeline, Runs, Tasks, Today)
-8. Wire or remove `dashboardHandlers.ts` — 4 fully-implemented Supabase handlers with zero consumers
 
 ### Priority 3 (Harden)
 7. Implement `/api/mcp-proxy` endpoint for stdio MCP server support
