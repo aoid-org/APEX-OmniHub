@@ -1,7 +1,7 @@
 import { useOmniModuleState, triggerModuleAction } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import { useState, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
+import { saveLocalFile } from '@/lib/localFilesDB';
 import { toast } from 'sonner';
 
 interface Props {
@@ -32,12 +32,8 @@ export default function FilesModule({ onClose }: Props) {
     setUploading(true);
     const toastId = toast.loading(`Uploading ${file.name}...`);
     try {
-      const { error } = await supabase.storage
-        .from('omnidash-files')
-        .upload(`${Date.now()}-${file.name}`, file);
-
-      if (error) throw error;
-      toast.success('File uploaded successfully', { id: toastId });
+      await saveLocalFile(file);
+      toast.success('File stored locally (Zero-Cost)', { id: toastId });
       // Call standard OmniDash action to track intent/analytics behind the scenes
       void triggerModuleAction('files', 'upload', [file.name]);
     } catch (err: unknown) {
