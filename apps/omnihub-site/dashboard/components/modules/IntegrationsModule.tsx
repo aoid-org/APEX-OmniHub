@@ -12,8 +12,8 @@ export default function IntegrationsModule({ onClose }: Props) {
   const availableStat = state.stats.find(s => s.label === 'Available');
   const connectedVal = connectedStat?.value ?? '0';
   const availableVal = availableStat?.value ?? '0';
-  const connectedNum = Number.parseInt(connectedVal.replaceAll(/\D/g, ''), 10) || 0;
-  const availableNum = Number.parseInt(availableVal.replaceAll(/\D/g, ''), 10) || 0;
+  const connectedNum = parseInt(connectedVal.replace(/[^0-9]/g, ''), 10) || 0;
+  const availableNum = parseInt(availableVal.replace(/[^0-9]/g, ''), 10) || 0;
   const pct = availableNum > 0 ? Math.round((connectedNum / availableNum) * 100) : 0;
 
   return (
