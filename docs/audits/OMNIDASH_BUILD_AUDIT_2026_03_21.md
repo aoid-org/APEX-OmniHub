@@ -110,6 +110,26 @@ All 4 functions are fully implemented with Supabase calls but completely unwired
 
 ---
 
+## BROKEN NAVIGATION LINKS (8 total)
+
+### AppSidebar — 3 broken links + 1 settings link
+- **File:** `src/components/AppSidebar.tsx:5-10`
+- `/links` — no route exists, hits ComingSoonPage
+- `/files` — no route exists, hits ComingSoonPage
+- `/automations` — no route exists, hits ComingSoonPage
+- `/settings` (line 56) — no route exists, hits ComingSoonPage
+
+### MobileBottomNav — 4 broken links
+- **File:** `src/components/MobileBottomNav.tsx:21-51`
+- `/integrations` — no route, capability-gated (`canManageIntegrations`)
+- `/omnitrace` — no route, capability-gated (`canViewOmniTrace`)
+- `/agent` — no route, capability-gated (`canUseVoiceAgent`)
+- `/settings` — no route, no capability gate
+
+**Impact:** Users clicking these nav items see "Page Not Found" fallback. These are core dashboard nav items — not edge-case pages.
+
+---
+
 ## CORE INFRASTRUCTURE FINDINGS
 
 ### ApexOrchestrator — Stub Tool Runner (By Design)
