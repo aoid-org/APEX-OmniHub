@@ -140,3 +140,20 @@ export {
   type A2ATaskRequest,
   type A2ATaskResponse,
 } from './TemporalBridge';
+
+// HTTP Router — REST API endpoints
+export {
+  handleTriggerLambda,
+  broadcastWorkflowComplete,
+  TriggerLambdaRequestSchema,
+  type TriggerLambdaRequest,
+  type TriggerLambdaResponse,
+  type RouteErrorResponse,
+} from './router';
+
+// MCP Client — Frontend gateway bridge
+export {
+  triggerAsyncLambdaDemo,
+  getGatewayBaseUrl,
+  type LambdaDemoPayload,
+} from './mcp-client';
