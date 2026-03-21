@@ -61,6 +61,37 @@ Comprehensive audit of the APEX-OmniHub build targeting dead features, unwired l
 
 **Impact:** `canvasOffset` and `canvasScale` state slices are always at default `{x:0,y:0}` and `1` respectively. OmniCanvas reads these values but they never change.
 
+### Completely Dead Stores (Zero Consumers)
+
+| Store | File | Actions | State Slices | Status |
+|-------|------|---------|-------------|--------|
+| `omniVisionStore` | `src/stores/omniVisionStore.ts` | 6 (submitFrame, recordResult, setRedactionLevel, clearActiveFrame, clearHistory, setError) | 7 (status, activeFrame, lastResult, history, redactionLevel, framesProcessed, lastError) | **ZERO consumers** — safe to delete |
+| `omniCognitionStore` | `src/stores/omniCognitionStore.ts` | 5 (recordAction, promoteToBrain, compress, loadState, sync) | 6 (status, recentActions, brainFacts, tokenEstimate, activeSessionCount, lastCompression) | **ZERO consumers** — store wrapper orphaned (underlying CognitionManager has tests) |
+
+### Dead Actions Across Active Stores (41 total)
+
+| Store | Dead Actions |
+|-------|-------------|
+| `omniBoardStore` | `hydrateIntegration`, `removeIntegration`, `mountActiveApp`, `transitionRenderState`, `clearActiveApp` (5) |
+| `omniGatewayStore` | `clearTokens` (1) |
+| `omniMediaStore` | `play`, `pause`, `togglePlay`, `setVolume`, `close` (5) |
+| `omniModalStore` | `close`, `abortModal` (2) |
+| `demoStore` | `addEntity`, `updateEntity`, `deleteEntity`, `addTask`, `updateTask`, `addEvent`, `approveItem`, `rejectItem` (8) |
+| `notificationStore` | `pushNotification` (1) |
+| `userRoleStore` | `setRole`, `clear` (2) |
+| `omniDashStore` | `minimiseWidget`, `maximiseWidget`, `restoreWidget`, `openFloating`, `panCanvas`, `zoomCanvas`, `resetCanvas` (7) |
+
+### Dead State Slices
+
+| Store | Dead Slices |
+|-------|------------|
+| `omniBoardStore` | `integrations`, `activeApp`, `isTransitioning` |
+| `userRoleStore` | `role`, `hydrated` |
+
+### Latent Auth Context Issue
+
+The 10 dead dashboard components (Approvals, Entities, Events, Kpis, Ops, Pipeline, Runs, Tasks, Today, Integrations) import `useAuth()` from `@/contexts/AuthContext` — but `AuthProvider` is **never mounted** in the app. These components are dead (never rendered), so no runtime crash occurs. However, re-activating any of them without mounting `AuthProvider` will cause an immediate error. Active components use `@/lib/useAuth` (standalone hook) and `ProtectedRoute` uses Supabase directly.
+
 ### Dead/Orphaned Pages
 
 | Component | File | Issue |
