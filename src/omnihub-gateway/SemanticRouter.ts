@@ -22,6 +22,8 @@
  */
 
 import { AgentCardRegistry, type RegisteredAgent } from './AgentCard';
+import { dispatchRoutedTask, type A2ATaskResponse } from './TemporalBridge';
+import type { GatewayContext } from './types';
 
 // ============================================================================
 // Types
@@ -204,5 +206,55 @@ export class SemanticRouter {
    */
   routeTopN(query: string, n: number): RoutingCandidate[] {
     return this.route(query).candidates.slice(0, n);
+  }
+
+  /**
+   * Route a task query and dispatch it to the selected agent
+   * via a Temporal durable workflow.
+   *
+   * Flow:
+   * 1. SemanticRouter scores and selects the best agent
+   * 2. TemporalBridge.dispatchRoutedTask starts an a2aTaskWorkflow
+   * 3. The workflow durably executes the task against the agent's endpoint
+   * 4. Results stream back via SSE or are returned synchronously
+   *
+   * @param query - Natural language task description
+   * @param context - Gateway request context (tenant, device, idempotency)
+   * @returns A2ATaskResponse from the Temporal workflow
+   * @throws Error if no suitable agent is found (fail-closed)
+   */
+  async routeAndDispatch(
+    query: string,
+    context: GatewayContext,
+  ): Promise<A2ATaskResponse> {
+    const result = this.route(query, context.requestId);
+
+    if (!result.selectedAgent) {
+      return {
+        id: context.requestId,
+        sessionId: context.requestId,
+        state: 'failed',
+        artifacts: [],
+        metadata: {
+          error: 'No suitable agent found for the given query',
+          query,
+          candidatesEvaluated: this.registry.listAgents().length,
+        },
+        workflowId: '',
+      };
+    }
+
+    const taskId = `task-${context.requestId}`;
+    const agentUrl = result.selectedAgent.card.url;
+
+    return dispatchRoutedTask(
+      taskId,
+      agentUrl,
+      {
+        role: 'user',
+        parts: [{ type: 'text', text: query }],
+      },
+      context,
+    );
   }
 }

@@ -18,6 +18,7 @@
  */
 
 import { AgentCardSchema, type AgentCard } from './types';
+import { registerAgentViaWorkflow } from './TemporalBridge';
 
 // ============================================================================
 // Agent Card Registry
@@ -40,7 +41,8 @@ export class AgentCardRegistry {
 
   /**
    * Register an agent card after Zod validation.
-   * Rejects malformed cards with an error.
+   * Persists the registration durably via a Temporal workflow,
+   * then caches locally for fast lookup.
    *
    * @param rawCard - Unvalidated agent card data
    * @returns The validated agent card
@@ -57,6 +59,18 @@ export class AgentCardRegistry {
 
     this.agents.set(card.url, entry);
     this.rebuildSkillIndex();
+
+    // Dispatch durable registration to Temporal (fire-and-forget).
+    // The local cache is the source of truth for routing;
+    // Temporal provides durability and health-check lifecycle.
+    registerAgentViaWorkflow(card.url, card as unknown as Record<string, unknown>).catch(
+      (err: unknown) => {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        console.warn(
+          `[AgentCardRegistry] Temporal registration failed for ${card.url}: ${message}. Local cache intact.`,
+        );
+      },
+    );
 
     return card;
   }

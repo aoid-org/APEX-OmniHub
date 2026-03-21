@@ -119,3 +119,17 @@ export {
   type ManModeTrigger,
   type AlertDispatcher,
 } from './middleware/ManMode';
+
+// Temporal Bridge — Durable Execution Bindings
+export {
+  executeToolViaWorkflow,
+  dispatchA2ATask,
+  queryA2ATask,
+  cancelA2ATask,
+  registerAgentViaWorkflow,
+  dispatchRoutedTask,
+  type ToolExecutionRequest,
+  type ToolExecutionResponse,
+  type A2ATaskRequest,
+  type A2ATaskResponse,
+} from './TemporalBridge';

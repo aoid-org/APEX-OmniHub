@@ -26,6 +26,12 @@ import {
   type JsonRpcResponse,
   type GatewayContext,
 } from './types';
+import {
+  executeToolViaWorkflow,
+  dispatchA2ATask,
+  queryA2ATask,
+  cancelA2ATask,
+} from './TemporalBridge';
 
 // ============================================================================
 // Method Handler Interface
@@ -174,15 +180,15 @@ export class JsonRpcMethodError extends Error {
 }
 
 // ============================================================================
-// Pre-built MCP Method Stubs
+// MCP Protocol Methods — Live Temporal Bindings
 // ============================================================================
 
 /**
  * Register standard MCP protocol methods on a handler.
- * These are stubs that return capability declarations.
+ * All stateful operations dispatch through Temporal workflows.
  */
 export function registerMCPMethods(handler: JsonRpcHandler): void {
-  // MCP initialize — capability negotiation
+  // MCP initialize — capability negotiation (stateless, no Temporal needed)
   handler.registerMethod('initialize', async () => ({
     protocolVersion: '2025-03-26',
     capabilities: {
@@ -196,30 +202,42 @@ export function registerMCPMethods(handler: JsonRpcHandler): void {
     },
   }));
 
-  // MCP tools/list — enumerate available tools
+  // MCP tools/list — enumerate available tools (stateless registry read)
   handler.registerMethod('tools/list', async () => ({
     tools: [],
   }));
 
-  // MCP tools/call — execute a tool
-  handler.registerMethod('tools/call', async (params) => {
+  // MCP tools/call — execute a tool via Temporal durable workflow
+  handler.registerMethod('tools/call', async (params, context) => {
     const toolName = params['name'] as string | undefined;
     if (!toolName) {
       throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: name');
     }
-    // Stub: delegate to tool registry in production
+
+    const toolArguments = (params['arguments'] as Record<string, unknown>) ?? {};
+
+    const result = await executeToolViaWorkflow({
+      toolName,
+      arguments: toolArguments,
+      context,
+    });
+
     return {
-      content: [{ type: 'text', text: `Tool "${toolName}" execution pending gateway wiring.` }],
-      isError: false,
+      content: result.content,
+      isError: result.isError,
+      _meta: {
+        workflowId: result.workflowId,
+        durationMs: result.durationMs,
+      },
     };
   });
 
-  // MCP resources/list
+  // MCP resources/list — stateless registry read
   handler.registerMethod('resources/list', async () => ({
     resources: [],
   }));
 
-  // MCP resources/read
+  // MCP resources/read — stateless resource fetch
   handler.registerMethod('resources/read', async (params) => {
     const uri = params['uri'] as string | undefined;
     if (!uri) {
@@ -230,72 +248,103 @@ export function registerMCPMethods(handler: JsonRpcHandler): void {
     };
   });
 
-  // MCP prompts/list
+  // MCP prompts/list — stateless registry read
   handler.registerMethod('prompts/list', async () => ({
     prompts: [],
   }));
 }
 
+// ============================================================================
+// A2A Protocol Methods — Live Temporal Bindings
+// ============================================================================
+
 /**
  * Register standard A2A protocol methods on a handler.
+ * All task lifecycle operations are durably executed via Temporal workflows.
  */
 export function registerA2AMethods(handler: JsonRpcHandler): void {
-  // A2A tasks/send — create or continue a task
-  handler.registerMethod('tasks/send', async (params) => {
+  // A2A tasks/send — create or continue a task via Temporal workflow
+  handler.registerMethod('tasks/send', async (params, context) => {
     const taskId = params['id'] as string | undefined;
     if (!taskId) {
       throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
     }
-    // Stub: delegate to Temporal workflow in production
-    return {
-      id: taskId,
-      state: 'submitted',
-      artifacts: [],
-      metadata: {},
-    };
+
+    const message = params['message'] as {
+      role: string;
+      parts: Array<{ type: string; text?: string; data?: unknown; mimeType?: string }>;
+    } | undefined;
+    if (!message || !message.role || !Array.isArray(message.parts)) {
+      throw new JsonRpcMethodError(
+        JSON_RPC_ERRORS.INVALID_PARAMS,
+        'Missing or malformed required param: message (must have role and parts)',
+      );
+    }
+
+    const result = await dispatchA2ATask({
+      taskId,
+      sessionId: params['sessionId'] as string | undefined,
+      message,
+      agentUrl: params['agentUrl'] as string | undefined,
+      context,
+    });
+
+    return result;
   });
 
-  // A2A tasks/get — retrieve task status
-  handler.registerMethod('tasks/get', async (params) => {
+  // A2A tasks/get — query task state from Temporal workflow
+  handler.registerMethod('tasks/get', async (params, context) => {
     const taskId = params['id'] as string | undefined;
     if (!taskId) {
       throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
     }
-    // Stub: look up from Temporal in production
-    return {
-      id: taskId,
-      state: 'working',
-      artifacts: [],
-      metadata: {},
-    };
+
+    return queryA2ATask(taskId, context.tenantId);
   });
 
-  // A2A tasks/cancel — cancel a running task
-  handler.registerMethod('tasks/cancel', async (params) => {
+  // A2A tasks/cancel — signal Temporal workflow to cancel
+  handler.registerMethod('tasks/cancel', async (params, context) => {
     const taskId = params['id'] as string | undefined;
     if (!taskId) {
       throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
     }
-    return {
-      id: taskId,
-      state: 'canceled',
-      artifacts: [],
-      metadata: {},
-    };
+
+    return cancelA2ATask(taskId, context.tenantId);
   });
 
-  // A2A tasks/sendSubscribe — SSE streaming variant
-  handler.registerMethod('tasks/sendSubscribe', async (params) => {
+  // A2A tasks/sendSubscribe — dispatch task with SSE streaming flag
+  handler.registerMethod('tasks/sendSubscribe', async (params, context) => {
     const taskId = params['id'] as string | undefined;
     if (!taskId) {
       throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
     }
-    // Stub: returns initial state; real impl streams via SSE
+
+    const message = params['message'] as {
+      role: string;
+      parts: Array<{ type: string; text?: string; data?: unknown; mimeType?: string }>;
+    } | undefined;
+    if (!message || !message.role || !Array.isArray(message.parts)) {
+      throw new JsonRpcMethodError(
+        JSON_RPC_ERRORS.INVALID_PARAMS,
+        'Missing or malformed required param: message (must have role and parts)',
+      );
+    }
+
+    const result = await dispatchA2ATask({
+      taskId,
+      sessionId: params['sessionId'] as string | undefined,
+      message,
+      agentUrl: params['agentUrl'] as string | undefined,
+      context,
+    });
+
     return {
-      id: taskId,
-      state: 'submitted',
-      artifacts: [],
-      metadata: { streaming: true },
+      ...result,
+      metadata: {
+        ...result.metadata,
+        streaming: true,
+        sseChannel: `a2a-task-${taskId}`,
+      },
     };
   });
 }
