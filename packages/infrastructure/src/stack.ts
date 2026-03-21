@@ -17,7 +17,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'node:path';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import type { Construct } from 'constructs';
 
 export class OmniHubWorkerStack extends cdk.Stack {
@@ -45,11 +45,18 @@ export class OmniHubWorkerStack extends cdk.Stack {
           image: lambda.Runtime.NODEJS_20_X.bundlingImage,
           local: {
             tryBundle(outputDir: string): boolean {
-              // esbuild bundles locally for fast iteration
-              execSync(
-                `esbuild ${path.join(__dirname, 'worker.ts')} --bundle --platform=node --target=node20 --outfile=${path.join(outputDir, 'worker.js')} --external:@temporalio/client --external:@supabase/supabase-js`,
-                { stdio: 'inherit' },
-              );
+              // esbuild bundles locally — execFileSync avoids shell interpretation (S4721)
+              const entryPoint = path.join(__dirname, 'worker.ts');
+              const outFile = path.join(outputDir, 'worker.js');
+              execFileSync('esbuild', [
+                entryPoint,
+                '--bundle',
+                '--platform=node',
+                '--target=node20',
+                `--outfile=${outFile}`,
+                '--external:@temporalio/client',
+                '--external:@supabase/supabase-js',
+              ], { stdio: 'inherit' });
               return true;
             },
           },
