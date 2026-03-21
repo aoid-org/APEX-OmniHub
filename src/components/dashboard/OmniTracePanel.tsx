@@ -46,6 +46,12 @@ const MAX_TRACE_ENTRIES = 50;
 // Component
 // ============================================================================
 
+function getEventColor(event: string): string {
+  if (event === 'WORKFLOW_COMPLETE') return '#34d399';
+  if (event === 'WORKFLOW_DISPATCHED') return '#facc15';
+  return '#94a3b8';
+}
+
 export const OmniTracePanel = memo(function OmniTracePanel({
   maxEntries = MAX_TRACE_ENTRIES,
 }: OmniTracePanelProps) {
@@ -147,12 +153,7 @@ export const OmniTracePanel = memo(function OmniTracePanel({
           >
             <span
               style={{
-                color:
-                  entry.event === 'WORKFLOW_COMPLETE'
-                    ? '#34d399'
-                    : entry.event === 'WORKFLOW_DISPATCHED'
-                      ? '#facc15'
-                      : '#94a3b8',
+                color: getEventColor(entry.event),
                 fontWeight: 700,
                 minWidth: 100,
                 flexShrink: 0,
