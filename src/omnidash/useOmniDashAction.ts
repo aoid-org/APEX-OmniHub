@@ -135,14 +135,12 @@ function resolveIntentModalType(intent: OmniDashIntent): ResolvedModalDirective 
     return { type: 'microfrontend', shouldNavigate: false };
   }
 
-  // Rule 4: Internal SPA app — navigate via router, no modal required
-
-  // Rule 4: Internal SPA app — navigate via router, no modal required
+  // Rule 4: Internal modules → open as modal within OmniDash (SPA — no page navigation)
   if (intent.source === 'module') {
-    return { type: 'form', shouldNavigate: true };
+    return { type: 'module', shouldNavigate: false };
   }
 
-  // Fallback for integrations without explicit modal directive — prevent internal routing
+  // Fallback for integrations without explicit modal directive
   return { type: 'oauth', shouldNavigate: false };
 }
 
