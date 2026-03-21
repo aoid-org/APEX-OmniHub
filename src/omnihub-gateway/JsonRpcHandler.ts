@@ -157,7 +157,7 @@ export class JsonRpcHandler {
     return {
       jsonrpc: '2.0',
       id: id ?? 0,
-      error: { code, message, ...(data !== undefined ? { data } : {}) },
+      error: { code, message, ...(data !== undefined && { data }) },
     };
   }
 }
@@ -258,6 +258,38 @@ export function registerMCPMethods(handler: JsonRpcHandler): void {
 // A2A Protocol Methods — Live Temporal Bindings
 // ============================================================================
 
+type A2AMessage = {
+  role: string;
+  parts: Array<{ type: string; text?: string; data?: unknown; mimeType?: string }>;
+};
+
+/** Extract and validate common A2A task params (id + message). */
+function extractTaskParams(params: Record<string, unknown>): { taskId: string; message: A2AMessage } {
+  const taskId = params['id'] as string | undefined;
+  if (!taskId) {
+    throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
+  }
+
+  const message = params['message'] as A2AMessage | undefined;
+  if (!message?.role || !Array.isArray(message.parts)) {
+    throw new JsonRpcMethodError(
+      JSON_RPC_ERRORS.INVALID_PARAMS,
+      'Missing or malformed required param: message (must have role and parts)',
+    );
+  }
+
+  return { taskId, message };
+}
+
+/** Extract and validate task ID from params. */
+function extractTaskId(params: Record<string, unknown>): string {
+  const taskId = params['id'] as string | undefined;
+  if (!taskId) {
+    throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
+  }
+  return taskId;
+}
+
 /**
  * Register standard A2A protocol methods on a handler.
  * All task lifecycle operations are durably executed via Temporal workflows.
@@ -265,70 +297,32 @@ export function registerMCPMethods(handler: JsonRpcHandler): void {
 export function registerA2AMethods(handler: JsonRpcHandler): void {
   // A2A tasks/send — create or continue a task via Temporal workflow
   handler.registerMethod('tasks/send', async (params, context) => {
-    const taskId = params['id'] as string | undefined;
-    if (!taskId) {
-      throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
-    }
+    const { taskId, message } = extractTaskParams(params);
 
-    const message = params['message'] as {
-      role: string;
-      parts: Array<{ type: string; text?: string; data?: unknown; mimeType?: string }>;
-    } | undefined;
-    if (!message || !message.role || !Array.isArray(message.parts)) {
-      throw new JsonRpcMethodError(
-        JSON_RPC_ERRORS.INVALID_PARAMS,
-        'Missing or malformed required param: message (must have role and parts)',
-      );
-    }
-
-    const result = await dispatchA2ATask({
+    return dispatchA2ATask({
       taskId,
       sessionId: params['sessionId'] as string | undefined,
       message,
       agentUrl: params['agentUrl'] as string | undefined,
       context,
     });
-
-    return result;
   });
 
   // A2A tasks/get — query task state from Temporal workflow
   handler.registerMethod('tasks/get', async (params, context) => {
-    const taskId = params['id'] as string | undefined;
-    if (!taskId) {
-      throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
-    }
-
+    const taskId = extractTaskId(params);
     return queryA2ATask(taskId, context.tenantId);
   });
 
   // A2A tasks/cancel — signal Temporal workflow to cancel
   handler.registerMethod('tasks/cancel', async (params, context) => {
-    const taskId = params['id'] as string | undefined;
-    if (!taskId) {
-      throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
-    }
-
+    const taskId = extractTaskId(params);
     return cancelA2ATask(taskId, context.tenantId);
   });
 
   // A2A tasks/sendSubscribe — dispatch task with SSE streaming flag
   handler.registerMethod('tasks/sendSubscribe', async (params, context) => {
-    const taskId = params['id'] as string | undefined;
-    if (!taskId) {
-      throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
-    }
-
-    const message = params['message'] as {
-      role: string;
-      parts: Array<{ type: string; text?: string; data?: unknown; mimeType?: string }>;
-    } | undefined;
-    if (!message || !message.role || !Array.isArray(message.parts)) {
-      throw new JsonRpcMethodError(
-        JSON_RPC_ERRORS.INVALID_PARAMS,
-        'Missing or malformed required param: message (must have role and parts)',
-      );
-    }
+    const { taskId, message } = extractTaskParams(params);
 
     const result = await dispatchA2ATask({
       taskId,

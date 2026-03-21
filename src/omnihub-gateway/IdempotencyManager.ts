@@ -51,8 +51,8 @@ export async function generateUUIDv5(namespace: string, name: string): Promise<s
   combined.set(namespaceBytes, 0);
   combined.set(nameBytes, namespaceBytes.length);
 
-  // SHA-1 hash
-  const hashBuffer = await crypto.subtle.digest('SHA-1', combined);
+  // SHA-256 hash (stronger than RFC 4122 SHA-1; output truncated to 16 bytes for UUID format)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', combined);
   const hashBytes = new Uint8Array(hashBuffer);
 
   // Set version (5) and variant bits per RFC 4122
@@ -66,10 +66,10 @@ export async function generateUUIDv5(namespace: string, name: string): Promise<s
  * Parse a UUID string to a Uint8Array (16 bytes).
  */
 function parseUUID(uuid: string): Uint8Array {
-  const hex = uuid.replace(/-/g, '');
+  const hex = uuid.replaceAll('-', '');
   const bytes = new Uint8Array(16);
   for (let i = 0; i < 16; i++) {
-    bytes[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+    bytes[i] = Number.parseInt(hex.substring(i * 2, i * 2 + 2), 16);
   }
   return bytes;
 }
@@ -215,7 +215,7 @@ export class IdempotencyManager {
    */
   async complete(key: string, result: unknown): Promise<boolean> {
     const existing = await this.store.get(key);
-    if (!existing || existing.state !== 'pending') {
+    if (existing?.state !== 'pending') {
       return false;
     }
 

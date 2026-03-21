@@ -132,7 +132,7 @@ export class AgentCardRegistry {
     const results: RegisteredAgent[] = [];
     for (const url of urls) {
       const agent = this.agents.get(url);
-      if (agent && agent.healthy) {
+      if (agent?.healthy) {
         results.push(agent);
       }
     }
@@ -153,7 +153,7 @@ export class AgentCardRegistry {
 
       for (const url of urls) {
         const agent = this.agents.get(url);
-        if (!agent || !agent.healthy) continue;
+        if (!agent?.healthy) continue;
 
         const existing = scoredAgents.get(url);
         if (existing) {

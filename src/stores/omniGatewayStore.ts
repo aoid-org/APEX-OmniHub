@@ -163,9 +163,11 @@ export const useOmniGateway = create<OmniGatewayState>((set, get) => ({
 
     // Build SSE URL with auth token as query param
     // (EventSource does not support custom headers; token goes in URL)
-    const url = authToken
-      ? `${endpoint}${endpoint.includes('?') ? '&' : '?'}token=${encodeURIComponent(authToken)}`
-      : endpoint;
+    let url = endpoint;
+    if (authToken) {
+      const separator = endpoint.includes('?') ? '&' : '?';
+      url = `${endpoint}${separator}token=${encodeURIComponent(authToken)}`;
+    }
 
     const es = new EventSource(url);
     _eventSource = es;

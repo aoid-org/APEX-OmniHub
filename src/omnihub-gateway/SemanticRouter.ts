@@ -80,6 +80,86 @@ export function extractKeywords(query: string): string[] {
 }
 
 // ============================================================================
+// Scoring Helpers (extracted to reduce cognitive complexity of route())
+// ============================================================================
+
+interface AgentScore {
+  score: number;
+  matchedTags: string[];
+  matchedSkills: string[];
+  reasoning: string;
+}
+
+/** Score a single skill against query keywords. Returns tag/skill matches and points. */
+function scoreSkill(
+  skill: { name: string; tags: string[]; description: string; examples: string[] },
+  keywords: string[],
+): { score: number; tags: string[]; skills: string[] } {
+  let score = 0;
+  const tags: string[] = [];
+  const skills: string[] = [];
+
+  // Tag matching (3 points each)
+  for (const tag of skill.tags) {
+    if (keywords.includes(tag.toLowerCase())) {
+      score += 3;
+      tags.push(tag);
+    }
+  }
+
+  // Skill name matching (5 points)
+  const nameWords = skill.name.toLowerCase().split(/\s+/);
+  if (nameWords.some((w) => keywords.includes(w))) {
+    score += 5;
+    skills.push(skill.name);
+  }
+
+  // Description matching (1 point per keyword)
+  const descWords = new Set(skill.description.toLowerCase().split(/\s+/));
+  score += keywords.filter((kw) => descWords.has(kw)).length;
+
+  // Example matching (2 points per example with keyword overlap)
+  for (const example of skill.examples) {
+    const exampleWords = new Set(example.toLowerCase().split(/\s+/));
+    if (keywords.some((kw) => exampleWords.has(kw))) {
+      score += 2;
+    }
+  }
+
+  return { score, tags, skills };
+}
+
+/** Score a complete agent against query keywords. */
+function scoreAgent(agent: RegisteredAgent, keywords: string[]): AgentScore {
+  let score = 0;
+  const matchedTags: string[] = [];
+  const matchedSkills: string[] = [];
+
+  for (const skill of agent.card.skills) {
+    const result = scoreSkill(skill, keywords);
+    score += result.score;
+    matchedTags.push(...result.tags);
+    matchedSkills.push(...result.skills);
+  }
+
+  // Agent-level description matching (0.5 points per keyword)
+  const agentDescWords = new Set(agent.card.description.toLowerCase().split(/\s+/));
+  score += keywords.filter((kw) => agentDescWords.has(kw)).length * 0.5;
+
+  const reasonParts: string[] = [];
+  if (matchedTags.length > 0) reasonParts.push(`tags=[${matchedTags.join(',')}]`);
+  if (matchedSkills.length > 0) reasonParts.push(`skills=[${matchedSkills.join(',')}]`);
+  reasonParts.push(`score=${score}`);
+
+  return {
+    score,
+    matchedTags: [...new Set(matchedTags)],
+    matchedSkills: [...new Set(matchedSkills)],
+    reasoning: reasonParts.join('; '),
+  };
+}
+
+// ============================================================================
 // Semantic Router
 // ============================================================================
 
@@ -108,7 +188,7 @@ export class SemanticRouter {
    * @returns RoutingResult with ranked candidates
    */
   route(query: string, requestId?: string): RoutingResult {
-    const id = requestId ?? `rt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const id = requestId ?? `rt-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
     const keywords = extractKeywords(query);
     const agents = this.registry.listAgents();
 
@@ -117,72 +197,12 @@ export class SemanticRouter {
     for (const agent of agents) {
       if (!agent.healthy) continue;
 
-      let score = 0;
-      const matchedTags: string[] = [];
-      const matchedSkills: string[] = [];
-      const reasonParts: string[] = [];
-
-      for (const skill of agent.card.skills) {
-        // Tag matching (3 points each)
-        for (const tag of skill.tags) {
-          const normalizedTag = tag.toLowerCase();
-          if (keywords.includes(normalizedTag)) {
-            score += 3;
-            matchedTags.push(tag);
-          }
-        }
-
-        // Skill name matching (5 points)
-        const skillNameWords = skill.name.toLowerCase().split(/\s+/);
-        for (const word of skillNameWords) {
-          if (keywords.includes(word)) {
-            score += 5;
-            matchedSkills.push(skill.name);
-            break; // Count each skill once
-          }
-        }
-
-        // Description matching (1 point per keyword)
-        const descWords = skill.description.toLowerCase().split(/\s+/);
-        for (const keyword of keywords) {
-          if (descWords.includes(keyword)) {
-            score += 1;
-          }
-        }
-
-        // Example matching (2 points per example with keyword overlap)
-        for (const example of skill.examples) {
-          const exampleWords = example.toLowerCase().split(/\s+/);
-          if (keywords.some((kw) => exampleWords.includes(kw))) {
-            score += 2;
-          }
-        }
-      }
-
-      // Agent-level description matching (0.5 points per keyword)
-      const agentDescWords = agent.card.description.toLowerCase().split(/\s+/);
-      for (const keyword of keywords) {
-        if (agentDescWords.includes(keyword)) {
-          score += 0.5;
-        }
-      }
-
-      if (score > 0) {
-        if (matchedTags.length > 0) reasonParts.push(`tags=[${matchedTags.join(',')}]`);
-        if (matchedSkills.length > 0) reasonParts.push(`skills=[${matchedSkills.join(',')}]`);
-        reasonParts.push(`score=${score}`);
-
-        candidates.push({
-          agent,
-          score,
-          matchedTags: [...new Set(matchedTags)],
-          matchedSkills: [...new Set(matchedSkills)],
-          reasoning: reasonParts.join('; '),
-        });
+      const result = scoreAgent(agent, keywords);
+      if (result.score > 0) {
+        candidates.push({ agent, ...result });
       }
     }
 
-    // Sort by score descending
     candidates.sort((a, b) => b.score - a.score);
 
     return {

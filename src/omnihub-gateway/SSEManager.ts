@@ -91,7 +91,7 @@ export class SSEChannel {
    */
   send(event: string, data: unknown, id?: string): void {
     const sseEvent: SSEEvent = {
-      id: id ?? `${this.channelId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: id ?? `${this.channelId}-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
       event,
       data: typeof data === 'string' ? data : JSON.stringify(data),
     };
@@ -117,9 +117,10 @@ export class SSEChannel {
    * Write a formatted SSE event to the stream.
    */
   private writeEvent(event: SSEEvent): void {
-    const lines: string[] = [];
-    lines.push(`id: ${event.id}`);
-    lines.push(`event: ${event.event}`);
+    const lines: string[] = [
+      `id: ${event.id}`,
+      `event: ${event.event}`,
+    ];
 
     // Split data across multiple lines if it contains newlines
     for (const line of event.data.split('\n')) {
@@ -204,7 +205,7 @@ export class SSEManager {
    */
   sendToChannel(channelId: string, event: string, data: unknown): boolean {
     const channel = this.channels.get(channelId);
-    if (!channel || channel.state !== 'open') {
+    if (channel?.state !== 'open') {
       return false;
     }
     channel.send(event, data);

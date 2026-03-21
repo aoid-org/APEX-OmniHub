@@ -58,6 +58,15 @@ export type GuardianInterceptor = (
   context: GatewayContext,
 ) => Promise<GuardianResult | null>;
 
+/** Build a standardized denial result. */
+function deny(
+  pillar: GuardianResult['pillar'],
+  reason: string,
+  correlationId: string,
+): GuardianResult {
+  return { verdict: 'deny', reason, pillar, timestamp: new Date().toISOString(), correlationId };
+}
+
 // ============================================================================
 // JWT Claims — Enterprise Role Extraction
 // ============================================================================
@@ -220,13 +229,7 @@ export function createJWTInterceptor(config?: Partial<JWTConfig>): GuardianInter
     );
 
     if (!token) {
-      return {
-        verdict: 'deny',
-        reason: 'JWT verification failed: No Bearer token in Authorization header',
-        pillar: 'jwt',
-        timestamp: new Date().toISOString(),
-        correlationId: context.correlationId,
-      };
+      return deny('jwt', 'JWT verification failed: No Bearer token in Authorization header', context.correlationId);
     }
 
     // --- Step 2: Check verification cache ---
@@ -253,13 +256,7 @@ export function createJWTInterceptor(config?: Partial<JWTConfig>): GuardianInter
       const { data, error } = await supabase.auth.getUser(token);
 
       if (error || !data.user) {
-        return {
-          verdict: 'deny',
-          reason: `JWT verification failed: ${error?.message ?? 'Invalid or expired token'}`,
-          pillar: 'jwt',
-          timestamp: new Date().toISOString(),
-          correlationId: context.correlationId,
-        };
+        return deny('jwt', `JWT verification failed: ${error?.message ?? 'Invalid or expired token'}`, context.correlationId);
       }
 
       const user = data.user;
@@ -306,13 +303,7 @@ export function createJWTInterceptor(config?: Partial<JWTConfig>): GuardianInter
       return null; // Passed
 
     } catch (err) {
-      return {
-        verdict: 'deny',
-        reason: `JWT verification failed: ${err instanceof Error ? err.message : 'Unknown verification error'}`,
-        pillar: 'jwt',
-        timestamp: new Date().toISOString(),
-        correlationId: context.correlationId,
-      };
+      return deny('jwt', `JWT verification failed: ${err instanceof Error ? err.message : 'Unknown verification error'}`, context.correlationId);
     }
   };
 }
@@ -367,13 +358,7 @@ export function createMTLSInterceptor(config?: Partial<MTLSConfig>): GuardianInt
     }
 
     if (!context.deviceId || context.deviceId === 'anonymous') {
-      return {
-        verdict: 'deny',
-        reason: 'mTLS verification failed: No authenticated device identity',
-        pillar: 'mTLS',
-        timestamp: new Date().toISOString(),
-        correlationId: context.correlationId,
-      };
+      return deny('mTLS', 'mTLS verification failed: No authenticated device identity', context.correlationId);
     }
 
     return null;
@@ -420,13 +405,7 @@ export function createSchemaInterceptor(registry: SchemaRegistry): GuardianInter
   return async (request, context) => {
     const error = registry.validate(request.method, request.params ?? {});
     if (error) {
-      return {
-        verdict: 'deny',
-        reason: `Schema validation failed: ${error}`,
-        pillar: 'schema',
-        timestamp: new Date().toISOString(),
-        correlationId: context.correlationId,
-      };
+      return deny('schema', `Schema validation failed: ${error}`, context.correlationId);
     }
     return null;
   };
@@ -452,7 +431,7 @@ export interface RBACPolicy {
  */
 export class RBACEngine {
   private readonly policies: RBACPolicy[] = [];
-  private failClosed: boolean;
+  private readonly failClosed: boolean;
 
   constructor(failClosed = true) {
     this.failClosed = failClosed;
@@ -508,13 +487,7 @@ export function createRBACInterceptor(engine: RBACEngine): GuardianInterceptor {
     const { authorized, policy } = engine.evaluate(request.method, context.trustTier);
 
     if (!authorized) {
-      return {
-        verdict: 'deny',
-        reason: `RBAC denied: method "${request.method}" requires trust tier "${policy?.requiredTrustTier ?? 'OPERATOR'}", got "${context.trustTier}". Ensure your enterprise role has sufficient privileges.`,
-        pillar: 'rbac',
-        timestamp: new Date().toISOString(),
-        correlationId: context.correlationId,
-      };
+      return deny('rbac', `RBAC denied: method "${request.method}" requires trust tier "${policy?.requiredTrustTier ?? 'OPERATOR'}", got "${context.trustTier}". Ensure your enterprise role has sufficient privileges.`, context.correlationId);
     }
 
     return null;
@@ -540,50 +513,19 @@ export function registerDefaultGatewayPolicies(engine: RBACEngine): void {
     });
   }
 
-  // MCP Protocol — tool execution (OPERATOR)
-  engine.addPolicy({
-    method: 'tools/call',
-    requiredAction: 'execute',
-    requiredTrustTier: 'OPERATOR',
-    description: 'MCP tool execution requires OPERATOR tier',
-  });
+  // MCP + A2A execute operations (OPERATOR tier)
+  for (const method of ['tools/call', 'tasks/send', 'tasks/sendSubscribe']) {
+    engine.addPolicy({ method, requiredAction: 'execute', requiredTrustTier: 'OPERATOR', description: `${method} requires OPERATOR tier` });
+  }
 
-  // A2A Protocol — task operations
-  engine.addPolicy({
-    method: 'tasks/send',
-    requiredAction: 'execute',
-    requiredTrustTier: 'OPERATOR',
-    description: 'A2A task dispatch requires OPERATOR tier',
-  });
+  // A2A write operations (OPERATOR tier)
+  engine.addPolicy({ method: 'tasks/cancel', requiredAction: 'write', requiredTrustTier: 'OPERATOR', description: 'tasks/cancel requires OPERATOR tier' });
 
-  engine.addPolicy({
-    method: 'tasks/get',
-    requiredAction: 'read',
-    requiredTrustTier: 'PERIPHERAL',
-    description: 'A2A task query requires PERIPHERAL tier',
-  });
-
-  engine.addPolicy({
-    method: 'tasks/cancel',
-    requiredAction: 'write',
-    requiredTrustTier: 'OPERATOR',
-    description: 'A2A task cancellation requires OPERATOR tier',
-  });
-
-  engine.addPolicy({
-    method: 'tasks/sendSubscribe',
-    requiredAction: 'execute',
-    requiredTrustTier: 'OPERATOR',
-    description: 'A2A streaming task dispatch requires OPERATOR tier',
-  });
+  // A2A read operations (PERIPHERAL tier)
+  engine.addPolicy({ method: 'tasks/get', requiredAction: 'read', requiredTrustTier: 'PERIPHERAL', description: 'tasks/get requires PERIPHERAL tier' });
 
   // Health check — public
-  engine.addPolicy({
-    method: 'health/check',
-    requiredAction: 'read',
-    requiredTrustTier: 'PUBLIC',
-    description: 'Health check is publicly accessible',
-  });
+  engine.addPolicy({ method: 'health/check', requiredAction: 'read', requiredTrustTier: 'PUBLIC', description: 'Health check is publicly accessible' });
 }
 
 // ============================================================================

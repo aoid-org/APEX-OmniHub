@@ -194,7 +194,7 @@ export class TokenEconomicsRouter {
    * 5. Fallback to reasoning tier if no match found
    */
   route(taskDescription: string, requiredCapabilities?: string[]): RoutingDecision {
-    const requestId = `te-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const requestId = `te-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
     const complexity = scoreComplexity(taskDescription);
 
     // Filter models by tier
@@ -223,7 +223,7 @@ export class TokenEconomicsRouter {
     // Select cheapest candidate (by output token cost, which dominates)
     const selected = candidates.reduce((cheapest, current) =>
       current.costPerOutputToken < cheapest.costPerOutputToken ? current : cheapest,
-    );
+    candidates[0]);
 
     // Estimate cost
     const estimatedInputTokens = Math.ceil(taskDescription.length / 4);
@@ -254,11 +254,12 @@ export class TokenEconomicsRouter {
   routeToTier(tier: ModelTier, requiredCapabilities?: string[]): RoutingDecision {
     const tierDescription = `Explicit tier override: ${tier}`;
     // Create a synthetic description that will score into the desired tier
-    const syntheticTask = tier === 'reasoning'
-      ? 'architecture security audit orchestration ' + tierDescription
-      : tier === 'economy'
-        ? 'summarize classify batch ' + tierDescription
-        : tierDescription;
+    let syntheticTask = tierDescription;
+    if (tier === 'reasoning') {
+      syntheticTask = 'architecture security audit orchestration ' + tierDescription;
+    } else if (tier === 'economy') {
+      syntheticTask = 'summarize classify batch ' + tierDescription;
+    }
     return this.route(syntheticTask, requiredCapabilities);
   }
 
