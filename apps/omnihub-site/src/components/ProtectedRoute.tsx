@@ -73,9 +73,5 @@ export function ProtectedRoute({ children }: Readonly<{ children: React.ReactNod
     );
   }
 
-  if (!authenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
   return <>{children}</>;
 }

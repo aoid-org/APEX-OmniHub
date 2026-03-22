@@ -28,8 +28,6 @@ interface DraggableWidgetProps {
 export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetProps) => {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const [dragActive, setDragActive] = useState(false);
-  const originRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -48,26 +46,6 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
     }
   }, [id, x, y]);
 
-  const handlePointerDown = useCallback((e: { clientX: number; clientY: number }) => {
-    originRef.current = { x: e.clientX, y: e.clientY };
-    setDragActive(false);
-  }, []);
-
-  const handlePointerMove = useCallback((e: { clientX: number; clientY: number }) => {
-    if (!originRef.current || dragActive) return;
-    const dx = e.clientX - originRef.current.x;
-    const dy = e.clientY - originRef.current.y;
-    // Euclidean distance: requires geometric commitment, not mere edge contact.
-    if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) {
-      setDragActive(true);
-    }
-  }, [dragActive]);
-
-  const handlePointerUp = useCallback(() => {
-    originRef.current = null;
-    setDragActive(false);
-  }, []);
-
   const handleDragEnd = useCallback(() => {
     const SNAP = 20;
     const finalX = Math.round(x.get() / SNAP) * SNAP;
@@ -81,15 +59,11 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
 
   return (
     <motion.div
-      drag={dragActive}
+      drag
       dragMomentum={false}
       dragElastic={0.05}
       style={{ ...style, x, y, position: 'relative', zIndex: 'auto' as unknown as number }}
       whileDrag={{ scale: 1.015, zIndex: 999, cursor: 'grabbing' }}
-      data-drag-active={dragActive}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
       onDragEnd={handleDragEnd}
     >
       {children}
