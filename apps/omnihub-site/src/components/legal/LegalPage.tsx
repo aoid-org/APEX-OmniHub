@@ -19,6 +19,14 @@ function createKeyFactory(): (prefix: string, value: string) => string {
   };
 }
 
+/** Parse inline markdown bold (**text**) into React nodes. */
+function parseInline(text: string): (string | JSX.Element)[] {
+  const parts = text.split(/\*\*(.+?)\*\*/g);
+  return parts.map((part, i) =>
+    i % 2 === 1 ? <strong key={`b-${i}`}>{part}</strong> : part,
+  );
+}
+
 function renderMarkdown(markdown: string): JSX.Element[] {
   const lines = markdown.split('\n');
   const elements: JSX.Element[] = [];
@@ -34,7 +42,7 @@ function renderMarkdown(markdown: string): JSX.Element[] {
     elements.push(
       <ul key={listKey}>
         {listItems.map((item) => (
-          <li key={getKey('item', `${listKey}-${item}`)}>{item}</li>
+          <li key={getKey('item', `${listKey}-${item}`)}>{parseInline(item)}</li>
         ))}
       </ul>,
     );
@@ -74,7 +82,16 @@ function renderMarkdown(markdown: string): JSX.Element[] {
       return;
     }
 
-    elements.push(<p key={getKey('p', line)}>{line.split('**').join('')}</p>);
+    if (line.startsWith('### ')) {
+      elements.push(
+        <h3 className="heading-4" key={getKey('h3', line)}>
+          {line.slice(4)}
+        </h3>,
+      );
+      return;
+    }
+
+    elements.push(<p key={getKey('p', line)}>{parseInline(line)}</p>);
   });
 
   flushList('list-final');

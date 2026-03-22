@@ -2100,6 +2100,14 @@ body {
   padding-left: var(--space-4);
 }
 
+.legal-content .heading-4 {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-3);
+}
+
 .legal-content__section p {
   font-size: var(--font-size-base);
   color: var(--color-text-secondary);
