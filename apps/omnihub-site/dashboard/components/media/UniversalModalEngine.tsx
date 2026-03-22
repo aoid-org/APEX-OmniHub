@@ -159,6 +159,8 @@ export function UniversalModalEngine() {
           </div>
         );
 
+      case 'vision_redact':
+      case 'vision_confirm':
       case 'confirmation':
         return (
           <div className="py-4">
@@ -176,6 +178,38 @@ export function UniversalModalEngine() {
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                 )}
                 Confirm
+              </Button>
+            </DialogFooter>
+          </div>
+        );
+
+      case 'mcp_tool_approve':
+        return (
+          <div className="py-4">
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
+              <p className="font-semibold mb-1">Security Warning: Destructive Operation</p>
+              <p className="text-xs opacity-90">The agent is requesting permission to execute an MCP tool that may modify or delete data.</p>
+            </div>
+            {activeModal.contextData && (
+              <div className="p-3 mb-4 rounded-md bg-muted/60 border font-mono text-[11px] overflow-auto max-h-[160px] text-muted-foreground whitespace-pre-wrap">
+                {JSON.stringify(activeModal.contextData, null, 2)}
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={close} disabled={isProcessing}>
+                Deny Action
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleAction({ approved: true })}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                )}
+                Approve Execution
               </Button>
             </DialogFooter>
           </div>
