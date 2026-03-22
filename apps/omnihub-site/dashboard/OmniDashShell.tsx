@@ -39,6 +39,8 @@ interface GlassCardProps {
   style?: CSSProperties;
   glow?: boolean;
   onClick?: () => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
 }
 
 interface SectionLabelProps {
@@ -208,7 +210,7 @@ const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) =
   }} />
 );
 
-const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => {
+const GlassCard = ({ children, style={}, glow = false, onClick, onDragOver, onDrop }: GlassCardProps) => {
   const cardStyle: CSSProperties = {
     background: T.card,
     border: `1px solid ${glow ? T.borderGlow : T.border}`,
@@ -230,7 +232,7 @@ const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps
   }
 
   return (
-    <div style={cardStyle}>
+    <div style={cardStyle} onDragOver={onDragOver} onDrop={onDrop}>
       {children}
     </div>
   );
@@ -855,6 +857,8 @@ const OmniSlateWidget = () => {
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [contextApps, setContextApps] = useState<{id: string, label: string, health: 'green'|'yellow'|'red'}[]>([]);
+  const [showContext, setShowContext] = useState<boolean>(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   const send = useCallback(async () => {
@@ -886,10 +890,56 @@ const OmniSlateWidget = () => {
     setInput("Summarize all open workflows and flag anything stalled over 24 hours.");
   };
 
+  useEffect(() => {
+    const handleWidgetDrop = ((e: CustomEvent) => {
+      const { id, label } = e.detail;
+      setContextApps(prev => {
+        if (prev.find(a => a.id === id)) return prev;
+        let health: 'green'|'yellow'|'red' = 'green';
+        if (id.includes('awaiting')) health = 'red';
+        else if (id.includes('trace')) health = 'yellow';
+        return [...prev, { id, label, health }];
+      });
+    }) as EventListener;
+    window.addEventListener('omnislate-drop', handleWidgetDrop);
+    return () => window.removeEventListener('omnislate-drop', handleWidgetDrop);
+  }, []);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData('application/apex-tile');
+    if (data) {
+      try {
+        const { id, label } = JSON.parse(data);
+        setContextApps(prev => {
+          if (prev.find(a => a.id === id)) return prev;
+          let health: 'green'|'yellow'|'red' = 'green';
+          if (id.includes('awaiting')) health = 'red';
+          else if (id.includes('trace') || id.includes('ops')) health = 'yellow';
+          return [...prev, { id, label, health }];
+        });
+      } catch {
+        // ignore parse error logs for bad drop payloads
+      }
+    }
+  };
+
   useEffect(() => { endRef.current?.scrollIntoView({behavior:"smooth"}); }, [messages]);
 
+  const aggregateHealth = contextApps.length === 0 ? null 
+                        : contextApps.some(a => a.health === 'red') ? T.red
+                        : contextApps.some(a => a.health === 'yellow') ? T.warn
+                        : T.green;
+
   return (
-    <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+    <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"visible" }}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       {/* Header — unified 44px */}
       <div style={{
         height:44, padding:"0 16px", flexShrink:0,
@@ -898,20 +948,68 @@ const OmniSlateWidget = () => {
         background:`linear-gradient(90deg,${T.orange}08,transparent)`,
       }}>
         <SectionLabel>OmniSlate</SectionLabel>
-        <div style={{display:"flex",gap:8}}>
+        <div style={{display:"flex",gap:8, position:"relative"}}>
           <button onClick={() => setMessages([])} style={{
             fontSize:11.9,fontWeight:600,color:T.orange,
             background:`${T.orange}15`,border:`1px solid ${T.orange}44`,
             borderRadius:8,padding:"3px 10px",cursor:"pointer",
           }}>CleanSlate</button>
-          <button
-            onClick={fillSuggestion}
-            title="Fill suggestion"
-            style={{
-              width:26,height:26,borderRadius:8,
-              background:`${T.orange}22`,border:`1px solid ${T.orange}44`,
-              color:T.orange,cursor:"pointer",fontSize:14.1,display:"flex",alignItems:"center",justifyContent:"center",
-            }}>💡</button>
+
+          <div
+            onMouseEnter={() => setShowContext(true)}
+            onMouseLeave={() => setShowContext(false)}
+            style={{ position: 'relative' }}
+          >
+            <button
+              onClick={fillSuggestion}
+              title={aggregateHealth ? "View Context" : "Fill suggestion"}
+              style={{
+                width:26,height:26,borderRadius:8,
+                background: aggregateHealth ? `${aggregateHealth}22` : `${T.orange}22`,
+                border:`1px solid ${aggregateHealth ? aggregateHealth + 'aa' : T.orange + '44'}`,
+                color: aggregateHealth || T.orange,
+                cursor:"pointer",fontSize:14.1,display:"flex",alignItems:"center",justifyContent:"center",
+                transition: "all .2s ease",
+                boxShadow: aggregateHealth ? `0 0 8px ${aggregateHealth}44` : 'none',
+              }}>💡</button>
+
+            {/* Non-intrusive Context Tooltip on Hover */}
+            {showContext && contextApps.length > 0 && (
+               <div style={{
+                 position: "absolute", top: "100%", right: 0, marginTop: 8,
+                 background: T.card, border: `1px solid ${aggregateHealth}66`,
+                 borderRadius: 12, padding: 10, width: 240, zIndex: 100,
+                 boxShadow: `0 8px 32px rgba(0,0,0,0.6), 0 0 12px ${aggregateHealth}22`,
+                 display: "flex", flexDirection: "column", gap: 6,
+               }}>
+                 <div style={{ fontSize: 9.8, fontWeight: 700, color: T.t2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
+                   Context Sources
+                 </div>
+                 {contextApps.map(app => (
+                   <div key={app.id} style={{
+                     fontSize: 11.2, fontWeight: 600, padding: "5px 8px", borderRadius: 6,
+                     background: app.health === 'red' ? `${T.red}1a` : app.health === 'yellow' ? `${T.warn}1a` : `${T.green}1a`,
+                     color: app.health === 'red' ? T.red : app.health === 'yellow' ? T.warn : T.green,
+                     border: `1px solid ${app.health === 'red' ? T.red : app.health === 'yellow' ? T.warn : T.green}44`,
+                     display: "flex", alignItems: "center", gap: 6
+                   }}>
+                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
+                     <div style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{app.label}</div>
+                     <button 
+                       onClick={(e) => { e.stopPropagation(); setContextApps(prev => prev.filter(a => a.id !== app.id)); }} 
+                       title="Remove context"
+                       style={{
+                         background: "none", border: "none", color: "currentColor", cursor: "pointer", 
+                         opacity: 0.6, padding: 0, display: "flex", alignItems: "center"
+                       }}
+                     >
+                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                     </button>
+                   </div>
+                 ))}
+               </div>
+            )}
+          </div>
         </div>
       </div>
       {/* Canvas — empty until user sends */}
@@ -952,7 +1050,6 @@ const OmniSlateWidget = () => {
         )}
         <div ref={endRef} />
       </div>
-
 
 
       {/* Input */}
@@ -1044,7 +1141,10 @@ const EcosystemWidget = () => {
     </div>
     <div style={{ padding:"14px", flex:1 }}>
       {/* APEX app tile — brilliant accent treatment */}
-      <button onClick={handleAddApp} style={{
+      <button 
+        draggable
+        onDragStart={(e) => e.dataTransfer.setData('application/apex-tile', JSON.stringify({ id: 'ecosystem', label: 'APEX Ecosystem' }))}
+        onClick={handleAddApp} style={{
         ...APP_TILE_STYLE,
         width:"100%",
         background:`linear-gradient(135deg, ${T.orange}28 0%, ${T.orange}14 100%)`,
@@ -1107,6 +1207,8 @@ const IntegratedAppsWidget = () => {
       {[1,2,3,4].map(i => (
         <button
           key={`integrated-app-ph-${i}`}
+          draggable
+          onDragStart={(e) => e.dataTransfer.setData('application/apex-tile', JSON.stringify({ id: `awaiting-${i}`, label: `Awaiting Node ${i}` }))}
           onClick={() => handleConnectApp(i)}
           title="Connect app"
           style={{

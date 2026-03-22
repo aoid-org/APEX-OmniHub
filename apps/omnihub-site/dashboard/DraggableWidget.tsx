@@ -12,7 +12,7 @@
  * starts tracking. A sub-8 px wiggle is absorbed with zero displacement.
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
 import type { ReactNode, CSSProperties } from 'react';
 
@@ -46,7 +46,7 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
     }
   }, [id, x, y]);
 
-  const handleDragEnd = useCallback(() => {
+  const handleDragEnd = useCallback((_event: unknown, info: { point: { x: number; y: number } }) => {
     const SNAP = 20;
     const finalX = Math.round(x.get() / SNAP) * SNAP;
     const finalY = Math.round(y.get() / SNAP) * SNAP;
@@ -54,11 +54,26 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
     y.set(finalY);
     if (id) {
       localStorage.setItem(`omni_widget_pos_${id}`, JSON.stringify({ x: finalX, y: finalY }));
+      
+      // Hit-test against OmniSlate widget to supply context
+      const slate = document.getElementById('widget_slate');
+      if (slate) {
+        const rect = slate.getBoundingClientRect();
+        // Framer motion info.point has the un-scrolled client coordinates
+        const dropX = info.point.x;
+        const dropY = info.point.y;
+        if (dropX >= rect.left && dropX <= rect.right && dropY >= rect.top && dropY <= rect.bottom) {
+          window.dispatchEvent(new CustomEvent('omnislate-drop', { 
+            detail: { id, label: `Widget: ${id.replace('rt_', '').replace('widget_', '')}` } 
+          }));
+        }
+      }
     }
   }, [id, x, y]);
 
   return (
     <motion.div
+      id={id}
       drag
       dragMomentum={false}
       dragElastic={0.05}
