@@ -864,7 +864,7 @@ const OmniSlateWidget = () => {
     
     try {
       const res = await invokeMcpIntent({ prompt: q, context: {} });
-      setMessages(m => [...m, {role:"assistant", text: res.response }]);
+      setMessages(m => [...m, {role:"assistant", text: res.reply }]);
     } catch (err) {
       console.error('[OmniSlateWidget] mcp-client invocation failed:', err);
       setMessages(m => [...m, {role:"assistant", text:`[System Error]: Failed to contact APEX Agent. Guardian audit logged.`}]);
@@ -881,6 +881,11 @@ const OmniSlateWidget = () => {
     );
   }, []);
 
+  const fillSuggestion = () => {
+    // Basic fallback suggestion since cycle is removed
+    setInput("Summarize all open workflows and flag anything stalled over 24 hours.");
+  };
+
   useEffect(() => { endRef.current?.scrollIntoView({behavior:"smooth"}); }, [messages]);
 
   return (
@@ -893,13 +898,22 @@ const OmniSlateWidget = () => {
         background:`linear-gradient(90deg,${T.orange}08,transparent)`,
       }}>
         <SectionLabel>OmniSlate</SectionLabel>
-        <button onClick={() => setMessages([])} style={{
-          fontSize:11.9,fontWeight:600,color:T.orange,
-          background:`${T.orange}15`,border:`1px solid ${T.orange}44`,
-          borderRadius:8,padding:"3px 10px",cursor:"pointer",
-        }}>CleanSlate</button>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={() => setMessages([])} style={{
+            fontSize:11.9,fontWeight:600,color:T.orange,
+            background:`${T.orange}15`,border:`1px solid ${T.orange}44`,
+            borderRadius:8,padding:"3px 10px",cursor:"pointer",
+          }}>CleanSlate</button>
+          <button
+            onClick={fillSuggestion}
+            title="Fill suggestion"
+            style={{
+              width:26,height:26,borderRadius:8,
+              background:`${T.orange}22`,border:`1px solid ${T.orange}44`,
+              color:T.orange,cursor:"pointer",fontSize:14.1,display:"flex",alignItems:"center",justifyContent:"center",
+            }}>💡</button>
+        </div>
       </div>
-
       {/* Canvas — empty until user sends */}
       <div style={{ flex:1, overflowY:"auto", padding:"14px 16px", display:"flex", flexDirection:"column", gap:10, minHeight:0 }}>
         {messages.length === 0 && (
