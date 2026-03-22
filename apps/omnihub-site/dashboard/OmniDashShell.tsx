@@ -3,7 +3,7 @@ import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useDashboardData, type DashboardData, type Incident } from "./hooks/useDashboardData";
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
-import { queryAgentRegistry } from '@/omnihub-gateway/mcp-client';
+import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -688,20 +688,13 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
 
 // ─── Widget: APEX Agent ───────────────────────────────────────────────────────
 const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
-  const [elapsed, setElapsed] = useState<number>(0);
-  const [isRunning, setIsRunning] = useState<boolean>(true);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (!isRunning) return undefined;
-    const id = setInterval(() => setElapsed(s => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [isRunning]);
-
-  const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
-  const ss = String(elapsed % 60).padStart(2, "0");
+  const mm = "00";
+  const ss = "00";
 
   const handlePlayPause = () => setIsRunning(r => !r);
-  const handleReset = () => { setElapsed(0); setIsRunning(false); };
+  const handleReset = () => setIsRunning(false);
 
   return (
     <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
@@ -858,59 +851,35 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
   );
 };
 
-// ─── Widget: OmniSlate ────────────────────────────────────────────────────────
-const SLATE_SUGGESTIONS = [
-  "Summarize all open workflows and flag anything stalled over 24 hours.",
-  "Run a Guardian audit on the last 50 agent actions and highlight anomalies.",
-  "Pull Salesforce pipeline for this week and draft an exec summary.",
-];
-
 const OmniSlateWidget = () => {
   const [input, setInput] = useState<string>("");
-  const [suggIdx, setSuggIdx] = useState<number>(0);
-  const [suggVisible, setSuggVisible] = useState<boolean>(true);
   const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const endRef = useRef<HTMLDivElement>(null);
-  const pendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Cycle suggestion every 4s with fade
-  const cycleSuggestion = useCallback(() => {
-    setSuggVisible(false);
-    setTimeout(() => {
-      setSuggIdx((i) => (i + 1) % SLATE_SUGGESTIONS.length);
-      setSuggVisible(true);
-    }, 400);
-  }, []);
-
-  useEffect(() => {
-    const id = setInterval(cycleSuggestion, 4000);
-    return () => clearInterval(id);
-  }, [cycleSuggestion]);
 
   const send = useCallback(async () => {
     if (!input.trim()) return;
     const q = input.trim(); setInput(""); setLoading(true);
     setMessages(m => [...m, {role:"user", text:q}]);
-    pendingRef.current = setTimeout(() => {
-      setMessages(m => [...m, {role:"assistant", text:`Analyzing: "${q}" — Guardian audit passed. Agent response queued.`}]);
+    
+    try {
+      const res = await invokeMcpIntent({ prompt: q, context: {} });
+      setMessages(m => [...m, {role:"assistant", text: res.response }]);
+    } catch (err) {
+      console.error('[OmniSlateWidget] mcp-client invocation failed:', err);
+      setMessages(m => [...m, {role:"assistant", text:`[System Error]: Failed to contact APEX Agent. Guardian audit logged.`}]);
+    } finally {
       setLoading(false);
-      pendingRef.current = null;
-    }, 900);
+    }
   }, [input]);
 
   const stop = useCallback(() => {
-    if (pendingRef.current) {
-      clearTimeout(pendingRef.current);
-      pendingRef.current = null;
-    }
     setLoading(false);
     setMessages(m => m.length > 0 && m.at(-1)?.role === 'user'
       ? [...m, {role:"assistant", text:"— Response stopped by user."}]
       : m
     );
   }, []);
-
-  const fillSuggestion = () => setInput(SLATE_SUGGESTIONS[suggIdx]);
 
   useEffect(() => { endRef.current?.scrollIntoView({behavior:"smooth"}); }, [messages]);
 
@@ -924,21 +893,11 @@ const OmniSlateWidget = () => {
         background:`linear-gradient(90deg,${T.orange}08,transparent)`,
       }}>
         <SectionLabel>OmniSlate</SectionLabel>
-        <div style={{display:"flex",gap:8}}>
-          <button onClick={() => setMessages([])} style={{
-            fontSize:11.9,fontWeight:600,color:T.orange,
-            background:`${T.orange}15`,border:`1px solid ${T.orange}44`,
-            borderRadius:8,padding:"3px 10px",cursor:"pointer",
-          }}>CleanSlate</button>
-          <button
-            onClick={fillSuggestion}
-            title="Fill suggestion"
-            style={{
-              width:26,height:26,borderRadius:8,
-              background:`${T.orange}22`,border:`1px solid ${T.orange}44`,
-              color:T.orange,cursor:"pointer",fontSize:14.1,display:"flex",alignItems:"center",justifyContent:"center",
-            }}>💡</button>
-        </div>
+        <button onClick={() => setMessages([])} style={{
+          fontSize:11.9,fontWeight:600,color:T.orange,
+          background:`${T.orange}15`,border:`1px solid ${T.orange}44`,
+          borderRadius:8,padding:"3px 10px",cursor:"pointer",
+        }}>CleanSlate</button>
       </div>
 
       {/* Canvas — empty until user sends */}
@@ -980,32 +939,7 @@ const OmniSlateWidget = () => {
         <div ref={endRef} />
       </div>
 
-      {/* Cycling suggestion chip */}
-      <div style={{
-        padding:"0 14px 8px",
-        display:"flex", alignItems:"center", gap:8,
-      }}>
-        <button onClick={fillSuggestion} style={{
-          display:"flex", alignItems:"center", gap:8,
-          background:`${T.surface}`,
-          border:`1px solid ${T.orange}28`,
-          borderRadius:10, padding:"7px 12px",
-          cursor:"pointer", textAlign:"left", width:"100%",
-          transition:"opacity .4s ease, border-color .2s",
-          opacity: suggVisible ? 1 : 0,
-        }}>
-          <span style={{
-            fontSize:9.8, fontWeight:800, letterSpacing:"0.12em",
-            color:T.orange, textTransform:"uppercase", flexShrink:0,
-          }}>Try</span>
-          <span style={{
-            fontSize:13, color:T.t2, lineHeight:1.4,
-            overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
-            flex:1, minWidth: 0,
-          }}>{SLATE_SUGGESTIONS[suggIdx]}</span>
-          <svg style={{flexShrink:0,marginLeft:"auto"}} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.orange} strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
-      </div>
+
 
       {/* Input */}
       <div style={{
@@ -1189,17 +1123,7 @@ const IntegratedAppsWidget = () => {
 
 // ─── Right Panel Sections ─────────────────────────────────────────────────────
 const SecurityPanel = (_props?: Record<string, unknown>) => {
-  const [scanning, setScanning] = useState<boolean>(false);
-  const [lastCheck, setLastCheck] = useState<string>(new Date().toLocaleTimeString());
-
-  const handleScan = () => {
-    if (scanning) return;
-    setScanning(true);
-    setTimeout(() => {
-      setScanning(false);
-      setLastCheck(new Date().toLocaleTimeString());
-    }, 1800);
-  };
+  const [lastCheck] = useState<string>(new Date().toLocaleTimeString());
 
   return (
     <GlassCard style={{ padding:"14px 14px 12px" }}>
@@ -1210,32 +1134,13 @@ const SecurityPanel = (_props?: Record<string, unknown>) => {
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
         <div style={{display:"flex",flexDirection:"column",gap:3}}>
           <div style={{display:"flex",alignItems:"center",gap:7}}>
-            <StatusDot color={scanning ? T.warn : T.green} />
-            <div style={{fontSize:14.1,fontWeight:600,color:T.t1}}>{scanning ? "Scanning…" : "Zero Trust Active"}</div>
+            <StatusDot color={T.green} />
+            <div style={{fontSize:14.1,fontWeight:600,color:T.t1}}>Zero Trust Active</div>
           </div>
-          <div style={{fontSize:10.8,color:T.t2}}>{scanning ? "Running gateway audit" : "All gateways secured"}</div>
+          <div style={{fontSize:10.8,color:T.t2}}>All gateways secured</div>
         </div>
       </div>
       <div style={{fontSize:9.8,color:T.t3}}>LAST CHECK: {lastCheck}</div>
-      <button
-        onClick={handleScan}
-        disabled={scanning}
-        style={{
-          marginTop:10,width:"100%",padding:"8px",
-          background: scanning ? `${T.warn}18` : T.surface,
-          border:`1px solid ${scanning ? T.warn+"55" : T.border}`,
-          borderRadius:10,color: scanning ? T.warn : T.t1,fontSize:13,
-          cursor: scanning ? "not-allowed" : "pointer",fontWeight:500,
-          display:"flex",alignItems:"center",justifyContent:"center",gap:6,
-          transition:"all .2s",
-        }}
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-          style={{ animation: scanning ? "spin 1s linear infinite" : "none" }}>
-          <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
-        </svg>
-        {scanning ? "Scanning…" : "Scan Now"}
-      </button>
     </GlassCard>
   );
 };
@@ -1369,8 +1274,6 @@ const OpsControlsPanel = ({ ops, setOps }: OpsControlsPanelProps) => (
       <SectionLabel>Ops Controls</SectionLabel>
     </div>
     <div style={{ display:"flex", flexDirection:"column", borderTop:`1px solid ${T.border}` }}>
-      <Toggle label="Demo Mode"     sublabel="Simulated data feed"        value={ops.demo}     onChange={v=>setOps(o=>({...o,demo:v}))}     color={T.orange} />
-      <div style={{height:1,background:T.border}} />
       <Toggle label="Auto-Pilot"    sublabel="Autonomous task handling"     value={ops.autoPilot} onChange={v=>setOps(o=>({...o,autoPilot:v}))} color={T.purple} />
       <div style={{height:1,background:T.border}} />
       <Toggle label="Guardian Mode" sublabel="AI policy enforcement"       value={ops.guardian} onChange={v=>setOps(o=>({...o,guardian:v}))}  color={T.blue}   />

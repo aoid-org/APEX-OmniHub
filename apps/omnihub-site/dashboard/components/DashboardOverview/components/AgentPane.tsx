@@ -22,7 +22,6 @@ export const AgentPane = memo(function AgentPane({
       }
     : undefined;
 
-  const [elapsed, setElapsed] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(!isStandby);
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -46,14 +45,8 @@ export const AgentPane = memo(function AgentPane({
     }
   }, [pos, x, y]);
 
-  useEffect(() => {
-    if (!isRunning) return undefined;
-    const id = setInterval(() => setElapsed(s => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [isRunning]);
-
-  const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
-  const ss = String(elapsed % 60).padStart(2, '0');
+  const mm = "00";
+  const ss = "00";
 
   const handlePlay = () => setIsRunning(true);
   const handlePause = () => setIsRunning(false);

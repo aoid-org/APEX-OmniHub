@@ -24,9 +24,7 @@ import { EcosystemPane } from './components/EcosystemPane';
 import { AppsSection } from './components/AppsSection';
 
 export const DashboardOverview = memo(function DashboardOverview({
-  demoMode,
   appHealth,
-  setAppHealth,
   ecoAppsVisible,
   setEcoAppsVisible,
 }: DashboardOverviewProps) {
@@ -84,19 +82,9 @@ export const DashboardOverview = memo(function DashboardOverview({
 
   const handleCommandSubmit = useCallback(() => {
     if (!prompt.trim()) return;
-    if (demoMode) {
-      setAppHealth('yellow');
-      addTraceLog('SIM_MODE_BYPASS: live Edge Functions skipped.');
-      setTimeout(() => {
-        setAppHealth('green');
-        addTraceLog('SIM_MODE_SUCCESS_TRACE: sync resolved in 2500ms.');
-        setPrompt('');
-      }, 2500);
-      return;
-    }
     addTraceLog(`QUEUED: ${prompt.trim()}`);
     setPrompt('');
-  }, [addTraceLog, demoMode, prompt, setAppHealth]);
+  }, [addTraceLog, prompt]);
 
   const handleRunLambda = useCallback(async () => {
     if (lambdaDispatching) return;
@@ -120,7 +108,7 @@ export const DashboardOverview = memo(function DashboardOverview({
       const entry = APP_REGISTRY.find((e: AppRegistryEntry) => e.label === app.name);
       if (!entry) return;
       const intent: OmniDashIntent = {
-        source: 'internal' as const,
+        source: 'module',
         appKey: entry.key,
         provider: app.name,
         label: app.name,
