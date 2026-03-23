@@ -13,7 +13,7 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { motion, useMotionValue } from 'framer-motion';
+import { motion, useMotionValue, useDragControls } from 'framer-motion';
 import type { ReactNode, CSSProperties } from 'react';
 
 /** Minimum pointer travel (px) before drag activates. Spatial commitment gate. */
@@ -28,6 +28,7 @@ interface DraggableWidgetProps {
 export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetProps) => {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
+  const controls = useDragControls();
   const [dragActive, setDragActive] = useState(false);
   const originRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -48,20 +49,22 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
     }
   }, [id, x, y]);
 
-  const handlePointerDown = useCallback((e: { clientX: number; clientY: number }) => {
+  // Note: Cast React.PointerEvent to any/unknown to satisfy Framer's PointerEvent expectation
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     originRef.current = { x: e.clientX, y: e.clientY };
     setDragActive(false);
   }, []);
 
-  const handlePointerMove = useCallback((e: { clientX: number; clientY: number }) => {
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (!originRef.current || dragActive) return;
     const dx = e.clientX - originRef.current.x;
     const dy = e.clientY - originRef.current.y;
     // Euclidean distance: requires geometric commitment, not mere edge contact.
     if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) {
       setDragActive(true);
+      controls.start(e);
     }
-  }, [dragActive]);
+  }, [dragActive, controls]);
 
   const handlePointerUp = useCallback(() => {
     originRef.current = null;
@@ -74,6 +77,9 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
     const finalY = Math.round(y.get() / SNAP) * SNAP;
     x.set(finalX);
     y.set(finalY);
+    setDragActive(false);
+    originRef.current = null;
+    
     if (id) {
       localStorage.setItem(`omni_widget_pos_${id}`, JSON.stringify({ x: finalX, y: finalY }));
       
@@ -96,7 +102,9 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
   return (
     <motion.div
       id={id}
-      drag={dragActive}
+      drag
+      dragControls={controls}
+      dragListener={false}
       dragMomentum={false}
       dragElastic={0.05}
       style={{ ...style, x, y, position: 'relative', zIndex: 'auto' as unknown as number }}
