@@ -303,6 +303,8 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
     };
   return (
     <button
+      draggable
+      onDragStart={(e) => e.dataTransfer.setData('application/apex-tile', JSON.stringify({ id: n.label.toLowerCase(), label: n.label, iconIdx: n.iconIdx }))}
       onClick={onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
@@ -857,7 +859,7 @@ const OmniSlateWidget = () => {
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [contextApps, setContextApps] = useState<{id: string, label: string, health: 'green'|'yellow'|'red'}[]>([]);
+  const [contextApps, setContextApps] = useState<{id: string, label: string, health: 'green'|'yellow'|'red', iconIdx?: number}[]>([]);
   const [showContext, setShowContext] = useState<boolean>(false);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -892,13 +894,13 @@ const OmniSlateWidget = () => {
 
   useEffect(() => {
     const handleWidgetDrop = ((e: CustomEvent) => {
-      const { id, label } = e.detail;
+      const { id, label, iconIdx } = e.detail;
       setContextApps(prev => {
         if (prev.find(a => a.id === id)) return prev;
         let health: 'green'|'yellow'|'red' = 'green';
         if (id.includes('awaiting')) health = 'red';
-        else if (id.includes('trace')) health = 'yellow';
-        return [...prev, { id, label, health }];
+        else if (id.includes('trace') || id.includes('ops')) health = 'yellow';
+        return [...prev, { id, label, health, iconIdx }];
       });
     }) as EventListener;
     window.addEventListener('omnislate-drop', handleWidgetDrop);
@@ -914,13 +916,13 @@ const OmniSlateWidget = () => {
     const data = e.dataTransfer.getData('application/apex-tile');
     if (data) {
       try {
-        const { id, label } = JSON.parse(data);
+        const { id, label, iconIdx } = JSON.parse(data);
         setContextApps(prev => {
           if (prev.find(a => a.id === id)) return prev;
           let health: 'green'|'yellow'|'red' = 'green';
           if (id.includes('awaiting')) health = 'red';
-          else if (id.includes('trace') || id.includes('ops')) health = 'yellow';
-          return [...prev, { id, label, health }];
+          else if (id.includes('trace') || id.includes('ops') || id.includes('security')) health = 'yellow';
+          return [...prev, { id, label, health, iconIdx }];
         });
       } catch {
         // ignore parse error logs for bad drop payloads
@@ -1051,6 +1053,29 @@ const OmniSlateWidget = () => {
         <div ref={endRef} />
       </div>
 
+      {/* Uniform Context Icons Map */}
+      {contextApps.length > 0 && (
+        <div style={{ padding: "0 14px", display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+          {contextApps.map(app => (
+            <div key={app.id} 
+              title={app.label}
+              style={{
+                width: 28, height: 28, borderRadius: 8,
+                background: app.health === 'red' ? `${T.red}22` : app.health === 'yellow' ? `${T.warn}22` : `${T.green}22`,
+                border: `1px solid ${app.health === 'red' ? `${T.red}66` : app.health === 'yellow' ? `${T.warn}66` : `${T.green}66`}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: app.health === 'red' ? T.red : app.health === 'yellow' ? T.warn : T.green,
+                fontSize: 14, fontWeight: 700,
+                boxShadow: `inset 0 0 10px rgba(0,0,0,0.5)`,
+              }}
+            >
+              {app.iconIdx !== undefined 
+                ? <AppIcon idx={app.iconIdx} size={16} style={{ filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.5))` }} /> 
+                : <span style={{fontSize:13}}>{app.label.charAt(0).toUpperCase()}</span>}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Input */}
       <div style={{
