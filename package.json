@@ -90,7 +90,7 @@
     "@ai-sdk/anthropic": "^3.0.63",
     "@ai-sdk/openai": "^3.0.47",
     "@ai-sdk/react": "^3.0.136",
-    "@capacitor/android": "^6.2.1",
+    "@capacitor/android": "^8.2.0",
     "@capacitor/core": "^6.2.1",
     "@capacitor/device": "^6.0.3",
     "@capacitor/ios": "^6.2.1",
