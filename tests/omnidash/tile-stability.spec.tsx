@@ -26,7 +26,7 @@ vi.mock('framer-motion', () => {
   const FRAMER_PROPS = new Set([
     'whileHover', 'whileTap', 'whileFocus', 'whileDrag', 'whileInView',
     'animate', 'initial', 'exit', 'variants', 'transition', 'layout',
-    'layoutId', 'drag', 'dragConstraints', 'dragElastic', 'dragMomentum',
+    'layoutId', 'drag', 'dragControls', 'dragListener', 'dragConstraints', 'dragElastic', 'dragMomentum',
     'dragTransition', 'dragSnapToOrigin', 'onDragStart', 'onDragEnd',
     'onAnimationStart', 'onAnimationComplete', 'onHoverStart', 'onHoverEnd',
   ]);
@@ -44,6 +44,7 @@ vi.mock('framer-motion', () => {
     useMotionValue: (v: unknown) => ({ get: () => v, set: vi.fn(), on: vi.fn() }),
     useSpring: (v: unknown) => ({ get: () => v, set: vi.fn() }),
     useTransform: vi.fn(() => ({ get: vi.fn() })),
+    useDragControls: vi.fn(() => ({ start: vi.fn() })),
   };
 });
 
