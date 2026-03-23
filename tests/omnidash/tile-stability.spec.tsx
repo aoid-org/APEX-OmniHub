@@ -26,7 +26,7 @@ vi.mock('framer-motion', () => {
   const FRAMER_PROPS = new Set([
     'whileHover', 'whileTap', 'whileFocus', 'whileDrag', 'whileInView',
     'animate', 'initial', 'exit', 'variants', 'transition', 'layout',
-    'layoutId', 'drag', 'dragConstraints', 'dragElastic', 'dragMomentum',
+    'layoutId', 'drag', 'dragControls', 'dragListener', 'dragConstraints', 'dragElastic', 'dragMomentum',
     'dragTransition', 'dragSnapToOrigin', 'onDragStart', 'onDragEnd',
     'onAnimationStart', 'onAnimationComplete', 'onHoverStart', 'onHoverEnd',
   ]);
@@ -44,6 +44,7 @@ vi.mock('framer-motion', () => {
     useMotionValue: (v: unknown) => ({ get: () => v, set: vi.fn(), on: vi.fn() }),
     useSpring: (v: unknown) => ({ get: () => v, set: vi.fn() }),
     useTransform: vi.fn(() => ({ get: vi.fn() })),
+    useDragControls: vi.fn(() => ({ start: vi.fn() })),
   };
 });
 
@@ -302,12 +303,12 @@ describe('BUG FAMILY B — OmniSlate Height Determinism', () => {
     );
     const css = fs.readFileSync(cssPath, 'utf-8');
 
-    const smBlock = css.match(/\.apex-hero-tile--sm\s*\{[^}]*\}/s);
+    const smBlock = /\.apex-hero-tile--sm\s*\{[^}]*\}/s.exec(css);
     expect(smBlock).not.toBeNull();
     // Must have a deterministic fixed height, not just a max-height cap
     expect(smBlock![0]).toMatch(/\bheight\s*:/);
 
-    const lgBlock = css.match(/\.apex-hero-tile--lg\s*\{[^}]*\}/s);
+    const lgBlock = /\.apex-hero-tile--lg\s*\{[^}]*\}/s.exec(css);
     expect(lgBlock).not.toBeNull();
     expect(lgBlock![0]).toMatch(/\bheight\s*:/);
   });
@@ -323,11 +324,11 @@ describe('BUG FAMILY B — OmniSlate Height Determinism', () => {
     );
     const css = fs.readFileSync(cssPath, 'utf-8');
 
-    const smBlock = css.match(/\.apex-hero-tile--sm\s*\{[^}]*\}/s);
+    const smBlock = /\.apex-hero-tile--sm\s*\{[^}]*\}/s.exec(css);
     expect(smBlock![0]).toContain('overflow: hidden');
     expect(smBlock![0]).not.toContain('overflow-y: auto');
 
-    const lgBlock = css.match(/\.apex-hero-tile--lg\s*\{[^}]*\}/s);
+    const lgBlock = /\.apex-hero-tile--lg\s*\{[^}]*\}/s.exec(css);
     expect(lgBlock![0]).toContain('overflow: hidden');
     expect(lgBlock![0]).not.toContain('overflow-y: auto');
   });
