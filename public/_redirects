@@ -15,5 +15,6 @@
 /terms /terms.html 200
 /terms/ /terms.html 200
 
-# SPA fallback
+# SPA fallback - serves index.html for all unmatched routes (no loop)
+/index.html /index.html 200
 /* /index.html 200
