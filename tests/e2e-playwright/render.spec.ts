@@ -53,7 +53,9 @@ test.describe('Runtime Render Smoke Tests', () => {
   });
 
   test('app renders interactive content', async ({ page }) => {
-    await page.goto('/omnitrace');
+    // Use the public home route (not a protected route like /omnitrace which
+    // redirects to /omnidash and yields minimal content without auth).
+    await page.goto('/');
 
     // Wait for app shell
     await expect(page.locator('[data-testid="app-shell"]')).toBeVisible();
