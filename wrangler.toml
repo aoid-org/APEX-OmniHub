@@ -1,0 +1,12 @@
+# Cloudflare Pages configuration for APEX-OmniHub
+# https://developers.cloudflare.com/pages/configuration/
+
+name = "apex-omnihub"
+compatibility_date = "2026-03-24"
+pages_build_output_dir = "dist"
+
+[env.production]
+# Production environment — all vars set in CF Pages dashboard
+
+[env.preview]
+# Preview deployments (pull requests)
