@@ -80,6 +80,15 @@ interface OmniDashHeaderProps {
   invoke: (config: OmniModalConfig) => void;
 }
 
+export type OmniHealthState = 'green' | 'yellow' | 'red';
+
+export interface OmniContextApp {
+  id: string;
+  label: string;
+  health: OmniHealthState;
+  iconIdx?: number;
+}
+
 interface AgentWidgetProps {
   tick: number;
 }
@@ -303,6 +312,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
     };
   return (
     <button
+      className="omni-nav-item"
       draggable
       onDragStart={(e) => e.dataTransfer.setData('application/apex-tile', JSON.stringify({ id: n.label.toLowerCase(), label: n.label, iconIdx: n.iconIdx }))}
       onClick={onClick}
@@ -399,7 +409,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
   };
 
   return (
-    <div style={{
+    <div className="omni-sidebar" style={{
       width:228, flexShrink:0,
       background:`linear-gradient(180deg, ${T.surface} 0%, ${T.bg} 100%)`,
       borderRight:`1px solid ${T.border}`,
@@ -413,7 +423,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
       ))}
 
       {/* Status Footer */}
-      <div style={{ marginTop:"auto", padding:"16px 12px 20px", borderTop:`1px solid ${T.border}` }}>
+      <div className="omni-sidebar-footer" style={{ marginTop:"auto", padding:"16px 12px 20px", borderTop:`1px solid ${T.border}` }}>
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
           <StatusDot color={T.green} />
           <span style={{ fontSize:11.9, color:T.t2, fontWeight:500 }}>All Systems Operational</span>
@@ -542,7 +552,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
       </button>
 
       {/* Search — takes all remaining center space, max 360px */}
-      <div style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
+      <div className="omni-header-search" style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
         <div style={{
           display:"flex", alignItems:"center", gap:9,
           background:T.card, border:`1px solid ${T.border}`,
@@ -559,7 +569,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
       </div>
 
       {/* Right actions — functional buttons */}
-      <div style={{display:"flex", alignItems:"center", gap:8, flexShrink:0}}>
+      <div className="omni-header-actions" style={{display:"flex", alignItems:"center", gap:8, flexShrink:0}}>
         {/* Org Selector */}
         <div style={{ position:"relative" }}>
           <button onClick={() => setOrgOpen(o => !o)} style={{
@@ -855,11 +865,49 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
   );
 };
 
+const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () => void }) => {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      onClick={onRemove}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      title={`Remove ${app.label}`}
+      style={{
+        width: 28, height: 28, borderRadius: 8,
+        background: app.health === 'red' ? `${T.red}22` : app.health === 'yellow' ? `${T.warn}22` : `${T.green}22`,
+        border: `1px solid ${app.health === 'red' ? `${T.red}66` : app.health === 'yellow' ? `${T.warn}66` : `${T.green}66`}`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: app.health === 'red' ? T.red : app.health === 'yellow' ? T.warn : T.green,
+        fontSize: 14, fontWeight: 700,
+        boxShadow: `inset 0 0 10px rgba(0,0,0,0.5)`,
+        cursor: "pointer",
+        position: "relative",
+        transition: "all 0.15s ease",
+        transform: hov ? "scale(1.05)" : "scale(1)",
+      }}
+    >
+      <div style={{ opacity: hov ? 0.15 : 1, transition: "opacity 0.15s ease", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {app.iconIdx !== undefined 
+          ? <AppIcon idx={app.iconIdx} size={16} style={{ filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.5))` }} /> 
+          : <span style={{fontSize:13}}>{app.label.charAt(0).toUpperCase()}</span>}
+      </div>
+      {hov && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </div>
+      )}
+    </button>
+  );
+};
+
 const OmniSlateWidget = () => {
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [contextApps, setContextApps] = useState<{id: string, label: string, health: 'green'|'yellow'|'red', iconIdx?: number}[]>([]);
+  const [contextApps, setContextApps] = useState<OmniContextApp[]>([]);
   const [showContext, setShowContext] = useState<boolean>(false);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -897,7 +945,7 @@ const OmniSlateWidget = () => {
       const { id, label, iconIdx } = e.detail;
       setContextApps(prev => {
         if (prev.find(a => a.id === id)) return prev;
-        let health: 'green'|'yellow'|'red' = 'green';
+        let health: OmniHealthState = 'green';
         if (id.includes('awaiting')) health = 'red';
         else if (id.includes('trace') || id.includes('ops')) health = 'yellow';
         return [...prev, { id, label, health, iconIdx }];
@@ -919,7 +967,7 @@ const OmniSlateWidget = () => {
         const { id, label, iconIdx } = JSON.parse(data);
         setContextApps(prev => {
           if (prev.find(a => a.id === id)) return prev;
-          let health: 'green'|'yellow'|'red' = 'green';
+          let health: OmniHealthState = 'green';
           if (id.includes('awaiting')) health = 'red';
           else if (id.includes('trace') || id.includes('ops') || id.includes('security')) health = 'yellow';
           return [...prev, { id, label, health, iconIdx }];
@@ -931,6 +979,10 @@ const OmniSlateWidget = () => {
   };
 
   useEffect(() => { endRef.current?.scrollIntoView({behavior:"smooth"}); }, [messages]);
+
+  const handleRemoveContextApp = useCallback((appId: string) => {
+    setContextApps(prev => prev.filter(a => a.id !== appId));
+  }, []);
 
   const aggregateHealth = contextApps.length === 0 ? null 
                         : contextApps.some(a => a.health === 'red') ? T.red
@@ -998,7 +1050,7 @@ const OmniSlateWidget = () => {
                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
                      <div style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{app.label}</div>
                      <button 
-                       onClick={(e) => { e.stopPropagation(); setContextApps(prev => prev.filter(a => a.id !== app.id)); }} 
+                       onClick={(e) => { e.stopPropagation(); handleRemoveContextApp(app.id); }} 
                        title="Remove context"
                        style={{
                          background: "none", border: "none", color: "currentColor", cursor: "pointer", 
@@ -1057,22 +1109,11 @@ const OmniSlateWidget = () => {
       {contextApps.length > 0 && (
         <div style={{ padding: "0 14px", display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
           {contextApps.map(app => (
-            <div key={app.id} 
-              title={app.label}
-              style={{
-                width: 28, height: 28, borderRadius: 8,
-                background: app.health === 'red' ? `${T.red}22` : app.health === 'yellow' ? `${T.warn}22` : `${T.green}22`,
-                border: `1px solid ${app.health === 'red' ? `${T.red}66` : app.health === 'yellow' ? `${T.warn}66` : `${T.green}66`}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: app.health === 'red' ? T.red : app.health === 'yellow' ? T.warn : T.green,
-                fontSize: 14, fontWeight: 700,
-                boxShadow: `inset 0 0 10px rgba(0,0,0,0.5)`,
-              }}
-            >
-              {app.iconIdx !== undefined 
-                ? <AppIcon idx={app.iconIdx} size={16} style={{ filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.5))` }} /> 
-                : <span style={{fontSize:13}}>{app.label.charAt(0).toUpperCase()}</span>}
-            </div>
+            <ContextDroplet
+              key={app.id}
+              app={app}
+              onRemove={() => handleRemoveContextApp(app.id)}
+            />
           ))}
         </div>
       )}
@@ -1228,7 +1269,7 @@ const IntegratedAppsWidget = () => {
       <SectionLabel>Integrated Apps</SectionLabel>
     </div>
     {/* 4 columns — same tile size as EcosystemWidget tiles */}
-    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10 }}>
+    <div className="omni-grid-apps" style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10 }}>
       {[1,2,3,4].map(i => (
         <button
           key={`integrated-app-ph-${i}`}
@@ -1457,15 +1498,32 @@ export default function OmniDashShell() {
         ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
         button { font-family:'Space Grotesk',sans-serif; }
         input { font-family:'Space Grotesk',sans-serif; }
+        
+        @media (max-width: 950px) {
+          .omni-shell-main { flex-direction: column !important; overflow-y: auto !important; }
+          .omni-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid ${T.border} !important; flex-direction: row !important; overflow-x: auto !important; padding: 12px !important; height: auto !important; max-height: 80px !important; }
+          .omni-sidebar-footer { display: none !important; }
+          .omni-nav-item { width: auto !important; white-space: nowrap !important; }
+          .omni-header-search { display: none !important; }
+          .omni-header-actions { flex: 1 !important; justify-content: flex-end !important; }
+          .omni-canvas-container { overflow: visible !important; padding: 12px !important; }
+          .omni-grid-top { display: flex !important; flex-direction: column !important; height: auto !important; }
+          .omni-grid-top > div { height: 420px !important; flex-shrink: 0 !important; }
+          .omni-grid-apps { grid-template-columns: 1fr 1fr !important; }
+          .omni-right-panel { width: 100% !important; border-left: none !important; border-top: 1px solid ${T.border} !important; height: auto !important; overflow: visible !important; flex-direction: row !important; flex-wrap: wrap !important; }
+          .omni-right-panel > div { flex: 1 1 300px !important; }
+          .omni-footer-bar { flex-direction: column !important; height: auto !important; padding: 12px !important; gap: 8px !important; align-items: flex-start !important; }
+          .omni-footer-bar .footer-right { margin-left: 0 !important; flex-wrap: wrap !important; }
+        }
       `}</style>
 
       <OmniDashHeader tick={tick} isDark={isDark} setIsDark={setIsDark} invoke={invoke} />
 
-      <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
+      <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
         <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />
 
         {/* Main Canvas */}
-        <div style={{
+        <div className="omni-canvas-container" style={{
           flex:1, display:"flex", flexDirection:"column",
           overflow:"auto", padding:"16px", gap:14,
           position:"relative",
@@ -1492,7 +1550,7 @@ export default function OmniDashShell() {
               Each DraggableWidget gets height+overflow:hidden so no child
               (including OmniSlate chat history) can blow out the row or
               dislodge sibling tiles. */}
-          <div style={{ display:"grid", gridTemplateColumns:"220px 1fr 220px", gap:14, height:300, minHeight:0 }}>
+          <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns:"220px 1fr 220px", gap:14, height:300, minHeight:0 }}>
             <DraggableWidget id="widget_agent" style={{ height:"100%", overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
             <DraggableWidget id="widget_slate" style={{ height:"100%", overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
             <DraggableWidget id="widget_eco" style={{ height:"100%", overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
@@ -1524,7 +1582,7 @@ export default function OmniDashShell() {
         </div>
 
         {/* Right Panel */}
-        <div style={{
+        <div className="omni-right-panel" style={{
           width:266, flexShrink:0,
           background:`linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
           borderLeft:`1px solid ${T.border}`,
@@ -1539,7 +1597,7 @@ export default function OmniDashShell() {
       </div>
 
       {/* Footer bar */}
-      <div style={{
+      <div className="omni-footer-bar" style={{
         height:28, background:T.surface,
         borderTop:`1px solid ${T.border}`,
         display:"flex", alignItems:"center",
@@ -1551,7 +1609,7 @@ export default function OmniDashShell() {
           APEX-OmniHub v2.5.0
         </div>
         <div>© 2026 APEX Business Systems Ltd.</div>
-        <div style={{marginLeft:"auto", display:"flex", gap:14, alignItems:"center"}}>
+        <div className="footer-right" style={{marginLeft:"auto", display:"flex", gap:14, alignItems:"center"}}>
           <span>Edmonton, AB</span>
           <span style={{color:T.t4}}>|</span>
           <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE</span>
