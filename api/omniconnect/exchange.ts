@@ -2,12 +2,25 @@ import { z } from 'zod';
 
 export const config = { runtime: 'edge' };
 
-const corsHeaders: Record<string, string> = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Max-Age': '86400',
-};
+/** Allowed origins for CORS — fail-closed (no wildcard). */
+const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
+  'https://apexomnihub.com',
+  'https://www.apexomnihub.com',
+  'https://apex-omnihub.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+]);
+
+function buildExchangeCorsHeaders(origin: string | null): Record<string, string> {
+  const resolvedOrigin = origin && ALLOWED_ORIGINS.has(origin) ? origin : '';
+  return {
+    'Access-Control-Allow-Origin': resolvedOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
+  };
+}
 
 const requestSchema = z.object({
   provider: z.string().min(1),
@@ -20,10 +33,10 @@ const responseSchema = z.object({
   data: z.record(z.string(), z.unknown()).default({}),
 });
 
-function jsonResponse(status: number, payload: Record<string, unknown>): Response {
+function jsonResponse(status: number, payload: Record<string, unknown>, origin: string | null = null): Response {
   return new Response(JSON.stringify(payload), {
     status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    headers: { 'Content-Type': 'application/json', ...buildExchangeCorsHeaders(origin) },
   });
 }
 
@@ -42,12 +55,14 @@ function requiredConfig(): { supabaseUrl: string; publishableKey: string } {
 }
 
 export default async function handler(request: Request): Promise<Response> {
+  const origin = request.headers.get('Origin');
+
   if (request.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: buildExchangeCorsHeaders(origin) });
   }
 
   if (request.method !== 'POST') {
-    return jsonResponse(405, { error: 'Method not allowed' });
+    return jsonResponse(405, { error: 'Method not allowed' }, origin);
   }
 
   const traceId = crypto.randomUUID();
@@ -59,12 +74,12 @@ export default async function handler(request: Request): Promise<Response> {
         error: 'Invalid request body',
         trace_id: traceId,
         details: parsedBody.error.flatten(),
-      });
+      }, origin);
     }
 
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return jsonResponse(401, { error: 'Missing bearer token', trace_id: traceId });
+      return jsonResponse(401, { error: 'Missing bearer token', trace_id: traceId }, origin);
     }
 
     const { supabaseUrl, publishableKey } = requiredConfig();
@@ -92,7 +107,7 @@ export default async function handler(request: Request): Promise<Response> {
         error: 'OmniConnect exchange failed',
         trace_id: traceId,
         upstream: upstreamJson,
-      });
+      }, origin);
     }
 
     const normalized = responseSchema.safeParse({
@@ -104,21 +119,21 @@ export default async function handler(request: Request): Promise<Response> {
       return jsonResponse(502, {
         error: 'Invalid upstream response schema',
         trace_id: traceId,
-      });
+      }, origin);
     }
 
-    return jsonResponse(200, normalized.data);
+    return jsonResponse(200, normalized.data, origin);
   } catch (error) {
     if (error instanceof Error && error.message === 'exchange_config_missing') {
       return jsonResponse(503, {
         error: 'Exchange API unavailable: missing Supabase configuration',
         trace_id: traceId,
-      });
+      }, origin);
     }
 
     return jsonResponse(502, {
       error: 'Exchange API request failed',
       trace_id: traceId,
-    });
+    }, origin);
   }
 }
