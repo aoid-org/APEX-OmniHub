@@ -4,6 +4,16 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-03-23
+
+### Changed — Document Audit & Repository Sweep
+
+- **Log Purge** — Permanently deleted stale `ts_errors.log`, `.apex/evidence` execution test logs, and `.npm-cache` legacy logs to maintain a pristine, strictly declarative repository root.
+- **Architectural Refresh** — Validated `README.md` and `PRODUCTION_STATUS.md` state, bumping certified version to `1.5.1` and tracking the new MCP Gateway release.
+- **Stale TODOs Audit** — Verified zero stray/obsolete TODO markers within the `orchestrator/` sub-tree and active project documentation.
+
+---
+
 ## [1.5.0] - 2026-03-21
 
 ### Added — APEX-DEV MCP Gateway Architectural Alignment

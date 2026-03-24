@@ -1,25 +1,26 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.1-L10N-PWA-HARDENING | LAST_UPDATED=2026-03-10 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.2-DOCUMENT-AUDIT | LAST_UPDATED=2026-03-23 -->
+
 # APEX OmniHub — Production Status
 
 ```
- ██████╗ ███╗   ███╗███╗   ██╗██╗██╗  ██╗██╗   ██╗██████╗ 
+ ██████╗ ███╗   ███╗███╗   ██╗██╗██╗  ██╗██╗   ██╗██████╗
 ██╔═══██╗████╗ ████║████╗  ██║██║██║  ██║██║   ██║██╔══██╗
 ██║   ██║██╔████╔██║██╔██╗ ██║██║███████║██║   ██║██████╔╝
 ██║   ██║██║╚██╔╝██║██║╚██╗██║██║██╔══██║██║   ██║██╔══██╗
 ╚██████╔╝██║ ╚═╝ ██║██║ ╚████║██║██║  ██║╚██████╔╝██████╔╝
- ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ 
+ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝
 E N T E R P R I S E   A I   P L A T F O R M
 ```
 
-| Status      | Architecture                 | Last Audit | Audit Score | Test Coverage             |
-| ----------- | ---------------------------- | ---------- | ----------- | ------------------------- |
-| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-03-10 | **94.3/100 (A)** | Build gates PASS (lint/typecheck/build) |
+| Status      | Architecture                 | Last Audit | Audit Score      | Test Coverage                           |
+| ----------- | ---------------------------- | ---------- | ---------------- | --------------------------------------- |
+| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-03-23 | **94.3/100 (A)** | Build gates PASS (lint/typecheck/build) |
 
 ---
 
 ## Executive Summary
 
-APEX OmniHub is **PRODUCTION CERTIFIED** with maintained 2026-03-09 third-party audit evidence and 2026-03-10 runtime/doc hardening updates. v1.4.1 finalizes multilingual UX + PWA install conversion surface (globe language menu, hero install node, locale key completeness) and eliminates residual non-brand black disabled CTA rendering. Third-party audit score remains **94.3/100 (A)**.
+APEX OmniHub is **PRODUCTION CERTIFIED** with maintained 2026-03-09 third-party audit evidence and 2026-03-23 repository document audit and clean sweep. Legacy logs and stale trackers have been purged to maintain absolute repo-truth. The MCP Gateway A2A SDK is live and verified. Third-party audit score remains **94.3/100 (A)**.
 
 ## Deployment Checklist (Verified)
 
@@ -71,12 +72,17 @@ APEX OmniHub is **PRODUCTION CERTIFIED** with maintained 2026-03-09 third-party 
 
 ```
 Repository:  apexbusiness-systems/APEX-OmniHub
-Status:      PRODUCTION READY (v1.4.1)
+Status:      PRODUCTION READY (v1.5.1)
 Type:        Cyber-Physical AI OS + Persistent Memory Platform
 Audit Score: 94.3/100 (A) — Third-Party Verified
-Updated:     2026-03-10
+Updated:     2026-03-23
 ```
 
+## 2026-03-23 Document Audit and Repository Sweep
+
+- **Log Purge:** Permanently deleted stale `ts_errors.log`, execution `.log`s in `.apex/evidence`, and `.npm-cache` logs to maintain a pristine directory structure.
+- **Architectural Refresh:** Verified and updated `README.md` and `PRODUCTION_STATUS.md` to cleanly track the new MCP Gateway and current `1.5.1` operational state.
+- **Continuous Validation:** Verified runtime quality gates successfully and confirmed no stale TODOs exist within the `orchestrator/` payload execution path.
 
 ## 2026-03-01 Audit Addendum
 
@@ -85,7 +91,6 @@ Updated:     2026-03-10
 - Production dependency audit (`npm audit --omit=dev`) reports **0 high / 0 critical** vulnerabilities (1 moderate outstanding).
 - Full dependency graph continues to include dev-toolchain advisories and remains tracked as non-launch backlog.
 - Secret scanning now excludes non-production placeholder contexts and no longer fails on binary assets.
-
 
 ## 2026-03-10 Build & Documentation Cross-Reference Addendum
 
