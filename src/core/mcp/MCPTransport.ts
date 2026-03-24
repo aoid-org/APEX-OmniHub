@@ -83,13 +83,30 @@ export class StdioTransport implements MCPTransport {
   private readonly serverId: string;
   private readonly proxyBaseUrl: string;
 
-  constructor(serverId: string, proxyBaseUrl = '/api/mcp-proxy') {
+  constructor(serverId: string, proxyBaseUrl?: string) {
     this.serverId = serverId;
-    this.proxyBaseUrl = proxyBaseUrl;
+    // Resolve proxy URL: prefer Supabase edge function, fall back to relative path
+    const meta = import.meta as unknown as Record<string, Record<string, string> | undefined>;
+    const supabaseUrl = meta['env']?.['VITE_SUPABASE_URL'] ?? '';
+    this.proxyBaseUrl = proxyBaseUrl ??
+      (supabaseUrl ? `${supabaseUrl}/functions/v1/mcp-proxy` : '/api/mcp-proxy');
   }
 
   get status(): TransportStatus {
     return this._status;
+  }
+
+  /** Get auth headers for proxy requests */
+  private getAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    // Inject Supabase auth token if available (set by session management)
+    if (typeof globalThis !== 'undefined' && '_supabaseAuthToken' in globalThis) {
+      const token = (globalThis as Record<string, unknown>)['_supabaseAuthToken'];
+      if (typeof token === 'string' && token.length > 0) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    return headers;
   }
 
   async connect(): Promise<void> {
@@ -97,7 +114,7 @@ export class StdioTransport implements MCPTransport {
     try {
       const response = await fetch(`${this.proxyBaseUrl}/connect`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify({ serverId: this.serverId }),
       });
       if (!response.ok) {
@@ -114,7 +131,7 @@ export class StdioTransport implements MCPTransport {
     try {
       await fetch(`${this.proxyBaseUrl}/disconnect`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify({ serverId: this.serverId }),
       });
     } finally {
@@ -129,7 +146,7 @@ export class StdioTransport implements MCPTransport {
 
     const response = await fetch(`${this.proxyBaseUrl}/rpc`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this.getAuthHeaders(),
       body: JSON.stringify({ serverId: this.serverId, request }),
     });
 

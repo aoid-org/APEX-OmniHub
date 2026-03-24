@@ -13,6 +13,7 @@
 import { useMemo, type ReactNode } from 'react';
 import { useOmniDash } from '../stores/omniDashStore';
 import { OmniDashContext, type OmniDashContextValue } from './OmniDashContext';
+import { useMCPApprovalBridge } from '../hooks/useMCPApprovalBridge';
 
 // ============================================================================
 // Provider
@@ -23,6 +24,9 @@ interface OmniDashProviderProps {
 }
 
 export function OmniDashProvider({ children }: OmniDashProviderProps) {
+  // Wire MCP approval callback → OmniModal UI bridge
+  useMCPApprovalBridge();
+
   const widgets = useOmniDash(s => s.widgets);
   const floatingWindows = useOmniDash(s => s.floatingWindows);
   const zManager = useOmniDash(s => s.zManager);

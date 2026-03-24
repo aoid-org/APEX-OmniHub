@@ -105,6 +105,15 @@
      ["trace-mcp", "MCP Tool Invocation Traces", "active", "48 spans/min | Avg: 210ms"]],
     [["search-traces", "Search Traces", "primary"], ["export-spans", "Export Spans", "secondary"]]],
 
+  ["cockpit", "Bring Your Own Model — provider credential management.",
+    [["Connected", "3", "up"], ["Providers", "5", "stable"], ["Health", "100%", "stable"]],
+    [["byom-openai", "OpenAI", "active", "GPT-4o | Key: ****7kQ2 | Rotated 3d ago"],
+     ["byom-anthropic", "Anthropic", "active", "Claude Sonnet 4 | Key: ****xN9m | Active"],
+     ["byom-google", "Google AI", "active", "Gemini 2.5 Pro | Key: ****Lp4R | Active"],
+     ["byom-xai", "xAI", "inactive", "Available — not configured"],
+     ["byom-groq", "Groq", "inactive", "Available — not configured"]],
+    [["add-provider", "Connect Provider", "primary"], ["test-all", "Test All Keys", "secondary"]]],
+
   ["agent", "Voice-powered AI agent for hands-free platform control.",
     [["Active Sessions", "3", "up"], ["Intent Accuracy", "94.2%", "up"], ["Avg Response", "1.2s", "down"]],
     [["agent-voice", "Voice Recognition Engine", "active", "Whisper v3 | 16kHz | Real-time STT"],
