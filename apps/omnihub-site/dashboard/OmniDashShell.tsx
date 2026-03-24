@@ -261,6 +261,7 @@ const SectionLabel = ({ children }: SectionLabelProps) => (
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const NAV = [
   { label:"OmniBoard",   iconIdx:0, active:true  },
+  { label:"BYOM",        iconIdx:4, active:false },
   { label:"PhysiOmni",   iconIdx:5, active:false },
   { label:"Audits",      iconIdx:1, active:false },
   { label:"Links",       iconIdx:4, active:false },
@@ -367,6 +368,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
 
 // ─── Module key map: sidebar label → omniModalStore module key
 const NAV_MODULE_KEY: Record<string, string> = {
+  BYOM:        'cockpit',
   PhysiOmni:   'physiomni',
   Audits:      'audits',
   Links:       'links',
