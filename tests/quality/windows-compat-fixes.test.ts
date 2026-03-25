@@ -148,8 +148,20 @@ describe('Idempotent Migration — man_tasks_rls', () => {
 
   it('does not use bare CREATE POLICY without guard', () => {
     const sql = readFileSync(migrationPath, 'utf-8');
-    // Split on DO $$ blocks — each CREATE POLICY should be inside one
+    // Strip DO $$ blocks — no CREATE POLICY should exist outside them
     const outsideBlocks = sql.replace(/DO \$\$[\s\S]*?END \$\$/g, '');
     expect(outsideBlocks).not.toMatch(/CREATE POLICY/);
+  });
+
+  it('uses a declared constant instead of duplicating the table name literal', () => {
+    const sql = readFileSync(migrationPath, 'utf-8');
+    // SonarCloud: "Define a constant instead of duplicating this literal 3 times"
+    // The pg_policies lookups must use a DECLARE'd constant, not a raw string
+    expect(sql).toMatch(/DECLARE[\s\S]*?CONSTANT\s+text\s*:=\s*'man_tasks'/);
+    // The tablename comparisons should reference the variable, not the literal
+    const lookups = sql.match(/tablename\s*=\s*(\S+)/g) || [];
+    for (const lookup of lookups) {
+      expect(lookup).not.toContain("'man_tasks'");
+    }
   });
 });
