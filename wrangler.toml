@@ -1,12 +1,19 @@
 # Cloudflare Pages configuration for APEX-OmniHub
-# https://developers.cloudflare.com/pages/configuration/
+# https://developers.cloudflare.com/pages/configuration/wrangler-configuration/
 
 name = "apex-omnihub"
 compatibility_date = "2026-03-24"
 pages_build_output_dir = "dist"
 
-[env.production]
-# Production environment — all vars set in CF Pages dashboard
-
-[env.preview]
-# Preview deployments (pull requests)
+# ---------------------------------------------------------------------------
+# Build environment
+# ---------------------------------------------------------------------------
+# Real VITE_* values are set in the CF Pages dashboard
+# (Settings → Environment Variables) and injected into `process.env` at
+# build time so Vite can inline them via `import.meta.env.*`.
+#
+# NOTE: Do NOT add empty [env.production] or [env.preview] sections here —
+# they can cause CF Pages to scope dashboard env-vars away from the build,
+# resulting in missing VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY
+# and a "Login is unavailable" error at runtime.
+# ---------------------------------------------------------------------------
