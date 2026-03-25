@@ -360,9 +360,10 @@ export function OnboardingWizard() {
 
             <form onSubmit={handleEmailAuth} className="space-y-4">
               <div>
-                <label htmlFor="onboarding-email" className="text-sm text-gray-400">Email</label>
+                <label id="onboarding-email-label" htmlFor="onboarding-email" className="text-sm text-gray-400">Email</label>
                 <input
                   id="onboarding-email"
+                  aria-labelledby="onboarding-email-label"
                   type="email"
                   required
                   className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2 mt-1 focus:ring-1 focus:ring-blue-500 outline-none"
@@ -371,9 +372,10 @@ export function OnboardingWizard() {
                 />
               </div>
               <div>
-                <label htmlFor="onboarding-password" className="text-sm text-gray-400">Password</label>
+                <label id="onboarding-password-label" htmlFor="onboarding-password" className="text-sm text-gray-400">Password</label>
                 <input
                   id="onboarding-password"
+                  aria-labelledby="onboarding-password-label"
                   type="password"
                   required
                   minLength={6}

@@ -11,6 +11,11 @@ export interface LocalFileRecord {
   timestamp: number;
 }
 
+function asError(reason: unknown, fallbackMessage: string): Error {
+  if (reason instanceof Error) return reason;
+  return new Error(fallbackMessage);
+}
+
 export async function initDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
@@ -21,7 +26,7 @@ export async function initDB(): Promise<IDBDatabase> {
       }
     };
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('Failed to open IndexedDB'));
+    request.onerror = () => reject(asError(request.error, 'Failed to open IndexedDB'));
   });
 }
 
@@ -43,7 +48,7 @@ export async function saveLocalFile(file: File): Promise<void> {
     
     const request = store.put(record);
     request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error ?? new Error('Failed to save local file'));
+    request.onerror = () => reject(asError(request.error, 'Failed to save local file'));
   });
 }
 
@@ -54,6 +59,6 @@ export async function listLocalFiles(): Promise<LocalFileRecord[]> {
     const store = tx.objectStore(STORE_NAME);
     const request = store.getAll();
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('Failed to list local files'));
+    request.onerror = () => reject(asError(request.error, 'Failed to list local files'));
   });
 }
