@@ -16,7 +16,7 @@ export const hasSupabaseConfig = hasValidSupabaseUrl && supabaseAnonKey.length >
 export const supabaseConfigTraceId = `cfg-${Math.random().toString(36).slice(2, 10)}`;
 
 // Startup guardrail: emit a clear diagnostic when config is absent.
-// Always logs so operators can diagnose missing Vercel env vars without
+// Always logs so operators can diagnose missing env vars without
 // needing to reproduce locally.
 if (!hasSupabaseConfig) {
   const missing: string[] = [];
