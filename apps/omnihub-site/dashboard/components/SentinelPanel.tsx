@@ -6,7 +6,7 @@
  * No external API calls — reads from existing stores and props.
  */
 
-import { memo, useState, useCallback } from 'react';
+import { memo, useMemo, useState, useCallback } from 'react';
 import { Shield, RefreshCw, Activity, Zap, Eye } from 'lucide-react';
 
 interface TraceEntry {
@@ -25,10 +25,10 @@ const TRACE_FEED: readonly TraceEntry[] = [
 
 export const SentinelPanel = memo(function SentinelPanel() {
   const [demoMode, setDemoMode] = useState(true);
-  const [lastScan] = useState(() => {
+  const lastScan = useMemo(() => {
     const now = new Date();
     return now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  });
+  }, []);
 
   const handleToggleDemo = useCallback(() => {
     setDemoMode(prev => !prev);

@@ -50,7 +50,6 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
 
   useEffect(() => {
     // Re-seed from registry when the key changes.
-    // Use functional updater to avoid synchronous setState-in-effect lint violation.
     setState(() => registryStateFor(appKey));
 
     let cancelled = false;

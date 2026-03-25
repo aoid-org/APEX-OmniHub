@@ -9,7 +9,8 @@
 
 import { createConfig, http } from 'wagmi';
 import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
-import { injected, walletConnect } from 'wagmi/connectors';
+import { injected } from 'wagmi/connectors';
+import { walletConnectConnector } from './walletConnectConnector';
 
 // WalletConnect project ID (should be set via environment variable)
 const WALLETCONNECT_PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '';
@@ -30,7 +31,7 @@ const connectors = [
   injected(), // MetaMask, Coinbase Wallet, etc.
   ...(WALLETCONNECT_PROJECT_ID
     ? [
-        walletConnect({
+        walletConnectConnector({
           projectId: WALLETCONNECT_PROJECT_ID,
           metadata: {
             name: 'OmniLink APEX',

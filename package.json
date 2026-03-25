@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:coverage": "VITEST_COVERAGE=true vitest run --coverage",
+    "test:coverage": "node scripts/run-vitest-coverage.cjs",
     "test:unit": "vitest run tests/lib",
     "test:integration": "vitest run tests/integration",
     "omni:validate": "vitest run tests/integration/omni-convergence.test.tsx",
