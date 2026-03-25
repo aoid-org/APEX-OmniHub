@@ -38,7 +38,6 @@ interface GlassCardProps {
   children?: ReactNode;
   style?: CSSProperties;
   glow?: boolean;
-  onClick?: () => void;
 }
 
 interface SectionLabelProps {
@@ -239,7 +238,7 @@ const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) =
   }} />
 );
 
-const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => {
+const GlassCard = ({ children, style={}, glow = false }: GlassCardProps) => {
   const cardStyle: CSSProperties = {
     background: T.card,
     border: `1px solid ${glow ? T.borderGlow : T.border}`,
@@ -251,14 +250,6 @@ const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps
     transition: "all .2s ease",
     ...style,
   };
-
-  if (onClick) {
-    return (
-      <button type="button" onClick={onClick} style={{ ...cardStyle, cursor: "pointer" }}>
-        {children}
-      </button>
-    );
-  }
 
   return (
     <div style={cardStyle}>
