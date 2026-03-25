@@ -115,162 +115,108 @@ export type BlastRadiusSurface = typeof BLAST_RADIUS_SURFACES[number];
 // The 14-App Contract — FROZEN
 // ============================================================================
 
-const OMNIDASH_CONTRACT_SOURCE: readonly OmniDashApp[] = [
-  {
-    id: 'omniboard',
-    title: 'OmniBoard',
-    route: '/omnidash',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: null,
-    defaultBounds: { width: 1200, height: 800 },
-    zLayer: 0,
-    category: 'control-plane',
-  },
-  {
-    id: 'omniport',
-    title: 'OmniPort',
-    route: '/omnidash/omniport',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'platform',
-  },
-  {
-    id: 'maestro',
-    title: 'Maestro',
-    route: '/omnidash/maestro',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'automation',
-  },
-  {
-    id: 'fortress',
-    title: 'Fortress',
-    route: '/omnidash/fortress',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'security',
-  },
-  {
-    id: 'orchestrator',
-    title: 'Orchestrator',
-    route: '/omnidash/orchestrator',
-    integrationStatus: 'Partial',
-    launchMode: 'oauth',
-    widgetType: null,
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'control-plane',
-  },
-  {
-    id: 'omniskills',
-    title: 'OmniSkills',
-    route: '/omnidash/omniskills',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 800, height: 500 },
-    zLayer: 10,
-    category: 'platform',
-  },
-  {
-    id: 'physiomni',
-    title: 'PhysiOmni',
-    route: '/omnidash/physiomni',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 800, height: 500 },
-    zLayer: 10,
-    category: 'operations',
-  },
-  {
-    id: 'audits',
-    title: 'Audits',
-    route: '/omnidash/audits',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'security',
-  },
-  {
-    id: 'links',
-    title: 'Links',
-    route: '/omnidash/links',
-    integrationStatus: 'Partial',
-    launchMode: 'oauth',
-    widgetType: 'module',
-    defaultBounds: { width: 800, height: 500 },
-    zLayer: 10,
-    category: 'platform',
-  },
-  {
-    id: 'automations',
-    title: 'Automations',
-    route: '/omnidash/automations',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'automation',
-  },
-  {
-    id: 'workflows',
-    title: 'Workflows',
-    route: '/omnidash/workflows',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'automation',
-  },
-  {
-    id: 'files',
-    title: 'Files',
-    route: '/omnidash/files',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 800, height: 500 },
-    zLayer: 10,
-    category: 'operations',
-  },
-  {
-    id: 'billing',
-    title: 'Billing',
-    route: '/omnidash/billing',
-    integrationStatus: 'Partial',
-    launchMode: 'oauth',
-    widgetType: 'module',
-    defaultBounds: { width: 800, height: 500 },
-    zLayer: 10,
-    category: 'operations',
-  },
-  {
-    id: 'settings',
-    title: 'Settings',
-    route: '/omnidash/settings',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'native',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'control-plane',
-  },
+const OMNIDASH_BOUNDS = Object.freeze({
+  compact: Object.freeze({ width: 800, height: 500 }),
+  standard: Object.freeze({ width: 900, height: 600 }),
+  board: Object.freeze({ width: 1200, height: 800 }),
+});
+
+type OmniDashAppBlueprint = {
+  readonly id: string;
+  readonly title: string;
+  readonly category: AppCategory;
+  readonly route?: `/omnidash${string}`;
+  readonly integrationStatus?: IntegrationStatus;
+  readonly launchMode?: LaunchMode;
+  readonly widgetType?: WidgetType;
+  readonly defaultBounds?: DefaultBounds;
+  readonly zLayer?: number;
+};
+
+type OmniDashAppOverrides = Omit<OmniDashAppBlueprint, 'id' | 'title' | 'category'>;
+
+type OmniDashAppSeed = readonly [
+  id: string,
+  title: string,
+  category: AppCategory,
+  overrides?: OmniDashAppOverrides,
 ];
+
+const buildOmniDashApp = (blueprint: OmniDashAppBlueprint): OmniDashApp => ({
+  id: blueprint.id,
+  title: blueprint.title,
+  route: blueprint.route ?? `/omnidash/${blueprint.id}`,
+  integrationStatus: blueprint.integrationStatus ?? 'Live',
+  launchMode: blueprint.launchMode ?? 'navigate',
+  widgetType: blueprint.widgetType ?? 'module',
+  defaultBounds: blueprint.defaultBounds ?? OMNIDASH_BOUNDS.standard,
+  zLayer: blueprint.zLayer ?? 10,
+  category: blueprint.category,
+});
+
+const OMNIDASH_APP_SEEDS: readonly OmniDashAppSeed[] = [
+  [
+    'omniboard',
+    'OmniBoard',
+    'control-plane',
+    {
+      route: '/omnidash',
+      widgetType: null,
+      defaultBounds: OMNIDASH_BOUNDS.board,
+      zLayer: 0,
+    },
+  ],
+  ['omniport', 'OmniPort', 'platform'],
+  ['maestro', 'Maestro', 'automation'],
+  ['fortress', 'Fortress', 'security'],
+  [
+    'orchestrator',
+    'Orchestrator',
+    'control-plane',
+    {
+      integrationStatus: 'Partial',
+      launchMode: 'oauth',
+      widgetType: null,
+    },
+  ],
+  ['omniskills', 'OmniSkills', 'platform', { defaultBounds: OMNIDASH_BOUNDS.compact }],
+  ['physiomni', 'PhysiOmni', 'operations', { defaultBounds: OMNIDASH_BOUNDS.compact }],
+  ['audits', 'Audits', 'security'],
+  [
+    'links',
+    'Links',
+    'platform',
+    {
+      integrationStatus: 'Partial',
+      launchMode: 'oauth',
+      defaultBounds: OMNIDASH_BOUNDS.compact,
+    },
+  ],
+  ['automations', 'Automations', 'automation'],
+  ['workflows', 'Workflows', 'automation'],
+  ['files', 'Files', 'operations', { defaultBounds: OMNIDASH_BOUNDS.compact }],
+  [
+    'billing',
+    'Billing',
+    'operations',
+    {
+      integrationStatus: 'Partial',
+      launchMode: 'oauth',
+      defaultBounds: OMNIDASH_BOUNDS.compact,
+    },
+  ],
+  ['settings', 'Settings', 'control-plane', { widgetType: 'native' }],
+];
+
+const OMNIDASH_CONTRACT_SOURCE: readonly OmniDashApp[] = OMNIDASH_APP_SEEDS.map(
+  ([id, title, category, overrides]) =>
+    buildOmniDashApp({
+      id,
+      title,
+      category,
+      ...(overrides ?? {}),
+    }),
+);
 
 // ============================================================================
 // Runtime Validation + Export

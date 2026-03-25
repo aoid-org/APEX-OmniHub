@@ -593,7 +593,7 @@ async function main() {
 }
 
 // Run if executed directly
-const isDirectRun = Boolean(require.main && require.main.id === module.id);
+const isDirectRun = require.main === module;
 if (isDirectRun) {
   main().catch(error => {
     console.error('\n❌ Simulation error:', error);
