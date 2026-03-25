@@ -6,7 +6,8 @@ Universal Intent Registry. No rigid if/else routing blocks — the registry
 is the routing table, and the workflow is a pure execution engine.
 
 Architecture:
-    EventEnvelope dict → extract intentId from payload → registry.resolve_or_offline() →
+    EventEnvelope dict → extract intentId from payload →
+    → resolve_intent activity (replay-safe registry lookup) →
     → execute_activity(resolved_name) → wrap result in OmniModalSchema → return
 
 Wire format (input dict): must satisfy models.events.EventEnvelope Pydantic model.
@@ -16,7 +17,9 @@ at the edge, and server.py passes it through as a raw dict.
 Determinism:
     - No direct I/O, no random, no system time calls.
     - All side effects are delegated to Temporal Activities.
-    - Registry resolution is a pure dict lookup (deterministic on replay).
+    - Registry resolution is delegated to the resolve_intent Activity,
+      whose result is recorded in workflow history and replayed deterministically.
+    - No standard-library loggers — only workflow.logger (replay-safe).
 """
 
 from datetime import timedelta
@@ -27,7 +30,6 @@ from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError
 
 with workflow.unsafe.imports_passed_through():
-    from core.intent_registry import OmniModalPayload, registry
     from models.events import EventEnvelope
 
 
@@ -68,6 +70,16 @@ ACTIVITY_RETRY_POLICY = RetryPolicy(
     maximum_attempts=3,
 )
 
+# Lightweight activity — pure dict lookup, no I/O.
+RESOLVE_INTENT_RETRY_POLICY = RetryPolicy(
+    initial_interval=timedelta(milliseconds=200),
+    backoff_coefficient=1.5,
+    maximum_interval=timedelta(seconds=2),
+    maximum_attempts=2,
+)
+
+RESOLVE_INTENT_TIMEOUT = timedelta(seconds=5)
+
 ACTIVITY_TIMEOUT = timedelta(seconds=120)
 
 
@@ -75,6 +87,13 @@ ACTIVITY_TIMEOUT = timedelta(seconds=120)
 class UniversalOrchestratorWorkflow:
     """Single Temporal Workflow that routes any EventEnvelope to the correct
     Activity via the Universal Intent Registry.
+
+    Intent resolution is performed inside the ``resolve_intent`` Activity so
+    that:
+      - The result is recorded in workflow history (deterministic on replay).
+      - Standard-library logging inside the registry fires only on first
+        execution, not on every replay.
+      - Hot-deployed intents never cause NonDeterministicWorkflowError.
 
     Input:  EventEnvelope (Pydantic model serialized as dict by Temporal).
     Output: OmniModalSchema-compliant dict for the frontend ModuleRenderer.
@@ -106,10 +125,30 @@ class UniversalOrchestratorWorkflow:
             trace_id,
         )
 
-        # ── Registry resolution (pure dict lookup — deterministic) ────
-        resolution = registry.resolve_or_offline(intent_id, trace_id)
+        # ── Intent resolution via Activity (replay-safe) ─────────────
+        # Delegates to resolve_intent activity so the lookup result is
+        # recorded in workflow history. On replay, Temporal returns the
+        # recorded dict without re-executing — immune to registry mutations.
+        try:
+            resolution = await workflow.execute_activity(
+                "resolve_intent",
+                args=[intent_id, trace_id],
+                start_to_close_timeout=RESOLVE_INTENT_TIMEOUT,
+                retry_policy=RESOLVE_INTENT_RETRY_POLICY,
+            )
+        except ActivityError as exc:
+            workflow.logger.error(
+                "UniversalSaga: resolve_intent activity failed: %s", exc
+            )
+            return build_omni_modal_schema(
+                intent_id=intent_id,
+                trace_id=trace_id,
+                status="error",
+                error=f"Intent resolution failed: {exc}",
+            )
 
-        if isinstance(resolution, OmniModalPayload):
+        if not resolution.get("resolved"):
+            offline_payload = resolution.get("offline_payload", {})
             workflow.logger.warning(
                 "UniversalSaga: OFFLINE — intent_id '%s' not in registry",
                 intent_id,
@@ -118,10 +157,10 @@ class UniversalOrchestratorWorkflow:
                 intent_id=intent_id,
                 trace_id=trace_id,
                 status="offline",
-                error=resolution.error,
+                error=offline_payload.get("error", f"Intent '{intent_id}' not registered"),
             )
 
-        activity_name: str = resolution
+        activity_name: str = resolution["activity_name"]
 
         # ── Execute the resolved activity ─────────────────────────────
         try:

@@ -37,6 +37,7 @@ from temporalio.worker import Worker
 import core.intents  # noqa: F401
 from activities.dlq_alert import send_dlq_alert
 from activities.iron_law_verify import verify_deductive_path
+from activities.resolve_intent import resolve_intent
 from activities.man_mode import (
     check_man_decision,
     create_man_task,
@@ -171,6 +172,8 @@ async def start_worker() -> None:
             send_dlq_alert,
             # OmniTrace activities
             *get_omnitrace_activities(),
+            # Intent resolution (replay-safe registry lookup)
+            resolve_intent,
             # Universal Intent activities (USO — registry-routable)
             system_health_check,
             system_echo,
