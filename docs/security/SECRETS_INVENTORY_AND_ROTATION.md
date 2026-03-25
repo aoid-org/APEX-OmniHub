@@ -25,7 +25,7 @@ This document inventories all secrets used in OmniHub infrastructure and provide
 **Variable:** `VITE_SUPABASE_URL`
 **Current Value:** `https://wwajmaohwcbooljdureo.supabase.co`
 **Sensitivity:** PUBLIC (client-side, embedded in frontend bundle)
-**Location:** Vercel environment variables, frontend code
+**Location:** Cloudflare Pages environment variables, frontend code
 **Rotation:** Not required (public identifier)
 
 #### 1.2 Supabase Publishable Key (Anon Key)
@@ -33,35 +33,34 @@ This document inventories all secrets used in OmniHub infrastructure and provide
 **Current Value:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` (anon key)
 **Sensitivity:** PUBLIC (designed for client-side use)
 **Permissions:** Limited by Row Level Security (RLS)
-**Location:** Vercel environment variables, frontend code
+**Location:** Cloudflare Pages environment variables, frontend code
 **Rotation Frequency:** 90 days OR on suspected abuse
 
 **Rotation Procedure:**
 ```bash
 # 1. Go to Supabase Dashboard
-https://app.supabase.com/project/wwajmaohwcbooljdureo/settings/api
+https://app.supabase.com/project/rtopreovkywofgwgmozi/settings/api
 
 # 2. Click "Reset JWT Secret" (WARNING: breaks all existing JWTs)
 # OR wait for Supabase to provide key rotation feature
 
 # 3. Copy new anon key
 
-# 4. Update in Vercel
-vercel env rm VITE_SUPABASE_PUBLISHABLE_KEY production
-vercel env add VITE_SUPABASE_PUBLISHABLE_KEY production
-# Paste new key when prompted
+# 4. Update in Cloudflare Pages
+#    Dashboard → apex-omnihub → Settings → Environment Variables
+#    Update VITE_SUPABASE_PUBLISHABLE_KEY for Production and Preview
 
 # 5. Update in Supabase Edge Functions (if needed)
 supabase secrets set VITE_SUPABASE_PUBLISHABLE_KEY=<new-key>
 
-# 6. Trigger new deployment
-vercel --prod
+# 6. Trigger new deployment (push to main or redeploy from CF dashboard)
+git push origin main
 
 # 7. Verify deployment
-curl https://omnihub.dev/health
+curl https://apexomnihub.icu/login
 ```
 
-**Rollback:** Revert Vercel environment variable to old key, redeploy
+**Rollback:** Revert Cloudflare Pages environment variable to old key, redeploy
 
 #### 1.3 Supabase Service Role Key
 **Variable:** `SUPABASE_SERVICE_ROLE_KEY`
