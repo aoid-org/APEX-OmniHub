@@ -511,8 +511,6 @@ npm run sim:validate      # Validate environment
 - [CHAOTIC_CLIENT_STORY.md](./CHAOTIC_CLIENT_STORY.md) - Full narrative
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System design
 - [INVENTORY.md](./INVENTORY.md) - App inventory
-- [RESULTS_REPORT.md](./RESULTS_REPORT.md) - Sample results
-
 ---
 
 **Questions?** Check `sim/README.md` or file an issue.
