@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-03-25 -->
 # Chaos Simulation Test Execution Report
 
 **Date:** 2026-01-03
