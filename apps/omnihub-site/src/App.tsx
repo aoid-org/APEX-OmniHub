@@ -12,6 +12,7 @@ import { PrivacyPage } from "@/pages/Privacy";
 import { TermsPage } from "@/pages/Terms";
 import FounderStory from "@/pages/FounderStory";
 import { RequestAccessPage } from "@/pages/RequestAccess";
+import Web3Integrations from "@/pages/integrations/Web3Integrations";
 
 type AppRoute = {
   readonly path: string;
@@ -56,6 +57,7 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/privacy", element: <PrivacyPage />, isPublic: true, routeName: "Privacy" },
   { path: "/terms", element: <TermsPage />, isPublic: true, routeName: "Terms" },
   { path: "/request-access", element: <RequestAccessPage />, isPublic: true, routeName: "Request Access" },
+  { path: "/integrations/web3", element: <Web3Integrations />, isPublic: true, routeName: "Web3 Integrations" },
 ];
 
 function App() {

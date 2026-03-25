@@ -153,11 +153,13 @@ function Hero() {
             <p className="hero__subtitle">
               <span className="hero__sentence-indent">
                 {t('hero.subtitleSentence1', {
-                  defaultValue:
-                    'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface.',
+                  defaultValue: 'The Anti-OS: Universal Sync Orchestrator (USO).',
                 })}
               </span>{' '}
-              {t('hero.subtitleSentence2', { defaultValue: 'Every action is authorized, logged, and reversible.' })}
+              {t('hero.subtitleSentence2', {
+                defaultValue:
+                  'Unify software, AI agents, and enterprise platforms into one governed command surface. Every action is authorized, logged, and reversible.',
+              })}
             </p>
             <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
               <span className="hero__sentence-indent">
@@ -178,9 +180,6 @@ function Hero() {
               />
             </div>
             <PWAInstallNode />
-            <p className="hero__footnote mt-2 text-center lg:text-left" style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-              {t('hero.footnote', { defaultValue: '*Blockchain, wallet, and NFT integrations are optional and disabled by default.' })}
-            </p>
           </div>
         </div>
 
