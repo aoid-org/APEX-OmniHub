@@ -16,7 +16,7 @@ function evaluateHasSupabaseConfig(url: string, anonKey: string): boolean {
 }
 
 function buildUrlWithProtocol(host: string, protocol: string): string {
-  return `${protocol}${String.fromCharCode(58, 47, 47)}${host}`;
+  return `${protocol}${String.fromCodePoint(58, 47, 47)}${host}`;
 }
 
 describe("hasSupabaseConfig guard (supabase.ts logic)", () => {
