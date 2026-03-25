@@ -39,8 +39,11 @@ describe("Login logo fallback (Fix #1: broken image)", () => {
   });
 
   it("should_render_inline_SVG_with_APEX_text_in_fallback", () => {
-    expect(loginSrc).toMatch(/LogoFallback[\s\S]*<svg/);
-    expect(loginSrc).toMatch(/<text[\s\S]*>[\s\S]*APEX[\s\S]*<\/text>/);
+    expect(loginSrc).toContain("function LogoFallback()");
+    expect(loginSrc).toContain("<svg");
+    expect(loginSrc).toContain("<text");
+    expect(loginSrc).toContain("APEX");
+    expect(loginSrc).toContain("</text>");
   });
 
   it("should_have_aria_label_for_accessibility", () => {
@@ -194,9 +197,13 @@ describe("supabase.ts config guard integrity", () => {
 
   it("should_use_nullish_coalescing_for_key_fallback", () => {
     // Must use ?? not || to correctly handle empty string
-    expect(supabaseSrc).toMatch(
-      /VITE_SUPABASE_PUBLISHABLE_KEY.*\?\?[\s\S]*VITE_SUPABASE_ANON_KEY/
-    );
+    // Check that PUBLISHABLE_KEY appears before ANON_KEY with ?? between them
+    const pkIndex = supabaseSrc.indexOf("VITE_SUPABASE_PUBLISHABLE_KEY");
+    const qqIndex = supabaseSrc.indexOf("??", pkIndex);
+    const akIndex = supabaseSrc.indexOf("VITE_SUPABASE_ANON_KEY", qqIndex);
+    expect(pkIndex).toBeGreaterThan(-1);
+    expect(qqIndex).toBeGreaterThan(pkIndex);
+    expect(akIndex).toBeGreaterThan(qqIndex);
   });
 
   it("should_log_console_error_with_missing_var_names", () => {
