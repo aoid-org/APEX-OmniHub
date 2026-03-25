@@ -248,6 +248,10 @@ function TriForceSection() {
       icon: <IconConnect size={32} />,
       description:
         'Modular adapters plug into any system with an interface: API, webhook, or events.',
+      details: [
+        'Zero translation loss between systems.',
+        'Every event schema-validated on ingress.',
+      ],
     },
     {
       id: 'translate',
@@ -262,6 +266,9 @@ function TriForceSection() {
       icon: <IconExecute size={32} />,
       description:
         'Deterministic workflows with receipts, retries, rollback paths, and MAN Mode gates.',
+      details: [
+        '"Receipts" means a forensic-grade record your compliance team can hand to an auditor — not a log file you have to query.',
+      ],
     },
   ];
 
@@ -284,6 +291,11 @@ function TriForceSection() {
               <div className="triforce__icon">{card.icon}</div>
               <h3 className="triforce__title">{card.title}</h3>
               <p className="triforce__desc">{card.description}</p>
+              {card.details?.map((detail) => (
+                <p key={detail} className="triforce__desc mt-3">
+                  {detail}
+                </p>
+              ))}
             </a>
           ))}
         </div>
