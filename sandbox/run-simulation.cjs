@@ -237,7 +237,7 @@ class ResponseAnalyzer {
     const questionCount = (response.match(/\?/g) || []).length;
     const isStressed = /stressed|overwhelmed|urgent|sorry this is so much|everything feels urgent/i.test(clientMessage);
     const isVague = VAGUE_REQUEST_PATTERN.test(clientMessage) || /don('| a)?t know/i.test(clientMessage);
-    const jargonCount = JARGON_WORDS.filter((word) => new RegExp(`\\b${word}\\b`, 'i').test(response)).length;
+    const jargonCount = JARGON_WORDS.filter((word) => new RegExp(String.raw`\b${word}\b`, 'i').test(response)).length;
     const hasEmpathy = EMPATHY_WORDS.some((word) => responseLower.includes(word));
 
     if (hasStructuredList) {
