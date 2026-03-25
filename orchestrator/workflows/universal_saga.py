@@ -137,9 +137,7 @@ class UniversalOrchestratorWorkflow:
                 retry_policy=RESOLVE_INTENT_RETRY_POLICY,
             )
         except ActivityError as exc:
-            workflow.logger.error(
-                "UniversalSaga: resolve_intent activity failed: %s", exc
-            )
+            workflow.logger.error("UniversalSaga: resolve_intent activity failed: %s", exc)
             return build_omni_modal_schema(
                 intent_id=intent_id,
                 trace_id=trace_id,
