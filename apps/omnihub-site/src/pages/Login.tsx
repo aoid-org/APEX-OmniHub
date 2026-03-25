@@ -195,13 +195,13 @@ export function LoginPage() {
                 lineHeight: 1.5,
               }}
             >
-              <strong>Authentication service not configured.</strong>
-              <br />
-              Set <code style={{ fontSize: '0.85em' }}>VITE_SUPABASE_URL</code> and{' '}
-              <code style={{ fontSize: '0.85em' }}>VITE_SUPABASE_PUBLISHABLE_KEY</code> in your
-              Cloudflare Pages environment variables.
-              <br />
-              <span style={{ opacity: 0.7 }}>Trace: {supabaseConfigTraceId}</span>
+                <strong>Authentication service not configured.</strong>
+                <br />
+                Set <code style={{ fontSize: '0.85em' }}>VITE_SUPABASE_URL</code> and{' '}
+                <code style={{ fontSize: '0.85em' }}>VITE_SUPABASE_ANON_KEY</code> in your
+                Vercel environment variables.
+                <br />
+                <span style={{ opacity: 0.7 }}>Trace: {supabaseConfigTraceId}</span>
             </div>
           )}
 
