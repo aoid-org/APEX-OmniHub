@@ -134,90 +134,156 @@ I really need someone to explain this to me like I'm five 😭
 // ANALYSIS ENGINE
 // ============================================================================
 
+const EMPATHY_WORDS = ['understand', 'help', "let's", 'together', 'i can see', 'sounds like'];
+const JARGON_WORDS = ['API', 'webhook', 'integration', 'protocol', 'endpoint', 'authentication', 'authorization'];
+const MULTI_REQUEST_PATTERN = String.raw`\b(and|also|oh|first|second)\b`;
+const ACTIONABLE_STEPS_PATTERN = /here's what|you can|let's start|first step|next step/i;
+const VAGUE_REQUEST_PATTERN = /automate|better|stuff|thing/i;
+
 class ResponseAnalyzer {
-  analyzeResponse(clientMessage, agentResponse) {
-    const analysis = {
+  createBaselineAnalysis() {
+    return {
       userExperienceScore: 5,
       technicalAccuracy: 5,
       empathyScore: 5,
       issues: [],
       successes: [],
     };
+  }
 
-    // Check for empathy markers
-    const empathyWords = ['understand', 'help', "let's", 'together', 'i can see', 'sounds like'];
-    const hasEmpathy = empathyWords.some(word =>
-      agentResponse.toLowerCase().includes(word)
-    );
+  hasStructuredList(text) {
+    const lines = text.split('\n');
+    for (const rawLine of lines) {
+      const line = rawLine.trimStart();
+      if (!line) {
+        continue;
+      }
 
-    if (hasEmpathy) {
-      analysis.empathyScore += 2;
-      analysis.successes.push('✅ Response shows empathy and understanding');
-    } else {
-      analysis.empathyScore -= 1;
-      analysis.issues.push('⚠️  Response lacks empathetic tone');
-    }
+      const first = line[0];
+      const second = line[1];
+      if ((first === '-' || first === '*') && (second === ' ' || second === '\t')) {
+        return true;
+      }
 
-    // Check for overwhelming technical jargon
-    const jargonWords = ['API', 'webhook', 'integration', 'protocol', 'endpoint', 'authentication', 'authorization'];
-    const jargonCount = jargonWords.filter(word =>
-      agentResponse.includes(word)
-    ).length;
+      let index = 0;
+      while (index < line.length) {
+        const code = line.charCodeAt(index);
+        const isDigit = code >= 48 && code <= 57;
+        if (!isDigit) {
+          break;
+        }
+        index += 1;
+      }
 
-    if (jargonCount > 3) {
-      analysis.userExperienceScore -= 2;
-      analysis.issues.push(`⚠️  Too much technical jargon (${jargonCount} terms) for non-technical user`);
-    } else if (jargonCount === 0) {
-      analysis.successes.push('✅ Response avoids technical jargon');
-    }
-
-    // Check for breaking down complex requests
-    const hasMultipleRequests = (clientMessage.match(/\b(and|also|oh|first|second)\b/gi) || []).length > 3;
-    const hasNumberedList = /[1-5]\.|\n-|\n\*/.test(agentResponse);
-
-    if (hasMultipleRequests) {
-      if (hasNumberedList) {
-        analysis.userExperienceScore += 2;
-        analysis.successes.push('✅ Agent properly organized multiple requests');
-      } else {
-        analysis.userExperienceScore -= 1;
-        analysis.issues.push('⚠️  Multiple requests not clearly organized');
+      if (index > 0 && index + 1 < line.length) {
+        const separator = line[index];
+        const separatorSpace = line[index + 1];
+        if ((separator === '.' || separator === ')') && (separatorSpace === ' ' || separatorSpace === '\t')) {
+          return true;
+        }
       }
     }
 
-    // Check response length
-    const wordCount = agentResponse.split(/\s+/).length;
+    return false;
+  }
+
+  hasMultipleRequests(clientMessage) {
+    return (clientMessage.match(new RegExp(MULTI_REQUEST_PATTERN, 'gi')) || []).length > 3;
+  }
+
+  scoreEmpathy(analysis, responseLower) {
+    const hasEmpathy = EMPATHY_WORDS.some((word) => responseLower.includes(word));
+    if (hasEmpathy) {
+      analysis.empathyScore += 2;
+      analysis.successes.push('Response shows empathy and understanding');
+      return;
+    }
+
+    analysis.empathyScore -= 1;
+    analysis.issues.push('Response lacks empathetic tone');
+  }
+
+  scoreJargon(analysis, agentResponse) {
+    const jargonCount = JARGON_WORDS.filter((word) => agentResponse.includes(word)).length;
+    if (jargonCount > 3) {
+      analysis.userExperienceScore -= 2;
+      analysis.issues.push(`Too much technical jargon (${jargonCount} terms) for non-technical user`);
+      return;
+    }
+
+    if (jargonCount === 0) {
+      analysis.successes.push('Response avoids technical jargon');
+    }
+  }
+
+  scoreOrganization(analysis, hasMultipleRequests, hasStructuredList) {
+    if (!hasMultipleRequests) {
+      return;
+    }
+
+    if (hasStructuredList) {
+      analysis.userExperienceScore += 2;
+      analysis.successes.push('Agent properly organized multiple requests');
+      return;
+    }
+
+    analysis.userExperienceScore -= 1;
+    analysis.issues.push('Multiple requests not clearly organized');
+  }
+
+  scoreLength(analysis, wordCount) {
     if (wordCount < 20) {
       analysis.userExperienceScore -= 1;
-      analysis.issues.push('⚠️  Response too brief for complex request');
-    } else if (wordCount > 400) {
+      analysis.issues.push('Response too brief for complex request');
+      return;
+    }
+
+    if (wordCount > 400) {
       analysis.userExperienceScore -= 1;
-      analysis.issues.push('⚠️  Response too long, may overwhelm user');
-    } else {
-      analysis.successes.push('✅ Response length appropriate');
+      analysis.issues.push('Response too long, may overwhelm user');
+      return;
     }
 
-    // Check for actionable steps
-    const hasActionableSteps = /here's what|you can|let's start|first step|next step/i.test(agentResponse);
-    if (hasActionableSteps) {
+    analysis.successes.push('Response length appropriate');
+  }
+
+  scoreActionability(analysis, agentResponse) {
+    if (ACTIONABLE_STEPS_PATTERN.test(agentResponse)) {
       analysis.userExperienceScore += 1;
-      analysis.successes.push('✅ Provides clear actionable steps');
+      analysis.successes.push('Provides clear actionable steps');
     }
+  }
 
-    // Check for clarifying questions when appropriate
-    const isVague = /automate|better|stuff|thing/i.test(clientMessage);
-    const asksQuestions = /\?/.test(agentResponse);
-
+  scoreClarityQuestions(analysis, clientMessage, agentResponse) {
+    const isVague = VAGUE_REQUEST_PATTERN.test(clientMessage);
+    const asksQuestions = agentResponse.includes('?');
     if (isVague && asksQuestions) {
       analysis.technicalAccuracy += 1;
-      analysis.successes.push('✅ Asks clarifying questions for vague requirements');
+      analysis.successes.push('Asks clarifying questions for vague requirements');
     }
+  }
 
-    // Normalize scores (1-10 scale)
-    analysis.userExperienceScore = Math.max(1, Math.min(10, analysis.userExperienceScore));
-    analysis.technicalAccuracy = Math.max(1, Math.min(10, analysis.technicalAccuracy));
-    analysis.empathyScore = Math.max(1, Math.min(10, analysis.empathyScore));
+  normalizeScores(analysis) {
+    const clamp = (score) => Math.max(1, Math.min(10, score));
+    analysis.userExperienceScore = clamp(analysis.userExperienceScore);
+    analysis.technicalAccuracy = clamp(analysis.technicalAccuracy);
+    analysis.empathyScore = clamp(analysis.empathyScore);
+  }
 
+  analyzeResponse(clientMessage, agentResponse) {
+    const analysis = this.createBaselineAnalysis();
+    const responseLower = agentResponse.toLowerCase();
+    const hasMultipleRequests = this.hasMultipleRequests(clientMessage);
+    const hasStructuredList = this.hasStructuredList(agentResponse);
+    const wordCount = agentResponse.trim().split(/\s+/).filter(Boolean).length;
+
+    this.scoreEmpathy(analysis, responseLower);
+    this.scoreJargon(analysis, agentResponse);
+    this.scoreOrganization(analysis, hasMultipleRequests, hasStructuredList);
+    this.scoreLength(analysis, wordCount);
+    this.scoreActionability(analysis, agentResponse);
+    this.scoreClarityQuestions(analysis, clientMessage, agentResponse);
+    this.normalizeScores(analysis);
     return analysis;
   }
 
@@ -244,7 +310,6 @@ class ResponseAnalyzer {
     return triggers;
   }
 }
-
 // ============================================================================
 // MOCK AGENT (for sandbox testing without live API)
 // ============================================================================
@@ -413,7 +478,7 @@ class Simulator {
     console.log('═'.repeat(80));
 
     console.log('\n📝 CLIENT MESSAGE:');
-    console.log('   ' + scenario.message.substring(0, 200).replace(/\n/g, '\n   ') + '...');
+    console.log('   ' + scenario.message.substring(0, 200).replaceAll('\n', '\n   ') + '...');
 
     const startTime = Date.now();
 
@@ -444,7 +509,7 @@ class Simulator {
 
     // Display results
     console.log('\n🤖 AGENT RESPONSE:');
-    console.log('   ' + agentResponse.response.replace(/\n/g, '\n   '));
+    console.log('   ' + agentResponse.response.replaceAll('\n', '\n   '));
 
     console.log('\n📊 ANALYSIS:');
     console.log(`   ⏱️  Response Time: ${responseTime}ms`);
@@ -601,3 +666,4 @@ if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.m
 }
 
 module.exports = { Simulator, CLIENT_PROFILE, SCENARIOS };
+
