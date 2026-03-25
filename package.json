@@ -17,6 +17,7 @@
     "omni:validate": "vitest run tests/integration/omni-convergence.test.tsx",
     "test:prompt-defense": "vitest run tests/prompt-defense",
     "test:e2e": "playwright test",
+    "test:e2e:ci": "npx playwright test --project=chromium",
     "test:e2e:install": "playwright install chromium",
     "test:assets": "node tests/smoke/assets-check.mjs",
     "check:react": "node scripts/check-react-singleton.mjs",
