@@ -71,7 +71,10 @@ export interface OmniDashApp {
 export const omniDashAppSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
-  route: z.string().startsWith('/omnidash'),
+  route: z.custom<`/omnidash${string}`>(
+    (val) => typeof val === 'string' && val.startsWith('/omnidash'),
+    { message: 'Route must start with /omnidash' },
+  ),
   integrationStatus: z.enum(['Live', 'Partial']),
   launchMode: z.enum(['navigate', 'oauth', 'modal', 'widget']),
   widgetType: z.enum(['module', 'iframe', 'native']).nullable(),

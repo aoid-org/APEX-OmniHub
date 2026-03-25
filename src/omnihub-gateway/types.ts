@@ -188,6 +188,9 @@ export interface IdempotencyEntry {
   readonly completedAt?: string;
   readonly result?: unknown;
   readonly ttlMs: number;
+  readonly tenantId?: string;
+  readonly correlationId?: string;
+  readonly eventType?: string;
 }
 
 // ============================================================================
