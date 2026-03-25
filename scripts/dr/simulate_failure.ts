@@ -78,17 +78,13 @@ export async function simulateFailure(): Promise<DRSimulationResult> {
     }
   } catch (error: unknown) {
     // If it threw an error with status 422
-    if (
+    const hasStatus422 =
       typeof error === 'object' &&
       error !== null &&
       'status' in error &&
-      Number((error as { status: unknown }).status) === 422
-    ) {
-      cPass = true;
-    } else if (
-      error instanceof Error &&
-      error.message.includes('422')
-    ) {
+      Number((error as { status: unknown }).status) === 422;
+    const hasMessage422 = error instanceof Error && error.message.includes('422');
+    if (hasStatus422 || hasMessage422) {
       cPass = true;
     }
   }

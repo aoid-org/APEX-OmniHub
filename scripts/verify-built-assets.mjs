@@ -62,25 +62,43 @@ if (failures > 0) {
   process.exit(1);
 }
 
-// --- Verify vercel.json has asset exclusion from SPA fallback ---
-const vercelJsonPath = join(process.cwd(), 'vercel.json');
-if (existsSync(vercelJsonPath)) {
-  const vercelConfig = JSON.parse(readFileSync(vercelJsonPath, 'utf-8'));
-  const rewrites = vercelConfig.rewrites || [];
-
-  // Check that /assets/* is handled before the catch-all
-  const catchAllIndex = rewrites.findIndex(r => r.source === '/(.*)' || r.source === '/:path*');
-  const assetRuleIndex = rewrites.findIndex(r =>
-    r.source?.includes('assets') && r.status
-  );
+// --- Verify routing fallback configuration ---
+const redirectsPath = join(process.cwd(), 'public', '_redirects');
+if (existsSync(redirectsPath)) {
+  const redirectsContent = readFileSync(redirectsPath, 'utf-8');
+  const hasSPACatchAll = redirectsContent
+    .split('\n')
+    .some((line) => /^\/\*\s+\/index\.html\s+200/.test(line.trim()));
 
   if (hasSPACatchAll) {
-    // Cloudflare Pages serves static assets directly before applying _redirects,
-    // so /assets/* files are never caught by the SPA fallback.
+    // Cloudflare Pages serves static assets before applying _redirects.
     console.log('OK: Cloudflare Pages _redirects has SPA catch-all (static assets served directly).');
   } else {
     console.error('FAIL: _redirects is missing SPA catch-all: /* /index.html 200');
     process.exit(1);
+  }
+} else {
+  // Backward-compatible fallback for environments that still use vercel.json rewrites.
+  const vercelJsonPath = join(process.cwd(), 'vercel.json');
+  if (existsSync(vercelJsonPath)) {
+    const vercelConfig = JSON.parse(readFileSync(vercelJsonPath, 'utf-8'));
+    const rewrites = vercelConfig.rewrites || [];
+    const catchAllRewriteIndex = rewrites.findIndex(
+      (rewrite) => rewrite.source === '/(.*)' || rewrite.source === '/:path*'
+    );
+
+    if (catchAllRewriteIndex >= 0) {
+      const hasProtectedAssetRoute = rewrites
+        .slice(0, catchAllRewriteIndex)
+        .some((rewrite) => rewrite.source?.includes('assets') && rewrite.status);
+
+      if (!hasProtectedAssetRoute) {
+        console.error('FAIL: vercel.json has SPA catch-all rewrite without /assets/* exclusion before it.');
+        console.error('Missing assets will be served as HTML instead of 404.');
+        process.exit(1);
+      }
+      console.log('OK: vercel.json has asset route protection before SPA catch-all.');
+    }
   }
 }
 

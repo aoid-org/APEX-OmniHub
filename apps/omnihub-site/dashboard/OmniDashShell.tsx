@@ -15,7 +15,7 @@ import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
-import type { CSSProperties, ReactNode, Dispatch, SetStateAction, KeyboardEvent } from "react";
+import type { CSSProperties, ReactNode, Dispatch, SetStateAction } from "react";
 
 interface AppIconProps {
   idx: number;
@@ -242,13 +242,6 @@ const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) =
 );
 
 const GlassCard = ({ children, style={}, glow = false, onClick, onDragOver, onDrop }: GlassCardProps) => {
-  const isDropZone = Boolean(onDragOver || onDrop);
-  const handleDropZoneKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-    }
-  };
-
   const cardStyle: CSSProperties = {
     background: T.card,
     border: `1px solid ${glow ? T.borderGlow : T.border}`,
@@ -274,9 +267,6 @@ const GlassCard = ({ children, style={}, glow = false, onClick, onDragOver, onDr
       style={cardStyle}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      role={isDropZone ? "button" : undefined}
-      tabIndex={isDropZone ? 0 : undefined}
-      onKeyDown={isDropZone ? handleDropZoneKeyDown : undefined}
     >
       {children}
     </div>
@@ -1036,6 +1026,11 @@ const OmniSlateWidget = () => {
       aggregateHealth = T.green;
     }
   }
+  const contextAccent = aggregateHealth ?? T.orange;
+  const contextBackground = `${contextAccent}22`;
+  const contextBorderColor = aggregateHealth ? `${aggregateHealth}aa` : `${T.orange}44`;
+  const contextBorder = `1px solid ${contextBorderColor}`;
+  const contextBoxShadow = aggregateHealth ? `0 0 8px ${aggregateHealth}44` : "none";
 
   return (
     <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"visible" }}
@@ -1057,7 +1052,8 @@ const OmniSlateWidget = () => {
             borderRadius:8,padding:"3px 10px",cursor:"pointer",
           }}>CleanSlate</button>
 
-          <div
+          <button
+            type="button"
             onMouseEnter={() => setShowContext(true)}
             onMouseLeave={() => setShowContext(false)}
             onFocus={() => setShowContext(true)}
@@ -1069,20 +1065,18 @@ const OmniSlateWidget = () => {
               }
             }}
             onClick={fillSuggestion}
-            role="button"
-            tabIndex={0}
             title={aggregateHealth ? "View Context" : "Fill suggestion"}
-            style={{ position: "relative" }}
+            style={{ position: "relative", background: "none", border: "none", padding: 0 }}
           >
             <div
               style={{
                 width:26,height:26,borderRadius:8,
-                background: aggregateHealth ? `${aggregateHealth}22` : `${T.orange}22`,
-                border:`1px solid ${aggregateHealth ? `${aggregateHealth}aa` : `${T.orange}44`}`,
-                color: aggregateHealth || T.orange,
+                background: contextBackground,
+                border: contextBorder,
+                color: contextAccent,
                 cursor:"pointer",fontSize:14.1,display:"flex",alignItems:"center",justifyContent:"center",
                 transition: "all .2s ease",
-                boxShadow: aggregateHealth ? `0 0 8px ${aggregateHealth}44` : "none",
+                boxShadow: contextBoxShadow,
               }}
             >
               💡
@@ -1127,7 +1121,7 @@ const OmniSlateWidget = () => {
                  })}
                 </div>
              )}
-          </div>
+          </button>
         </div>
       </div>
       {/* Canvas — empty until user sends */}

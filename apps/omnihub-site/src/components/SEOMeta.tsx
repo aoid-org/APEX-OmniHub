@@ -15,7 +15,7 @@ interface SEOMetaProps {
 export function SEOMeta({ title, description, canonical, ogImage, noIndex }: SEOMetaProps) {
   const fullTitle = `${title} | APEX OmniHub — Intelligence Designed`;
   const ogImg     = ogImage ?? 'https://apexomnihub.icu/og-image.png';
-  const currentUrl = typeof globalThis.window === 'undefined' ? '' : globalThis.window.location.href;
+  const currentUrl = globalThis.window === undefined ? '' : globalThis.window.location.href;
   const canon     = canonical ?? currentUrl;
 
   useEffect(() => {

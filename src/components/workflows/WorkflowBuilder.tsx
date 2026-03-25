@@ -443,7 +443,8 @@ export function WorkflowBuilder() {
                 </p>
               )}
               {skills.data?.map((skill) => (
-                <div
+                <button
+                  type="button"
                   key={skill.id}
                   draggable
                   onDragStart={(e) => onPaletteDragStart(e, skill)}
@@ -454,9 +455,7 @@ export function WorkflowBuilder() {
                       addSkillNode(skill);
                     }
                   }}
-                  role="button"
-                  tabIndex={0}
-                  className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-accent/50 transition-colors flex items-center gap-2 group cursor-grab active:cursor-grabbing mb-1 border border-transparent hover:border-border"
+                  className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-accent/50 transition-colors flex items-center gap-2 group cursor-grab active:cursor-grabbing mb-1 border border-transparent hover:border-border bg-transparent"
                 >
                   <Plus className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                   <div className="min-w-0">
@@ -468,7 +467,7 @@ export function WorkflowBuilder() {
                   <span className="ml-auto shrink-0 text-muted-foreground group-hover:text-primary">
                     <Plus className="h-3.5 w-3.5" />
                   </span>
-                </div>
+                </button>
               ))}
             </ScrollArea>
           </CardContent>
