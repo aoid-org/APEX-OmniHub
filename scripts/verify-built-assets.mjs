@@ -74,12 +74,13 @@ if (existsSync(vercelJsonPath)) {
     r.source?.includes('assets') && r.status
   );
 
-  if (catchAllIndex >= 0 && (assetRuleIndex < 0 || assetRuleIndex > catchAllIndex)) {
-    console.error('FAIL: vercel.json has SPA catch-all rewrite without /assets/* exclusion before it.');
-    console.error('Missing assets will be served as HTML instead of 404.');
+  if (hasSPACatchAll) {
+    // Cloudflare Pages serves static assets directly before applying _redirects,
+    // so /assets/* files are never caught by the SPA fallback.
+    console.log('OK: Cloudflare Pages _redirects has SPA catch-all (static assets served directly).');
+  } else {
+    console.error('FAIL: _redirects is missing SPA catch-all: /* /index.html 200');
     process.exit(1);
-  } else if (assetRuleIndex >= 0) {
-    console.log('OK: vercel.json has asset route protection before SPA catch-all.');
   }
 }
 

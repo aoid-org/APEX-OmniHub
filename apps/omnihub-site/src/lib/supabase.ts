@@ -25,7 +25,7 @@ if (!hasSupabaseConfig) {
   console.error(
     `[APEX OmniHub] Supabase is not configured. trace=${supabaseConfigTraceId}. Missing env vars:`,
     missing.join(', '),
-    '— Set these in Vercel → Settings → Environment Variables. Auth is disabled until configured.'
+    '— Set these in Cloudflare Pages → Settings → Environment Variables. Auth is disabled until configured.'
   );
 }
 
