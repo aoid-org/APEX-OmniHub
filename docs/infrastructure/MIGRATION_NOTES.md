@@ -291,9 +291,9 @@ All Lovable files fully removed from codebase as of PR#426 (2026-02-07):
 
 ### Deployment Checklist
 - [x] Run Supabase migrations: `supabase db push`
-- [x] Set Vercel environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
+- [x] Set Cloudflare Pages environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY)
 - [x] Set Supabase Edge Function secrets (SUPABASE_SERVICE_ROLE_KEY)
-- [x] Deploy to Vercel
+- [x] Deploy to Cloudflare Pages
 - [x] Verify `/health` endpoint
 - [x] Run smoke tests: `npm run smoke-test`
 - [x] Test critical user flows (login, audit logging, device registry)
