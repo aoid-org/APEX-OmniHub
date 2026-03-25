@@ -149,7 +149,7 @@ describe('Idempotent Migration — man_tasks_rls', () => {
   it('does not use bare CREATE POLICY without guard', () => {
     const sql = readFileSync(migrationPath, 'utf-8');
     // Strip DO $$ blocks — no CREATE POLICY should exist outside them
-    const outsideBlocks = sql.replace(/DO \$\$[\s\S]*?END \$\$/g, '');
+    const outsideBlocks = sql.replaceAll(/DO \$\$[\s\S]*?END \$\$/g, '');
     expect(outsideBlocks).not.toMatch(/CREATE POLICY/);
   });
 

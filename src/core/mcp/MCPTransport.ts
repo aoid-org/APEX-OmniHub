@@ -94,7 +94,7 @@ export function isTransientError(error: unknown): boolean {
     const msg = error.message;
     if (/timeout|network|ECONNRESET|ECONNREFUSED|fetch failed/i.test(msg)) return true;
     // HTTP 5xx status in our error messages
-    const statusMatch = msg.match(/:\s*(\d{3})/);
+    const statusMatch = /:\s*(\d{3})/.exec(msg);
     if (statusMatch) {
       const status = Number(statusMatch[1]);
       return status >= 500 && status < 600;

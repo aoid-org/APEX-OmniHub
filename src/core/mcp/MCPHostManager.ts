@@ -84,7 +84,7 @@ export interface ToolResult {
 export interface ApprovalRequest {
   readonly toolName: string;
   readonly params: Record<string, unknown>;
-  readonly riskLevel: 'read' | 'write' | 'destructive';
+  readonly riskLevel: BridgeRiskLevel;
   readonly serverId: string;
 }
 
@@ -101,7 +101,7 @@ export interface AuditEntry {
   readonly correlationId: string;
   readonly toolName: string;
   readonly serverId: string;
-  readonly riskLevel: 'read' | 'write' | 'destructive';
+  readonly riskLevel: BridgeRiskLevel;
   readonly approved: boolean;
   readonly success: boolean;
   readonly durationMs: number;
@@ -156,8 +156,8 @@ export class MCPHostManager {
   private readonly transports = new Map<string, MCPTransport>();
   private approvalCallback: ApprovalCallback | null = null;
   private auditCallback: AuditCallback | null = null;
-  private healthTimers = new Map<string, ReturnType<typeof setInterval>>();
-  private healthFailures = new Map<string, number>();
+  private readonly healthTimers = new Map<string, ReturnType<typeof setInterval>>();
+  private readonly healthFailures = new Map<string, number>();
   private healthConfig: HealthCheckConfig = DEFAULT_HEALTH_CONFIG;
 
   /** Discovered resources indexed by serverId */
@@ -510,7 +510,7 @@ export class MCPHostManager {
                 }),
               )
             : [],
-          riskLevel: (t['riskLevel'] as 'read' | 'write' | 'destructive') ?? 'read',
+          riskLevel: (t['riskLevel'] as BridgeRiskLevel) ?? 'read',
         }))
         .filter((t) => t.name.length > 0);
     } catch {
@@ -563,7 +563,7 @@ export class MCPHostManager {
 
     const timer = setInterval(async () => {
       const transport = this.transports.get(serverId);
-      if (!transport || transport.status !== 'connected') {
+      if (transport?.status !== 'connected') {
         this.stopHeartbeat(serverId);
         return;
       }
