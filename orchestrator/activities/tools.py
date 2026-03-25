@@ -218,9 +218,7 @@ def _resolve_llm_model(context: dict[str, Any]) -> str:
 
     allowed_models = context.get("allowed_models", [])
     if allowed_models and resolved_model not in allowed_models:
-        _raise_non_retryable_plan_error(
-            f"Model {resolved_model} is not approved for this tenant"
-        )
+        _raise_non_retryable_plan_error(f"Model {resolved_model} is not approved for this tenant")
 
     return resolved_model
 
@@ -298,9 +296,7 @@ def _validate_generated_plan(plan: GeneratedPlan) -> None:
             continue
 
         if step.compensation not in tool_contract.compensation_tools_allowed:
-            invalid_compensations.append(
-                f"{step.compensation} (not allowed for {step.tool})"
-            )
+            invalid_compensations.append(f"{step.compensation} (not allowed for {step.tool})")
 
     if invalid_tools:
         _raise_non_retryable_plan_error(f"Plan contains unknown tools: {invalid_tools}")
@@ -309,9 +305,7 @@ def _validate_generated_plan(plan: GeneratedPlan) -> None:
             f"Plan contains invalid compensations: {invalid_compensations}"
         )
     if invalid_schemas:
-        _raise_non_retryable_plan_error(
-            f"Plan contains invalid tool inputs: {invalid_schemas}"
-        )
+        _raise_non_retryable_plan_error(f"Plan contains invalid tool inputs: {invalid_schemas}")
 
 
 def _build_safe_user_message(goal: str, context: dict[str, Any]) -> str:
@@ -319,9 +313,7 @@ def _build_safe_user_message(goal: str, context: dict[str, Any]) -> str:
         return create_safe_user_message(goal, context)
     except PromptInjectionError as err:
         activity.logger.warning(f"Prompt injection blocked: {err.pattern}")
-        _raise_non_retryable_plan_error(
-            "Request rejected: potential prompt injection detected"
-        )
+        _raise_non_retryable_plan_error("Request rejected: potential prompt injection detected")
 
 
 @activity.defn(name="generate_plan_with_llm")
