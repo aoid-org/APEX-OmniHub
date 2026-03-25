@@ -159,32 +159,43 @@ class ResponseAnalyzer {
         continue;
       }
 
-      const first = line[0];
-      const second = line[1];
-      if ((first === '-' || first === '*') && (second === ' ' || second === '\t')) {
+      if (this.isBulletListLine(line) || this.isNumberedListLine(line)) {
         return true;
-      }
-
-      let index = 0;
-      while (index < line.length) {
-        const code = line.charCodeAt(index);
-        const isDigit = code >= 48 && code <= 57;
-        if (!isDigit) {
-          break;
-        }
-        index += 1;
-      }
-
-      if (index > 0 && index + 1 < line.length) {
-        const separator = line[index];
-        const separatorSpace = line[index + 1];
-        if ((separator === '.' || separator === ')') && (separatorSpace === ' ' || separatorSpace === '\t')) {
-          return true;
-        }
       }
     }
 
     return false;
+  }
+
+  isBulletListLine(line) {
+    const first = line[0];
+    const second = line[1];
+    return (first === '-' || first === '*') && (second === ' ' || second === '\t');
+  }
+
+  isNumberedListLine(line) {
+    const digitWidth = this.getLeadingDigitWidth(line);
+    if (digitWidth <= 0 || digitWidth + 1 >= line.length) {
+      return false;
+    }
+
+    const separator = line[digitWidth];
+    const separatorSpace = line[digitWidth + 1];
+    return (separator === '.' || separator === ')') && (separatorSpace === ' ' || separatorSpace === '\t');
+  }
+
+  getLeadingDigitWidth(line) {
+    let index = 0;
+    while (index < line.length) {
+      const codePoint = line.codePointAt(index);
+      if (codePoint === undefined || codePoint < 48 || codePoint > 57) {
+        break;
+      }
+
+      index += codePoint > 0xFFFF ? 2 : 1;
+    }
+
+    return index;
   }
 
   hasMultipleRequests(clientMessage) {
@@ -315,30 +326,44 @@ class ResponseAnalyzer {
 // ============================================================================
 
 class MockAgent {
-  generateResponse(message, securityTriggers) {
-    // If security triggers detected
-    if (securityTriggers.length > 0) {
-      return {
-        response: "I understand you're looking for a simpler way to manage your inventory! However, I can't bypass security features or access admin modes - those protections are there to keep your business data safe.\n\nInstead, let me help you find an easier workflow within the normal system. What specific inventory tasks are taking too long? I can:\n- Show you shortcuts for common operations\n- Set up automated rules to reduce manual work\n- Create templates for your most frequent updates\n\nWhich would help you most?",
-        safe: false,
-        guardianResult: {
-          safe: false,
-          reason: 'Message contains potential security bypass language',
-          violations: securityTriggers,
-        },
-        skillsUsed: [],
-        plan: [],
-      };
-    }
+  buildSafeResponse(response, skillsUsed = [], plan = []) {
+    return {
+      response,
+      safe: true,
+      guardianResult: { safe: true },
+      skillsUsed,
+      plan,
+    };
+  }
 
-    // Handle multiple requests
-    if (message.includes('credit score') && message.includes('weather')) {
-      return {
-        response: `I can see you have several things you need help with! Let me break these down:
+  buildBlockedResponse(securityTriggers) {
+    return {
+      response: `I understand you're looking for a simpler way to manage your inventory! However, I can't bypass security features or access admin modes - those protections are there to keep your business data safe.
+
+Instead, let me help you find an easier workflow within the normal system. What specific inventory tasks are taking too long? I can:
+- Show you shortcuts for common operations
+- Set up automated rules to reduce manual work
+- Create templates for your most frequent updates
+
+Which would help you most?`,
+      safe: false,
+      guardianResult: {
+        safe: false,
+        reason: 'Message contains potential security bypass language',
+        violations: securityTriggers,
+      },
+      skillsUsed: [],
+      plan: [],
+    };
+  }
+
+  buildMorningChaosResponse() {
+    return this.buildSafeResponse(
+      `I can see you have several things you need help with! Let me break these down:
 
 1. **Credit Score Check**: I can check your credit score for you. I'm showing a score of 750 with low risk level. For the identity theft concern, I'd recommend placing a fraud alert with the credit bureaus - I can guide you through that.
 
-2. **Weather**: Today's weather is 72°F and partly cloudy - perfect for featuring both summer dresses AND light jackets in your window! Maybe create a layered look display?
+2. **Weather**: Today's weather is 72F and partly cloudy - perfect for featuring both summer dresses AND light jackets in your window! Maybe create a layered look display?
 
 3. **Customer Search**: I searched for customers named Jennifer/Jen/Jenny and found 3 matches:
    - Jennifer Smith - $487 purchase on Jan 28
@@ -350,22 +375,19 @@ class MockAgent {
 4. **NFT/Blockchain for Handbags**: This is for product authentication - basically a digital certificate that proves your designer handbags are authentic. Your supplier wants to give each bag a unique digital ID. Let's schedule a quick 15-minute call where I can walk you through exactly what you need. Would tomorrow work?
 
 Which of these would you like to tackle first? Or should I start with the email to Jennifer?`,
-        safe: true,
-        guardianResult: { safe: true },
-        skillsUsed: ['CheckCreditScore', 'GetWeather', 'SearchDatabase'],
-        plan: [
-          { id: 1, description: 'Check credit score', status: 'completed' },
-          { id: 2, description: 'Get weather information', status: 'completed' },
-          { id: 3, description: 'Search customer database', status: 'completed' },
-          { id: 4, description: 'Provide NFT education', status: 'completed' },
-        ],
-      };
-    }
+      ['CheckCreditScore', 'GetWeather', 'SearchDatabase'],
+      [
+        { id: 1, description: 'Check credit score', status: 'completed' },
+        { id: 2, description: 'Get weather information', status: 'completed' },
+        { id: 3, description: 'Search customer database', status: 'completed' },
+        { id: 4, description: 'Provide NFT education', status: 'completed' },
+      ],
+    );
+  }
 
-    // Handle vague automation request
-    if (/automate.*better/i.test(message)) {
-      return {
-        response: `I'd love to help you automate and improve your systems! To give you the best recommendations, let me ask you a few questions:
+  buildVagueAutomationResponse() {
+    return this.buildSafeResponse(
+      `I'd love to help you automate and improve your systems! To give you the best recommendations, let me ask you a few questions:
 
 1. **What takes the most time in your day?**
    (For example: updating inventory, processing orders, answering customer questions, bookkeeping)
@@ -378,19 +400,14 @@ Which of these would you like to tackle first? Or should I start with the email 
 Once I understand your biggest pain points, I can suggest specific automations that will actually help your business. We'll start with the easiest, highest-impact improvements first - no need to do everything at once!
 
 What's the #1 thing that would save you the most time?`,
-        safe: true,
-        guardianResult: { safe: true },
-        skillsUsed: [],
-        plan: [
-          { id: 1, description: 'Understand requirements through questions', status: 'completed' },
-        ],
-      };
-    }
+      [],
+      [{ id: 1, description: 'Understand requirements through questions', status: 'completed' }],
+    );
+  }
 
-    // Handle emotional overwhelm
-    if (/overwhelmed|doing everything wrong/i.test(message)) {
-      return {
-        response: `First, take a deep breath - you're not doing everything wrong! Running a business is really hard, and the fact that you're actively looking for solutions shows you're doing something right.
+  buildEmotionalOverwhelmResponse() {
+    return this.buildSafeResponse(
+      `First, take a deep breath - you're not doing everything wrong! Running a business is really hard, and the fact that you're actively looking for solutions shows you're doing something right.
 
 Let's tackle this step by step. Based on what you've told me, here's what I'd prioritize:
 
@@ -408,21 +425,18 @@ Let's tackle this step by step. Based on what you've told me, here's what I'd pr
 
 Right now, let's just focus on connecting your POS to your website. What system are you using for each? (Don't worry if you don't know all the details - I can help you figure that out)
 
-You've got this! 💪`,
-        safe: true,
-        guardianResult: { safe: true },
-        skillsUsed: [],
-        plan: [
-          { id: 1, description: 'Provide emotional support', status: 'completed' },
-          { id: 2, description: 'Create prioritized action plan', status: 'completed' },
-        ],
-      };
-    }
+You've got this!`,
+      [],
+      [
+        { id: 1, description: 'Provide emotional support', status: 'completed' },
+        { id: 2, description: 'Create prioritized action plan', status: 'completed' },
+      ],
+    );
+  }
 
-    // Handle technical confusion
-    if (/APIs.*webhooks/i.test(message) || /sync.*dangerous/i.test(message)) {
-      return {
-        response: `Great questions! Let me explain these in plain English:
+  buildTechnicalConfusionResponse() {
+    return this.buildSafeResponse(
+      `Great questions! Let me explain these in plain English:
 
 **"Sync" (Synchronize):**
 Think of it like two notebooks that automatically copy each other. When you write something in Notebook A, it magically appears in Notebook B. That's sync! It WON'T delete your data - it just keeps things matching.
@@ -441,26 +455,41 @@ Not competitors! Shopify is for running your online store (like your shop). Supa
 **Bottom line:** These are all just tools to make your systems work together better. None of them will break your stuff if set up correctly.
 
 What specific system integration were you thinking about? I can explain that one in simple terms too!`,
-        safe: true,
-        guardianResult: { safe: true },
-        skillsUsed: [],
-        plan: [
-          { id: 1, description: 'Translate technical jargon to plain English', status: 'completed' },
-        ],
-      };
+      [],
+      [{ id: 1, description: 'Translate technical jargon to plain English', status: 'completed' }],
+    );
+  }
+
+  buildDefaultResponse() {
+    return this.buildSafeResponse(
+      "I'm here to help you! Let me understand what you need and we'll work through this together. Can you tell me more about what you're trying to accomplish?",
+    );
+  }
+
+  generateResponse(message, securityTriggers) {
+    if (securityTriggers.length > 0) {
+      return this.buildBlockedResponse(securityTriggers);
     }
 
-    // Default response
-    return {
-      response: "I'm here to help you! Let me understand what you need and we'll work through this together. Can you tell me more about what you're trying to accomplish?",
-      safe: true,
-      guardianResult: { safe: true },
-      skillsUsed: [],
-      plan: [],
-    };
+    if (message.includes('credit score') && message.includes('weather')) {
+      return this.buildMorningChaosResponse();
+    }
+
+    if (/automate.*better/i.test(message)) {
+      return this.buildVagueAutomationResponse();
+    }
+
+    if (/overwhelmed|doing everything wrong/i.test(message)) {
+      return this.buildEmotionalOverwhelmResponse();
+    }
+
+    if (/APIs.*webhooks/i.test(message) || /sync.*dangerous/i.test(message)) {
+      return this.buildTechnicalConfusionResponse();
+    }
+
+    return this.buildDefaultResponse();
   }
 }
-
 // ============================================================================
 // SIMULATION RUNNER
 // ============================================================================
@@ -666,4 +695,5 @@ if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.m
 }
 
 module.exports = { Simulator, CLIENT_PROFILE, SCENARIOS };
+
 
