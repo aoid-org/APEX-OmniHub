@@ -35,7 +35,7 @@ def _mock_heavy_deps():
             del sys.modules[mod_name]
 
     # Restore original activities modules to prevent downstream pollution
-    for key in list(sys.modules):
+    for key in tuple(sys.modules):
         if key.startswith("activities"):
             del sys.modules[key]
     sys.modules.update(saved)

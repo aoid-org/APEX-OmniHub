@@ -221,9 +221,7 @@ def extract_stack_trace(content: str) -> list[str]:
     return relevant[:5]  # Top 5 relevant lines
 
 
-def print_analysis(
-    error_input: str, language: str, matches: list[dict], stack_lines: list[str]
-):
+def print_analysis(language: str, matches: list[dict], stack_lines: list[str]):
     """Print formatted analysis."""
     print(f"\n{'═' * 60}")
     print("  OMNIDEV DEBUG ANALYSIS")
@@ -300,7 +298,7 @@ def main():
     stack_lines = extract_stack_trace(content)
 
     # Output
-    print_analysis(content, language, matches, stack_lines)
+    print_analysis(language, matches, stack_lines)
 
     sys.exit(0)
 

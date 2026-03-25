@@ -10,6 +10,7 @@ Covers:
 from __future__ import annotations
 
 import sys
+from collections.abc import Generator
 
 import pytest
 
@@ -19,7 +20,7 @@ import metrics as _real_metrics_module  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
-def _restore_real_metrics_module() -> None:
+def _restore_real_metrics_module() -> Generator[None, None, None]:
     """
     Ensure each test uses the real metrics module, not the MagicMock that
     test_server.py installs via ``sys.modules["metrics"] = MagicMock(...)``

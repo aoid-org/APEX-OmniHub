@@ -39,8 +39,6 @@ interface GlassCardProps {
   style?: CSSProperties;
   glow?: boolean;
   onClick?: () => void;
-  onDragOver?: (e: React.DragEvent) => void;
-  onDrop?: (e: React.DragEvent) => void;
 }
 
 interface SectionLabelProps {
@@ -241,7 +239,7 @@ const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) =
   }} />
 );
 
-const GlassCard = ({ children, style={}, glow = false, onClick, onDragOver, onDrop }: GlassCardProps) => {
+const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => {
   const cardStyle: CSSProperties = {
     background: T.card,
     border: `1px solid ${glow ? T.borderGlow : T.border}`,
@@ -263,11 +261,7 @@ const GlassCard = ({ children, style={}, glow = false, onClick, onDragOver, onDr
   }
 
   return (
-    <div
-      style={cardStyle}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-    >
+    <div style={cardStyle}>
       {children}
     </div>
   );
@@ -992,24 +986,6 @@ const OmniSlateWidget = () => {
     return () => globalThis.removeEventListener("omnislate-drop", handleWidgetDrop);
   }, [addContextApp]);
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const data = e.dataTransfer.getData('application/apex-tile');
-    if (data) {
-      try {
-        const parsed = JSON.parse(data) as { id?: string; label?: string; iconIdx?: number };
-        if (!parsed.id || !parsed.label) return;
-        addContextApp(parsed.id, parsed.label, parsed.iconIdx, true);
-      } catch {
-        // ignore parse error logs for bad drop payloads
-      }
-    }
-  };
-
   useEffect(() => { endRef.current?.scrollIntoView({behavior:"smooth"}); }, [messages]);
 
   const handleRemoveContextApp = useCallback((appId: string) => {
@@ -1033,10 +1009,7 @@ const OmniSlateWidget = () => {
   const contextBoxShadow = aggregateHealth ? `0 0 8px ${aggregateHealth}44` : "none";
 
   return (
-    <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"visible" }}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-    >
+    <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"visible" }}>
       {/* Header — unified 44px */}
       <div style={{
         height:44, padding:"0 16px", flexShrink:0,

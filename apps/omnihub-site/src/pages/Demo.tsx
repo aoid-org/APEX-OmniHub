@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, type Dispatch, type SetStateAction } from 'react';
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { Section, SectionHeader } from '@/components/Section';
@@ -35,6 +35,52 @@ function buttonLabel(running: boolean, allDone: boolean): string {
   if (running) return 'Running Workflow...';
   if (allDone) return 'Run Again';
   return 'Run Sample Workflow';
+}
+
+const STEP_START_DELAY_MS = 1200;
+const STEP_COMPLETE_OFFSET_MS = 900;
+const WORKFLOW_RESET_DELAY_MS = 800;
+
+type SetActiveStep = Dispatch<SetStateAction<number>>;
+type SetCompleted = Dispatch<SetStateAction<ReadonlySet<string>>>;
+type SetRunning = Dispatch<SetStateAction<boolean>>;
+
+function scheduleWorkflowReset(setActiveStep: SetActiveStep, setRunning: SetRunning): void {
+  setTimeout(() => {
+    setActiveStep(-1);
+    setRunning(false);
+  }, WORKFLOW_RESET_DELAY_MS);
+}
+
+function completeWorkflowStep(
+  stepId: string,
+  isLast: boolean,
+  setCompleted: SetCompleted,
+  setActiveStep: SetActiveStep,
+  setRunning: SetRunning,
+): void {
+  setCompleted((prev) => new Set([...prev, stepId]));
+  if (isLast) {
+    scheduleWorkflowReset(setActiveStep, setRunning);
+  }
+}
+
+function scheduleWorkflowStep(
+  stepId: string,
+  idx: number,
+  isLast: boolean,
+  setActiveStep: SetActiveStep,
+  setCompleted: SetCompleted,
+  setRunning: SetRunning,
+): void {
+  const startDelay = idx * STEP_START_DELAY_MS;
+  const completeDelay = startDelay + STEP_COMPLETE_OFFSET_MS;
+
+  setTimeout(() => setActiveStep(idx), startDelay);
+  setTimeout(
+    () => completeWorkflowStep(stepId, isLast, setCompleted, setActiveStep, setRunning),
+    completeDelay,
+  );
 }
 
 function WorkflowStepRow({ step, idx, isActive, isDone }: Readonly<{
@@ -95,18 +141,15 @@ function InteractiveWorkflowDemo() {
     setCompleted(new Set());
     setActiveStep(0);
 
-    const scheduleStep = (stepId: string, idx: number, isLast: boolean) => {
-      setTimeout(() => setActiveStep(idx), idx * 1200);
-      setTimeout(() => {
-        setCompleted(prev => new Set([...prev, stepId]));
-        if (isLast) {
-          setTimeout(() => { setActiveStep(-1); setRunning(false); }, 800);
-        }
-      }, idx * 1200 + 900);
-    };
-
     WORKFLOW_STEPS.forEach((step, idx) => {
-      scheduleStep(step.id, idx, idx === WORKFLOW_STEPS.length - 1);
+      scheduleWorkflowStep(
+        step.id,
+        idx,
+        idx === WORKFLOW_STEPS.length - 1,
+        setActiveStep,
+        setCompleted,
+        setRunning,
+      );
     });
   }, [running]);
 

@@ -84,7 +84,7 @@ def test_build_dag_structure(agent_workflow):
         {"id": "step4", "tool": "D", "depends_on": ["step2", "step3"]},
     ]
 
-    step_lookup, dependencies, dependents, in_degree = agent_workflow._build_dag_structure()
+    step_lookup, _, dependents, in_degree = agent_workflow._build_dag_structure()
 
     assert "step1" in step_lookup
     assert in_degree["step1"] == 0

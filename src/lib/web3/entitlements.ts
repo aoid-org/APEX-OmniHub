@@ -302,7 +302,7 @@ async function checkNFTBalanceOnChain(
         args: [walletAddress],
       });
 
-      return balance as bigint;
+      return balance;
     } catch (error) {
       lastError = error as Error;
       console.error(`NFT balance check attempt ${attempt + 1} failed:`, error);
