@@ -44,12 +44,12 @@ export const siteConfig = {
   },
   hero: {
     eyebrow: 'APEX OMNIHUB',
-    title: 'Connect anything.\nOrchestrate everything.\nStay in control.',
+    title: 'The only orchestrator you can audit, override, and reverse.',
     tagline: 'YOUR SYSTEMS. YOUR RULES.',
     subtitle:
-      'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, and enterprise platforms into one governed command surface. Every action is authorized, logged, and reversible.',
+      'The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface - where every action is authorized, logged, and reversible.',
     description:
-      'OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.',
+      'No vendor lock-in. No black boxes. No surprises.',
   },
   highlights: {
     title: '',

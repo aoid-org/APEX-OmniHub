@@ -135,49 +135,60 @@ function Hero() {
       </div>
       <div className="container hero__grid">
         <div className="hero__content">
-          <h1 className="heading-hero hero__title flex flex-col items-center lg:items-start w-fit mx-auto lg:mx-0">
-            <div className="flex flex-row gap-[0.5em] justify-center lg:justify-start text-center">
-              <span className="w-min">{t('hero.headline.line1', { defaultValue: 'Connect anything.' })}</span>
-              <span className="w-min">{t('hero.headline.line2', { defaultValue: 'Orchestrate everything.' })}</span>
-            </div>
-            <div className="w-full text-center mt-[0.1em]">
-              <span>{t('hero.headline.line3', { defaultValue: 'Stay in control.' })}</span>
-            </div>
+          <h1 className="heading-hero hero__title text-center lg:text-left">
+            {t('hero.headline.line1', {
+              defaultValue: 'The only orchestrator you can audit, override, and reverse.',
+            })}
           </h1>
-          <p className="hero__tagline hero__tagline--center">{t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}</p>
-          <p className="hero__subtagline hero__subtagline--center">
-            {t('hero.traits', { defaultValue: 'DIRECTABLE \u2022 AUDITABLE \u2022 REVERSIBLE' })}
+          <p className="text-lg font-semibold tracking-wide text-foreground mt-4">
+            {t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}
           </p>
-          
+          <div
+            className="flex flex-wrap gap-4 items-center justify-center mt-3"
+            aria-label="Core platform pillars: Directable, Auditable, Reversible"
+          >
+            {['DIRECTABLE', 'AUDITABLE', 'REVERSIBLE'].map((pillar) => (
+              <span
+                key={pillar}
+                className="px-5 py-1.5 border border-teal-500 text-teal-400 text-sm font-bold tracking-widest rounded-sm"
+              >
+                {pillar}
+              </span>
+            ))}
+          </div>
+
           <div className="flex flex-col gap-4 mt-6 mb-6">
-            <p className="hero__subtitle">
-              <span className="hero__sentence-indent">
-                {t('hero.subtitleSentence1', {
-                  defaultValue: 'The Anti-OS: Universal Sync Orchestrator (USO).',
-                })}
-              </span>{' '}
-              {t('hero.subtitleSentence2', {
+            <p className="hero-body mt-6 text-muted-foreground max-w-2xl mx-auto">
+              {t('hero.subtitle', {
                 defaultValue:
-                  'Unify software, AI agents, and enterprise platforms into one governed command surface. Every action is authorized, logged, and reversible.',
+                  'The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.',
               })}
             </p>
-            <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
-              <span className="hero__sentence-indent">
-                {t('hero.descriptionSentence1', { defaultValue: 'OmniDash keeps execution in view.' })}
-              </span>{' '}
-              {t('hero.descriptionSentence2', {
-                defaultValue:
-                  'Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.',
+            <p className="hero-body mt-3 font-medium text-foreground">
+              {t('hero.description', {
+                defaultValue: 'No vendor lock-in. No black boxes. No surprises.',
               })}
             </p>
           </div>
-          
+
           <div className="flex flex-col items-center lg:items-start gap-4 mt-8">
             <div className="flex flex-row flex-wrap justify-center lg:justify-start gap-4">
               <CTAGroup
                 primary={{ label: t('hero.cta.primary', { defaultValue: 'Request Access' }), href: siteConfig.ctas.primary.href }}
                 secondary={{ label: t('hero.cta.secondary', { defaultValue: 'Watch Demo' }), href: siteConfig.ctas.secondary.href }}
               />
+            </div>
+            <div
+              className="flex flex-wrap gap-x-3 gap-y-1 items-center justify-center text-xs text-muted-foreground mt-5"
+              aria-label="Compliance certifications"
+            >
+              <span>SOC 2 aligned</span>
+              <span aria-hidden="true">·</span>
+              <span>EU AI Act Article 14</span>
+              <span aria-hidden="true">·</span>
+              <span>GDPR Art. 30</span>
+              <span aria-hidden="true">·</span>
+              <span>Trusted by operators in regulated industries</span>
             </div>
             <PWAInstallNode />
           </div>
