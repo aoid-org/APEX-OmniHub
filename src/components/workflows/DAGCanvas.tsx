@@ -5,7 +5,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { memo, useCallback, useRef } from 'react';
+import { memo, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { WorkflowNode, WorkflowEdge } from '@/lib/workflow-api';
 
