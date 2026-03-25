@@ -30,7 +30,7 @@ import ipaddress
 import json
 import os
 import time
-from typing import Any
+from typing import Any, NoReturn
 from urllib.parse import urlparse, urlunparse
 from uuid import uuid4
 
@@ -204,7 +204,7 @@ class GeneratedPlan(BaseModel):
     reasoning: str
 
 
-def _raise_non_retryable_plan_error(message: str) -> None:
+def _raise_non_retryable_plan_error(message: str) -> NoReturn:
     from temporalio.exceptions import ApplicationError
 
     raise ApplicationError(message, non_retryable=True)
