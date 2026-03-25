@@ -37,7 +37,6 @@ from temporalio.worker import Worker
 import core.intents  # noqa: F401
 from activities.dlq_alert import send_dlq_alert
 from activities.iron_law_verify import verify_deductive_path
-from activities.resolve_intent import resolve_intent
 from activities.man_mode import (
     check_man_decision,
     create_man_task,
@@ -48,6 +47,7 @@ from activities.man_mode import (
 from activities.notify_man_task import notify_man_task
 from activities.omni_policy import evaluate_policy_activity
 from activities.omnitrace_activities import get_omnitrace_activities
+from activities.resolve_intent import resolve_intent
 from activities.tools import (
     call_webhook,
     check_semantic_cache,

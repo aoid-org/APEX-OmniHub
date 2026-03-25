@@ -27,9 +27,7 @@ def _load_resolve_intent_module():
     if mod_name in sys.modules:
         return sys.modules[mod_name]
 
-    module_path = os.path.join(
-        os.path.dirname(__file__), "..", "activities", "resolve_intent.py"
-    )
+    module_path = os.path.join(os.path.dirname(__file__), "..", "activities", "resolve_intent.py")
     spec = importlib.util.spec_from_file_location(mod_name, module_path)
     mod = importlib.util.module_from_spec(spec)
     sys.modules[mod_name] = mod
