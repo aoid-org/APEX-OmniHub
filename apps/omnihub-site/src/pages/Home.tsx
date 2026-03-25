@@ -213,20 +213,23 @@ function HighlightsSection() {
         'You define what happens. The system runs it. You can change it anytime.',
       icon: <IconAutomation size={22} />,
       href: '/ai-automation#modular-adapters',
+      ariaLabel: 'Portable Automation — Directable',
     },
     {
       title: 'Smart Integrations',
       description:
-        'Connect your systems. Keep your rules. Switch tools without rebuilding.',
+        'Switch tools without rebuilding. Your logic, your schemas, and your rules move with you — never locked to a single vendor or platform.',
       icon: <IconIntegrations size={22} />,
       href: '/smart-integrations#single-port',
+      ariaLabel: 'Smart Integrations — Reversible',
     },
     {
       title: 'Clear Visibility',
       description:
-        'See what runs. Know what changed. Decide what happens next.',
+        'See what runs. Know what changed. Prove it to anyone — with a complete, tamper-evident audit trail your compliance team can hand to an auditor.',
       icon: <IconAnalytics size={22} />,
       href: '/advanced-analytics#receipts-idempotency',
+      ariaLabel: 'Clear Visibility — Auditable',
     },
   ];
 
