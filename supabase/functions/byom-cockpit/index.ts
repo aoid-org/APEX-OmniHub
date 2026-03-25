@@ -163,7 +163,7 @@ async function dispatchRoute(
   tenantId: string,
 ): Promise<Response> {
   const route = ROUTES[path];
-  if (!route || route.method !== method) {
+  if (route?.method !== method) {
     return jsonResponse({ error: "Not found" }, 404);
   }
 

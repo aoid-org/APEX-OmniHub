@@ -40,7 +40,7 @@ from litellm import acompletion
 from pydantic import BaseModel
 from temporalio import activity
 
-from activities.tool_registry import TOOL_REGISTRY, resolve_tool_name
+from activities.tool_registry import TOOL_REGISTRY, ToolContract, resolve_tool_name
 from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event
 from providers.database.base import DatabaseError
 from providers.database.factory import get_database_provider
@@ -243,11 +243,7 @@ def _has_dependency_cycle(dependencies: dict[str, list[str]]) -> bool:
     return any(visit(node) for node in dependencies)
 
 
-def _validate_generated_plan(plan: GeneratedPlan) -> None:
-    invalid_tools: list[str] = []
-    invalid_compensations: list[str] = []
-    invalid_schemas: list[str] = []
-
+def _validate_plan_dependencies(plan: GeneratedPlan) -> None:
     step_ids = {step.id for step in plan.steps}
     dependencies = {step.id: step.depends_on for step in plan.steps}
     missing_deps = [
@@ -265,39 +261,54 @@ def _validate_generated_plan(plan: GeneratedPlan) -> None:
     if _has_dependency_cycle(dependencies):
         _raise_non_retryable_plan_error("Plan validation failed (DAG Cycle detected)")
 
-    for step in plan.steps:
-        resolved_tool = resolve_tool_name(step.tool)
-        if not resolved_tool:
-            invalid_tools.append(step.tool)
-            continue
 
-        step.tool = resolved_tool
-        tool_contract = TOOL_REGISTRY[step.tool]
+def _resolve_step_tool(step: PlanStep, invalid_tools: list[str]) -> ToolContract | None:
+    resolved_tool = resolve_tool_name(step.tool)
+    if not resolved_tool:
+        invalid_tools.append(step.tool)
+        return None
 
-        try:
-            if tool_contract.input_schema:
-                jsonschema.validate(instance=step.input, schema=tool_contract.input_schema)
-        except jsonschema.exceptions.ValidationError as err:
-            invalid_schemas.append(f"Step {step.id} ({step.tool}) schema error: {err.message}")
+    step.tool = resolved_tool
+    return TOOL_REGISTRY[step.tool]
 
-        if not step.compensation:
-            continue
 
-        resolved_comp = resolve_tool_name(step.compensation)
-        if not resolved_comp:
-            invalid_compensations.append(f"{step.compensation} (unknown tool)")
-            continue
+def _validate_step_input_schema(
+    step: PlanStep, tool_contract: ToolContract, invalid_schemas: list[str]
+) -> None:
+    if not tool_contract.input_schema:
+        return
 
-        step.compensation = resolved_comp
-        if not tool_contract.compensable:
-            invalid_compensations.append(
-                f"{step.compensation} (tool {step.tool} does not support compensation)"
-            )
-            continue
+    try:
+        jsonschema.validate(instance=step.input, schema=tool_contract.input_schema)
+    except jsonschema.exceptions.ValidationError as err:
+        invalid_schemas.append(f"Step {step.id} ({step.tool}) schema error: {err.message}")
 
-        if step.compensation not in tool_contract.compensation_tools_allowed:
-            invalid_compensations.append(f"{step.compensation} (not allowed for {step.tool})")
 
+def _validate_step_compensation(
+    step: PlanStep, tool_contract: ToolContract, invalid_compensations: list[str]
+) -> None:
+    if not step.compensation:
+        return
+
+    resolved_comp = resolve_tool_name(step.compensation)
+    if not resolved_comp:
+        invalid_compensations.append(f"{step.compensation} (unknown tool)")
+        return
+
+    step.compensation = resolved_comp
+    if not tool_contract.compensable:
+        invalid_compensations.append(
+            f"{step.compensation} (tool {step.tool} does not support compensation)"
+        )
+        return
+
+    if step.compensation not in tool_contract.compensation_tools_allowed:
+        invalid_compensations.append(f"{step.compensation} (not allowed for {step.tool})")
+
+
+def _raise_plan_validation_errors(
+    invalid_tools: list[str], invalid_compensations: list[str], invalid_schemas: list[str]
+) -> None:
     if invalid_tools:
         _raise_non_retryable_plan_error(f"Plan contains unknown tools: {invalid_tools}")
     if invalid_compensations:
@@ -306,6 +317,24 @@ def _validate_generated_plan(plan: GeneratedPlan) -> None:
         )
     if invalid_schemas:
         _raise_non_retryable_plan_error(f"Plan contains invalid tool inputs: {invalid_schemas}")
+
+
+def _validate_generated_plan(plan: GeneratedPlan) -> None:
+    invalid_tools: list[str] = []
+    invalid_compensations: list[str] = []
+    invalid_schemas: list[str] = []
+
+    _validate_plan_dependencies(plan)
+
+    for step in plan.steps:
+        tool_contract = _resolve_step_tool(step, invalid_tools)
+        if not tool_contract:
+            continue
+
+        _validate_step_input_schema(step, tool_contract, invalid_schemas)
+        _validate_step_compensation(step, tool_contract, invalid_compensations)
+
+    _raise_plan_validation_errors(invalid_tools, invalid_compensations, invalid_schemas)
 
 
 def _build_safe_user_message(goal: str, context: dict[str, Any]) -> str:
