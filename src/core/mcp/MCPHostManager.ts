@@ -153,6 +153,14 @@ export class MCPHostManager {
     return this.sessionMgr.prompts;
   }
 
+  /**
+   * Backwards-compatible transport registry exposure for tests and legacy callers.
+   * Allows controlled seeding of transports after the facade decomposition.
+   */
+  get transports(): Map<string, import('./MCPTransport').MCPTransport> {
+    return this.connectionMgr.transports;
+  }
+
   private constructor() {
     this.registry = new MCPServerRegistry();
     this.discovery = new MCPToolDiscovery();

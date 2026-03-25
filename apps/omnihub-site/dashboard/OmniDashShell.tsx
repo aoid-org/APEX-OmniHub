@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
+import { useViewport } from "./hooks/useViewport";
 import { useDashboardData, type DashboardData, type Incident } from "./hooks/useDashboardData";
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
+import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
+import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -1501,6 +1504,9 @@ export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);
   const { activeNav, setActiveNav, isDark, setIsDark, ops, setOps } = useLayoutPersistence();
   const { invoke } = useOmniModal();
+  const { isDesktop } = useViewport();
+  const [mobileTab, setMobileTab] = useState<MobileTab>("home");
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
   const dashData = useDashboardData();
@@ -1510,11 +1516,20 @@ export default function OmniDashShell() {
     return () => clearInterval(id);
   }, []);
 
+  // Close drawer when viewport expands to desktop
+  useEffect(() => {
+    if (isDesktop) setDrawerOpen(false);
+  }, [isDesktop]);
+
+  // Responsive grid columns
+  const gridCols = isDesktop ? "220px 1fr 220px" : "1fr";
+  const gridHeight = isDesktop ? 300 : undefined;
+
   return (
     <div style={{
       fontFamily:"'Space Grotesk',sans-serif",
       background: T.bg, color: T.t1,
-      width:"100%", height:"100vh",
+      width:"100%", height:"100dvh",
       display:"flex", flexDirection:"column",
       overflow:"hidden",
     }}>
@@ -1529,29 +1544,13 @@ export default function OmniDashShell() {
         ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
         button { font-family:'Space Grotesk',sans-serif; }
         input { font-family:'Space Grotesk',sans-serif; }
-        
-        @media (max-width: 950px) {
-          .omni-shell-main { flex-direction: column !important; overflow-y: auto !important; }
-          .omni-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid ${T.border} !important; flex-direction: row !important; overflow-x: auto !important; padding: 12px !important; height: auto !important; max-height: 80px !important; }
-          .omni-sidebar-footer { display: none !important; }
-          .omni-nav-item { width: auto !important; white-space: nowrap !important; }
-          .omni-header-search { display: none !important; }
-          .omni-header-actions { flex: 1 !important; justify-content: flex-end !important; }
-          .omni-canvas-container { overflow: visible !important; padding: 12px !important; }
-          .omni-grid-top { display: flex !important; flex-direction: column !important; height: auto !important; }
-          .omni-grid-top > div { height: 420px !important; flex-shrink: 0 !important; }
-          .omni-grid-apps { grid-template-columns: 1fr 1fr !important; }
-          .omni-right-panel { width: 100% !important; border-left: none !important; border-top: 1px solid ${T.border} !important; height: auto !important; overflow: visible !important; flex-direction: row !important; flex-wrap: wrap !important; }
-          .omni-right-panel > div { flex: 1 1 300px !important; }
-          .omni-footer-bar { flex-direction: column !important; height: auto !important; padding: 12px !important; gap: 8px !important; align-items: flex-start !important; }
-          .omni-footer-bar .footer-right { margin-left: 0 !important; flex-wrap: wrap !important; }
-        }
       `}</style>
 
       <OmniDashHeader tick={tick} isDark={isDark} setIsDark={setIsDark} invoke={invoke} />
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
-        <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />
+        {/* Sidebar — desktop only; tablet/mobile use bottom nav */}
+        {isDesktop && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />}
 
         {/* Main Canvas */}
         <div className="omni-canvas-container" style={{
@@ -1581,10 +1580,10 @@ export default function OmniDashShell() {
               Each DraggableWidget gets height+overflow:hidden so no child
               (including OmniSlate chat history) can blow out the row or
               dislodge sibling tiles. */}
-          <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns:"220px 1fr 220px", gap:14, height:300, minHeight:0 }}>
-            <DraggableWidget id="widget_agent" style={{ height:"100%", overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
-            <DraggableWidget id="widget_slate" style={{ height:"100%", overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
-            <DraggableWidget id="widget_eco" style={{ height:"100%", overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
+          <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0 }}>
+            <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
+            <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
+            <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
           </div>
 
           {/* Integrated Apps row */}
@@ -1612,22 +1611,47 @@ export default function OmniDashShell() {
           </div>
         </div>
 
-        {/* Right Panel */}
-        <div className="omni-right-panel" style={{
-          width:266, flexShrink:0,
-          background:`linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
-          borderLeft:`1px solid ${T.border}`,
-          overflowY:"auto", padding:"14px 12px",
-          display:"flex", flexDirection:"column", gap:12,
-        }}>
-          <DraggableWidget id="rt_security"><SecurityPanel /></DraggableWidget>
-          <DraggableWidget id="rt_analytics"><AnalyticsPanel dash={dashData} /></DraggableWidget>
-          <DraggableWidget id="rt_trace"><OmniTracePanel dash={dashData} /></DraggableWidget>
-          <DraggableWidget id="rt_ops"><OpsControlsPanel ops={ops} setOps={setOps} /></DraggableWidget>
-        </div>
+        {/* Right Panel — desktop only; mobile/tablet use OmniMobileDrawer */}
+        {isDesktop && (
+          <div className="omni-right-panel" style={{
+            width:266, flexShrink:0,
+            background:`linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
+            borderLeft:`1px solid ${T.border}`,
+            overflowY:"auto", padding:"14px 12px",
+            display:"flex", flexDirection:"column", gap:12,
+          }}>
+            <DraggableWidget id="rt_security"><SecurityPanel /></DraggableWidget>
+            <DraggableWidget id="rt_analytics"><AnalyticsPanel dash={dashData} /></DraggableWidget>
+            <DraggableWidget id="rt_trace"><OmniTracePanel dash={dashData} /></DraggableWidget>
+            <DraggableWidget id="rt_ops"><OpsControlsPanel ops={ops} setOps={setOps} /></DraggableWidget>
+          </div>
+        )}
+
+        {/* Mobile/Tablet — drawer trigger button in header area */}
+        {!isDesktop && (
+          <button
+            type="button"
+            className="omni-mobile-drawer-btn"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open insights panel"
+            style={{
+              position: "fixed",
+              top: 10,
+              right: 56,
+              zIndex: 8000,
+              display: "flex",
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      {/* Footer bar */}
+      {/* Footer bar — hidden on mobile via CSS */}
       <div className="omni-footer-bar" style={{
         height:28, background:T.surface,
         borderTop:`1px solid ${T.border}`,
@@ -1648,6 +1672,25 @@ export default function OmniDashShell() {
           <span style={{display:"flex",alignItems:"center",gap:5,color:T.green}}><StatusDot color={T.green} pulse={false} />Zero Trust: ON</span>
         </div>
       </div>
+
+      {/* Mobile/Tablet — Insights drawer for right panel content */}
+      {!isDesktop && (
+        <OmniMobileDrawer
+          isOpen={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          title="Insights & Controls"
+        >
+          <SecurityPanel />
+          <AnalyticsPanel dash={dashData} />
+          <OmniTracePanel dash={dashData} />
+          <OpsControlsPanel ops={ops} setOps={setOps} />
+        </OmniMobileDrawer>
+      )}
+
+      {/* Mobile/Tablet bottom navigation */}
+      {!isDesktop && (
+        <OmniMobileBottomNav activeTab={mobileTab} setActiveTab={setMobileTab} />
+      )}
 
       {/* OmniSpatialHost — universal modal engine, portal-mounted */}
       <OmniSpatialHost />
