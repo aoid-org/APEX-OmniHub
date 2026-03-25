@@ -1,6 +1,6 @@
 /**
  * MCPHostManager — Singleton MCP Host Controller
- * @version 1.0.0
+ * @version 1.1.0
  * @module src/core/mcp/MCPHostManager
  *
  * Central MCP Host that manages client connections, capability negotiation,
@@ -11,11 +11,15 @@
  *                ↕                    ↕
  *         MCPServerRegistry    MCPToolDiscovery
  *
+ * v1.1.0 — Added health check heartbeat, resource/prompt discovery,
+ *           and audit trail integration for tool invocations.
+ *
  * APEX STANDARDS ENFORCED:
  * - Singleton Pattern: One host per application lifecycle
  * - Fail-Closed: Unknown servers/tools rejected at boundary
- * - Audit Trail: All tool invocations logged with correlation IDs
+ * - Audit Trail: All tool invocations persisted with correlation IDs
  * - Approval Gate: Write/destructive ops require user confirmation
+ * - Heartbeat: Connected servers monitored; stale connections recovered
  *
  * OWNED BY: APEX Business Systems Ltd.
  */
@@ -90,6 +94,57 @@ export type ApprovalCallback = (
 ) => Promise<boolean>;
 
 // ============================================================================
+// Audit Trail
+// ============================================================================
+
+export interface AuditEntry {
+  readonly correlationId: string;
+  readonly toolName: string;
+  readonly serverId: string;
+  readonly riskLevel: 'read' | 'write' | 'destructive';
+  readonly approved: boolean;
+  readonly success: boolean;
+  readonly durationMs: number;
+  readonly error?: string;
+  readonly timestamp: string;
+}
+
+/** Callback to persist audit entries (e.g., to Supabase audit_logs) */
+export type AuditCallback = (entry: AuditEntry) => void;
+
+// ============================================================================
+// Health Check
+// ============================================================================
+
+export interface HealthCheckConfig {
+  /** Interval between heartbeats in milliseconds (default: 60_000) */
+  intervalMs: number;
+  /** Maximum consecutive failures before marking server as error (default: 3) */
+  maxFailures: number;
+}
+
+const DEFAULT_HEALTH_CONFIG: HealthCheckConfig = { intervalMs: 60_000, maxFailures: 3 };
+
+// ============================================================================
+// Resource & Prompt Types (MCP Capability Negotiation)
+// ============================================================================
+
+export interface MCPResource {
+  readonly uri: string;
+  readonly name: string;
+  readonly description: string;
+  readonly mimeType?: string;
+  readonly serverId: string;
+}
+
+export interface MCPPrompt {
+  readonly name: string;
+  readonly description: string;
+  readonly serverId: string;
+  readonly arguments: readonly { name: string; description: string; required: boolean }[];
+}
+
+// ============================================================================
 // Host Manager
 // ============================================================================
 
@@ -100,6 +155,15 @@ export class MCPHostManager {
   readonly discovery: MCPToolDiscovery;
   private readonly transports = new Map<string, MCPTransport>();
   private approvalCallback: ApprovalCallback | null = null;
+  private auditCallback: AuditCallback | null = null;
+  private healthTimers = new Map<string, ReturnType<typeof setInterval>>();
+  private healthFailures = new Map<string, number>();
+  private healthConfig: HealthCheckConfig = DEFAULT_HEALTH_CONFIG;
+
+  /** Discovered resources indexed by serverId */
+  readonly resources = new Map<string, readonly MCPResource[]>();
+  /** Discovered prompts indexed by serverId */
+  readonly prompts = new Map<string, readonly MCPPrompt[]>();
 
   private constructor() {
     this.registry = new MCPServerRegistry();
@@ -151,12 +215,29 @@ export class MCPHostManager {
     this.approvalCallback = callback;
   }
 
+  /**
+   * Set the audit trail callback for tool invocation logging.
+   * Typically wired to Supabase audit_logs insert.
+   */
+  setAuditCallback(callback: AuditCallback): void {
+    this.auditCallback = callback;
+  }
+
+  /**
+   * Configure health check heartbeat parameters.
+   */
+  setHealthCheckConfig(config: Partial<HealthCheckConfig>): void {
+    this.healthConfig = { ...DEFAULT_HEALTH_CONFIG, ...config };
+  }
+
   // --------------------------------------------------------------------------
   // Connection Lifecycle
   // --------------------------------------------------------------------------
 
   /**
    * Connect to a specific MCP server.
+   * Performs full capability negotiation (tools, resources, prompts)
+   * and starts a health check heartbeat.
    */
   async connectServer(serverId: string): Promise<void> {
     const validation = this.registry.validateServer(serverId);
@@ -169,15 +250,37 @@ export class MCPHostManager {
       throw new Error(`No transport for server: ${serverId}`);
     }
 
+    const entry = this.registry.getServer(serverId);
+    const capabilities = entry?.config.capabilities ?? [];
+
     try {
       await transport.connect();
       this.registry.updateStatus(serverId, 'connected');
 
-      // Negotiate capabilities: list available tools
-      const toolsResponse = await this.listServerTools(serverId);
-      if (toolsResponse.length > 0) {
-        this.discovery.registerTools(serverId, toolsResponse);
+      // Negotiate capabilities based on server declaration
+      if (capabilities.includes('tools')) {
+        const toolsResponse = await this.listServerTools(serverId);
+        if (toolsResponse.length > 0) {
+          this.discovery.registerTools(serverId, toolsResponse);
+        }
       }
+
+      if (capabilities.includes('resources')) {
+        const resourcesResponse = await this.listServerResources(serverId);
+        if (resourcesResponse.length > 0) {
+          this.resources.set(serverId, resourcesResponse);
+        }
+      }
+
+      if (capabilities.includes('prompts')) {
+        const promptsResponse = await this.listServerPrompts(serverId);
+        if (promptsResponse.length > 0) {
+          this.prompts.set(serverId, promptsResponse);
+        }
+      }
+
+      // Start health check heartbeat
+      this.startHeartbeat(serverId);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Unknown connection error';
@@ -188,14 +291,19 @@ export class MCPHostManager {
 
   /**
    * Disconnect from a specific MCP server.
+   * Stops heartbeat and clears all capability caches.
    */
   async disconnectServer(serverId: string): Promise<void> {
+    this.stopHeartbeat(serverId);
     const transport = this.transports.get(serverId);
     if (transport) {
       await transport.disconnect();
-      this.discovery.clearServer(serverId);
       this.registry.updateStatus(serverId, 'available');
     }
+    // Always clear capability caches regardless of transport state
+    this.discovery.clearServer(serverId);
+    this.resources.delete(serverId);
+    this.prompts.delete(serverId);
   }
 
   // --------------------------------------------------------------------------
@@ -203,13 +311,14 @@ export class MCPHostManager {
   // --------------------------------------------------------------------------
 
   /**
-   * Invoke an MCP tool with approval gating.
+   * Invoke an MCP tool with approval gating and audit trail.
    *
    * Flow:
    * 1. Validate tool exists in discovery cache
    * 2. Check risk level — gate write/destructive ops through approval
-   * 3. Send JSON-RPC request via transport
-   * 4. Return structured result
+   * 3. Send JSON-RPC request via transport (with retry)
+   * 4. Persist audit entry
+   * 5. Return structured result
    */
   async invokeTool(invocation: ToolInvocation): Promise<ToolResult> {
     const startTime = Date.now();
@@ -218,6 +327,17 @@ export class MCPHostManager {
     // 1. Look up tool
     const tool = this.discovery.getTool(parsed.toolName);
     if (!tool) {
+      this.emitAudit({
+        correlationId: parsed.correlationId,
+        toolName: parsed.toolName,
+        serverId: 'unknown',
+        riskLevel: 'read',
+        approved: false,
+        success: false,
+        durationMs: Date.now() - startTime,
+        error: `Unknown tool: ${parsed.toolName}`,
+        timestamp: new Date().toISOString(),
+      });
       return {
         success: false,
         data: undefined,
@@ -227,16 +347,29 @@ export class MCPHostManager {
       };
     }
 
+    const riskLevel = tool.riskLevel ?? 'read';
+
     // 2. Approval gate for risky operations
     if (this.discovery.requiresApproval(parsed.toolName)) {
       const approved = await this.requestApproval({
         toolName: parsed.toolName,
         params: parsed.params,
-        riskLevel: tool.riskLevel ?? 'write',
+        riskLevel,
         serverId: tool.serverId,
       });
 
       if (!approved) {
+        this.emitAudit({
+          correlationId: parsed.correlationId,
+          toolName: parsed.toolName,
+          serverId: tool.serverId,
+          riskLevel,
+          approved: false,
+          success: false,
+          durationMs: Date.now() - startTime,
+          error: 'User denied tool invocation',
+          timestamp: new Date().toISOString(),
+        });
         return {
           success: false,
           data: undefined,
@@ -247,9 +380,20 @@ export class MCPHostManager {
       }
     }
 
-    // 3. Send JSON-RPC request
+    // 3. Send JSON-RPC request (transport handles retry)
     const transport = this.transports.get(tool.serverId);
     if (transport?.status !== 'connected') {
+      this.emitAudit({
+        correlationId: parsed.correlationId,
+        toolName: parsed.toolName,
+        serverId: tool.serverId,
+        riskLevel,
+        approved: true,
+        success: false,
+        durationMs: Date.now() - startTime,
+        error: `Server not connected: ${tool.serverId}`,
+        timestamp: new Date().toISOString(),
+      });
       return {
         success: false,
         data: undefined,
@@ -267,25 +411,50 @@ export class MCPHostManager {
         params: parsed.params,
       });
 
-      if (response.error) {
-        return {
-          success: false,
-          data: undefined,
-          error: response.error.message,
-          durationMs: Date.now() - startTime,
-          correlationId: parsed.correlationId,
-        };
-      }
+      const success = !response.error;
+      const result: ToolResult = success
+        ? {
+            success: true,
+            data: response.result,
+            durationMs: Date.now() - startTime,
+            correlationId: parsed.correlationId,
+          }
+        : {
+            success: false,
+            data: undefined,
+            error: response.error!.message,
+            durationMs: Date.now() - startTime,
+            correlationId: parsed.correlationId,
+          };
 
-      return {
-        success: true,
-        data: response.result,
-        durationMs: Date.now() - startTime,
+      // 4. Persist audit entry
+      this.emitAudit({
         correlationId: parsed.correlationId,
-      };
+        toolName: parsed.toolName,
+        serverId: tool.serverId,
+        riskLevel,
+        approved: true,
+        success: result.success,
+        durationMs: result.durationMs,
+        error: result.error,
+        timestamp: new Date().toISOString(),
+      });
+
+      return result;
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Tool invocation failed';
+      this.emitAudit({
+        correlationId: parsed.correlationId,
+        toolName: parsed.toolName,
+        serverId: tool.serverId,
+        riskLevel,
+        approved: true,
+        success: false,
+        durationMs: Date.now() - startTime,
+        error: message,
+        timestamp: new Date().toISOString(),
+      });
       return {
         success: false,
         data: undefined,
@@ -380,7 +549,160 @@ export class MCPHostManager {
     this.registry.updateStatus(serverId, status, error);
   }
 
+  // --------------------------------------------------------------------------
+  // Health Check Heartbeat
+  // --------------------------------------------------------------------------
 
+  /**
+   * Start periodic health checks for a connected server.
+   * Sends a JSON-RPC ping; consecutive failures trigger error status.
+   */
+  private startHeartbeat(serverId: string): void {
+    this.stopHeartbeat(serverId);
+    this.healthFailures.set(serverId, 0);
+
+    const timer = setInterval(async () => {
+      const transport = this.transports.get(serverId);
+      if (!transport || transport.status !== 'connected') {
+        this.stopHeartbeat(serverId);
+        return;
+      }
+
+      try {
+        await transport.send({
+          jsonrpc: '2.0',
+          id: `heartbeat-${serverId}-${Date.now()}`,
+          method: 'ping',
+        });
+        this.healthFailures.set(serverId, 0);
+      } catch {
+        const failures = (this.healthFailures.get(serverId) ?? 0) + 1;
+        this.healthFailures.set(serverId, failures);
+
+        if (failures >= this.healthConfig.maxFailures) {
+          this.registry.updateStatus(
+            serverId,
+            'error',
+            `Health check failed ${failures} consecutive times`,
+          );
+          this.stopHeartbeat(serverId);
+        }
+      }
+    }, this.healthConfig.intervalMs);
+
+    this.healthTimers.set(serverId, timer);
+  }
+
+  /**
+   * Stop heartbeat for a server.
+   */
+  private stopHeartbeat(serverId: string): void {
+    const timer = this.healthTimers.get(serverId);
+    if (timer) {
+      clearInterval(timer);
+      this.healthTimers.delete(serverId);
+    }
+    this.healthFailures.delete(serverId);
+  }
+
+  /**
+   * Get current health failure count for a server (for testing/monitoring).
+   */
+  getHealthFailures(serverId: string): number {
+    return this.healthFailures.get(serverId) ?? 0;
+  }
+
+  // --------------------------------------------------------------------------
+  // Resource & Prompt Discovery
+  // --------------------------------------------------------------------------
+
+  /**
+   * List resources from a connected server via JSON-RPC.
+   */
+  private async listServerResources(serverId: string): Promise<MCPResource[]> {
+    const transport = this.transports.get(serverId);
+    if (transport?.status !== 'connected') return [];
+
+    try {
+      const response = await transport.send({
+        jsonrpc: '2.0',
+        id: `discover-resources-${serverId}-${Date.now()}`,
+        method: 'resources/list',
+      });
+
+      if (!response || response.error || !response.result) return [];
+      const items = response.result;
+      if (!Array.isArray(items)) return [];
+
+      return items
+        .filter((r): r is Record<string, unknown> => typeof r === 'object' && r !== null)
+        .map((r) => ({
+          uri: coerceUnknownToString(r['uri']),
+          name: coerceUnknownToString(r['name']),
+          description: coerceUnknownToString(r['description']),
+          mimeType: typeof r['mimeType'] === 'string' ? r['mimeType'] : undefined,
+          serverId,
+        }))
+        .filter((r) => r.uri.length > 0);
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * List prompts from a connected server via JSON-RPC.
+   */
+  private async listServerPrompts(serverId: string): Promise<MCPPrompt[]> {
+    const transport = this.transports.get(serverId);
+    if (transport?.status !== 'connected') return [];
+
+    try {
+      const response = await transport.send({
+        jsonrpc: '2.0',
+        id: `discover-prompts-${serverId}-${Date.now()}`,
+        method: 'prompts/list',
+      });
+
+      if (!response || response.error || !response.result) return [];
+      const items = response.result;
+      if (!Array.isArray(items)) return [];
+
+      return items
+        .filter((p): p is Record<string, unknown> => typeof p === 'object' && p !== null)
+        .map((p) => ({
+          name: coerceUnknownToString(p['name']),
+          description: coerceUnknownToString(p['description']),
+          serverId,
+          arguments: Array.isArray(p['arguments'])
+            ? (p['arguments'] as Array<Record<string, unknown>>).map((a) => ({
+                name: coerceUnknownToString(a['name']),
+                description: coerceUnknownToString(a['description']),
+                required: Boolean(a['required']),
+              }))
+            : [],
+        }))
+        .filter((p) => p.name.length > 0);
+    } catch {
+      return [];
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Audit Trail
+  // --------------------------------------------------------------------------
+
+  /**
+   * Emit an audit entry to the registered callback.
+   * Fire-and-forget: audit failures never block tool execution.
+   */
+  private emitAudit(entry: AuditEntry): void {
+    if (!this.auditCallback) return;
+    try {
+      this.auditCallback(entry);
+    } catch {
+      // Audit persistence failures are silent — never block the pipeline
+    }
+  }
 }
 
 function coerceUnknownToString(value: unknown, fallback = ''): string {

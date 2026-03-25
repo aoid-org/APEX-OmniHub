@@ -1,16 +1,19 @@
 /**
  * MCPTransport — Transport Abstraction Layer
- * @version 1.0.0
+ * @version 1.1.0
  * @module src/core/mcp/MCPTransport
  *
  * Defines the transport interface for MCP server communication.
  * Supports stdio (local) and Streamable HTTP (remote) protocols.
  * Each transport implementation handles JSON-RPC message framing.
  *
+ * v1.1.0 — Added retry with exponential backoff for transient failures
+ *
  * APEX STANDARDS ENFORCED:
  * - Interface-first: Pure interface + factory pattern
  * - Fail-closed: Connection failures produce rejection, not silent drops
  * - Zero side effects: Transport does not interpret message semantics
+ * - Resilient: Transient failures retried with exponential backoff
  *
  * OWNED BY: APEX Business Systems Ltd.
  */
@@ -67,6 +70,61 @@ export interface MCPTransport {
 }
 
 // ============================================================================
+// Retry Configuration
+// ============================================================================
+
+export interface RetryConfig {
+  /** Maximum number of retry attempts (default: 3) */
+  maxRetries: number;
+  /** Base delay in milliseconds (default: 500) */
+  baseDelayMs: number;
+  /** Maximum delay cap in milliseconds (default: 8000) */
+  maxDelayMs: number;
+}
+
+const DEFAULT_RETRY: RetryConfig = { maxRetries: 3, baseDelayMs: 500, maxDelayMs: 8_000 };
+
+/**
+ * Determine if an error is transient and worth retrying.
+ * Network errors and 5xx responses are retryable; 4xx are not.
+ */
+export function isTransientError(error: unknown): boolean {
+  if (error instanceof TypeError) return true; // fetch network failure
+  if (error instanceof Error) {
+    const msg = error.message;
+    if (/timeout|network|ECONNRESET|ECONNREFUSED|fetch failed/i.test(msg)) return true;
+    // HTTP 5xx status in our error messages
+    const statusMatch = msg.match(/:\s*(\d{3})/);
+    if (statusMatch) {
+      const status = Number(statusMatch[1]);
+      return status >= 500 && status < 600;
+    }
+  }
+  return false;
+}
+
+/**
+ * Execute an async operation with exponential backoff retry.
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  config: RetryConfig = DEFAULT_RETRY,
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt >= config.maxRetries || !isTransientError(err)) throw err;
+      const delay = Math.min(config.baseDelayMs * 2 ** attempt, config.maxDelayMs);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw lastError;
+}
+
+// ============================================================================
 // Stdio Transport (Local Process)
 // ============================================================================
 
@@ -82,8 +140,10 @@ export class StdioTransport implements MCPTransport {
   private _status: TransportStatus = 'disconnected';
   private readonly serverId: string;
   private readonly proxyBaseUrl: string;
+  private readonly retryConfig: RetryConfig;
 
-  constructor(serverId: string, proxyBaseUrl?: string) {
+  constructor(serverId: string, proxyBaseUrl?: string, retryConfig?: Partial<RetryConfig>) {
+    this.retryConfig = { ...DEFAULT_RETRY, ...retryConfig };
     this.serverId = serverId;
     // Resolve proxy URL: prefer Supabase edge function, fall back to relative path
     const meta = import.meta as unknown as Record<string, Record<string, string> | undefined>;
@@ -144,18 +204,20 @@ export class StdioTransport implements MCPTransport {
       throw new Error(`Cannot send: transport status is "${this._status}"`);
     }
 
-    const response = await fetch(`${this.proxyBaseUrl}/rpc`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify({ serverId: this.serverId, request }),
-    });
+    return withRetry(async () => {
+      const response = await fetch(`${this.proxyBaseUrl}/rpc`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ serverId: this.serverId, request }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`RPC failed: ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`RPC failed: ${response.status}`);
+      }
 
-    const raw: unknown = await response.json();
-    return JsonRpcResponseSchema.parse(raw);
+      const raw: unknown = await response.json();
+      return JsonRpcResponseSchema.parse(raw);
+    }, this.retryConfig);
   }
 }
 
@@ -174,10 +236,12 @@ export class StreamableHTTPTransport implements MCPTransport {
   private _status: TransportStatus = 'disconnected';
   private readonly endpoint: string;
   private readonly headers: Record<string, string>;
+  private readonly retryConfig: RetryConfig;
 
-  constructor(endpoint: string, headers: Record<string, string> = {}) {
+  constructor(endpoint: string, headers: Record<string, string> = {}, retryConfig?: Partial<RetryConfig>) {
     this.endpoint = endpoint;
     this.headers = headers;
+    this.retryConfig = { ...DEFAULT_RETRY, ...retryConfig };
   }
 
   get status(): TransportStatus {
@@ -211,21 +275,23 @@ export class StreamableHTTPTransport implements MCPTransport {
       throw new Error(`Cannot send: transport status is "${this._status}"`);
     }
 
-    const response = await fetch(this.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.headers,
-      },
-      body: JSON.stringify(request),
-    });
+    return withRetry(async () => {
+      const response = await fetch(this.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.headers,
+        },
+        body: JSON.stringify(request),
+      });
 
-    if (!response.ok) {
-      throw new Error(`RPC failed: ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`RPC failed: ${response.status}`);
+      }
 
-    const raw: unknown = await response.json();
-    return JsonRpcResponseSchema.parse(raw);
+      const raw: unknown = await response.json();
+      return JsonRpcResponseSchema.parse(raw);
+    }, this.retryConfig);
   }
 }
 

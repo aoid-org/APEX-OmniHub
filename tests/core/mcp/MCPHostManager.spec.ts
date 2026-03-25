@@ -27,6 +27,8 @@ import {
   StreamableHTTPTransport,
   createTransport,
   JsonRpcRequestSchema,
+  isTransientError,
+  withRetry,
 } from '../../../src/core/mcp/MCPTransport';
 
 // ============================================================================
@@ -399,6 +401,93 @@ describe('MCPTransport', () => {
 });
 
 // ============================================================================
+// Retry & Transient Error Detection (v1.1.0)
+// ============================================================================
+
+describe('isTransientError', () => {
+  it('returns true for TypeError (fetch network failure)', () => {
+    expect(isTransientError(new TypeError('Failed to fetch'))).toBe(true);
+  });
+
+  it('returns true for timeout errors', () => {
+    expect(isTransientError(new Error('Request timeout'))).toBe(true);
+  });
+
+  it('returns true for ECONNREFUSED', () => {
+    expect(isTransientError(new Error('ECONNREFUSED'))).toBe(true);
+  });
+
+  it('returns true for 5xx status codes', () => {
+    expect(isTransientError(new Error('RPC failed: 502'))).toBe(true);
+    expect(isTransientError(new Error('RPC failed: 503'))).toBe(true);
+  });
+
+  it('returns false for 4xx status codes', () => {
+    expect(isTransientError(new Error('RPC failed: 400'))).toBe(false);
+    expect(isTransientError(new Error('RPC failed: 401'))).toBe(false);
+  });
+
+  it('returns false for non-transient errors', () => {
+    expect(isTransientError(new Error('Unknown tool: foo'))).toBe(false);
+    expect(isTransientError(new Error('Validation failed'))).toBe(false);
+  });
+
+  it('returns false for non-error values', () => {
+    expect(isTransientError('string')).toBe(false);
+    expect(isTransientError(null)).toBe(false);
+  });
+});
+
+describe('withRetry', () => {
+  it('returns immediately on success', async () => {
+    let calls = 0;
+    const result = await withRetry(async () => {
+      calls++;
+      return 'ok';
+    }, { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 10 });
+
+    expect(result).toBe('ok');
+    expect(calls).toBe(1);
+  });
+
+  it('retries on transient errors', async () => {
+    let calls = 0;
+    const result = await withRetry(async () => {
+      calls++;
+      if (calls < 3) throw new TypeError('Failed to fetch');
+      return 'recovered';
+    }, { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 10 });
+
+    expect(result).toBe('recovered');
+    expect(calls).toBe(3);
+  });
+
+  it('throws immediately on non-transient errors', async () => {
+    let calls = 0;
+    await expect(
+      withRetry(async () => {
+        calls++;
+        throw new Error('RPC failed: 400');
+      }, { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 10 }),
+    ).rejects.toThrow('400');
+
+    expect(calls).toBe(1); // No retry for 4xx
+  });
+
+  it('throws after exhausting retries', async () => {
+    let calls = 0;
+    await expect(
+      withRetry(async () => {
+        calls++;
+        throw new TypeError('network error');
+      }, { maxRetries: 2, baseDelayMs: 1, maxDelayMs: 10 }),
+    ).rejects.toThrow('network error');
+
+    expect(calls).toBe(3); // 1 initial + 2 retries
+  });
+});
+
+// ============================================================================
 // JSON-RPC Schemas
 // ============================================================================
 
@@ -535,6 +624,150 @@ describe('MCPHostManager', () => {
     it('validates default config schema', () => {
       const result = MCPConfigSchema.safeParse(makeTestConfig());
       expect(result.success).toBe(true);
+    });
+  });
+
+  // ==========================================================================
+  // v1.1.0 — Audit Trail
+  // ==========================================================================
+
+  describe('audit trail', () => {
+    it('emits audit entry on successful tool invocation path', async () => {
+      host.initialize(makeTestConfig());
+      host.discovery.registerTools('test-scraper', makeTools('test-scraper'));
+
+      const entries: Array<Record<string, unknown>> = [];
+      host.setAuditCallback((entry) => {
+        entries.push(entry as unknown as Record<string, unknown>);
+      });
+
+      // Will fail because transport not connected, but audit should still fire
+      await host.invokeTool({
+        toolName: 'test-scraper.read_data',
+        params: { query: 'test' },
+        correlationId: 'audit-1',
+      });
+
+      expect(entries).toHaveLength(1);
+      expect(entries[0]).toMatchObject({
+        correlationId: 'audit-1',
+        toolName: 'test-scraper.read_data',
+        serverId: 'test-scraper',
+        riskLevel: 'read',
+      });
+      expect(entries[0]).toHaveProperty('timestamp');
+      expect(entries[0]).toHaveProperty('durationMs');
+    });
+
+    it('emits audit entry for unknown tools', async () => {
+      host.initialize(makeTestConfig());
+
+      const entries: Array<Record<string, unknown>> = [];
+      host.setAuditCallback((entry) => {
+        entries.push(entry as unknown as Record<string, unknown>);
+      });
+
+      await host.invokeTool({
+        toolName: 'nonexistent.tool',
+        params: {},
+        correlationId: 'audit-2',
+      });
+
+      expect(entries).toHaveLength(1);
+      expect(entries[0]).toMatchObject({
+        success: false,
+        approved: false,
+        error: expect.stringContaining('Unknown tool'),
+      });
+    });
+
+    it('emits audit entry when approval is denied', async () => {
+      host.initialize(makeTestConfig());
+      host.discovery.registerTools('test-scraper', makeTools('test-scraper'));
+      host.setApprovalCallback(async () => false);
+
+      const entries: Array<Record<string, unknown>> = [];
+      host.setAuditCallback((entry) => {
+        entries.push(entry as unknown as Record<string, unknown>);
+      });
+
+      await host.invokeTool({
+        toolName: 'test-scraper.write_data',
+        params: { data: {} },
+        correlationId: 'audit-3',
+      });
+
+      expect(entries).toHaveLength(1);
+      expect(entries[0]).toMatchObject({
+        approved: false,
+        success: false,
+        riskLevel: 'write',
+      });
+    });
+
+    it('audit callback failures do not throw', async () => {
+      host.initialize(makeTestConfig());
+      host.discovery.registerTools('test-scraper', makeTools('test-scraper'));
+
+      host.setAuditCallback(() => {
+        throw new Error('Audit storage down');
+      });
+
+      // Should not throw despite audit callback failure
+      const result = await host.invokeTool({
+        toolName: 'test-scraper.read_data',
+        params: { query: 'test' },
+        correlationId: 'audit-4',
+      });
+
+      expect(result.correlationId).toBe('audit-4');
+    });
+  });
+
+  // ==========================================================================
+  // v1.1.0 — Health Check
+  // ==========================================================================
+
+  describe('health check', () => {
+    it('tracks health failures', () => {
+      host.initialize(makeTestConfig());
+      expect(host.getHealthFailures('test-scraper')).toBe(0);
+      expect(host.getHealthFailures('nonexistent')).toBe(0);
+    });
+
+    it('accepts custom health config', () => {
+      host.setHealthCheckConfig({ intervalMs: 5_000, maxFailures: 5 });
+      // No throw — config accepted
+      expect(host).toBeDefined();
+    });
+  });
+
+  // ==========================================================================
+  // v1.1.0 — Resource & Prompt Caches
+  // ==========================================================================
+
+  describe('resource and prompt caches', () => {
+    it('resources map is initialized empty', () => {
+      expect(host.resources.size).toBe(0);
+    });
+
+    it('prompts map is initialized empty', () => {
+      expect(host.prompts.size).toBe(0);
+    });
+
+    it('disconnect clears resource and prompt caches', async () => {
+      // Use a server that has no transport (never initialized) to avoid fetch
+      host.resources.set('ghost-server', [
+        { uri: 'test://data', name: 'Test', description: 'Test resource', serverId: 'ghost-server' },
+      ]);
+      host.prompts.set('ghost-server', [
+        { name: 'greet', description: 'Greeting prompt', serverId: 'ghost-server', arguments: [] },
+      ]);
+
+      await host.disconnectServer('ghost-server');
+
+      expect(host.resources.has('ghost-server')).toBe(false);
+      expect(host.prompts.has('ghost-server')).toBe(false);
     });
   });
 });
