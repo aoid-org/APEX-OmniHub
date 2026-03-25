@@ -30,26 +30,31 @@ describe('Z-Index Manager Contract', () => {
 
   it('modal overlay z-index is 1000', () => {
     // .od-modal-overlay { z-index: 1000; }
-    const match = css.match(/\.od-modal-overlay\s*\{[^}]*z-index:\s*(\d+)/);
+    const modalRegex = /\.od-modal-overlay\s*\{[^}]*z-index:\s*(\d+)/;
+    const match = modalRegex.exec(css);
     expect(match).not.toBeNull();
     expect(Number(match![1])).toBe(1000);
   });
 
   it('#omni-portal-root z-index is 9999 (highest layer)', () => {
-    const match = css.match(/#omni-portal-root\s*\{[^}]*z-index:\s*(\d+)/);
+    const portalRegex = /#omni-portal-root\s*\{[^}]*z-index:\s*(\d+)/;
+    const match = portalRegex.exec(css);
     expect(match).not.toBeNull();
     expect(Number(match![1])).toBe(9999);
   });
 
   it('hero row z-index is 10', () => {
-    const match = css.match(/\.apex-hero-row\s*\{[^}]*z-index:\s*(\d+)/);
+    const heroRegex = /\.apex-hero-row\s*\{[^}]*z-index:\s*(\d+)/;
+    const match = heroRegex.exec(css);
     expect(match).not.toBeNull();
     expect(Number(match![1])).toBe(10);
   });
 
   it('portal root z-index exceeds modal overlay z-index', () => {
-    const portalMatch = css.match(/#omni-portal-root\s*\{[^}]*z-index:\s*(\d+)/);
-    const modalMatch = css.match(/\.od-modal-overlay\s*\{[^}]*z-index:\s*(\d+)/);
+    const portalRegex = /#omni-portal-root\s*\{[^}]*z-index:\s*(\d+)/;
+    const modalRegex = /\.od-modal-overlay\s*\{[^}]*z-index:\s*(\d+)/;
+    const portalMatch = portalRegex.exec(css);
+    const modalMatch = modalRegex.exec(css);
 
     expect(portalMatch).not.toBeNull();
     expect(modalMatch).not.toBeNull();
@@ -83,9 +88,12 @@ describe('Z-Index Manager Contract', () => {
   it('shell and header z-indexes are not clobbered by modal', () => {
     // .omnidash-shell does not declare z-index (it is root)
     // .od-header may declare z-index for stacking context, but must stay well below modal (1000)
-    const shellZMatch = css.match(/\.omnidash-shell\s*\{[^}]*z-index:\s*(\d+)/);
-    const headerZMatch = css.match(/\.od-header\s*\{[^}]*z-index:\s*(\d+)/);
-    const modalMatch = css.match(/\.od-modal-overlay\s*\{[^}]*z-index:\s*(\d+)/);
+    const shellRegex = /\.omnidash-shell\s*\{[^}]*z-index:\s*(\d+)/;
+    const headerRegex = /\.od-header\s*\{[^}]*z-index:\s*(\d+)/;
+    const modalRegex = /\.od-modal-overlay\s*\{[^}]*z-index:\s*(\d+)/;
+    const shellZMatch = shellRegex.exec(css);
+    const headerZMatch = headerRegex.exec(css);
+    const modalMatch = modalRegex.exec(css);
 
     // Shell should not have a numeric z-index
     expect(shellZMatch).toBeNull();

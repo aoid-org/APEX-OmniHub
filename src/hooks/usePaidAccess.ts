@@ -133,13 +133,20 @@ export function usePaidAccess(): PaidAccessResult {
     return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   })();
 
+  let resolvedError: Error | null = null;
+  if (error instanceof Error) {
+    resolvedError = error;
+  } else if (error) {
+    resolvedError = new Error(String(error));
+  }
+
   return {
     isPaid,
     tier,
     status,
     subscription,
     loading: isLoading,
-    error: error as Error | null,
+    error: resolvedError,
     isTrial: status === 'trialing',
     willCancel: subscription?.cancel_at_period_end ?? false,
     daysRemaining,

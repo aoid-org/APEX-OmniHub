@@ -1,11 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import * as _fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import {
-  getSecureEvidenceDir,
+  resolveEvidenceBackend,
   createSecureEvidenceDir,
   writeSecureEvidence,
   generateEvidenceHash,
@@ -40,25 +39,27 @@ describe('Evidence Storage', () => {
     process.env = originalEnv;
   });
 
-  describe('getSecureEvidenceDir', () => {
+  describe('resolveEvidenceBackend', () => {
     it('throws if APEX_EVIDENCE_STORAGE is set to public temp dir', () => {
       process.env.APEX_EVIDENCE_STORAGE = os.tmpdir();
-      expect(() => getSecureEvidenceDir()).toThrow(/publicly writable directory/);
+      expect(() => resolveEvidenceBackend()).toThrow(/publicly writable directory/);
     });
 
     it('returns APEX_EVIDENCE_STORAGE if configured', () => {
       // Pick a secure path that is different from os.tmpdir
       const securePath = path.join(os.homedir(), 'custom_secure_apex_path');
       process.env.APEX_EVIDENCE_STORAGE = securePath;
-      expect(getSecureEvidenceDir()).toBe(securePath);
+      const config = resolveEvidenceBackend();
+      expect(config.backend).toBe('local');
+      expect(config.localPath).toBe(securePath);
     });
 
     it('returns project local dir', () => {
       delete process.env.APEX_EVIDENCE_STORAGE;
-      const res = getSecureEvidenceDir();
-      expect(res).toContain('.apex');
-      expect(res).toContain('evidence');
-      // mkdirSync might not be called if it uses fallback due to mock behavior, but local path comes back
+      const config = resolveEvidenceBackend();
+      expect(config.backend).toBe('local');
+      expect(config.localPath).toContain('.apex');
+      expect(config.localPath).toContain('evidence');
     });
   });
 

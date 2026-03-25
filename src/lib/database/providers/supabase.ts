@@ -598,7 +598,10 @@ export class SupabaseDatabase implements IDatabase {
             table: table,
           },
           (payload) => {
-            const eventType = payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE'
+            const eventType = payload.eventType
+            if (eventType !== 'INSERT' && eventType !== 'UPDATE' && eventType !== 'DELETE') {
+              return
+            }
             const record = payload.new || payload.old
 
             // Apply filters client-side (limitation of Supabase realtime)

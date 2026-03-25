@@ -86,7 +86,7 @@ export const Pipeline = () => {
     });
     data.forEach((item) => {
       map[item.stage] = map[item.stage] || [];
-      map[item.stage].push(item as PipelineItem);
+      map[item.stage].push(item);
     });
     return map;
   }, [pipelineQuery.data]);

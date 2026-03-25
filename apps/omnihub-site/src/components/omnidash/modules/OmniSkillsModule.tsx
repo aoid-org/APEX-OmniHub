@@ -13,8 +13,8 @@ export default function OmniSkillsModule({ onClose }: Props) {
   const availableStat = state.stats.find(s => s.label === 'Available');
   const activeCount = activeStat?.value ?? '0';
   const availableCount = availableStat?.value ?? '0';
-  const activeNum = parseInt(activeCount.replace(/[^0-9]/g, ''), 10) || 0;
-  const availableNum = parseInt(availableCount.replace(/[^0-9]/g, ''), 10) || 0;
+  const activeNum = Number.parseInt(activeCount.replaceAll(/\D/g, ''), 10) || 0;
+  const availableNum = Number.parseInt(availableCount.replaceAll(/\D/g, ''), 10) || 0;
   const pct = availableNum > 0 ? Math.round((activeNum / availableNum) * 100) : 0;
 
   return (

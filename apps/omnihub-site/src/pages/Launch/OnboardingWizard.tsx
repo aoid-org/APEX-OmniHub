@@ -25,7 +25,7 @@ export function OnboardingWizard() {
   const [searchParams] = useSearchParams();
 
   // Resolve step from URL or fallback to state
-  const urlStep = parseInt(searchParams.get('step') || '1', 10);
+  const urlStep = Number.parseInt(searchParams.get('step') || '1', 10);
   const [step, setStep] = useState(urlStep);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -63,7 +63,7 @@ export function OnboardingWizard() {
         navigate('/omnidash?onboarded=true');
 
       } else if (tier === 'PRO') {
-        const returnUrl = new URL(window.location.origin);
+        const returnUrl = new URL(globalThis.location.origin);
 
         const { data, error } = await supabase.functions.invoke('create-checkout', {
           body: {
@@ -76,7 +76,7 @@ export function OnboardingWizard() {
         if (error) throw error;
 
         if (data?.url) {
-          window.location.href = data.url; // Redirect to Stripe
+          globalThis.location.href = data.url; // Redirect to Stripe
         } else {
           throw new Error('No checkout URL returned');
         }
@@ -178,7 +178,7 @@ export function OnboardingWizard() {
   };
 
   const handleOAuth = async (provider: 'google' | 'apple') => {
-    const returnUrl = new URL(window.location.href);
+    const returnUrl = new URL(globalThis.location.href);
     returnUrl.searchParams.set('step', '4'); // Return directly to step 4
 
     await supabase.auth.signInWithOAuth({
@@ -188,6 +188,8 @@ export function OnboardingWizard() {
       }
     });
   };
+
+  const authActionLabel = authState.mode === 'signup' ? 'Create Account' : 'Sign In';
 
   return (
     <div className="min-h-screen bg-[#030303] text-white flex flex-col items-center justify-center p-6 font-sans">
@@ -358,8 +360,9 @@ export function OnboardingWizard() {
 
             <form onSubmit={handleEmailAuth} className="space-y-4">
               <div>
-                <label className="text-sm text-gray-400">Email</label>
+                <label htmlFor="onboarding-email" className="text-sm text-gray-400">Email</label>
                 <input
+                  id="onboarding-email"
                   type="email"
                   required
                   className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2 mt-1 focus:ring-1 focus:ring-blue-500 outline-none"
@@ -368,8 +371,9 @@ export function OnboardingWizard() {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400">Password</label>
+                <label htmlFor="onboarding-password" className="text-sm text-gray-400">Password</label>
                 <input
+                  id="onboarding-password"
                   type="password"
                   required
                   minLength={6}
@@ -384,7 +388,7 @@ export function OnboardingWizard() {
                 disabled={authState.isLoading}
                 className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
               >
-                {authState.isLoading ? 'Processing...' : authState.mode === 'signup' ? 'Create Account' : 'Sign In'}
+                {authState.isLoading ? 'Processing...' : authActionLabel}
               </button>
             </form>
 

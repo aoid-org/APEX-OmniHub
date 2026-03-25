@@ -21,7 +21,7 @@ export async function initDB(): Promise<IDBDatabase> {
       }
     };
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onerror = () => reject(request.error ?? new Error('Failed to open IndexedDB'));
   });
 }
 
@@ -43,7 +43,7 @@ export async function saveLocalFile(file: File): Promise<void> {
     
     const request = store.put(record);
     request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+    request.onerror = () => reject(request.error ?? new Error('Failed to save local file'));
   });
 }
 
@@ -54,6 +54,6 @@ export async function listLocalFiles(): Promise<LocalFileRecord[]> {
     const store = tx.objectStore(STORE_NAME);
     const request = store.getAll();
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onerror = () => reject(request.error ?? new Error('Failed to list local files'));
   });
 }

@@ -12,6 +12,7 @@ All audit events must be logged using this schema to maintain:
 - Standardized metadata for enterprise integration
 """
 
+import asyncio
 from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
@@ -369,8 +370,8 @@ class AuditLogger:
 
             query = query.limit(limit)
 
-            # Using execute() which returns APIResponse.
-            response = query.execute()
+            # Execute sync DB call off the event loop.
+            response = await asyncio.to_thread(query.execute)
             data = response.data
 
             return [AuditLogEntry(**(row if isinstance(row, dict) else {})) for row in data]

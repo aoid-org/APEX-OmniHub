@@ -76,9 +76,9 @@ beforeEach(() => {
   MockWS.instances = [];
 
   // @ts-expect-error — jsdom override (same as voiceBackoff.spec.tsx)
-  global.WebSocket = MockWS;
+  globalThis.WebSocket = MockWS;
   // @ts-expect-error — jsdom override
-  global.AudioContext = class {
+  globalThis.AudioContext = class {
     sampleRate = 24000;
     close = vi.fn();
   };

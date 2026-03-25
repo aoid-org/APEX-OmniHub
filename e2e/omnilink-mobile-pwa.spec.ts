@@ -19,7 +19,7 @@ test.describe('OmniLink Mobile PWA', () => {
 
   test('should support PWA installation', async ({ page }) => {
     await page.goto('/');
-    const manifestLink = await page.locator('link[rel="manifest"]');
+    const manifestLink = page.locator('link[rel="manifest"]');
     expect(manifestLink).toHaveAttribute('href', '/manifest.webmanifest');
   });
 });

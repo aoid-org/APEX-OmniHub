@@ -6,7 +6,6 @@ import { AuthSessionStorage } from '@/omniconnect/storage/auth-session-storage';
 vi.mock('ioredis', () => {
   const store = new Map<string, string>();
   class RedisMock {
-    constructor(_url?: string) { /* no-op: no real connection */ }
     async setex(key: string, _ttl: number, val: string) { store.set(key, val); }
     async get(key: string) { return store.get(key) ?? null; }
     async del(key: string) { store.delete(key); return 1; }
@@ -37,10 +36,16 @@ describe('AuthSessionStorage', () => {
   });
 
   afterEach(() => {
-    if (originalRedisUrl !== undefined) process.env.UPSTASH_REDIS_URL = originalRedisUrl;
-    else delete process.env.UPSTASH_REDIS_URL;
-    if (originalRedisUrl2 !== undefined) process.env.REDIS_URL = originalRedisUrl2;
-    else delete process.env.REDIS_URL;
+    const restoreEnv = (key: 'UPSTASH_REDIS_URL' | 'REDIS_URL', value: string | undefined) => {
+      if (value === undefined) {
+        delete process.env[key];
+        return;
+      }
+      process.env[key] = value;
+    };
+
+    restoreEnv('UPSTASH_REDIS_URL', originalRedisUrl);
+    restoreEnv('REDIS_URL', originalRedisUrl2);
   });
 
 

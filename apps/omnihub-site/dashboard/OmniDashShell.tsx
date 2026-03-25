@@ -139,6 +139,28 @@ const T = {
   t4:        "#1E293B",
 };
 
+function getHealthPalette(health: OmniHealthState): {
+  bg: string;
+  border: string;
+  color: string;
+} {
+  if (health === "red") {
+    return { bg: `${T.red}22`, border: `${T.red}66`, color: T.red };
+  }
+  if (health === "yellow") {
+    return { bg: `${T.warn}22`, border: `${T.warn}66`, color: T.warn };
+  }
+  return { bg: `${T.green}22`, border: `${T.green}66`, color: T.green };
+}
+
+function inferContextHealth(id: string, includeSecurity: boolean): OmniHealthState {
+  if (id.includes("awaiting")) return "red";
+  if (id.includes("trace") || id.includes("ops") || (includeSecurity && id.includes("security"))) {
+    return "yellow";
+  }
+  return "green";
+}
+
 // ─── Icon Sprite (9-icon grid from app_icons.png: 3x3, source 1024x1024) ─────
 // Row 0: Brain(0), Shield(1), Photo(2)
 // Row 1: Database(3), CPU(4), Mind(5)
@@ -241,7 +263,11 @@ const GlassCard = ({ children, style={}, glow = false, onClick, onDragOver, onDr
   }
 
   return (
-    <div style={cardStyle} onDragOver={onDragOver} onDrop={onDrop}>
+    <div
+      style={cardStyle}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
       {children}
     </div>
   );
@@ -869,6 +895,11 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
 
 const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () => void }) => {
   const [hov, setHov] = useState(false);
+  const palette = getHealthPalette(app.health);
+  const icon = app.iconIdx === undefined
+    ? <span style={{fontSize:13}}>{app.label.charAt(0).toUpperCase()}</span>
+    : <AppIcon idx={app.iconIdx} size={16} style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))" }} />;
+
   return (
     <button
       onClick={onRemove}
@@ -877,10 +908,10 @@ const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () =
       title={`Remove ${app.label}`}
       style={{
         width: 28, height: 28, borderRadius: 8,
-        background: app.health === 'red' ? `${T.red}22` : app.health === 'yellow' ? `${T.warn}22` : `${T.green}22`,
-        border: `1px solid ${app.health === 'red' ? `${T.red}66` : app.health === 'yellow' ? `${T.warn}66` : `${T.green}66`}`,
+        background: palette.bg,
+        border: `1px solid ${palette.border}`,
         display: "flex", alignItems: "center", justifyContent: "center",
-        color: app.health === 'red' ? T.red : app.health === 'yellow' ? T.warn : T.green,
+        color: palette.color,
         fontSize: 14, fontWeight: 700,
         boxShadow: `inset 0 0 10px rgba(0,0,0,0.5)`,
         cursor: "pointer",
@@ -890,9 +921,7 @@ const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () =
       }}
     >
       <div style={{ opacity: hov ? 0.15 : 1, transition: "opacity 0.15s ease", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {app.iconIdx !== undefined 
-          ? <AppIcon idx={app.iconIdx} size={16} style={{ filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.5))` }} /> 
-          : <span style={{fontSize:13}}>{app.label.charAt(0).toUpperCase()}</span>}
+        {icon}
       </div>
       {hov && (
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff" }}>
@@ -942,20 +971,26 @@ const OmniSlateWidget = () => {
     setInput("Summarize all open workflows and flag anything stalled over 24 hours.");
   };
 
-  useEffect(() => {
-    const handleWidgetDrop = ((e: CustomEvent) => {
-      const { id, label, iconIdx } = e.detail;
+  const addContextApp = useCallback(
+    (id: string, label: string, iconIdx: number | undefined, includeSecurity: boolean) => {
       setContextApps(prev => {
-        if (prev.find(a => a.id === id)) return prev;
-        let health: OmniHealthState = 'green';
-        if (id.includes('awaiting')) health = 'red';
-        else if (id.includes('trace') || id.includes('ops')) health = 'yellow';
+        if (prev.some(a => a.id === id)) return prev;
+        const health = inferContextHealth(id, includeSecurity);
         return [...prev, { id, label, health, iconIdx }];
       });
-    }) as EventListener;
-    window.addEventListener('omnislate-drop', handleWidgetDrop);
-    return () => window.removeEventListener('omnislate-drop', handleWidgetDrop);
-  }, []);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const handleWidgetDrop = (event: Event) => {
+      const customEvent = event as CustomEvent<{ id: string; label: string; iconIdx?: number }>;
+      const { id, label, iconIdx } = customEvent.detail;
+      addContextApp(id, label, iconIdx, false);
+    };
+    globalThis.addEventListener("omnislate-drop", handleWidgetDrop);
+    return () => globalThis.removeEventListener("omnislate-drop", handleWidgetDrop);
+  }, [addContextApp]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -966,14 +1001,9 @@ const OmniSlateWidget = () => {
     const data = e.dataTransfer.getData('application/apex-tile');
     if (data) {
       try {
-        const { id, label, iconIdx } = JSON.parse(data);
-        setContextApps(prev => {
-          if (prev.find(a => a.id === id)) return prev;
-          let health: OmniHealthState = 'green';
-          if (id.includes('awaiting')) health = 'red';
-          else if (id.includes('trace') || id.includes('ops') || id.includes('security')) health = 'yellow';
-          return [...prev, { id, label, health, iconIdx }];
-        });
+        const parsed = JSON.parse(data) as { id?: string; label?: string; iconIdx?: number };
+        if (!parsed.id || !parsed.label) return;
+        addContextApp(parsed.id, parsed.label, parsed.iconIdx, true);
       } catch {
         // ignore parse error logs for bad drop payloads
       }
@@ -986,10 +1016,21 @@ const OmniSlateWidget = () => {
     setContextApps(prev => prev.filter(a => a.id !== appId));
   }, []);
 
-  const aggregateHealth = contextApps.length === 0 ? null 
-                        : contextApps.some(a => a.health === 'red') ? T.red
-                        : contextApps.some(a => a.health === 'yellow') ? T.warn
-                        : T.green;
+  let aggregateHealth: string | null = null;
+  if (contextApps.length > 0) {
+    if (contextApps.some(a => a.health === "red")) {
+      aggregateHealth = T.red;
+    } else if (contextApps.some(a => a.health === "yellow")) {
+      aggregateHealth = T.warn;
+    } else {
+      aggregateHealth = T.green;
+    }
+  }
+  const contextAccent = aggregateHealth ?? T.orange;
+  const contextBackground = `${contextAccent}22`;
+  const contextBorderColor = aggregateHealth ? `${aggregateHealth}aa` : `${T.orange}44`;
+  const contextBorder = `1px solid ${contextBorderColor}`;
+  const contextBoxShadow = aggregateHealth ? `0 0 8px ${aggregateHealth}44` : "none";
 
   return (
     <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"visible" }}
@@ -1011,23 +1052,35 @@ const OmniSlateWidget = () => {
             borderRadius:8,padding:"3px 10px",cursor:"pointer",
           }}>CleanSlate</button>
 
-          <div
+          <button
+            type="button"
             onMouseEnter={() => setShowContext(true)}
             onMouseLeave={() => setShowContext(false)}
-            style={{ position: 'relative' }}
+            onFocus={() => setShowContext(true)}
+            onBlur={() => setShowContext(false)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                fillSuggestion();
+              }
+            }}
+            onClick={fillSuggestion}
+            title={aggregateHealth ? "View Context" : "Fill suggestion"}
+            style={{ position: "relative", background: "none", border: "none", padding: 0 }}
           >
-            <button
-              onClick={fillSuggestion}
-              title={aggregateHealth ? "View Context" : "Fill suggestion"}
+            <div
               style={{
                 width:26,height:26,borderRadius:8,
-                background: aggregateHealth ? `${aggregateHealth}22` : `${T.orange}22`,
-                border:`1px solid ${aggregateHealth ? aggregateHealth + 'aa' : T.orange + '44'}`,
-                color: aggregateHealth || T.orange,
+                background: contextBackground,
+                border: contextBorder,
+                color: contextAccent,
                 cursor:"pointer",fontSize:14.1,display:"flex",alignItems:"center",justifyContent:"center",
                 transition: "all .2s ease",
-                boxShadow: aggregateHealth ? `0 0 8px ${aggregateHealth}44` : 'none',
-              }}>💡</button>
+                boxShadow: contextBoxShadow,
+              }}
+            >
+              💡
+            </div>
 
             {/* Non-intrusive Context Tooltip on Hover */}
             {showContext && contextApps.length > 0 && (
@@ -1041,31 +1094,34 @@ const OmniSlateWidget = () => {
                  <div style={{ fontSize: 9.8, fontWeight: 700, color: T.t2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
                    Context Sources
                  </div>
-                 {contextApps.map(app => (
-                   <div key={app.id} style={{
-                     fontSize: 11.2, fontWeight: 600, padding: "5px 8px", borderRadius: 6,
-                     background: app.health === 'red' ? `${T.red}1a` : app.health === 'yellow' ? `${T.warn}1a` : `${T.green}1a`,
-                     color: app.health === 'red' ? T.red : app.health === 'yellow' ? T.warn : T.green,
-                     border: `1px solid ${app.health === 'red' ? T.red : app.health === 'yellow' ? T.warn : T.green}44`,
-                     display: "flex", alignItems: "center", gap: 6
-                   }}>
-                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
-                     <div style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{app.label}</div>
-                     <button 
-                       onClick={(e) => { e.stopPropagation(); handleRemoveContextApp(app.id); }} 
+                 {contextApps.map(app => {
+                   const palette = getHealthPalette(app.health);
+                   return (
+                     <div key={app.id} style={{
+                       fontSize: 11.2, fontWeight: 600, padding: "5px 8px", borderRadius: 6,
+                       background: palette.bg.replace("22", "1a"),
+                       color: palette.color,
+                       border: `1px solid ${palette.color}44`,
+                       display: "flex", alignItems: "center", gap: 6
+                     }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
+                      <div style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{app.label}</div>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleRemoveContextApp(app.id); }} 
                        title="Remove context"
                        style={{
                          background: "none", border: "none", color: "currentColor", cursor: "pointer", 
                          opacity: 0.6, padding: 0, display: "flex", alignItems: "center"
                        }}
-                     >
-                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                     </button>
-                   </div>
-                 ))}
-               </div>
-            )}
-          </div>
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                      </button>
+                    </div>
+                   );
+                 })}
+                </div>
+             )}
+          </button>
         </div>
       </div>
       {/* Canvas — empty until user sends */}
