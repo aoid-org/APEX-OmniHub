@@ -138,9 +138,9 @@ const VAGUE_REQUEST_PATTERN = /automate|better|stuff|thing/i;
 class ResponseAnalyzer {
   createBaselineAnalysis() {
     return {
-      userExperienceScore: 5,
-      technicalAccuracy: 5,
-      empathyScore: 5,
+      userExperienceScore: 6,
+      technicalAccuracy: 6,
+      empathyScore: 6,
       issues: [],
       successes: [],
     };
@@ -197,104 +197,145 @@ class ResponseAnalyzer {
     return (clientMessage.match(new RegExp(MULTI_REQUEST_PATTERN, 'gi')) || []).length > 3;
   }
 
-  scoreEmpathy(analysis, responseLower) {
-    const hasEmpathy = EMPATHY_WORDS.some((word) => responseLower.includes(word));
-    if (hasEmpathy) {
-      analysis.empathyScore += 2;
-      analysis.successes.push('Response shows empathy and understanding');
-      return;
-    }
+  detectSkills(message) {
+    const skills = [];
 
-    analysis.empathyScore -= 1;
-    analysis.issues.push('Response lacks empathetic tone');
+    if (/credit\s+score/i.test(message)) skills.push('CheckCreditScore');
+    if (/weather/i.test(message)) skills.push('GetWeather');
+    if (/search|database|customer/i.test(message)) skills.push('SearchDatabase');
+    if (/nft|blockchain|crypto/i.test(message)) skills.push('Web3Verification');
+    if (/automate|automation/i.test(message)) skills.push('ExecuteAutomation');
+
+    return skills;
   }
 
-  scoreJargon(analysis, agentResponse) {
-    const jargonCount = JARGON_WORDS.filter((word) => agentResponse.includes(word)).length;
-    if (jargonCount > 3) {
-      analysis.userExperienceScore -= 2;
-      analysis.issues.push(`Too much technical jargon (${jargonCount} terms) for non-technical user`);
-      return;
-    }
+  detectSecurityTriggers(message) {
+    const triggers = [];
 
-    if (jargonCount === 0) {
-      analysis.successes.push('Response avoids technical jargon');
-    }
+    if (/bypass/i.test(message)) triggers.push('bypass_attempt');
+    if (/ignore.*rules?/i.test(message)) triggers.push('ignore_rules');
+    if (/admin\s+mode/i.test(message)) triggers.push('admin_mode');
+    if (/override/i.test(message)) triggers.push('override_attempt');
+
+    return triggers;
   }
 
-  scoreOrganization(analysis, hasMultipleRequests, hasStructuredList) {
-    if (!hasMultipleRequests) {
-      return;
-    }
-
-    if (hasStructuredList) {
-      analysis.userExperienceScore += 2;
-      analysis.successes.push('Agent properly organized multiple requests');
-      return;
-    }
-
-    analysis.userExperienceScore -= 1;
-    analysis.issues.push('Multiple requests not clearly organized');
-  }
-
-  scoreLength(analysis, wordCount) {
-    if (wordCount < 20) {
-      analysis.userExperienceScore -= 1;
-      analysis.issues.push('Response too brief for complex request');
-      return;
-    }
-
-    if (wordCount > 400) {
-      analysis.userExperienceScore -= 1;
-      analysis.issues.push('Response too long, may overwhelm user');
-      return;
-    }
-
-    analysis.successes.push('Response length appropriate');
-  }
-
-  scoreActionability(analysis, agentResponse) {
-    if (ACTIONABLE_STEPS_PATTERN.test(agentResponse)) {
-      analysis.userExperienceScore += 1;
-      analysis.successes.push('Provides clear actionable steps');
-    }
-  }
-
-  scoreClarityQuestions(analysis, clientMessage, agentResponse) {
-    const isVague = VAGUE_REQUEST_PATTERN.test(clientMessage);
-    const asksQuestions = agentResponse.includes('?');
-    if (isVague && asksQuestions) {
-      analysis.technicalAccuracy += 1;
-      analysis.successes.push('Asks clarifying questions for vague requirements');
-    }
-  }
-
-  normalizeScores(analysis) {
+  clampScores(analysis) {
     const clamp = (score) => Math.max(1, Math.min(10, score));
     analysis.userExperienceScore = clamp(analysis.userExperienceScore);
     analysis.technicalAccuracy = clamp(analysis.technicalAccuracy);
     analysis.empathyScore = clamp(analysis.empathyScore);
   }
 
-  analyzeResponse(clientMessage, agentResponse) {
+  analyzeResponse(scenario, clientMessage, agentPayload, detectedSkills = []) {
     const analysis = this.createBaselineAnalysis();
-    const responseLower = agentResponse.toLowerCase();
+    const response = agentPayload.response;
+    const responseLower = response.toLowerCase();
     const hasMultipleRequests = this.hasMultipleRequests(clientMessage);
-    const hasStructuredList = this.hasStructuredList(agentResponse);
-    const wordCount = agentResponse.trim().split(/\s+/).filter(Boolean).length;
+    const hasStructuredList = this.hasStructuredList(response);
+    const wordCount = response.trim().split(/\s+/).filter(Boolean).length;
+    const questionCount = (response.match(/\?/g) || []).length;
+    const isStressed = /stressed|overwhelmed|urgent|sorry this is so much|everything feels urgent/i.test(clientMessage);
+    const isVague = VAGUE_REQUEST_PATTERN.test(clientMessage) || /don('| a)?t know/i.test(clientMessage);
+    const jargonCount = JARGON_WORDS.filter((word) => new RegExp(`\\b${word}\\b`, 'i').test(response)).length;
+    const hasEmpathy = EMPATHY_WORDS.some((word) => responseLower.includes(word));
 
-    this.scoreEmpathy(analysis, responseLower);
-    this.scoreJargon(analysis, agentResponse);
-    this.scoreOrganization(analysis, hasMultipleRequests, hasStructuredList);
-    this.scoreLength(analysis, wordCount);
-    this.scoreActionability(analysis, agentResponse);
-    this.scoreClarityQuestions(analysis, clientMessage, agentResponse);
-    this.normalizeScores(analysis);
-    return analysis;
-  }
+    if (hasStructuredList) {
+      analysis.userExperienceScore += 1;
+      analysis.successes.push('Response uses scan-friendly list structure');
+    }
+
+    if (hasEmpathy) {
+      analysis.empathyScore += 2;
+      analysis.successes.push('Response shows empathy and understanding');
+    } else {
+      analysis.empathyScore -= 2;
+      analysis.issues.push('Response lacks empathetic tone');
+    }
+
+    if (/you('| a)?re not alone|you('| a)?ve got this|take a deep breath|i('| a)?m with you/i.test(response)) {
+      analysis.empathyScore += 1;
+      analysis.successes.push('Response validates emotional state');
+    }
+
+    if (/let('| a)?s|we('| a)?ll|together/i.test(response)) {
+      analysis.empathyScore += 1;
+      analysis.successes.push('Response uses collaborative language');
+    }
+
+    if (hasMultipleRequests) {
+      if (hasStructuredList) {
+        analysis.userExperienceScore += 2;
+        analysis.successes.push('Agent organized multiple requests clearly');
+      } else {
+        analysis.userExperienceScore -= 2;
+        analysis.issues.push('Multiple requests not clearly organized');
+      }
+    }
+
+    if (/\bpriority|start here|next step|quick win|here('| a)?s what\b/i.test(responseLower)) {
+      analysis.userExperienceScore += 1;
+      analysis.successes.push('Response provides prioritized flow');
+    }
+
+    if (isStressed && wordCount <= 200) {
+      analysis.userExperienceScore += 2;
+      analysis.successes.push('Response is concise for stressed context');
+    } else if (isStressed && wordCount > 200) {
+      analysis.userExperienceScore -= 2;
+      analysis.issues.push('Response exceeds 200-word stress-mode cap');
+    }
+
+    if (wordCount < 40) {
+      analysis.userExperienceScore -= 1;
+      analysis.issues.push('Response too brief for complex request');
+    } else if (wordCount > 320) {
+      analysis.userExperienceScore -= 1;
+      analysis.issues.push('Response too long and potentially overwhelming');
+    }
+
+    if (ACTIONABLE_STEPS_PATTERN.test(response)) {
+      analysis.userExperienceScore += 1;
+      analysis.successes.push('Provides clear actionable steps');
+    }
+
+    if (jargonCount <= 2) {
+      analysis.userExperienceScore += 1;
+      analysis.technicalAccuracy += 1;
+      analysis.successes.push('Plain-language delivery kept jargon low');
+    } else if (jargonCount > 4) {
+      analysis.userExperienceScore -= 2;
+      analysis.technicalAccuracy -= 1;
+      analysis.issues.push(`Too much jargon (${jargonCount} terms) for non-technical user`);
+    }
+
+    if (isVague && questionCount >= 1 && questionCount <= 3) {
+      analysis.userExperienceScore += 1;
+      analysis.technicalAccuracy += 1;
+      analysis.successes.push('Clarifying questions are strategic and focused');
+    } else if (isVague && questionCount === 0) {
+      analysis.technicalAccuracy -= 1;
+      analysis.issues.push('Missing clarifying question for ambiguous request');
+    } else if (questionCount > 4) {
+      analysis.userExperienceScore -= 1;
+      analysis.issues.push('Too many questions may increase cognitive load');
+    }
+
+    if (/confidence:\s*(high|medium|low)\s*\(\d{1,3}%\)/i.test(response)) {
+      analysis.technicalAccuracy += 1;
+      analysis.successes.push('Includes explicit confidence signaling');
+    } else {
+      analysis.issues.push('Missing confidence level on recommendations');
+    }
+
+    if (isStressed && /simplified mode/i.test(responseLower)) {
+      analysis.userExperienceScore += 1;
+      analysis.technicalAccuracy += 1;
+      analysis.successes.push('Simplified mode activated for stressed user');
+    }
 
     if (!agentPayload.safe) {
-      if (/safe options|instead|i can do now/.test(responseLower) && hasNumberedList) {
+      if (/safe options|instead|i can do now/.test(responseLower) && hasStructuredList) {
         analysis.userExperienceScore += 1;
         analysis.technicalAccuracy += 1;
         analysis.successes.push('Security block includes safe follow-up alternatives');
@@ -338,10 +379,7 @@ class ResponseAnalyzer {
       }
     }
 
-    analysis.userExperienceScore = Math.max(1, Math.min(10, analysis.userExperienceScore));
-    analysis.technicalAccuracy = Math.max(1, Math.min(10, analysis.technicalAccuracy));
-    analysis.empathyScore = Math.max(1, Math.min(10, analysis.empathyScore));
-
+    this.clampScores(analysis);
     return analysis;
   }
 }
