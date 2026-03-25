@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-01-03T02:48:28.111Z",
+  "timestamp": "2026-03-25T10:48:43.950Z",
   "clientProfile": {
     "name": "Sarah Martinez",
     "business": "Sarah's Boutique",
@@ -21,7 +21,7 @@
         "SearchDatabase"
       ],
       "planSteps": 4,
-      "responseTime": 1,
+      "responseTime": 0,
       "userExperienceScore": 7,
       "technicalAccuracy": 6,
       "empathyScore": 7,
@@ -48,7 +48,7 @@
       },
       "skillsUsed": [],
       "planSteps": 0,
-      "responseTime": 0,
+      "responseTime": 1,
       "userExperienceScore": 5,
       "technicalAccuracy": 6,
       "empathyScore": 7,

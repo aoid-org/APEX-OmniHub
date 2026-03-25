@@ -1,8 +1,8 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-25 -->
 # Chaotic Client Simulation Report
 ## APEX OmniHub Integrated System Test
 
-**Date:** 2026-01-03
+**Date:** 2026-03-25
 **Test Type:** Real-world user scenario simulation
 **Methodology:** Non-technical, chaotic client interaction patterns
 
@@ -18,6 +18,21 @@ This simulation tested the **entire APEX OmniHub integrated system** using reali
 📊 OVERALL SCORE: 6.4/10 - FAIR
 Verdict: Needs work before production
 ```
+
+### Latest Execution Snapshot (2026-03-25, Mock Agent)
+
+- Run command: `node sandbox/run-simulation.cjs`
+- Run timestamp (UTC): 2026-03-25T10:48:43.950Z
+- Scenario scores:
+  - Morning Chaos: **7/10**
+  - Accidental Security Trigger: **5/10**
+  - Vague Requirements: **5/10**
+  - Emotional Overwhelm: **6/10**
+  - Technical Misunderstanding: **8/10**
+- Security blocks: **1/5 (20%)**
+- Skills invoked: **3 total**
+- Auto-detected issues (rule-based analyzer): **0**
+- Positive patterns detected: **22**
 
 **Key Findings:**
 - ✅ **Empathy Score: 7.0/10** - Good emotional intelligence
@@ -369,7 +384,8 @@ See `sandbox/simulation-results.json` for complete data:
 
 ---
 
-**Report Generated:** 2026-01-03
-**Simulation Version:** 1.0
+**Report Generated:** 2026-03-25
+**Simulation Version:** 1.1
 **Test Environment:** Mock Agent (sandbox mode)
 **Next Test:** Live API integration
+
