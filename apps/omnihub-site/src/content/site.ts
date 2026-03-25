@@ -109,9 +109,9 @@ export const siteConfig = {
   },
   manMode: {
     title: 'M.A.N.Mode',
-    subtitle: 'Manual Authorization Needed',
+    subtitle: 'MAN Mode — Human-in-the-Loop Governance',
     description:
-      'High-risk decision items are flagged and blocked. The workflow continues with zero interruption. Your team reviews. You decide. OmniHub remembers.',
+      'High-risk decision items are automatically flagged and held for human review. The workflow continues without interruption — only the flagged item is paused until an authorized operator approves or rejects it. Nothing irreversible executes without deliberate human sign-off.',
   },
   footer: {
     copyright: '\u00A9 2026 APEX Business Systems. All rights reserved.',
