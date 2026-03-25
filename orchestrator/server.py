@@ -13,6 +13,7 @@ import os
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -73,7 +74,7 @@ class GoalRequest(BaseModel):
 
 
 @app.post("/api/v1/goals", responses={500: {"description": "Internal Server Error"}})
-async def create_goal(request: GoalRequest) -> dict[str, str]:
+async def create_goal(request: GoalRequest) -> dict[str, str] | JSONResponse:
     """
     Create and start a new agent workflow.
 
@@ -110,8 +111,6 @@ async def create_goal(request: GoalRequest) -> dict[str, str]:
             if type(e).__name__ == "WorkflowExecutionAlreadyStartedError":
                 logger.info(f"Workflow {workflow_id} already started")
                 # Return 409 Conflict with the workflow ID to restore request-boundary idempotency
-                from fastapi.responses import JSONResponse
-
                 return JSONResponse(
                     status_code=409,
                     content={"workflowId": workflow_id, "status": "already_started"},

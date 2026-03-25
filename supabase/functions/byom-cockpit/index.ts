@@ -91,6 +91,16 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   connections: { maxRequests: 30, windowMs: 60_000,  keyPrefix: 'byom-list' },
 };
 
+type RouteHandler = (req: Request, userId: string, tenantId: string) => Promise<Response>;
+
+type RouteKey = 'connect' | 'rotate' | 'revoke' | 'connections';
+
+type RouteDefinition = {
+  method: 'GET' | 'POST';
+  rateLimit: RouteKey;
+  handler: RouteHandler;
+};
+
 // ──────────────────────────────────────────────────────────
 // Provider Validation
 // ──────────────────────────────────────────────────────────
@@ -121,6 +131,49 @@ const VALID_PROVIDERS: ReadonlySet<ByomProvider> = new Set<ByomProvider>([
   "xai",
   "groq",
 ]);
+
+const ROUTES: Record<string, RouteDefinition> = {
+  "/byom/key/connect": {
+    method: "POST",
+    rateLimit: "connect",
+    handler: handleConnect,
+  },
+  "/byom/key/rotate": {
+    method: "POST",
+    rateLimit: "rotate",
+    handler: handleRotate,
+  },
+  "/byom/key/revoke": {
+    method: "POST",
+    rateLimit: "revoke",
+    handler: handleRevoke,
+  },
+  "/byom/connections": {
+    method: "GET",
+    rateLimit: "connections",
+    handler: (_req: Request, userId: string, tenantId: string) => handleListConnections(userId, tenantId),
+  },
+};
+
+async function dispatchRoute(
+  path: string,
+  method: string,
+  req: Request,
+  userId: string,
+  tenantId: string,
+): Promise<Response> {
+  const route = ROUTES[path];
+  if (!route || route.method !== method) {
+    return jsonResponse({ error: "Not found" }, 404);
+  }
+
+  const rl = await checkRateLimit(userId, RATE_LIMITS[route.rateLimit]);
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(_requestOrigin, rl);
+  }
+
+  return route.handler(req, userId, tenantId);
+}
 
 // ──────────────────────────────────────────────────────────
 // Server
@@ -157,28 +210,7 @@ serve(async (req: Request) => {
 
   // ── Route dispatch ──────────────────────────────────────
   try {
-    if (path === "/byom/key/connect" && req.method === "POST") {
-      const rl = await checkRateLimit(user.id, RATE_LIMITS.connect);
-      if (!rl.allowed) return rateLimitExceededResponse(_requestOrigin, rl);
-      return await handleConnect(req, user.id, tenantId);
-    }
-    if (path === "/byom/key/rotate" && req.method === "POST") {
-      const rl = await checkRateLimit(user.id, RATE_LIMITS.rotate);
-      if (!rl.allowed) return rateLimitExceededResponse(_requestOrigin, rl);
-      return await handleRotate(req, user.id, tenantId);
-    }
-    if (path === "/byom/key/revoke" && req.method === "POST") {
-      const rl = await checkRateLimit(user.id, RATE_LIMITS.revoke);
-      if (!rl.allowed) return rateLimitExceededResponse(_requestOrigin, rl);
-      return await handleRevoke(req, user.id, tenantId);
-    }
-    if (path === "/byom/connections" && req.method === "GET") {
-      const rl = await checkRateLimit(user.id, RATE_LIMITS.connections);
-      if (!rl.allowed) return rateLimitExceededResponse(_requestOrigin, rl);
-      return await handleListConnections(user.id, tenantId);
-    }
-
-    return jsonResponse({ error: "Not found" }, 404);
+    return await dispatchRoute(path, req.method, req, user.id, tenantId);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return jsonResponse({

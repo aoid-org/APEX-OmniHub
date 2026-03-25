@@ -17,6 +17,31 @@ import { useEffect } from 'react';
 import { MCPHostManager, type ApprovalRequest } from '../../../../src/core/mcp/MCPHostManager';
 import { useOmniModal } from '@/stores/omniModalStore';
 
+type ResolveApproval = (approved: boolean) => void;
+
+function createApprovalPayload(request: ApprovalRequest, resolve: ResolveApproval) {
+  return {
+    id: `mcp-approve-${Date.now()}`,
+    provider: 'mcp' as const,
+    type: 'mcp_tool_approve' as const,
+    title: `Approve: ${request.toolName}`,
+    description: `MCP tool "${request.toolName}" requires ${request.riskLevel}-level access on server "${request.serverId}"`,
+    priority: request.riskLevel === 'destructive' ? 'critical' as const : 'high' as const,
+    contextData: {
+      toolName: request.toolName,
+      params: request.params,
+      riskLevel: request.riskLevel,
+      serverId: request.serverId,
+    },
+    onComplete: async (data: Record<string, unknown>) => {
+      resolve(data.approved === true);
+    },
+    onCancel: () => {
+      resolve(false);
+    },
+  };
+}
+
 /**
  * Wire MCP approval callback to OmniModal on mount.
  * Must be called inside a React component tree (uses hooks).
@@ -27,30 +52,12 @@ export function useMCPApprovalBridge(): void {
   useEffect(() => {
     const host = MCPHostManager.getInstance();
 
-    host.setApprovalCallback(async (request: ApprovalRequest): Promise<boolean> => {
-      return new Promise<boolean>((resolve) => {
-        invoke({
-          id: `mcp-approve-${Date.now()}`,
-          provider: 'mcp',
-          type: 'mcp_tool_approve',
-          title: `Approve: ${request.toolName}`,
-          description: `MCP tool "${request.toolName}" requires ${request.riskLevel}-level access on server "${request.serverId}"`,
-          priority: request.riskLevel === 'destructive' ? 'critical' : 'high',
-          contextData: {
-            toolName: request.toolName,
-            params: request.params,
-            riskLevel: request.riskLevel,
-            serverId: request.serverId,
-          },
-          onComplete: async (data: Record<string, unknown>) => {
-            resolve(data.approved === true);
-          },
-          onCancel: () => {
-            resolve(false);
-          },
-        });
-      });
-    });
+    host.setApprovalCallback(
+      async (request: ApprovalRequest): Promise<boolean> =>
+        new Promise<boolean>((resolve) => {
+          invoke(createApprovalPayload(request, resolve));
+        }),
+    );
 
     return () => {
       // On unmount, clear the callback so it falls back to fail-closed
