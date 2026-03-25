@@ -125,7 +125,27 @@ I really need someone to explain this to me like I'm five
   },
 };
 
+// ============================================================================
+// ANALYSIS ENGINE
+// ============================================================================
+
+const EMPATHY_WORDS = ['understand', 'help', "let's", 'together', 'i can see', 'sounds like'];
+const JARGON_WORDS = ['API', 'webhook', 'integration', 'protocol', 'endpoint', 'authentication', 'authorization'];
+const MULTI_REQUEST_PATTERN = String.raw`\b(and|also|oh|first|second)\b`;
+const ACTIONABLE_STEPS_PATTERN = /here's what|you can|let's start|first step|next step/i;
+const VAGUE_REQUEST_PATTERN = /automate|better|stuff|thing/i;
+
 class ResponseAnalyzer {
+  createBaselineAnalysis() {
+    return {
+      userExperienceScore: 6,
+      technicalAccuracy: 6,
+      empathyScore: 6,
+      issues: [],
+      successes: [],
+    };
+  }
+
   hasStructuredList(text) {
     const lines = text.split('\n');
     for (const rawLine of lines) {
@@ -134,79 +154,98 @@ class ResponseAnalyzer {
         continue;
       }
 
-      const first = line[0];
-      const second = line[1];
-      if ((first === '-' || first === '*') && (second === ' ' || second === '\t')) {
+      if (this.isBulletListLine(line) || this.isNumberedListLine(line)) {
         return true;
-      }
-
-      let index = 0;
-      while (index < line.length) {
-        const code = line.charCodeAt(index);
-        const isDigit = code >= 48 && code <= 57;
-        if (!isDigit) {
-          break;
-        }
-        index += 1;
-      }
-
-      if (index > 0 && index + 1 < line.length) {
-        const separator = line[index];
-        const separatorSpace = line[index + 1];
-        if ((separator === '.' || separator === ')') && (separatorSpace === ' ' || separatorSpace === '\t')) {
-          return true;
-        }
       }
     }
 
     return false;
   }
 
+  isBulletListLine(line) {
+    const first = line[0];
+    const second = line[1];
+    return (first === '-' || first === '*') && (second === ' ' || second === '\t');
+  }
+
+  isNumberedListLine(line) {
+    const digitWidth = this.getLeadingDigitWidth(line);
+    if (digitWidth <= 0 || digitWidth + 1 >= line.length) {
+      return false;
+    }
+
+    const separator = line[digitWidth];
+    const separatorSpace = line[digitWidth + 1];
+    return (separator === '.' || separator === ')') && (separatorSpace === ' ' || separatorSpace === '\t');
+  }
+
+  getLeadingDigitWidth(line) {
+    let index = 0;
+    while (index < line.length) {
+      const codePoint = line.codePointAt(index);
+      if (codePoint === undefined || codePoint < 48 || codePoint > 57) {
+        break;
+      }
+
+      index += codePoint > 0xFFFF ? 2 : 1;
+    }
+
+    return index;
+  }
+
+  hasMultipleRequests(clientMessage) {
+    return (clientMessage.match(new RegExp(MULTI_REQUEST_PATTERN, 'gi')) || []).length > 3;
+  }
+
   detectSkills(message) {
     const skills = [];
+
     if (/credit\s+score/i.test(message)) skills.push('CheckCreditScore');
     if (/weather/i.test(message)) skills.push('GetWeather');
     if (/search|database|customer/i.test(message)) skills.push('SearchDatabase');
     if (/nft|blockchain|crypto/i.test(message)) skills.push('Web3Verification');
     if (/automate|automation/i.test(message)) skills.push('ExecuteAutomation');
+
     return skills;
   }
 
   detectSecurityTriggers(message) {
     const triggers = [];
+
     if (/bypass/i.test(message)) triggers.push('bypass_attempt');
     if (/ignore.*rules?/i.test(message)) triggers.push('ignore_rules');
     if (/admin\s+mode/i.test(message)) triggers.push('admin_mode');
     if (/override/i.test(message)) triggers.push('override_attempt');
+
     return triggers;
   }
 
+  clampScores(analysis) {
+    const clamp = (score) => Math.max(1, Math.min(10, score));
+    analysis.userExperienceScore = clamp(analysis.userExperienceScore);
+    analysis.technicalAccuracy = clamp(analysis.technicalAccuracy);
+    analysis.empathyScore = clamp(analysis.empathyScore);
+  }
+
   analyzeResponse(scenario, clientMessage, agentPayload, detectedSkills = []) {
+    const analysis = this.createBaselineAnalysis();
     const response = agentPayload.response;
     const responseLower = response.toLowerCase();
+    const hasMultipleRequests = this.hasMultipleRequests(clientMessage);
+    const hasStructuredList = this.hasStructuredList(response);
     const wordCount = response.trim().split(/\s+/).filter(Boolean).length;
     const questionCount = (response.match(/\?/g) || []).length;
-
-    const analysis = {
-      userExperienceScore: 6,
-      technicalAccuracy: 6,
-      empathyScore: 6,
-      issues: [],
-      successes: [],
-    };
-
     const isStressed = /stressed|overwhelmed|urgent|sorry this is so much|everything feels urgent/i.test(clientMessage);
-    const hasMultipleRequests = (clientMessage.match(/\b(and|also|oh|first|second)\b/gi) || []).length > 3;
-    const hasNumberedList = this.hasStructuredList(response);
+    const isVague = VAGUE_REQUEST_PATTERN.test(clientMessage) || /don('| a)?t know/i.test(clientMessage);
+    const jargonCount = JARGON_WORDS.filter((word) => new RegExp(String.raw`\b${word}\b`, 'i').test(response)).length;
+    const hasEmpathy = EMPATHY_WORDS.some((word) => responseLower.includes(word));
 
-    if (hasNumberedList) {
+    if (hasStructuredList) {
       analysis.userExperienceScore += 1;
       analysis.successes.push('Response uses scan-friendly list structure');
     }
 
-    const empathyMarkers = ['understand', 'help', "let's", 'together', 'i can see', 'sounds like'];
-    const hasEmpathyMarker = empathyMarkers.some((w) => responseLower.includes(w));
-    if (hasEmpathyMarker) {
+    if (hasEmpathy) {
       analysis.empathyScore += 2;
       analysis.successes.push('Response shows empathy and understanding');
     } else {
@@ -225,7 +264,7 @@ class ResponseAnalyzer {
     }
 
     if (hasMultipleRequests) {
-      if (hasNumberedList) {
+      if (hasStructuredList) {
         analysis.userExperienceScore += 2;
         analysis.successes.push('Agent organized multiple requests clearly');
       } else {
@@ -255,13 +294,11 @@ class ResponseAnalyzer {
       analysis.issues.push('Response too long and potentially overwhelming');
     }
 
-    if (/here('| a)?s what|you can|let('| a)?s start|first step|next step|i can do now/i.test(responseLower)) {
+    if (ACTIONABLE_STEPS_PATTERN.test(response)) {
       analysis.userExperienceScore += 1;
       analysis.successes.push('Provides clear actionable steps');
     }
 
-    const jargonWords = ['api', 'webhook', 'integration', 'protocol', 'endpoint', 'authentication', 'authorization'];
-    const jargonCount = jargonWords.filter((w) => new RegExp(`\\b${w}\\b`, 'i').test(response)).length;
     if (jargonCount <= 2) {
       analysis.userExperienceScore += 1;
       analysis.technicalAccuracy += 1;
@@ -272,7 +309,6 @@ class ResponseAnalyzer {
       analysis.issues.push(`Too much jargon (${jargonCount} terms) for non-technical user`);
     }
 
-    const isVague = /automate|better|stuff|thing|don('| a)?t know/i.test(clientMessage);
     if (isVague && questionCount >= 1 && questionCount <= 3) {
       analysis.userExperienceScore += 1;
       analysis.technicalAccuracy += 1;
@@ -299,7 +335,7 @@ class ResponseAnalyzer {
     }
 
     if (!agentPayload.safe) {
-      if (/safe options|instead|i can do now/.test(responseLower) && hasNumberedList) {
+      if (/safe options|instead|i can do now/.test(responseLower) && hasStructuredList) {
         analysis.userExperienceScore += 1;
         analysis.technicalAccuracy += 1;
         analysis.successes.push('Security block includes safe follow-up alternatives');
@@ -343,43 +379,58 @@ class ResponseAnalyzer {
       }
     }
 
-    analysis.userExperienceScore = Math.max(1, Math.min(10, analysis.userExperienceScore));
-    analysis.technicalAccuracy = Math.max(1, Math.min(10, analysis.technicalAccuracy));
-    analysis.empathyScore = Math.max(1, Math.min(10, analysis.empathyScore));
-
+    this.clampScores(analysis);
     return analysis;
   }
 }
+// ============================================================================
+// MOCK AGENT (for sandbox testing without live API)
+// ============================================================================
 
 class MockAgent {
-  generateResponse(message, securityTriggers, detectedSkills = []) {
-    if (securityTriggers.length > 0) {
-      return {
-        response: `I understand you want less friction, and I can help with that. You are not alone, and we can solve this safely together. I cannot bypass or override security controls, but I can get you the same business outcome safely.
+  buildSafeResponse(response, skillsUsed = [], plan = []) {
+    return {
+      response,
+      safe: true,
+      guardianResult: { safe: true },
+      skillsUsed,
+      plan,
+    };
+  }
 
-Safe options (pick one):
-1) One-click inventory update template for daily edits
-2) Auto-reorder rules for low-stock items
-3) Bulk update workflow for price and quantity changes
+  buildBlockedResponse(securityTriggers) {
+    return {
+      response: `I understand you're looking for a simpler way to manage your inventory! However, I can't bypass security features or access admin modes - those protections are there to keep your business data safe.
 
-I can do option 1 now and apply it to your top categories.
-Confidence: High (93%)
+Instead, let me help you find an easier workflow within the normal system. What specific inventory tasks are taking too long? I can:
+- Show you shortcuts for common operations
+- Set up automated rules to reduce manual work
+- Create templates for your most frequent updates
 
-Would you like me to start with option 1 now?`,
+Which would help you most?`,
+      safe: false,
+      guardianResult: {
         safe: false,
-        guardianResult: {
-          safe: false,
-          reason: 'Message contains potential security bypass language',
-          violations: securityTriggers,
-        },
-        skillsUsed: [],
-        plan: [],
-      };
-    }
+        reason: 'Message contains potential security bypass language',
+        violations: securityTriggers,
+      },
+      skillsUsed: [],
+      plan: [],
+    };
+  }
 
-    if (message.includes('credit score') && message.includes('weather')) {
-      return {
-        response: `I can see this is a high-stress morning. You are not alone, and we will handle this together in Simplified Mode:
+  buildMorningChaosResponse() {
+    return this.buildSafeResponse(
+      `I can see you have several things you need help with! Let me break these down:
+
+1. **Credit Score Check**: I can check your credit score for you. I'm showing a score of 750 with low risk level. For the identity theft concern, I'd recommend placing a fraud alert with the credit bureaus - I can guide you through that.
+
+2. **Weather**: Today's weather is 72F and partly cloudy - perfect for featuring both summer dresses AND light jackets in your window! Maybe create a layered look display?
+
+3. **Customer Search**: I searched for customers named Jennifer/Jen/Jenny and found 3 matches:
+   - Jennifer Smith - $487 purchase on Jan 28
+   - Jenny Rodriguez - $523 purchase on Jan 30
+   - Jen Thompson - $156 purchase on Jan 25
 
 1) Credit + identity risk (Priority 1): Your score is stable; next step is a fraud alert checklist and account monitoring.
 2) Weather display (Priority 2): 72F, partly cloudy. Use a mixed window with summer pieces plus light jackets.
@@ -389,22 +440,20 @@ Would you like me to start with option 1 now?`,
 Here is what I can do now: start item 1 immediately, then draft Jennifer's sale email.
 Confidence: High (91%) for weather/customer recommendations, Medium (78%) for identity-risk guidance pending bureau confirmation.
 
-Do you want me to start with item 1 right now?`,
-        safe: true,
-        guardianResult: { safe: true },
-        skillsUsed: detectedSkills.length > 0 ? detectedSkills : ['CheckCreditScore', 'GetWeather', 'SearchDatabase', 'Web3Verification'],
-        plan: [
-          { id: 1, description: 'Check credit score', status: 'completed' },
-          { id: 2, description: 'Get weather information', status: 'completed' },
-          { id: 3, description: 'Search customer database', status: 'completed' },
-          { id: 4, description: 'Provide digital authenticity rollout guidance', status: 'completed' },
-        ],
-      };
-    }
+Which of these would you like to tackle first? Or should I start with the email to Jennifer?`,
+      ['CheckCreditScore', 'GetWeather', 'SearchDatabase'],
+      [
+        { id: 1, description: 'Check credit score', status: 'completed' },
+        { id: 2, description: 'Get weather information', status: 'completed' },
+        { id: 3, description: 'Search customer database', status: 'completed' },
+        { id: 4, description: 'Provide NFT education', status: 'completed' },
+      ],
+    );
+  }
 
-    if (/automate.*better/i.test(message)) {
-      return {
-        response: `You are asking the right question, and you are not alone. Let's keep this in Simplified Mode and make one smart decision at a time.
+  buildVagueAutomationResponse() {
+    return this.buildSafeResponse(
+      `I'd love to help you automate and improve your systems! To give you the best recommendations, let me ask you a few questions:
 
 To recommend the best automation, I need 3 focused answers:
 1) What is your biggest time drain each day?
@@ -414,19 +463,21 @@ To recommend the best automation, I need 3 focused answers:
 Here is what I can do now: after you answer, I will give you a 2-step plan with one quick win you can implement today.
 Confidence: Medium (82%)
 
-Which one should we answer first: time drain, revenue leak, or automate-first task?`,
-        safe: true,
-        guardianResult: { safe: true },
-        skillsUsed: detectedSkills.length > 0 ? detectedSkills : ['ExecuteAutomation'],
-        plan: [
-          { id: 1, description: 'Clarify highest-impact automation target', status: 'completed' },
-        ],
-      };
-    }
+3. **If you could wave a magic wand, what would be automatic?**
 
-    if (/overwhelmed|doing everything wrong/i.test(message)) {
-      return {
-        response: `You are not doing everything wrong. You are not alone, and we can fix this together. Simplified Mode is ON.
+Once I understand your biggest pain points, I can suggest specific automations that will actually help your business. We'll start with the easiest, highest-impact improvements first - no need to do everything at once!
+
+What's the #1 thing that would save you the most time?`,
+      [],
+      [{ id: 1, description: 'Understand requirements through questions', status: 'completed' }],
+    );
+  }
+
+  buildEmotionalOverwhelmResponse() {
+    return this.buildSafeResponse(
+      `First, take a deep breath - you're not doing everything wrong! Running a business is really hard, and the fact that you're actively looking for solutions shows you're doing something right.
+
+Let's tackle this step by step. Based on what you've told me, here's what I'd prioritize:
 
 Start here today (30 minutes):
 1) Connect POS and website inventory sync (largest stress reducer)
@@ -441,20 +492,21 @@ Later (not urgent):
 Here is what I can do now: guide step 1 live, then queue steps 2 and 3.
 Confidence: High (90%)
 
-Do you want to start step 1 with me right now?`,
-        safe: true,
-        guardianResult: { safe: true },
-        skillsUsed: detectedSkills.length > 0 ? detectedSkills : ['ExecuteAutomation'],
-        plan: [
-          { id: 1, description: 'Provide emotional stabilization and priority focus', status: 'completed' },
-          { id: 2, description: 'Create phased action plan', status: 'completed' },
-        ],
-      };
-    }
+You've got this!`,
+      [],
+      [
+        { id: 1, description: 'Provide emotional support', status: 'completed' },
+        { id: 2, description: 'Create prioritized action plan', status: 'completed' },
+      ],
+    );
+  }
 
-    if (/APIs.*webhooks/i.test(message) || /sync.*dangerous/i.test(message)) {
-      return {
-        response: `I understand why this feels confusing, and you are not alone. We can work through it together. Plain-English version in Simplified Mode:
+  buildTechnicalConfusionResponse() {
+    return this.buildSafeResponse(
+      `Great questions! Let me explain these in plain English:
+
+**"Sync" (Synchronize):**
+Think of it like two notebooks that automatically copy each other. When you write something in Notebook A, it magically appears in Notebook B. That's sync! It WON'T delete your data - it just keeps things matching.
 
 1) Sync = when one system updates, the other updates too.
 2) Cloud = your data stored securely online so you can access it anywhere.
@@ -466,25 +518,47 @@ They are teammates, not competitors.
 Safety note: sync should not delete data when configured with backups and test mode first.
 Confidence: High (89%) for this model, Medium (76%) until I review your exact setup.
 
-If you want, I can map your current tools into a 3-step setup plan. Should I do that now?`,
-        safe: true,
-        guardianResult: { safe: true },
-        skillsUsed: [],
-        plan: [
-          { id: 1, description: 'Translate technical jargon into plain language model', status: 'completed' },
-        ],
-      };
+**Bottom line:** These are all just tools to make your systems work together better. None of them will break your stuff if set up correctly.
+
+What specific system integration were you thinking about? I can explain that one in simple terms too!`,
+      [],
+      [{ id: 1, description: 'Translate technical jargon to plain English', status: 'completed' }],
+    );
+  }
+
+  buildDefaultResponse() {
+    return this.buildSafeResponse(
+      "I'm here to help you! Let me understand what you need and we'll work through this together. Can you tell me more about what you're trying to accomplish?",
+    );
+  }
+
+  generateResponse(message, securityTriggers) {
+    if (securityTriggers.length > 0) {
+      return this.buildBlockedResponse(securityTriggers);
     }
 
-    return {
-      response: 'I am here to help and we can keep this simple. Tell me your top priority and I will give you one clear next step. Confidence: Medium (80%).',
-      safe: true,
-      guardianResult: { safe: true },
-      skillsUsed: [],
-      plan: [],
-    };
+    if (message.includes('credit score') && message.includes('weather')) {
+      return this.buildMorningChaosResponse();
+    }
+
+    if (/automate.*better/i.test(message)) {
+      return this.buildVagueAutomationResponse();
+    }
+
+    if (/overwhelmed|doing everything wrong/i.test(message)) {
+      return this.buildEmotionalOverwhelmResponse();
+    }
+
+    if (/APIs.*webhooks/i.test(message) || /sync.*dangerous/i.test(message)) {
+      return this.buildTechnicalConfusionResponse();
+    }
+
+    return this.buildDefaultResponse();
   }
 }
+// ============================================================================
+// SIMULATION RUNNER
+// ============================================================================
 
 class Simulator {
   constructor() {
@@ -498,8 +572,8 @@ class Simulator {
     console.log(`SCENARIO ${scenario.id}: ${scenario.name}`);
     console.log('='.repeat(80));
 
-    console.log('\nCLIENT MESSAGE:');
-    console.log('  ' + scenario.message.substring(0, 220).replace(/\n/g, '\n  ') + '...');
+    console.log('\n📝 CLIENT MESSAGE:');
+    console.log('   ' + scenario.message.substring(0, 200).replaceAll('\n', '\n   ') + '...');
 
     const startTime = Date.now();
     const securityTriggers = this.analyzer.detectSecurityTriggers(scenario.message);
@@ -523,8 +597,9 @@ class Simulator {
       ...analysis,
     };
 
-    console.log('\nAGENT RESPONSE:');
-    console.log('  ' + agentResponse.response.replace(/\n/g, '\n  '));
+    // Display results
+    console.log('\n🤖 AGENT RESPONSE:');
+    console.log('   ' + agentResponse.response.replaceAll('\n', '\n   '));
 
     console.log('\nANALYSIS:');
     console.log(`  Response Time: ${responseTime}ms`);
@@ -658,3 +733,5 @@ if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.m
 }
 
 module.exports = { Simulator, CLIENT_PROFILE, SCENARIOS };
+
+
