@@ -23,8 +23,12 @@ cp .env.example .env.local
 ### Configure Environment
 Edit `.env.local` with credentials from 1Password vault:
 - `VITE_SUPABASE_URL`: Supabase project URL
-- `VITE_SUPABASE_ANON_KEY`: Supabase anonymous key
+- `VITE_SUPABASE_PUBLISHABLE_KEY`: Supabase publishable/anon key (or legacy `VITE_SUPABASE_ANON_KEY`)
 - `VITE_OMNILINK_PORT`: Default 9876 (Single Port Rule)
+
+> **Deployment note:** Production env vars are set in Cloudflare Pages dashboard
+> (Settings → Environment Variables). Do NOT add empty `[env.*]` sections
+> to `wrangler.toml` — this blocks env var injection at build time.
 
 ### Verify Installation
 ```bash
