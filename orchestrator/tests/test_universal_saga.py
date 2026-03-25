@@ -189,7 +189,7 @@ async def test_run_known_intent_activity_succeeds_dict_result():
 
     call_count = 0
 
-    async def mock_execute_activity(name, *_args, **_kwargs):
+    def mock_execute_activity(name, *_args, **_kwargs):
         nonlocal call_count
         call_count += 1
         if call_count == 1:
@@ -221,7 +221,7 @@ async def test_run_known_intent_activity_returns_non_dict():
 
     call_count = 0
 
-    async def mock_execute_activity(_name, *_args, **_kwargs):
+    def mock_execute_activity(_name, *_args, **_kwargs):
         nonlocal call_count
         call_count += 1
         if call_count == 1:
@@ -246,7 +246,7 @@ async def test_run_known_intent_activity_raises_activity_error():
 
     call_count = 0
 
-    async def mock_execute_activity(_name, *_args, **_kwargs):
+    def mock_execute_activity(_name, *_args, **_kwargs):
         nonlocal call_count
         call_count += 1
         if call_count == 1:
@@ -348,7 +348,7 @@ async def test_run_trace_id_from_correlation_id():
 
     call_count = 0
 
-    async def mock_execute_activity(_name, *_args, **_kwargs):
+    def mock_execute_activity(_name, *_args, **_kwargs):
         nonlocal call_count
         call_count += 1
         if call_count == 1:
