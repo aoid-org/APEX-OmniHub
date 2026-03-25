@@ -144,28 +144,27 @@ function Hero() {
               <span>{t('hero.headline.line3', { defaultValue: 'Stay in control.' })}</span>
             </div>
           </h1>
-          <p className="hero__tagline hero__tagline--center">{t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}</p>
-          <p className="hero__subtagline hero__subtagline--center">
+          <p className="hero__tagline hero__tagline--center" style={{ fontSize: 'clamp(1.1rem, 2.5vw, 1.6rem)', fontWeight: 700, letterSpacing: '0.12em' }}>
             {t('hero.traits', { defaultValue: 'DIRECTABLE \u2022 AUDITABLE \u2022 REVERSIBLE' })}
           </p>
-          
+          <p className="hero__subtagline hero__subtagline--center">
+            {t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}
+          </p>
+
           <div className="flex flex-col gap-4 mt-6 mb-6">
             <p className="hero__subtitle">
               <span className="hero__sentence-indent">
                 {t('hero.subtitleSentence1', {
                   defaultValue:
-                    'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface.',
+                    'The enterprise AI governance platform. Unify software, AI agents, and enterprise platforms into one governed command surface.',
                 })}
               </span>{' '}
               {t('hero.subtitleSentence2', { defaultValue: 'Every action is authorized, logged, and reversible.' })}
             </p>
             <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
-              <span className="hero__sentence-indent">
-                {t('hero.descriptionSentence1', { defaultValue: 'OmniDash keeps execution in view.' })}
-              </span>{' '}
-              {t('hero.descriptionSentence2', {
+              {t('hero.descriptionSentence1', {
                 defaultValue:
-                  'Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.',
+                  'OmniHub is the Brain. OmniDash is the Eyes. APEX Agent is the Voice. OmniLink is the AppShell. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese.',
               })}
             </p>
           </div>
@@ -178,9 +177,6 @@ function Hero() {
               />
             </div>
             <PWAInstallNode />
-            <p className="hero__footnote mt-2 text-center lg:text-left" style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-              {t('hero.footnote', { defaultValue: '*Blockchain, wallet, and NFT integrations are optional and disabled by default.' })}
-            </p>
           </div>
         </div>
 
@@ -455,7 +451,7 @@ function CTASection() {
           className="text-lg mt-4"
           style={{ color: 'var(--color-text-muted)' }}
         >
-          Unite. Automate. Excel.
+          Directable. Auditable. Reversible.
         </p>
         <div className="mt-8">
           <CTAGroup
