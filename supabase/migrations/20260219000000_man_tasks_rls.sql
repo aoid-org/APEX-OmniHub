@@ -1,5 +1,16 @@
 ALTER TABLE public.man_tasks ENABLE ROW LEVEL SECURITY;
 
+-- Ensure operator_role exists before referencing it in policies.
+-- In Supabase, custom roles must be created explicitly; built-in roles
+-- (authenticated, anon, service_role) are available by default.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'operator_role') THEN
+    CREATE ROLE operator_role NOLOGIN;
+    GRANT USAGE ON SCHEMA public TO operator_role;
+  END IF;
+END $$;
+
 DO $$
 DECLARE
   tbl CONSTANT text := 'man_tasks';
