@@ -135,12 +135,11 @@ type OmniDashAppBlueprint = {
 
 type OmniDashAppOverrides = Omit<OmniDashAppBlueprint, 'id' | 'title' | 'category'>;
 
-type OmniDashAppSeed = readonly [
-  id: string,
-  title: string,
-  category: AppCategory,
-  overrides?: OmniDashAppOverrides,
-];
+type BoundsPreset = keyof typeof OMNIDASH_BOUNDS;
+
+type CreateOmniDashAppOptions = OmniDashAppOverrides & {
+  readonly bounds?: BoundsPreset;
+};
 
 const buildOmniDashApp = (blueprint: OmniDashAppBlueprint): OmniDashApp => ({
   id: blueprint.id,
@@ -154,69 +153,53 @@ const buildOmniDashApp = (blueprint: OmniDashAppBlueprint): OmniDashApp => ({
   category: blueprint.category,
 });
 
-const OMNIDASH_APP_SEEDS: readonly OmniDashAppSeed[] = [
-  [
-    'omniboard',
-    'OmniBoard',
-    'control-plane',
-    {
-      route: '/omnidash',
-      widgetType: null,
-      defaultBounds: OMNIDASH_BOUNDS.board,
-      zLayer: 0,
-    },
-  ],
-  ['omniport', 'OmniPort', 'platform'],
-  ['maestro', 'Maestro', 'automation'],
-  ['fortress', 'Fortress', 'security'],
-  [
-    'orchestrator',
-    'Orchestrator',
-    'control-plane',
-    {
-      integrationStatus: 'Partial',
-      launchMode: 'oauth',
-      widgetType: null,
-    },
-  ],
-  ['omniskills', 'OmniSkills', 'platform', { defaultBounds: OMNIDASH_BOUNDS.compact }],
-  ['physiomni', 'PhysiOmni', 'operations', { defaultBounds: OMNIDASH_BOUNDS.compact }],
-  ['audits', 'Audits', 'security'],
-  [
-    'links',
-    'Links',
-    'platform',
-    {
-      integrationStatus: 'Partial',
-      launchMode: 'oauth',
-      defaultBounds: OMNIDASH_BOUNDS.compact,
-    },
-  ],
-  ['automations', 'Automations', 'automation'],
-  ['workflows', 'Workflows', 'automation'],
-  ['files', 'Files', 'operations', { defaultBounds: OMNIDASH_BOUNDS.compact }],
-  [
-    'billing',
-    'Billing',
-    'operations',
-    {
-      integrationStatus: 'Partial',
-      launchMode: 'oauth',
-      defaultBounds: OMNIDASH_BOUNDS.compact,
-    },
-  ],
-  ['settings', 'Settings', 'control-plane', { widgetType: 'native' }],
-];
+const createOmniDashApp = (
+  id: string,
+  title: string,
+  category: AppCategory,
+  options: CreateOmniDashAppOptions = {},
+): OmniDashApp => {
+  const { bounds, ...overrides } = options;
+  return buildOmniDashApp({
+    id,
+    title,
+    category,
+    ...overrides,
+    defaultBounds: bounds ? OMNIDASH_BOUNDS[bounds] : overrides.defaultBounds,
+  });
+};
 
-const OMNIDASH_CONTRACT_SOURCE: readonly OmniDashApp[] = OMNIDASH_APP_SEEDS.map(
-  ([id, title, category, overrides]) =>
-    buildOmniDashApp({
-      id,
-      title,
-      category,
-      ...(overrides ?? {}),
-    }),
-);
+const PARTIAL_OAUTH = Object.freeze({
+  integrationStatus: 'Partial' as const,
+  launchMode: 'oauth' as const,
+});
+
+const COMPACT = Object.freeze({ bounds: 'compact' as const });
+
+const OMNIDASH_CONTRACT_SOURCE: readonly OmniDashApp[] = [
+  createOmniDashApp('omniboard', 'OmniBoard', 'control-plane', {
+    route: '/omnidash',
+    widgetType: null,
+    bounds: 'board',
+    zLayer: 0,
+  }),
+  createOmniDashApp('omniport', 'OmniPort', 'platform'),
+  createOmniDashApp('maestro', 'Maestro', 'automation'),
+  createOmniDashApp('fortress', 'Fortress', 'security'),
+  createOmniDashApp('orchestrator', 'Orchestrator', 'control-plane', {
+    ...PARTIAL_OAUTH,
+    widgetType: null,
+  }),
+  createOmniDashApp('omniskills', 'OmniSkills', 'platform', COMPACT),
+  createOmniDashApp('physiomni', 'PhysiOmni', 'operations', COMPACT),
+  createOmniDashApp('audits', 'Audits', 'security'),
+  createOmniDashApp('links', 'Links', 'platform', { ...PARTIAL_OAUTH, ...COMPACT }),
+  createOmniDashApp('automations', 'Automations', 'automation'),
+  createOmniDashApp('workflows', 'Workflows', 'automation'),
+  createOmniDashApp('files', 'Files', 'operations', COMPACT),
+  createOmniDashApp('billing', 'Billing', 'operations', { ...PARTIAL_OAUTH, ...COMPACT }),
+  createOmniDashApp('settings', 'Settings', 'control-plane', { widgetType: 'native' }),
+];
 
 // ============================================================================
 // Runtime Validation + Export
