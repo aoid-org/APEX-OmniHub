@@ -339,9 +339,9 @@ function FortressSection() {
   return (
     <Section id="fortress" variant="navy">
       <div className="fortress">
-        <h2 className="heading-2">Zero-Trust Fortress Protocol</h2>
-        <p className="fortress__subtitle">
-          Security is not an afterthought. It is the foundation.
+        <h2 className="heading-2">Assume breach by default.</h2>
+        <p className="text-muted-foreground mt-2 text-lg">
+          Then verify, log, and replay everything anyway.
         </p>
         <div className="fortress__grid">
           {siteConfig.fortress.items.map((item, idx) => (
