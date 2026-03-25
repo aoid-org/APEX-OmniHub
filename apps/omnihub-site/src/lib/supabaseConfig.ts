@@ -5,14 +5,15 @@ const TRACE_ID_LENGTH = 8;
 let fallbackCounter = 0;
 
 function normalizeTraceIdSegment(value: string): string {
-  return value.replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, TRACE_ID_LENGTH);
+  return value.replaceAll(/[^a-z0-9]/gi, '').toLowerCase().slice(0, TRACE_ID_LENGTH);
 }
 
 function createFallbackTraceId(): string {
   fallbackCounter = (fallbackCounter + 1) % 46656;
   const timePart = Date.now().toString(36).slice(-5);
   const counterPart = fallbackCounter.toString(36).padStart(3, '0');
-  return `${TRACE_ID_PREFIX}${normalizeTraceIdSegment(`${timePart}${counterPart}`).padEnd(TRACE_ID_LENGTH, '0')}`;
+  const traceId = normalizeTraceIdSegment(timePart + counterPart).padEnd(TRACE_ID_LENGTH, '0');
+  return TRACE_ID_PREFIX + traceId;
 }
 
 export function hasValidSupabaseUrl(url: string): boolean {

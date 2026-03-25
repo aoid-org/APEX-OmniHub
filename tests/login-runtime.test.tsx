@@ -76,7 +76,7 @@ describe('supabase.ts config guard (runtime coverage)', () => {
 });
 
 describe('hasSupabaseConfig validation logic (runtime)', () => {
-  const protocolSeparator = String.fromCharCode(58, 47, 47);
+  const protocolSeparator = String.fromCodePoint(58, 47, 47);
   const buildUrl = (protocol: string, host: string) => `${protocol}${protocolSeparator}${host}`;
   const httpProtocol = ['h', 't', 't', 'p'].join('');
   const httpsProtocol = `${httpProtocol}s`;
