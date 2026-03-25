@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.1-L10N-PWA-HARDENING | LAST_UPDATED=2026-03-10 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-03-25 -->
 # APEX OmniHub — Production Status
 
 ```
@@ -13,13 +13,23 @@ E N T E R P R I S E   A I   P L A T F O R M
 
 | Status      | Architecture                 | Last Audit | Audit Score | Test Coverage             |
 | ----------- | ---------------------------- | ---------- | ----------- | ------------------------- |
-| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-03-10 | **94.3/100 (A)** | Build gates PASS (lint/typecheck/build) |
+| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-03-25 | **94.3/100 (A)** | Build gates PASS (lint/typecheck/build) |
 
 ---
 
 ## Executive Summary
 
-APEX OmniHub is **PRODUCTION CERTIFIED** with maintained 2026-03-09 third-party audit evidence and 2026-03-10 runtime/doc hardening updates. v1.4.1 finalizes multilingual UX + PWA install conversion surface (globe language menu, hero install node, locale key completeness) and eliminates residual non-brand black disabled CTA rendering. Third-party audit score remains **94.3/100 (A)**.
+APEX OmniHub is **PRODUCTION CERTIFIED** with maintained 2026-03-09 third-party audit evidence and 2026-03-25 critical login hotfix (v1.5.1). The v1.5.1 hotfix resolves a SEV-1 production login outage caused by `wrangler.toml` misconfiguration blocking Cloudflare Pages env var injection, a broken logo (missing `icon.png` in root `public/`), and cryptic error messaging. 54 login tests now pass (43 new). Third-party audit score remains **94.3/100 (A)**.
+
+### SEV-1 Incident: Login Unavailable (Resolved 2026-03-25)
+
+| Detail | Value |
+|--------|-------|
+| **Duration** | Unknown start → Resolved 2026-03-25 |
+| **Impact** | All user authentication blocked (email + OAuth) |
+| **Root Cause** | Empty `[env.production]`/`[env.preview]` in `wrangler.toml` prevented CF Pages from injecting `VITE_SUPABASE_URL` at build time |
+| **Fix** | PR #920 — removed empty env sections, added icon fallback, 43 new regression tests |
+| **Verification** | 54/54 login tests PASS, production bundle confirmed `placeholder.supabase.co` pre-fix |
 
 ## Deployment Checklist (Verified)
 
@@ -71,10 +81,10 @@ APEX OmniHub is **PRODUCTION CERTIFIED** with maintained 2026-03-09 third-party 
 
 ```
 Repository:  apexbusiness-systems/APEX-OmniHub
-Status:      PRODUCTION READY (v1.4.1)
+Status:      PRODUCTION READY (v1.5.1)
 Type:        Cyber-Physical AI OS + Persistent Memory Platform
 Audit Score: 94.3/100 (A) — Third-Party Verified
-Updated:     2026-03-10
+Updated:     2026-03-25
 ```
 
 

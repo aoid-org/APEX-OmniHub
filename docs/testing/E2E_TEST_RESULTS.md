@@ -1,10 +1,10 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.5.1 | LAST_UPDATED=2026-03-25 -->
 # APEX OmniHub E2E Test Results Report
 
-**Date:** March 15, 2026 (Updated)
-**Branch:** `claude/setup-dev-testing-infra-C70aY`
-**Commit:** `acb1a09`
-**Test Framework:** Vitest 4.0.17
+**Date:** March 25, 2026 (Updated)
+**Branch:** `fix/login-unavailable-and-broken-logo`
+**Commit:** `b2b01b4`
+**Test Framework:** Vitest 4.0.18
 
 ---
 
@@ -32,6 +32,8 @@
 
 | Test Suite | Tests | Passed | Skipped | Duration |
 |------------|-------|--------|---------|----------|
+| **`tests/login-page-fixes.test.ts`** | **43** | **43** | **0** | **13ms** |
+| **`tests/login-supabase-config.test.ts`** | **11** | **11** | **0** | **5ms** |
 | **`tests/omniconnect/omniport.spec.ts`** | **27** | **27** | **0** | **35ms** |
 | `tests/stress/battery.spec.ts` | 21 | 21 | 0 | 3035ms |
 | `tests/e2e/security.spec.ts` | 13 | 13 | 0 | 177ms |

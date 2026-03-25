@@ -1,11 +1,17 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
-# Migration Notes: Lovable Cloud → Supabase + Vercel
+<!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-03-25 -->
+# Migration Notes: Lovable Cloud → Supabase + Cloudflare Pages
 
 **Status**: ✅ COMPLETE
 **Started**: 2025-12-18
 **Completed**: 2026-02-08
-**Target**: Migrate from Lovable Cloud backend to independent Supabase + Vercel deployment
-**Version**: 1.0.0
+**Hotfix**: 2026-03-25 — Cloudflare Pages env var injection fix (v1.5.1)
+**Target**: Migrate from Lovable Cloud backend to independent Supabase + Cloudflare Pages deployment
+**Version**: 1.1.0
+
+> **CRITICAL LESSON (2026-03-25):** Do NOT add empty `[env.production]` or `[env.preview]`
+> sections to `wrangler.toml`. This causes Cloudflare Pages to skip injecting dashboard
+> environment variables into the Vite build, resulting in `VITE_SUPABASE_URL` compiling to
+> empty string and permanently disabling authentication. See INC-20260325-LOGIN.
 
 ## Checklist
 
