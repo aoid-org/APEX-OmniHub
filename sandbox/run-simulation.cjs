@@ -126,6 +126,42 @@ I really need someone to explain this to me like I'm five
 };
 
 class ResponseAnalyzer {
+  hasStructuredList(text) {
+    const lines = text.split('\n');
+    for (const rawLine of lines) {
+      const line = rawLine.trimStart();
+      if (!line) {
+        continue;
+      }
+
+      const first = line[0];
+      const second = line[1];
+      if ((first === '-' || first === '*') && (second === ' ' || second === '\t')) {
+        return true;
+      }
+
+      let index = 0;
+      while (index < line.length) {
+        const code = line.charCodeAt(index);
+        const isDigit = code >= 48 && code <= 57;
+        if (!isDigit) {
+          break;
+        }
+        index += 1;
+      }
+
+      if (index > 0 && index + 1 < line.length) {
+        const separator = line[index];
+        const separatorSpace = line[index + 1];
+        if ((separator === '.' || separator === ')') && (separatorSpace === ' ' || separatorSpace === '\t')) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   detectSkills(message) {
     const skills = [];
     if (/credit\s+score/i.test(message)) skills.push('CheckCreditScore');
@@ -161,7 +197,7 @@ class ResponseAnalyzer {
 
     const isStressed = /stressed|overwhelmed|urgent|sorry this is so much|everything feels urgent/i.test(clientMessage);
     const hasMultipleRequests = (clientMessage.match(/\b(and|also|oh|first|second)\b/gi) || []).length > 3;
-    const hasNumberedList = /(?:^|\n)\s*(?:\d+[.)]|-|\*)\s/.test(response);
+    const hasNumberedList = this.hasStructuredList(response);
 
     if (hasNumberedList) {
       analysis.userExperienceScore += 1;
