@@ -73,7 +73,11 @@ class GoalRequest(BaseModel):
     trace_id: str
 
 
-@app.post("/api/v1/goals", responses={500: {"description": "Internal Server Error"}})
+@app.post(
+    "/api/v1/goals",
+    response_model=None,
+    responses={500: {"description": "Internal Server Error"}},
+)
 async def create_goal(request: GoalRequest) -> dict[str, str] | JSONResponse:
     """
     Create and start a new agent workflow.

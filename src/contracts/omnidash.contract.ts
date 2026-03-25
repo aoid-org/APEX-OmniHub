@@ -14,6 +14,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
+import { APP_REGISTRY, type AppRegistryEntry } from '../../packages/core/src/registry';
 import { z } from 'zod';
 
 // ============================================================================
@@ -121,85 +122,51 @@ const OMNIDASH_BOUNDS = Object.freeze({
   board: Object.freeze({ width: 1200, height: 800 }),
 });
 
-type OmniDashAppBlueprint = {
-  readonly id: string;
-  readonly title: string;
-  readonly category: AppCategory;
-  readonly route?: `/omnidash${string}`;
-  readonly integrationStatus?: IntegrationStatus;
+type BoundsPreset = keyof typeof OMNIDASH_BOUNDS;
+
+type OmniDashContractOverride = {
+  readonly category?: AppCategory;
   readonly launchMode?: LaunchMode;
   readonly widgetType?: WidgetType;
-  readonly defaultBounds?: DefaultBounds;
+  readonly bounds?: BoundsPreset;
   readonly zLayer?: number;
 };
 
-type OmniDashAppOverrides = Omit<OmniDashAppBlueprint, 'id' | 'title' | 'category'>;
-
-type BoundsPreset = keyof typeof OMNIDASH_BOUNDS;
-
-type CreateOmniDashAppOptions = OmniDashAppOverrides & {
-  readonly bounds?: BoundsPreset;
-};
-
-const buildOmniDashApp = (blueprint: OmniDashAppBlueprint): OmniDashApp => ({
-  id: blueprint.id,
-  title: blueprint.title,
-  route: blueprint.route ?? `/omnidash/${blueprint.id}`,
-  integrationStatus: blueprint.integrationStatus ?? 'Live',
-  launchMode: blueprint.launchMode ?? 'navigate',
-  widgetType: blueprint.widgetType ?? 'module',
-  defaultBounds: blueprint.defaultBounds ?? OMNIDASH_BOUNDS.standard,
-  zLayer: blueprint.zLayer ?? 10,
-  category: blueprint.category,
+const OMNIDASH_OVERRIDES: Readonly<Record<string, OmniDashContractOverride>> = Object.freeze({
+  omniboard: { widgetType: null, bounds: 'board', zLayer: 0 },
+  maestro: { category: 'automation' },
+  orchestrator: { category: 'control-plane', widgetType: null },
+  omniskills: { bounds: 'compact' },
+  physiomni: { bounds: 'compact' },
+  links: { bounds: 'compact' },
+  files: { bounds: 'compact' },
+  billing: { bounds: 'compact' },
+  settings: { widgetType: 'native' },
 });
 
-const createOmniDashApp = (
-  id: string,
-  title: string,
-  category: AppCategory,
-  options: CreateOmniDashAppOptions = {},
-): OmniDashApp => {
-  const { bounds, ...overrides } = options;
-  return buildOmniDashApp({
-    id,
-    title,
-    category,
-    ...overrides,
-    defaultBounds: bounds ? OMNIDASH_BOUNDS[bounds] : overrides.defaultBounds,
-  });
+const resolveLaunchMode = (integrationStatus: IntegrationStatus, override?: LaunchMode): LaunchMode =>
+  override ?? (integrationStatus === 'Partial' ? 'oauth' : 'navigate');
+
+const toOmniDashApp = (entry: AppRegistryEntry): OmniDashApp => {
+  const override = OMNIDASH_OVERRIDES[entry.key];
+  const integrationStatus = entry.dashboard.status;
+  const boundsPreset = override?.bounds;
+  const defaultBounds = boundsPreset ? OMNIDASH_BOUNDS[boundsPreset] : OMNIDASH_BOUNDS.standard;
+
+  return {
+    id: entry.key,
+    title: entry.label,
+    route: entry.routePath,
+    integrationStatus,
+    launchMode: resolveLaunchMode(integrationStatus, override?.launchMode),
+    widgetType: override?.widgetType ?? 'module',
+    defaultBounds,
+    zLayer: override?.zLayer ?? 10,
+    category: override?.category ?? entry.category,
+  };
 };
 
-const PARTIAL_OAUTH = Object.freeze({
-  integrationStatus: 'Partial' as const,
-  launchMode: 'oauth' as const,
-});
-
-const COMPACT = Object.freeze({ bounds: 'compact' as const });
-
-const OMNIDASH_CONTRACT_SOURCE: readonly OmniDashApp[] = [
-  createOmniDashApp('omniboard', 'OmniBoard', 'control-plane', {
-    route: '/omnidash',
-    widgetType: null,
-    bounds: 'board',
-    zLayer: 0,
-  }),
-  createOmniDashApp('omniport', 'OmniPort', 'platform'),
-  createOmniDashApp('maestro', 'Maestro', 'automation'),
-  createOmniDashApp('fortress', 'Fortress', 'security'),
-  createOmniDashApp('orchestrator', 'Orchestrator', 'control-plane', {
-    ...PARTIAL_OAUTH,
-    widgetType: null,
-  }),
-  createOmniDashApp('omniskills', 'OmniSkills', 'platform', COMPACT),
-  createOmniDashApp('physiomni', 'PhysiOmni', 'operations', COMPACT),
-  createOmniDashApp('audits', 'Audits', 'security'),
-  createOmniDashApp('links', 'Links', 'platform', { ...PARTIAL_OAUTH, ...COMPACT }),
-  createOmniDashApp('automations', 'Automations', 'automation'),
-  createOmniDashApp('workflows', 'Workflows', 'automation'),
-  createOmniDashApp('files', 'Files', 'operations', COMPACT),
-  createOmniDashApp('billing', 'Billing', 'operations', { ...PARTIAL_OAUTH, ...COMPACT }),
-  createOmniDashApp('settings', 'Settings', 'control-plane', { widgetType: 'native' }),
-];
+const OMNIDASH_CONTRACT_SOURCE: readonly OmniDashApp[] = APP_REGISTRY.map(toOmniDashApp);
 
 // ============================================================================
 // Runtime Validation + Export
