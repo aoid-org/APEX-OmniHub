@@ -1,11 +1,19 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-03-25 -->
 # SECRETS INVENTORY & ROTATION GUIDE
 **OmniHub/TradeLine/APEX - Comprehensive Secrets Management**
 
-**Last Updated:** 2026-02-08
+**Last Updated:** 2026-03-25
 **Owner:** DevOps Team
 **Review Cycle:** Quarterly
-**Version:** 1.0.0
+**Version:** 1.1.0
+
+> **INCIDENT NOTE (2026-03-25):** Empty `[env.*]` sections in `wrangler.toml` blocked
+> Cloudflare Pages from injecting `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`
+> into the Vite build. After rotation or any env var change, verify the production JS bundle
+> contains the real Supabase URL (not `placeholder.supabase.co`) by running:
+> ```bash
+> curl -sL https://apexomnihub.icu/assets/js/index-*.js | grep -o 'rtopreovkywofgwgmozi'
+> ```
 
 ---
 
