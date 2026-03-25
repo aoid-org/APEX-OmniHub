@@ -77,7 +77,8 @@ describe('useAgentRecording', () => {
       const { result } = renderHook(() => useAgentRecording(addTraceLog));
 
       await act(async () => {
-        await result.current.handleToggleRecording();
+        result.current.handleToggleRecording();
+        await Promise.resolve();
       });
 
       expect(result.current.isRecording).toBe(true);
@@ -88,7 +89,8 @@ describe('useAgentRecording', () => {
       const { result } = renderHook(() => useAgentRecording(addTraceLog));
 
       await act(async () => {
-        await result.current.handleToggleRecording();
+        result.current.handleToggleRecording();
+        await Promise.resolve();
       });
 
       expect(result.current.recordingDuration).toBe(0);
@@ -104,7 +106,8 @@ describe('useAgentRecording', () => {
       const { result } = renderHook(() => useAgentRecording(addTraceLog));
 
       await act(async () => {
-        await result.current.handleToggleRecording();
+        result.current.handleToggleRecording();
+        await Promise.resolve();
       });
 
       expect(result.current.isRecording).toBe(false);
@@ -120,7 +123,8 @@ describe('useAgentRecording', () => {
 
       // Start recording
       await act(async () => {
-        await result.current.handleToggleRecording();
+        result.current.handleToggleRecording();
+        await Promise.resolve();
       });
       expect(result.current.isRecording).toBe(true);
 
@@ -139,7 +143,8 @@ describe('useAgentRecording', () => {
       const { result, unmount } = renderHook(() => useAgentRecording(addTraceLog));
 
       await act(async () => {
-        await result.current.handleToggleRecording();
+        result.current.handleToggleRecording();
+        await Promise.resolve();
       });
 
       // Unmount while recording — should not throw
@@ -150,7 +155,8 @@ describe('useAgentRecording', () => {
       const { result, unmount } = renderHook(() => useAgentRecording(addTraceLog));
 
       await act(async () => {
-        await result.current.handleToggleRecording();
+        result.current.handleToggleRecording();
+        await Promise.resolve();
       });
 
       act(() => {

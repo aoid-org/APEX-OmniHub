@@ -15,7 +15,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { memo, useCallback, useRef, type MouseEvent } from 'react';
+import { memo, useRef } from 'react';
 import { useOmniDash } from '../../stores/omniDashStore';
 import { WidgetShell } from './WidgetShell';
 import { FloatingWindow } from './FloatingWindow';
@@ -31,18 +31,10 @@ export const OmniCanvas = memo(function OmniCanvas() {
   const widgetArray = Array.from(widgets.values());
   const floatingArray = Array.from(floatingWindows.values());
 
-  const handleCanvasClick = useCallback((e: MouseEvent) => {
-    // Only fire on the canvas itself, not on child widgets
-    if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('omni-canvas-inner')) {
-      // Deselect — future use for multi-select
-    }
-  }, []);
-
   return (
     <div
       ref={canvasRef}
       className="omni-canvas"
-      onClick={handleCanvasClick}
     >
       {/* Transform layer for pan/zoom */}
       <div

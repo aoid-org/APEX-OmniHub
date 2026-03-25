@@ -71,7 +71,7 @@ if (existsSync(vercelJsonPath)) {
   // Check that /assets/* is handled before the catch-all
   const catchAllIndex = rewrites.findIndex(r => r.source === '/(.*)' || r.source === '/:path*');
   const assetRuleIndex = rewrites.findIndex(r =>
-    r.source && r.source.includes('assets') && r.status
+    r.source?.includes('assets') && r.status
   );
 
   if (catchAllIndex >= 0 && (assetRuleIndex < 0 || assetRuleIndex > catchAllIndex)) {

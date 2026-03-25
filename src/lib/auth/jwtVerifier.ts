@@ -176,9 +176,11 @@ export async function verifySupabaseJWT(token: string): Promise<VerificationResu
     }
 
     // --- Signature verification ---
-    const secret = globalThis.process !== undefined
-      ? (globalThis.process as NodeJS.Process).env?.SUPABASE_JWT_SECRET
-      : undefined;
+    const processEnv =
+      'process' in globalThis
+        ? (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env
+        : undefined;
+    const secret = processEnv?.SUPABASE_JWT_SECRET;
 
     if (!secret) {
       return {

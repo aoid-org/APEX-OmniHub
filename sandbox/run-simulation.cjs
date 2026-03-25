@@ -593,7 +593,7 @@ async function main() {
 }
 
 // Run if executed directly
-if (require.main === module) {
+if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module) {
   main().catch(error => {
     console.error('\n❌ Simulation error:', error);
     process.exit(1);

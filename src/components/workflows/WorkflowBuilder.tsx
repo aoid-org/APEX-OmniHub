@@ -447,6 +447,15 @@ export function WorkflowBuilder() {
                   key={skill.id}
                   draggable
                   onDragStart={(e) => onPaletteDragStart(e, skill)}
+                  onClick={() => addSkillNode(skill)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      addSkillNode(skill);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                   className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-accent/50 transition-colors flex items-center gap-2 group cursor-grab active:cursor-grabbing mb-1 border border-transparent hover:border-border"
                 >
                   <Plus className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
@@ -456,14 +465,9 @@ export function WorkflowBuilder() {
                       {skill.trigger_intent}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    title="Add to canvas"
-                    onClick={() => addSkillNode(skill)}
-                    className="ml-auto shrink-0 text-muted-foreground hover:text-primary"
-                  >
+                  <span className="ml-auto shrink-0 text-muted-foreground group-hover:text-primary">
                     <Plus className="h-3.5 w-3.5" />
-                  </button>
+                  </span>
                 </div>
               ))}
             </ScrollArea>
@@ -569,6 +573,12 @@ export function WorkflowBuilder() {
                 const isSelected = selectedNode === node.id;
                 const isSource = connectingFrom === node.id;
                 const isConnectTarget = connectingFrom !== null && connectingFrom !== node.id;
+                let strokeColor = 'hsl(var(--border))';
+                if (isSource || isSelected) {
+                  strokeColor = 'hsl(var(--primary))';
+                } else if (isConnectTarget) {
+                  strokeColor = 'hsl(var(--ring))';
+                }
 
                 return (
                   <g
@@ -588,15 +598,7 @@ export function WorkflowBuilder() {
                       rx={10}
                       ry={10}
                       fill="hsl(var(--card))"
-                      stroke={
-                        isSource
-                          ? 'hsl(var(--primary))'
-                          : isConnectTarget
-                          ? 'hsl(var(--ring))'
-                          : isSelected
-                          ? 'hsl(var(--primary))'
-                          : 'hsl(var(--border))'
-                      }
+                      stroke={strokeColor}
                       strokeWidth={isSelected || isSource ? 2 : 1.5}
                       filter={isSelected ? 'drop-shadow(0 2px 8px hsl(var(--primary)/0.3))' : undefined}
                     />

@@ -204,13 +204,13 @@ export async function verifyM2MToken(token: string, secret: string): Promise<M2M
     throw new Error('Missing or invalid "tenant_id" claim');
   }
   if (!Array.isArray(claims.scopes)) {
-    throw new Error('Missing or invalid "scopes" claim');
+    throw new TypeError('Missing or invalid "scopes" claim');
   }
   if (typeof claims.iat !== 'number') {
-    throw new Error('Missing or invalid "iat" claim');
+    throw new TypeError('Missing or invalid "iat" claim');
   }
   if (typeof claims.exp !== 'number') {
-    throw new Error('Missing or invalid "exp" claim');
+    throw new TypeError('Missing or invalid "exp" claim');
   }
 
   // Check expiration

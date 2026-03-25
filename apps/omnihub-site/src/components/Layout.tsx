@@ -100,13 +100,12 @@ function LanguageSelector({
         <span className="language-selector__caret" aria-hidden="true">▾</span>
       </button>
       {isOpen && (
-        <ul className="language-selector__menu" role="menu" id={menuId}>
+        <ul className="language-selector__menu" id={menuId}>
           {SUPPORTED_LANGUAGES.map((language) => (
-            <li key={language.code} role="none">
+            <li key={language.code}>
               <button
                 type="button"
-                role="menuitemradio"
-                aria-checked={language.code === selectedLanguage}
+                aria-pressed={language.code === selectedLanguage}
                 className={`language-selector__option ${
                   language.code === selectedLanguage ? 'language-selector__option--active' : ''
                 }`}

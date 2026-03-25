@@ -139,7 +139,7 @@ export function usePaidAccess(): PaidAccessResult {
     status,
     subscription,
     loading: isLoading,
-    error: error as Error | null,
+    error: error instanceof Error ? error : error ? new Error(String(error)) : null,
     isTrial: status === 'trialing',
     willCancel: subscription?.cancel_at_period_end ?? false,
     daysRemaining,

@@ -37,22 +37,24 @@ function makeSupabaseMock() {
 
   // Build a chainable builder where terminal calls resolve via spy
   const makeBuilder = (terminalSpy: typeof singleSpy) => {
-    const builder: Record<string, unknown> = {};
-    const _chain = () => builder;
-
-    builder.select = (..._args: unknown[]) => { selectSpy(..._args); return builder; };
-    builder.eq = (..._args: unknown[]) => { eqSpy(..._args); return builder; };
-    builder.gte = (..._args: unknown[]) => { gteSpy(..._args); return builder; };
-    builder.order = (..._args: unknown[]) => { orderSpy(..._args); return builder; };
-    builder.limit = (..._args: unknown[]) => { limitSpy(..._args); return builder; };
-    builder.single = (..._args: unknown[]) => terminalSpy(..._args);
-
-    // Make the builder itself thenable (for queries that don't call .single())
-    builder.then = (resolve: (v: unknown) => unknown) => {
-      return Promise.resolve(terminalSpy()).then(resolve);
+    const asyncBuilder = Promise.resolve().then(() => terminalSpy()) as Promise<unknown> & {
+      select: (...args: unknown[]) => typeof asyncBuilder;
+      eq: (...args: unknown[]) => typeof asyncBuilder;
+      gte: (...args: unknown[]) => typeof asyncBuilder;
+      order: (...args: unknown[]) => typeof asyncBuilder;
+      limit: (...args: unknown[]) => typeof asyncBuilder;
+      single: (...args: unknown[]) => unknown;
     };
 
-    return builder;
+    asyncBuilder.select = (..._args: unknown[]) => { selectSpy(..._args); return asyncBuilder; };
+    asyncBuilder.eq = (..._args: unknown[]) => { eqSpy(..._args); return asyncBuilder; };
+    asyncBuilder.gte = (..._args: unknown[]) => { gteSpy(..._args); return asyncBuilder; };
+    asyncBuilder.order = (..._args: unknown[]) => { orderSpy(..._args); return asyncBuilder; };
+    asyncBuilder.limit = (..._args: unknown[]) => { limitSpy(..._args); return asyncBuilder; };
+    asyncBuilder.single = (..._args: unknown[]) => terminalSpy(..._args);
+
+    // Queries without .single() are awaited directly; emulate supabase's Promise-like builder.
+    return asyncBuilder;
   };
 
   const client = {
@@ -520,18 +522,23 @@ describe('MemoryClient — operation sequences', () => {
     // store returns an ID
     spies.singleSpy.mockResolvedValueOnce({ data: { id: 'mem-seq-001' }, error: null });
 
-    // recall: build a thenable query mock
-    const recallBuilder: Record<string, unknown> = {};
+    // recall: build a chainable async query mock
+    let recallCalled = false;
+    const recallBuilder = Promise.resolve().then(() => {
+      recallCalled = true;
+      return { data: [SAMPLE_MEMORY_ROW], error: null };
+    }) as Promise<unknown> & {
+      select: ReturnType<typeof vi.fn>;
+      eq: ReturnType<typeof vi.fn>;
+      gte: ReturnType<typeof vi.fn>;
+      order: ReturnType<typeof vi.fn>;
+      limit: ReturnType<typeof vi.fn>;
+    };
     recallBuilder.select = vi.fn().mockReturnValue(recallBuilder);
     recallBuilder.eq = vi.fn().mockReturnValue(recallBuilder);
     recallBuilder.gte = vi.fn().mockReturnValue(recallBuilder);
     recallBuilder.order = vi.fn().mockReturnValue(recallBuilder);
     recallBuilder.limit = vi.fn().mockReturnValue(recallBuilder);
-    let recallCalled = false;
-    recallBuilder.then = (resolve: (v: unknown) => unknown) => {
-      recallCalled = true;
-      return Promise.resolve({ data: [SAMPLE_MEMORY_ROW], error: null }).then(resolve);
-    };
 
     (client.from as ReturnType<typeof vi.fn>)
       .mockReturnValueOnce({

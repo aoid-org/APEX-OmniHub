@@ -37,7 +37,7 @@ export const supabase = createClient(
       flowType: 'pkce',
       persistSession: true,
       autoRefreshToken: true,
-      storage: typeof globalThis.window === 'undefined' ? undefined : globalThis.window.localStorage,
+      storage: globalThis.window === undefined ? undefined : globalThis.window.localStorage,
     },
   },
 );

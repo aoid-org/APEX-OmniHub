@@ -3,9 +3,7 @@ import { safeParse, tryParse } from '@/lib/graceful-degradation';
 
 describe('graceful-degradation', () => {
   beforeEach(() => {
-    if (vi !== undefined && vi.clearAllMocks) {
-      vi.clearAllMocks();
-    }
+    vi.clearAllMocks?.();
   });
 
   describe('tryParse', () => {

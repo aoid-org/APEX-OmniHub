@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * Validates that there is only one version of React and React DOM

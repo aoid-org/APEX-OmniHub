@@ -334,9 +334,13 @@ describe('Combined Spatial Engine Stress', () => {
     const avgFrameTime = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
     expect(avgFrameTime).toBeLessThan(16.67);
 
-    // No single frame should exceed 50ms under aggregate CI load (30fps floor
-    // is 33ms but CI contention causes spurious spikes — 50ms avoids flake).
+    // 95th percentile frame should stay within 30fps budget.
+    const sorted = [...frameTimes].sort((a, b) => a - b);
+    const p95FrameTime = sorted[Math.max(0, Math.floor(sorted.length * 0.95) - 1)];
+    expect(p95FrameTime).toBeLessThan(33);
+
+    // Allow occasional outliers (GC/OS scheduling) but keep them bounded.
     const maxFrameTime = Math.max(...frameTimes);
-    expect(maxFrameTime).toBeLessThan(50);
+    expect(maxFrameTime).toBeLessThan(80);
   });
 });
