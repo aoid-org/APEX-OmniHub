@@ -34,6 +34,7 @@
 import { z } from 'zod';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { GatewayContext, JsonRpcRequest } from '../types';
+import { withGatewaySpan } from '../Tracer';
 
 // ============================================================================
 // Types
@@ -590,12 +591,20 @@ export class TriforceGuardian {
    * Returns null if all interceptors pass, or the first denial.
    */
   async guard(request: JsonRpcRequest, context: GatewayContext): Promise<GuardianResult | null> {
-    for (const interceptor of this.interceptors) {
-      const result = await interceptor(request, context);
-      if (result !== null) {
-        return result;
+    return withGatewaySpan('TriforceGuardian.guard', {
+      'rpc.method': request.method,
+      'gateway.tenantId': context.tenantId,
+      'gateway.deviceId': context.deviceId,
+      'gateway.correlationId': context.correlationId,
+      'gateway.trustTier': context.trustTier || 'UNKNOWN',
+    }, async () => {
+      for (const interceptor of this.interceptors) {
+        const result = await interceptor(request, context);
+        if (result !== null) {
+          return result;
+        }
       }
-    }
-    return null;
+      return null;
+    });
   }
 }

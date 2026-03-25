@@ -3,7 +3,15 @@ import { SupabaseIdempotencyStore } from '../../../src/omnihub-gateway/SupabaseI
 import type { IdempotencyEntry } from '../../../src/omnihub-gateway/types';
 
 describe('SupabaseIdempotencyStore', () => {
-  let mockSupabase: any;
+  let mockSupabase: {
+    from: ReturnType<typeof vi.fn>;
+    select: ReturnType<typeof vi.fn>;
+    insert: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+    eq: ReturnType<typeof vi.fn>;
+    single: ReturnType<typeof vi.fn>;
+  };
   let store: SupabaseIdempotencyStore;
 
   beforeEach(() => {

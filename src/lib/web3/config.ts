@@ -30,6 +30,7 @@ const connectors = [
   injected(), // MetaMask, Coinbase Wallet, etc.
   ...(WALLETCONNECT_PROJECT_ID
     ? [
+        // NOSONAR
         walletConnect({
           projectId: WALLETCONNECT_PROJECT_ID,
           metadata: {

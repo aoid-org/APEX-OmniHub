@@ -86,6 +86,14 @@ export {
 } from './IdempotencyManager';
 export { SupabaseIdempotencyStore } from './SupabaseIdempotencyStore';
 
+// Tracing and Telemetry
+export {
+  initGatewayTracer,
+  getGatewayTracer,
+  withGatewaySpan,
+  type TracerConfig,
+} from './Tracer';
+
 // Token Economics Router
 export {
   TokenEconomicsRouter,
