@@ -227,24 +227,7 @@ class ResponseAnalyzer {
     analysis.empathyScore = clamp(analysis.empathyScore);
   }
 
-  analyzeResponse(scenario, clientMessage, agentPayload, detectedSkills = []) {
-    const analysis = this.createBaselineAnalysis();
-    const response = agentPayload.response;
-    const responseLower = response.toLowerCase();
-    const hasMultipleRequests = this.hasMultipleRequests(clientMessage);
-    const hasStructuredList = this.hasStructuredList(response);
-    const wordCount = response.trim().split(/\s+/).filter(Boolean).length;
-    const questionCount = (response.match(/\?/g) || []).length;
-    const isStressed = /stressed|overwhelmed|urgent|sorry this is so much|everything feels urgent/i.test(clientMessage);
-    const isVague = VAGUE_REQUEST_PATTERN.test(clientMessage) || /don('| a)?t know/i.test(clientMessage);
-    const jargonCount = JARGON_WORDS.filter((word) => new RegExp(String.raw`\b${word}\b`, 'i').test(response)).length;
-    const hasEmpathy = EMPATHY_WORDS.some((word) => responseLower.includes(word));
-
-    if (hasStructuredList) {
-      analysis.userExperienceScore += 1;
-      analysis.successes.push('Response uses scan-friendly list structure');
-    }
-
+  _evaluateTone(analysis, response, responseLower, isStressed, hasEmpathy, wordCount) {
     if (hasEmpathy) {
       analysis.empathyScore += 2;
       analysis.successes.push('Response shows empathy and understanding');
@@ -252,17 +235,33 @@ class ResponseAnalyzer {
       analysis.empathyScore -= 2;
       analysis.issues.push('Response lacks empathetic tone');
     }
-
     if (/you('| a)?re not alone|you('| a)?ve got this|take a deep breath|i('| a)?m with you/i.test(response)) {
       analysis.empathyScore += 1;
       analysis.successes.push('Response validates emotional state');
     }
-
     if (/let('| a)?s|we('| a)?ll|together/i.test(response)) {
       analysis.empathyScore += 1;
       analysis.successes.push('Response uses collaborative language');
     }
+    if (isStressed && wordCount <= 200) {
+      analysis.userExperienceScore += 2;
+      analysis.successes.push('Response is concise for stressed context');
+    } else if (isStressed && wordCount > 200) {
+      analysis.userExperienceScore -= 2;
+      analysis.issues.push('Response exceeds 200-word stress-mode cap');
+    }
+    if (isStressed && /simplified mode/i.test(responseLower)) {
+      analysis.userExperienceScore += 1;
+      analysis.technicalAccuracy += 1;
+      analysis.successes.push('Simplified mode activated for stressed user');
+    }
+  }
 
+  _evaluateStructure(analysis, response, responseLower, hasMultipleRequests, hasStructuredList, wordCount) {
+    if (hasStructuredList) {
+      analysis.userExperienceScore += 1;
+      analysis.successes.push('Response uses scan-friendly list structure');
+    }
     if (hasMultipleRequests) {
       if (hasStructuredList) {
         analysis.userExperienceScore += 2;
@@ -272,20 +271,10 @@ class ResponseAnalyzer {
         analysis.issues.push('Multiple requests not clearly organized');
       }
     }
-
     if (/\bpriority|start here|next step|quick win|here('| a)?s what\b/i.test(responseLower)) {
       analysis.userExperienceScore += 1;
       analysis.successes.push('Response provides prioritized flow');
     }
-
-    if (isStressed && wordCount <= 200) {
-      analysis.userExperienceScore += 2;
-      analysis.successes.push('Response is concise for stressed context');
-    } else if (isStressed && wordCount > 200) {
-      analysis.userExperienceScore -= 2;
-      analysis.issues.push('Response exceeds 200-word stress-mode cap');
-    }
-
     if (wordCount < 40) {
       analysis.userExperienceScore -= 1;
       analysis.issues.push('Response too brief for complex request');
@@ -293,12 +282,13 @@ class ResponseAnalyzer {
       analysis.userExperienceScore -= 1;
       analysis.issues.push('Response too long and potentially overwhelming');
     }
-
     if (ACTIONABLE_STEPS_PATTERN.test(response)) {
       analysis.userExperienceScore += 1;
       analysis.successes.push('Provides clear actionable steps');
     }
+  }
 
+  _evaluateTechnical(analysis, response, responseLower, isVague, jargonCount, questionCount, agentPayload, hasStructuredList) {
     if (jargonCount <= 2) {
       analysis.userExperienceScore += 1;
       analysis.technicalAccuracy += 1;
@@ -308,7 +298,6 @@ class ResponseAnalyzer {
       analysis.technicalAccuracy -= 1;
       analysis.issues.push(`Too much jargon (${jargonCount} terms) for non-technical user`);
     }
-
     if (isVague && questionCount >= 1 && questionCount <= 3) {
       analysis.userExperienceScore += 1;
       analysis.technicalAccuracy += 1;
@@ -320,20 +309,12 @@ class ResponseAnalyzer {
       analysis.userExperienceScore -= 1;
       analysis.issues.push('Too many questions may increase cognitive load');
     }
-
     if (/confidence:\s*(high|medium|low)\s*\(\d{1,3}%\)/i.test(response)) {
       analysis.technicalAccuracy += 1;
       analysis.successes.push('Includes explicit confidence signaling');
     } else {
       analysis.issues.push('Missing confidence level on recommendations');
     }
-
-    if (isStressed && /simplified mode/i.test(responseLower)) {
-      analysis.userExperienceScore += 1;
-      analysis.technicalAccuracy += 1;
-      analysis.successes.push('Simplified mode activated for stressed user');
-    }
-
     if (!agentPayload.safe) {
       if (/safe options|instead|i can do now/.test(responseLower) && hasStructuredList) {
         analysis.userExperienceScore += 1;
@@ -344,7 +325,9 @@ class ResponseAnalyzer {
         analysis.issues.push('Block response lacks concrete safe alternatives');
       }
     }
+  }
 
+  _evaluateScenarioAndSkills(analysis, response, scenario, agentPayload, detectedSkills) {
     const scenarioCoverage = {
       1: [/fraud alert/i, /weather/i, /customer/i, /digital certificate|authentic/i],
       2: [/can('| a)?t.*bypass|can('| a)?t.*override/i, /safe options|safe workflow/i],
@@ -352,7 +335,6 @@ class ResponseAnalyzer {
       4: [/start here/i, /next/i, /later/i],
       5: [/sync/i, /cloud/i, /shopify/i, /supabase/i],
     };
-
     const checks = scenarioCoverage[scenario.id] || [];
     if (checks.length > 0) {
       const matched = checks.filter((regex) => regex.test(response)).length;
@@ -367,7 +349,6 @@ class ResponseAnalyzer {
         analysis.issues.push('Misses key technical points for this scenario');
       }
     }
-
     if (detectedSkills.length > 0) {
       const matchedSkills = detectedSkills.filter((skill) => agentPayload.skillsUsed.includes(skill));
       if (matchedSkills.length >= Math.ceil(detectedSkills.length * 0.75)) {
@@ -378,6 +359,49 @@ class ResponseAnalyzer {
         analysis.issues.push('Skill selection does not cover all detected intents');
       }
     }
+  }
+
+  collectResponseSignals(clientMessage, response) {
+    const responseLower = response.toLowerCase();
+
+    return {
+      responseLower,
+      hasMultipleRequests: this.hasMultipleRequests(clientMessage),
+      hasStructuredList: this.hasStructuredList(response),
+      wordCount: response.trim().split(/\s+/).filter(Boolean).length,
+      questionCount: (response.match(/\?/g) || []).length,
+      isStressed: /stressed|overwhelmed|urgent|sorry this is so much|everything feels urgent/i.test(clientMessage),
+      isVague: VAGUE_REQUEST_PATTERN.test(clientMessage) || /don('| a)?t know/i.test(clientMessage),
+      jargonCount: JARGON_WORDS.filter((word) => new RegExp(String.raw`\b${word}\b`, 'i').test(response)).length,
+      hasEmpathy: EMPATHY_WORDS.some((word) => responseLower.includes(word)),
+    };
+  }
+
+  analyzeResponse(scenario, clientMessage, agentPayload, detectedSkills = []) {
+    const analysis = this.createBaselineAnalysis();
+    const response = agentPayload.response;
+    const signals = this.collectResponseSignals(clientMessage, response);
+
+    this._evaluateTone(analysis, response, signals.responseLower, signals.isStressed, signals.hasEmpathy, signals.wordCount);
+    this._evaluateStructure(
+      analysis,
+      response,
+      signals.responseLower,
+      signals.hasMultipleRequests,
+      signals.hasStructuredList,
+      signals.wordCount,
+    );
+    this._evaluateTechnical(
+      analysis,
+      response,
+      signals.responseLower,
+      signals.isVague,
+      signals.jargonCount,
+      signals.questionCount,
+      agentPayload,
+      signals.hasStructuredList,
+    );
+    this._evaluateScenarioAndSkills(analysis, response, scenario, agentPayload, detectedSkills);
 
     this.clampScores(analysis);
     return analysis;
@@ -725,7 +749,12 @@ async function main() {
   console.log('\nSimulation complete.\n');
 }
 
-if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module) {
+const isDirectRun =
+  typeof process !== 'undefined' &&
+  typeof process.argv[1] === 'string' &&
+  path.resolve(process.argv[1]) === __filename;
+
+if (isDirectRun) {
   main().catch((error) => {
     console.error('\nSimulation error:', error);
     process.exit(1);
