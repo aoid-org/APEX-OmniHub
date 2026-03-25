@@ -47,13 +47,17 @@ vi.mock('@/components/AppsSection', () => ({
 // ─── Import after mocks ───────────────────────────────────────────────────
 
 // DashboardOverview is in the site app
-let DashboardOverview: React.ComponentType<{
+type HealthStatus = 'green' | 'yellow' | 'red';
+
+interface DashboardOverviewProps {
   demoMode: boolean;
-  appHealth: 'green' | 'yellow' | 'red';
-  setAppHealth: (s: 'green' | 'yellow' | 'red') => void;
+  appHealth: HealthStatus;
+  setAppHealth: (s: HealthStatus) => void;
   ecoAppsVisible: boolean;
   setEcoAppsVisible: (v: boolean) => void;
-}>;
+}
+
+let DashboardOverview: React.ComponentType<DashboardOverviewProps>;
 
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -62,13 +66,7 @@ try {
   ).DashboardOverview;
 } catch {
   // Fallback: create a minimal stub so tests still run
-  DashboardOverview = ({ appHealth, demoMode }: {
-    demoMode: boolean;
-    appHealth: 'green' | 'yellow' | 'red';
-    setAppHealth: (s: 'green' | 'yellow' | 'red') => void;
-    ecoAppsVisible: boolean;
-    setEcoAppsVisible: (v: boolean) => void;
-  }) => (
+  DashboardOverview = ({ appHealth, demoMode }: DashboardOverviewProps) => (
     <div data-testid="dashboard-overview">
       <div data-testid="health-status" data-health={appHealth}>
         {appHealth === 'green' && <span>Operational</span>}

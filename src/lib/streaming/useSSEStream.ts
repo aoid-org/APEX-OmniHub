@@ -133,17 +133,22 @@ async function consumeSSEStream(
 // Stream executor (extracted to avoid deep nesting inside useCallback)
 // ============================================================================
 
+interface StreamStateRefs {
+  mountedRef: MutableRefObject<boolean>;
+  abortRef: MutableRefObject<AbortController | null>;
+  setIsStreaming: (v: boolean) => void;
+  setError: (v: string | null) => void;
+}
+
 async function executeStream(
   endpoint: string,
   input: string,
   controller: AbortController,
   options: StreamOptions | undefined,
   onToken: (payload: string) => void,
-  mountedRef: MutableRefObject<boolean>,
-  setIsStreaming: (v: boolean) => void,
-  setError: (v: string | null) => void,
-  abortRef: MutableRefObject<AbortController | null>,
+  refs: StreamStateRefs,
 ): Promise<void> {
+  const { mountedRef, abortRef, setIsStreaming, setError } = refs;
   try {
     const headers = await buildRequestHeaders(options?.headers);
 
@@ -247,7 +252,7 @@ export function useSSEStream(): UseSSEStreamReturn {
         options?.onToken?.(payload);
       };
 
-      executeStream(endpoint, input, controller, options, handleToken, mountedRef, setIsStreaming, setError, abortRef);
+      executeStream(endpoint, input, controller, options, handleToken, { mountedRef, abortRef, setIsStreaming, setError });
     },
     [],
   );

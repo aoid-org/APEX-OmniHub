@@ -211,30 +211,30 @@ describe('MemoryClient.store()', () => {
 
 // ─── recall() ────────────────────────────────────────────────────────────────
 
+function makeRecallMock(rows: Record<string, unknown>[]) {
+  const { client, spies } = makeSupabaseMock();
+
+  // recall() doesn't call .single() — it awaits the query builder directly
+  // so we need to make the builder resolve with the row set
+  const builder: Record<string, unknown> = {};
+  builder.select = vi.fn().mockReturnValue(builder);
+  builder.eq = vi.fn().mockReturnValue(builder);
+  builder.gte = vi.fn().mockReturnValue(builder);
+  builder.order = vi.fn().mockReturnValue(builder);
+  builder.limit = vi.fn().mockReturnValue(builder);
+  // thenable: data/error resolution
+  builder.then = (resolve: (v: unknown) => unknown) =>
+    Promise.resolve({ data: rows, error: null }).then(resolve);
+
+  (client.from as ReturnType<typeof vi.fn>).mockReturnValue(builder);
+
+  // touch_memory RPC returns ok
+  spies.rpcSpy.mockResolvedValue({ data: null, error: null });
+
+  return { client, spies, builder };
+}
+
 describe('MemoryClient.recall()', () => {
-  function makeRecallMock(rows: Record<string, unknown>[]) {
-    const { client, spies } = makeSupabaseMock();
-
-    // recall() doesn't call .single() — it awaits the query builder directly
-    // so we need to make the builder resolve with the row set
-    const builder: Record<string, unknown> = {};
-    builder.select = vi.fn().mockReturnValue(builder);
-    builder.eq = vi.fn().mockReturnValue(builder);
-    builder.gte = vi.fn().mockReturnValue(builder);
-    builder.order = vi.fn().mockReturnValue(builder);
-    builder.limit = vi.fn().mockReturnValue(builder);
-    // thenable: data/error resolution
-    builder.then = (resolve: (v: unknown) => unknown) =>
-      Promise.resolve({ data: rows, error: null }).then(resolve);
-
-    (client.from as ReturnType<typeof vi.fn>).mockReturnValue(builder);
-
-    // touch_memory RPC returns ok
-    spies.rpcSpy.mockResolvedValue({ data: null, error: null });
-
-    return { client, spies, builder };
-  }
-
   it('returns empty array when no memories exist', async () => {
     const { client, spies } = makeRecallMock([]);
     spies.rpcSpy.mockResolvedValue({ data: null, error: null });

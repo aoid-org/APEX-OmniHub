@@ -222,7 +222,7 @@ def extract_stack_trace(content: str) -> list[str]:
 
 
 def print_analysis(
-    error_input: str, language: str, matches: list[dict], stack_lines: list[str]
+    _error_input: str, language: str, matches: list[dict], stack_lines: list[str]
 ):
     """Print formatted analysis."""
     print(f"\n{'═' * 60}")

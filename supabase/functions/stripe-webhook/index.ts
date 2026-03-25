@@ -16,6 +16,63 @@ const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
+function parseSkills(skillsStr: string | undefined): unknown[] {
+  if (!skillsStr) return [];
+  try {
+    return JSON.parse(skillsStr);
+  } catch (e) {
+    console.error('Failed to parse skills from metadata', e);
+    return [];
+  }
+}
+
+async function getSubscriptionPeriod(subscriptionId: string | null): Promise<{ start: Date | null; end: Date | null }> {
+  if (!subscriptionId) return { start: null, end: null };
+  try {
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    return {
+      start: new Date(subscription.current_period_start * 1000),
+      end: new Date(subscription.current_period_end * 1000),
+    };
+  } catch (e) {
+    console.error('Failed to retrieve subscription to get period dates', e);
+    return { start: null, end: null };
+  }
+}
+
+async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<Response | null> {
+  const userId = session.metadata?.user_id;
+  const tier = session.metadata?.tier;
+  const stripeCustomerId = session.customer as string;
+  const stripeSubscriptionId = session.subscription as string;
+
+  if (!userId || !tier) {
+    console.error('Missing userId or tier in session metadata');
+    return new Response('Missing metadata', { status: 400 });
+  }
+
+  const skills = parseSkills(session.metadata?.skills);
+  const period = await getSubscriptionPeriod(stripeSubscriptionId);
+
+  const { data, error } = await supabaseAdmin.rpc('activate_client_subscription', {
+    p_user_id: userId,
+    p_tier: tier,
+    p_skills: skills,
+    p_stripe_customer_id: stripeCustomerId,
+    p_stripe_subscription_id: stripeSubscriptionId,
+    p_current_period_start: period.start ? period.start.toISOString() : null,
+    p_current_period_end: period.end ? period.end.toISOString() : null
+  });
+
+  if (error) {
+    console.error('Failed to update entitlement via RPC', error);
+    return new Response('Failed to provision user', { status: 500 });
+  }
+
+  console.log('Successfully provisioned PRO user', userId, data);
+  return null;
+}
+
 serve(async (req) => {
   const signature = req.headers.get('stripe-signature');
   if (!signature) {
@@ -26,7 +83,6 @@ serve(async (req) => {
 
   try {
     const body = await req.text();
-    // Verify signature
     event = stripe.webhooks.constructEvent(body, signature, stripeWebhookSecret ?? '');
   } catch (err) {
     console.error('Webhook signature verification failed.', err);
@@ -35,57 +91,8 @@ serve(async (req) => {
 
   try {
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
-
-      const userId = session.metadata?.user_id;
-      const tier = session.metadata?.tier;
-      const skillsStr = session.metadata?.skills;
-      const stripeCustomerId = session.customer as string;
-      const stripeSubscriptionId = session.subscription as string;
-
-      if (!userId || !tier) {
-        console.error('Missing userId or tier in session metadata');
-        return new Response('Missing metadata', { status: 400 });
-      }
-
-      let skills = [];
-      try {
-        if (skillsStr) {
-          skills = JSON.parse(skillsStr);
-        }
-      } catch (e) {
-        console.error('Failed to parse skills from metadata', e);
-      }
-
-      let currentPeriodEnd: Date | null = null;
-      let currentPeriodStart: Date | null = null;
-
-      if (stripeSubscriptionId) {
-        try {
-          const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
-          currentPeriodStart = new Date(subscription.current_period_start * 1000);
-          currentPeriodEnd = new Date(subscription.current_period_end * 1000);
-        } catch (e) {
-          console.error('Failed to retrieve subscription to get period dates', e);
-        }
-      }
-
-      const { data, error } = await supabaseAdmin.rpc('activate_client_subscription', {
-        p_user_id: userId,
-        p_tier: tier,
-        p_skills: skills,
-        p_stripe_customer_id: stripeCustomerId,
-        p_stripe_subscription_id: stripeSubscriptionId,
-        p_current_period_start: currentPeriodStart ? currentPeriodStart.toISOString() : null,
-        p_current_period_end: currentPeriodEnd ? currentPeriodEnd.toISOString() : null
-      });
-
-      if (error) {
-        console.error('Failed to update entitlement via RPC', error);
-        return new Response('Failed to provision user', { status: 500 });
-      }
-
-      console.log('Successfully provisioned PRO user', userId, data);
+      const errorResponse = await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+      if (errorResponse) return errorResponse;
     }
 
     // Additional handlers for customer.subscription.updated/deleted could go here

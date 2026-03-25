@@ -32,20 +32,12 @@ vi.mock('@tanstack/react-query', () => ({
   useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
 }));
 
+const emptyResult = { data: [], error: null };
+const mockEq = vi.fn(() => ({ eq: vi.fn(() => emptyResult), ...emptyResult }));
+const mockSelect = vi.fn(() => ({ eq: mockEq, ...emptyResult }));
+
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({ data: [], error: null })),
-          data: [],
-          error: null,
-        })),
-        data: [],
-        error: null,
-      })),
-    })),
-  },
+  supabase: { from: vi.fn(() => ({ select: mockSelect })) },
 }));
 
 vi.mock('@/lib/workflow-api', () => ({

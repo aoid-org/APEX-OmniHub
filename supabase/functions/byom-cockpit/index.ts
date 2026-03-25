@@ -156,29 +156,21 @@ serve(async (req: Request) => {
   const tenantId: string = user.user_metadata?.tenant_id ?? user.id;
 
   // ── Route dispatch ──────────────────────────────────────
-  try {
-    if (path === "/byom/key/connect" && req.method === "POST") {
-      const rl = await checkRateLimit(user.id, RATE_LIMITS.connect);
-      if (!rl.allowed) return rateLimitExceededResponse(_requestOrigin, rl);
-      return await handleConnect(req, user.id, tenantId);
-    }
-    if (path === "/byom/key/rotate" && req.method === "POST") {
-      const rl = await checkRateLimit(user.id, RATE_LIMITS.rotate);
-      if (!rl.allowed) return rateLimitExceededResponse(_requestOrigin, rl);
-      return await handleRotate(req, user.id, tenantId);
-    }
-    if (path === "/byom/key/revoke" && req.method === "POST") {
-      const rl = await checkRateLimit(user.id, RATE_LIMITS.revoke);
-      if (!rl.allowed) return rateLimitExceededResponse(_requestOrigin, rl);
-      return await handleRevoke(req, user.id, tenantId);
-    }
-    if (path === "/byom/connections" && req.method === "GET") {
-      const rl = await checkRateLimit(user.id, RATE_LIMITS.connections);
-      if (!rl.allowed) return rateLimitExceededResponse(_requestOrigin, rl);
-      return await handleListConnections(user.id, tenantId);
-    }
+  const routeKey = `${req.method} ${path}`;
+  const routes: Record<string, { limit: typeof RATE_LIMITS.connect; handler: () => Promise<Response> }> = {
+    "POST /byom/key/connect": { limit: RATE_LIMITS.connect, handler: () => handleConnect(req, user.id, tenantId) },
+    "POST /byom/key/rotate": { limit: RATE_LIMITS.rotate, handler: () => handleRotate(req, user.id, tenantId) },
+    "POST /byom/key/revoke": { limit: RATE_LIMITS.revoke, handler: () => handleRevoke(req, user.id, tenantId) },
+    "GET /byom/connections": { limit: RATE_LIMITS.connections, handler: () => handleListConnections(user.id, tenantId) },
+  };
 
-    return jsonResponse({ error: "Not found" }, 404);
+  const route = routes[routeKey];
+  if (!route) return jsonResponse({ error: "Not found" }, 404);
+
+  try {
+    const rl = await checkRateLimit(user.id, route.limit);
+    if (!rl.allowed) return rateLimitExceededResponse(_requestOrigin, rl);
+    return await route.handler();
   } catch (error) {
     if (error instanceof z.ZodError) {
       return jsonResponse({

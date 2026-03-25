@@ -84,6 +84,23 @@ function WorkflowStepRow({ step, idx, isActive, isDone }: Readonly<{
   );
 }
 
+function scheduleWorkflowStep(
+  stepId: string,
+  idx: number,
+  isLast: boolean,
+  setActiveStep: (v: number) => void,
+  setCompleted: React.Dispatch<React.SetStateAction<ReadonlySet<string>>>,
+  setRunning: (v: boolean) => void,
+) {
+  setTimeout(() => setActiveStep(idx), idx * 1200);
+  setTimeout(() => {
+    setCompleted(prev => new Set([...prev, stepId]));
+    if (isLast) {
+      setTimeout(() => { setActiveStep(-1); setRunning(false); }, 800);
+    }
+  }, idx * 1200 + 900);
+}
+
 function InteractiveWorkflowDemo() {
   const [activeStep, setActiveStep] = useState(-1);
   const [completed, setCompleted] = useState<ReadonlySet<string>>(new Set());
@@ -95,18 +112,8 @@ function InteractiveWorkflowDemo() {
     setCompleted(new Set());
     setActiveStep(0);
 
-    const scheduleStep = (stepId: string, idx: number, isLast: boolean) => {
-      setTimeout(() => setActiveStep(idx), idx * 1200);
-      setTimeout(() => {
-        setCompleted(prev => new Set([...prev, stepId]));
-        if (isLast) {
-          setTimeout(() => { setActiveStep(-1); setRunning(false); }, 800);
-        }
-      }, idx * 1200 + 900);
-    };
-
     WORKFLOW_STEPS.forEach((step, idx) => {
-      scheduleStep(step.id, idx, idx === WORKFLOW_STEPS.length - 1);
+      scheduleWorkflowStep(step.id, idx, idx === WORKFLOW_STEPS.length - 1, setActiveStep, setCompleted, setRunning);
     });
   }, [running]);
 

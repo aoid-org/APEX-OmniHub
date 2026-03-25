@@ -40,9 +40,9 @@ vi.mock('@/lib/backoff', () => ({
 // ─── WebSocket Mock ───────────────────────────────────────────────────────
 
 class MockWS {
-  static instances: MockWS[] = [];
-  static OPEN = 1;
-  static CLOSED = 3;
+  static readonly instances: MockWS[] = [];
+  static readonly OPEN = 1;
+  static readonly CLOSED = 3;
 
   readyState = MockWS.OPEN;
   onopen: ((e: unknown) => void) | null = null;

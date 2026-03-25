@@ -204,6 +204,142 @@ class GeneratedPlan(BaseModel):
     reasoning: str
 
 
+def _resolve_model(context: dict[str, Any], system_default_model: str) -> str:
+    """Resolve the LLM model from context, enforcing tenant allowlists.
+
+    Precedence: explicit request -> tenant default -> system default.
+
+    Raises:
+        ApplicationError: If the resolved model is not in the tenant's allowlist.
+    """
+    from temporalio.exceptions import ApplicationError
+
+    tenant_model = context.get("tenant_model")
+    requested_model = context.get("requested_model")
+    resolved_model = requested_model or tenant_model or system_default_model
+
+    allowed_models = context.get("allowed_models", [])
+    if allowed_models and resolved_model not in allowed_models:
+        raise ApplicationError(
+            f"Model {resolved_model} is not approved for this tenant", non_retryable=True
+        )
+
+    return resolved_model
+
+
+def _validate_plan_dependencies(plan: GeneratedPlan) -> None:
+    """Validate that the plan's dependency graph is a valid DAG.
+
+    Checks for missing dependency references and cycles.
+
+    Raises:
+        ApplicationError: If dependencies reference unknown steps or contain cycles.
+    """
+    from temporalio.exceptions import ApplicationError
+
+    step_ids = {s.id for s in plan.steps}
+    dependencies = {s.id: s.depends_on for s in plan.steps}
+
+    # Fast fail on missing dependency references
+    missing_deps = [
+        f"Step {step_id} depends on unknown step {dep}"
+        for step_id, deps in dependencies.items()
+        for dep in deps
+        if dep not in step_ids
+    ]
+
+    if missing_deps:
+        raise ApplicationError(
+            f"Plan validation failed (Missing dependencies): {missing_deps}", non_retryable=True
+        )
+
+    # Detect DAG cycles via topological sort check
+    visited: set[str] = set()
+    path: set[str] = set()
+
+    def _has_cycle_from(node: str) -> bool:
+        if node in path:
+            return True
+        if node in visited:
+            return False
+        visited.add(node)
+        path.add(node)
+        for neighbor in dependencies.get(node, []):
+            if _has_cycle_from(neighbor):
+                return True
+        path.remove(node)
+        return False
+
+    if any(_has_cycle_from(node) for node in dependencies):
+        raise ApplicationError(
+            "Plan validation failed (DAG Cycle detected)", non_retryable=True
+        )
+
+
+def _validate_plan_tools(plan: GeneratedPlan) -> None:
+    """Validate tool names, input schemas, and compensation activities for all steps.
+
+    Mutates plan steps in-place to set resolved canonical tool/compensation names.
+
+    Raises:
+        ApplicationError: If any tools are unknown, schemas are invalid, or
+            compensations are invalid.
+    """
+    from temporalio.exceptions import ApplicationError
+
+    invalid_tools: list[str] = []
+    invalid_compensations: list[str] = []
+    invalid_schemas: list[str] = []
+
+    for step in plan.steps:
+        resolved_tool = resolve_tool_name(step.tool)
+        if not resolved_tool:
+            invalid_tools.append(step.tool)
+            continue
+
+        step.tool = resolved_tool
+        tool_contract = TOOL_REGISTRY[step.tool]
+
+        # Input schema validation
+        try:
+            if tool_contract.input_schema:
+                jsonschema.validate(instance=step.input, schema=tool_contract.input_schema)
+        except jsonschema.exceptions.ValidationError as e:
+            invalid_schemas.append(f"Step {step.id} ({step.tool}) schema error: {e.message}")
+
+        # Validate compensation if specified
+        if step.compensation:
+            resolved_comp = resolve_tool_name(step.compensation)
+            if not resolved_comp:
+                invalid_compensations.append(f"{step.compensation} (unknown tool)")
+                continue
+
+            step.compensation = resolved_comp
+            if not tool_contract.compensable:
+                invalid_compensations.append(
+                    f"{step.compensation} (tool {step.tool} does not support compensation)"
+                )
+            elif step.compensation not in tool_contract.compensation_tools_allowed:
+                invalid_compensations.append(
+                    f"{step.compensation} (not allowed for {step.tool})"
+                )
+
+    if invalid_tools:
+        raise ApplicationError(
+            f"Plan contains unknown tools: {invalid_tools}", non_retryable=True
+        )
+
+    if invalid_compensations:
+        raise ApplicationError(
+            f"Plan contains invalid compensations: {invalid_compensations}", non_retryable=True
+        )
+
+    if invalid_schemas:
+        raise ApplicationError(
+            f"Plan contains invalid tool inputs: {invalid_schemas}", non_retryable=True
+        )
+
+
 @activity.defn(name="generate_plan_with_llm")
 async def generate_plan_with_llm(goal: str, context: dict[str, Any]) -> dict[str, Any]:
     """
@@ -270,20 +406,7 @@ Output valid JSON matching the PlanStep schema."""
 
         # Phase 7: Tenant-aware model resolution
         system_default_model = os.getenv("DEFAULT_LLM_MODEL", "gpt-4-turbo-preview")
-        tenant_model = context.get("tenant_model")
-        requested_model = context.get("requested_model")
-
-        # Resolve by precedence: explicit request -> tenant default -> system default
-        resolved_model = requested_model or tenant_model or system_default_model
-
-        # Enforce tenant allowlists
-        allowed_models = context.get("allowed_models", [])
-        if allowed_models and resolved_model not in allowed_models:
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                f"Model {resolved_model} is not approved for this tenant", non_retryable=True
-            )
+        resolved_model = _resolve_model(context, system_default_model)
 
         plan = await client.chat.completions.create(
             model=resolved_model,
@@ -297,110 +420,9 @@ Output valid JSON matching the PlanStep schema."""
 
         activity.logger.info(f"✓ Plan generated: {len(plan.steps)} steps")
 
-        # Phase 1 & 2: Structural validation via ToolRegistry
-        invalid_tools = []
-        invalid_compensations = []
-        invalid_schemas = []
-
-        # Track steps and dependencies for DAG validation
-        step_ids = {s.id for s in plan.steps}
-        dependencies = {s.id: s.depends_on for s in plan.steps}
-        missing_deps = []
-
-        # Fast fail on missing dependency references
-        for step_id, deps in dependencies.items():
-            for dep in deps:
-                if dep not in step_ids:
-                    missing_deps.append(f"Step {step_id} depends on unknown step {dep}")
-
-        if missing_deps:
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                f"Plan validation failed (Missing dependencies): {missing_deps}", non_retryable=True
-            )
-
-        # Detect DAG cycles via topological sort check
-        def has_cycle(deps_map):
-            visited = set()
-            path = set()
-
-            def visit(node):
-                if node in path:
-                    return True
-                if node in visited:
-                    return False
-                visited.add(node)
-                path.add(node)
-                for neighbor in deps_map.get(node, []):
-                    if visit(neighbor):
-                        return True
-                path.remove(node)
-                return False
-
-            return any(visit(node) for node in deps_map)
-
-        if has_cycle(dependencies):
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                "Plan validation failed (DAG Cycle detected)", non_retryable=True
-            )
-
-        for step in plan.steps:
-            # Resolve canonical tool name
-            resolved_tool = resolve_tool_name(step.tool)
-            if not resolved_tool:
-                invalid_tools.append(step.tool)
-                continue
-
-            step.tool = resolved_tool
-            tool_contract = TOOL_REGISTRY[step.tool]
-
-            # Input schema validation
-            try:
-                if tool_contract.input_schema:
-                    jsonschema.validate(instance=step.input, schema=tool_contract.input_schema)
-            except jsonschema.exceptions.ValidationError as e:
-                invalid_schemas.append(f"Step {step.id} ({step.tool}) schema error: {e.message}")
-
-            # Validate compensation if specified
-            if step.compensation:
-                resolved_comp = resolve_tool_name(step.compensation)
-                if not resolved_comp:
-                    invalid_compensations.append(f"{step.compensation} (unknown tool)")
-                    continue
-
-                step.compensation = resolved_comp
-                if not tool_contract.compensable:
-                    invalid_compensations.append(
-                        f"{step.compensation} (tool {step.tool} does not support compensation)"
-                    )
-                elif step.compensation not in tool_contract.compensation_tools_allowed:
-                    invalid_compensations.append(
-                        f"{step.compensation} (not allowed for {step.tool})"
-                    )
-
-        if invalid_tools:
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                f"Plan contains unknown tools: {invalid_tools}", non_retryable=True
-            )
-
-        if invalid_compensations:
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                f"Plan contains invalid compensations: {invalid_compensations}", non_retryable=True
-            )
-
-        if invalid_schemas:
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                f"Plan contains invalid tool inputs: {invalid_schemas}", non_retryable=True
-            )
+        # Validate plan structure
+        _validate_plan_dependencies(plan)
+        _validate_plan_tools(plan)
 
         # Store in semantic cache for future hits
         if _semantic_cache:

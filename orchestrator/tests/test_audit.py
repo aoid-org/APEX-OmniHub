@@ -137,7 +137,7 @@ async def test_log_event_file():
             return mock_file
 
         async def __aexit__(self, exc_type, exc, tb):
-            pass
+            pass  # No cleanup needed for mock file context manager
 
     with patch("aiofiles.open", return_value=AsyncContextManager()):
         await logger.log_event(entry)
