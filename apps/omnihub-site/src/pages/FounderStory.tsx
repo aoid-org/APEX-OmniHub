@@ -238,7 +238,7 @@ const FounderStory = memo(function FounderStory() {
       <SEOMeta title="Our Story" description="From enterprise IT to AI governance — the journey behind APEX OmniHub and the vision for accountable AI orchestration." canonical="https://apexomnihub.icu/story" />
       <ReadingProgress />
 
-      <section className="relative min-h-screen flex flex-col justify-end overflow-hidden px-6 pb-20 pt-[calc(60px+3rem)]" aria-labelledby="founder-story-title">
+      <section className="relative min-h-[70vh] flex flex-col justify-center overflow-hidden px-6 pb-20 pt-[calc(60px+3rem)]" aria-labelledby="founder-story-title">
         <div className="absolute inset-0 pointer-events-none z-0 bg-[linear-gradient(rgba(74,154,186,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(74,154,186,0.055)_1px,transparent_1px)] bg-[size:52px_52px]" aria-hidden="true" />
         <div className="absolute inset-0 pointer-events-none z-[1] bg-[radial-gradient(ellipse_70%_55%_at_10%_88%,rgba(212,98,31,0.13)_0%,transparent_55%),radial-gradient(ellipse_55%_60%_at_88%_12%,rgba(74,154,186,0.07)_0%,transparent_50%)]" aria-hidden="true" />
 

@@ -12,6 +12,17 @@ import { PrivacyPage } from "@/pages/Privacy";
 import { TermsPage } from "@/pages/Terms";
 import FounderStory from "@/pages/FounderStory";
 import { RequestAccessPage } from "@/pages/RequestAccess";
+import { AdvancedAnalyticsPage } from "@/pages/AdvancedAnalytics";
+import { AiAutomationPage } from "@/pages/AiAutomation";
+import { FortressPage } from "@/pages/Fortress";
+import { MaestroPage } from "@/pages/Maestro";
+import { ManModePage } from "@/pages/ManMode";
+import { OmniPortPage } from "@/pages/OmniPort";
+import { OrchestratorPage } from "@/pages/Orchestrator";
+import { SmartIntegrationsPage } from "@/pages/SmartIntegrations";
+import { TriForcePage } from "@/pages/TriForce";
+import { DemoPage } from "@/pages/Demo";
+import { TechSpecsPage } from "@/pages/TechSpecs";
 
 type AppRoute = {
   readonly path: string;
@@ -56,6 +67,18 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/privacy", element: <PrivacyPage />, isPublic: true, routeName: "Privacy" },
   { path: "/terms", element: <TermsPage />, isPublic: true, routeName: "Terms" },
   { path: "/request-access", element: <RequestAccessPage />, isPublic: true, routeName: "Request Access" },
+  { path: "/advanced-analytics", element: <AdvancedAnalyticsPage />, isPublic: true, routeName: "Advanced Analytics" },
+  { path: "/ai-automation", element: <AiAutomationPage />, isPublic: true, routeName: "AI Automation" },
+  { path: "/fortress", element: <FortressPage />, isPublic: true, routeName: "Fortress" },
+  { path: "/maestro", element: <MaestroPage />, isPublic: true, routeName: "Maestro" },
+  { path: "/man-mode", element: <ManModePage />, isPublic: true, routeName: "MAN Mode" },
+  { path: "/omniport", element: <OmniPortPage />, isPublic: true, routeName: "OmniPort" },
+  { path: "/orchestrator", element: <OrchestratorPage />, isPublic: true, routeName: "Orchestrator" },
+  { path: "/smart-integrations", element: <SmartIntegrationsPage />, isPublic: true, routeName: "Smart Integrations" },
+  { path: "/tri-force", element: <TriForcePage />, isPublic: true, routeName: "Tri-Force" },
+  { path: "/tech-specs", element: <TechSpecsPage />, isPublic: true, routeName: "Tech Specs" },
+  { path: "/demo", element: <DemoPage />, isPublic: true, routeName: "Demo" },
+  { path: "/demo.html", element: <DemoPage />, isPublic: true, routeName: "Demo" },
 ];
 
 function App() {
