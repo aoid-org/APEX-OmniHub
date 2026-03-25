@@ -74,7 +74,7 @@ export function ProtectedRoute({ children }: Readonly<{ children: React.ReactNod
   }
 
   if (!authenticated) {
-    return <Navigate to="/omniport?mode=login" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   return <>{children}</>;
