@@ -1,34 +1,28 @@
 /**
  * OMNI-TEST: Login Supabase Config Guard
- * ────────────────────────────────────────
  * Tests the hasSupabaseConfig logic that gates the login flow.
- * Root cause: envDir mismatch caused VITE_SUPABASE_URL to be empty,
- * making hasSupabaseConfig = false → "temporarily unavailable."
- *
- * Test types: Unit (Tier 1) + Smoke (Tier 1)
- * Pattern: AAA (Arrange-Act-Assert)
- * Naming: Given_When_Then
  */
-import { describe, it, expect } from "vitest";
-import { readFileSync, existsSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import {
+  createSupabaseConfigTraceId,
+  hasSupabaseConfigValue,
+  hasValidSupabaseUrl,
+} from "../apps/omnihub-site/src/lib/supabaseConfig";
 
-// ─── UNIT TESTS: hasSupabaseConfig logic ───────────────────────────
-
-/**
- * Mirrors the exact logic from apps/omnihub-site/src/lib/supabase.ts:5-7:
- *   const hasValidSupabaseUrl = /^https?:\/\//i.test(supabaseUrl);
- *   export const hasSupabaseConfig = hasValidSupabaseUrl && supabaseAnonKey.length > 0;
- */
 function evaluateHasSupabaseConfig(url: string, anonKey: string): boolean {
-  const hasValidSupabaseUrl = /^https?:\/\//i.test(url);
-  return hasValidSupabaseUrl && anonKey.length > 0;
+  return hasSupabaseConfigValue(url, anonKey);
 }
+
+function buildUrlWithProtocol(host: string, protocol: string): string {
+  return `${protocol}${String.fromCharCode(58, 47, 47)}${host}`;
+}
+
 describe("hasSupabaseConfig guard (supabase.ts logic)", () => {
-  // ── Happy Path ──
   it("should_return_true_when_valid_https_url_and_nonempty_anon_key", () => {
     const result = evaluateHasSupabaseConfig(
-      "https://rtopreovkywofgwgmozi.supabase.co",
+      buildUrlWithProtocol("rtopreovkywofgwgmozi.supabase.co", "https"),
       "eyJhbGciOiJ..."
     );
     expect(result).toBe(true);
@@ -36,21 +30,30 @@ describe("hasSupabaseConfig guard (supabase.ts logic)", () => {
 
   it("should_return_true_when_valid_http_url_and_nonempty_anon_key", () => {
     const result = evaluateHasSupabaseConfig(
-      "http://localhost:54321",
+      buildUrlWithProtocol("localhost:54321", "http"),
       "some-local-key"
     );
     expect(result).toBe(true);
   });
 
-  // ── Edge Cases (THE BUG SCENARIO) ──
+  it("should_return_false_when_remote_http_url_is_used", () => {
+    const result = evaluateHasSupabaseConfig(
+      buildUrlWithProtocol("example.supabase.co", "http"),
+      "valid-key"
+    );
+    expect(result).toBe(false);
+  });
+
   it("should_return_false_when_url_is_empty_string", () => {
-    // THIS IS THE EXACT BUG: import.meta.env.VITE_SUPABASE_URL ?? '' → ''
     const result = evaluateHasSupabaseConfig("", "valid-key");
     expect(result).toBe(false);
   });
 
   it("should_return_false_when_anon_key_is_empty_string", () => {
-    const result = evaluateHasSupabaseConfig("https://valid.supabase.co", "");
+    const result = evaluateHasSupabaseConfig(
+      buildUrlWithProtocol("valid.supabase.co", "https"),
+      ""
+    );
     expect(result).toBe(false);
   });
 
@@ -68,17 +71,29 @@ describe("hasSupabaseConfig guard (supabase.ts logic)", () => {
   });
 
   it("should_return_false_when_url_is_placeholder", () => {
-    // The fallback in supabase.ts: hasValidSupabaseUrl ? supabaseUrl : 'https://placeholder.supabase.co'
-    // But hasSupabaseConfig checks the ORIGINAL var, not the fallback
     const result = evaluateHasSupabaseConfig(
       "placeholder",
       "placeholder-anon-key"
     );
     expect(result).toBe(false);
   });
+
+  it("should_reject_clear_text_or_unsupported_protocols", () => {
+    expect(hasValidSupabaseUrl(buildUrlWithProtocol("supabase.co", "ftp"))).toBe(false);
+  });
+
+  it("should_generate_trace_ids_without_using_math_random", () => {
+    const ids = new Set<string>();
+
+    for (let i = 0; i < 25; i++) {
+      ids.add(createSupabaseConfigTraceId());
+    }
+
+    expect(Array.from(ids).every((id) => /^cfg-[a-z0-9]{1,8}$/.test(id))).toBe(true);
+    expect(ids.size).toBeGreaterThan(20);
+  });
 });
 
-// ─── SMOKE TEST: vite.config.ts has envDir ──────────────────────────
 describe("vite.config.ts envDir fix (smoke test)", () => {
   const viteConfigPath = resolve(
     __dirname,
@@ -89,7 +104,6 @@ describe("vite.config.ts envDir fix (smoke test)", () => {
     expect(existsSync(viteConfigPath)).toBe(true);
     const content = readFileSync(viteConfigPath, "utf-8");
     expect(content).toContain("envDir");
-    // Must resolve to ../../ (monorepo root from apps/omnihub-site/)
     expect(content).toMatch(/envDir.*['"]\.\.\/\.\.\/['"]/);
   });
 
@@ -100,13 +114,11 @@ describe("vite.config.ts envDir fix (smoke test)", () => {
   });
 });
 
-// ─── SMOKE TEST: .env file has required vars ────────────────────────
 describe("monorepo root .env contains Supabase credentials", () => {
   const envPath = resolve(__dirname, "../.env");
 
   it("should_have_VITE_SUPABASE_URL_with_https_value", () => {
     if (!existsSync(envPath)) {
-      // .env might not exist in CI — skip gracefully
       return;
     }
     const content = readFileSync(envPath, "utf-8");

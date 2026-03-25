@@ -22,6 +22,10 @@ const SUPABASE_TS = resolve(
   __dirname,
   "../apps/omnihub-site/src/lib/supabase.ts"
 );
+const SUPABASE_CONFIG_TS = resolve(
+  __dirname,
+  "../apps/omnihub-site/src/lib/supabaseConfig.ts"
+);
 const WRANGLER_TOML = resolve(__dirname, "../wrangler.toml");
 const ROOT_PUBLIC_ICON = resolve(__dirname, "../public/icon.png");
 const SITE_PUBLIC_ICON = resolve(
@@ -177,6 +181,7 @@ describe("wrangler.toml config (Fix #3: env var injection)", () => {
 
 describe("supabase.ts config guard integrity", () => {
   const supabaseSrc = readFileSync(SUPABASE_TS, "utf-8");
+  const supabaseConfigSrc = readFileSync(SUPABASE_CONFIG_TS, "utf-8");
 
   it("should_export_hasSupabaseConfig_boolean", () => {
     expect(supabaseSrc).toContain("export const hasSupabaseConfig");
@@ -184,10 +189,15 @@ describe("supabase.ts config guard integrity", () => {
 
   it("should_export_supabaseConfigTraceId", () => {
     expect(supabaseSrc).toContain("export const supabaseConfigTraceId");
+    expect(supabaseSrc).toContain("createSupabaseConfigTraceId()");
+    expect(supabaseSrc).not.toContain("Math.random()");
   });
 
   it("should_validate_url_with_https_or_http_protocol", () => {
-    expect(supabaseSrc).toMatch(/\/\^https\?:.*test\(supabaseUrl\)/);
+    expect(supabaseSrc).toContain("hasValidSupabaseUrl");
+    expect(supabaseSrc).toContain("const isValidSupabaseUrl = hasValidSupabaseUrl(supabaseUrl);");
+    expect(supabaseConfigSrc).toContain("parsedUrl.protocol === 'https:'");
+    expect(supabaseConfigSrc).toContain("parsedUrl.protocol === 'http:' && LOOPBACK_HOSTNAMES.has(parsedUrl.hostname)");
   });
 
   it("should_check_both_publishable_key_and_anon_key", () => {
