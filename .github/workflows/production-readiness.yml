@@ -55,7 +55,7 @@ jobs:
       - name: Documentation drift check
         run: bun run docs:check
 
-      - name: Vercel SPA Rewrite Check
+      - name: Cloudflare Pages SPA Redirect Check
         run: cd apps/omnihub-site && node scripts/check-vercel-spa-rewrite.mjs
 
       - name: Guardrail - No TS suppression in config files
