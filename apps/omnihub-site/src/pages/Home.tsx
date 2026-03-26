@@ -475,12 +475,12 @@ function CTASection() {
   return (
     <Section id="cta" variant="navy">
       <div style={{ textAlign: 'center' }}>
-        <h2 className="heading-2">Experience APEX OmniHub Today</h2>
+        <h2 className="heading-2">YOUR SYSTEMS. YOUR RULES. ONE GOVERNED SURFACE.</h2>
         <p
           className="text-lg mt-4"
           style={{ color: 'var(--color-text-muted)' }}
         >
-          Unite. Automate. Excel.
+          Governance isn&apos;t a feature. It&apos;s the architecture.
         </p>
         <div className="mt-8">
           <CTAGroup
@@ -488,6 +488,12 @@ function CTASection() {
             secondary={{ label: 'Watch Demo', href: '/demo' }}
             centered
           />
+          <p
+            className="text-xs tracking-widest text-teal-400 mt-4 text-center"
+            aria-label="Core platform pillars"
+          >
+            Directable · Auditable · Reversible
+          </p>
         </div>
       </div>
     </Section>

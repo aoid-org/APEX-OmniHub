@@ -69,8 +69,8 @@ export const siteConfig = {
     ],
   },
   showcase: {
-    title: 'Experience APEX OmniHub Today',
-    subtitle: 'Unite. Automate. Excel.',
+    title: 'YOUR SYSTEMS. YOUR RULES. ONE GOVERNED SURFACE.',
+    subtitle: 'Governance isn\'t a feature. It\'s the architecture.',
     items: [
       buildShowcaseItem('Project Management', '/assets/screenshots/omniboard-connections.png'),
       buildShowcaseItem('Team Collaboration', '/assets/screenshots/omniport-dashboard.png'),
