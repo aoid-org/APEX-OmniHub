@@ -12,7 +12,7 @@ import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentation
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
-import { trace, context, SpanStatusCode, Tracer, Span } from '@opentelemetry/api';
+import { trace, SpanStatusCode, Tracer, Span } from '@opentelemetry/api';
 
 export interface TracerConfig {
   enabled: boolean;
