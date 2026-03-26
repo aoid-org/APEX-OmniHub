@@ -255,7 +255,7 @@ const FounderStory = memo(function FounderStory() {
           {/* Eyebrow */}
           <p className="font-mono text-[0.6rem] tracking-[0.25em] uppercase text-apex-teal mb-5 flex items-center gap-4">
             <span className="block w-6 h-px bg-apex-teal" aria-hidden="true" />
-            Founder&apos;s Story
+            {'Founder\u2019s Story'}
           </p>
 
           {/* Pills */}
