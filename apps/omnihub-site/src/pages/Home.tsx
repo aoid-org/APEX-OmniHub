@@ -1,12 +1,15 @@
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { Section } from '@/components/Section';
+import { StructuredData } from '@/components/StructuredData';
 import { CTAGroup } from '@/components/CTAGroup';
 import { HeroVisual } from '@/components/HeroVisual';
 import { FeatureHighlightGrid } from '@/components/FeatureHighlightGrid';
 import { siteConfig } from '@/content/site';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import homepageSchema from '../../public/schema/homepage.jsonld?raw';
+import organizationSchema from '../../public/schema/organization.jsonld?raw';
 import {
   IconConnect,
   IconTranslate,
@@ -135,46 +138,60 @@ function Hero() {
       </div>
       <div className="container hero__grid">
         <div className="hero__content">
-          <h1 className="heading-hero hero__title flex flex-col items-center lg:items-start w-fit mx-auto lg:mx-0">
-            <div className="flex flex-row gap-[0.5em] justify-center lg:justify-start text-center">
-              <span className="w-min">{t('hero.headline.line1', { defaultValue: 'Connect anything.' })}</span>
-              <span className="w-min">{t('hero.headline.line2', { defaultValue: 'Orchestrate everything.' })}</span>
-            </div>
-            <div className="w-full text-center mt-[0.1em]">
-              <span>{t('hero.headline.line3', { defaultValue: 'Stay in control.' })}</span>
-            </div>
+          <h1 className="heading-hero hero__title text-center lg:text-left">
+            {t('hero.headline.line1', {
+              defaultValue: 'The only orchestrator you can audit, override, and reverse.',
+            })}
           </h1>
-          <p className="hero__tagline hero__tagline--center" style={{ fontSize: 'clamp(1.1rem, 2.5vw, 1.6rem)', fontWeight: 700, letterSpacing: '0.12em' }}>
-            {t('hero.traits', { defaultValue: 'DIRECTABLE \u2022 AUDITABLE \u2022 REVERSIBLE' })}
-          </p>
-          <p className="hero__subtagline hero__subtagline--center">
+          <p className="text-lg font-semibold tracking-wide text-foreground mt-4">
             {t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}
           </p>
+          <div
+            className="flex flex-wrap gap-4 items-center justify-center mt-3"
+            aria-label="Core platform pillars: Directable, Auditable, Reversible"
+          >
+            {['DIRECTABLE', 'AUDITABLE', 'REVERSIBLE'].map((pillar) => (
+              <span
+                key={pillar}
+                className="px-5 py-1.5 border border-teal-500 text-teal-400 text-sm font-bold tracking-widest rounded-sm"
+              >
+                {pillar}
+              </span>
+            ))}
+          </div>
 
           <div className="flex flex-col gap-4 mt-6 mb-6">
-            <p className="hero__subtitle">
-              <span className="hero__sentence-indent">
-                {t('hero.subtitleSentence1', {
-                  defaultValue:
-                    'The enterprise AI governance platform. Unify software, AI agents, and enterprise platforms into one governed command surface.',
-                })}
-              </span>{' '}
-              {t('hero.subtitleSentence2', { defaultValue: 'Every action is authorized, logged, and reversible.' })}
-            </p>
-            <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
-              {t('hero.descriptionSentence1', {
+            <p className="hero-body mt-6 text-muted-foreground max-w-2xl mx-auto">
+              {t('hero.subtitle', {
                 defaultValue:
-                  'OmniHub is the Brain. OmniDash is the Eyes. APEX Agent is the Voice. OmniLink is the AppShell. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese.',
+                  'The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.',
+              })}
+            </p>
+            <p className="hero-body mt-3 font-medium text-foreground">
+              {t('hero.description', {
+                defaultValue: 'No vendor lock-in. No black boxes. No surprises.',
               })}
             </p>
           </div>
-          
+
           <div className="flex flex-col items-center lg:items-start gap-4 mt-8">
             <div className="flex flex-row flex-wrap justify-center lg:justify-start gap-4">
               <CTAGroup
                 primary={{ label: t('hero.cta.primary', { defaultValue: 'Request Access' }), href: siteConfig.ctas.primary.href }}
                 secondary={{ label: t('hero.cta.secondary', { defaultValue: 'Watch Demo' }), href: siteConfig.ctas.secondary.href }}
               />
+            </div>
+            <div
+              className="flex flex-wrap gap-x-3 gap-y-1 items-center justify-center text-xs text-muted-foreground mt-5"
+              aria-label="Compliance certifications"
+            >
+              <span>SOC 2 aligned</span>
+              <span aria-hidden="true">·</span>
+              <span>EU AI Act Article 14</span>
+              <span aria-hidden="true">·</span>
+              <span>GDPR Art. 30</span>
+              <span aria-hidden="true">·</span>
+              <span>Trusted by operators in regulated industries</span>
             </div>
             <PWAInstallNode />
           </div>
@@ -199,20 +216,23 @@ function HighlightsSection() {
         'You define what happens. The system runs it. You can change it anytime.',
       icon: <IconAutomation size={22} />,
       href: '/ai-automation#modular-adapters',
+      ariaLabel: 'Portable Automation — Directable',
     },
     {
       title: 'Smart Integrations',
       description:
-        'Connect your systems. Keep your rules. Switch tools without rebuilding.',
+        'Switch tools without rebuilding. Your logic, your schemas, and your rules move with you — never locked to a single vendor or platform.',
       icon: <IconIntegrations size={22} />,
       href: '/smart-integrations#single-port',
+      ariaLabel: 'Smart Integrations — Reversible',
     },
     {
       title: 'Clear Visibility',
       description:
-        'See what runs. Know what changed. Decide what happens next.',
+        'See what runs. Know what changed. Prove it to anyone — with a complete, tamper-evident audit trail your compliance team can hand to an auditor.',
       icon: <IconAnalytics size={22} />,
       href: '/advanced-analytics#receipts-idempotency',
+      ariaLabel: 'Clear Visibility — Auditable',
     },
   ];
 
@@ -231,6 +251,10 @@ function TriForceSection() {
       icon: <IconConnect size={32} />,
       description:
         'Modular adapters plug into any system with an interface: API, webhook, or events.',
+      details: [
+        'Zero translation loss between systems.',
+        'Every event schema-validated on ingress.',
+      ],
     },
     {
       id: 'translate',
@@ -245,6 +269,9 @@ function TriForceSection() {
       icon: <IconExecute size={32} />,
       description:
         'Deterministic workflows with receipts, retries, rollback paths, and MAN Mode gates.',
+      details: [
+        '"Receipts" means a forensic-grade record your compliance team can hand to an auditor — not a log file you have to query.',
+      ],
     },
   ];
 
@@ -267,6 +294,11 @@ function TriForceSection() {
               <div className="triforce__icon">{card.icon}</div>
               <h3 className="triforce__title">{card.title}</h3>
               <p className="triforce__desc">{card.description}</p>
+              {card.details?.map((detail) => (
+                <p key={detail} className="triforce__desc mt-3">
+                  {detail}
+                </p>
+              ))}
             </a>
           ))}
         </div>
@@ -310,9 +342,9 @@ function FortressSection() {
   return (
     <Section id="fortress" variant="navy">
       <div className="fortress">
-        <h2 className="heading-2">Zero-Trust Fortress Protocol</h2>
-        <p className="fortress__subtitle">
-          Security is not an afterthought. It is the foundation.
+        <h2 className="heading-2">Assume breach by default.</h2>
+        <p className="text-muted-foreground mt-2 text-lg">
+          Then verify, log, and replay everything anyway.
         </p>
         <div className="fortress__grid">
           {siteConfig.fortress.items.map((item, idx) => (
@@ -446,12 +478,12 @@ function CTASection() {
   return (
     <Section id="cta" variant="navy">
       <div style={{ textAlign: 'center' }}>
-        <h2 className="heading-2">Experience APEX OmniHub Today</h2>
+        <h2 className="heading-2">YOUR SYSTEMS. YOUR RULES. ONE GOVERNED SURFACE.</h2>
         <p
           className="text-lg mt-4"
           style={{ color: 'var(--color-text-muted)' }}
         >
-          Directable. Auditable. Reversible.
+          Governance isn&apos;t a feature. It&apos;s the architecture.
         </p>
         <div className="mt-8">
           <CTAGroup
@@ -459,6 +491,12 @@ function CTASection() {
             secondary={{ label: 'Watch Demo', href: '/demo' }}
             centered
           />
+          <p
+            className="text-xs tracking-widest text-teal-400 mt-4 text-center"
+            aria-label="Core platform pillars"
+          >
+            Directable · Auditable · Reversible
+          </p>
         </div>
       </div>
     </Section>
@@ -469,10 +507,13 @@ export function HomePage() {
   return (
     <Layout>
       <SEOMeta
-        title="AI Orchestration Platform"
-        description="APEX OmniHub is the enterprise AI governance platform for governed execution across AI agents, legacy systems, and Web3. Directable. Accountable. Dependable."
-        canonical="https://apexomnihub.icu"
+        title="APEX OmniHub — Auditable, Reversible AI Orchestration"
+        description="The only enterprise AI orchestrator that's fully directable, auditable, and reversible. Govern every action. Override anything. Replay everything."
+        canonical="https://apexomnihub.icu/"
+        appendBrandSuffix={false}
       />
+      <StructuredData id="homepage-schema" json={homepageSchema} />
+      <StructuredData id="organization-schema" json={organizationSchema} />
       <Hero />
       <HighlightsSection />
       <TriForceSection />

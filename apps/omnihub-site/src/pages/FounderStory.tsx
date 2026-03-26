@@ -2,8 +2,10 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
+import { StructuredData } from '@/components/StructuredData';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import storySchema from '../../public/schema/story.jsonld?raw';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -166,33 +168,7 @@ const Manifesto = memo(function Manifesto() {
   );
 });
 
-function useScrollReveal() {
-  const ref = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.classList.add('opacity-100', 'translate-y-0');
-          obs.disconnect();
-        }
-      },
-      { threshold: 0.04 },
-    );
-
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
-  return ref;
-}
-
 const FounderStory = memo(function FounderStory() {
-  const articleRef = useScrollReveal();
-
   const paragraphs = {
     opening: [
       'I did not set out to build an enterprise platform. I was trying to build a crutch.',
@@ -235,14 +211,40 @@ const FounderStory = memo(function FounderStory() {
 
   return (
     <Layout title="Founder's Story">
-      <SEOMeta title="Our Story" description="From enterprise IT to AI governance — the journey behind APEX OmniHub and the vision for accountable AI orchestration." canonical="https://apexomnihub.icu/story" />
+      <style>{`
+        .storyHero,
+        .storyHeroContent,
+        .founderHero {
+          opacity: 1;
+          transform: translateY(0);
+          animation: storyFadeUp 0.3s ease-out forwards;
+        }
+
+        @keyframes storyFadeUp {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+      <SEOMeta
+        title="The Founder's Story — Why APEX OmniHub Exists"
+        description="Built from personal fragmentation, engineered for enterprise resilience. The story behind the platform that puts control back in your hands."
+        canonical="https://apexomnihub.icu/story/"
+        appendBrandSuffix={false}
+      />
+      <StructuredData id="story-schema" json={storySchema} />
       <ReadingProgress />
 
-      <section className="relative min-h-[70vh] flex flex-col justify-center overflow-hidden px-6 pb-20 pt-[calc(60px+3rem)]" aria-labelledby="founder-story-title">
+      <section className="storyHero relative min-h-[calc(100vh-60px)] flex flex-col justify-center overflow-hidden px-6 py-16 sm:py-20" aria-labelledby="founder-story-title">
         <div className="absolute inset-0 pointer-events-none z-0 bg-[linear-gradient(rgba(74,154,186,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(74,154,186,0.055)_1px,transparent_1px)] bg-[size:52px_52px]" aria-hidden="true" />
         <div className="absolute inset-0 pointer-events-none z-[1] bg-[radial-gradient(ellipse_70%_55%_at_10%_88%,rgba(212,98,31,0.13)_0%,transparent_55%),radial-gradient(ellipse_55%_60%_at_88%_12%,rgba(74,154,186,0.07)_0%,transparent_50%)]" aria-hidden="true" />
 
-        <div className="relative z-[2] max-w-[860px] animate-fadeUp mx-auto w-full">
+        <div className="storyHeroContent relative z-[2] max-w-[860px] mx-auto w-full">
           <p className="font-mono text-[0.6rem] tracking-[0.25em] uppercase text-apex-teal mb-5 flex items-center gap-4">
             <span className="block w-6 h-px bg-apex-teal" aria-hidden="true" />
             {' '}Founder&apos;s Story
@@ -259,6 +261,10 @@ const FounderStory = memo(function FounderStory() {
             <span className="text-apex-orange2">OmniHub</span>
           </h1>
 
+          <p className="text-[clamp(1.05rem,2.5vw,1.22rem)] font-medium text-apex-text leading-relaxed border-l-[3px] border-apex-orange pl-5 mb-8 text-left indent-0 max-w-[720px]">
+            {paragraphs.opening[0]}
+          </p>
+
           <p className="text-apex-teal2 leading-relaxed max-w-[520px] mb-9 text-[clamp(0.9rem,2vw,1.05rem)]">
             Turning chaos into orchestration. A personal account of fragmentation,
             resilience, and the system I had to build to survive.
@@ -266,15 +272,25 @@ const FounderStory = memo(function FounderStory() {
 
           <p className="font-mono text-[0.62rem] tracking-[0.22em] uppercase text-apex-muted font-bold mb-[0.45rem]">Your Systems. Your Rules.</p>
           <p className="font-mono text-[0.58rem] tracking-[0.18em] uppercase text-apex-orange">Directable<span className="text-apex-muted mx-1">&bull;</span>Auditable<span className="text-apex-muted mx-1">&bull;</span>Reversible</p>
+
+          <div className="flex justify-center mt-8" aria-hidden="true">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="text-teal-500 animate-bounce"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
         </div>
       </section>
 
       <main id="main-content" className="relative z-[2] max-w-[calc(700px+10rem)] mx-auto px-6 pt-16 pb-28 grid grid-cols-1 md:grid-cols-[1fr_700px_1fr]">
-        <article ref={articleRef} className="md:col-start-2 opacity-0 translate-y-5 transition-all duration-700 ease-out">
-          <p className="text-[clamp(1.05rem,2.5vw,1.22rem)] font-medium text-apex-text leading-relaxed border-l-[3px] border-apex-orange pl-5 mb-9 text-left indent-0">
-            {paragraphs.opening[0]}
-          </p>
-
+        <article className="founderHero md:col-start-2">
           {paragraphs.opening.slice(1).map((text) => (
             <p key={text} className="text-base text-apex-text-dim mb-6 text-justify indent-8 hyphens-auto">{text}</p>
           ))}

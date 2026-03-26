@@ -359,6 +359,15 @@ function Footer() {
               </a>
             </li>
           ))}
+          <li>
+            <a
+              href="/integrations/web3"
+              className="footer__link"
+              style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}
+            >
+              Web3 Integrations
+            </a>
+          </li>
         </ul>
       </div>
       {/* Maestro Observability Indicator */}

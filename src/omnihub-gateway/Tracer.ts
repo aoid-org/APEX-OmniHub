@@ -11,7 +11,8 @@ import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { Resource } from '@opentelemetry/resources';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
+import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from '@opentelemetry/semantic-conventions/incubating';
 import { trace, SpanStatusCode, Tracer, Span } from '@opentelemetry/api';
 
 export interface TracerConfig {
@@ -33,8 +34,8 @@ export function initGatewayTracer(config: TracerConfig): NodeSDK | undefined {
   }
 
   const resource = new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: config.serviceName || 'omnihub-gateway',
-    [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: process.env.NODE_ENV || 'production',
+    [ATTR_SERVICE_NAME]: config.serviceName || 'omnihub-gateway',
+    [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: process.env.NODE_ENV || 'production',
   });
 
   const traceExporter = new OTLPTraceExporter({

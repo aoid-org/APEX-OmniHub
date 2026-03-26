@@ -44,12 +44,12 @@ export const siteConfig = {
   },
   hero: {
     eyebrow: 'APEX OMNIHUB',
-    title: 'Connect anything.\nOrchestrate everything.\nStay in control.',
+    title: 'The only orchestrator you can audit, override, and reverse.',
     tagline: 'YOUR SYSTEMS. YOUR RULES.',
     subtitle:
-      'The enterprise AI governance platform. Unify software, AI agents, and enterprise platforms into one governed command surface. Every action is authorized, logged, and reversible.',
+      'The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface - where every action is authorized, logged, and reversible.',
     description:
-      'OmniHub is the Brain. OmniDash is the Eyes. APEX Agent is the Voice. OmniLink is the AppShell. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese.',
+      'No vendor lock-in. No black boxes. No surprises.',
   },
   highlights: {
     title: '',
@@ -69,8 +69,8 @@ export const siteConfig = {
     ],
   },
   showcase: {
-    title: 'Experience APEX OmniHub Today',
-    subtitle: 'Directable. Auditable. Reversible.',
+    title: 'YOUR SYSTEMS. YOUR RULES. ONE GOVERNED SURFACE.',
+    subtitle: 'Governance isn\'t a feature. It\'s the architecture.',
     items: [
       buildShowcaseItem('Project Management', '/assets/screenshots/omniboard-connections.png'),
       buildShowcaseItem('Team Collaboration', '/assets/screenshots/omniport-dashboard.png'),

@@ -1,9 +1,19 @@
 import { Layout, Section } from '@/components';
+import { SEOMeta } from '@/components/SEOMeta';
+import { StructuredData } from '@/components/StructuredData';
+import manModeSchema from '../../public/schema/man-mode-faq.jsonld?raw';
 
 export function ManModePage() {
   // Verified clean for ESLint - Quality Gate pass
   return (
     <Layout title="M.A.N.Mode">
+      <SEOMeta
+        title="MAN Mode — Human-in-the-Loop AI Governance | APEX OmniHub"
+        description="Flag, hold, and review high-risk AI decisions before execution. MAN Mode keeps humans in control of every irreversible action."
+        canonical="https://apexomnihub.icu/features/man-mode/"
+        appendBrandSuffix={false}
+      />
+      <StructuredData id="man-mode-schema" json={manModeSchema} />
       <Section>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           

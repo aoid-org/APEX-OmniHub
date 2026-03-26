@@ -245,14 +245,16 @@
   },
   "overrides": {
     "flatted": "^3.4.2",
+    "h3": "1.15.10",
     "lodash": "^4.17.23",
+    "picomatch@^2.0.0": "2.3.2",
+    "picomatch@^4.0.0": "4.0.4",
     "tar": "^7.5.11",
     "undici": "^6.24.0",
     "hono": "^4.12.4",
     "serialize-javascript": "^7.0.3",
     "rollup": "^4.59.0",
     "immutable": "^4.3.8",
-    "h3": "^1.15.9",
     "picomatch": ">=2.3.2"
   },
   "resolutions": {

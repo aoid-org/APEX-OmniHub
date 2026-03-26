@@ -2,8 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SupabaseIdempotencyStore } from '../../../src/omnihub-gateway/SupabaseIdempotencyStore';
 import type { IdempotencyEntry } from '../../../src/omnihub-gateway/types';
 
+type MockSupabase = {
+  from: ReturnType<typeof vi.fn>;
+  select: ReturnType<typeof vi.fn>;
+  insert: ReturnType<typeof vi.fn>;
+  update: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+  eq: ReturnType<typeof vi.fn>;
+  single: ReturnType<typeof vi.fn>;
+};
+
 describe('SupabaseIdempotencyStore', () => {
-  let mockSupabase: Record<string, ReturnType<typeof vi.fn>>;
+  let mockSupabase: MockSupabase;
   let store: SupabaseIdempotencyStore;
 
   beforeEach(() => {
@@ -17,7 +27,9 @@ describe('SupabaseIdempotencyStore', () => {
       eq: vi.fn().mockReturnThis(),
       single: vi.fn()
     };
-    store = new SupabaseIdempotencyStore(mockSupabase);
+    store = new SupabaseIdempotencyStore(
+      mockSupabase as unknown as ConstructorParameters<typeof SupabaseIdempotencyStore>[0],
+    );
   });
 
   describe('get()', () => {

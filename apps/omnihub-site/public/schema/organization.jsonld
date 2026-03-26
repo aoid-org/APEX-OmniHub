@@ -1,0 +1,15 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "APEX Business Systems Ltd.",
+  "alternateName": "APEX Business Systems",
+  "url": "https://apexbusiness-systems.com",
+  "description": "APEX Business Systems Ltd. builds enterprise AI orchestration and governance platforms. Headquartered in Edmonton, Alberta, Canada.",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Edmonton",
+    "addressRegion": "Alberta",
+    "addressCountry": "CA"
+  },
+  "sameAs": []
+}

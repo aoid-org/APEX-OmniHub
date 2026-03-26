@@ -224,6 +224,10 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       - name: Vercel Production Sync Shield
         run: cd apps/omnihub-site && bun install --frozen-lockfile --omit=dev && bun run build
+        env:
+          VITE_SUPABASE_URL: https://test.supabase.co
+          VITE_SUPABASE_ANON_KEY: test-key
+          VITE_SUPABASE_PUBLISHABLE_KEY: test-key
 
       - name: Build production bundle
         run: bun run build
