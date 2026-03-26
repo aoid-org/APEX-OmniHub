@@ -1,5 +1,5 @@
 /**
- * useOmniModuleState — Live data hook for OmniDash module panels.
+ * useOmniModuleState - Live data hook for OmniDash module panels.
  *
  * Fetches authenticated module state from Supabase Edge Functions.
  * Falls back to static registry data when the backend is unavailable.
@@ -7,7 +7,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase, hasSupabaseConfig } from '@/lib/supabase';
 import { getModuleContent } from '@/dashboard/components/ModuleRegistry';
 import type {
@@ -28,8 +28,17 @@ export interface OmniModuleState {
   readonly isLive: boolean;
 }
 
-// ROOT CAUSE FIX: Build initial state from registry so the fallback path
-// always renders real data (stats, items, actions) rather than empty arrays.
+type LiveModuleState = Readonly<{
+  key: string;
+  headline?: string;
+  stats?: readonly ModuleStatItem[];
+  items?: readonly ModuleListItem[];
+  actions?: readonly ModuleAction[];
+  loading: boolean;
+  error: string | null;
+  isLive: boolean;
+}>;
+
 function registryStateFor(appKey: string): OmniModuleState {
   const reg = getModuleContent(appKey);
   return {
@@ -45,29 +54,44 @@ function registryStateFor(appKey: string): OmniModuleState {
 }
 
 export function useOmniModuleState(appKey: string): OmniModuleState {
-  // Initialise directly from registry — widgets render immediately with real data.
-  const [state, setState] = useState<OmniModuleState>(() => registryStateFor(appKey));
+  const baselineState = useMemo(() => registryStateFor(appKey), [appKey]);
+  const [liveState, setLiveState] = useState<LiveModuleState>(() => ({
+    key: appKey,
+    loading: true,
+    error: null,
+    isLive: false,
+  }));
 
   useEffect(() => {
-    // Re-seed from registry when the key changes.
-    // Use functional updater to avoid synchronous setState-in-effect lint violation.
-    setState(() => registryStateFor(appKey));
-
     let cancelled = false;
 
     async function fetchLiveState() {
       if (!hasSupabaseConfig) {
-        // No backend — registry data is already loaded; just clear the loading flag.
         if (!cancelled) {
-          setState(prev => ({ ...prev, loading: false, isLive: false }));
+          setLiveState({
+            key: appKey,
+            loading: false,
+            error: null,
+            isLive: false,
+          });
         }
         return;
       }
 
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
         if (!user || cancelled) {
-          setState(prev => ({ ...prev, loading: false, isLive: false }));
+          if (!cancelled) {
+            setLiveState({
+              key: appKey,
+              loading: false,
+              error: null,
+              isLive: false,
+            });
+          }
           return;
         }
 
@@ -75,42 +99,68 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
           body: { action: 'get_module_state', module_key: appKey },
         });
 
-        if (cancelled) return;
-
-        if (error || !data) {
-          // Backend unavailable — registry data already in state; just clear loading.
-          setState(prev => ({ ...prev, loading: false, isLive: false }));
+        if (cancelled) {
           return;
         }
 
-        // Merge live data over registry baseline.
+        if (error || !data) {
+          setLiveState({
+            key: appKey,
+            loading: false,
+            error: null,
+            isLive: false,
+          });
+          return;
+        }
+
         const live = data as Partial<ModuleContent>;
-        setState(prev => ({
-          ...prev,
-          headline: live.headline ?? prev.headline,
-          stats: live.stats ?? prev.stats,
-          items: live.items ?? prev.items,
-          actions: live.actions ?? prev.actions,
+        setLiveState({
+          key: appKey,
+          headline: live.headline,
+          stats: live.stats,
+          items: live.items,
+          actions: live.actions,
           loading: false,
-          isLive: true,
           error: null,
-        }));
+          isLive: true,
+        });
       } catch {
         if (!cancelled) {
-          setState(prev => ({ ...prev, loading: false, isLive: false }));
+          setLiveState({
+            key: appKey,
+            loading: false,
+            error: null,
+            isLive: false,
+          });
         }
       }
     }
 
-    fetchLiveState();
-    return () => { cancelled = true; };
+    void fetchLiveState();
+
+    return () => {
+      cancelled = true;
+    };
   }, [appKey]);
 
-  return state;
+  if (liveState.key !== appKey) {
+    return baselineState;
+  }
+
+  return {
+    ...baselineState,
+    headline: liveState.headline ?? baselineState.headline,
+    stats: liveState.stats ?? baselineState.stats,
+    items: liveState.items ?? baselineState.items,
+    actions: liveState.actions ?? baselineState.actions,
+    loading: liveState.loading,
+    error: liveState.error,
+    isLive: liveState.isLive,
+  };
 }
 
 /**
- * triggerModuleAction — Dispatches a module action to the backend workflow engine.
+ * triggerModuleAction - Dispatches a module action to the backend workflow engine.
  *
  * Calls the trigger-workflow Edge Function to execute a Temporal saga
  * for the given module and action.
@@ -123,12 +173,14 @@ export async function triggerModuleAction(
   if (!hasSupabaseConfig) {
     return {
       success: true,
-      message: `Action "${actionId}" queued for ${moduleKey} (offline mode — will execute when backend is connected).`,
+      message: `Action "${actionId}" queued for ${moduleKey} (offline mode - will execute when backend is connected).`,
     };
   }
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return { success: false, message: 'Authentication required. Please sign in.' };
     }

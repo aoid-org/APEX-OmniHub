@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 import { ResponsiveGridLayout, DragHandle, type Layout } from './GridLayout';
 
+type ResponsiveLayouts = Partial<Record<string, Layout[]>>;
+
 /** Circuit-breaker status indicator */
 function circuitBreakerStatus(
   errorRate: number,
@@ -95,9 +97,7 @@ export const Ops = () => {
     { i: 'incidentlog', x: 0, y: 14, w: 1, h: overrides?.incidentlog ?? 7, isResizable: false },
   ] as Layout;
 
-  const [layouts, setLayouts] = useState<
-    Partial<Record<string, Layout>>
-  >({
+  const [layouts, setLayouts] = useState<ResponsiveLayouts>({
     lg: [
       { i: 'freeze', x: 0, y: 0, w: 1, h: 2, isResizable: false },
       { i: 'memoryhealth', x: 1, y: 0, w: 1, h: 4, isResizable: false },
@@ -130,7 +130,7 @@ export const Ops = () => {
         breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
         cols={{ lg: 2, md: 1, sm: 1, xs: 1, xxs: 1 }}
         rowHeight={60}
-        onLayoutChange={(_layout, allLayouts) => setLayouts(allLayouts)}
+        onLayoutChange={(_layout: Layout[], allLayouts: ResponsiveLayouts) => setLayouts(allLayouts)}
         draggableHandle=".custom-drag-handle"
         margin={[16, 16]}
       >
