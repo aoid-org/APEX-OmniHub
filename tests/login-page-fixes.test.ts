@@ -132,48 +132,16 @@ describe("Login error messaging (Fix #2: cryptic error)", () => {
   });
 });
 
-// ─── FIX 3: wrangler.toml empty [env.*] sections ───────────────────
+// ─── FIX 3: wrangler.toml REMOVED — CF Pages BETA intercepts it ─────────────
+// When CF Pages detects wrangler.toml it reads build config from there instead
+// of the dashboard, causing "Build environment variables: (none found)".
+// Removing wrangler.toml forces CF Pages to use dashboard-only config where
+// VITE_* env vars are properly injected. pages_build_output_dir is set in
+// the CF Pages dashboard Build settings instead.
 
-describe("wrangler.toml config (Fix #3: env var injection)", () => {
-  it("should_exist_at_monorepo_root", () => {
-    expect(existsSync(WRANGLER_TOML)).toBe(true);
-  });
-
-  const wranglerContent = existsSync(WRANGLER_TOML)
-    ? readFileSync(WRANGLER_TOML, "utf-8")
-    : "";
-
-  it("should_have_pages_build_output_dir", () => {
-    expect(wranglerContent).toContain('pages_build_output_dir = "dist"');
-  });
-
-  it("should_have_compatibility_date", () => {
-    expect(wranglerContent).toMatch(/compatibility_date\s*=\s*"20\d{2}-\d{2}-\d{2}"/);
-  });
-
-  it("should_NOT_have_env_production_section_that_blocks_dashboard_vars", () => {
-    // Empty [env.production] sections cause CF Pages to scope env vars
-    // away from the build, blocking VITE_* injection.
-    // The fix: remove these sections entirely so dashboard vars flow through.
-    // Only match actual TOML headers (start of line), not comments mentioning them.
-    const hasEnvProductionSection = /^\[env\.production\]/m.test(wranglerContent);
-    expect(hasEnvProductionSection).toBe(false);
-  });
-
-  it("should_NOT_have_env_preview_section_that_blocks_dashboard_vars", () => {
-    const hasEnvPreviewSection = /^\[env\.preview\]/m.test(wranglerContent);
-    expect(hasEnvPreviewSection).toBe(false);
-  });
-
-  it("should_NOT_contain_any_real_supabase_credentials", () => {
-    // Security: wrangler.toml is committed to git — no real keys allowed
-    expect(wranglerContent).not.toMatch(/eyJhbGci/); // JWT prefix
-    expect(wranglerContent).not.toMatch(/rtopreovkywofgwgmozi/); // Project ref
-    expect(wranglerContent).not.toMatch(/sb_publishable_/); // Supabase key prefix
-  });
-
-  it("should_have_project_name", () => {
-    expect(wranglerContent).toContain('name = "apex-omnihub"');
+describe("wrangler.toml removal (Fix #3: env var injection)", () => {
+  it("should_NOT_exist_at_monorepo_root", () => {
+    expect(existsSync(WRANGLER_TOML)).toBe(false);
   });
 });
 
