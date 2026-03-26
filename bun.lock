@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "apex-omnihub",
@@ -171,7 +170,7 @@
   },
   "overrides": {
     "flatted": "^3.4.2",
-    "h3": "^1.15.9",
+    "h3": "1.15.10",
     "hono": "^4.12.4",
     "immutable": "^4.3.8",
     "lodash": "^4.17.23",
