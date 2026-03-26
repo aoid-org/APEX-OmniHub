@@ -47,9 +47,9 @@ export const siteConfig = {
     title: 'Connect anything.\nOrchestrate everything.\nStay in control.',
     tagline: 'YOUR SYSTEMS. YOUR RULES.',
     subtitle:
-      'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.',
+      'The enterprise AI governance platform. Unify software, AI agents, and enterprise platforms into one governed command surface. Every action is authorized, logged, and reversible.',
     description:
-      'OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.',
+      'OmniHub is the Brain. OmniDash is the Eyes. APEX Agent is the Voice. OmniLink is the AppShell. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese.',
   },
   highlights: {
     title: '',
@@ -70,7 +70,7 @@ export const siteConfig = {
   },
   showcase: {
     title: 'Experience APEX OmniHub Today',
-    subtitle: 'Unite. Automate. Excel.',
+    subtitle: 'Directable. Auditable. Reversible.',
     items: [
       buildShowcaseItem('Project Management', '/assets/screenshots/omniboard-connections.png'),
       buildShowcaseItem('Team Collaboration', '/assets/screenshots/omniport-dashboard.png'),
