@@ -188,7 +188,10 @@ jobs:
           REQUIRE_SUPABASE_INTEGRATION_TESTS: "false"
 
       - name: Run JS coverage
-        run: bun run test:coverage
+        # Use npx (Node) instead of bun to avoid bun ESM resolution bug
+        # where nested js-tokens@10 (needed by ast-v8-to-istanbul) resolves
+        # to the hoisted js-tokens@4, causing "jsTokens is not a function".
+        run: VITEST_COVERAGE=true npx vitest run --coverage
 
       - name: Setup Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
