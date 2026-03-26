@@ -95,10 +95,23 @@ export default defineConfig({
         'src/contexts/**',
         'src/hooks/**',
         'src/utils/RealtimeAudio.ts', // Relies on browser WebAudio primitives
-        'apps/omnihub-site/**',
-        // Allow coverage for login-critical files tested in tests/login-page-fixes.test.ts
-        '!apps/omnihub-site/src/lib/supabase.ts',
-        '!apps/omnihub-site/src/pages/Login.tsx',
+        // Exclude omnihub-site except login-critical files tested in tests/login-page-fixes.test.ts.
+        // Negation patterns (!) break vitest v8 coverage, so we exclude specific sub-paths instead.
+        'apps/omnihub-site/dashboard/**',
+        'apps/omnihub-site/public/**',
+        'apps/omnihub-site/tests/**',
+        'apps/omnihub-site/src/components/**',
+        'apps/omnihub-site/src/contexts/**',
+        'apps/omnihub-site/src/hooks/**',
+        'apps/omnihub-site/src/utils/**',
+        'apps/omnihub-site/src/styles/**',
+        'apps/omnihub-site/src/routes/**',
+        'apps/omnihub-site/src/App.tsx',
+        'apps/omnihub-site/src/main.tsx',
+        'apps/omnihub-site/src/vite-env.d.ts',
+        'apps/omnihub-site/*.config.*',
+        'apps/omnihub-site/*.json',
+        'apps/omnihub-site/*.html',
         'node_modules/**',
         'dist/**',
         '.idea/**',
