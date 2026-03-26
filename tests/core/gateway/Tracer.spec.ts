@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { initGatewayTracer, withGatewaySpan, getGatewayTracer } from '../../../src/omnihub-gateway/Tracer';
-import { trace, context } from '@opentelemetry/api';
+import { trace } from '@opentelemetry/api';
 
 vi.mock('@opentelemetry/api', () => {
   const mockSpan = {
@@ -51,7 +51,7 @@ describe('Gateway Tracer', () => {
   });
 
   it('withGatewaySpan handles successful execution and sets attributes', async () => {
-    const result = await withGatewaySpan('test-method', { tenantId: 't1', correlationId: 'c1' }, async (span) => {
+    const result = await withGatewaySpan('test-method', { tenantId: 't1', correlationId: 'c1' }, async (_span) => {
       return 'success';
     });
 
