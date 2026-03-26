@@ -256,5 +256,9 @@
     "h3": "^1.15.9",
     "picomatch": "^4.0.4"
   },
-  "packageManager": "bun@1.2.14"
+  "packageManager": "bun@1.2.14",
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.60.0",
+    "@rollup/rollup-linux-x64-musl": "^4.60.0"
+  }
 }

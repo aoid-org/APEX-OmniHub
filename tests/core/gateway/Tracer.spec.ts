@@ -10,10 +10,10 @@ vi.mock('@opentelemetry/api', () => {
     recordException: vi.fn()
   };
   const mockTracer = {
-    startActiveSpan: vi.fn((name, options, context, callback) => {
-      // Handle the case where context is not provided
-      const cb = typeof context === 'function' ? context : callback;
-      return cb(mockSpan);
+    startActiveSpan: vi.fn((_name: string, ...args: unknown[]) => {
+      // Handle all overloads: (name, cb), (name, opts, cb), (name, opts, ctx, cb)
+      const cb = args.find((a) => typeof a === 'function') as ((span: typeof mockSpan) => unknown) | undefined;
+      return cb!(mockSpan);
     }),
   };
   return {
