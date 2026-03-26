@@ -329,7 +329,7 @@ function FortressSection() {
 
 function ManModeSection() {
   return (
-    <Section id="man-mode" variant="default">
+    <Section variant="default">
       <div className="manmode">
         <div className="manmode__visual" aria-hidden="true">
           <div className="manmode__icon">
@@ -353,13 +353,16 @@ function ManModeSection() {
         </div>
         <div className="manmode__content">
           <span className="manmode__badge">MAN MODE</span>
-          <h2 className="heading-2">{siteConfig.manMode.subtitle}</h2>
+          <h2 id="man-mode" className="heading-2">
+            {siteConfig.manMode.subtitle}
+          </h2>
           <p className="text-secondary mt-4">{siteConfig.manMode.description}</p>
           <ul className="manmode__features">
-            <li>High-risk items are flagged and held for review</li>
-            <li>Remaining workflow continues with zero interruption</li>
-            <li>Reviewer approves or rejects the held step</li>
-            <li>Full audit trail maintained for every decision</li>
+            <li>High-risk items are flagged and held — not silently blocked, not silently executed</li>
+            <li>Workflow execution continues on all non-flagged items</li>
+            <li>Flagged item enters review queue: Approve → executes | Reject → logged + discarded</li>
+            <li>Every decision is timestamped, attributed, and replayed via OmniTrace</li>
+            <li>MAN Mode thresholds are operator-configurable per environment</li>
           </ul>
           <a href="/man-mode#man-mode" className="btn btn--secondary mt-8">
             Learn More

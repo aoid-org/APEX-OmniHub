@@ -17,7 +17,7 @@ import {
 import type { MCPConfig } from './mcp.config';
 
 export class MCPConnectionManager {
-  private readonly transports = new Map<string, MCPTransport>();
+  private readonly transportMap = new Map<string, MCPTransport>();
 
   /**
    * Create transports for all enabled servers in the registry.
@@ -33,7 +33,7 @@ export class MCPConnectionManager {
           entry.config.transport,
           serverId,
         );
-        this.transports.set(serverId, transport);
+        this.transportMap.set(serverId, transport);
       }
     }
 
@@ -50,7 +50,7 @@ export class MCPConnectionManager {
       throw new Error(validation);
     }
 
-    const transport = this.transports.get(serverId);
+    const transport = this.transportMap.get(serverId);
     if (!transport) {
       throw new Error(`No transport for server: ${serverId}`);
     }
@@ -63,7 +63,7 @@ export class MCPConnectionManager {
    * Disconnect transport for a server.
    */
   async disconnect(serverId: string, registry: MCPServerRegistry): Promise<void> {
-    const transport = this.transports.get(serverId);
+    const transport = this.transportMap.get(serverId);
     if (transport) {
       await transport.disconnect();
       registry.updateStatus(serverId, 'available');
@@ -72,6 +72,14 @@ export class MCPConnectionManager {
 
   /** Retrieve a transport by server ID. */
   getTransport(serverId: string): MCPTransport | undefined {
-    return this.transports.get(serverId);
+    return this.transportMap.get(serverId);
+  }
+
+  /**
+   * Backwards-compatible transport registry exposure for tests and legacy callers.
+   * Returns the live transport map used by the facade.
+   */
+  get transports(): Map<string, MCPTransport> {
+    return this.transportMap;
   }
 }

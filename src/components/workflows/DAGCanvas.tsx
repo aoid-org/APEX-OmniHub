@@ -54,7 +54,7 @@ interface DAGCanvasProps {
   onCanvasMouseUp: () => void;
   onCanvasDragOver: (e: React.DragEvent) => void;
   onCanvasDrop: (e: React.DragEvent) => void;
-  canvasRef: React.RefObject<SVGSVGElement | null>;
+  canvasRef: React.RefObject<SVGSVGElement>;
 }
 
 // ---------------------------------------------------------------------------
