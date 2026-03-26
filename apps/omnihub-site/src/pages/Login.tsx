@@ -311,8 +311,8 @@ export function LoginPage() {
           </div>
 
           {import.meta.env.VITE_CONNECT_AI_ENABLED === 'true' && (
-            <button
-              type="button"
+            <a
+              href={`${dashboardUrl}?connect-ai=true`}
               className="btn btn--secondary"
               style={{
                 display: 'flex',
@@ -321,15 +321,14 @@ export function LoginPage() {
                 gap: '0.5rem',
                 width: '100%',
                 marginTop: 12,
+                textDecoration: 'none',
               }}
-              disabled={isLoading || oauthLoading !== null}
-              onClick={() => handleOAuthSignIn('azure' as Parameters<typeof handleOAuthSignIn>[0])}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M11.4 2L2 8.5l5.3 4.7L2 22h9.4l9.6-10L11.4 2z" fill="#00A4EF" />
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#f97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Connect AI
-            </button>
+            </a>
           )}
 
           <p className="text-muted mt-8" style={{ fontSize: 'var(--font-size-sm)' }}>
