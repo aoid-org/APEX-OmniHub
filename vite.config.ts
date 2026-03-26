@@ -3,17 +3,6 @@ import react from "@vitejs/plugin-react-swc";
 import { visualizer } from "rollup-plugin-visualizer";
 import path from "node:path";
 
-// Log env var availability at build time for CF Pages diagnostics
-if (process.env.CI || process.env.CF_PAGES) {
-  const hasUrl = !!process.env.VITE_SUPABASE_URL;
-  const hasKey = !!(process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY);
-  console.log(`[vite.config] VITE_SUPABASE_URL: ${hasUrl ? 'present' : 'MISSING'}`);
-  console.log(`[vite.config] VITE_SUPABASE_PUBLISHABLE_KEY: ${process.env.VITE_SUPABASE_PUBLISHABLE_KEY ? 'present' : 'MISSING'}`);
-  console.log(`[vite.config] VITE_SUPABASE_ANON_KEY: ${process.env.VITE_SUPABASE_ANON_KEY ? 'present' : 'MISSING'}`);
-  if (!hasUrl || !hasKey) {
-    console.warn('[vite.config] WARNING: Supabase env vars missing — auth will be broken at runtime!');
-  }
-}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
