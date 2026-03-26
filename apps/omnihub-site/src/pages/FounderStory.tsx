@@ -229,7 +229,12 @@ const FounderStory = memo(function FounderStory() {
           }
         }
       `}</style>
-      <SEOMeta title="Our Story" description="From enterprise IT to AI governance — the journey behind APEX OmniHub and the vision for accountable AI orchestration." canonical="https://apexomnihub.icu/story" />
+      <SEOMeta
+        title="The Founder's Story — Why APEX OmniHub Exists"
+        description="Built from personal fragmentation, engineered for enterprise resilience. The story behind the platform that puts control back in your hands."
+        canonical="https://apexomnihub.icu/story/"
+        appendBrandSuffix={false}
+      />
       <ReadingProgress />
 
       <section className="storyHero relative min-h-[calc(100vh-60px)] flex flex-col justify-center overflow-hidden px-6 py-16 sm:py-20" aria-labelledby="founder-story-title">

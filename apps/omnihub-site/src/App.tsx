@@ -11,6 +11,8 @@ import { LoginPage } from "@/pages/Login";
 import { PrivacyPage } from "@/pages/Privacy";
 import { TermsPage } from "@/pages/Terms";
 import FounderStory from "@/pages/FounderStory";
+import { TechSpecsPage } from "@/pages/TechSpecs";
+import { ManModePage } from "@/pages/ManMode";
 import { RequestAccessPage } from "@/pages/RequestAccess";
 import Web3Integrations from "@/pages/integrations/Web3Integrations";
 import OmniDash from "@/pages/product/OmniDash";
@@ -55,6 +57,9 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/auth", element: <LoginPage />, isPublic: true, routeName: "Auth" },
   { path: "/login", element: <LoginPage />, isPublic: true, routeName: "Login" },
   { path: "/story", element: <FounderStory />, isPublic: true, routeName: "Founder Story" },
+  { path: "/tech-specs", element: <TechSpecsPage />, isPublic: true, routeName: "Tech Specs" },
+  { path: "/features/man-mode", element: <ManModePage />, isPublic: true, routeName: "MAN Mode" },
+  { path: "/man-mode", element: <ManModePage />, isPublic: true, routeName: "MAN Mode Legacy" },
   { path: "/privacy", element: <PrivacyPage />, isPublic: true, routeName: "Privacy" },
   { path: "/terms", element: <TermsPage />, isPublic: true, routeName: "Terms" },
   { path: "/request-access", element: <RequestAccessPage />, isPublic: true, routeName: "Request Access" },

@@ -504,9 +504,10 @@ export function HomePage() {
   return (
     <Layout>
       <SEOMeta
-        title="AI Orchestration Platform"
-        description="APEX OmniHub is the enterprise AI governance platform for governed execution across AI agents, legacy systems, and Web3. Directable. Accountable. Dependable."
-        canonical="https://apexomnihub.icu"
+        title="APEX OmniHub — Auditable, Reversible AI Orchestration"
+        description="The only enterprise AI orchestrator that's fully directable, auditable, and reversible. Govern every action. Override anything. Replay everything."
+        canonical="https://apexomnihub.icu/"
+        appendBrandSuffix={false}
       />
       <Hero />
       <HighlightsSection />

@@ -1,9 +1,16 @@
 import { Layout } from '@/components/Layout';
 import { Section } from '@/components/Section';
+import { SEOMeta } from '@/components/SEOMeta';
 
 export default function OmniDash() {
   return (
     <Layout title="OmniDash">
+      <SEOMeta
+        title="OmniDash — Single-Plane Command Interface | APEX OmniHub"
+        description="One governed surface. Modal-first, PiP persistent, multilingual. Every action visible, every decision logged. Enterprise command, simplified."
+        canonical="https://apexomnihub.icu/product/omnidash/"
+        appendBrandSuffix={false}
+      />
       <Section>
         <article className="omnidash-page max-w-4xl mx-auto px-6 py-20">
           <header className="mb-12">
