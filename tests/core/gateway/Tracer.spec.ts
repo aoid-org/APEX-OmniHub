@@ -10,10 +10,10 @@ vi.mock('@opentelemetry/api', () => {
     recordException: vi.fn()
   };
   const mockTracer = {
-    startActiveSpan: vi.fn((...args: unknown[]) => {
-      // startActiveSpan can be called with 2, 3, or 4 args; the callback is always last
-      const cb = args[args.length - 1] as (span: typeof mockSpan) => unknown;
-      return cb(mockSpan);
+    startActiveSpan: vi.fn((_name: string, ...args: unknown[]) => {
+      // Handle all overloads: (name, cb), (name, opts, cb), (name, opts, ctx, cb)
+      const cb = args.find((a) => typeof a === 'function') as ((span: typeof mockSpan) => unknown) | undefined;
+      return cb!(mockSpan);
     }),
   };
   return {

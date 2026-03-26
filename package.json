@@ -97,6 +97,12 @@
     "@capacitor/ios": "^6.2.1",
     "@capacitor/push-notifications": "^6.0.5",
     "@hookform/resolvers": "^3.10.0",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.72.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
+    "@opentelemetry/resources": "^2.6.1",
+    "@opentelemetry/sdk-node": "^0.214.0",
+    "@opentelemetry/semantic-conventions": "^1.40.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -181,12 +187,6 @@
     "@nomicfoundation/hardhat-network-helpers": "^1.0.12",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.12",
-    "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/auto-instrumentations-node": "^0.72.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
-    "@opentelemetry/resources": "^2.6.1",
-    "@opentelemetry/sdk-node": "^0.214.0",
-    "@opentelemetry/semantic-conventions": "^1.40.0",
     "@openzeppelin/contracts": "^5.1.0",
     "@playwright/test": "^1.57.0",
     "@size-limit/file": "^12.0.1",
@@ -252,8 +252,19 @@
     "serialize-javascript": "^7.0.3",
     "rollup": "^4.59.0",
     "immutable": "^4.3.8",
-    "picomatch": ">=2.3.2",
-    "h3": "^1.15.9"
+    "h3": "^1.15.9",
+    "picomatch": ">=2.3.2"
   },
-  "packageManager": "bun@1.2.14"
+  "resolutions": {
+    "h3": "^1.15.9",
+    "picomatch": "^4.0.4"
+  },
+  "packageManager": "bun@1.2.14",
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "^0.25.12",
+    "@rollup/rollup-linux-x64-gnu": "^4.60.0",
+    "@rollup/rollup-linux-x64-musl": "^4.60.0",
+    "@swc/core-linux-x64-gnu": "^1.15.21",
+    "@swc/core-linux-x64-musl": "^1.15.21"
+  }
 }
