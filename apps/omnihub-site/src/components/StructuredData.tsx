@@ -14,7 +14,7 @@ export function StructuredData({ id, json }: StructuredDataProps) {
     if (!script) {
       script = document.createElement('script');
       script.type = 'application/ld+json';
-      script.setAttribute('data-schema-id', id);
+      script.dataset.schemaId = id;
       document.head.appendChild(script);
     }
 

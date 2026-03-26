@@ -12,12 +12,13 @@ const { mockTracer, mockGetTracer, mockSdkStart, mockNodeSdk } = vi.hoisted(() =
   const tracer = {
     startActiveSpan: vi.fn((name, options, context, callback) => {
       // Support both startActiveSpan(name, callback) and longer overloads.
-      const cb =
-        typeof options === 'function'
-          ? options
-          : typeof context === 'function'
-            ? context
-            : callback;
+      let cb = callback;
+      if (typeof options === 'function') {
+        cb = options;
+      } else if (typeof context === 'function') {
+        cb = context;
+      }
+
       return cb(span);
     }),
   };
@@ -87,10 +88,15 @@ vi.mock(
 vi.mock(
   '@opentelemetry/semantic-conventions',
   () => ({
-    SemanticResourceAttributes: {
-      SERVICE_NAME: 'service.name',
-      DEPLOYMENT_ENVIRONMENT: 'deployment.environment',
-    },
+    ATTR_SERVICE_NAME: 'service.name',
+  }),
+  { virtual: true },
+);
+
+vi.mock(
+  '@opentelemetry/semantic-conventions/incubating',
+  () => ({
+    ATTR_DEPLOYMENT_ENVIRONMENT_NAME: 'deployment.environment.name',
   }),
   { virtual: true },
 );
