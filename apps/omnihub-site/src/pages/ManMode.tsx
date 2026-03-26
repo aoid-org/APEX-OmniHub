@@ -1,5 +1,7 @@
 import { Layout, Section } from '@/components';
 import { SEOMeta } from '@/components/SEOMeta';
+import { StructuredData } from '@/components/StructuredData';
+import manModeSchema from '../../public/schema/man-mode-faq.jsonld?raw';
 
 export function ManModePage() {
   // Verified clean for ESLint - Quality Gate pass
@@ -11,6 +13,7 @@ export function ManModePage() {
         canonical="https://apexomnihub.icu/features/man-mode/"
         appendBrandSuffix={false}
       />
+      <StructuredData id="man-mode-schema" json={manModeSchema} />
       <Section>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           

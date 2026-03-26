@@ -1,12 +1,15 @@
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { Section } from '@/components/Section';
+import { StructuredData } from '@/components/StructuredData';
 import { CTAGroup } from '@/components/CTAGroup';
 import { HeroVisual } from '@/components/HeroVisual';
 import { FeatureHighlightGrid } from '@/components/FeatureHighlightGrid';
 import { siteConfig } from '@/content/site';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import homepageSchema from '../../public/schema/homepage.jsonld?raw';
+import organizationSchema from '../../public/schema/organization.jsonld?raw';
 import {
   IconConnect,
   IconTranslate,
@@ -509,6 +512,8 @@ export function HomePage() {
         canonical="https://apexomnihub.icu/"
         appendBrandSuffix={false}
       />
+      <StructuredData id="homepage-schema" json={homepageSchema} />
+      <StructuredData id="organization-schema" json={organizationSchema} />
       <Hero />
       <HighlightsSection />
       <TriForceSection />

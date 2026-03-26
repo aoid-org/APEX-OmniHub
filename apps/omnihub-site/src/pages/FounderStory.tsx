@@ -2,8 +2,10 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
+import { StructuredData } from '@/components/StructuredData';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import storySchema from '../../public/schema/story.jsonld?raw';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -235,6 +237,7 @@ const FounderStory = memo(function FounderStory() {
         canonical="https://apexomnihub.icu/story/"
         appendBrandSuffix={false}
       />
+      <StructuredData id="story-schema" json={storySchema} />
       <ReadingProgress />
 
       <section className="storyHero relative min-h-[calc(100vh-60px)] flex flex-col justify-center overflow-hidden px-6 py-16 sm:py-20" aria-labelledby="founder-story-title">
