@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
 const supabaseAnonKey =
-  import.meta.env.VITE_SUPABASE_ANON_KEY ??
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+  import.meta.env.VITE_SUPABASE_ANON_KEY ??
   '';
 
 const hasValidSupabaseUrl = /^https?:\/\//i.test(supabaseUrl);
@@ -16,8 +16,9 @@ if (
   (!import.meta.env.VITE_SUPABASE_ANON_KEY && !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
 ) {
   console.error(
-    `[APEX] Supabase is not configured. trace=${supabaseConfigTraceId}. ` +
-      'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your Vercel environment.',
+    `[APEX OmniHub] Supabase is not configured. trace=${supabaseConfigTraceId}. ` +
+      'Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in Cloudflare Pages. ' +
+      'VITE_SUPABASE_ANON_KEY remains supported as a legacy fallback.',
   );
 }
 

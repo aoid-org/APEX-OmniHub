@@ -198,8 +198,9 @@ export function LoginPage() {
                 <strong>Authentication service not configured.</strong>
                 <br />
                 Set <code style={{ fontSize: '0.85em' }}>VITE_SUPABASE_URL</code> and{' '}
-                <code style={{ fontSize: '0.85em' }}>VITE_SUPABASE_ANON_KEY</code> in your
-                Vercel environment variables.
+                <code style={{ fontSize: '0.85em' }}>VITE_SUPABASE_PUBLISHABLE_KEY</code> in your
+                Cloudflare Pages environment variables. <span style={{ opacity: 0.85 }}>If your
+                project still uses the legacy key name, <code style={{ fontSize: '0.85em' }}>VITE_SUPABASE_ANON_KEY</code> is also supported.</span>
                 <br />
                 <span style={{ opacity: 0.7 }}>Trace: {supabaseConfigTraceId}</span>
             </div>
