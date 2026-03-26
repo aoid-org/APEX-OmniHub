@@ -3,11 +3,7 @@ import { SupabaseIdempotencyStore } from '../../../src/omnihub-gateway/SupabaseI
 import type { IdempotencyEntry } from '../../../src/omnihub-gateway/types';
 
 describe('SupabaseIdempotencyStore', () => {
-<<<<<<< Updated upstream
   let mockSupabase: Record<string, ReturnType<typeof vi.fn>>;
-=======
-  let mockSupabase: import('@supabase/supabase-js').SupabaseClient;
->>>>>>> Stashed changes
   let store: SupabaseIdempotencyStore;
 
   beforeEach(() => {
