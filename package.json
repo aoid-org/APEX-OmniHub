@@ -71,7 +71,7 @@
     "changeset:version": "changeset version",
     "changeset:publish": "changeset publish",
     "release": "bun run build && bun run changeset:publish",
-    "prebuild": "node scripts/generate-sitemap.mjs"
+    "prebuild": "node scripts/check-env-root.mjs && node scripts/generate-sitemap.mjs"
   },
   "size-limit": [
     {
