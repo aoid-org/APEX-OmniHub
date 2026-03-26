@@ -1,14 +1,14 @@
 {
   "_meta": {
-    "generated": "2026-03-15T16:26:28.978Z",
+    "generated": "2026-03-26T07:43:36.037Z",
     "generated_by": "scripts/generate-readiness-report.mjs",
     "schema": "institutional-readiness-v2",
     "warning": "Auto-generated from repo state. DO NOT edit manually. Re-run the script.",
-    "version": "1.4.2"
+    "version": "1.5.1"
   },
   "platform": {
     "name": "APEX OmniHub",
-    "version": "1.4.2",
+    "version": "1.5.1",
     "repository": "https://github.com/apexbusiness-systems/APEX-OmniHub",
     "live_url": "https://apexomnihub.icu",
     "documentation_url": "https://apexomnihub.icu/docs",
@@ -49,10 +49,10 @@
       "multi_region_roadmap": "2026-Q4"
     },
     "repository_metrics": {
-      "database_migrations": 61,
-      "edge_functions": 22,
-      "test_specs": 102,
-      "as_of": "2026-03-15"
+      "database_migrations": 70,
+      "edge_functions": 26,
+      "test_specs": 133,
+      "as_of": "2026-03-26"
     }
   },
   "security": {
