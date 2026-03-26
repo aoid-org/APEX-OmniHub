@@ -15,7 +15,8 @@ if (missing.length > 0) {
   console.error('\nAPEX BUILD GUARD - Missing required environment variables:\n');
   missing.forEach((key) => console.error(`   - ${key}`));
   console.error(
-    '\nFix: Vercel -> Project -> Settings -> Environment Variables -> add missing keys -> redeploy\n',
+    '\nFix: Cloudflare Pages -> Project -> Settings -> Environment Variables -> add missing keys -> redeploy\n',
+    'Note: Env vars added after the last build require a manual redeploy (CF Pages only rebuilds on git push).\n',
   );
   process.exit(1);
 }
