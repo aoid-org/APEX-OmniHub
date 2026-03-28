@@ -21,7 +21,7 @@ function findWorkspaceRoot() {
   let depth = 0;
   while (depth < 10) {
     if (existsSync(join(currentDir, 'package.json')) &&
-        (existsSync(join(currentDir, 'bun.lockb')) || existsSync(join(currentDir, 'package-lock.json')))) {
+        (existsSync(join(currentDir, 'bun.lock')) || existsSync(join(currentDir, 'bun.lockb')) || existsSync(join(currentDir, 'package-lock.json')))) {
       return currentDir;
     }
 
@@ -40,7 +40,7 @@ function findWorkspaceRoot() {
 function resolveNpmRunner() {
   const root = findWorkspaceRoot();
 
-  if (existsSync(join(root, 'bun.lockb'))) {
+  if (existsSync(join(root, 'bun.lock')) || existsSync(join(root, 'bun.lockb'))) {
     // Return bun command array
     return { command: 'bun', args: ['pm', 'ls', '--all'] };
   }
