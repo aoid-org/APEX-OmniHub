@@ -256,7 +256,9 @@
     "rollup": "^4.59.0",
     "immutable": "^4.3.8",
     "picomatch": ">=2.3.2",
-    "ast-v8-to-istanbul>js-tokens": "^10.0.0"
+    "ast-v8-to-istanbul": {
+      "js-tokens": "^10.0.0"
+    }
   },
   "resolutions": {
     "h3": "^1.15.9",
