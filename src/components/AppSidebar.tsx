@@ -1,4 +1,4 @@
-import { Image, Folder, Play, Settings, LifeBuoy, Headphones } from 'lucide-react';
+import { Image, Folder, Play, Globe, Settings, LifeBuoy, LayoutDashboard, Headphones } from 'lucide-react';
 import { useOmniModal } from '../stores/omniModalStore';
 import type { OmniModalConfig } from '../stores/omniModalStore';
 
@@ -8,7 +8,10 @@ import type { OmniModalConfig } from '../stores/omniModalStore';
  * No route navigation — single page app architecture.
  */
 export function AppSidebar() {
+  const activeModuleKey = useOmniModal((s) => s.activeModal?.contextData?.moduleKey as string | undefined);
+
   const navItems = [
+    { title: 'Dashboard', moduleKey: 'dashboard', icon: LayoutDashboard, iconColor: 'text-orange-400', glowColor: 'from-orange-500/20 to-amber-500/10' },
     { title: 'Links', moduleKey: 'links', icon: Image, iconColor: 'text-blue-400', glowColor: 'from-blue-500/20 to-indigo-500/10' },
     { title: 'Files', moduleKey: 'files', icon: Folder, iconColor: 'text-blue-300', glowColor: 'from-blue-400/20 to-cyan-500/10' },
     { title: 'Automations', moduleKey: 'automations', icon: Play, iconColor: 'text-indigo-400', glowColor: 'from-indigo-500/20 to-purple-500/10' },
@@ -33,11 +36,28 @@ export function AppSidebar() {
         <div>
           <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">PLATFORM</h3>
           <nav className="space-y-1">
+            <button
+              onClick={() => openModule('omnidash', 'OmniDash')}
+              className={`group flex items-center justify-between w-full px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                activeModuleKey === 'omnidash'
+                  ? 'bg-orange-500/[0.08] border border-orange-500/30 text-foreground shadow-[0_0_12px_rgba(249,115,22,0.08)]'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground border border-transparent hover:border-border'
+              }`}
+            >
+              <span className="text-[13px]">OmniDash</span>
+              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-purple-500/20 to-indigo-500/10 flex items-center justify-center border border-border/50 shadow-inner">
+                <Globe className="w-3 h-3 text-purple-400" />
+              </div>
+            </button>
             {navItems.map((item) => (
               <button
                 key={item.title}
                 onClick={() => openModule(item.moduleKey, item.title)}
-                className="group flex items-center justify-between w-full px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-foreground border border-transparent hover:border-border"
+                className={`group flex items-center justify-between w-full px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  activeModuleKey === item.moduleKey
+                    ? 'bg-orange-500/[0.08] border border-orange-500/30 text-foreground shadow-[0_0_12px_rgba(249,115,22,0.08)]'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground border border-transparent hover:border-border'
+                }`}
               >
                 <span>{item.title}</span>
                 <div className={`w-6 h-6 rounded-md bg-gradient-to-br ${item.glowColor} flex items-center justify-center border border-border/50 shadow-inner`}>
@@ -51,7 +71,11 @@ export function AppSidebar() {
         <div className="mt-1">
           <button
             onClick={() => openModule('settings', 'Settings')}
-            className="group flex items-center gap-3 w-full px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-foreground border border-transparent"
+            className={`group flex items-center gap-3 w-full px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+              activeModuleKey === 'settings'
+                ? 'bg-accent text-foreground border border-border'
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground border border-transparent'
+            }`}
           >
             <Settings className="w-4 h-4 opacity-70" />
             <span>Settings</span>
