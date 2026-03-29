@@ -45,7 +45,7 @@ describe('offline utils', () => {
 
     const lsProxy = new Proxy(memoryStore, {
       get: (target, prop) => {
-        if (prop in ls) return (ls as any)[prop];
+        if (prop in ls) return (ls as Record<string, unknown>)[prop];
         return target[prop as string];
       },
       ownKeys: (target) => Object.keys(target),
@@ -117,7 +117,7 @@ describe('offline utils', () => {
 
       const eventListeners: Record<string, EventListenerOrEventListenerObject[]> = {};
 
-      spyOn(globalThis, 'addEventListener').mockImplementation((type: string, listener: any) => {
+      spyOn(globalThis, 'addEventListener').mockImplementation((type: string, listener: EventListenerOrEventListenerObject) => {
         if (!eventListeners[type]) eventListeners[type] = [];
         eventListeners[type].push(listener);
       });
@@ -125,11 +125,11 @@ describe('offline utils', () => {
       setupOfflineListeners(onOnline, onOffline);
 
       // Trigger online
-      eventListeners['online']?.forEach((fn: any) => fn());
+      eventListeners['online']?.forEach((fn: EventListenerOrEventListenerObject) => { if (typeof fn === "function") { fn(new Event("test")); } else { fn.handleEvent(new Event("test")); } });
       expect(onOnline).toHaveBeenCalledTimes(1);
 
       // Trigger offline
-      eventListeners['offline']?.forEach((fn: any) => fn());
+      eventListeners['offline']?.forEach((fn: EventListenerOrEventListenerObject) => { if (typeof fn === "function") { fn(new Event("test")); } else { fn.handleEvent(new Event("test")); } });
       expect(onOffline).toHaveBeenCalledTimes(1);
     });
   });
@@ -265,8 +265,8 @@ describe('offline utils', () => {
       const queueAfter = JSON.parse(rawQueueAfter!);
 
       expect(queueAfter.length).toBe(50); // Still 50
-      expect(queueAfter.find((i: any) => i.id === firstId)).toBeUndefined(); // First item removed
-      expect(queueAfter.find((i: any) => i.id === newId)).toBeDefined(); // New item added
+      expect(queueAfter.find((i: { id: string; retries: number; nextRetryTime?: number }) => i.id === firstId)).toBeUndefined(); // First item removed
+      expect(queueAfter.find((i: { id: string; retries: number; nextRetryTime?: number }) => i.id === newId)).toBeDefined(); // New item added
     });
 
     it('processes queued requests successfully when online', async () => {
@@ -315,7 +315,7 @@ describe('offline utils', () => {
       expect(rawQueue1).toContain(id); // Still in queue because it failed
 
       const queue1 = JSON.parse(rawQueue1!);
-      const item1 = queue1.find((i: any) => i.id === id);
+      const item1 = queue1.find((i: { id: string; retries: number; nextRetryTime?: number }) => i.id === id);
       expect(item1.retries).toBe(1);
     });
 
