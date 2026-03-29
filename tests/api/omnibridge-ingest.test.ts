@@ -37,7 +37,8 @@ async function buildHardenedSignature(
 }
 
 function buildLegacyRequest(body: Record<string, unknown>, signature: string): Request {
-  return new Request('https://example.com/api/omnibridge/ingest', {
+  return new Request('https://example.com/api/omnibridge/ingest', // NOSONAR
+    {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -54,7 +55,7 @@ async function buildHardenedRequest(
   traceId: string,
   secret: string,
   timestampOffsetSecs = 0,
-  ip = '192.168.1.1'
+  ip = '192.168.1.1' // NOSONAR
 ): Promise<Request> {
   const timestamp = Math.floor(Date.now() / 1000) + timestampOffsetSecs;
   const timestampStr = timestamp.toString();
@@ -64,7 +65,8 @@ async function buildHardenedRequest(
 
   const signature = await buildHardenedSignature(secret, method, path, timestampStr, traceId, sourceId, bodyRaw);
 
-  return new Request(`https://example.com${path}`, {
+  return new Request(`https://example.com${path}`, // NOSONAR
+  {
     method,
     headers: {
       'Content-Type': 'application/json',
@@ -107,7 +109,7 @@ describe('api/omnibridge/ingest', () => {
           key_id: 'sbbl-hq-v1',
           secret_env: 'OMNIBRIDGE_SBBL_HQ_SECRET',
           status: 'active',
-          allowed_ips: ['192.168.1.1']
+          allowed_ips: ['192.168.1.1'] // NOSONAR
         }
       },
       {
@@ -205,7 +207,7 @@ describe('api/omnibridge/ingest', () => {
     });
 
     it('rejects unauthorized IP', async () => {
-      const req = await buildHardenedRequest(validHardenedBody, 'sbbl-hq', 'sbbl-hq-v1', 'trace-1', testSecret, 0, '10.0.0.1');
+      const req = await buildHardenedRequest(validHardenedBody, 'sbbl-hq', 'sbbl-hq-v1', 'trace-1', testSecret, 0, '10.0.0.1'); // NOSONAR
       const res = await handler(req);
       expect(res.status).toBe(403);
     });
