@@ -221,33 +221,48 @@ async function flushUpserts(force = false) {
   const queue = await loadUpsertQueue();
   let updated = [...queue];
 
-  for (const item of queue) {
-    if (item.status === 'failed') continue;
-    if (!force && item.nextAttemptAt > now) continue;
-    if (isOffline()) {
-      scheduleFlush(2_000);
-      break;
+  if (isOffline()) {
+    scheduleFlush(2_000);
+    flushInFlight = false;
+    return;
+  }
+
+  const itemsToProcess = queue.filter(
+    (item) => item.status !== 'failed' && (force || item.nextAttemptAt <= now)
+  );
+
+  if (itemsToProcess.length === 0) {
+    flushInFlight = false;
+    scheduleRemainingFlush(updated);
+    return;
+  }
+
+  const payload = itemsToProcess.map((item) => ({
+    user_id: item.record.userId,
+    device_id: item.record.deviceId,
+    device_fingerprint: JSON.stringify(item.record.deviceInfo),
+    status: item.record.status || 'suspect',
+    last_seen_at: item.record.lastSeen,
+  }));
+
+  try {
+    const { error } = await supabase
+      .from('device_registry')
+      .upsert(payload, {
+        onConflict: 'user_id,device_id',
+      });
+
+    if (error) {
+      throw new Error(`Device upsert failed: ${error.message}`);
     }
 
-    try {
-      const { error } = await supabase
-        .from('device_registry')
-        .upsert({
-          user_id: item.record.userId,
-          device_id: item.record.deviceId,
-          device_fingerprint: JSON.stringify(item.record.deviceInfo),
-          status: item.record.status || 'suspect',
-          last_seen_at: item.record.lastSeen,
-        }, {
-          onConflict: 'user_id,device_id',
-        });
-
-      if (error) {
-        throw new Error(`Device upsert failed: ${error.message}`);
-      }
-
+    // Process successes for all items in batch
+    for (const item of itemsToProcess) {
       updated = await handleUpsertSuccess(item, updated);
-    } catch (error) {
+    }
+  } catch (error) {
+    // If the batch fails, apply backoff to all items
+    for (const item of itemsToProcess) {
       await handleUpsertFailure(item, error, updated);
     }
   }
