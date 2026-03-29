@@ -255,14 +255,14 @@ describe('MemoryClient.recall()', () => {
     expect(results[0]).toEqual(SAMPLE_MEMORY_RECORD);
   });
 
-  it('calls touch_memory RPC for each returned memory', async () => {
+  it('calls touch_memories_bulk RPC for returned memories', async () => {
     const { client, spies } = makeRecallMock([SAMPLE_MEMORY_ROW]);
 
     const mc = new MemoryClient(client, TENANT_ID, USER_ID);
     await mc.recall();
 
-    expect(spies.rpcSpy).toHaveBeenCalledWith('touch_memory', {
-      memory_id: SAMPLE_MEMORY_ROW.id,
+    expect(spies.rpcSpy).toHaveBeenCalledWith('touch_memories_bulk', {
+      memory_ids: [SAMPLE_MEMORY_ROW.id],
     });
   });
 
@@ -519,9 +519,9 @@ describe('MemoryClient — operation sequences', () => {
       })
       .mockReturnValue(recallBuilder);
 
-    // RPC: touch_memory + purge_user_memories
+    // RPC: touch_memories_bulk + purge_user_memories
     spies.rpcSpy
-      .mockResolvedValueOnce({ data: null, error: null }) // touch_memory
+      .mockResolvedValueOnce({ data: null, error: null }) // touch_memories_bulk
       .mockResolvedValueOnce({ data: 1, error: null });   // purge_user_memories
 
     const mc = new MemoryClient(client, TENANT_ID, USER_ID);
