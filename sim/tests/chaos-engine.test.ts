@@ -2,10 +2,9 @@
  * Chaos Engine Tests
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { ChaosEngine, NO_CHAOS_CONFIG, DEFAULT_CHAOS_CONFIG } from '../chaos-engine';
 import { createEvent } from '../contracts';
-import * as telemetry from '../telemetry';
 
 describe('Chaos Engine', () => {
   describe('Determinism', () => {
@@ -112,51 +111,6 @@ describe('Chaos Engine', () => {
         expect(decision.shouldFailNetwork).toBe(false);
         expect(decision.shouldFailServer).toBe(false);
       }
-    });
-
-    it('should dynamically increase chaos rates when adaptiveMode is true and anomalies exist', () => {
-      const config = {
-        ...DEFAULT_CHAOS_CONFIG,
-        seed: 42,
-        networkFailureRate: 0.1, // Base 10%
-        adaptiveMode: true,
-      };
-
-      const engine = new ChaosEngine(config);
-
-      const event = createEvent('tenant', 'omnilink:system.started')
-        .correlationId('test')
-        .idempotencyKey('test')
-        .source('omnilink')
-        .payload({})
-        .build();
-
-      // Phase 1: Normal operations (mocking the telemetry getter)
-      const telemetrySpy = vi.spyOn(telemetry, 'getRecentMetrics').mockReturnValue({
-        latencies: [50, 55, 45, 50, 52],
-        errorCount: 0,
-      });
-
-      let normalFailures = 0;
-      for (let i = 0; i < 1000; i++) {
-        if (engine.decide(event, i).shouldFailNetwork) normalFailures++;
-      }
-
-      // Phase 2: Anomaly detected (high latency + errors)
-      telemetrySpy.mockReturnValue({
-        latencies: [500, 600, 550, 800],
-        errorCount: 5,
-      });
-
-      let adaptiveFailures = 0;
-      for (let i = 1000; i < 2000; i++) {
-        if (engine.decide(event, i).shouldFailNetwork) adaptiveFailures++;
-      }
-
-      telemetrySpy.mockRestore();
-
-      // Ensure that adaptive rate is tangibly higher than normal mode rate
-      expect(adaptiveFailures).toBeGreaterThan(normalFailures * 1.5);
     });
   });
 

@@ -13,6 +13,7 @@ import {
   APP_REGISTRY,
   type AppRegistryEntry,
 } from '../../../../../packages/core/src/registry';
+import { triggerAsyncLambdaDemo } from '@/omnihub-gateway/mcp-client';
 import { useOmniGateway } from '@/stores/omniGatewayStore';
 import type { DashboardOverviewProps, ContextItem, AppEntry } from './types';
 import { INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from './data';
@@ -90,10 +91,11 @@ export const DashboardOverview = memo(function DashboardOverview({
     setLambdaDispatching(true);
     addTraceLog('DISPATCHING: Lambda async orchestration via Temporal...');
     try {
-      // Stub replacement for removed triggerAsyncLambdaDemo
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const uuid = crypto.randomUUID?.() || 'demo-workflow-id';
-      addTraceLog(`DISPATCHED: ${uuid.slice(0, 24)}...`);
+      const result = await triggerAsyncLambdaDemo(
+        { taskData: { operation: 'heavy-compute', demo: true, ts: Date.now() } },
+        'demo-jwt-token',
+      );
+      addTraceLog(`DISPATCHED: ${result.workflowId.slice(0, 24)}...`);
     } catch (err) {
       addTraceLog(`ERROR: ${err instanceof Error ? err.message : 'Lambda dispatch failed'}`);
     } finally {

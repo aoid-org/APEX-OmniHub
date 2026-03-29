@@ -8,7 +8,6 @@ from activities.man_mode import (
     risk_triage,
 )
 from activities.omni_policy import evaluate_policy_activity
-from activities.resolve_intent import resolve_intent
 from activities.tools import (
     check_semantic_cache,
     generate_plan_with_llm,
@@ -20,8 +19,6 @@ __all__ = [
     "check_semantic_cache",
     "generate_plan_with_llm",
     "setup_activities",
-    # Intent resolution (replay-safe registry lookup)
-    "resolve_intent",
     # Policy enforcement
     "evaluate_policy_activity",
     # MAN Mode activities

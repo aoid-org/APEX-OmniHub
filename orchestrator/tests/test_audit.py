@@ -137,8 +137,7 @@ async def test_log_event_file():
             return mock_file
 
         async def __aexit__(self, exc_type, exc, tb):
-            # Propagate any exception raised in the context body.
-            return False
+            pass
 
     with patch("aiofiles.open", return_value=AsyncContextManager()):
         await logger.log_event(entry)

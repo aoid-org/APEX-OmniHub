@@ -40,9 +40,9 @@ export class BatchProcessor<T, R> {
       // Process immediately if batch is full
       if (this.queue.length >= this.options.maxBatchSize!) {
         this.flush();
-      } else {
+      } else if (!this.timer) {
         // Schedule batch processing
-        this.timer ??= setTimeout(() => this.flush(), this.options.maxWaitMs);
+        this.timer = setTimeout(() => this.flush(), this.options.maxWaitMs);
       }
     });
   }

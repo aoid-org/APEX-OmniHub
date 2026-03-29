@@ -47,7 +47,6 @@ from activities.man_mode import (
 from activities.notify_man_task import notify_man_task
 from activities.omni_policy import evaluate_policy_activity
 from activities.omnitrace_activities import get_omnitrace_activities
-from activities.resolve_intent import resolve_intent
 from activities.tools import (
     call_webhook,
     check_semantic_cache,
@@ -172,8 +171,6 @@ async def start_worker() -> None:
             send_dlq_alert,
             # OmniTrace activities
             *get_omnitrace_activities(),
-            # Intent resolution (replay-safe registry lookup)
-            resolve_intent,
             # Universal Intent activities (USO — registry-routable)
             system_health_check,
             system_echo,

@@ -1,49 +1,21 @@
 ALTER TABLE public.man_tasks ENABLE ROW LEVEL SECURITY;
 
--- Ensure operator_role exists before referencing it in policies.
--- In Supabase, custom roles must be created explicitly; built-in roles
--- (authenticated, anon, service_role) are available by default.
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'operator_role') THEN
-    CREATE ROLE operator_role NOLOGIN;
-    GRANT USAGE ON SCHEMA public TO operator_role;
-  END IF;
-END $$;
+CREATE POLICY "service_role_full_access"
+ON public.man_tasks
+FOR ALL
+TO service_role
+USING (true)
+WITH CHECK (true);
 
-DO $$
-DECLARE
-  tbl CONSTANT text := 'man_tasks';
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE policyname = 'service_role_full_access' AND tablename = tbl
-  ) THEN
-    CREATE POLICY "service_role_full_access"
-    ON public.man_tasks
-    FOR ALL
-    TO service_role
-    USING (true)
-    WITH CHECK (true);
-  END IF;
+CREATE POLICY "operator_select"
+ON public.man_tasks
+FOR SELECT
+TO operator_role
+USING (true);
 
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE policyname = 'operator_select' AND tablename = tbl
-  ) THEN
-    CREATE POLICY "operator_select"
-    ON public.man_tasks
-    FOR SELECT
-    TO operator_role
-    USING (true);
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE policyname = 'operator_update' AND tablename = tbl
-  ) THEN
-    CREATE POLICY "operator_update"
-    ON public.man_tasks
-    FOR UPDATE
-    TO operator_role
-    USING (true)
-    WITH CHECK (true);
-  END IF;
-END $$;
+CREATE POLICY "operator_update"
+ON public.man_tasks
+FOR UPDATE
+TO operator_role
+USING (true)
+WITH CHECK (true);

@@ -8,6 +8,20 @@ create table if not exists public.user_dashboard_layouts (
   unique (user_id)
 );
 alter table public.user_dashboard_layouts enable row level security;
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'user_dashboard_layouts'
+      and policyname = 'Users own their layout'
+  ) then
+    create policy "Users own their layout" on public.user_dashboard_layouts
+      for all using (auth.uid() = user_id);
+  end if;
+end $$;
+
 create table if not exists public.user_ops_controls (
   user_id uuid references auth.users primary key,
   demo_mode bool not null default true,
@@ -17,6 +31,20 @@ create table if not exists public.user_ops_controls (
   updated_at timestamptz default now()
 );
 alter table public.user_ops_controls enable row level security;
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'user_ops_controls'
+      and policyname = 'Users own their ops'
+  ) then
+    create policy "Users own their ops" on public.user_ops_controls
+      for all using (auth.uid() = user_id);
+  end if;
+end $$;
+
 create table if not exists public.omnihub_analytics (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users not null,
@@ -27,6 +55,20 @@ create table if not exists public.omnihub_analytics (
   recorded_at timestamptz default now()
 );
 alter table public.omnihub_analytics enable row level security;
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'omnihub_analytics'
+      and policyname = 'Users read their analytics'
+  ) then
+    create policy "Users read their analytics" on public.omnihub_analytics
+      for select using (auth.uid() = user_id);
+  end if;
+end $$;
+
 create table if not exists public.omnitrace_events (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users not null,
@@ -37,6 +79,20 @@ create table if not exists public.omnitrace_events (
   created_at timestamptz default now()
 );
 alter table public.omnitrace_events enable row level security;
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'omnitrace_events'
+      and policyname = 'Users read their traces'
+  ) then
+    create policy "Users read their traces" on public.omnitrace_events
+      for select using (auth.uid() = user_id);
+  end if;
+end $$;
+
 create table if not exists public.security_audit_log (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users not null,
@@ -45,6 +101,20 @@ create table if not exists public.security_audit_log (
   gateway_count int not null default 0
 );
 alter table public.security_audit_log enable row level security;
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'security_audit_log'
+      and policyname = 'Users read their audits'
+  ) then
+    create policy "Users read their audits" on public.security_audit_log
+      for select using (auth.uid() = user_id);
+  end if;
+end $$;
+
 create table if not exists public.agent_sessions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users not null,
@@ -53,6 +123,20 @@ create table if not exists public.agent_sessions (
   updated_at timestamptz default now()
 );
 alter table public.agent_sessions enable row level security;
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'agent_sessions'
+      and policyname = 'Users own their sessions'
+  ) then
+    create policy "Users own their sessions" on public.agent_sessions
+      for all using (auth.uid() = user_id);
+  end if;
+end $$;
+
 create table if not exists public.telemetry_audit_log (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users not null,
@@ -67,81 +151,18 @@ create table if not exists public.telemetry_audit_log (
   created_at timestamptz default now()
 );
 alter table public.telemetry_audit_log enable row level security;
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'telemetry_audit_log'
+      and policyname = 'Users read their telemetry audits'
+  ) then
+    create policy "Users read their telemetry audits" on public.telemetry_audit_log
+      for select using (auth.uid() = user_id);
+  end if;
+end $$;
 create index if not exists telemetry_audit_log_user_id_created_at_idx
   on public.telemetry_audit_log (user_id, created_at desc);
-
-DO $$
-DECLARE
-  _schema CONSTANT TEXT := 'public';
-BEGIN
-  if not exists (
-      select 1
-      from pg_policies
-      where schemaname = _schema
-        and tablename = 'user_dashboard_layouts'
-        and policyname = 'Users own their layout'
-    ) then
-      create policy "Users own their layout" on public.user_dashboard_layouts
-        for all using (auth.uid() = user_id);
-    end if;
-  if not exists (
-      select 1
-      from pg_policies
-      where schemaname = _schema
-        and tablename = 'user_ops_controls'
-        and policyname = 'Users own their ops'
-    ) then
-      create policy "Users own their ops" on public.user_ops_controls
-        for all using (auth.uid() = user_id);
-    end if;
-  if not exists (
-      select 1
-      from pg_policies
-      where schemaname = _schema
-        and tablename = 'omnihub_analytics'
-        and policyname = 'Users read their analytics'
-    ) then
-      create policy "Users read their analytics" on public.omnihub_analytics
-        for select using (auth.uid() = user_id);
-    end if;
-  if not exists (
-      select 1
-      from pg_policies
-      where schemaname = _schema
-        and tablename = 'omnitrace_events'
-        and policyname = 'Users read their traces'
-    ) then
-      create policy "Users read their traces" on public.omnitrace_events
-        for select using (auth.uid() = user_id);
-    end if;
-  if not exists (
-      select 1
-      from pg_policies
-      where schemaname = _schema
-        and tablename = 'security_audit_log'
-        and policyname = 'Users read their audits'
-    ) then
-      create policy "Users read their audits" on public.security_audit_log
-        for select using (auth.uid() = user_id);
-    end if;
-  if not exists (
-      select 1
-      from pg_policies
-      where schemaname = _schema
-        and tablename = 'agent_sessions'
-        and policyname = 'Users own their sessions'
-    ) then
-      create policy "Users own their sessions" on public.agent_sessions
-        for all using (auth.uid() = user_id);
-    end if;
-  if not exists (
-      select 1
-      from pg_policies
-      where schemaname = _schema
-        and tablename = 'telemetry_audit_log'
-        and policyname = 'Users read their telemetry audits'
-    ) then
-      create policy "Users read their telemetry audits" on public.telemetry_audit_log
-        for select using (auth.uid() = user_id);
-    end if;
-END $$;

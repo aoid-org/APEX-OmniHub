@@ -32,17 +32,19 @@ vi.mock('@tanstack/react-query', () => ({
   useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
 }));
 
-const buildSupabaseQueryChain = () => {
-  const terminal = { data: [], error: null };
-  const secondEq = vi.fn(() => terminal);
-  const firstEq = vi.fn(() => ({ eq: secondEq, ...terminal }));
-  const select = vi.fn(() => ({ eq: firstEq, ...terminal }));
-  return { select };
-};
-
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: vi.fn(() => buildSupabaseQueryChain()),
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => ({ data: [], error: null })),
+          data: [],
+          error: null,
+        })),
+        data: [],
+        error: null,
+      })),
+    })),
   },
 }));
 

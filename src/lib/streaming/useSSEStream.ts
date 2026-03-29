@@ -139,15 +139,11 @@ async function executeStream(
   controller: AbortController,
   options: StreamOptions | undefined,
   onToken: (payload: string) => void,
-  context: {
-    mountedRef: MutableRefObject<boolean>;
-    setIsStreaming: (v: boolean) => void;
-    setError: (v: string | null) => void;
-    abortRef: MutableRefObject<AbortController | null>;
-  },
+  mountedRef: MutableRefObject<boolean>,
+  setIsStreaming: (v: boolean) => void,
+  setError: (v: string | null) => void,
+  abortRef: MutableRefObject<AbortController | null>,
 ): Promise<void> {
-  const { mountedRef, setIsStreaming, setError, abortRef } = context;
-
   try {
     const headers = await buildRequestHeaders(options?.headers);
 
@@ -251,12 +247,7 @@ export function useSSEStream(): UseSSEStreamReturn {
         options?.onToken?.(payload);
       };
 
-      executeStream(endpoint, input, controller, options, handleToken, {
-        mountedRef,
-        setIsStreaming,
-        setError,
-        abortRef,
-      });
+      executeStream(endpoint, input, controller, options, handleToken, mountedRef, setIsStreaming, setError, abortRef);
     },
     [],
   );

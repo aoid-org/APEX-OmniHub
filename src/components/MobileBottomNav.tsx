@@ -18,7 +18,6 @@ interface NavItem {
  */
 export function MobileBottomNav() {
   const { capabilities } = useCapabilities();
-  const activeModuleKey = useOmniModal((s) => s.activeModal?.contextData?.moduleKey as string | undefined);
 
   const navItems: NavItem[] = [
     {
@@ -76,7 +75,6 @@ export function MobileBottomNav() {
       <div className="flex items-center justify-around h-16 px-2">
         {visibleItems.map((item) => {
           const Icon = item.icon;
-          const active = activeModuleKey === item.moduleKey;
 
           return (
             <button
@@ -85,22 +83,12 @@ export function MobileBottomNav() {
               className={cn(
                 'flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all',
                 'min-w-[64px] touch-manipulation',
-                active
-                  ? 'text-primary bg-primary/10'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               )}
               aria-label={item.label}
             >
-              <Icon
-                className={cn(
-                  'w-5 h-5 transition-transform',
-                  active && 'scale-110'
-                )}
-              />
-              <span className={cn(
-                'text-[10px] font-medium transition-all',
-                active && 'text-primary'
-              )}>
+              <Icon className="w-5 h-5 transition-transform" />
+              <span className="text-[10px] font-medium transition-all">
                 {item.label}
               </span>
             </button>

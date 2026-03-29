@@ -1,5 +1,4 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
-
 # Chaos Simulation RUNBOOK
 
 ## How to Run the APEX OmniHub Chaotic Client Simulation
@@ -512,6 +511,7 @@ npm run sim:validate      # Validate environment
 - [CHAOTIC_CLIENT_STORY.md](./CHAOTIC_CLIENT_STORY.md) - Full narrative
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System design
 - [INVENTORY.md](./INVENTORY.md) - App inventory
+- [RESULTS_REPORT.md](./RESULTS_REPORT.md) - Sample results
 
 ---
 

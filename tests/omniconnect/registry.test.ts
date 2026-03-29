@@ -9,22 +9,6 @@ import {
 } from '../../src/omniconnect/core/registry';
 import { Connector } from '../../src/omniconnect/types/connector';
 
-// Mock lucide-react to avoid potential issues in environments where it's not fully resolved
-vi.mock('lucide-react', () => ({
-  BarChart3: () => null,
-  MessageCircle: () => null,
-  Facebook: () => null,
-  Mail: () => null,
-  Youtube: () => null,
-  Instagram: () => null,
-  Music: () => null,
-  Zap: () => null,
-  Server: () => null,
-  Globe: () => null,
-  Smartphone: () => null,
-  Bot: () => null,
-}));
-
 describe('Connector Registry', () => {
   beforeEach(() => {
     // Clear the registry before each test to ensure isolation

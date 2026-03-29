@@ -61,9 +61,6 @@ export interface ChaosConfig {
 
   /** When partial outage ends (event sequence number) */
   outageEndSeq?: number;
-
-  /** Enable ML-based anomaly detection to adaptively scale chaos (default: false) */
-  adaptiveMode?: boolean;
 }
 
 export interface ChaosDecision {
@@ -157,13 +154,9 @@ class SeededRandom {
 // CHAOS ENGINE
 // ============================================================================
 
-import { getRecentMetrics } from './telemetry';
-import { AnomalyDetector } from './anomaly-detector';
-
 export class ChaosEngine {
   private readonly config: ChaosConfig;
   private readonly rng: SeededRandom;
-  private readonly anomalyDetector: AnomalyDetector;
   private stats: ChaosStats;
   private eventSequence: number = 0;
 
@@ -183,7 +176,6 @@ export class ChaosEngine {
       networkFailureRate: 0,
       serverErrorRate: 0,
     };
-    this.anomalyDetector = new AnomalyDetector(0.2, 2);
   }
 
   /**
@@ -196,35 +188,13 @@ export class ChaosEngine {
     // Check if in partial outage
     const inPartialOutage = this.isInPartialOutage(event.target as string, seq);
 
-    // AI/ML Anomaly calculation block map
-    let riskMultiplier = 1;
-    if (this.config.adaptiveMode) {
-      const { latencies, errorCount } = getRecentMetrics(50);
-      const riskScore = this.anomalyDetector.predictFailureRisk(latencies, errorCount);
-      // As risk goes up (towards 1.0), multiply failure rates up to a max factor of 5x.
-      riskMultiplier = 1 + (riskScore * 4);
-      
-      // Update EMA pipeline with current network delay if network latency is simulated
-      // This allows the mathematical window to slide deterministically.
-      if (latencies.length > 0) {
-        this.anomalyDetector.ingest({ latencyMs: latencies[latencies.length - 1], isError: errorCount > 0 });
-      }
-    }
-
-    // Adapt probabilities using risk multiplier (cap at 1.0 = 100%)
-    const adaptiveDupRate = Math.min(this.config.duplicateRate * riskMultiplier, 1);
-    const adaptiveOutOfOrderRate = Math.min(this.config.outOfOrderRate * riskMultiplier, 1);
-    const adaptiveTimeoutRate = Math.min(this.config.timeoutRate * riskMultiplier, 1);
-    const adaptiveNetworkRate = Math.min(this.config.networkFailureRate * riskMultiplier, 1);
-    const adaptiveServerRate = Math.min(this.config.serverErrorRate * riskMultiplier, 1);
-
     // Make decisions
-    const shouldDuplicate = !inPartialOutage && this.rng.nextBool(adaptiveDupRate);
-    const shouldDelay = !inPartialOutage && this.rng.nextBool(adaptiveOutOfOrderRate);
+    const shouldDuplicate = !inPartialOutage && this.rng.nextBool(this.config.duplicateRate);
+    const shouldDelay = !inPartialOutage && this.rng.nextBool(this.config.outOfOrderRate);
     const delayMs = shouldDelay ? this.rng.nextInt(0, this.config.maxDelayMs) : 0;
-    const shouldTimeout = inPartialOutage || this.rng.nextBool(adaptiveTimeoutRate);
-    const shouldFailNetwork = inPartialOutage || this.rng.nextBool(adaptiveNetworkRate);
-    const shouldFailServer = this.rng.nextBool(adaptiveServerRate);
+    const shouldTimeout = inPartialOutage || this.rng.nextBool(this.config.timeoutRate);
+    const shouldFailNetwork = inPartialOutage || this.rng.nextBool(this.config.networkFailureRate);
+    const shouldFailServer = this.rng.nextBool(this.config.serverErrorRate);
 
     // Update stats
     if (shouldDuplicate) this.stats.duplicates++;
@@ -333,7 +303,6 @@ export class ChaosEngine {
       networkFailureRate: 0,
       serverErrorRate: 0,
     };
-    this.anomalyDetector.reset();
   }
 
   /**

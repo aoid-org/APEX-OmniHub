@@ -5,7 +5,6 @@ interface FeatureItem {
   readonly description: string;
   readonly icon?: ReactNode;
   readonly href?: string;
-  readonly ariaLabel?: string;
 }
 
 type FeatureHighlightGridProps = Readonly<{
@@ -47,16 +46,11 @@ export function FeatureHighlightGrid({ items }: FeatureHighlightGridProps) {
         return (
           <li key={item.title}>
             {item.href ? (
-              <a
-                href={item.href}
-                className="card feature-card"
-                style={{ textDecoration: 'none' }}
-                aria-label={item.ariaLabel}
-              >
+              <a href={item.href} className="card feature-card" style={{ textDecoration: 'none' }}>
                 {content}
               </a>
             ) : (
-              <div className="card feature-card" aria-label={item.ariaLabel}>
+              <div className="card feature-card">
                 {content}
               </div>
             )}

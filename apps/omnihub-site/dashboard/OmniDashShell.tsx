@@ -1,13 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
-import { useViewport } from "./hooks/useViewport";
 import { useDashboardData, type DashboardData, type Incident } from "./hooks/useDashboardData";
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
-import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
-import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -42,6 +39,8 @@ interface GlassCardProps {
   style?: CSSProperties;
   glow?: boolean;
   onClick?: () => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
 }
 
 interface SectionLabelProps {
@@ -79,15 +78,6 @@ interface OmniDashHeaderProps {
   isDark: boolean;
   setIsDark: Dispatch<SetStateAction<boolean>>;
   invoke: (config: OmniModalConfig) => void;
-}
-
-export type OmniHealthState = 'green' | 'yellow' | 'red';
-
-export interface OmniContextApp {
-  id: string;
-  label: string;
-  health: OmniHealthState;
-  iconIdx?: number;
 }
 
 interface AgentWidgetProps {
@@ -139,28 +129,6 @@ const T = {
   t3:        "#475569",
   t4:        "#1E293B",
 };
-
-function getHealthPalette(health: OmniHealthState): {
-  bg: string;
-  border: string;
-  color: string;
-} {
-  if (health === "red") {
-    return { bg: `${T.red}22`, border: `${T.red}66`, color: T.red };
-  }
-  if (health === "yellow") {
-    return { bg: `${T.warn}22`, border: `${T.warn}66`, color: T.warn };
-  }
-  return { bg: `${T.green}22`, border: `${T.green}66`, color: T.green };
-}
-
-function inferContextHealth(id: string, includeSecurity: boolean): OmniHealthState {
-  if (id.includes("awaiting")) return "red";
-  if (id.includes("trace") || id.includes("ops") || (includeSecurity && id.includes("security"))) {
-    return "yellow";
-  }
-  return "green";
-}
 
 // ─── Icon Sprite (9-icon grid from app_icons.png: 3x3, source 1024x1024) ─────
 // Row 0: Brain(0), Shield(1), Photo(2)
@@ -242,7 +210,7 @@ const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) =
   }} />
 );
 
-const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => {
+const GlassCard = ({ children, style={}, glow = false, onClick, onDragOver, onDrop }: GlassCardProps) => {
   const cardStyle: CSSProperties = {
     background: T.card,
     border: `1px solid ${glow ? T.borderGlow : T.border}`,
@@ -264,7 +232,7 @@ const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps
   }
 
   return (
-    <div style={cardStyle}>
+    <div style={cardStyle} onDragOver={onDragOver} onDrop={onDrop}>
       {children}
     </div>
   );
@@ -284,7 +252,6 @@ const SectionLabel = ({ children }: SectionLabelProps) => (
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const NAV = [
   { label:"OmniBoard",   iconIdx:0, active:true  },
-  { label:"BYOM",        iconIdx:4, active:false },
   { label:"PhysiOmni",   iconIdx:5, active:false },
   { label:"Audits",      iconIdx:1, active:false },
   { label:"Links",       iconIdx:4, active:false },
@@ -336,7 +303,6 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
     };
   return (
     <button
-      className="omni-nav-item"
       draggable
       onDragStart={(e) => e.dataTransfer.setData('application/apex-tile', JSON.stringify({ id: n.label.toLowerCase(), label: n.label, iconIdx: n.iconIdx }))}
       onClick={onClick}
@@ -391,7 +357,6 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
 
 // ─── Module key map: sidebar label → omniModalStore module key
 const NAV_MODULE_KEY: Record<string, string> = {
-  BYOM:        'cockpit',
   PhysiOmni:   'physiomni',
   Audits:      'audits',
   Links:       'links',
@@ -434,7 +399,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
   };
 
   return (
-    <div className="omni-sidebar" style={{
+    <div style={{
       width:228, flexShrink:0,
       background:`linear-gradient(180deg, ${T.surface} 0%, ${T.bg} 100%)`,
       borderRight:`1px solid ${T.border}`,
@@ -448,7 +413,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
       ))}
 
       {/* Status Footer */}
-      <div className="omni-sidebar-footer" style={{ marginTop:"auto", padding:"16px 12px 20px", borderTop:`1px solid ${T.border}` }}>
+      <div style={{ marginTop:"auto", padding:"16px 12px 20px", borderTop:`1px solid ${T.border}` }}>
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
           <StatusDot color={T.green} />
           <span style={{ fontSize:11.9, color:T.t2, fontWeight:500 }}>All Systems Operational</span>
@@ -577,7 +542,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
       </button>
 
       {/* Search — takes all remaining center space, max 360px */}
-      <div className="omni-header-search" style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
+      <div style={{ flex:1, display:"flex", justifyContent:"center", marginRight:10 }}>
         <div style={{
           display:"flex", alignItems:"center", gap:9,
           background:T.card, border:`1px solid ${T.border}`,
@@ -594,7 +559,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
       </div>
 
       {/* Right actions — functional buttons */}
-      <div className="omni-header-actions" style={{display:"flex", alignItems:"center", gap:8, flexShrink:0}}>
+      <div style={{display:"flex", alignItems:"center", gap:8, flexShrink:0}}>
         {/* Org Selector */}
         <div style={{ position:"relative" }}>
           <button onClick={() => setOrgOpen(o => !o)} style={{
@@ -890,52 +855,11 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
   );
 };
 
-const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () => void }) => {
-  const [hov, setHov] = useState(false);
-  const palette = getHealthPalette(app.health);
-  const icon = app.iconIdx === undefined
-    ? <span style={{fontSize:13}}>{app.label.charAt(0).toUpperCase()}</span>
-    : <AppIcon idx={app.iconIdx} size={16} style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))" }} />;
-
-  return (
-    <button
-      onClick={onRemove}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      title={`Remove ${app.label}`}
-      style={{
-        width: 28, height: 28, borderRadius: 8,
-        background: palette.bg,
-        border: `1px solid ${palette.border}`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: palette.color,
-        fontSize: 14, fontWeight: 700,
-        boxShadow: `inset 0 0 10px rgba(0,0,0,0.5)`,
-        cursor: "pointer",
-        position: "relative",
-        transition: "all 0.15s ease",
-        transform: hov ? "scale(1.05)" : "scale(1)",
-      }}
-    >
-      <div style={{ opacity: hov ? 0.15 : 1, transition: "opacity 0.15s ease", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {icon}
-      </div>
-      {hov && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff" }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </div>
-      )}
-    </button>
-  );
-};
-
 const OmniSlateWidget = () => {
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [contextApps, setContextApps] = useState<OmniContextApp[]>([]);
+  const [contextApps, setContextApps] = useState<{id: string, label: string, health: 'green'|'yellow'|'red', iconIdx?: number}[]>([]);
   const [showContext, setShowContext] = useState<boolean>(false);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -968,51 +892,56 @@ const OmniSlateWidget = () => {
     setInput("Summarize all open workflows and flag anything stalled over 24 hours.");
   };
 
-  const addContextApp = useCallback(
-    (id: string, label: string, iconIdx: number | undefined, includeSecurity: boolean) => {
+  useEffect(() => {
+    const handleWidgetDrop = ((e: CustomEvent) => {
+      const { id, label, iconIdx } = e.detail;
       setContextApps(prev => {
-        if (prev.some(a => a.id === id)) return prev;
-        const health = inferContextHealth(id, includeSecurity);
+        if (prev.find(a => a.id === id)) return prev;
+        let health: 'green'|'yellow'|'red' = 'green';
+        if (id.includes('awaiting')) health = 'red';
+        else if (id.includes('trace') || id.includes('ops')) health = 'yellow';
         return [...prev, { id, label, health, iconIdx }];
       });
-    },
-    [],
-  );
+    }) as EventListener;
+    window.addEventListener('omnislate-drop', handleWidgetDrop);
+    return () => window.removeEventListener('omnislate-drop', handleWidgetDrop);
+  }, []);
 
-  useEffect(() => {
-    const handleWidgetDrop = (event: Event) => {
-      const customEvent = event as CustomEvent<{ id: string; label: string; iconIdx?: number }>;
-      const { id, label, iconIdx } = customEvent.detail;
-      addContextApp(id, label, iconIdx, false);
-    };
-    globalThis.addEventListener("omnislate-drop", handleWidgetDrop);
-    return () => globalThis.removeEventListener("omnislate-drop", handleWidgetDrop);
-  }, [addContextApp]);
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData('application/apex-tile');
+    if (data) {
+      try {
+        const { id, label, iconIdx } = JSON.parse(data);
+        setContextApps(prev => {
+          if (prev.find(a => a.id === id)) return prev;
+          let health: 'green'|'yellow'|'red' = 'green';
+          if (id.includes('awaiting')) health = 'red';
+          else if (id.includes('trace') || id.includes('ops') || id.includes('security')) health = 'yellow';
+          return [...prev, { id, label, health, iconIdx }];
+        });
+      } catch {
+        // ignore parse error logs for bad drop payloads
+      }
+    }
+  };
 
   useEffect(() => { endRef.current?.scrollIntoView({behavior:"smooth"}); }, [messages]);
 
-  const handleRemoveContextApp = useCallback((appId: string) => {
-    setContextApps(prev => prev.filter(a => a.id !== appId));
-  }, []);
-
-  let aggregateHealth: string | null = null;
-  if (contextApps.length > 0) {
-    if (contextApps.some(a => a.health === "red")) {
-      aggregateHealth = T.red;
-    } else if (contextApps.some(a => a.health === "yellow")) {
-      aggregateHealth = T.warn;
-    } else {
-      aggregateHealth = T.green;
-    }
-  }
-  const contextAccent = aggregateHealth ?? T.orange;
-  const contextBackground = `${contextAccent}22`;
-  const contextBorderColor = aggregateHealth ? `${aggregateHealth}aa` : `${T.orange}44`;
-  const contextBorder = `1px solid ${contextBorderColor}`;
-  const contextBoxShadow = aggregateHealth ? `0 0 8px ${aggregateHealth}44` : "none";
+  const aggregateHealth = contextApps.length === 0 ? null
+                        : contextApps.some(a => a.health === 'red') ? T.red
+                        : contextApps.some(a => a.health === 'yellow') ? T.warn
+                        : T.green;
 
   return (
-    <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"visible" }}>
+    <GlassCard glow style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"visible" }}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       {/* Header — unified 44px */}
       <div style={{
         height:44, padding:"0 16px", flexShrink:0,
@@ -1028,35 +957,23 @@ const OmniSlateWidget = () => {
             borderRadius:8,padding:"3px 10px",cursor:"pointer",
           }}>CleanSlate</button>
 
-          <button
-            type="button"
+          <div
             onMouseEnter={() => setShowContext(true)}
             onMouseLeave={() => setShowContext(false)}
-            onFocus={() => setShowContext(true)}
-            onBlur={() => setShowContext(false)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                fillSuggestion();
-              }
-            }}
-            onClick={fillSuggestion}
-            title={aggregateHealth ? "View Context" : "Fill suggestion"}
-            style={{ position: "relative", background: "none", border: "none", padding: 0 }}
+            style={{ position: 'relative' }}
           >
-            <div
+            <button
+              onClick={fillSuggestion}
+              title={aggregateHealth ? "View Context" : "Fill suggestion"}
               style={{
                 width:26,height:26,borderRadius:8,
-                background: contextBackground,
-                border: contextBorder,
-                color: contextAccent,
+                background: aggregateHealth ? `${aggregateHealth}22` : `${T.orange}22`,
+                border:`1px solid ${aggregateHealth ? aggregateHealth + 'aa' : T.orange + '44'}`,
+                color: aggregateHealth || T.orange,
                 cursor:"pointer",fontSize:14.1,display:"flex",alignItems:"center",justifyContent:"center",
                 transition: "all .2s ease",
-                boxShadow: contextBoxShadow,
-              }}
-            >
-              💡
-            </div>
+                boxShadow: aggregateHealth ? `0 0 8px ${aggregateHealth}44` : 'none',
+              }}>💡</button>
 
             {/* Non-intrusive Context Tooltip on Hover */}
             {showContext && contextApps.length > 0 && (
@@ -1070,34 +987,31 @@ const OmniSlateWidget = () => {
                  <div style={{ fontSize: 9.8, fontWeight: 700, color: T.t2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
                    Context Sources
                  </div>
-                 {contextApps.map(app => {
-                   const palette = getHealthPalette(app.health);
-                   return (
-                     <div key={app.id} style={{
-                       fontSize: 11.2, fontWeight: 600, padding: "5px 8px", borderRadius: 6,
-                       background: palette.bg.replace("22", "1a"),
-                       color: palette.color,
-                       border: `1px solid ${palette.color}44`,
-                       display: "flex", alignItems: "center", gap: 6
-                     }}>
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
-                      <div style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{app.label}</div>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleRemoveContextApp(app.id); }} 
+                 {contextApps.map(app => (
+                   <div key={app.id} style={{
+                     fontSize: 11.2, fontWeight: 600, padding: "5px 8px", borderRadius: 6,
+                     background: app.health === 'red' ? `${T.red}1a` : app.health === 'yellow' ? `${T.warn}1a` : `${T.green}1a`,
+                     color: app.health === 'red' ? T.red : app.health === 'yellow' ? T.warn : T.green,
+                     border: `1px solid ${app.health === 'red' ? T.red : app.health === 'yellow' ? T.warn : T.green}44`,
+                     display: "flex", alignItems: "center", gap: 6
+                   }}>
+                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
+                     <div style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{app.label}</div>
+                     <button
+                       onClick={(e) => { e.stopPropagation(); setContextApps(prev => prev.filter(a => a.id !== app.id)); }}
                        title="Remove context"
                        style={{
                          background: "none", border: "none", color: "currentColor", cursor: "pointer", 
                          opacity: 0.6, padding: 0, display: "flex", alignItems: "center"
                        }}
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                      </button>
-                    </div>
-                   );
-                 })}
-                </div>
-             )}
-          </button>
+                     >
+                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                     </button>
+                   </div>
+                 ))}
+               </div>
+            )}
+          </div>
         </div>
       </div>
       {/* Canvas — empty until user sends */}
@@ -1143,11 +1057,22 @@ const OmniSlateWidget = () => {
       {contextApps.length > 0 && (
         <div style={{ padding: "0 14px", display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
           {contextApps.map(app => (
-            <ContextDroplet
-              key={app.id}
-              app={app}
-              onRemove={() => handleRemoveContextApp(app.id)}
-            />
+            <div key={app.id}
+              title={app.label}
+              style={{
+                width: 28, height: 28, borderRadius: 8,
+                background: app.health === 'red' ? `${T.red}22` : app.health === 'yellow' ? `${T.warn}22` : `${T.green}22`,
+                border: `1px solid ${app.health === 'red' ? `${T.red}66` : app.health === 'yellow' ? `${T.warn}66` : `${T.green}66`}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: app.health === 'red' ? T.red : app.health === 'yellow' ? T.warn : T.green,
+                fontSize: 14, fontWeight: 700,
+                boxShadow: `inset 0 0 10px rgba(0,0,0,0.5)`,
+              }}
+            >
+              {app.iconIdx !== undefined
+                ? <AppIcon idx={app.iconIdx} size={16} style={{ filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.5))` }} />
+                : <span style={{fontSize:13}}>{app.label.charAt(0).toUpperCase()}</span>}
+            </div>
           ))}
         </div>
       )}
@@ -1303,7 +1228,7 @@ const IntegratedAppsWidget = () => {
       <SectionLabel>Integrated Apps</SectionLabel>
     </div>
     {/* 4 columns — same tile size as EcosystemWidget tiles */}
-    <div className="omni-grid-apps" style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10 }}>
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10 }}>
       {[1,2,3,4].map(i => (
         <button
           key={`integrated-app-ph-${i}`}
@@ -1504,9 +1429,6 @@ export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);
   const { activeNav, setActiveNav, isDark, setIsDark, ops, setOps } = useLayoutPersistence();
   const { invoke } = useOmniModal();
-  const { isDesktop } = useViewport();
-  const [mobileTab, setMobileTab] = useState<MobileTab>("home");
-  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
   const dashData = useDashboardData();
@@ -1516,20 +1438,11 @@ export default function OmniDashShell() {
     return () => clearInterval(id);
   }, []);
 
-  // Close drawer when viewport expands to desktop
-  useEffect(() => {
-    if (isDesktop) setDrawerOpen(false);
-  }, [isDesktop]);
-
-  // Responsive grid columns
-  const gridCols = isDesktop ? "220px 1fr 220px" : "1fr";
-  const gridHeight = isDesktop ? 300 : undefined;
-
   return (
     <div style={{
       fontFamily:"'Space Grotesk',sans-serif",
       background: T.bg, color: T.t1,
-      width:"100%", height:"100dvh",
+      width:"100%", height:"100vh",
       display:"flex", flexDirection:"column",
       overflow:"hidden",
     }}>
@@ -1548,12 +1461,11 @@ export default function OmniDashShell() {
 
       <OmniDashHeader tick={tick} isDark={isDark} setIsDark={setIsDark} invoke={invoke} />
 
-      <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
-        {/* Sidebar — desktop only; tablet/mobile use bottom nav */}
-        {isDesktop && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />}
+      <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
+        <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />
 
         {/* Main Canvas */}
-        <div className="omni-canvas-container" style={{
+        <div style={{
           flex:1, display:"flex", flexDirection:"column",
           overflow:"auto", padding:"16px", gap:14,
           position:"relative",
@@ -1580,10 +1492,10 @@ export default function OmniDashShell() {
               Each DraggableWidget gets height+overflow:hidden so no child
               (including OmniSlate chat history) can blow out the row or
               dislodge sibling tiles. */}
-          <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0 }}>
-            <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
-            <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
-            <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
+          <div style={{ display:"grid", gridTemplateColumns:"220px 1fr 220px", gap:14, height:300, minHeight:0 }}>
+            <DraggableWidget id="widget_agent" style={{ height:"100%", overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
+            <DraggableWidget id="widget_slate" style={{ height:"100%", overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
+            <DraggableWidget id="widget_eco" style={{ height:"100%", overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
           </div>
 
           {/* Integrated Apps row */}
@@ -1611,48 +1523,23 @@ export default function OmniDashShell() {
           </div>
         </div>
 
-        {/* Right Panel — desktop only; mobile/tablet use OmniMobileDrawer */}
-        {isDesktop && (
-          <div className="omni-right-panel" style={{
-            width:266, flexShrink:0,
-            background:`linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
-            borderLeft:`1px solid ${T.border}`,
-            overflowY:"auto", padding:"14px 12px",
-            display:"flex", flexDirection:"column", gap:12,
-          }}>
-            <DraggableWidget id="rt_security"><SecurityPanel /></DraggableWidget>
-            <DraggableWidget id="rt_analytics"><AnalyticsPanel dash={dashData} /></DraggableWidget>
-            <DraggableWidget id="rt_trace"><OmniTracePanel dash={dashData} /></DraggableWidget>
-            <DraggableWidget id="rt_ops"><OpsControlsPanel ops={ops} setOps={setOps} /></DraggableWidget>
-          </div>
-        )}
-
-        {/* Mobile/Tablet — drawer trigger button in header area */}
-        {!isDesktop && (
-          <button
-            type="button"
-            className="omni-mobile-drawer-btn"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Open insights panel"
-            style={{
-              position: "fixed",
-              top: 10,
-              right: 56,
-              zIndex: 8000,
-              display: "flex",
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-          </button>
-        )}
+        {/* Right Panel */}
+        <div style={{
+          width:266, flexShrink:0,
+          background:`linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
+          borderLeft:`1px solid ${T.border}`,
+          overflowY:"auto", padding:"14px 12px",
+          display:"flex", flexDirection:"column", gap:12,
+        }}>
+          <DraggableWidget id="rt_security"><SecurityPanel /></DraggableWidget>
+          <DraggableWidget id="rt_analytics"><AnalyticsPanel dash={dashData} /></DraggableWidget>
+          <DraggableWidget id="rt_trace"><OmniTracePanel dash={dashData} /></DraggableWidget>
+          <DraggableWidget id="rt_ops"><OpsControlsPanel ops={ops} setOps={setOps} /></DraggableWidget>
+        </div>
       </div>
 
-      {/* Footer bar — hidden on mobile via CSS */}
-      <div className="omni-footer-bar" style={{
+      {/* Footer bar */}
+      <div style={{
         height:28, background:T.surface,
         borderTop:`1px solid ${T.border}`,
         display:"flex", alignItems:"center",
@@ -1664,7 +1551,7 @@ export default function OmniDashShell() {
           APEX-OmniHub v2.5.0
         </div>
         <div>© 2026 APEX Business Systems Ltd.</div>
-        <div className="footer-right" style={{marginLeft:"auto", display:"flex", gap:14, alignItems:"center"}}>
+        <div style={{marginLeft:"auto", display:"flex", gap:14, alignItems:"center"}}>
           <span>Edmonton, AB</span>
           <span style={{color:T.t4}}>|</span>
           <span style={{display:"flex",alignItems:"center",gap:5}}><StatusDot color={T.blue} pulse={false} />Guardian: ACTIVE</span>
@@ -1672,25 +1559,6 @@ export default function OmniDashShell() {
           <span style={{display:"flex",alignItems:"center",gap:5,color:T.green}}><StatusDot color={T.green} pulse={false} />Zero Trust: ON</span>
         </div>
       </div>
-
-      {/* Mobile/Tablet — Insights drawer for right panel content */}
-      {!isDesktop && (
-        <OmniMobileDrawer
-          isOpen={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-          title="Insights & Controls"
-        >
-          <SecurityPanel />
-          <AnalyticsPanel dash={dashData} />
-          <OmniTracePanel dash={dashData} />
-          <OpsControlsPanel ops={ops} setOps={setOps} />
-        </OmniMobileDrawer>
-      )}
-
-      {/* Mobile/Tablet bottom navigation */}
-      {!isDesktop && (
-        <OmniMobileBottomNav activeTab={mobileTab} setActiveTab={setMobileTab} />
-      )}
 
       {/* OmniSpatialHost — universal modal engine, portal-mounted */}
       <OmniSpatialHost />

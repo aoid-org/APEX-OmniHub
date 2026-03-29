@@ -1,4 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// We have to use vitest run to avoid bun test vi.mock issues
+// This test file should be executed via vitest run tests/middleware/rate-limiter.test.ts
+
+// vi.hoisted() ensures the mock object exists BEFORE vi.mock's hoisted factory runs.
+// Without this, `mockKv` would be undefined at factory execution time (ReferenceError).
+const mockKv = vi.hoisted(() => ({
+  checkLimit: vi.fn(),
+}));
+
+vi.mock('@vercel/kv', () => ({
+  kv: mockKv
+}));
+
 import { rateLimitMiddleware } from '../../api/middleware/rate-limiter';
 
 describe('rateLimitMiddleware', () => {
@@ -6,65 +20,57 @@ describe('rateLimitMiddleware', () => {
     vi.clearAllMocks();
   });
 
-  it('should allow first request (in-memory fallback)', async () => {
-    const request = new Request('https://example.com', {
-      headers: { 'x-real-ip': '10.0.0.1' },
-    });
-
-    const response = await rateLimitMiddleware(request);
-    expect(response).toBeNull(); // allowed
-  });
-
-  it('should prefer cf-connecting-ip header', async () => {
+  it('should use x-real-ip if provided', async () => {
+    vi.mocked(mockKv.checkLimit).mockResolvedValue(true);
     const request = new Request('https://example.com', {
       headers: {
-        'cf-connecting-ip': '10.0.0.50',
-        'x-real-ip': '10.0.0.51',
-        'x-forwarded-for': '10.0.0.52',
+        'x-real-ip': '192.0.2.1',
+        'x-forwarded-for': '198.51.100.1',
       },
     });
 
-    const response = await rateLimitMiddleware(request);
-    expect(response).toBeNull();
+    await rateLimitMiddleware(request);
+    expect(mockKv.checkLimit).toHaveBeenCalledWith('192.0.2.1');
   });
 
-  it('should use x-real-ip if cf-connecting-ip is absent', async () => {
-    const request = new Request('https://example.com', {
-      headers: {
-        'x-real-ip': '10.0.0.60',
-        'x-forwarded-for': '10.0.0.61',
-      },
-    });
-
-    const response = await rateLimitMiddleware(request);
-    expect(response).toBeNull();
-  });
-
-  it('should use the last IP from x-forwarded-for as fallback', async () => {
+  it('should use the last IP from x-forwarded-for if x-real-ip is not provided', async () => {
+    vi.mocked(mockKv.checkLimit).mockResolvedValue(true);
     const request = new Request('https://example.com', {
       headers: {
         'x-forwarded-for': '203.0.113.1, 192.0.2.2',
       },
     });
 
-    const response = await rateLimitMiddleware(request);
-    expect(response).toBeNull();
+    await rateLimitMiddleware(request);
+    expect(mockKv.checkLimit).toHaveBeenCalledWith('192.0.2.2');
   });
 
-  it('should return 429 when rate limit is exceeded (in-memory)', async () => {
-    // Exhaust the limit for a unique IP
-    const ip = '10.255.255.1';
-    for (let i = 0; i < 60; i++) {
-      const req = new Request('https://example.com', {
-        headers: { 'cf-connecting-ip': ip },
-      });
-      await rateLimitMiddleware(req);
-    }
-
-    // 61st request should be rate-limited
+  it('should trim the IP address from x-forwarded-for', async () => {
+    vi.mocked(mockKv.checkLimit).mockResolvedValue(true);
     const request = new Request('https://example.com', {
-      headers: { 'cf-connecting-ip': ip },
+      headers: {
+        'x-forwarded-for': '203.0.113.1,  192.0.2.2  ',
+      },
     });
+
+    await rateLimitMiddleware(request);
+    expect(mockKv.checkLimit).toHaveBeenCalledWith('192.0.2.2');
+  });
+
+  it('should use "unknown_ip" if no headers are provided', async () => {
+    vi.mocked(mockKv.checkLimit).mockResolvedValue(true);
+    const request = new Request('https://example.com');
+
+    await rateLimitMiddleware(request);
+    expect(mockKv.checkLimit).toHaveBeenCalledWith('unknown_ip');
+  });
+
+  it('should return 429 when rate limit is exceeded', async () => {
+    vi.mocked(mockKv.checkLimit).mockResolvedValue(false);
+    const request = new Request('https://example.com', {
+      headers: { 'x-real-ip': '192.0.2.1' },
+    });
+
     const response = await rateLimitMiddleware(request);
     expect(response).not.toBeNull();
     expect(response!.status).toBe(429);
@@ -72,26 +78,27 @@ describe('rateLimitMiddleware', () => {
     expect(body.error).toContain('Rate Limit Exceeded');
   });
 
-  it('should fail-closed with 503 when KV throws an error', async () => {
-    const brokenKV = {
-      get: vi.fn().mockRejectedValue(new Error('KV subsystem failure')),
-      put: vi.fn(),
-    } as unknown as KVNamespace;
-
+  it('should fail-closed with 429 when checkLimit returns null', async () => {
+    vi.mocked(mockKv.checkLimit).mockResolvedValue(null);
     const request = new Request('https://example.com', {
-      headers: { 'cf-connecting-ip': '10.0.0.99' },
+      headers: { 'x-real-ip': '192.0.2.1' },
     });
 
-    const response = await rateLimitMiddleware(request, { RATE_LIMIT_KV: brokenKV });
+    const response = await rateLimitMiddleware(request);
+    expect(response).not.toBeNull();
+    expect(response!.status).toBe(429);
+  });
+
+  it('should fail-closed with 503 when KV throws an error', async () => {
+    vi.mocked(mockKv.checkLimit).mockRejectedValue(new Error('KV subsystem failure'));
+    const request = new Request('https://example.com', {
+      headers: { 'x-real-ip': '192.0.2.1' },
+    });
+
+    const response = await rateLimitMiddleware(request);
     expect(response).not.toBeNull();
     expect(response!.status).toBe(503);
     const body = await response!.json();
     expect(body.error).toContain('Service Unavailable');
-  });
-
-  it('should use "unknown_ip" if no headers are provided', async () => {
-    const request = new Request('https://example.com');
-    const response = await rateLimitMiddleware(request);
-    expect(response).toBeNull(); // allowed
   });
 });

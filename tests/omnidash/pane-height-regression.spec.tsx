@@ -118,13 +118,11 @@ describe('Pane Height Regression', () => {
       const cssPath = path.resolve(__dirname, '../../apps/omnihub-site/src/styles/omnidash-layout.css');
       const css = fs.readFileSync(cssPath, 'utf-8');
 
-      const smRegex = /\.apex-hero-tile--sm\s*\{[^}]*\}/s;
-      const smBlock = smRegex.exec(css);
+      const smBlock = css.match(/\.apex-hero-tile--sm\s*\{[^}]*\}/s);
       expect(smBlock).not.toBeNull();
       expect(smBlock![0]).toMatch(/\bheight\s*:/);
 
-      const lgRegex = /\.apex-hero-tile--lg\s*\{[^}]*\}/s;
-      const lgBlock = lgRegex.exec(css);
+      const lgBlock = css.match(/\.apex-hero-tile--lg\s*\{[^}]*\}/s);
       expect(lgBlock).not.toBeNull();
       expect(lgBlock![0]).toMatch(/\bheight\s*:/);
     });
@@ -137,13 +135,11 @@ describe('Pane Height Regression', () => {
       const cssPath = path.resolve(__dirname, '../../apps/omnihub-site/src/styles/omnidash-layout.css');
       const css = fs.readFileSync(cssPath, 'utf-8');
 
-      const smRegex = /\.apex-hero-tile--sm\s*\{[^}]*\}/s;
-      const smBlock = smRegex.exec(css);
+      const smBlock = css.match(/\.apex-hero-tile--sm\s*\{[^}]*\}/s);
       expect(smBlock![0]).toContain('overflow: hidden');
       expect(smBlock![0]).not.toContain('overflow-y: auto');
 
-      const lgRegex = /\.apex-hero-tile--lg\s*\{[^}]*\}/s;
-      const lgBlock = lgRegex.exec(css);
+      const lgBlock = css.match(/\.apex-hero-tile--lg\s*\{[^}]*\}/s);
       expect(lgBlock![0]).toContain('overflow: hidden');
       expect(lgBlock![0]).not.toContain('overflow-y: auto');
     });

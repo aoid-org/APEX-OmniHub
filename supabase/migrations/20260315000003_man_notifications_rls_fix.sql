@@ -25,12 +25,11 @@ CREATE INDEX IF NOT EXISTS idx_man_notifications_user_id
 DO $$
 DECLARE
     _tbl CONSTANT TEXT := 'man_notifications';
-    _schema CONSTANT TEXT := 'public';
 BEGIN
     -- Drop the over-broad SELECT policy
     IF EXISTS (
         SELECT 1 FROM pg_policies
-        WHERE schemaname = _schema
+        WHERE schemaname = 'public'
           AND tablename  = _tbl
           AND policyname = 'man_notifications_user_read'
     ) THEN
@@ -41,7 +40,7 @@ BEGIN
     -- Scoped policy: only the owning user can read their notifications
     IF NOT EXISTS (
         SELECT 1 FROM pg_policies
-        WHERE schemaname = _schema
+        WHERE schemaname = 'public'
           AND tablename  = _tbl
           AND policyname = 'man_notifications_owner_read'
     ) THEN
@@ -55,7 +54,7 @@ BEGIN
     -- Ensure service_role full-access policy exists
     IF NOT EXISTS (
         SELECT 1 FROM pg_policies
-        WHERE schemaname = _schema
+        WHERE schemaname = 'public'
           AND tablename  = _tbl
           AND policyname = 'man_notifications_service_full_access'
     ) THEN

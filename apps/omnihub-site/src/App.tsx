@@ -11,20 +11,7 @@ import { LoginPage } from "@/pages/Login";
 import { PrivacyPage } from "@/pages/Privacy";
 import { TermsPage } from "@/pages/Terms";
 import FounderStory from "@/pages/FounderStory";
-import { AdvancedAnalyticsPage } from "@/pages/AdvancedAnalytics";
-import { AiAutomationPage } from "@/pages/AiAutomation";
-import { DemoPage } from "@/pages/Demo";
-import { FortressPage } from "@/pages/Fortress";
-import Web3Integrations from "@/pages/integrations/Web3Integrations";
-import { ManModePage } from "@/pages/ManMode";
-import { MaestroPage } from "@/pages/Maestro";
-import { OmniPortPage } from "@/pages/OmniPort";
-import { OrchestratorPage } from "@/pages/Orchestrator";
 import { RequestAccessPage } from "@/pages/RequestAccess";
-import { SmartIntegrationsPage } from "@/pages/SmartIntegrations";
-import { TechSpecsPage } from "@/pages/TechSpecs";
-import { TriForcePage } from "@/pages/TriForce";
-import OmniDash from "@/pages/product/OmniDash";
 
 type AppRoute = {
   readonly path: string;
@@ -66,24 +53,9 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/auth", element: <LoginPage />, isPublic: true, routeName: "Auth" },
   { path: "/login", element: <LoginPage />, isPublic: true, routeName: "Login" },
   { path: "/story", element: <FounderStory />, isPublic: true, routeName: "Founder Story" },
-  { path: "/tech-specs", element: <TechSpecsPage />, isPublic: true, routeName: "Tech Specs" },
-  { path: "/features/man-mode", element: <ManModePage />, isPublic: true, routeName: "MAN Mode" },
-  { path: "/man-mode", element: <ManModePage />, isPublic: true, routeName: "MAN Mode Legacy" },
   { path: "/privacy", element: <PrivacyPage />, isPublic: true, routeName: "Privacy" },
   { path: "/terms", element: <TermsPage />, isPublic: true, routeName: "Terms" },
   { path: "/request-access", element: <RequestAccessPage />, isPublic: true, routeName: "Request Access" },
-  { path: "/advanced-analytics", element: <AdvancedAnalyticsPage />, isPublic: true, routeName: "Advanced Analytics" },
-  { path: "/ai-automation", element: <AiAutomationPage />, isPublic: true, routeName: "AI Automation" },
-  { path: "/fortress", element: <FortressPage />, isPublic: true, routeName: "Fortress" },
-  { path: "/maestro", element: <MaestroPage />, isPublic: true, routeName: "Maestro" },
-  { path: "/omniport", element: <OmniPortPage />, isPublic: true, routeName: "OmniPort" },
-  { path: "/orchestrator", element: <OrchestratorPage />, isPublic: true, routeName: "Orchestrator" },
-  { path: "/smart-integrations", element: <SmartIntegrationsPage />, isPublic: true, routeName: "Smart Integrations" },
-  { path: "/tri-force", element: <TriForcePage />, isPublic: true, routeName: "Tri-Force" },
-  { path: "/integrations/web3", element: <Web3Integrations />, isPublic: true, routeName: "Web3 Integrations" },
-  { path: "/product/omnidash", element: <OmniDash />, isPublic: true, routeName: "OmniDash" },
-  { path: "/demo", element: <DemoPage />, isPublic: true, routeName: "Demo" },
-  { path: "/demo.html", element: <DemoPage />, isPublic: true, routeName: "Demo" },
 ];
 
 function App() {

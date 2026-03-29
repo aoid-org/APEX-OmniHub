@@ -359,32 +359,6 @@ export function getTelemetrySummary(): {
   };
 }
 
-/**
- * Extract recent metrics specifically designed for Anomaly Detection pipelines.
- * @param count Number of recent spans to examine.
- */
-export function getRecentMetrics(count: number): { latencies: number[], errorCount: number } {
-  const spans = completedSpans;
-  if (spans.length === 0) {
-    return { latencies: [], errorCount: 0 };
-  }
-
-  const recentSpans = spans.slice(-count);
-  const latencies: number[] = [];
-  let errorCount = 0;
-
-  for (const span of recentSpans) {
-    if (span.endTime) {
-      latencies.push(span.endTime - span.startTime);
-    }
-    if (span.status === 'error') {
-      errorCount++;
-    }
-  }
-
-  return { latencies, errorCount };
-}
-
 // ============================================================================
 // EXPORTS
 // ============================================================================
@@ -406,5 +380,4 @@ export default {
   clearAllSpans,
   exportAllSpans,
   getTelemetrySummary,
-  getRecentMetrics,
 };

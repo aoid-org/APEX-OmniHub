@@ -25,7 +25,7 @@
 // ──────────────────────────────────────────────────────────
 
 /** Approved LLM providers (Chinese-origin explicitly excluded) */
-export type ByomProvider = "openai" | "google" | "anthropic" | "xai" | "groq";
+export type ByomProvider = "openai" | "google" | "anthropic" | "xai";
 
 /** Authentication method used for provider connection */
 export type ByomAuthType =

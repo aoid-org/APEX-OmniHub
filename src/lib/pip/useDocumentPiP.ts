@@ -80,7 +80,7 @@ export function useDocumentPiP(): UseDocumentPiPReturn {
     globalThis.window !== undefined &&
     'documentPictureInPicture' in globalThis;
 
-  const [pipWindow, setPipWindow] = useState<Window | null>(null);
+  const [pipWindow, setPiPWindow] = useState<Window | null>(null);
   const [isPiPActive, setIsPiPActive] = useState(false);
 
   // Track the current PiP window in a ref so cleanup callbacks always have the
@@ -93,7 +93,7 @@ export function useDocumentPiP(): UseDocumentPiPReturn {
    */
   const handlePiPClose = useCallback(() => {
     pipWindowRef.current = null;
-    setPipWindow(null);
+    setPiPWindow(null);
     setIsPiPActive(false);
   }, []);
 
@@ -129,7 +129,7 @@ export function useDocumentPiP(): UseDocumentPiPReturn {
         win.addEventListener('pagehide', handlePiPClose);
 
         pipWindowRef.current = win;
-        setPipWindow(win);
+        setPiPWindow(win);
         setIsPiPActive(true);
       } catch (err) {
         console.error('[useDocumentPiP] Failed to open PiP window:', err);

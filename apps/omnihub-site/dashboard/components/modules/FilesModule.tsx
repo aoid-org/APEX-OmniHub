@@ -15,7 +15,7 @@ export default function FilesModule({ onClose }: Props) {
   const totalFiles = totalFilesStat?.value ?? '—';
 
   // Parse a rough percentage from "14.2 GB" for progress bar (registry cap: 100 GB)
-  const usedGB = Number.parseFloat(storageUsed.replaceAll(/[^0-9.]/g, '')) || 0;
+  const usedGB = parseFloat(storageUsed.replace(/[^0-9.]/g, '')) || 0;
   const capGB = 100;
   const pct = Math.min(100, Math.round((usedGB / capGB) * 100));
 

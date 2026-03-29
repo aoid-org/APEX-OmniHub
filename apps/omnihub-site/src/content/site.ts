@@ -44,12 +44,12 @@ export const siteConfig = {
   },
   hero: {
     eyebrow: 'APEX OMNIHUB',
-    title: 'The only orchestrator you can audit, override, and reverse.',
+    title: 'Connect anything.\nOrchestrate everything.\nStay in control.',
     tagline: 'YOUR SYSTEMS. YOUR RULES.',
     subtitle:
-      'The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface - where every action is authorized, logged, and reversible.',
+      'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.',
     description:
-      'No vendor lock-in. No black boxes. No surprises.',
+      'OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.',
   },
   highlights: {
     title: '',
@@ -69,8 +69,8 @@ export const siteConfig = {
     ],
   },
   showcase: {
-    title: 'YOUR SYSTEMS. YOUR RULES. ONE GOVERNED SURFACE.',
-    subtitle: 'Governance isn\'t a feature. It\'s the architecture.',
+    title: 'Experience APEX OmniHub Today',
+    subtitle: 'Unite. Automate. Excel.',
     items: [
       buildShowcaseItem('Project Management', '/assets/screenshots/omniboard-connections.png'),
       buildShowcaseItem('Team Collaboration', '/assets/screenshots/omniport-dashboard.png'),
@@ -109,9 +109,9 @@ export const siteConfig = {
   },
   manMode: {
     title: 'M.A.N.Mode',
-    subtitle: 'MAN Mode — Human-in-the-Loop Governance',
+    subtitle: 'Manual Authorization Needed',
     description:
-      'High-risk decision items are automatically flagged and held for human review. The workflow continues without interruption — only the flagged item is paused until an authorized operator approves or rejects it. Nothing irreversible executes without deliberate human sign-off.',
+      'High-risk decision items are flagged and blocked. The workflow continues with zero interruption. Your team reviews. You decide. OmniHub remembers.',
   },
   footer: {
     copyright: '\u00A9 2026 APEX Business Systems. All rights reserved.',

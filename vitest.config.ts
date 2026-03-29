@@ -96,9 +96,6 @@ export default defineConfig({
         'src/hooks/**',
         'src/utils/RealtimeAudio.ts', // Relies on browser WebAudio primitives
         'apps/omnihub-site/**',
-        // Allow coverage for login-critical files tested in tests/login-page-fixes.test.ts
-        '!apps/omnihub-site/src/lib/supabase.ts',
-        '!apps/omnihub-site/src/pages/Login.tsx',
         'node_modules/**',
         'dist/**',
         '.idea/**',

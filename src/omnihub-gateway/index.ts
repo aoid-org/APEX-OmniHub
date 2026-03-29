@@ -84,7 +84,6 @@ export {
   generateUUIDv5,
   type IdempotencyStore,
 } from './IdempotencyManager';
-export { SupabaseIdempotencyStore } from './SupabaseIdempotencyStore';
 
 // Token Economics Router
 export {

@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 
 /**
  * Validates that there is only one version of React and React DOM
@@ -21,7 +21,7 @@ function findWorkspaceRoot() {
   let depth = 0;
   while (depth < 10) {
     if (existsSync(join(currentDir, 'package.json')) &&
-        (existsSync(join(currentDir, 'bun.lock')) || existsSync(join(currentDir, 'bun.lockb')) || existsSync(join(currentDir, 'package-lock.json')))) {
+        (existsSync(join(currentDir, 'bun.lockb')) || existsSync(join(currentDir, 'package-lock.json')))) {
       return currentDir;
     }
 
@@ -40,7 +40,7 @@ function findWorkspaceRoot() {
 function resolveNpmRunner() {
   const root = findWorkspaceRoot();
 
-  if (existsSync(join(root, 'bun.lock')) || existsSync(join(root, 'bun.lockb'))) {
+  if (existsSync(join(root, 'bun.lockb'))) {
     // Return bun command array
     return { command: 'bun', args: ['pm', 'ls', '--all'] };
   }

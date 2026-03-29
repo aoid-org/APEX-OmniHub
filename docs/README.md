@@ -234,6 +234,7 @@ Test results, simulation, and quality assurance:
 | [Simulation Runbook](sim/RUNBOOK.md)                                        | How to run simulations   |
 | [Client Story](sim/CHAOTIC_CLIENT_STORY.md)                                 | Test scenario            |
 | [Chaotic Client Simulation Report](sim/CHAOTIC_CLIENT_SIMULATION_REPORT.md) | User-behavior validation |
+| [Results Report](sim/RESULTS_REPORT.md)                                     | Simulation results       |
 | [Test Execution](sim/TEST_EXECUTION_REPORT.md)                              | Execution details        |
 
 ---

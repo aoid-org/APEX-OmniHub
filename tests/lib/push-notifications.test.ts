@@ -9,7 +9,7 @@ const logAnalyticsEventSpy = vi.spyOn(monitoring, 'logAnalyticsEvent').mockImple
  * Mock ServiceWorker class for instanceof checks in tests
  */
 class MockServiceWorker {
-  readonly scriptURL = 'mock-service-worker.js';
+  // Empty class implementation for mocking purposes
 }
 
 describe('setupNotificationClickHandler', () => {

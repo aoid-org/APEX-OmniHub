@@ -228,7 +228,7 @@ class TestPostSlackWebhook:
         def capture_post(_url: str, **kwargs: object) -> None:
             posted_json.update(kwargs.get("json", {}))  # type: ignore[arg-type]
 
-        _, mock_ctx = _make_mock_client(post_fn=capture_post)
+        mock_http_client, mock_ctx = _make_mock_client(post_fn=capture_post)
 
         with (
             patch.dict("sys.modules", {"config": mock_config}),
@@ -254,7 +254,7 @@ class TestPostSlackWebhook:
         def capture_post(_url: str, **kwargs: object) -> None:
             posted_json.update(kwargs.get("json", {}))  # type: ignore[arg-type]
 
-        _, mock_ctx = _make_mock_client(post_fn=capture_post)
+        mock_http_client, mock_ctx = _make_mock_client(post_fn=capture_post)
 
         with (
             patch.dict("sys.modules", {"config": mock_config}),

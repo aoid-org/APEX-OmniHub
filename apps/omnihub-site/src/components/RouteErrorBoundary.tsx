@@ -81,7 +81,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
           <Button variant="outline" onClick={this.handleReset}>
             Try again
           </Button>
-          <Button onClick={() => { globalThis.location.href = '/'; }}>
+          <Button onClick={() => window.location.href = '/'}>
             Go home
           </Button>
         </div>

@@ -1,15 +1,12 @@
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { Section } from '@/components/Section';
-import { StructuredData } from '@/components/StructuredData';
 import { CTAGroup } from '@/components/CTAGroup';
 import { HeroVisual } from '@/components/HeroVisual';
 import { FeatureHighlightGrid } from '@/components/FeatureHighlightGrid';
 import { siteConfig } from '@/content/site';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import homepageSchema from '../../public/schema/homepage.jsonld?raw';
-import organizationSchema from '../../public/schema/organization.jsonld?raw';
 import {
   IconConnect,
   IconTranslate,
@@ -44,8 +41,9 @@ function isBeforeInstallPromptEvent(event: Event): event is BeforeInstallPromptE
 function PWAInstallNode() {
   const { t } = useTranslation();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState<boolean>(
-    () => globalThis.window?.matchMedia('(display-mode: standalone)').matches ?? false,
+  const [isInstalled, setIsInstalled] = useState<boolean>(() =>
+    globalThis.window !== undefined &&
+    globalThis.window.matchMedia('(display-mode: standalone)').matches,
   );
 
   const isIOS = useMemo(() => {
@@ -98,19 +96,6 @@ function PWAInstallNode() {
     return null;
   }
 
-  let installHelpText = t('hero.installPromptFallback', {
-    defaultValue: 'Install becomes available once your browser meets PWA criteria.',
-  });
-  if (deferredPrompt) {
-    installHelpText = t('hero.installPromptReady', {
-      defaultValue: 'Install OmniHub for one-tap launch and push updates.',
-    });
-  } else if (isIOS) {
-    installHelpText = t('hero.installPromptIOS', {
-      defaultValue: 'On iOS: Share -> Add to Home Screen to install OmniHub.',
-    });
-  }
-
   return (
     <div className="hero__install-node">
       <button
@@ -121,7 +106,13 @@ function PWAInstallNode() {
       >
         {t('hero.cta.install', { defaultValue: 'Install App' })}
       </button>
-      <p className="hero__install-help">{installHelpText}</p>
+      <p className="hero__install-help">
+        {deferredPrompt
+          ? t('hero.installPromptReady', { defaultValue: 'Install OmniHub for one-tap launch and push updates.' })
+          : isIOS
+            ? t('hero.installPromptIOS', { defaultValue: 'On iOS: Share → Add to Home Screen to install OmniHub.' })
+            : t('hero.installPromptFallback', { defaultValue: 'Install becomes available once your browser meets PWA criteria.' })}
+      </p>
     </div>
   );
 }
@@ -138,38 +129,37 @@ function Hero() {
       </div>
       <div className="container hero__grid">
         <div className="hero__content">
-          <h1 className="heading-hero hero__title text-center lg:text-left">
-            {t('hero.headline.line1', {
-              defaultValue: 'The only orchestrator you can audit, override, and reverse.',
-            })}
+          <h1 className="heading-hero hero__title flex flex-col items-center lg:items-start w-fit mx-auto lg:mx-0">
+            <div className="flex flex-row gap-[0.5em] justify-center lg:justify-start text-center">
+              <span className="w-min">{t('hero.headline.line1', { defaultValue: 'Connect anything.' })}</span>
+              <span className="w-min">{t('hero.headline.line2', { defaultValue: 'Orchestrate everything.' })}</span>
+            </div>
+            <div className="w-full text-center mt-[0.1em]">
+              <span>{t('hero.headline.line3', { defaultValue: 'Stay in control.' })}</span>
+            </div>
           </h1>
-          <p className="text-lg font-semibold tracking-wide text-foreground mt-4">
-            {t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}
+          <p className="hero__tagline hero__tagline--center">{t('hero.tagline', { defaultValue: 'YOUR SYSTEMS. YOUR RULES.' })}</p>
+          <p className="hero__subtagline hero__subtagline--center">
+            {t('hero.traits', { defaultValue: 'DIRECTABLE \u2022 AUDITABLE \u2022 REVERSIBLE' })}
           </p>
-          <div
-            className="flex flex-wrap gap-4 items-center justify-center mt-3"
-            aria-label="Core platform pillars: Directable, Auditable, Reversible"
-          >
-            {['DIRECTABLE', 'AUDITABLE', 'REVERSIBLE'].map((pillar) => (
-              <span
-                key={pillar}
-                className="px-5 py-1.5 border border-teal-500 text-teal-400 text-sm font-bold tracking-widest rounded-sm"
-              >
-                {pillar}
-              </span>
-            ))}
-          </div>
 
           <div className="flex flex-col gap-4 mt-6 mb-6">
-            <p className="hero-body mt-6 text-muted-foreground max-w-2xl mx-auto">
-              {t('hero.subtitle', {
-                defaultValue:
-                  'The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.',
-              })}
+            <p className="hero__subtitle">
+              <span className="hero__sentence-indent">
+                {t('hero.subtitleSentence1', {
+                  defaultValue:
+                    'The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface.',
+                })}
+              </span>{' '}
+              {t('hero.subtitleSentence2', { defaultValue: 'Every action is authorized, logged, and reversible.' })}
             </p>
-            <p className="hero-body mt-3 font-medium text-foreground">
-              {t('hero.description', {
-                defaultValue: 'No vendor lock-in. No black boxes. No surprises.',
+            <p className="hero__description" style={{ color: 'rgba(100, 180, 255, 0.95)' }}>
+              <span className="hero__sentence-indent">
+                {t('hero.descriptionSentence1', { defaultValue: 'OmniDash keeps execution in view.' })}
+              </span>{' '}
+              {t('hero.descriptionSentence2', {
+                defaultValue:
+                  'Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.',
               })}
             </p>
           </div>
@@ -181,19 +171,10 @@ function Hero() {
                 secondary={{ label: t('hero.cta.secondary', { defaultValue: 'Watch Demo' }), href: siteConfig.ctas.secondary.href }}
               />
             </div>
-            <div
-              className="flex flex-wrap gap-x-3 gap-y-1 items-center justify-center text-xs text-muted-foreground mt-5"
-              aria-label="Compliance certifications"
-            >
-              <span>SOC 2 aligned</span>
-              <span aria-hidden="true">·</span>
-              <span>EU AI Act Article 14</span>
-              <span aria-hidden="true">·</span>
-              <span>GDPR Art. 30</span>
-              <span aria-hidden="true">·</span>
-              <span>Trusted by operators in regulated industries</span>
-            </div>
             <PWAInstallNode />
+            <p className="hero__footnote mt-2 text-center lg:text-left" style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+              {t('hero.footnote', { defaultValue: '*Blockchain, wallet, and NFT integrations are optional and disabled by default.' })}
+            </p>
           </div>
         </div>
 
@@ -216,23 +197,20 @@ function HighlightsSection() {
         'You define what happens. The system runs it. You can change it anytime.',
       icon: <IconAutomation size={22} />,
       href: '/ai-automation#modular-adapters',
-      ariaLabel: 'Portable Automation — Directable',
     },
     {
       title: 'Smart Integrations',
       description:
-        'Switch tools without rebuilding. Your logic, your schemas, and your rules move with you — never locked to a single vendor or platform.',
+        'Connect your systems. Keep your rules. Switch tools without rebuilding.',
       icon: <IconIntegrations size={22} />,
       href: '/smart-integrations#single-port',
-      ariaLabel: 'Smart Integrations — Reversible',
     },
     {
       title: 'Clear Visibility',
       description:
-        'See what runs. Know what changed. Prove it to anyone — with a complete, tamper-evident audit trail your compliance team can hand to an auditor.',
+        'See what runs. Know what changed. Decide what happens next.',
       icon: <IconAnalytics size={22} />,
       href: '/advanced-analytics#receipts-idempotency',
-      ariaLabel: 'Clear Visibility — Auditable',
     },
   ];
 
@@ -251,10 +229,6 @@ function TriForceSection() {
       icon: <IconConnect size={32} />,
       description:
         'Modular adapters plug into any system with an interface: API, webhook, or events.',
-      details: [
-        'Zero translation loss between systems.',
-        'Every event schema-validated on ingress.',
-      ],
     },
     {
       id: 'translate',
@@ -269,9 +243,6 @@ function TriForceSection() {
       icon: <IconExecute size={32} />,
       description:
         'Deterministic workflows with receipts, retries, rollback paths, and MAN Mode gates.',
-      details: [
-        '"Receipts" means a forensic-grade record your compliance team can hand to an auditor — not a log file you have to query.',
-      ],
     },
   ];
 
@@ -294,11 +265,6 @@ function TriForceSection() {
               <div className="triforce__icon">{card.icon}</div>
               <h3 className="triforce__title">{card.title}</h3>
               <p className="triforce__desc">{card.description}</p>
-              {card.details?.map((detail) => (
-                <p key={detail} className="triforce__desc mt-3">
-                  {detail}
-                </p>
-              ))}
             </a>
           ))}
         </div>
@@ -342,9 +308,9 @@ function FortressSection() {
   return (
     <Section id="fortress" variant="navy">
       <div className="fortress">
-        <h2 className="heading-2">Assume breach by default.</h2>
-        <p className="text-muted-foreground mt-2 text-lg">
-          Then verify, log, and replay everything anyway.
+        <h2 className="heading-2">Zero-Trust Fortress Protocol</h2>
+        <p className="fortress__subtitle">
+          Security is not an afterthought. It is the foundation.
         </p>
         <div className="fortress__grid">
           {siteConfig.fortress.items.map((item, idx) => (
@@ -361,7 +327,7 @@ function FortressSection() {
 
 function ManModeSection() {
   return (
-    <Section variant="default">
+    <Section id="man-mode" variant="default">
       <div className="manmode">
         <div className="manmode__visual" aria-hidden="true">
           <div className="manmode__icon">
@@ -385,16 +351,13 @@ function ManModeSection() {
         </div>
         <div className="manmode__content">
           <span className="manmode__badge">MAN MODE</span>
-          <h2 id="man-mode" className="heading-2">
-            {siteConfig.manMode.subtitle}
-          </h2>
+          <h2 className="heading-2">{siteConfig.manMode.subtitle}</h2>
           <p className="text-secondary mt-4">{siteConfig.manMode.description}</p>
           <ul className="manmode__features">
-            <li>High-risk items are flagged and held — not silently blocked, not silently executed</li>
-            <li>Workflow execution continues on all non-flagged items</li>
-            <li>Flagged item enters review queue: Approve → executes | Reject → logged + discarded</li>
-            <li>Every decision is timestamped, attributed, and replayed via OmniTrace</li>
-            <li>MAN Mode thresholds are operator-configurable per environment</li>
+            <li>High-risk items are flagged, not blocked</li>
+            <li>Workflow continues with zero interruption</li>
+            <li>User notified for manual review</li>
+            <li>Full audit trail maintained</li>
           </ul>
           <a href="/man-mode#man-mode" className="btn btn--secondary mt-8">
             Learn More
@@ -478,12 +441,12 @@ function CTASection() {
   return (
     <Section id="cta" variant="navy">
       <div style={{ textAlign: 'center' }}>
-        <h2 className="heading-2">YOUR SYSTEMS. YOUR RULES. ONE GOVERNED SURFACE.</h2>
+        <h2 className="heading-2">Experience APEX OmniHub Today</h2>
         <p
           className="text-lg mt-4"
           style={{ color: 'var(--color-text-muted)' }}
         >
-          Governance isn&apos;t a feature. It&apos;s the architecture.
+          Unite. Automate. Excel.
         </p>
         <div className="mt-8">
           <CTAGroup
@@ -491,12 +454,6 @@ function CTASection() {
             secondary={{ label: 'Watch Demo', href: '/demo' }}
             centered
           />
-          <p
-            className="text-xs tracking-widest text-teal-400 mt-4 text-center"
-            aria-label="Core platform pillars"
-          >
-            Directable · Auditable · Reversible
-          </p>
         </div>
       </div>
     </Section>
@@ -507,13 +464,10 @@ export function HomePage() {
   return (
     <Layout>
       <SEOMeta
-        title="APEX OmniHub — Auditable, Reversible AI Orchestration"
-        description="The only enterprise AI orchestrator that's fully directable, auditable, and reversible. Govern every action. Override anything. Replay everything."
-        canonical="https://apexomnihub.icu/"
-        appendBrandSuffix={false}
+        title="AI Orchestration Platform"
+        description="APEX OmniHub is the enterprise AI governance platform for governed execution across AI agents, legacy systems, and Web3. Directable. Accountable. Dependable."
+        canonical="https://apexomnihub.icu"
       />
-      <StructuredData id="homepage-schema" json={homepageSchema} />
-      <StructuredData id="organization-schema" json={organizationSchema} />
       <Hero />
       <HighlightsSection />
       <TriForceSection />
@@ -525,5 +479,3 @@ export function HomePage() {
     </Layout>
   );
 }
-
-

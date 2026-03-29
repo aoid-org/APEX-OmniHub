@@ -43,3 +43,6 @@ if (httpProxy) {
 // The factory-less call tells Vitest to use the adjacent __mocks__ file,
 // avoiding the async-factory timing race that caused props to bleed through.
 vi.mock('framer-motion');
+
+// Mock lucide-react using the robust mock in __mocks__
+vi.mock('lucide-react');

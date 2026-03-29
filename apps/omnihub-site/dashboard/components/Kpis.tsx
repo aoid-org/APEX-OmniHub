@@ -12,8 +12,6 @@ import { HiddenValue } from './HiddenMetric';
 import { LineChart, PlayCircle, AlertTriangle, MonitorPlay, CreditCard, DollarSign, Siren, Clock } from 'lucide-react';
 import { ResponsiveGridLayout, type Layout } from './GridLayout';
 
-type ResponsiveLayouts = Partial<Record<string, Layout[]>>;
-
 const today = () => new Date().toISOString().slice(0, 10);
 
 export const Kpis = () => {
@@ -74,7 +72,7 @@ export const Kpis = () => {
     },
   });
 
-  const [layouts, setLayouts] = useState<ResponsiveLayouts>({
+  const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>({
     lg: [
       { i: 'update', x: 0, y: 0, w: 1, h: 4, isResizable: false },
       { i: 'daily', x: 0, y: 4, w: 1, h: 6, isResizable: false }
@@ -97,7 +95,7 @@ export const Kpis = () => {
         breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
         cols={{ lg: 1, md: 1, sm: 1, xs: 1, xxs: 1 }}
         rowHeight={80}
-        onLayoutChange={(_layout: Layout[], allLayouts: ResponsiveLayouts) => setLayouts(allLayouts)}
+        onLayoutChange={(_layout, allLayouts) => setLayouts(allLayouts)}
         draggableHandle=".custom-drag-handle"
         margin={[16, 16]}
       >

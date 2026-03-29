@@ -9,9 +9,9 @@ export function getSiteUrl(): string {
         return import.meta.env.VITE_SITE_URL;
     }
 
-    // Preview environment (Cloudflare Pages)
-    if (import.meta.env.VITE_CF_PAGES_URL) {
-        return import.meta.env.VITE_CF_PAGES_URL;
+    // Preview environment (Vercel)
+    if (import.meta.env.VITE_VERCEL_URL) {
+        return `https://${import.meta.env.VITE_VERCEL_URL}`;
     }
 
     // Development fallback

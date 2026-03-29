@@ -15,7 +15,7 @@ const patterns = {
 const retention = {};
 
 for (const [key, pattern] of Object.entries(patterns)) {
-  const match = pattern.exec(source);
+  const match = source.match(pattern);
   if (!match) {
     throw new Error(`Missing retention field in policy: ${key}`);
   }

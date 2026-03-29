@@ -17,12 +17,9 @@ async function checkScopeDrift(
     return { drifted: false, missing: [] };  // Fail-open on query error
   }
 
-  let granted: string[] = [];
-  if (Array.isArray(data.scopes)) {
-    granted = data.scopes;
-  } else if (typeof data.scopes === 'object' && data.scopes !== null) {
-    granted = Object.keys(data.scopes);
-  }
+  const granted: string[] = Array.isArray(data.scopes)
+    ? data.scopes
+    : (typeof data.scopes === 'object' && data.scopes !== null ? Object.keys(data.scopes) : []);
 
   const missing = requiredScopes.filter((s) => !granted.includes(s));
   return { drifted: missing.length > 0, missing };

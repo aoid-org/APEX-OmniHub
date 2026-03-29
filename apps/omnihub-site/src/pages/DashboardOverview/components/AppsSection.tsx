@@ -57,7 +57,6 @@ export const AppsSection = memo(function AppsSection({
         <button
           type="button"
           onClick={() => dispatch({
-            source: 'module',
             appKey: SETTINGS_APP.id,
             provider: SETTINGS_APP.title,
             label: SETTINGS_APP.title,

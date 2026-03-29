@@ -13,11 +13,10 @@ let hasErrors = false;
 function checkCodePointers(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
-  const locationRegex = /Location:\s+`?([^`]+)`?/;
   
   lines.forEach((line, index) => {
     // Check "Location: `path`" or "Location: path"
-    const locationMatch = locationRegex.exec(line);
+    const locationMatch = line.match(/Location:\s+`?([^`]+)`?/);
     if (locationMatch) {
       checkPath(filePath, index + 1, locationMatch[1].trim());
     }

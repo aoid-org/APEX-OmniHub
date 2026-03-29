@@ -28,7 +28,6 @@ const MODULE_COMPONENTS: Readonly<Record<string, React.LazyExoticComponent<React
   dashboard: lazy(() => import('./modules/DashboardModule')),
   integrations: lazy(() => import('./modules/IntegrationsModule')),
   omnitrace: lazy(() => import('./modules/OmniTraceModule')),
-  cockpit: lazy(() => import('./modules/BYOMCockpitModule')),
   agent: lazy(() => import('./modules/AgentModule')),
 };
 

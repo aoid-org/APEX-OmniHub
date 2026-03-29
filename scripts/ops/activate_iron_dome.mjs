@@ -55,8 +55,7 @@ function getGitConfigRemote() {
     const gitConfigPath = path.join(process.cwd(), '.git', 'config');
     if (fs.existsSync(gitConfigPath)) {
       const config = fs.readFileSync(gitConfigPath, 'utf8');
-      const remoteRegex = /url\s*=\s*(?:https:\/\/github\.com\/|git@github\.com:)([\w-]+\/[\w-.]+?)(\.git)?\s/;
-      const match = remoteRegex.exec(config);
+      const match = config.match(/url\s*=\s*(?:https:\/\/github\.com\/|git@github\.com:)([\w-]+\/[\w-.]+?)(\.git)?\s/);
       if (match) {
         const [owner, repo] = match[1].replace('.git', '').split('/');
         return { owner, repo };
@@ -72,8 +71,7 @@ function getPackageJsonRemote() {
     if (fs.existsSync(pkgPath)) {
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
       if (pkg.repository?.url) {
-        const repoRegex = /github\.com[:/]([\w-]+\/[\w-.]+)/;
-        const match = repoRegex.exec(pkg.repository.url);
+        const match = pkg.repository.url.match(/github\.com[:/]([\w-]+\/[\w-.]+)/);
          if (match) {
             const [owner, repo] = match[1].replace('.git', '').split('/');
             return { owner, repo };

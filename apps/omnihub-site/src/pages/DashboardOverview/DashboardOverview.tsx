@@ -84,11 +84,7 @@ export const DashboardOverview = memo(function DashboardOverview({
     setAppHealth('yellow');
     
     try {
-      const response = await invokeMcpIntent({
-        prompt: prompt.trim(),
-        context: { items: context },
-      });
-      
+      const response = await invokeMcpIntent({ prompt: prompt.trim(), context: context as Record<string, unknown> });
       
       const reply = response.reply || 'Sync complete.';
       addTraceLog(`AGENT: ${reply}`);

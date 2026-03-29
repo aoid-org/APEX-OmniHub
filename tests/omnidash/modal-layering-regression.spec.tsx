@@ -82,7 +82,7 @@ describe('Modal Layering Regression', () => {
       );
 
       const dialog = screen.getByRole('dialog');
-      const style = globalThis.getComputedStyle(dialog);
+      const style = window.getComputedStyle(dialog);
       expect(style.pointerEvents).not.toBe('none');
     });
 
@@ -121,8 +121,7 @@ describe('Modal Layering Regression', () => {
         const source = fs.readFileSync(filePath, 'utf-8');
 
         // Find the custom backdrop button line
-        const backdropRegex = /aria-label="Close modal"[\s\S]*?className="([^"]+)"/;
-        const backdropMatch = backdropRegex.exec(source);
+        const backdropMatch = source.match(/aria-label="Close modal"[\s\S]*?className="([^"]+)"/);
         expect(backdropMatch).not.toBeNull();
 
         const backdropClasses = backdropMatch![1];

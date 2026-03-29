@@ -5,11 +5,10 @@ Covers:
   - build_omni_modal_schema helper: all fields, None data default, error field
   - UniversalOrchestratorWorkflow.run:
       * Invalid EventEnvelope dict → error response
-      * Unknown intent → offline response (resolve_intent returns resolved=False)
+      * Unknown intent → offline response (registry.resolve_or_offline returns OmniModalPayload)
       * Known intent, activity succeeds → ok response (dict result)
       * Known intent, activity succeeds → ok response (non-dict result wrapped)
       * Known intent, activity raises ActivityError → error response
-      * resolve_intent activity itself fails → error response
   - IntentRegistry helpers used by the workflow (via core.intent_registry):
       * resolve returns activity name for registered intent
       * resolve_or_offline returns OmniModalPayload for unknown intent
@@ -27,8 +26,6 @@ from core.intent_registry import IntentRegistry, OmniModalPayload
 from workflows.universal_saga import (
     ACTIVITY_RETRY_POLICY,
     ACTIVITY_TIMEOUT,
-    RESOLVE_INTENT_RETRY_POLICY,
-    RESOLVE_INTENT_TIMEOUT,
     UniversalOrchestratorWorkflow,
     build_omni_modal_schema,
 )
@@ -95,21 +92,6 @@ def test_retry_policy_config():
     assert ACTIVITY_RETRY_POLICY.maximum_interval == timedelta(seconds=30)
 
 
-def test_resolve_intent_timeout_is_5_seconds():
-    from datetime import timedelta
-
-    assert timedelta(seconds=5) == RESOLVE_INTENT_TIMEOUT
-
-
-def test_resolve_intent_retry_policy():
-    from datetime import timedelta
-
-    assert RESOLVE_INTENT_RETRY_POLICY.maximum_attempts == 2
-    assert RESOLVE_INTENT_RETRY_POLICY.initial_interval == timedelta(milliseconds=200)
-    assert RESOLVE_INTENT_RETRY_POLICY.backoff_coefficient == pytest.approx(1.5)
-    assert RESOLVE_INTENT_RETRY_POLICY.maximum_interval == timedelta(seconds=2)
-
-
 # ============================================================================
 # UniversalOrchestratorWorkflow.run — mocked workflow context
 # ============================================================================
@@ -154,22 +136,9 @@ async def test_run_unknown_intent_returns_offline():
 
     envelope_dict = _valid_envelope_dict(intent_id="totally.unknown.intent.xyz")
 
-    # resolve_intent activity returns resolved=False
-    resolve_result = {
-        "resolved": False,
-        "offline_payload": {
-            "intentId": "totally.unknown.intent.xyz",
-            "status": "offline",
-            "error": "Intent 'totally.unknown.intent.xyz' is not registered in the Universal Intent Registry.",
-            "traceId": "corr-123",
-            "data": {},
-        },
-    }
-
     with patch("workflows.universal_saga.workflow") as mock_wf:
         mock_wf.logger = MagicMock()
-        # First call: resolve_intent activity → offline
-        mock_wf.execute_activity = AsyncMock(return_value=resolve_result)
+        # registry.resolve_or_offline will return OmniModalPayload for unknown intent
         result = await wf.run(envelope_dict)
 
     assert result["status"] == "offline"
@@ -184,32 +153,21 @@ async def test_run_known_intent_activity_succeeds_dict_result():
 
     envelope_dict = _valid_envelope_dict(intent_id="test.saga.known_intent")
 
-    resolve_result = {"resolved": True, "activity_name": "sync_contacts_activity"}
     activity_result = {"contacts": 10, "synced": True}
 
-    call_count = 0
+    with patch("workflows.universal_saga.registry") as mock_registry:
+        mock_registry.resolve_or_offline.return_value = "sync_contacts_activity"
 
-    def mock_execute_activity(name, *_args, **_kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            # First call: resolve_intent
-            assert name == "resolve_intent"
-            return resolve_result
-        # Second call: the resolved activity
-        assert name == "sync_contacts_activity"
-        return activity_result
+        with patch("workflows.universal_saga.workflow") as mock_wf:
+            mock_wf.logger = MagicMock()
+            mock_wf.execute_activity = AsyncMock(return_value=activity_result)
 
-    with patch("workflows.universal_saga.workflow") as mock_wf:
-        mock_wf.logger = MagicMock()
-        mock_wf.execute_activity = AsyncMock(side_effect=mock_execute_activity)
-        result = await wf.run(envelope_dict)
+            result = await wf.run(envelope_dict)
 
     assert result["status"] == "ok"
     assert result["data"] == activity_result
     assert result["intentId"] == "test.saga.known_intent"
     assert result["error"] is None
-    assert call_count == 2
 
 
 @pytest.mark.asyncio
@@ -219,19 +177,14 @@ async def test_run_known_intent_activity_returns_non_dict():
 
     envelope_dict = _valid_envelope_dict(intent_id="test.saga.string_result")
 
-    call_count = 0
+    with patch("workflows.universal_saga.registry") as mock_registry:
+        mock_registry.resolve_or_offline.return_value = "string_activity"
 
-    def mock_execute_activity(_name, *_args, **_kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return {"resolved": True, "activity_name": "string_activity"}
-        return "plain string result"
+        with patch("workflows.universal_saga.workflow") as mock_wf:
+            mock_wf.logger = MagicMock()
+            mock_wf.execute_activity = AsyncMock(return_value="plain string result")
 
-    with patch("workflows.universal_saga.workflow") as mock_wf:
-        mock_wf.logger = MagicMock()
-        mock_wf.execute_activity = AsyncMock(side_effect=mock_execute_activity)
-        result = await wf.run(envelope_dict)
+            result = await wf.run(envelope_dict)
 
     assert result["status"] == "ok"
     assert result["data"] == {"result": "plain string result"}
@@ -244,58 +197,28 @@ async def test_run_known_intent_activity_raises_activity_error():
 
     envelope_dict = _valid_envelope_dict(intent_id="test.saga.failing_intent")
 
-    call_count = 0
+    with patch("workflows.universal_saga.registry") as mock_registry:
+        mock_registry.resolve_or_offline.return_value = "failing_activity"
 
-    def mock_execute_activity(_name, *_args, **_kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return {"resolved": True, "activity_name": "failing_activity"}
-        raise ActivityError(
-            "activity failed",
-            scheduled_event_id=1,
-            started_event_id=2,
-            identity="worker",
-            activity_type="failing_activity",
-            activity_id="act-1",
-            retry_state=None,
-        )
+        with patch("workflows.universal_saga.workflow") as mock_wf:
+            mock_wf.logger = MagicMock()
+            mock_wf.execute_activity = AsyncMock(
+                side_effect=ActivityError(
+                    "activity failed",
+                    scheduled_event_id=1,
+                    started_event_id=2,
+                    identity="worker",
+                    activity_type="failing_activity",
+                    activity_id="act-1",
+                    retry_state=None,
+                )
+            )
 
-    with patch("workflows.universal_saga.workflow") as mock_wf:
-        mock_wf.logger = MagicMock()
-        mock_wf.execute_activity = AsyncMock(side_effect=mock_execute_activity)
-        result = await wf.run(envelope_dict)
+            result = await wf.run(envelope_dict)
 
     assert result["status"] == "error"
     assert "failing_activity" in result["error"]
     assert result["intentId"] == "test.saga.failing_intent"
-
-
-@pytest.mark.asyncio
-async def test_run_resolve_intent_activity_fails():
-    """resolve_intent activity itself raises ActivityError → error response."""
-    wf = UniversalOrchestratorWorkflow()
-
-    envelope_dict = _valid_envelope_dict(intent_id="test.saga.resolve_fail")
-
-    with patch("workflows.universal_saga.workflow") as mock_wf:
-        mock_wf.logger = MagicMock()
-        mock_wf.execute_activity = AsyncMock(
-            side_effect=ActivityError(
-                "resolve_intent crashed",
-                scheduled_event_id=1,
-                started_event_id=2,
-                identity="worker",
-                activity_type="resolve_intent",
-                activity_id="act-resolve-1",
-                retry_state=None,
-            )
-        )
-        result = await wf.run(envelope_dict)
-
-    assert result["status"] == "error"
-    assert "Intent resolution failed" in result["error"]
-    assert result["intentId"] == "test.saga.resolve_fail"
 
 
 @pytest.mark.asyncio
@@ -317,25 +240,13 @@ async def test_run_envelope_uses_event_type_as_fallback_intent_id():
         },
     }
 
-    resolve_result = {
-        "resolved": False,
-        "offline_payload": {
-            "intentId": "orchestrator:agent.goal_received",
-            "status": "offline",
-            "error": "Intent 'orchestrator:agent.goal_received' is not registered.",
-            "traceId": "corr-456",
-            "data": {},
-        },
-    }
-
     with patch("workflows.universal_saga.workflow") as mock_wf:
         mock_wf.logger = MagicMock()
-        mock_wf.execute_activity = AsyncMock(return_value=resolve_result)
         result = await wf.run(envelope_dict)
 
     # The fallback intentId comes from event_type.value
     assert result["intentId"] == "orchestrator:agent.goal_received"
-    # It won't be registered → offline
+    # It won't be registered in the real registry → offline
     assert result["status"] == "offline"
 
 
@@ -346,25 +257,20 @@ async def test_run_trace_id_from_correlation_id():
 
     envelope_dict = _valid_envelope_dict(intent_id="test.trace.check")
 
-    call_count = 0
+    with patch("workflows.universal_saga.registry") as mock_registry:
+        mock_registry.resolve_or_offline.return_value = "some_activity"
 
-    def mock_execute_activity(_name, *_args, **_kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return {"resolved": True, "activity_name": "some_activity"}
-        return {"ok": True}
+        with patch("workflows.universal_saga.workflow") as mock_wf:
+            mock_wf.logger = MagicMock()
+            mock_wf.execute_activity = AsyncMock(return_value={"ok": True})
 
-    with patch("workflows.universal_saga.workflow") as mock_wf:
-        mock_wf.logger = MagicMock()
-        mock_wf.execute_activity = AsyncMock(side_effect=mock_execute_activity)
-        result = await wf.run(envelope_dict)
+            result = await wf.run(envelope_dict)
 
     assert result["traceId"] == "corr-123"
 
 
 # ============================================================================
-# IntentRegistry unit tests (used by the resolve_intent activity)
+# IntentRegistry unit tests (used by the workflow)
 # ============================================================================
 
 

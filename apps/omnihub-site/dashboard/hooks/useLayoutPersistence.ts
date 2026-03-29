@@ -40,11 +40,10 @@ function loadPersistedState(): PersistedLayoutState {
     const raw = localStorage.getItem(LAYOUT_STORAGE_KEY);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw) as Partial<PersistedLayoutState>;
-    const persistedOps = parsed.ops;
     return {
       activeNav: (parsed.activeNav as DashboardNavSection) ?? 'OmniBoard',
       isDark: parsed.isDark ?? true,
-      ops: persistedOps ? { ...DEFAULT_OPS_STATE, ...persistedOps } : DEFAULT_OPS_STATE,
+      ops: { ...DEFAULT_OPS_STATE, ...(parsed.ops ?? {}) },
     };
   } catch {
     return defaultState();

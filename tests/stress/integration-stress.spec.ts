@@ -33,34 +33,25 @@ describe('Integration Stress Tests', () => {
     });
 
     it('handles rapid login/logout cycles', { timeout: 10000 }, async () => {
-      vi.useFakeTimers();
-      try {
-        let sessionCount = 0;
+      let sessionCount = 0;
 
-        const login = async () => {
-          sessionCount++;
-          await new Promise(resolve => setTimeout(resolve, 10));
-        };
+      const login = async () => {
+        sessionCount++;
+        await new Promise(resolve => setTimeout(resolve, 10));
+      };
 
-        const logout = async () => {
-          sessionCount--;
-          await new Promise(resolve => setTimeout(resolve, 10));
-        };
+      const logout = async () => {
+        sessionCount--;
+        await new Promise(resolve => setTimeout(resolve, 10));
+      };
 
-        const cyclePromise = (async () => {
-          for (let i = 0; i < 100; i++) {
-            await login();
-            await logout();
-          }
-        })();
-
-        await vi.runAllTimersAsync();
-        await cyclePromise;
-
-        expect(sessionCount).toBe(0);
-      } finally {
-        vi.useRealTimers();
+      // Rapid cycles
+      for (let i = 0; i < 100; i++) {
+        await login();
+        await logout();
       }
+
+      expect(sessionCount).toBe(0);
     });
   });
 

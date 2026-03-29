@@ -92,6 +92,13 @@ To disable preload (before submission):
 
 ## Platform Configurations
 
+### Vercel
+
+Configuration is in `vercel.json` for header parity only. Vercel deployment is intentionally disabled, but the file documents:
+- All security headers
+- Asset caching (1 year for `/assets/*`)
+- App icon caching (24 hours)
+
 ### IONOS / Apache
 
 Create `.htaccess` in the document root:
@@ -231,7 +238,7 @@ With this configuration, expect:
 
 ### Remove All Security Headers
 
-**Cloudflare Pages**: Delete the `public/_headers` file
+**Vercel**: Delete the `headers` array from `vercel.json`
 
 **IONOS/Apache**: Delete `.htaccess` or remove the `<IfModule mod_headers.c>` block
 

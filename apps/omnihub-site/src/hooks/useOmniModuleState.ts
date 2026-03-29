@@ -1,5 +1,5 @@
 /**
- * useOmniModuleState - Live data hook for OmniDash module panels.
+ * useOmniModuleState — Live data hook for OmniDash module panels.
  *
  * Fetches authenticated module state from Supabase Edge Functions.
  * Falls back to static registry data when the backend is unavailable.
@@ -7,7 +7,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase, hasSupabaseConfig } from '@/lib/supabase';
 import { getModuleContent } from '@/dashboard/components/ModuleRegistry';
 import type {
@@ -28,17 +28,8 @@ export interface OmniModuleState {
   readonly isLive: boolean;
 }
 
-type LiveModuleState = Readonly<{
-  key: string;
-  headline?: string;
-  stats?: readonly ModuleStatItem[];
-  items?: readonly ModuleListItem[];
-  actions?: readonly ModuleAction[];
-  loading: boolean;
-  error: string | null;
-  isLive: boolean;
-}>;
-
+// ROOT CAUSE FIX: Build initial state from registry so the fallback path
+// always renders real data (stats, items, actions) rather than empty arrays.
 function registryStateFor(appKey: string): OmniModuleState {
   const reg = getModuleContent(appKey);
   return {
@@ -54,44 +45,28 @@ function registryStateFor(appKey: string): OmniModuleState {
 }
 
 export function useOmniModuleState(appKey: string): OmniModuleState {
-  const baselineState = useMemo(() => registryStateFor(appKey), [appKey]);
-  const [liveState, setLiveState] = useState<LiveModuleState>(() => ({
-    key: appKey,
-    loading: true,
-    error: null,
-    isLive: false,
-  }));
+  // Initialise directly from registry — widgets render immediately with real data.
+  const [state, setState] = useState<OmniModuleState>(() => registryStateFor(appKey));
 
   useEffect(() => {
+    // Re-seed from registry when the key changes.
+    setState(registryStateFor(appKey));
+
     let cancelled = false;
 
     async function fetchLiveState() {
       if (!hasSupabaseConfig) {
+        // No backend — registry data is already loaded; just clear the loading flag.
         if (!cancelled) {
-          setLiveState({
-            key: appKey,
-            loading: false,
-            error: null,
-            isLive: false,
-          });
+          setState(prev => ({ ...prev, loading: false, isLive: false }));
         }
         return;
       }
 
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user || cancelled) {
-          if (!cancelled) {
-            setLiveState({
-              key: appKey,
-              loading: false,
-              error: null,
-              isLive: false,
-            });
-          }
+          setState(prev => ({ ...prev, loading: false, isLive: false }));
           return;
         }
 
@@ -99,68 +74,42 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
           body: { action: 'get_module_state', module_key: appKey },
         });
 
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
         if (error || !data) {
-          setLiveState({
-            key: appKey,
-            loading: false,
-            error: null,
-            isLive: false,
-          });
+          // Backend unavailable — registry data already in state; just clear loading.
+          setState(prev => ({ ...prev, loading: false, isLive: false }));
           return;
         }
 
+        // Merge live data over registry baseline.
         const live = data as Partial<ModuleContent>;
-        setLiveState({
-          key: appKey,
-          headline: live.headline,
-          stats: live.stats,
-          items: live.items,
-          actions: live.actions,
+        setState(prev => ({
+          ...prev,
+          headline: live.headline ?? prev.headline,
+          stats: live.stats ?? prev.stats,
+          items: live.items ?? prev.items,
+          actions: live.actions ?? prev.actions,
           loading: false,
-          error: null,
           isLive: true,
-        });
+          error: null,
+        }));
       } catch {
         if (!cancelled) {
-          setLiveState({
-            key: appKey,
-            loading: false,
-            error: null,
-            isLive: false,
-          });
+          setState(prev => ({ ...prev, loading: false, isLive: false }));
         }
       }
     }
 
-    void fetchLiveState();
-
-    return () => {
-      cancelled = true;
-    };
+    fetchLiveState();
+    return () => { cancelled = true; };
   }, [appKey]);
 
-  if (liveState.key !== appKey) {
-    return baselineState;
-  }
-
-  return {
-    ...baselineState,
-    headline: liveState.headline ?? baselineState.headline,
-    stats: liveState.stats ?? baselineState.stats,
-    items: liveState.items ?? baselineState.items,
-    actions: liveState.actions ?? baselineState.actions,
-    loading: liveState.loading,
-    error: liveState.error,
-    isLive: liveState.isLive,
-  };
+  return state;
 }
 
 /**
- * triggerModuleAction - Dispatches a module action to the backend workflow engine.
+ * triggerModuleAction — Dispatches a module action to the backend workflow engine.
  *
  * Calls the trigger-workflow Edge Function to execute a Temporal saga
  * for the given module and action.
@@ -173,14 +122,12 @@ export async function triggerModuleAction(
   if (!hasSupabaseConfig) {
     return {
       success: true,
-      message: `Action "${actionId}" queued for ${moduleKey} (offline mode - will execute when backend is connected).`,
+      message: `Action "${actionId}" queued for ${moduleKey} (offline mode — will execute when backend is connected).`,
     };
   }
 
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return { success: false, message: 'Authentication required. Please sign in.' };
     }

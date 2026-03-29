@@ -5,29 +5,17 @@
 import { useEffect } from 'react';
 
 interface SEOMetaProps {
-  title: string;
+  title:       string;
   description: string;
-  canonical?: string;
-  ogImage?: string;
-  noIndex?: boolean;
-  appendBrandSuffix?: boolean;
+  canonical?:  string;
+  ogImage?:    string;
+  noIndex?:    boolean;
 }
 
-export function SEOMeta({
-  title,
-  description,
-  canonical,
-  ogImage,
-  noIndex,
-  appendBrandSuffix = true,
-}: SEOMetaProps) {
-  const fullTitle = appendBrandSuffix
-    ? `${title} | APEX OmniHub — Intelligence Designed`
-    : title;
-  const ogImg = ogImage ?? 'https://apexomnihub.icu/og-image.png';
-  const currentUrl =
-    globalThis.window === undefined ? '' : globalThis.window.location.href;
-  const canon = canonical ?? currentUrl;
+export function SEOMeta({ title, description, canonical, ogImage, noIndex }: SEOMetaProps) {
+  const fullTitle = `${title} | APEX OmniHub — Intelligence Designed`;
+  const ogImg     = ogImage ?? 'https://apexomnihub.icu/og-image.png';
+  const canon     = canonical ?? (typeof window !== 'undefined' ? globalThis.globalThis.window.location.href : '');
 
   useEffect(() => {
     document.title = fullTitle;
@@ -57,10 +45,9 @@ export function SEOMeta({
       setMeta('name', 'robots', 'noindex,nofollow');
     }
 
+    // Set canonical link
     if (canonical) {
-      let link = document.querySelector(
-        'link[rel="canonical"]',
-      ) as HTMLLinkElement | null;
+      let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
       if (!link) {
         link = document.createElement('link');
         link.setAttribute('rel', 'canonical');

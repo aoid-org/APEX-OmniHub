@@ -57,7 +57,7 @@ export function setupMonitoringTestEnv(): void {
     };
   }
 
-  if (globalThis.window === undefined) {
+  if (typeof window === 'undefined') {
     globalObj.window = globalThis;
   }
 

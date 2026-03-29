@@ -92,7 +92,7 @@ export function useSpatialEngine(options: SpatialEngineOptions = {}): SpatialEng
   const {
     worldBounds = DEFAULT_WORLD_BOUNDS,
     minScale = 0.1,
-    maxScale = 5,
+    maxScale = 5.0,
     zoomSensitivity = 1e-3,
   } = options;
 

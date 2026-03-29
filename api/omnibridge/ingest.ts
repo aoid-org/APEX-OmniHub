@@ -1,45 +1,65 @@
-import { generateSecureId } from '../../src/lib/security';
 /**
  * api/omnibridge/ingest.ts — Edge Webhook Ingestion Endpoint
  *
- * Receives inbound webhook events from OmniBridge partners.
- * Supports a source-aware hardened mode (for SBBL HQ and new partners)
- * and optionally a legacy single-secret fallback.
+ * Receives inbound webhook events from OmniBridge partners with
+ * HMAC-SHA256 signature validation and idempotency enforcement.
  *
  * Security:
- * - Source registry lookups and validation
- * - Replay prevention via ReplayStore
- * - HMAC-SHA256 signature verification (constant-time)
- * - Payload sanitization (XSS and prototype pollution mitigation)
+ * - HMAC-SHA256 signature verification on every request
+ * - Constant-time signature comparison (via Web Crypto)
+ * - Payload sanitization (strips unsafe fields)
+ * - Idempotency deduplication
  *
  * @module api/omnibridge/ingest
  * @license Proprietary - APEX Business Systems Ltd.
  */
 
 import { validateHMAC } from '../../src/lib/security/hmacValidator';
-import {
-  resolveWebhookSource,
-  getRegistryError
-} from '../../src/lib/omnibridge/sourceRegistry';
-import {
-  extractHardenedHeaders,
-  computeCanonicalString,
-  isTimestampValid,
-  isIpAllowed,
-  extractClientIp
-} from '../../src/lib/omnibridge/verifySignedIngress';
-import {
-  replayStore,
-  getHardenedReplayKey,
-  getLegacyIdempotencyKey
-} from '../../src/lib/omnibridge/replayStore';
-import {
-  normalizeHardenedEvent,
-  normalizeLegacyEvent,
-  type EventEnvelope
-} from '../../src/lib/omnibridge/eventEnvelope';
 
 export const config = { runtime: 'edge' };
+
+/* -------------------------------------------------------------------------- */
+/*  Types                                                                     */
+/* -------------------------------------------------------------------------- */
+
+interface IngestPayload {
+  event_type: string;
+  tenant_id: string;
+  timestamp: string;
+  payload: Record<string, unknown>;
+  idempotency_key?: string;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Idempotency tracker (per-isolate; resets on cold start)                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * In-memory set of processed idempotency keys.
+ * For edge runtime this provides best-effort deduplication within a single
+ * isolate. Production systems should back this with a distributed store.
+ */
+const processedKeys = new Set<string>();
+const MAX_IDEMPOTENCY_KEYS = 10_000;
+
+/**
+ * Check if an idempotency key has already been processed.
+ * Returns true if the key is a duplicate.
+ */
+function isDuplicate(key: string): boolean {
+  if (processedKeys.has(key)) {
+    return true;
+  }
+
+  // Evict oldest entries if we exceed the cap to bound memory
+  if (processedKeys.size >= MAX_IDEMPOTENCY_KEYS) {
+    const firstKey = processedKeys.values().next().value as string;
+    processedKeys.delete(firstKey);
+  }
+
+  processedKeys.add(key);
+  return false;
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Helpers                                                                   */
@@ -53,15 +73,34 @@ function jsonResponse(status: number, body: Record<string, unknown>): Response {
 }
 
 /**
- * Log structure for tracking accept/deny paths cleanly without leaking auth material.
+ * Validate the ingest payload structure.
+ * Returns the parsed payload or null if invalid.
  */
-function logEvent(deny: boolean, reason: string, meta: { mode: 'hardened' | 'legacy', source_id?: string, tenant_id?: string, trace_id?: string, error?: string }) {
-  const prefix = `[omnibridge/ingest][${meta.mode}]`;
-  if (deny) {
-    console.error(`${prefix} DENY: ${reason} | ${JSON.stringify(meta)}`);
-  } else {
-    console.warn(`${prefix} ACCEPT: ${reason} | ${JSON.stringify(meta)}`);
+function parsePayload(body: unknown): IngestPayload | null {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return null;
   }
+
+  const obj = body as Record<string, unknown>;
+
+  if (typeof obj.event_type !== 'string' || obj.event_type.length === 0) return null;
+  if (typeof obj.tenant_id !== 'string' || obj.tenant_id.length === 0) return null;
+  if (typeof obj.timestamp !== 'string' || obj.timestamp.length === 0) return null;
+  if (!obj.payload || typeof obj.payload !== 'object' || Array.isArray(obj.payload)) return null;
+
+  // Validate timestamp is a parseable date
+  if (Number.isNaN(Date.parse(obj.timestamp))) return null;
+
+  // Optional idempotency_key must be string if present
+  if (obj.idempotency_key !== undefined && typeof obj.idempotency_key !== 'string') return null;
+
+  return {
+    event_type: obj.event_type,
+    tenant_id: obj.tenant_id,
+    timestamp: obj.timestamp,
+    payload: obj.payload as Record<string, unknown>,
+    idempotency_key: typeof obj.idempotency_key === 'string' ? obj.idempotency_key : undefined,
+  };
 }
 
 /**
@@ -108,190 +147,85 @@ function sanitizePayload(obj: Record<string, unknown>): Record<string, unknown> 
 /*  Handler                                                                   */
 /* -------------------------------------------------------------------------- */
 
-export default async function handler(request: Request): Promise<Response> { // NOSONAR
+export default async function handler(request: Request): Promise<Response> {
   // Only POST allowed
   if (request.method !== 'POST') {
     return jsonResponse(405, { error: 'method_not_allowed' });
   }
 
-  // Always read raw body first for signature verification
+  // Read raw body for signature verification
   const rawBody = await request.text();
 
-  // Try extracting hardened headers first
-  const hardenedHeaders = extractHardenedHeaders(request);
-
-  if (hardenedHeaders) {
-    /* ---------------------------------------------------------------------- */
-    /*  HARDENED MODE PATH                                                    */
-    /* ---------------------------------------------------------------------- */
-    const { sourceId, keyId, timestamp, traceId, signature } = hardenedHeaders;
-    const modeMeta = { mode: 'hardened' as const, source_id: sourceId, trace_id: traceId };
-
-    // Basic format validations
-    if (!isTimestampValid(timestamp, 300)) {
-      logEvent(true, 'invalid_timestamp', modeMeta);
-      return jsonResponse(400, { error: 'invalid_timestamp' });
-    }
-
-    // Replay check before heavy crypto
-    const replayKey = getHardenedReplayKey(sourceId, traceId);
-    if (replayStore.isDuplicate(replayKey)) {
-      logEvent(true, 'replay_detected', modeMeta);
-      return jsonResponse(409, { error: 'replay_detected' });
-    }
-
-    // Lookup Source
-    const resolution = resolveWebhookSource(sourceId, keyId);
-
-    // Check if there was a server error reading config
-    if (getRegistryError()) {
-      logEvent(true, 'server_config_error', { ...modeMeta, error: getRegistryError()?.message });
-      return jsonResponse(500, { error: 'server_config_error' });
-    }
-
-    if (!resolution) {
-      logEvent(true, 'invalid_key_id', modeMeta);
-      return jsonResponse(401, { error: 'invalid_key_id' }); // Generic error to hide inner workings
-    }
-
-    // IP validation (if configured)
-    const clientIp = extractClientIp(request);
-    if (!isIpAllowed(clientIp, resolution.webhook.allowed_ips)) {
-      logEvent(true, 'ip_not_allowed', { ...modeMeta, error: `IP ${clientIp} not in allowed_ips` });
-      return jsonResponse(403, { error: 'ip_not_allowed' });
-    }
-
-    // Verify HMAC
-    const path = new URL(request.url).pathname;
-
-    // Create canonical string matching _shared/requestSigning.ts pattern but with sourceId prepended
-    // METHOD + "\n" + PATH + "\n" + TIMESTAMP + "\n" + TRACE_ID + "\n" + SOURCE_ID + "\n" + SHA256_HEX(BODY)
-    const canonicalStr = await computeCanonicalString(
-      request.method,
-      path,
-      timestamp,
-      traceId,
-      sourceId,
-      rawBody
-    );
-
-    const signatureValid = await validateHMAC(canonicalStr, signature, resolution.secret);
-    if (!signatureValid) {
-      logEvent(true, 'invalid_signature', modeMeta);
-      return jsonResponse(401, { error: 'invalid_signature' });
-    }
-
-    // Payload parsing
-    let parsedBody: Record<string, unknown>;
-    try {
-      parsedBody = JSON.parse(rawBody) as Record<string, unknown>;
-    } catch {
-      logEvent(true, 'invalid_json', modeMeta);
-      return jsonResponse(400, { error: 'invalid_json' });
-    }
-
-    // Normalize and enforce tenant matching
-    let eventEnvelope: EventEnvelope;
-    try {
-      const eventId = generateSecureId();
-      eventEnvelope = normalizeHardenedEvent(
-        parsedBody,
-        resolution.client.tenant_id,
-        timestamp,
-        traceId,
-        sourceId,
-        eventId,
-        typeof parsedBody.idempotency_key === 'string' ? parsedBody.idempotency_key : undefined
-      );
-    } catch (e) {
-      logEvent(true, 'invalid_payload', { ...modeMeta, error: e instanceof Error ? e.message : String(e) });
-      return jsonResponse(400, { error: 'invalid_payload' });
-    }
-
-    // Optional legacy payload tenant_id strict checking against registry (if payload provided it)
-    if (parsedBody.tenant_id && parsedBody.tenant_id !== resolution.client.tenant_id) {
-      logEvent(true, 'tenant_mismatch', { ...modeMeta, tenant_id: parsedBody.tenant_id as string });
-      return jsonResponse(403, { error: 'tenant_mismatch' });
-    }
-
-    // Pre-process sanitization
-    eventEnvelope.payload = sanitizePayload(eventEnvelope.payload);
-
-    logEvent(false, 'event_received', { ...modeMeta, tenant_id: resolution.client.tenant_id });
-
-    // FUTURE: Durable execution routing
-    return jsonResponse(200, { received: true, event_id: eventEnvelope.event_id });
-
-  } else {
-    /* ---------------------------------------------------------------------- */
-    /*  LEGACY MODE PATH                                                      */
-    /* ---------------------------------------------------------------------- */
-    const modeMeta = { mode: 'legacy' as const };
-
-    const allowLegacy = process.env['OMNIBRIDGE_ALLOW_LEGACY_SINGLE_SECRET'] === 'true';
-    if (!allowLegacy) {
-      // If we got here, they lacked the hardened headers. Determine why.
-      const hasAnyHardened = request.headers.has('X-Omni-Source') || request.headers.has('X-Omni-Key-Id');
-      if (hasAnyHardened) {
-        logEvent(true, 'missing_signature', modeMeta);
-        return jsonResponse(401, { error: 'missing_signature' }); // missing one of the 5
-      }
-
-      logEvent(true, 'legacy_mode_disabled', modeMeta);
-      return jsonResponse(403, { error: 'legacy_mode_disabled' });
-    }
-
-    const legacySignature = request.headers.get('X-OmniBridge-Signature');
-    if (!legacySignature) {
-      logEvent(true, 'missing_signature', modeMeta);
-      return jsonResponse(401, { error: 'missing_signature' });
-    }
-
-    const webhookSecret = process.env['OMNIBRIDGE_WEBHOOK_SECRET'];
-    if (!webhookSecret) {
-      logEvent(true, 'server_config_error', { ...modeMeta, error: 'OMNIBRIDGE_WEBHOOK_SECRET missing' });
-      return jsonResponse(500, { error: 'server_config_error' });
-    }
-
-    const signatureValid = await validateHMAC(rawBody, legacySignature, webhookSecret);
-    if (!signatureValid) {
-      logEvent(true, 'invalid_signature', modeMeta);
-      return jsonResponse(401, { error: 'invalid_signature' });
-    }
-
-    // Payload Parsing
-    let parsedBody: Record<string, unknown>;
-    try {
-      parsedBody = JSON.parse(rawBody) as Record<string, unknown>;
-    } catch {
-      logEvent(true, 'invalid_json', modeMeta);
-      return jsonResponse(400, { error: 'invalid_json' });
-    }
-
-    // Normalization & Validation
-    const eventId = generateSecureId();
-    let eventEnvelope: EventEnvelope;
-    try {
-      eventEnvelope = normalizeLegacyEvent(parsedBody, eventId);
-    } catch (e) {
-      logEvent(true, 'invalid_payload', { ...modeMeta, error: e instanceof Error ? e.message : String(e) });
-      return jsonResponse(400, { error: 'invalid_payload' });
-    }
-
-    // Idempotency check for Legacy
-    if (eventEnvelope.idempotency_key) {
-      const replayKey = getLegacyIdempotencyKey(eventEnvelope.idempotency_key);
-      if (replayStore.isDuplicate(replayKey)) {
-        logEvent(true, 'replay_detected', { ...modeMeta, trace_id: eventEnvelope.idempotency_key });
-        return jsonResponse(200, { received: true, event_id: eventId, duplicate: true });
-      }
-    }
-
-    eventEnvelope.payload = sanitizePayload(eventEnvelope.payload);
-
-    logEvent(false, 'event_received', { ...modeMeta, tenant_id: eventEnvelope.tenant_id });
-
-    // Match the previous legacy endpoint response
-    return jsonResponse(200, { received: true, event_id: eventId });
+  // Validate HMAC signature
+  const signature = request.headers.get('X-OmniBridge-Signature');
+  if (!signature) {
+    return jsonResponse(401, { error: 'missing_signature' });
   }
+
+  const webhookSecret = process.env['OMNIBRIDGE_WEBHOOK_SECRET'];
+  if (!webhookSecret) {
+    console.error('[omnibridge/ingest] OMNIBRIDGE_WEBHOOK_SECRET env var not configured');
+    return jsonResponse(500, { error: 'server_error' });
+  }
+
+  const signatureValid = await validateHMAC(rawBody, signature, webhookSecret);
+  if (!signatureValid) {
+    return jsonResponse(401, { error: 'invalid_signature' });
+  }
+
+  // Parse and validate payload
+  let parsedBody: unknown;
+  try {
+    parsedBody = JSON.parse(rawBody);
+  } catch {
+    return jsonResponse(400, { error: 'invalid_json' });
+  }
+
+  const ingestPayload = parsePayload(parsedBody);
+  if (!ingestPayload) {
+    return jsonResponse(400, {
+      error: 'invalid_payload',
+      error_description:
+        'Required fields: event_type (string), tenant_id (string), timestamp (ISO string), payload (object)',
+    });
+  }
+
+  // Generate a unique event ID for tracking
+  const eventId = crypto.randomUUID();
+
+  // Idempotency check
+  if (ingestPayload.idempotency_key) {
+    if (isDuplicate(ingestPayload.idempotency_key)) {
+      console.warn(
+        `[omnibridge/ingest] Duplicate event skipped: idempotency_key=${ingestPayload.idempotency_key}, event_id=${eventId}`,
+      );
+      // Return success — the original event was already processed
+      return jsonResponse(200, { received: true, event_id: eventId, duplicate: true });
+    }
+  }
+
+  // Sanitize payload
+  const sanitizedPayload = sanitizePayload(ingestPayload.payload);
+
+  const sanitizedEvent = {
+    event_id: eventId,
+    event_type: ingestPayload.event_type,
+    tenant_id: ingestPayload.tenant_id,
+    timestamp: ingestPayload.timestamp,
+    payload: sanitizedPayload,
+    idempotency_key: ingestPayload.idempotency_key ?? null,
+    received_at: new Date().toISOString(),
+  };
+
+  // FUTURE: Route to Temporal workflow for durable processing
+  // await temporalClient.workflow.start('omnibridgeEventHandler', {
+  //   taskQueue: 'omnibridge-events',
+  //   workflowId: `omni-event-${eventId}`,
+  //   args: [sanitizedEvent],
+  // });
+
+  // For now, log the sanitized event for observability
+  console.warn(`[omnibridge/ingest] Event received:`, JSON.stringify(sanitizedEvent));
+
+  return jsonResponse(200, { received: true, event_id: eventId });
 }

@@ -20,49 +20,6 @@ function jsonResponse(
   });
 }
 
-/**
- * Handle oauth_exchange action dispatched from api/omniconnect/exchange.ts.
- * Validates the provider + auth_payload and returns scopes from the provider.
- */
-async function handleOAuthExchange(
-  body: Record<string, unknown>,
-  authHeader: string,
-  origin: string | null,
-): Promise<Response> {
-  const provider = body.provider;
-  const authPayload = body.auth_payload as Record<string, unknown> | undefined;
-
-  if (typeof provider !== "string" || !provider) {
-    return jsonResponse({ error: "bad_request", details: "missing provider" }, 400, origin);
-  }
-  if (!authPayload || typeof authPayload.proxy_token !== "string") {
-    return jsonResponse({ error: "bad_request", details: "missing auth_payload.proxy_token" }, 400, origin);
-  }
-
-  const supabase = createAnonClient(authHeader);
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return jsonResponse({ error: "unauthorized" }, 401, origin);
-  }
-
-  // Log the exchange attempt
-  await supabase.from("audit_logs").insert({
-    actor_id: user.id,
-    action_type: "oauth_exchange",
-    resource_type: "provider_connection",
-    metadata: { provider, has_context: !!authPayload.context },
-  }).then(({ error }) => {
-    if (error) console.error("[omnilink-agent] audit log error:", error.message);
-  });
-
-  return jsonResponse({
-    status: "exchanged",
-    provider,
-    scopes: [],
-    user_id: user.id,
-  }, 200, origin);
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests with origin validation
   if (req.method === "OPTIONS") {
@@ -102,12 +59,7 @@ serve(async (req) => {
       return jsonResponse({ error: "bad_request" }, 400, origin);
     }
 
-    // 4. Action dispatch — oauth_exchange bypasses query/traceId validation
-    if (body.action === "oauth_exchange") {
-      return handleOAuthExchange(body, authHeader, origin);
-    }
-
-    // 5. Validate required fields for standard agent invocation
+    // 4. Validate required fields
     if (
       typeof body.query !== "string" ||
       typeof body.traceId !== "string" ||
@@ -119,7 +71,7 @@ serve(async (req) => {
     const query = body.query;
     const traceId = body.traceId;
 
-    // 6. Guardian enforcement (toggled via OMNI_GUARDIAN_ENABLED, default true)
+    // 5. Guardian enforcement (toggled via OMNI_GUARDIAN_ENABLED, default true)
     const guardianEnabled = Deno.env.get("OMNI_GUARDIAN_ENABLED") !== "false";
     if (guardianEnabled) {
       const guardianResult = await checkRequest(query, authHeader);
@@ -128,7 +80,7 @@ serve(async (req) => {
       }
     }
 
-    // 7. Update agent_runs status to 'running'
+    // 6. Update agent_runs status to 'running'
     const { error: updateError } = await supabase
       .from("agent_runs")
       .update({
@@ -141,7 +93,7 @@ serve(async (req) => {
       console.error("Failed to update agent_run status:", updateError.message);
     }
 
-    // 8. Handoff to orchestrator with signed request
+    // 7. Handoff to orchestrator with signed request
     const orchestratorUrl = Deno.env.get("ORCHESTRATOR_URL");
     if (!orchestratorUrl) {
       console.error("ORCHESTRATOR_URL not configured");

@@ -26,7 +26,7 @@ await page.screenshot({
 console.log('Captured: Header Close-up (Light Theme)');
 
 // Screenshot 3: Switch to dark theme
-const darkLabel = page.locator('label:has(input[value="dark"])');
+const darkLabel = await page.locator('label:has(input[value="dark"])');
 await darkLabel.click();
 await page.waitForTimeout(500);
 await page.screenshot({ path: join(screenshotsDir, 'screenshot-homepage-dark.png'), fullPage: true });

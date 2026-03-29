@@ -12,7 +12,6 @@ All audit events must be logged using this schema to maintain:
 - Standardized metadata for enterprise integration
 """
 
-import asyncio
 from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
@@ -311,10 +310,10 @@ class AuditLogger:
 
     async def _store_file(self, event: AuditLogEntry) -> None:
         """Store audit event in local file (for development/testing)."""
-        import importlib
         import json
 
-        aiofiles: Any = importlib.import_module("aiofiles")
+        import aiofiles  # type: ignore
+
         log_file = f"audit_logs_{event.timestamp.date()}.jsonl"
 
         async with aiofiles.open(log_file, "a") as f:
@@ -370,8 +369,8 @@ class AuditLogger:
 
             query = query.limit(limit)
 
-            # Execute sync DB call off the event loop.
-            response = await asyncio.to_thread(query.execute)
+            # Using execute() which returns APIResponse.
+            response = query.execute()
             data = response.data
 
             return [AuditLogEntry(**(row if isinstance(row, dict) else {})) for row in data]

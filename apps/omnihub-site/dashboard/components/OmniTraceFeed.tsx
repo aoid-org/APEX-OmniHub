@@ -8,7 +8,7 @@ interface AuditLog {
   [key: string]: unknown;
 }
 
-export function OmniTraceFeed({ tenantId }: Readonly<{ tenantId?: string }>) {
+export function OmniTraceFeed({ tenantId }: { tenantId?: string }) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [status, setStatus] = useState<'CONNECTING' | 'SUBSCRIBED' | 'ERROR'>('CONNECTING');
 

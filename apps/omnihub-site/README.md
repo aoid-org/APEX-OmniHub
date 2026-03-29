@@ -105,9 +105,9 @@ apps/omnihub-site/
 The marketing site supports both **clean URLs** (e.g., `/demo`) and **portable .html URLs** (e.g., `/demo.html`):
 
 - **Canonical pages** are `.html` files for maximum portability across static hosting providers
-- **Clean URLs** are supported in production via Cloudflare Pages redirects (configured in `public/_redirects`)
+- **Clean URLs** are supported in production via Vercel rewrites (configured in root `vercel.json`)
 - All internal links use `.html` extensions to ensure the site works on any static host without server configuration
-- The `public/_redirects` file provides explicit rewrites for each marketing page, with an SPA catch-all fallback
+- The root `vercel.json` provides explicit rewrites for each marketing page, with no catch-all fallback (unknown paths return 404)
 
 ## Themes
 
@@ -176,7 +176,7 @@ The form works without Supabase (falls back to mailto). To enable database stora
    VITE_SUPABASE_ANON_KEY=eyJ...
    ```
 
-3. **Update CSP** (in `public/_headers`):
+3. **Update CSP** (in `vercel.json`):
    ```
    connect-src 'self' https://xxx.supabase.co
    ```
@@ -185,7 +185,7 @@ The form works without Supabase (falls back to mailto). To enable database stora
 
 ### Headers (A+ Grade)
 
-All security headers are pre-configured in `public/_headers` (Cloudflare Pages). See `docs/headers.md` for:
+All security headers are pre-configured in `vercel.json`. See `docs/headers.md` for:
 
 - IONOS/Apache configuration
 - Nginx configuration
@@ -294,17 +294,13 @@ Visual tests check:
 
 ## Deployment
 
-### Cloudflare Pages (Production)
+### Vercel (Deprecated)
 
-The site is deployed via Cloudflare Pages. Configuration:
-- `wrangler.toml` (repo root) — build settings and environment variable notes
-- `public/_headers` — security headers (A+ grade)
-- `public/_redirects` — clean URL rewrites and SPA catch-all
+Vercel deployment is intentionally disabled for this app. The `vercel.json` file remains only
+to document security headers and caching behavior, and `.vercelignore` prevents packaging. Use
+static hosting instead.
 
-Environment variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) must be set in the
-**Cloudflare Pages dashboard** under Settings → Environment Variables.
-
-### Static Hosting (Alternative)
+### Static Hosting
 
 ```bash
 npm run build

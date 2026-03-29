@@ -1,5 +1,4 @@
 import os
-from typing import Any
 
 import redis.asyncio as redis
 from fastapi import APIRouter, HTTPException
@@ -27,14 +26,14 @@ async def start_session(tenant_id: str, trace_id: str) -> FSMContext:
 
 
 SESSION_NOT_FOUND = "Session not found"
-_404_RESPONSE: dict[int | str, dict[str, str]] = {404: {"description": SESSION_NOT_FOUND}}
+_404_RESPONSE: dict[int | str, dict] = {404: {"description": SESSION_NOT_FOUND}}
 
 
 @router.post(
     "/{session_id}/next",
     responses=_404_RESPONSE,
 )
-async def next_turn(session_id: str, event: FSMEvent) -> dict[str, Any]:
+async def next_turn(session_id: str, event: FSMEvent) -> dict:
     """
     Process a user turn and advance the FSM.
     Returns the updated context and the system's response message.

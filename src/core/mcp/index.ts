@@ -47,7 +47,7 @@ export {
   type MCPToolParameter,
 } from './MCPToolDiscovery';
 
-// Host Manager (Facade)
+// Host Manager
 export {
   MCPHostManager,
   ToolInvocationSchema,
@@ -55,16 +55,4 @@ export {
   type ToolResult,
   type ApprovalRequest,
   type ApprovalCallback,
-  type AuditEntry,
-  type AuditCallback,
-  type BridgeRiskLevel,
-  type HealthCheckConfig,
-  type MCPResource,
-  type MCPPrompt,
-  resolveBridgeRiskLevel,
 } from './MCPHostManager';
-
-// Decomposed Managers (v2.0.0)
-export { MCPConnectionManager } from './MCPConnectionManager';
-export { MCPSessionManager } from './MCPSessionManager';
-export { MCPDispatcher } from './MCPDispatcher';

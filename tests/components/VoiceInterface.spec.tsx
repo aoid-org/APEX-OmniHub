@@ -40,9 +40,9 @@ vi.mock('@/lib/backoff', () => ({
 // ─── WebSocket Mock ───────────────────────────────────────────────────────
 
 class MockWS {
-  static readonly instances: MockWS[] = [];
-  static readonly OPEN = 1;
-  static readonly CLOSED = 3;
+  static instances: MockWS[] = [];
+  static OPEN = 1;
+  static CLOSED = 3;
 
   readyState = MockWS.OPEN;
   onopen: ((e: unknown) => void) | null = null;
@@ -73,12 +73,12 @@ import { logAnalyticsEvent } from '@/lib/monitoring';
 // ─── Test Setup ───────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  MockWS.instances.length = 0;
+  MockWS.instances = [];
 
   // @ts-expect-error — jsdom override (same as voiceBackoff.spec.tsx)
-  globalThis.WebSocket = MockWS;
+  global.WebSocket = MockWS;
   // @ts-expect-error — jsdom override
-  globalThis.AudioContext = class {
+  global.AudioContext = class {
     sampleRate = 24000;
     close = vi.fn();
   };
