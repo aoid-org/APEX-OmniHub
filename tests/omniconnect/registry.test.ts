@@ -1,4 +1,4 @@
-import { expect, test, describe, beforeEach, mock } from "bun:test";
+import { expect, it, describe, beforeEach, vi } from 'vitest';
 import {
   connectorRegistry,
   registerConnector,
@@ -17,42 +17,42 @@ describe('Connector Registry', () => {
 
   const mockConnector = {
     provider: 'test-provider',
-    getAuthUrl: mock(() => Promise.resolve('')),
-    completeHandshake: mock(() => Promise.resolve({})),
-    disconnect: mock(() => Promise.resolve()),
-    refreshToken: mock(() => Promise.resolve({})),
-    fetchDelta: mock(() => Promise.resolve([])),
-    normalizeToCanonical: mock(() => Promise.resolve([])),
-    validateToken: mock(() => Promise.resolve(true)),
+    getAuthUrl: vi.fn(() => Promise.resolve('')),
+    completeHandshake: vi.fn(() => Promise.resolve({})),
+    disconnect: vi.fn(() => Promise.resolve()),
+    refreshToken: vi.fn(() => Promise.resolve({})),
+    fetchDelta: vi.fn(() => Promise.resolve([])),
+    normalizeToCanonical: vi.fn(() => Promise.resolve([])),
+    validateToken: vi.fn(() => Promise.resolve(true)),
   } as unknown as Connector;
 
-  test('should register and get a connector', () => {
+  it('should register and get a connector', () => {
     registerConnector('test-provider', mockConnector);
     const retrieved = getConnector('test-provider');
     expect(retrieved).toBe(mockConnector);
   });
 
-  test('should throw error when registering a duplicate provider', () => {
+  it('should throw error when registering a duplicate provider', () => {
     registerConnector('test-provider', mockConnector);
     expect(() => registerConnector('test-provider', mockConnector)).toThrow(
       "Connector for provider 'test-provider' is already registered"
     );
   });
 
-  test('should return undefined for non-existent provider', () => {
+  it('should return undefined for non-existent provider', () => {
     const retrieved = getConnector('non-existent');
     expect(retrieved).toBeUndefined();
   });
 
-  test('should correctly identify if a connector is registered', () => {
+  it('should correctly identify if a connector is registered', () => {
     expect(hasConnector('test-provider')).toBe(false);
     registerConnector('test-provider', mockConnector);
     expect(hasConnector('test-provider')).toBe(true);
   });
 
-  test('should list all registered providers', () => {
-    registerConnector('p1', { ...mockConnector, provider: 'p1' } as any);
-    registerConnector('p2', { ...mockConnector, provider: 'p2' } as any);
+  it('should list all registered providers', () => {
+    registerConnector('p1', { ...mockConnector, provider: 'p1' } as unknown as Connector);
+    registerConnector('p2', { ...mockConnector, provider: 'p2' } as unknown as Connector);
 
     const list = listConnectors();
     expect(list).toContain('p1');
@@ -60,7 +60,7 @@ describe('Connector Registry', () => {
     expect(list.length).toBe(2);
   });
 
-  test('should unregister a connector', () => {
+  it('should unregister a connector', () => {
     registerConnector('test-provider', mockConnector);
     expect(hasConnector('test-provider')).toBe(true);
 
@@ -69,12 +69,12 @@ describe('Connector Registry', () => {
     expect(hasConnector('test-provider')).toBe(false);
   });
 
-  test('should return false when unregistering non-existent provider', () => {
+  it('should return false when unregistering non-existent provider', () => {
     const result = connectorRegistry.unregister('non-existent');
     expect(result).toBe(false);
   });
 
-  test('should clear all connectors', () => {
+  it('should clear all connectors', () => {
     registerConnector('p1', mockConnector);
     registerConnector('p2', mockConnector);
 
@@ -83,7 +83,7 @@ describe('Connector Registry', () => {
   });
 
   describe('availableIntegrations', () => {
-    test('should be an array of integration definitions', () => {
+    it('should be an array of integration definitions', () => {
       expect(Array.isArray(availableIntegrations)).toBe(true);
       expect(availableIntegrations.length).toBeGreaterThan(0);
 
@@ -96,7 +96,7 @@ describe('Connector Registry', () => {
       expect(first).toHaveProperty('requiresApiKey');
     });
 
-    test('should contain expected integrations', () => {
+    it('should contain expected integrations', () => {
       const types = availableIntegrations.map(i => i.type);
       expect(types).toContain('whatsapp');
       expect(types).toContain('facebook');
