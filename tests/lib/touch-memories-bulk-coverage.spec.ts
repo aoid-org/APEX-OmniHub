@@ -1,30 +1,32 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { MemoryClient } from '../../src/lib/memory/MemoryClient';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 interface MockBuilder {
-  select: ReturnType<typeof vi.fn>;
-  eq: ReturnType<typeof vi.fn>;
-  order: ReturnType<typeof vi.fn>;
-  limit: ReturnType<typeof vi.fn>;
-  then: ReturnType<typeof vi.fn>;
+  select: Mock;
+  eq: Mock;
+  order: Mock;
+  limit: Mock;
+  then: Mock;
 }
 
 describe('MemoryClient.touch_memories_bulk() logic coverage', () => {
   let mc: MemoryClient;
-  let rpcSpy: ReturnType<typeof vi.fn>;
-  let fromSpy: ReturnType<typeof vi.fn>;
+  let rpcSpy: Mock;
+  let fromSpy: Mock;
 
   beforeEach(() => {
     rpcSpy = vi.fn().mockResolvedValue({ data: null, error: null });
 
-    // Mock builder
+    // Mock builder with explicit typing to avoid 'any' where possible
     const builder: MockBuilder = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
-      then: vi.fn((resolve: (v: unknown) => unknown) => resolve({ data: [{ id: 'mem-1' }, { id: 'mem-2' }], error: null })),
+      then: vi.fn((resolve: (v: { data: { id: string }[] | null; error: Error | null }) => void) => {
+        resolve({ data: [{ id: 'mem-1' }, { id: 'mem-2' }], error: null });
+      }),
     };
 
     fromSpy = vi.fn().mockReturnValue(builder);
@@ -53,7 +55,9 @@ describe('MemoryClient.touch_memories_bulk() logic coverage', () => {
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
-      then: vi.fn((resolve: (v: unknown) => unknown) => resolve({ data: [], error: null })),
+      then: vi.fn((resolve: (v: { data: unknown[] | null; error: Error | null }) => void) => {
+        resolve({ data: [], error: null });
+      }),
     };
     fromSpy.mockReturnValue(emptyBuilder);
 

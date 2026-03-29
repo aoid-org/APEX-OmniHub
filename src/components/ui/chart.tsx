@@ -70,14 +70,12 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
-  const safeId = id.replace(/[^a-zA-Z0-9-_]/g, "");
-
   return (
     <style>
       {Object.entries(THEMES)
         .map(
           ([theme, prefix]) => `
-${prefix} [data-chart="${safeId}"] {
+${prefix} [data-chart="${id}"] {
 ${colorConfig
                 .map(([key, itemConfig]) => {
                   const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
