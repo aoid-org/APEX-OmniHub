@@ -327,13 +327,12 @@ These are source-verified bugs present in HEAD `fe4688a7`. Each has a prescribed
 
 ## 5) API / Edge Architecture
 
-### 5.1 Supabase Edge Functions (22 directories)
+### 5.1 Supabase Edge Functions (21 directories)
 
 | Function | Purpose |
 |---|---|
 | `_shared` | Shared utilities |
 | `alchemy-webhook` | Blockchain webhook receiver |
-| `apex-assistant` | AI conversation handler |
 | `apex-voice` | Real-time voice processing |
 | `byom-cockpit` | BYOM dashboard backend |
 | `byom-proxy` | BYOM proxy handler |

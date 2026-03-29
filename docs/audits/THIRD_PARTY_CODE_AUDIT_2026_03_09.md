@@ -49,7 +49,7 @@ All metrics below were obtained by direct `find`, `wc -l`, `grep`, and source in
 | React Components (omnidash) | 22 | `src/components/omnidash/` |
 | Orchestrator Python Files | 70 | `orchestrator/` (excl. tests) |
 | Orchestrator LOC | 13,120 | `wc -l orchestrator/**/*.py` |
-| Edge Functions | 22 directories | `supabase/functions/` |
+| Edge Functions | 21 directories | `supabase/functions/` |
 | Edge Functions LOC | 10,318 | `wc -l` all function .ts |
 | Shared Edge Utilities | 30 files, 4,083 LOC | `supabase/functions/_shared/` |
 | Database Migrations | 57 SQL files | `supabase/migrations/` |
@@ -128,7 +128,7 @@ All metrics below were obtained by direct `find`, `wc -l`, `grep`, and source in
 #### 2.1.3 Edge Functions Layer (Supabase/Deno — 22 Functions)
 
 22 serverless edge functions with 10,318 LOC total:
-- **Core Intelligence:** `apex-assistant`, `apex-voice` (218 LOC), `omnilink-eval` (367 LOC), `byom-cockpit` (495 LOC), `byom-proxy`
+- **Core Intelligence:** `apex-voice` (218 LOC), `omnilink-eval` (367 LOC), `byom-cockpit` (495 LOC), `byom-proxy`
 - **Connectivity:** `omnilink-agent`, `omnilink-port` (664 LOC — largest function), `omnilink-retry-scheduler`
 - **Web3:** `web3-verify` (489 LOC, full SIWE), `web3-nonce`, `verify-nft`, `alchemy-webhook` (363 LOC)
 - **Operations:** `trigger-workflow` (404 LOC), `execute-automation` (428 LOC), `omni-runs` (290 LOC), `send-push-notification` (251 LOC), `storage-upload-url`

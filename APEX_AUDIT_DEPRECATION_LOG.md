@@ -42,7 +42,7 @@
 | `omnilink-eval` | Custom integration eval | **A2A Task** — Evaluation as A2A workflow task |
 | `omni-runs` | Custom workflow tracking | **A2A Task Streaming** — Workflow status via A2A task artifacts + SSE |
 | `apex-voice` | Custom voice processing | **MCP Server: `apex-voice`** — Voice tools via JSON-RPC 2.0 |
-| `apex-assistant` | Custom AI assistant | **A2A Agent** — Full A2A agent with Agent Card + task protocol |
+| `apex-assistant` | DEPRECATED | **REMOVED** — Replaced by `omnilink-agent` for durable orchestration |
 | `trigger-workflow` | Custom workflow dispatch | **A2A Task** — Temporal workflow dispatch via A2A task creation |
 | `byom-cockpit` / `byom-proxy` | Custom model proxy | **TokenEconomicsRouter** — Asymmetric model routing via gateway |
 | `generate-business-skills` | Custom skill generation | **MCP Tool** — Expose as discoverable MCP tool |

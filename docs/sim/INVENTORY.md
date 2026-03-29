@@ -29,7 +29,7 @@ Branch: claude/root-cause-analysis-2Vvua
 | 5 | **FLOWBills** | ✅ FULL | React + Supabase | Billing automation | `src/pages/apps/FLOWBills.tsx` |
 | 6 | **Jubee.Love** | ✅ FULL | React + Supabase | AI relationship coach | `src/pages/apps/JubeeLove.tsx` |
 | 7 | **KeepSafe** | ✅ FULL | React + Supabase | Safety & compliance | `src/pages/apps/KeepSafe.tsx` |
-| 8 | **APEX Assistant** | ✅ BACKEND | Supabase Function | AI assistant endpoint | `supabase/functions/apex-assistant/` |
+| 8 | **APEX Assistant** | ❌ DEPRECATED | Removed | Replaced by `omnilink-agent` | `supabase/functions/apex-assistant/` (REMOVED) |
 
 ### Not Found / To Be Stubbed (4/12 Apps)
 
@@ -82,7 +82,7 @@ interface OmniLinkRequestOptions {
 |----------|---------|------------------|--------|
 | `omnilink-agent` | AI Agent (Guardian/Planner/Executor) | HTTP POST | ✅ Production |
 | `omnilink-eval` | Agent evaluation system | HTTP POST | ✅ Production |
-| `apex-assistant` | General AI assistant | HTTP POST | ✅ Production |
+| `apex-assistant` | General AI assistant | HTTP POST | ❌ DEPRECATED |
 | `apex-voice` | Voice processing | HTTP POST | ✅ Production |
 | `execute-automation` | Automation runner | HTTP POST | ✅ Production |
 | `lovable-audit` | Audit logging | HTTP POST | ✅ Production |
@@ -165,7 +165,6 @@ await request({
         ┌─────────────────────────────┐
         │   Supabase Functions        │
         │  • omnilink-agent           │
-        │  • apex-assistant           │
         │  • execute-automation       │
         └─────────────┬───────────────┘
                       │
@@ -189,7 +188,7 @@ await request({
 4. ✅ **Jubee.Love** - Call `src/pages/apps/JubeeLove.tsx` logic
 5. ✅ **KeepSafe** - Call `src/pages/apps/KeepSafe.tsx` logic
 6. ✅ **OmniLink Agent** - Call `supabase/functions/omnilink-agent/` via HTTP
-7. ✅ **APEX Assistant** - Call `supabase/functions/apex-assistant/` via HTTP
+7. ❌ **APEX Assistant** - DEPRECATED (Use `omnilink-agent`)
 
 ### Apps to Stub (Create Contracts)
 8. ⚠️ **aSpiral** - Mock event emitter

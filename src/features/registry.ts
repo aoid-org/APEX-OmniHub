@@ -285,17 +285,6 @@ export const FEATURE_REGISTRY: readonly FeatureDefinition[] = [
     order: 8,
   },
   {
-    id: 'apex-assistant',
-    path: '/apex',
-    label: 'APEX Assistant',
-    description: 'AI-powered assistant',
-    icon: Sparkles,
-    category: 'core',
-    requiredScopes: ['authenticated'],
-    isEnabled: true,
-    order: 9,
-  },
-  {
     id: 'omnitrace',
     path: '/omnitrace',
     label: 'OmniTrace',

@@ -21,7 +21,7 @@ APEX OmniHub is a **polyglot platform monorepo** implementing a Universal Sync O
 | **TypeScript/TSX Lines (src + apps)** | 47,991 |
 | **Python Lines (orchestrator)** | 12,441 |
 | **SQL Migration Lines** | 7,437 across 59 migrations |
-| **Edge Function Lines** | 5,569 across 21 endpoints |
+| **Edge Function Lines** | 5,350 across 20 endpoints |
 | **CI/CD Workflow Lines** | 2,359 across 13 workflows |
 | **Terraform IaC Lines** | 617 |
 | **Smart Contract Lines (Solidity)** | 257 |
@@ -89,7 +89,6 @@ The platform implements a well-defined five-plane architecture:
 
 | Function | Purpose | Category |
 |---|---|---|
-| `apex-assistant` | AI conversation handler | AI/LLM |
 | `apex-voice` | Real-time voice processing | AI/Voice |
 | `omnilink-agent` | Agent orchestration | Orchestration |
 | `omnilink-port` | Universal connector | Integration |
@@ -296,7 +295,7 @@ The platform implements a well-defined five-plane architecture:
 | Protected Routes | Live | `ProtectedRoute.tsx` |
 | Web3 Sign-In (SIWE) | Live | `web3-verify/`, `web3-nonce/` edge functions |
 | NFT Membership Verification | Live | `verify-nft/` + `APEXMembershipNFT.sol` |
-| AI Assistant | Live | `apex-assistant/` edge function |
+| AI Assistant | DEPRECATED | Removed (replaced by `omnilink-agent`) |
 | Voice Processing | Live | `apex-voice/`, `ops-voice-health/` edge functions |
 | BYOM (Bring Your Own Model) | Live | `byom-cockpit/`, `byom-proxy/` edge functions |
 | Workflow Orchestration (Temporal) | Live | Full Python orchestrator with saga patterns |
