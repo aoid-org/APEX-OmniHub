@@ -9,6 +9,22 @@ import {
 } from '../../src/omniconnect/core/registry';
 import { Connector } from '../../src/omniconnect/types/connector';
 
+// Mock lucide-react to avoid potential issues in environments where it's not fully resolved
+vi.mock('lucide-react', () => ({
+  BarChart3: () => null,
+  MessageCircle: () => null,
+  Facebook: () => null,
+  Mail: () => null,
+  Youtube: () => null,
+  Instagram: () => null,
+  Music: () => null,
+  Zap: () => null,
+  Server: () => null,
+  Globe: () => null,
+  Smartphone: () => null,
+  Bot: () => null,
+}));
+
 describe('Connector Registry', () => {
   beforeEach(() => {
     // Clear the registry before each test to ensure isolation
@@ -17,13 +33,13 @@ describe('Connector Registry', () => {
 
   const mockConnector = {
     provider: 'test-provider',
-    getAuthUrl: vi.fn(() => Promise.resolve('')),
-    completeHandshake: vi.fn(() => Promise.resolve({})),
-    disconnect: vi.fn(() => Promise.resolve()),
-    refreshToken: vi.fn(() => Promise.resolve({})),
-    fetchDelta: vi.fn(() => Promise.resolve([])),
-    normalizeToCanonical: vi.fn(() => Promise.resolve([])),
-    validateToken: vi.fn(() => Promise.resolve(true)),
+    getAuthUrl: vi.fn(),
+    completeHandshake: vi.fn(),
+    disconnect: vi.fn(),
+    refreshToken: vi.fn(),
+    fetchDelta: vi.fn(),
+    normalizeToCanonical: vi.fn(),
+    validateToken: vi.fn(),
   } as unknown as Connector;
 
   it('should register and get a connector', () => {
@@ -51,8 +67,10 @@ describe('Connector Registry', () => {
   });
 
   it('should list all registered providers', () => {
-    registerConnector('p1', { ...mockConnector, provider: 'p1' } as unknown as Connector);
-    registerConnector('p2', { ...mockConnector, provider: 'p2' } as unknown as Connector);
+    const c1 = { ...mockConnector, provider: 'p1' } as unknown as Connector;
+    const c2 = { ...mockConnector, provider: 'p2' } as unknown as Connector;
+    registerConnector('p1', c1);
+    registerConnector('p2', c2);
 
     const list = listConnectors();
     expect(list).toContain('p1');
