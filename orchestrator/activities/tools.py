@@ -30,7 +30,7 @@ import ipaddress
 import json
 import os
 import time
-from typing import Any
+from typing import Any, NoReturn
 from urllib.parse import urlparse, urlunparse
 from uuid import uuid4
 
@@ -40,7 +40,7 @@ from litellm import acompletion
 from pydantic import BaseModel
 from temporalio import activity
 
-from activities.tool_registry import TOOL_REGISTRY, resolve_tool_name
+from activities.tool_registry import TOOL_REGISTRY, ToolContract, resolve_tool_name
 from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event
 from providers.database.base import DatabaseError
 from providers.database.factory import get_database_provider
@@ -204,6 +204,147 @@ class GeneratedPlan(BaseModel):
     reasoning: str
 
 
+def _raise_non_retryable_plan_error(message: str) -> NoReturn:
+    from temporalio.exceptions import ApplicationError
+
+    raise ApplicationError(message, non_retryable=True)
+
+
+def _resolve_llm_model(context: dict[str, Any]) -> str:
+    system_default_model = os.getenv("DEFAULT_LLM_MODEL", "gpt-4-turbo-preview")
+    tenant_model = context.get("tenant_model")
+    requested_model = context.get("requested_model")
+    resolved_model = requested_model or tenant_model or system_default_model
+
+    allowed_models = context.get("allowed_models", [])
+    if allowed_models and resolved_model not in allowed_models:
+        _raise_non_retryable_plan_error(f"Model {resolved_model} is not approved for this tenant")
+
+    return resolved_model
+
+
+def _has_dependency_cycle(dependencies: dict[str, list[str]]) -> bool:
+    visited: set[str] = set()
+    path: set[str] = set()
+
+    def visit(node: str) -> bool:
+        if node in path:
+            return True
+        if node in visited:
+            return False
+        visited.add(node)
+        path.add(node)
+        for neighbor in dependencies.get(node, []):
+            if visit(neighbor):
+                return True
+        path.remove(node)
+        return False
+
+    return any(visit(node) for node in dependencies)
+
+
+def _validate_plan_dependencies(plan: GeneratedPlan) -> None:
+    step_ids = {step.id for step in plan.steps}
+    dependencies = {step.id: step.depends_on for step in plan.steps}
+    missing_deps = [
+        f"Step {step_id} depends on unknown step {dep}"
+        for step_id, deps in dependencies.items()
+        for dep in deps
+        if dep not in step_ids
+    ]
+
+    if missing_deps:
+        _raise_non_retryable_plan_error(
+            f"Plan validation failed (Missing dependencies): {missing_deps}"
+        )
+
+    if _has_dependency_cycle(dependencies):
+        _raise_non_retryable_plan_error("Plan validation failed (DAG Cycle detected)")
+
+
+def _resolve_step_tool(step: PlanStep, invalid_tools: list[str]) -> ToolContract | None:
+    resolved_tool = resolve_tool_name(step.tool)
+    if not resolved_tool:
+        invalid_tools.append(step.tool)
+        return None
+
+    step.tool = resolved_tool
+    return TOOL_REGISTRY[step.tool]
+
+
+def _validate_step_input_schema(
+    step: PlanStep, tool_contract: ToolContract, invalid_schemas: list[str]
+) -> None:
+    if not tool_contract.input_schema:
+        return
+
+    try:
+        jsonschema.validate(instance=step.input, schema=tool_contract.input_schema)
+    except jsonschema.exceptions.ValidationError as err:
+        invalid_schemas.append(f"Step {step.id} ({step.tool}) schema error: {err.message}")
+
+
+def _validate_step_compensation(
+    step: PlanStep, tool_contract: ToolContract, invalid_compensations: list[str]
+) -> None:
+    if not step.compensation:
+        return
+
+    resolved_comp = resolve_tool_name(step.compensation)
+    if not resolved_comp:
+        invalid_compensations.append(f"{step.compensation} (unknown tool)")
+        return
+
+    step.compensation = resolved_comp
+    if not tool_contract.compensable:
+        invalid_compensations.append(
+            f"{step.compensation} (tool {step.tool} does not support compensation)"
+        )
+        return
+
+    if step.compensation not in tool_contract.compensation_tools_allowed:
+        invalid_compensations.append(f"{step.compensation} (not allowed for {step.tool})")
+
+
+def _raise_plan_validation_errors(
+    invalid_tools: list[str], invalid_compensations: list[str], invalid_schemas: list[str]
+) -> None:
+    if invalid_tools:
+        _raise_non_retryable_plan_error(f"Plan contains unknown tools: {invalid_tools}")
+    if invalid_compensations:
+        _raise_non_retryable_plan_error(
+            f"Plan contains invalid compensations: {invalid_compensations}"
+        )
+    if invalid_schemas:
+        _raise_non_retryable_plan_error(f"Plan contains invalid tool inputs: {invalid_schemas}")
+
+
+def _validate_generated_plan(plan: GeneratedPlan) -> None:
+    invalid_tools: list[str] = []
+    invalid_compensations: list[str] = []
+    invalid_schemas: list[str] = []
+
+    _validate_plan_dependencies(plan)
+
+    for step in plan.steps:
+        tool_contract = _resolve_step_tool(step, invalid_tools)
+        if not tool_contract:
+            continue
+
+        _validate_step_input_schema(step, tool_contract, invalid_schemas)
+        _validate_step_compensation(step, tool_contract, invalid_compensations)
+
+    _raise_plan_validation_errors(invalid_tools, invalid_compensations, invalid_schemas)
+
+
+def _build_safe_user_message(goal: str, context: dict[str, Any]) -> str:
+    try:
+        return create_safe_user_message(goal, context)
+    except PromptInjectionError as err:
+        activity.logger.warning(f"Prompt injection blocked: {err.pattern}")
+        _raise_non_retryable_plan_error("Request rejected: potential prompt injection detected")
+
+
 @activity.defn(name="generate_plan_with_llm")
 async def generate_plan_with_llm(goal: str, context: dict[str, Any]) -> dict[str, Any]:
     """
@@ -255,35 +396,8 @@ Output valid JSON matching the PlanStep schema."""
     client = instructor.from_litellm(acompletion)
 
     try:
-        # SECURITY: Sanitize user input to prevent prompt injection
-        # CVE fix: Never interpolate raw user input into prompts
-        try:
-            safe_user_message = create_safe_user_message(goal, context)
-        except PromptInjectionError as e:
-            activity.logger.warning(f"Prompt injection blocked: {e.pattern}")
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                "Request rejected: potential prompt injection detected",
-                non_retryable=True,  # Don't retry injection attempts
-            ) from e
-
-        # Phase 7: Tenant-aware model resolution
-        system_default_model = os.getenv("DEFAULT_LLM_MODEL", "gpt-4-turbo-preview")
-        tenant_model = context.get("tenant_model")
-        requested_model = context.get("requested_model")
-
-        # Resolve by precedence: explicit request -> tenant default -> system default
-        resolved_model = requested_model or tenant_model or system_default_model
-
-        # Enforce tenant allowlists
-        allowed_models = context.get("allowed_models", [])
-        if allowed_models and resolved_model not in allowed_models:
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                f"Model {resolved_model} is not approved for this tenant", non_retryable=True
-            )
+        safe_user_message = _build_safe_user_message(goal, context)
+        resolved_model = _resolve_llm_model(context)
 
         plan = await client.chat.completions.create(
             model=resolved_model,
@@ -296,111 +410,7 @@ Output valid JSON matching the PlanStep schema."""
         )
 
         activity.logger.info(f"✓ Plan generated: {len(plan.steps)} steps")
-
-        # Phase 1 & 2: Structural validation via ToolRegistry
-        invalid_tools = []
-        invalid_compensations = []
-        invalid_schemas = []
-
-        # Track steps and dependencies for DAG validation
-        step_ids = {s.id for s in plan.steps}
-        dependencies = {s.id: s.depends_on for s in plan.steps}
-        missing_deps = []
-
-        # Fast fail on missing dependency references
-        for step_id, deps in dependencies.items():
-            for dep in deps:
-                if dep not in step_ids:
-                    missing_deps.append(f"Step {step_id} depends on unknown step {dep}")
-
-        if missing_deps:
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                f"Plan validation failed (Missing dependencies): {missing_deps}", non_retryable=True
-            )
-
-        # Detect DAG cycles via topological sort check
-        def has_cycle(deps_map):
-            visited = set()
-            path = set()
-
-            def visit(node):
-                if node in path:
-                    return True
-                if node in visited:
-                    return False
-                visited.add(node)
-                path.add(node)
-                for neighbor in deps_map.get(node, []):
-                    if visit(neighbor):
-                        return True
-                path.remove(node)
-                return False
-
-            return any(visit(node) for node in deps_map)
-
-        if has_cycle(dependencies):
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                "Plan validation failed (DAG Cycle detected)", non_retryable=True
-            )
-
-        for step in plan.steps:
-            # Resolve canonical tool name
-            resolved_tool = resolve_tool_name(step.tool)
-            if not resolved_tool:
-                invalid_tools.append(step.tool)
-                continue
-
-            step.tool = resolved_tool
-            tool_contract = TOOL_REGISTRY[step.tool]
-
-            # Input schema validation
-            try:
-                if tool_contract.input_schema:
-                    jsonschema.validate(instance=step.input, schema=tool_contract.input_schema)
-            except jsonschema.exceptions.ValidationError as e:
-                invalid_schemas.append(f"Step {step.id} ({step.tool}) schema error: {e.message}")
-
-            # Validate compensation if specified
-            if step.compensation:
-                resolved_comp = resolve_tool_name(step.compensation)
-                if not resolved_comp:
-                    invalid_compensations.append(f"{step.compensation} (unknown tool)")
-                    continue
-
-                step.compensation = resolved_comp
-                if not tool_contract.compensable:
-                    invalid_compensations.append(
-                        f"{step.compensation} (tool {step.tool} does not support compensation)"
-                    )
-                elif step.compensation not in tool_contract.compensation_tools_allowed:
-                    invalid_compensations.append(
-                        f"{step.compensation} (not allowed for {step.tool})"
-                    )
-
-        if invalid_tools:
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                f"Plan contains unknown tools: {invalid_tools}", non_retryable=True
-            )
-
-        if invalid_compensations:
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                f"Plan contains invalid compensations: {invalid_compensations}", non_retryable=True
-            )
-
-        if invalid_schemas:
-            from temporalio.exceptions import ApplicationError
-
-            raise ApplicationError(
-                f"Plan contains invalid tool inputs: {invalid_schemas}", non_retryable=True
-            )
+        _validate_generated_plan(plan)
 
         # Store in semantic cache for future hits
         if _semantic_cache:

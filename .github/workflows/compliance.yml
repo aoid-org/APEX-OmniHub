@@ -73,6 +73,8 @@ jobs:
   sbom-gate:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
     runs-on: ubuntu-latest
+    env:
+      npm_package_version: ""
     permissions:
       contents: write
     steps:
@@ -112,6 +114,8 @@ jobs:
   sonarcloud-gate:
     permissions:
       contents: read
+    env:
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY || '' }}
     if: vars.SONAR_PROJECT_KEY != ''
     runs-on: ubuntu-latest
     steps:
@@ -127,7 +131,7 @@ jobs:
             -Dproject.settings=sonar-project.properties \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization=apexbusiness-systems \
-            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }} \
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
             -Dsonar.qualitygate.wait=true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

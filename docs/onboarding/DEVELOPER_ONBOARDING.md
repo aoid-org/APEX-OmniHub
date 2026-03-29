@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-03-25 -->
 <!-- VALUATION_IMPACT: Reduces onboarding time from 2 weeks to 3 days, lowering bus factor risk by 70%. Demonstrates institutional knowledge transfer capability for M&A scenarios. Generated: 2026-02-03 -->
 
 # Developer Onboarding Guide
@@ -23,8 +23,12 @@ cp .env.example .env.local
 ### Configure Environment
 Edit `.env.local` with credentials from 1Password vault:
 - `VITE_SUPABASE_URL`: Supabase project URL
-- `VITE_SUPABASE_ANON_KEY`: Supabase anonymous key
+- `VITE_SUPABASE_PUBLISHABLE_KEY`: Supabase publishable/anon key (or legacy `VITE_SUPABASE_ANON_KEY`)
 - `VITE_OMNILINK_PORT`: Default 9876 (Single Port Rule)
+
+> **Deployment note:** Production env vars are set in Cloudflare Pages dashboard
+> (Settings → Environment Variables). Do NOT add empty `[env.*]` sections
+> to `wrangler.toml` — this blocks env var injection at build time.
 
 ### Verify Installation
 ```bash

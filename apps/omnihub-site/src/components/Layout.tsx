@@ -100,13 +100,12 @@ function LanguageSelector({
         <span className="language-selector__caret" aria-hidden="true">▾</span>
       </button>
       {isOpen && (
-        <ul className="language-selector__menu" role="menu" id={menuId}>
+        <ul className="language-selector__menu" id={menuId}>
           {SUPPORTED_LANGUAGES.map((language) => (
-            <li key={language.code} role="none">
+            <li key={language.code}>
               <button
                 type="button"
-                role="menuitemradio"
-                aria-checked={language.code === selectedLanguage}
+                aria-pressed={language.code === selectedLanguage}
                 className={`language-selector__option ${
                   language.code === selectedLanguage ? 'language-selector__option--active' : ''
                 }`}
@@ -360,6 +359,15 @@ function Footer() {
               </a>
             </li>
           ))}
+          <li>
+            <a
+              href="/integrations/web3"
+              className="footer__link"
+              style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}
+            >
+              Web3 Integrations
+            </a>
+          </li>
         </ul>
       </div>
       {/* Maestro Observability Indicator */}

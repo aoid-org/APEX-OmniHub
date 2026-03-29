@@ -1,26 +1,26 @@
 {
   "hero": {
     "headline": {
-      "line1": "Connect anything.",
-      "line2": "Orchestrate everything.",
-      "line3": "Stay in control."
+      "line1": "The only orchestrator you can audit, override, and reverse.",
+      "line2": "",
+      "line3": ""
     },
     "tagline": "YOUR SYSTEMS. YOUR RULES.",
-    "traits": "DIRECTABLE • AUDITABLE • REVERSIBLE",
-    "subtitle": "The Anti-OS: Universal Sync Orchestrator (USO). Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.",
-    "description": "OmniDash keeps execution in view. Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.",
+    "traits": "DIRECTABLE | AUDITABLE | REVERSIBLE",
+    "subtitle": "The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.",
+    "description": "No vendor lock-in. No black boxes. No surprises.",
     "cta": {
       "primary": "Request Access",
       "secondary": "Watch Demo",
       "install": "Install App"
     },
-    "footnote": "*Blockchain, wallet, and NFT integrations are optional and disabled by default.",
-    "subtitleSentence1": "The Anti-OS: Universal Sync Orchestrator (USO).",
-    "subtitleSentence2": "Unify software, AI agents, enterprise platforms, and optional blockchain, wallet, and NFT integrations* into one governed command surface. Every action is authorized, logged, and reversible.",
-    "descriptionSentence1": "OmniDash keeps execution in view.",
-    "descriptionSentence2": "Single-plane. Modal-first. PiP persistent. One-hand ready. Translate across English, French, Spanish, German, Japanese, and Simplified Chinese (en-US, fr-FR, es-ES, de-DE, ja-JP, zh-CN). OmniHub is the Brain. OmniDash is the Eyes. PhysiOmni is the Hands and Feet (Enterprise). APEX Agent is the Voice. OmniLink is the AppShell.",
+    "footnote": "",
+    "subtitleSentence1": "The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.",
+    "subtitleSentence2": "",
+    "descriptionSentence1": "No vendor lock-in. No black boxes. No surprises.",
+    "descriptionSentence2": "",
     "installPromptReady": "Install OmniHub for one-tap launch and push updates.",
-    "installPromptIOS": "On iOS: Share → Add to Home Screen to install OmniHub.",
+    "installPromptIOS": "On iOS: Share -> Add to Home Screen to install OmniHub.",
     "installPromptFallback": "Install becomes available once your browser meets PWA criteria."
   }
 }

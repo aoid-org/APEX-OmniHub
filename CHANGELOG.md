@@ -4,6 +4,27 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-03-25
+
+### Fixed — Critical Production Login Outage (SEV-1)
+
+- **Login Permanently Unavailable** — Empty `[env.production]` and `[env.preview]` sections in `wrangler.toml` caused Cloudflare Pages to skip injecting dashboard environment variables into the Vite build. `VITE_SUPABASE_URL` compiled to `""`, making `hasSupabaseConfig = false` and disabling all authentication flows site-wide. **Root cause confirmed**: production JS bundle contained `placeholder.supabase.co` instead of real Supabase URL. Fix: removed empty `[env.*]` sections from `wrangler.toml`.
+- **Broken Logo on Login Page** — `icon.png` only existed in `apps/omnihub-site/public/` but Cloudflare Pages builds from the monorepo root (`root_dir: ""`), so Vite served static assets from `public/` at root where no `icon.png` existed. Fix: copied `icon.png` to root `public/` and added inline SVG fallback with `onError` handler.
+- **Cryptic Error Message** — Users saw "Login is unavailable. Trace: cfg-xxx" with no actionable guidance. Fix: added proactive `role="alert"` banner showing exact env var names (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`) and Cloudflare Pages setup instructions.
+
+### Added
+
+- **`tests/login-page-fixes.test.ts`** — 43 new tests across 5 describe blocks covering logo fallback, error messaging, wrangler.toml integrity, supabase.ts config guard, and Login.tsx regression guards.
+
+### Verification (Release Blocking)
+
+- `vitest run tests/login-page-fixes.test.ts tests/login-supabase-config.test.ts` → **54/54 PASS** (43 new + 11 existing)
+- `tsc --noEmit --skipLibCheck` → 0 errors in changed files
+- Production bundle verification: `curl` confirmed `placeholder.supabase.co` in live JS → will resolve after merge + redeploy
+- Cloudflare Pages dashboard env vars confirmed present and correct
+
+---
+
 ## [1.5.0] - 2026-03-21
 
 ### Added — APEX-DEV MCP Gateway Architectural Alignment

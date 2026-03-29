@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('node:fs');
 const path = 'tests/omnidash/dashboard-overview-wiring.test.tsx';
 let content = fs.readFileSync(path, 'utf8');
 

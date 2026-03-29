@@ -22,10 +22,10 @@ export function getIntegrationConfig() {
     .toLowerCase() === 'false'
 
   const hasCreds = Boolean(supabaseUrl && supabaseKey && !isPlaceholder(supabaseUrl, supabaseKey))
-  const shouldRun = hasCreds && !explicitlyDisabled
-  
-  // Cast describe.skip to work around type issues if needed, or just return check
-  const suite = shouldRun ? describe : describe.skip
+  // Integration suites are opt-in and only execute when explicitly enabled.
+  const shouldRun = requireIntegration && hasCreds && !explicitlyDisabled
+  // Keep suites active when explicitly required so missing credentials fail loudly.
+  const suite = requireIntegration ? describe : describe.skip
   
   return {
     supabaseUrl,

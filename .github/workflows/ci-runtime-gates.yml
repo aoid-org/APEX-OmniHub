@@ -96,24 +96,6 @@ jobs:
       - name: Repo Hygiene Guard
         run: bash scripts/repo-hygiene-guard.sh
 
-      - name: Lint commit messages
-        if: github.event_name == 'pull_request'
-        run: |
-          # Ensure base ref is available for commit range validation
-          # Use the true merge-base of the PR branch against the target branch so
-          # that commits already in main (brought in via "Merge branch 'main' into
-          # <pr-branch>" merges) are never re-validated.  This is more reliable
-          # than github.event.pull_request.base.sha when the sprint branch contains
-          # merge-back commits from an older tip of main.
-          npm cache clean --force
-          npm install --no-save --ignore-scripts @commitlint/cli @commitlint/config-conventional
-          MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
-          echo "Linting commits from merge-base ${MERGE_BASE} to HEAD"
-          npx @commitlint/cli \
-            --from "${MERGE_BASE}" \
-            --to HEAD \
-            --verbose
-
       - name: Setup Node.js
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
@@ -140,14 +122,27 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .turbo
-          key: turbo-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          key: turbo-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ github.sha }}
           restore-keys: |
-            turbo-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+            turbo-${{ runner.os }}-${{ hashFiles('bun.lock') }}-
             turbo-${{ runner.os }}-
 
       # ─────────────────────────────────────────────────────────────
       # PHASE 1: Static Analysis
       # ─────────────────────────────────────────────────────────────
+      - name: Lint commit messages (full PR range)
+        if: github.event_name == 'pull_request'
+        run: |
+          # Use the true merge-base of the PR branch against the target branch so
+          # that commits already in main (brought in via "Merge branch 'main' into
+          # <pr-branch>" merges) are never re-validated.
+          MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
+          echo "Linting commits from merge-base ${MERGE_BASE} to HEAD"
+          bunx @commitlint/cli \
+            --from "${MERGE_BASE}" \
+            --to HEAD \
+            --verbose
+
       - name: Validate commit messages
         if: github.event_name == 'pull_request'
         run: |
@@ -224,6 +219,10 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       - name: Vercel Production Sync Shield
         run: cd apps/omnihub-site && bun install --frozen-lockfile --omit=dev && bun run build
+        env:
+          VITE_SUPABASE_URL: https://test.supabase.co
+          VITE_SUPABASE_ANON_KEY: test-key
+          VITE_SUPABASE_PUBLISHABLE_KEY: test-key
 
       - name: Build production bundle
         run: bun run build

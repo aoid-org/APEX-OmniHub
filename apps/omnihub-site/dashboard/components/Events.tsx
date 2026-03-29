@@ -8,6 +8,8 @@ import { Activity, RadioReceiver, Clock as ClockIcon, Hash } from 'lucide-react'
 import { ResponsiveGridLayout, type Layout } from './GridLayout';
 import { useState, useMemo } from 'react';
 
+type ResponsiveLayouts = Partial<Record<string, Layout[]>>;
+
 export const Events = () => {
   const { user } = useAuth();
   const eventsQuery = useQuery({
@@ -26,7 +28,7 @@ export const Events = () => {
     return { lg, md: lg, sm: lg, xs: lg, xxs: lg };
   }, [events]);
 
-  const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>(initialLayouts);
+  const [layouts, setLayouts] = useState<ResponsiveLayouts>(initialLayouts);
 
   return (
     <Card className="h-full flex flex-col">
@@ -44,7 +46,7 @@ export const Events = () => {
             breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
             cols={{ lg: 1, md: 1, sm: 1, xs: 1, xxs: 1 }}
             rowHeight={80}
-            onLayoutChange={(_layout, allLayouts) => setLayouts(allLayouts)}
+            onLayoutChange={(_layout: Layout[], allLayouts: ResponsiveLayouts) => setLayouts(allLayouts)}
             draggableHandle=".custom-drag-handle"
             margin={[12, 12]}
             useCSSTransforms={true}

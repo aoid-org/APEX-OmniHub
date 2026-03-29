@@ -7,16 +7,45 @@ import type { Provider } from '@supabase/supabase-js';
 
 const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL ?? '/omnidash';
 
+/** Inline SVG fallback so the logo never shows a broken-image icon. */
+function LogoFallback() {
+  return (
+    <svg
+      width="72"
+      height="72"
+      viewBox="0 0 72 72"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ display: 'block', margin: '0 auto var(--space-6)', borderRadius: '18px' }}
+      aria-label="APEX OmniHub"
+    >
+      <rect width="72" height="72" rx="18" fill="#1a1f2e" />
+      <text
+        x="36"
+        y="42"
+        textAnchor="middle"
+        fill="#f97316"
+        fontSize="22"
+        fontWeight="700"
+        fontFamily="system-ui, sans-serif"
+      >
+        APEX
+      </text>
+    </svg>
+  );
+}
+
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<Provider | null>(null);
+  const [logoError, setLogoError] = useState(false);
 
   const handleOAuthSignIn = async (provider: Provider) => {
     if (!hasSupabaseConfig) {
-      setError(`Login is unavailable. Trace: ${supabaseConfigTraceId}`);
+      setError(`Login is temporarily unavailable — authentication service is not configured. Contact your administrator. (Trace: ${supabaseConfigTraceId})`);
       return;
     }
     setOauthLoading(provider);
@@ -55,7 +84,7 @@ export function LoginPage() {
     setError('');
 
     if (!hasSupabaseConfig) {
-      setError(`Login is unavailable. Trace: ${supabaseConfigTraceId}`);
+      setError(`Login is temporarily unavailable — authentication service is not configured. Contact your administrator. (Trace: ${supabaseConfigTraceId})`);
       return;
     }
 
@@ -132,20 +161,50 @@ export function LoginPage() {
       <SEOMeta title="Sign In" description="Sign in to APEX OmniHub." noIndex={true} />
       <Section>
         <div style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto' }}>
-          <img
-            src="/icon.png"
-            alt="APEX OmniHub icon"
-            style={{
-              width: '72px',
-              height: '72px',
-              borderRadius: '18px',
-              objectFit: 'cover',
-              display: 'block',
-              margin: '0 auto var(--space-6)',
-            }}
-          />
+          {logoError ? (
+            <LogoFallback />
+          ) : (
+            <img
+              src="/icon.png"
+              alt="APEX OmniHub icon"
+              onError={() => setLogoError(true)}
+              style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '18px',
+                objectFit: 'cover',
+                display: 'block',
+                margin: '0 auto var(--space-6)',
+              }}
+            />
+          )}
           <h1 className="heading-2">Welcome Back</h1>
           <p className="text-secondary mt-2">Sign in to your APEX OmniHub account</p>
+
+          {!hasSupabaseConfig && (
+            <div
+              role="alert"
+              style={{
+                marginTop: 'var(--space-6)',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#fca5a5',
+                fontSize: 'var(--font-size-sm)',
+                lineHeight: 1.5,
+              }}
+            >
+                <strong>Authentication service not configured.</strong>
+                <br />
+                Set <code style={{ fontSize: '0.85em' }}>VITE_SUPABASE_URL</code> and{' '}
+                <code style={{ fontSize: '0.85em' }}>VITE_SUPABASE_PUBLISHABLE_KEY</code> in your
+                Cloudflare Pages environment variables. <span style={{ opacity: 0.85 }}>If your
+                project still uses the legacy key name, <code style={{ fontSize: '0.85em' }}>VITE_SUPABASE_ANON_KEY</code> is also supported.</span>
+                <br />
+                <span style={{ opacity: 0.7 }}>Trace: {supabaseConfigTraceId}</span>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} style={{ marginTop: 'var(--space-8)' }}>
             <div className="form-group">
@@ -252,8 +311,8 @@ export function LoginPage() {
           </div>
 
           {import.meta.env.VITE_CONNECT_AI_ENABLED === 'true' && (
-            <button
-              type="button"
+            <a
+              href={`${dashboardUrl}?connect-ai=true`}
               className="btn btn--secondary"
               style={{
                 display: 'flex',
@@ -262,15 +321,14 @@ export function LoginPage() {
                 gap: '0.5rem',
                 width: '100%',
                 marginTop: 12,
+                textDecoration: 'none',
               }}
-              disabled={isLoading || oauthLoading !== null}
-              onClick={() => handleOAuthSignIn('azure' as Parameters<typeof handleOAuthSignIn>[0])}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M11.4 2L2 8.5l5.3 4.7L2 22h9.4l9.6-10L11.4 2z" fill="#00A4EF" />
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#f97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Connect AI
-            </button>
+            </a>
           )}
 
           <p className="text-muted mt-8" style={{ fontSize: 'var(--font-size-sm)' }}>

@@ -79,7 +79,7 @@ function RunDetailPanel({ workflowId }: { readonly workflowId: string }) {
   if (detailQuery.error) {
     return (
       <div className="text-sm text-destructive p-4">
-        Failed to load: {(detailQuery.error as Error).message}
+        Failed to load: {detailQuery.error.message}
       </div>
     );
   }
@@ -287,7 +287,7 @@ function RunDetailPanel({ workflowId }: { readonly workflowId: string }) {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <pre className="mt-2 text-xs bg-background p-3 rounded border overflow-x-auto max-h-48 overflow-y-auto">
-              {formatPayload(detail.run.output_redacted as Record<string, unknown>)}
+              {formatPayload(detail.run.output_redacted)}
             </pre>
           </CollapsibleContent>
         </Collapsible>
@@ -357,7 +357,7 @@ export const Runs = () => {
 
         {runsQuery.error && (
           <p className="text-sm text-destructive">
-            Failed to load runs: {(runsQuery.error as Error).message}
+            Failed to load runs: {runsQuery.error.message}
           </p>
         )}
 

@@ -1,12 +1,12 @@
 /**
  * ============================================================
- * BYOM Cockpit API — Phase 1 Edge Function
+ * BYOM Cockpit API — Phase 2 Edge Function
  * ============================================================
  *
  * Project:    APEX OmniHub — Project COCKPIT (BYOM Architecture)
  * Module:     byom-cockpit
- * Version:    1.0.0
- * Date:       2026-02-17
+ * Version:    2.0.0
+ * Date:       2026-03-24
  * Author:     APEX Business Systems Engineering
  * License:    Proprietary — APEX Business Systems
  * Reference:  byom 3.md §7 — Implementation Roadmap Phase 2
@@ -17,16 +17,27 @@
  *   POST /byom/key/revoke   — Revoke a connection
  *   GET  /byom/connections   — List connections (sanitized, no ciphertext)
  *
- * Security:
+ * Security (Phase 2 hardened):
+ *   - Zod boundary validation on ALL request bodies
+ *   - Distributed rate limiting (Upstash) per userId + endpoint
+ *   - Multi-tenant isolation: tenant_id enforced on all queries
  *   - service_role client for DB mutations (bypasses RLS)
  *   - auth.uid() verified for every request
  *   - Credential probed against provider before storage
  *   - Audit: all actions logged to audit_logs with NO SECRETS
+ *   - CORS: fail-closed origin validation via shared utility
  */
 
+import { z } from "https://esm.sh/zod@3.25.76";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCockpitCrypto } from "../_shared/cockpit-crypto.ts";
+import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  type RateLimitConfig,
+} from "../_shared/rate-limit.ts";
 import type {
   ByomProvider,
   ByomAuditMetadata,
@@ -44,12 +55,63 @@ const supabase = createClient(
 
 const cockpitCrypto = getCockpitCrypto();
 
+/** Per-request origin for CORS (set at top of serve handler). */
+let _requestOrigin: string | null = null;
+
+// ──────────────────────────────────────────────────────────
+// Zod Schemas — Boundary Validation
+// ──────────────────────────────────────────────────────────
+
+const PROVIDERS = ['openai', 'google', 'anthropic', 'xai', 'groq'] as const;
+const AUTH_TYPES = ['api_key', 'oauth_refresh', 'oauth_access', 'service_account', 'ephemeral'] as const;
+
+const ConnectSchema = z.object({
+  provider: z.enum(PROVIDERS),
+  auth_type: z.enum(AUTH_TYPES),
+  api_key: z.string().min(10).max(500),
+});
+
+const RotateSchema = z.object({
+  connection_id: z.string().uuid(),
+  new_api_key: z.string().min(10).max(500),
+});
+
+const RevokeSchema = z.object({
+  connection_id: z.string().uuid(),
+});
+
+// ──────────────────────────────────────────────────────────
+// Rate Limit Profiles
+// ──────────────────────────────────────────────────────────
+
+const RATE_LIMITS: Record<string, RateLimitConfig> = {
+  connect:     { maxRequests: 5,  windowMs: 60_000,  keyPrefix: 'byom-connect' },
+  rotate:      { maxRequests: 5,  windowMs: 60_000,  keyPrefix: 'byom-rotate' },
+  revoke:      { maxRequests: 10, windowMs: 60_000,  keyPrefix: 'byom-revoke' },
+  connections: { maxRequests: 30, windowMs: 60_000,  keyPrefix: 'byom-list' },
+};
+
+type RouteHandler = (req: Request, userId: string, tenantId: string) => Promise<Response>;
+
+type RouteKey = 'connect' | 'rotate' | 'revoke' | 'connections';
+
+type RouteDefinition = {
+  method: 'GET' | 'POST';
+  rateLimit: RouteKey;
+  handler: RouteHandler;
+};
+
+// ──────────────────────────────────────────────────────────
+// Provider Validation
+// ──────────────────────────────────────────────────────────
+
 /** Provider validation endpoints (used for credential probing) */
 const PROVIDER_PROBE_ENDPOINTS: Record<ByomProvider, string> = {
   openai: "https://api.openai.com/v1/models?limit=1",
   anthropic: "https://api.anthropic.com/v1/models?limit=1",
   google: "https://generativelanguage.googleapis.com/v1beta/models",
   xai: "https://api.x.ai/v1/models",
+  groq: "https://api.groq.com/openai/v1/models",
 };
 
 /** API key format regex per provider (early rejection of malformed keys) */
@@ -58,6 +120,7 @@ const API_KEY_PATTERNS: Record<ByomProvider, RegExp> = {
   anthropic: /^sk-ant-[A-Za-z0-9_-]{20,}$/,
   google: /^AI[A-Za-z0-9_-]{20,}$/,
   xai: /^xai-[A-Za-z0-9_-]{20,}$/,
+  groq: /^gsk_[A-Za-z0-9_-]{20,}$/,
 };
 
 /** Allowed providers (Chinese-origin excluded) */
@@ -66,37 +129,77 @@ const VALID_PROVIDERS: ReadonlySet<ByomProvider> = new Set<ByomProvider>([
   "google",
   "anthropic",
   "xai",
+  "groq",
 ]);
+
+const ROUTES: Record<string, RouteDefinition> = {
+  "/byom/key/connect": {
+    method: "POST",
+    rateLimit: "connect",
+    handler: handleConnect,
+  },
+  "/byom/key/rotate": {
+    method: "POST",
+    rateLimit: "rotate",
+    handler: handleRotate,
+  },
+  "/byom/key/revoke": {
+    method: "POST",
+    rateLimit: "revoke",
+    handler: handleRevoke,
+  },
+  "/byom/connections": {
+    method: "GET",
+    rateLimit: "connections",
+    handler: (_req: Request, userId: string, tenantId: string) => handleListConnections(userId, tenantId),
+  },
+};
+
+async function dispatchRoute(
+  path: string,
+  method: string,
+  req: Request,
+  userId: string,
+  tenantId: string,
+): Promise<Response> {
+  const route = ROUTES[path];
+  if (route?.method !== method) {
+    return jsonResponse({ error: "Not found" }, 404);
+  }
+
+  const rl = await checkRateLimit(userId, RATE_LIMITS[route.rateLimit]);
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(_requestOrigin, rl);
+  }
+
+  return route.handler(req, userId, tenantId);
+}
 
 // ──────────────────────────────────────────────────────────
 // Server
 // ──────────────────────────────────────────────────────────
 
 serve(async (req: Request) => {
-  // CORS preflight
+  // CORS preflight — uses shared fail-closed origin validation
   if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
-        "Access-Control-Allow-Headers": "authorization, content-type",
-      },
-    });
+    return handlePreflight(req);
   }
 
+  _requestOrigin = req.headers.get("origin");
   const url = new URL(req.url);
   const path = url.pathname;
 
   // ── Auth check ──────────────────────────────────────────
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return jsonResponse({ error: "Missing Authorization header" }, 401);
+  if (!authHeader?.startsWith("Bearer ")) {
+    return jsonResponse({ error: "Missing or malformed Authorization header" }, 401);
   }
 
+  const token = authHeader.replace("Bearer ", "");
   const {
     data: { user },
     error: authError,
-  } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+  } = await supabase.auth.getUser(token);
 
   if (authError || !user) {
     return jsonResponse({ error: "Unauthorized" }, 401);
@@ -107,21 +210,14 @@ serve(async (req: Request) => {
 
   // ── Route dispatch ──────────────────────────────────────
   try {
-    if (path === "/byom/key/connect" && req.method === "POST") {
-      return await handleConnect(req, user.id, tenantId);
-    }
-    if (path === "/byom/key/rotate" && req.method === "POST") {
-      return await handleRotate(req, user.id, tenantId);
-    }
-    if (path === "/byom/key/revoke" && req.method === "POST") {
-      return await handleRevoke(req, user.id, tenantId);
-    }
-    if (path === "/byom/connections" && req.method === "GET") {
-      return await handleListConnections(user.id);
-    }
-
-    return jsonResponse({ error: "Not found" }, 404);
+    return await dispatchRoute(path, req.method, req, user.id, tenantId);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return jsonResponse({
+        error: "Validation failed",
+        details: error.errors.map(e => `${e.path.join('.')}: ${e.message}`),
+      }, 400);
+    }
     console.error("[byom-cockpit] Unhandled error:", error);
     return jsonResponse({ error: "Internal server error" }, 500);
   }
@@ -136,23 +232,15 @@ async function handleConnect(
   userId: string,
   tenantId: string
 ): Promise<Response> {
-  const body = await req.json();
+  const body = ConnectSchema.parse(await req.json());
   const { provider, auth_type, api_key } = body;
-
-  // ── Input validation ────────────────────────────────────
-  if (!provider || !auth_type || !api_key) {
-    return jsonResponse(
-      { error: "Missing required fields: provider, auth_type, api_key" },
-      400
-    );
-  }
 
   if (!VALID_PROVIDERS.has(provider)) {
     return jsonResponse({ error: `Invalid provider: ${provider}` }, 400);
   }
 
   // Regex format check (early rejection)
-  const pattern = API_KEY_PATTERNS[provider as ByomProvider];
+  const pattern = API_KEY_PATTERNS[provider];
   if (pattern && !pattern.test(api_key)) {
     return jsonResponse(
       { error: `Invalid API key format for ${provider}` },
@@ -164,10 +252,7 @@ async function handleConnect(
   const probeResult = await probeCredential(provider, api_key);
   if (!probeResult.valid) {
     return jsonResponse(
-      {
-        error: "Invalid credential",
-        details: probeResult.reason,
-      },
+      { error: "Invalid credential", details: probeResult.reason },
       401
     );
   }
@@ -177,6 +262,7 @@ async function handleConnect(
     .from("provider_connections")
     .select("connection_id")
     .eq("user_id", userId)
+    .eq("tenant_id", tenantId)
     .eq("provider", provider)
     .eq("status", "active")
     .maybeSingle();
@@ -237,22 +323,16 @@ async function handleRotate(
   userId: string,
   tenantId: string
 ): Promise<Response> {
-  const body = await req.json();
+  const body = RotateSchema.parse(await req.json());
   const { connection_id, new_api_key } = body;
 
-  if (!connection_id || !new_api_key) {
-    return jsonResponse(
-      { error: "Missing required fields: connection_id, new_api_key" },
-      400
-    );
-  }
-
-  // ── Verify ownership ────────────────────────────────────
+  // ── Verify ownership + tenant isolation ─────────────────
   const { data: connection, error: fetchError } = await supabase
     .from("provider_connections")
     .select("provider, auth_type, rotation_version")
     .eq("connection_id", connection_id)
     .eq("user_id", userId)
+    .eq("tenant_id", tenantId)
     .eq("status", "active")
     .single();
 
@@ -295,7 +375,9 @@ async function handleRotate(
       key_hint: newHint,
       rotation_version: newVersion,
     })
-    .eq("connection_id", connection_id);
+    .eq("connection_id", connection_id)
+    .eq("user_id", userId)
+    .eq("tenant_id", tenantId);
 
   if (updateError) {
     console.error("[byom-cockpit] Rotate error:", updateError);
@@ -326,19 +408,16 @@ async function handleRevoke(
   userId: string,
   tenantId: string
 ): Promise<Response> {
-  const body = await req.json();
+  const body = RevokeSchema.parse(await req.json());
   const { connection_id } = body;
 
-  if (!connection_id) {
-    return jsonResponse({ error: "Missing connection_id" }, 400);
-  }
-
-  // Verify ownership before revocation
+  // Verify ownership + tenant isolation before revocation
   const { data: connection } = await supabase
     .from("provider_connections")
     .select("provider")
     .eq("connection_id", connection_id)
     .eq("user_id", userId)
+    .eq("tenant_id", tenantId)
     .eq("status", "active")
     .single();
 
@@ -350,7 +429,8 @@ async function handleRevoke(
     .from("provider_connections")
     .update({ status: "revoked" })
     .eq("connection_id", connection_id)
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .eq("tenant_id", tenantId);
 
   if (error) {
     console.error("[byom-cockpit] Revoke error:", error);
@@ -369,29 +449,33 @@ async function handleRevoke(
 // GET /byom/connections
 // ──────────────────────────────────────────────────────────
 
-async function handleListConnections(_userId: string): Promise<Response> {
-  // Use the safe view (excludes credential_ciphertext)
+async function handleListConnections(userId: string, tenantId: string): Promise<Response> {
+  // Query the base table (not the view) because the service_role client
+  // bypasses RLS and the view relies on auth.uid() which is unavailable.
+  // Explicitly select only safe columns — credential_ciphertext is EXCLUDED.
+  // Both user_id AND tenant_id enforced for multi-tenant isolation.
   const { data: connections, error } = await supabase
-    .from("user_provider_connections_safe")
-    .select("*");
+    .from("provider_connections")
+    .select("connection_id, provider, auth_type, status, key_hint, created_at, updated_at, last_used_at, token_expires_at, rotation_version")
+    .eq("user_id", userId)
+    .eq("tenant_id", tenantId);
 
   if (error) {
     console.error("[byom-cockpit] List error:", error);
     return jsonResponse({ error: "Failed to fetch connections" }, 500);
   }
 
-  return jsonResponse({ connections: connections ?? [] });
+  return jsonResponse(
+    { connections: connections ?? [] },
+    200,
+    { "Cache-Control": "private, no-store, max-age=0" }
+  );
 }
 
 // ──────────────────────────────────────────────────────────
 // Credential Probing
 // ──────────────────────────────────────────────────────────
 
-/**
- * Validate a credential by probing the provider's API.
- * Returns { valid: true } if the provider accepts the credential,
- * or { valid: false, reason } if rejected.
- */
 async function probeCredential(
   provider: ByomProvider,
   apiKey: string
@@ -405,6 +489,7 @@ async function probeCredential(
   switch (provider) {
     case "openai":
     case "xai":
+    case "groq":
       headers["Authorization"] = `Bearer ${apiKey}`;
       break;
     case "anthropic":
@@ -418,7 +503,7 @@ async function probeCredential(
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000); // 10s timeout
+    const timeout = setTimeout(() => controller.abort(), 10_000);
 
     const response = await fetch(probeUrl, {
       method: "GET",
@@ -428,23 +513,13 @@ async function probeCredential(
 
     clearTimeout(timeout);
 
-    if (response.ok) {
-      return { valid: true };
-    }
-
+    if (response.ok) return { valid: true };
     if (response.status === 401 || response.status === 403) {
       return { valid: false, reason: "Provider rejected credential (unauthorized)" };
     }
+    if (response.status === 429) return { valid: true }; // Rate limited = key IS valid
 
-    // 429 = rate limited but key IS valid
-    if (response.status === 429) {
-      return { valid: true };
-    }
-
-    return {
-      valid: false,
-      reason: `Provider returned HTTP ${response.status}`,
-    };
+    return { valid: false, reason: `Provider returned HTTP ${response.status}` };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       return { valid: false, reason: "Credential probe timed out (10s)" };
@@ -457,25 +532,21 @@ async function probeCredential(
 // Audit Logging
 // ──────────────────────────────────────────────────────────
 
-/**
- * Insert audit log entry. Metadata MUST NOT contain secrets
- * (enforced by DB constraint audit_logs_no_secrets).
- */
 async function auditLog(
   userId: string,
-  _tenantId: string,
+  tenantId: string,
   actionType: string,
   metadata: ByomAuditMetadata
 ): Promise<void> {
   const { error } = await supabase.from("audit_logs").insert({
     actor_id: userId,
+    tenant_id: tenantId,
     action_type: actionType,
     resource_type: "provider_connection",
     metadata,
   });
 
   if (error) {
-    // Log but don't fail the request for audit failures
     console.error("[byom-cockpit] Audit log error:", error);
   }
 }
@@ -484,12 +555,18 @@ async function auditLog(
 // Helpers
 // ──────────────────────────────────────────────────────────
 
-function jsonResponse(data: unknown, status = 200): Response {
+function jsonResponse(
+  data: unknown,
+  status = 200,
+  extraHeaders: Record<string, string> = {}
+): Response {
+  const corsHeaders = buildCorsHeaders(_requestOrigin);
   return new Response(JSON.stringify(data), {
     status,
     headers: {
+      ...corsHeaders,
+      ...extraHeaders,
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
     },
   });
 }

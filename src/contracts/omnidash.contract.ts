@@ -14,6 +14,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
+import { APP_REGISTRY, type AppRegistryEntry } from '../../packages/core/src/registry';
 import { z } from 'zod';
 
 // ============================================================================
@@ -70,7 +71,10 @@ export interface OmniDashApp {
 export const omniDashAppSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
-  route: z.string().startsWith('/omnidash'),
+  route: z.custom<`/omnidash${string}`>(
+    (val) => typeof val === 'string' && val.startsWith('/omnidash'),
+    { message: 'Route must start with /omnidash' },
+  ),
   integrationStatus: z.enum(['Live', 'Partial']),
   launchMode: z.enum(['navigate', 'oauth', 'modal', 'widget']),
   widgetType: z.enum(['module', 'iframe', 'native']).nullable(),
@@ -115,162 +119,57 @@ export type BlastRadiusSurface = typeof BLAST_RADIUS_SURFACES[number];
 // The 14-App Contract — FROZEN
 // ============================================================================
 
-const OMNIDASH_CONTRACT_SOURCE: readonly OmniDashApp[] = [
-  {
-    id: 'omniboard',
-    title: 'OmniBoard',
-    route: '/omnidash',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: null,
-    defaultBounds: { width: 1200, height: 800 },
-    zLayer: 0,
-    category: 'control-plane',
-  },
-  {
-    id: 'omniport',
-    title: 'OmniPort',
-    route: '/omnidash/omniport',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'platform',
-  },
-  {
-    id: 'maestro',
-    title: 'Maestro',
-    route: '/omnidash/maestro',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'automation',
-  },
-  {
-    id: 'fortress',
-    title: 'Fortress',
-    route: '/omnidash/fortress',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'security',
-  },
-  {
-    id: 'orchestrator',
-    title: 'Orchestrator',
-    route: '/omnidash/orchestrator',
-    integrationStatus: 'Partial',
-    launchMode: 'oauth',
-    widgetType: null,
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'control-plane',
-  },
-  {
-    id: 'omniskills',
-    title: 'OmniSkills',
-    route: '/omnidash/omniskills',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 800, height: 500 },
-    zLayer: 10,
-    category: 'platform',
-  },
-  {
-    id: 'physiomni',
-    title: 'PhysiOmni',
-    route: '/omnidash/physiomni',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 800, height: 500 },
-    zLayer: 10,
-    category: 'operations',
-  },
-  {
-    id: 'audits',
-    title: 'Audits',
-    route: '/omnidash/audits',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'security',
-  },
-  {
-    id: 'links',
-    title: 'Links',
-    route: '/omnidash/links',
-    integrationStatus: 'Partial',
-    launchMode: 'oauth',
-    widgetType: 'module',
-    defaultBounds: { width: 800, height: 500 },
-    zLayer: 10,
-    category: 'platform',
-  },
-  {
-    id: 'automations',
-    title: 'Automations',
-    route: '/omnidash/automations',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'automation',
-  },
-  {
-    id: 'workflows',
-    title: 'Workflows',
-    route: '/omnidash/workflows',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'automation',
-  },
-  {
-    id: 'files',
-    title: 'Files',
-    route: '/omnidash/files',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'module',
-    defaultBounds: { width: 800, height: 500 },
-    zLayer: 10,
-    category: 'operations',
-  },
-  {
-    id: 'billing',
-    title: 'Billing',
-    route: '/omnidash/billing',
-    integrationStatus: 'Partial',
-    launchMode: 'oauth',
-    widgetType: 'module',
-    defaultBounds: { width: 800, height: 500 },
-    zLayer: 10,
-    category: 'operations',
-  },
-  {
-    id: 'settings',
-    title: 'Settings',
-    route: '/omnidash/settings',
-    integrationStatus: 'Live',
-    launchMode: 'navigate',
-    widgetType: 'native',
-    defaultBounds: { width: 900, height: 600 },
-    zLayer: 10,
-    category: 'control-plane',
-  },
-];
+const OMNIDASH_BOUNDS = Object.freeze({
+  compact: Object.freeze({ width: 800, height: 500 }),
+  standard: Object.freeze({ width: 900, height: 600 }),
+  board: Object.freeze({ width: 1200, height: 800 }),
+});
+
+type BoundsPreset = keyof typeof OMNIDASH_BOUNDS;
+
+type OmniDashContractOverride = {
+  readonly category?: AppCategory;
+  readonly launchMode?: LaunchMode;
+  readonly widgetType?: WidgetType;
+  readonly bounds?: BoundsPreset;
+  readonly zLayer?: number;
+};
+
+const OMNIDASH_OVERRIDES: Readonly<Record<string, OmniDashContractOverride>> = Object.freeze({
+  omniboard: { widgetType: null, bounds: 'board', zLayer: 0 },
+  maestro: { category: 'automation' },
+  orchestrator: { category: 'control-plane', widgetType: null },
+  omniskills: { bounds: 'compact' },
+  physiomni: { bounds: 'compact' },
+  links: { bounds: 'compact' },
+  files: { bounds: 'compact' },
+  billing: { bounds: 'compact' },
+  settings: { widgetType: 'native' },
+});
+
+const resolveLaunchMode = (integrationStatus: IntegrationStatus, override?: LaunchMode): LaunchMode =>
+  override ?? (integrationStatus === 'Partial' ? 'oauth' : 'navigate');
+
+const toOmniDashApp = (entry: AppRegistryEntry): OmniDashApp => {
+  const override = OMNIDASH_OVERRIDES[entry.key];
+  const integrationStatus = entry.dashboard.status;
+  const boundsPreset = override?.bounds;
+  const defaultBounds = boundsPreset ? OMNIDASH_BOUNDS[boundsPreset] : OMNIDASH_BOUNDS.standard;
+
+  return {
+    id: entry.key,
+    title: entry.label,
+    route: entry.routePath,
+    integrationStatus,
+    launchMode: resolveLaunchMode(integrationStatus, override?.launchMode),
+    widgetType: override?.widgetType ?? 'module',
+    defaultBounds,
+    zLayer: override?.zLayer ?? 10,
+    category: override?.category ?? entry.category,
+  };
+};
+
+const OMNIDASH_CONTRACT_SOURCE: readonly OmniDashApp[] = APP_REGISTRY.map(toOmniDashApp);
 
 // ============================================================================
 // Runtime Validation + Export

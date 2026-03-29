@@ -62,7 +62,7 @@ async def send_dlq_alert(payload: dict[str, str]) -> None:
 def _increment_prometheus_counter(alert: DLQAlertPayload) -> None:
     """Increment the DLQ alert Prometheus counter (best-effort)."""
     try:
-        from prometheus_client import Counter  # type: ignore
+        from prometheus_client import Counter
 
         counter = Counter(
             "apex_dlq_alerts_total",
@@ -80,7 +80,7 @@ def _increment_prometheus_counter(alert: DLQAlertPayload) -> None:
 async def _post_slack_webhook(alert: DLQAlertPayload) -> None:
     """Post a Slack alert message (best-effort, no-op if unconfigured)."""
     try:
-        from config import settings  # type: ignore
+        from config import settings
 
         webhook_url: str | None = getattr(settings, "slack_alert_webhook_url", None)
     except Exception:  # noqa: BLE001

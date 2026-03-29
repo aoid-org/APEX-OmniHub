@@ -1,7 +1,7 @@
 {
   "name": "apex-omnihub",
   "private": true,
-  "version": "1.5.0",
+  "version": "1.5.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,6 +17,7 @@
     "omni:validate": "vitest run tests/integration/omni-convergence.test.tsx",
     "test:prompt-defense": "vitest run tests/prompt-defense",
     "test:e2e": "playwright test",
+    "test:e2e:ci": "npx playwright test --project=chromium",
     "test:e2e:install": "playwright install chromium",
     "test:assets": "node tests/smoke/assets-check.mjs",
     "check:react": "node scripts/check-react-singleton.mjs",
@@ -29,7 +30,7 @@
     "dr:test": "tsx scripts/dr/run-dr-test.ts --dry-run",
     "prompt-defense:analyze": "tsx scripts/prompt-defense/analyze_flags.ts",
     "secret:scan": "node scripts/secret-scan.mjs",
-    "security:audit": "node -e \"const fs=require('fs');const dir='security';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});\" && npm audit --json > security/npm-audit-latest.json || true",
+    "security:audit": "node -e \"const fs=require('fs');const dir='security';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});\" && node -e \"const{execSync}=require('child_process');try{const r=execSync('npm audit --json',{encoding:'utf8'});require('fs').writeFileSync('security/npm-audit-latest.json',r)}catch(e){require('fs').writeFileSync('security/npm-audit-latest.json',e.stdout||'{}')}\"",
     "sim:chaos": "tsx sim/cli.ts --mode chaos",
     "sim:dry": "tsx sim/cli.ts --mode dry",
     "sim:quick": "tsx sim/cli.ts --mode quick",
@@ -37,7 +38,7 @@
     "sim:custom": "tsx sim/cli.ts --mode custom",
     "sim:validate": "tsx sim/cli.ts --validate",
     "sim:report": "tsx sim/evidence.ts --report",
-    "sim:clean": "rm -rf evidence/*",
+    "sim:clean": "node -e \"const fs=require('fs'),p=require('path'),d=p.join(__dirname,'evidence');if(fs.existsSync(d)){fs.readdirSync(d).forEach(f=>{const fp=p.join(d,f);fs.rmSync(fp,{recursive:true,force:true})})}\"",
     "eval:ci": "tsx sim/cli.ts --mode eval",
     "test:sim": "vitest run sim/tests",
     "test:wwwct": "tsx scripts/worldwide-wildcard/run.ts --mode mock",
@@ -62,7 +63,7 @@
     "audit:features": "tsx scripts/audit-features.ts",
     "apple:secret": "tsx scripts/generate-apple-secret.ts",
     "readiness:generate": "node scripts/generate-readiness-report.mjs",
-    "postinstall": "node scripts/patch-capacitor-tar.cjs && bash scripts/install-githooks.sh 2>/dev/null || true",
+    "postinstall": "node scripts/patch-capacitor-tar.cjs && node -e \"try{require('child_process').execFileSync(process.platform==='win32'?'sh':'/bin/sh',[require('path').join(__dirname,'scripts','install-githooks.sh')],{stdio:'ignore'})}catch(e){}\"",
     "bundle:analyze": "bun run build && open dist/stats.html",
     "bundle:check": "bun run build && size-limit",
     "build:seo": "node scripts/generate-sitemap.mjs && vite build",
@@ -70,7 +71,7 @@
     "changeset:version": "changeset version",
     "changeset:publish": "changeset publish",
     "release": "bun run build && bun run changeset:publish",
-    "prebuild": "node scripts/generate-sitemap.mjs"
+    "prebuild": "node scripts/check-env-root.mjs && node scripts/generate-sitemap.mjs"
   },
   "size-limit": [
     {
@@ -96,6 +97,12 @@
     "@capacitor/ios": "^6.2.1",
     "@capacitor/push-notifications": "^6.0.5",
     "@hookform/resolvers": "^3.10.0",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.72.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
+    "@opentelemetry/resources": "^2.6.1",
+    "@opentelemetry/sdk-node": "^0.214.0",
+    "@opentelemetry/semantic-conventions": "^1.40.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -238,13 +245,32 @@
   },
   "overrides": {
     "flatted": "^3.4.2",
+    "h3": "1.15.10",
     "lodash": "^4.17.23",
+    "picomatch@^2.0.0": "2.3.2",
+    "picomatch@^4.0.0": "4.0.4",
     "tar": "^7.5.11",
     "undici": "^6.24.0",
     "hono": "^4.12.4",
     "serialize-javascript": "^7.0.3",
     "rollup": "^4.59.0",
-    "immutable": "^4.3.8"
+    "immutable": "^4.3.8",
+    "picomatch": ">=2.3.2",
+    "ast-v8-to-istanbul": {
+      "js-tokens": "^10.0.0"
+    }
   },
-  "packageManager": "bun@1.2.14"
+  "resolutions": {
+    "h3": "^1.15.9",
+    "picomatch": "^4.0.4",
+    "ast-v8-to-istanbul/js-tokens": "^10.0.0"
+  },
+  "packageManager": "bun@1.2.14",
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "^0.25.12",
+    "@rollup/rollup-linux-x64-gnu": "^4.60.0",
+    "@rollup/rollup-linux-x64-musl": "^4.60.0",
+    "@swc/core-linux-x64-gnu": "^1.15.21",
+    "@swc/core-linux-x64-musl": "^1.15.21"
+  }
 }

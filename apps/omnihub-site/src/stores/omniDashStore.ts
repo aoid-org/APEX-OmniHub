@@ -19,7 +19,7 @@
  */
 
 import { create } from 'zustand';
-import { ZIndexManager, Z_FLOATING } from '../lib/ZIndexManager';
+import { ZIndexManager } from '../lib/ZIndexManager';
 
 // ============================================================================
 // Types
@@ -207,13 +207,15 @@ export const useOmniDash = create<OmniDashState>((set, get) => {
     // ── Floating Window Operations ─────────────────────
 
     openFloating: (id, title, component, position) => {
+      const viewportWidth = globalThis.window?.innerWidth ?? 1280;
+      const viewportHeight = globalThis.window?.innerHeight ?? 800;
       const floating: FloatingWindowConfig = {
         id,
         title: structuredClone(title),
         component: structuredClone(component),
         position: position ? structuredClone(position) : {
-          x: (typeof window !== 'undefined' ? globalThis.window.innerWidth : 1280) - 360,
-          y: (typeof window !== 'undefined' ? globalThis.window.innerHeight : 800) - 280,
+          x: viewportWidth - 360,
+          y: viewportHeight - 280,
         },
         size: { ...DEFAULT_FLOATING_SIZE },
       };
@@ -253,4 +255,4 @@ export const useOmniDash = create<OmniDashState>((set, get) => {
   };
 });
 
-export { Z_FLOATING };
+export { Z_FLOATING } from '../lib/ZIndexManager';
