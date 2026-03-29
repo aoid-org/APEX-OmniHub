@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, spyOn, mock } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   isOnline,
   setupOfflineListeners,
@@ -78,7 +78,7 @@ describe('offline utils', () => {
   });
 
   afterEach(() => {
-    mock.restore();
+    vi.restoreAllMocks();
   });
 
   describe('isOnline', () => {
@@ -95,8 +95,8 @@ describe('offline utils', () => {
 
   describe('setupOfflineListeners', () => {
     it('adds and removes event listeners correctly', () => {
-      const addEventListener = spyOn(globalThis, 'addEventListener');
-      const removeEventListener = spyOn(globalThis, 'removeEventListener');
+      const addEventListener = vi.spyOn(globalThis, 'addEventListener');
+      const removeEventListener = vi.spyOn(globalThis, 'removeEventListener');
 
       const cleanup = setupOfflineListeners();
 
@@ -112,12 +112,12 @@ describe('offline utils', () => {
     });
 
     it('calls callbacks when events fire', () => {
-      const onOnline = mock(() => {});
-      const onOffline = mock(() => {});
+      const onOnline = vi.fn(() => {});
+      const onOffline = vi.fn(() => {});
 
       const eventListeners: Record<string, EventListenerOrEventListenerObject[]> = {};
 
-      spyOn(globalThis, 'addEventListener').mockImplementation((type: string, listener: EventListenerOrEventListenerObject) => {
+      vi.spyOn(globalThis, 'addEventListener').mockImplementation((type: string, listener: EventListenerOrEventListenerObject) => {
         if (!eventListeners[type]) eventListeners[type] = [];
         eventListeners[type].push(listener);
       });
@@ -156,7 +156,7 @@ describe('offline utils', () => {
     });
 
     it('loadFromLocalStorage handles maxAge correctly', () => {
-      const dateNowMock = spyOn(Date, 'now');
+      const dateNowMock = vi.spyOn(Date, 'now');
 
       // Save data at time 1000
       dateNowMock.mockReturnValue(1000);
@@ -177,8 +177,8 @@ describe('offline utils', () => {
     });
 
     it('saveToLocalStorage handles quota exceeded by clearing old data', () => {
-      const dateNowMock = spyOn(Date, 'now');
-      spyOn(console, 'error').mockImplementation(() => {});
+      const dateNowMock = vi.spyOn(Date, 'now');
+      vi.spyOn(console, 'error').mockImplementation(() => {});
 
       // Setup some old data (time 1000)
       dateNowMock.mockReturnValue(1000);
@@ -211,7 +211,7 @@ describe('offline utils', () => {
     });
 
     it('returns false when quota is exceeded and clear fails to fix', () => {
-      spyOn(console, 'error').mockImplementation(() => {});
+      vi.spyOn(console, 'error').mockImplementation(() => {});
       simulateQuotaExceeded = () => true;
 
       const success = saveToLocalStorage('trigger-fail', { val: 'test' });
@@ -234,10 +234,10 @@ describe('offline utils', () => {
 
   describe('queueOfflineRequest & processQueuedRequests', () => {
     it('queues a request and persists it', () => {
-      const req = mock(() => Promise.resolve('ok'));
+      const req = vi.fn(() => Promise.resolve('ok'));
       const id = queueOfflineRequest(req);
 
-      expect(id).toBeString();
+      expect(typeof id).toBe("string");
       const rawQueue = globalThis.localStorage.getItem('offline_request_queue');
       expect(rawQueue).toBeTruthy();
 
@@ -246,11 +246,11 @@ describe('offline utils', () => {
 
     it('removes oldest request when queue is full', () => {
       // Mock console.warn to keep output clean
-      spyOn(console, 'warn').mockImplementation(() => {});
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       // Fill the queue up to MAX_QUEUE_SIZE (50)
       for (let i = 0; i < 50; i++) {
-        queueOfflineRequest(mock(() => Promise.resolve('ok')));
+        queueOfflineRequest(vi.fn(() => Promise.resolve('ok')));
       }
 
       const rawQueueBefore = globalThis.localStorage.getItem('offline_request_queue');
@@ -259,7 +259,7 @@ describe('offline utils', () => {
       const firstId = queueBefore[0].id;
 
       // Add one more
-      const newId = queueOfflineRequest(mock(() => Promise.resolve('ok')));
+      const newId = queueOfflineRequest(vi.fn(() => Promise.resolve('ok')));
 
       const rawQueueAfter = globalThis.localStorage.getItem('offline_request_queue');
       const queueAfter = JSON.parse(rawQueueAfter!);
@@ -273,7 +273,7 @@ describe('offline utils', () => {
       globalThis.navigator.onLine = true;
 
       let callCount = 0;
-      const req = mock(() => {
+      const req = vi.fn(() => {
         callCount++;
         return Promise.resolve('ok');
       });
@@ -292,7 +292,7 @@ describe('offline utils', () => {
     it('does not process requests when offline', async () => {
       globalThis.navigator.onLine = false;
 
-      const req = mock(() => Promise.resolve('ok'));
+      const req = vi.fn(() => Promise.resolve('ok'));
       queueOfflineRequest(req);
 
       await processQueuedRequests();
@@ -303,9 +303,9 @@ describe('offline utils', () => {
     it('handles failed requests with retries', async () => {
       globalThis.navigator.onLine = true;
       // Mock console.error
-      spyOn(console, 'error').mockImplementation(() => {});
+      vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const req = mock(() => Promise.reject('error'));
+      const req = vi.fn(() => Promise.reject('error'));
       const id = queueOfflineRequest(req);
 
       // Process 1: fails, increments retry, sets nextRetryTime
@@ -321,10 +321,10 @@ describe('offline utils', () => {
 
     it('respects nextRetryTime', async () => {
       globalThis.navigator.onLine = true;
-      spyOn(console, 'error').mockImplementation(() => {});
+      vi.spyOn(console, 'error').mockImplementation(() => {});
 
       let reqCalls = 0;
-      const req = mock(() => {
+      const req = vi.fn(() => {
         reqCalls++;
         return Promise.reject('error');
       });
@@ -340,7 +340,7 @@ describe('offline utils', () => {
       expect(reqCalls).toBe(1);
 
       // Fast forward time past nextRetryTime
-      const dateNowMock = spyOn(Date, 'now');
+      const dateNowMock = vi.spyOn(Date, 'now');
       dateNowMock.mockReturnValue(Date.now() + 100000);
 
       // Process 3: should call req again
@@ -352,10 +352,10 @@ describe('offline utils', () => {
 
     it('stops retrying after MAX_RETRIES', async () => {
       globalThis.navigator.onLine = true;
-      spyOn(console, 'error').mockImplementation(() => {});
+      vi.spyOn(console, 'error').mockImplementation(() => {});
 
       let reqCalls = 0;
-      const req = mock(() => {
+      const req = vi.fn(() => {
         reqCalls++;
         return Promise.reject('error');
       });
@@ -363,7 +363,7 @@ describe('offline utils', () => {
       const id = queueOfflineRequest(req);
 
       // We need to bypass the nextRetryTime for tests easily.
-      const dateNowMock = spyOn(Date, 'now');
+      const dateNowMock = vi.spyOn(Date, 'now');
       let simulatedTime = Date.now();
       dateNowMock.mockImplementation(() => simulatedTime);
 
