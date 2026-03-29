@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, type MockInstance } from 'vitest';
 import {
   trackPWAInstallPrompt,
   trackPWAInstalled,
@@ -16,7 +16,7 @@ import * as monitoring from '../../src/lib/monitoring';
 
 describe('PWA Analytics', () => {
   let addedEventListeners: Record<string, EventListener>;
-  let spy: any;
+  let spy: MockInstance;
 
   beforeEach(() => {
     spy = vi.spyOn(monitoring, 'logAnalyticsEvent');
@@ -25,7 +25,7 @@ describe('PWA Analytics', () => {
     // Mock globalThis.addEventListener
     globalThis.addEventListener = vi.fn((event: string, callback: EventListener) => {
       addedEventListeners[event] = callback;
-    });
+    }) as unknown as typeof globalThis.addEventListener;
 
     // Mock matchMedia
     globalThis.matchMedia = vi.fn((query) => ({
@@ -269,7 +269,7 @@ describe('PWA Analytics', () => {
       addedEventListeners['beforeinstallprompt'](promptEvent as unknown as Event);
       await new Promise(r => setTimeout(r, 0));
 
-      expect(spy).toHaveBeenCalledTimes(2);
+            expect(spy).toHaveBeenCalledTimes(2);
       expect(spy.mock.calls[0][0]).toBe('pwa.install.prompt_shown');
 
       await mockUserChoice; // Wait for the promise inside the handler
@@ -401,7 +401,7 @@ describe('PWA Analytics', () => {
       addedEventListeners['offline'](new Event('offline'));
       await new Promise(r => setTimeout(r, 0));
 
-      expect(spy).toHaveBeenCalledTimes(1);
+            expect(spy).toHaveBeenCalledTimes(1);
       expect(spy.mock.calls[0][0]).toBe('pwa.network.offline');
       expect(spy.mock.calls[0][1].onlineDuration).toBe(1000); // 2000 - 1000
 
@@ -491,7 +491,7 @@ describe('PWA Analytics', () => {
       globalThis.addEventListener = vi.fn((event: string, callback: EventListener) => {
         listenersAdded++;
         originalAddEventListener(event, callback);
-      });
+      }) as unknown as typeof globalThis.addEventListener;
 
       initializePWAAnalytics();
 
@@ -507,7 +507,7 @@ describe('PWA Analytics', () => {
       globalThis.addEventListener = vi.fn((event: string, callback: EventListener) => {
         listenerEvents.push(event);
         originalAddEventListener(event, callback);
-      });
+      }) as unknown as typeof globalThis.addEventListener;
 
       Object.defineProperty(globalThis.navigator, 'serviceWorker', {
         value: {
@@ -540,7 +540,7 @@ describe('PWA Analytics', () => {
       const listenersEvents: Record<string, EventListener> = {};
       globalThis.addEventListener = vi.fn((event: string, callback: EventListener) => {
         listenersEvents[event] = callback;
-      });
+      }) as unknown as typeof globalThis.addEventListener;
 
       Object.defineProperty(globalThis.navigator, 'serviceWorker', {
         value: {
@@ -565,7 +565,9 @@ describe('PWA Analytics', () => {
       await new Promise(r => setTimeout(r, 0));
 
       expect(spy).toHaveBeenCalled();
-      const sessionEndCall = spy.mock.calls.find((call: any[]) => call[0] === 'pwa.session.end');
+      const sessionEndCall = spy.mock.calls.find((call: [string, Record<string, unknown>]) => call[0] === 'pwa.session.end') as [string, Record<string, unknown>] | undefined;
+      if (!sessionEndCall) throw new Error('pwa.session.end event not found');
+
       expect(sessionEndCall).toBeDefined();
       expect(sessionEndCall[1].duration).toBe(4000); // 5000 - 1000
       expect(sessionEndCall[1].pagesViewed).toBe(2); // 1 initial + 1 pushState
