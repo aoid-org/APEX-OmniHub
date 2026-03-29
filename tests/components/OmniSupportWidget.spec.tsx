@@ -84,11 +84,13 @@ describe('OmniSupportWidget', () => {
   describe('closing the widget', () => {
     it('closes form when X button is clicked', () => {
       render(<OmniSupportWidget />);
+      // Click the floating MessageCircle button to open
       fireEvent.click(screen.getByRole('button'));
-      // Click the X close button
-      const buttons = screen.getAllByRole('button');
-      const closeBtn = buttons.find((b) => b.querySelector('svg') !== null && b !== buttons.at(-1));
+
+      // Select the close button by finding the one that contains the icon-X testid
+      const closeBtn = screen.getByTestId('icon-X').closest('button');
       if (closeBtn) fireEvent.click(closeBtn);
+
       expect(screen.queryByText('Support')).not.toBeInTheDocument();
     });
   });
