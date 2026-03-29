@@ -302,15 +302,6 @@ export class ChaosEngine {
   }
 
   /**
-   * @deprecated Use calculateRetryDelay() instead.
-   * Thin wrapper kept for backwards-compat call sites.
-   */
-  calculateBackoff(attempt: number): number {
-    console.warn('calculateBackoff() DEPRECATED - use calculateRetryDelay()');
-    return this.calculateRetryDelay(attempt);
-  }
-
-  /**
    * Reset engine (for new run)
    */
   reset(newSeed?: number): void {
