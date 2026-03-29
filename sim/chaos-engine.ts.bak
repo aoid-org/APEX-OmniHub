@@ -203,7 +203,7 @@ export class ChaosEngine {
       const riskScore = this.anomalyDetector.predictFailureRisk(latencies, errorCount);
       // As risk goes up (towards 1.0), multiply failure rates up to a max factor of 5x.
       riskMultiplier = 1 + (riskScore * 4);
-      
+
       // Update EMA pipeline with current network delay if network latency is simulated
       // This allows the mathematical window to slide deterministically.
       if (latencies.length > 0) {
@@ -300,6 +300,7 @@ export class ChaosEngine {
   getStats(): ChaosStats {
     return { ...this.stats };
   }
+
 
   /**
    * Reset engine (for new run)
