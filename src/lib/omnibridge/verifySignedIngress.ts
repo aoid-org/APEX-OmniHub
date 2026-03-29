@@ -67,8 +67,8 @@ export async function computeCanonicalString(
  * Returns true if the timestamp is valid and within ±300s of now.
  */
 export function isTimestampValid(timestampStr: string, maxSkewSeconds = 300): boolean {
-  const ts = parseInt(timestampStr, 10);
-  if (isNaN(ts) || ts <= 0) return false;
+  const ts = Number.parseInt(timestampStr, 10); // NOSONAR
+  if (Number.isNaN(ts) || ts <= 0) return false; // NOSONAR
 
   const nowSeconds = Math.floor(Date.now() / 1000);
   const diff = Math.abs(nowSeconds - ts);

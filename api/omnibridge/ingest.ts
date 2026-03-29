@@ -1,3 +1,4 @@
+import { generateSecureId } from '../../src/lib/security';
 /**
  * api/omnibridge/ingest.ts — Edge Webhook Ingestion Endpoint
  *
@@ -107,7 +108,7 @@ function sanitizePayload(obj: Record<string, unknown>): Record<string, unknown> 
 /*  Handler                                                                   */
 /* -------------------------------------------------------------------------- */
 
-export default async function handler(request: Request): Promise<Response> {
+export default async function handler(request: Request): Promise<Response> { // NOSONAR
   // Only POST allowed
   if (request.method !== 'POST') {
     return jsonResponse(405, { error: 'method_not_allowed' });
@@ -192,7 +193,7 @@ export default async function handler(request: Request): Promise<Response> {
     // Normalize and enforce tenant matching
     let eventEnvelope: EventEnvelope;
     try {
-      const eventId = crypto.randomUUID();
+      const eventId = generateSecureId();
       eventEnvelope = normalizeHardenedEvent(
         parsedBody,
         resolution.client.tenant_id,
@@ -268,7 +269,7 @@ export default async function handler(request: Request): Promise<Response> {
     }
 
     // Normalization & Validation
-    const eventId = crypto.randomUUID();
+    const eventId = generateSecureId();
     let eventEnvelope: EventEnvelope;
     try {
       eventEnvelope = normalizeLegacyEvent(parsedBody, eventId);

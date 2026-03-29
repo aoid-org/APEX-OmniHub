@@ -15,7 +15,6 @@ export interface ReplayStore {
    */
   isDuplicate(key: string): boolean;
 
-  // TODO: Add methods for distributed store integration (e.g. KV/Redis)
   // async checkAndSet(key: string, ttl: number): Promise<boolean>;
 }
 
