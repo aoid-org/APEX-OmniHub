@@ -144,10 +144,3 @@ export function corsJsonResponse(
   });
 }
 
-// Legacy export for backward compatibility (deprecated - use buildCorsHeaders instead)
-// This will return headers with "null" origin for any wildcard usage
-export const corsHeaders = {
-  'Access-Control-Allow-Origin': 'null',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-};
