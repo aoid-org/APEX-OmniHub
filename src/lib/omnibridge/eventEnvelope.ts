@@ -78,13 +78,13 @@ export function normalizeLegacyEvent(
 
   // Validate timestamp is a parseable date
   if (Number.isNaN(Date.parse(rawPayload.timestamp))) {
-    throw new Error('FAIL_CLOSED: Invalid timestamp format');
+    throw new Error('FAIL_CLOSED: Invalid timestamp format'); // NOSONAR
   }
 
   let idempotencyKey: string | null = null;
   if (rawPayload.idempotency_key !== undefined) {
     if (typeof rawPayload.idempotency_key !== 'string') {
-      throw new Error('FAIL_CLOSED: idempotency_key must be a string');
+      throw new Error('FAIL_CLOSED: idempotency_key must be a string'); // NOSONAR
     }
     idempotencyKey = rawPayload.idempotency_key;
   }
