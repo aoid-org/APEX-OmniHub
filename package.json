@@ -236,7 +236,11 @@
     "hono": "^4.12.4",
     "serialize-javascript": "^7.0.3",
     "rollup": "^4.59.0",
-    "immutable": "^4.3.8"
+    "immutable": "^4.3.8",
+    "undici": "^6.21.1",
+    "cross-spawn": "^7.0.6",
+    "micromatch": "^4.0.8",
+    "braces": "^3.0.3"
   },
   "packageManager": "bun@1.2.14"
 }
