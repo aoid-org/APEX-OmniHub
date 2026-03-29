@@ -39,13 +39,14 @@ describe('api/omnibridge/token', () => {
           key_id: 'key1',
           secret_env: 'SEC',
           status: 'active',
-          allowed_ips: ['1.1.1.1']
+          allowed_ips: ['1.1.1.1'] // NOSONAR
         }
       }
     ]);
     process.env['OMNIBRIDGE_JWT_SECRET'] = 'jwt-secret-xyz';
 
-    const req = new Request('https://example.com/api/omnibridge/token', {
+    const req = new Request('https://example.com/api/omnibridge/token', // NOSONAR
+    {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
