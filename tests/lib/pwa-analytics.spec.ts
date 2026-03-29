@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach, mock } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import {
   trackPWAInstallPrompt,
   trackPWAInstalled,
@@ -14,7 +14,7 @@ import {
 } from '../../src/lib/pwa-analytics';
 
 // Setup basic mocks
-const mockLogAnalyticsEvent = mock(async (event: string, properties?: any) => {});
+const mockLogAnalyticsEvent = mock(async (_event: string, _properties?: Record<string, unknown>) => {});
 
 // Override the actual implementation using Bun's mock
 mock.module('../../src/lib/monitoring', () => ({
@@ -22,14 +22,14 @@ mock.module('../../src/lib/monitoring', () => ({
 }));
 
 describe('PWA Analytics', () => {
-  let addedEventListeners: Record<string, Function>;
+  let addedEventListeners: Record<string, EventListener>;
 
   beforeEach(() => {
     mockLogAnalyticsEvent.mockClear();
     addedEventListeners = {};
 
     // Mock globalThis.addEventListener
-    globalThis.addEventListener = mock((event: string, callback: Function) => {
+    globalThis.addEventListener = mock((event: string, callback: EventListener) => {
       addedEventListeners[event] = callback;
     });
 
@@ -112,7 +112,7 @@ describe('PWA Analytics', () => {
       });
 
       trackPWAInstalled();
-      addedEventListeners['appinstalled']();
+      addedEventListeners['appinstalled'](new Event('appinstalled'));
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalled();
       const args = mockLogAnalyticsEvent.mock.calls[0];
@@ -127,7 +127,7 @@ describe('PWA Analytics', () => {
       });
 
       trackPWAInstalled();
-      addedEventListeners['appinstalled']();
+      addedEventListeners['appinstalled'](new Event('appinstalled'));
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalled();
       const args = mockLogAnalyticsEvent.mock.calls[0];
@@ -142,7 +142,7 @@ describe('PWA Analytics', () => {
       });
 
       trackPWAInstalled();
-      addedEventListeners['appinstalled']();
+      addedEventListeners['appinstalled'](new Event('appinstalled'));
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalled();
       const args = mockLogAnalyticsEvent.mock.calls[0];
@@ -157,7 +157,7 @@ describe('PWA Analytics', () => {
       });
 
       trackPWAInstalled();
-      addedEventListeners['appinstalled']();
+      addedEventListeners['appinstalled'](new Event('appinstalled'));
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalled();
       const args = mockLogAnalyticsEvent.mock.calls[0];
@@ -180,7 +180,7 @@ describe('PWA Analytics', () => {
       }));
 
       trackPWAInstalled();
-      addedEventListeners['appinstalled']();
+      addedEventListeners['appinstalled'](new Event('appinstalled'));
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalled();
       const args = mockLogAnalyticsEvent.mock.calls[0];
@@ -201,7 +201,7 @@ describe('PWA Analytics', () => {
       }));
 
       trackPWAInstalled();
-      addedEventListeners['appinstalled']();
+      addedEventListeners['appinstalled'](new Event('appinstalled'));
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalled();
       const args = mockLogAnalyticsEvent.mock.calls[0];
@@ -222,7 +222,7 @@ describe('PWA Analytics', () => {
       }));
 
       trackPWAInstalled();
-      addedEventListeners['appinstalled']();
+      addedEventListeners['appinstalled'](new Event('appinstalled'));
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalled();
       const args = mockLogAnalyticsEvent.mock.calls[0];
@@ -243,7 +243,7 @@ describe('PWA Analytics', () => {
       }));
 
       trackPWAInstalled();
-      addedEventListeners['appinstalled']();
+      addedEventListeners['appinstalled'](new Event('appinstalled'));
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalled();
       const args = mockLogAnalyticsEvent.mock.calls[0];
@@ -264,7 +264,7 @@ describe('PWA Analytics', () => {
         prompt: mock(),
       };
 
-      addedEventListeners['beforeinstallprompt'](promptEvent);
+      addedEventListeners['beforeinstallprompt'](promptEvent as unknown as Event);
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalledTimes(1);
       expect(mockLogAnalyticsEvent.mock.calls[0][0]).toBe('pwa.install.prompt_shown');
@@ -281,7 +281,7 @@ describe('PWA Analytics', () => {
 
     it('trackPWAInstalled stores install date in localStorage', () => {
       trackPWAInstalled();
-      addedEventListeners['appinstalled']();
+      addedEventListeners['appinstalled'](new Event('appinstalled'));
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalledTimes(1);
       expect(globalThis.localStorage.setItem).toHaveBeenCalledWith(
@@ -359,11 +359,11 @@ describe('PWA Analytics', () => {
     });
 
     it('trackServiceWorkerEvents tracks controllerchange', () => {
-      let swEventListeners: Record<string, Function> = {};
+      const swEventListeners: Record<string, EventListener> = {};
 
       Object.defineProperty(globalThis.navigator, 'serviceWorker', {
         value: {
-          addEventListener: mock((event: string, callback: Function) => {
+          addEventListener: mock((event: string, callback: EventListener) => {
             swEventListeners[event] = callback;
           }),
           ready: new Promise(() => {}) // Pending promise so it doesn't trigger ready part
@@ -374,7 +374,7 @@ describe('PWA Analytics', () => {
       trackServiceWorkerEvents();
 
       if (swEventListeners['controllerchange']) {
-        swEventListeners['controllerchange']();
+        swEventListeners['controllerchange'](new Event('controllerchange'));
         expect(mockLogAnalyticsEvent).toHaveBeenCalledTimes(1);
         expect(mockLogAnalyticsEvent.mock.calls[0][0]).toBe('pwa.sw.controller_changed');
       } else {
@@ -392,7 +392,7 @@ describe('PWA Analytics', () => {
 
       // Trigger offline
       mockTime = 2000;
-      addedEventListeners['offline']();
+      addedEventListeners['offline'](new Event('offline'));
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalledTimes(1);
       expect(mockLogAnalyticsEvent.mock.calls[0][0]).toBe('pwa.network.offline');
@@ -400,7 +400,7 @@ describe('PWA Analytics', () => {
 
       // Trigger online
       mockTime = 5000;
-      addedEventListeners['online']();
+      addedEventListeners['online'](new Event('online'));
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalledTimes(2);
       expect(mockLogAnalyticsEvent.mock.calls[1][0]).toBe('pwa.network.online');
@@ -478,7 +478,7 @@ describe('PWA Analytics', () => {
 
       const originalAddEventListener = globalThis.addEventListener;
       let listenersAdded = 0;
-      globalThis.addEventListener = mock((event: string, callback: Function) => {
+      globalThis.addEventListener = mock((event: string, callback: EventListener) => {
         listenersAdded++;
         originalAddEventListener(event, callback);
       });
@@ -492,9 +492,9 @@ describe('PWA Analytics', () => {
     it('initializePWAAnalytics initializes all tracking if opted in', () => {
       globalThis.localStorage.getItem = mock(() => null);
 
-      let listenerEvents: string[] = [];
+      const listenerEvents: string[] = [];
       const originalAddEventListener = globalThis.addEventListener;
-      globalThis.addEventListener = mock((event: string, callback: Function) => {
+      globalThis.addEventListener = mock((event: string, callback: EventListener) => {
         listenerEvents.push(event);
         originalAddEventListener(event, callback);
       });
@@ -527,8 +527,8 @@ describe('PWA Analytics', () => {
       globalThis.Date.now = () => mockTime;
 
       // Ensure we start with 1 page viewed
-      let listenersEvents: Record<string, Function> = {};
-      globalThis.addEventListener = mock((event: string, callback: Function) => {
+      const listenersEvents: Record<string, EventListener> = {};
+      globalThis.addEventListener = mock((event: string, callback: EventListener) => {
         listenersEvents[event] = callback;
       });
 
@@ -551,7 +551,7 @@ describe('PWA Analytics', () => {
 
       // End session
       mockTime = 5000;
-      listenersEvents['beforeunload']();
+      listenersEvents['beforeunload'](new Event('beforeunload'));
 
       expect(mockLogAnalyticsEvent).toHaveBeenCalled();
       const sessionEndCall = mockLogAnalyticsEvent.mock.calls.find(call => call[0] === 'pwa.session.end');
