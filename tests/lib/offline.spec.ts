@@ -28,12 +28,12 @@ describe('offline utils', () => {
     const ls = {
       getItem: (k: string) => memoryStore[k] || null,
       setItem: (k: string, v: string) => {
-        if (simulateQuotaExceeded && simulateQuotaExceeded(k)) {
+        if (simulateQuotaExceeded?.(k)) {
           const error = new Error('QuotaExceededError');
           error.name = 'QuotaExceededError';
           throw error;
         }
-        if (simulateOtherError && simulateOtherError(k)) {
+        if (simulateOtherError?.(k)) {
           throw new Error('Some other error');
         }
         memoryStore[k] = v;
@@ -63,7 +63,7 @@ describe('offline utils', () => {
     // Reset crypto mocks
     Object.defineProperty(globalThis, 'crypto', {
       value: {
-        randomUUID: () => 'test-uuid-' + Math.random(),
+        randomUUID: () => 'test-uuid-' + Date.now() + "-" + Math.floor(1000 + Math.random() * 9000 /* NOSONAR */),
         getRandomValues: (arr: Uint32Array) => {
           arr[0] = 0; // consistent jitter
           return arr;
@@ -305,7 +305,7 @@ describe('offline utils', () => {
       // Mock console.error
       vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const req = vi.fn(() => Promise.reject('error'));
+      const req = vi.fn(() => Promise.reject(new Error('error')));
       const id = queueOfflineRequest(req);
 
       // Process 1: fails, increments retry, sets nextRetryTime
@@ -326,7 +326,7 @@ describe('offline utils', () => {
       let reqCalls = 0;
       const req = vi.fn(() => {
         reqCalls++;
-        return Promise.reject('error');
+        return Promise.reject(new Error('error'));
       });
 
       queueOfflineRequest(req);
@@ -357,7 +357,7 @@ describe('offline utils', () => {
       let reqCalls = 0;
       const req = vi.fn(() => {
         reqCalls++;
-        return Promise.reject('error');
+        return Promise.reject(new Error('error'));
       });
 
       const id = queueOfflineRequest(req);
