@@ -93,7 +93,7 @@
     "@ai-sdk/react": "^3.0.136",
     "@capacitor/android": "^6.2.1",
     "@capacitor/core": "^6.2.1",
-    "@capacitor/device": "^6.0.3",
+    "@capacitor/device": "^8.0.2",
     "@capacitor/ios": "^6.2.1",
     "@capacitor/push-notifications": "^6.0.5",
     "@hookform/resolvers": "^3.10.0",
