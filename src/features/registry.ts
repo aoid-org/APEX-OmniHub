@@ -285,7 +285,6 @@ export const FEATURE_REGISTRY: readonly FeatureDefinition[] = [
     order: 8,
   },
   {
-  {
     id: 'omnitrace',
     path: '/omnitrace',
     label: 'OmniTrace',

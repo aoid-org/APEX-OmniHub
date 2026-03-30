@@ -245,14 +245,14 @@
     "serialize-javascript": "^7.0.3",
     "rollup": "^4.59.0",
     "immutable": "^4.3.8",
-    "axios": "^1.7.4",
+    "axios": "^1.7.9",
     "cross-spawn": "^7.0.6",
-    "follow-redirects": "^1.15.6",
+    "follow-redirects": "^1.15.9",
     "micromatch": "^4.0.8",
     "braces": "^3.0.3",
-    "ws": "^8.17.1",
+    "ws": "^8.18.0",
     "cookie": "^0.7.0",
-    "semver": "^7.5.2",
+    "semver": "^7.7.1",
     "path-to-regexp": "^0.1.10"
   },
   "packageManager": "bun@1.2.14"
