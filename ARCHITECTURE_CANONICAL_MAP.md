@@ -263,7 +263,6 @@ These are source-verified bugs present in HEAD `fe4688a7`. Each has a prescribed
 |---|---|
 | `_shared` | Shared utilities |
 | `alchemy-webhook` | Blockchain webhook receiver |
-| `apex-assistant` | AI conversation handler |
 | `apex-voice` | Real-time voice processing |
 | `byom-cockpit` | BYOM dashboard backend |
 | `byom-proxy` | BYOM proxy handler |

@@ -42,9 +42,6 @@ verify_jwt = true
 [functions.byom-proxy]
 verify_jwt = true
 
-[functions.apex-assistant]
-verify_jwt = true
-
 [functions.apex-voice]
 verify_jwt = false
 

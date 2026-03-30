@@ -89,7 +89,6 @@ The platform implements a well-defined five-plane architecture:
 
 | Function | Purpose | Category |
 |---|---|---|
-| `apex-assistant` | AI conversation handler | AI/LLM |
 | `apex-voice` | Real-time voice processing | AI/Voice |
 | `omnilink-agent` | Agent orchestration | Orchestration |
 | `omnilink-port` | Universal connector | Integration |
@@ -296,7 +295,6 @@ The platform implements a well-defined five-plane architecture:
 | Protected Routes | Live | `ProtectedRoute.tsx` |
 | Web3 Sign-In (SIWE) | Live | `web3-verify/`, `web3-nonce/` edge functions |
 | NFT Membership Verification | Live | `verify-nft/` + `APEXMembershipNFT.sol` |
-| AI Assistant | Live | `apex-assistant/` edge function |
 | Voice Processing | Live | `apex-voice/`, `ops-voice-health/` edge functions |
 | BYOM (Bring Your Own Model) | Live | `byom-cockpit/`, `byom-proxy/` edge functions |
 | Workflow Orchestration (Temporal) | Live | Full Python orchestrator with saga patterns |

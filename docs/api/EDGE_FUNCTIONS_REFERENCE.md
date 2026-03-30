@@ -12,7 +12,6 @@
 | `omnilink-eval` | POST | Yes (service only) | Run evaluation suite |
 | `omnilink-port` | POST | Yes (anon) | Universal connector input normalization |
 | `trigger-workflow` | POST | Yes (service) | Dispatch Temporal workflow |
-| `apex-assistant` | POST | Yes (anon) | AI conversation handler |
 | `apex-voice` | POST | Yes (anon) | Real-time voice processing |
 | `web3-verify` | POST | No | SIWE wallet authentication |
 | `verify-nft` | POST | Yes (anon) | NFT ownership verification |

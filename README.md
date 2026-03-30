@@ -131,7 +131,6 @@ Client-side infrastructure for deterministic media delivery:
 
 | Function                 | Purpose                    |
 | ------------------------ | -------------------------- |
-| `apex-assistant`         | AI conversation handler    |
 | `apex-voice`             | Real-time voice processing |
 | `omnilink-agent`         | Agent orchestration        |
 | `omnilink-port`          | Universal connector        |

@@ -97,7 +97,7 @@
 - `lovable-audit` - Proxies audit events to Lovable API
 - `lovable-device` - Proxies device registry to Lovable API
 - `lovable-healthcheck` - Health check
-- `apex-assistant`, `apex-voice`, `execute-automation`, `storage-upload-url`, `supabase_healthcheck`, `test-integration`
+- `apex-voice`, `execute-automation`, `storage-upload-url`, `supabase_healthcheck`, `test-integration`
 
 **Missing Tables:**
 - ❌ `audit_logs` table (currently only in localStorage/IndexedDB)
