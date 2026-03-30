@@ -5,11 +5,11 @@
  *
  * Central routing middleware that scores incoming tasks, applies policy
  * rules, validates against model constraints, and produces deterministic
- * routing decisions. Sits between the UI layer (ApexAssistant) and the
+ * routing decisions. Sits between the UI layer (Agent Feature) and the
  * orchestration layer (Temporal workflows via Supabase Edge Functions).
  *
  * Integration:
- * - Receives task descriptions from ApexAssistant.sendQuery()
+ * - Receives task descriptions from the Agent UI layer (OmniLink Agent)
  * - Scores via TaskComplexityScorer (deterministic, no ML)
  * - Applies RoutePolicy overrides (priority-ordered rules)
  * - Validates via ModelRegistry (constraint checking)
