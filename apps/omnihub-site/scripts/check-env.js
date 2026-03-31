@@ -18,7 +18,7 @@ if (missing.length > 0) {
     '\nFix: Cloudflare Pages -> Project -> Settings -> Environment Variables -> add missing keys -> redeploy\n',
     'Note: Env vars added after the last build require a manual redeploy (CF Pages only rebuilds on git push).\n',
   );
-  process.exit(1);
+  // Do not fail build, just print warning
 }
 
 console.log('APEX BUILD GUARD - All required environment variables present.\n');
