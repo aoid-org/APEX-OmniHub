@@ -223,7 +223,7 @@ async function processNFTTransfersBatch(
       })
       .in('id', failedIds);
 
-    throw error; // Let the caller handle it
+    throw error;
   }
 }
 
@@ -280,7 +280,7 @@ Deno.serve(async (req) => {
     let payload: AlchemyWebhookPayload;
     try {
       payload = JSON.parse(rawBody);
-    } catch (_error) {
+    } catch {
       return new Response(
         JSON.stringify({ error: 'invalid_payload', message: 'Invalid JSON payload' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -312,8 +312,8 @@ Deno.serve(async (req) => {
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
 
-  } catch (_error) {
-    console.error('Unexpected error in alchemy-webhook function:', _error);
+  } catch (error) {
+    console.error('Unexpected error in alchemy-webhook function:', error);
     return new Response(
       JSON.stringify({
         success: false,
