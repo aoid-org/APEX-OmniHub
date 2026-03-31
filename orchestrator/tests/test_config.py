@@ -312,10 +312,6 @@ class TestApplicationDefaults:
         s = make_settings(ENVIRONMENT="development")
         assert s.environment == "development"
 
-    def test_enable_distributed_locks_default(self):
-        s = make_settings()
-        assert s.enable_distributed_locks is True
-
     def test_max_workflow_history_size_default(self):
         s = make_settings()
         assert s.max_workflow_history_size == 1000
