@@ -156,9 +156,6 @@ async def start_worker() -> None:
             send_email,
             call_webhook,
             evaluate_policy_activity,
-            # C2: Distributed locking removed - deprecated via config
-            # acquire_distributed_lock,
-            # release_distributed_lock,
             # MAN Mode activities
             risk_triage,
             create_man_task,
