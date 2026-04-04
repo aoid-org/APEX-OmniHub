@@ -88,11 +88,15 @@ const RISK_RANK: Record<ManModeRiskLevel, number> = {
   critical: 3,
 };
 
+/** Maximum number of resolved operations retained for audit trail. */
+const MAX_RESOLVED_HISTORY = 500;
+
 export class ManModeController {
   private readonly triggers: ManModeTrigger[] = [];
   private readonly suspended = new Map<string, SuspendedOperation>();
   private readonly pendingResolvers = new Map<string, {
     resolve: (decision: ManModeDecision) => void;
+    timer: ReturnType<typeof setTimeout>;
   }>();
   private alertDispatcher: AlertDispatcher | null = null;
   private readonly defaultTimeoutMs: number;
@@ -188,15 +192,15 @@ export class ManModeController {
 
     // Wait for human decision or timeout
     return new Promise<ManModeDecision>((resolve) => {
-      this.pendingResolvers.set(suspensionId, { resolve });
-
-      // Auto-timeout
-      setTimeout(() => {
+      // Auto-timeout timer — cleaned up on resolve to prevent resource leaks
+      const timer = setTimeout(() => {
         if (this.pendingResolvers.has(suspensionId)) {
           this.resolveInternal(suspensionId, 'timeout', 'system:timeout');
           resolve('timeout');
         }
       }, timeoutMs);
+
+      this.pendingResolvers.set(suspensionId, { resolve, timer });
     });
   }
 
@@ -256,14 +260,38 @@ export class ManModeController {
       decidedBy,
     });
 
-    // Resolve the pending promise
+    // Clear the timeout timer and resolve the pending promise
     const resolver = this.pendingResolvers.get(suspensionId);
     if (resolver) {
+      clearTimeout(resolver.timer);
       resolver.resolve(decision);
       this.pendingResolvers.delete(suspensionId);
     }
 
+    // Prune resolved operations to prevent unbounded memory growth
+    this.pruneResolved();
+
     return true;
+  }
+
+  /**
+   * Evict oldest resolved operations when history exceeds limit.
+   */
+  private pruneResolved(): void {
+    const resolved = Array.from(this.suspended.entries())
+      .filter(([, op]) => op.decision !== undefined);
+
+    if (resolved.length <= MAX_RESOLVED_HISTORY) return;
+
+    // Sort by decidedAt ascending — oldest first
+    resolved.sort((a, b) =>
+      (a[1].decidedAt ?? '').localeCompare(b[1].decidedAt ?? ''),
+    );
+
+    const toRemove = resolved.length - MAX_RESOLVED_HISTORY;
+    for (let i = 0; i < toRemove; i++) {
+      this.suspended.delete(resolved[i][0]);
+    }
   }
 }
 

@@ -73,10 +73,14 @@ export class SupabaseIdempotencyStore implements IdempotencyStore {
       expires_at: expiresAt,
     };
 
-    // Note: We use upsert to handle state transitions seamlessly
-    await this.supabase
+    // Upsert to handle state transitions and prevent duplicate-key errors
+    const { error } = await this.supabase
       .from('idempotency_receipts')
-      .insert(record); // Using insert here per initial requirements, test relies on it
+      .upsert(record, { onConflict: 'idempotency_key' });
+
+    if (error) {
+      throw new Error(`Idempotency upsert failed: ${error.message}`);
+    }
   }
 
   async delete(key: string): Promise<boolean> {

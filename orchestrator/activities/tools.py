@@ -84,7 +84,13 @@ async def _idempotency_guard(
             return json.loads(existing[0].get("result_payload", "{}"))
         # "pending" status: concurrent execution or failed attempt — fall through
     except DatabaseError as e:
-        activity.logger.warning("Failed to check idempotency ledger for %s: %s", tool_name, e)
+        # Log but allow retry — Temporal will retry the activity on transient DB failures
+        activity.logger.warning(
+            "Idempotency ledger check failed for %s (key=%s): %s — activity will proceed without guard",
+            tool_name,
+            idempotency_key,
+            e,
+        )
 
     try:
         await db.upsert(

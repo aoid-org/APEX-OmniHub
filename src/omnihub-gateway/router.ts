@@ -26,9 +26,22 @@ import type { SSEManager } from './SSEManager';
 // Request Schema
 // ============================================================================
 
+/** Allowed Lambda function names — prevents SSRF via arbitrary function invocation. */
+const ALLOWED_LAMBDA_FUNCTIONS = new Set([
+  'OmniHubWorkerLambda',
+  'OmniHubAnalyticsLambda',
+  'OmniHubNotificationLambda',
+]);
+
 export const TriggerLambdaRequestSchema = z.object({
   taskData: z.record(z.unknown()),
-  functionName: z.string().min(1).default('OmniHubWorkerLambda'),
+  functionName: z
+    .string()
+    .min(1)
+    .default('OmniHubWorkerLambda')
+    .refine((name) => ALLOWED_LAMBDA_FUNCTIONS.has(name), {
+      message: 'Function name not in allowlist',
+    }),
 });
 
 export type TriggerLambdaRequest = z.infer<typeof TriggerLambdaRequestSchema>;
