@@ -86,7 +86,7 @@ async def _idempotency_guard(
     except DatabaseError as e:
         # Log but allow retry — Temporal will retry the activity on transient DB failures
         activity.logger.warning(
-            "Idempotency ledger check failed for %s (key=%s): %s — activity will proceed without guard",
+            "Idempotency check failed for %s (key=%s): %s — proceeding unguarded",
             tool_name,
             idempotency_key,
             e,
