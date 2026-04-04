@@ -129,8 +129,12 @@ def validate_url_with_dns_pin(url: str) -> ValidatedURL:
     if not selected_ip:
         raise ValueError(f"No valid public IP addresses found for hostname {hostname}")
 
+    # Reconstruct URL with the validated hostname to strip any zone IDs or
+    # other fragments that passed through urlparse but could bypass downstream checks
+    normalized_url = urlparse(url).geturl()
+
     return ValidatedURL(
-        original_url=urlparse(url).geturl(),
+        original_url=normalized_url,
         resolved_ip=selected_ip,
         host_header=hostname,
     )

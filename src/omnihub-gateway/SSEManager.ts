@@ -100,8 +100,12 @@ export class SSEChannel {
       this.writeEvent(sseEvent);
     } else if (this.queue.length < MAX_QUEUE_SIZE) {
       this.queue.push(sseEvent);
+    } else {
+      // Backpressure: queue full — log the drop so operators can detect data loss
+      console.warn(
+        `[SSEChannel:${this.channelId}] Backpressure: dropped event "${event}" (queue full at ${MAX_QUEUE_SIZE})`,
+      );
     }
-    // Events beyond MAX_QUEUE_SIZE are silently dropped (backpressure)
   }
 
   /**
