@@ -1148,12 +1148,14 @@ async def test_send_email_production_edge_function_success():
                 mock_client.post = AsyncMock(return_value=mock_resp)
                 mock_client_cls.return_value = mock_client
 
-                result = await send_email({
-                    "to": "user@example.com",
-                    "subject": "Hello",
-                    "body": "World",
-                    "step_id": "s1",
-                })
+                result = await send_email(
+                    {
+                        "to": "user@example.com",
+                        "subject": "Hello",
+                        "body": "World",
+                        "step_id": "s1",
+                    }
+                )
 
     assert result["success"] is True
     assert result["message_id"] == "edge-msg-001"
@@ -1283,16 +1285,19 @@ async def test_send_email_dev_fallback_simulated():
         # Ensure production env vars are NOT set
         with patch.dict("os.environ", {}, clear=False):
             import os
+
             os.environ.pop("SUPABASE_EDGE_FUNCTION_URL", None)
             os.environ.pop("SUPABASE_ANON_KEY", None)
 
             with patch("activities.tools.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-                result = await send_email({
-                    "to": "dev@test.com",
-                    "subject": "Test",
-                    "body": "Dev mode",
-                    "step_id": "s1",
-                })
+                result = await send_email(
+                    {
+                        "to": "dev@test.com",
+                        "subject": "Test",
+                        "body": "Dev mode",
+                        "step_id": "s1",
+                    }
+                )
 
     assert result["success"] is True
     assert result["to"] == "dev@test.com"
@@ -1317,6 +1322,7 @@ async def test_send_email_dev_fallback_only_url_set():
             {"SUPABASE_EDGE_FUNCTION_URL": "https://project.supabase.co/functions/v1"},
         ):
             import os
+
             os.environ.pop("SUPABASE_ANON_KEY", None)
 
             with patch("activities.tools.asyncio.sleep", new_callable=AsyncMock):
@@ -1336,6 +1342,7 @@ async def test_send_email_dev_fallback_only_key_set():
     with patch("activities.tools.get_database_provider", return_value=db):
         with patch.dict("os.environ", {"SUPABASE_ANON_KEY": "key-only"}):
             import os
+
             os.environ.pop("SUPABASE_EDGE_FUNCTION_URL", None)
 
             with patch("activities.tools.asyncio.sleep", new_callable=AsyncMock):
