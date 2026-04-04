@@ -1113,3 +1113,345 @@ async def test_call_webhook_with_activity_info_success():
     assert result["success"] is True
     update_call = db.update.call_args
     assert "wf-real-789" in update_call.kwargs["filters"]["idempotency_key"]
+
+
+# ============================================================================
+# send_email — production Edge Function path + dev fallback
+# ============================================================================
+
+
+@pytest.mark.asyncio
+async def test_send_email_production_edge_function_success():
+    """send_email calls Supabase Edge Function when env vars are configured."""
+    db = AsyncMock()
+    db.select.return_value = []
+    db.upsert = AsyncMock()
+    db.update = AsyncMock()
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.raise_for_status = MagicMock()
+    mock_resp.json.return_value = {"message_id": "edge-msg-001"}
+
+    with patch("activities.tools.get_database_provider", return_value=db):
+        with patch.dict(
+            "os.environ",
+            {
+                "SUPABASE_EDGE_FUNCTION_URL": "https://project.supabase.co/functions/v1",
+                "SUPABASE_ANON_KEY": "test-anon-key",
+            },
+        ):
+            with patch("httpx.AsyncClient") as mock_client_cls:
+                mock_client = AsyncMock()
+                mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+                mock_client.__aexit__ = AsyncMock(return_value=False)
+                mock_client.post = AsyncMock(return_value=mock_resp)
+                mock_client_cls.return_value = mock_client
+
+                result = await send_email({
+                    "to": "user@example.com",
+                    "subject": "Hello",
+                    "body": "World",
+                    "step_id": "s1",
+                })
+
+    assert result["success"] is True
+    assert result["message_id"] == "edge-msg-001"
+    assert result["to"] == "user@example.com"
+    assert "simulated" not in result
+
+    # Verify the edge function was called with correct URL and headers
+    mock_client.post.assert_called_once()
+    call_args, call_kwargs = mock_client.post.call_args
+    # URL may be positional or keyword
+    actual_url = call_args[0] if call_args else call_kwargs.get("url", "")
+    assert actual_url == "https://project.supabase.co/functions/v1/send-email"
+    headers = call_kwargs.get("headers", {})
+    assert headers["Authorization"] == "Bearer test-anon-key"
+    json_body = call_kwargs.get("json", {})
+    assert json_body["to"] == "user@example.com"
+    assert json_body["subject"] == "Hello"
+    assert json_body["body"] == "World"
+
+
+@pytest.mark.asyncio
+async def test_send_email_production_edge_function_missing_message_id():
+    """send_email generates a UUID when edge function response lacks message_id."""
+    db = AsyncMock()
+    db.select.return_value = []
+    db.upsert = AsyncMock()
+    db.update = AsyncMock()
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.raise_for_status = MagicMock()
+    mock_resp.json.return_value = {}  # No message_id in response
+
+    with patch("activities.tools.get_database_provider", return_value=db):
+        with patch.dict(
+            "os.environ",
+            {
+                "SUPABASE_EDGE_FUNCTION_URL": "https://project.supabase.co/functions/v1",
+                "SUPABASE_ANON_KEY": "test-key",
+            },
+        ):
+            with patch("httpx.AsyncClient") as mock_client_cls:
+                mock_client = AsyncMock()
+                mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+                mock_client.__aexit__ = AsyncMock(return_value=False)
+                mock_client.post = AsyncMock(return_value=mock_resp)
+                mock_client_cls.return_value = mock_client
+
+                result = await send_email({"to": "a@b.com", "step_id": "s1"})
+
+    assert result["success"] is True
+    assert result["message_id"]  # UUID was generated
+    assert result["to"] == "a@b.com"
+
+
+@pytest.mark.asyncio
+async def test_send_email_production_edge_function_http_error():
+    """send_email raises when edge function returns an HTTP error."""
+    db = AsyncMock()
+    db.select.return_value = []
+    db.upsert = AsyncMock()
+    db.update = AsyncMock()
+
+    import httpx as real_httpx
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 500
+    mock_resp.raise_for_status.side_effect = real_httpx.HTTPStatusError(
+        "Server Error", request=MagicMock(), response=mock_resp
+    )
+
+    with patch("activities.tools.get_database_provider", return_value=db):
+        with patch.dict(
+            "os.environ",
+            {
+                "SUPABASE_EDGE_FUNCTION_URL": "https://project.supabase.co/functions/v1",
+                "SUPABASE_ANON_KEY": "test-key",
+            },
+        ):
+            with patch("httpx.AsyncClient") as mock_client_cls:
+                mock_client = AsyncMock()
+                mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+                mock_client.__aexit__ = AsyncMock(return_value=False)
+                mock_client.post = AsyncMock(return_value=mock_resp)
+                mock_client_cls.return_value = mock_client
+
+                with pytest.raises(real_httpx.HTTPStatusError):
+                    await send_email({"to": "a@b.com", "step_id": "s1"})
+
+
+@pytest.mark.asyncio
+async def test_send_email_production_edge_function_network_error():
+    """send_email raises when edge function call fails with network error."""
+    db = AsyncMock()
+    db.select.return_value = []
+    db.upsert = AsyncMock()
+    db.update = AsyncMock()
+
+    with patch("activities.tools.get_database_provider", return_value=db):
+        with patch.dict(
+            "os.environ",
+            {
+                "SUPABASE_EDGE_FUNCTION_URL": "https://project.supabase.co/functions/v1",
+                "SUPABASE_ANON_KEY": "test-key",
+            },
+        ):
+            with patch("httpx.AsyncClient") as mock_client_cls:
+                mock_client = AsyncMock()
+                mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+                mock_client.__aexit__ = AsyncMock(return_value=False)
+                mock_client.post = AsyncMock(side_effect=ConnectionError("Network down"))
+                mock_client_cls.return_value = mock_client
+
+                with pytest.raises(ConnectionError, match="Network down"):
+                    await send_email({"to": "a@b.com", "step_id": "s1"})
+
+
+@pytest.mark.asyncio
+async def test_send_email_dev_fallback_simulated():
+    """send_email uses simulated delivery when env vars are not set."""
+    db = AsyncMock()
+    db.select.return_value = []
+    db.upsert = AsyncMock()
+    db.update = AsyncMock()
+
+    with patch("activities.tools.get_database_provider", return_value=db):
+        # Ensure production env vars are NOT set
+        with patch.dict("os.environ", {}, clear=False):
+            import os
+            os.environ.pop("SUPABASE_EDGE_FUNCTION_URL", None)
+            os.environ.pop("SUPABASE_ANON_KEY", None)
+
+            with patch("activities.tools.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                result = await send_email({
+                    "to": "dev@test.com",
+                    "subject": "Test",
+                    "body": "Dev mode",
+                    "step_id": "s1",
+                })
+
+    assert result["success"] is True
+    assert result["to"] == "dev@test.com"
+    assert result["simulated"] is True
+    assert "message_id" in result
+    mock_sleep.assert_called_once_with(0.1)
+    # Ledger update should still be called
+    db.update.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_send_email_dev_fallback_only_url_set():
+    """send_email falls back to simulation if only URL is set but not anon key."""
+    db = AsyncMock()
+    db.select.return_value = []
+    db.upsert = AsyncMock()
+    db.update = AsyncMock()
+
+    with patch("activities.tools.get_database_provider", return_value=db):
+        with patch.dict(
+            "os.environ",
+            {"SUPABASE_EDGE_FUNCTION_URL": "https://project.supabase.co/functions/v1"},
+        ):
+            import os
+            os.environ.pop("SUPABASE_ANON_KEY", None)
+
+            with patch("activities.tools.asyncio.sleep", new_callable=AsyncMock):
+                result = await send_email({"to": "x@y.com", "step_id": "s1"})
+
+    assert result["simulated"] is True
+
+
+@pytest.mark.asyncio
+async def test_send_email_dev_fallback_only_key_set():
+    """send_email falls back to simulation if only anon key is set but not URL."""
+    db = AsyncMock()
+    db.select.return_value = []
+    db.upsert = AsyncMock()
+    db.update = AsyncMock()
+
+    with patch("activities.tools.get_database_provider", return_value=db):
+        with patch.dict("os.environ", {"SUPABASE_ANON_KEY": "key-only"}):
+            import os
+            os.environ.pop("SUPABASE_EDGE_FUNCTION_URL", None)
+
+            with patch("activities.tools.asyncio.sleep", new_callable=AsyncMock):
+                result = await send_email({"to": "x@y.com", "step_id": "s1"})
+
+    assert result["simulated"] is True
+
+
+@pytest.mark.asyncio
+async def test_send_email_production_records_to_ledger():
+    """send_email records completion in idempotency ledger after production send."""
+    db = AsyncMock()
+    db.select.return_value = []
+    db.upsert = AsyncMock()
+    db.update = AsyncMock()
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.raise_for_status = MagicMock()
+    mock_resp.json.return_value = {"message_id": "prod-msg-123"}
+
+    with patch("activities.tools.get_database_provider", return_value=db):
+        with patch.dict(
+            "os.environ",
+            {
+                "SUPABASE_EDGE_FUNCTION_URL": "https://project.supabase.co/functions/v1",
+                "SUPABASE_ANON_KEY": "test-key",
+            },
+        ):
+            with patch("httpx.AsyncClient") as mock_client_cls:
+                mock_client = AsyncMock()
+                mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+                mock_client.__aexit__ = AsyncMock(return_value=False)
+                mock_client.post = AsyncMock(return_value=mock_resp)
+                mock_client_cls.return_value = mock_client
+
+                result = await send_email({"to": "u@e.com", "step_id": "s1"})
+
+    assert result["success"] is True
+    # Verify ledger was updated with completed status
+    db.update.assert_called_once()
+    update_kwargs = db.update.call_args.kwargs
+    assert update_kwargs["table"] == "idempotency_ledger"
+    assert update_kwargs["updates"]["status"] == "completed"
+    payload = json.loads(update_kwargs["updates"]["result_payload"])
+    assert payload["message_id"] == "prod-msg-123"
+
+
+@pytest.mark.asyncio
+async def test_send_email_production_ledger_write_failure_swallowed():
+    """Ledger write failure after production send is swallowed (not raised)."""
+    db = AsyncMock()
+    db.select.return_value = []
+    db.upsert = AsyncMock()
+    db.update.side_effect = Exception("ledger write failed")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.raise_for_status = MagicMock()
+    mock_resp.json.return_value = {"message_id": "msg-ok"}
+
+    with patch("activities.tools.get_database_provider", return_value=db):
+        with patch.dict(
+            "os.environ",
+            {
+                "SUPABASE_EDGE_FUNCTION_URL": "https://project.supabase.co/functions/v1",
+                "SUPABASE_ANON_KEY": "test-key",
+            },
+        ):
+            with patch("httpx.AsyncClient") as mock_client_cls:
+                mock_client = AsyncMock()
+                mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+                mock_client.__aexit__ = AsyncMock(return_value=False)
+                mock_client.post = AsyncMock(return_value=mock_resp)
+                mock_client_cls.return_value = mock_client
+
+                # Should not raise despite ledger failure
+                result = await send_email({"to": "u@e.com", "step_id": "s1"})
+
+    assert result["success"] is True
+    assert result["message_id"] == "msg-ok"
+
+
+@pytest.mark.asyncio
+async def test_send_email_production_uses_default_subject_and_body():
+    """send_email uses default subject/body when not provided."""
+    db = AsyncMock()
+    db.select.return_value = []
+    db.upsert = AsyncMock()
+    db.update = AsyncMock()
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.raise_for_status = MagicMock()
+    mock_resp.json.return_value = {"message_id": "defaults-msg"}
+
+    with patch("activities.tools.get_database_provider", return_value=db):
+        with patch.dict(
+            "os.environ",
+            {
+                "SUPABASE_EDGE_FUNCTION_URL": "https://project.supabase.co/functions/v1",
+                "SUPABASE_ANON_KEY": "test-key",
+            },
+        ):
+            with patch("httpx.AsyncClient") as mock_client_cls:
+                mock_client = AsyncMock()
+                mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+                mock_client.__aexit__ = AsyncMock(return_value=False)
+                mock_client.post = AsyncMock(return_value=mock_resp)
+                mock_client_cls.return_value = mock_client
+
+                result = await send_email({"to": "u@e.com", "step_id": "s1"})
+
+    # Verify defaults were sent
+    _, call_kwargs = mock_client.post.call_args
+    json_body = call_kwargs.get("json", {})
+    assert json_body["subject"] == "Welcome!"
+    assert json_body["body"] == "Hello world"
+    assert result["success"] is True
