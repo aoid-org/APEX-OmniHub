@@ -33,8 +33,11 @@ from workflows.universal_saga import UniversalOrchestratorWorkflow
 
 logger = logging.getLogger(__name__)
 
-# Initialize rate limiter
-limiter = Limiter(key_func=get_remote_address)
+# Initialize rate limiter with default limits applied to all endpoints
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["60/minute"],
+)
 
 # FastAPI app for HTTP API
 app = FastAPI(title="APEX Orchestrator API", version="1.0.0")
@@ -63,7 +66,14 @@ app.add_middleware(
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "X-Omni-Timestamp",
+        "X-Omni-Trace-Id",
+        "X-Omni-Signature",
+        "X-Request-Id",
+    ],
 )
 
 
@@ -206,7 +216,7 @@ async def start_api_server() -> None:
     host = os.getenv("API_HOST", "0.0.0.0")
     port = int(os.getenv("API_PORT", "8000"))
     logger.info(f"API Server: http://{host}:{port}")
-    logger.info("Health check: http://{host}:{port}/health")
+    logger.info(f"Health check: http://{host}:{port}/health")
 
     # Run FastAPI with uvicorn
     config = Config(

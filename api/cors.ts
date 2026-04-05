@@ -43,7 +43,7 @@ const MAX_REDIRECTS = 3;
  * Returns an empty array when the variable is missing or blank, which causes
  * all requests to be denied (fail-closed).
  */
-function loadAllowlist(): string[] {
+export function loadAllowlist(): string[] {
   const raw = (process.env['CORS_PROXY_ALLOWLIST'] ?? '').trim();
   if (!raw) return [];
   return raw
@@ -52,7 +52,7 @@ function loadAllowlist(): string[] {
     .filter(Boolean);
 }
 
-function isAllowedHost(hostname: string, allowlist: string[]): boolean {
+export function isAllowedHost(hostname: string, allowlist: string[]): boolean {
   if (allowlist.length === 0) return false;
   const lower = hostname.toLowerCase();
   return allowlist.some((allowed) => lower === allowed || lower.endsWith(`.${allowed}`));
@@ -77,7 +77,7 @@ function isAllowedHost(hostname: string, allowlist: string[]): boolean {
  *   - IPv6 link-local:       fe80::/10
  *   - IPv6 ULA:              fc00::/7
  */
-function isPrivateOrReservedIp(hostname: string): boolean {
+export function isPrivateOrReservedIp(hostname: string): boolean {
   // Strip brackets from IPv6 literals, e.g. [::1] → ::1
   const h = hostname.startsWith('[') && hostname.endsWith(']')
     ? hostname.slice(1, -1)
@@ -125,7 +125,7 @@ type UrlValidation = {
   error: string;
 };
 
-function validateProxyUrl(raw: string, allowlist: string[]): UrlValidation {
+export function validateProxyUrl(raw: string, allowlist: string[]): UrlValidation {
   let parsed: URL;
   try {
     parsed = new URL(raw);
