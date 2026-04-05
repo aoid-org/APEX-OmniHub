@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Version:** 1.4.3 | **Release Date:** 2026-03-16
+**Version:** 1.5.1 | **Release Date:** 2026-04-04
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
@@ -45,7 +45,7 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-03-16)
+## Platform Statistics (Repository Snapshot 2026-04-04)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |

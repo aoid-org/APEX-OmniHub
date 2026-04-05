@@ -1,51 +1,11 @@
 /**
- * Alchemy Webhook Event Processor Edge Function
+ * Alchemy Webhook Event Processor Edge Function (Optimized)
  *
  * Purpose: Process blockchain events from Alchemy webhooks and update user state
- *
- * Endpoint: POST /alchemy-webhook
- *
- * Request Body: Alchemy webhook payload
- *   {
- *     "webhookId": "...",
- *     "id": "...",
- *     "createdAt": "...",
- *     "type": "NFT_ACTIVITY",
- *     "event": {
- *       "network": "MATIC_MAINNET",
- *       "activity": [{
- *         "fromAddress": "0x...",
- *         "toAddress": "0x...",
- *         "contractAddress": "0x...",
- *         "tokenId": "1",
- *         "category": "erc721",
- *         "log": {
- *           "transactionHash": "0x...",
- *           "logIndex": "0x..."
- *         }
- *       }]
- *     }
- *   }
- *
- * Response:
- *   { "success": true, "processed": number, "skipped": number }
- *
- * Security:
- *   - Verifies Alchemy webhook signature (X-Alchemy-Signature header)
- *   - Idempotent: uses (txHash + logIndex) as unique key
- *   - Uses service role for database access
- *   - Validates contract address matches MEMBERSHIP_NFT_ADDRESS
- *   - Fails closed on signature verification errors
- *
- * Environment Variables:
- *   - ALCHEMY_WEBHOOK_SIGNING_KEY
- *   - MEMBERSHIP_NFT_ADDRESS
- *
- * Author: OmniLink APEX
- * Date: 2026-01-01
+ * Optimized: Uses batching to minimize database roundtrips (prevents N+1)
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Buffer } from 'node:buffer';
 
@@ -58,7 +18,6 @@ async function verifyAlchemySignature(
   signingKey: string
 ): Promise<boolean> {
   try {
-    // Alchemy uses HMAC-SHA256
     const hmac = createHmac('sha256', signingKey);
     hmac.update(body);
     const expectedSignature = hmac.digest('hex');
@@ -105,129 +64,166 @@ interface AlchemyWebhookPayload {
 }
 
 /**
- * Process a single NFT transfer event
+ * Process a batch of NFT transfer events
  */
-async function processNFTTransfer(
-  supabase: ReturnType<typeof createClient>,
-  activity: AlchemyNFTActivity,
+async function processNFTTransfersBatch(
+  supabase: SupabaseClient,
+  activities: AlchemyNFTActivity[],
   membershipNFTAddress: string
-): Promise<{ success: boolean; reason?: string }> {
-  const { fromAddress, toAddress, contractAddress, tokenId, log } = activity;
+): Promise<{ processed: number; skipped: number }> {
+  // 1. Filter for our contract and generate IDs
+  const validActivities = activities.filter(
+    (a) => a.contractAddress.toLowerCase() === membershipNFTAddress.toLowerCase()
+  );
 
-  // Validate this is for our membership NFT contract
-  if (contractAddress.toLowerCase() !== membershipNFTAddress.toLowerCase()) {
-    return { success: false, reason: 'contract_mismatch' };
+  if (validActivities.length === 0) {
+    return { processed: 0, skipped: activities.length };
   }
 
-  // Create idempotency key (txHash + logIndex)
-  const eventId = `${log.transactionHash}-${log.logIndex}`;
+  const activityWithIds = validActivities.map((a) => ({
+    ...a,
+    eventId: `${a.log.transactionHash}-${a.log.logIndex}`,
+  }));
 
-  // Check if event already processed
-  const { data: existingEvent } = await supabase
+  // 2. Batch check for already processed events
+  const eventIds = activityWithIds.map((a) => a.eventId);
+  const { data: existingEvents } = await supabase
     .from('chain_tx_log')
-    .select('id, status')
-    .eq('id', eventId)
-    .maybeSingle();
+    .select('id')
+    .in('id', eventIds);
 
-  if (existingEvent) {
-    return { success: true, reason: 'already_processed' };
+  const existingIds = new Set((existingEvents || []).map((e) => e.id));
+  const newActivities = activityWithIds.filter((a) => !existingIds.has(a.eventId));
+
+  if (newActivities.length === 0) {
+    return { processed: 0, skipped: activities.length };
   }
 
-  // Record event as pending
-  await supabase
-    .from('chain_tx_log')
-    .upsert({
-      id: eventId,
-      tx_hash: log.transactionHash,
-      status: 'pending',
-      metadata: {
-        from: fromAddress,
-        to: toAddress,
-        contract: contractAddress,
-        token_id: tokenId,
-        log_index: log.logIndex,
-        block_number: log.blockNumber,
-      },
-    });
+  // 3. Record all new events as 'pending' in one batch
+  const pendingLogs = newActivities.map((a) => ({
+    id: a.eventId,
+    tx_hash: a.log.transactionHash,
+    status: 'pending',
+    metadata: {
+      from: a.fromAddress,
+      to: a.toAddress,
+      contract: a.contractAddress,
+      token_id: a.tokenId,
+      log_index: a.log.logIndex,
+      block_number: a.log.blockNumber,
+    },
+  }));
+
+  await supabase.from('chain_tx_log').upsert(pendingLogs);
 
   try {
     const zeroAddress = '0x0000000000000000000000000000000000000000';
-    const normalizedFrom = fromAddress.toLowerCase();
-    const normalizedTo = toAddress.toLowerCase();
+    const allAddresses = new Set<string>();
 
-    // Handle NFT transfer OUT (user lost NFT)
-    if (normalizedFrom !== zeroAddress) {
-      // Find users with this wallet
-      const { data: fromWallets } = await supabase
-        .from('wallet_identities')
-        .select('user_id')
-        .eq('wallet_address', normalizedFrom);
-
-      if (fromWallets && fromWallets.length > 0) {
-        const userIds = fromWallets.map(w => w.user_id);
-
-        // Set has_premium_nft to false
-        await supabase
-          .from('profiles')
-          .update({
-            has_premium_nft: false,
-            nft_verified_at: new Date().toISOString(),
-          })
-          .in('id', userIds);
-
-        for (const wallet of fromWallets) {
-          console.log(`Removed NFT access for user ${wallet.user_id} (transfer out)`);
-        }
+    newActivities.forEach((a) => {
+      if (a.fromAddress.toLowerCase() !== zeroAddress) {
+        allAddresses.add(a.fromAddress.toLowerCase());
       }
+      if (a.toAddress.toLowerCase() !== zeroAddress) {
+        allAddresses.add(a.toAddress.toLowerCase());
+      }
+    });
+
+    // 4. Batch lookup wallet identities
+    const { data: wallets } = await supabase
+      .from('wallet_identities')
+      .select('wallet_address, user_id')
+      .in('wallet_address', Array.from(allAddresses));
+
+    // Map address to list of users
+    const addressToUsers: Record<string, string[]> = {};
+    (wallets || []).forEach((w) => {
+      const addr = w.wallet_address.toLowerCase();
+      if (!addressToUsers[addr]) addressToUsers[addr] = [];
+      addressToUsers[addr].push(w.user_id);
+    });
+
+    // 5. Determine final state for each user in this batch
+    // We process activities in order to respect chronological sequence
+    const userFinalState = new Map<string, boolean>();
+
+    newActivities.forEach((a) => {
+      const fromAddr = a.fromAddress.toLowerCase();
+      const toAddr = a.toAddress.toLowerCase();
+
+      if (fromAddr !== zeroAddress && addressToUsers[fromAddr]) {
+        addressToUsers[fromAddr].forEach((userId) => {
+          userFinalState.set(userId, false);
+        });
+      }
+
+      if (toAddr !== zeroAddress && addressToUsers[toAddr]) {
+        addressToUsers[toAddr].forEach((userId) => {
+          userFinalState.set(userId, true);
+        });
+      }
+    });
+
+    // 6. Batch update profiles
+    const usersToRevoke = Array.from(userFinalState.entries())
+      .filter(([_, hasNft]) => !hasNft)
+      .map(([userId]) => userId);
+
+    const usersToGrant = Array.from(userFinalState.entries())
+      .filter(([_, hasNft]) => hasNft)
+      .map(([userId]) => userId);
+
+    const now = new Date().toISOString();
+
+    const updatePromises = [];
+
+    if (usersToRevoke.length > 0) {
+      updatePromises.push(
+        supabase
+          .from('profiles')
+          .update({ has_premium_nft: false, nft_verified_at: now })
+          .in('id', usersToRevoke)
+      );
     }
 
-    // Handle NFT transfer IN (user received NFT)
-    if (normalizedTo !== zeroAddress) {
-      // Find users with this wallet
-      const { data: toWallets } = await supabase
-        .from('wallet_identities')
-        .select('user_id')
-        .eq('wallet_address', normalizedTo);
-
-      if (toWallets && toWallets.length > 0) {
-        const userIds = toWallets.map(w => w.user_id);
-
-        // Set has_premium_nft to true
-        await supabase
+    if (usersToGrant.length > 0) {
+      updatePromises.push(
+        supabase
           .from('profiles')
-          .update({
-            has_premium_nft: true,
-            nft_verified_at: new Date().toISOString(),
-          })
-          .in('id', userIds);
-
-        for (const wallet of toWallets) {
-          console.log(`Granted NFT access to user ${wallet.user_id} (transfer in)`);
-        }
-      }
+          .update({ has_premium_nft: true, nft_verified_at: now })
+          .in('id', usersToGrant)
+      );
     }
 
-    // Mark event as confirmed
+    if (updatePromises.length > 0) {
+      await Promise.all(updatePromises);
+    }
+
+    // 7. Mark batch as confirmed
+    const processedIds = newActivities.map((a) => a.eventId);
     await supabase
       .from('chain_tx_log')
       .update({ status: 'confirmed' })
-      .eq('id', eventId);
+      .in('id', processedIds);
 
-    return { success: true };
-
+    return {
+      processed: newActivities.length,
+      skipped: activities.length - newActivities.length,
+    };
   } catch (error) {
-    console.error('Error processing NFT transfer:', error);
+    console.error('Error in batch processing:', error);
 
-    // Mark event as failed
+    // Mark failed events
+    const failedIds = newActivities.map((a) => a.eventId);
     await supabase
       .from('chain_tx_log')
       .update({
         status: 'failed',
         metadata: { error: error instanceof Error ? error.message : String(error) },
       })
-      .eq('id', eventId);
+      .in('id', failedIds);
 
-    return { success: false, reason: 'processing_error' };
+    throw error;
   }
 }
 
@@ -235,7 +231,6 @@ async function processNFTTransfer(
  * Main request handler
  */
 Deno.serve(async (req) => {
-  // Only allow POST requests
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({ error: 'method_not_allowed', message: 'Only POST requests are allowed' }),
@@ -252,41 +247,28 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get webhook signing key — fail-closed: reject all payloads when key is missing
     const signingKey = Deno.env.get('ALCHEMY_WEBHOOK_SIGNING_KEY');
-    if (!signingKey) {
-      console.error('CRITICAL: ALCHEMY_WEBHOOK_SIGNING_KEY not configured — rejecting payload (fail-closed)');
+    const membershipNFTAddress = Deno.env.get('MEMBERSHIP_NFT_ADDRESS');
+
+    if (!signingKey || !membershipNFTAddress) {
+      console.error('CRITICAL: Missing configuration (fail-closed)');
       return new Response(
         JSON.stringify({ error: 'configuration_error', message: 'Webhook verification unavailable' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Get membership NFT contract address — fail-closed: reject when missing
-    const membershipNFTAddress = Deno.env.get('MEMBERSHIP_NFT_ADDRESS');
-    if (!membershipNFTAddress) {
-      console.error('CRITICAL: MEMBERSHIP_NFT_ADDRESS not configured — rejecting payload (fail-closed)');
-      return new Response(
-        JSON.stringify({ error: 'configuration_error', message: 'NFT contract address not configured' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get signature from header
     const signature = req.headers.get('x-alchemy-signature');
     if (!signature) {
-      console.error('Missing X-Alchemy-Signature header');
       return new Response(
         JSON.stringify({ error: 'unauthorized', message: 'Missing signature header' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Get raw body for signature verification
     const rawBody = await req.text();
-
-    // Verify signature
     const isValidSignature = await verifyAlchemySignature(rawBody, signature, signingKey);
+
     if (!isValidSignature) {
       console.error('Invalid webhook signature');
       return new Response(
@@ -295,58 +277,36 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse webhook payload
     let payload: AlchemyWebhookPayload;
     try {
       payload = JSON.parse(rawBody);
-    } catch (error) {
-      console.error('Invalid JSON payload:', error);
+    } catch {
       return new Response(
         JSON.stringify({ error: 'invalid_payload', message: 'Invalid JSON payload' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Validate webhook type
     if (payload.type !== 'NFT_ACTIVITY') {
-      console.log(`Ignoring webhook type: ${payload.type}`);
       return new Response(
         JSON.stringify({ success: true, processed: 0, skipped: 1, reason: 'unsupported_type' }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Initialize Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Process each activity in the event
     const activities = payload.event.activity || [];
-    let processed = 0;
-    let skipped = 0;
+    const result = await processNFTTransfersBatch(supabase, activities, membershipNFTAddress);
 
-    for (const activity of activities) {
-      const result = await processNFTTransfer(supabase, activity, membershipNFTAddress);
-      if (result.success) {
-        if (result.reason === 'already_processed') {
-          skipped++;
-        } else {
-          processed++;
-        }
-      } else {
-        console.error(`Failed to process activity: ${result.reason}`);
-        skipped++;
-      }
-    }
-
-    // Return success response
     return new Response(
       JSON.stringify({
         success: true,
         webhook_id: payload.webhookId,
-        processed,
-        skipped,
+        processed: result.processed,
+        skipped: result.skipped,
         total: activities.length,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
@@ -354,7 +314,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Unexpected error in alchemy-webhook function:', error);
-    // Return 200 to prevent Alchemy retries for internal errors
     return new Response(
       JSON.stringify({
         success: false,
