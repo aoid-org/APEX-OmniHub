@@ -72,7 +72,6 @@ class Settings(BaseSettings):
     # Application Configuration
     log_level: str = Field(default="INFO", description="Logging level")
     environment: str = Field(default="development", description="Environment name")
-    enable_distributed_locks: bool = Field(default=True, description="Enable distributed locking")
     max_workflow_history_size: int = Field(
         default=1000, description="Max events before continue-as-new"
     )

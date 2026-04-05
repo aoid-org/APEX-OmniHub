@@ -6,6 +6,7 @@ type MockSupabase = {
   from: ReturnType<typeof vi.fn>;
   select: ReturnType<typeof vi.fn>;
   insert: ReturnType<typeof vi.fn>;
+  upsert: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
   delete: ReturnType<typeof vi.fn>;
   eq: ReturnType<typeof vi.fn>;
@@ -22,6 +23,7 @@ describe('SupabaseIdempotencyStore', () => {
       from: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
+      upsert: vi.fn().mockReturnThis(),
       update: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -79,7 +81,7 @@ describe('SupabaseIdempotencyStore', () => {
   });
 
   describe('set()', () => {
-    it('inserts a new receipt linking metadata and ttl correctly', async () => {
+    it('upserts a receipt linking metadata and ttl correctly', async () => {
       const entry: IdempotencyEntry = {
         key: 'test-key',
         namespace: 'test-ns',
@@ -91,18 +93,18 @@ describe('SupabaseIdempotencyStore', () => {
         eventType: 'test.event',
       };
 
-      mockSupabase.insert.mockResolvedValueOnce({ error: null });
+      mockSupabase.upsert.mockResolvedValueOnce({ error: null });
       await store.set('test-key', entry);
 
       expect(mockSupabase.from).toHaveBeenCalledWith('idempotency_receipts');
-      expect(mockSupabase.insert).toHaveBeenCalled();
-      // Inspect the object passed to insert
-      const insertArgs = mockSupabase.insert.mock.calls[0][0];
-      expect(insertArgs.idempotency_key).toBe('test-key');
-      expect(insertArgs.tenant_id).toBe('tenant-123');
-      expect(insertArgs.correlation_id).toBe('corr-123');
-      expect(insertArgs.event_type).toBe('test.event');
-      expect(insertArgs.request_payload.state).toBe('pending');
+      expect(mockSupabase.upsert).toHaveBeenCalled();
+      // Inspect the object passed to upsert
+      const upsertArgs = mockSupabase.upsert.mock.calls[0][0];
+      expect(upsertArgs.idempotency_key).toBe('test-key');
+      expect(upsertArgs.tenant_id).toBe('tenant-123');
+      expect(upsertArgs.correlation_id).toBe('corr-123');
+      expect(upsertArgs.event_type).toBe('test.event');
+      expect(upsertArgs.request_payload.state).toBe('pending');
     });
 
     it('falls back to default tenant/correlation id if missing in entry', async () => {
@@ -114,12 +116,12 @@ describe('SupabaseIdempotencyStore', () => {
         ttlMs: 3600000,
       };
 
-      mockSupabase.insert.mockResolvedValueOnce({ error: null });
+      mockSupabase.upsert.mockResolvedValueOnce({ error: null });
       await store.set('test-key', entry);
 
-      const insertArgs = mockSupabase.insert.mock.calls[0][0];
-      expect(insertArgs.tenant_id).toBe('system');
-      expect(insertArgs.correlation_id).toBeDefined();
+      const upsertArgs = mockSupabase.upsert.mock.calls[0][0];
+      expect(upsertArgs.tenant_id).toBe('system');
+      expect(upsertArgs.correlation_id).toBeDefined();
     });
   });
 
