@@ -16,6 +16,8 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
+import DOMPurify from 'dompurify';
+
 // ============================================================================
 // Configuration Types
 // ============================================================================
@@ -148,7 +150,7 @@ class OmniAppShellElement extends HTMLElement {
     } else if (config.htmlContent) {
       // Render raw HTML inside shadow DOM
       const wrapper = document.createElement('div');
-      wrapper.innerHTML = config.htmlContent;
+      wrapper.innerHTML = DOMPurify.sanitize(config.htmlContent);
       container.appendChild(wrapper);
     } else {
       // Placeholder

@@ -84,7 +84,13 @@ async def _idempotency_guard(
             return json.loads(existing[0].get("result_payload", "{}"))
         # "pending" status: concurrent execution or failed attempt — fall through
     except DatabaseError as e:
-        activity.logger.warning("Failed to check idempotency ledger for %s: %s", tool_name, e)
+        # Log but allow retry — Temporal will retry the activity on transient DB failures
+        activity.logger.warning(
+            "Idempotency check failed for %s (key=%s): %s — proceeding unguarded",
+            tool_name,
+            idempotency_key,
+            e,
+        )
 
     try:
         await db.upsert(
@@ -685,15 +691,50 @@ async def send_email(params: dict[str, Any]) -> dict[str, Any]:
 
     activity.logger.info(f"Sending email to: {to}")
 
-    # In production, call Supabase Edge Function or email service
-    # For now, simulate success
-    await asyncio.sleep(0.5)  # Simulate network latency
+    result: dict[str, Any]
 
-    result = {
-        "success": True,
-        "message_id": str(uuid4()),
-        "to": to,
-    }
+    # Production path: delegate to Supabase Edge Function for actual delivery
+    edge_function_url = os.getenv("SUPABASE_EDGE_FUNCTION_URL")
+    supabase_anon_key = os.getenv("SUPABASE_ANON_KEY", "")
+
+    if edge_function_url and supabase_anon_key:
+        import httpx
+
+        send_url = f"{edge_function_url}/send-email"
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    send_url,
+                    json={"to": to, "subject": _subject, "body": _body},
+                    headers={
+                        "Authorization": f"Bearer {supabase_anon_key}",
+                        "Content-Type": "application/json",
+                    },
+                    timeout=15.0,
+                )
+                response.raise_for_status()
+                resp_data = response.json()
+                result = {
+                    "success": True,
+                    "message_id": resp_data.get("message_id", str(uuid4())),
+                    "to": to,
+                }
+        except Exception as e:
+            activity.logger.error(f"Email send via edge function failed: {e}")
+            raise
+    else:
+        # Development/test fallback: simulate delivery
+        activity.logger.warning(
+            "Email provider not configured (SUPABASE_EDGE_FUNCTION_URL / SUPABASE_ANON_KEY). "
+            "Using simulated delivery. Set these env vars for production email."
+        )
+        await asyncio.sleep(0.1)
+        result = {
+            "success": True,
+            "message_id": str(uuid4()),
+            "to": to,
+            "simulated": True,
+        }
 
     # Record success
     try:
