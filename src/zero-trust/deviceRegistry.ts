@@ -129,13 +129,23 @@ async function fetchRemoteRegistry(userId: string): Promise<DeviceRecord[]> {
       throw new Error(`Failed to fetch device registry: ${error.message}`);
     }
 
-    return (data || []).map((d: Record<string, unknown>) => ({
-      deviceId: d.device_id as string,
-      userId: d.user_id as string,
-      lastSeen: d.last_seen_at as string,
-      deviceInfo: d.device_fingerprint ? JSON.parse(d.device_fingerprint as string) : {},
-      status: d.status as DeviceStatus,
-    }));
+    return (data || []).map((d: Record<string, unknown>) => {
+      let deviceInfo: Record<string, unknown> = {};
+      if (d.device_fingerprint) {
+        try {
+          deviceInfo = JSON.parse(d.device_fingerprint as string);
+        } catch {
+          console.warn('[deviceRegistry] Corrupt device_fingerprint, using empty object');
+        }
+      }
+      return {
+        deviceId: d.device_id as string,
+        userId: d.user_id as string,
+        lastSeen: d.last_seen_at as string,
+        deviceInfo,
+        status: d.status as DeviceStatus,
+      };
+    });
   } catch (error) {
     // Network errors are expected when backend is unavailable - use local cache (idempotent)
     if (error instanceof Error && error.message.includes('fetch')) {

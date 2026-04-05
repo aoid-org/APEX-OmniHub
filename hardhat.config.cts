@@ -4,7 +4,21 @@ import * as dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
 
-const PRIVATE_KEY = process.env.WEB3_PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000001";
+// Dummy key allows `hardhat compile` and local tests without real credentials.
+// Real network deploys MUST set WEB3_PRIVATE_KEY — guard-mainnet-deploy.mjs enforces this.
+const DUMMY_KEY = "0x0000000000000000000000000000000000000000000000000000000000000001";
+const PRIVATE_KEY = process.env.WEB3_PRIVATE_KEY || DUMMY_KEY;
+
+if (PRIVATE_KEY === DUMMY_KEY && process.argv.some(a => ["deploy", "run"].includes(a))) {
+  const network = process.argv.find((_, i, arr) => arr[i - 1] === "--network");
+  if (network && !["hardhat", "localhost"].includes(network)) {
+    throw new Error(
+      `WEB3_PRIVATE_KEY is required for network "${network}". ` +
+      "Set it in .env.local before deploying to live networks."
+    );
+  }
+}
+
 const ALCHEMY_API_KEY_ETH = process.env.ALCHEMY_API_KEY_ETH || "";
 const ALCHEMY_API_KEY_POLYGON = process.env.ALCHEMY_API_KEY_POLYGON || "";
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";

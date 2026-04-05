@@ -272,6 +272,11 @@ export function createJWTInterceptor(config?: Partial<JWTConfig>): GuardianInter
       const roles: readonly string[] = appMetadata.roles ?? [user.role ?? 'PUBLIC'];
       const trustTier = mapRolesToTrustTier(roles);
 
+      // Use the session expiry if available; fall back to 1h from now
+      const sessionExpiresAt = user.identities?.[0]?.updated_at
+        ? Math.floor(new Date(user.identities[0].updated_at).getTime() / 1000) + 3600
+        : Math.floor(Date.now() / 1000) + 3600;
+
       const identity: VerifiedIdentity = {
         userId: user.id,
         email: user.email ?? '',
@@ -280,7 +285,7 @@ export function createJWTInterceptor(config?: Partial<JWTConfig>): GuardianInter
         tenantId: appMetadata.tenant_id ?? context.tenantId,
         trustTier,
         provider: appMetadata.provider ?? 'email',
-        expiresAt: Math.floor(Date.now() / 1000) + 3600, // Default 1h from now
+        expiresAt: sessionExpiresAt,
       };
 
       // --- Step 5: Cache and enrich context ---
@@ -310,12 +315,12 @@ export function createJWTInterceptor(config?: Partial<JWTConfig>): GuardianInter
 
 /**
  * Hash a token for cache key purposes (not for security).
- * Uses SHA-256 truncated to 16 hex chars.
+ * Uses full SHA-256 (32 bytes / 64 hex chars) to avoid cache collisions.
  */
 async function hashToken(token: string): Promise<string> {
   const encoder = new TextEncoder();
   const buffer = await crypto.subtle.digest('SHA-256', encoder.encode(token));
-  return Array.from(new Uint8Array(buffer).slice(0, 8))
+  return Array.from(new Uint8Array(buffer))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 }
