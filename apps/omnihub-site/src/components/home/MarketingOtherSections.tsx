@@ -1,0 +1,18 @@
+import { siteConfig } from '@/content/site';
+import { capability, compliance, maestro } from '@/components/home/MarketingHomeData';
+
+export function CapabilitySection() {
+  return <section id="features" className="refresh-home__section refresh-home__section--surface"><div className="container"><div className="refresh-home__section-head refresh-home__section-head--center"><div className="refresh-home__eyebrow">Core Capabilities</div><h2 className="refresh-home__section-title">Everything you need to<br/><span>govern enterprise AI.</span></h2><p className="refresh-home__section-copy refresh-home__section-copy--center">One platform. No black boxes. No vendor lock-in. No surprises.</p></div><div className="refresh-home__capability-grid">{capability.map(([t,d,icon]) => <article key={t} className="refresh-home__capability-card"><div className="refresh-home__capability-icon">{icon}</div><h3 className="refresh-home__capability-title">{t}</h3><p className="refresh-home__capability-description">{d}</p></article>)}</div></div></section>;
+}
+
+export function MaestroSection() {
+  return <section className="refresh-home__maestro"><div className="container refresh-home__maestro-grid"><div><div className="refresh-home__eyebrow">Operating Principle</div><h2 className="refresh-home__section-title">The<br/><span>MAESTRO Principle.</span></h2><p className="refresh-home__section-copy">A memory-augmented, explainable, synchronized orchestration model designed to keep enterprise AI directable, reversible, and fully under operator control.</p></div><div className="refresh-home__maestro-list">{maestro.map(([l,w,d]) => <div key={l} className="refresh-home__maestro-row"><div className="refresh-home__maestro-letter">{l}</div><div><div className="refresh-home__maestro-word">{w}</div><div className="refresh-home__maestro-description">{d}</div></div></div>)}</div></div></section>;
+}
+
+export function ComplianceSection() {
+  return <section id="enterprise" className="refresh-home__section"><div className="container"><div className="refresh-home__section-head"><div className="refresh-home__eyebrow">Compliance Ready</div><h2 className="refresh-home__section-title">Built for<br/><span>regulated environments.</span></h2><p className="refresh-home__section-copy">Architected from day one for compliance and governance across finance, healthcare, legal, and government.</p></div><div className="refresh-home__compliance-grid">{compliance.map(([t,d,icon]) => <article key={t} className="refresh-home__compliance-card"><div className="refresh-home__compliance-icon">{icon}</div><h3 className="refresh-home__compliance-title">{t}</h3><p className="refresh-home__compliance-description">{d}</p></article>)}</div></div></section>;
+}
+
+export function CtaSection() {
+  return <section className="refresh-home__cta-shell"><div className="refresh-home__cta-bg" /><div className="refresh-home__cta-grid" /><div className="container refresh-home__cta-content"><div className="refresh-home__eyebrow refresh-home__eyebrow--center">Take Control</div><h2 className="refresh-home__cta-title">Take operational<br/>authority back.</h2><p className="refresh-home__cta-copy">Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production.</p><div className="refresh-home__hero-actions refresh-home__hero-actions--center"><a className="btn btn--primary btn--lg refresh-home__hero-button" href={siteConfig.ctas.primary.href}>Request Early Access</a><a className="btn btn--secondary btn--lg refresh-home__hero-button" href={siteConfig.ctas.secondary.href}>Schedule a Demo</a></div><p className="refresh-home__cta-note">No vendor lock-in. No black boxes. No surprises.</p></div></section>;
+}
