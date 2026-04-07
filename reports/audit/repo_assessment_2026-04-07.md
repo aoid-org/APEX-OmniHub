@@ -103,3 +103,16 @@
 - A literal full “line-by-line” manual audit of the entire repository is outside feasible single-turn execution due to repository size.
 - This report is a comprehensive **high-signal static + targeted runtime** assessment with explicit focus on Supabase and Cloudflare as requested.
 - If needed, a phase-2 deep audit can be split into module batches (`src/`, `supabase/functions/`, `supabase/migrations/`, `orchestrator/`, `terraform/`) with explicit defect ledger output per file.
+
+---
+
+## 8) 2026-04-07 validation update (post-fix)
+
+- Terraform CLI was installed in the execution environment (`terraform v1.8.5`).
+- `terraform validate` now passes for:
+  - `terraform/modules/cloudflare`
+  - `terraform/modules/upstash`
+  - `terraform/modules/vercel`
+  - `terraform/environments/staging`
+- Validation is currently successful with **deprecation warnings only** for `cloudflare_rate_limit` resources, which Cloudflare recommends migrating to `cloudflare_ruleset`.
+- Upstash/Vercel provider-schema drift that previously blocked staging validation has been remediated in-module.
