@@ -61,15 +61,16 @@ export const encodeAudioForAPI = (float32Array: Float32Array): string => {
   }
   
   const uint8Array = new Uint8Array(int16Array.buffer);
-  let binary = '';
+  const chunks: string[] = [];
   const chunkSize = 0x8000;
   
   for (let i = 0; i < uint8Array.length; i += chunkSize) {
     const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
-    binary += String.fromCharCode.apply(null, Array.from(chunk));
+    // @ts-expect-error - Uint8Array is compatible with apply's arg list in most environments
+    chunks.push(String.fromCharCode.apply(null, chunk));
   }
   
-  return btoa(binary);
+  return btoa(chunks.join(''));
 };
 
 const createWavFromPCM = (pcmData: Uint8Array) => {
