@@ -114,5 +114,5 @@
   - `terraform/modules/upstash`
   - `terraform/modules/vercel`
   - `terraform/environments/staging`
-- Validation is currently successful with **deprecation warnings only** for `cloudflare_rate_limit` resources, which Cloudflare recommends migrating to `cloudflare_ruleset`.
+- Rate limiting has now been migrated from deprecated `cloudflare_rate_limit` resources to `cloudflare_ruleset` (`http_ratelimit` phase), and validation is warning-free in staging.
 - Upstash/Vercel provider-schema drift that previously blocked staging validation has been remediated in-module.
