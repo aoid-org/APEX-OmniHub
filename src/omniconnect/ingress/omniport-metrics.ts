@@ -193,19 +193,42 @@ class MetricsCollector {
         ? latencies[Math.floor(latencies.length * 0.95)] || latencies.at(-1)
         : 0;
 
+    let accepted = 0;
+    let blocked = 0;
+    let buffered = 0;
+    let redLaneEvents = 0;
+    let manModeTriggered = 0;
+    let text = 0;
+    let voice = 0;
+    let webhook = 0;
+
+    for (let i = 0; i < windowEvents.length; i++) {
+      const e = windowEvents[i];
+      if (e.status === 'accepted') accepted++;
+      else if (e.status === 'blocked') blocked++;
+      else if (e.status === 'buffered') buffered++;
+
+      if (e.riskLane === 'RED') redLaneEvents++;
+      if (e.requiresManApproval) manModeTriggered++;
+
+      if (e.sourceType === 'text') text++;
+      else if (e.sourceType === 'voice') voice++;
+      else if (e.sourceType === 'webhook') webhook++;
+    }
+
     return {
       totalIngestions: windowEvents.length,
-      accepted: windowEvents.filter((e) => e.status === 'accepted').length,
-      blocked: windowEvents.filter((e) => e.status === 'blocked').length,
-      buffered: windowEvents.filter((e) => e.status === 'buffered').length,
-      redLaneEvents: windowEvents.filter((e) => e.riskLane === 'RED').length,
-      manModeTriggered: windowEvents.filter((e) => e.requiresManApproval).length,
+      accepted,
+      blocked,
+      buffered,
+      redLaneEvents,
+      manModeTriggered,
       avgLatencyMs: Math.round(avgLatencyMs * 100) / 100,
       p95LatencyMs,
       bySourceType: {
-        text: windowEvents.filter((e) => e.sourceType === 'text').length,
-        voice: windowEvents.filter((e) => e.sourceType === 'voice').length,
-        webhook: windowEvents.filter((e) => e.sourceType === 'webhook').length,
+        text,
+        voice,
+        webhook,
       },
       windowStart,
       windowEnd: now,
