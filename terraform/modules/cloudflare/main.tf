@@ -50,25 +50,9 @@ resource "cloudflare_ruleset" "waf" {
   }
 }
 
-# Rate Limiting
-resource "cloudflare_rate_limit" "api" {
-  zone_id   = var.zone_id
-  threshold = var.rate_limit_threshold
-  period    = 60
-  match {
-    request {
-      url_pattern = "${var.domain}/api/*"
-    }
-  }
-  action {
-    mode    = "challenge"
-    timeout = 86400
-  }
-}
-
-# Rate Limiting for Sensitive Endpoints
+# Rate Limiting Rules (Cloudflare Ruleset Engine)
 locals {
-  # One rate-limit rule per sensitive endpoint because url_pattern expects a single string.
+  # Keep endpoint list centralized so per-path rules are generated deterministically.
   sensitive_function_paths = toset([
     "/functions/v1/web3-verify",
     "/functions/v1/web3-nonce",
@@ -76,32 +60,46 @@ locals {
   ])
 }
 
-resource "cloudflare_rate_limit" "apex_sensitive_endpoints" {
-  for_each  = local.sensitive_function_paths
-  zone_id   = var.zone_id
-  threshold = 50
-  period    = 60
+resource "cloudflare_ruleset" "rate_limits" {
+  zone_id     = var.zone_id
+  name        = "OmniHub Rate Limits"
+  description = "Rate limiting rules for API and sensitive Edge Function endpoints"
+  kind        = "zone"
+  phase       = "http_ratelimit"
 
-  match {
-    request {
-      url_pattern = "${var.domain}${each.value}"
+  # General API rate limit.
+  rules {
+    action      = "managed_challenge"
+    expression  = "(http.host eq \"${var.domain}\" and starts_with(http.request.uri.path, \"/api/\"))"
+    description = "Challenge high-rate API traffic"
+    enabled     = true
+
+    ratelimit {
+      characteristics     = ["cf.colo.id", "ip.src"]
+      period              = 60
+      requests_per_period = var.rate_limit_threshold
+      mitigation_timeout  = 86400
     }
   }
 
-  action {
-    mode    = "ban"
-    timeout = 60
-    response {
-      content_type = "application/json"
-      body = jsonencode({
-        error       = "Rate limit exceeded"
-        message     = "Too many requests to sensitive endpoint"
-        retry_after = 60
-      })
+  # Sensitive endpoint limits are stricter and generated per endpoint path.
+  dynamic "rules" {
+    for_each = local.sensitive_function_paths
+    content {
+      action      = "block"
+      expression  = "(http.host eq \"${var.domain}\" and http.request.uri.path eq \"${rules.value}\")"
+      description = "Block burst traffic on sensitive endpoint: ${rules.value}"
+      enabled     = true
+
+      ratelimit {
+        characteristics     = ["cf.colo.id", "ip.src"]
+        period              = 60
+        requests_per_period = 50
+        mitigation_timeout  = 60
+      }
     }
   }
 
-  description = "Rate limiting for sensitive Supabase Edge Function endpoints: ${each.value}"
 }
 
 # Page Rules
