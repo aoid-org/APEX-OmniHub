@@ -119,7 +119,7 @@ jobs:
       # Turborepo Caching
       # ─────────────────────────────────────────────────────────────
       - name: Cache Turborepo
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ github.sha }}
@@ -254,7 +254,7 @@ jobs:
         run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
 
       - name: Cache Playwright browsers
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -360,7 +360,7 @@ jobs:
         run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
 
       - name: Cache Playwright browsers
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         id: playwright-cache-preview
         with:
           path: ~/.cache/ms-playwright
