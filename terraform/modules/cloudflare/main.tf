@@ -70,6 +70,7 @@ resource "cloudflare_ruleset" "rate_limits" {
   # General API rate limit.
   rules {
     action      = "managed_challenge"
+    # Contract: only match same-host API prefix traffic.
     expression  = "(http.host eq \"${var.domain}\" and starts_with(http.request.uri.path, \"/api/\"))"
     description = "Challenge high-rate API traffic"
     enabled     = true
@@ -87,6 +88,7 @@ resource "cloudflare_ruleset" "rate_limits" {
     for_each = local.sensitive_function_paths
     content {
       action      = "block"
+      # Contract: only match exact sensitive path on configured host (no wildcard drift).
       expression  = "(http.host eq \"${var.domain}\" and http.request.uri.path eq \"${rules.value}\")"
       description = "Block burst traffic on sensitive endpoint: ${rules.value}"
       enabled     = true
