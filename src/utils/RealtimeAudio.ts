@@ -67,7 +67,7 @@ export const encodeAudioForAPI = (float32Array: Float32Array): string => {
   for (let i = 0; i < uint8Array.length; i += chunkSize) {
     const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
     // @ts-expect-error - Uint8Array is compatible with apply's arg list in most environments
-    chunks.push(String.fromCharCode.apply(null, chunk));
+    chunks.push(String.fromCharCode.apply(null, chunk as unknown as number[]));
   }
   
   return btoa(chunks.join(''));
