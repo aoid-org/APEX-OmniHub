@@ -38,14 +38,14 @@ resource "cloudflare_ruleset" "waf" {
   phase       = "http_request_firewall_managed"
 
   rules {
-    action = "block"
-    expression = "(cf.threat_score > 14)"
+    action      = "block"
+    expression  = "(cf.threat_score > 14)"
     description = "Block high threat score"
   }
 
   rules {
-    action = "challenge"
-    expression = "(cf.threat_score > 5)"
+    action      = "challenge"
+    expression  = "(cf.threat_score > 5)"
     description = "Challenge medium threat score"
   }
 }
@@ -67,32 +67,41 @@ resource "cloudflare_rate_limit" "api" {
 }
 
 # Rate Limiting for Sensitive Endpoints
+locals {
+  # One rate-limit rule per sensitive endpoint because url_pattern expects a single string.
+  sensitive_function_paths = toset([
+    "/functions/v1/web3-verify",
+    "/functions/v1/web3-nonce",
+    "/functions/v1/apex-voice",
+  ])
+}
+
 resource "cloudflare_rate_limit" "apex_sensitive_endpoints" {
+  for_each  = local.sensitive_function_paths
   zone_id   = var.zone_id
   threshold = 50
   period    = 60
+
   match {
     request {
-      url_pattern = [
-        "${var.domain}/functions/v1/web3-verify",
-        "${var.domain}/functions/v1/web3-nonce",
-        "${var.domain}/functions/v1/apex-voice"
-      ]
+      url_pattern = "${var.domain}${each.value}"
     }
   }
+
   action {
-    mode = "block"
+    mode    = "ban"
+    timeout = 60
     response {
-      status_code = 429
       content_type = "application/json"
       body = jsonencode({
-        error = "Rate limit exceeded"
-        message = "Too many requests to sensitive endpoint"
+        error       = "Rate limit exceeded"
+        message     = "Too many requests to sensitive endpoint"
         retry_after = 60
       })
     }
   }
-  description = "Rate limiting for sensitive Supabase Edge Function endpoints"
+
+  description = "Rate limiting for sensitive Supabase Edge Function endpoints: ${each.value}"
 }
 
 # Page Rules
@@ -102,9 +111,9 @@ resource "cloudflare_page_rule" "cache_static" {
   priority = 1
 
   actions {
-    cache_level         = "cache_everything"
-    edge_cache_ttl      = 7200
-    browser_cache_ttl   = 14400
+    cache_level       = "cache_everything"
+    edge_cache_ttl    = 7200
+    browser_cache_ttl = 14400
   }
 }
 
