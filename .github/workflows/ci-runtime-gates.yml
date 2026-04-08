@@ -103,7 +103,15 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run Terraform expression drift tests
+        id: terraform_drift_tests
+        continue-on-error: true
         run: npm run test:infra
+
+      - name: Annotate Terraform expression drift failure
+        if: steps.terraform_drift_tests.outcome == 'failure'
+        run: |
+          echo "::error title=Terraform Expression Drift Gate::Infrastructure expression drift detected. Run 'npm run test:infra' locally and update terraform/modules/cloudflare/main.tf or tests/infrastructure/cloudflare-ratelimit-ruleset.test.ts."
+          exit 1
 
   build-and-test:
     needs: [architectural-boundary-enforcement, terraform-expression-drift-gate]
