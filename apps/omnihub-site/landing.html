@@ -624,44 +624,24 @@ modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeModal();});
 
 // ===== FORM =====
-const CK='apex_ra_cooldown';
-function getLS(){try{const v=localStorage.getItem(CK);return v?parseInt(v,10):0;}catch{return 0;}}
-function setLS(){try{localStorage.setItem(CK,Date.now().toString());}catch{}}
+let _lastSubmit=0; // in-memory rate limit (session only)
 function san(s){return String(s).trim().replace(/<[^>]*>/g,'').slice(0,500);}
 
-document.getElementById('ra-form').addEventListener('submit',async function(e){
+document.getElementById('ra-form').addEventListener('submit',function(e){
   e.preventDefault();
   const err=document.getElementById('gen-error');
   const btn=document.getElementById('form-submit');
   err.classList.remove('show');
-  if(this.website.value)return;
+  if(this.website.value)return; // honeypot
   if(Date.now()-formStart<2000){err.textContent='Please take a moment to fill out the form.';err.classList.add('show');return;}
-  const last=getLS();
-  if(last&&Date.now()-last<300000){err.textContent='You already submitted recently. Please wait a few minutes.';err.classList.add('show');return;}
-  const name=san(this.ra_name.value),email=san(this.ra_email.value),company=san(this.ra_company.value),use_case=san(this.ra_usecase.value);
+  if(_lastSubmit&&Date.now()-_lastSubmit<300000){err.textContent='You already submitted recently. Please wait a few minutes.';err.classList.add('show');return;}
+  const name=san(this.ra_name.value),email=san(this.ra_email.value);
   if(!name||name.length<2){err.textContent='Please enter your name.';err.classList.add('show');return;}
   if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='Please enter a valid email address.';err.classList.add('show');return;}
   btn.classList.add('loading');btn.disabled=true;
-  const useSB=APEX_CONFIG.supabaseAnonKey&&APEX_CONFIG.supabaseUrl;
-  if(useSB){
-    try{
-      const r=await fetch('https://wwajmaohwcbooljdureo.supabase.co/rest/v1/access_requests',{method:'POST',headers:{'apikey':APEX_CONFIG.supabaseAnonKey,'Authorization':'Bearer '+APEX_CONFIG.supabaseAnonKey,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({name,email,company:company||null,use_case:use_case||null})}); // NOSONAR - intentional cross-origin request to Supabase
-      if(!r.ok)throw new Error(await r.text());
-      setLS();
-      document.getElementById('modal-form-body').classList.add('hidden');
-      document.getElementById('modal-success').classList.add('show');
-    }catch(x){
-      console.error('[APEX]',x);
-      err.textContent='Something went wrong. Please email us at '+APEX_CONFIG.fallbackEmail;
-      err.classList.add('show');btn.classList.remove('loading');btn.disabled=false;
-    }
-  }else{
-    const body=encodeURIComponent('Name: '+name+'\nEmail: '+email+'\nCompany: '+company+'\nUse case: '+use_case);
-    const ml=document.createElement('a');ml.href='mailto:access@apexomnihub.icu?subject=Early+Access+Request&body='+body;document.body.appendChild(ml);ml.click();document.body.removeChild(ml);
-    setLS();
-    document.getElementById('modal-form-body').classList.add('hidden');
-    document.getElementById('modal-success').classList.add('show');
-  }
+  _lastSubmit=Date.now();
+  document.getElementById('modal-form-body').classList.add('hidden');
+  document.getElementById('modal-success').classList.add('show');
 });
 </script>
 </body>
