@@ -482,8 +482,10 @@ export interface LambdaDispatchResult {
 export async function dispatchToLambdaActivity(
   payload: LambdaDispatchPayload,
   lambdaClient?: InstanceType<typeof LambdaClient>,
+  taskTokenOverride?: Uint8Array,
 ): Promise<never> {
-  const taskToken = Context.current().info.taskToken;
+  // Accept explicit task token override for deterministic unit tests and harnesses.
+  const taskToken = taskTokenOverride ?? Context.current().info.taskToken;
   const taskTokenB64 = Buffer.from(taskToken).toString('base64');
 
   const client = lambdaClient ?? new LambdaClient({});

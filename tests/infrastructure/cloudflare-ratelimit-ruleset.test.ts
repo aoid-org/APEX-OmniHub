@@ -7,11 +7,11 @@ describe('cloudflare ruleset ratelimit expressions', () => {
   const tf = readFileSync(tfPath, 'utf8');
 
   it('pins API rule expression to host + /api prefix', () => {
-    expect(tf).toContain('expression  = "(http.host eq \\\"${var.domain}\\\" and starts_with(http.request.uri.path, \\\"/api/\\\"))"');
+    expect(tf).toContain('expression  = "(http.host eq \\"${var.domain}\\" and starts_with(http.request.uri.path, \\"/api/\\"))"');
   });
 
   it('pins sensitive rule expression to host + exact path', () => {
-    expect(tf).toContain('expression  = "(http.host eq \\\"${var.domain}\\\" and http.request.uri.path eq \\\"${rules.value}\\\")"');
+    expect(tf).toContain('expression  = "(http.host eq \\"${var.domain}\\" and http.request.uri.path eq \\"${rules.value}\\")"');
   });
 
   it('keeps sensitive endpoint list explicit and complete', () => {
