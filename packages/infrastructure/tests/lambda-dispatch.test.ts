@@ -136,4 +136,5 @@ describe('dispatchToLambdaActivity', () => {
     // Lambda must have been invoked before the throw
     expect(mockSend).toHaveBeenCalledOnce();
   });
+
 });
