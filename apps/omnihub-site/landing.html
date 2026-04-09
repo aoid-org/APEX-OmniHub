@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX OmniHub | Intelligence, Designed.</title>
+<meta name="description" content="The Universal Sync Orchestrator. Every AI agent, enterprise platform, and workflow unified under one governed command surface. Authorized. Logged. Reversible.">
+<meta property="og:title" content="APEX OmniHub | The Universal Sync Orchestrator">
+<meta property="og:description" content="The Anti-OS for enterprise AI. One governed command surface. Every action authorized, logged, and reversible.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://apexomnihub.icu/">
+<meta property="og:image" content="https://apexomnihub.icu/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="/apex-badge.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0B1F2E;--bg1:#0F2538;--bg2:#0E2236;
+  --line:rgba(255,255,255,0.07);--teal:rgba(100,180,220,0.08);
+  --copper:#D4855A;--gold:#E8A247;--gold2:#F5C06A;
+  --ember:#C4511A;--ember2:#D46025;
+  --t1:rgba(255,255,255,0.93);--t2:rgba(255,255,255,0.52);
+  --t3:rgba(255,255,255,0.26);--t4:rgba(255,255,255,0.09);
+  --font:'Space Grotesk',sans-serif;--ease:cubic-bezier(0.16,1,0.3,1);--max:1260px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(var(--teal) 1px,transparent 1px),linear-gradient(90deg,var(--teal) 1px,transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(ellipse 100% 80% at 50% 20%,black 10%,transparent 75%);opacity:.7;}
+.hov-section{position:relative;overflow:hidden}
+.hov-section::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(212,133,90,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(212,133,90,0.035) 1px,transparent 1px);
+  background-size:48px 48px;opacity:0;transition:opacity .6s ease;}
+.hov-section:hover::after{opacity:1}
+.hov-section > *{position:relative;z-index:1}
+/* Pill buttons */
+.pill{display:inline-flex;align-items:center;gap:8px;background:var(--ember);color:#fff;border:none;border-radius:10px;padding:13px 28px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:all .22s var(--ease);letter-spacing:-.15px;text-decoration:none;white-space:nowrap;}
+.pill:hover{background:var(--ember2);transform:translateY(-2px);box-shadow:0 10px 28px rgba(196,81,26,.38)}
+.pill:active{transform:translateY(0);box-shadow:none}
+.pill-sm{padding:7px 16px;font-size:12px;font-weight:700}
+.pill-lg{padding:16px 40px;font-size:16px}
+.pill-ghost{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.18);color:var(--t1);}
+.pill-ghost:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.3);box-shadow:none;transform:translateY(-1px)}
+.pill-dark{background:rgba(255,255,255,0.06);color:var(--t2);border:1px solid var(--line)}
+.pill-dark:hover{background:rgba(255,255,255,.1);color:var(--t1);box-shadow:none;transform:none}
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;padding:0 5%;display:flex;align-items:center;justify-content:space-between;background:rgba(11,31,46,0.8);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-bottom:1px solid var(--line);transition:background .3s;}
+nav.scrolled{background:rgba(11,31,46,0.97)}
+.nav-logo{display:flex;align-items:center;text-decoration:none}
+.nav-wordmark{height:28px;width:auto;display:block;mix-blend-mode:screen;filter:brightness(1.15) contrast(1.1)}
+.nav-links{display:flex;gap:30px;list-style:none}
+.nav-links a{text-decoration:none;color:var(--t2);font-size:14px;font-weight:500;letter-spacing:-.1px;transition:color .2s}
+.nav-links a:hover{color:var(--t1)}
+.nav-right{display:flex;gap:10px;align-items:center}
+.nav-signin{background:transparent;border:none;color:var(--t2);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;padding:8px 14px;transition:color .2s;text-decoration:none}
+.nav-signin:hover{color:var(--t1)}
+/* Hero */
+.hero{position:relative;z-index:1;min-height:100vh;padding:110px 5% 80px;display:flex;align-items:center;overflow:hidden;}
+.hero-glow-l{position:absolute;top:-5%;left:-15%;width:65%;height:85%;background:radial-gradient(ellipse,rgba(196,81,26,0.07) 0%,transparent 62%);pointer-events:none}
+.hero-glow-r{position:absolute;top:5%;right:-12%;width:60%;height:75%;background:radial-gradient(ellipse,rgba(32,130,180,0.07) 0%,transparent 62%);pointer-events:none}
+.hero-inner{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1.1fr;gap:60px;align-items:center;max-width:var(--max);margin:0 auto;width:100%;}
+.hero-left{text-align:center;display:flex;flex-direction:column;align-items:center}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(212,133,90,.28);background:rgba(212,133,90,.06);padding:5px 14px 5px 9px;border-radius:999px;margin-bottom:26px;}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:var(--copper);animation:dot-pulse 2.4s ease-in-out infinite}
+@keyframes dot-pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(212,133,90,.5)}50%{opacity:.65;box-shadow:0 0 0 6px rgba(212,133,90,0)}}
+.hero-eyebrow-txt{font-size:11px;font-weight:700;color:var(--copper);letter-spacing:2px;text-transform:uppercase}
+.hero-h1{font-size:clamp(52px,5.8vw,82px);font-weight:700;letter-spacing:-3.5px;line-height:.98;margin-bottom:22px;background:linear-gradient(150deg,#fff 0%,#fff 38%,var(--copper) 60%,var(--gold) 78%,var(--gold2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:17px;line-height:1.65;color:var(--t2);margin-bottom:12px;max-width:500px;font-weight:400;letter-spacing:-.15px;text-indent:2em;text-align:justify}
+.hero-power{font-size:16px;font-weight:600;color:var(--t1);margin-bottom:34px;letter-spacing:-.3px}
+.hero-power strong{color:var(--copper)}
+.hero-ctas{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:28px;flex-wrap:wrap}
+.hero-trust{font-size:11px;color:var(--t3);letter-spacing:.4px;line-height:1.9}
+.hero-trust span{margin:0 6px;color:rgba(212,133,90,.4)}
+.hero-right{display:flex;align-items:center;justify-content:center}
+.hero-art-wrap{width:100%;max-width:560px;display:flex;align-items:center;justify-content:center}
+.hero-art-svg{width:100%;height:auto;display:block}
+/* Ticker */
+.ticker{position:relative;z-index:1;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.018);padding:13px 0;overflow:hidden}
+.ticker-track{display:flex;width:max-content;animation:ticker 38s linear infinite}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ticker-item{display:flex;align-items:center;padding:0 28px;white-space:nowrap;font-size:12.5px;font-weight:500;color:var(--t3);letter-spacing:.2px}
+.ticker-dot{color:rgba(212,133,90,.5);margin-left:28px}
+/* Sections */
+.sec{position:relative;z-index:1;padding:110px 5%}
+.sec-in{max-width:var(--max);margin:0 auto}
+.divider{border:none;border-top:1px solid var(--line);position:relative;z-index:1}
+.tag{display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:700;color:var(--copper);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:14px}
+.h2{font-size:clamp(34px,4vw,56px);font-weight:700;letter-spacing:-2.5px;line-height:1.05;margin-bottom:18px;color:var(--t1)}
+.h2 .g{background:linear-gradient(100deg,var(--copper),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sub{font-size:16px;color:var(--t2);line-height:1.68;max-width:500px;letter-spacing:-.1px;text-align:justify;text-indent:2em}
+/* Split layout */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.split.rev{direction:rtl}.split.rev > *{direction:ltr}
+.feat-list{margin-top:28px;display:flex;flex-direction:column}
+.feat-item{display:flex;align-items:flex-start;gap:15px;padding:16px 0;border-bottom:1px solid var(--line)}
+.feat-item:first-child{border-top:1px solid var(--line)}
+.feat-ico{width:38px;height:38px;border-radius:9px;flex-shrink:0;background:rgba(212,133,90,.07);border:1px solid rgba(212,133,90,.16);display:flex;align-items:center;justify-content:center;}
+.feat-ico svg{width:18px;height:18px}
+.feat-ttl{font-size:13.5px;font-weight:600;color:var(--t1);margin-bottom:4px;letter-spacing:-.2px}
+.feat-dsc{font-size:12.5px;color:var(--t2);line-height:1.58;letter-spacing:-.1px}
+/* Visual panels */
+.vpanel{background:#091826;border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;position:relative;}
+.vpanel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(212,133,90,.055),transparent 58%)}
+.vpanel-in{padding:28px;position:relative;z-index:1}
+.vp-tag{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--copper);margin-bottom:14px;display:block}
+/* Audit log */
+.alog{display:flex;flex-direction:column}
+.arow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.arow:last-child{border-bottom:none}
+.at{color:var(--t3);font-size:9.5px;width:64px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.adot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.adot.ok{background:#4ade80;box-shadow:0 0 5px rgba(74,222,128,.5)}
+.adot.warn{background:var(--gold);box-shadow:0 0 5px rgba(232,162,71,.4)}
+.adot.info{background:#60a5fa;box-shadow:0 0 5px rgba(96,165,250,.4)}
+.atxt{color:var(--t1);flex:1;font-size:11px}
+.apill{font-size:8px;font-weight:700;padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0}
+.p-auth{background:rgba(74,222,128,.09);color:#4ade80;border:1px solid rgba(74,222,128,.22)}
+.p-log{background:rgba(96,165,250,.09);color:#60a5fa;border:1px solid rgba(96,165,250,.22)}
+.p-block{background:rgba(251,113,133,.09);color:#fb7185;border:1px solid rgba(251,113,133,.22)}
+/* Policy toggles */
+.prules{display:flex;flex-direction:column;gap:8px}
+.prule{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.prule-l{display:flex;align-items:center;gap:10px}
+.prule-ico{width:30px;height:30px;border-radius:7px;background:rgba(212,133,90,.07);border:1px solid rgba(212,133,90,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.prule-ico svg{width:14px;height:14px}
+.prule-n{font-size:11.5px;font-weight:600;color:var(--t1);letter-spacing:-.2px}
+.prule-d{font-size:10px;color:var(--t3);margin-top:2px}
+.toggle{width:32px;height:18px;border-radius:999px;background:var(--ember);position:relative;flex-shrink:0;cursor:pointer;transition:background .2s}
+.toggle::after{content:'';position:absolute;top:2.5px;right:2.5px;width:13px;height:13px;border-radius:50%;background:#fff;transition:left .2s,right .2s}
+.toggle.off{background:rgba(255,255,255,.1)}
+.toggle.off::after{right:auto;left:2.5px}
+/* Capability grid */
+.cap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-radius:16px;overflow:hidden;margin-top:50px}
+.cap-card{background:#0B1F2E;padding:30px 26px;position:relative;overflow:hidden;transition:background .25s;cursor:default}
+.cap-card:hover{background:#0E2438}
+.cap-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,133,90,.3),transparent);opacity:0;transition:opacity .25s}
+.cap-card:hover::after{opacity:1}
+.cap-ico{width:40px;height:40px;border-radius:10px;background:rgba(212,133,90,.07);border:1px solid rgba(212,133,90,.15);display:flex;align-items:center;justify-content:center;margin-bottom:15px}
+.cap-ico svg{width:20px;height:20px}
+.cap-ttl{font-size:14.5px;font-weight:600;color:var(--t1);letter-spacing:-.3px;margin-bottom:8px}
+.cap-dsc{font-size:12.5px;color:var(--t2);line-height:1.6;letter-spacing:-.1px}
+/* Maestro */
+.maestro-wrap{background:#091826;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.maestro-in{max-width:var(--max);margin:0 auto;padding:110px 5%;display:grid;grid-template-columns:1fr 1.2fr;gap:90px;align-items:start}
+.maestro-rows{display:flex;flex-direction:column}
+.m-row{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:all .2s}
+.m-row:last-child{border-bottom:none}
+.m-row:hover .m-l{color:var(--gold)}
+.m-l{font-size:48px;font-weight:700;color:var(--copper);letter-spacing:-3px;width:46px;flex-shrink:0;line-height:1;transition:color .2s}
+.m-word{font-size:15px;font-weight:600;color:var(--t1);letter-spacing:-.2px}
+.m-desc{font-size:12.5px;color:var(--t2);letter-spacing:-.1px;margin-top:2px}
+/* Compliance */
+.comp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:44px}
+.comp-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:9px;transition:border-color .2s}
+.comp-card:hover{border-color:rgba(212,133,90,.28)}
+.comp-chk{width:20px;height:20px;border-radius:50%;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.22);display:flex;align-items:center;justify-content:center;font-size:9px;color:#4ade80}
+.comp-n{font-size:12.5px;font-weight:600;color:var(--t1);letter-spacing:-.2px}
+.comp-d{font-size:11px;color:var(--t3);line-height:1.5}
+/* CTA section */
+.cta-sec{position:relative;z-index:1;padding:160px 5%;text-align:center;overflow:hidden}
+.cta-bg{position:absolute;inset:0;background:radial-gradient(ellipse 65% 75% at 50% 50%,rgba(196,81,26,.09) 0%,transparent 60%),radial-gradient(ellipse 50% 55% at 15% 80%,rgba(32,130,180,.06) 0%,transparent 55%),radial-gradient(ellipse 40% 45% at 85% 20%,rgba(232,162,71,.05) 0%,transparent 55%)}
+.cta-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(212,133,90,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(212,133,90,.06) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 60% 60% at 50% 50%,black 0%,transparent 100%);animation:grid-breath 4s ease-in-out infinite}
+@keyframes grid-breath{0%,100%{opacity:.35}50%{opacity:1}}
+.cta-in{position:relative;z-index:2;max-width:660px;margin:0 auto}
+.cta-h2{font-size:clamp(42px,5.2vw,72px);font-weight:700;letter-spacing:-3px;line-height:1.02;margin-bottom:18px;background:linear-gradient(140deg,#fff 0%,#fff 38%,var(--copper) 63%,var(--gold) 84%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.cta-sub{font-size:16px;color:var(--t2);line-height:1.65;margin-bottom:42px;letter-spacing:-.15px}
+.cta-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+.cta-note{font-size:11.5px;color:var(--t3);letter-spacing:.3px}
+/* Footer */
+footer{position:relative;z-index:1;border-top:1px solid var(--line);background:#091826;padding:68px 5% 40px}
+.foot-grid{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:52px;margin-bottom:48px}
+.foot-wm{height:24px;width:auto;display:block;margin-bottom:14px;mix-blend-mode:screen;filter:brightness(1.15) contrast(1.1)}
+.foot-about{font-size:12.5px;color:var(--t2);line-height:1.68;margin-bottom:18px;max-width:260px}
+.foot-legal-sm{font-size:11.5px;color:var(--t3);line-height:1.7}
+.foot-ttl{font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:15px}
+.foot-links{list-style:none;display:flex;flex-direction:column;gap:9px}
+.foot-links a{text-decoration:none;color:var(--t2);font-size:12.5px;transition:color .2s}
+.foot-links a:hover{color:var(--t1)}
+.foot-bottom{max-width:var(--max);margin:0 auto;padding-top:22px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+.foot-copy{font-size:11.5px;color:var(--t3)}
+.foot-bl{display:flex;gap:22px}
+.foot-bl a{font-size:11.5px;color:var(--t3);text-decoration:none;transition:color .2s}
+.foot-bl a:hover{color:var(--t2)}
+/* Scroll reveal */
+.rv{opacity:0;transform:translateY(22px);transition:opacity .72s var(--ease),transform .72s var(--ease)}
+.rv.d1{transition-delay:.1s}.rv.d2{transition-delay:.2s}.rv.d3{transition-delay:.3s}.rv.d4{transition-delay:.4s}
+.rv.in{opacity:1;transform:translateY(0)}
+/* Nav logo wrapper */
+.nav-logo-wrap{display:flex;flex-direction:column;gap:1px}
+.nav-tagline{font-size:8.5px;font-weight:600;letter-spacing:2.2px;text-transform:uppercase;color:var(--copper);opacity:.75}
+/* Hero tiles */
+.hero-tiles{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;justify-content:center}
+.htile{padding:9px 20px;border:1.5px solid rgba(255,255,255,0.35);border-radius:6px;font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--t1);text-transform:uppercase;background:rgba(255,255,255,0.04);transition:all .2s;}
+.htile:hover{border-color:var(--copper);color:var(--copper)}
+/* Pulse bar for dashboard panel */
+.dash-pulse{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--copper),var(--gold),transparent);animation:pulse-bar 2.8s ease-in-out infinite}
+@keyframes pulse-bar{0%,100%{opacity:.35}50%{opacity:1}}
+/* ===== MODAL ===== */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(9,24,37,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s ease;}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-card{background:#0F2538;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:40px;width:100%;max-width:480px;position:relative;box-shadow:0 40px 120px rgba(0,0,0,0.7);max-height:90vh;overflow-y:auto;margin:16px;}
+.modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.07);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:rgba(255,255,255,0.5);font-size:20px;line-height:32px;text-align:center;transition:background .2s;font-family:inherit;}
+.modal-close:hover{background:rgba(255,255,255,0.14);color:#fff}
+.modal-title{font-size:22px;font-weight:700;color:#fff;letter-spacing:-1px;margin-bottom:6px}
+.modal-sub{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:28px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.55);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px}
+.form-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:11px 14px;font-family:var(--font);font-size:14px;color:#fff;outline:none;transition:border-color .2s;}
+.form-input:focus{border-color:rgba(212,133,90,0.5)}
+.form-input::placeholder{color:rgba(255,255,255,0.25)}
+textarea.form-input{resize:vertical;min-height:80px}
+.form-err{font-size:11px;color:#fb7185;margin-top:4px;display:none}
+.form-err.show{display:block}
+.form-honey{display:none!important;visibility:hidden;position:absolute;left:-9999px}
+.modal-success{text-align:center;padding:20px 0;display:none}
+.modal-success.show{display:block}
+.modal-success-ico{font-size:48px;margin-bottom:12px}
+.modal-success-ttl{font-size:20px;font-weight:700;color:#fff;margin-bottom:8px}
+.modal-success-txt{font-size:14px;color:rgba(255,255,255,0.5)}
+.modal-form-body{transition:opacity .2s}
+.modal-form-body.hidden{display:none}
+.modal-gen-error{background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);border-radius:8px;padding:10px 14px;font-size:13px;color:#fb7185;margin-bottom:16px;display:none}
+.modal-gen-error.show{display:block}
+.submit-btn-inner{display:flex;align-items:center;gap:8px}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pill.loading .spinner{display:block}
+.pill.loading .btn-text{display:none}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-wrap"><img class="nav-wordmark" src="/apex-omnihub-wordmark.svg" alt="APEX OmniHub"><span class="nav-tagline">Intelligence, Designed.</span></div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#platform">Platform</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#story">Founder's Story</a></li>
+    <li><a href="#enterprise">Enterprise</a></li>
+  </ul>
+  <div class="nav-right">
+    <a class="nav-signin" href="#" data-action="signin">Sign In</a>
+    <a href="#" class="pill" data-modal="request-access">Request Access</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero hov-section">
+  <div class="hero-glow-l"></div>
+  <div class="hero-glow-r"></div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <h1 class="hero-h1 rv">The Universal<br>Sync<br>Orchestrator.</h1>
+      <p class="hero-sub rv d1">
+        The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface, where every action is authorized, logged, and reversible. Connect Web3, legacy, blockchain, and AI systems without limits, constrained only by your capacity and use cases.
+      </p>
+      <div class="hero-tiles rv d1">
+        <div class="htile">DIRECT</div>
+        <div class="htile">AUDIT</div>
+        <div class="htile">DEDUCE</div>
+      </div>
+      <div class="hero-ctas rv d2">
+        <a href="#" class="pill pill-lg" data-modal="request-access">Request Early Access</a>
+        <a href="/demo.html" class="pill pill-lg pill-ghost">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="5,3 13,8 5,13" fill="currentColor" opacity=".9"/></svg>
+          Watch Demo
+        </a>
+      </div>
+      <p class="hero-trust rv d3">SOC 2 Aligned<span>&middot;</span>EU AI Act Art. 14<span>&middot;</span>GDPR Art. 30<span>&middot;</span>Trusted in regulated industries</p>
+    </div>
+    <div class="hero-right rv d1">
+      <div class="hero-art-wrap">
+        <svg class="hero-art-svg" viewBox="0 0 520 540" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+          <defs>
+            <radialGradient id="sphere-core" cx="42%" cy="38%" r="58%"><stop offset="0%" stop-color="#F5C06A"/><stop offset="28%" stop-color="#E8A247"/><stop offset="58%" stop-color="#C4511A"/><stop offset="82%" stop-color="#8B2E0A"/><stop offset="100%" stop-color="#3A1005"/></radialGradient>
+            <radialGradient id="atm-r" cx="50%" cy="50%" r="50%"><stop offset="60%" stop-color="rgba(196,81,26,0)"/><stop offset="85%" stop-color="rgba(196,81,26,0.06)"/><stop offset="100%" stop-color="rgba(232,162,71,0.14)"/></radialGradient>
+            <linearGradient id="rg1" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(232,162,71,0)"/><stop offset="40%" stop-color="rgba(232,162,71,0.62)"/><stop offset="70%" stop-color="rgba(245,192,106,0.82)"/><stop offset="100%" stop-color="rgba(232,162,71,0)"/></linearGradient>
+            <linearGradient id="sa" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(96,165,250,0)"/><stop offset="55%" stop-color="rgba(96,165,250,0.7)"/><stop offset="100%" stop-color="rgba(232,162,71,0.9)"/></linearGradient>
+            <linearGradient id="sb" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(192,132,252,0)"/><stop offset="55%" stop-color="rgba(192,132,252,0.62)"/><stop offset="100%" stop-color="rgba(232,162,71,0.88)"/></linearGradient>
+            <linearGradient id="sc" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="rgba(74,222,128,0)"/><stop offset="55%" stop-color="rgba(74,222,128,0.56)"/><stop offset="100%" stop-color="rgba(232,162,71,0.88)"/></linearGradient>
+            <linearGradient id="sd" x1="50%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="rgba(251,191,36,0)"/><stop offset="55%" stop-color="rgba(251,191,36,0.6)"/><stop offset="100%" stop-color="rgba(196,81,26,0.92)"/></linearGradient>
+            <filter id="fg"><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="fxl"><feGaussianBlur in="SourceGraphic" stdDeviation="18"/></filter>
+            <filter id="fm"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <clipPath id="sclip"><circle cx="260" cy="265" r="152"/></clipPath>
+          </defs>
+          <!-- Atmosphere -->
+          <circle cx="260" cy="265" r="240" fill="rgba(196,81,26,0.033)"/>
+          <circle cx="260" cy="265" r="192" fill="rgba(232,162,71,0.038)"/>
+          <circle cx="260" cy="265" r="178" fill="url(#atm-r)" filter="url(#fxl)"/>
+          <ellipse cx="260" cy="265" rx="212" ry="52" fill="none" stroke="rgba(232,162,71,0.1)" stroke-width="1.5" transform="rotate(-18,260,265)"/>
+          <path d="M78,212 A212 52 0 0 1 442,220" fill="none" stroke="url(#rg1)" stroke-width="2" transform="rotate(-18,260,265)"/>
+          <ellipse cx="260" cy="265" rx="183" ry="43" fill="none" stroke="rgba(196,81,26,0.08)" stroke-width="1" transform="rotate(28,260,265)"/>
+          <!-- Stream A: Web3 -->
+          <path d="M30,54 C84,104,140,149,168,183 C192,214,215,240,235,254" fill="none" stroke="url(#sa)" stroke-width="1.8" stroke-linecap="round"><animate attributeName="stroke-dasharray" from="0,480" to="480,0" dur="2.8s" repeatCount="indefinite"/></path>
+          <!-- Stream B: AI Cloud -->
+          <path d="M490,42 C442,94,392,148,350,190 C322,216,300,240,286,254" fill="none" stroke="url(#sb)" stroke-width="1.8" stroke-linecap="round"><animate attributeName="stroke-dasharray" from="0,480" to="480,0" dur="3.4s" repeatCount="indefinite" begin="0.6s"/></path>
+          <!-- Stream C: Legacy -->
+          <path d="M18,492 C68,442,122,396,170,356 C202,326,228,304,246,285" fill="none" stroke="url(#sc)" stroke-width="1.8" stroke-linecap="round"><animate attributeName="stroke-dasharray" from="0,480" to="480,0" dur="3.1s" repeatCount="indefinite" begin="1.2s"/></path>
+          <!-- Stream D: Agents -->
+          <path d="M260,12 L260,215" fill="none" stroke="url(#sd)" stroke-width="1.8" stroke-linecap="round"><animate attributeName="stroke-dasharray" from="0,480" to="480,0" dur="2.2s" repeatCount="indefinite" begin="0.3s"/></path>
+          <!-- Stream E: Enterprise -->
+          <path d="M508,300 C462,288,416,280,380,276 C350,272,320,268,292,267" fill="none" stroke="rgba(232,162,71,0.58)" stroke-width="1.5" stroke-linecap="round"><animate attributeName="stroke-dasharray" from="0,480" to="480,0" dur="3.8s" repeatCount="indefinite" begin="0.9s"/></path>
+          <!-- Stream F: Blockchain -->
+          <path d="M498,512 C450,462,398,415,350,372 C318,344,292,318,276,298" fill="none" stroke="rgba(192,132,252,0.52)" stroke-width="1.5" stroke-linecap="round"><animate attributeName="stroke-dasharray" from="0,480" to="480,0" dur="4.1s" repeatCount="indefinite" begin="1.6s"/></path>
+          <!-- Stream G: Physical AI -->
+          <path d="M22,390 C80,355,148,324,205,299 C228,288,247,278,250,271" fill="none" stroke="rgba(56,189,248,0.58)" stroke-width="1.8" stroke-linecap="round"><animate attributeName="stroke-dasharray" from="0,500" to="500,0" dur="3.9s" repeatCount="indefinite" begin="2.2s"/></path>
+          <!-- Node: Web3 -->
+          <g transform="translate(26,50)"><circle r="7" fill="rgba(96,165,250,0.1)" stroke="rgba(96,165,250,0.52)" stroke-width="1"/><circle r="3" fill="#60a5fa" filter="url(#fm)"/><text x="12" y="4" fill="rgba(96,165,250,0.72)" font-size="7.5" font-weight="700" font-family="Space Grotesk,sans-serif" letter-spacing="1">WEB3</text></g>
+          <!-- Node: AI Cloud -->
+          <g transform="translate(490,40)"><circle r="7" fill="rgba(192,132,252,0.1)" stroke="rgba(192,132,252,0.52)" stroke-width="1"/><circle r="3" fill="#c084fc" filter="url(#fm)"/><text x="-52" y="4" fill="rgba(192,132,252,0.72)" font-size="7.5" font-weight="700" font-family="Space Grotesk,sans-serif" letter-spacing="1">AI CLOUD</text></g>
+          <!-- Node: Legacy -->
+          <g transform="translate(12,494)"><circle r="7" fill="rgba(74,222,128,0.1)" stroke="rgba(74,222,128,0.52)" stroke-width="1"/><circle r="3" fill="#4ade80" filter="url(#fm)"/><text x="12" y="4" fill="rgba(74,222,128,0.72)" font-size="7.5" font-weight="700" font-family="Space Grotesk,sans-serif" letter-spacing="1">LEGACY</text></g>
+          <!-- Node: AI Agents -->
+          <g transform="translate(260,8)"><circle r="7" fill="rgba(251,191,36,0.1)" stroke="rgba(251,191,36,0.52)" stroke-width="1"/><circle r="3" fill="#fbbf24" filter="url(#fm)"/><text x="-22" y="-11" fill="rgba(251,191,36,0.72)" font-size="7.5" font-weight="700" font-family="Space Grotesk,sans-serif" letter-spacing="1">AI AGENTS</text></g>
+          <!-- Node: Enterprise -->
+          <g transform="translate(510,300)"><circle r="7" fill="rgba(232,162,71,0.1)" stroke="rgba(232,162,71,0.52)" stroke-width="1"/><circle r="3" fill="#E8A247" filter="url(#fm)"/><text x="-72" y="-11" fill="rgba(232,162,71,0.72)" font-size="7.5" font-weight="700" font-family="Space Grotesk,sans-serif" letter-spacing="1">ENTERPRISE</text></g>
+          <!-- Node: Blockchain -->
+          <g transform="translate(500,512)"><circle r="7" fill="rgba(192,132,252,0.1)" stroke="rgba(192,132,252,0.45)" stroke-width="1"/><circle r="3" fill="#c084fc" filter="url(#fm)"/><text x="-74" y="4" fill="rgba(192,132,252,0.68)" font-size="7.5" font-weight="700" font-family="Space Grotesk,sans-serif" letter-spacing="1">BLOCKCHAIN</text></g>
+          <!-- Node: Physical AI -->
+          <g transform="translate(18,390)"><circle r="7" fill="rgba(56,189,248,0.1)" stroke="rgba(56,189,248,0.52)" stroke-width="1"/><circle r="3" fill="#38bdf8" filter="url(#fm)"/><text x="12" y="4" fill="rgba(56,189,248,0.72)" font-size="7.5" font-weight="700" font-family="Space Grotesk,sans-serif" letter-spacing="1">PHYSICAL AI</text></g>
+          <!-- Sphere -->
+          <circle cx="268" cy="272" r="152" fill="rgba(0,0,0,0.42)"/>
+          <circle cx="260" cy="265" r="152" fill="url(#sphere-core)"/>
+          <!-- Latitude lines -->
+          <g clip-path="url(#sclip)" opacity="0.15"><line x1="108" y1="185" x2="412" y2="185" stroke="#fff" stroke-width=".5"/><line x1="108" y1="210" x2="412" y2="210" stroke="#fff" stroke-width=".5"/><line x1="108" y1="235" x2="412" y2="235" stroke="#fff" stroke-width=".5"/><line x1="108" y1="260" x2="412" y2="260" stroke="#fff" stroke-width=".5"/><line x1="108" y1="285" x2="412" y2="285" stroke="#fff" stroke-width=".5"/><line x1="108" y1="310" x2="412" y2="310" stroke="#fff" stroke-width=".5"/><line x1="108" y1="335" x2="412" y2="335" stroke="#fff" stroke-width=".5"/></g>
+          <!-- Meridians -->
+          <g clip-path="url(#sclip)" opacity="0.1"><ellipse cx="260" cy="265" rx="14" ry="152" fill="none" stroke="#fff" stroke-width=".5"/><ellipse cx="260" cy="265" rx="42" ry="152" fill="none" stroke="#fff" stroke-width=".5"/><ellipse cx="260" cy="265" rx="82" ry="152" fill="none" stroke="#fff" stroke-width=".5"/><ellipse cx="260" cy="265" rx="124" ry="152" fill="none" stroke="#fff" stroke-width=".5"/></g>
+          <!-- Specular -->
+          <ellipse cx="214" cy="208" rx="55" ry="38" fill="rgba(255,255,255,0.15)" filter="url(#fg)"/>
+          <ellipse cx="206" cy="200" rx="28" ry="19" fill="rgba(255,255,255,0.26)"/>
+          <!-- Equatorial glow -->
+          <ellipse cx="260" cy="265" rx="152" ry="30" fill="none" stroke="rgba(245,192,106,0.27)" stroke-width="3" filter="url(#fg)"/>
+          <!-- Badge core: light-blue pulsing glow -->
+          <circle cx="260" cy="265" r="64" fill="rgba(56,189,248,0.12)"><animate attributeName="r" values="60;70;60" dur="2.6s" repeatCount="indefinite"/><animate attributeName="fill" values="rgba(56,189,248,0.08);rgba(56,189,248,0.22);rgba(56,189,248,0.08)" dur="2.6s" repeatCount="indefinite"/></circle>
+          <circle cx="260" cy="265" r="64" fill="none" stroke="rgba(56,189,248,0.45)" stroke-width="1.5"><animate attributeName="r" values="60;74;60" dur="2.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.45;0.85;0.45" dur="2.6s" repeatCount="indefinite"/></circle>
+          <!-- APEX Badge floating inside sphere -->
+          <g clip-path="url(#sclip)"><image href="/apex-badge.svg" xlink:href="/apex-badge.svg" x="202" y="203" width="116" height="124" preserveAspectRatio="xMidYMid meet"><animate attributeName="opacity" values="0.82;1;0.82" dur="2.6s" repeatCount="indefinite"/></image></g>
+          <!-- Pulse rings -->
+          <circle cx="260" cy="265" r="90" fill="none" stroke="rgba(232,162,71,0.18)" stroke-width="1.5"><animate attributeName="r" from="90" to="155" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.28" to="0" dur="3s" repeatCount="indefinite"/></circle>
+          <circle cx="260" cy="265" r="90" fill="none" stroke="rgba(232,162,71,0.12)" stroke-width="1"><animate attributeName="r" from="90" to="155" dur="3s" repeatCount="indefinite" begin="1.5s"/><animate attributeName="opacity" from="0.18" to="0" dur="3s" repeatCount="indefinite" begin="1.5s"/></circle>
+          <!-- Orbiting dots -->
+          <circle cx="260" cy="113" r="4" fill="rgba(232,162,71,0.65)" filter="url(#fm)"><animateTransform attributeName="transform" type="rotate" from="0 260 265" to="360 260 265" dur="12s" repeatCount="indefinite"/></circle>
+          <circle cx="412" cy="182" r="3" fill="rgba(96,165,250,0.55)" filter="url(#fm)"><animateTransform attributeName="transform" type="rotate" from="0 260 265" to="-360 260 265" dur="19s" repeatCount="indefinite"/></circle>
+          <circle cx="108" cy="348" r="3.5" fill="rgba(192,132,252,0.6)" filter="url(#fm)"><animateTransform attributeName="transform" type="rotate" from="0 260 265" to="360 260 265" dur="24s" repeatCount="indefinite"/></circle>
+          <!-- Signature -->
+          <text x="260" y="518" text-anchor="middle" fill="rgba(232,162,71,0.28)" font-size="7.5" font-weight="700" font-family="Space Grotesk,sans-serif" letter-spacing="3.5">INTELLIGENCE, DESIGNED.</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track">
+    <div class="ticker-item">Universal Sync<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">Agent Governance<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">Immutable Audit Log<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">Policy Enforcement<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">One-Click Rollback<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">MAN Mode<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">Tri-Force Architecture<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">Zero Vendor Lock-In<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">200+ Integrations<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">SOC 2 Aligned<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">Universal Sync<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">Agent Governance<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">Immutable Audit Log<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">Policy Enforcement<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">One-Click Rollback<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">MAN Mode<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">Tri-Force Architecture<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">Zero Vendor Lock-In<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">200+ Integrations<span class="ticker-dot">&middot;</span></div>
+    <div class="ticker-item">SOC 2 Aligned<span class="ticker-dot">&middot;</span></div>
+  </div>
+</div>
+
+<!-- FEAT 1: GOVERNANCE -->
+<hr class="divider">
+<section class="sec hov-section" id="platform">
+  <div class="sec-in">
+    <div class="split">
+      <div class="rv">
+        <div class="tag">Total Command</div>
+        <h2 class="h2">Absolute<br><span class="g">Governance.</span></h2>
+        <p class="sub">Issue the directive. OmniHub orchestrates all connected systems with full real-time visibility: actions logged, agents tracked, outcomes traceable.</p>
+        <div class="feat-list">
+          <div class="feat-item">
+            <div class="feat-ico"><svg viewBox="0 0 18 18" fill="none"><path d="M3 4h12M3 8h8M3 12h5" stroke="#D4855A" stroke-width="1.6" stroke-linecap="round"/><circle cx="14" cy="10" r="3.5" stroke="#D4855A" stroke-width="1.4" fill="none"/><path d="M13 10l1 1 1.5-1.5" stroke="#D4855A" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div><div class="feat-ttl">Natural language directives</div><div class="feat-dsc">Issue commands in plain language. OmniHub translates intent into structured task plans dispatched across your agent network.</div></div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-ico"><svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" fill="#D4855A" opacity=".9"/><circle cx="9" cy="9" r="6.5" stroke="#D4855A" stroke-width="1.3" fill="none" stroke-dasharray="3 2"/><path d="M9 2.5V1M9 17v-1.5M2.5 9H1M17 9h-1.5" stroke="#D4855A" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+            <div><div class="feat-ttl">Capability-matched routing</div><div class="feat-dsc">Each task routes to the most qualified agent. No guesswork, no misroutes, full audit of each routing decision.</div></div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-ico"><svg viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="2" stroke="#D4855A" stroke-width="1.4" fill="none"/><path d="M9 6v4M7 8l2 2 2-2" stroke="#D4855A" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><line x1="6" y1="13" x2="12" y2="13" stroke="#D4855A" stroke-width="1.3" stroke-linecap="round" opacity=".5"/></svg></div>
+            <div><div class="feat-ttl">Override any agent, instantly</div><div class="feat-dsc">One command halts, redirects, or replaces any running agent mid-execution. You remain in full control at all times.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="vpanel rv d2">
+        <div class="vpanel-in">
+          <span class="vp-tag">Live Audit Trail</span>
+          <div class="alog">
+            <div class="arow"><span class="at">14:32:07</span><span class="adot ok"></span><span class="atxt">SalesForce Sync: write contact #4821</span><span class="apill p-auth">Authorized</span></div>
+            <div class="arow"><span class="at">14:32:05</span><span class="adot info"></span><span class="atxt">Compliance Reporter: export GDPR batch</span><span class="apill p-log">Logged</span></div>
+            <div class="arow"><span class="at">14:31:58</span><span class="adot ok"></span><span class="atxt">ERP Orchestrator: inventory sync complete</span><span class="apill p-auth">Authorized</span></div>
+            <div class="arow"><span class="at">14:31:44</span><span class="adot warn"></span><span class="atxt">Anomaly: unauthorized scope attempt blocked</span><span class="apill p-block">Blocked</span></div>
+            <div class="arow"><span class="at">14:31:33</span><span class="adot info"></span><span class="atxt">Policy update: RBAC rule #12 applied</span><span class="apill p-log">Logged</span></div>
+            <div class="arow"><span class="at">14:31:20</span><span class="adot ok"></span><span class="atxt">Workflow: Invoice Reconcile, step 3 of 6</span><span class="apill p-auth">Authorized</span></div>
+            <div class="arow"><span class="at">14:31:08</span><span class="adot ok"></span><span class="atxt">Agent deployed: Customer360 Aggregator</span><span class="apill p-auth">Authorized</span></div>
+            <div class="arow"><span class="at">14:30:55</span><span class="adot info"></span><span class="atxt">MAN Mode activated: ERP agent paused</span><span class="apill p-log">Logged</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEAT 2: REVERSIBLE -->
+<hr class="divider">
+<section class="sec hov-section">
+  <div class="sec-in">
+    <div class="split rev">
+      <div class="rv">
+        <div class="tag">Architectural Primitive</div>
+        <h2 class="h2">Built to<br><span class="g">Reverse.</span></h2>
+        <p class="sub">The only enterprise AI platform where rollback is a first-class architectural primitive. One bad decision does not cascade. You undo it completely.</p>
+        <div class="feat-list">
+          <div class="feat-item">
+            <div class="feat-ico"><svg viewBox="0 0 18 18" fill="none"><path d="M5 9a4 4 0 0 1 4-4h2" stroke="#D4855A" stroke-width="1.5" stroke-linecap="round"/><path d="M8 3l3 2-3 2" stroke="#D4855A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 13H7a4 4 0 0 1 0-8" stroke="#D4855A" stroke-width="1.3" fill="none" opacity=".5"/></svg></div>
+            <div><div class="feat-ttl">One-click rollback</div><div class="feat-dsc">Reverse any agent action or workflow state with a single command. No cleanup required.</div></div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-ico"><svg viewBox="0 0 18 18" fill="none"><path d="M9 2L15 5.5v7L9 16 3 12.5v-7L9 2Z" stroke="#D4855A" stroke-width="1.4" fill="none"/><path d="M9 8v2.5" stroke="#D4855A" stroke-width="1.4" stroke-linecap="round"/><circle cx="9" cy="13" r=".8" fill="#D4855A"/></svg></div>
+            <div><div class="feat-ttl">Blast radius containment</div><div class="feat-dsc">OmniHub detects propagation risk and contains failures before they cascade across connected systems.</div></div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-ico"><svg viewBox="0 0 18 18" fill="none"><rect x="2.5" y="5" width="6" height="4" rx="1.2" stroke="#D4855A" stroke-width="1.3" fill="none"/><rect x="9.5" y="9" width="6" height="4" rx="1.2" stroke="#D4855A" stroke-width="1.3" fill="none"/><path d="M8.5 7h1.5M8.5 11h1.5" stroke="#D4855A" stroke-width="1.2" stroke-linecap="round"/><path d="M10 7c0 2-1 4-1.5 4" stroke="#D4855A" stroke-width="1" fill="none" stroke-dasharray="2 1.5" opacity=".6"/></svg></div>
+            <div><div class="feat-ttl">Compensating transactions</div><div class="feat-dsc">Each agent action carries a compensating operation. Distributed state stays coherent under rollback across connected systems.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="vpanel rv d2">
+        <div class="vpanel-in">
+          <span class="vp-tag">Policy Engine: Active Rules</span>
+          <div class="prules">
+            <div class="prule"><div class="prule-l"><div class="prule-ico"><svg viewBox="0 0 14 14" fill="none"><path d="M7 1.5L11.5 4v6L7 12.5 2.5 10V4Z" stroke="#D4855A" stroke-width="1.3" fill="none"/><path d="M7 5.5v2" stroke="#D4855A" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="9" r=".5" fill="#D4855A"/></svg></div><div><div class="prule-n">Scope Restriction</div><div class="prule-d">No agent accesses unauthorized data scopes</div></div></div><div class="toggle"></div></div>
+            <div class="prule"><div class="prule-l"><div class="prule-ico"><svg viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="10" rx="1.5" stroke="#D4855A" stroke-width="1.3" fill="none"/><path d="M4 5h6M4 7h4M4 9h2" stroke="#D4855A" stroke-width="1" stroke-linecap="round"/></svg></div><div><div class="prule-n">Audit on Write</div><div class="prule-d">Each write operation logged immutably</div></div></div><div class="toggle"></div></div>
+            <div class="prule"><div class="prule-l"><div class="prule-ico"><svg viewBox="0 0 14 14" fill="none"><path d="M4 7a3 3 0 0 1 3-3h2" stroke="#D4855A" stroke-width="1.3" stroke-linecap="round"/><path d="M6.5 2.5l2.5 1.5-2.5 1.5" stroke="#D4855A" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="prule-n">Rollback Window</div><div class="prule-d">30-minute compensating transaction window</div></div></div><div class="toggle"></div></div>
+            <div class="prule"><div class="prule-l"><div class="prule-ico"><svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="2" stroke="#D4855A" stroke-width="1.3" fill="none"/><path d="M3.5 12c0-1.933 1.567-3.5 3.5-3.5s3.5 1.567 3.5 3.5" stroke="#D4855A" stroke-width="1.3" fill="none"/></svg></div><div><div class="prule-n">Human-in-Loop</div><div class="prule-d">High-risk actions require manual approval</div></div></div><div class="toggle off"></div></div>
+            <div class="prule"><div class="prule-l"><div class="prule-ico"><svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="#D4855A" stroke-width="1.3" fill="none"/><path d="M4 7h6M7 4v6" stroke="#D4855A" stroke-width="1" stroke-linecap="round" opacity=".6"/></svg></div><div><div class="prule-n">Cross-Border Block</div><div class="prule-d">GDPR: EU data stays within EEA zones</div></div></div><div class="toggle"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CAPABILITY CARDS -->
+<hr class="divider">
+<section class="sec hov-section" id="features">
+  <div class="sec-in">
+    <div class="rv"><div class="tag">Platform Capabilities</div>
+    <h2 class="h2">Everything you need<br>to govern enterprise AI.</h2>
+    <p class="sub">One platform. No black boxes. No vendor lock-in. No surprises.</p></div>
+    <div class="cap-grid">
+      <div class="cap-card rv"><div class="cap-ico"><svg viewBox="0 0 20 20" fill="none"><path d="M3 10h14M10 3v14" stroke="#D4855A" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="10" r="7.5" stroke="#D4855A" stroke-width="1.3" fill="none" stroke-dasharray="4 2.5" opacity=".5"/><circle cx="10" cy="10" r="2" fill="#D4855A" opacity=".8"/></svg></div><div class="cap-ttl">Universal Connector Network</div><div class="cap-dsc">200+ native integrations across CRMs, ERPs, cloud platforms, and data warehouses. Connect and govern from one surface.</div></div>
+      <div class="cap-card rv d1"><div class="cap-ico"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="5" r="2.5" stroke="#D4855A" stroke-width="1.4" fill="none"/><circle cx="4" cy="15" r="2.5" stroke="#D4855A" stroke-width="1.4" fill="none"/><circle cx="16" cy="15" r="2.5" stroke="#D4855A" stroke-width="1.4" fill="none"/><line x1="8.3" y1="6.8" x2="5.7" y2="12.8" stroke="#D4855A" stroke-width="1.2" stroke-linecap="round"/><line x1="11.7" y1="6.8" x2="14.3" y2="12.8" stroke="#D4855A" stroke-width="1.2" stroke-linecap="round"/><line x1="6.5" y1="15" x2="13.5" y2="15" stroke="#D4855A" stroke-width="1.2" stroke-linecap="round"/></svg></div><div class="cap-ttl">Multi-Agent Orchestration</div><div class="cap-dsc">Deploy, coordinate, and monitor multiple AI agents simultaneously. Each is scoped, authorized, and observable in real time.</div></div>
+      <div class="cap-card rv d2"><div class="cap-ico"><svg viewBox="0 0 20 20" fill="none"><path d="M2 14L5 8l3 4 3-6 3 3 3-5" stroke="#D4855A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="5" r="1.5" fill="#D4855A"/></svg></div><div class="cap-ttl">Real-Time Telemetry</div><div class="cap-dsc">Live operational intelligence across all agents and workflows. See what is running, what failed, and where attention is needed.</div></div>
+      <div class="cap-card rv d1"><div class="cap-ico"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2L16 5.5v9L10 18 4 14.5v-9L10 2Z" stroke="#D4855A" stroke-width="1.4" fill="none"/><path d="M10 8v3" stroke="#D4855A" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="14" r=".8" fill="#D4855A"/></svg></div><div class="cap-ttl">Policy Enforcement Engine</div><div class="cap-dsc">Governance rules apply before any action executes. No agent bypasses policy, no exceptions.</div></div>
+      <div class="cap-card rv d2"><div class="cap-ico"><svg viewBox="0 0 20 20" fill="none"><rect x="2.5" y="7" width="5" height="4" rx="1.5" stroke="#D4855A" stroke-width="1.3" fill="none"/><rect x="12.5" y="3" width="5" height="4" rx="1.5" stroke="#D4855A" stroke-width="1.3" fill="none"/><rect x="12.5" y="13" width="5" height="4" rx="1.5" stroke="#D4855A" stroke-width="1.3" fill="none"/><path d="M7.5 9h2.5v-4h2.5M7.5 9h2.5v5h2.5" stroke="#D4855A" stroke-width="1.2" stroke-linecap="round"/></svg></div><div class="cap-ttl">Workflow Intelligence</div><div class="cap-dsc">Visual workflow builder with embedded governance. Design complex automations that remain fully auditable end-to-end.</div></div>
+      <div class="cap-card rv d3"><div class="cap-ico"><svg viewBox="0 0 20 20" fill="none"><path d="M10 3v4M10 13v4M3 10h4M13 10h4" stroke="#D4855A" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="10" r="3" stroke="#D4855A" stroke-width="1.4" fill="none"/><circle cx="10" cy="10" r=".8" fill="#D4855A"/></svg></div><div class="cap-ttl">MAN Mode</div><div class="cap-dsc">Manual Autonomous Negotiation. Define the operational boundaries. AI executes within them with full traceability.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MAESTRO -->
+<div class="maestro-wrap hov-section" id="maestro">
+  <div class="maestro-in">
+    <div class="rv">
+      <div class="tag">Core Philosophy</div>
+      <h2 class="h2">The MAESTRO<br>Principle.</h2>
+      <p class="sub" style="margin-bottom:20px">Intelligence is not just capability. It is coordination with consequence. MAESTRO is the operating philosophy baked into each layer of APEX OmniHub.</p>
+      <p style="font-size:13.5px;color:var(--t2);line-height:1.72;letter-spacing:-.1px;text-align:justify;text-indent:2em">Enterprise AI must serve organizational intent. As the system scales, MAESTRO ensures authority scales with it.</p>
+    </div>
+    <div class="maestro-rows rv d2">
+      <div class="m-row"><div class="m-l">M</div><div><div class="m-word">Multi-Agent</div><div class="m-desc">coordination at enterprise scale, all synchronized</div></div></div>
+      <div class="m-row"><div class="m-l">A</div><div><div class="m-word">Authorized</div><div class="m-desc">execution, each action gated by policy</div></div></div>
+      <div class="m-row"><div class="m-l">E</div><div><div class="m-word">Explainable</div><div class="m-desc">decisions in plain operational language, always</div></div></div>
+      <div class="m-row"><div class="m-l">S</div><div><div class="m-word">Synchronized</div><div class="m-desc">state across all connected systems, in real time</div></div></div>
+      <div class="m-row"><div class="m-l">T</div><div><div class="m-word">Traceable</div><div class="m-desc">outcomes with cryptographic immutable audit chains</div></div></div>
+      <div class="m-row"><div class="m-l">R</div><div><div class="m-word">Reversible</div><div class="m-desc">by design, rollback is a first-class platform primitive</div></div></div>
+      <div class="m-row"><div class="m-l">O</div><div><div class="m-word">Operational authority</div><div class="m-desc">returned entirely to your organization</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ENTERPRISE -->
+<hr class="divider">
+<section class="sec hov-section" id="enterprise">
+  <div class="sec-in">
+    <div class="rv"><div class="tag">Enterprise Ready</div>
+    <h2 class="h2">Built for regulated<br>environments.</h2>
+    <p class="sub">Architected from day one for compliance and governance across finance, healthcare, legal, and government.</p></div>
+    <div class="comp-grid">
+      <div class="comp-card rv"><div class="comp-chk">&#10003;</div><div class="comp-n">SOC 2 Type II</div><div class="comp-d">Security and availability controls validated by independent audit</div></div>
+      <div class="comp-card rv d1"><div class="comp-chk">&#10003;</div><div class="comp-n">EU AI Act Art. 14</div><div class="comp-d">Human oversight requirements for high-risk AI systems</div></div>
+      <div class="comp-card rv d2"><div class="comp-chk">&#10003;</div><div class="comp-n">GDPR Article 30</div><div class="comp-d">Complete records of processing activities, always exportable</div></div>
+      <div class="comp-card rv d3"><div class="comp-chk">&#10003;</div><div class="comp-n">ISO 27001</div><div class="comp-d">Information security management system compatible architecture</div></div>
+      <div class="comp-card rv"><div class="comp-chk">&#10003;</div><div class="comp-n">HIPAA-Ready</div><div class="comp-d">Healthcare data handling architecture with BAA support</div></div>
+      <div class="comp-card rv d1"><div class="comp-chk">&#10003;</div><div class="comp-n">Zero Trust Model</div><div class="comp-d">No implicit trust. Each agent and action verified.</div></div>
+      <div class="comp-card rv d2"><div class="comp-chk">&#10003;</div><div class="comp-n">RBAC + ABAC</div><div class="comp-d">Granular role and attribute-based access control across all surfaces</div></div>
+      <div class="comp-card rv d3"><div class="comp-chk">&#10003;</div><div class="comp-n">E2E Encryption</div><div class="comp-d">All data in transit and at rest encrypted with AES-256</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-sec hov-section" id="cta">
+  <div class="cta-bg"></div>
+  <div class="cta-grid"></div>
+  <div class="cta-in">
+    <div class="tag rv" style="justify-content:center">Take Control</div>
+    <h2 class="cta-h2 rv">Take operational<br>authority back.</h2>
+    <p class="cta-sub rv d1">Request early access and see what governed intelligence looks like when it runs in production.</p>
+    <div class="cta-btns rv d2">
+      <a href="#" class="pill pill-lg" data-modal="request-access">Request Early Access</a>
+      <a href="/demo.html" class="pill pill-lg pill-ghost">Schedule a Demo</a>
+    </div>
+    <p class="cta-note rv d3">No vendor lock-in. No black boxes. No surprises.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-grid">
+    <div>
+      <img class="foot-wm" src="/apex-omnihub-wordmark.svg" alt="APEX OmniHub">
+      <p class="foot-about">The Universal Sync Orchestrator. Enterprise AI governance that puts operational authority back where it belongs, with you.</p>
+      <p class="foot-legal-sm">2025 APEX Business Systems Ltd.<br>Edmonton, Alberta, Canada.</p>
+    </div>
+    <div>
+      <div class="foot-ttl">Platform</div>
+      <ul class="foot-links"><li><a href="#">Overview</a></li><li><a href="/tri-force.html">Tri-Force Architecture</a></li><li><a href="/maestro.html">MAESTRO Engine</a></li><li><a href="/man-mode.html">MAN Mode</a></li><li><a href="/smart-integrations.html">Integrations</a></li></ul>
+    </div>
+    <div>
+      <div class="foot-ttl">Company</div>
+      <ul class="foot-links"><li><a href="#">About APEX</a></li><li><a href="#">Founder's Story</a></li><li><a href="#">Blog</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li></ul>
+    </div>
+    <div>
+      <div class="foot-ttl">Resources</div>
+      <ul class="foot-links"><li><a href="#">Documentation</a></li><li><a href="#">API Reference</a></li><li><a href="#">Security</a></li><li><a href="#">Status</a></li><li><a href="#">Contact</a></li></ul>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p class="foot-copy">Intelligence, Designed. APEX OmniHub is a product of APEX Business Systems Ltd.</p>
+    <div class="foot-bl"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="#">Cookies</a></div>
+  </div>
+</footer>
+
+<!-- REQUEST ACCESS MODAL -->
+<div id="ra-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-card">
+    <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+    <div class="modal-form-body" id="modal-form-body">
+      <div class="modal-title" id="modal-title">Request Early Access</div>
+      <div class="modal-sub">Tell us about your use case and we will be in touch.</div>
+      <div class="modal-gen-error" id="gen-error"></div>
+      <form id="ra-form" novalidate>
+        <input type="text" name="website" class="form-honey" tabindex="-1" autocomplete="off">
+        <div class="form-group"><label class="form-label" for="ra_name">Full Name *</label><input class="form-input" type="text" id="ra_name" name="ra_name" required maxlength="100" autocomplete="name" placeholder="Jane Smith"></div>
+        <div class="form-group"><label class="form-label" for="ra_email">Work Email *</label><input class="form-input" type="email" id="ra_email" name="ra_email" required maxlength="254" autocomplete="email" placeholder="jane@company.com"></div>
+        <div class="form-group"><label class="form-label" for="ra_company">Company</label><input class="form-input" type="text" id="ra_company" name="ra_company" maxlength="100" autocomplete="organization" placeholder="ACME Corp"></div>
+        <div class="form-group"><label class="form-label" for="ra_usecase">Use Case</label><textarea class="form-input" id="ra_usecase" name="ra_usecase" maxlength="500" rows="3" placeholder="Briefly describe how you plan to use APEX OmniHub"></textarea></div>
+        <button type="submit" class="pill" id="form-submit" style="width:100%;justify-content:center;margin-top:8px"><span class="btn-text">Request Access</span><span class="spinner"></span></button>
+      </form>
+    </div>
+    <div class="modal-success" id="modal-success">
+      <div class="modal-success-ico">&#10003;</div>
+      <div class="modal-success-ttl">Request Received</div>
+      <div class="modal-success-txt">We will be in touch shortly.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== CONFIG =====
+const APEX_CONFIG={
+  supabaseUrl:'https://wwajmaohwcbooljdureo.supabase.co',
+  supabaseAnonKey:'',
+  fallbackEmail:'access@apexomnihub.icu',
+  dashboardUrl:'https://app.apexomnihub.icu',
+};
+
+// ===== NAV SCROLL =====
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>40),{passive:true});
+
+// ===== SCROLL REVEAL =====
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:.07,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
+
+// ===== SIGN IN =====
+document.querySelectorAll('[data-action="signin"]').forEach(el=>{
+  el.addEventListener('click',e=>{e.preventDefault();window.location.href=APEX_CONFIG.dashboardUrl;});
+});
+
+// ===== MODAL =====
+const modal=document.getElementById('ra-modal');
+let formStart=0;
+function openModal(){modal.classList.add('open');modal.removeAttribute('aria-hidden');document.body.style.overflow='hidden';formStart=Date.now();}
+function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';}
+document.querySelectorAll('[data-modal="request-access"]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();openModal();}));
+document.getElementById('modal-close').addEventListener('click',closeModal);
+modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeModal();});
+
+// ===== FORM =====
+const CK='apex_ra_cooldown';
+function getLS(){try{const v=localStorage.getItem(CK);return v?parseInt(v,10):0;}catch{return 0;}}
+function setLS(){try{localStorage.setItem(CK,Date.now().toString());}catch{}}
+function san(s){return String(s).trim().replace(/<[^>]*>/g,'').slice(0,500);}
+
+document.getElementById('ra-form').addEventListener('submit',async function(e){
+  e.preventDefault();
+  const err=document.getElementById('gen-error');
+  const btn=document.getElementById('form-submit');
+  err.classList.remove('show');
+  if(this.website.value)return;
+  if(Date.now()-formStart<2000){err.textContent='Please take a moment to fill out the form.';err.classList.add('show');return;}
+  const last=getLS();
+  if(last&&Date.now()-last<300000){err.textContent='You already submitted recently. Please wait a few minutes.';err.classList.add('show');return;}
+  const name=san(this.ra_name.value),email=san(this.ra_email.value),company=san(this.ra_company.value),use_case=san(this.ra_usecase.value);
+  if(!name||name.length<2){err.textContent='Please enter your name.';err.classList.add('show');return;}
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='Please enter a valid email address.';err.classList.add('show');return;}
+  btn.classList.add('loading');btn.disabled=true;
+  const useSB=APEX_CONFIG.supabaseAnonKey&&APEX_CONFIG.supabaseUrl;
+  if(useSB){
+    try{
+      const r=await fetch(APEX_CONFIG.supabaseUrl+'/rest/v1/access_requests',{method:'POST',headers:{'apikey':APEX_CONFIG.supabaseAnonKey,'Authorization':'Bearer '+APEX_CONFIG.supabaseAnonKey,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({name,email,company:company||null,use_case:use_case||null})});
+      if(!r.ok)throw new Error(await r.text());
+      setLS();
+      document.getElementById('modal-form-body').classList.add('hidden');
+      document.getElementById('modal-success').classList.add('show');
+    }catch(x){
+      console.error('[APEX]',x);
+      err.textContent='Something went wrong. Please email us at '+APEX_CONFIG.fallbackEmail;
+      err.classList.add('show');btn.classList.remove('loading');btn.disabled=false;
+    }
+  }else{
+    const body=encodeURIComponent('Name: '+name+'\nEmail: '+email+'\nCompany: '+company+'\nUse case: '+use_case);
+    window.location.href='mailto:'+APEX_CONFIG.fallbackEmail+'?subject=Early+Access+Request&body='+body;
+    setLS();
+    document.getElementById('modal-form-body').classList.add('hidden');
+    document.getElementById('modal-success').classList.add('show');
+  }
+});
+</script>
+</body>
+</html>
