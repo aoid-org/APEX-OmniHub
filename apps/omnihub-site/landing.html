@@ -625,7 +625,6 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.con
 
 // ===== FORM =====
 let _lastSubmit=0; // in-memory rate limit (session only)
-function san(s){return String(s).trim().replace(/<[^>]*>/g,'').slice(0,500);}
 
 document.getElementById('ra-form').addEventListener('submit',function(e){
   e.preventDefault();
@@ -635,9 +634,10 @@ document.getElementById('ra-form').addEventListener('submit',function(e){
   if(this.website.value)return; // honeypot
   if(Date.now()-formStart<2000){err.textContent='Please take a moment to fill out the form.';err.classList.add('show');return;}
   if(_lastSubmit&&Date.now()-_lastSubmit<300000){err.textContent='You already submitted recently. Please wait a few minutes.';err.classList.add('show');return;}
-  const name=san(this.ra_name.value),email=san(this.ra_email.value);
+  const name=String(this.ra_name.value).trim().slice(0,200);
+  const emailEl=this.ra_email;
   if(!name||name.length<2){err.textContent='Please enter your name.';err.classList.add('show');return;}
-  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='Please enter a valid email address.';err.classList.add('show');return;}
+  if(!emailEl.validity.valid||!emailEl.value){err.textContent='Please enter a valid email address.';err.classList.add('show');return;}
   btn.classList.add('loading');btn.disabled=true;
   _lastSubmit=Date.now();
   document.getElementById('modal-form-body').classList.add('hidden');
