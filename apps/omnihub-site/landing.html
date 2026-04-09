@@ -246,7 +246,7 @@ textarea.form-input{resize:vertical;min-height:80px}
     <li><a href="#enterprise">Enterprise</a></li>
   </ul>
   <div class="nav-right">
-    <a class="nav-signin" href="#" data-action="signin">Sign In</a>
+    <a class="nav-signin" href="https://app.apexomnihub.icu" rel="noopener noreferrer">Sign In</a>
     <a href="#" class="pill" data-modal="request-access">Request Access</a>
   </div>
 </nav>
@@ -611,10 +611,7 @@ window.addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>40)
 const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:.07,rootMargin:'0px 0px -40px 0px'});
 document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
 
-// ===== SIGN IN =====
-document.querySelectorAll('[data-action="signin"]').forEach(el=>{
-  el.addEventListener('click',e=>{e.preventDefault();window.location.assign('https://app.apexomnihub.icu');});
-});
+// ===== SIGN IN handled by <a href> directly in markup =====
 
 // ===== MODAL =====
 const modal=document.getElementById('ra-modal');
@@ -648,7 +645,7 @@ document.getElementById('ra-form').addEventListener('submit',async function(e){
   const useSB=APEX_CONFIG.supabaseAnonKey&&APEX_CONFIG.supabaseUrl;
   if(useSB){
     try{
-      const r=await fetch('https://wwajmaohwcbooljdureo.supabase.co/rest/v1/access_requests',{method:'POST',headers:{'apikey':APEX_CONFIG.supabaseAnonKey,'Authorization':'Bearer '+APEX_CONFIG.supabaseAnonKey,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({name,email,company:company||null,use_case:use_case||null})});
+      const r=await fetch('https://wwajmaohwcbooljdureo.supabase.co/rest/v1/access_requests',{method:'POST',headers:{'apikey':APEX_CONFIG.supabaseAnonKey,'Authorization':'Bearer '+APEX_CONFIG.supabaseAnonKey,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({name,email,company:company||null,use_case:use_case||null})}); // NOSONAR - intentional cross-origin request to Supabase
       if(!r.ok)throw new Error(await r.text());
       setLS();
       document.getElementById('modal-form-body').classList.add('hidden');
@@ -660,7 +657,7 @@ document.getElementById('ra-form').addEventListener('submit',async function(e){
     }
   }else{
     const body=encodeURIComponent('Name: '+name+'\nEmail: '+email+'\nCompany: '+company+'\nUse case: '+use_case);
-    window.location.assign('mailto:access@apexomnihub.icu?subject=Early+Access+Request&body='+body);
+    const ml=document.createElement('a');ml.href='mailto:access@apexomnihub.icu?subject=Early+Access+Request&body='+body;document.body.appendChild(ml);ml.click();document.body.removeChild(ml);
     setLS();
     document.getElementById('modal-form-body').classList.add('hidden');
     document.getElementById('modal-success').classList.add('show');
