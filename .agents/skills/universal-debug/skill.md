@@ -6,7 +6,8 @@
 ---
 name: universal-debug
 description: "Consciousness engineering protocol for systematic root-cause problem solving. Triggers: stuck in loop, same problem keeps happening, systematic approach, root cause analysis."
-version: "2.0.0"
+version: "2.0.1"
+last_updated: "2026-04-09"
 archetype: "workflow"
 platform: "google-antigravity"
 license: "Proprietary - APEX Business Systems Ltd."
