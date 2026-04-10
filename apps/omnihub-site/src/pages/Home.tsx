@@ -1,28 +1,12 @@
 import { useEffect, useRef } from 'react';
+import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { StructuredData } from '@/components/StructuredData';
 import '@/styles/landing.css';
 import homepageSchema from '../../public/schema/homepage.jsonld?raw';
 import organizationSchema from '../../public/schema/organization.jsonld?raw';
 
-const LANDING_HTML = `<!-- NAV -->
-<nav id="landing-nav">
-  <a class="nav-logo" href="#">
-    <div class="nav-logo-wrap"><img class="nav-wordmark" src="/apex-omnihub-wordmark.svg" alt="APEX OmniHub"><span class="nav-tagline">Intelligence, Designed.</span></div>
-  </a>
-  <ul class="nav-links">
-    <li><a href="#platform">Platform</a></li>
-    <li><a href="#features">Features</a></li>
-    <li><a href="#story">Founder's Story</a></li>
-    <li><a href="#enterprise">Enterprise</a></li>
-  </ul>
-  <div class="nav-right">
-    <a class="nav-signin" href="https://app.apexomnihub.icu" rel="noopener noreferrer">Sign In</a>
-    <a href="#" class="pill" data-modal="request-access">Request Access</a>
-  </div>
-</nav>
-
-<!-- HERO -->
+const LANDING_HTML = `<!-- HERO -->
 <section class="hero hov-section">
   <div class="hero-glow-l"></div>
   <div class="hero-glow-r"></div>
@@ -30,7 +14,7 @@ const LANDING_HTML = `<!-- NAV -->
     <div class="hero-left">
       <h1 class="hero-h1 rv">The Universal<br>Sync<br>Orchestrator.</h1>
       <p class="hero-sub rv d1">
-        The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface, where every action is authorized, logged, and reversible. Connect Web3, legacy, blockchain, and AI systems without limits, constrained only by your capacity and use cases.
+        The governed command surface for enterprise AI. Unify software, AI agents, and enterprise platforms into one orchestrated layer where every action is authorized, logged, and reversible. Connect Web3, legacy, blockchain, and AI systems without limits. Your capacity and use cases are the only boundaries.
       </p>
       <div class="hero-tiles rv d1">
         <div class="htile">DIRECT</div>
@@ -163,7 +147,7 @@ const LANDING_HTML = `<!-- NAV -->
       <div class="rv">
         <div class="tag">Total Command</div>
         <h2 class="h2">Absolute<br><span class="g">Governance.</span></h2>
-        <p class="sub">Issue the directive. OmniHub orchestrates all connected systems with full real-time visibility: actions logged, agents tracked, outcomes traceable.</p>
+        <p class="sub">You issue the directive. OmniHub orchestrates every connected system with full real-time visibility. Actions logged. Agents tracked. Outcomes traceable.</p>
         <div class="feat-list">
           <div class="feat-item">
             <div class="feat-ico"><svg viewBox="0 0 18 18" fill="none"><path d="M3 4h12M3 8h8M3 12h5" stroke="#D4855A" stroke-width="1.6" stroke-linecap="round"/><circle cx="14" cy="10" r="3.5" stroke="#D4855A" stroke-width="1.4" fill="none"/><path d="M13 10l1 1 1.5-1.5" stroke="#D4855A" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
@@ -206,7 +190,7 @@ const LANDING_HTML = `<!-- NAV -->
       <div class="rv">
         <div class="tag">Architectural Primitive</div>
         <h2 class="h2">Built to<br><span class="g">Reverse.</span></h2>
-        <p class="sub">The only enterprise AI platform where rollback is a first-class architectural primitive. One bad decision does not cascade. You undo it completely.</p>
+        <p class="sub">The only enterprise AI platform where rollback is a first-class architectural primitive. One bad decision does not cascade. You undo it. Completely.</p>
         <div class="feat-list">
           <div class="feat-item">
             <div class="feat-ico"><svg viewBox="0 0 18 18" fill="none"><path d="M5 9a4 4 0 0 1 4-4h2" stroke="#D4855A" stroke-width="1.5" stroke-linecap="round"/><path d="M8 3l3 2-3 2" stroke="#D4855A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 13H7a4 4 0 0 1 0-8" stroke="#D4855A" stroke-width="1.3" fill="none" opacity=".5"/></svg></div>
@@ -263,7 +247,7 @@ const LANDING_HTML = `<!-- NAV -->
       <div class="tag">Core Philosophy</div>
       <h2 class="h2">The MAESTRO<br>Principle.</h2>
       <p class="sub" style="margin-bottom:20px">Intelligence is not just capability. It is coordination with consequence. MAESTRO is the operating philosophy baked into each layer of APEX OmniHub.</p>
-      <p style="font-size:13.5px;color:var(--t2);line-height:1.72;letter-spacing:-.1px;text-align:justify;text-indent:2em">Enterprise AI must serve organizational intent. As the system scales, MAESTRO ensures authority scales with it.</p>
+      <p style="font-size:13.5px;color:var(--t2);line-height:1.72;letter-spacing:-.1px;text-align:justify;text-indent:2em">Enterprise AI must serve your organization's intent. As the system scales, MAESTRO ensures authority scales with it.</p>
     </div>
     <div class="maestro-rows rv d2">
       <div class="m-row"><div class="m-l">M</div><div><div class="m-word">Multi-Agent</div><div class="m-desc">coordination at enterprise scale, all synchronized</div></div></div>
@@ -304,7 +288,7 @@ const LANDING_HTML = `<!-- NAV -->
   <div class="cta-in">
     <div class="tag rv" style="justify-content:center">Take Control</div>
     <h2 class="cta-h2 rv">Take operational<br>authority back.</h2>
-    <p class="cta-sub rv d1">Request early access and see what governed intelligence looks like when it runs in production.</p>
+    <p class="cta-sub rv d1">Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production.</p>
     <div class="cta-btns rv d2">
       <a href="#" class="pill pill-lg" data-modal="request-access">Request Early Access</a>
       <a href="/demo.html" class="pill pill-lg pill-ghost">Schedule a Demo</a>
@@ -312,33 +296,6 @@ const LANDING_HTML = `<!-- NAV -->
     <p class="cta-note rv d3">No vendor lock-in. No black boxes. No surprises.</p>
   </div>
 </section>
-
-<!-- FOOTER -->
-<footer>
-  <div class="foot-grid">
-    <div>
-      <img class="foot-wm" src="/apex-omnihub-wordmark.svg" alt="APEX OmniHub">
-      <p class="foot-about">The Universal Sync Orchestrator. Enterprise AI governance that puts operational authority back where it belongs, with you.</p>
-      <p class="foot-legal-sm">2025 APEX Business Systems Ltd.<br>Edmonton, Alberta, Canada.</p>
-    </div>
-    <div>
-      <div class="foot-ttl">Platform</div>
-      <ul class="foot-links"><li><a href="#">Overview</a></li><li><a href="/tri-force.html">Tri-Force Architecture</a></li><li><a href="/maestro.html">MAESTRO Engine</a></li><li><a href="/man-mode.html">MAN Mode</a></li><li><a href="/smart-integrations.html">Integrations</a></li></ul>
-    </div>
-    <div>
-      <div class="foot-ttl">Company</div>
-      <ul class="foot-links"><li><a href="#">About APEX</a></li><li><a href="#">Founder's Story</a></li><li><a href="#">Blog</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li></ul>
-    </div>
-    <div>
-      <div class="foot-ttl">Resources</div>
-      <ul class="foot-links"><li><a href="#">Documentation</a></li><li><a href="#">API Reference</a></li><li><a href="#">Security</a></li><li><a href="#">Status</a></li><li><a href="#">Contact</a></li></ul>
-    </div>
-  </div>
-  <div class="foot-bottom">
-    <p class="foot-copy">Intelligence, Designed. APEX OmniHub is a product of APEX Business Systems Ltd.</p>
-    <div class="foot-bl"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="#">Cookies</a></div>
-  </div>
-</footer>
 
 <!-- REQUEST ACCESS MODAL -->
 <div id="ra-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -371,13 +328,6 @@ export function HomePage() {
   useEffect(() => {
     if (!rootRef.current) return;
     const root = rootRef.current;
-
-    // Nav scroll
-    const nav = root.querySelector('#landing-nav') as HTMLElement | null;
-    const scrollHandler = () => {
-      if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);
-    };
-    window.addEventListener('scroll', scrollHandler, { passive: true });
 
     // Scroll reveal
     const obs = new IntersectionObserver(
@@ -455,7 +405,6 @@ export function HomePage() {
     if (form) form.addEventListener('submit', formHandler);
 
     return () => {
-      window.removeEventListener('scroll', scrollHandler);
       obs.disconnect();
       document.removeEventListener('keydown', escHandler);
       document.body.style.overflow = '';
@@ -463,16 +412,16 @@ export function HomePage() {
   }, []);
 
   return (
-    <div className="landing-root" ref={rootRef}>
+    <Layout>
       <SEOMeta
-        title="APEX OmniHub \u2014 Intelligence, Designed."
+        title="APEX OmniHub - Intelligence, Designed."
         description="The Universal Sync Orchestrator. Every AI agent, enterprise platform, and workflow unified under one governed command surface."
         canonical="https://apexomnihub.icu/"
         appendBrandSuffix={false}
       />
       <StructuredData id="homepage-schema" json={homepageSchema} />
       <StructuredData id="organization-schema" json={organizationSchema} />
-      <div dangerouslySetInnerHTML={{ __html: LANDING_HTML }} />
-    </div>
+      <div className="landing-root" ref={rootRef} dangerouslySetInnerHTML={{ __html: LANDING_HTML }} />
+    </Layout>
   );
 }
