@@ -19,19 +19,39 @@ export interface BaselineMetrics {
 export function computeBaseline(logs: ActivityLog[]): BaselineMetrics[] {
   const buckets = new Map<string, ActivityLog[]>();
 
-  logs.forEach((log) => {
+  // Use a fast for loop instead of .forEach
+  for (let i = 0; i < logs.length; i++) {
+    const log = logs[i];
     const key = `${log.userId}:${log.deviceId}`;
-    if (!buckets.has(key)) buckets.set(key, []);
-    buckets.get(key)!.push(log);
-  });
+    let bucket = buckets.get(key);
+    if (!bucket) {
+      bucket = [];
+      buckets.set(key, bucket);
+    }
+    bucket.push(log);
+  }
 
   return Array.from(buckets.entries()).map(([key, entries]) => {
     const [userId, deviceId] = key.split(':');
     const totalSessions = entries.length;
-    const avgSessionDuration =
-      entries.reduce((sum, e) => sum + (e.durationMs ?? 0), 0) / Math.max(totalSessions, 1);
-    const uniqueActions = new Set(entries.map((e) => e.action)).size;
-    const lastSeen = Math.max(...entries.map((e) => e.timestamp));
+
+    // Single pass accumulation to avoid multiple O(N) traversals and
+    // prevent "Maximum call stack size exceeded" with Math.max(...array)
+    let totalDuration = 0;
+    let lastSeen = -Infinity;
+    const uniqueActionsSet = new Set<string>();
+
+    for (let i = 0; i < totalSessions; i++) {
+      const e = entries[i];
+      totalDuration += (e.durationMs ?? 0);
+      uniqueActionsSet.add(e.action);
+      if (e.timestamp > lastSeen) {
+        lastSeen = e.timestamp;
+      }
+    }
+
+    const uniqueActions = uniqueActionsSet.size;
+    const avgSessionDuration = totalDuration / Math.max(totalSessions, 1);
     const risk = avgSessionDuration < 1000 || uniqueActions > 10 ? 'elevated' : 'normal';
 
     return {
