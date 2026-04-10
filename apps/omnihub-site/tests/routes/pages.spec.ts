@@ -15,7 +15,7 @@ import { test, expect } from '@playwright/test';
 
 // Page test matrix: [route, expectedContent]
 const PAGE_TESTS = [
-  { route: '/', htmlRoute: '/index.html', content: 'Universal Sync Orchestrator', description: 'Landing page hero title' },
+  { route: '/', htmlRoute: '/index.html', content: 'Intelligence Designed', description: 'Homepage hero title' },
   { route: '/demo', htmlRoute: '/demo.html', content: 'See It In Action', description: 'Demo page title' },
   { route: '/tech-specs', htmlRoute: '/tech-specs.html', content: 'Technical Specifications', description: 'Tech specs page title' },
   { route: '/request-access', htmlRoute: '/request-access.html', content: 'Request Access', description: 'Request access page title' },

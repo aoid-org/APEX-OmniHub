@@ -21,8 +21,7 @@ const ASSETS_JS_DIR = resolve(DIST_DIR, 'assets/js');
 
 // Page expectations
 const PAGE_CHECKS = [
-  { file: 'index.html', name: 'Landing (/)', htmlContains: ['Universal Sync Orchestrator', '<nav'] },
-  { file: 'app.html', name: 'SPA Shell (/app)', htmlContains: ['<div id="root">', '<script'] },
+  { file: 'index.html', name: 'Home (/)', htmlContains: ['<div id="root">', '<script'] },
   { file: 'demo.html', name: 'Demo (/demo)', htmlContains: ['<div id="root">', '<script'] },
   { file: 'tech-specs.html', name: 'Tech Specs (/tech-specs)', htmlContains: ['<div id="root">', '<script'] },
   { file: 'request-access.html', name: 'Request Access (/request-access)', htmlContains: ['<div id="root">', '<script'] },

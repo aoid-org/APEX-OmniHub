@@ -14,12 +14,12 @@ const content = fs.readFileSync(redirectsPath, 'utf8');
 
 const hasSPARewrite = content.split('\n').some(line => {
   const trimmed = line.trim();
-  // Match: /* /app.html 200
-  return /^\/\*\s+\/app\.html\s+200/.test(trimmed);
+  // Match: /* /index.html 200
+  return /^\/\*\s+\/index\.html\s+200/.test(trimmed);
 });
 
 if (!hasSPARewrite) {
-  console.error('FAIL: Missing SPA catch-all redirect: /* /app.html 200');
+  console.error('FAIL: Missing SPA catch-all redirect: /* /index.html 200');
   process.exit(1);
 }
 

@@ -13,5 +13,5 @@
 /terms /terms.html 200
 /terms/ /terms.html 200
 
-# SPA catch-all — serves app.html for all unmatched React SPA routes
-/* /app.html 200
+# SPA catch-all — serves index.html for all unmatched routes
+/* /index.html 200
