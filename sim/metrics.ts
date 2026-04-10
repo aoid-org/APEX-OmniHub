@@ -176,15 +176,34 @@ export class MetricsCollector {
     const stats: LatencyStats[] = [];
 
     for (const [op, metrics] of byOp.entries()) {
-      const durations = metrics.map(m => m.durationMs).sort((a, b) => a - b);
-      const successes = metrics.filter(m => m.success).length;
+      const len = metrics.length;
+      let successes = 0;
+      let durationSum = 0;
+      const durations = new Array(len);
+      let min = Infinity;
+      let max = -Infinity;
+
+      for (let i = 0; i < len; i++) {
+        const m = metrics[i];
+        const d = m.durationMs;
+        durations[i] = d;
+        durationSum += d;
+        if (d < min) min = d;
+        if (d > max) max = d;
+        if (m.success) successes++;
+      }
+      durations.sort((a, b) => a - b);
+      if (len === 0) {
+        min = 0;
+        max = 0;
+      }
 
       stats.push({
         operation: op,
-        count: metrics.length,
-        min: Math.min(...durations),
-        max: Math.max(...durations),
-        mean: durations.reduce((a, b) => a + b, 0) / durations.length,
+        count: len,
+        min: min,
+        max: max,
+        mean: len > 0 ? durationSum / len : 0,
         p50: this.percentile(durations, 0.50),
         p95: this.percentile(durations, 0.95),
         p99: this.percentile(durations, 0.99),
@@ -201,18 +220,37 @@ export class MetricsCollector {
   getAppMetrics(): AppMetrics[] {
     const metrics: AppMetrics[] = [];
 
+    // Pre-group latencies by app to avoid O(A*N) filtering
+    const appLatencies = new Map<string, { durations: number[], sum: number }>();
+    const apps = Array.from(this.appCounts.keys());
+    for (const app of apps) {
+      appLatencies.set(app, { durations: [], sum: 0 });
+    }
+
+    // Single pass to bucket by app
+    for (let i = 0; i < this.latencyMetrics.length; i++) {
+      const m = this.latencyMetrics[i];
+      // Find matching app - typically operation starts with app name
+      for (const app of apps) {
+        if (m.operation.startsWith(app)) {
+          const bucket = appLatencies.get(app)!;
+          bucket.durations.push(m.durationMs);
+          bucket.sum += m.durationMs;
+          break; // Assume operation maps to one app
+        }
+      }
+    }
+
     for (const [app, counts] of this.appCounts.entries()) {
       const total = counts.success + counts.failure;
       const successRate = total > 0 ? counts.success / total : 0;
 
-      // Get app-specific latency metrics
-      const appLatency = this.latencyMetrics.filter(m => m.operation.startsWith(app));
-      const avgLatency = appLatency.length > 0
-        ? appLatency.reduce((sum, m) => sum + m.durationMs, 0) / appLatency.length
-        : 0;
+      const bucket = appLatencies.get(app)!;
+      const len = bucket.durations.length;
+      const avgLatency = len > 0 ? bucket.sum / len : 0;
 
-      const durations = appLatency.map(m => m.durationMs).sort((a, b) => a - b);
-      const p95Latency = durations.length > 0 ? this.percentile(durations, 0.95) : 0;
+      const durations = bucket.durations.sort((a, b) => a - b);
+      const p95Latency = len > 0 ? this.percentile(durations, 0.95) : 0;
 
       metrics.push({
         app,
@@ -234,10 +272,20 @@ export class MetricsCollector {
    * Get system-wide metrics
    */
   getSystemMetrics(queueDepth: number = 0, circuitStates: Record<string, string> = {}): SystemMetrics {
-    const allDurations = this.latencyMetrics.map(m => m.durationMs).sort((a, b) => a - b);
     const totalEvents = this.latencyMetrics.length;
-    const totalFailures = this.latencyMetrics.filter(m => !m.success).length;
-    const totalRetries = this.latencyMetrics.filter(m => m.retryAttempt > 0).length;
+    let totalFailures = 0;
+    let totalRetries = 0;
+    const allDurations = new Array(totalEvents);
+    let totalDurationSum = 0;
+
+    for (let i = 0; i < totalEvents; i++) {
+      const m = this.latencyMetrics[i];
+      allDurations[i] = m.durationMs;
+      totalDurationSum += m.durationMs;
+      if (!m.success) totalFailures++;
+      if (m.retryAttempt > 0) totalRetries++;
+    }
+    allDurations.sort((a, b) => a - b);
 
     const appMetrics = this.getAppMetrics();
     const totalDedupes = appMetrics.reduce((sum, m) => sum + m.dedupesTotal, 0);
@@ -246,7 +294,7 @@ export class MetricsCollector {
       totalEvents,
       totalDurations: allDurations.length,
       avgLatencyMs: allDurations.length > 0
-        ? allDurations.reduce((a, b) => a + b, 0) / allDurations.length
+        ? totalDurationSum / allDurations.length
         : 0,
       p50LatencyMs: this.percentile(allDurations, 0.50),
       p95LatencyMs: this.percentile(allDurations, 0.95),

@@ -14,7 +14,8 @@ resource "vercel_project" "main" {
   name      = var.project_name
   framework = "vite"
 
-  git_repository {
+  # Provider expects git_repository as an object argument, not a nested block.
+  git_repository = {
     type = "github"
     repo = var.github_repo
   }
@@ -27,7 +28,8 @@ resource "vercel_project" "main" {
 
 # Environment variables (synced from Doppler)
 resource "vercel_project_environment_variable" "env_vars" {
-  for_each = var.env_vars
+  # nonsensitive() is required because for_each keys cannot be marked sensitive.
+  for_each = nonsensitive(var.env_vars)
 
   project_id = vercel_project.main.id
   key        = each.key
@@ -41,12 +43,4 @@ resource "vercel_project_domain" "main" {
 
   project_id = vercel_project.main.id
   domain     = var.custom_domain
-}
-
-# Deployment protection (production only)
-resource "vercel_project_deployment_retention" "main" {
-  project_id = vercel_project.main.id
-
-  # Keep last 30 deployments
-  expiration = 2592000 # 30 days in seconds
 }

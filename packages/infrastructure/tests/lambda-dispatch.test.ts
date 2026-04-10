@@ -22,26 +22,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockTaskToken = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0xAA, 0xBB]);
 
-vi.mock('@temporalio/activity', () => {
-  class CompleteAsyncError extends Error {
-    readonly name = 'CompleteAsyncError';
-    constructor() {
-      super('Activity will be completed asynchronously');
-    }
-  }
-
-  return {
-    Context: {
-      current: () => ({
-        info: {
-          taskToken: mockTaskToken,
-        },
-      }),
-    },
-    CompleteAsyncError,
-  };
-});
-
 const mockSend = vi.fn().mockResolvedValue({ StatusCode: 202 });
 
 vi.mock('@aws-sdk/client-lambda', () => {
@@ -64,7 +44,6 @@ vi.mock('@aws-sdk/client-lambda', () => {
 // ============================================================================
 
 import { dispatchToLambdaActivity } from '../../../src/omnihub-gateway/TemporalBridge';
-import { CompleteAsyncError } from '@temporalio/activity';
 import { LambdaClient } from '@aws-sdk/client-lambda';
 
 // ============================================================================
@@ -86,8 +65,12 @@ describe('dispatchToLambdaActivity', () => {
     const client = new LambdaClient();
 
     await expect(
-      dispatchToLambdaActivity(testPayload, client as unknown as InstanceType<typeof LambdaClient>),
-    ).rejects.toThrow(CompleteAsyncError);
+      dispatchToLambdaActivity(
+        testPayload,
+        client as unknown as InstanceType<typeof LambdaClient>,
+        mockTaskToken,
+      ),
+    ).rejects.toMatchObject({ name: 'CompleteAsyncError' });
 
     expect(mockSend).toHaveBeenCalledOnce();
 
@@ -100,8 +83,12 @@ describe('dispatchToLambdaActivity', () => {
     const client = new LambdaClient();
 
     await expect(
-      dispatchToLambdaActivity(testPayload, client as unknown as InstanceType<typeof LambdaClient>),
-    ).rejects.toThrow(CompleteAsyncError);
+      dispatchToLambdaActivity(
+        testPayload,
+        client as unknown as InstanceType<typeof LambdaClient>,
+        mockTaskToken,
+      ),
+    ).rejects.toMatchObject({ name: 'CompleteAsyncError' });
 
     const invokeCommand = mockSend.mock.calls[0][0];
     const payloadBytes = invokeCommand.input.Payload as Uint8Array;
@@ -123,12 +110,13 @@ describe('dispatchToLambdaActivity', () => {
       await dispatchToLambdaActivity(
         testPayload,
         client as unknown as InstanceType<typeof LambdaClient>,
+        mockTaskToken,
       );
     } catch (err) {
       caughtError = err;
     }
 
-    expect(caughtError).toBeInstanceOf(CompleteAsyncError);
+    expect(caughtError).toBeInstanceOf(Error);
     expect((caughtError as Error).name).toBe('CompleteAsyncError');
   });
 
@@ -139,6 +127,7 @@ describe('dispatchToLambdaActivity', () => {
       await dispatchToLambdaActivity(
         testPayload,
         client as unknown as InstanceType<typeof LambdaClient>,
+        mockTaskToken,
       );
     } catch {
       // Expected
@@ -147,4 +136,5 @@ describe('dispatchToLambdaActivity', () => {
     // Lambda must have been invoked before the throw
     expect(mockSend).toHaveBeenCalledOnce();
   });
+
 });

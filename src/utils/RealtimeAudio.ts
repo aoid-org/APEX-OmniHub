@@ -61,15 +61,15 @@ export const encodeAudioForAPI = (float32Array: Float32Array): string => {
   }
   
   const uint8Array = new Uint8Array(int16Array.buffer);
-  let binary = '';
+  // Efficient binary to base64 conversion using Array.from().map().join() or chunks
+  // to avoid stack overflow with String.fromCharCode.apply on large arrays.
+  const chunks: string[] = [];
   const chunkSize = 0x8000;
-  
   for (let i = 0; i < uint8Array.length; i += chunkSize) {
-    const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
-    binary += String.fromCharCode.apply(null, Array.from(chunk));
+    const chunk = uint8Array.subarray(i, i + chunkSize);
+    chunks.push(String.fromCharCode(...chunk));
   }
-  
-  return btoa(binary);
+  return btoa(chunks.join(''));
 };
 
 const createWavFromPCM = (pcmData: Uint8Array) => {
