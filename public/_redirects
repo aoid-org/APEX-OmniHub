@@ -15,6 +15,6 @@
 /terms /terms.html 200
 /terms/ /terms.html 200
 
-# SPA fallback — serves app.html for all unmatched React SPA routes
-/app.html /app.html 200
-/* /app.html 200
+# SPA fallback - serves index.html for all unmatched routes (no loop)
+/index.html /index.html 200
+/* /index.html 200
