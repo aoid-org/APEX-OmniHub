@@ -36,7 +36,7 @@
     { "source": "/tri-force/", "destination": "/tri-force.html" },
     {
       "source": "/((?!assets|schema|icons|robots.txt|sitemap.xml|favicon.ico).*)",
-      "destination": "/index.html"
+      "destination": "/app.html"
     }
   ],
   "headers": [

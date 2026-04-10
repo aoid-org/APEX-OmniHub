@@ -69,7 +69,10 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
-      // Input defaults to index.html in SPA mode
+      input: {
+        index: resolve(__dirname, 'index.html'),
+        app: resolve(__dirname, 'app.html'),
+      },
       output: {
         // Consistent asset naming for caching
         assetFileNames: 'assets/[name]-[hash][extname]',
