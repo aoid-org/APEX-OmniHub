@@ -183,16 +183,8 @@ class MetricsCollector {
 
     const windowEvents = this.events.filter((e) => e.timestamp >= windowStart);
 
-    const latencies = windowEvents.map((e) => e.latencyMs).sort((a, b) => a - b);
-    const avgLatencyMs =
-      latencies.length > 0
-        ? latencies.reduce((sum, l) => sum + l, 0) / latencies.length
-        : 0;
-    const p95LatencyMs =
-      latencies.length > 0
-        ? latencies[Math.floor(latencies.length * 0.95)] || latencies.at(-1)
-        : 0;
-
+    // BOLT OPTIMIZATION: Accumulate all metrics in a single O(N) pass
+    // to avoid multiple iterations and intermediate array creations.
     let accepted = 0;
     let blocked = 0;
     let buffered = 0;
@@ -202,8 +194,15 @@ class MetricsCollector {
     let voice = 0;
     let webhook = 0;
 
+    let sumLatencies = 0;
+    const latencies = new Array(windowEvents.length); // Pre-allocate for speed
+
     for (let i = 0; i < windowEvents.length; i++) {
       const e = windowEvents[i];
+
+      latencies[i] = e.latencyMs;
+      sumLatencies += e.latencyMs;
+
       if (e.status === 'accepted') accepted++;
       else if (e.status === 'blocked') blocked++;
       else if (e.status === 'buffered') buffered++;
@@ -215,6 +214,10 @@ class MetricsCollector {
       else if (e.sourceType === 'voice') voice++;
       else if (e.sourceType === 'webhook') webhook++;
     }
+
+    latencies.sort((a, b) => a - b);
+    const avgLatencyMs = latencies.length > 0 ? sumLatencies / latencies.length : 0;
+    const p95LatencyMs = latencies.length > 0 ? (latencies[Math.floor(latencies.length * 0.95)] || latencies.at(-1)) : 0;
 
     return {
       totalIngestions: windowEvents.length,

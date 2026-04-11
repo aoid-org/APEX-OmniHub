@@ -9,3 +9,7 @@
 ## 2026-04-10 - [Math.max call stack error optimization]
 **Learning:** Found an issue in `src/zero-trust/baseline.ts` where spreading a large mapped array into `Math.max` (e.g., `Math.max(...entries.map(e => e.timestamp))`) causes a "Maximum call stack size exceeded" error. This is a common JavaScript pitfall for arrays larger than the engine's argument limit (typically around 65K - 120K elements).
 **Action:** Replaced `Math.max(...array)` with a simple `for` loop that updates a `max` variable. This not only avoids the call stack error, but combined with replacing chained `.map` and `.reduce` calls, it converts O(k*N) array traversals to a single O(N) traversal.
+
+## 2026-04-11 - [Array processing overhead across codebase]
+**Learning:** Discovered that O(k*N) chained array methods (.filter().length, .map().reduce(), etc) are a widespread bottleneck in multiple modules (metrics, sim evaluation, test runners). Floating point precision is usually not a problem when mathematically reverse engineering counts (e.g. Math.round(rate * total)) to avoid loops, but can make code brittle.
+**Action:** Replaced widespread O(k*N) array operations with O(N) single-pass loops, pre-allocating arrays when possible via `new Array(length)` to avoid `.push()` overhead. Ensure comments explicitly describe why these loops exist.
