@@ -3,6 +3,7 @@ import asyncio
 import pytest
 from temporalio.exceptions import ApplicationError
 
+import reliability.llm_plan_resilience as plan_resilience
 from reliability.llm_plan_resilience import (
     attempt_with_model_fallback,
     resolve_model_candidates,
@@ -54,7 +55,7 @@ async def test_attempt_with_model_fallback_times_out_then_raises_non_retryable(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("LLM_PLAN_MAX_MODEL_ATTEMPTS", "2")
-    monkeypatch.setenv("LLM_PLAN_REQUEST_TIMEOUT_SECONDS", "0")
+    monkeypatch.setattr(plan_resilience, "resolve_plan_timeout_seconds", lambda: 0.001)
 
     async def _execute(_: str, model: str, __: dict[str, object]) -> dict[str, object]:
         await asyncio.sleep(0.01)
