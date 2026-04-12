@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { LayoutDashboard, Plug, Activity, Mic, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCapabilities, type Capabilities } from '@/hooks/useCapabilities';
@@ -11,6 +12,38 @@ interface NavItem {
   capability?: keyof Capabilities;
 }
 
+const navItems: NavItem[] = [
+  {
+    moduleKey: 'dashboard',
+    label: 'Dash',
+    icon: LayoutDashboard,
+    capability: 'canViewOmniDash',
+  },
+  {
+    moduleKey: 'integrations',
+    label: 'Connect',
+    icon: Plug,
+    capability: 'canManageIntegrations',
+  },
+  {
+    moduleKey: 'omnitrace',
+    label: 'Trace',
+    icon: Activity,
+    capability: 'canViewOmniTrace',
+  },
+  {
+    moduleKey: 'agent',
+    label: 'Agent',
+    icon: Mic,
+    capability: 'canUseVoiceAgent',
+  },
+  {
+    moduleKey: 'settings',
+    label: 'Settings',
+    icon: Settings,
+  },
+];
+
 /**
  * MobileBottomNav — Touch-friendly bottom navigation for mobile/tablet.
  * All items dispatch module modals within OmniDash.
@@ -20,43 +53,13 @@ export function MobileBottomNav() {
   const { capabilities } = useCapabilities();
   const activeModuleKey = useOmniModal((s) => s.activeModal?.contextData?.moduleKey as string | undefined);
 
-  const navItems: NavItem[] = [
-    {
-      moduleKey: 'dashboard',
-      label: 'Dash',
-      icon: LayoutDashboard,
-      capability: 'canViewOmniDash',
-    },
-    {
-      moduleKey: 'integrations',
-      label: 'Connect',
-      icon: Plug,
-      capability: 'canManageIntegrations',
-    },
-    {
-      moduleKey: 'omnitrace',
-      label: 'Trace',
-      icon: Activity,
-      capability: 'canViewOmniTrace',
-    },
-    {
-      moduleKey: 'agent',
-      label: 'Agent',
-      icon: Mic,
-      capability: 'canUseVoiceAgent',
-    },
-    {
-      moduleKey: 'settings',
-      label: 'Settings',
-      icon: Settings,
-    },
-  ];
-
   // Filter items based on capabilities
-  const visibleItems = navItems.filter((item) => {
-    if (!item.capability) return true;
-    return capabilities[item.capability];
-  });
+  const visibleItems = useMemo(() => {
+    return navItems.filter((item) => {
+      if (!item.capability) return true;
+      return capabilities[item.capability];
+    });
+  }, [capabilities]);
 
   const openModule = (moduleKey: string, title: string) => {
     const config: OmniModalConfig = {

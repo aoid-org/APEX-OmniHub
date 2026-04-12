@@ -1,7 +1,8 @@
 ---
 name: apex-ios
 description: "Executes enterprise-grade iOS architecture, Fastlane CI/CD deployments, and Match code signing. Triggers: ios deployment, fastlane beta, xcode build failed, certificate expired, testflight upload, match signing error, swiftui architecture."
-version: "1.2.0"
+version: "1.2.1"
+last_updated: "2026-04-09"
 archetype: "workflow"
 platform: "google-antigravity"
 license: "Proprietary - APEX Business Systems Ltd."

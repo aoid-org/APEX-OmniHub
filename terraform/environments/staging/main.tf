@@ -74,7 +74,7 @@ module "cloudflare" {
 
   zone_id              = var.cloudflare_zone_id
   domain               = "staging.omnihub.dev"
-  rate_limit_threshold = 200  # Higher limit for staging
+  rate_limit_threshold = 200   # Higher limit for staging
   security_level       = "low" # Less strict for testing
 }
 
@@ -98,12 +98,12 @@ module "vercel" {
   custom_domain = "staging.omnihub.dev"
 
   env_vars = {
-    VITE_SUPABASE_URL                = var.vite_supabase_url
-    VITE_SUPABASE_PUBLISHABLE_KEY    = var.vite_supabase_publishable_key
-    VITE_SENTRY_DSN                  = var.vite_sentry_dsn
-    VITE_DATADOG_APPLICATION_ID      = var.vite_datadog_application_id
-    VITE_DATADOG_CLIENT_TOKEN        = var.vite_datadog_client_token
-    REDIS_URL                        = module.redis.redis_url
-    REDIS_TOKEN                      = module.redis.redis_token
+    VITE_SUPABASE_URL             = var.vite_supabase_url
+    VITE_SUPABASE_PUBLISHABLE_KEY = var.vite_supabase_publishable_key
+    VITE_SENTRY_DSN               = var.vite_sentry_dsn
+    VITE_DATADOG_APPLICATION_ID   = var.vite_datadog_application_id
+    VITE_DATADOG_CLIENT_TOKEN     = var.vite_datadog_client_token
+    REDIS_URL                     = module.redis.redis_url
+    REDIS_TOKEN                   = module.redis.redis_token
   }
 }

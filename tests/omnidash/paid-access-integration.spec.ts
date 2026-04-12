@@ -22,17 +22,19 @@ import {
 const describeIf = hasServiceKey ? describe : describe.skip;
 
 describeIf('Paid Access Integration with OmniDash', () => {
-  let ctx: OmniDashTestContext;
+  let ctx: OmniDashTestContext | undefined;
 
   beforeEach(async () => {
     ctx = await setupTestUser('paid-access-test');
   });
 
   afterEach(async () => {
-    await cleanupTestUser(ctx.adminClient, ctx.testUserId, async (client, userId) => {
-      await client.from('subscriptions').delete().eq('user_id', userId);
-      await client.from('omnidash_settings').delete().eq('user_id', userId);
-    });
+    if (ctx) {
+      await cleanupTestUser(ctx.adminClient, ctx.testUserId, async (client, userId) => {
+        await client.from('subscriptions').delete().eq('user_id', userId);
+        await client.from('omnidash_settings').delete().eq('user_id', userId);
+      });
+    }
   });
 
   // Helper to insert subscription

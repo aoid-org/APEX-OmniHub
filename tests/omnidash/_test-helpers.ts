@@ -12,8 +12,10 @@ export const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'http://localhost:5
 export const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 export const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
 
-// Conditional test execution
-export const hasServiceKey = !!SUPABASE_SERVICE_KEY;
+// Conditional test execution — only enable if both the key is set AND it looks
+// like a valid JWT (starts with "eyJ"). Misformatted env vars (e.g., including
+// the key name as a prefix) will correctly evaluate to false.
+export const hasServiceKey = !!SUPABASE_SERVICE_KEY && SUPABASE_SERVICE_KEY.startsWith('eyJ');
 
 /**
  * Test context containing clients and test user info
