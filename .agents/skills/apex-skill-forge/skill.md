@@ -1,7 +1,8 @@
 ---
 name: apex-skill-forge
 description: "Self-replicating meta-skill to forge Cathedral-tier Antigravity agent skills. Triggers: create a skill, forge skill, build agent context"
-version: "4.2.0"
+version: "4.2.1"
+last_updated: "2026-04-09"
 archetype: "transformer"
 platform: "google-antigravity"
 license: "Proprietary - APEX Business Systems Ltd."

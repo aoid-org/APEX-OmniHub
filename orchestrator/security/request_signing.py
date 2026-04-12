@@ -21,7 +21,7 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 # Paths that require signature verification
-_SIGNED_PATHS = {"/api/v1/goals"}
+_SIGNED_PATHS = {"/api/v1/goals", "/api/v1/intents"}
 
 # Maximum allowed clock skew in seconds
 _MAX_TIMESTAMP_SKEW = 300

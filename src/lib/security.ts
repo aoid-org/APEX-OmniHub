@@ -8,14 +8,12 @@ import { createDebugLogger } from './debug-logger';
 
 
 function constantTimeEquals(left: string, right: string): boolean {
-  if (left.length !== right.length) {
-    return false;
-  }
-
-  let mismatch = 0;
-  for (let i = 0; i < left.length; i += 1) {
-    const leftCodePoint = left.codePointAt(i) ?? 0;
-    const rightCodePoint = right.codePointAt(i) ?? 0;
+  // Pad to same length to prevent timing side-channel from length comparison
+  const maxLen = Math.max(left.length, right.length);
+  let mismatch = left.length ^ right.length; // length difference is a mismatch
+  for (let i = 0; i < maxLen; i += 1) {
+    const leftCodePoint = i < left.length ? (left.codePointAt(i) ?? 0) : 0;
+    const rightCodePoint = i < right.length ? (right.codePointAt(i) ?? 0) : 0;
     mismatch |= leftCodePoint ^ rightCodePoint;
   }
 
