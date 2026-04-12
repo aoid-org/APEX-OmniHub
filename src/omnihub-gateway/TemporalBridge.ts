@@ -27,9 +27,9 @@ import {
   Client,
   WorkflowNotFoundError,
 } from '@temporalio/client';
-import { Context, CompleteAsyncError } from '@temporalio/activity';
-import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import type { GatewayContext } from './types';
+export type { LambdaDispatchPayload, LambdaDispatchResult } from './lambdaDispatchActivity';
+export { dispatchToLambdaActivity } from './lambdaDispatchActivity';
 
 // ============================================================================
 // Constants
@@ -451,56 +451,3 @@ export async function dispatchRoutedTask(
 // ============================================================================
 
 export { TASK_QUEUE_LAMBDA };
-
-export interface LambdaDispatchPayload {
-  readonly taskData: Record<string, unknown>;
-  readonly userJwt: string;
-  readonly functionName: string;
-}
-
-export interface LambdaDispatchResult {
-  readonly dispatched: boolean;
-  readonly taskToken: string;
-}
-
-/**
- * Temporal Activity: Dispatch a heavy-lift task to the OmniHubWorkerLambda.
- *
- * Implements the **Asynchronous Activity Completion** pattern:
- * 1. Extracts the Temporal taskToken from the current activity context.
- * 2. Serializes the task payload, user JWT, and Base64-encoded taskToken
- *    into the Lambda invocation payload.
- * 3. Fires the Lambda asynchronously (InvocationType: 'Event').
- * 4. Throws CompleteAsyncError — instructs the Temporal cluster that
- *    this activity is pending external completion by the Lambda callback.
- *
- * The Lambda is responsible for calling `client.activity.complete(token, result)`
- * or `client.activity.fail(token, error)` upon finishing.
- *
- * @throws {CompleteAsyncError} Always — by design.
- */
-export async function dispatchToLambdaActivity(
-  payload: LambdaDispatchPayload,
-  lambdaClient?: InstanceType<typeof LambdaClient>,
-): Promise<never> {
-  const taskToken = Context.current().info.taskToken;
-  const taskTokenB64 = Buffer.from(taskToken).toString('base64');
-
-  const client = lambdaClient ?? new LambdaClient({});
-
-  const invokePayload = JSON.stringify({
-    taskData: payload.taskData,
-    userJwt: payload.userJwt,
-    taskToken: taskTokenB64,
-  });
-
-  await client.send(
-    new InvokeCommand({
-      FunctionName: payload.functionName,
-      InvocationType: 'Event',
-      Payload: new TextEncoder().encode(invokePayload),
-    }),
-  );
-
-  throw new CompleteAsyncError();
-}

@@ -303,7 +303,8 @@ Infra:    CPU→scale/optimize | Memory→reduce allocs/stream | I/O→async/bat
 
 ---
 
-**Version**: 2.0.0
-**Supersedes**: omnidev v1, one-pass-debug, apex-power (for all software engineering)
+**Version**: 2.0.1
+**Supersedes**: omnidev v2.0.0, one-pass-debug, apex-power (for all software engineering)
 **Compatibility**: Claude, GPT-4/o1/o3, Gemini, Llama, Mistral, DeepSeek, Qwen, Grok, any reasoning model
 **License**: Proprietary - APEX Business Systems Ltd. Edmonton, AB, Canada.
+> **Updated:** 2026-04-09
