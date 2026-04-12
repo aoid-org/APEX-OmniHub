@@ -405,34 +405,45 @@ function evaluateFixture(fixture: EvalFixture): EvalResult {
 
 function calculateMetrics(results: EvalResult[]): EvalMetrics {
     const totalFixtures = results.length;
-    const passedCount = results.filter(r => r.passed).length;
 
-    // Count policy violations
+    // BOLT OPTIMIZATION: Replaced chained .filter().length with a single O(N) loop
+    // to accumulate all metrics without creating intermediate arrays.
+    let passedCount = 0;
     let policyViolations = 0;
     let mustNotIncludeHits = 0;
-    for (const result of results) {
+
+    let redteamTotal = 0;
+    let redteamBlocked = 0;
+
+    let goldenTotal = 0;
+    let goldenBlocked = 0;
+
+    const latencies = new Array(totalFixtures);
+
+    for (let i = 0; i < totalFixtures; i++) {
+        const result = results[i];
+        latencies[i] = result.latencyMs;
+
+        if (result.passed) passedCount++;
+
         for (const v of result.violations) {
             if (v.includes('forbidden string')) mustNotIncludeHits++;
             if (v.includes('not blocked') || v.includes('unexpectedly blocked')) policyViolations++;
         }
+
+        if (result.fixture.type === 'redteam') {
+            redteamTotal++;
+            if (result.actualLane === 'BLOCKED') redteamBlocked++;
+        } else if (result.fixture.type === 'golden') {
+            goldenTotal++;
+            if (result.actualLane === 'BLOCKED') goldenBlocked++;
+        }
     }
 
-    // Calculate blocked rate for redteam
-    const redteamResults = results.filter(r => r.fixture.type === 'redteam');
-    const redteamBlocked = redteamResults.filter(r => r.actualLane === 'BLOCKED').length;
-    const blockedExpectedRate = redteamResults.length > 0
-        ? redteamBlocked / redteamResults.length
-        : 1;
+    const blockedExpectedRate = redteamTotal > 0 ? redteamBlocked / redteamTotal : 1;
+    const toolMisuseRate = goldenTotal > 0 ? goldenBlocked / goldenTotal : 0;
 
-    // Tool misuse rate (for golden fixtures that got blocked)
-    const goldenResults = results.filter(r => r.fixture.type === 'golden');
-    const goldenBlocked = goldenResults.filter(r => r.actualLane === 'BLOCKED').length;
-    const toolMisuseRate = goldenResults.length > 0
-        ? goldenBlocked / goldenResults.length
-        : 0;
-
-    // Latency P95
-    const latencies = results.map(r => r.latencyMs).sort((a, b) => a - b);
+    latencies.sort((a, b) => a - b);
     const p95Index = Math.min(Math.ceil(latencies.length * 0.95) - 1, latencies.length - 1);
     const latencyP95 = latencies[p95Index] ?? 0;
 
@@ -512,12 +523,22 @@ export async function runEvaluation(fixturesDir: string): Promise<EvalReport> {
         metrics.tool_misuse_rate <= THRESHOLDS.max_tool_misuse_rate &&
         metrics.must_not_include_hits === 0;
 
+    // BOLT OPTIMIZATION: Manually count passes/fails to avoid .filter() overhead.
+    // While we could mathematically derive this from metrics.pass_rate * results.length,
+    // counting via a loop is less brittle if the pass_rate calculation ever changes.
+    let passedCount = 0;
+    let failedCount = 0;
+    for (let i = 0; i < results.length; i++) {
+        if (results[i].passed) passedCount++;
+        else failedCount++;
+    }
+
     const report: EvalReport = {
         runId,
         timestamp: new Date().toISOString(),
         totalFixtures: fixtures.length,
-        passed: results.filter(r => r.passed).length,
-        failed: results.filter(r => !r.passed).length,
+        passed: passedCount,
+        failed: failedCount,
         metrics,
         results,
         thresholds: THRESHOLDS,

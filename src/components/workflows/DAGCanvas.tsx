@@ -5,7 +5,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { WorkflowNode, WorkflowEdge } from '@/lib/workflow-api';
 
@@ -79,7 +79,10 @@ export const DAGCanvas = memo(function DAGCanvas({
   canvasRef,
 }: DAGCanvasProps) {
   const hasNodes = nodes.length > 0;
-  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+
+  // ⚡ Bolt: Memoize the node map creation to prevent O(N) iteration on every drag re-render
+  // This significantly reduces main-thread blocking when dragging nodes around the canvas
+  const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
 
   return (
     <Card className="glass-card rounded-2xl overflow-hidden">
