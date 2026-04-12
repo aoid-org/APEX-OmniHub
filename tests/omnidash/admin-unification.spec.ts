@@ -16,14 +16,16 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 const describeIf = hasServiceKey ? describe : describe.skip;
 
 describeIf('Admin Role Unification (integration)', () => {
-  let ctx: OmniDashTestContext;
+  let ctx: OmniDashTestContext | undefined;
 
   beforeEach(async () => {
     ctx = await setupTestUser('admin-unification-test');
   });
 
   afterEach(async () => {
-    await cleanupTestUser(ctx.adminClient, ctx.testUserId);
+    if (ctx) {
+      await cleanupTestUser(ctx.adminClient, ctx.testUserId);
+    }
   });
 
   // Helper to query user_roles

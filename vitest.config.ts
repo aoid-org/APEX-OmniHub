@@ -84,9 +84,10 @@ export default defineConfig({
         'src/integrations/omniport/**',
         // Web3/blockchain entitlements — tested via hardhat, not vitest.
         'src/lib/web3/**',
-        // OmniHub Gateway — requires live Temporal cluster + infrastructure.
-        // Integration-tested via orchestrator pytest suite, not vitest.
+        // OmniHub Gateway — mostly integration-tested via orchestrator pytest suite.
+        // Explicitly include TemporalBridge for unit-level drift/coverage enforcement.
         'src/omnihub-gateway/**',
+        '!src/omnihub-gateway/TemporalBridge.ts',
         // Infrastructure package — CDK stacks and Lambda workers require AWS.
         'packages/infrastructure/src/stack.ts',
         'packages/infrastructure/src/worker.ts',

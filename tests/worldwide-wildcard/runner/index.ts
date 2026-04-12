@@ -207,15 +207,28 @@ export async function runWWWCT(options: RunnerOptions): Promise<ReportBundle> {
     results.push(result);
   }
 
+  // BOLT OPTIMIZATION: Accumulate summary stats in a single O(N) loop
+  // instead of multiple .filter().length and .reduce() passes
+  let passedCount = 0;
+  let failedCount = 0;
+  let blockedCount = 0;
+  let totalScore = 0;
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (result.status === 'passed') passedCount++;
+    else if (result.status === 'failed') failedCount++;
+    else if (result.status === 'blocked') blockedCount++;
+
+    totalScore += result.metrics.finalScore;
+  }
+
   const summary = {
     total: results.length,
-    passed: results.filter(result => result.status === 'passed').length,
-    failed: results.filter(result => result.status === 'failed').length,
-    blocked: results.filter(result => result.status === 'blocked').length,
-    score:
-      results.length === 0
-        ? 0
-        : results.reduce((sum, result) => sum + result.metrics.finalScore, 0) / results.length,
+    passed: passedCount,
+    failed: failedCount,
+    blocked: blockedCount,
+    score: results.length === 0 ? 0 : totalScore / results.length,
   };
 
   const report: ReportBundle = {
