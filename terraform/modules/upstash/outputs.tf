@@ -14,8 +14,3 @@ output "database_id" {
   description = "Database ID"
   value       = upstash_redis_database.main.database_id
 }
-
-output "qstash_endpoint_id" {
-  description = "QStash endpoint ID"
-  value       = var.enable_qstash ? upstash_qstash_endpoint.webhook[0].id : null
-}

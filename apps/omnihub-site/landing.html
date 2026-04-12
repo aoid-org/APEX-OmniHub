@@ -1,12 +1,257 @@
-import { useEffect, useRef } from 'react';
-import { Layout } from '@/components/Layout';
-import { SEOMeta } from '@/components/SEOMeta';
-import { StructuredData } from '@/components/StructuredData';
-import '@/styles/landing.css';
-import homepageSchema from '../../public/schema/homepage.jsonld?raw';
-import organizationSchema from '../../public/schema/organization.jsonld?raw';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX OmniHub | Intelligence, Designed.</title>
+<meta name="description" content="The Universal Sync Orchestrator. Every AI agent, enterprise platform, and workflow unified under one governed command surface. Authorized. Logged. Reversible.">
+<meta property="og:title" content="APEX OmniHub | The Universal Sync Orchestrator">
+<meta property="og:description" content="The Anti-OS for enterprise AI. One governed command surface. Every action authorized, logged, and reversible.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://apexomnihub.icu/">
+<meta property="og:image" content="https://apexomnihub.icu/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="/apex-badge.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0B1F2E;--bg1:#0F2538;--bg2:#0E2236;
+  --line:rgba(255,255,255,0.07);--teal:rgba(100,180,220,0.08);
+  --copper:#D4855A;--gold:#E8A247;--gold2:#F5C06A;
+  --ember:#C4511A;--ember2:#D46025;
+  --t1:rgba(255,255,255,0.93);--t2:rgba(255,255,255,0.52);
+  --t3:rgba(255,255,255,0.26);--t4:rgba(255,255,255,0.09);
+  --font:'Space Grotesk',sans-serif;--ease:cubic-bezier(0.16,1,0.3,1);--max:1260px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(var(--teal) 1px,transparent 1px),linear-gradient(90deg,var(--teal) 1px,transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(ellipse 100% 80% at 50% 20%,black 10%,transparent 75%);opacity:.7;}
+.hov-section{position:relative;overflow:hidden}
+.hov-section::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(212,133,90,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(212,133,90,0.035) 1px,transparent 1px);
+  background-size:48px 48px;opacity:0;transition:opacity .6s ease;}
+.hov-section:hover::after{opacity:1}
+.hov-section > *{position:relative;z-index:1}
+/* Pill buttons */
+.pill{display:inline-flex;align-items:center;gap:8px;background:var(--ember);color:#fff;border:none;border-radius:10px;padding:13px 28px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:all .22s var(--ease);letter-spacing:-.15px;text-decoration:none;white-space:nowrap;}
+.pill:hover{background:var(--ember2);transform:translateY(-2px);box-shadow:0 10px 28px rgba(196,81,26,.38)}
+.pill:active{transform:translateY(0);box-shadow:none}
+.pill-sm{padding:7px 16px;font-size:12px;font-weight:700}
+.pill-lg{padding:16px 40px;font-size:16px}
+.pill-ghost{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.18);color:var(--t1);}
+.pill-ghost:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.3);box-shadow:none;transform:translateY(-1px)}
+.pill-dark{background:rgba(255,255,255,0.06);color:var(--t2);border:1px solid var(--line)}
+.pill-dark:hover{background:rgba(255,255,255,.1);color:var(--t1);box-shadow:none;transform:none}
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;padding:0 5%;display:flex;align-items:center;justify-content:space-between;background:rgba(11,31,46,0.8);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-bottom:1px solid var(--line);transition:background .3s;}
+nav.scrolled{background:rgba(11,31,46,0.97)}
+.nav-logo{display:flex;align-items:center;text-decoration:none}
+.nav-wordmark{height:28px;width:auto;display:block;mix-blend-mode:screen;filter:brightness(1.15) contrast(1.1)}
+.nav-links{display:flex;gap:30px;list-style:none}
+.nav-links a{text-decoration:none;color:var(--t2);font-size:14px;font-weight:500;letter-spacing:-.1px;transition:color .2s}
+.nav-links a:hover{color:var(--t1)}
+.nav-right{display:flex;gap:10px;align-items:center}
+.nav-signin{background:transparent;border:none;color:var(--t2);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;padding:8px 14px;transition:color .2s;text-decoration:none}
+.nav-signin:hover{color:var(--t1)}
+/* Hero */
+.hero{position:relative;z-index:1;min-height:100vh;padding:110px 5% 80px;display:flex;align-items:center;overflow:hidden;}
+.hero-glow-l{position:absolute;top:-5%;left:-15%;width:65%;height:85%;background:radial-gradient(ellipse,rgba(196,81,26,0.07) 0%,transparent 62%);pointer-events:none}
+.hero-glow-r{position:absolute;top:5%;right:-12%;width:60%;height:75%;background:radial-gradient(ellipse,rgba(32,130,180,0.07) 0%,transparent 62%);pointer-events:none}
+.hero-inner{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1.1fr;gap:60px;align-items:center;max-width:var(--max);margin:0 auto;width:100%;}
+.hero-left{text-align:center;display:flex;flex-direction:column;align-items:center}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(212,133,90,.28);background:rgba(212,133,90,.06);padding:5px 14px 5px 9px;border-radius:999px;margin-bottom:26px;}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:var(--copper);animation:dot-pulse 2.4s ease-in-out infinite}
+@keyframes dot-pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(212,133,90,.5)}50%{opacity:.65;box-shadow:0 0 0 6px rgba(212,133,90,0)}}
+.hero-eyebrow-txt{font-size:11px;font-weight:700;color:var(--copper);letter-spacing:2px;text-transform:uppercase}
+.hero-h1{font-size:clamp(52px,5.8vw,82px);font-weight:700;letter-spacing:-3.5px;line-height:.98;margin-bottom:22px;background:linear-gradient(150deg,#fff 0%,#fff 38%,var(--copper) 60%,var(--gold) 78%,var(--gold2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:17px;line-height:1.65;color:var(--t2);margin-bottom:12px;max-width:500px;font-weight:400;letter-spacing:-.15px;text-indent:2em;text-align:justify}
+.hero-power{font-size:16px;font-weight:600;color:var(--t1);margin-bottom:34px;letter-spacing:-.3px}
+.hero-power strong{color:var(--copper)}
+.hero-ctas{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:28px;flex-wrap:wrap}
+.hero-trust{font-size:11px;color:var(--t3);letter-spacing:.4px;line-height:1.9}
+.hero-trust span{margin:0 6px;color:rgba(212,133,90,.4)}
+.hero-right{display:flex;align-items:center;justify-content:center}
+.hero-art-wrap{width:100%;max-width:560px;display:flex;align-items:center;justify-content:center}
+.hero-art-svg{width:100%;height:auto;display:block}
+/* Ticker */
+.ticker{position:relative;z-index:1;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.018);padding:13px 0;overflow:hidden}
+.ticker-track{display:flex;width:max-content;animation:ticker 38s linear infinite}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ticker-item{display:flex;align-items:center;padding:0 28px;white-space:nowrap;font-size:12.5px;font-weight:500;color:var(--t3);letter-spacing:.2px}
+.ticker-dot{color:rgba(212,133,90,.5);margin-left:28px}
+/* Sections */
+.sec{position:relative;z-index:1;padding:110px 5%}
+.sec-in{max-width:var(--max);margin:0 auto}
+.divider{border:none;border-top:1px solid var(--line);position:relative;z-index:1}
+.tag{display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:700;color:var(--copper);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:14px}
+.h2{font-size:clamp(34px,4vw,56px);font-weight:700;letter-spacing:-2.5px;line-height:1.05;margin-bottom:18px;color:var(--t1)}
+.h2 .g{background:linear-gradient(100deg,var(--copper),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sub{font-size:16px;color:var(--t2);line-height:1.68;max-width:500px;letter-spacing:-.1px;text-align:justify;text-indent:2em}
+/* Split layout */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.split.rev{direction:rtl}.split.rev > *{direction:ltr}
+.feat-list{margin-top:28px;display:flex;flex-direction:column}
+.feat-item{display:flex;align-items:flex-start;gap:15px;padding:16px 0;border-bottom:1px solid var(--line)}
+.feat-item:first-child{border-top:1px solid var(--line)}
+.feat-ico{width:38px;height:38px;border-radius:9px;flex-shrink:0;background:rgba(212,133,90,.07);border:1px solid rgba(212,133,90,.16);display:flex;align-items:center;justify-content:center;}
+.feat-ico svg{width:18px;height:18px}
+.feat-ttl{font-size:13.5px;font-weight:600;color:var(--t1);margin-bottom:4px;letter-spacing:-.2px}
+.feat-dsc{font-size:12.5px;color:var(--t2);line-height:1.58;letter-spacing:-.1px}
+/* Visual panels */
+.vpanel{background:#091826;border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;position:relative;}
+.vpanel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(212,133,90,.055),transparent 58%)}
+.vpanel-in{padding:28px;position:relative;z-index:1}
+.vp-tag{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--copper);margin-bottom:14px;display:block}
+/* Audit log */
+.alog{display:flex;flex-direction:column}
+.arow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.arow:last-child{border-bottom:none}
+.at{color:var(--t3);font-size:9.5px;width:64px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.adot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.adot.ok{background:#4ade80;box-shadow:0 0 5px rgba(74,222,128,.5)}
+.adot.warn{background:var(--gold);box-shadow:0 0 5px rgba(232,162,71,.4)}
+.adot.info{background:#60a5fa;box-shadow:0 0 5px rgba(96,165,250,.4)}
+.atxt{color:var(--t1);flex:1;font-size:11px}
+.apill{font-size:8px;font-weight:700;padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0}
+.p-auth{background:rgba(74,222,128,.09);color:#4ade80;border:1px solid rgba(74,222,128,.22)}
+.p-log{background:rgba(96,165,250,.09);color:#60a5fa;border:1px solid rgba(96,165,250,.22)}
+.p-block{background:rgba(251,113,133,.09);color:#fb7185;border:1px solid rgba(251,113,133,.22)}
+/* Policy toggles */
+.prules{display:flex;flex-direction:column;gap:8px}
+.prule{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.prule-l{display:flex;align-items:center;gap:10px}
+.prule-ico{width:30px;height:30px;border-radius:7px;background:rgba(212,133,90,.07);border:1px solid rgba(212,133,90,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.prule-ico svg{width:14px;height:14px}
+.prule-n{font-size:11.5px;font-weight:600;color:var(--t1);letter-spacing:-.2px}
+.prule-d{font-size:10px;color:var(--t3);margin-top:2px}
+.toggle{width:32px;height:18px;border-radius:999px;background:var(--ember);position:relative;flex-shrink:0;cursor:pointer;transition:background .2s}
+.toggle::after{content:'';position:absolute;top:2.5px;right:2.5px;width:13px;height:13px;border-radius:50%;background:#fff;transition:left .2s,right .2s}
+.toggle.off{background:rgba(255,255,255,.1)}
+.toggle.off::after{right:auto;left:2.5px}
+/* Capability grid */
+.cap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-radius:16px;overflow:hidden;margin-top:50px}
+.cap-card{background:#0B1F2E;padding:30px 26px;position:relative;overflow:hidden;transition:background .25s;cursor:default}
+.cap-card:hover{background:#0E2438}
+.cap-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,133,90,.3),transparent);opacity:0;transition:opacity .25s}
+.cap-card:hover::after{opacity:1}
+.cap-ico{width:40px;height:40px;border-radius:10px;background:rgba(212,133,90,.07);border:1px solid rgba(212,133,90,.15);display:flex;align-items:center;justify-content:center;margin-bottom:15px}
+.cap-ico svg{width:20px;height:20px}
+.cap-ttl{font-size:14.5px;font-weight:600;color:var(--t1);letter-spacing:-.3px;margin-bottom:8px}
+.cap-dsc{font-size:12.5px;color:var(--t2);line-height:1.6;letter-spacing:-.1px}
+/* Maestro */
+.maestro-wrap{background:#091826;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.maestro-in{max-width:var(--max);margin:0 auto;padding:110px 5%;display:grid;grid-template-columns:1fr 1.2fr;gap:90px;align-items:start}
+.maestro-rows{display:flex;flex-direction:column}
+.m-row{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:all .2s}
+.m-row:last-child{border-bottom:none}
+.m-row:hover .m-l{color:var(--gold)}
+.m-l{font-size:48px;font-weight:700;color:var(--copper);letter-spacing:-3px;width:46px;flex-shrink:0;line-height:1;transition:color .2s}
+.m-word{font-size:15px;font-weight:600;color:var(--t1);letter-spacing:-.2px}
+.m-desc{font-size:12.5px;color:var(--t2);letter-spacing:-.1px;margin-top:2px}
+/* Compliance */
+.comp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:44px}
+.comp-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:9px;transition:border-color .2s}
+.comp-card:hover{border-color:rgba(212,133,90,.28)}
+.comp-chk{width:20px;height:20px;border-radius:50%;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.22);display:flex;align-items:center;justify-content:center;font-size:9px;color:#4ade80}
+.comp-n{font-size:12.5px;font-weight:600;color:var(--t1);letter-spacing:-.2px}
+.comp-d{font-size:11px;color:var(--t3);line-height:1.5}
+/* CTA section */
+.cta-sec{position:relative;z-index:1;padding:160px 5%;text-align:center;overflow:hidden}
+.cta-bg{position:absolute;inset:0;background:radial-gradient(ellipse 65% 75% at 50% 50%,rgba(196,81,26,.09) 0%,transparent 60%),radial-gradient(ellipse 50% 55% at 15% 80%,rgba(32,130,180,.06) 0%,transparent 55%),radial-gradient(ellipse 40% 45% at 85% 20%,rgba(232,162,71,.05) 0%,transparent 55%)}
+.cta-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(212,133,90,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(212,133,90,.06) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 60% 60% at 50% 50%,black 0%,transparent 100%);animation:grid-breath 4s ease-in-out infinite}
+@keyframes grid-breath{0%,100%{opacity:.35}50%{opacity:1}}
+.cta-in{position:relative;z-index:2;max-width:660px;margin:0 auto}
+.cta-h2{font-size:clamp(42px,5.2vw,72px);font-weight:700;letter-spacing:-3px;line-height:1.02;margin-bottom:18px;background:linear-gradient(140deg,#fff 0%,#fff 38%,var(--copper) 63%,var(--gold) 84%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.cta-sub{font-size:16px;color:var(--t2);line-height:1.65;margin-bottom:42px;letter-spacing:-.15px}
+.cta-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+.cta-note{font-size:11.5px;color:var(--t3);letter-spacing:.3px}
+/* Footer */
+footer{position:relative;z-index:1;border-top:1px solid var(--line);background:#091826;padding:68px 5% 40px}
+.foot-grid{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:52px;margin-bottom:48px}
+.foot-wm{height:24px;width:auto;display:block;margin-bottom:14px;mix-blend-mode:screen;filter:brightness(1.15) contrast(1.1)}
+.foot-about{font-size:12.5px;color:var(--t2);line-height:1.68;margin-bottom:18px;max-width:260px}
+.foot-legal-sm{font-size:11.5px;color:var(--t3);line-height:1.7}
+.foot-ttl{font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:15px}
+.foot-links{list-style:none;display:flex;flex-direction:column;gap:9px}
+.foot-links a{text-decoration:none;color:var(--t2);font-size:12.5px;transition:color .2s}
+.foot-links a:hover{color:var(--t1)}
+.foot-bottom{max-width:var(--max);margin:0 auto;padding-top:22px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+.foot-copy{font-size:11.5px;color:var(--t3)}
+.foot-bl{display:flex;gap:22px}
+.foot-bl a{font-size:11.5px;color:var(--t3);text-decoration:none;transition:color .2s}
+.foot-bl a:hover{color:var(--t2)}
+/* Scroll reveal */
+.rv{opacity:0;transform:translateY(22px);transition:opacity .72s var(--ease),transform .72s var(--ease)}
+.rv.d1{transition-delay:.1s}.rv.d2{transition-delay:.2s}.rv.d3{transition-delay:.3s}.rv.d4{transition-delay:.4s}
+.rv.in{opacity:1;transform:translateY(0)}
+/* Nav logo wrapper */
+.nav-logo-wrap{display:flex;flex-direction:column;gap:1px}
+.nav-tagline{font-size:8.5px;font-weight:600;letter-spacing:2.2px;text-transform:uppercase;color:var(--copper);opacity:.75}
+/* Hero tiles */
+.hero-tiles{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;justify-content:center}
+.htile{padding:9px 20px;border:1.5px solid rgba(255,255,255,0.35);border-radius:6px;font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--t1);text-transform:uppercase;background:rgba(255,255,255,0.04);transition:all .2s;}
+.htile:hover{border-color:var(--copper);color:var(--copper)}
+/* Pulse bar for dashboard panel */
+.dash-pulse{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--copper),var(--gold),transparent);animation:pulse-bar 2.8s ease-in-out infinite}
+@keyframes pulse-bar{0%,100%{opacity:.35}50%{opacity:1}}
+/* ===== MODAL ===== */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(9,24,37,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s ease;}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-card{background:#0F2538;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:40px;width:100%;max-width:480px;position:relative;box-shadow:0 40px 120px rgba(0,0,0,0.7);max-height:90vh;overflow-y:auto;margin:16px;}
+.modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.07);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:rgba(255,255,255,0.5);font-size:20px;line-height:32px;text-align:center;transition:background .2s;font-family:inherit;}
+.modal-close:hover{background:rgba(255,255,255,0.14);color:#fff}
+.modal-title{font-size:22px;font-weight:700;color:#fff;letter-spacing:-1px;margin-bottom:6px}
+.modal-sub{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:28px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.55);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px}
+.form-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:11px 14px;font-family:var(--font);font-size:14px;color:#fff;outline:none;transition:border-color .2s;}
+.form-input:focus{border-color:rgba(212,133,90,0.5)}
+.form-input::placeholder{color:rgba(255,255,255,0.25)}
+textarea.form-input{resize:vertical;min-height:80px}
+.form-err{font-size:11px;color:#fb7185;margin-top:4px;display:none}
+.form-err.show{display:block}
+.form-honey{display:none!important;visibility:hidden;position:absolute;left:-9999px}
+.modal-success{text-align:center;padding:20px 0;display:none}
+.modal-success.show{display:block}
+.modal-success-ico{font-size:48px;margin-bottom:12px}
+.modal-success-ttl{font-size:20px;font-weight:700;color:#fff;margin-bottom:8px}
+.modal-success-txt{font-size:14px;color:rgba(255,255,255,0.5)}
+.modal-form-body{transition:opacity .2s}
+.modal-form-body.hidden{display:none}
+.modal-gen-error{background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);border-radius:8px;padding:10px 14px;font-size:13px;color:#fb7185;margin-bottom:16px;display:none}
+.modal-gen-error.show{display:block}
+.submit-btn-inner{display:flex;align-items:center;gap:8px}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pill.loading .spinner{display:block}
+.pill.loading .btn-text{display:none}
+</style>
+</head>
+<body>
 
-const LANDING_HTML = `<!-- HERO -->
+<!-- NAV -->
+<nav id="nav">
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-wrap"><img class="nav-wordmark" src="/apex-omnihub-wordmark.svg" alt="APEX OmniHub"><span class="nav-tagline">Intelligence, Designed.</span></div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#platform">Platform</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#story">Founder's Story</a></li>
+    <li><a href="#enterprise">Enterprise</a></li>
+  </ul>
+  <div class="nav-right">
+    <a class="nav-signin" href="https://app.apexomnihub.icu" rel="noopener noreferrer">Sign In</a>
+    <a href="#" class="pill" data-modal="request-access">Request Access</a>
+  </div>
+</nav>
+
+<!-- HERO -->
 <section class="hero hov-section">
   <div class="hero-glow-l"></div>
   <div class="hero-glow-r"></div>
@@ -14,7 +259,7 @@ const LANDING_HTML = `<!-- HERO -->
     <div class="hero-left">
       <h1 class="hero-h1 rv">The Universal<br>Sync<br>Orchestrator.</h1>
       <p class="hero-sub rv d1">
-        The governed command surface for enterprise AI. Unify software, AI agents, and enterprise platforms into one orchestrated layer where every action is authorized, logged, and reversible. Connect Web3, legacy, blockchain, and AI systems without limits. Your capacity and use cases are the only boundaries.
+        The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface, where every action is authorized, logged, and reversible. Connect Web3, legacy, blockchain, and AI systems without limits, constrained only by your capacity and use cases.
       </p>
       <div class="hero-tiles rv d1">
         <div class="htile">DIRECT</div>
@@ -147,7 +392,7 @@ const LANDING_HTML = `<!-- HERO -->
       <div class="rv">
         <div class="tag">Total Command</div>
         <h2 class="h2">Absolute<br><span class="g">Governance.</span></h2>
-        <p class="sub">You issue the directive. OmniHub orchestrates every connected system with full real-time visibility. Actions logged. Agents tracked. Outcomes traceable.</p>
+        <p class="sub">Issue the directive. OmniHub orchestrates all connected systems with full real-time visibility: actions logged, agents tracked, outcomes traceable.</p>
         <div class="feat-list">
           <div class="feat-item">
             <div class="feat-ico"><svg viewBox="0 0 18 18" fill="none"><path d="M3 4h12M3 8h8M3 12h5" stroke="#D4855A" stroke-width="1.6" stroke-linecap="round"/><circle cx="14" cy="10" r="3.5" stroke="#D4855A" stroke-width="1.4" fill="none"/><path d="M13 10l1 1 1.5-1.5" stroke="#D4855A" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
@@ -190,7 +435,7 @@ const LANDING_HTML = `<!-- HERO -->
       <div class="rv">
         <div class="tag">Architectural Primitive</div>
         <h2 class="h2">Built to<br><span class="g">Reverse.</span></h2>
-        <p class="sub">The only enterprise AI platform where rollback is a first-class architectural primitive. One bad decision does not cascade. You undo it. Completely.</p>
+        <p class="sub">The only enterprise AI platform where rollback is a first-class architectural primitive. One bad decision does not cascade. You undo it completely.</p>
         <div class="feat-list">
           <div class="feat-item">
             <div class="feat-ico"><svg viewBox="0 0 18 18" fill="none"><path d="M5 9a4 4 0 0 1 4-4h2" stroke="#D4855A" stroke-width="1.5" stroke-linecap="round"/><path d="M8 3l3 2-3 2" stroke="#D4855A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 13H7a4 4 0 0 1 0-8" stroke="#D4855A" stroke-width="1.3" fill="none" opacity=".5"/></svg></div>
@@ -247,7 +492,7 @@ const LANDING_HTML = `<!-- HERO -->
       <div class="tag">Core Philosophy</div>
       <h2 class="h2">The MAESTRO<br>Principle.</h2>
       <p class="sub" style="margin-bottom:20px">Intelligence is not just capability. It is coordination with consequence. MAESTRO is the operating philosophy baked into each layer of APEX OmniHub.</p>
-      <p style="font-size:13.5px;color:var(--t2);line-height:1.72;letter-spacing:-.1px;text-align:justify;text-indent:2em">Enterprise AI must serve your organization's intent. As the system scales, MAESTRO ensures authority scales with it.</p>
+      <p style="font-size:13.5px;color:var(--t2);line-height:1.72;letter-spacing:-.1px;text-align:justify;text-indent:2em">Enterprise AI must serve organizational intent. As the system scales, MAESTRO ensures authority scales with it.</p>
     </div>
     <div class="maestro-rows rv d2">
       <div class="m-row"><div class="m-l">M</div><div><div class="m-word">Multi-Agent</div><div class="m-desc">coordination at enterprise scale, all synchronized</div></div></div>
@@ -288,7 +533,7 @@ const LANDING_HTML = `<!-- HERO -->
   <div class="cta-in">
     <div class="tag rv" style="justify-content:center">Take Control</div>
     <h2 class="cta-h2 rv">Take operational<br>authority back.</h2>
-    <p class="cta-sub rv d1">Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production.</p>
+    <p class="cta-sub rv d1">Request early access and see what governed intelligence looks like when it runs in production.</p>
     <div class="cta-btns rv d2">
       <a href="#" class="pill pill-lg" data-modal="request-access">Request Early Access</a>
       <a href="/demo.html" class="pill pill-lg pill-ghost">Schedule a Demo</a>
@@ -296,6 +541,33 @@ const LANDING_HTML = `<!-- HERO -->
     <p class="cta-note rv d3">No vendor lock-in. No black boxes. No surprises.</p>
   </div>
 </section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-grid">
+    <div>
+      <img class="foot-wm" src="/apex-omnihub-wordmark.svg" alt="APEX OmniHub">
+      <p class="foot-about">The Universal Sync Orchestrator. Enterprise AI governance that puts operational authority back where it belongs, with you.</p>
+      <p class="foot-legal-sm">2025 APEX Business Systems Ltd.<br>Edmonton, Alberta, Canada.</p>
+    </div>
+    <div>
+      <div class="foot-ttl">Platform</div>
+      <ul class="foot-links"><li><a href="#">Overview</a></li><li><a href="/tri-force.html">Tri-Force Architecture</a></li><li><a href="/maestro.html">MAESTRO Engine</a></li><li><a href="/man-mode.html">MAN Mode</a></li><li><a href="/smart-integrations.html">Integrations</a></li></ul>
+    </div>
+    <div>
+      <div class="foot-ttl">Company</div>
+      <ul class="foot-links"><li><a href="#">About APEX</a></li><li><a href="#">Founder's Story</a></li><li><a href="#">Blog</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li></ul>
+    </div>
+    <div>
+      <div class="foot-ttl">Resources</div>
+      <ul class="foot-links"><li><a href="#">Documentation</a></li><li><a href="#">API Reference</a></li><li><a href="#">Security</a></li><li><a href="#">Status</a></li><li><a href="#">Contact</a></li></ul>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p class="foot-copy">Intelligence, Designed. APEX OmniHub is a product of APEX Business Systems Ltd.</p>
+    <div class="foot-bl"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="#">Cookies</a></div>
+  </div>
+</footer>
 
 <!-- REQUEST ACCESS MODAL -->
 <div id="ra-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -320,108 +592,57 @@ const LANDING_HTML = `<!-- HERO -->
       <div class="modal-success-txt">We will be in touch shortly.</div>
     </div>
   </div>
-</div>`;
+</div>
 
-export function HomePage() {
-  const rootRef = useRef<HTMLDivElement>(null);
+<script>
+// ===== CONFIG =====
+const APEX_CONFIG={
+  supabaseUrl:'https://wwajmaohwcbooljdureo.supabase.co',
+  supabaseAnonKey:'',
+  fallbackEmail:'access@apexomnihub.icu',
+  dashboardUrl:'https://app.apexomnihub.icu',
+};
 
-  useEffect(() => {
-    if (!rootRef.current) return;
-    const root = rootRef.current;
+// ===== NAV SCROLL =====
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>40),{passive:true});
 
-    // Scroll reveal
-    const obs = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('in'); }),
-      { threshold: 0.07, rootMargin: '0px 0px -40px 0px' }
-    );
-    root.querySelectorAll('.rv').forEach((el) => obs.observe(el));
+// ===== SCROLL REVEAL =====
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:.07,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
 
-    // Modal
-    const modal = root.querySelector('#ra-modal') as HTMLElement | null;
-    const closeBtn = root.querySelector('#modal-close') as HTMLElement | null;
-    let formStart = 0;
-    let lastSubmit = 0;
+// ===== SIGN IN handled by <a href> directly in markup =====
 
-    function openModal() {
-      if (!modal) return;
-      modal.classList.add('open');
-      modal.removeAttribute('aria-hidden');
-      document.body.style.overflow = 'hidden';
-      formStart = Date.now();
-    }
-    function closeModal() {
-      if (!modal) return;
-      modal.classList.remove('open');
-      modal.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-    }
+// ===== MODAL =====
+const modal=document.getElementById('ra-modal');
+let formStart=0;
+function openModal(){modal.classList.add('open');modal.removeAttribute('aria-hidden');document.body.style.overflow='hidden';formStart=Date.now();}
+function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';}
+document.querySelectorAll('[data-modal="request-access"]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();openModal();}));
+document.getElementById('modal-close').addEventListener('click',closeModal);
+modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeModal();});
 
-    root.querySelectorAll('[data-modal="request-access"]').forEach((b) =>
-      b.addEventListener('click', (e) => { e.preventDefault(); openModal(); })
-    );
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    if (modal) {
-      modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-    }
-    const escHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && modal?.classList.contains('open')) closeModal();
-    };
-    document.addEventListener('keydown', escHandler);
+// ===== FORM =====
+let _lastSubmit=0; // in-memory rate limit (session only)
 
-    // Form
-    const form = root.querySelector('#ra-form') as HTMLFormElement | null;
-    const formHandler = (e: Event) => {
-      e.preventDefault();
-      if (!form) return;
-      const err = root.querySelector('#gen-error') as HTMLElement;
-      err?.classList.remove('show');
-      const honeypot = (form.elements.namedItem('website') as HTMLInputElement)?.value;
-      if (honeypot) return;
-      if (Date.now() - formStart < 2000) {
-        if (err) { err.textContent = 'Please take a moment to fill out the form.'; err.classList.add('show'); }
-        return;
-      }
-      if (lastSubmit && Date.now() - lastSubmit < 300000) {
-        if (err) { err.textContent = 'You already submitted recently. Please wait a few minutes.'; err.classList.add('show'); }
-        return;
-      }
-      const nameEl = form.elements.namedItem('ra_name') as HTMLInputElement;
-      const emailEl = form.elements.namedItem('ra_email') as HTMLInputElement;
-      const name = nameEl.value.trim().slice(0, 200);
-      if (!name || name.length < 2) {
-        if (err) { err.textContent = 'Please enter your name.'; err.classList.add('show'); }
-        return;
-      }
-      if (!emailEl.validity.valid || !emailEl.value) {
-        if (err) { err.textContent = 'Please enter a valid email address.'; err.classList.add('show'); }
-        return;
-      }
-      lastSubmit = Date.now();
-      const formBody = root.querySelector('#modal-form-body') as HTMLElement;
-      const success = root.querySelector('#modal-success') as HTMLElement;
-      formBody?.classList.add('hidden');
-      success?.classList.add('show');
-    };
-    if (form) form.addEventListener('submit', formHandler);
-
-    return () => {
-      obs.disconnect();
-      document.removeEventListener('keydown', escHandler);
-      document.body.style.overflow = '';
-    };
-  }, []);
-
-  return (
-    <Layout>
-      <SEOMeta
-        title="APEX OmniHub - Intelligence, Designed."
-        description="The Universal Sync Orchestrator. Every AI agent, enterprise platform, and workflow unified under one governed command surface."
-        canonical="https://apexomnihub.icu/"
-        appendBrandSuffix={false}
-      />
-      <StructuredData id="homepage-schema" json={homepageSchema} />
-      <StructuredData id="organization-schema" json={organizationSchema} />
-      <div className="landing-root" ref={rootRef} dangerouslySetInnerHTML={{ __html: LANDING_HTML }} />
-    </Layout>
-  );
-}
+document.getElementById('ra-form').addEventListener('submit',function(e){
+  e.preventDefault();
+  const err=document.getElementById('gen-error');
+  const btn=document.getElementById('form-submit');
+  err.classList.remove('show');
+  if(this.website.value)return; // honeypot
+  if(Date.now()-formStart<2000){err.textContent='Please take a moment to fill out the form.';err.classList.add('show');return;}
+  if(_lastSubmit&&Date.now()-_lastSubmit<300000){err.textContent='You already submitted recently. Please wait a few minutes.';err.classList.add('show');return;}
+  const name=String(this.ra_name.value).trim().slice(0,200);
+  const emailEl=this.ra_email;
+  if(!name||name.length<2){err.textContent='Please enter your name.';err.classList.add('show');return;}
+  if(!emailEl.validity.valid||!emailEl.value){err.textContent='Please enter a valid email address.';err.classList.add('show');return;}
+  btn.classList.add('loading');btn.disabled=true;
+  _lastSubmit=Date.now();
+  document.getElementById('modal-form-body').classList.add('hidden');
+  document.getElementById('modal-success').classList.add('show');
+});
+</script>
+</body>
+</html>
