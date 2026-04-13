@@ -7,8 +7,8 @@ describe('MetricsCollector', () => {
 
   beforeEach(() => {
     // Mock date to have consistent timestamps
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2024-01-01T12:00:00Z'));
+    vi.spyOn(Date, "now").mockImplementation(() => new Date("2024-01-01T12:00:00Z").getTime());
+
 
     // Reset singleton state before each test
     resetMetrics();
@@ -16,8 +16,8 @@ describe('MetricsCollector', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
-    vi.unstubAllEnvs();
+
+
   });
 
   describe('Initialization', () => {
@@ -164,7 +164,7 @@ describe('MetricsCollector', () => {
       }
 
       // Move time forward 1 second
-      vi.advanceTimersByTime(1000);
+      vi.spyOn(Date, "now").mockImplementation(() => new Date("2024-01-01T12:00:01Z").getTime());//(1000);
       collector.finish();
 
       const scorecard = collector.generateScorecard('run-1', 'happy-path', 'tenant-1', 123);
@@ -195,7 +195,7 @@ describe('MetricsCollector', () => {
     });
 
     it('should respect SIM_MODE env var for relaxed thresholds', () => {
-      vi.stubEnv('SIM_MODE', 'true');
+      process.env.SIM_MODE = 'true';
 
       const app: AppName = 'omnilink';
       // High latency but acceptable in SIM_MODE (threshold 3000ms)
@@ -208,7 +208,7 @@ describe('MetricsCollector', () => {
     });
 
     it('should respect CHAOS_THRESHOLD env var', () => {
-      vi.stubEnv('CHAOS_THRESHOLD', '50');
+      process.env.CHAOS_THRESHOLD = '50';
 
       const scorecard = collector.generateScorecard('run-1', 'custom-threshold', 'tenant-1', 123);
       expect(scorecard.requiredScore).toBe(50);
