@@ -42,7 +42,7 @@ dependencies = [
 
     # Embeddings for semantic cache
     "sentence-transformers>=2.3.0",
-    "numpy>=1.26.0",
+    "numpy>=2.4.4",
     "prometheus-client>=0.20.0",
 ]
 
