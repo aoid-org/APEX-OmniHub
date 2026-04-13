@@ -19,6 +19,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from temporalio.client import Client
+from temporalio.exceptions import WorkflowAlreadyStartedError
 from uvicorn import Config, Server
 
 # Ensure registry is seeded before any request arrives
@@ -120,9 +121,10 @@ async def create_goal(request: GoalRequest) -> dict[str, str] | JSONResponse:
 
         except Exception as e:
             # Handle Temporal workflow already started error safely
-            # We catch generically but check class name because temporalio exceptions
-            # might be nested or we want to avoid strict import dependency issues here
-            if type(e).__name__ == "WorkflowExecutionAlreadyStartedError":
+            if (
+                isinstance(e, WorkflowAlreadyStartedError)
+                or type(e).__name__ == "WorkflowExecutionAlreadyStartedError"
+            ):
                 logger.info(f"Workflow {workflow_id} already started")
                 # Return 409 Conflict with the workflow ID to restore request-boundary idempotency
                 return JSONResponse(

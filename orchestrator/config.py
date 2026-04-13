@@ -43,15 +43,15 @@ class Settings(BaseSettings):
 
     # Supabase Configuration
     supabase_url: str = Field(..., description="Supabase project URL")
-    supabase_service_role_key: str = Field(..., description="Supabase service role key")
-    supabase_activity_key: str = Field(
-        default="", description="Least-privilege key/JWT for workflow activities"
+    supabase_service_role_key: SecretStr = Field(..., description="Supabase service role key")
+    supabase_activity_key: SecretStr = Field(
+        default=SecretStr(""), description="Least-privilege key/JWT for workflow activities"
     )
-    supabase_db_url: str = Field(..., description="Direct Supabase PostgreSQL URL")
+    supabase_db_url: SecretStr = Field(..., description="Direct Supabase PostgreSQL URL")
 
     # LLM Configuration
-    openai_api_key: str = Field(default="", description="OpenAI API key")
-    anthropic_api_key: str = Field(default="", description="Anthropic API key")
+    openai_api_key: SecretStr = Field(default=SecretStr(""), description="OpenAI API key")
+    anthropic_api_key: SecretStr = Field(default=SecretStr(""), description="Anthropic API key")
     default_llm_model: str = Field(default="gpt-4-turbo-preview", description="Default LLM model")
     default_llm_temperature: float = Field(default=0.0, description="LLM temperature")
 
@@ -76,7 +76,7 @@ class Settings(BaseSettings):
         default=1000, description="Max events before continue-as-new"
     )
 
-    slack_alert_webhook_url: str | None = Field(
+    slack_alert_webhook_url: SecretStr | None = Field(
         default=None,
         description=(
             "Slack incoming webhook URL for DLQ and critical "
@@ -99,6 +99,12 @@ class Settings(BaseSettings):
             not self.redis_password or not self.redis_password.get_secret_value()
         ):
             raise ValueError("redis_password must be set in production")
+
+        if self.environment == "production":
+            import os
+            require_sig = os.environ.get("ORCHESTRATOR_REQUIRE_SIGNATURE", "").lower()
+            if require_sig in ("false", "0", "no"):
+                raise ValueError("ORCHESTRATOR_REQUIRE_SIGNATURE cannot be disabled in production")
         return self
 
 
