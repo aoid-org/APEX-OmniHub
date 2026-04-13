@@ -322,7 +322,9 @@ class TestApplicationDefaults:
 
     def test_slack_webhook_url_env_override(self):
         s = make_settings(SLACK_ALERT_WEBHOOK_URL="https://hooks.slack.com/services/XXX")
-        assert s.slack_alert_webhook_url.get_secret_value() == "https://hooks.slack.com/services/XXX"
+        assert (
+            s.slack_alert_webhook_url.get_secret_value() == "https://hooks.slack.com/services/XXX"
+        )
 
     def test_environment_env_override(self):
         s = make_settings(ENVIRONMENT="staging")
@@ -388,10 +390,14 @@ class TestCaseInsensitive:
         s = make_settings(Temporal_Host="mixed.host:7233")
         assert s.temporal_host == "mixed.host:7233"
 
+
 def test_production_without_signature_disabled():
     import pytest
     import os
-    with pytest.raises(ValueError, match="ORCHESTRATOR_REQUIRE_SIGNATURE cannot be disabled in production"):
+
+    with pytest.raises(
+        ValueError, match="ORCHESTRATOR_REQUIRE_SIGNATURE cannot be disabled in production"
+    ):
         os.environ["ORCHESTRATOR_REQUIRE_SIGNATURE"] = "false"
         try:
             make_settings(ENVIRONMENT="production", REDIS_PASSWORD="secure-pass")  # noqa: S106  # NOSONAR

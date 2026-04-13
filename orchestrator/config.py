@@ -102,6 +102,7 @@ class Settings(BaseSettings):
 
         if self.environment == "production":
             import os
+
             require_sig = os.environ.get("ORCHESTRATOR_REQUIRE_SIGNATURE", "").lower()
             if require_sig in ("false", "0", "no"):
                 raise ValueError("ORCHESTRATOR_REQUIRE_SIGNATURE cannot be disabled in production")
