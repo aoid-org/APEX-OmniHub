@@ -44,6 +44,7 @@ def _make_mock_config(webhook_url: str | None) -> MagicMock:
     """Build a mock ``config`` module with the given webhook URL."""
     mock_settings = MagicMock()
     from pydantic import SecretStr
+
     mock_settings.slack_alert_webhook_url = SecretStr(webhook_url) if webhook_url else None
     mock_config = MagicMock()
     mock_config.settings = mock_settings
@@ -219,7 +220,10 @@ class TestPostSlackWebhook:
 
         mock_http_client.post.assert_awaited_once()
         call_kwargs = mock_http_client.post.call_args
-        assert call_kwargs.args[0] == "https://hooks.slack.com/test" or call_kwargs.args[0].get_secret_value() == "https://hooks.slack.com/test"
+        assert (
+            call_kwargs.args[0] == "https://hooks.slack.com/test"
+            or call_kwargs.args[0].get_secret_value() == "https://hooks.slack.com/test"
+        )
 
     @pytest.mark.asyncio
     async def test_message_contains_workflow_id(self, alert: DLQAlertPayload) -> None:
