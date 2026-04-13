@@ -185,15 +185,15 @@ class TestSupabaseRequired:
 
     def test_supabase_service_role_key_loaded(self):
         s = make_settings(SUPABASE_SERVICE_ROLE_KEY="my-svc-key")
-        assert s.supabase_service_role_key == "my-svc-key"
+        assert s.supabase_service_role_key.get_secret_value() == "my-svc-key"
 
     def test_supabase_db_url_loaded(self):
         s = make_settings(SUPABASE_DB_URL="postgresql://u:p@db-host/mydb")
-        assert s.supabase_db_url == "postgresql://u:p@db-host/mydb"
+        assert s.supabase_db_url.get_secret_value() == "postgresql://u:p@db-host/mydb"
 
     def test_supabase_activity_key_default_empty(self):
         s = make_settings()
-        assert s.supabase_activity_key == ""
+        assert s.supabase_activity_key.get_secret_value() == ""
 
     def test_supabase_url_missing_raises(self, monkeypatch):
         """Missing supabase_url should raise ValidationError."""
@@ -237,11 +237,11 @@ class TestLLMDefaults:
 
     def test_openai_api_key_default_empty(self):
         s = make_settings()
-        assert s.openai_api_key == ""
+        assert s.openai_api_key.get_secret_value() == ""
 
     def test_anthropic_api_key_default_empty(self):
         s = make_settings()
-        assert s.anthropic_api_key == ""
+        assert s.anthropic_api_key.get_secret_value() == ""
 
     def test_default_llm_model(self):
         s = make_settings()
@@ -322,7 +322,7 @@ class TestApplicationDefaults:
 
     def test_slack_webhook_url_env_override(self):
         s = make_settings(SLACK_ALERT_WEBHOOK_URL="https://hooks.slack.com/services/XXX")
-        assert s.slack_alert_webhook_url == "https://hooks.slack.com/services/XXX"
+        assert s.slack_alert_webhook_url.get_secret_value() == "https://hooks.slack.com/services/XXX"
 
     def test_environment_env_override(self):
         s = make_settings(ENVIRONMENT="staging")
@@ -387,3 +387,13 @@ class TestCaseInsensitive:
     def test_mixed_case_env_var(self):
         s = make_settings(Temporal_Host="mixed.host:7233")
         assert s.temporal_host == "mixed.host:7233"
+
+def test_production_without_signature_disabled():
+    import pytest
+    import os
+    with pytest.raises(ValueError, match="ORCHESTRATOR_REQUIRE_SIGNATURE cannot be disabled in production"):
+        os.environ["ORCHESTRATOR_REQUIRE_SIGNATURE"] = "false"
+        try:
+            make_settings(ENVIRONMENT="production", REDIS_PASSWORD="secure-pass")  # noqa: S106  # NOSONAR
+        finally:
+            del os.environ["ORCHESTRATOR_REQUIRE_SIGNATURE"]

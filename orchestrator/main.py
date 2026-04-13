@@ -113,8 +113,10 @@ async def start_worker() -> None:
 
     # Initialize activity dependencies
     logger.info("Initializing activity dependencies...")
-    activity_key = settings.supabase_activity_key or settings.supabase_service_role_key
-    if activity_key == settings.supabase_service_role_key:
+    activity_key = settings.supabase_activity_key.get_secret_value() \
+        if settings.supabase_activity_key.get_secret_value() \
+        else settings.supabase_service_role_key.get_secret_value()
+    if activity_key == settings.supabase_service_role_key.get_secret_value():
         logger.warning(
             "Using SUPABASE_SERVICE_ROLE_KEY for activities; "
             "configure SUPABASE_ACTIVITY_KEY for least privilege"

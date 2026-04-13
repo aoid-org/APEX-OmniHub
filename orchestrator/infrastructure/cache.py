@@ -392,7 +392,7 @@ class SemanticCacheService:
         try:
             results = await self.redis.ft(self.index_name).search(  # type: ignore[misc]
                 query,
-                query_params={"vec": embedding_bytes},  # type: ignore[dict-item]
+                query_params={"vec": embedding_bytes},
             )
         except Exception as e:
             logger.error(f"Vector search failed: {e}")
