@@ -1,3 +1,3 @@
-## 2026-04-13 - Memoizing spatial store values from Zustand
-**Learning:** Zustand selectors that return iterable object methods (like `Array.from(map.values())`) run on every state change tracked by the store. In high-frequency interaction components like `OmniCanvas` (pan/zoom), this causes massive garbage collection overhead.
-**Action:** Always wrap derived reference types (arrays, objects) generated from Zustand state variables in `useMemo` hooks with the state variables as dependencies, particularly in components bound to mouse/pointer movement.
+## YYYY-MM-DD - [Concurrent Execution with Promise.all in Batch Processing]
+**Learning:** Sequential batch processing (using a standard `for...of` loop with `await` on each item) introduces a massive N+1 blocking bottleneck, significantly degrading performance as the batch size increases.
+**Action:** Replaced sequential execution with concurrent mapping using `Promise.all` and `Array.prototype.map`. Retained isolated error handling by placing `try/catch` blocks inside the inner async mapping function, ensuring that an error in one item doesn't short-circuit the execution for others. This should always be preferred over sequential processing for independent asynchronous tasks unless strict execution order is explicitly required.
