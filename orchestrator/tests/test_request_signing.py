@@ -96,10 +96,47 @@ class TestVerifyRequest:
         result = verify_request("POST", "/api/v1/goals", old_ts, tid, sig, body)
         assert result == "timestamp_expired"
 
+    def test_future_timestamp_within_skew(self):
+        body = b'{"test":"data"}'
+        future_ts = str(int(time.time()) + 120)  # 2 min in future
+        _, tid, sig = _sign(body=body, timestamp=future_ts)
+        result = verify_request("POST", "/api/v1/goals", future_ts, tid, sig, body)
+        assert result is None
+
+    def test_future_timestamp_outside_skew(self):
+        body = b'{"test":"data"}'
+        future_ts = str(int(time.time()) + 600)  # 10 min in future
+        _, tid, sig = _sign(body=body, timestamp=future_ts)
+        result = verify_request("POST", "/api/v1/goals", future_ts, tid, sig, body)
+        assert result == "timestamp_expired"
+
     def test_wrong_secret(self):
         body = b'{"test":"data"}'
         ts, tid, sig = _sign(body=body, secret="wrong-secret")  # noqa: S106
         result = verify_request("POST", "/api/v1/goals", ts, tid, sig, body)
+        assert result == "signature_mismatch"
+
+    def test_mismatched_method(self):
+        body = b'{"test":"data"}'
+        ts, tid, sig = _sign(method="POST", body=body)
+        result = verify_request("PUT", "/api/v1/goals", ts, tid, sig, body)
+        assert result == "signature_mismatch"
+
+    def test_mismatched_path(self):
+        body = b'{"test":"data"}'
+        ts, tid, sig = _sign(path="/api/v1/goals", body=body)
+        result = verify_request("POST", "/api/v1/intents", ts, tid, sig, body)
+        assert result == "signature_mismatch"
+
+    def test_mismatched_trace_id(self):
+        body = b'{"test":"data"}'
+        ts, tid, sig = _sign(trace_id="trace-1", body=body)
+        result = verify_request("POST", "/api/v1/goals", ts, "trace-2", sig, body)
+        assert result == "signature_mismatch"
+
+    def test_mismatched_body(self):
+        ts, tid, sig = _sign(body=b'{"a":1}')
+        result = verify_request("POST", "/api/v1/goals", ts, tid, sig, b'{"a":2}')
         assert result == "signature_mismatch"
 
     def test_no_secret_configured(self, monkeypatch):
@@ -238,6 +275,43 @@ class TestSignatureVerificationMiddleware:
             method="POST",
             path="/api/v1/goals",
             headers={},
+        )
+        call_next = AsyncMock()
+        response = await middleware.dispatch(request, call_next)
+        assert response.status_code == 401
+        call_next.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_dispatch_returns_401_on_expired_timestamp(self):
+        """A request with an expired timestamp returns 401."""
+        middleware = SignatureVerificationMiddleware(app=MagicMock())
+        ts = str(int(time.time()) - 600)
+        request = self._make_request(
+            method="POST",
+            path="/api/v1/goals",
+            headers={
+                "X-Omni-Timestamp": ts,
+                "X-Omni-Trace-Id": "trace-123",
+                "X-Omni-Signature": "00" * 32,
+            },
+        )
+        call_next = AsyncMock()
+        response = await middleware.dispatch(request, call_next)
+        assert response.status_code == 401
+        call_next.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_dispatch_returns_401_on_invalid_timestamp_format(self):
+        """A request with a non-numeric timestamp returns 401."""
+        middleware = SignatureVerificationMiddleware(app=MagicMock())
+        request = self._make_request(
+            method="POST",
+            path="/api/v1/goals",
+            headers={
+                "X-Omni-Timestamp": "not-a-number",
+                "X-Omni-Trace-Id": "trace-123",
+                "X-Omni-Signature": "00" * 32,
+            },
         )
         call_next = AsyncMock()
         response = await middleware.dispatch(request, call_next)
