@@ -87,51 +87,58 @@ export async function flushQueue(force = false): Promise<void> {
   const pendingQueue = await loadQueue();
 
   let updated = [...pendingQueue];
-  for (const item of pendingQueue) {
-    if (item.status === 'failed') continue;
-    if (!force && item.nextAttemptAt > now) continue;
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      scheduleFlush(2_000);
-      break;
-    }
 
-    try {
-      await writeToSupabase(item);
-      updated = updated.filter((e) => e.id !== item.id);
-      consecutiveFlushFailures = 0;
-      await logAnalyticsEvent('audit.flush.success', { id: item.id });
-    } catch (error) {
-      const attempts = item.attempts + 1;
-      const isTerminal = attempts >= MAX_ATTEMPTS;
-      const backoffMs = calculateBackoffDelay(attempts, {
-        baseMs: BASE_DELAY_MS,
-        maxMs: MAX_DELAY_MS,
-        jitterMs: JITTER_MS,
-      });
-
-      const mutated = updated.find((e) => e.id === item.id);
-      if (mutated) {
-        mutated.attempts = attempts;
-        mutated.nextAttemptAt = Date.now() + backoffMs;
-        mutated.status = isTerminal ? 'failed' : 'pending';
-      }
-
-      consecutiveFlushFailures += 1;
-
-      if (isTerminal) {
-        await logError(error as Error, {
-          action: 'audit_flush_failed_terminal',
-          metadata: { id: item.id, attempts },
-        });
-      } else {
-        await logAnalyticsEvent('audit.flush.retry', {
-          id: item.id,
-          attempts,
-          backoffMs,
-        });
-      }
-    }
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    scheduleFlush(2_000);
+    flushInFlight = false;
+    return;
   }
+
+  const itemsToProcess = pendingQueue.filter(
+    (item) => item.status !== 'failed' && (force || item.nextAttemptAt <= now)
+  );
+
+  // ⚡ Bolt: Use Promise.all to avoid N+1 sequential await bottlenecks
+  await Promise.all(
+    itemsToProcess.map(async (item) => {
+      try {
+        await writeToSupabase(item);
+        updated = updated.filter((e) => e.id !== item.id);
+        consecutiveFlushFailures = 0;
+        await logAnalyticsEvent('audit.flush.success', { id: item.id });
+      } catch (error) {
+        const attempts = item.attempts + 1;
+        const isTerminal = attempts >= MAX_ATTEMPTS;
+        const backoffMs = calculateBackoffDelay(attempts, {
+          baseMs: BASE_DELAY_MS,
+          maxMs: MAX_DELAY_MS,
+          jitterMs: JITTER_MS,
+        });
+
+        const mutated = updated.find((e) => e.id === item.id);
+        if (mutated) {
+          mutated.attempts = attempts;
+          mutated.nextAttemptAt = Date.now() + backoffMs;
+          mutated.status = isTerminal ? 'failed' : 'pending';
+        }
+
+        consecutiveFlushFailures += 1;
+
+        if (isTerminal) {
+          await logError(error as Error, {
+            action: 'audit_flush_failed_terminal',
+            metadata: { id: item.id, attempts },
+          });
+        } else {
+          await logAnalyticsEvent('audit.flush.retry', {
+            id: item.id,
+            attempts,
+            backoffMs,
+          });
+        }
+      }
+    })
+  );
 
   await saveQueue(updated);
   flushInFlight = false;
