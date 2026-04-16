@@ -163,11 +163,8 @@ function scheduleFlush(delay = 0) {
   }, delay);
 }
 
-async function handleUpsertSuccess(item: QueuedUpsert, updated: QueuedUpsert[]): Promise<QueuedUpsert[]> {
-  const next = updated.filter((u) => u.record.deviceId !== item.record.deviceId);
-  consecutiveFailures = 0;
+async function handleUpsertSuccess(item: QueuedUpsert) {
   await logAnalyticsEvent('device.upsert.success', { deviceId: item.record.deviceId });
-  return next;
 }
 
 async function handleUpsertFailure(item: QueuedUpsert, error: unknown, updated: QueuedUpsert[]): Promise<void> {
@@ -185,8 +182,6 @@ async function handleUpsertFailure(item: QueuedUpsert, error: unknown, updated: 
     found.nextAttemptAt = Date.now() + delay;
     found.status = isTerminal ? 'failed' : 'pending';
   }
-
-  consecutiveFailures += 1;
 
   if (isTerminal) {
     await logError(error as Error, {
@@ -266,15 +261,18 @@ async function flushUpserts(force = false) {
       throw new Error(`Device upsert failed: ${error.message}`);
     }
 
-    // Process successes for all items in batch
-    for (const item of itemsToProcess) {
-      updated = await handleUpsertSuccess(item, updated);
-    }
+    // Process successes for all items in batch concurrently
+    await Promise.all(itemsToProcess.map((item) => handleUpsertSuccess(item)));
+
+    // Filter out successful items
+    const successDeviceIds = new Set(itemsToProcess.map(i => i.record.deviceId));
+    updated = updated.filter(u => !successDeviceIds.has(u.record.deviceId));
+
+    consecutiveFailures = 0;
   } catch (error) {
-    // If the batch fails, apply backoff to all items
-    for (const item of itemsToProcess) {
-      await handleUpsertFailure(item, error, updated);
-    }
+    // If the batch fails, apply backoff to all items concurrently
+    await Promise.all(itemsToProcess.map((item) => handleUpsertFailure(item, error, updated)));
+    consecutiveFailures += itemsToProcess.length;
   }
 
   await saveUpsertQueue(updated);
