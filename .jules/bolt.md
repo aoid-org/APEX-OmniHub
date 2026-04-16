@@ -1,6 +1,3 @@
 ## YYYY-MM-DD - [Concurrent Execution with Promise.all in Batch Processing]
 **Learning:** Sequential batch processing (using a standard `for...of` loop with `await` on each item) introduces a massive N+1 blocking bottleneck, significantly degrading performance as the batch size increases.
 **Action:** Replaced sequential execution with concurrent mapping using `Promise.all` and `Array.prototype.map`. Retained isolated error handling by placing `try/catch` blocks inside the inner async mapping function, ensuring that an error in one item doesn't short-circuit the execution for others. This should always be preferred over sequential processing for independent asynchronous tasks unless strict execution order is explicitly required.
-## 2026-04-16 - [Concurrent Execution with Promise.all in Batch Array Mutation]
-**Learning:** Sequential batch processing combined with array filtering inside loops (e.g., `updated = updated.filter(...)` inside a `for...of` loop) creates an O(N*M) complexity issue.
-**Action:** Replaced sequential execution and array filtering with a concurrent `Promise.all` block for asynchronous operations, and combined filtering into a single O(N+M) pass using a `Set`. This drastically speeds up execution while retaining the original logic.

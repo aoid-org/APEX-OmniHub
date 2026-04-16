@@ -1,3 +1,0 @@
-const { lint, load } = require('@commitlint/core');
-const fs = require('fs');
-// ...
