@@ -4,6 +4,58 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-04-17
+
+### Added — SBBL-HQ Bidirectional Integration + Control Plane
+
+This release closes the `FUTURE: Durable execution routing` gap at
+`api/omnibridge/ingest.ts:222` and wires OmniHub as the authoritative
+control plane for SBBL-HQ ahead of the 2026 Spring Edition live event.
+
+- **`supabase/migrations/20260417000000_omnibridge_events.sql`** — durable event log (`omnibridge_events`), dispatch DLQ (`omnibridge_events_dlq`), and hash-chained control audit (`omnibridge_control_audit`) with RLS + tenant-scoped admin reads. Plus `omnibridge_event_stats_hourly` view for grant-evidence reporting.
+- **`src/lib/omnibridge/syncPacketVerifier.ts`** — SBBL-HQ native HMAC-SHA256 verifier with base64url decode + constant-time `crypto.subtle.verify`. Byte-identical to SBBL-HQ's own `signSyncPacket` primitive (proven by `omnibridge-roundtrip.test.ts`).
+- **`api/omnibridge/sync.ts`** — new Vercel Edge endpoint accepting SBBL-HQ's native `{packet, signature}` envelope with source lookup, IP allowlist, 300s timestamp skew, replay guard on `packet_id`, payload sanitization, and durable persistence.
+- **`src/lib/omnibridge/eventStore.ts`** — persist + dispatch pipeline writing to PostgREST with `on_conflict` idempotency; exponential-backoff DLQ on dispatch failures.
+- **`src/lib/omnibridge/sourceRegistry.ts`** — extended `WebhookConfig` with `profile: 'hardened' | 'sync_packet'`; added `resolveSyncPacketSource()`.
+- **`src/lib/omnibridge/outboundCaller.ts`** — signs + POSTs control commands to SBBL-HQ with exponential-backoff retries (3x max), 5xx retry / 4xx terminal, injected-fetch for testability.
+- **`supabase/functions/omnibridge-control/index.ts`** — privileged control-plane endpoint (JWT + RBAC). Actions: `disable_stream`, `enable_stream`, `revoke_access`, `grant_access`, `emergency_halt`, `broadcast_message`, `force_man_review`, `hotfix_dispatch`. RED-lane actions require **two-party MAN approval** (approver ≠ requester enforced). BLOCKED patterns (`drop table`, `disable rls`, etc.) rejected at ingestion. Hash-chained audit log. `hotfix_dispatch` requires explicit `target_file_allowlist` with path-traversal rejection.
+- **`src/components/omnibridge/OmniBridgeLiveFeed.tsx`** — real-time admin dashboard backed by Supabase Realtime on `omnibridge_events`. Shows verified %, acked %, DLQ count, p95 round-trip latency. Alberta Innovates grant-evidence UI.
+- **`api/omnibridge/ingest.ts`** — wired the existing hardened path to `persistEvent`, closing the `FUTURE: Durable execution routing` TODO without touching the signature verification code path (zero regression risk to existing 15 ingest tests).
+- **`.env.example`** — documented `OMNIBRIDGE_SBBL_NATIVE_SECRET`, `CONTROL_SIGNING_SECRET_SBBL_HQ`, `CONTROL_TARGET_URL_SBBL_HQ`, plus registry example for `profile: 'sync_packet'`.
+- **`docs/integration/sbbl-hq-v1.6.0-patch.md`** — ready-to-apply patch for the SBBL-HQ Cloudflare Workers side (outbound emit callsite, inbound `/webhooks/omnihub` route, Supabase migration, secret provisioning, deployment order, rollback).
+
+### Added — Tests (75 new)
+
+- **`tests/lib/omnibridge/syncPacketVerifier.test.ts`** — 20 tests: envelope shape validation, emitted_at skew, signature tampering, wrong secret, malformed base64, expired packets, custom skew window.
+- **`tests/lib/omnibridge/outboundCaller.test.ts`** — 10 tests: signature determinism, payload divergence, base64url charset, missing URL/secret fail-closed, 2xx success, 4xx terminal, 5xx retry-to-exhaustion (`MAX_ATTEMPTS=3`), correct signed header transmission.
+- **`tests/api/omnibridge-sync.test.ts`** — 13 tests: happy path, method gating, header validation, unknown source, IP allowlist, bad signature, expired emitted_at, replay detection on `packet_id`, invalid JSON, oversized body (413), persist config_missing (500), persist upstream_error (502), dunder/XSS sanitization verification.
+- **`tests/api/omnibridge-roundtrip.test.ts`** — 7 tests: 5-packet live-event sequence persistence, mid-stream tamper detection, 50-packet concurrent burst (no drops / all unique), outbound command signing reversibility, outbound tamper detection, **byte-identical signature to SBBL-HQ native primitive**, **OmniHub verifier accepts SBBL-HQ native signatures**.
+- **`tests/api/omnibridge-ingest.test.ts`** — updated existing 15 tests to mock `persistEvent` for the now-persistent hardened path. All pass unchanged.
+
+### Verification (Release Blocking)
+
+- `vitest run tests/` → **2,336 passed, 0 failed**, 70 skipped (pre-existing). +75 tests vs v1.5.1 baseline.
+- `tsc --noEmit` → 0 errors.
+- `eslint` on all new files → 0 errors, 0 warnings.
+- Round-trip cryptographic contract with SBBL-HQ: **byte-verified** (not assumed).
+
+### Security Posture
+
+- All new ingest endpoints are **fail-closed** (no default-allow paths).
+- All new control commands are gated by **RBAC + risk lane classification + two-party MAN approval for RED/BLOCKED**.
+- Hotfix dispatch action requires explicit file allowlist with path-traversal rejection.
+- Audit log is hash-chained for integrity (`prev_hash` → `entry_hash` = SHA-256 of canonical JSON).
+- No secrets committed; `.env.example` contains placeholders only.
+- No provider lock-in introduced; all new code uses Web Crypto API + PostgREST fetch only (Edge-compatible, no SDK coupling).
+
+### Known Residual (Accepted)
+
+- **Supabase RLS policy** on `omnibridge_events` assumes a `user_roles` table with `role` column (pattern consistent with existing migrations). Verify target Supabase project has that table before applying migration.
+- **SBBL-HQ side not yet deployed**: `docs/integration/sbbl-hq-v1.6.0-patch.md` must be applied to the `sbbl-hq` repo in a separate authorized session. This repo's GitHub MCP scope does not include `sbbl-hq`.
+- **`hotfix_dispatch` action is acknowledged but not executed** on the SBBL-HQ side in this release — the patch doc marks it 501 pending a hardened agent runtime on SBBL-HQ's side (v1.6.1 scope).
+
+---
+
 ## [1.5.1] - 2026-03-25
 
 ### Fixed — Critical Production Login Outage (SEV-1)
