@@ -54,6 +54,10 @@ type HardenedHeaders = NonNullable<ReturnType<typeof extractHardenedHeaders>>;
 
 const logEvent = makeLogger('omnibridge/ingest');
 
+function toErrorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
 function isTenantMismatch(parsedBody: Record<string, unknown>, expectedTenantId: string): boolean {
   return !!parsedBody.tenant_id && parsedBody.tenant_id !== expectedTenantId;
 }
@@ -124,7 +128,7 @@ async function handleHardenedIngress(
       idempotencyKey,
     );
   } catch (e) {
-    logEvent(true, 'invalid_payload', { ...meta, error: e instanceof Error ? e.message : String(e) });
+    logEvent(true, 'invalid_payload', { ...meta, error: toErrorMessage(e) });
     return jsonResponse(400, { error: 'invalid_payload' });
   }
 
