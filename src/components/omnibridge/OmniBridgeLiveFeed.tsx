@@ -95,16 +95,31 @@ export const OmniBridgeLiveFeed: FC<OmniBridgeLiveFeedProps> = ({
   }, [sourceFilter, windowSize, tenantId]);
 
   const stats = useMemo(() => {
+    // ⚡ Bolt: Replaced 4 O(n) array passes (filter/map) with a single O(n) loop
+    // to minimize main-thread overhead during high-frequency live feed updates
     const total = events.length;
-    const verified = events.filter((e) => e.signature_verified).length;
-    const acked = events.filter((e) => e.dispatch_state === 'acknowledged').length;
-    const dlq = events.filter((e) => e.dispatch_state === 'dlq').length;
-    const latencies = events
-      .filter((e) => e.acknowledged_at)
-      .map((e) => new Date(e.acknowledged_at!).getTime() - new Date(e.received_at).getTime())
-      .sort((a, b) => a - b);
+    let verified = 0;
+    let acked = 0;
+    let dlq = 0;
+    const latencies: number[] = [];
+
+    for (const e of events) {
+      if (e.signature_verified) verified++;
+      if (e.dispatch_state === 'acknowledged') {
+        acked++;
+        if (e.acknowledged_at) {
+          latencies.push(
+            new Date(e.acknowledged_at).getTime() - new Date(e.received_at).getTime()
+          );
+        }
+      }
+      if (e.dispatch_state === 'dlq') dlq++;
+    }
+
+    latencies.sort((a, b) => a - b);
     const p95Idx = Math.floor(latencies.length * 0.95);
     const p95 = latencies[p95Idx] ?? 0;
+
     return {
       total,
       verified_rate: total ? ((verified / total) * 100).toFixed(1) : '0.0',
