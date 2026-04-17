@@ -10,8 +10,15 @@
  * @license Proprietary - APEX Business Systems Ltd.
  */
 
-import { generateSecureId } from '../../../src/lib/security';
 import { validateHMAC } from '../../../src/lib/security/hmacValidator';
+
+// Inline secure ID generator — avoids pulling in src/lib/security.ts which
+// imports the Vite-only @/guardian/loops alias that CF Pages Functions
+// bundler (esbuild) cannot resolve. crypto.randomUUID is available in
+// the Cloudflare Workers / Pages Functions runtime.
+function generateSecureId(): string {
+  return crypto.randomUUID();
+}
 import {
   resolveHardenedSourceFromEnv,
   lastRegistryErrorFromEnv,
