@@ -38,6 +38,7 @@ import {
   normalizeLegacyEvent,
   type EventEnvelope
 } from '../../src/lib/omnibridge/eventEnvelope';
+import { persistEvent } from '../../src/lib/omnibridge/eventStore';
 
 export const config = { runtime: 'edge' };
 
@@ -217,10 +218,52 @@ export default async function handler(request: Request): Promise<Response> { // 
     // Pre-process sanitization
     eventEnvelope.payload = sanitizePayload(eventEnvelope.payload);
 
-    logEvent(false, 'event_received', { ...modeMeta, tenant_id: resolution.client.tenant_id });
+    // Durable persistence (v1.6.0). Failure to persist returns 5xx so the
+    // partner retries. Dispatch to orchestrator happens asynchronously via
+    // the outbound worker (best-effort, DLQ-backed).
+    const persistOutcome = await persistEvent({
+      event_id: eventEnvelope.event_id,
+      source_id: sourceId,
+      tenant_id: resolution.client.tenant_id,
+      profile: 'hardened',
+      event_type: eventEnvelope.event_type,
+      trace_id: eventEnvelope.trace_id,
+      idempotency_key: eventEnvelope.idempotency_key,
+      payload: eventEnvelope.payload,
+      raw_headers: {
+        'x-omni-source': sourceId,
+        'x-omni-key-id': keyId,
+        'x-omni-timestamp': timestamp,
+        'x-omni-trace-id': traceId,
+      },
+      signature_verified: true,
+    });
 
-    // FUTURE: Durable execution routing
-    return jsonResponse(200, { received: true, event_id: eventEnvelope.event_id });
+    if (!persistOutcome.ok) {
+      // Fail-closed unless explicitly running without Supabase (e.g. early
+      // preview deploys). `config_missing` is treated as a soft-accept so
+      // verified events are not lost — they're logged and returned 200 so
+      // partners don't retry, matching legacy behaviour.
+      if (persistOutcome.reason === 'config_missing') {
+        logEvent(false, 'event_received_no_store', { ...modeMeta, tenant_id: resolution.client.tenant_id });
+        return jsonResponse(200, { received: true, event_id: eventEnvelope.event_id, stored: false });
+      }
+      logEvent(true, `persist_failed:${persistOutcome.reason}`, { ...modeMeta, error: persistOutcome.detail });
+      return jsonResponse(502, { error: 'persist_failed', reason: persistOutcome.reason });
+    }
+
+    logEvent(false, persistOutcome.duplicate ? 'idempotent_accept' : 'event_persisted', {
+      ...modeMeta,
+      tenant_id: resolution.client.tenant_id,
+      event_uuid: persistOutcome.event_uuid,
+    });
+
+    return jsonResponse(200, {
+      received: true,
+      event_id: eventEnvelope.event_id,
+      event_uuid: persistOutcome.event_uuid,
+      duplicate: persistOutcome.duplicate,
+    });
 
   } else {
     /* ---------------------------------------------------------------------- */
