@@ -80,7 +80,7 @@ export const OmniBridgeLiveFeed: FC<OmniBridgeLiveFeedProps> = ({
         (payload) => {
           if (!isMounted) return;
           const row = payload.new as OmniBridgeEventRow;
-          setEvents((prev) => prev.map((e) => (e.id === row.id ? row : e)));
+          setEvents((prev) => mergeUpdatedRow(prev, row));
         },
       )
       .subscribe((status) => {
@@ -194,6 +194,20 @@ export const OmniBridgeLiveFeed: FC<OmniBridgeLiveFeedProps> = ({
   );
 };
 
+function mergeUpdatedRow(prev: OmniBridgeEventRow[], row: OmniBridgeEventRow): OmniBridgeEventRow[] {
+  return prev.map((e) => (e.id === row.id ? row : e));
+}
+
+function getStateBadgeColor(state: OmniBridgeEventRow['dispatch_state'], verified: boolean): string {
+  if (verified) {
+    if (state === 'acknowledged') return 'bg-green-500/20 text-green-700 dark:text-green-300';
+    if (state === 'dlq') return 'bg-red-500/20 text-red-700 dark:text-red-300';
+    if (state === 'dispatched') return 'bg-blue-500/20 text-blue-700 dark:text-blue-300';
+    return 'bg-muted text-muted-foreground';
+  }
+  return 'bg-red-500/20 text-red-700 dark:text-red-300';
+}
+
 const Stat: FC<{ label: string; value: string }> = ({ label, value }) => (
   <div className="rounded border bg-muted/30 p-3">
     <div className="text-xs text-muted-foreground">{label}</div>
@@ -202,15 +216,7 @@ const Stat: FC<{ label: string; value: string }> = ({ label, value }) => (
 );
 
 const StateBadge: FC<{ state: OmniBridgeEventRow['dispatch_state']; verified: boolean }> = ({ state, verified }) => {
-  const color = !verified
-    ? 'bg-red-500/20 text-red-700 dark:text-red-300'
-    : state === 'acknowledged'
-    ? 'bg-green-500/20 text-green-700 dark:text-green-300'
-    : state === 'dlq'
-    ? 'bg-red-500/20 text-red-700 dark:text-red-300'
-    : state === 'dispatched'
-    ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300'
-    : 'bg-muted text-muted-foreground';
+  const color = getStateBadgeColor(state, verified);
   return <span className={`rounded px-2 py-0.5 text-xs ${color}`}>{state}</span>;
 };
 

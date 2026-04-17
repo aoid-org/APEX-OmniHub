@@ -72,8 +72,8 @@ function readSupabaseConfig(env: EventStoreEnv | undefined): { url: string; serv
   const source: EventStoreEnv = env ?? (typeof process !== 'undefined' ? process.env as EventStoreEnv : {});
   const url = source.SUPABASE_URL ?? source.VITE_SUPABASE_URL;
   const serviceKey = source.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) return null;
-  return { url, serviceKey };
+  if (url && serviceKey) return { url, serviceKey };
+  return null;
 }
 
 /**

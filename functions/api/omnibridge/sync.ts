@@ -31,6 +31,7 @@ import {
 } from '../../../src/lib/omnibridge/replayStore';
 import { persistEvent, type EventStoreEnv } from '../../../src/lib/omnibridge/eventStore';
 import { extractClientIp, isIpAllowed } from '../../../src/lib/omnibridge/verifySignedIngress';
+import { jsonResponse, makeLogger, sanitize } from '../../../src/lib/omnibridge/httpUtils';
 
 interface Env extends EventStoreEnv {
   OMNIBRIDGE_M2M_CLIENTS?: string;
@@ -42,39 +43,11 @@ type OnRequestPost = (context: {
   env: Env;
 }) => Response | Promise<Response>;
 
-function jsonResponse(status: number, body: Record<string, unknown>): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
+const logEvent = makeLogger('omnibridge/sync');
 
-function logEvent(deny: boolean, reason: string, meta: Record<string, unknown>): void {
-  const prefix = '[omnibridge/sync]';
-  const line = `${prefix} ${deny ? 'DENY' : 'ACCEPT'}: ${reason} | ${JSON.stringify(meta)}`;
-  if (deny) console.error(line); else console.warn(line);
-}
-
-function sanitize(obj: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (k.startsWith('__')) continue;
-    if (typeof v === 'string' && /<script/i.test(v)) continue;
-    if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
-      out[k] = sanitize(v as Record<string, unknown>);
-    } else if (Array.isArray(v)) {
-      out[k] = v.map((item) => {
-        if (item !== null && typeof item === 'object' && !Array.isArray(item)) {
-          return sanitize(item as Record<string, unknown>);
-        }
-        if (typeof item === 'string' && /<script/i.test(item)) return undefined;
-        return item;
-      }).filter((item) => item !== undefined);
-    } else {
-      out[k] = v;
-    }
-  }
-  return out;
+function verifyErrorResponse(reason: string | undefined): Response {
+  const status = reason === 'expired' ? 400 : 401;
+  return jsonResponse(status, { error: reason ?? 'invalid_signature' });
 }
 
 export const onRequestPost: OnRequestPost = async ({ request, env }) => {
@@ -139,8 +112,7 @@ export const onRequestPost: OnRequestPost = async ({ request, env }) => {
       source_id: sourceId,
       packet_id: envelope.packet.packet_id,
     });
-    const status = verify.reason === 'expired' ? 400 : 401;
-    return jsonResponse(status, { error: verify.reason ?? 'invalid_signature' });
+    return verifyErrorResponse(verify.reason);
   }
 
   const cleanPayload = sanitize(envelope.packet.payload);

@@ -22,28 +22,34 @@ export interface RegistryEnv {
 
 const parseErrors = new WeakMap<object, Error | null>();
 
+function validateWebhookShape(w: Record<string, unknown>): boolean {
+  if (typeof w.source_id !== 'string') return false;
+  if (typeof w.key_id !== 'string') return false;
+  if (typeof w.secret_env !== 'string') return false;
+  if (w.status !== 'active' && w.status !== 'inactive') return false;
+  if (w.profile !== undefined && w.profile !== 'hardened' && w.profile !== 'sync_packet') return false;
+  if (w.allowed_ips === undefined) return true;
+  if (!Array.isArray(w.allowed_ips)) return false;
+  for (const ip of w.allowed_ips) {
+    if (typeof ip !== 'string') return false;
+  }
+  return true;
+}
+
 function validateRecord(record: unknown): record is M2MClientRecord {
   if (!record || typeof record !== 'object') return false;
   const r = record as Record<string, unknown>;
   if (typeof r.client_id !== 'string') return false;
   if (typeof r.client_secret_hash !== 'string') return false;
   if (!Array.isArray(r.scopes)) return false;
-  for (const s of r.scopes) if (typeof s !== 'string') return false;
-  if (typeof r.tenant_id !== 'string') return false;
-  if (r.webhook !== undefined) {
-    const w = r.webhook as Record<string, unknown> | null;
-    if (!w || typeof w !== 'object') return false;
-    if (typeof w.source_id !== 'string') return false;
-    if (typeof w.key_id !== 'string') return false;
-    if (typeof w.secret_env !== 'string') return false;
-    if (w.status !== 'active' && w.status !== 'inactive') return false;
-    if (w.profile !== undefined && w.profile !== 'hardened' && w.profile !== 'sync_packet') return false;
-    if (w.allowed_ips !== undefined) {
-      if (!Array.isArray(w.allowed_ips)) return false;
-      for (const ip of w.allowed_ips) if (typeof ip !== 'string') return false;
-    }
+  for (const s of r.scopes) {
+    if (typeof s !== 'string') return false;
   }
-  return true;
+  if (typeof r.tenant_id !== 'string') return false;
+  if (r.webhook === undefined) return true;
+  const w = r.webhook as Record<string, unknown> | null;
+  if (!w || typeof w !== 'object') return false;
+  return validateWebhookShape(w);
 }
 
 function parseClients(env: RegistryEnv): M2MClientRecord[] | null {
