@@ -70,9 +70,13 @@ function base64UrlEncode(buf: ArrayBuffer): string {
   const bytes = new Uint8Array(buf);
   let binary = '';
   bytes.forEach((b) => {
-    binary += String.fromCharCode(b);
+    binary += String.fromCodePoint(b);
   });
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+}
+
+function toErrorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
 }
 
 export async function signCommand(command: OutboundCommand, secret: string): Promise<string> {
@@ -110,8 +114,7 @@ export async function dispatchCommand(params: {
    */
   fetchImpl?: typeof fetch;
 }): Promise<OutboundResult> {
-  const { targetUrl, secret, command } = params;
-  const doFetch = params.fetchImpl ?? fetch;
+  const { targetUrl, secret, command, fetchImpl = fetch } = params;
 
   if (!targetUrl) return { ok: false, error: 'missing_target_url', attempts: 0 };
   if (!secret) return { ok: false, error: 'missing_secret', attempts: 0 };
@@ -132,7 +135,7 @@ export async function dispatchCommand(params: {
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
     try {
-      const res = await doFetch(targetUrl, {
+      const res = await fetchImpl(targetUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -166,7 +169,7 @@ export async function dispatchCommand(params: {
       lastError = `upstream_${res.status}`;
     } catch (e) {
       clearTimeout(timer);
-      lastError = e instanceof Error ? e.message : String(e);
+      lastError = toErrorMessage(e);
     }
   }
 

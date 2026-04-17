@@ -46,11 +46,11 @@ function base64UrlToBytes(value: string): Uint8Array | null {
   // Node's Buffer API is not available; atob/btoa are the canonical choice.
   if (!/^[A-Za-z0-9_-]+$/.test(value)) return null;
   const padLen = (4 - (value.length % 4)) % 4;
-  const normalized = value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(padLen);
+  const normalized = value.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat(padLen);
   try {
     const binary = atob(normalized); // NOSONAR — see justification above
     const out = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
+    for (let i = 0; i < binary.length; i++) out[i] = binary.codePointAt(i) ?? 0;
     return out;
   } catch {
     return null;
@@ -157,7 +157,7 @@ export async function signSyncPacketForTest(
   const bytes = new Uint8Array(signature);
   let binary = '';
   bytes.forEach((b) => {
-    binary += String.fromCharCode(b);
+    binary += String.fromCodePoint(b);
   });
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
 }

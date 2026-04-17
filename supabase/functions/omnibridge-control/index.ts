@@ -140,6 +140,22 @@ interface IssueInput {
   target_file_allowlist?: string[];
 }
 
+function validateHotfixAllowlist(b: Record<string, unknown>): string | null {
+  const allowlist = b.target_file_allowlist;
+  if (!Array.isArray(allowlist) || allowlist.length === 0) {
+    return 'hotfix_requires_file_allowlist';
+  }
+  for (const entry of allowlist) {
+    if (typeof entry !== 'string' || entry.length === 0) {
+      return 'hotfix_allowlist_entry_invalid';
+    }
+    if (entry.includes('..')) {
+      return 'hotfix_allowlist_path_traversal';
+    }
+  }
+  return null;
+}
+
 function validateIssueInput(body: unknown): { ok: true; input: IssueInput } | { ok: false; error: string } {
   if (!body || typeof body !== 'object') return { ok: false, error: 'invalid_body' };
   const b = body as Record<string, unknown>;
@@ -158,30 +174,26 @@ function validateIssueInput(body: unknown): { ok: true; input: IssueInput } | { 
     return { ok: false, error: 'invalid_payload' };
   }
   if (action === 'hotfix_dispatch') {
-    const allowlist = b.target_file_allowlist;
-    if (!Array.isArray(allowlist) || allowlist.length === 0) {
-      return { ok: false, error: 'hotfix_requires_file_allowlist' };
-    }
-    for (const entry of allowlist) {
-      if (typeof entry !== 'string' || entry.length === 0) {
-        return { ok: false, error: 'hotfix_allowlist_entry_invalid' };
-      }
-      if (entry.includes('..')) {
-        return { ok: false, error: 'hotfix_allowlist_path_traversal' };
-      }
-    }
+    const hotfixErr = validateHotfixAllowlist(b);
+    if (hotfixErr) return { ok: false, error: hotfixErr };
   }
   return {
     ok: true,
     input: {
       action: action as Action,
-      target_source: b.target_source as string,
+      target_source: b.target_source,
       target_entity_id: typeof b.target_entity_id === 'string' ? b.target_entity_id : null,
-      reason: b.reason as string,
+      reason: b.reason,
       payload: b.payload as Record<string, unknown>,
       target_file_allowlist: Array.isArray(b.target_file_allowlist) ? (b.target_file_allowlist as string[]) : undefined,
     },
   };
+}
+
+function base64UrlFromBytes(bytes: Uint8Array): string {
+  let binary = '';
+  bytes.forEach((b) => { binary += String.fromCodePoint(b); });
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
 }
 
 async function dispatchApproved(
@@ -241,10 +253,7 @@ async function dispatchApproved(
     key,
     new TextEncoder().encode(JSON.stringify(command)),
   );
-  const sigBytes = new Uint8Array(sigBuf);
-  let binary = '';
-  sigBytes.forEach((b) => { binary += String.fromCharCode(b); });
-  const signature = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  const signature = base64UrlFromBytes(new Uint8Array(sigBuf));
 
   const res = await fetch(targetUrl, {
     method: 'POST',
@@ -272,6 +281,141 @@ async function dispatchApproved(
   return { ok: res.ok, response: responseBody, http_status: res.status };
 }
 
+async function handleIssue(
+  body: Record<string, unknown>,
+  userId: string,
+  supabase: ReturnType<typeof createSupabaseClient>,
+  corsHeaders: Record<string, string>,
+): Promise<Response> {
+  const validated = validateIssueInput(body);
+  if (!validated.ok) {
+    return jsonResponse({ error: validated.error }, 400, corsHeaders);
+  }
+  const { input } = validated;
+  const risk = classifyRiskLane(input.action, input.payload);
+  if (risk === 'BLOCKED') {
+    return jsonResponse({ error: 'blocked_pattern_detected', risk }, 403, corsHeaders);
+  }
+
+  const commandId = generateCommandId();
+  const createdAt = new Date().toISOString();
+  const prevHash = await getPrevHash(supabase);
+  const entryHash = await computeEntryHash({
+    prev_hash: prevHash,
+    command_id: commandId,
+    action: input.action,
+    target_source: input.target_source,
+    risk_lane: risk,
+    payload: input.payload,
+    reason: input.reason,
+    requested_by: userId,
+    created_at: createdAt,
+  });
+
+  const initialState = risk === 'RED' ? 'awaiting_man_approval' : 'approved';
+
+  const { error: insErr } = await supabase.from('omnibridge_control_audit').insert({
+    command_id: commandId,
+    target_source: input.target_source,
+    action: input.action,
+    risk_lane: risk,
+    state: initialState,
+    requested_by: userId,
+    reason: input.reason,
+    payload: input.payload,
+    target_file_allowlist: input.target_file_allowlist ?? null,
+    prev_hash: prevHash,
+    entry_hash: entryHash,
+    created_at: createdAt,
+  });
+  if (insErr) {
+    return jsonResponse({ error: 'audit_insert_failed', detail: insErr.message }, 500, corsHeaders);
+  }
+
+  if (initialState === 'approved') {
+    const dispatch = await dispatchApproved(supabase, commandId);
+    return jsonResponse({
+      command_id: commandId,
+      state: dispatch.ok ? 'dispatched' : 'failed',
+      risk_lane: risk,
+      dispatch,
+    }, dispatch.ok ? 200 : 502, corsHeaders);
+  }
+
+  return jsonResponse({
+    command_id: commandId,
+    state: initialState,
+    risk_lane: risk,
+    message: 'Command recorded. Awaiting second-party MAN approval before dispatch.',
+  }, 202, corsHeaders);
+}
+
+async function handleApproveOrDeny(
+  op: string,
+  body: Record<string, unknown>,
+  userId: string,
+  isApprover: boolean,
+  supabase: ReturnType<typeof createSupabaseClient>,
+  corsHeaders: Record<string, string>,
+): Promise<Response> {
+  if (!isApprover) {
+    return jsonResponse({ error: 'forbidden', reason: 'not_approver' }, 403, corsHeaders);
+  }
+  const commandId = body.command_id;
+  if (typeof commandId !== 'string' || commandId.length === 0) {
+    return jsonResponse({ error: 'missing_command_id' }, 400, corsHeaders);
+  }
+
+  const { data: rows } = await supabase
+    .from('omnibridge_control_audit')
+    .select('command_id, state, requested_by')
+    .eq('command_id', commandId)
+    .limit(1);
+
+  const current = rows?.[0] as { command_id: string; state: string; requested_by: string } | undefined;
+  if (!current) return jsonResponse({ error: 'command_not_found' }, 404, corsHeaders);
+  if (current.state !== 'awaiting_man_approval') {
+    return jsonResponse({ error: 'invalid_state_transition', current_state: current.state }, 409, corsHeaders);
+  }
+  // Enforce two-party: approver must be different from requester
+  if (current.requested_by === userId) {
+    return jsonResponse({ error: 'two_party_required', detail: 'approver cannot be requester' }, 403, corsHeaders);
+  }
+
+  if (op === 'deny') {
+    await supabase
+      .from('omnibridge_control_audit')
+      .update({ state: 'denied', approved_by: userId, approved_at: new Date().toISOString() })
+      .eq('command_id', commandId);
+    return jsonResponse({ command_id: commandId, state: 'denied' }, 200, corsHeaders);
+  }
+
+  await supabase
+    .from('omnibridge_control_audit')
+    .update({ state: 'approved', approved_by: userId, approved_at: new Date().toISOString() })
+    .eq('command_id', commandId);
+
+  const dispatch = await dispatchApproved(supabase, commandId);
+  return jsonResponse({
+    command_id: commandId,
+    state: dispatch.ok ? 'dispatched' : 'failed',
+    dispatch,
+  }, dispatch.ok ? 200 : 502, corsHeaders);
+}
+
+async function handleList(
+  body: Record<string, unknown>,
+  supabase: ReturnType<typeof createSupabaseClient>,
+  corsHeaders: Record<string, string>,
+): Promise<Response> {
+  const stateFilter = body.state;
+  let query = supabase.from('omnibridge_control_audit').select('*').order('created_at', { ascending: false }).limit(100);
+  if (typeof stateFilter === 'string') query = query.eq('state', stateFilter);
+  const { data, error } = await query;
+  if (error) return jsonResponse({ error: 'list_failed', detail: error.message }, 500, corsHeaders);
+  return jsonResponse({ commands: data ?? [] }, 200, corsHeaders);
+}
+
 export default Deno.serve(withHttp(async (req, ctx) => {
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'method_not_allowed' }, 405, ctx.corsHeaders);
@@ -292,125 +436,11 @@ export default Deno.serve(withHttp(async (req, ctx) => {
   }
 
   const op = body.op;
+  const bodyRecord = body as Record<string, unknown>;
 
-  if (op === 'issue') {
-    const validated = validateIssueInput(body);
-    if (!validated.ok) {
-      return jsonResponse({ error: validated.error }, 400, ctx.corsHeaders);
-    }
-    const { input } = validated;
-    const risk = classifyRiskLane(input.action, input.payload);
-    if (risk === 'BLOCKED') {
-      return jsonResponse({ error: 'blocked_pattern_detected', risk }, 403, ctx.corsHeaders);
-    }
-
-    const commandId = generateCommandId();
-    const createdAt = new Date().toISOString();
-    const prevHash = await getPrevHash(supabase);
-    const entryHash = await computeEntryHash({
-      prev_hash: prevHash,
-      command_id: commandId,
-      action: input.action,
-      target_source: input.target_source,
-      risk_lane: risk,
-      payload: input.payload,
-      reason: input.reason,
-      requested_by: userId,
-      created_at: createdAt,
-    });
-
-    const initialState = risk === 'RED' ? 'awaiting_man_approval' : 'approved';
-
-    const { error: insErr } = await supabase.from('omnibridge_control_audit').insert({
-      command_id: commandId,
-      target_source: input.target_source,
-      action: input.action,
-      risk_lane: risk,
-      state: initialState,
-      requested_by: userId,
-      reason: input.reason,
-      payload: input.payload,
-      target_file_allowlist: input.target_file_allowlist ?? null,
-      prev_hash: prevHash,
-      entry_hash: entryHash,
-      created_at: createdAt,
-    });
-    if (insErr) {
-      return jsonResponse({ error: 'audit_insert_failed', detail: insErr.message }, 500, ctx.corsHeaders);
-    }
-
-    if (initialState === 'approved') {
-      const dispatch = await dispatchApproved(supabase, commandId);
-      return jsonResponse({
-        command_id: commandId,
-        state: dispatch.ok ? 'dispatched' : 'failed',
-        risk_lane: risk,
-        dispatch,
-      }, dispatch.ok ? 200 : 502, ctx.corsHeaders);
-    }
-
-    return jsonResponse({
-      command_id: commandId,
-      state: initialState,
-      risk_lane: risk,
-      message: 'Command recorded. Awaiting second-party MAN approval before dispatch.',
-    }, 202, ctx.corsHeaders);
-  }
-
-  if (op === 'approve' || op === 'deny') {
-    if (!isApprover) {
-      return jsonResponse({ error: 'forbidden', reason: 'not_approver' }, 403, ctx.corsHeaders);
-    }
-    const commandId = (body as { command_id?: unknown }).command_id;
-    if (typeof commandId !== 'string' || commandId.length === 0) {
-      return jsonResponse({ error: 'missing_command_id' }, 400, ctx.corsHeaders);
-    }
-
-    const { data: rows } = await supabase
-      .from('omnibridge_control_audit')
-      .select('command_id, state, requested_by')
-      .eq('command_id', commandId)
-      .limit(1);
-
-    const current = rows?.[0] as { command_id: string; state: string; requested_by: string } | undefined;
-    if (!current) return jsonResponse({ error: 'command_not_found' }, 404, ctx.corsHeaders);
-    if (current.state !== 'awaiting_man_approval') {
-      return jsonResponse({ error: 'invalid_state_transition', current_state: current.state }, 409, ctx.corsHeaders);
-    }
-    // Enforce two-party: approver must be different from requester
-    if (current.requested_by === userId) {
-      return jsonResponse({ error: 'two_party_required', detail: 'approver cannot be requester' }, 403, ctx.corsHeaders);
-    }
-
-    if (op === 'deny') {
-      await supabase
-        .from('omnibridge_control_audit')
-        .update({ state: 'denied', approved_by: userId, approved_at: new Date().toISOString() })
-        .eq('command_id', commandId);
-      return jsonResponse({ command_id: commandId, state: 'denied' }, 200, ctx.corsHeaders);
-    }
-
-    await supabase
-      .from('omnibridge_control_audit')
-      .update({ state: 'approved', approved_by: userId, approved_at: new Date().toISOString() })
-      .eq('command_id', commandId);
-
-    const dispatch = await dispatchApproved(supabase, commandId);
-    return jsonResponse({
-      command_id: commandId,
-      state: dispatch.ok ? 'dispatched' : 'failed',
-      dispatch,
-    }, dispatch.ok ? 200 : 502, ctx.corsHeaders);
-  }
-
-  if (op === 'list') {
-    const stateFilter = (body as { state?: unknown }).state;
-    let query = supabase.from('omnibridge_control_audit').select('*').order('created_at', { ascending: false }).limit(100);
-    if (typeof stateFilter === 'string') query = query.eq('state', stateFilter);
-    const { data, error } = await query;
-    if (error) return jsonResponse({ error: 'list_failed', detail: error.message }, 500, ctx.corsHeaders);
-    return jsonResponse({ commands: data ?? [] }, 200, ctx.corsHeaders);
-  }
+  if (op === 'issue') return handleIssue(bodyRecord, userId, supabase, ctx.corsHeaders);
+  if (op === 'approve' || op === 'deny') return handleApproveOrDeny(op, bodyRecord, userId, isApprover, supabase, ctx.corsHeaders);
+  if (op === 'list') return handleList(bodyRecord, supabase, ctx.corsHeaders);
 
   return jsonResponse({ error: 'unknown_op', op }, 400, ctx.corsHeaders);
 }, { requireAuth: true, maxBodySizeBytes: 512 * 1024 }));

@@ -76,6 +76,25 @@ function makePacket(eventType: string, payload: Record<string, unknown>): SyncPa
   };
 }
 
+function base64UrlToBytes(sig: string): Uint8Array {
+  const padded = sig.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - sig.length % 4) % 4);
+  return Uint8Array.from(atob(padded), (c) => c.codePointAt(0) ?? 0);
+}
+
+async function sbblNativeSign(packet: SyncPacket, secret: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
+  );
+  const sig = await crypto.subtle.sign(
+    'HMAC', key, new TextEncoder().encode(JSON.stringify(packet)),
+  );
+  const bytes = new Uint8Array(sig);
+  let bin = '';
+  bytes.forEach((b) => { bin += String.fromCodePoint(b); });
+  return btoa(bin).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+}
+
 describe('ROUND-TRIP: SBBL-HQ → OmniHub (CF Pages Function)', () => {
   it('persists a 5-packet live-event sequence', async () => {
     const env = baseEnv();
@@ -163,10 +182,7 @@ describe('ROUND-TRIP: OmniHub → SBBL-HQ outbound command signing', () => {
       'raw', new TextEncoder().encode(CONTROL_SECRET),
       { name: 'HMAC', hash: 'SHA-256' }, false, ['verify'],
     );
-    const sigBytes = Uint8Array.from(
-      atob(signature.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - signature.length % 4) % 4)),
-      c => c.charCodeAt(0),
-    );
+    const sigBytes = base64UrlToBytes(signature);
     const ok = await crypto.subtle.verify(
       'HMAC', verifyKey, sigBytes,
       new TextEncoder().encode(JSON.stringify(command)),
@@ -191,10 +207,7 @@ describe('ROUND-TRIP: OmniHub → SBBL-HQ outbound command signing', () => {
       'raw', new TextEncoder().encode(CONTROL_SECRET),
       { name: 'HMAC', hash: 'SHA-256' }, false, ['verify'],
     );
-    const sigBytes = Uint8Array.from(
-      atob(signature.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - signature.length % 4) % 4)),
-      c => c.charCodeAt(0),
-    );
+    const sigBytes = base64UrlToBytes(signature);
     const ok = await crypto.subtle.verify(
       'HMAC', verifyKey, sigBytes,
       new TextEncoder().encode(JSON.stringify(tampered)),
@@ -204,20 +217,6 @@ describe('ROUND-TRIP: OmniHub → SBBL-HQ outbound command signing', () => {
 });
 
 describe('ROUND-TRIP: contract compatibility with SBBL-HQ sync-packets.ts', () => {
-  async function sbblNativeSign(packet: SyncPacket, secret: string): Promise<string> {
-    const key = await crypto.subtle.importKey(
-      'raw', new TextEncoder().encode(secret),
-      { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
-    );
-    const sig = await crypto.subtle.sign(
-      'HMAC', key, new TextEncoder().encode(JSON.stringify(packet)),
-    );
-    const bytes = new Uint8Array(sig);
-    let bin = '';
-    bytes.forEach((b) => { bin += String.fromCharCode(b); });
-    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  }
-
   it('produces byte-identical signatures to SBBL-HQ native signSyncPacket', async () => {
     const packet = makePacket('game.started', { game_id: 'test' });
     const sbblSig = await sbblNativeSign(packet, SBBL_SECRET);

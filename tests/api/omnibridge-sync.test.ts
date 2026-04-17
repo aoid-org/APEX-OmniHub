@@ -215,7 +215,7 @@ describe('functions/api/omnibridge/sync', () => {
     const req = await buildRequest({ packet });
     await onRequest({ request: req, env });
     const call = spy.mock.calls[0][0];
-    const data = (call.payload as Record<string, unknown>).data as Record<string, unknown>;
+    const data = call.payload.data as Record<string, unknown>;
     expect(data.good).toBe('val');
     expect('__proto__polluted' in data).toBe(false);
     expect('xss' in data).toBe(false);
