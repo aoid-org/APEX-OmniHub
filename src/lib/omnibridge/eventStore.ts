@@ -24,6 +24,16 @@
 
 export type PersistProfile = 'hardened' | 'sync_packet' | 'legacy';
 
+/**
+ * Platform-agnostic env bag. CF Pages Functions pass it via context.env.
+ * Tests and Node code can pass process.env directly (string-indexable).
+ */
+export interface EventStoreEnv {
+  SUPABASE_URL?: string;
+  VITE_SUPABASE_URL?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+}
+
 export interface PersistEventInput {
   event_id: string;
   source_id: string;
@@ -53,9 +63,15 @@ export type PersistOutcome = PersistResult | PersistFailure;
 
 const HARDCODED_TIMEOUT_MS = 3_000;
 
-function readSupabaseConfig(): { url: string; serviceKey: string } | null {
-  const url = process.env['SUPABASE_URL'] ?? process.env['VITE_SUPABASE_URL'];
-  const serviceKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+/**
+ * Resolve Supabase config from an explicit env bag. On CF Pages Functions
+ * callers pass context.env. On Node (tests) the caller may pass process.env.
+ * Returns null when required values aren't set — caller decides how to fail.
+ */
+function readSupabaseConfig(env: EventStoreEnv | undefined): { url: string; serviceKey: string } | null {
+  const source: EventStoreEnv = env ?? (typeof process !== 'undefined' ? process.env as EventStoreEnv : {});
+  const url = source.SUPABASE_URL ?? source.VITE_SUPABASE_URL;
+  const serviceKey = source.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) return null;
   return { url, serviceKey };
 }
@@ -65,8 +81,11 @@ function readSupabaseConfig(): { url: string; serviceKey: string } | null {
  * PostgREST `Prefer: resolution=ignore-duplicates` so replays (same
  * source_id + event_id) return the existing row as duplicate=true.
  */
-export async function persistEvent(input: PersistEventInput): Promise<PersistOutcome> {
-  const cfg = readSupabaseConfig();
+export async function persistEvent(
+  input: PersistEventInput,
+  env?: EventStoreEnv,
+): Promise<PersistOutcome> {
+  const cfg = readSupabaseConfig(env);
   if (!cfg) {
     return { ok: false, reason: 'config_missing', detail: 'SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set' };
   }
@@ -137,14 +156,17 @@ export async function persistEvent(input: PersistEventInput): Promise<PersistOut
  */
 const BACKOFF_MINUTES = [0.5, 2, 10, 60, 360, 1440];
 
-export async function recordDispatchFailure(input: {
-  event_uuid: string;
-  target_url: string;
-  error_message: string;
-  http_status?: number;
-  retry_count?: number;
-}): Promise<void> {
-  const cfg = readSupabaseConfig();
+export async function recordDispatchFailure(
+  input: {
+    event_uuid: string;
+    target_url: string;
+    error_message: string;
+    http_status?: number;
+    retry_count?: number;
+  },
+  env?: EventStoreEnv,
+): Promise<void> {
+  const cfg = readSupabaseConfig(env);
   if (!cfg) return;
 
   const retryCount = input.retry_count ?? 0;
@@ -177,14 +199,17 @@ export async function recordDispatchFailure(input: {
 /**
  * Mark an event row as dispatched/acknowledged. Best-effort.
  */
-export async function updateDispatchState(input: {
-  event_uuid: string;
-  state: 'dispatching' | 'dispatched' | 'acknowledged' | 'dlq';
-  error?: string;
-  attempts_delta?: number;
-  dispatch_target?: string;
-}): Promise<void> {
-  const cfg = readSupabaseConfig();
+export async function updateDispatchState(
+  input: {
+    event_uuid: string;
+    state: 'dispatching' | 'dispatched' | 'acknowledged' | 'dlq';
+    error?: string;
+    attempts_delta?: number;
+    dispatch_target?: string;
+  },
+  env?: EventStoreEnv,
+): Promise<void> {
+  const cfg = readSupabaseConfig(env);
   if (!cfg) return;
 
   const nowIso = new Date().toISOString();
