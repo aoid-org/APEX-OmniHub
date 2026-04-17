@@ -6,15 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.0] - 2026-04-17
 
-### Added — SBBL-HQ Bidirectional Integration + Control Plane
+### Added — SBBL-HQ Bidirectional Integration + Control Plane (Cloudflare Pages target)
 
-This release closes the `FUTURE: Durable execution routing` gap at
-`api/omnibridge/ingest.ts:222` and wires OmniHub as the authoritative
+This release closes the `FUTURE: Durable execution routing` gap previously
+at `api/omnibridge/ingest.ts` and wires OmniHub as the authoritative
 control plane for SBBL-HQ ahead of the 2026 Spring Edition live event.
 
-- **`supabase/migrations/20260417000000_omnibridge_events.sql`** — durable event log (`omnibridge_events`), dispatch DLQ (`omnibridge_events_dlq`), and hash-chained control audit (`omnibridge_control_audit`) with RLS + tenant-scoped admin reads. Plus `omnibridge_event_stats_hourly` view for grant-evidence reporting.
+**Deployment target: Cloudflare Pages Functions (`functions/api/...`).** The
+original implementation targeted Vercel Edge (`api/`); post-audit the code
+was rewritten for CF Pages's `onRequestPost({request, env})` signature with
+`context.env` binding. The old `api/omnibridge/*.ts` Vercel-shaped files
+have been removed.
+
+- **`supabase/migrations/20260417000000_omnibridge_events.sql`** — durable event log (`omnibridge_events`), dispatch DLQ (`omnibridge_events_dlq`), and hash-chained control audit (`omnibridge_control_audit`) with RLS + tenant-scoped admin reads. Plus `omnibridge_event_stats_hourly` view for grant-evidence reporting. **DDL validated on Armageddon Test Suite** (`qhjqselqpkfqjfpuxykb`) with live insert + idempotency rejection + DLQ FK cascade proven before release.
+- **SBBL-HQ side migration applied live** (`ezanilxygnpucwkwpsoc` / SBBL-HQ production Supabase): `omnihub_command_log` table created for idempotent receipt of inbound control commands. See `supabase/migrations/*` + verification log.
 - **`src/lib/omnibridge/syncPacketVerifier.ts`** — SBBL-HQ native HMAC-SHA256 verifier with base64url decode + constant-time `crypto.subtle.verify`. Byte-identical to SBBL-HQ's own `signSyncPacket` primitive (proven by `omnibridge-roundtrip.test.ts`).
-- **`api/omnibridge/sync.ts`** — new Vercel Edge endpoint accepting SBBL-HQ's native `{packet, signature}` envelope with source lookup, IP allowlist, 300s timestamp skew, replay guard on `packet_id`, payload sanitization, and durable persistence.
+- **`functions/api/omnibridge/sync.ts`** — new CF Pages Function (`onRequestPost`) accepting SBBL-HQ's native `{packet, signature}` envelope with source lookup, IP allowlist, 300s timestamp skew, replay guard on `packet_id`, payload sanitization, and durable persistence.
+- **`functions/api/omnibridge/ingest.ts`** — CF Pages Function for the hardened 5-header HMAC profile (migrated from Vercel Edge shape).
+- **`src/lib/omnibridge/registryEnv.ts`** — env-parameterized registry resolution (`resolveSyncPacketSourceFromEnv`, `resolveHardenedSourceFromEnv`) for CF Pages Functions which receive env via `context.env` rather than `process.env`.
+- **`apps/omnihub-site/public/_headers`** — fixed `Cross-Origin-Opener-Policy: same-origin` (was `unsafe-none`) and added hardened `Content-Security-Policy`. The v1.5.1 audit report claimed these were fixed in `vercel.json`, but CF Pages ignores `vercel.json` — the production fix belongs in `_headers`.
 - **`src/lib/omnibridge/eventStore.ts`** — persist + dispatch pipeline writing to PostgREST with `on_conflict` idempotency; exponential-backoff DLQ on dispatch failures.
 - **`src/lib/omnibridge/sourceRegistry.ts`** — extended `WebhookConfig` with `profile: 'hardened' | 'sync_packet'`; added `resolveSyncPacketSource()`.
 - **`src/lib/omnibridge/outboundCaller.ts`** — signs + POSTs control commands to SBBL-HQ with exponential-backoff retries (3x max), 5xx retry / 4xx terminal, injected-fetch for testability.
@@ -34,10 +44,12 @@ control plane for SBBL-HQ ahead of the 2026 Spring Edition live event.
 
 ### Verification (Release Blocking)
 
-- `vitest run tests/` → **2,336 passed, 0 failed**, 70 skipped (pre-existing). +75 tests vs v1.5.1 baseline.
+- `vitest run tests/` → **2,379 passed, 0 failed**, 70 skipped (pre-existing). **+118 tests vs v1.5.1 baseline** (2,261 → 2,379).
 - `tsc --noEmit` → 0 errors.
 - `eslint` on all new files → 0 errors, 0 warnings.
 - Round-trip cryptographic contract with SBBL-HQ: **byte-verified** (not assumed).
+- **Live Supabase verification**: migration DDL applied to Armageddon Test Suite; INSERT / duplicate-reject / DLQ FK cascade all confirmed working with real Postgres.
+- **SBBL-HQ side migration applied live**: `omnihub_command_log` table created on SBBL-HQ production Supabase (`ezanilxygnpucwkwpsoc`) — ready to receive inbound commands as soon as SBBL-HQ worker route handler is deployed (see `docs/integration/sbbl-hq-v1.6.0-patch.md`).
 
 ### Security Posture
 
