@@ -3,6 +3,7 @@ import handler from '../../api/omnibridge/ingest';
 import { clearRegistryCache } from '../../src/lib/omnibridge/sourceRegistry';
 import { clearReplayStore } from '../../src/lib/omnibridge/replayStore';
 import { generateHMAC } from '../../src/lib/security/hmacValidator';
+import * as eventStore from '../../src/lib/omnibridge/eventStore';
 
 type EnvMap = Record<string, string | undefined>;
 
@@ -12,6 +13,14 @@ beforeEach(() => {
   originalEnv = { ...process.env };
   clearRegistryCache();
   clearReplayStore();
+  // Default: return config_missing so legacy tests see a soft-accept 200
+  // without requiring Supabase. Specific tests override this spy to verify
+  // the persist path directly.
+  vi.spyOn(eventStore, 'persistEvent').mockResolvedValue({
+    ok: false,
+    reason: 'config_missing',
+    detail: 'tests: no Supabase configured',
+  });
 });
 
 afterEach(() => {
