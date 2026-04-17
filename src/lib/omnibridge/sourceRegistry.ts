@@ -8,12 +8,19 @@
  * @license Proprietary - APEX Business Systems Ltd.
  */
 
+export type WebhookProfile = 'hardened' | 'sync_packet';
+
 export interface WebhookConfig {
   source_id: string;
   key_id: string;
   secret_env: string;
   status: 'active' | 'inactive';
   allowed_ips?: string[];
+  /**
+   * Verification profile. Default 'hardened' (5-header canonical HMAC).
+   * 'sync_packet' accepts SBBL-HQ's native { packet, signature } envelope.
+   */
+  profile?: WebhookProfile;
 }
 
 export interface M2MClientRecord {
@@ -56,6 +63,10 @@ function isValidClientRecord(record: unknown): record is M2MClientRecord { // NO
       for (const ip of wObj.allowed_ips) {
         if (typeof ip !== 'string') return false;
       }
+    }
+
+    if (wObj.profile !== undefined && wObj.profile !== 'hardened' && wObj.profile !== 'sync_packet') {
+      return false;
     }
   }
 
@@ -139,6 +150,35 @@ export function resolveWebhookSource(sourceId: string, keyId: string): WebhookSo
         secret
       };
     }
+  }
+
+  return null;
+}
+
+/**
+ * Look up a sync-packet profile source by source_id only (no key_id in the
+ * SBBL-HQ native envelope). Returns null unless a matching client exists with
+ * an active sync_packet webhook.
+ */
+export function resolveSyncPacketSource(sourceId: string): WebhookSourceResolution | null {
+  const clients = getM2MClients();
+  if (!clients || clients.length === 0) return null;
+
+  for (const client of clients) {
+    if (!client.webhook) continue;
+    if (client.webhook.source_id !== sourceId) continue;
+    if (client.webhook.profile !== 'sync_packet') continue;
+    if (client.webhook.status !== 'active') return null;
+
+    const secret = process.env[client.webhook.secret_env];
+    if (!secret) {
+      console.error(
+        `[omnibridge/sourceRegistry] Secret env var ${client.webhook.secret_env} not configured for sync-packet source ${sourceId}`,
+      );
+      return null;
+    }
+
+    return { client, webhook: client.webhook, secret };
   }
 
   return null;
