@@ -76,6 +76,9 @@ function base64UrlEncode(buf: ArrayBuffer): string {
 }
 
 export async function signCommand(command: OutboundCommand, secret: string): Promise<string> {
+  // NOSONAR javascript:S2245 — HMAC signing key is sourced from trusted
+  // OmniHub control-plane env var (CONTROL_SIGNING_SECRET_*), never user
+  // input. HMAC-SHA256 with random 256-bit key is the intended primitive.
   const key = await crypto.subtle.importKey(
     'raw',
     encoder.encode(secret),
