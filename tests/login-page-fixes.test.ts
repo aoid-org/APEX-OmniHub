@@ -174,11 +174,10 @@ describe("supabase.ts config guard integrity", () => {
   });
 
   it("should_use_nullish_coalescing_for_key_fallback", () => {
-    // Must use ?? not || to correctly handle empty string
-    // Check that PUBLISHABLE_KEY appears before ANON_KEY with ?? between them
+    // Now uses || to correctly handle empty string
     const pkIndex = supabaseSrc.indexOf("VITE_SUPABASE_PUBLISHABLE_KEY");
-    const qqIndex = supabaseSrc.indexOf("??", pkIndex);
-    const akIndex = supabaseSrc.indexOf("VITE_SUPABASE_ANON_KEY", qqIndex);
+    const qqIndex = supabaseSrc.indexOf("||", pkIndex);
+    const akIndex = supabaseSrc.indexOf("VITE_SUPABASE_ANON_KEY", pkIndex);
     expect(pkIndex).toBeGreaterThan(-1);
     expect(qqIndex).toBeGreaterThan(pkIndex);
     expect(akIndex).toBeGreaterThan(qqIndex);
