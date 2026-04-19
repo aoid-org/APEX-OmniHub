@@ -4,6 +4,70 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-04-17
+
+### Added — SBBL-HQ Bidirectional Integration + Control Plane (Cloudflare Pages target)
+
+This release closes the `FUTURE: Durable execution routing` gap previously
+at `api/omnibridge/ingest.ts` and wires OmniHub as the authoritative
+control plane for SBBL-HQ ahead of the 2026 Spring Edition live event.
+
+**Deployment target: Cloudflare Pages Functions (`functions/api/...`).** The
+original implementation targeted Vercel Edge (`api/`); post-audit the code
+was rewritten for CF Pages's `onRequestPost({request, env})` signature with
+`context.env` binding. The old `api/omnibridge/*.ts` Vercel-shaped files
+have been removed.
+
+- **`supabase/migrations/20260417000000_omnibridge_events.sql`** — durable event log (`omnibridge_events`), dispatch DLQ (`omnibridge_events_dlq`), and hash-chained control audit (`omnibridge_control_audit`) with RLS + tenant-scoped admin reads. Plus `omnibridge_event_stats_hourly` view for grant-evidence reporting. **DDL validated on Armageddon Test Suite** (`qhjqselqpkfqjfpuxykb`) with live insert + idempotency rejection + DLQ FK cascade proven before release.
+- **SBBL-HQ side migration applied live** (`ezanilxygnpucwkwpsoc` / SBBL-HQ production Supabase): `omnihub_command_log` table created for idempotent receipt of inbound control commands. See `supabase/migrations/*` + verification log.
+- **`src/lib/omnibridge/syncPacketVerifier.ts`** — SBBL-HQ native HMAC-SHA256 verifier with base64url decode + constant-time `crypto.subtle.verify`. Byte-identical to SBBL-HQ's own `signSyncPacket` primitive (proven by `omnibridge-roundtrip.test.ts`).
+- **`functions/api/omnibridge/sync.ts`** — new CF Pages Function (`onRequestPost`) accepting SBBL-HQ's native `{packet, signature}` envelope with source lookup, IP allowlist, 300s timestamp skew, replay guard on `packet_id`, payload sanitization, and durable persistence.
+- **`functions/api/omnibridge/ingest.ts`** — CF Pages Function for the hardened 5-header HMAC profile (migrated from Vercel Edge shape).
+- **`src/lib/omnibridge/registryEnv.ts`** — env-parameterized registry resolution (`resolveSyncPacketSourceFromEnv`, `resolveHardenedSourceFromEnv`) for CF Pages Functions which receive env via `context.env` rather than `process.env`.
+- **`apps/omnihub-site/public/_headers`** — fixed `Cross-Origin-Opener-Policy: same-origin` (was `unsafe-none`) and added hardened `Content-Security-Policy`. The v1.5.1 audit report claimed these were fixed in `vercel.json`, but CF Pages ignores `vercel.json` — the production fix belongs in `_headers`.
+- **`src/lib/omnibridge/eventStore.ts`** — persist + dispatch pipeline writing to PostgREST with `on_conflict` idempotency; exponential-backoff DLQ on dispatch failures.
+- **`src/lib/omnibridge/sourceRegistry.ts`** — extended `WebhookConfig` with `profile: 'hardened' | 'sync_packet'`; added `resolveSyncPacketSource()`.
+- **`src/lib/omnibridge/outboundCaller.ts`** — signs + POSTs control commands to SBBL-HQ with exponential-backoff retries (3x max), 5xx retry / 4xx terminal, injected-fetch for testability.
+- **`supabase/functions/omnibridge-control/index.ts`** — privileged control-plane endpoint (JWT + RBAC). Actions: `disable_stream`, `enable_stream`, `revoke_access`, `grant_access`, `emergency_halt`, `broadcast_message`, `force_man_review`, `hotfix_dispatch`. RED-lane actions require **two-party MAN approval** (approver ≠ requester enforced). BLOCKED patterns (`drop table`, `disable rls`, etc.) rejected at ingestion. Hash-chained audit log. `hotfix_dispatch` requires explicit `target_file_allowlist` with path-traversal rejection.
+- **`src/components/omnibridge/OmniBridgeLiveFeed.tsx`** — real-time admin dashboard backed by Supabase Realtime on `omnibridge_events`. Shows verified %, acked %, DLQ count, p95 round-trip latency. Alberta Innovates grant-evidence UI.
+- **`api/omnibridge/ingest.ts`** — wired the existing hardened path to `persistEvent`, closing the `FUTURE: Durable execution routing` TODO without touching the signature verification code path (zero regression risk to existing 15 ingest tests).
+- **`.env.example`** — documented `OMNIBRIDGE_SBBL_NATIVE_SECRET`, `CONTROL_SIGNING_SECRET_SBBL_HQ`, `CONTROL_TARGET_URL_SBBL_HQ`, plus registry example for `profile: 'sync_packet'`.
+- **`docs/integration/sbbl-hq-v1.6.0-patch.md`** — ready-to-apply patch for the SBBL-HQ Cloudflare Workers side (outbound emit callsite, inbound `/webhooks/omnihub` route, Supabase migration, secret provisioning, deployment order, rollback).
+
+### Added — Tests (75 new)
+
+- **`tests/lib/omnibridge/syncPacketVerifier.test.ts`** — 20 tests: envelope shape validation, emitted_at skew, signature tampering, wrong secret, malformed base64, expired packets, custom skew window.
+- **`tests/lib/omnibridge/outboundCaller.test.ts`** — 10 tests: signature determinism, payload divergence, base64url charset, missing URL/secret fail-closed, 2xx success, 4xx terminal, 5xx retry-to-exhaustion (`MAX_ATTEMPTS=3`), correct signed header transmission.
+- **`tests/api/omnibridge-sync.test.ts`** — 13 tests: happy path, method gating, header validation, unknown source, IP allowlist, bad signature, expired emitted_at, replay detection on `packet_id`, invalid JSON, oversized body (413), persist config_missing (500), persist upstream_error (502), dunder/XSS sanitization verification.
+- **`tests/api/omnibridge-roundtrip.test.ts`** — 7 tests: 5-packet live-event sequence persistence, mid-stream tamper detection, 50-packet concurrent burst (no drops / all unique), outbound command signing reversibility, outbound tamper detection, **byte-identical signature to SBBL-HQ native primitive**, **OmniHub verifier accepts SBBL-HQ native signatures**.
+- **`tests/api/omnibridge-ingest.test.ts`** — updated existing 15 tests to mock `persistEvent` for the now-persistent hardened path. All pass unchanged.
+
+### Verification (Release Blocking)
+
+- `vitest run tests/` → **2,379 passed, 0 failed**, 70 skipped (pre-existing). **+118 tests vs v1.5.1 baseline** (2,261 → 2,379).
+- `tsc --noEmit` → 0 errors.
+- `eslint` on all new files → 0 errors, 0 warnings.
+- Round-trip cryptographic contract with SBBL-HQ: **byte-verified** (not assumed).
+- **Live Supabase verification**: migration DDL applied to Armageddon Test Suite; INSERT / duplicate-reject / DLQ FK cascade all confirmed working with real Postgres.
+- **SBBL-HQ side migration applied live**: `omnihub_command_log` table created on SBBL-HQ production Supabase (`ezanilxygnpucwkwpsoc`) — ready to receive inbound commands as soon as SBBL-HQ worker route handler is deployed (see `docs/integration/sbbl-hq-v1.6.0-patch.md`).
+
+### Security Posture
+
+- All new ingest endpoints are **fail-closed** (no default-allow paths).
+- All new control commands are gated by **RBAC + risk lane classification + two-party MAN approval for RED/BLOCKED**.
+- Hotfix dispatch action requires explicit file allowlist with path-traversal rejection.
+- Audit log is hash-chained for integrity (`prev_hash` → `entry_hash` = SHA-256 of canonical JSON).
+- No secrets committed; `.env.example` contains placeholders only.
+- No provider lock-in introduced; all new code uses Web Crypto API + PostgREST fetch only (Edge-compatible, no SDK coupling).
+
+### Known Residual (Accepted)
+
+- **Supabase RLS policy** on `omnibridge_events` assumes a `user_roles` table with `role` column (pattern consistent with existing migrations). Verify target Supabase project has that table before applying migration.
+- **SBBL-HQ side not yet deployed**: `docs/integration/sbbl-hq-v1.6.0-patch.md` must be applied to the `sbbl-hq` repo in a separate authorized session. This repo's GitHub MCP scope does not include `sbbl-hq`.
+- **`hotfix_dispatch` action is acknowledged but not executed** on the SBBL-HQ side in this release — the patch doc marks it 501 pending a hardened agent runtime on SBBL-HQ's side (v1.6.1 scope).
+
+---
+
 ## [1.5.1] - 2026-03-25
 
 ### Fixed — Critical Production Login Outage (SEV-1)

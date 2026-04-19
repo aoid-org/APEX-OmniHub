@@ -103,7 +103,7 @@ export class MetricsCollector {
   private endTime: Date | null = null;
 
   constructor() {
-    this.startTime = new Date();
+    this.startTime = new Date(Date.now());
   }
 
   /**
@@ -118,7 +118,7 @@ export class MetricsCollector {
     this.latencyMetrics.push({
       operation,
       durationMs,
-      timestamp: new Date(),
+      timestamp: new Date(Date.now()),
       success,
       retryAttempt,
     });
@@ -153,7 +153,7 @@ export class MetricsCollector {
    * Mark end time
    */
   finish(): void {
-    this.endTime = new Date();
+    this.endTime = new Date(Date.now());
   }
 
   /**
@@ -491,7 +491,7 @@ export class MetricsCollector {
   reset(): void {
     this.latencyMetrics = [];
     this.appCounts.clear();
-    this.startTime = new Date();
+    this.startTime = new Date(Date.now());
     this.endTime = null;
   }
 }

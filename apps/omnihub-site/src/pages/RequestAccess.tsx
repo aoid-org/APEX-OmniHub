@@ -29,7 +29,7 @@ import { requestAccessConfig } from '@/content/site';
 const ENABLE_SUPABASE =
   import.meta.env.VITE_ENABLE_REQUEST_ACCESS === 'true' &&
   Boolean(import.meta.env.VITE_SUPABASE_URL) &&
-  Boolean(import.meta.env.VITE_SUPABASE_ANON_KEY);
+  Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 /** LocalStorage key for submission cooldown tracking */
 const COOLDOWN_KEY = 'omnihub_request_access_cooldown';
@@ -441,7 +441,7 @@ export function RequestAccessPage(): JSX.Element {
           const { createClient } = await import('@supabase/supabase-js');
           const supabase = createClient(
             import.meta.env.VITE_SUPABASE_URL,
-            import.meta.env.VITE_SUPABASE_ANON_KEY
+            import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY
           );
 
           // Upsert for idempotency - requires UNIQUE constraint on email
