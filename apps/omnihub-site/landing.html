@@ -288,6 +288,7 @@ textarea.form-input{resize:vertical;min-height:80px}
             <linearGradient id="sd" x1="50%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="rgba(251,191,36,0)"/><stop offset="55%" stop-color="rgba(251,191,36,0.6)"/><stop offset="100%" stop-color="rgba(196,81,26,0.92)"/></linearGradient>
             <filter id="fg"><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
             <filter id="fxl"><feGaussianBlur in="SourceGraphic" stdDeviation="18"/></filter>
+            <filter id="coreGlow"><feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="b1"/><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b2"/><feMerge><feMergeNode in="b2"/><feMergeNode in="b1"/></feMerge></filter>
             <filter id="fm"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
             <clipPath id="sclip"><circle cx="260" cy="265" r="152"/></clipPath>
           </defs>
@@ -342,7 +343,7 @@ textarea.form-input{resize:vertical;min-height:80px}
           <circle cx="260" cy="265" r="64" fill="rgba(56,189,248,0.12)"><animate attributeName="r" values="60;70;60" dur="2.6s" repeatCount="indefinite"/><animate attributeName="fill" values="rgba(56,189,248,0.08);rgba(56,189,248,0.22);rgba(56,189,248,0.08)" dur="2.6s" repeatCount="indefinite"/></circle>
           <circle cx="260" cy="265" r="64" fill="none" stroke="rgba(56,189,248,0.45)" stroke-width="1.5"><animate attributeName="r" values="60;74;60" dur="2.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.45;0.85;0.45" dur="2.6s" repeatCount="indefinite"/></circle>
           <!-- APEX Badge floating inside sphere -->
-          <g clip-path="url(#sclip)"><image href="/apex-badge.svg" xlink:href="/apex-badge.svg" x="202" y="203" width="116" height="124" preserveAspectRatio="xMidYMid meet"><animate attributeName="opacity" values="0.82;1;0.82" dur="2.6s" repeatCount="indefinite"/></image></g>
+          <g clip-path="url(#sclip)"><image href="/apex-badge.png" xlink:href="/apex-badge.png" x="172" y="214" width="176" height="102" preserveAspectRatio="xMidYMid meet" filter="url(#coreGlow)"><animate attributeName="opacity" values="0.35;0.65;0.35" dur="2.6s" repeatCount="indefinite"/><animate attributeName="y" values="214;210;214" dur="4.2s" repeatCount="indefinite"/></image></g>
           <!-- Pulse rings -->
           <circle cx="260" cy="265" r="90" fill="none" stroke="rgba(232,162,71,0.18)" stroke-width="1.5"><animate attributeName="r" from="90" to="155" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.28" to="0" dur="3s" repeatCount="indefinite"/></circle>
           <circle cx="260" cy="265" r="90" fill="none" stroke="rgba(232,162,71,0.12)" stroke-width="1"><animate attributeName="r" from="90" to="155" dur="3s" repeatCount="indefinite" begin="1.5s"/><animate attributeName="opacity" from="0.18" to="0" dur="3s" repeatCount="indefinite" begin="1.5s"/></circle>

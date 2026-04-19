@@ -1,0 +1,7 @@
+$ vite
+
+  VITE v7.3.2  ready in 907 ms
+
+  ➜  Local:   http://localhost:8080/
+  ➜  Network: http://192.168.0.2:8080/
+error: script "dev" exited with code 143

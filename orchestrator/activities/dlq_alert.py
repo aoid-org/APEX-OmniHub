@@ -82,7 +82,8 @@ async def _post_slack_webhook(alert: DLQAlertPayload) -> None:
     try:
         from config import settings
 
-        webhook_url: str | None = getattr(settings, "slack_alert_webhook_url", None)
+        slack_val = getattr(settings, "slack_alert_webhook_url", None)
+        webhook_url: str | None = slack_val.get_secret_value() if slack_val else None
     except Exception:  # noqa: BLE001
         return
 

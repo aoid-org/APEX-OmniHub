@@ -15,7 +15,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { memo, useRef } from 'react';
+import { memo, useRef, useMemo } from 'react';
 import { useOmniDash } from '../../stores/omniDashStore';
 import { WidgetShell } from './WidgetShell';
 import { FloatingWindow } from './FloatingWindow';
@@ -28,8 +28,11 @@ export const OmniCanvas = memo(function OmniCanvas() {
   const canvasScale = useOmniDash(s => s.canvasScale);
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  const widgetArray = Array.from(widgets.values());
-  const floatingArray = Array.from(floatingWindows.values());
+  // ⚡ Bolt: Memoize widget arrays to prevent re-allocation on every render.
+  // Impact: Reduces garbage collection overhead and frame drops during high-frequency
+  // pan/zoom interactions, as widgets/floatingWindows maps only change when widgets are opened/closed.
+  const widgetArray = useMemo(() => Array.from(widgets.values()), [widgets]);
+  const floatingArray = useMemo(() => Array.from(floatingWindows.values()), [floatingWindows]);
 
   return (
     <div

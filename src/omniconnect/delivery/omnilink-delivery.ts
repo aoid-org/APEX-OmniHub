@@ -149,16 +149,21 @@ export class OmniLinkDelivery {
     processor: (item: T) => Promise<void>,
     errorHandler: (item: T, error: unknown) => Promise<void>
   ): Promise<number> {
-    let successCount = 0;
-    for (const item of items) {
-      try {
-        await processor(item);
-        successCount++;
-      } catch (error) {
-        await errorHandler(item, error);
-      }
-    }
-    return successCount;
+    // ⚡ Bolt: Execute event delivery concurrently via Promise.all
+    // Replaced sequential for...of await with mapped Promise execution to resolve N+1 blocking
+    // resulting in significantly faster batch processing of delivery events.
+    const results = await Promise.all(
+      items.map(async (item) => {
+        try {
+          await processor(item);
+          return true;
+        } catch (error) {
+          await errorHandler(item, error);
+          return false;
+        }
+      })
+    );
+    return results.filter(Boolean).length;
   }
 
   private async addToDLQ(event: TranslatedEvent, correlationId: string, error: unknown): Promise<void> {

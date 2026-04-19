@@ -163,13 +163,6 @@ function scheduleFlush(delay = 0) {
   }, delay);
 }
 
-async function handleUpsertSuccess(item: QueuedUpsert, updated: QueuedUpsert[]): Promise<QueuedUpsert[]> {
-  const next = updated.filter((u) => u.record.deviceId !== item.record.deviceId);
-  consecutiveFailures = 0;
-  await logAnalyticsEvent('device.upsert.success', { deviceId: item.record.deviceId });
-  return next;
-}
-
 async function handleUpsertFailure(item: QueuedUpsert, error: unknown, updated: QueuedUpsert[]): Promise<void> {
   const attempts = item.attempts + 1;
   const isTerminal = attempts >= MAX_ATTEMPTS;
@@ -267,14 +260,22 @@ async function flushUpserts(force = false) {
     }
 
     // Process successes for all items in batch
-    for (const item of itemsToProcess) {
-      updated = await handleUpsertSuccess(item, updated);
-    }
+    const processedIds = new Set(itemsToProcess.map((i) => i.record.deviceId));
+    updated = updated.filter((u) => !processedIds.has(u.record.deviceId));
+    consecutiveFailures = 0;
+
+    // ⚡ Bolt: Use Promise.all to avoid N+1 sequential await bottlenecks
+    await Promise.all(
+      itemsToProcess.map((item) =>
+        logAnalyticsEvent('device.upsert.success', { deviceId: item.record.deviceId })
+      )
+    );
   } catch (error) {
     // If the batch fails, apply backoff to all items
-    for (const item of itemsToProcess) {
-      await handleUpsertFailure(item, error, updated);
-    }
+    // ⚡ Bolt: Use Promise.all to avoid N+1 sequential await bottlenecks
+    await Promise.all(
+      itemsToProcess.map((item) => handleUpsertFailure(item, error, updated))
+    );
   }
 
   await saveUpsertQueue(updated);
