@@ -11,7 +11,7 @@ import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-import imgBadge from "../../../src/assets/omnidash/apex-badge.png";
+import imgBadge from "../../../src/assets/omnidash/apex-badge.svg";
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgAvatar from "../../../src/assets/omnidash/avatar-default.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";

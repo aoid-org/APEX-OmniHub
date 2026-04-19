@@ -295,7 +295,7 @@ jobs:
           key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright Chromium
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           # CI runs chromium-only (see playwright.config.ts for rationale)
           # Firefox/WebKit require OS packages unavailable on GitHub Actions runners
@@ -401,7 +401,7 @@ jobs:
           key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright Chromium
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
           ./node_modules/.bin/playwright install --with-deps chromium
 
