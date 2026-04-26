@@ -81,4 +81,4 @@ module "redis" {
   multi_zone      = false # Single zone for staging
 }
 
-# TODO: Cloudflare Pages is the active provider; Vercel module removed.
+# Cloudflare Pages is the active provider for staging; Vercel module intentionally removed.
