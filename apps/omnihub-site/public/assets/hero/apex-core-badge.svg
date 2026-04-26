@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="bg-g" cx="42%" cy="36%" r="60%">
+      <stop offset="0%" stop-color="#F5C06A"/>
+      <stop offset="40%" stop-color="#E8A247"/>
+      <stop offset="75%" stop-color="#C4511A"/>
+      <stop offset="100%" stop-color="#3A1005"/>
+    </radialGradient>
+    <radialGradient id="ring-g" cx="50%" cy="50%" r="50%">
+      <stop offset="70%" stop-color="rgba(196,81,26,0)"/>
+      <stop offset="100%" stop-color="rgba(232,162,71,0.35)"/>
+    </radialGradient>
+  </defs>
+  <!-- Outer glow ring -->
+  <circle cx="100" cy="100" r="96" fill="url(#ring-g)" stroke="rgba(232,162,71,0.4)" stroke-width="1"/>
+  <!-- Core badge disc -->
+  <circle cx="100" cy="100" r="84" fill="url(#bg-g)" stroke="rgba(245,192,106,0.5)" stroke-width="1.5"/>
+  <!-- Inner track ring -->
+  <circle cx="100" cy="100" r="72" fill="none" stroke="rgba(245,192,106,0.25)" stroke-width="0.75"/>
+  <!-- APEX wordmark -->
+  <text
+    x="100" y="96"
+    text-anchor="middle"
+    dominant-baseline="central"
+    font-family="system-ui, -apple-system, sans-serif"
+    font-weight="700"
+    font-size="26"
+    letter-spacing="6"
+    fill="rgba(255,255,255,0.95)"
+  >APEX</text>
+  <!-- Sub-label -->
+  <text
+    x="100" y="122"
+    text-anchor="middle"
+    dominant-baseline="central"
+    font-family="system-ui, -apple-system, sans-serif"
+    font-weight="400"
+    font-size="9"
+    letter-spacing="3.5"
+    fill="rgba(255,255,255,0.55)"
+  >OMNIHUB</text>
+  <!-- Four cardinal dots on inner track -->
+  <circle cx="100" cy="28"  r="2.5" fill="rgba(245,192,106,0.7)"/>
+  <circle cx="172" cy="100" r="2.5" fill="rgba(245,192,106,0.7)"/>
+  <circle cx="100" cy="172" r="2.5" fill="rgba(245,192,106,0.7)"/>
+  <circle cx="28"  cy="100" r="2.5" fill="rgba(245,192,106,0.7)"/>
+</svg>

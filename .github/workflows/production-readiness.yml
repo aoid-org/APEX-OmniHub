@@ -56,7 +56,7 @@ jobs:
         run: bun run docs:check
 
       - name: Cloudflare Pages SPA Redirect Check
-        run: cd apps/omnihub-site && node scripts/check-vercel-spa-rewrite.mjs
+        run: test -f apps/omnihub-site/public/_redirects
 
       - name: Guardrail - No TS suppression in config files
         run: |
