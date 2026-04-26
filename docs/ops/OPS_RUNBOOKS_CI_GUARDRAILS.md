@@ -1,5 +1,13 @@
 # OPS_RUNBOOKS.md — APEX-OmniHub Operations Runbooks
 
+> **Status:** Current operations index (canonical).
+>
+> Related canonical docs:
+> - `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`
+> - `docs/infrastructure/CI_RUNTIME_GATES.md`
+> - `docs/infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md`
+> - `docs/ops/INCIDENT_RESPONSE.md`
+
 ## Table of Contents
 
 1. [Idempotency Monitoring](#idempotency-monitoring)
