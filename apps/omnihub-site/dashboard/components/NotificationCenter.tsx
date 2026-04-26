@@ -7,7 +7,7 @@
  * @module components/omnidash/NotificationCenter
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -95,7 +95,11 @@ export function NotificationCenter() {
   const { notifications, approve, deny } = useNotifications();
   const [open, setOpen] = useState(false);
 
-  const pendingCount = notifications.filter((n) => n.status === 'pending').length;
+  // ⚡ Bolt: Memoized pending notifications count to avoid recalculating on every re-render
+  const pendingCount = useMemo(
+    () => notifications.filter((n) => n.status === 'pending').length,
+    [notifications]
+  );
 
   const handleApprove = useCallback((taskId: string) => approve(taskId), [approve]);
   const handleDeny = useCallback((taskId: string) => deny(taskId), [deny]);

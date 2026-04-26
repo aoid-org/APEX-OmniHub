@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Activity, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react";
 
@@ -45,31 +45,36 @@ export default function LocalAgents() {
     },
   });
 
-  const leadGenMetrics = events
-    ?.filter((e: AgentEventRow) => e.source === "lead-gen")
-    .reduce(
-      (acc: { ingested: number; qualified: number; queueSize: number }, e: AgentEventRow) => {
-        if (e.type === "lead_ingested") acc.ingested++;
-        if (e.type === "lead_qualified") acc.qualified++;
-        if (e.type === "queue_seeded") acc.queueSize = (e.data as { queue_size?: number })?.queue_size ?? 0;
-        return acc;
-      },
-      { ingested: 0, qualified: 0, queueSize: 0 }
-    ) ?? { ingested: 0, qualified: 0, queueSize: 0 };
+  // ⚡ Bolt: Memoized metrics calculations to prevent double O(n) array iteration on every render
+  const leadGenMetrics = useMemo(() => {
+    return events
+      ?.filter((e: AgentEventRow) => e.source === "lead-gen")
+      .reduce(
+        (acc: { ingested: number; qualified: number; queueSize: number }, e: AgentEventRow) => {
+          if (e.type === "lead_ingested") acc.ingested++;
+          if (e.type === "lead_qualified") acc.qualified++;
+          if (e.type === "queue_seeded") acc.queueSize = (e.data as { queue_size?: number })?.queue_size ?? 0;
+          return acc;
+        },
+        { ingested: 0, qualified: 0, queueSize: 0 }
+      ) ?? { ingested: 0, qualified: 0, queueSize: 0 };
+  }, [events]);
 
-  const apexSalesMetrics = events
-    ?.filter((e: AgentEventRow) => e.source === "apex-sales")
-    .reduce(
-      (acc: { attempted: number; connected: number; booked: number; completed: number; errors: number }, e: AgentEventRow) => {
-        if (e.type === "call_attempted") acc.attempted++;
-        if (e.type === "call_connected") acc.connected++;
-        if (e.type === "meeting_booked") acc.booked++;
-        if (e.type === "call_completed") acc.completed++;
-        if (e.type === "error") acc.errors++;
-        return acc;
-      },
-      { attempted: 0, connected: 0, booked: 0, completed: 0, errors: 0 }
-    ) ?? { attempted: 0, connected: 0, booked: 0, completed: 0, errors: 0 };
+  const apexSalesMetrics = useMemo(() => {
+    return events
+      ?.filter((e: AgentEventRow) => e.source === "apex-sales")
+      .reduce(
+        (acc: { attempted: number; connected: number; booked: number; completed: number; errors: number }, e: AgentEventRow) => {
+          if (e.type === "call_attempted") acc.attempted++;
+          if (e.type === "call_connected") acc.connected++;
+          if (e.type === "meeting_booked") acc.booked++;
+          if (e.type === "call_completed") acc.completed++;
+          if (e.type === "error") acc.errors++;
+          return acc;
+        },
+        { attempted: 0, connected: 0, booked: 0, completed: 0, errors: 0 }
+      ) ?? { attempted: 0, connected: 0, booked: 0, completed: 0, errors: 0 };
+  }, [events]);
 
   const qualificationRate = leadGenMetrics.ingested > 0
     ? ((leadGenMetrics.qualified / leadGenMetrics.ingested) * 100).toFixed(1)
