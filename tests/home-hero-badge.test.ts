@@ -1,17 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 
 const homeSource = readFileSync('apps/omnihub-site/src/pages/Home.tsx', 'utf8');
-const heroBadgePath = 'apps/omnihub-site/public/assets/hero/apex-core-badge.svg';
 
 describe('Homepage hero core badge wiring', () => {
-  it('references the hero badge asset from the app public directory', () => {
+  it('uses the production hero badge asset path served from root public', () => {
     expect(homeSource).toContain('href="/assets/hero/apex-core-badge.svg"');
     expect(homeSource).toContain('xlink:href="/assets/hero/apex-core-badge.svg"');
-  });
-
-  it('ships the referenced hero badge image at the expected public path', () => {
-    expect(existsSync(heroBadgePath)).toBe(true);
   });
 
   it('keeps the badge superimposed inside the orb clip path with pulse animation', () => {

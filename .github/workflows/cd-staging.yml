@@ -52,7 +52,6 @@ jobs:
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID || 'mock-zone' }}
           TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL || 'mock@example.com' }}
           TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY || 'mock-key' }}
-          TF_VAR_vercel_token: ${{ secrets.VERCEL_TOKEN || 'mock-token' }}
           TF_VAR_github_repo: ${{ github.repository }}
           TF_VAR_vite_supabase_url: ${{ secrets.STAGING_SUPABASE_URL || 'https://mock.supabase.co' }}
           TF_VAR_vite_supabase_publishable_key: ${{ secrets.STAGING_SUPABASE_KEY || 'mock-key' }}
@@ -68,7 +67,6 @@ jobs:
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           TF_VAR_upstash_email: ${{ secrets.UPSTASH_EMAIL }}
           TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
-          TF_VAR_vercel_token: ${{ secrets.VERCEL_TOKEN }}
           TF_VAR_github_repo: ${{ github.repository }}
           TF_VAR_vite_supabase_url: ${{ secrets.STAGING_SUPABASE_URL }}
           TF_VAR_vite_supabase_publishable_key: ${{ secrets.STAGING_SUPABASE_KEY }}
@@ -86,19 +84,15 @@ jobs:
             echo "- CLOUDFLARE_ZONE_ID" >> $GITHUB_STEP_SUMMARY
             echo "- UPSTASH_EMAIL" >> $GITHUB_STEP_SUMMARY
             echo "- UPSTASH_API_KEY" >> $GITHUB_STEP_SUMMARY
-            echo "- VERCEL_TOKEN" >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ **Using real API tokens**" >> $GITHUB_STEP_SUMMARY
           fi
 
   build-and-deploy:
-    name: Build and Deploy (Vercel)
+    name: Build and Deploy (Staging)
     runs-on: ubuntu-latest
     needs: terraform
     if: always() # Run even if terraform fails
-    env:
-      HAS_VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -126,35 +120,17 @@ jobs:
           VITE_DATADOG_APPLICATION_ID: ${{ secrets.DATADOG_APP_ID }}
           VITE_DATADOG_CLIENT_TOKEN: ${{ secrets.DATADOG_CLIENT_TOKEN }}
 
-      - name: Deploy to Vercel (Staging)
-        if: ${{ env.HAS_VERCEL_TOKEN == 'true' }}
-        uses: amondnet/vercel-action@16e87c0a08142b0d0d33b76aeaf20823c381b9b9 # v25
-        continue-on-error: true
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_STAGING }}
-          vercel-args: "--prod" # Deploy to staging's production
-          working-directory: ./
-
       - name: Deployment Status
         if: always()
         run: |
           echo "## 🚀 Deployment Status" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ env.HAS_VERCEL_TOKEN }}" != "true" ]; then
-            echo "⚠️ **Skipped** - Add VERCEL_TOKEN to GitHub Secrets" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "✅ **Deployed to Vercel**" >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "ℹ️ Deployment handled by Terraform/Cloudflare configuration." >> $GITHUB_STEP_SUMMARY
 
   smoke-tests:
     name: Run Smoke Tests
     runs-on: ubuntu-latest
     needs: build-and-deploy
     if: always() # Run even if deploy fails (for status reporting)
-    env:
-      HAS_VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -171,17 +147,15 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Wait for deployment
-        run: sleep 30 # Wait for Vercel deployment to stabilize
+        run: sleep 30 # Wait for staging deployment to stabilize
 
       - name: Run smoke tests
-        if: ${{ env.HAS_VERCEL_TOKEN == 'true' }}
         run: bun run test:e2e
         continue-on-error: true
         env:
           STAGING_URL: https://staging.omnihub.dev
 
       - name: Health check
-        if: ${{ env.HAS_VERCEL_TOKEN == 'true' }}
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" https://staging.omnihub.dev/health)
           if [ $response -ne 200 ]; then
@@ -192,7 +166,6 @@ jobs:
         continue-on-error: true
 
       - name: Validate /metrics endpoint
-        if: ${{ env.HAS_VERCEL_TOKEN == 'true' }}
         run: |
           response=$(curl -sf https://staging.omnihub.dev/metrics 2>/dev/null || echo "UNREACHABLE")
           if [ "$response" = "UNREACHABLE" ]; then

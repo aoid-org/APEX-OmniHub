@@ -8,10 +8,10 @@ variable "domain" {
   type        = string
 }
 
-variable "vercel_cname" {
-  description = "Vercel CNAME target (e.g., cname.vercel-dns.com)"
+variable "origin_cname" {
+  description = "Origin CNAME target for Cloudflare DNS records"
   type        = string
-  default     = "cname.vercel-dns.com"
+  default     = "omnihub.pages.dev"
 }
 
 variable "rate_limit_threshold" {

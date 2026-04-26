@@ -21,12 +21,6 @@ variable "upstash_api_key" {
   sensitive   = true
 }
 
-variable "vercel_token" {
-  description = "Vercel API token"
-  type        = string
-  sensitive   = true
-}
-
 # Application configuration
 variable "github_repo" {
   description = "GitHub repository (owner/repo)"

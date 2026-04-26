@@ -14,19 +14,19 @@ terraform {
 resource "cloudflare_record" "root" {
   zone_id = var.zone_id
   name    = "@"
-  value   = var.vercel_cname
+  value   = var.origin_cname
   type    = "CNAME"
   proxied = true
-  comment = "Root domain pointing to Vercel"
+  comment = "Root domain pointing to Cloudflare Pages origin"
 }
 
 resource "cloudflare_record" "www" {
   zone_id = var.zone_id
   name    = "www"
-  value   = var.vercel_cname
+  value   = var.origin_cname
   type    = "CNAME"
   proxied = true
-  comment = "WWW subdomain pointing to Vercel"
+  comment = "WWW subdomain pointing to Cloudflare Pages origin"
 }
 
 # WAF Rules (OWASP Top 10 Protection)
