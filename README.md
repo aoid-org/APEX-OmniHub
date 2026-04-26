@@ -27,7 +27,9 @@
 
 **Before touching code, read the canonical architecture map:**
 
-- [ARCHITECTURE_CANONICAL_MAP.md](./ARCHITECTURE_CANONICAL_MAP.md)
+- [ARCHITECTURE_CANONICAL_MAP.md](./docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
+- [Production Status (Current)](./docs/project-status/PRODUCTION_STATUS.md)
+- [Production Status Brief 04252006](./docs/project-status/PRODUCTION_STATUS_04252006.md)
 
 ---
 
