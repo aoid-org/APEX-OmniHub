@@ -1,12 +1,19 @@
-<!-- APEX_DOC_STAMP: VERSION=v2.0 | LAST_UPDATED=2026-04-26 -->
+<!-- APEX_DOC_STAMP: VERSION=v2.1 | LAST_UPDATED=2026-04-26 -->
 # Production Deployment Guide (Cloudflare Pages + Supabase)
 
 ## Purpose
-Operational checklist for production rollouts using Cloudflare Pages as web runtime and Supabase as data/edge runtime.
+Operational playbook for production rollouts with strong readability for new operators and strong execution fidelity for experienced teams.
 
-## 0) Required Gates Before Deploy
+## Scope
+- Web deployment: Cloudflare Pages
+- Data + edge runtime: Supabase
+- Orchestrator: Temporal Python service (where enabled)
 
-Run and pass:
+---
+
+## 0) Pre-Deploy Readiness Gates
+
+Run and pass locally (or validate in CI):
 
 ```bash
 npm run typecheck
@@ -21,9 +28,14 @@ npm run test:py
 
 ## 1) Environment Validation
 
-- Cloudflare Pages vars present (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`)
-- Supabase Edge Function secrets present (`SUPABASE_SERVICE_ROLE_KEY`, provider secrets as needed)
-- Production-only secrets validated via security runbooks
+### Cloudflare Pages variables
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY` (preferred)
+- optional legacy fallback: `VITE_SUPABASE_ANON_KEY`
+
+### Supabase Edge Function secrets
+- `SUPABASE_SERVICE_ROLE_KEY`
+- provider-specific credentials (web3, payment, BYOM, etc.)
 
 Recommended pre-check:
 
@@ -31,20 +43,36 @@ Recommended pre-check:
 node scripts/check-env-root.mjs
 ```
 
-## 2) Database + Edge Runtime
+---
+
+## 2) Database and Function Deployment
 
 ```bash
 supabase link --project-ref <prod-ref>
 supabase db push
-# Deploy only required functions
 supabase functions deploy <function-name>
 ```
 
+### Verification checklist
+- [ ] migrations applied without error
+- [ ] required tables present
+- [ ] function auth mode matches `supabase/config.toml`
+- [ ] secrets resolved in runtime logs
+
+---
+
 ## 3) Web Deployment (Cloudflare Pages)
 
-- Merge approved PR into deployment branch.
-- Confirm Cloudflare Pages build succeeded.
-- Validate deployed URL + headers + routing.
+1. Merge approved PR into deployment branch.
+2. Confirm Cloudflare Pages build success.
+3. Validate routing + headers + env var injection.
+
+### Quick verification
+- [ ] landing route returns 200
+- [ ] login/auth route renders
+- [ ] `/omnidash` accessible post-auth
+
+---
 
 ## 4) Post-Deploy Validation
 
@@ -53,19 +81,31 @@ npm run smoke-test
 npm run test:assets
 ```
 
-Also verify:
-- auth/login journey
-- `/omnidash` post-auth shell
-- critical edge-function flows
-- orchestrator health endpoints where applicable
+Operational checks:
+- [ ] critical edge functions healthy
+- [ ] key user journeys pass (auth, dashboard, primary workflows)
+- [ ] no severe errors in telemetry/logging window after deploy
+
+---
 
 ## 5) Rollback Strategy
 
-1. Revert deployment commit and redeploy via Cloudflare Pages.
-2. If schema caused impact, apply matching rollback migration from `supabase/migrations/rollback/`.
-3. Trigger incident process in `docs/ops/INCIDENT_RESPONSE.md`.
+### Fast rollback
+1. Revert deployment commit.
+2. Push revert.
+3. Confirm Cloudflare Pages rollback deployment.
 
-## 6) Legacy Notice
+### Data rollback
+- Use rollback SQL under `supabase/migrations/rollback/`.
+- Execute incident process if customer-impacting.
 
-This guide supersedes prior Vercel-centric deployment instructions.
+Reference: `docs/ops/INCIDENT_RESPONSE.md`
+
+---
+
+## 6) Operator Notes
+
+- This guide prioritizes current topology and practical run steps.
+- Deep historical deployment context is preserved in:
+  `docs/archive/legacy-runbooks/PRODUCTION_DEPLOYMENT_GUIDE_legacy.md`.
 
