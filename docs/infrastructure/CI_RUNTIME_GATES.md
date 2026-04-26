@@ -1,54 +1,68 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.0 | LAST_UPDATED=2026-04-26 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.1 | LAST_UPDATED=2026-04-26 -->
 # CI Runtime Gates
 
 ## Purpose
-Define the runtime and architecture gates that must pass before merge/deploy.
+Define runtime, architecture, and security gates required before merge/deploy, with onboarding-friendly command mapping.
 
-## Current Gate Model
+## Authoritative Source
+- Workflow YAML: `.github/workflows/ci-runtime-gates.yml`
 
-The authoritative workflow is `.github/workflows/ci-runtime-gates.yml`.
+This document is an operator guide; YAML is the exact implementation source.
+
+---
+
+## Gate Phases
 
 ### Phase A — Architectural Boundary Enforcement
-- Guardrail checks for monitored files
-- Worker/API purity checks
-- Metrics decoupling checks
+- monitored file existence
+- worker/API purity checks
+- metrics decoupling checks
 
-### Phase B — Infrastructure Drift Gate
-- Terraform expression drift tests
-- Coverage thresholds for infrastructure-sensitive paths
+### Phase B — Infrastructure Drift
+- terraform expression drift tests
+- infra-sensitive coverage thresholds
 
-### Phase C — Build/Test/Quality
+### Phase C — Build, Test, and Quality
 - changelog path verification
 - repo hygiene guard
-- TypeScript + ESLint + React singleton check
+- TypeScript, ESLint, React singleton validation
 - unit tests + coverage
-- build validation + asset verification
+- production build + asset checks
 
-### Phase D — Security & Operational Gates
+### Phase D — Security and Operational Readiness
 - secret scanning
 - dependency/security posture checks
-- smoke/runtime rendering checks where configured
+- runtime smoke/e2e checks where configured
 
-## Why this exists
+---
 
-Historically, static green builds still allowed runtime regressions (blank-page classes of failures, asset breakages, routing regressions). The current gate stack combines static, runtime, architectural, and infra checks to fail closed.
+## Command Mapping (Local)
 
-## Local Reproduction
+| Gate intent | Local command |
+|---|---|
+| TS correctness | `npm run typecheck` |
+| Lint policy | `npm run lint` |
+| React singleton | `npm run check:react` |
+| Unit/runtime tests | `npm run test` |
+| Build correctness | `npm run build` |
+| Asset reachability | `npm run test:assets` |
+| E2E render confidence | `npm run test:e2e` |
+| Infra drift checks | `npm run test:infra` |
 
-```bash
-npm run typecheck
-npm run lint
-npm run check:react
-npm run test
-npm run build
-npm run test:assets
-npm run test:e2e
-npm run test:infra
-```
+---
 
-## Notes
+## Failure Triage Quick Playbook
 
-- This document intentionally describes gate categories, not every YAML line.
-- For exact implementation details and latest updates, always inspect the workflow file directly.
-- Legacy Vercel-specific bypass behavior is not canonical for current deployment topology.
+1. Identify failing phase in CI summary.
+2. Reproduce locally with mapped command.
+3. If architectural guardrail fails, fix boundary violation before any feature work.
+4. If infra drift fails, reconcile Terraform/tests together.
+5. If runtime checks fail, treat as release blocker.
+
+---
+
+## Legacy Note
+
+Historical Vercel-oriented gate context is preserved in:
+`docs/archive/legacy-runbooks/CI_RUNTIME_GATES_legacy.md`.
 

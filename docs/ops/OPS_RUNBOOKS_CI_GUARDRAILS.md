@@ -132,3 +132,11 @@ If the violation pattern appears in legitimate code (e.g., documentation):
 | ----------------- | ------------------------------ |
 | `SLACK_BOT_TOKEN` | Slack notifications            |
 | `GITHUB_TOKEN`    | Issue creation (auto-provided) |
+
+
+## Legacy deep-dive archives
+
+- `docs/archive/legacy-runbooks/OPS_RUNBOOK_legacy_2026-01-25.md`
+- `docs/archive/legacy-runbooks/PRODUCTION_DEPLOYMENT_GUIDE_legacy.md`
+- `docs/archive/legacy-runbooks/CI_RUNTIME_GATES_legacy.md`
+- `docs/archive/legacy-runbooks/MIGRATION_RUNBOOK_legacy.md`

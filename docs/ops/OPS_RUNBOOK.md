@@ -1,18 +1,21 @@
 > **DEPRECATED (READ-ONLY)**
 >
-> This runbook is retained for historical context only.
+> This runbook is retained as a navigation stub and historical pointer.
 >
-> **Do not use this file for active operations.**
+> **Do not use this file as the active source for production operations.**
 >
-> Use the following instead:
-> - Primary ops index: `docs/ops/OPS_RUNBOOKS_CI_GUARDRAILS.md`
+> Use instead:
+> - Active ops index: `docs/ops/OPS_RUNBOOKS_CI_GUARDRAILS.md`
 > - Incident response: `docs/ops/INCIDENT_RESPONSE.md`
-> - Production deployment: `docs/infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md`
-> - Runtime gates: `docs/infrastructure/CI_RUNTIME_GATES.md`
+> - Production deploy flow: `docs/infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md`
+> - CI runtime guardrails: `docs/infrastructure/CI_RUNTIME_GATES.md`
+>
+> Full legacy runbook archive:
+> - `docs/archive/legacy-runbooks/OPS_RUNBOOK_legacy_2026-01-25.md`
 >
 > Last active baseline: 2026-01-25.
 
 # APEX OmniHub OPS RUNBOOK (Deprecated)
 
-This content remains archived for audit traceability and historical references only.
+This file is intentionally short to avoid operator confusion while preserving a durable entry point to active and archived runbooks.
 
