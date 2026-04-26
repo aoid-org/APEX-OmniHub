@@ -78,11 +78,11 @@ if (existsSync(redirectsPath)) {
     process.exit(1);
   }
 } else {
-  // Backward-compatible fallback for environments that still use vercel.json rewrites.
-  const vercelJsonPath = join(process.cwd(), 'vercel.json');
-  if (existsSync(vercelJsonPath)) {
-    const vercelConfig = JSON.parse(readFileSync(vercelJsonPath, 'utf-8'));
-    const rewrites = vercelConfig.rewrites || [];
+  // Backward-compatible fallback for environments that still use hosting.json rewrites.
+  const hostingJsonPath = join(process.cwd(), 'hosting.json');
+  if (existsSync(hostingJsonPath)) {
+    const hostingConfig = JSON.parse(readFileSync(hostingJsonPath, 'utf-8'));
+    const rewrites = hostingConfig.rewrites || [];
     const catchAllRewriteIndex = rewrites.findIndex(
       (rewrite) => rewrite.source === '/(.*)' || rewrite.source === '/:path*'
     );
@@ -93,11 +93,11 @@ if (existsSync(redirectsPath)) {
         .some((rewrite) => rewrite.source?.includes('assets') && rewrite.status);
 
       if (!hasProtectedAssetRoute) {
-        console.error('FAIL: vercel.json has SPA catch-all rewrite without /assets/* exclusion before it.');
+        console.error('FAIL: hosting.json has SPA catch-all rewrite without /assets/* exclusion before it.');
         console.error('Missing assets will be served as HTML instead of 404.');
         process.exit(1);
       }
-      console.log('OK: vercel.json has asset route protection before SPA catch-all.');
+      console.log('OK: hosting.json has asset route protection before SPA catch-all.');
     }
   }
 }

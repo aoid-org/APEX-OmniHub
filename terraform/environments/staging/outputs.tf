@@ -3,11 +3,6 @@ output "cloudflare_nameservers" {
   value       = module.cloudflare.nameservers
 }
 
-output "vercel_deployment_url" {
-  description = "Vercel deployment URL"
-  value       = module.vercel.deployment_url
-}
-
 output "staging_url" {
   description = "Staging environment URL"
   value       = "https://staging.omnihub.dev"
