@@ -73,9 +73,26 @@ function mapConnectorModels(
   keys: OmniLinkApiKey[],
   events: OmniLinkEvent[],
 ): ConnectorViewModel[] {
+  // O(N) grouping to avoid O(N^2) filtering in the map loop
+  const keysByIntegration = new Map<string, OmniLinkApiKey[]>();
+  for (const key of keys) {
+    if (!keysByIntegration.has(key.integration_id)) {
+      keysByIntegration.set(key.integration_id, []);
+    }
+    keysByIntegration.get(key.integration_id)!.push(key);
+  }
+
+  const eventsByIntegration = new Map<string, OmniLinkEvent[]>();
+  for (const event of events) {
+    if (!eventsByIntegration.has(event.integration_id)) {
+      eventsByIntegration.set(event.integration_id, []);
+    }
+    eventsByIntegration.get(event.integration_id)!.push(event);
+  }
+
   return integrations.map((integration) => {
-    const integrationKeys = keys.filter((key) => key.integration_id === integration.id);
-    const integrationEvents = events.filter((event) => event.integration_id === integration.id);
+    const integrationKeys = keysByIntegration.get(integration.id) || [];
+    const integrationEvents = eventsByIntegration.get(integration.id) || [];
     const status = deriveStatus(integration, integrationKeys, integrationEvents);
 
     return {

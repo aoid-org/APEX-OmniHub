@@ -5,3 +5,7 @@
 ## 2024-05-18 - [Optimizing High-Frequency React useMemo Calculations]
 **Learning:** Multiple array passes (e.g. chaining `.filter()` and `.map()`) inside a `useMemo` hook on frequently updating data streams (like WebSockets or Server-Sent Events) can cause unnecessary CPU overhead and trigger frequent garbage collection due to intermediate array allocations.
 **Action:** Consolidate multiple array iterations into a single O(n) `for...of` loop when calculating complex statistics from a frequently updating list in React.
+
+## 2026-04-19 - [Replacing O(N^2) Array Filters with Maps]
+**Learning:** In React components like `Integrations.tsx`, iterating over a list (M) and repeatedly calling `.filter()` on secondary arrays (K and E) inside the loop creates an O(M * (K + E)) time complexity. This causes excessive CPU overhead and blocks the main thread when these lists grow.
+**Action:** Replaced the O(N^2) `.filter()` loops by grouping the secondary arrays (keys and events) into Hash Maps (`Map<string, T[]>`) beforehand using a single pass (O(K + E)). This reduced the overall mapping logic to O(M + K + E), significantly speeding up the `mapConnectorModels` utility.
