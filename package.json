@@ -150,7 +150,7 @@
     "input-otp": "^1.4.2",
     "ioredis": "^5.4.1",
     "lru-cache": "^11.0.2",
-    "lucide-react": "^0.462.0",
+    "lucide-react": "^1.11.0",
     "nanoid": "^5.0.9",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
