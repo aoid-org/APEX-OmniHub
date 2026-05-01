@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -72,6 +72,14 @@ function RunDetailPanel({ workflowId }: { readonly workflowId: string }) {
     setIsPlaying(!isPlaying);
   };
 
+  const detail = detailQuery.data;
+
+  // ⚡ Bolt: Memoize policyEvents array to prevent O(N) filter on every render during replay
+  const policyEvents = useMemo(() => {
+    if (!detail) return [];
+    return detail.events.filter(e => e.kind === 'policy');
+  }, [detail]);
+
   if (detailQuery.isLoading) {
     return <div className="text-sm text-muted-foreground p-4">Loading events...</div>;
   }
@@ -84,11 +92,9 @@ function RunDetailPanel({ workflowId }: { readonly workflowId: string }) {
     );
   }
 
-  const detail = detailQuery.data;
   if (!detail) return null;
 
   const currentEvent = detail.events[replayIndex];
-  const policyEvents = detail.events.filter(e => e.kind === 'policy');
 
   return (
     <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
