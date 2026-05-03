@@ -12,3 +12,6 @@
 ## 2026-04-26 - [Memoize O(n) Array Processing in React Components]
 **Learning:** Performing array iterations such as `.reduce` and `.filter` on potentially large data sources (like `tasks`, `notifications`, or `events`) directly within the render cycle causes unnecessary CPU load. If a component re-renders for other reasons, the operations are re-run on identical data.
 **Action:** Wrap these operations in `useMemo` hooks. Provide the source array as the dependency (e.g., `[tasks]`). This ensures that the O(n) array passes are only executed when the source data actually changes.
+## 2024-05-18 - [Fix React Rule of Hooks error with useMemo]
+**Learning:** If you introduce `useMemo` to memoize computations in a React component, make sure it is not conditionally executed. It must be placed *before* any early return statements (such as `if (isLoading) return ...`).
+**Action:** Always extract variables from data-fetching hooks safely (e.g. `const detail = detailQuery.data;`) and place `useMemo` hooks above early return logic. Inside `useMemo`, add a null check (`if (!detail) return [];`) to handle cases where the data isn't loaded yet.

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, type FC } from 'react';
+import { useEffect, useState, useMemo, memo, type FC } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface OmniBridgeEventRow {
@@ -30,7 +30,12 @@ interface OmniBridgeLiveFeedProps {
  * Real-time admin feed backed by Supabase Realtime on omnibridge_events.
  * Grant-evidence UI: shows verification pass rate, dispatch acks, latency.
  */
-export const OmniBridgeLiveFeed: FC<OmniBridgeLiveFeedProps> = ({
+
+// ⚡ Bolt: Wrapped OmniBridgeLiveFeed in React.memo() to prevent unnecessary re-renders.
+// Since this component manages high-frequency real-time events, avoiding re-renders
+// triggered by parent components reduces main-thread overhead and improves UI responsiveness.
+// Expected impact: Eliminates unnecessary re-renders when parent state changes.
+export const OmniBridgeLiveFeed: FC<OmniBridgeLiveFeedProps> = memo(({
   sourceFilter,
   windowSize = 100,
   tenantId,
@@ -207,7 +212,7 @@ export const OmniBridgeLiveFeed: FC<OmniBridgeLiveFeedProps> = ({
       </div>
     </div>
   );
-};
+});
 
 function mergeUpdatedRow(prev: OmniBridgeEventRow[], row: OmniBridgeEventRow): OmniBridgeEventRow[] {
   return prev.map((e) => (e.id === row.id ? row : e));
