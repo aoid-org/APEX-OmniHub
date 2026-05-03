@@ -36,7 +36,7 @@ async function checkAsset(url, description, expectStatus = 200) {
     const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
     const querySeparator = url.includes('?') ? '&' : '?';
     const targetUrl = bypassSecret
-      ? `${url}${querySeparator}x-vercel-protection-bypass=${encodeURIComponent(bypassSecret)}`
+      ? `${url}${querySeparator}x-preview-protection-bypass=${encodeURIComponent(bypassSecret)}`
       : url;
     const response = await fetch(targetUrl, {
       method: 'GET',
@@ -44,8 +44,8 @@ async function checkAsset(url, description, expectStatus = 200) {
         'User-Agent': 'OmniLink-APEX-CI-AssetCheck/1.0',
         // Include Vercel protection bypass if provided
         ...(bypassSecret && {
-          'x-vercel-protection-bypass': bypassSecret,
-          'x-vercel-set-bypass-cookie': 'true',
+          'x-preview-protection-bypass': bypassSecret,
+          'x-preview-set-bypass-cookie': 'true',
         }),
       },
     });
@@ -57,7 +57,7 @@ async function checkAsset(url, description, expectStatus = 200) {
       // Vercel deployment protection - skip if no bypass secret provided
       if (!process.env.VERCEL_AUTOMATION_BYPASS_SECRET) {
         log('warn', `${description}: ${response.status} (Vercel protection enabled - skipping)`);
-        return { status: 'skip', reason: 'vercel_protection' };
+        return { status: 'skip', reason: 'preview_protection' };
       }
       log('fail', `${description}: ${response.status} (AUTHENTICATION ERROR - check bypass secret)`);
       return { status: 'fail' };

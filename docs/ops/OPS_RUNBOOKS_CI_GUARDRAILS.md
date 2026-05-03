@@ -1,5 +1,13 @@
 # OPS_RUNBOOKS.md — APEX-OmniHub Operations Runbooks
 
+> **Status:** Current operations index (canonical).
+>
+> Related canonical docs:
+> - `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`
+> - `docs/infrastructure/CI_RUNTIME_GATES.md`
+> - `docs/infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md`
+> - `docs/ops/INCIDENT_RESPONSE.md`
+
 ## Table of Contents
 
 1. [Idempotency Monitoring](#idempotency-monitoring)
@@ -124,3 +132,11 @@ If the violation pattern appears in legitimate code (e.g., documentation):
 | ----------------- | ------------------------------ |
 | `SLACK_BOT_TOKEN` | Slack notifications            |
 | `GITHUB_TOKEN`    | Issue creation (auto-provided) |
+
+
+## Legacy deep-dive archives
+
+- `docs/archive/legacy-runbooks/OPS_RUNBOOK_legacy_2026-01-25.md`
+- `docs/archive/legacy-runbooks/PRODUCTION_DEPLOYMENT_GUIDE_legacy.md`
+- `docs/archive/legacy-runbooks/CI_RUNTIME_GATES_legacy.md`
+- `docs/archive/legacy-runbooks/MIGRATION_RUNBOOK_legacy.md`
