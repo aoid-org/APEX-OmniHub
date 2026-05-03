@@ -9,3 +9,9 @@
 ## 2026-04-19 - [Replacing O(N^2) Array Filters with Maps]
 **Learning:** In React components like `Integrations.tsx`, iterating over a list (M) and repeatedly calling `.filter()` on secondary arrays (K and E) inside the loop creates an O(M * (K + E)) time complexity. This causes excessive CPU overhead and blocks the main thread when these lists grow.
 **Action:** Replaced the O(N^2) `.filter()` loops by grouping the secondary arrays (keys and events) into Hash Maps (`Map<string, T[]>`) beforehand using a single pass (O(K + E)). This reduced the overall mapping logic to O(M + K + E), significantly speeding up the `mapConnectorModels` utility.
+## 2026-04-26 - [Memoize O(n) Array Processing in React Components]
+**Learning:** Performing array iterations such as `.reduce` and `.filter` on potentially large data sources (like `tasks`, `notifications`, or `events`) directly within the render cycle causes unnecessary CPU load. If a component re-renders for other reasons, the operations are re-run on identical data.
+**Action:** Wrap these operations in `useMemo` hooks. Provide the source array as the dependency (e.g., `[tasks]`). This ensures that the O(n) array passes are only executed when the source data actually changes.
+## 2024-05-18 - [Fix React Rule of Hooks error with useMemo]
+**Learning:** If you introduce `useMemo` to memoize computations in a React component, make sure it is not conditionally executed. It must be placed *before* any early return statements (such as `if (isLoading) return ...`).
+**Action:** Always extract variables from data-fetching hooks safely (e.g. `const detail = detailQuery.data;`) and place `useMemo` hooks above early return logic. Inside `useMemo`, add a null check (`if (!detail) return [];`) to handle cases where the data isn't loaded yet.

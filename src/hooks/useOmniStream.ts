@@ -75,6 +75,14 @@ export function useOmniStream(
         .sort((a, b) => a.sequence_id - b.sequence_id)
         .slice(-maxEvents); // Keep only last N events
 
+      // ⚡ Bolt: Prune old items from the map to prevent O(N) memory leak and O(N log N) sorting degradation
+      if (eventMapRef.current.size > maxEvents) {
+        eventMapRef.current.clear();
+        for (const event of sortedEvents) {
+          eventMapRef.current.set(event.id, event);
+        }
+      }
+
       setEvents(sortedEvents);
     },
     [maxEvents]
@@ -92,6 +100,14 @@ export function useOmniStream(
       const sortedEvents = Array.from(eventMapRef.current.values())
         .sort((a, b) => a.sequence_id - b.sequence_id)
         .slice(-maxEvents);
+
+      // ⚡ Bolt: Prune old items from the map to prevent O(N) memory leak and O(N log N) sorting degradation
+      if (eventMapRef.current.size > maxEvents) {
+        eventMapRef.current.clear();
+        for (const event of sortedEvents) {
+          eventMapRef.current.set(event.id, event);
+        }
+      }
 
       setEvents(sortedEvents);
     },

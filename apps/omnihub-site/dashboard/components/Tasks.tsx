@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, XCircle, Clock, Play, Plus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -191,13 +191,16 @@ export default function Tasks() {
     },
   });
 
-  const statusCounts = tasks?.reduce(
-    (acc, task) => {
-      acc[task.status] = (acc[task.status] ?? 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
+  // ⚡ Bolt: Memoized task status counting to prevent O(n) recalculations on every render
+  const statusCounts = useMemo(() => {
+    return tasks?.reduce(
+      (acc, task) => {
+        acc[task.status] = (acc[task.status] ?? 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+  }, [tasks]);
 
   return (
     <div className="space-y-6">
