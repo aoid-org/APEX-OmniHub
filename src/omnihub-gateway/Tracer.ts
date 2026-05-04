@@ -7,8 +7,14 @@
  * Compliant with APEX OBSERVABILITY STACK.
  */
 
-import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+// NODE-ONLY: These packages crash in browser environments.
+// Dynamically imported at runtime — bundlers will NOT inline them.
+type NodeSDKType = import('@opentelemetry/sdk-node').NodeSDK;
+let NodeSDK: (typeof import('@opentelemetry/sdk-node'))['NodeSDK'] | undefined;
+let getNodeAutoInstrumentations:
+  | typeof import('@opentelemetry/auto-instrumentations-node').getNodeAutoInstrumentations
+  | undefined;
+
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { Resource } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
@@ -21,16 +27,31 @@ export interface TracerConfig {
   otlpEndpoint?: string; // Jaeger HTTP receiver endpoint
 }
 
-let sdk: NodeSDK | null = null;
+let sdk: NodeSDKType | null = null;
 let initialized = false;
 
 /**
  * Initializes the OpenTelemetry Node SDK if enabled.
- * Should be called once at application startup.
+ * Should be called once at application startup (Node context only).
  */
-export function initGatewayTracer(config: TracerConfig): NodeSDK | undefined {
+export async function initGatewayTracer(config: TracerConfig): Promise<NodeSDKType | undefined> {
   if (!config.enabled || initialized) {
     return undefined;
+  }
+
+  // Guard: no-op in browser environments
+  if (typeof process === 'undefined' || typeof window !== 'undefined') {
+    console.warn('[Tracer] initGatewayTracer() called in browser context — no-op.');
+    return undefined;
+  }
+
+  if (!NodeSDK) {
+    const [sdkMod, instrMod] = await Promise.all([
+      import('@opentelemetry/sdk-node'),
+      import('@opentelemetry/auto-instrumentations-node'),
+    ]);
+    NodeSDK = sdkMod.NodeSDK;
+    getNodeAutoInstrumentations = instrMod.getNodeAutoInstrumentations;
   }
 
   const resource = new Resource({
@@ -45,7 +66,7 @@ export function initGatewayTracer(config: TracerConfig): NodeSDK | undefined {
   sdk = new NodeSDK({
     resource,
     traceExporter,
-    instrumentations: [getNodeAutoInstrumentations()],
+    instrumentations: [getNodeAutoInstrumentations!()],
   });
 
   // Since we might be inside a synchronous init flow, handle gracefully
@@ -75,13 +96,13 @@ export async function withGatewaySpan<T>(
   fn: (span: Span) => Promise<T>
 ): Promise<T> {
   const tracer = getGatewayTracer();
-  
+
   return tracer.startActiveSpan(name, async (span) => {
     // Inject custom attributes
     for (const [key, value] of Object.entries(attributes)) {
       span.setAttribute(key, value);
     }
-    
+
     try {
       const result = await fn(span);
       span.setStatus({ code: SpanStatusCode.OK });
