@@ -25,7 +25,8 @@ const { mockTracer, mockGetTracer, mockSdkStart, mockNodeSdk } = vi.hoisted(() =
 
   const getTracer = vi.fn(() => tracer);
   const sdkStart = vi.fn();
-  const nodeSdk = vi.fn(() => ({ start: sdkStart }));
+  // Arrow functions cannot be used with `new`; use a regular function so NodeSDK can be constructed.
+  const nodeSdk = vi.fn(function () { return { start: sdkStart }; });
 
   return {
     mockTracer: tracer,
@@ -112,7 +113,6 @@ describe('Gateway Tracer', () => {
   });
 
   it('initGatewayTracer should not crash and should return a provider if enabled', async () => {
-    // RED PHASE test: the implementation shouldn't exist yet but we expect it to return undefined or a provider
     const provider = await initGatewayTracer({ enabled: false });
     expect(provider).toBeUndefined();
     expect(mockNodeSdk).not.toHaveBeenCalled();

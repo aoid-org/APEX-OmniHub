@@ -85,9 +85,22 @@ export default defineConfig({
         // Web3/blockchain entitlements — tested via hardhat, not vitest.
         'src/lib/web3/**',
         // OmniHub Gateway — mostly integration-tested via orchestrator pytest suite.
-        // Explicitly include TemporalBridge for unit-level drift/coverage enforcement.
-        'src/omnihub-gateway/**',
-        '!src/omnihub-gateway/TemporalBridge.ts',
+        // Tracer.ts and TemporalBridge.ts have unit tests; exclude everything else.
+        // (micromatch.isMatch doesn't honour negation overrides in an exclude array,
+        //  so list each excluded file explicitly rather than using a blanket glob + negation.)
+        'src/omnihub-gateway/AgentCard.ts',
+        'src/omnihub-gateway/IdempotencyManager.ts',
+        'src/omnihub-gateway/JsonRpcHandler.ts',
+        'src/omnihub-gateway/SSEManager.ts',
+        'src/omnihub-gateway/SemanticRouter.ts',
+        'src/omnihub-gateway/SupabaseIdempotencyStore.ts',
+        'src/omnihub-gateway/TokenEconomicsRouter.ts',
+        'src/omnihub-gateway/index.ts',
+        'src/omnihub-gateway/lambdaDispatchActivity.ts',
+        'src/omnihub-gateway/mcp-client.ts',
+        'src/omnihub-gateway/middleware/**',
+        'src/omnihub-gateway/router.ts',
+        'src/omnihub-gateway/types.ts',
         // Infrastructure package — CDK stacks and Lambda workers require AWS.
         'packages/infrastructure/src/stack.ts',
         'packages/infrastructure/src/worker.ts',

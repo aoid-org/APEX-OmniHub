@@ -7,14 +7,8 @@
  * Compliant with APEX OBSERVABILITY STACK.
  */
 
-// NODE-ONLY: These packages crash in browser environments.
-// Dynamically imported at runtime — bundlers will NOT inline them.
-type NodeSDKType = import('@opentelemetry/sdk-node').NodeSDK;
-let NodeSDK: (typeof import('@opentelemetry/sdk-node'))['NodeSDK'] | undefined;
-let getNodeAutoInstrumentations:
-  | typeof import('@opentelemetry/auto-instrumentations-node').getNodeAutoInstrumentations
-  | undefined;
-
+// Type-only import — erased by TypeScript at compile time, never reaches browser bundle.
+import type { NodeSDK as NodeSDKType } from '@opentelemetry/sdk-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { Resource } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
@@ -39,20 +33,19 @@ export async function initGatewayTracer(config: TracerConfig): Promise<NodeSDKTy
     return undefined;
   }
 
-  // Guard: no-op in browser environments
+  // Guard: no-op in browser environments — avoids crashing if accidentally called client-side.
   if (typeof process === 'undefined' || typeof globalThis.window !== 'undefined') {
     console.warn('[Tracer] initGatewayTracer() called in browser context — no-op.');
     return undefined;
   }
 
-  if (!NodeSDK) {
-    const [sdkMod, instrMod] = await Promise.all([
-      import('@opentelemetry/sdk-node'),
-      import('@opentelemetry/auto-instrumentations-node'),
-    ]);
-    NodeSDK = sdkMod.NodeSDK;
-    getNodeAutoInstrumentations = instrMod.getNodeAutoInstrumentations;
-  }
+  // NODE-ONLY: Lazily imported so bundlers see only a dynamic import(), not a static one.
+  // This prevents @opentelemetry/sdk-node and auto-instrumentations-node from entering
+  // the browser bundle even if this file is reachable from browser code paths.
+  const [{ NodeSDK }, { getNodeAutoInstrumentations }] = await Promise.all([
+    import('@opentelemetry/sdk-node'),
+    import('@opentelemetry/auto-instrumentations-node'),
+  ]);
 
   const resource = new Resource({
     [ATTR_SERVICE_NAME]: config.serviceName || 'omnihub-gateway',
@@ -66,7 +59,7 @@ export async function initGatewayTracer(config: TracerConfig): Promise<NodeSDKTy
   sdk = new NodeSDK({
     resource,
     traceExporter,
-    instrumentations: [getNodeAutoInstrumentations!()],
+    instrumentations: [getNodeAutoInstrumentations()],
   });
 
   // Since we might be inside a synchronous init flow, handle gracefully
