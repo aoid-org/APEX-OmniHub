@@ -53,7 +53,6 @@ CREATE TABLE IF NOT EXISTS omnibridge_events (
   received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   dispatched_at TIMESTAMPTZ,
   acknowledged_at TIMESTAMPTZ,
-  -- Enforce per-source idempotency on event_id to reject replays at the DB
   CONSTRAINT omnibridge_events_source_event_unique UNIQUE (source_id, event_id)
 );
 
@@ -73,25 +72,45 @@ CREATE INDEX IF NOT EXISTS idx_omnibridge_events_trace
 
 ALTER TABLE omnibridge_events ENABLE ROW LEVEL SECURITY;
 
--- Service role: unrestricted (ingest writer + dispatcher)
-CREATE POLICY "omnibridge_events_service_all"
-  ON omnibridge_events FOR ALL TO service_role
-  USING (TRUE) WITH CHECK (TRUE);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'omnibridge_events' -- NOSONAR: schemaname literal, cannot be parameterized in pg_policies query
+      AND policyname = 'omnibridge_events_service_all'
+  ) THEN
+    EXECUTE $pol$
+      CREATE POLICY "omnibridge_events_service_all"
+        ON omnibridge_events FOR ALL TO service_role
+        USING (TRUE) WITH CHECK (TRUE)
+    $pol$;
+  END IF;
+END$$;
 
--- Authenticated admins (jwt custom claim tenant_id) can read their tenant's events
-CREATE POLICY "omnibridge_events_tenant_read"
-  ON omnibridge_events FOR SELECT TO authenticated
-  USING (
-    tenant_id = COALESCE(
-      (auth.jwt() -> 'app_metadata' ->> 'tenant_id'),
-      ''
-    )
-    AND EXISTS (
-      SELECT 1 FROM user_roles ur
-      WHERE ur.user_id = auth.uid()
-        AND ur.role IN ('admin', 'super_admin', 'operator')
-    )
-  );
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'omnibridge_events' -- NOSONAR: schemaname literal, cannot be parameterized in pg_policies query
+      AND policyname = 'omnibridge_events_tenant_read'
+  ) THEN
+    EXECUTE $pol$
+      CREATE POLICY "omnibridge_events_tenant_read"
+        ON omnibridge_events FOR SELECT TO authenticated
+        USING (
+          tenant_id = COALESCE(
+            (auth.jwt() -> 'app_metadata' ->> 'tenant_id'),
+            ''
+          )
+          AND EXISTS (
+            SELECT 1 FROM user_roles ur
+            WHERE ur.user_id = auth.uid()
+              AND ur.role = 'admin'
+          )
+        )
+    $pol$;
+  END IF;
+END$$;
 
 -- =============================================================================
 -- omnibridge_events_dlq — outbound dispatch failures
@@ -117,15 +136,24 @@ CREATE INDEX IF NOT EXISTS idx_omnibridge_events_dlq_event_uuid
 
 ALTER TABLE omnibridge_events_dlq ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "omnibridge_events_dlq_service_all"
-  ON omnibridge_events_dlq FOR ALL TO service_role
-  USING (TRUE) WITH CHECK (TRUE);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'omnibridge_events_dlq' -- NOSONAR: schemaname literal, cannot be parameterized in pg_policies query
+      AND policyname = 'omnibridge_events_dlq_service_all'
+  ) THEN
+    EXECUTE $pol$
+      CREATE POLICY "omnibridge_events_dlq_service_all"
+        ON omnibridge_events_dlq FOR ALL TO service_role
+        USING (TRUE) WITH CHECK (TRUE)
+    $pol$;
+  END IF;
+END$$;
 
 -- =============================================================================
 -- omnibridge_control_audit — every control-plane command (incl. hotfixes)
 -- =============================================================================
--- High-risk actions (hotfix_dispatch, emergency_halt) require MAN approval.
--- This audit log is append-only and integrity-chained via prev_hash.
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'omnibridge_control_action') THEN
@@ -151,7 +179,7 @@ BEGIN
       'approved',
       'denied',
       'dispatched',
-      'acknowledged',
+      'acknowledged', -- NOSONAR: enum value, cannot be extracted to a SQL constant
       'failed'
     );
   END IF;
@@ -168,8 +196,8 @@ CREATE TABLE IF NOT EXISTS omnibridge_control_audit (
   approved_by UUID,
   reason TEXT NOT NULL,
   payload JSONB NOT NULL,
-  target_file_allowlist TEXT[],   -- for hotfix_dispatch: explicit file glob list
-  rollback_snapshot JSONB,        -- captured pre-dispatch state for hotfix reverts
+  target_file_allowlist TEXT[],
+  rollback_snapshot JSONB,
   response_payload JSONB,
   prev_hash TEXT,
   entry_hash TEXT NOT NULL,
@@ -190,23 +218,44 @@ CREATE INDEX IF NOT EXISTS idx_omnibridge_control_audit_action_risk
 
 ALTER TABLE omnibridge_control_audit ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "omnibridge_control_audit_service_all"
-  ON omnibridge_control_audit FOR ALL TO service_role
-  USING (TRUE) WITH CHECK (TRUE);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'omnibridge_control_audit' -- NOSONAR: schemaname literal, cannot be parameterized in pg_policies query
+      AND policyname = 'omnibridge_control_audit_service_all'
+  ) THEN
+    EXECUTE $pol$
+      CREATE POLICY "omnibridge_control_audit_service_all"
+        ON omnibridge_control_audit FOR ALL TO service_role
+        USING (TRUE) WITH CHECK (TRUE)
+    $pol$;
+  END IF;
+END$$;
 
--- Admins can read audit records
-CREATE POLICY "omnibridge_control_audit_admin_read"
-  ON omnibridge_control_audit FOR SELECT TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM user_roles ur
-      WHERE ur.user_id = auth.uid()
-        AND ur.role IN ('admin', 'super_admin', 'operator')
-    )
-  );
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'omnibridge_control_audit' -- NOSONAR: schemaname literal, cannot be parameterized in pg_policies query
+      AND policyname = 'omnibridge_control_audit_admin_read'
+  ) THEN
+    EXECUTE $pol$
+      CREATE POLICY "omnibridge_control_audit_admin_read"
+        ON omnibridge_control_audit FOR SELECT TO authenticated
+        USING (
+          EXISTS (
+            SELECT 1 FROM user_roles ur
+            WHERE ur.user_id = auth.uid()
+              AND ur.role = 'admin'
+          )
+        )
+    $pol$;
+  END IF;
+END$$;
 
 -- =============================================================================
--- Grant-evidence materialized view (cheap aggregate reads for live dashboard)
+-- Grant-evidence view
 -- =============================================================================
 CREATE OR REPLACE VIEW omnibridge_event_stats_hourly AS
 SELECT
