@@ -48,7 +48,6 @@ const LANDING_HTML = `<!-- HERO -->
             <filter id="fm"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
             <clipPath id="sclip"><circle cx="260" cy="265" r="152"/></clipPath>
           </defs>
-          <image href="/assets/hero/apex-core-badge.svg" xlink:href="/assets/hero/apex-core-badge.svg" x="170" y="165" width="140" height="140" opacity="0.92"/>
           <!-- Atmosphere -->
           <circle cx="260" cy="265" r="240" fill="rgba(196,81,26,0.033)"/>
           <circle cx="260" cy="265" r="192" fill="rgba(232,162,71,0.038)"/>
