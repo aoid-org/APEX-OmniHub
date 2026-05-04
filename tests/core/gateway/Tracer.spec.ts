@@ -106,9 +106,9 @@ describe('Gateway Tracer', () => {
     vi.clearAllMocks();
   });
 
-  it('initGatewayTracer should not crash and should return a provider if enabled', () => {
+  it('initGatewayTracer should not crash and should return a provider if enabled', async () => {
     // RED PHASE test: the implementation shouldn't exist yet but we expect it to return undefined or a provider
-    const provider = initGatewayTracer({ enabled: false });
+    const provider = await initGatewayTracer({ enabled: false });
     expect(provider).toBeUndefined();
     expect(mockNodeSdk).not.toHaveBeenCalled();
     expect(mockSdkStart).not.toHaveBeenCalled();

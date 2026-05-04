@@ -3,10 +3,6 @@
   "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
   "compilerOptions": {
     "baseUrl": ".",
-    // INTENTIONAL SPLIT: '@/*' here resolves to ./apps/omnihub-site/src/* for the app
-    // bundle. vitest.config.ts deliberately resolves '@' to ./src (root package) so that
-    // tests under tests/ import root-package modules. Do NOT unify these — the split
-    // isolates test-time code from app-bundle code and is load-bearing.
     "paths": {
       "@/dashboard/*": ["./apps/omnihub-site/dashboard/*"],
       "@/*": ["./apps/omnihub-site/src/*"]
