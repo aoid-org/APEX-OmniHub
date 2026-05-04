@@ -1,7 +1,7 @@
 # APEX OmniHub — Canonical Infrastructure & Architecture Map
 
-> **Version:** 2.1.0  
-> **Last updated:** 2026-04-26  
+> **Version:** 2.2.0  
+> **Last updated:** 2026-05-04  
 > **Status:** Canonical (source of truth)
 
 This document is optimized for **onboarding clarity** and **operator execution** while preserving value proposition context.
@@ -32,13 +32,14 @@ APEX OmniHub is a polyglot monorepo with five execution planes:
 
 ---
 
-## 3) Deployment Truth (2026-04)
+## 3) Deployment Truth (2026-05)
 
 - **Production web runtime:** Cloudflare Pages-aligned deployment model.
 - **Primary app surface:** `apps/omnihub-site/src/App.tsx`.
 - **Root app shim:** `src/App.tsx` intentionally re-exports the app-site app.
 - **Build orchestration:** root `vite.config.ts` + app-level Vite config coexist.
 - **Legacy references to Vercel and `api/` may still exist in historical docs/scripts; treat them as non-canonical unless explicitly marked active.**
+- **Production Supabase project:** `rtopreovkywofgwgmozi` (ca-central-1, ACTIVE_HEALTHY). All public-schema tables have RLS enabled as of 2026-05-04. All SECURITY DEFINER functions have pinned `search_path = public` and revoked `anon` EXECUTE access. OmniBridge persistence layer (`omnibridge_events`, `omnibridge_events_dlq`, `omnibridge_control_audit`) is live since v1.6.1. See `docs/infrastructure/SUPABASE_SETUP.md` for the full security posture and `docs/audits/SUPABASE_SECURITY_AUDIT_2026_05_04.md` for the audit record.
 
 ---
 
