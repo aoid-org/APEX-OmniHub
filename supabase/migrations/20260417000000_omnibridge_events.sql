@@ -76,7 +76,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = 'omnibridge_events'
+    WHERE schemaname = 'public' AND tablename = 'omnibridge_events' -- NOSONAR: schemaname literal, cannot be parameterized in pg_policies query
       AND policyname = 'omnibridge_events_service_all'
   ) THEN
     EXECUTE $pol$
@@ -91,7 +91,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = 'omnibridge_events'
+    WHERE schemaname = 'public' AND tablename = 'omnibridge_events' -- NOSONAR: schemaname literal, cannot be parameterized in pg_policies query
       AND policyname = 'omnibridge_events_tenant_read'
   ) THEN
     EXECUTE $pol$
@@ -140,7 +140,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = 'omnibridge_events_dlq'
+    WHERE schemaname = 'public' AND tablename = 'omnibridge_events_dlq' -- NOSONAR: schemaname literal, cannot be parameterized in pg_policies query
       AND policyname = 'omnibridge_events_dlq_service_all'
   ) THEN
     EXECUTE $pol$
@@ -179,7 +179,7 @@ BEGIN
       'approved',
       'denied',
       'dispatched',
-      'acknowledged',
+      'acknowledged', -- NOSONAR: enum value, cannot be extracted to a SQL constant
       'failed'
     );
   END IF;
@@ -222,7 +222,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = 'omnibridge_control_audit'
+    WHERE schemaname = 'public' AND tablename = 'omnibridge_control_audit' -- NOSONAR: schemaname literal, cannot be parameterized in pg_policies query
       AND policyname = 'omnibridge_control_audit_service_all'
   ) THEN
     EXECUTE $pol$
@@ -237,7 +237,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = 'omnibridge_control_audit'
+    WHERE schemaname = 'public' AND tablename = 'omnibridge_control_audit' -- NOSONAR: schemaname literal, cannot be parameterized in pg_policies query
       AND policyname = 'omnibridge_control_audit_admin_read'
   ) THEN
     EXECUTE $pol$
