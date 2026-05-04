@@ -120,6 +120,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      // INTENTIONAL SPLIT: '@' here resolves to ./src (root package code) while
+      // vite.config.ts and tsconfig.json resolve '@' to ./apps/omnihub-site/src.
+      // Tests under tests/ import root-package modules via '@/'; the app imports
+      // omnihub-site modules via '@/'. Do NOT align these — the split is load-bearing.
       'dashboard': path.resolve(__dirname, './apps/omnihub-site/dashboard'),
       '@/dashboard': path.resolve(__dirname, './apps/omnihub-site/dashboard'),
       '@': path.resolve(__dirname, './src'),
