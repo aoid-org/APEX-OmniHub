@@ -22,10 +22,10 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'omnibridge_dispatch_state') THEN
     CREATE TYPE omnibridge_dispatch_state AS ENUM (
-      'received',     -- NOSONAR: enum value, cannot be extracted to a SQL constant
+      'received',
       'dispatching',
       'dispatched',
-      'acknowledged', -- NOSONAR: enum value, cannot be extracted to a SQL constant
+      'acknowledged',
       'dlq'
     );
   END IF;
