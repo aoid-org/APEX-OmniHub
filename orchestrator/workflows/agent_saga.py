@@ -707,7 +707,7 @@ class AgentWorkflow:
             Tuple of (step_lookup, dependencies, dependents, in_degree)
         """
         step_lookup = {}
-        dependencies: dict[str, list[str]] = {}
+        dependencies: dict[str, list[str]] = defaultdict(list)
         dependents: dict[str, list[str]] = defaultdict(list)
 
         for idx, step in enumerate(self.plan_steps):
