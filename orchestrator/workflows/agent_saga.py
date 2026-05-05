@@ -707,15 +707,23 @@ class AgentWorkflow:
             Tuple of (step_lookup, dependencies, dependents, in_degree)
         """
         step_lookup = {}
-        dependencies: dict[str, list[str]] = defaultdict(list)
+        dependencies: dict[str, list[str]] = {}
         dependents: dict[str, list[str]] = defaultdict(list)
 
         for idx, step in enumerate(self.plan_steps):
-            step_id = step.get("id", f"step_{idx}")
+            # Optimization: Avoid redundant get() and eager string formatting
+            step_id = step.get("id")
+            if step_id is None:
+                step_id = f"step_{idx}"
+
             step_lookup[step_id] = step
-            deps = step.get("depends_on", [])
-            if isinstance(deps, str):
+
+            deps = step.get("depends_on")
+            if deps is None:
+                deps = []
+            elif isinstance(deps, str):
                 deps = [deps]
+
             dependencies[step_id] = deps
             for dep in deps:
                 dependents[dep].append(step_id)
