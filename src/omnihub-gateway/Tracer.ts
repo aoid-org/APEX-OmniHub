@@ -34,7 +34,7 @@ export async function initGatewayTracer(config: TracerConfig): Promise<NodeSDKTy
   }
 
   // Guard: no-op in browser environments — avoids crashing if accidentally called client-side.
-  if (typeof process === 'undefined' || typeof globalThis.window !== 'undefined') {
+  if (typeof process === 'undefined' || globalThis.window !== undefined) {
     console.warn('[Tracer] initGatewayTracer() called in browser context — no-op.');
     return undefined;
   }
