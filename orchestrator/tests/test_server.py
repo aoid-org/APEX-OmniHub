@@ -21,6 +21,12 @@ from server import app  # noqa: E402
 client = TestClient(app)
 
 
+@pytest.fixture(autouse=True)
+def bypass_signature_verification(monkeypatch):
+    """Bypass HMAC signature verification for all tests in this module."""
+    monkeypatch.setenv("ORCHESTRATOR_REQUIRE_SIGNATURE", "false")
+
+
 @pytest.fixture
 def mock_temporal_client():
     with patch("server.Client.connect", new_callable=AsyncMock) as mock_connect:
@@ -42,10 +48,6 @@ def test_create_goal_success(mock_temporal_client):
     payload = {"user_id": "user-1", "user_intent": "do something", "trace_id": "trace-1"}
 
     with patch("server.Client.connect", mock_temporal_client[0]):
-        # Patch middleware to passthrough
-        app.user_middleware.clear()  # Hack for TestClient to bypass middleware
-        app.middleware_stack = app.build_middleware_stack()
-
         # Now hit it
         response = client.post("/api/v1/goals", json=payload)
 
@@ -60,17 +62,11 @@ def test_create_goal_failure(mock_temporal_client):
     _, temp_client = mock_temporal_client
     temp_client.start_workflow.side_effect = Exception("Temporal dead")
 
-    app.user_middleware.clear()
-    app.middleware_stack = app.build_middleware_stack()
-
     response = client.post("/api/v1/goals", json=payload)
     assert response.status_code == 500
 
 
 def test_execute_intent_missing_intent_id():
-    app.user_middleware.clear()
-    app.middleware_stack = app.build_middleware_stack()
-
     payload = {
         "payload": {}  # Missing intentId
     }
@@ -80,9 +76,6 @@ def test_execute_intent_missing_intent_id():
 
 
 def test_execute_intent_unregistered_intent():
-    app.user_middleware.clear()
-    app.middleware_stack = app.build_middleware_stack()
-
     payload = {"payload": {"intentId": "unknown-intent-123"}}
 
     response = client.post("/api/v1/intents", json=payload)
@@ -93,9 +86,6 @@ def test_execute_intent_unregistered_intent():
 
 
 def test_execute_intent_success(mock_temporal_client):
-    app.user_middleware.clear()
-    app.middleware_stack = app.build_middleware_stack()
-
     payload = {"payload": {"intentId": "test_intent"}, "correlation_id": "corr-1"}
 
     with patch("server.registry") as mock_registry:
