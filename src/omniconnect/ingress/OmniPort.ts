@@ -101,6 +101,44 @@ function computeHash(data: string): string {
   return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
+
+
+/**
+ * Compute HMAC-SHA256 signature for webhook payload
+ */
+async function computeHmacSha256(payload: string, secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
+  const bytes = new Uint8Array(signature);
+  return Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
+ * Constant-time comparison to reduce timing attack signal
+ */
+function timingSafeEqualHex(a: string, b: string): boolean {
+  const left = a.toLowerCase();
+  const right = b.toLowerCase();
+  let mismatch = left.length ^ right.length;
+  const maxLength = Math.max(left.length, right.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const leftCode = left.charCodeAt(i) || 0;
+    const rightCode = right.charCodeAt(i) || 0;
+    mismatch |= leftCode ^ rightCode;
+  }
+
+  return mismatch === 0;
+}
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -403,6 +441,11 @@ class OmniPortEngine {
 
     try {
       // =======================================================================
+      // STEP 0: WEBHOOK HMAC AUTHENTICITY GATE
+      // =======================================================================
+      await this.validateWebhookHmac(input, ctx);
+
+      // =======================================================================
       // STEP 1: THE ZERO-TRUST GATE
       // =======================================================================
       const deviceRecord = await this.validateZeroTrust(input, ctx);
@@ -451,6 +494,36 @@ class OmniPortEngine {
   // ===========================================================================
   // PIPELINE STAGES
   // ===========================================================================
+
+
+  /**
+   * STEP 0: Webhook HMAC authenticity gate
+   * Requires and validates HMAC-SHA256 signatures for webhook inputs
+   */
+  private async validateWebhookHmac(input: RawInput, ctx: PipelineContext): Promise<void> {
+    if (!isWebhookSource(input)) return;
+
+    const webhookSecret = import.meta.env.VITE_OMNIPORT_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      throw new SecurityError('Webhook secret is not configured', 'WEBHOOK_SECRET_MISSING');
+    }
+
+    const providedSignature = input.signature.startsWith('sha256=')
+      ? input.signature.slice('sha256='.length)
+      : input.signature;
+
+    if (!providedSignature) {
+      throw new SecurityError('Missing webhook signature', 'WEBHOOK_SIGNATURE_MISSING');
+    }
+
+    const rawPayload = JSON.stringify(input.payload);
+    const expectedSignature = await computeHmacSha256(rawPayload, webhookSecret);
+
+    if (!timingSafeEqualHex(providedSignature, expectedSignature)) {
+      this.log(ctx, 'WEBHOOK_SIGNATURE_MISMATCH', { provider: input.provider });
+      throw new SecurityError('Invalid webhook signature', 'WEBHOOK_SIGNATURE_INVALID');
+    }
+  }
 
   /**
    * STEP 1: Zero-Trust Gate
