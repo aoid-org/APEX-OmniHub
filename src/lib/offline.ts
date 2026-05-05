@@ -66,6 +66,10 @@ function loadQueue() {
 
 loadQueue();
 
+export function _clearQueueForTests(): void {
+  requestQueue.length = 0;
+}
+
 export function queueOfflineRequest(request: () => Promise<unknown>): string {
   if (requestQueue.length >= MAX_QUEUE_SIZE) {
     console.warn('Request queue is full, removing oldest request');
