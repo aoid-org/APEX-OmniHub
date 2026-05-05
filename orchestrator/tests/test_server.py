@@ -22,9 +22,10 @@ client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def bypass_signature_verification(monkeypatch):
-    """Bypass HMAC signature verification for all tests in this module."""
-    monkeypatch.setenv("ORCHESTRATOR_REQUIRE_SIGNATURE", "false")
+def bypass_signature_verification():
+    """Bypass HMAC signature verification for all tests in this module via proper mocking."""
+    with patch("security.request_signing._is_signature_required", return_value=False):
+        yield
 
 
 @pytest.fixture
