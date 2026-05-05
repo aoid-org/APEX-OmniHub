@@ -12,6 +12,10 @@
 ## 2026-04-26 - [Memoize O(n) Array Processing in React Components]
 **Learning:** Performing array iterations such as `.reduce` and `.filter` on potentially large data sources (like `tasks`, `notifications`, or `events`) directly within the render cycle causes unnecessary CPU load. If a component re-renders for other reasons, the operations are re-run on identical data.
 **Action:** Wrap these operations in `useMemo` hooks. Provide the source array as the dependency (e.g., `[tasks]`). This ensures that the O(n) array passes are only executed when the source data actually changes.
-## 2024-05-18 - [Fix React Rule of Hooks error with useMemo]
-**Learning:** If you introduce `useMemo` to memoize computations in a React component, make sure it is not conditionally executed. It must be placed *before* any early return statements (such as `if (isLoading) return ...`).
-**Action:** Always extract variables from data-fetching hooks safely (e.g. `const detail = detailQuery.data;`) and place `useMemo` hooks above early return logic. Inside `useMemo`, add a null check (`if (!detail) return [];`) to handle cases where the data isn't loaded yet.
+## 2026-04-29 - [O(n) Filter to O(log n) Binary Search in Time-Ordered Data]
+**Learning:** Sequential O(n) array  scans over large chronological collections (like an event buffer up to 10,000 items) for time-window calculations cause unnecessary CPU overhead, especially when called frequently (e.g., getting real-time status).
+**Action:** Since append-only event buffers are naturally sorted by timestamp, replace O(n)  with an O(log n) binary search to find the cutoff index, followed by . This dramatically speeds up real-time window calculations.
+
+## 2024-05-18 - [O(n) Filter to O(log n) Binary Search in Time-Ordered Data]
+**Learning:** Sequential O(n) array `.filter()` scans over large chronological collections (like an event buffer up to 10,000 items) for time-window calculations cause unnecessary CPU overhead, especially when called frequently (e.g., getting real-time status).
+**Action:** Since append-only event buffers are naturally sorted by timestamp, replace O(n) `.filter()` with an O(log n) binary search to find the cutoff index, followed by `.slice(startIndex)`. This dramatically speeds up real-time window calculations.
