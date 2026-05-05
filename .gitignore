@@ -6,6 +6,7 @@ cdk.out/
 
 # Logs
 logs
+logs.txt
 *.log
 npm-debug.log*
 yarn-debug.log*

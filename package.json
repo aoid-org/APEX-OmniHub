@@ -3,6 +3,10 @@
   "private": true,
   "version": "1.5.1",
   "type": "module",
+  "engines": {
+    "node": ">=20.19.0",
+    "bun": ">=1.2.14"
+  },
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc -p tsconfig.json --noEmit",
