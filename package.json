@@ -170,7 +170,6 @@
     "vaul": "^0.9.9",
     "viem": "^2.43.4",
     "wagmi": "^2.19.5",
-    "uuid": "^14.0.0",
     "zod": "^3.25.76",
     "zustand": "^4.5.7"
   },
@@ -230,7 +229,7 @@
     "jsdom": "^26.0.0",
     "pixelmatch": "^5.3.0",
     "pngjs": "^7.0.0",
-    "postcss": "^8.5.10",
+    "postcss": "^8.5.6",
     "rollup-plugin-visualizer": "^7.0.1",
     "size-limit": "^12.0.1",
     "snyk": "^1.1297.3",
@@ -255,9 +254,6 @@
     "tar": "^7.5.11",
     "undici": "^6.24.0",
     "hono": "^4.12.4",
-    "axios": "^1.16.2",
-    "uuid": "^14.0.0",
-    "postcss": "^8.5.10",
     "serialize-javascript": "^7.0.3",
     "rollup": "^4.59.0",
     "immutable": "^4.3.8",
@@ -269,9 +265,6 @@
   "resolutions": {
     "h3": "^1.15.9",
     "picomatch": "^4.0.4",
-    "axios": "^1.16.2",
-    "uuid": "^14.0.0",
-    "postcss": "^8.5.10",
     "ast-v8-to-istanbul/js-tokens": "^10.0.0"
   },
   "packageManager": "bun@1.2.14",
