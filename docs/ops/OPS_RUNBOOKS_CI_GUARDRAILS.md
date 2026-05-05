@@ -140,3 +140,60 @@ If the violation pattern appears in legitimate code (e.g., documentation):
 - `docs/archive/legacy-runbooks/PRODUCTION_DEPLOYMENT_GUIDE_legacy.md`
 - `docs/archive/legacy-runbooks/CI_RUNTIME_GATES_legacy.md`
 - `docs/archive/legacy-runbooks/MIGRATION_RUNBOOK_legacy.md`
+
+---
+
+## Supabase Security Posture Gates (Added 2026-05-04)
+
+**Version:** 1.0 | **Date:** 2026-05-04 | **Branch:** `claude/apex-omnihub-supabase-fixes-RnSc6`
+
+### What Changed in Production
+
+Four migrations applied to `rtopreovkywofgwgmozi` — see `docs/audits/SUPABASE_SECURITY_AUDIT_2026_05_04.md` for full detail.
+
+| Migration | Timestamp | Change |
+|---|---|---|
+| `omnibridge_events` | 20260417000000 | OmniBridge v1.6.0 tables live in production |
+| `fix_security_advisor_findings` | 20260426000000 | RLS on 10 tables; 2 views set security_invoker |
+| `security_hardening_functions_rls` | 20260504000000 | Function execute permissions hardened |
+| `fk_indexes_performance` | 20260504000001 | 14 FK covering indexes |
+| `fix_omnibridge_view_security_invoker` | 20260504000002 | Fixed omnibridge_event_stats_hourly view |
+
+### Function Execute Permission Model (Current State)
+
+| Category | anon | authenticated | service_role |
+|---|---|---|---|
+| Trigger functions (8) | ✗ | ✗ | ✓ |
+| Maintenance functions (4) | ✗ | ✗ | ✓ |
+| Business-logic SECURITY DEFINER functions (20) | ✗ | ✓ | ✓ |
+
+**Trigger functions (no RPC):** `audit_emergency_controls_changes`, `emergency_controls_singleton_id`, `handle_new_user`, `handle_new_user_subscription`, `handle_updated_at`, `subscription_active_status`, `update_man_notifications_updated_at`, `update_updated_at_column`
+
+**Maintenance (service_role only):** `cleanup_expired_nonces`, `cleanup_old_audit_logs`, `cleanup_old_dlq_entries`, `sync_admin_metadata_to_user_roles`
+
+### Security Baseline for New Code
+
+Any new SECURITY DEFINER function **MUST**:
+1. Set `search_path = public` (or `''` with fully-qualified names)
+2. Have EXECUTE revoked from PUBLIC
+3. Explicitly GRANT EXECUTE to the minimum required roles only
+
+Any new public-schema table **MUST** have `ENABLE ROW LEVEL SECURITY` with at minimum a `service_role_all` policy.
+
+### Manual Action Required (Operator)
+
+> Enable "Leaked Password Protection" in Supabase Dashboard → Authentication → Settings.
+> This cannot be set via SQL migration and was flagged by the Security Advisor.
+
+### Rollback Reference
+
+```sql
+-- Re-grant execute to a role if needed:
+GRANT EXECUTE ON FUNCTION public.<func_name>(<args>) TO <role>;
+
+-- Disable RLS on a table (use with caution, test in staging first):
+ALTER TABLE public.<table_name> DISABLE ROW LEVEL SECURITY;
+
+-- Drop a FK index:
+DROP INDEX IF EXISTS public.idx_<table>_<column>;
+```
