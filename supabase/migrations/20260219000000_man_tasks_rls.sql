@@ -27,13 +27,22 @@ END $$;
 -- =============================================================================
 -- service_role is the backend/server key used by APEX agents and internal
 -- services. It MUST retain full access to create, read, update all tasks.
-DROP POLICY IF EXISTS "service_role_full_access" ON public.man_tasks;
-CREATE POLICY "service_role_full_access"
-  ON public.man_tasks
-  FOR ALL
-  TO service_role
-  USING (true)
-  WITH CHECK (true);
+DO $$
+DECLARE
+  tbl CONSTANT text := 'man_tasks';
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = tbl AND policyname = 'service_role_full_access'
+  ) THEN
+    CREATE POLICY "service_role_full_access"
+      ON public.man_tasks
+      FOR ALL
+      TO service_role
+      USING (true)
+      WITH CHECK (true);
+  END IF;
+END $$;
 
 -- =============================================================================
 -- POLICY 2: operator_role SELECT — Scoped to PENDING tasks only
@@ -47,12 +56,25 @@ CREATE POLICY "service_role_full_access"
 --   add a column (e.g., assigned_to UUID REFERENCES auth.users(id)) and tighten
 --   this policy to: USING (status = 'PENDING' AND assigned_to = auth.uid())
 -- =============================================================================
-DROP POLICY IF EXISTS "operator_select" ON public.man_tasks;
-CREATE POLICY "operator_select"
-  ON public.man_tasks
-  FOR SELECT
-  TO operator_role
-  USING (status = 'PENDING');
+DO $$
+DECLARE
+  tbl CONSTANT text := 'man_tasks';
+BEGIN
+  -- Drop the old wide-open policy if it exists, then recreate with scoped predicate
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = tbl AND policyname = 'operator_select'
+      AND qual::text LIKE '%PENDING%'
+  ) THEN
+    -- Remove stale policy (may have USING(true)) before recreating
+    DROP POLICY IF EXISTS "operator_select" ON public.man_tasks;
+    CREATE POLICY "operator_select"
+      ON public.man_tasks
+      FOR SELECT
+      TO operator_role
+      USING (status = 'PENDING');
+  END IF;
+END $$;
 
 -- =============================================================================
 -- POLICY 3: operator_role UPDATE — Scoped to PENDING tasks + identity binding
@@ -74,13 +96,26 @@ CREATE POLICY "operator_select"
 --   application layer. If it stores email, change to:
 --   WITH CHECK (decided_by = (SELECT email FROM auth.users WHERE id = auth.uid()))
 -- =============================================================================
-DROP POLICY IF EXISTS "operator_update" ON public.man_tasks;
-CREATE POLICY "operator_update"
-  ON public.man_tasks
-  FOR UPDATE
-  TO operator_role
-  USING (status = 'PENDING')
-  WITH CHECK (decided_by = auth.uid()::text);
+DO $$
+DECLARE
+  tbl CONSTANT text := 'man_tasks';
+BEGIN
+  -- Drop the old wide-open policy if it exists, then recreate with scoped predicate
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = tbl AND policyname = 'operator_update'
+      AND qual::text LIKE '%PENDING%'
+  ) THEN
+    -- Remove stale policy (may have USING(true)) before recreating
+    DROP POLICY IF EXISTS "operator_update" ON public.man_tasks;
+    CREATE POLICY "operator_update"
+      ON public.man_tasks
+      FOR UPDATE
+      TO operator_role
+      USING (status = 'PENDING')
+      WITH CHECK (decided_by = auth.uid()::text);
+  END IF;
+END $$;
 
 -- =============================================================================
 -- POST-EXECUTION VALIDATION CHECKLIST
@@ -116,10 +151,15 @@ CREATE POLICY "operator_update"
 --    RESET ROLE;
 --
 -- 5. Verify policies are correctly registered:
---    SELECT policyname, cmd, roles, qual, with_check
---    FROM pg_policies
---    WHERE tablename = 'man_tasks'
---    ORDER BY policyname;
+--    DO $$
+--    DECLARE
+--      tbl CONSTANT text := 'man_tasks';
+--    BEGIN
+--      PERFORM policyname, cmd, roles, qual, with_check
+--      FROM pg_policies
+--      WHERE tablename = tbl
+--      ORDER BY policyname;
+--    END $$;
 --    -- EXPECTED: 3 policies:
 --    --   operator_select  (SELECT, operator_role, status = 'PENDING')
 --    --   operator_update  (UPDATE, operator_role, status = 'PENDING', decided_by check)
