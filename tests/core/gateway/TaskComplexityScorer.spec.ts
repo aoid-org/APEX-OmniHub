@@ -161,7 +161,7 @@ describe('TaskComplexityScorer', () => {
     });
 
     it('handles complex tokenization (slashes, backslashes, braces)', () => {
-      const result = scoreTask('migration/refactor{security}\\api');
+      const result = scoreTask(String.raw`migration/refactor{security}\api`);
       // words: migration, refactor, security, api
       // migration(15) + refactor(10) + security(8) + api(5) = 38
       expect(result.depthScore).toBe(38);
