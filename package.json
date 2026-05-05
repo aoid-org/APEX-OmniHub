@@ -246,7 +246,6 @@
     "vitest": "^4.0.16"
   },
   "overrides": {
-    "axios": "^1.16.0",
     "flatted": "^3.4.2",
     "h3": "1.15.10",
     "lodash": "^4.17.23",
@@ -264,7 +263,6 @@
     }
   },
   "resolutions": {
-    "axios": "^1.16.0",
     "h3": "^1.15.9",
     "picomatch": "^4.0.4",
     "ast-v8-to-istanbul/js-tokens": "^10.0.0"
