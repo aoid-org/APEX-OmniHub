@@ -263,6 +263,9 @@
     "rollup": "^4.59.0",
     "immutable": "^4.3.8",
     "picomatch": ">=2.3.2",
+    "axios": "^1.7.9",
+    "postcss": "^8.5.10",
+    "uuid": "^14.0.0",
     "ast-v8-to-istanbul": {
       "js-tokens": "^10.0.0"
     },
@@ -273,6 +276,9 @@
   "resolutions": {
     "h3": "^1.15.9",
     "picomatch": "^4.0.4",
+    "axios": "^1.7.9",
+    "postcss": "^8.5.10",
+    "uuid": "^14.0.0",
     "ast-v8-to-istanbul/js-tokens": "^10.0.0"
   },
   "packageManager": "bun@1.2.14",
