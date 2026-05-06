@@ -4,9 +4,7 @@
  * Covers: singleton lifecycle, protocol normalization helpers,
  * Zod validation gate, and public ingest API.
  */
-import { createHmac } from 'node:crypto';
-
-import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
 
 // ── Mocks (must be hoisted before module import) ──────────────────────
@@ -54,11 +52,6 @@ vi.mock('../src/automation/OutreachDispatcher', () => ({
 
 // ── Helpers ───────────────────────────────────────────────────────────
 const testUserId = uuidv4();
-const testWebhookSecret = 'omniport-engine-test-secret';
-
-function signWebhookRawPayload(rawPayload: string): string {
-  return `sha256=${createHmac('sha256', testWebhookSecret).update(rawPayload).digest('hex')}`;
-}
 
 async function loadOmniPort() {
   const mod = await import('../src/omniconnect/ingress/OmniPort');
@@ -67,12 +60,7 @@ async function loadOmniPort() {
 
 describe('OmniPort Engine', () => {
   beforeEach(() => {
-    process.env.OMNIPORT_WEBHOOK_SECRET = testWebhookSecret;
     vi.resetModules();
-  });
-
-  afterEach(() => {
-    delete process.env.OMNIPORT_WEBHOOK_SECRET;
   });
 
   // ── Singleton ─────────────────────────────────────────────────────
@@ -101,17 +89,13 @@ describe('OmniPort Engine', () => {
       expect(result.latencyMs).toBeGreaterThanOrEqual(0);
     });
 
-    it('accepts a webhook input with a valid HMAC signature', async () => {
+    it('accepts a webhook input', async () => {
       const { ingest } = await loadOmniPort();
-      const payload = { event: 'test' };
-      const rawPayload = JSON.stringify(payload);
-
       const result = await ingest({
         type: 'webhook',
-        payload,
-        rawPayload,
+        payload: { event: 'test' },
         provider: 'stripe',
-        signature: signWebhookRawPayload(rawPayload),
+        signature: 'sha256=abc123',
       });
       expect(['accepted', 'buffered']).toContain(result.status);
     });

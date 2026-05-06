@@ -61,13 +61,11 @@ export type VoiceSource = z.infer<typeof VoiceSourceSchema>;
 
 /**
  * WebhookSource - External webhook payloads
- * @example { type: 'webhook', payload: {...}, rawPayload: '{...}', provider: 'stripe', signature: 'sha256=...' }
+ * @example { type: 'webhook', payload: {...}, provider: 'stripe', signature: 'sha256=...' }
  */
 export const WebhookSourceSchema = z.object({
   type: z.literal('webhook'),
   payload: z.record(z.unknown()),
-  /** Exact raw HTTP body used for provider HMAC validation when available. */
-  rawPayload: z.string().min(1, 'Raw payload cannot be empty').optional(),
   provider: z.string().min(1, 'Provider cannot be empty'),
   signature: z.string().min(1, 'Signature cannot be empty'),
   userId: UUIDSchema.optional(),

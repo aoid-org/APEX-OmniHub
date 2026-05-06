@@ -6,7 +6,6 @@ cdk.out/
 
 # Logs
 logs
-logs.txt
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -103,7 +102,3 @@ security/npm-audit-prod.json
 ERRORS.md
 # Claude Code agent worktrees (local only)
 .claude/worktrees/
-
-
-# Auto-generated security posture reports (local tooling output)
-reports/security/

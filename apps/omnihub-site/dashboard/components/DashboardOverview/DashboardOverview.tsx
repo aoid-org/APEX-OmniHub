@@ -2,98 +2,39 @@
  * DashboardOverview — OmniBoard Centre Content (thin orchestrator)
  */
 
-import { memo, useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { fetchOmniLinkIntegrations } from "@/omnidash/omnilink-api";
-
-
-import { useNavigate } from "react-router-dom";
+import { memo, useState, useCallback, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   useOmniDashAction,
   type OmniDashIntent,
   type OmniDashConnectStatus,
-} from "@/hooks/useOmniDashAction";
+} from '@/hooks/useOmniDashAction';
 import {
   APP_REGISTRY,
   type AppRegistryEntry,
-} from "../../../../../packages/core/src/registry";
-import { useOmniGateway } from "@/stores/omniGatewayStore";
-import type { DashboardOverviewProps, ContextItem, AppEntry } from "./types";
-import { INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from "./data";
-import { useAgentRecording } from "./hooks/useAgentRecording";
-import { AgentPane } from "./components/AgentPane";
-import { OmniSlatePane } from "./components/OmniSlatePane";
-import { EcosystemPane } from "./components/EcosystemPane";
-import { AppsSection } from "./components/AppsSection";
+} from '../../../../../packages/core/src/registry';
+import { useOmniGateway } from '@/stores/omniGatewayStore';
+import type { DashboardOverviewProps, ContextItem, AppEntry } from './types';
+import { INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from './data';
+import { useAgentRecording } from './hooks/useAgentRecording';
+import { AgentPane } from './components/AgentPane';
+import { OmniSlatePane } from './components/OmniSlatePane';
+import { EcosystemPane } from './components/EcosystemPane';
+import { AppsSection } from './components/AppsSection';
 
 export const DashboardOverview = memo(function DashboardOverview({
   appHealth,
   ecoAppsVisible,
   setEcoAppsVisible,
 }: DashboardOverviewProps) {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const integrationsQuery = useQuery({
-    queryKey: ["omnidash-integrations-overview", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      if (!user) throw new Error("User required");
-      return fetchOmniLinkIntegrations(user.id);
-    },
-  });
-
-  useEffect(() => {
-    if (!user) return;
-    const channel = supabase
-      .channel("integrations-overview-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "integrations",
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          queryClient.invalidateQueries({
-            queryKey: ["omnidash-integrations-overview", user.id],
-          });
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, queryClient]);
-
-  const liveApps = useMemo(() => {
-    const defaultApps = APPS;
-    if (!integrationsQuery.data) return defaultApps;
-
-    return defaultApps.map((app) => {
-      const integration = integrationsQuery.data.find(
-        (i) => i.name.toLowerCase() === app.name.toLowerCase(),
-      );
-      if (integration) {
-        return {
-          ...app,
-          status: integration.status === "active" ? "Live" : "Partial",
-        };
-      }
-      return app;
-    });
-  }, [integrationsQuery.data]);
-
   const navigate = useNavigate();
   const { dispatch } = useOmniDashAction(navigate);
 
   const [context, setContext] =
     useState<readonly ContextItem[]>(INITIAL_CONTEXT);
-  const [activeInsight, setActiveInsight] = useState<string | null>(null);
-  const [prompt, setPrompt] = useState("");
+  const [activeInsight, setActiveInsight] =
+    useState<string | null>(null);
+  const [prompt, setPrompt] = useState('');
   const [traceLogs, setTraceLogs] = useState<readonly string[]>([]);
   const [lambdaDispatching, setLambdaDispatching] = useState(false);
 
@@ -101,7 +42,7 @@ export const DashboardOverview = memo(function DashboardOverview({
   const prevWorkflowCompleteRef = useRef(workflowComplete);
 
   const addTraceLog = useCallback((message: string) => {
-    setTraceLogs((prev) => [message, ...prev].slice(0, 4));
+    setTraceLogs(prev => [message, ...prev].slice(0, 4));
   }, []);
 
   const { isRecording, recordingDuration, handleToggleRecording } =
@@ -109,10 +50,7 @@ export const DashboardOverview = memo(function DashboardOverview({
 
   // Listen for SSE workflow_complete events and append to trace log
   useEffect(() => {
-    if (
-      workflowComplete &&
-      workflowComplete !== prevWorkflowCompleteRef.current
-    ) {
+    if (workflowComplete && workflowComplete !== prevWorkflowCompleteRef.current) {
       prevWorkflowCompleteRef.current = workflowComplete;
       addTraceLog(
         `WORKFLOW_COMPLETE: ${workflowComplete.workflowId.slice(0, 20)}... | cost=$${workflowComplete.cost.toFixed(4)} | worker=${workflowComplete.worker}`,
@@ -124,8 +62,9 @@ export const DashboardOverview = memo(function DashboardOverview({
     setEcoAppsVisible(ECOSYSTEM.length > 0);
   }, [setEcoAppsVisible]);
 
-  const health = appHealth === "green" ? deriveHealth(context) : appHealth;
-  const agentStatus = isRecording ? "standby" : "listening";
+  const health =
+    appHealth === 'green' ? deriveHealth(context) : appHealth;
+  const agentStatus = isRecording ? 'standby' : 'listening';
 
   const handleCleanSlate = useCallback(() => {
     setContext([]);
@@ -133,46 +72,41 @@ export const DashboardOverview = memo(function DashboardOverview({
   }, []);
 
   const handleToggleInsight = useCallback((name: string) => {
-    setActiveInsight((prev) => (prev === name ? null : name));
+    setActiveInsight(prev => (prev === name ? null : name));
   }, []);
 
   const handleToggleGlobalInsight = useCallback(() => {
-    setActiveInsight((prev) => (prev ? null : "__global__"));
+    setActiveInsight(prev => (prev ? null : '__global__'));
   }, []);
 
   const handleCommandSubmit = useCallback(() => {
     if (!prompt.trim()) return;
     addTraceLog(`QUEUED: ${prompt.trim()}`);
-    setPrompt("");
+    setPrompt('');
   }, [addTraceLog, prompt]);
 
   const handleRunLambda = useCallback(async () => {
     if (lambdaDispatching) return;
     setLambdaDispatching(true);
-    addTraceLog("DISPATCHING: Lambda async orchestration via Temporal...");
+    addTraceLog('DISPATCHING: Lambda async orchestration via Temporal...');
     try {
       // Stub replacement for removed triggerAsyncLambdaDemo
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      const uuid = crypto.randomUUID?.() || "demo-workflow-id";
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const uuid = crypto.randomUUID?.() || 'demo-workflow-id';
       addTraceLog(`DISPATCHED: ${uuid.slice(0, 24)}...`);
     } catch (err) {
-      addTraceLog(
-        `ERROR: ${err instanceof Error ? err.message : "Lambda dispatch failed"}`,
-      );
+      addTraceLog(`ERROR: ${err instanceof Error ? err.message : 'Lambda dispatch failed'}`);
     } finally {
       setLambdaDispatching(false);
     }
   }, [lambdaDispatching, addTraceLog]);
 
-  const appsToUse = liveApps;
   const handleAppClick = useCallback(
     (app: AppEntry) => () => {
-      const entry = APP_REGISTRY.find(
-        (e: AppRegistryEntry) => e.label === app.name,
-      );
+      const entry = APP_REGISTRY.find((e: AppRegistryEntry) => e.label === app.name);
       if (!entry) return;
       const intent: OmniDashIntent = {
-        source: "module",
+        source: 'module',
         appKey: entry.key,
         provider: app.name,
         label: app.name,
@@ -207,36 +141,32 @@ export const DashboardOverview = memo(function DashboardOverview({
         />
         <EcosystemPane ecoAppsVisible={ecoAppsVisible} />
       </div>
-      <div
-        style={{ display: "flex", justifyContent: "center", padding: "12px 0" }}
-      >
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
         <button
           type="button"
           onClick={handleRunLambda}
           disabled={lambdaDispatching}
           style={{
-            padding: "10px 24px",
+            padding: '10px 24px',
             borderRadius: 12,
             background: lambdaDispatching
-              ? "rgba(194,80,31,0.15)"
-              : "linear-gradient(135deg, #f97316, #c2501f)",
-            border: "1px solid rgba(194,80,31,0.3)",
-            color: lambdaDispatching ? "#94a3b8" : "#fff",
+              ? 'rgba(194,80,31,0.15)'
+              : 'linear-gradient(135deg, #f97316, #c2501f)',
+            border: '1px solid rgba(194,80,31,0.3)',
+            color: lambdaDispatching ? '#94a3b8' : '#fff',
             fontSize: 13,
             fontWeight: 700,
-            cursor: lambdaDispatching ? "not-allowed" : "pointer",
-            fontFamily: "inherit",
-            letterSpacing: "0.03em",
-            boxShadow: lambdaDispatching
-              ? "none"
-              : "0 0 20px rgba(194,80,31,0.25)",
-            transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+            cursor: lambdaDispatching ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+            letterSpacing: '0.03em',
+            boxShadow: lambdaDispatching ? 'none' : '0 0 20px rgba(194,80,31,0.25)',
+            transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          {lambdaDispatching ? "Dispatching..." : "Run Lambda Orchestrator"}
+          {lambdaDispatching ? 'Dispatching...' : 'Run Lambda Orchestrator'}
         </button>
       </div>
-      <AppsSection apps={appsToUse} onAppClick={handleAppClick} />
+      <AppsSection onAppClick={handleAppClick} />
     </div>
   );
 });

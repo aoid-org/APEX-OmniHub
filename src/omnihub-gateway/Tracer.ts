@@ -7,8 +7,8 @@
  * Compliant with APEX OBSERVABILITY STACK.
  */
 
-// Type-only import — erased by TypeScript at compile time, never reaches browser bundle.
-import type { NodeSDK as NodeSDKType } from '@opentelemetry/sdk-node';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { Resource } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
@@ -21,31 +21,17 @@ export interface TracerConfig {
   otlpEndpoint?: string; // Jaeger HTTP receiver endpoint
 }
 
-let sdk: NodeSDKType | null = null;
+let sdk: NodeSDK | null = null;
 let initialized = false;
 
 /**
  * Initializes the OpenTelemetry Node SDK if enabled.
- * Should be called once at application startup (Node context only).
+ * Should be called once at application startup.
  */
-export async function initGatewayTracer(config: TracerConfig): Promise<NodeSDKType | undefined> {
+export function initGatewayTracer(config: TracerConfig): NodeSDK | undefined {
   if (!config.enabled || initialized) {
     return undefined;
   }
-
-  // Guard: no-op in browser environments — avoids crashing if accidentally called client-side.
-  if (typeof process === 'undefined' || globalThis.window !== undefined) {
-    console.warn('[Tracer] initGatewayTracer() called in browser context — no-op.');
-    return undefined;
-  }
-
-  // NODE-ONLY: Lazily imported so bundlers see only a dynamic import(), not a static one.
-  // This prevents @opentelemetry/sdk-node and auto-instrumentations-node from entering
-  // the browser bundle even if this file is reachable from browser code paths.
-  const [{ NodeSDK }, { getNodeAutoInstrumentations }] = await Promise.all([
-    import('@opentelemetry/sdk-node'),
-    import('@opentelemetry/auto-instrumentations-node'),
-  ]);
 
   const resource = new Resource({
     [ATTR_SERVICE_NAME]: config.serviceName || 'omnihub-gateway',

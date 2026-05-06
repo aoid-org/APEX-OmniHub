@@ -19,14 +19,6 @@ Types: `feat` | `fix` | `docs` | `style` | `refactor` | `perf` | `test` | `build
 3. Write a human-readable summary of the change
 4. Commit the generated `.changeset/*.md` file
 
-## Lockfiles
-
-**`bun.lock`** is the authoritative lockfile for all human-driven installs (`bun install`).
-
-**`package-lock.json`** is generated exclusively by Dependabot (`.github/dependabot.yml` uses
-`package-ecosystem: npm`) to enable automated security updates. Do not edit or commit
-`package-lock.json` manually — let Dependabot manage it. Run `bun install` for local development.
-
 The release workflow will automatically:
 - Create a "Version Packages" PR accumulating changesets
 - Generate `CHANGELOG.md` entries

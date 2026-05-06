@@ -54,35 +54,3 @@ psql "$SUPABASE_DB_URL" -f supabase/migrations/20260226000001_rollback.sql
 | `SUPABASE_URL`              | Yes      | Project API URL                     |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes      | Service role key (server-side only) |
 | `SUPABASE_DB_URL`           | Yes      | Direct PostgreSQL connection string |
-
----
-
-## Security Posture (as of 2026-05-04)
-
-The following security hardening has been applied to the production project (`rtopreovkywofgwgmozi`):
-
-### RLS Coverage
-All public-schema tables now have RLS enabled. Tables added to RLS coverage on 2026-05-04:
-`media_assets`, `leagues`, `products`, `product_media`, `ingest_jobs`, `ingest_artifacts`,
-`armageddon_runs`, `armageddon_events`, `ingest_parse_results`, `ingest_dead_letters`.
-
-All these tables have a `service_role_all` policy that preserves full backend access.
-No end-user (authenticated role) data is exposed without an explicit RLS policy.
-
-### View Security
-`user_provider_connections_safe` and `active_idempotency_receipts` are configured as
-`SECURITY INVOKER` (not DEFINER). They rely on the underlying table's RLS policies,
-which are properly scoped (`auth.uid()` isolation for `provider_connections`).
-
-### Function Execute Permissions
-- **Trigger functions** (8): EXECUTE revoked from PUBLIC. Invocable only by trigger machinery + service_role.
-- **Maintenance functions** (4): EXECUTE revoked from PUBLIC. Invocable only by service_role (pg_cron, operator).
-- **Business-logic functions** (20): anon EXECUTE revoked; authenticated + service_role access preserved.
-- **search_path**: Pinned to `public` on all previously-mutable SECURITY DEFINER functions.
-
-### admin_claim_secrets
-Has RLS enabled with `service_role_all` policy. The admin claim flow uses the service_role key.
-
-### Supabase Auth
-> **ACTION REQUIRED (manual):** Enable "Leaked Password Protection" (HaveIBeenPwned.org check)
-> in Supabase Dashboard → Authentication → Settings. This cannot be set via SQL migration.
