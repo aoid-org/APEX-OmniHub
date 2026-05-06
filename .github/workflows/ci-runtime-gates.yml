@@ -105,12 +105,12 @@ jobs:
       - name: Run Terraform expression drift tests
         id: terraform_drift_tests
         continue-on-error: true
-        run: npm run test:infra:coverage
+        run: bun run test:infra:coverage
 
       - name: Annotate Terraform expression drift failure
         if: steps.terraform_drift_tests.outcome == 'failure'
         run: |
-          echo "::error title=Terraform Expression Drift Gate::Infra drift or coverage threshold failure detected. Run 'npm run test:infra:coverage' locally and update terraform/modules/cloudflare/main.tf, src/omnihub-gateway/TemporalBridge.ts, or related tests."
+          echo "::error title=Terraform Expression Drift Gate::Infra drift or coverage threshold failure detected. Run 'bun run test:infra:coverage' locally and update terraform/modules/cloudflare/main.tf, src/omnihub-gateway/TemporalBridge.ts, or related tests."
           exit 1
 
   build-and-test:
