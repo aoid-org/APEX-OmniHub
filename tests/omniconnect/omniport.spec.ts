@@ -6,6 +6,8 @@
  * =============================================================================
  */
 
+import { createHmac } from 'node:crypto';
+
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 
 // =============================================================================
@@ -110,6 +112,12 @@ import {
   SecurityError,
 } from '../../src/omniconnect/types/ingress';
 
+const TEST_WEBHOOK_SECRET = 'test-omniport-webhook-secret';
+
+function signWebhookPayload(rawPayload: string): string {
+  return `sha256=${createHmac('sha256', TEST_WEBHOOK_SECRET).update(rawPayload).digest('hex')}`;
+}
+
 // =============================================================================
 // TEST FIXTURES
 // =============================================================================
@@ -132,14 +140,20 @@ const createVoiceInput = (overrides: Partial<VoiceSource> = {}): VoiceSource => 
   ...overrides,
 });
 
-const createWebhookInput = (overrides: Partial<WebhookSource> = {}): WebhookSource => ({
-  type: 'webhook',
-  payload: { event: 'test', data: { key: 'value' } },
-  provider: 'stripe',
-  signature: 'sha256=abc123',
-  userId: '550e8400-e29b-41d4-a716-446655440002',
-  ...overrides,
-});
+const createWebhookInput = (overrides: Partial<WebhookSource> = {}): WebhookSource => {
+  const payload = overrides.payload ?? { event: 'test', data: { key: 'value' } };
+  const rawPayload = overrides.rawPayload ?? JSON.stringify(payload);
+
+  return {
+    type: 'webhook',
+    payload,
+    rawPayload,
+    provider: 'stripe',
+    signature: signWebhookPayload(rawPayload),
+    userId: '550e8400-e29b-41d4-a716-446655440002',
+    ...overrides,
+  };
+};
 
 // =============================================================================
 // TEST SUITE
@@ -149,6 +163,7 @@ describe('OmniPort - The Proprietary Ingress Engine', () => {
   let omniPort: OmniPortEngine;
 
   beforeEach(() => {
+    process.env.OMNIPORT_WEBHOOK_SECRET = TEST_WEBHOOK_SECRET;
     vi.clearAllMocks();
     mockDeviceRegistry.clear();
     mockDLQInsert.mockResolvedValue({ data: null, error: null });
@@ -161,6 +176,7 @@ describe('OmniPort - The Proprietary Ingress Engine', () => {
   });
 
   afterEach(() => {
+    delete process.env.OMNIPORT_WEBHOOK_SECRET;
     OmniPortEngine.resetInstance();
   });
 
@@ -440,6 +456,47 @@ describe('OmniPort - The Proprietary Ingress Engine', () => {
 
       const dlqCall = mockDLQInsert.mock.calls[0][0];
       expect(dlqCall.user_id).toBe(userId);
+    });
+  });
+
+  // ===========================================================================
+  // SECURITY: Webhook HMAC Verification
+  // ===========================================================================
+  describe('Webhook HMAC Verification', () => {
+    it('rejects webhook input when the signature is missing', async () => {
+      const input = createWebhookInput({ signature: '' });
+
+      await expect(omniPort.ingest(input)).rejects.toMatchObject({
+        code: 'WEBHOOK_SIGNATURE_MISSING',
+      });
+    });
+
+    it('rejects webhook input when the signature is malformed', async () => {
+      const input = createWebhookInput({ signature: 'sha256=not-hex' });
+
+      await expect(omniPort.ingest(input)).rejects.toMatchObject({
+        code: 'WEBHOOK_SIGNATURE_INVALID',
+      });
+    });
+
+    it('rejects webhook input when the signature does not match the raw payload', async () => {
+      const input = createWebhookInput({
+        rawPayload: '{"event":"tampered"}',
+        signature: signWebhookPayload('{"event":"original"}'),
+      });
+
+      await expect(omniPort.ingest(input)).rejects.toMatchObject({
+        code: 'WEBHOOK_SIGNATURE_INVALID',
+      });
+    });
+
+    it('rejects webhook input when the server-only secret is missing', async () => {
+      delete process.env.OMNIPORT_WEBHOOK_SECRET;
+      const input = createWebhookInput();
+
+      await expect(omniPort.ingest(input)).rejects.toMatchObject({
+        code: 'WEBHOOK_SECRET_MISSING',
+      });
     });
   });
 

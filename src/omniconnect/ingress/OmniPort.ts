@@ -87,6 +87,12 @@ const APEX_MEMBERSHIP_NFT_CONTRACT = (import.meta.env.VITE_APEX_NFT_CONTRACT ||
 // UNIVERSAL HASHING (Browser + Node.js compatible)
 // =============================================================================
 
+const WEBHOOK_SIGNATURE_PREFIX = 'sha256=';
+const HMAC_SHA256_HEX_LENGTH = 64;
+const OMNIPORT_WEBHOOK_SECRET_ENV = 'OMNIPORT_WEBHOOK_SECRET';
+
+type RuntimeEnv = Record<string, string | undefined>;
+
 /**
  * Compute a deterministic hash for idempotency keys
  * Uses FNV-1a algorithm - fast, deterministic, browser-compatible
@@ -101,6 +107,70 @@ function computeHash(data: string): string {
   return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
+
+
+/**
+ * Resolve the webhook secret from server-only runtime environment variables.
+ */
+function getOmniPortWebhookSecret(): string | undefined {
+  const runtime = globalThis as typeof globalThis & {
+    process?: { env?: RuntimeEnv };
+  };
+
+  return runtime.process?.env?.[OMNIPORT_WEBHOOK_SECRET_ENV];
+}
+
+/**
+ * Compute HMAC-SHA256 signature for the exact webhook payload bytes.
+ */
+async function computeHmacSha256(payload: string, secret: string): Promise<string> {
+  const subtleCrypto = globalThis.crypto?.subtle;
+  if (!subtleCrypto) {
+    throw new SecurityError('Webhook HMAC verification is unavailable', 'WEBHOOK_CRYPTO_UNAVAILABLE');
+  }
+
+  const encoder = new TextEncoder();
+  const key = await subtleCrypto.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await subtleCrypto.sign('HMAC', key, encoder.encode(payload));
+  const bytes = new Uint8Array(signature);
+  return Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
+ * Decode a lowercase/uppercase hex string into bytes for timing-safe comparison.
+ */
+function hexToBytes(hex: string): Uint8Array | undefined {
+  if (!/^[0-9a-fA-F]+$/.test(hex) || hex.length % 2 !== 0) return undefined;
+
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+  return bytes;
+}
+
+/**
+ * Constant-time byte comparison to reduce timing attack signal.
+ */
+function timingSafeEqualBytes(a: Uint8Array, b: Uint8Array): boolean {
+  let mismatch = a.length ^ b.length;
+  const maxLength = Math.max(a.length, b.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    // Read through the full max length so mismatch position does not affect runtime.
+    mismatch |= (a[i] ?? 0) ^ (b[i] ?? 0);
+  }
+
+  return mismatch === 0;
+}
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -403,6 +473,11 @@ class OmniPortEngine {
 
     try {
       // =======================================================================
+      // STEP 0: WEBHOOK HMAC AUTHENTICITY GATE
+      // =======================================================================
+      await this.validateWebhookHmac(input, ctx);
+
+      // =======================================================================
       // STEP 1: THE ZERO-TRUST GATE
       // =======================================================================
       const deviceRecord = await this.validateZeroTrust(input, ctx);
@@ -451,6 +526,53 @@ class OmniPortEngine {
   // ===========================================================================
   // PIPELINE STAGES
   // ===========================================================================
+
+
+  /**
+   * STEP 0: Webhook HMAC authenticity gate
+   * Requires and validates HMAC-SHA256 signatures for webhook inputs
+   */
+  private async validateWebhookHmac(input: RawInput, ctx: PipelineContext): Promise<void> {
+    if (!isWebhookSource(input)) return;
+
+    const signatureHeader = typeof input.signature === 'string' ? input.signature.trim() : '';
+    if (!signatureHeader) {
+      throw new SecurityError('Missing webhook signature', 'WEBHOOK_SIGNATURE_MISSING');
+    }
+
+    const webhookSecret = getOmniPortWebhookSecret();
+    if (!webhookSecret) {
+      throw new SecurityError('Webhook secret is not configured', 'WEBHOOK_SECRET_MISSING');
+    }
+
+    const providedSignature = signatureHeader.startsWith(WEBHOOK_SIGNATURE_PREFIX)
+      ? signatureHeader.slice(WEBHOOK_SIGNATURE_PREFIX.length)
+      : signatureHeader;
+    const providedSignatureBytes = hexToBytes(providedSignature);
+
+    if (!providedSignatureBytes || providedSignature.length !== HMAC_SHA256_HEX_LENGTH) {
+      this.log(ctx, 'WEBHOOK_SIGNATURE_MALFORMED', { provider: input.provider });
+      throw new SecurityError('Invalid webhook signature', 'WEBHOOK_SIGNATURE_INVALID');
+    }
+
+    // Prefer the exact HTTP body; JSON serialization is only a typed-adapter fallback.
+    const rawPayload = input.rawPayload ?? JSON.stringify(input.payload);
+    let expectedSignature: string;
+
+    try {
+      expectedSignature = await computeHmacSha256(rawPayload, webhookSecret);
+    } catch (error) {
+      if (error instanceof SecurityError) throw error;
+      throw new SecurityError('Webhook HMAC verification failed', 'WEBHOOK_HMAC_VERIFICATION_FAILED');
+    }
+
+    const expectedSignatureBytes = hexToBytes(expectedSignature);
+
+    if (!expectedSignatureBytes || !timingSafeEqualBytes(providedSignatureBytes, expectedSignatureBytes)) {
+      this.log(ctx, 'WEBHOOK_SIGNATURE_MISMATCH', { provider: input.provider });
+      throw new SecurityError('Invalid webhook signature', 'WEBHOOK_SIGNATURE_INVALID');
+    }
+  }
 
   /**
    * STEP 1: Zero-Trust Gate
