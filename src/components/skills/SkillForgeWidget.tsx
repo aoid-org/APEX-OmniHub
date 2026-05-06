@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
@@ -101,7 +101,9 @@ const wizardSteps: WizardStep[] = [
   },
 ];
 
-export function SkillForgeWidget() {
+// ⚡ Bolt: Wrapped SkillForgeWidget in React.memo() to prevent unnecessary re-renders when parent states change.
+// Expected impact: Eliminates unnecessary re-renders of the entire wizard, especially during Voice UI updates.
+export const SkillForgeWidget = memo(function SkillForgeWidget() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -120,25 +122,25 @@ export function SkillForgeWidget() {
     return value.trim().length === 0;
   }, [currentStep.field, formData]);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     recognitionRef.current?.stop();
     recognitionRef.current = null;
     setIsListening(false);
     setStep(1);
     setFormData({ intent: '', trigger: '', constraints: '' });
     setErrors([]);
-  };
+  }, []);
 
-  const resolveSpeechRecognition = (): SpeechRecognitionConstructor | null => {
+  const resolveSpeechRecognition = useMemo(() => (): SpeechRecognitionConstructor | null => {
     if (globalThis.window === undefined) {
       return null;
     }
 
     const voiceWindow = globalThis as unknown as VoiceWindow;
     return voiceWindow.SpeechRecognition ?? voiceWindow.webkitSpeechRecognition ?? null;
-  };
+  }, []);
 
-  const appendTranscriptToCurrentField = (transcript: string) => {
+  const appendTranscriptToCurrentField = useCallback((transcript: string) => {
     setFormData((previous) => {
       const priorValue = previous[currentStep.field].trim();
       const mergedValue = priorValue.length > 0 ? `${priorValue} ${transcript}` : transcript;
@@ -147,9 +149,9 @@ export function SkillForgeWidget() {
         [currentStep.field]: mergedValue,
       };
     });
-  };
+  }, [currentStep.field]);
 
-  const handleVoiceToggle = () => {
+  const handleVoiceToggle = useCallback(() => {
     setErrors([]);
     const SpeechRecognitionAPI = resolveSpeechRecognition();
 
@@ -205,7 +207,7 @@ export function SkillForgeWidget() {
     recognitionRef.current = recognition;
     setIsListening(true);
     recognition.start();
-  };
+  }, [appendTranscriptToCurrentField, isListening, resolveSpeechRecognition, toast]);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -257,21 +259,21 @@ export function SkillForgeWidget() {
     },
   });
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setErrors([]);
     if (step < 3) {
       setStep((step + 1) as StepId);
       return;
     }
     mutation.mutate();
-  };
+  }, [mutation, step]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     setErrors([]);
     if (step > 1) {
       setStep((step - 1) as StepId);
     }
-  };
+  }, [step]);
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => { setOpen(nextOpen); if (!nextOpen) resetForm(); }}>
@@ -384,4 +386,4 @@ export function SkillForgeWidget() {
       </DialogContent>
     </Dialog>
   );
-}
+});
