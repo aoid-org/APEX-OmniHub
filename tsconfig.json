@@ -3,6 +3,9 @@
   "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
   "compilerOptions": {
     "baseUrl": ".",
+    // INTENTIONAL SPLIT: '@/*' here resolves to apps/omnihub-site/src/* for the app build.
+    // vitest.config.ts resolves '@' to ./src (root package) so tests import root modules.
+    // Do NOT align these — the split is load-bearing. See also vitest.config.ts resolve.alias.
     "paths": {
       "@/dashboard/*": ["./apps/omnihub-site/dashboard/*"],
       "@/*": ["./apps/omnihub-site/src/*"]
@@ -14,6 +17,6 @@
     "noUnusedLocals": true,
     "strictNullChecks": true,
     "strict": true,
-    "ignoreDeprecations": "5.0"
+    "ignoreDeprecations": "6.0"
   }
 }
