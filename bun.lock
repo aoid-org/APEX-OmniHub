@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "apex-omnihub",
@@ -50,7 +51,7 @@
         "@tanstack/react-query": "^5.83.0",
         "@types/dompurify": "^3.2.0",
         "@types/react-grid-layout": "^2.1.0",
-        "@types/uuid": "^10.0.0",
+        "@types/uuid": "^11.0.0",
         "ai": "^6.0.134",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -1621,7 +1622,7 @@
 
     "@types/trusted-types": ["@types/trusted-types@2.0.7", "", {}, ""],
 
-    "@types/uuid": ["@types/uuid@10.0.0", "", {}, ""],
+    "@types/uuid": ["@types/uuid@11.0.0", "", { "dependencies": { "uuid": "*" } }, "sha512-HVyk8nj2m+jcFRNazzqyVKiZezyhDKrGUA3jlEcg/nZ6Ms+qHwocba1Y/AaVaznJTAM9xpdFSh+ptbNrhOGvZA=="],
 
     "@types/ws": ["@types/ws@8.18.1", "", { "dependencies": { "@types/node": "*" } }, ""],
 
@@ -4536,6 +4537,8 @@
     "rollup-plugin-visualizer/open": ["open@11.0.0", "", { "dependencies": { "default-browser": "^5.4.0", "define-lazy-prop": "^3.0.0", "is-in-ssh": "^1.0.0", "is-inside-container": "^1.0.0", "powershell-utils": "^0.1.0", "wsl-utils": "^0.3.0" } }, ""],
 
     "rollup-plugin-visualizer/yargs": ["yargs@18.0.0", "", { "dependencies": { "cliui": "^9.0.1", "escalade": "^3.1.1", "get-caller-file": "^2.0.5", "string-width": "^7.2.0", "y18n": "^5.0.5", "yargs-parser": "^22.0.0" } }, ""],
+
+    "rpc-websockets/@types/uuid": ["@types/uuid@10.0.0", "", {}, ""],
 
     "rpc-websockets/eventemitter3": ["eventemitter3@5.0.4", "", {}, ""],
 
