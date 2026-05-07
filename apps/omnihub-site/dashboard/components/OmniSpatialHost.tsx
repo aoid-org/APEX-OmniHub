@@ -1,7 +1,7 @@
 /**
  * OmniSpatialHost — Unified Polymorphic Modal Renderer
  * @version 1.0.0
- * @module apps/omnihub-site/src/components/omnidash/OmniSpatialHost
+ * @module apps/omnihub-site/dashboard/components/OmniSpatialHost
  *
  * Merges UniversalModalEngine (dialog modality) and OmniMediaModal (spatial
  * modality) into a single component. Uses resolveRenderMode() to pick the

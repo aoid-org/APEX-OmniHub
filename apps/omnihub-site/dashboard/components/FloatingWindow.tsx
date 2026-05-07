@@ -1,7 +1,7 @@
 /**
  * FloatingWindow — PiP Manager (Layer 5)
  * @version 1.0.0
- * @module apps/omnihub-site/src/components/omnidash/FloatingWindow
+ * @module apps/omnihub-site/dashboard/components/FloatingWindow
  *
  * Always-on-top floating windows for picture-in-picture content.
  * Rendered outside the canvas transform layer so they remain

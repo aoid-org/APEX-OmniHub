@@ -1,7 +1,7 @@
 /**
  * WidgetShell — Widget Exoskeleton (Layer 3)
  * @version 1.0.0
- * @module apps/omnihub-site/src/components/omnidash/WidgetShell
+ * @module apps/omnihub-site/dashboard/components/WidgetShell
  *
  * The draggable, resizable container for every widget on the OmniCanvas.
  * Provides: title bar, drag handle, resize handles, minimize/maximize/close,

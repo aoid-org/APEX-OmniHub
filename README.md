@@ -151,7 +151,7 @@ Client-side infrastructure for deterministic media delivery:
 ```
 /src                 - OmniDash UI (277 files)
 /dashboard/OmniDashShell.tsx  -  Unified dashboard Shell / layout
-/src/components/omnidash/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
+/apps/omnihub-site/dashboard/components/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
 /src/omnidash/uiRegistry.ts  -   UI registry wiring
 
 
