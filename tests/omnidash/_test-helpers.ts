@@ -12,10 +12,25 @@ export const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'http://localhost:5
 export const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 export const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
 
-// Conditional test execution — only enable if both the key is set AND it looks
-// like a valid JWT (starts with "eyJ"). Misformatted env vars (e.g., including
-// the key name as a prefix) will correctly evaluate to false.
-export const hasServiceKey = !!SUPABASE_SERVICE_KEY && SUPABASE_SERVICE_KEY.startsWith('eyJ');
+// Placeholder / local-stack URL patterns that indicate no real Supabase project is reachable.
+const PLACEHOLDER_URL_PATTERNS = [
+  'localhost',
+  '127.0.0.1',
+  'mock.supabase.co',
+  'test.supabase.co',
+  'placeholder.supabase.co',
+];
+
+const hasRealSupabaseUrl = !PLACEHOLDER_URL_PATTERNS.some((p) => SUPABASE_URL.includes(p));
+
+// Conditional test execution — only enable if:
+//   1. SUPABASE_SERVICE_ROLE_KEY looks like a valid JWT (starts with "eyJ"), AND
+//   2. VITE_SUPABASE_URL points to a real (non-local/mock) Supabase project.
+// Misformatted env vars or local-stack URLs correctly evaluate to false.
+export const hasServiceKey =
+  !!SUPABASE_SERVICE_KEY &&
+  SUPABASE_SERVICE_KEY.startsWith('eyJ') &&
+  hasRealSupabaseUrl;
 
 /**
  * Test context containing clients and test user info
