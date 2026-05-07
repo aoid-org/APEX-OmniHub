@@ -7,8 +7,8 @@
  * Compliant with APEX OBSERVABILITY STACK.
  */
 
-import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+// Type-only import — erased by TypeScript at compile time, never reaches browser bundle.
+import type { NodeSDK as NodeSDKType } from '@opentelemetry/sdk-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { Resource } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
@@ -21,17 +21,31 @@ export interface TracerConfig {
   otlpEndpoint?: string; // Jaeger HTTP receiver endpoint
 }
 
-let sdk: NodeSDK | null = null;
+let sdk: NodeSDKType | null = null;
 let initialized = false;
 
 /**
  * Initializes the OpenTelemetry Node SDK if enabled.
- * Should be called once at application startup.
+ * Should be called once at application startup (Node context only).
  */
-export function initGatewayTracer(config: TracerConfig): NodeSDK | undefined {
+export async function initGatewayTracer(config: TracerConfig): Promise<NodeSDKType | undefined> {
   if (!config.enabled || initialized) {
     return undefined;
   }
+
+  // Guard: no-op in browser environments — avoids crashing if accidentally called client-side.
+  if (typeof process === 'undefined' || globalThis.window !== undefined) {
+    console.warn('[Tracer] initGatewayTracer() called in browser context — no-op.');
+    return undefined;
+  }
+
+  // NODE-ONLY: Lazily imported so bundlers see only a dynamic import(), not a static one.
+  // This prevents @opentelemetry/sdk-node and auto-instrumentations-node from entering
+  // the browser bundle even if this file is reachable from browser code paths.
+  const [{ NodeSDK }, { getNodeAutoInstrumentations }] = await Promise.all([
+    import('@opentelemetry/sdk-node'),
+    import('@opentelemetry/auto-instrumentations-node'),
+  ]);
 
   const resource = new Resource({
     [ATTR_SERVICE_NAME]: config.serviceName || 'omnihub-gateway',
@@ -75,13 +89,13 @@ export async function withGatewaySpan<T>(
   fn: (span: Span) => Promise<T>
 ): Promise<T> {
   const tracer = getGatewayTracer();
-  
+
   return tracer.startActiveSpan(name, async (span) => {
     // Inject custom attributes
     for (const [key, value] of Object.entries(attributes)) {
       span.setAttribute(key, value);
     }
-    
+
     try {
       const result = await fn(span);
       span.setStatus({ code: SpanStatusCode.OK });

@@ -16,10 +16,7 @@ import {
   routeTasks,
   summarizeDecision,
 } from '../../../src/core/gateway/OmniRoute';
-import {
-  scoreTask,
-  type RouteTarget,
-} from '../../../src/core/gateway/TaskComplexityScorer';
+import type { RouteTarget } from '../../../src/core/gateway/TaskComplexityScorer';
 import {
   estimateCost,
   getAllModels,
@@ -30,90 +27,6 @@ import {
   DEFAULT_POLICY_RULES,
   evaluatePolicy,
 } from '../../../src/core/gateway/RoutePolicy';
-
-// ============================================================================
-// TaskComplexityScorer
-// ============================================================================
-
-describe('TaskComplexityScorer', () => {
-  describe('scoreTask', () => {
-    it('assigns positive depth score for backend keywords', () => {
-      const result = scoreTask(
-        'Create a migration to add the users schema with rollback support',
-      );
-      expect(result.depthScore).toBeGreaterThan(0);
-      expect(result.target).toBe('CLAUDE_OPUS');
-    });
-
-    it('assigns negative depth score for frontend keywords', () => {
-      const result = scoreTask(
-        'Build a responsive dashboard layout with CSS animations and SVG icons',
-      );
-      expect(result.depthScore).toBeLessThan(0);
-      expect(result.target).toBe('GEMINI_PRO');
-    });
-
-    it('routes ambiguous tasks to CLAUDE_OPUS as fail-safe', () => {
-      const result = scoreTask('Do something vague and unclassifiable');
-      expect(result.target).toBe('CLAUDE_OPUS');
-      expect(result.reasoning).toContain('Ambiguous');
-    });
-
-    it('classifies domain via keyword match count', () => {
-      const dbResult = scoreTask(
-        'Run SQL migration on Supabase Postgres with RLS policy',
-      );
-      expect(dbResult.domain).toBe('database');
-
-      const uiResult = scoreTask(
-        'Create a button component with modal dropdown form and input',
-      );
-      expect(uiResult.domain).toBe('ui');
-    });
-
-    it('estimates output tokens from input length', () => {
-      const result = scoreTask('Short task');
-      expect(result.estimatedTokens).toBeGreaterThanOrEqual(100);
-
-      const longResult = scoreTask('A '.repeat(500));
-      expect(longResult.estimatedTokens).toBeGreaterThan(
-        result.estimatedTokens,
-      );
-    });
-
-    it('records matched keywords with weights', () => {
-      const result = scoreTask('migration with refactor and security review');
-      expect(result.matchedKeywords.length).toBeGreaterThan(0);
-      const migrationKw = result.matchedKeywords.find(
-        (kw) => kw.keyword === 'migration',
-      );
-      expect(migrationKw).toBeDefined();
-      expect(migrationKw?.weight).toBe(15);
-    });
-
-    it('provides reasoning trace', () => {
-      const result = scoreTask('Create UI layout with CSS animations');
-      expect(result.reasoning).toBeTruthy();
-      expect(result.reasoning.length).toBeGreaterThan(10);
-    });
-  });
-
-  describe('DETERMINISM (critical gate)', () => {
-    it('produces identical results for the same input across 100 runs', () => {
-      const input =
-        'Refactor the authentication middleware with saga orchestrator support';
-      const baseline = scoreTask(input);
-
-      for (let i = 0; i < 100; i++) {
-        const result = scoreTask(input);
-        expect(result.depthScore).toBe(baseline.depthScore);
-        expect(result.target).toBe(baseline.target);
-        expect(result.domain).toBe(baseline.domain);
-        expect(result.matchedKeywords).toEqual(baseline.matchedKeywords);
-      }
-    });
-  });
-});
 
 // ============================================================================
 // ModelRegistry

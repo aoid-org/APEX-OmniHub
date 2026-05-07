@@ -1,0 +1,35 @@
+PR summary:
+
+The following files have been modified to implement real-time live data.
+- /app/apps/omnihub-site/dashboard/components/Approvals.tsx
+- /app/apps/omnihub-site/dashboard/components/DashboardOverview/DashboardOverview.tsx
+- /app/apps/omnihub-site/dashboard/components/DashboardOverview/components/AppsSection.tsx
+- /app/apps/omnihub-site/dashboard/components/Pipeline.tsx
+
+Supabase sources used:
+- Approvals: `omnilink_orchestration_requests`
+- DashboardOverview: `integrations`
+- Pipeline: `omnidash_pipeline_items`
+
+Schema Assumptions:
+- `user.id` maps to the user id tracking column for these queries (which is how the current implementation filters the data)
+
+Validation Commands:
+- Ran `bun run lint` and formatted with `prettier`
+- Replaced mock values in React components with valid Supabase schemas.
+
+No tables were touched outside of `Approvals`, `DashboardOverview`, and `Pipeline`.
+
+Remaining mock panels intentionally left out of scope:
+- Kpis
+- Tasks
+- LocalAgents
+- Integrations
+- Entities
+- Events
+- NotificationCenter
+- Ops
+- Runs
+- SentinelPanel
+- Today
+- WorkflowStudio

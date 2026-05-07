@@ -242,14 +242,15 @@ Test results, simulation, and quality assurance:
 
 Audit reports, remediation, and historical records:
 
-| Document                                                                                       | Description                     |
-| ---------------------------------------------------------------------------------------------- | ------------------------------- |
-| [Armageddon Test](audits/ARMAGEDDON_TEST_SUITE_REPORT.md)                                      | Extreme testing                 |
-| [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md)                               | Voice security                  |
-| [Full Code Audit 2026-03-06](audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md)               | Full platform audit             |
-| [Third-Party Code Audit 2026-03-07](audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md)               | Third-party audit               |
-| [Third-Party Code Audit 2026-03-08](audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md)               | Third-party audit               |
-| [**Third-Party Code Audit 2026-03-09 ← CURRENT**](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) | **Latest audit — 94.3/100 (A)** |
+| Document                                                                                       | Description                                                            |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| [Armageddon Test](audits/ARMAGEDDON_TEST_SUITE_REPORT.md)                                      | Extreme testing                                                        |
+| [Voice Fortress Audit](audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md)                               | Voice security                                                         |
+| [Full Code Audit 2026-03-06](audits/FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md)               | Full platform audit                                                    |
+| [Third-Party Code Audit 2026-03-07](audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md)               | Third-party audit                                                      |
+| [Third-Party Code Audit 2026-03-08](audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md)               | Third-party audit                                                      |
+| [**Third-Party Code Audit 2026-03-09 ← CURRENT**](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) | **Latest audit — 94.3/100 (A)**                                        |
+| [Annotated PR Triage 2026-05-06](audits/ANNOTATED_PR_TRIAGE_2026_05_06.md)                     | Current merge/update/close decisions for screenshot-annotated PR queue |
 
 ---
 

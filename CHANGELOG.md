@@ -4,6 +4,33 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2026-05-04
+
+### Fixed — Supabase Security & Performance Hardening (Production `rtopreovkywofgwgmozi`)
+
+Applied four migrations to the production Supabase project resolving all
+Security Advisor ERRORs, 60+ WARNs, and 14 performance advisor findings.
+Zero breaking changes — all authenticated and service_role access preserved.
+
+**Migrations applied (in order):**
+
+- **`supabase/migrations/20260417000000_omnibridge_events.sql`** — applied to production (was previously only validated on the Armageddon Test Suite). Tables `omnibridge_events`, `omnibridge_events_dlq`, `omnibridge_control_audit` + `omnibridge_event_stats_hourly` view now live. Migration file corrected: removed invalid `super_admin`/`operator` enum values (only `admin` and `user` exist in `app_role`); all CREATE POLICY statements are idempotency-guarded.
+- **`supabase/migrations/20260426000000_fix_security_advisor_findings.sql`** — fixed 2 `SECURITY DEFINER` view ERRORs (`user_provider_connections_safe`, `active_idempotency_receipts`) by setting `security_invoker = true`. Enabled RLS on 10 previously-unprotected public tables (`media_assets`, `leagues`, `products`, `product_media`, `ingest_jobs`, `ingest_artifacts`, `armageddon_runs`, `armageddon_events`, `ingest_parse_results`, `ingest_dead_letters`) with `service_role` bypass policies. Verified safe: armageddon code uses `service_role` key; `provider_connections` underlying table has existing authenticated-user SELECT policy.
+- **`supabase/migrations/20260504000000_security_hardening_functions_rls.sql`** *(new)* — pinned `search_path = public` on 4 mutable-search-path functions (`cleanup_expired_idempotency_receipts`, `claim_admin_role`, `update_idempotency_receipts_updated_at`, `check_rate_limit`). Revoked PUBLIC execute from 8 trigger-only functions and 4 maintenance functions (re-granted to `service_role` only). Revoked PUBLIC (anon) execute from 20 business-logic SECURITY DEFINER functions and re-granted to `authenticated` + `service_role` — preserving all existing frontend and edge function access. Added `service_role` RLS policy to `admin_claim_secrets` (was RLS-enabled with zero policies).
+- **`supabase/migrations/20260504000001_fk_indexes_performance.sql`** *(new)* — added 14 `CREATE INDEX IF NOT EXISTS` covering indexes on foreign key columns flagged by the Supabase Performance Advisor: `emergency_controls.updated_by`, `health_checks.user_id`, `ingest_artifacts.job_id`, `ingest_dead_letters.job_id`, `ingest_parse_results.job_id`, `media_publications.league_id`, `omnilink_entities.last_event_id`, `omnilink_events.api_key_id`, `omnilink_orchestration_requests.api_key_id`, `omnilink_runs.integration_id`, `omnilink_runs.orchestration_request_id`, `product_media.media_asset_id`, `product_media.product_id`, `usage_metering.user_id`.
+
+### Security Posture Change
+
+| Category | Before | After |
+|---|---|---|
+| Security Advisor ERRORs | 12 | 0 |
+| Security Advisor WARNs (anon/auth fn exposure) | ~55 | 0 |
+| Mutable search_path WARNs | 4 | 0 |
+| RLS-enabled-no-policy WARNs | 1 | 0 |
+| Performance Advisor FK index INFOs | 14 | 0 |
+
+---
+
 ## [1.6.0] - 2026-04-17
 
 ### Added — SBBL-HQ Bidirectional Integration + Control Plane (Cloudflare Pages target)
