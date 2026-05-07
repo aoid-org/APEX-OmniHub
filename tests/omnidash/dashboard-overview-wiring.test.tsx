@@ -68,7 +68,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 // Stub hasModuleComponent — modules are resolved via Edge Function, not local registry
-vi.mock('../../apps/omnihub-site/src/components/omnidash/moduleComponents', () => ({
+vi.mock('../../apps/omnihub-site/dashboard/components/moduleComponents', () => ({
   hasModuleComponent: (key: string) =>
     ['omniskills', 'physiomni', 'audits', 'links', 'automations', 'workflows', 'files', 'billing', 'settings'].includes(key),
 }));

@@ -1,22 +1,23 @@
 /**
- * OmniBridge Event Store — persistence + orchestrator dispatch
+ * OmniBridge Event Store — durable event persistence.
  *
- * Closes the `FUTURE: Durable execution routing` gap at
- * api/omnibridge/ingest.ts:222. Called by both the hardened and sync_packet
- * ingress profiles after signature verification succeeds.
+ * Called by both the hardened and sync_packet ingress profiles after signature
+ * verification succeeds.
  *
  * Design:
  *   - Writes every verified event to omnibridge_events (idempotent on
  *     (source_id, event_id)).
- *   - Best-effort fire-and-forget dispatch to the orchestrator. Dispatch
- *     failures land in omnibridge_events_dlq with exponential-backoff metadata.
  *   - Edge-safe: uses fetch (no SDK). The service role key is provided via env
- *     and is never logged. Callers run in Vercel Edge and POST to Supabase
- *     PostgREST directly.
+ *     and is never logged. Callers run on Cloudflare Pages Functions and POST
+ *     to Supabase PostgREST directly.
  *
  * Fail-closed: a persistence failure surfaces to the caller so the partner
- * receives a 5xx and retries. Dispatch failure is captured in DLQ and does
- * NOT fail the caller (event is already durable).
+ * receives a 5xx and retries.
+ *
+ * Dispatch infrastructure: recordDispatchFailure() and updateDispatchState()
+ * are implemented and available but are NOT wired in production ingress paths.
+ * They must be called explicitly by an orchestrator dispatch layer when that
+ * integration is activated.
  *
  * @module lib/omnibridge/eventStore
  * @license Proprietary - APEX Business Systems Ltd.
