@@ -56,14 +56,6 @@ export default defineConfig(({ mode }) => ({
       },
     } : undefined,
     rollupOptions: {
-      // Keep Node-only packages out of the browser bundle entirely
-      external: (id: string) => {
-        return (
-          id === 'ioredis' ||
-          id === '@opentelemetry/sdk-node' ||
-          id === '@opentelemetry/auto-instrumentations-node'
-        );
-      },
       // Suppress warnings for third-party package annotations that Rollup can't interpret
       onwarn(warning, warn) {
         // Ignore PURE comment warnings from node_modules (ox, wagmi, etc.)
@@ -149,13 +141,7 @@ export default defineConfig(({ mode }) => ({
       'clsx',
       'tailwind-merge',
     ],
-    exclude: [
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      'ioredis',
-      '@opentelemetry/sdk-node',
-      '@opentelemetry/auto-instrumentations-node',
-    ],
+    exclude: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
     holdUntilCrawlEnd: true,
   },
   // Preview server configuration (for testing production builds locally)

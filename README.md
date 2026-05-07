@@ -168,7 +168,7 @@ Client-side infrastructure for deterministic media delivery:
 
 ### Prerequisites
 
-- Node.js **20.19+** or **22.12+** (required by Vite 7; Node 18 reached EOL April 2025)
+- Node.js **18+** (20+ recommended)
 - Python 3.10+
 - Docker & Docker Compose
 

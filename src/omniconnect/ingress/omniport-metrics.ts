@@ -175,36 +175,13 @@ class MetricsCollector {
   // ===========================================================================
 
   /**
-   * Find index of first event on or after timestamp using binary search.
-   * Assumes this.events is sorted chronologically.
-   */
-  private findCutoffIndex(timestamp: Date): number {
-    let low = 0;
-    let high = this.events.length - 1;
-    let result = this.events.length;
-    const timeMs = timestamp.getTime();
-
-    while (low <= high) {
-      const mid = Math.floor((low + high) / 2);
-      if (this.events[mid].timestamp.getTime() >= timeMs) {
-        result = mid;
-        high = mid - 1; // Look for earlier occurrences
-      } else {
-        low = mid + 1;
-      }
-    }
-    return result;
-  }
-
-  /**
    * Get aggregated metrics for a time window
    */
   public getMetrics(windowMs: number = this.windowMs): OmniPortMetrics {
     const now = new Date();
     const windowStart = new Date(now.getTime() - windowMs);
 
-    const startIndex = this.findCutoffIndex(windowStart);
-    const windowEvents = this.events.slice(startIndex);
+    const windowEvents = this.events.filter((e) => e.timestamp >= windowStart);
 
     // BOLT OPTIMIZATION: Accumulate all metrics in a single O(N) pass
     // to avoid multiple iterations and intermediate array creations.
@@ -268,9 +245,9 @@ class MetricsCollector {
   public getStatus(): OmniPortStatus {
     const now = new Date();
     const recentWindowMs = 10000; // 10 seconds
-    const cutoffDate = new Date(now.getTime() - recentWindowMs);
-    const startIndex = this.findCutoffIndex(cutoffDate);
-    const recentEvents = this.events.slice(startIndex);
+    const recentEvents = this.events.filter(
+      (e) => e.timestamp >= new Date(now.getTime() - recentWindowMs)
+    );
 
     const eventsPerSecond = recentEvents.length / (recentWindowMs / 1000);
 
@@ -316,10 +293,7 @@ class MetricsCollector {
 
     // Also prune events older than 1 hour
     const cutoff = new Date(Date.now() - 3600000);
-    const startIndex = this.findCutoffIndex(cutoff);
-    if (startIndex > 0) {
-      this.events = this.events.slice(startIndex);
-    }
+    this.events = this.events.filter((e) => e.timestamp >= cutoff);
   }
 }
 

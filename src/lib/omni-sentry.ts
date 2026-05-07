@@ -423,24 +423,18 @@ export async function flushOfflineErrors(): Promise<number> {
   const offlineErrors = safeRead<unknown[]>('omni_sentry_offline', []);
   if (offlineErrors.length === 0) return 0;
 
-  if (!isCircuitClosed()) return 0;
-
-  const logs = safeRead<unknown[]>('omni_sentry_errors', []);
-  const remainingOffline: unknown[] = [];
   let flushed = 0;
-
   for (const entry of offlineErrors) {
     if (isCircuitClosed()) {
+      const logs = safeRead<unknown[]>('omni_sentry_errors', []);
       logs.push(entry);
+      safePersist('omni_sentry_errors', logs.slice(-100));
       flushed++;
-    } else {
-      remainingOffline.push(entry);
     }
   }
 
   if (flushed > 0) {
-    safePersist('omni_sentry_errors', logs.slice(-100));
-    safePersist('omni_sentry_offline', remainingOffline);
+    safePersist('omni_sentry_offline', []);
     if (import.meta.env.DEV) console.info(`[OmniSentry] Flushed ${flushed} offline errors`);
   }
 

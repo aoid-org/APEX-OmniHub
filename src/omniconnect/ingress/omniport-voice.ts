@@ -9,7 +9,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { OmniPort } from './OmniPort';
 import { VoiceSource, IngestResult, detectHighRiskIntents } from '../types/ingress';
-import { createDebugLogger, logError } from '../../lib/debug-logger';
 
 // =============================================================================
 // TYPES
@@ -86,7 +85,6 @@ const DEFAULT_CONFIG: VoiceCommandConfig = {
 class VoiceCommandHandler {
   private static instance: VoiceCommandHandler | null = null;
   private config: VoiceCommandConfig;
-  private readonly logger = createDebugLogger('OmniPort.Voice');
   private readonly sessions: Map<string, VoiceSession> = new Map();
 
   private constructor(config: Partial<VoiceCommandConfig> = {}) {
@@ -191,7 +189,7 @@ class VoiceCommandHandler {
     };
 
     this.sessions.set(userId, session);
-    this.logger(`Session started for user ${userId}`);
+    if (import.meta.env.DEV) console.log(`[OmniPort.Voice] Session started for user ${userId}`);
 
     return session;
   }
@@ -204,7 +202,7 @@ class VoiceCommandHandler {
     if (session) {
       session.isActive = false;
       this.sessions.delete(userId);
-      this.logger(`Session ended for user ${userId} (${session.commandCount} commands)`);
+      if (import.meta.env.DEV) console.log(`[OmniPort.Voice] Session ended for user ${userId} (${session.commandCount} commands)`);
     }
   }
 
@@ -261,7 +259,7 @@ class VoiceCommandHandler {
           .upload(fileName, audioBlob);
 
         if (error) {
-          logError(error, { context: 'Supabase storage upload' });
+          console.error('Failed to upload audio to Supabase:', error);
           throw new Error('Supabase storage upload failed');
         }
 
@@ -271,7 +269,7 @@ class VoiceCommandHandler {
 
         audioUrl = urlData.publicUrl;
       } catch (e) {
-        logError(e, { context: 'Supabase storage operation' });
+        console.error('Error in Supabase storage operation:', e);
         throw e;
       }
     } else {

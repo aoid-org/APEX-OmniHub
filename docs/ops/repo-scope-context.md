@@ -1,10 +1,7 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.0 | LAST_UPDATED=2026-05-06 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Repo Scope Context (Senior DevOps Prep)
 
-> **Note:** Verified facts as of 2026-05-06 with confirmed build status.
-> For agent-specific briefing, read `CLAUDE.md` at the repo root first.
-
-_Last verified:_ 2026-05-06
+_Date:_ 2026-02-15
 _Repository:_ `APEX-OmniHub`
 
 ## Objective
@@ -47,19 +44,14 @@ From the root README and docs index, APEX OmniHub is organized as an enterprise 
 
 ## Build/Test/Run Surface
 
-**Package manager: `bun` (not npm/yarn for installs).** All install commands use `bun install`.
-`npm` is used only for `npm audit` in CI security gates.
-
 Primary package scripts indicate a polyglot operational model:
 
-- Frontend quality gates: `bun run lint`, `bun run typecheck`, `bun run test`, `bun run build`
-- E2E + smoke checks: Playwright (`bun run test:e2e`) + asset checks (`bun run test:assets`)
-- Security/quality scans: `bun run secret:scan`, `npm audit --omit=dev --audit-level=high`, `bun run docs:check`
-- Resilience: simulation modes (`bun run sim:*`) and worldwide wildcard test harness
-- Python orchestrator CI path: `bun run lint:py`, `bun run test:py`, `bun run ci:py`
+- Frontend quality gates: `lint`, `typecheck`, `test`, `build`
+- E2E + smoke checks: Playwright + asset checks
+- Security/quality scans: secret scan, audit, docs checks, prompt-defense analysis
+- Resilience: simulation modes (`sim:*`) and worldwide wildcard test harness
+- Python orchestrator CI path: `lint:py`, `test:py`, `ci:py`
 - Web3 path: Hardhat compile/test/deploy scripts
-
-**Dev server runs on port 8080** (not 5173). Set in `vite.config.ts: server.port: 8080`.
 
 ## CI/CD Workflow Inventory
 

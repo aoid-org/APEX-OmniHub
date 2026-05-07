@@ -5,8 +5,7 @@ import {
   queueOfflineRequest,
   processQueuedRequests,
   saveToLocalStorage,
-  loadFromLocalStorage,
-  _clearQueueForTests
+  loadFromLocalStorage
 } from '../../src/lib/offline';
 
 describe('offline utils', () => {
@@ -234,11 +233,6 @@ describe('offline utils', () => {
   });
 
   describe('queueOfflineRequest & processQueuedRequests', () => {
-    beforeEach(() => {
-      _clearQueueForTests();
-      localStorage.removeItem('offline_request_queue');
-    });
-
     it('queues a request and persists it', () => {
       const req = vi.fn(() => Promise.resolve('ok'));
       const id = queueOfflineRequest(req);

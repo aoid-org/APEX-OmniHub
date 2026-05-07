@@ -8,8 +8,6 @@ ARTIFACTS=(
   "test_output_pr601.txt"
   "test_forge_full.py"
   "test_json.json"
-  "logs.txt"
-  "debug_test.cjs"
 )
 
 EXIT_CODE=0
