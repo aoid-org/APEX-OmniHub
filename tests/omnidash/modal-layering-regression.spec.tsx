@@ -107,46 +107,35 @@ describe('Modal Layering Regression', () => {
   });
 
   describe('OmniSpatialHost Source — no double overlay', () => {
-    it('custom backdrop in OmniSpatialHost uses bg-transparent (click handler only)', async () => {
+    it('canonical custom backdrop uses bg-transparent (click handler only)', async () => {
       const fs = await import('node:fs');
       const path = await import('node:path');
+      const filePath = path.resolve(__dirname, '../../apps/omnihub-site/dashboard/components/OmniSpatialHost.tsx');
+      const source = fs.readFileSync(filePath, 'utf-8');
 
-      // Check both copies of OmniSpatialHost
-      const paths = [
-        path.resolve(__dirname, '../../apps/omnihub-site/dashboard/components/OmniSpatialHost.tsx'),
-        path.resolve(__dirname, '../../apps/omnihub-site/src/components/omnidash/OmniSpatialHost.tsx'),
-      ];
+      const backdropRegex = /aria-label="Close modal"[\s\S]*?className="([^"]+)"/;
+      const backdropMatch = backdropRegex.exec(source);
+      expect(backdropMatch).not.toBeNull();
 
-      for (const filePath of paths) {
-        const source = fs.readFileSync(filePath, 'utf-8');
-
-        // Find the custom backdrop button line
-        const backdropRegex = /aria-label="Close modal"[\s\S]*?className="([^"]+)"/;
-        const backdropMatch = backdropRegex.exec(source);
-        expect(backdropMatch).not.toBeNull();
-
-        const backdropClasses = backdropMatch![1];
-        // Must be transparent — visual overlay comes from DialogOverlay only
-        expect(backdropClasses).toContain('bg-transparent');
-        // Must NOT have bg-black with opacity
-        expect(backdropClasses).not.toMatch(/bg-black\/\d/);
-      }
+      const backdropClasses = backdropMatch![1];
+      expect(backdropClasses).toContain('bg-transparent');
+      expect(backdropClasses).not.toMatch(/bg-black\/\d/);
     });
 
-    it('DialogContent in OmniSpatialHost has z-[9001] (above backdrop)', async () => {
+    it('canonical DialogContent has z-[9001] and legacy path re-exports it', async () => {
       const fs = await import('node:fs');
       const path = await import('node:path');
-
-      const paths = [
+      const canonical = fs.readFileSync(
         path.resolve(__dirname, '../../apps/omnihub-site/dashboard/components/OmniSpatialHost.tsx'),
+        'utf-8',
+      );
+      const legacyShim = fs.readFileSync(
         path.resolve(__dirname, '../../apps/omnihub-site/src/components/omnidash/OmniSpatialHost.tsx'),
-      ];
+        'utf-8',
+      );
 
-      for (const filePath of paths) {
-        const source = fs.readFileSync(filePath, 'utf-8');
-        // DialogContent className should include z-[9001]
-        expect(source).toContain('z-[9001]');
-      }
+      expect(canonical).toContain('z-[9001]');
+      expect(legacyShim).toContain("dashboard/components/OmniSpatialHost");
     });
   });
 

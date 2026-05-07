@@ -93,6 +93,7 @@ bun run preview          # Preview production build → http://localhost:4173
 bun run typecheck        # TypeScript — must produce zero errors
 bun run lint             # ESLint — must produce zero warnings (--max-warnings 0)
 bun run check:react      # React singleton check (one React version only)
+bun run check:drift      # Repo drift guard (runtime, headers, OmniDash shims, replay ordering, docs claims)
 bun run test             # Full Vitest suite (~2400 tests, ~70-90s)
 bun run docs:check       # Doc link + file-pointer integrity check
 bun run build            # Production build must succeed
@@ -186,14 +187,28 @@ TypeScript 5.x only accepts `"5.0"` as a valid `ignoreDeprecations` value.
 "ignoreDeprecations": "6.0"   // ❌ breaks build — TS 6.0 does not exist
 ```
 
-### 5.4 Single React Instance
+### 5.4 Repo Drift Guard — Mandatory Before PRs
+
+`bun run check:drift` is the repo-wide anti-regression gate. It fails closed when any of these invariants drift:
+
+- React/React DOM declarations leave the canonical 18.3.1 runtime.
+- Nested `apps/omnihub-site` lockfiles reappear instead of using root lockfile authority.
+- Legacy OmniDash files under `apps/omnihub-site/src/components/omnidash/` become implementations instead of compatibility re-exports to `apps/omnihub-site/dashboard/components/`.
+- Root deployment headers weaken COOP or add `'unsafe-inline'` to `script-src`.
+- OmniBridge replay-store checks move before signature verification.
+- Generated artifacts (`output.txt`, `logs.txt`, `*.pyc`, `__pycache__/`) become tracked.
+- Active docs use certification/global-rollout language without evidence-led status framing.
+
+Run it before opening or updating every PR. If it fails, fix the invariant rather than bypassing the script.
+
+### 5.5 Single React Instance
 
 There must be exactly one React instance loaded at runtime. The `check:react`
 script enforces this. Do not add secondary React dependencies in sub-packages.
 `vite.config.ts` and `vitest.config.ts` both use `dedupe: ['react', 'react-dom']`
 to enforce this.
 
-### 5.5 CSP Policy — No `unsafe-inline` in `script-src`
+### 5.6 CSP Policy — No `unsafe-inline` in `script-src`
 
 `public/_headers` enforces:
 ```
@@ -202,7 +217,7 @@ Content-Security-Policy: ... script-src 'self'; ...
 Do not add `'unsafe-inline'` to `script-src`. All scripts must be
 self-hosted and bundled by Vite.
 
-### 5.6 OmniLink Single Port Rule
+### 5.7 OmniLink Single Port Rule
 
 All OmniLink traffic flows through port `9876`. Do not add
 alternative ports or bypass this constraint.
@@ -217,7 +232,7 @@ alternative ports or bypass this constraint.
 |---|---|---|
 | `architectural-boundary-enforcement` | `ci-runtime-gates.yml` | Worker/API purity, metrics decoupling |
 | `terraform-expression-drift-gate` | `ci-runtime-gates.yml` | Terraform expressions unchanged |
-| `build-and-test` | `ci-runtime-gates.yml` | Changelog paths, repo hygiene, TSC, ESLint, React singleton, tests, build |
+| `build-and-test` | `ci-runtime-gates.yml` | Changelog paths, repo/drift hygiene, TSC, ESLint, React singleton, tests, build |
 | `quality-gates` | `production-readiness.yml` | TSC, ESLint, tests, docs:check, SPA redirect file |
 | `security-gates` | `production-readiness.yml` | TruffleHog secrets scan, npm audit (high/critical), security posture |
 | `rls-posture-gate` | `orchestrator-ci.yml` | Supabase RLS coverage on all tables |

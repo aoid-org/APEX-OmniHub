@@ -1,7 +1,7 @@
 # Canonical Truth File — Platform Topology & Deployment
 
 **Version:** 1.2.0
-**Last Updated:** 2026-05-06
+**Last Updated:** 2026-05-07
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements
@@ -21,6 +21,12 @@
 13. **Path alias split is intentional and load-bearing.** `vite.config.ts` resolves `@/*` → `./apps/omnihub-site/src/*`. `vitest.config.ts` resolves `@/*` → `./src/*`. Do not align these — the split enables test isolation between root-package code and the omnihub-site app.
 14. **Dev server port is 8080.** `vite.config.ts` sets `server.port: 8080`. Documentation referencing port 5173 is incorrect.
 15. **`orchestrator/requirements.lock` must stay committed.** The `Dependency Security Audit` CI gate checks for its existence. Do not delete or gitignore it.
+
+16. **Repo drift guard is mandatory.** `bun run check:drift` is the fail-closed guard for canonical React runtime declarations, root lockfile authority, OmniDash compatibility shims, deployment header hardening, OmniBridge replay-verification ordering, tracked artifact hygiene, and active-doc evidence language.
+17. **OmniDash source authority is single-tree.** Implementations live under `apps/omnihub-site/dashboard/components/`. Files under `apps/omnihub-site/src/components/omnidash/` are compatibility re-export shims only and must not regain independent UI/business logic.
+18. **OmniBridge replay protection must run after signature verification.** `functions/api/omnibridge/ingest.ts` and `functions/api/omnibridge/sync.ts` must verify HMAC/sync signatures before calling `replayStore.isDuplicate()` so invalid packets cannot poison replay state.
+19. **Root deployment headers are canonical for Pages.** `public/_headers` must keep `Cross-Origin-Opener-Policy: same-origin` and `script-src 'self'`; do not reintroduce COOP `unsafe-none` or `script-src 'unsafe-inline'`.
+20. **Status claims require evidence.** Active documents must use dated command evidence, audit artifact links, or evidence-led wording. Historical audits can remain historical, but active docs must not present stale pass counts or certification language as current proof.
 
 ## Conflict Resolution Rule
 

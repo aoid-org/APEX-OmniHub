@@ -1,23 +1,6 @@
 /**
- * moduleComponents — Module key lookup for OmniDash.
- *
- * Separated from ModuleRenderer.tsx to satisfy react-refresh/only-export-components.
- * OWNED BY: APEX Business Systems Ltd.
+ * Compatibility re-export. Canonical OmniDash components live under
+ * apps/omnihub-site/dashboard/components; keep this shim for legacy
+ * tests/docs imports without maintaining a second implementation.
  */
-
-const MODULE_KEYS: ReadonlySet<string> = new Set([
-  'omniskills',
-  'physiomni',
-  'audits',
-  'links',
-  'automations',
-  'workflows',
-  'files',
-  'billing',
-  'settings',
-]);
-
-/** Returns true when a lazy-loaded module component exists for the given key. */
-export function hasModuleComponent(moduleKey: string): boolean {
-  return MODULE_KEYS.has(moduleKey);
-}
+export * from '../../../dashboard/components/moduleComponents';

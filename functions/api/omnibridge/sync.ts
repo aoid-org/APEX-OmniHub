@@ -100,12 +100,6 @@ export const onRequestPost: OnRequestPost = async ({ request, env }) => {
   }
   const envelope = parsed as SyncPacketEnvelope;
 
-  const replayKey = getHardenedReplayKey(sourceId, envelope.packet.packet_id);
-  if (replayStore.isDuplicate(replayKey)) {
-    logEvent(true, 'replay_detected', { source_id: sourceId, packet_id: envelope.packet.packet_id });
-    return jsonResponse(409, { error: 'replay_detected' });
-  }
-
   const verify = await verifySyncPacket(envelope, resolution.secret);
   if (!verify.valid) {
     logEvent(true, `verify_failed:${verify.reason ?? 'unknown'}`, {
@@ -113,6 +107,12 @@ export const onRequestPost: OnRequestPost = async ({ request, env }) => {
       packet_id: envelope.packet.packet_id,
     });
     return verifyErrorResponse(verify.reason);
+  }
+
+  const replayKey = getHardenedReplayKey(sourceId, envelope.packet.packet_id);
+  if (replayStore.isDuplicate(replayKey)) {
+    logEvent(true, 'replay_detected', { source_id: sourceId, packet_id: envelope.packet.packet_id });
+    return jsonResponse(409, { error: 'replay_detected' });
   }
 
   const cleanPayload = sanitize(envelope.packet.payload);

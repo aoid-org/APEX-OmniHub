@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v2.0.0 | LAST_UPDATED=2026-05-06 -->
+<!-- APEX_DOC_STAMP: VERSION=v2.1.0 | LAST_UPDATED=2026-05-07 -->
 # Developer Onboarding Guide
 
 > **Agent note:** The single most important file is `CLAUDE.md` at the repo root.
@@ -52,6 +52,7 @@ Edit `.env.local` with credentials from the team vault:
 bun run typecheck    # TypeScript compilation — must produce zero errors
 bun run lint         # ESLint — must produce zero warnings
 bun run test         # Full test suite (~2400 tests, ~70–90 s)
+bun run check:drift  # Canonical drift guard: runtime, headers, shims, replay ordering, docs claims
 bun run build        # Production Vite build → dist/
 bun run dev          # Dev server → http://localhost:8080
 ```
@@ -154,6 +155,23 @@ git commit -m "feat(scope): concise description of what and why"
 git push -u origin feature/your-feature-name
 ```
 
+
+### Anti-Regression / Drift Guardrail Rules
+
+`bun run check:drift` must pass before every PR update. It is intentionally broader than a style check and blocks changes that historically caused regressions:
+
+| Guarded area | Required invariant | Why it exists |
+|---|---|---|
+| React runtime | React and React DOM declarations remain on 18.3.1-compatible ranges | Prevents hook/runtime split-brain between root and app-site |
+| Lockfiles | Root `bun.lock` + root `package-lock.json` are authoritative; no app-site nested lockfiles | Prevents dependency authority drift |
+| OmniDash | Legacy `src/components/omnidash` files stay compatibility re-export shims to `dashboard/components` | Prevents duplicate implementation trees |
+| Headers | COOP stays `same-origin`; CSP `script-src` stays `'self'` | Prevents deployment security regression |
+| OmniBridge | Signature verification precedes replay-store mutation | Prevents invalid packets from poisoning replay state |
+| Repo hygiene | Generated logs/output/Python cache files are not tracked | Prevents noisy and misleading artifacts |
+| Docs claims | Active docs use evidence-led status language, not stale certification claims | Prevents hallucinated readiness narratives |
+
+Do not bypass this gate. If a legitimate architecture change requires changing an invariant, update `docs/architecture/CANONICAL_TRUTH.md`, this guide, the guard script, and the tests in the same PR.
+
 ### Commit Message Format (Conventional Commits)
 
 ```
@@ -174,6 +192,7 @@ chore(deps): bump protobufjs 7.5.4 → 7.5.5 (CVE-2026-41242)
 - [ ] `bun run typecheck` — zero TypeScript errors
 - [ ] `bun run lint` — zero ESLint warnings
 - [ ] `bun run test` — all tests pass
+- [ ] `bun run check:drift` — canonical runtime, security headers, source-tree shims, replay ordering, repo hygiene, and evidence-language invariants pass
 - [ ] `bun run build` — production build succeeds
 - [ ] No secrets in code (run `bun run secret:scan`)
 - [ ] Commit message follows Conventional Commits format

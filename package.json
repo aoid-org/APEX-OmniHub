@@ -28,7 +28,7 @@
     "test:infra:coverage": "VITEST_COVERAGE=true vitest run tests/infrastructure/cloudflare-ratelimit-ruleset.test.ts tests/infrastructure/lambda-dispatch-context-branch.test.ts packages/infrastructure/tests/lambda-dispatch.test.ts --coverage.include=src/omnihub-gateway/lambdaDispatchActivity.ts --coverage.exclude= --coverage.thresholds.lines=85 --coverage.thresholds.functions=85 --coverage.thresholds.branches=70 --coverage.thresholds.statements=85",
     "check:react": "node scripts/check-react-singleton.mjs",
     "docs:check": "node scripts/ci/check_docs_links.mjs && node scripts/ci/check_doc_code_pointers.mjs",
-    "ci:runtime-gates": "npm run check:react && npm run test:assets && npm run test:infra && npm run test:e2e",
+    "ci:runtime-gates": "npm run check:drift && npm run check:react && npm run test:assets && npm run test:infra && npm run test:e2e",
     "smoke-test": "tsx scripts/smoke-test.ts",
     "guardian:status": "tsx scripts/guardian/status.ts",
     "omnilink:health": "tsx scripts/omnilink/health.ts",
@@ -77,7 +77,8 @@
     "changeset:version": "changeset version",
     "changeset:publish": "changeset publish",
     "release": "bun run build && bun run changeset:publish",
-    "prebuild": "node scripts/check-env-root.mjs && node scripts/generate-sitemap.mjs"
+    "prebuild": "node scripts/check-env-root.mjs && node scripts/generate-sitemap.mjs",
+    "check:drift": "node scripts/ci/check_repo_drift.mjs"
   },
   "size-limit": [
     {
@@ -259,18 +260,17 @@
     "tar": "^7.5.11",
     "undici": "^6.24.0",
     "hono": "^4.12.4",
-    "serialize-javascript": "^7.0.3",     "protobufjs": "^7.5.5",     "axios": "^1.16.0",
+    "serialize-javascript": "^7.0.3",
+    "protobufjs": "7.5.5",
+    "axios": "$axios",
     "rollup": "^4.59.0",
     "immutable": "^4.3.8",
     "picomatch": ">=2.3.2",
-    "axios": "^1.7.9",
-    "postcss": "^8.5.10",
-    "uuid": "^14.0.0",
+    "postcss": "$postcss",
+    "uuid": "$uuid",
     "ast-v8-to-istanbul": {
       "js-tokens": "^10.0.0"
     },
-    "axios": "$axios",
-    "protobufjs": "7.5.5",
     "ip-address": "10.2.0"
   },
   "resolutions": {

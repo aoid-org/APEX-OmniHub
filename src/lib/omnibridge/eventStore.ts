@@ -1,5 +1,5 @@
 /**
- * OmniBridge Event Store — persistence + orchestrator dispatch
+ * OmniBridge Event Store — persistence + optional orchestrator dispatch
  *
  * Closes the `FUTURE: Durable execution routing` gap at
  * api/omnibridge/ingest.ts:222. Called by both the hardened and sync_packet
@@ -8,10 +8,10 @@
  * Design:
  *   - Writes every verified event to omnibridge_events (idempotent on
  *     (source_id, event_id)).
- *   - Best-effort fire-and-forget dispatch to the orchestrator. Dispatch
- *     failures land in omnibridge_events_dlq with exponential-backoff metadata.
+ *   - Optional best-effort dispatch to OMNIBRIDGE_DISPATCH_URL when configured.
+ *     Dispatch failures land in omnibridge_events_dlq with exponential-backoff metadata.
  *   - Edge-safe: uses fetch (no SDK). The service role key is provided via env
- *     and is never logged. Callers run in Vercel Edge and POST to Supabase
+ *     and is never logged. Callers run in Cloudflare Pages Functions and POST to Supabase
  *     PostgREST directly.
  *
  * Fail-closed: a persistence failure surfaces to the caller so the partner
@@ -32,6 +32,8 @@ export interface EventStoreEnv {
   SUPABASE_URL?: string;
   VITE_SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
+  OMNIBRIDGE_DISPATCH_URL?: string;
+  OMNIBRIDGE_DISPATCH_TOKEN?: string;
 }
 
 export interface PersistEventInput {
@@ -62,6 +64,7 @@ export interface PersistFailure {
 export type PersistOutcome = PersistResult | PersistFailure;
 
 const HARDCODED_TIMEOUT_MS = 3_000;
+const DISPATCH_TIMEOUT_MS = 5_000;
 
 /**
  * Resolve Supabase config from an explicit env bag. On CF Pages Functions
@@ -74,6 +77,81 @@ function readSupabaseConfig(env: EventStoreEnv | undefined): { url: string; serv
   const serviceKey = source.SUPABASE_SERVICE_ROLE_KEY;
   if (url && serviceKey) return { url, serviceKey };
   return null;
+}
+
+function readDispatchConfig(env: EventStoreEnv | undefined): { url: string; token?: string } | null {
+  const source: EventStoreEnv = env ?? (typeof process !== 'undefined' ? process.env as EventStoreEnv : {});
+  if (!source.OMNIBRIDGE_DISPATCH_URL) return null;
+  return { url: source.OMNIBRIDGE_DISPATCH_URL, token: source.OMNIBRIDGE_DISPATCH_TOKEN };
+}
+
+function truncateDetail(detail: string): string {
+  return detail.slice(0, 2000);
+}
+
+async function dispatchPersistedEvent(
+  eventUuid: string,
+  input: PersistEventInput,
+  env?: EventStoreEnv,
+): Promise<void> {
+  const dispatch = readDispatchConfig(env);
+  if (!dispatch) return;
+
+  await updateDispatchState({
+    event_uuid: eventUuid,
+    state: 'dispatching',
+    dispatch_target: dispatch.url,
+  }, env);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DISPATCH_TIMEOUT_MS);
+
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-OmniBridge-Event-UUID': eventUuid,
+      'X-OmniBridge-Event-Type': input.event_type,
+    };
+    if (dispatch.token) {
+      headers.Authorization = `Bearer ${dispatch.token}`;
+    }
+
+    const res = await fetch(dispatch.url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ event_uuid: eventUuid, ...input }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      const message = truncateDetail(`dispatch_failed:${res.status}:${text}`);
+      await updateDispatchState({ event_uuid: eventUuid, state: 'dlq', error: message }, env);
+      await recordDispatchFailure({
+        event_uuid: eventUuid,
+        target_url: dispatch.url,
+        error_message: message,
+        http_status: res.status,
+      }, env);
+      return;
+    }
+
+    await updateDispatchState({
+      event_uuid: eventUuid,
+      state: 'dispatched',
+      dispatch_target: dispatch.url,
+    }, env);
+  } catch (e) {
+    const message = truncateDetail(e instanceof Error ? e.message : String(e));
+    await updateDispatchState({ event_uuid: eventUuid, state: 'dlq', error: message }, env);
+    await recordDispatchFailure({
+      event_uuid: eventUuid,
+      target_url: dispatch.url,
+      error_message: message,
+    }, env);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
@@ -142,6 +220,7 @@ export async function persistEvent(
       return { ok: true, event_uuid: existing[0].id, duplicate: true };
     }
 
+    await dispatchPersistedEvent(rows[0].id, input, env);
     return { ok: true, event_uuid: rows[0].id, duplicate: false };
   } catch (e) {
     return { ok: false, reason: 'upstream_error', detail: e instanceof Error ? e.message : String(e) };
@@ -184,7 +263,7 @@ export async function recordDispatchFailure(
       body: JSON.stringify([{
         event_uuid: input.event_uuid,
         target_url: input.target_url,
-        error_message: input.error_message.slice(0, 2000),
+        error_message: truncateDetail(input.error_message),
         http_status: input.http_status ?? null,
         retry_count: retryCount,
         next_retry_at: nextRetryAt,
@@ -216,7 +295,7 @@ export async function updateDispatchState(
   const patch: Record<string, unknown> = { dispatch_state: input.state };
   if (input.state === 'dispatched') patch.dispatched_at = nowIso;
   if (input.state === 'acknowledged') patch.acknowledged_at = nowIso;
-  if (input.error) patch.dispatch_last_error = input.error.slice(0, 2000);
+  if (input.error) patch.dispatch_last_error = truncateDetail(input.error);
   if (input.dispatch_target) patch.dispatch_target = input.dispatch_target;
 
   try {

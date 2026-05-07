@@ -235,3 +235,23 @@ upstream gate (`quality-gates` or `security-gates`), not the summary job.
 
 Historical Vercel-oriented gate context is preserved in:
 `docs/archive/legacy-runbooks/CI_RUNTIME_GATES_legacy.md`
+
+
+---
+
+## Repo Drift Guard (Canonical Anti-Regression Gate)
+
+**Command:** `bun run check:drift`
+
+This gate is mandatory in CI and before PR updates. It validates the exact invariants that prevent the known high-impact drift classes in this repository:
+
+- canonical React 18.3.1 declarations and absence of React 19 lockfile drift;
+- root lockfile authority for `apps/omnihub-site`;
+- OmniDash legacy compatibility shims pointing to the canonical `dashboard/components` implementation tree;
+- root `_headers` COOP/CSP hardening;
+- OmniBridge signature verification before replay-store checks;
+- event-store dispatch/DLQ contract presence;
+- tracked artifact exclusion;
+- active documentation evidence-language discipline.
+
+**Failure policy:** fix the invariant. Do not mute the gate, remove file paths from the guard, or weaken regex checks unless the canonical architecture has changed and the same PR updates `docs/architecture/CANONICAL_TRUTH.md`, `CLAUDE.md`, and onboarding docs.

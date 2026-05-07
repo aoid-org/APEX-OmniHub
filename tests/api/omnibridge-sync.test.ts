@@ -141,6 +141,18 @@ describe('functions/api/omnibridge/sync', () => {
     expect(res.status).toBe(401);
   });
 
+  it('does not poison replay cache before signature verification', async () => {
+    const env = baseEnv();
+    const packet = buildPacket();
+    const badSignature = await signSyncPacketForTest(packet, 'wrong-secret');
+    const rejected = await onRequest({ request: await buildRequest({ packet, signature: badSignature }), env });
+    expect(rejected.status).toBe(401);
+
+    const goodSignature = await signSyncPacketForTest(packet, 'native-test-secret-xyz');
+    const accepted = await onRequest({ request: await buildRequest({ packet, signature: goodSignature }), env });
+    expect(accepted.status).toBe(202);
+  });
+
   it('rejects expired emitted_at', async () => {
     const env = baseEnv();
     const packet = buildPacket({ emitted_at: new Date(Date.now() - 600_000).toISOString() });

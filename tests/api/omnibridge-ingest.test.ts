@@ -184,6 +184,17 @@ describe('functions/api/omnibridge/ingest', () => {
       expect(res.status).toBe(401);
     });
 
+    it('does not poison replay cache before signature verification', async () => {
+      const env = baseEnv();
+      const bad = await buildHardenedRequest(validBody, 'sbbl-hq', 'sbbl-hq-v1', 'trace-poison', 'wrong-secret');
+      const rejected = await onRequest({ request: bad, env });
+      expect(rejected.status).toBe(401);
+
+      const good = await buildHardenedRequest(validBody, 'sbbl-hq', 'sbbl-hq-v1', 'trace-poison', testSecret);
+      const accepted = await onRequest({ request: good, env });
+      expect(accepted.status).toBe(200);
+    });
+
     it('rejects tenant mismatch', async () => {
       const env = baseEnv();
       const req = await buildHardenedRequest({ ...validBody, tenant_id: 'wrong-tenant' }, 'sbbl-hq', 'sbbl-hq-v1', 'trace-1', testSecret);

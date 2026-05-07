@@ -1,7 +1,7 @@
 # APEX OmniHub — Canonical Infrastructure & Architecture Map
 
-> **Version:** 2.2.0  
-> **Last updated:** 2026-05-04  
+> **Version:** 2.2.0
+> **Last updated:** 2026-05-07
 > **Status:** Canonical (source of truth)
 
 This document is optimized for **onboarding clarity** and **operator execution** while preserving value proposition context.
@@ -66,7 +66,7 @@ APEX OmniHub is a polyglot monorepo with five execution planes:
 ### A) New Engineer (first 60 minutes)
 1. Read `docs/architecture/CANONICAL_TRUTH.md`.
 2. Read this file end-to-end.
-3. Run: `npm run typecheck && npm run lint && npm run test`.
+3. Run: `bun run check:drift && bun run typecheck && bun run lint && bun run test`.
 4. Review `.github/workflows/ci-runtime-gates.yml`.
 
 ### B) DevOps/SRE onboarding
@@ -90,6 +90,7 @@ The repository intentionally supports multi-domain validation:
 - Smart contracts: hardhat compile/test/deploy gates
 - Simulation/chaos: `sim:*` pipelines
 - Security/compliance: secret scans + guardrail workflows
+- Repo drift: `bun run check:drift` validates runtime, source-tree, deployment-header, replay-ordering, hygiene, and docs-claim invariants before merge.
 
 ---
 

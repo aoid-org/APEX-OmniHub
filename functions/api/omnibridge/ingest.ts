@@ -76,12 +76,6 @@ async function handleHardenedIngress(
     return jsonResponse(400, { error: 'invalid_timestamp' });
   }
 
-  const replayKey = getHardenedReplayKey(sourceId, traceId);
-  if (replayStore.isDuplicate(replayKey)) {
-    logEvent(true, 'replay_detected', meta);
-    return jsonResponse(409, { error: 'replay_detected' });
-  }
-
   const resolution = resolveHardenedSourceFromEnv(sourceId, keyId, env);
   if (lastRegistryErrorFromEnv(env)) {
     logEvent(true, 'server_config_error', meta);
@@ -103,6 +97,12 @@ async function handleHardenedIngress(
   if (!(await validateHMAC(canonical, signature, resolution.secret))) {
     logEvent(true, 'invalid_signature', meta);
     return jsonResponse(401, { error: 'invalid_signature' });
+  }
+
+  const replayKey = getHardenedReplayKey(sourceId, traceId);
+  if (replayStore.isDuplicate(replayKey)) {
+    logEvent(true, 'replay_detected', meta);
+    return jsonResponse(409, { error: 'replay_detected' });
   }
 
   let parsedBody: Record<string, unknown>;

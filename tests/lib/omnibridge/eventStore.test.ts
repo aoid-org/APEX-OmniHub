@@ -146,6 +146,61 @@ describe('eventStore — persistEvent', () => {
     const out = await persistEvent(buildInput(), env);
     expect(out.ok).toBe(true);
   });
+
+  it('dispatches newly persisted events when OMNIBRIDGE_DISPATCH_URL is configured', async () => {
+    const env = {
+      ...BASE_ENV,
+      OMNIBRIDGE_DISPATCH_URL: 'https://orchestrator.example/omnibridge/events',
+      OMNIBRIDGE_DISPATCH_TOKEN: 'dispatch-token-NOSONAR', // NOSONAR
+    };
+    fetchMock
+      .mockResolvedValueOnce(makeResponse(201, [{ id: 'db-uuid-dispatch' }]))
+      .mockResolvedValueOnce(makeResponse(204, null))
+      .mockResolvedValueOnce(makeResponse(202, { accepted: true }))
+      .mockResolvedValueOnce(makeResponse(204, null));
+
+    const out = await persistEvent(buildInput(), env);
+
+    expect(out.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(String(fetchMock.mock.calls[1][0])).toContain('/rest/v1/omnibridge_events?id=eq.db-uuid-dispatch');
+    expect(fetchMock.mock.calls[2][0]).toBe(env.OMNIBRIDGE_DISPATCH_URL);
+    const dispatchInit = fetchMock.mock.calls[2][1] as RequestInit;
+    const dispatchHeaders = dispatchInit.headers as Record<string, string>;
+    expect(dispatchHeaders.Authorization).toBe(`Bearer ${env.OMNIBRIDGE_DISPATCH_TOKEN}`);
+    expect(JSON.parse(dispatchInit.body as string)).toMatchObject({
+      event_uuid: 'db-uuid-dispatch',
+      event_id: 'evt-1',
+      source_id: 'sbbl-hq',
+    });
+    const finalPatch = JSON.parse((fetchMock.mock.calls[3][1] as RequestInit).body as string);
+    expect(finalPatch.dispatch_state).toBe('dispatched');
+  });
+
+  it('records dispatch failures in DLQ without failing persistence', async () => {
+    const env = { ...BASE_ENV, OMNIBRIDGE_DISPATCH_URL: 'https://orchestrator.example/fail' };
+    fetchMock
+      .mockResolvedValueOnce(makeResponse(201, [{ id: 'db-uuid-dlq' }]))
+      .mockResolvedValueOnce(makeResponse(204, null))
+      .mockResolvedValueOnce(makeResponse(503, { error: 'down' }))
+      .mockResolvedValueOnce(makeResponse(204, null))
+      .mockResolvedValueOnce(makeResponse(201, []));
+
+    const out = await persistEvent(buildInput(), env);
+
+    expect(out.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+    const dlqPatch = JSON.parse((fetchMock.mock.calls[3][1] as RequestInit).body as string);
+    expect(dlqPatch.dispatch_state).toBe('dlq');
+    expect(String(fetchMock.mock.calls[4][0])).toContain('/rest/v1/omnibridge_events_dlq');
+    const dlqBody = JSON.parse((fetchMock.mock.calls[4][1] as RequestInit).body as string);
+    expect(dlqBody[0]).toMatchObject({
+      event_uuid: 'db-uuid-dlq',
+      target_url: env.OMNIBRIDGE_DISPATCH_URL,
+      http_status: 503,
+    });
+  });
+
 });
 
 describe('eventStore — recordDispatchFailure', () => {

@@ -1,20 +1,23 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
-# OMNILINK_HYBRID_CERTIFICATION
+<!-- APEX_DOC_STAMP: VERSION=v8.1-EVIDENCE-LEDGER | LAST_UPDATED=2026-05-07 -->
+# OMNILINK_HYBRID_CERTIFICATION — Historical Evidence Ledger
 
-**Date:** 2026-01-26  
-**Scope:** Hybrid Mobile App + OMEGA Architecture + M.A.E.S.T.R.O.  
-**Branch Certified:** `feature/native-wrapper-capacitor-20260125` & `feature/maestro-marketing-showcase-20260126`  
-**Verdict:** ✅ **PASS** (PWA + Native + OMEGA Complete)
+**Date:** 2026-01-26
+**Scope:** Hybrid Mobile App + OMEGA Architecture + M.A.E.S.T.R.O.
+**Branch Certified:** `feature/native-wrapper-capacitor-20260125` & `feature/maestro-marketing-showcase-20260126`
+**Verdict:** Historical branch-local pass record; re-run current gates before using as release evidence.
 
 ---
 
-## 1. Executive Summary
-The APEX-OmniHub project is a **production-ready Progressive Web App (PWA)** with **full native wrapper implementation** and a verified **OMEGA Enterprise Architecture**. The system includes enterprise-grade offline sync, native push notifications, and a hardened edge gateway for AI orchestration.
 
-**Current State:** Fully functional Mobile PWA + Native iOS/Android wrapper + OMEGA Security Layer.  
+> **Current-branch evidence rule (2026-05-07):** before citing this document in release notes, run `bun run check:drift`, `bun run typecheck`, `bun run lint`, `bun run test`, `bun run docs:check`, `bun run build`, and `npm audit --omit=dev --audit-level=high` from the repository root and attach the exact output bundle.
+
+## 1. Executive Summary
+This document records a historical branch-local hybrid mobile and OMEGA architecture verification. It is not a current production certification for the active branch. The system includes enterprise-grade offline sync, native push notifications, and a hardened edge gateway for AI orchestration.
+
+**Historical state recorded:** Mobile PWA + Native iOS/Android wrapper + OMEGA Security Layer on the named 2026-01 branches.
 **Architecture:** PWA-first with Capacitor native bridge + Temporal/Edge-driven AI orchestration.
 
-**Key Achievement:** Complete hybrid implementation with **zero Firebase dependency** and **100% verified OMEGA architecture** (Idempotent, Signed, Event-Sourced).
+**Key historical achievement:** Hybrid implementation with no Firebase SDK dependency and branch-local OMEGA architecture verification (Idempotent, Signed, Event-Sourced).
 
 ---
 
@@ -108,22 +111,22 @@ npm run cap:android        # Open in Android Studio
 
 ---
 
-## 5. Quality Gates Proof
+## 5. Historical Quality Gates Proof
 
 ### JS/TS Stack
-**Command:** `npm run typecheck`  
-**Result:** ✅ **PASS**
+**Historical command:** `npm run typecheck`
+**Recorded result:** PASS on the historical branch; not current-branch evidence.
 
-**Command:** `npm test`  
-**Result:** ✅ **PASS** (492 tests passed)
+**Historical command:** `npm test`
+**Recorded result:** PASS (492 tests passed) on the historical branch; not current-branch evidence.
 
 ### Python Stack
-**Command:** `npm run test:py`  
-**Result:** ✅ **PASS**
+**Historical command:** `npm run test:py`
+**Recorded result:** PASS on the historical branch; not current-branch evidence.
 
 ### Capacitor Sync
-**Command:** `npx cap sync`  
-**Result:** ✅ **PASS** (Web assets synced to native projects)
+**Historical command:** `npx cap sync`
+**Recorded result:** PASS on the historical branch; not current-branch evidence.
 
 ---
 
@@ -170,7 +173,7 @@ npm run cap:android        # Open in Android Studio
 
 **✅ PASS (Full Hybrid + OMEGA Certification)**
 
-The OmniLink Hybrid implementation is **production-ready** with:
+The historical OmniLink Hybrid implementation was recorded with:
 - ✅ Complete PWA functionality
 - ✅ Native iOS/Android wrapper (Capacitor)
 - ✅ Native push notifications (no Firebase dependency)
@@ -181,9 +184,9 @@ The OmniLink Hybrid implementation is **production-ready** with:
 
 ---
 
-**Certified By:** Google Antigravity  
-**Certification Date:** 2026-01-26  
-**Branch:** `feature/maestro-marketing-showcase-20260126`  
-**Native Wrapper:** Capacitor 6.x  
+**Certified By:** Google Antigravity
+**Certification Date:** 2026-01-26
+**Branch:** `feature/maestro-marketing-showcase-20260126`
+**Native Wrapper:** Capacitor 6.x
 **Push Architecture:** Native-only (APNS HTTP/2 + FCM HTTP v1)
 **Security Architecture:** OMEGA (Idempotent Edge)
