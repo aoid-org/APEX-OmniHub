@@ -83,6 +83,10 @@ const SENSITIVE_FIELD_NAMES = [
   'authToken',
 ] as const;
 
+// Pre-compiled regex for O(1) matching vs O(n) array traversal
+// This significantly speeds up object traversal since it runs on every key
+const SENSITIVE_FIELD_REGEX = new RegExp(SENSITIVE_FIELD_NAMES.join('|'), 'i');
+
 // ============================================================================
 // CIRCUIT BREAKER STATE
 // ============================================================================
@@ -146,8 +150,7 @@ function sanitizeString(text: string, metrics: SanitizationMetrics): string {
  * Check if field name is sensitive
  */
 function isSensitiveField(key: string): boolean {
-  const lowerKey = key.toLowerCase();
-  return SENSITIVE_FIELD_NAMES.some(sensitive => lowerKey.includes(sensitive));
+  return SENSITIVE_FIELD_REGEX.test(key);
 }
 
 /**
