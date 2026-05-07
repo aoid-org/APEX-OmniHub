@@ -36,7 +36,13 @@ COPY models ./models
 COPY infrastructure ./infrastructure
 COPY workflows ./workflows
 COPY activities ./activities
-COPY config.py main.py ./
+COPY core ./core
+COPY observability ./observability
+COPY security ./security
+COPY policies ./policies
+COPY providers ./providers
+COPY omniboard ./omniboard
+COPY config.py main.py server.py metrics.py ./
 
 # Create non-root user
 RUN useradd -m -u 1000 orchestrator && \

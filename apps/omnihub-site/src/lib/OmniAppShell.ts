@@ -156,11 +156,15 @@ class OmniAppShellElement extends HTMLElement {
       // Placeholder
       const placeholder = document.createElement('div');
       placeholder.className = 'omni-sandbox-placeholder';
-      placeholder.innerHTML = `
-        <h3>${config.title ?? 'Integration Sandbox'}</h3>
-        <p>This integration is running in a zero-trust Shadow DOM sandbox.</p>
-        <p>No styles or scripts can escape this boundary.</p>
-      `;
+      const heading = document.createElement('h3');
+      heading.textContent = config.title ?? 'Integration Sandbox';
+      const desc1 = document.createElement('p');
+      desc1.textContent = 'This integration is running in a zero-trust Shadow DOM sandbox.';
+      const desc2 = document.createElement('p');
+      desc2.textContent = 'No styles or scripts can escape this boundary.';
+      placeholder.appendChild(heading);
+      placeholder.appendChild(desc1);
+      placeholder.appendChild(desc2);
       container.appendChild(placeholder);
     }
 

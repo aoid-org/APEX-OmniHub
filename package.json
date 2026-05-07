@@ -156,7 +156,6 @@
     "ioredis": "^5.4.1",
     "lru-cache": "^11.0.2",
     "lucide-react": "^1.11.0",
-    "nanoid": "^5.0.9",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -166,7 +165,6 @@
     "react-i18next": "^16.5.4",
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^7.13.0",
-    "reactflow": "^11.11.4",
     "recharts": "^2.15.4",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
@@ -259,24 +257,22 @@
     "tar": "^7.5.11",
     "undici": "^6.24.0",
     "hono": "^4.12.16",
-    "serialize-javascript": "^7.0.3",     "protobufjs": "^7.5.5",     "axios": "^1.16.0",
+    "serialize-javascript": "^7.0.3",
     "rollup": "^4.59.0",
     "immutable": "^4.3.8",
-    "picomatch": ">=2.3.2",
-    "axios": "^1.7.9",
+    "axios": "^1.16.0",
     "postcss": "^8.5.10",
     "uuid": "^14.0.0",
     "ast-v8-to-istanbul": {
       "js-tokens": "^10.0.0"
     },
-    "axios": "$axios",
     "protobufjs": "7.5.5",
     "ip-address": "10.2.0"
   },
   "resolutions": {
     "h3": "^1.15.9",
     "picomatch": "^4.0.4",
-    "axios": "^1.7.9",
+    "axios": "^1.16.0",
     "postcss": "^8.5.10",
     "uuid": "^14.0.0",
     "ast-v8-to-istanbul/js-tokens": "^10.0.0"

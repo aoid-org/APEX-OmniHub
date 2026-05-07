@@ -6,6 +6,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — Zero Tech Debt Pass (2026-05-07)
+
+- **Security (create-checkout):** Added `ALLOWED_ORIGINS` allowlist for `returnUrl`
+  validation to prevent open-redirect abuse; replaced raw `error.message` in catch
+  block with a generic `500` message to prevent internal stack exposure.
+- **Security (OmniAppShell):** Replaced unsafe `innerHTML` template literal for
+  `config.title` in shadow DOM placeholder with `textContent` assignments —
+  eliminates XSS vector in the sandbox placeholder path.
+- **Dependency hygiene:** Removed duplicate/invalid `overrides` entries from root
+  `package.json` (`axios: "$axios"`, inline `protobufjs: ^7.5.5`, inline
+  `axios: ^1.16.0`, redundant `picomatch: >=2.3.2`). Single clean `axios: ^1.7.9`
+  override remains. Removed unused direct deps `reactflow` and `nanoid` (zero
+  production imports confirmed).
+- **Orchestrator requirements:** Added missing runtime packages to
+  `orchestrator/requirements.in`: `authlib`, `slowapi`, `aiofiles`,
+  `prometheus-client`, `mysql-connector-python`; aligned `temporalio` version to
+  match `pyproject.toml`.
+- **Orchestrator Dockerfile:** Added missing `COPY` directives for `core/`,
+  `observability/`, `security/`, `policies/`, `providers/`, `omniboard/`,
+  `server.py`, and `metrics.py` — container was missing six runtime packages
+  and two entry-point files that `main.py` and `server.py` directly import.
+- **Documentation drift:** Updated 4 stale `src/components/omnidash/media/` paths
+  in `docs/platform/OMNIDASH.md` and 1 stale path in `README.md` to canonical
+  `apps/omnihub-site/dashboard/components/` locations.
+- **JSDoc @module comments:** Fixed 4 dashboard components with stale
+  `@module apps/omnihub-site/src/components/omnidash/*` headers —
+  now correctly reflect `apps/omnihub-site/dashboard/components/*`.
+
 ### Fixed — Code Quality Improvements (2026-05-07)
 
 - **Security headers:** `Cross-Origin-Opener-Policy` in `public/_headers` upgraded
