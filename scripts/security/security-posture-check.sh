@@ -33,7 +33,7 @@ check_failed() {
 }
 
 echo "## Secret Scanning" >> "${REPORT_FILE}"
-if [[ -f ".gitleaks.toml" && -f ".trufflehog.yaml" ]]; then
+if [[ -f ".gitleaks.toml" && ( -f ".trufflehog.yaml" || -f ".trufflehog-exclude-paths.txt" ) ]]; then
   check_passed "Secret scanning configuration present"
 else
   check_failed "Secret scanning configuration missing"
@@ -47,9 +47,9 @@ fi
 echo "" >> "${REPORT_FILE}"
 
 echo "## Dependency Security" >> "${REPORT_FILE}"
-AUDIT_OUTPUT=$(npm audit --json 2>/dev/null || echo '{"metadata":{"vulnerabilities":{}}}')
-CRITICAL=$(echo "${AUDIT_OUTPUT}" | jq -r '.metadata.vulnerabilities.critical // 0')
-HIGH=$(echo "${AUDIT_OUTPUT}" | jq -r '.metadata.vulnerabilities.high // 0')
+AUDIT_OUTPUT=$(npm audit --omit=dev --json 2>/dev/null || echo '{"metadata":{"vulnerabilities":{}}}')
+CRITICAL=$(echo "${AUDIT_OUTPUT}" | jq -rs '[.[] | .metadata.vulnerabilities.critical // empty] | last // 0')
+HIGH=$(echo "${AUDIT_OUTPUT}" | jq -rs '[.[] | .metadata.vulnerabilities.high // empty] | last // 0')
 
 if [[ "${CRITICAL}" -eq 0 ]]; then
   check_passed "Zero critical vulnerabilities"

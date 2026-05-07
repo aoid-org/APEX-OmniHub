@@ -25,7 +25,8 @@ const { mockTracer, mockGetTracer, mockSdkStart, mockNodeSdk } = vi.hoisted(() =
 
   const getTracer = vi.fn(() => tracer);
   const sdkStart = vi.fn();
-  const nodeSdk = vi.fn(() => ({ start: sdkStart }));
+  // Arrow functions cannot be used with `new`; use a regular function so NodeSDK can be constructed.
+  const nodeSdk = vi.fn(function () { return { start: sdkStart }; });
 
   return {
     mockTracer: tracer,
@@ -53,10 +54,15 @@ vi.mock('@opentelemetry/api', () => {
   };
 });
 
+// NodeSDK must be a real class — vi.fn arrow-wrapper is not constructible in Vitest v4.
+// mockNodeSdk() is called inside the constructor so spy assertions still work.
 vi.mock(
   '@opentelemetry/sdk-node',
   () => ({
-    NodeSDK: mockNodeSdk,
+    NodeSDK: class NodeSDKMock {
+      start = mockSdkStart;
+      constructor(opts: unknown) { mockNodeSdk(opts); }
+    },
   }),
   { virtual: true },
 );
@@ -106,9 +112,8 @@ describe('Gateway Tracer', () => {
     vi.clearAllMocks();
   });
 
-  it('initGatewayTracer should not crash and should return a provider if enabled', () => {
-    // RED PHASE test: the implementation shouldn't exist yet but we expect it to return undefined or a provider
-    const provider = initGatewayTracer({ enabled: false });
+  it('initGatewayTracer should not crash and should return a provider if enabled', async () => {
+    const provider = await initGatewayTracer({ enabled: false });
     expect(provider).toBeUndefined();
     expect(mockNodeSdk).not.toHaveBeenCalled();
     expect(mockSdkStart).not.toHaveBeenCalled();
@@ -134,5 +139,70 @@ describe('Gateway Tracer', () => {
     await expect(withGatewaySpan('failing-method', {}, async () => {
       throw new Error('Test Error');
     })).rejects.toThrow('Test Error');
+  });
+
+  // ─── Coverage: new branches added in hardening pass ───────────────────────
+
+  it('initGatewayTracer warns and returns undefined in browser context (window defined)', async () => {
+    // jsdom environment defines globalThis.window — the browser guard must fire.
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const provider = await initGatewayTracer({ enabled: true });
+    expect(provider).toBeUndefined();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[Tracer] initGatewayTracer() called in browser context — no-op.',
+    );
+    expect(mockNodeSdk).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
+    // initialized remains false — subsequent Node-context tests can still initialise
+  });
+
+  it('initGatewayTracer logs error and returns sdk when NodeSDK.start() throws (Node context)', async () => {
+    // Suppress window so the browser guard is bypassed (simulates Node context).
+    vi.stubGlobal('window', undefined);
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockSdkStart.mockImplementationOnce(() => { throw new Error('SDK init failed'); });
+
+    const provider = await initGatewayTracer({ enabled: true });
+
+    // NodeSDK was lazy-loaded and instantiated
+    expect(mockNodeSdk).toHaveBeenCalledTimes(1);
+    // start() was called and threw
+    expect(mockSdkStart).toHaveBeenCalledTimes(1);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Failed to start OpenTelemetry NodeSDK',
+      expect.any(Error),
+    );
+    // sdk is returned even when start() fails; initialized stays false
+    expect(provider).toBeDefined();
+
+    vi.unstubAllGlobals();
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('initGatewayTracer initialises SDK and returns it on first successful Node-context call', async () => {
+    // initialized is still false (start() threw in the previous test).
+    // NodeSDK module is already cached — the lazy-import block is skipped.
+    vi.stubGlobal('window', undefined);
+
+    const provider = await initGatewayTracer({ enabled: true });
+
+    expect(mockNodeSdk).toHaveBeenCalledTimes(1);
+    expect(mockSdkStart).toHaveBeenCalledTimes(1);
+    expect(provider).toBeDefined();
+    // initialized is now true — next call will short-circuit
+
+    vi.unstubAllGlobals();
+  });
+
+  it('initGatewayTracer skips re-initialisation when already initialized', async () => {
+    // initialized === true from the previous test.
+    vi.stubGlobal('window', undefined);
+
+    const provider = await initGatewayTracer({ enabled: true });
+
+    expect(provider).toBeUndefined();
+    expect(mockNodeSdk).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
   });
 });

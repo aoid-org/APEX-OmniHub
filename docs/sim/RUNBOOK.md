@@ -62,6 +62,18 @@ export SUPABASE_URL=http://localhost:54321        # Local/sandbox only
 export SUPABASE_SERVICE_ROLE_KEY=sandbox-key      # Sandbox key only
 ```
 
+```powershell
+# PowerShell equivalent (same shell session)
+$env:SIM_MODE = 'true'                    # Enable simulation mode
+$env:SANDBOX_TENANT = 'my-test-tenant'    # Sandbox tenant ID
+$env:SUPABASE_URL = 'http://localhost:54321'
+$env:SUPABASE_SERVICE_ROLE_KEY = 'sandbox-key'
+```
+
+For credential-heavy local runs on Windows, use `scripts/set-apex-secrets.ps1` to load
+`GH_TOKEN`, `SUPABASE_TOKEN`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_URL` into the
+current PowerShell session.
+
 ### Production Protection
 
 The guard rails **block** if they detect:
