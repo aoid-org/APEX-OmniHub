@@ -45,8 +45,12 @@ function assertCondition(condition, message, failures) {
   if (!condition) failures.push(message);
 }
 
-function assertReactRuntime(failures) {
-  const packageFiles = gitLsFiles(['package.json']).filter(file => !file.includes('/node_modules/'));
+function isCanonicalReactRange(declared) {
+  return declared === CANONICAL_REACT || declared === `^${CANONICAL_REACT}` || declared === `~${CANONICAL_REACT}`;
+}
+
+function assertPackageJsonReactRuntime(failures) {
+  const packageFiles = gitLsFiles(['*package.json']).filter(file => !file.includes('/node_modules/'));
   for (const packageFile of packageFiles) {
     const pkg = readJson(packageFile);
     for (const section of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) {
@@ -54,17 +58,48 @@ function assertReactRuntime(failures) {
         const declared = pkg[section]?.[depName];
         if (!declared) continue;
         assertCondition(
-          declared === CANONICAL_REACT || declared === `^${CANONICAL_REACT}` || declared === `~${CANONICAL_REACT}`,
+          isCanonicalReactRange(declared),
           `${packageFile} declares ${depName}@${declared}; canonical runtime is ${CANONICAL_REACT}.`,
           failures,
         );
       }
     }
   }
+}
 
-  const lockText = readText('package-lock.json');
-  assertCondition(!lockText.includes('react@19') && !lockText.includes('react-dom@19'), 'package-lock.json contains React 19 drift.', failures);
-  assertCondition(!readText('bun.lock').includes('react@19'), 'bun.lock contains React 19 drift.', failures);
+function assertPackageLockReactRuntime(failures) {
+  const lock = readJson('package-lock.json');
+  for (const depName of ['react', 'react-dom']) {
+    const versions = new Set();
+    for (const [packagePath, entry] of Object.entries(lock.packages ?? {})) {
+      if (new RegExp(`(^|/)node_modules/${depName}$`).test(packagePath) && entry?.version) {
+        versions.add(entry.version);
+      }
+    }
+    assertCondition(versions.size > 0, `package-lock.json is missing node_modules/${depName}.`, failures);
+    for (const version of versions) {
+      assertCondition(version === CANONICAL_REACT, `package-lock.json resolves ${depName}@${version}; canonical runtime is ${CANONICAL_REACT}.`, failures);
+    }
+  }
+}
+
+function assertBunLockReactRuntime(failures) {
+  const lockText = readText('bun.lock');
+  for (const depName of ['react', 'react-dom']) {
+    const packageEntry = lockText.match(new RegExp(`\\n    "${depName}": \\["${depName}@([^"\\s]+)`));
+    assertCondition(!!packageEntry, `bun.lock is missing canonical package entry for ${depName}.`, failures);
+    if (packageEntry) {
+      assertCondition(packageEntry[1] === CANONICAL_REACT, `bun.lock resolves ${depName}@${packageEntry[1]}; canonical runtime is ${CANONICAL_REACT}.`, failures);
+    }
+    // Broad text scan catches accidental alias/lockfile reintroduction of React 19 packages.
+    assertCondition(!lockText.includes(`${depName}@19`), `bun.lock contains ${depName}@19 drift.`, failures);
+  }
+}
+
+function assertReactRuntime(failures) {
+  assertPackageJsonReactRuntime(failures);
+  assertPackageLockReactRuntime(failures);
+  assertBunLockReactRuntime(failures);
 }
 
 function assertLockfileAuthority(failures) {
@@ -96,14 +131,32 @@ function assertSecurityHeaders(failures) {
   assertCondition(!/script-src[^;]*'unsafe-inline'/.test(cspLine), "public/_headers CSP script-src must not contain 'unsafe-inline'.", failures);
 }
 
+function maskComments(source) {
+  return source.replace(/\/\*[\s\S]*?\*\//g, match => ' '.repeat(match.length))
+    .replace(/(^|[^:])\/\/.*$/gm, match => ' '.repeat(match.length));
+}
+
+export function firstExecutableCallIndex(source, callExpression) {
+  const searchableSource = maskComments(source);
+  const escaped = callExpression.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = new RegExp(`\\b(?:await\\s+)?${escaped}\\s*\\(`).exec(searchableSource);
+  return match?.index ?? -1;
+}
+
 function assertReplayVerificationOrdering(failures) {
-  for (const file of ['functions/api/omnibridge/ingest.ts', 'functions/api/omnibridge/sync.ts']) {
+  const replayCall = 'replayStore.isDuplicate';
+  const files = [
+    { file: 'functions/api/omnibridge/ingest.ts', verifier: 'validateHMAC' },
+    { file: 'functions/api/omnibridge/sync.ts', verifier: 'verifySyncPacket' },
+  ];
+
+  for (const { file, verifier } of files) {
     const source = readText(file);
-    const duplicateIndex = source.indexOf('replayStore.isDuplicate');
-    const verificationIndexes = [source.indexOf('validateHMAC'), source.indexOf('verifySyncPacket')].filter(index => index >= 0);
-    const firstVerificationIndex = Math.min(...verificationIndexes);
-    assertCondition(firstVerificationIndex >= 0, `${file} must contain signature verification before replay checks.`, failures);
-    assertCondition(duplicateIndex > firstVerificationIndex, `${file} calls replayStore.isDuplicate before signature verification.`, failures);
+    const duplicateIndex = firstExecutableCallIndex(source, replayCall);
+    const verificationIndex = firstExecutableCallIndex(source, verifier);
+    assertCondition(verificationIndex >= 0, `${file} must execute ${verifier} before replay checks.`, failures);
+    assertCondition(duplicateIndex >= 0, `${file} must execute ${replayCall} after signature verification.`, failures);
+    assertCondition(duplicateIndex > verificationIndex, `${file} calls ${replayCall} before executing ${verifier}.`, failures);
   }
 }
 
