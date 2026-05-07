@@ -111,10 +111,8 @@ describe('Modal Layering Regression', () => {
       const fs = await import('node:fs');
       const path = await import('node:path');
 
-      // Check both copies of OmniSpatialHost
       const paths = [
         path.resolve(__dirname, '../../apps/omnihub-site/dashboard/components/OmniSpatialHost.tsx'),
-        path.resolve(__dirname, '../../apps/omnihub-site/src/components/omnidash/OmniSpatialHost.tsx'),
       ];
 
       for (const filePath of paths) {
@@ -139,7 +137,6 @@ describe('Modal Layering Regression', () => {
 
       const paths = [
         path.resolve(__dirname, '../../apps/omnihub-site/dashboard/components/OmniSpatialHost.tsx'),
-        path.resolve(__dirname, '../../apps/omnihub-site/src/components/omnidash/OmniSpatialHost.tsx'),
       ];
 
       for (const filePath of paths) {

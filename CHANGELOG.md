@@ -4,6 +4,26 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed — Code Quality Improvements (2026-05-07)
+
+- **Security headers:** `Cross-Origin-Opener-Policy` in `public/_headers` upgraded
+  from `unsafe-none` to `same-origin` — matches the stricter policy already in
+  `apps/omnihub-site/public/_headers` and closes the deployed header split.
+- **Repo hygiene:** Removed tracked `output.txt` CI artifact; added `output.txt`
+  to `.gitignore` to prevent future leakage.
+- **OmniDash consolidation:** Deleted stale legacy tree
+  `apps/omnihub-site/src/components/omnidash/` (24 files, superseded by the
+  canonical `apps/omnihub-site/dashboard/components/`). Updated two test files
+  to reference the active tree only.
+- **React version drift:** Aligned `apps/omnihub-site` devDependency `react` /
+  `react-dom` from `^19.2.4` back to `^18.3.1` — matches root package and
+  `CANONICAL_TRUTH.md` statement 1; eliminates split that caused dedupe ambiguity.
+- **eventStore.ts docs:** Replaced misleading module-header comment that claimed
+  fire-and-forget dispatch + DLQ were active; documented that dispatch helpers
+  exist but are not wired in production ingress paths.
+
 ## [1.6.1] - 2026-05-04
 
 ### Fixed — Supabase Security & Performance Hardening (Production `rtopreovkywofgwgmozi`)
