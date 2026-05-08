@@ -12,7 +12,11 @@
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { withHttp, jsonResponse } from "../_shared/http.ts";
+import {
+  withHttp,
+  jsonResponse,
+  type HttpHandlerContext,
+} from "../_shared/http.ts";
 import { buildSignedHeaders } from "../_shared/requestSigning.ts";
 import {
   normalizeToEventEnvelope,
@@ -312,221 +316,256 @@ async function dispatchIntent(
   );
 }
 
-serve(
-  withHttp(
-    async (req, ctx) => {
-      // Only accept POST requests
-      if (req.method !== "POST") {
-        return jsonResponse(
-          { error: "method_not_allowed", message: "Only POST is allowed" },
-          405,
-          ctx.corsHeaders
-        );
-      }
+type AuthenticatedHttpUser = NonNullable<HttpHandlerContext["user"]>;
 
-      const authUser = ctx.user;
-      if (!authUser) {
-        return jsonResponse({ error: "unauthorized" }, 401, ctx.corsHeaders);
-      }
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
 
-      if (!ctx.body || typeof ctx.body !== "object") {
-        return jsonResponse(
-          {
-            error: "invalid_payload",
-            message: "Request body must be an object",
-          },
-          400,
-          ctx.corsHeaders
-        );
-      }
+function invalidPayloadResponse(
+  message: string,
+  corsHeaders: HeadersInit
+): Response {
+  return jsonResponse({ error: "invalid_payload", message }, 400, corsHeaders);
+}
 
-      try {
-        const rawBody = ctx.body as Record<string, unknown>;
+function hasClientScopedIdentity(rawBody: Record<string, unknown>): boolean {
+  return (
+    "user_id" in rawBody || "tenant_id" in rawBody || "tenantId" in rawBody
+  );
+}
 
-        if (rawBody.kind === "module_action") {
-          if (!validateModuleActionPayload(rawBody)) {
-            return jsonResponse(
-              {
-                error: "invalid_payload",
-                message:
-                  "Required: module_key, action_id, selected_items, trace_id UUID, idempotency_key UUID",
-              },
-              400,
-              ctx.corsHeaders
-            );
-          }
+function buildModuleActionIntentPayload(
+  rawBody: Extract<TriggerWorkflowPayload, { kind: "module_action" }>,
+  tenantId: string
+): Record<string, unknown> {
+  return {
+    intent: `module.${rawBody.module_key}.${rawBody.action_id}`,
+    tenantId,
+    module_key: rawBody.module_key,
+    action_id: rawBody.action_id,
+    selected_items: rawBody.selected_items,
+    idempotency_key: rawBody.idempotency_key,
+    trace_id: rawBody.trace_id,
+  };
+}
 
-          if (
-            "user_id" in rawBody ||
-            "tenant_id" in rawBody ||
-            "tenantId" in rawBody
-          ) {
-            return jsonResponse(
-              {
-                error: "invalid_payload",
-                message: "Client-supplied user_id or tenant_id is not accepted",
-              },
-              400,
-              ctx.corsHeaders
-            );
-          }
+async function handleModuleActionPayload(
+  rawBody: Record<string, unknown>,
+  authUser: AuthenticatedHttpUser,
+  req: Request,
+  corsHeaders: HeadersInit
+): Promise<Response | null> {
+  if (rawBody.kind !== "module_action") {
+    return null;
+  }
 
-          // No authoritative tenant membership table is used by this edge contract; use auth user ID as tenant fallback.
-          const resolvedTenantId = authUser.id;
-          return await dispatchIntent(
-            {
-              intent: `module.${rawBody.module_key}.${rawBody.action_id}`,
-              tenantId: resolvedTenantId,
-              module_key: rawBody.module_key,
-              action_id: rawBody.action_id,
-              selected_items: rawBody.selected_items,
-              idempotency_key: rawBody.idempotency_key,
-              trace_id: rawBody.trace_id,
-            },
-            authUser.id,
-            req,
-            ctx.corsHeaders
-          );
-        }
+  if (!validateModuleActionPayload(rawBody)) {
+    return invalidPayloadResponse(
+      "Required: module_key, action_id, selected_items, trace_id UUID, idempotency_key UUID",
+      corsHeaders
+    );
+  }
 
-        if (hasIntentSignal(rawBody)) {
-          return await dispatchIntent(
-            {
-              ...rawBody,
-              tenantId: authUser.id,
-              tenant_id: authUser.id,
-            },
-            authUser.id,
-            req,
-            ctx.corsHeaders
-          );
-        }
+  if (hasClientScopedIdentity(rawBody)) {
+    return invalidPayloadResponse(
+      "Client-supplied user_id or tenant_id is not accepted",
+      corsHeaders
+    );
+  }
 
-        if (!validateGoalPayload(ctx.body)) {
-          return jsonResponse(
-            {
-              error: "invalid_payload",
-              message:
-                "Required: query (string), session_id (string), trace_id (UUID), idempotency_key (UUID)",
-            },
-            400,
-            ctx.corsHeaders
-          );
-        }
+  // No authoritative tenant membership table is used by this edge contract; use auth user ID as tenant fallback.
+  const resolvedTenantId = authUser.id;
+  return await dispatchIntent(
+    buildModuleActionIntentPayload(rawBody, resolvedTenantId),
+    authUser.id,
+    req,
+    corsHeaders
+  );
+}
 
-        const payload = ctx.body;
+async function handleIntentPayload(
+  rawBody: Record<string, unknown>,
+  authUser: AuthenticatedHttpUser,
+  req: Request,
+  corsHeaders: HeadersInit
+): Promise<Response | null> {
+  if (!hasIntentSignal(rawBody)) {
+    return null;
+  }
 
-        // ── Legacy goal-based routing (AgentWorkflow path) ──────────
-        // Compute cryptographic seal
-        const requestHash = await computeRequestHash(
-          payload.query,
-          payload.session_id,
-          payload.trace_id
-        );
-
-        // Resolve orchestrator URL
-        const orchestratorUrl = resolveOrchestratorUrl();
-
-        // Forward to orchestrator with signed + idempotency headers
-        const requestPath = "/api/v1/goals";
-        const bodyRaw = JSON.stringify({
-          user_id: authUser.id,
-          user_intent: payload.query,
-          trace_id: payload.trace_id,
-        });
-
-        const signedHeaders = await buildSignedHeaders(
-          "POST",
-          requestPath,
-          bodyRaw,
-          payload.trace_id
-        );
-
-        const orchestratorResponse = await fetch(
-          `${orchestratorUrl}${requestPath}`,
-          {
-            method: "POST",
-            headers: {
-              ...signedHeaders,
-              "X-Idempotency-Key": payload.idempotency_key,
-              "X-Request-Signature": requestHash,
-              "X-User-Id": authUser.id,
-              "X-Session-Id": payload.session_id,
-            },
-            body: bodyRaw,
-          }
-        );
-
-        if (!orchestratorResponse.ok) {
-          const errorText = await orchestratorResponse.text();
-          console.error(
-            `Orchestrator error: ${orchestratorResponse.status}`,
-            errorText
-          );
-
-          // Handle idempotency conflict (already processed)
-          if (orchestratorResponse.status === 409) {
-            const existingData = JSON.parse(errorText);
-            return jsonResponse(
-              {
-                workflow_id: existingData.workflow_id,
-                status: "active" as const,
-                request_hash: requestHash,
-                deduplicated: true,
-              },
-              200,
-              ctx.corsHeaders
-            );
-          }
-
-          return jsonResponse(
-            {
-              error: "orchestrator_error",
-              message: "Failed to trigger workflow",
-            },
-            502,
-            ctx.corsHeaders
-          );
-        }
-
-        const orchestratorData = await orchestratorResponse.json();
-
-        const response: WorkflowResponse = {
-          workflow_id: orchestratorData.workflowId ?? payload.trace_id,
-          status: "queued",
-          request_hash: requestHash,
-        };
-
-        return jsonResponse(response, 202, ctx.corsHeaders);
-      } catch (error) {
-        console.error("Workflow trigger error:", error);
-
-        // Handle orchestrator connection errors gracefully
-        if (error instanceof TypeError && error.message.includes("fetch")) {
-          return jsonResponse(
-            {
-              error: "orchestrator_unavailable",
-              message: "Workflow orchestrator is not available",
-            },
-            503,
-            ctx.corsHeaders
-          );
-        }
-
-        return jsonResponse(
-          {
-            error: "internal_error",
-            message: error instanceof Error ? error.message : "Unknown error",
-          },
-          500,
-          ctx.corsHeaders
-        );
-      }
-    },
+  return await dispatchIntent(
     {
-      maxBodySizeBytes: 256 * 1024, // 256KB max payload
-      requireOrigin: true,
-      requireAuth: true,
+      ...rawBody,
+      tenantId: authUser.id,
+      tenant_id: authUser.id,
+    },
+    authUser.id,
+    req,
+    corsHeaders
+  );
+}
+
+async function dispatchGoalWorkflow(
+  payload: WorkflowRequestPayload,
+  authUserId: string,
+  corsHeaders: HeadersInit
+): Promise<Response> {
+  const requestHash = await computeRequestHash(
+    payload.query,
+    payload.session_id,
+    payload.trace_id
+  );
+
+  const orchestratorUrl = resolveOrchestratorUrl();
+  const requestPath = "/api/v1/goals";
+  const bodyRaw = JSON.stringify({
+    user_id: authUserId,
+    user_intent: payload.query,
+    trace_id: payload.trace_id,
+  });
+
+  const signedHeaders = await buildSignedHeaders(
+    "POST",
+    requestPath,
+    bodyRaw,
+    payload.trace_id
+  );
+
+  const orchestratorResponse = await fetch(`${orchestratorUrl}${requestPath}`, {
+    method: "POST",
+    headers: {
+      ...signedHeaders,
+      "X-Idempotency-Key": payload.idempotency_key,
+      "X-Request-Signature": requestHash,
+      "X-User-Id": authUserId,
+      "X-Session-Id": payload.session_id,
+    },
+    body: bodyRaw,
+  });
+
+  if (orchestratorResponse.ok) {
+    const orchestratorData = await orchestratorResponse.json();
+    const response: WorkflowResponse = {
+      workflow_id: orchestratorData.workflowId ?? payload.trace_id,
+      status: "queued",
+      request_hash: requestHash,
+    };
+    return jsonResponse(response, 202, corsHeaders);
+  }
+
+  const errorText = await orchestratorResponse.text();
+  console.error(
+    `Orchestrator error: ${orchestratorResponse.status}`,
+    errorText
+  );
+
+  if (orchestratorResponse.status === 409) {
+    const existingData = JSON.parse(errorText);
+    return jsonResponse(
+      {
+        workflow_id: existingData.workflow_id,
+        status: "active" as const,
+        request_hash: requestHash,
+        deduplicated: true,
+      },
+      200,
+      corsHeaders
+    );
+  }
+
+  return jsonResponse(
+    { error: "orchestrator_error", message: "Failed to trigger workflow" },
+    502,
+    corsHeaders
+  );
+}
+
+function workflowErrorResponse(
+  error: unknown,
+  corsHeaders: HeadersInit
+): Response {
+  console.error("Workflow trigger error:", error);
+
+  if (error instanceof TypeError && error.message.includes("fetch")) {
+    return jsonResponse(
+      {
+        error: "orchestrator_unavailable",
+        message: "Workflow orchestrator is not available",
+      },
+      503,
+      corsHeaders
+    );
+  }
+
+  return jsonResponse(
+    {
+      error: "internal_error",
+      message: error instanceof Error ? error.message : "Unknown error",
+    },
+    500,
+    corsHeaders
+  );
+}
+
+async function handleTriggerWorkflow(
+  req: Request,
+  ctx: HttpHandlerContext
+): Promise<Response> {
+  if (req.method !== "POST") {
+    return jsonResponse(
+      { error: "method_not_allowed", message: "Only POST is allowed" },
+      405,
+      ctx.corsHeaders
+    );
+  }
+
+  const authUser = ctx.user;
+  if (!authUser) {
+    return jsonResponse({ error: "unauthorized" }, 401, ctx.corsHeaders);
+  }
+
+  if (!isRecord(ctx.body)) {
+    return invalidPayloadResponse(
+      "Request body must be an object",
+      ctx.corsHeaders
+    );
+  }
+
+  try {
+    const moduleActionResponse = await handleModuleActionPayload(
+      ctx.body,
+      authUser,
+      req,
+      ctx.corsHeaders
+    );
+    if (moduleActionResponse) return moduleActionResponse;
+
+    const intentResponse = await handleIntentPayload(
+      ctx.body,
+      authUser,
+      req,
+      ctx.corsHeaders
+    );
+    if (intentResponse) return intentResponse;
+
+    if (!validateGoalPayload(ctx.body)) {
+      return invalidPayloadResponse(
+        "Required: query (string), session_id (string), trace_id (UUID), idempotency_key (UUID)",
+        ctx.corsHeaders
+      );
     }
-  )
+
+    return await dispatchGoalWorkflow(ctx.body, authUser.id, ctx.corsHeaders);
+  } catch (error) {
+    return workflowErrorResponse(error, ctx.corsHeaders);
+  }
+}
+
+serve(
+  withHttp(handleTriggerWorkflow, {
+    maxBodySizeBytes: 256 * 1024, // 256KB max payload
+    requireOrigin: true,
+    requireAuth: true,
+  })
 );

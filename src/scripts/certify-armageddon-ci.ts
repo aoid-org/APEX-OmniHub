@@ -6,6 +6,7 @@
  * not provision Temporal workers or Supabase telemetry for the heavy workflow.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
+import { EOL } from "node:os";
 import { dirname } from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -164,7 +165,7 @@ try {
   const evidence = buildEvidence();
   validateEvidence(evidence);
   mkdirSync(dirname(OUTPUT_PATH), { recursive: true });
-  writeFileSync(OUTPUT_PATH, `${JSON.stringify(evidence, null, 2)}\n`);
+  writeFileSync(OUTPUT_PATH, `${JSON.stringify(evidence, null, 2)}${EOL}`);
   console.log(`Armageddon CI evidence written to ${OUTPUT_PATH}`);
   console.log(`Verdict: ${evidence.verdict}`);
   process.exit(evidence.verdict === "PASS" ? 0 : 1);
