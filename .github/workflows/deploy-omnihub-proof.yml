@@ -1,0 +1,36 @@
+name: Deploy OmniHub Proof Site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/omnihub-proof/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Build and Deploy to Cloudflare Pages
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: apps/omnihub-proof/package-lock.json
+
+      - name: Install dependencies
+        working-directory: apps/omnihub-proof
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/omnihub-proof
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=omnihub-proof
+          workingDirectory: apps/omnihub-proof
