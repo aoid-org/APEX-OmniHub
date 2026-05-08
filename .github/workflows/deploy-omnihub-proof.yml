@@ -21,7 +21,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: apps/omnihub-proof
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build
         working-directory: apps/omnihub-proof

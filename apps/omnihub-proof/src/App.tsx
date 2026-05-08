@@ -1,6 +1,6 @@
-// JR_TODO: Replace this URL with your actual Calendly link
+// JR_ACTION: Replace this URL with the final Calendly link before launch.
 const CALENDLY_URL = 'https://calendly.com/apex-jr-REPLACE'
-// JR_TODO: Replace with your actual contact email
+// JR_ACTION: Replace with the final contact email before launch.
 const CONTACT_EMAIL = 'jr@apexbiz.ca-REPLACE'
 
 const proofStats = [
