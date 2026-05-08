@@ -74,10 +74,24 @@ function authenticate(request: Request, env: Env): Response | null {
   return null;
 }
 
+function replaceControlCharacters(value: string): string {
+  let output = '';
+
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index];
+    const code = value.charCodeAt(index);
+    output += code <= 31 || code === 127 ? ' ' : char;
+  }
+
+  return output;
+}
+
 function cleanText(value: unknown, maxLength: number): string | null {
   if (value === undefined || value === null) return null;
   if (typeof value !== 'string') throw new Error('expected_string');
-  const cleaned = value.replace(/[\u0000-\u001F\u007F]/g, ' ').replace(/\s+/g, ' ').trim();
+
+  const cleaned = replaceControlCharacters(value).replace(/\s+/g, ' ').trim();
+
   if (cleaned.length === 0) return null;
   return cleaned.slice(0, maxLength);
 }
