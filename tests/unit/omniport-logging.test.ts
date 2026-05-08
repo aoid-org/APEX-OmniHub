@@ -25,7 +25,7 @@ vi.mock('../../../sim/idempotency', () => ({
   }),
 }));
 
-vi.mock('../delivery/omnilink-delivery', () => ({
+vi.mock('@/omniconnect/delivery/omnilink-delivery', () => ({
   OmniLinkDelivery: class {
     async deliverBatch() { return; }
   }
@@ -48,6 +48,7 @@ describe('OmniPort Logging Performance', () => {
     omniPort = OmniPortEngine.getInstance();
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {

@@ -1,10 +1,9 @@
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { IronLawVerifier } from '../core/iron-law';
 import type { AgentTask, Evidence } from '../core/types';
 import fs from 'node:fs';
 import path from 'node:path';
-import { nanoid } from 'nanoid';
 
 // Subclass to isolate security verification
 class ConcurrencyTestVerifier extends IronLawVerifier {
@@ -33,6 +32,18 @@ const TEST_DIR = path.join(process.cwd(), 'concurrency_test_temp');
 const NUM_FILES = 100; // Enough to trigger concurrency but fast enough for test
 
 describe('IronLawVerifier - Concurrency Handling', () => {
+  const withExpectedShadowPromptLogsMuted = async (run: () => Promise<void>) => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await run();
+      await new Promise(resolve => setTimeout(resolve, 0));
+    } finally {
+      errorSpy.mockRestore();
+      warnSpy.mockRestore();
+    }
+  };
+
   let verifier: ConcurrencyTestVerifier;
   const createdFiles: string[] = [];
 
@@ -65,7 +76,7 @@ describe('IronLawVerifier - Concurrency Handling', () => {
 
   it('should handle multiple files concurrently without EMFILE errors', async () => {
     const task: AgentTask = {
-      id: nanoid(),
+      id: crypto.randomUUID(),
       description: 'Concurrency Test Task',
       modifiedFiles: createdFiles,
       touchesUI: false,
@@ -73,17 +84,15 @@ describe('IronLawVerifier - Concurrency Handling', () => {
       timestamp: new Date().toISOString(),
     };
 
-    // We expect this to succeed without throwing errors
-    // If unbounded concurrency was used on 5000 files (in benchmark), it would fail.
-    // Here on 100 files, we just verify correctness first.
-    // The main implementation change will ensure safety for larger numbers.
-
-    await expect(verifier.verify(task)).resolves.toBeDefined();
+    // Shadow-prompt detections are expected; suppress only this negative-path stderr.
+    await withExpectedShadowPromptLogsMuted(async () => {
+      await expect(verifier.verify(task)).resolves.toBeDefined();
+    });
   }, 30000);
 
   it('should correctly identify shadow prompts in concurrent execution', async () => {
     const task: AgentTask = {
-      id: nanoid(),
+      id: crypto.randomUUID(),
       description: 'Detection Test Task',
       modifiedFiles: createdFiles,
       touchesUI: false,
@@ -91,13 +100,15 @@ describe('IronLawVerifier - Concurrency Handling', () => {
       timestamp: new Date().toISOString(),
     };
 
-    const result = await verifier.verify(task);
-    const securityEvidence = result.evidence.find(e => e.type === 'security_scan');
+    await withExpectedShadowPromptLogsMuted(async () => {
+      const result = await verifier.verify(task);
+      const securityEvidence = result.evidence.find(e => e.type === 'security_scan');
 
-    expect(securityEvidence).toBeDefined();
-    if (securityEvidence?.type === 'security_scan') {
+      expect(securityEvidence).toBeDefined();
+      if (securityEvidence?.type === 'security_scan') {
         // We injected shadow prompts in every 10th file (0, 10, 20...90) -> 10 files
         expect(securityEvidence.shadowPromptAttempts).toBe(10);
-    }
+      }
+    });
   });
 });

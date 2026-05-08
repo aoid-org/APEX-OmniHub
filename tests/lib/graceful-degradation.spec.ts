@@ -19,7 +19,11 @@ describe('graceful-degradation', () => {
 
     it('should return success false and error when JSON is invalid', () => {
       const json = 'invalid json';
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const result = tryParse(json);
+      consoleErrorSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -41,7 +45,11 @@ describe('graceful-degradation', () => {
     it('should return fallback when JSON is invalid', () => {
       const json = 'invalid json';
       const fallback = { key: 'fallback' };
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const result = safeParse(json, fallback);
+      consoleErrorSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
 
       expect(result).toEqual(fallback);
     });
