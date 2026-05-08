@@ -42,6 +42,26 @@ const OUTPUT_PATH = "artifacts/armageddon/latest.json";
 const ITERATIONS = 250;
 const SEED = 424242;
 
+/**
+ * Hardened PATH containing only fixed, non-writable system directories.
+ *
+ * Passing this as the PATH for child_process.execSync prevents PATH-hijacking
+ * attacks where a malicious executable placed in a user-writable directory
+ * earlier in the default PATH could shadow the real `git` binary.
+ *
+ * Satisfies SonarQube rule typescript:S4036 —
+ * "Make sure the PATH variable only contains fixed, unwriteable directories."
+ */
+const SAFE_SYSTEM_PATH: string =
+  process.platform === "win32"
+    ? [
+        "C:\\Windows\\System32",
+        "C:\\Windows",
+        "C:\\Program Files\\Git\\cmd",
+        "C:\\Program Files\\Git\\bin",
+      ].join(";")
+    : ["/usr/bin", "/bin", "/usr/local/bin"].join(":");
+
 function assertSimMode(): void {
   if (process.env.SIM_MODE !== "true") {
     throw new Error(
@@ -52,7 +72,12 @@ function assertSimMode(): void {
 
 function currentCommitSha(): string {
   try {
-    return execSync("git rev-parse HEAD", { encoding: "utf8" }).trim();
+    // Pass a hardened PATH so the OS resolves `git` only from fixed,
+    // non-writable system directories — satisfies SonarQube typescript:S4036.
+    return execSync("git rev-parse HEAD", {
+      encoding: "utf8",
+      env: { PATH: SAFE_SYSTEM_PATH },
+    }).trim();
   } catch {
     return "unknown";
   }
