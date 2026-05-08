@@ -1,0 +1,12 @@
+{
+  "name": "apex-sales",
+  "compatibility_date": "2024-01-01",
+  "main": "src/worker.ts",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "SUPABASE_URL": ""
+  }
+}
