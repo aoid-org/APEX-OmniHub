@@ -1,4 +1,9 @@
+import asyncio
+import importlib.util
+import sys
 from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -11,6 +16,16 @@ from models.execution_envelope import (
     continue_trace_context,
 )
 from security.guardian_fabric import GuardianPolicyRule, evaluate_guardian_policy
+
+
+def load_compensation_catalog() -> Any:
+    module_path = Path(__file__).parents[1] / "activities" / "compensation_catalog.py"
+    spec = importlib.util.spec_from_file_location("apex_compensation_catalog", module_path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def test_execution_envelope_is_stable_for_same_action() -> None:
@@ -176,13 +191,14 @@ def test_guardian_denies_stale_event() -> None:
 
 @pytest.mark.asyncio
 async def test_compensation_catalog_register_get_and_handler() -> None:
-    from activities.compensation_catalog import CompensationCatalog, CompensationEntry
+    compensation_catalog = load_compensation_catalog()
 
     async def handler(payload: dict[str, object]) -> dict[str, object]:
+        await asyncio.sleep(0)  # Exercise the async compensation contract without side effects.
         return {"compensated": True, "payload": payload}
 
-    catalog = CompensationCatalog()
-    entry = CompensationEntry(
+    catalog = compensation_catalog.CompensationCatalog()
+    entry = compensation_catalog.CompensationEntry(
         ref="apex.comp.billing.rollback",
         owner="billing",
         description="Rollback billing side effect",
@@ -199,10 +215,12 @@ async def test_compensation_catalog_register_get_and_handler() -> None:
 
 
 def test_compensation_catalog_rejects_non_apex_namespace() -> None:
-    from activities.compensation_catalog import CompensationCatalog, CompensationEntry
+    compensation_catalog = load_compensation_catalog()
 
-    catalog = CompensationCatalog()
+    catalog = compensation_catalog.CompensationCatalog()
     with pytest.raises(ValueError, match="compensation_ref_must_use_apex_namespace"):
         catalog.register(
-            CompensationEntry(ref="third.party.rollback", owner="billing", description="invalid")
+            compensation_catalog.CompensationEntry(
+                ref="third.party.rollback", owner="billing", description="invalid"
+            )
         )
