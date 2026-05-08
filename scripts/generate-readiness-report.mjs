@@ -76,7 +76,7 @@ const report = {
       workflow_engine:  'Temporal.io',
     },
     infrastructure: {
-      frontend_host:    'Vercel (Edge Network)',
+      frontend_host:    'Cloudflare Pages (Edge Network)',
       backend_host:     'Supabase (PostgreSQL + Edge Functions)',
       orchestrator:     'Temporal.io (Docker)',
       cdn_enabled:      true,
