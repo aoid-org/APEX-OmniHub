@@ -7,7 +7,7 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { execSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 
 import {
   BASE_ESCAPE_PROBABILITY,
@@ -45,14 +45,14 @@ const SEED = 424242;
 /**
  * Hardened PATH containing only fixed, non-writable system directories.
  *
- * Passing this as the PATH for child_process.execSync prevents PATH-hijacking
+ * Used as the execution environment for child processes to prevent PATH-hijacking
  * attacks where a malicious executable placed in a user-writable directory
- * earlier in the default PATH could shadow the real `git` binary.
+ * earlier in the default PATH could shadow trusted binaries.
  *
  * Satisfies SonarQube rule typescript:S4036 —
  * "Make sure the PATH variable only contains fixed, unwriteable directories."
  */
-const SAFE_SYSTEM_PATH: string =
+const SAFE_SYSTEM_PATH: string = Object.freeze(
   process.platform === "win32"
     ? [
         "C:\\Windows\\System32",
@@ -60,7 +60,8 @@ const SAFE_SYSTEM_PATH: string =
         "C:\\Program Files\\Git\\cmd",
         "C:\\Program Files\\Git\\bin",
       ].join(";")
-    : ["/usr/bin", "/bin", "/usr/local/bin"].join(":");
+    : ["/usr/bin", "/bin", "/usr/local/bin"].join(":")
+);
 
 function assertSimMode(): void {
   if (process.env.SIM_MODE !== "true") {
@@ -70,14 +71,23 @@ function assertSimMode(): void {
   }
 }
 
+/**
+ * Returns the current git commit SHA using spawnSync (no shell expansion).
+ *
+ * spawnSync with an argument array bypasses the OS shell entirely — no PATH
+ * resolution ambiguity exists. The explicit env with SAFE_SYSTEM_PATH ensures
+ * the git binary can only be resolved from known, non-writable system paths.
+ *
+ * Satisfies SonarQube typescript:S4036: PATH contains only fixed directories.
+ */
 function currentCommitSha(): string {
   try {
-    // Pass a hardened PATH so the OS resolves `git` only from fixed,
-    // non-writable system directories — satisfies SonarQube typescript:S4036.
-    return execSync("git rev-parse HEAD", {
+    const result = spawnSync("git", ["rev-parse", "HEAD"], {
       encoding: "utf8",
-      env: { PATH: SAFE_SYSTEM_PATH },
-    }).trim();
+      env: Object.freeze({ PATH: SAFE_SYSTEM_PATH }),
+    });
+    if (result.status !== 0 || result.error) return "unknown";
+    return result.stdout.trim();
   } catch {
     return "unknown";
   }
