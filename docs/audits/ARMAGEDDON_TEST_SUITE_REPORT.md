@@ -1,5 +1,11 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.5.1 | LAST_UPDATED=2026-05-08 -->
 # ARMAGEDDON TEST SUITE - Comprehensive System Validation Report
+
+## 2026-05-08 Live Validation Addendum
+
+The latest Armageddon validation was executed on 2026-05-08 on branch `work` with Node v24.15.0, npm 11.4.2, and Python 3.14.4. The run passed TypeScript, ESLint, full Vitest, production build, documentation integrity, secret scanning, simulation unit tests, Worldwide Wildcard mock execution, and Python orchestration CI after fixing the semantic-cache fixture's external model download dependency.
+
+The requested SIM MODE=false posture was honored: `npm run sim:validate` blocked chaos execution because `SIM_MODE` and `SANDBOX_TENANT` were not set. This is the intended safety posture for non-sandbox execution. Browser E2E remains environment-blocked in this container because Chromium is absent and both Playwright CDN and apt package repositories returned HTTP 403 during installation attempts. See `docs/audits/ARMAGEDDON_LIVE_TEST_RESULTS_2026_05_08.md` for the separate detailed results ledger.
 
 ## EXECUTIVE SUMMARY
 
