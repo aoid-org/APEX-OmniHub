@@ -245,7 +245,7 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       # PHASE 3: Build
       # ─────────────────────────────────────────────────────────────
-      - name: Vercel Production Sync Shield
+      - name: Cloudflare Pages Production Sync Shield
         run: cd apps/omnihub-site && npm ci --ignore-scripts && npm run build
         env:
           VITE_SUPABASE_URL: https://test.supabase.co
