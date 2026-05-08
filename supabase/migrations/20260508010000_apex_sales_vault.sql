@@ -80,9 +80,35 @@ revoke all on public.lead_events from public, anon, authenticated;
 grant all on public.leads to service_role;
 grant all on public.lead_events to service_role;
 
+with seed_defaults as (
+  select
+    '[TBD]'::text as email,
+    '[PROSPECT]'::text as company,
+    'seed'::text as source,
+    'new'::text as status,
+    'Replace with qualified prospect.'::text as next_action
+),
+seed_leads (name, offer_interest, notes) as (
+  values
+    ('Sample Lead — Offer A', 'A-SBBL', 'Template placeholder for SBBL outreach.'),
+    ('Sample Lead — Offer C', 'C-OmniHub', 'Template placeholder for OmniHub outreach.'),
+    ('Sample Lead — Offer D', 'D-Armageddon', 'Template placeholder for Armageddon outreach.')
+)
 insert into public.leads (name, email, company, offer_interest, source, status, notes, next_action)
-values
-  ('Sample Lead — Offer A', '[TBD]', '[PROSPECT]', 'A-SBBL', 'seed', 'new', 'Template placeholder for SBBL outreach.', 'Replace with qualified prospect.'),
-  ('Sample Lead — Offer C', '[TBD]', '[PROSPECT]', 'C-OmniHub', 'seed', 'new', 'Template placeholder for OmniHub outreach.', 'Replace with qualified prospect.'),
-  ('Sample Lead — Offer D', '[TBD]', '[PROSPECT]', 'D-Armageddon', 'seed', 'new', 'Template placeholder for Armageddon outreach.', 'Replace with qualified prospect.')
-on conflict do nothing;
+select
+  seed_leads.name,
+  seed_defaults.email,
+  seed_defaults.company,
+  seed_leads.offer_interest,
+  seed_defaults.source,
+  seed_defaults.status,
+  seed_leads.notes,
+  seed_defaults.next_action
+from seed_leads
+cross join seed_defaults
+where not exists (
+  select 1
+  from public.leads existing_leads
+  where existing_leads.name = seed_leads.name
+    and existing_leads.source = seed_defaults.source
+);
