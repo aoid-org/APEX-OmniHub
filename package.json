@@ -1,7 +1,7 @@
 {
   "name": "apex-omnihub",
   "private": true,
-  "version": "1.5.1",
+  "version": "1.6.0",
   "type": "module",
   "engines": {
     "node": ">=22 <25"
@@ -278,7 +278,7 @@
     "uuid": "^14.0.0",
     "ast-v8-to-istanbul/js-tokens": "^10.0.0"
   },
-  "packageManager": "npm@11.6.2",
+  "packageManager": "bun@1.x",
   "optionalDependencies": {
     "@esbuild/linux-x64": "^0.25.12",
     "@rollup/rollup-linux-x64-gnu": "^4.60.0",

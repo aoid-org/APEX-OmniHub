@@ -12,12 +12,12 @@
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Version:** 1.5.1 | **Release Date:** 2026-04-04
+**Version:** 1.6.0 | **Release Date:** 2026-05-08
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
 [![SonarQube](https://img.shields.io/badge/sonarqube-A-success)]()
-[![Tests](https://img.shields.io/badge/tests-1785%2B%20pass-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-3584%2B%20pass-brightgreen)]()
 [![Armageddon](https://img.shields.io/badge/armageddon-L7%20CERTIFIED-gold)]()
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 
@@ -248,8 +248,11 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 
 | Document                                                                                | Description           |
 | --------------------------------------------------------------------------------------- | --------------------- |
+| [Release Notes v1.6.0](./docs/releases/RELEASE_NOTES_v1.6.0.md)                 | What is new in v1.6.0 |
 | [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
 | [Launch Readiness](./docs/project-status/LAUNCH_READINESS_v1.0.0.md)                    | Deployment checklist  |
+| [Testing Evidence & Armageddon Reports](./docs/testing/README.md)                    | Validation history    |
+| [PR Triage Report](./docs/ops/PR_TRIAGE.md)                                      | Open PR resolution matrix |
 | [OPS Runbooks](./OPS_RUNBOOKS.md)                                                       | Operations procedures |
 | [Supabase Setup](./SUPABASE_SETUP.md)                                                   | Database config guide |
 | [orchestrator/README](./orchestrator/README.md)                                         | Temporal setup        |
