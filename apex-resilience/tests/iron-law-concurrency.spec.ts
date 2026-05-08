@@ -72,10 +72,9 @@ describe("IronLawVerifier - Concurrency Handling", () => {
       timestamp: new Date().toISOString(),
     };
 
-    // Shadow-prompt detections are expected; suppress only this negative-path stderr.
-    await withExpectedShadowPromptLogsMuted(async () => {
-      await expect(verifier.verify(task)).resolves.toBeDefined();
-    });
+    // Shadow-prompt detections on every 10th file are expected (verified in next test).
+    // Directly assert verifier resolves without EMFILE crash — no stderr suppression needed.
+    await expect(verifier.verify(task)).resolves.toBeDefined();
   }, 30000);
 
   it("should correctly identify shadow prompts in concurrent execution", async () => {
