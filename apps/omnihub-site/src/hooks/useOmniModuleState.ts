@@ -7,15 +7,15 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import { useEffect, useMemo, useState } from 'react';
-import { supabase, hasSupabaseConfig } from '@/lib/supabase';
-import { getModuleContent } from '@/dashboard/components/ModuleRegistry';
+import { useEffect, useMemo, useState } from "react";
+import { supabase, hasSupabaseConfig } from "@/lib/supabase";
+import { getModuleContent } from "@/dashboard/components/ModuleRegistry";
 import type {
   ModuleContent,
   ModuleStatItem,
   ModuleListItem,
   ModuleAction,
-} from '@/dashboard/components/ModuleRegistry';
+} from "@/dashboard/components/ModuleRegistry";
 
 export interface OmniModuleState {
   readonly moduleKey: string;
@@ -43,7 +43,7 @@ function registryStateFor(appKey: string): OmniModuleState {
   const reg = getModuleContent(appKey);
   return {
     moduleKey: appKey,
-    headline: reg?.headline ?? '',
+    headline: reg?.headline ?? "",
     stats: reg?.stats ?? [],
     items: reg?.items ?? [],
     actions: reg?.actions ?? [],
@@ -95,9 +95,12 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
           return;
         }
 
-        const { data, error } = await supabase.functions.invoke('omnilink-port', {
-          body: { action: 'get_module_state', module_key: appKey },
-        });
+        const { data, error } = await supabase.functions.invoke(
+          "omnilink-port",
+          {
+            body: { action: "get_module_state", module_key: appKey },
+          }
+        );
 
         if (cancelled) {
           return;
@@ -168,7 +171,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
 export async function triggerModuleAction(
   moduleKey: string,
   actionId: string,
-  selectedItems: readonly string[],
+  selectedItems: readonly string[]
 ): Promise<{ success: boolean; message: string }> {
   if (!hasSupabaseConfig) {
     return {
@@ -182,29 +185,42 @@ export async function triggerModuleAction(
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      return { success: false, message: 'Authentication required. Please sign in.' };
+      return {
+        success: false,
+        message: "Authentication required. Please sign in.",
+      };
     }
 
-    const { data, error } = await supabase.functions.invoke('trigger-workflow', {
-      body: {
-        module_key: moduleKey,
-        action_id: actionId,
-        selected_items: selectedItems,
-        user_id: user.id,
-      },
-    });
+    const { data, error } = await supabase.functions.invoke(
+      "trigger-workflow",
+      {
+        body: {
+          kind: "module_action",
+          module_key: moduleKey,
+          action_id: actionId,
+          selected_items: [...selectedItems],
+          trace_id: crypto.randomUUID(),
+          idempotency_key: crypto.randomUUID(),
+        },
+      }
+    );
 
     if (error) {
-      return { success: false, message: `Workflow trigger failed: ${error.message}` };
+      return {
+        success: false,
+        message: `Workflow trigger failed: ${error.message}`,
+      };
     }
 
     const result = data as { workflow_id?: string; message?: string } | null;
     return {
       success: true,
-      message: result?.message ?? `Workflow ${result?.workflow_id ?? actionId} dispatched successfully.`,
+      message:
+        result?.message ??
+        `Workflow ${result?.workflow_id ?? actionId} dispatched successfully.`,
     };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Unknown error';
+    const msg = err instanceof Error ? err.message : "Unknown error";
     return { success: false, message: `Action failed: ${msg}` };
   }
 }

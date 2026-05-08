@@ -20,10 +20,7 @@ export interface ValidationResult {
  * Per-tool validation rules.
  * Each entry receives the raw result and returns a ValidationResult.
  */
-const VALIDATORS: Record<
-  string,
-  (result: unknown) => ValidationResult
-> = {
+const VALIDATORS: Record<string, (result: unknown) => ValidationResult> = {
   search_database: validateHasData,
   create_record: validateHasId,
   delete_record: validateSuccessFlag,
@@ -37,43 +34,54 @@ const VALIDATORS: Record<
 /*  Shared validators                                                  */
 /* ------------------------------------------------------------------ */
 
-function isObject(
-  v: unknown,
-): v is Record<string, unknown> {
-  return v !== null && typeof v === 'object' && !Array.isArray(v);
+function isObject(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === "object" && !Array.isArray(v);
 }
 
 function validateHasData(result: unknown): ValidationResult {
   if (!isObject(result)) {
-    return { valid: false, reason: 'Result is not an object' };
+    return { valid: false, reason: "Result is not an object" };
   }
-  if (!('data' in result) && !('videos' in result)) {
-    return { valid: false, reason: 'Missing data field' };
+  if (!("data" in result) && !("videos" in result)) {
+    return { valid: false, reason: "Missing data field" };
   }
   return { valid: true };
+}
+
+function hasDurableId(value: unknown): boolean {
+  return (
+    isObject(value) && typeof value.id === "string" && value.id.trim() !== ""
+  );
 }
 
 function validateHasId(result: unknown): ValidationResult {
   if (!isObject(result)) {
-    return { valid: false, reason: 'Result is not an object' };
+    return { valid: false, reason: "Result is not an object" };
   }
-  if (!('id' in result) && !('success' in result)) {
-    return {
-      valid: false,
-      reason: 'Missing id or success field',
-    };
+  if ("success" in result && result.success !== true) {
+    return { valid: false, reason: "Success flag must be true" };
   }
-  return { valid: true };
+  if (typeof result.id === "string" && result.id.trim() !== "") {
+    return { valid: true };
+  }
+  if (Array.isArray(result.data) && result.data.some(hasDurableId)) {
+    return { valid: true };
+  }
+  if (hasDurableId(result.data)) {
+    return { valid: true };
+  }
+  return {
+    valid: false,
+    reason: "Missing durable persisted id",
+  };
 }
 
-function validateSuccessFlag(
-  result: unknown,
-): ValidationResult {
+function validateSuccessFlag(result: unknown): ValidationResult {
   if (!isObject(result)) {
-    return { valid: false, reason: 'Result is not an object' };
+    return { valid: false, reason: "Result is not an object" };
   }
-  if (typeof result.success !== 'boolean') {
-    return { valid: false, reason: 'Missing success flag' };
+  if (result.success !== true) {
+    return { valid: false, reason: "Success flag must be true" };
   }
   return { valid: true };
 }
@@ -85,22 +93,19 @@ function validateSuccessFlag(
 /**
  * Validate a tool's raw result against its expected contract.
  *
- * Tools without a registered validator pass by default
- * (open-world assumption — new tools are permissive).
+ * Tools without a registered validator fail closed so future tools
+ * cannot commit without an explicit result contract.
  *
  * @param toolName - canonical tool identifier
  * @param result   - raw execution output
  */
-export function validate(
-  toolName: string,
-  result: unknown,
-): ValidationResult {
+export function validate(toolName: string, result: unknown): ValidationResult {
   const validator = VALIDATORS[toolName];
   if (!validator) {
-    if (typeof console !== 'undefined') {
-      console.warn(`[Veritas] No validator registered for tool "${toolName}" — passing by open-world default`);
-    }
-    return { valid: true };
+    return {
+      valid: false,
+      reason: `No validator registered for tool "${toolName}"`,
+    };
   }
   return validator(result);
 }

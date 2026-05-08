@@ -11,7 +11,7 @@
  * Pure function: deterministic output for identical inputs (aside from generated IDs).
  */
 
-import { z } from 'https://esm.sh/zod@3.25.76';
+import { z } from "https://esm.sh/zod@3.25.76";
 
 // ─── Zod Schemas ─────────────────────────────────────────────────────
 
@@ -41,7 +41,14 @@ export type EventEnvelope = z.infer<typeof EventEnvelopeSchema>;
 
 // ─── Intent Extraction ──────────────────────────────────────────────
 
-const INTENT_KEYS = ["intentId", "intent_id", "intent", "action", "event_type", "type"] as const;
+const INTENT_KEYS = [
+  "intentId",
+  "intent_id",
+  "intent",
+  "action",
+  "event_type",
+  "type",
+] as const;
 
 function extractIntentId(payload: Record<string, unknown>): string {
   for (const key of INTENT_KEYS) {
@@ -64,13 +71,19 @@ function extractIntentId(payload: Record<string, unknown>): string {
 
   throw new Error(
     "FAIL_CLOSED: No intentId could be extracted from payload. " +
-    `Searched keys: [${INTENT_KEYS.join(", ")}] at root and nested levels.`
+      `Searched keys: [${INTENT_KEYS.join(", ")}] at root and nested levels.`
   );
 }
 
 // ─── Tenant Extraction ──────────────────────────────────────────────
 
-const TENANT_KEYS = ["tenantId", "tenant_id", "org_id", "orgId", "workspace_id"] as const;
+const TENANT_KEYS = [
+  "tenantId",
+  "tenant_id",
+  "org_id",
+  "orgId",
+  "workspace_id",
+] as const;
 
 function extractTenantId(payload: Record<string, unknown>): string {
   for (const key of TENANT_KEYS) {
@@ -81,7 +94,7 @@ function extractTenantId(payload: Record<string, unknown>): string {
   }
   throw new Error(
     "FAIL_CLOSED: No tenantId could be extracted from payload. " +
-    `Searched keys: [${TENANT_KEYS.join(", ")}].`
+      `Searched keys: [${TENANT_KEYS.join(", ")}].`
   );
 }
 
@@ -101,19 +114,20 @@ export interface NormalizeOptions {
  */
 export function normalizeToEventEnvelope(
   rawPayload: Record<string, unknown>,
-  options: NormalizeOptions = {},
+  options: NormalizeOptions = {}
 ): EventEnvelope {
   const intentId = extractIntentId(rawPayload);
   const tenantId = extractTenantId(rawPayload);
 
   const now = new Date().toISOString();
   const eventId = crypto.randomUUID();
-  const traceId = crypto.randomUUID();
+  const traceId =
+    typeof rawPayload["trace_id"] === "string"
+      ? rawPayload["trace_id"]
+      : crypto.randomUUID();
 
   const rawTimestamp =
-    typeof rawPayload["timestamp"] === "string"
-      ? rawPayload["timestamp"]
-      : now;
+    typeof rawPayload["timestamp"] === "string" ? rawPayload["timestamp"] : now;
 
   const idempotencyKey =
     typeof rawPayload["idempotency_key"] === "string"
@@ -166,7 +180,7 @@ const DEFAULT_SOURCE_APP = "omni-dash";
  */
 export function toPythonEventEnvelope(
   tsEnvelope: EventEnvelope,
-  userId: string,
+  userId: string
 ): Record<string, unknown> {
   const spanId = crypto.randomUUID().slice(0, 16);
 

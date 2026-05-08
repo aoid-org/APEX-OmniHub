@@ -75,10 +75,10 @@
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:publish": "changeset publish",
-    "release": "npm run build && npm run changeset:publish",
+    "release": "bun run build && bun run changeset:publish",
     "prebuild": "node scripts/check-env-root.mjs && node scripts/generate-sitemap.mjs",
-    "release:lattice": "node scripts/ci/release-lattice.mjs",
-    "dev:bun": "bun run dev"
+    "armageddon:certify": "tsx src/scripts/certify-armageddon.ts",
+    "armageddon:certify:ci": "tsx src/scripts/certify-armageddon-ci.ts"
   },
   "size-limit": [
     {

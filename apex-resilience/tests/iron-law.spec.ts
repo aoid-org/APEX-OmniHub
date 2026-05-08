@@ -1,30 +1,30 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { IronLawVerifier } from '../core/iron-law';
-import type { AgentTask } from '../core/types';
+import { describe, it, expect, beforeAll } from "vitest";
+import { IronLawVerifier } from "../core/iron-law";
+import type { AgentTask } from "../core/types";
 
-describe('IronLawVerifier - Core Functionality', () => {
+describe("IronLawVerifier - Core Functionality", () => {
   let verifier: IronLawVerifier;
 
   beforeAll(() => {
-    process.env.APEX_IRON_LAW_FAST_MODE = '1';
+    process.env.APEX_IRON_LAW_FAST_MODE = "1";
     verifier = new IronLawVerifier();
   });
 
-  it('should create verifier instance', () => {
+  it("should create verifier instance", () => {
     expect(verifier).toBeDefined();
     expect(verifier).toBeInstanceOf(IronLawVerifier);
   });
 
-  it('should have verify method', () => {
+  it("should have verify method", () => {
     expect(verifier.verify).toBeDefined();
-    expect(typeof verifier.verify).toBe('function');
+    expect(typeof verifier.verify).toBe("function");
   });
 
-  it('should generate verification result with required fields', async () => {
+  it("should generate verification result with required fields", async () => {
     const task: AgentTask = {
       id: crypto.randomUUID(),
-      description: 'Test task',
-      modifiedFiles: ['apex-resilience/tests/iron-law.spec.ts'],
+      description: "Test task",
+      modifiedFiles: ["apex-resilience/tests/iron-law.spec.ts"],
       touchesUI: false,
       touchesSecurity: false,
       timestamp: new Date().toISOString(),
@@ -41,11 +41,11 @@ describe('IronLawVerifier - Core Functionality', () => {
     expect(result.verificationLatencyMs).toBeGreaterThanOrEqual(0);
   }, 35000);
 
-  it('should include test evidence in verification result', async () => {
+  it("should include test evidence in verification result", async () => {
     const task: AgentTask = {
       id: crypto.randomUUID(),
-      description: 'Test task with evidence check',
-      modifiedFiles: ['apex-resilience/tests/iron-law.spec.ts'],
+      description: "Test task with evidence check",
+      modifiedFiles: ["apex-resilience/tests/iron-law.spec.ts"],
       touchesUI: false,
       touchesSecurity: false,
       timestamp: new Date().toISOString(),
@@ -53,9 +53,9 @@ describe('IronLawVerifier - Core Functionality', () => {
 
     const result = await verifier.verify(task);
 
-    const testEvidence = result.evidence.find((e) => e.type === 'test_result');
+    const testEvidence = result.evidence.find((e) => e.type === "test_result");
     expect(testEvidence).toBeDefined();
-    if (testEvidence?.type === 'test_result') {
+    if (testEvidence?.type === "test_result") {
       expect(testEvidence.exitCode).toBeDefined();
       expect(testEvidence.coverage).toBeGreaterThanOrEqual(0);
       expect(testEvidence.coverage).toBeLessThanOrEqual(100);
@@ -64,11 +64,11 @@ describe('IronLawVerifier - Core Functionality', () => {
     }
   }, 35000);
 
-  it('should require human review for critical file changes', async () => {
+  it("should require human review for critical file changes", async () => {
     const task: AgentTask = {
       id: crypto.randomUUID(),
-      description: 'Modify auth logic',
-      modifiedFiles: ['src/auth/login.ts'],
+      description: "Modify auth logic",
+      modifiedFiles: ["src/auth/login.ts"],
       touchesUI: false,
       touchesSecurity: true,
       timestamp: new Date().toISOString(),
@@ -76,14 +76,14 @@ describe('IronLawVerifier - Core Functionality', () => {
 
     const result = await verifier.verify(task);
 
-    expect(['REQUIRES_HUMAN_REVIEW', 'REJECTED']).toContain(result.status);
+    expect(["REQUIRES_HUMAN_REVIEW", "REJECTED"]).toContain(result.status);
   }, 35000);
 
-  it('should include security evidence for security-sensitive tasks', async () => {
+  it("should include security evidence for security-sensitive tasks", async () => {
     const task: AgentTask = {
       id: crypto.randomUUID(),
-      description: 'Security-related change',
-      modifiedFiles: ['src/security/validator.ts'],
+      description: "Security-related change",
+      modifiedFiles: ["src/security/validator.ts"],
       touchesUI: false,
       touchesSecurity: true,
       timestamp: new Date().toISOString(),
@@ -91,20 +91,22 @@ describe('IronLawVerifier - Core Functionality', () => {
 
     const result = await verifier.verify(task);
 
-    const securityEvidence = result.evidence.find((e) => e.type === 'security_scan');
+    const securityEvidence = result.evidence.find(
+      (e) => e.type === "security_scan"
+    );
     expect(securityEvidence).toBeDefined();
-    if (securityEvidence?.type === 'security_scan') {
+    if (securityEvidence?.type === "security_scan") {
       expect(securityEvidence.vulnerabilities).toBeDefined();
       expect(securityEvidence.shadowPromptAttempts).toBeGreaterThanOrEqual(0);
       expect(securityEvidence.reportPath).toBeDefined();
     }
   }, 35000);
 
-  it('should include visual evidence for UI tasks', async () => {
+  it("should include visual evidence for UI tasks", async () => {
     const task: AgentTask = {
       id: crypto.randomUUID(),
-      description: 'UI component update',
-      modifiedFiles: ['src/components/Button.tsx'],
+      description: "UI component update",
+      modifiedFiles: ["src/components/Button.tsx"],
       touchesUI: true,
       touchesSecurity: false,
       timestamp: new Date().toISOString(),
@@ -112,9 +114,11 @@ describe('IronLawVerifier - Core Functionality', () => {
 
     const result = await verifier.verify(task);
 
-    const visualEvidence = result.evidence.find((e) => e.type === 'visual_verification');
+    const visualEvidence = result.evidence.find(
+      (e) => e.type === "visual_verification"
+    );
     expect(visualEvidence).toBeDefined();
-    if (visualEvidence?.type === 'visual_verification') {
+    if (visualEvidence?.type === "visual_verification") {
       expect(visualEvidence.screenshotPath).toBeDefined();
       expect(visualEvidence.pixelDiffScore).toBeGreaterThanOrEqual(0);
       expect(visualEvidence.pixelDiffScore).toBeLessThanOrEqual(100);
@@ -124,11 +128,11 @@ describe('IronLawVerifier - Core Functionality', () => {
     }
   }, 35000);
 
-  it('should complete verification within latency threshold', async () => {
+  it("should complete verification within latency threshold", async () => {
     const task: AgentTask = {
       id: crypto.randomUUID(),
-      description: 'Performance test',
-      modifiedFiles: ['apex-resilience/tests/iron-law.spec.ts'],
+      description: "Performance test",
+      modifiedFiles: ["apex-resilience/tests/iron-law.spec.ts"],
       touchesUI: false,
       touchesSecurity: false,
       timestamp: new Date().toISOString(),

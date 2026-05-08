@@ -137,6 +137,11 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
       - name: Install dependencies
         run: npm ci --ignore-scripts
         env:
@@ -184,6 +189,9 @@ jobs:
 
       - name: ESLint
         run: npm run lint
+
+      - name: Secret scan
+        run: bun run secret:scan
 
       - name: React singleton check
         run: npm run check:react
@@ -233,6 +241,19 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       - name: Run OmniEval (deterministic eval gate)
         run: npm run eval:ci
+
+      - name: Run Armageddon CI certification evidence
+        run: bun run armageddon:certify:ci
+        env:
+          SIM_MODE: "true"
+
+      - name: Upload Armageddon evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: armageddon-evidence
+          path: artifacts/armageddon/latest.json
+          retention-days: 30
 
       - name: Upload OmniEval report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -357,4 +378,3 @@ jobs:
           name: playwright-screenshots
           path: test-results/
           retention-days: 7
-
