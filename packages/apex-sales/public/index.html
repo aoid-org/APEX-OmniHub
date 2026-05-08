@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>APEX-SALES Lead Vault</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17" integrity="sha384-igm5BeiBt36UU4gqwWS7imYmelpTsZlQ45FZf+XBn9MuJbn4nQr7yx1yFydocC/K" crossorigin="anonymous"></script>
+  <style>
+    :root { --bg:#0A0A0A; --card:#111111; --gold:#C9A84C; --text:#F5F5F5; }
+    body { background: var(--bg); color: var(--text); }
+    .card { background: var(--card); border: 1px solid rgba(201,168,76,.18); }
+    .gold { color: var(--gold); }
+    .gold-bg { background: var(--gold); color: #0A0A0A; }
+    .drawer-open { transform: translateX(0); }
+  </style>
+</head>
+<body class="min-h-screen font-sans">
+  <main class="mx-auto max-w-7xl px-4 py-6">
+    <header class="mb-6 flex flex-col gap-4 border-b border-[#C9A84C]/20 pb-5 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="gold text-sm font-semibold tracking-[0.35em]">APEX-SALES</p>
+        <h1 class="text-3xl font-bold">Lead Vault CRM</h1>
+        <p class="mt-1 text-sm text-neutral-400">Supabase-backed pipeline command center for Offers A–E.</p>
+      </div>
+      <div class="flex gap-2">
+        <button id="refreshBtn" class="rounded-lg border border-[#C9A84C]/40 px-4 py-2 text-sm hover:bg-[#C9A84C]/10">Refresh</button>
+        <button id="tokenBtn" class="rounded-lg gold-bg px-4 py-2 text-sm font-semibold">Admin Token</button>
+      </div>
+    </header>
+
+    <nav class="mb-6 flex flex-wrap gap-2" aria-label="Dashboard tabs">
+      <button data-tab="board" class="tab rounded-lg px-4 py-2 text-sm font-semibold">Pipeline Board</button>
+      <button data-tab="add" class="tab rounded-lg px-4 py-2 text-sm font-semibold">Add Lead</button>
+      <button data-tab="summary" class="tab rounded-lg px-4 py-2 text-sm font-semibold">Pipeline Summary</button>
+    </nav>
+
+    <section id="alert" class="mb-4 hidden rounded-lg border px-4 py-3 text-sm"></section>
+
+    <section id="boardView" class="view">
+      <div id="pipelineBoard" class="grid gap-4 lg:grid-cols-5"></div>
+    </section>
+
+    <section id="addView" class="view hidden">
+      <form id="leadForm" class="card grid gap-4 rounded-2xl p-5 md:grid-cols-2">
+        <label class="grid gap-2 text-sm">Name<input required name="name" class="rounded-lg border border-neutral-700 bg-black px-3 py-2" /></label>
+        <label class="grid gap-2 text-sm">Email<input name="email" type="email" class="rounded-lg border border-neutral-700 bg-black px-3 py-2" /></label>
+        <label class="grid gap-2 text-sm">Company<input name="company" class="rounded-lg border border-neutral-700 bg-black px-3 py-2" /></label>
+        <label class="grid gap-2 text-sm">Title<input name="title" class="rounded-lg border border-neutral-700 bg-black px-3 py-2" /></label>
+        <label class="grid gap-2 text-sm">Offer Interest<select name="offer_interest" class="rounded-lg border border-neutral-700 bg-black px-3 py-2"></select></label>
+        <label class="grid gap-2 text-sm">Source<select name="source" class="rounded-lg border border-neutral-700 bg-black px-3 py-2"></select></label>
+        <label class="grid gap-2 text-sm md:col-span-2">Notes<textarea name="notes" rows="4" class="rounded-lg border border-neutral-700 bg-black px-3 py-2"></textarea></label>
+        <label class="grid gap-2 text-sm">Next Action<input name="next_action" class="rounded-lg border border-neutral-700 bg-black px-3 py-2" /></label>
+        <label class="grid gap-2 text-sm">Next Action Due<input name="next_action_due" type="date" class="rounded-lg border border-neutral-700 bg-black px-3 py-2" /></label>
+        <div class="md:col-span-2">
+          <button class="gold-bg rounded-lg px-5 py-2 font-semibold" type="submit">Create Lead</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="summaryView" class="view hidden">
+      <div class="card overflow-x-auto rounded-2xl p-5">
+        <table class="w-full min-w-[760px] text-left text-sm">
+          <thead id="summaryHead" class="text-neutral-300">
+            <tr>
+              <th scope="col" class="px-3 py-2">Offer</th>
+              <th scope="col" class="px-3 py-2">New</th>
+              <th scope="col" class="px-3 py-2">Contacted</th>
+              <th scope="col" class="px-3 py-2">Replied</th>
+              <th scope="col" class="px-3 py-2">Call Booked</th>
+              <th scope="col" class="px-3 py-2">Proposal Sent</th>
+              <th scope="col" class="px-3 py-2">Closed Won</th>
+              <th scope="col" class="px-3 py-2">Closed Lost</th>
+              <th scope="col" class="px-3 py-2">Nurture</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody"></tbody>
+        </table>
+      </div>
+      <div id="summaryMetrics" class="mt-4 grid gap-4 md:grid-cols-3"></div>
+    </section>
+  </main>
+
+  <aside id="drawer" class="fixed right-0 top-0 z-30 h-full w-full max-w-xl translate-x-full overflow-y-auto border-l border-[#C9A84C]/25 bg-[#0A0A0A] p-5 shadow-2xl transition-transform">
+    <div class="mb-4 flex items-start justify-between gap-3">
+      <div>
+        <p class="gold text-xs font-semibold tracking-[0.3em]">LEAD DETAIL</p>
+        <h2 id="drawerName" class="text-2xl font-bold">Lead details</h2>
+      </div>
+      <button id="closeDrawer" class="rounded-lg border border-neutral-700 px-3 py-1 text-sm">Close</button>
+    </div>
+    <div id="drawerContent" class="space-y-4"></div>
+  </aside>
+
+  <script type="module">
+    const statuses = ['new','contacted','replied','call-booked','proposal-sent','closed-won','closed-lost','nurture'];
+    const boardStatuses = ['new','contacted','replied','call-booked','proposal-sent'];
+    const statusLabels = { 'new':'New', 'contacted':'Contacted', 'replied':'Replied', 'call-booked':'Call Booked', 'proposal-sent':'Proposal Sent', 'closed-won':'Closed Won', 'closed-lost':'Closed Lost', 'nurture':'Nurture' };
+    const offers = ['A-SBBL','B-Sprint','C-OmniHub','D-Armageddon','E-FLOWBills','TDA','Other'];
+    const sources = ['linkedin','cold-email','referral','inbound','event','partner','seed','other'];
+    const offerColors = { 'A-SBBL':'bg-blue-500/20 text-blue-200 border-blue-500/30', 'B-Sprint':'bg-purple-500/20 text-purple-200 border-purple-500/30', 'C-OmniHub':'bg-green-500/20 text-green-200 border-green-500/30', 'D-Armageddon':'bg-red-500/20 text-red-200 border-red-500/30', 'E-FLOWBills':'bg-orange-500/20 text-orange-200 border-orange-500/30', 'TDA':'bg-cyan-500/20 text-cyan-200 border-cyan-500/30', 'Other':'bg-neutral-500/20 text-neutral-200 border-neutral-500/30' };
+    const state = { leads: [], summary: null, activeTab: 'board' };
+
+    function token() {
+      let value = localStorage.getItem('apex_admin_token');
+      if (!value) value = prompt('Enter APEX admin token');
+      if (value) localStorage.setItem('apex_admin_token', value.trim());
+      return localStorage.getItem('apex_admin_token');
+    }
+
+    function text(value) { return value === null || value === undefined || value === '' ? '—' : String(value); }
+
+    function el(tag, className, value) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (value !== undefined) node.textContent = value;
+      return node;
+    }
+
+    function showAlert(message, mode = 'ok') {
+      const alert = document.getElementById('alert');
+      alert.textContent = message;
+      alert.className = `mb-4 rounded-lg border px-4 py-3 text-sm ${mode === 'error' ? 'border-red-500/40 bg-red-500/10 text-red-200' : 'border-green-500/40 bg-green-500/10 text-green-200'}`;
+      globalThis.setTimeout(() => alert.classList.add('hidden'), 5000);
+    }
+
+    async function api(path, options = {}) {
+      const adminToken = token();
+      if (!adminToken) throw new Error('Admin token is required.');
+
+      const headers = { 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' };
+      if (options.headers) Object.assign(headers, options.headers);
+
+      const response = await fetch(path, { ...options, headers });
+      const payload = await response.json().catch(() => ({ error: { message: undefined } }));
+      if (!response.ok) throw new Error(payload.error?.message || `Request failed: ${response.status}`);
+      return payload.data;
+    }
+
+    function showError(error) {
+      showAlert(error instanceof Error ? error.message : 'Unexpected dashboard error.', 'error');
+    }
+
+    async function refresh() {
+      const [leads, summary] = await Promise.all([api('/leads'), api('/pipeline')]);
+      state.leads = leads;
+      state.summary = summary;
+      renderBoard();
+      renderSummary();
+    }
+
+    function renderTabs() {
+      document.querySelectorAll('.tab').forEach(button => {
+        const active = button.dataset.tab === state.activeTab;
+        button.className = `tab rounded-lg px-4 py-2 text-sm font-semibold ${active ? 'gold-bg' : 'border border-neutral-700 hover:bg-neutral-900'}`;
+      });
+      document.querySelectorAll('.view').forEach(view => view.classList.add('hidden'));
+      document.getElementById(`${state.activeTab}View`).classList.remove('hidden');
+    }
+
+    function renderBoard() {
+      const board = document.getElementById('pipelineBoard');
+      board.replaceChildren();
+      boardStatuses.forEach(status => {
+        const column = el('section', 'card min-h-[420px] rounded-2xl p-3');
+        const header = el('div', 'mb-3 flex items-center justify-between border-b border-neutral-800 pb-2');
+        header.append(el('h3', 'font-semibold', statusLabels[status]));
+        header.append(el('span', 'rounded-full bg-neutral-900 px-2 py-1 text-xs text-neutral-300', state.leads.filter(lead => lead.status === status).length));
+        column.append(header);
+        const stack = el('div', 'space-y-3');
+        state.leads.filter(lead => lead.status === status).forEach(lead => stack.append(leadCard(lead)));
+        if (!stack.children.length) stack.append(el('p', 'rounded-lg border border-dashed border-neutral-800 p-4 text-sm text-neutral-500', 'No leads in this stage.'));
+        column.append(stack);
+        board.append(column);
+      });
+    }
+
+    function leadCard(lead) {
+      const card = el('button', 'w-full rounded-xl border border-neutral-800 bg-black/40 p-3 text-left hover:border-[#C9A84C]/70');
+      card.type = 'button';
+      card.addEventListener('click', () => openLead(lead.id));
+      card.append(el('p', 'font-semibold', lead.name));
+      card.append(el('p', 'mt-1 text-sm text-neutral-400', text(lead.company)));
+      const row = el('div', 'mt-3 flex flex-wrap items-center gap-2');
+      row.append(el('span', `rounded-full border px-2 py-1 text-xs ${offerColors[lead.offer_interest] || offerColors.Other}`, text(lead.offer_interest)));
+      row.append(el('span', 'text-xs text-neutral-500', `Due: ${text(lead.next_action_due)}`));
+      card.append(row);
+      if (lead.next_action) card.append(el('p', 'mt-2 text-xs text-neutral-300', lead.next_action));
+      return card;
+    }
+
+    async function openLead(id) {
+      const lead = await api(`/leads/${id}`);
+      document.getElementById('drawerName').textContent = lead.name;
+      const content = document.getElementById('drawerContent');
+      content.replaceChildren();
+      const meta = el('div', 'card rounded-2xl p-4 text-sm');
+      [['Email', lead.email], ['Company', lead.company], ['Title', lead.title], ['Offer', lead.offer_interest], ['Source', lead.source], ['Status', statusLabels[lead.status]], ['Next Action', lead.next_action], ['Due', lead.next_action_due], ['Notes', lead.notes]].forEach(([label, value]) => {
+        const row = el('p', 'mb-2 text-neutral-300');
+        row.append(el('span', 'gold font-semibold', `${label}: `));
+        row.append(document.createTextNode(text(value)));
+        meta.append(row);
+      });
+      content.append(meta, patchForm(lead), eventForm(lead), timeline(lead.events || []));
+      document.getElementById('drawer').classList.add('drawer-open');
+    }
+
+    function patchForm(lead) {
+      const form = el('form', 'card grid gap-3 rounded-2xl p-4');
+      const statusSelect = el('select', 'rounded-lg border border-neutral-700 bg-black px-3 py-2');
+      statusSelect.name = 'status';
+      statuses.forEach(status => {
+        const option = el('option', '', statusLabels[status]);
+        option.value = status;
+        option.selected = status === lead.status;
+        statusSelect.append(option);
+      });
+      const notes = el('textarea', 'rounded-lg border border-neutral-700 bg-black px-3 py-2');
+      notes.name = 'notes'; notes.rows = 3; notes.value = lead.notes || '';
+      const nextAction = el('input', 'rounded-lg border border-neutral-700 bg-black px-3 py-2');
+      nextAction.name = 'next_action'; nextAction.value = lead.next_action || '';
+      const due = el('input', 'rounded-lg border border-neutral-700 bg-black px-3 py-2');
+      due.name = 'next_action_due'; due.type = 'date'; due.value = lead.next_action_due || '';
+      form.append(el('h3', 'font-semibold', 'Update Lead'), statusSelect, notes, nextAction, due);
+      const submit = el('button', 'gold-bg rounded-lg px-4 py-2 font-semibold', 'Save Updates');
+      form.append(submit);
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        await api(`/leads/${lead.id}`, { method: 'PATCH', body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+        showAlert('Lead updated.');
+        await refresh();
+        await openLead(lead.id);
+      });
+      return form;
+    }
+
+    function eventForm(lead) {
+      const form = el('form', 'card grid gap-3 rounded-2xl p-4');
+      const type = el('select', 'rounded-lg border border-neutral-700 bg-black px-3 py-2');
+      type.name = 'event_type';
+      ['email-sent','email-replied','call','proposal','closed'].forEach(value => { const option = el('option', '', value); option.value = value; type.append(option); });
+      const notes = el('textarea', 'rounded-lg border border-neutral-700 bg-black px-3 py-2');
+      notes.name = 'notes'; notes.rows = 2; notes.placeholder = 'Event notes';
+      form.append(el('h3', 'font-semibold', 'Add Timeline Event'), type, notes, el('button', 'gold-bg rounded-lg px-4 py-2 font-semibold', 'Add Event'));
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        await api(`/leads/${lead.id}/events`, { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+        showAlert('Event added.');
+        await refresh();
+        await openLead(lead.id);
+      });
+      return form;
+    }
+
+    function timeline(events) {
+      const wrap = el('div', 'card rounded-2xl p-4');
+      wrap.append(el('h3', 'mb-3 font-semibold', 'Timeline'));
+      if (!events.length) wrap.append(el('p', 'text-sm text-neutral-500', 'No events yet.'));
+      events.forEach(event => {
+        const item = el('div', 'border-b border-neutral-800 py-3 text-sm last:border-b-0');
+        item.append(el('p', 'font-semibold', event.event_type));
+        item.append(el('p', 'text-neutral-400', new Date(event.created_at).toLocaleString()));
+        if (event.notes) item.append(el('p', 'mt-1 text-neutral-300', event.notes));
+        wrap.append(item);
+      });
+      return wrap;
+    }
+
+    function renderSummary() {
+      if (!state.summary) return;
+      const head = document.getElementById('summaryHead');
+      const body = document.getElementById('summaryBody');
+      head.replaceChildren(); body.replaceChildren();
+      const headRow = el('tr', 'border-b border-neutral-800');
+      ['Offer', ...statuses.map(status => statusLabels[status])].forEach(label => {
+        const header = el('th', 'px-3 py-2', label);
+        header.scope = 'col';
+        headRow.append(header);
+      });
+      head.append(headRow);
+      offers.forEach(offer => {
+        const row = el('tr', 'border-b border-neutral-900');
+        row.append(el('td', 'px-3 py-2 font-semibold', offer));
+        statuses.forEach(status => row.append(el('td', 'px-3 py-2 text-neutral-300', String(state.summary.matrix?.[offer]?.[status] || 0))));
+        body.append(row);
+      });
+      const metrics = document.getElementById('summaryMetrics');
+      metrics.replaceChildren();
+      [['Contacted This Week', state.summary.contacted_this_week], ['Total Replied', state.summary.total_replied], ['Conversion Rate', `${state.summary.conversion_rate}%`]].forEach(([label, value]) => {
+        const card = el('div', 'card rounded-2xl p-5');
+        card.append(el('p', 'text-sm text-neutral-400', label));
+        card.append(el('p', 'mt-2 text-3xl font-bold gold', String(value)));
+        metrics.append(card);
+      });
+    }
+
+    function initFormOptions() {
+      const offerSelect = document.querySelector('[name="offer_interest"]');
+      offers.forEach(value => { const option = el('option', '', value); option.value = value; offerSelect.append(option); });
+      const sourceSelect = document.querySelector('[name="source"]');
+      sources.forEach(value => { const option = el('option', '', value); option.value = value; sourceSelect.append(option); });
+    }
+
+    document.getElementById('leadForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      try {
+        const payload = Object.fromEntries(new FormData(event.target));
+        await api('/leads', { method: 'POST', body: JSON.stringify(payload) });
+        event.target.reset();
+        showAlert('Lead created.');
+        await refresh();
+        state.activeTab = 'board'; renderTabs();
+      } catch (error) {
+        showError(error);
+      }
+    });
+
+    document.querySelectorAll('.tab').forEach(button => button.addEventListener('click', () => {
+      state.activeTab = button.dataset.tab;
+      renderTabs();
+    }));
+    document.getElementById('refreshBtn').addEventListener('click', async () => {
+      try {
+        await refresh();
+      } catch (error) {
+        showError(error);
+      }
+    });
+    document.getElementById('tokenBtn').addEventListener('click', async () => {
+      const value = prompt('Enter APEX admin token', localStorage.getItem('apex_admin_token') || '');
+      if (value) {
+        localStorage.setItem('apex_admin_token', value.trim());
+      }
+
+      try {
+        await refresh();
+      } catch (error) {
+        showError(error);
+      }
+    });
+    document.getElementById('closeDrawer').addEventListener('click', () => document.getElementById('drawer').classList.remove('drawer-open'));
+
+    initFormOptions();
+    renderTabs();
+    try {
+      await refresh();
+    } catch (error) {
+      showError(error);
+    }
+  </script>
+</body>
+</html>
