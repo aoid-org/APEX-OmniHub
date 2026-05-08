@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setupMonitoringTestEnv } from './monitoring-test-helper';
 
 // Must run before importing monitoring
@@ -37,8 +37,12 @@ describe('monitoring - in-memory cache', () => {
 
   it('should update cache on write', async () => {
     const { getCachedLogs } = _testing;
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     await logError(new Error('test error'));
+    consoleErrorSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
 
     // Force flush (logError triggers persistLog which might queue or directWrite depending on criticality)
     // logError is critical, so it directWrites immediately.

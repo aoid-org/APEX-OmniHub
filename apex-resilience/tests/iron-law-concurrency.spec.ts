@@ -72,12 +72,10 @@ describe("IronLawVerifier - Concurrency Handling", () => {
       timestamp: new Date().toISOString(),
     };
 
-    // We expect this to succeed without throwing errors
-    // If unbounded concurrency was used on 5000 files (in benchmark), it would fail.
-    // Here on 100 files, we just verify correctness first.
-    // The main implementation change will ensure safety for larger numbers.
-
-    await expect(verifier.verify(task)).resolves.toBeDefined();
+    // Shadow-prompt detections are expected; suppress only this negative-path stderr.
+    await withExpectedShadowPromptLogsMuted(async () => {
+      await expect(verifier.verify(task)).resolves.toBeDefined();
+    });
   }, 30000);
 
   it("should correctly identify shadow prompts in concurrent execution", async () => {
