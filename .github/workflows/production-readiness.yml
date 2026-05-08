@@ -36,10 +36,10 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: TypeScript compilation
-        run: npm exec --no -- tsc --noEmit
+        run: npm exec --no --ignore-scripts -- tsc --noEmit
 
       - name: ESLint validation
-        run: npm exec --no -- eslint . --max-warnings 0
+        run: npm exec --no --ignore-scripts -- eslint . --max-warnings 0
 
       - name: React singleton check
         run: npm run check:react
@@ -155,7 +155,7 @@ jobs:
         run: npm run build
 
       - name: Install Playwright
-        run: npm exec --no -- playwright install chromium
+        run: npm exec --no --ignore-scripts -- playwright install chromium
 
       - name: Run E2E smoke tests
         run: npm run test:e2e
