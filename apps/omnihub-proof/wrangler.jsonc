@@ -1,0 +1,8 @@
+{
+  "name": "omnihub-proof",
+  "compatibility_date": "2024-09-23",
+  "pages_build_output_dir": "dist",
+  "routes": [
+    { "pattern": "omnihub.apexbiz.ca/*", "zone_name": "apexbiz.ca" }
+  ]
+}
