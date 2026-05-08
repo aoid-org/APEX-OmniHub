@@ -10,7 +10,7 @@ on:
   workflow_dispatch: # Manual trigger
 
 env:
-  NODE_VERSION: "20.x"
+  NODE_VERSION: "24.x"
 
 jobs:
   terraform:
@@ -102,17 +102,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.2.14"
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Run tests
-        run: bun run test:unit
+        run: npm run test:unit
 
       - name: Build application
-        run: bun run build
+        run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.STAGING_SUPABASE_KEY }}
@@ -140,17 +137,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.2.14"
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Wait for deployment
         run: sleep 30 # Wait for staging deployment to stabilize
 
       - name: Run smoke tests
-        run: bun run test:e2e
+        run: npm run test:e2e
         continue-on-error: true
         env:
           STAGING_URL: https://staging.omnihub.dev

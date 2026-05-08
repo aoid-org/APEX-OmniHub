@@ -33,7 +33,7 @@ on:
         default: '42'
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '24'
   SIM_MODE: 'true'
   SANDBOX_TENANT: 'ci-test'
 
@@ -58,14 +58,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.2.14"
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Run simulation unit tests
-        run: bun run test:sim
+        run: npm run test:sim
 
       - name: Upload test results
         if: always()
@@ -94,14 +91,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.2.14"
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Run quick smoke test
-        run: bun run sim:quick
+        run: npm run sim:quick
         env:
           SIM_MODE: 'true'
           SANDBOX_TENANT: 'ci-quick-${{ github.run_id }}'
@@ -131,14 +125,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.2.14"
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Run dry simulation
-        run: bun run sim:dry
+        run: npm run sim:dry
         env:
           SIM_MODE: 'true'
           SANDBOX_TENANT: 'ci-dry-${{ github.run_id }}'
@@ -175,14 +166,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.2.14"
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Run full chaos simulation (seed ${{ matrix.seed }})
-        run: bun run sim:chaos -- --seed ${{ matrix.seed }}
+        run: npm run sim:chaos -- --seed ${{ matrix.seed }}
         env:
           SIM_MODE: 'true'
           SANDBOX_TENANT: 'ci-chaos-${{ github.run_id }}-seed-${{ matrix.seed }}'
@@ -310,14 +298,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.2.14"
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Run burst mode (1000 events)
-        run: bun run sim:burst
+        run: npm run sim:burst
         env:
           SIM_MODE: 'true'
           SANDBOX_TENANT: 'ci-burst-${{ github.run_id }}'
@@ -366,21 +351,18 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.2.14"
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Run simulation twice with same seed
         run: |
           export SIM_MODE=true
           export SANDBOX_TENANT=ci-determinism-${{ github.run_id }}
 
-          bun run sim:chaos -- --seed 42 > run1.log 2>&1
+          npm run sim:chaos -- --seed 42 > run1.log 2>&1
           cp evidence/latest/scorecard.json scorecard1.json
 
-          bun run sim:chaos -- --seed 42 > run2.log 2>&1
+          npm run sim:chaos -- --seed 42 > run2.log 2>&1
           cp evidence/latest/scorecard.json scorecard2.json
 
       - name: Verify determinism
