@@ -31,7 +31,7 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'placeholder' }}
 
       - name: Run Lighthouse CI
-        run: npm exec --no -- lhci autorun
+        run: npm exec --no --ignore-scripts -- lhci autorun
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 
