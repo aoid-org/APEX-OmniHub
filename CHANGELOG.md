@@ -6,6 +6,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-05-08
+
+### 🔒 Security & Hardening
+- Armageddon Live Validation passed: 2,399 Vitest + 891 Pytest + 21 Playwright
+  E2E + 168 simulation + 5 Worldwide Wildcard — all green (2026-05-08)
+- SIM_MODE=false chaos guardrail confirmed operational against live Supabase
+- Secret scan clean: zero findings
+
+### 🧹 Repository Hygiene
+- Relocated dev artifacts from root to scripts/debug/ and scripts/dev/
+- Deleted logs.txt (ephemeral runtime artifact; already absent during audit)
+- Canonicalized package manager metadata with packageManager field
+- Hardened .gitignore: excluded runtime logs, debug artifacts, volatile reports
+
+### 📦 CI/CD
+- GitHub Actions package manager usage audited against canonical metadata
+- Playwright install-deps remediation documented for Chromium runtime dependencies
+- Worldwide Wildcard runner remediation documented: guardrail blocks correctly
+  scored as passing control-plane outcomes
+
+### 📚 Documentation
+- Armageddon 2026-05-08 validation report integrated into docs/testing/
+- Release Notes v1.6.0 published
+- PR Triage Report published in docs/ops/
+
+
 ### Fixed — Zero Tech Debt Pass (2026-05-07)
 
 - **Security (create-checkout):** Added `ALLOWED_ORIGINS` allowlist for `returnUrl`
