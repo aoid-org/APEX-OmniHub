@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { SemanticTranslator } from '../src/omniconnect/translation/translator';
 import { CanonicalEvent, DataClassification, EventType } from '../src/omniconnect/types/canonical';
 
@@ -65,10 +65,17 @@ describe('Universal Translation Engine (UTE)', () => {
             metadata: {}
         }];
 
-        const result = await brokenTranslator.translate(events, appId, correlationId);
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        try {
+            const result = await brokenTranslator.translate(events, appId, correlationId);
 
-        expect(result[0].payload._translation_status).toBe('FAILED');
-        expect(result[0].metadata.risk_lane).toBe('RED');
+            expect(result[0].payload._translation_status).toBe('FAILED');
+            expect(result[0].metadata.risk_lane).toBe('RED');
+        } finally {
+            consoleErrorSpy.mockRestore();
+            consoleWarnSpy.mockRestore();
+        }
     });
 
     it('3. Cross-Lingual Consistency', async () => {

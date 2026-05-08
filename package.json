@@ -4,8 +4,7 @@
   "version": "1.5.1",
   "type": "module",
   "engines": {
-    "node": ">=20.19.0",
-    "bun": ">=1.2.14"
+    "node": ">=22 <25"
   },
   "scripts": {
     "dev": "vite",
@@ -70,14 +69,16 @@
     "apple:secret": "tsx scripts/generate-apple-secret.ts",
     "readiness:generate": "node scripts/generate-readiness-report.mjs",
     "postinstall": "node scripts/patch-capacitor-tar.cjs && node -e \"try{require('child_process').execFileSync(process.platform==='win32'?'sh':'/bin/sh',[require('path').join(__dirname,'scripts','install-githooks.sh')],{stdio:'ignore'})}catch(e){}\"",
-    "bundle:analyze": "bun run build && open dist/stats.html",
-    "bundle:check": "bun run build && size-limit",
+    "bundle:analyze": "npm run build && open dist/stats.html",
+    "bundle:check": "npm run build && size-limit",
     "build:seo": "node scripts/generate-sitemap.mjs && vite build",
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:publish": "changeset publish",
-    "release": "bun run build && bun run changeset:publish",
-    "prebuild": "node scripts/check-env-root.mjs && node scripts/generate-sitemap.mjs"
+    "release": "npm run build && npm run changeset:publish",
+    "prebuild": "node scripts/check-env-root.mjs && node scripts/generate-sitemap.mjs",
+    "release:lattice": "node scripts/ci/release-lattice.mjs",
+    "dev:bun": "bun run dev"
   },
   "size-limit": [
     {
@@ -277,7 +278,7 @@
     "uuid": "^14.0.0",
     "ast-v8-to-istanbul/js-tokens": "^10.0.0"
   },
-  "packageManager": "bun@1.2.14",
+  "packageManager": "npm@11.6.2",
   "optionalDependencies": {
     "@esbuild/linux-x64": "^0.25.12",
     "@rollup/rollup-linux-x64-gnu": "^4.60.0",

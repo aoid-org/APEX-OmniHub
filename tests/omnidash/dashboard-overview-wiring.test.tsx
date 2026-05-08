@@ -9,12 +9,17 @@ import type { ReactNode } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { DashboardOverview } from '../../apps/omnihub-site/src/pages/DashboardOverview';
+import { invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { useOmniModal } from '../../src/stores/omniModalStore';
 
 // APEX-DEV: Mock the newly introduced MCP-Client SDK to isolate the UI tests
-vi.mock('../../apps/omnihub-site/src/omnihub-gateway/mcp-client', () => ({
-  invokeMcpIntent: vi.fn(() => new Promise(() => {})), // Pending promise retains 'QUEUED' state
-  queryAgentRegistry: vi.fn(() => Promise.resolve([]))
+const { invokeMcpIntentMock } = vi.hoisted(() => ({
+  invokeMcpIntentMock: vi.fn(() => new Promise(() => {})),
+}));
+
+vi.mock('@/omnihub-gateway/mcp-client', () => ({
+  invokeMcpIntent: invokeMcpIntentMock, // Pending promise retains 'QUEUED' state
+  queryAgentRegistry: vi.fn(() => Promise.resolve([])),
 }));
 // Strips Framer animation props before they reach jsdom DOM elements to
 // eliminate "React does not recognize the `X` prop" stderr noise.
@@ -166,6 +171,11 @@ describe('DashboardOverview - OmniBoard Wiring', () => {
     fireEvent.click(screen.getByText('▶').closest('button') as HTMLButtonElement);
 
     expect(setAppHealth).toHaveBeenCalledWith('yellow');
+    expect(typeof invokeMcpIntent).toBe('function');
+    expect(invokeMcpIntentMock).toHaveBeenCalledWith({
+      prompt: 'Reconcile end-of-day cash and deposit ledger',
+      context: expect.objectContaining({ items: expect.any(Array) }),
+    });
   });
 
   it('sim_mode=true performs deterministic bypass and returns health to green after 2.5s', () => {

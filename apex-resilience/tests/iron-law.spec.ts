@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { IronLawVerifier } from '../core/iron-law';
 import type { AgentTask } from '../core/types';
-import { nanoid } from 'nanoid';
 
 describe('IronLawVerifier - Core Functionality', () => {
   let verifier: IronLawVerifier;
@@ -23,7 +22,7 @@ describe('IronLawVerifier - Core Functionality', () => {
 
   it('should generate verification result with required fields', async () => {
     const task: AgentTask = {
-      id: nanoid(),
+      id: crypto.randomUUID(),
       description: 'Test task',
       modifiedFiles: ['apex-resilience/tests/iron-law.spec.ts'],
       touchesUI: false,
@@ -44,7 +43,7 @@ describe('IronLawVerifier - Core Functionality', () => {
 
   it('should include test evidence in verification result', async () => {
     const task: AgentTask = {
-      id: nanoid(),
+      id: crypto.randomUUID(),
       description: 'Test task with evidence check',
       modifiedFiles: ['apex-resilience/tests/iron-law.spec.ts'],
       touchesUI: false,
@@ -67,7 +66,7 @@ describe('IronLawVerifier - Core Functionality', () => {
 
   it('should require human review for critical file changes', async () => {
     const task: AgentTask = {
-      id: nanoid(),
+      id: crypto.randomUUID(),
       description: 'Modify auth logic',
       modifiedFiles: ['src/auth/login.ts'],
       touchesUI: false,
@@ -82,7 +81,7 @@ describe('IronLawVerifier - Core Functionality', () => {
 
   it('should include security evidence for security-sensitive tasks', async () => {
     const task: AgentTask = {
-      id: nanoid(),
+      id: crypto.randomUUID(),
       description: 'Security-related change',
       modifiedFiles: ['src/security/validator.ts'],
       touchesUI: false,
@@ -103,7 +102,7 @@ describe('IronLawVerifier - Core Functionality', () => {
 
   it('should include visual evidence for UI tasks', async () => {
     const task: AgentTask = {
-      id: nanoid(),
+      id: crypto.randomUUID(),
       description: 'UI component update',
       modifiedFiles: ['src/components/Button.tsx'],
       touchesUI: true,
@@ -127,7 +126,7 @@ describe('IronLawVerifier - Core Functionality', () => {
 
   it('should complete verification within latency threshold', async () => {
     const task: AgentTask = {
-      id: nanoid(),
+      id: crypto.randomUUID(),
       description: 'Performance test',
       modifiedFiles: ['apex-resilience/tests/iron-law.spec.ts'],
       touchesUI: false,
