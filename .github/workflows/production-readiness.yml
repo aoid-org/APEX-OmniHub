@@ -33,13 +33,13 @@ jobs:
           node-version: "24"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: TypeScript compilation
-        run: npx tsc --noEmit
+        run: npm exec --no -- tsc --noEmit
 
       - name: ESLint validation
-        run: npx eslint . --max-warnings 0
+        run: npm exec --no -- eslint . --max-warnings 0
 
       - name: React singleton check
         run: npm run check:react
@@ -149,13 +149,13 @@ jobs:
           node-version: "24"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build production bundle
         run: npm run build
 
       - name: Install Playwright
-        run: npx playwright install chromium
+        run: npm exec --no -- playwright install chromium
 
       - name: Run E2E smoke tests
         run: npm run test:e2e

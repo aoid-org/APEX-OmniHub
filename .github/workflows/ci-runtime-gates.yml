@@ -9,8 +9,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
-  attestations: write
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════
@@ -100,7 +98,7 @@ jobs:
           node-version: "24"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run Terraform expression drift tests
         id: terraform_drift_tests
@@ -117,6 +115,10 @@ jobs:
     needs: [architectural-boundary-enforcement, terraform-expression-drift-gate]
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout code
@@ -136,7 +138,7 @@ jobs:
           node-version: "24"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -164,7 +166,7 @@ jobs:
           # <pr-branch>" merges) are never re-validated.
           MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
           echo "Linting commits from merge-base ${MERGE_BASE} to HEAD"
-          npx @commitlint/cli \
+          ./node_modules/.bin/commitlint \
             --from "${MERGE_BASE}" \
             --to HEAD \
             --verbose
@@ -175,7 +177,7 @@ jobs:
           # Only validate the HEAD commit, not the full PR range.
           # Historical commits from other contributors may use non-conventional
           # formats (GitHub UI defaults, emoji prefixes, etc.) and cannot be amended.
-          npx commitlint --last --verbose
+          ./node_modules/.bin/commitlint --last --verbose
 
       - name: TypeScript type check
         run: npm run typecheck
@@ -244,7 +246,7 @@ jobs:
       # PHASE 3: Build
       # ─────────────────────────────────────────────────────────────
       - name: Vercel Production Sync Shield
-        run: cd apps/omnihub-site && npm ci --omit=dev && npm run build
+        run: cd apps/omnihub-site && npm ci --ignore-scripts && npm run build
         env:
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-key
@@ -255,7 +257,7 @@ jobs:
 
       - name: Bundle size check
         run: |
-          npx size-limit --json > bundle-size.json || {
+          npm exec --no -- size-limit --json > bundle-size.json || {
             echo "::error::Bundle size exceeds limits. Run 'npm run bundle:analyze' locally."
             cat bundle-size.json
             exit 1

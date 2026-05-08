@@ -138,3 +138,71 @@ def test_guardian_deny_paths(
     )
     assert decision.decision == "deny"
     assert decision.reason_code == reason
+
+
+def test_guardian_default_deny_when_no_rule_matches() -> None:
+    decision = evaluate_guardian_policy(
+        principal="user-1",
+        action="admin.delete_user",
+        resource="user:2",
+        context={"mfa_verified": True},
+        envelope=_envelope(),
+        rules=(),
+    )
+    assert decision.decision == "deny"
+    assert decision.reason_code == "NO_MATCHING_POLICY"
+
+
+def test_guardian_denies_stale_event() -> None:
+    stale_envelope = create_execution_envelope(
+        actor_id="user-1",
+        device_id="device-1",
+        action="admin.rotate_key",
+        resource="secret:stripe",
+        stale_after="2020-01-01T00:00:00+00:00",
+    )
+    decision = evaluate_guardian_policy(
+        principal="user-1",
+        action="admin.rotate_key",
+        resource="secret:stripe",
+        context={"mfa_verified": True},
+        envelope=stale_envelope,
+        rules=(),
+        now=datetime(2021, 1, 1, tzinfo=UTC),
+    )
+    assert decision.decision == "deny"
+    assert decision.reason_code == "STALE_EVENT"
+
+
+@pytest.mark.asyncio
+async def test_compensation_catalog_register_get_and_handler() -> None:
+    from activities.compensation_catalog import CompensationCatalog, CompensationEntry
+
+    async def handler(payload: dict[str, object]) -> dict[str, object]:
+        return {"compensated": True, "payload": payload}
+
+    catalog = CompensationCatalog()
+    entry = CompensationEntry(
+        ref="apex.comp.billing.rollback",
+        owner="billing",
+        description="Rollback billing side effect",
+        handler=handler,
+    )
+    catalog.register(entry)
+
+    assert catalog.get(entry.ref) == entry
+    assert catalog.get(None) is None
+    assert await entry.handler({"invoice": "inv-1"}) == {
+        "compensated": True,
+        "payload": {"invoice": "inv-1"},
+    }
+
+
+def test_compensation_catalog_rejects_non_apex_namespace() -> None:
+    from activities.compensation_catalog import CompensationCatalog, CompensationEntry
+
+    catalog = CompensationCatalog()
+    with pytest.raises(ValueError, match="compensation_ref_must_use_apex_namespace"):
+        catalog.register(
+            CompensationEntry(ref="third.party.rollback", owner="billing", description="invalid")
+        )

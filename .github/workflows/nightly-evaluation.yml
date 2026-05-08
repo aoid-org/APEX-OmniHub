@@ -41,7 +41,7 @@ jobs:
 
     - name: Install dependencies
       if: steps.usage-check.outputs.should_run == 'true'
-      run: npm ci
+      run: npm ci --ignore-scripts
 
     - name: Run agent evaluations
       if: steps.usage-check.outputs.should_run == 'true'

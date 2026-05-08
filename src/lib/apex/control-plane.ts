@@ -73,7 +73,8 @@ function canonicalize(value: unknown): string {
   const entries = Object.entries(value as Record<string, unknown>)
     .filter(([, item]) => item !== undefined)
     .sort(([a], [b]) => a.localeCompare(b));
-  return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalize(item)}`).join(',')}}`;
+  const serializedEntries = entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalize(item)}`).join(',');
+  return `{${serializedEntries}}`;
 }
 
 async function sha256Hex(input: string): Promise<string> {

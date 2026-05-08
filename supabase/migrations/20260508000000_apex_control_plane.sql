@@ -60,6 +60,11 @@ SET search_path = public
 AS $$
 DECLARE
   existing apex_idempotency_ledger%ROWTYPE;
+  c_status_pending CONSTANT TEXT := 'pending';
+  c_status_duplicate CONSTANT TEXT := 'duplicate';
+  c_status_stale CONSTANT TEXT := 'stale';
+  c_outcome_duplicate CONSTANT TEXT := 'DUPLICATE_DELIVERY';
+  c_outcome_stale CONSTANT TEXT := 'STALE_EVENT';
 BEGIN
   IF p_idempotency_key IS NULL OR p_idempotency_key = '' OR p_intent_hash IS NULL OR p_intent_hash = '' OR p_stale_after IS NULL THEN
     RAISE EXCEPTION 'missing_mutation_envelope_fields';
@@ -72,22 +77,22 @@ BEGIN
 
   IF FOUND THEN
     UPDATE apex_idempotency_ledger
-    SET last_seen_at = now(), attempt = GREATEST(attempt, p_attempt), status = CASE WHEN status = 'pending' THEN status ELSE 'duplicate' END
+    SET last_seen_at = now(), attempt = GREATEST(attempt, p_attempt), status = CASE WHEN status = c_status_pending THEN status ELSE c_status_duplicate END
     WHERE id = existing.id;
-    RETURN QUERY SELECT 'duplicate'::TEXT, existing.id, existing.response_payload, COALESCE(existing.outcome_code, 'DUPLICATE_DELIVERY');
+    RETURN QUERY SELECT c_status_duplicate, existing.id, existing.response_payload, COALESCE(existing.outcome_code, c_outcome_duplicate);
     RETURN;
   END IF;
 
   IF p_stale_after <= now() THEN
     INSERT INTO apex_idempotency_ledger(scope, idempotency_key, intent_hash, trace_id, correlation_id, actor_id, device_id, operation, status, stale_after, attempt, policy_version, compensation_ref, request_hash, outcome_code)
-    VALUES (p_scope, p_idempotency_key, p_intent_hash, p_trace_id, p_correlation_id, p_actor_id, p_device_id, p_operation, 'stale', p_stale_after, p_attempt, p_policy_version, p_compensation_ref, p_request_hash, 'STALE_EVENT')
+    VALUES (p_scope, p_idempotency_key, p_intent_hash, p_trace_id, p_correlation_id, p_actor_id, p_device_id, p_operation, c_status_stale, p_stale_after, p_attempt, p_policy_version, p_compensation_ref, p_request_hash, c_outcome_stale)
     RETURNING * INTO existing;
-    RETURN QUERY SELECT 'stale'::TEXT, existing.id, existing.response_payload, 'STALE_EVENT'::TEXT;
+    RETURN QUERY SELECT c_status_stale, existing.id, existing.response_payload, c_outcome_stale;
     RETURN;
   END IF;
 
   INSERT INTO apex_idempotency_ledger(scope, idempotency_key, intent_hash, trace_id, correlation_id, actor_id, device_id, operation, status, stale_after, attempt, policy_version, compensation_ref, request_hash)
-  VALUES (p_scope, p_idempotency_key, p_intent_hash, p_trace_id, p_correlation_id, p_actor_id, p_device_id, p_operation, 'pending', p_stale_after, p_attempt, p_policy_version, p_compensation_ref, p_request_hash)
+  VALUES (p_scope, p_idempotency_key, p_intent_hash, p_trace_id, p_correlation_id, p_actor_id, p_device_id, p_operation, c_status_pending, p_stale_after, p_attempt, p_policy_version, p_compensation_ref, p_request_hash)
   RETURNING * INTO existing;
 
   RETURN QUERY SELECT 'accepted'::TEXT, existing.id, existing.response_payload, 'ACCEPTED'::TEXT;

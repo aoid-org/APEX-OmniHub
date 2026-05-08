@@ -97,7 +97,7 @@ jobs:
           node-version: '24'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run npm audit
         run: |
@@ -141,10 +141,10 @@ jobs:
           node-version: '24'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: TypeScript type check
-        run: npx tsc --noEmit
+        run: npm exec --no -- tsc --noEmit
 
       - name: Clear Vitest cache
         run: |

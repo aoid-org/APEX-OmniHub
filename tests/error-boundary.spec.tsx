@@ -27,10 +27,10 @@ function silenceExpectedRenderFailure() {
       event.preventDefault();
     }
   };
-  window.addEventListener('error', preventExpectedJsdomError);
+  globalThis.addEventListener('error', preventExpectedJsdomError);
 
   return () => {
-    window.removeEventListener('error', preventExpectedJsdomError);
+    globalThis.removeEventListener('error', preventExpectedJsdomError);
     consoleErrorSpy.mockRestore();
     consoleWarnSpy.mockRestore();
   };
