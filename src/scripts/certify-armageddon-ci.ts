@@ -54,7 +54,7 @@ const SEED = 424242;
  */
 const GIT_BINARY: string =
   process.platform === "win32"
-    ? "C:\\Program Files\\Git\\cmd\\git.exe"
+    ? String.raw`C:\Program Files\Git\cmd\git.exe`
     : "/usr/bin/git";
 
 function assertSimMode(): void {
