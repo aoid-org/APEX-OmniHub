@@ -246,7 +246,7 @@ jobs:
       # PHASE 3: Build
       # ─────────────────────────────────────────────────────────────
       - name: Vercel Production Sync Shield
-        run: cd apps/omnihub-site && npm ci --ignore-scripts && npm run build
+        run: cd apps/omnihub-site && npm install --ignore-scripts && npm run build
         env:
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-key
@@ -257,7 +257,7 @@ jobs:
 
       - name: Bundle size check
         run: |
-          npm exec --no -- size-limit --json > bundle-size.json || {
+          npm exec --no --ignore-scripts -- size-limit --json > bundle-size.json || {
             echo "::error::Bundle size exceeds limits. Run 'npm run bundle:analyze' locally."
             cat bundle-size.json
             exit 1
