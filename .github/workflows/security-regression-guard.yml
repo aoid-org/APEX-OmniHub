@@ -144,7 +144,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: TypeScript type check
-        run: npm exec --no -- tsc --noEmit
+        run: npm exec --no --ignore-scripts -- tsc --noEmit
 
       - name: Clear Vitest cache
         run: |
