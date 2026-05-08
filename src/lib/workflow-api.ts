@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { createExecutionEnvelope, type ApexExecutionEnvelope } from './apex/control-plane';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -176,4 +177,30 @@ export async function fetchWorkflowRuns(workflowId: string): Promise<WorkflowRun
 
   if (error) throw new Error(error.message);
   return (data ?? []) as WorkflowRun[];
+}
+
+// ---------------------------------------------------------------------------
+// APEX Control Plane Envelope Helpers
+// ---------------------------------------------------------------------------
+
+
+export async function createWorkflowSubmissionEnvelope(args: {
+  workflowId: string;
+  userId: string;
+  deviceId: string;
+  definition?: WorkflowDefinition;
+  staleAfter: string | Date;
+  traceId?: string;
+  compensationRef?: string | null;
+}): Promise<ApexExecutionEnvelope> {
+  return createExecutionEnvelope({
+    actor_id: args.userId,
+    device_id: args.deviceId,
+    action: 'workflow.submit',
+    resource: `workflow:${args.workflowId}`,
+    payload: args.definition ?? null,
+    stale_after: args.staleAfter,
+    trace_id: args.traceId,
+    compensation_ref: args.compensationRef ?? null,
+  });
 }

@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { ChartContainer } from '../../src/components/ui/chart';
 
 class ResizeObserverMock {
@@ -11,6 +11,13 @@ class ResizeObserverMock {
 describe("ChartStyle Security", () => {
   beforeEach(() => {
     (globalThis as unknown as { ResizeObserver: typeof ResizeObserverMock }).ResizeObserver = ResizeObserverMock;
+    // Recharts reports zero dimensions under jsdom; these tests assert CSS sanitization, not layout.
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("should sanitize chart id to prevent XSS", () => {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { SemanticTranslator } from '../../src/omniconnect/translation/translator';
 import { EventType, DataClassification, CanonicalEvent } from '../../src/omniconnect/types/canonical';
 
@@ -8,6 +8,8 @@ describe('Universal Translation Engine (UTE) Stress Tests', () => {
   const correlationId = 'test-corr-123';
 
   it('should gracefully drop events missing required canonical fields', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const malformedPayload = {
       foo: 'bar',
       garbageData: true,
@@ -15,6 +17,8 @@ describe('Universal Translation Engine (UTE) Stress Tests', () => {
     } as unknown as CanonicalEvent;
 
     const results = await translator.translate([malformedPayload], appId, correlationId);
+    consoleErrorSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
 
     expect(results).toHaveLength(1);
     expect(results[0].payload._translation_status).toBe('DROPPED');
@@ -24,6 +28,8 @@ describe('Universal Translation Engine (UTE) Stress Tests', () => {
   });
 
   it('should gracefully drop events with incorrect data types', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const malformedTypePayload = {
       eventId: 'evt-1',
       correlationId: 'corr-1',
@@ -41,6 +47,8 @@ describe('Universal Translation Engine (UTE) Stress Tests', () => {
     } as CanonicalEvent;
 
     const results = await translator.translate([malformedTypePayload], appId, correlationId);
+    consoleErrorSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
 
     expect(results).toHaveLength(1);
     expect(results[0].payload._translation_status).toBe('DROPPED');

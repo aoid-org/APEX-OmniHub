@@ -1,6 +1,9 @@
 <!-- APEX_DOC_STAMP: VERSION=v10.0 | LAST_UPDATED=2026-05-06 -->
 # CI Runtime Gates
 
+Canonical runtime: Node 24. Minimum supported runtime: Node 22. CI and release gates use `npm ci` and `npm run ...`; Bun is optional local tooling only.
+
+
 ## Purpose
 
 Define runtime, architecture, and security gates required before merge/deploy,
@@ -44,7 +47,7 @@ Verifies Terraform expression consistency via test suite.
 
 Local equivalent:
 ```bash
-bun run test:infra
+npm run test:infra
 ```
 
 ---
@@ -59,24 +62,24 @@ Steps run in order:
 |---|---|
 | Verify changelog paths exist | `node scripts/verify-changelog-paths.js CHANGELOG.md` |
 | Repo hygiene guard | `bash scripts/repo-hygiene-guard.sh` |
-| Lint commit messages | `bunx @commitlint/cli --from <merge-base> --to HEAD` |
-| TypeScript compilation | `bun run typecheck` |
-| ESLint validation | `bun run lint` |
-| React singleton check | `bun run check:react` |
-| Unit tests | `bun run test` |
-| Production build | `bun run build` |
-| Asset reachability | `bun run test:assets` |
+| Lint commit messages | `npx @commitlint/cli --from <merge-base> --to HEAD` |
+| TypeScript compilation | `npm run typecheck` |
+| ESLint validation | `npm run lint` |
+| React singleton check | `npm run check:react` |
+| Unit tests | `npm run test` |
+| Production build | `npm run build` |
+| Asset reachability | `npm run test:assets` |
 
 **To reproduce the full gate locally:**
 ```bash
 node scripts/verify-changelog-paths.js CHANGELOG.md
 bash scripts/repo-hygiene-guard.sh
-bun run typecheck
-bun run lint
-bun run check:react
-bun run test
-bun run build
-bun run test:assets
+npm run typecheck
+npm run lint
+npm run check:react
+npm run test
+npm run build
+npm run test:assets
 ```
 
 ---
@@ -87,11 +90,11 @@ bun run test:assets
 
 | Step | Local command |
 |---|---|
-| TypeScript compilation | `bun run typecheck` |
-| ESLint validation | `bun run lint` |
-| React singleton check | `bun run check:react` |
-| Run tests | `bun run test` |
-| Documentation drift check | `bun run docs:check` |
+| TypeScript compilation | `npm run typecheck` |
+| ESLint validation | `npm run lint` |
+| React singleton check | `npm run check:react` |
+| Run tests | `npm run test` |
+| Documentation drift check | `npm run docs:check` |
 | SPA redirect check | `test -f apps/omnihub-site/public/_redirects` |
 | No TS suppression in config files | `grep -r "@ts-ignore\|@ts-expect-error" vitest.config.ts vite.config.ts` (must be empty) |
 
@@ -128,7 +131,7 @@ git add package-lock.json
 
 | Step | Local equivalent |
 |---|---|
-| Install dependencies | `bun install --frozen-lockfile` |
+| Install dependencies | `npm ci` |
 | npm audit (prod, high+) | `npm audit --omit=dev --audit-level=high` |
 | Python lockfile exists and is valid | `test -f orchestrator/requirements.lock` |
 
@@ -143,10 +146,10 @@ committed for this gate to pass. Neither file should be gitignored.
 
 | Step | Local equivalent |
 |---|---|
-| TypeScript type check | `bun run typecheck` |
+| TypeScript type check | `npm run typecheck` |
 | Clear Vitest cache | `rm -rf node_modules/.vitest` |
-| Run tests | `bun run test` |
-| Build verification | `bun run build` |
+| Run tests | `npm run test` |
+| Build verification | `npm run build` |
 
 ---
 
@@ -155,7 +158,7 @@ committed for this gate to pass. Neither file should be gitignored.
 | Gate | Local command |
 |---|---|
 | `rls-posture-gate` | Checks all Supabase tables have RLS enabled |
-| `ruff-gate` | `bun run lint:py` |
+| `ruff-gate` | `npm run lint:py` |
 | `legal-drift-gate` | License file integrity check |
 | `claims-proof-gate` | Evidence file presence check |
 | `retention-evidence-gate` | Evidence retention check |
@@ -166,18 +169,18 @@ committed for this gate to pass. Neither file should be gitignored.
 
 | Gate intent | Local command | Notes |
 |---|---|---|
-| TypeScript correctness | `bun run typecheck` | Must exit 0 |
-| Lint policy | `bun run lint` | `--max-warnings 0` enforced |
-| React singleton | `bun run check:react` | One React version only |
-| Full test suite | `bun run test` | ~2400 tests |
-| Production build | `bun run build` | Must exit 0 |
-| Asset reachability | `bun run test:assets` | |
-| E2E render | `bun run test:e2e` | Requires `bun run test:e2e:install` |
-| Infra drift | `bun run test:infra` | |
-| Python lint | `bun run lint:py` | |
-| Python tests | `bun run test:py` | |
+| TypeScript correctness | `npm run typecheck` | Must exit 0 |
+| Lint policy | `npm run lint` | `--max-warnings 0` enforced |
+| React singleton | `npm run check:react` | One React version only |
+| Full test suite | `npm run test` | ~2400 tests |
+| Production build | `npm run build` | Must exit 0 |
+| Asset reachability | `npm run test:assets` | |
+| E2E render | `npm run test:e2e` | Requires `npm run test:e2e:install` |
+| Infra drift | `npm run test:infra` | |
+| Python lint | `npm run lint:py` | |
+| Python tests | `npm run test:py` | |
 | npm audit (prod) | `npm audit --omit=dev --audit-level=high` | Not `bun audit` |
-| Docs integrity | `bun run docs:check` | |
+| Docs integrity | `npm run docs:check` | |
 | Changelog paths | `node scripts/verify-changelog-paths.js CHANGELOG.md` | |
 | Repo hygiene | `bash scripts/repo-hygiene-guard.sh` | |
 
