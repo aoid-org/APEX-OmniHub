@@ -17,26 +17,19 @@
  */
 
 // @ts-ignore: Deno imports are not recognized by standard TS
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createSupabaseClient, authenticateUser } from '../_shared/auth.ts';
-import { handleCors, corsJsonResponse } from '../_shared/cors.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createSupabaseClient, authenticateUser } from "../_shared/auth.ts";
+import { handleCors, corsJsonResponse } from "../_shared/cors.ts";
 // @ts-ignore: Deno imports are not recognized by standard TS
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
-import { assertUrlSafe } from '../_shared/ssrf-protection.ts';
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
+import { assertUrlSafe } from "../_shared/ssrf-protection.ts";
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
 
 /** Allowed tables for record creation (SQL injection prevention) */
-const ALLOWED_TABLES = [
-  'invoices',
-  'users',
-  'logs',
-  'tasks',
-  'notifications',
-  'audit_logs',
-] as const;
+const ALLOWED_TABLES = ["invoices", "logs", "tasks", "notifications"] as const;
 
 type AllowedTable = (typeof ALLOWED_TABLES)[number];
 
@@ -58,7 +51,7 @@ interface CreateRecordConfig {
 /** Webhook action configuration */
 interface WebhookConfig {
   url: string;
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   headers?: Record<string, string>;
   data?: unknown;
 }
@@ -67,7 +60,7 @@ interface WebhookConfig {
 interface NotificationConfig {
   message: string;
   channel?: string;
-  priority?: 'low' | 'normal' | 'high';
+  priority?: "low" | "normal" | "high";
 }
 
 /** Union of all config types */
@@ -80,43 +73,41 @@ type AutomationConfig =
 /** Automation record from database */
 interface Automation {
   id: string;
-  action_type: 'send_email' | 'create_record' | 'webhook' | 'notification';
+  action_type: "send_email" | "create_record" | "webhook" | "notification";
   config: AutomationConfig;
   is_active: boolean;
 }
-
-
 
 // Type Guards
 // ============================================================================
 
 function isEmailConfig(config: unknown): config is EmailConfig {
-  if (!config || typeof config !== 'object') return false;
+  if (!config || typeof config !== "object") return false;
   const c = config as Record<string, unknown>;
-  return typeof c.to === 'string' || Array.isArray(c.to);
+  return typeof c.to === "string" || Array.isArray(c.to);
 }
 
 function isCreateRecordConfig(config: unknown): config is CreateRecordConfig {
-  if (!config || typeof config !== 'object') return false;
+  if (!config || typeof config !== "object") return false;
   const c = config as Record<string, unknown>;
   return (
-    typeof c.table === 'string' &&
+    typeof c.table === "string" &&
     c.data !== null &&
-    typeof c.data === 'object' &&
+    typeof c.data === "object" &&
     !Array.isArray(c.data)
   );
 }
 
 function isWebhookConfig(config: unknown): config is WebhookConfig {
-  if (!config || typeof config !== 'object') return false;
+  if (!config || typeof config !== "object") return false;
   const c = config as Record<string, unknown>;
-  return typeof c.url === 'string';
+  return typeof c.url === "string";
 }
 
 function isNotificationConfig(config: unknown): config is NotificationConfig {
-  if (!config || typeof config !== 'object') return false;
+  if (!config || typeof config !== "object") return false;
   const c = config as Record<string, unknown>;
-  return typeof c.message === 'string';
+  return typeof c.message === "string";
 }
 
 function isAllowedTable(table: string): table is AllowedTable {
@@ -134,30 +125,30 @@ async function executeEmailAction(
   config: unknown
 ): Promise<Record<string, unknown>> {
   // @ts-ignore: Deno global
-  const resendKey = Deno.env.get('RESEND_API_KEY');
+  const resendKey = Deno.env.get("RESEND_API_KEY");
   if (!resendKey) {
-    throw new Error('Email service not configured');
+    throw new Error("Email service not configured");
   }
 
   if (!isEmailConfig(config)) {
-    throw new Error('Invalid email configuration: missing to or subject');
+    throw new Error("Invalid email configuration: missing to or subject");
   }
 
-  if (!config.subject || typeof config.subject !== 'string') {
-    throw new Error('Invalid email configuration: subject is required');
+  if (!config.subject || typeof config.subject !== "string") {
+    throw new Error("Invalid email configuration: subject is required");
   }
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${resendKey}`,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: config.from ?? 'noreply@omnilink.app',
+      from: config.from ?? "noreply@omnilink.app",
       to: config.to,
       subject: config.subject,
-      html: config.html ?? config.body ?? '',
+      html: config.html ?? config.body ?? "",
     }),
   });
 
@@ -174,10 +165,11 @@ async function executeEmailAction(
  */
 async function executeCreateRecord(
   config: unknown,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  userId: string
 ): Promise<unknown[]> {
   if (!isCreateRecordConfig(config)) {
-    throw new Error('Invalid record configuration: missing table or data');
+    throw new Error("Invalid record configuration: missing table or data");
   }
 
   const { table, data } = config;
@@ -186,13 +178,21 @@ async function executeCreateRecord(
   if (!isAllowedTable(table)) {
     throw new Error(
       `Invalid or unauthorized table: ${table}. ` +
-      `Allowed tables: ${ALLOWED_TABLES.join(', ')}`
+        `Allowed tables: ${ALLOWED_TABLES.join(", ")}`
     );
   }
 
+  if ("user_id" in data && data.user_id !== userId) {
+    throw new Error(
+      "Record owner mismatch: user_id must match authenticated user"
+    );
+  }
+
+  const ownedData = { ...data, user_id: userId };
+
   const { data: result, error } = await supabase
     .from(table)
-    .insert(data)
+    .insert(ownedData)
     .select();
 
   if (error) {
@@ -202,13 +202,15 @@ async function executeCreateRecord(
   return result ?? [];
 }
 
-async function parseWebhookResponse(response: Response): Promise<Record<string, unknown>> {
+async function parseWebhookResponse(
+  response: Response
+): Promise<Record<string, unknown>> {
   if (response.status >= 300 && response.status < 400) {
-    const redirectUrl = response.headers.get('location');
+    const redirectUrl = response.headers.get("location");
     if (redirectUrl) {
       throw new Error(
-        'Webhook returned a redirect. Automatic redirects are disabled for security. ' +
-        `If ${redirectUrl} is a trusted destination, update the webhook URL directly.`
+        "Webhook returned a redirect. Automatic redirects are disabled for security. " +
+          `If ${redirectUrl} is a trusted destination, update the webhook URL directly.`
       );
     }
   }
@@ -217,8 +219,8 @@ async function parseWebhookResponse(response: Response): Promise<Record<string, 
     throw new Error(`Webhook request failed: ${response.status}`);
   }
 
-  const contentType = response.headers.get('content-type') ?? '';
-  if (contentType.includes('application/json')) {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
     return (await response.json()) as Record<string, unknown>;
   }
 
@@ -232,7 +234,7 @@ async function executeWebhook(
   config: unknown
 ): Promise<Record<string, unknown>> {
   if (!isWebhookConfig(config)) {
-    throw new Error('Invalid webhook configuration: URL is required');
+    throw new Error("Invalid webhook configuration: URL is required");
   }
 
   try {
@@ -243,7 +245,8 @@ async function executeWebhook(
       dnsTimeoutMs: 5000,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'URL failed SSRF validation';
+    const message =
+      error instanceof Error ? error.message : "URL failed SSRF validation";
     throw new Error(`Webhook URL blocked by security policy: ${message}`);
   }
 
@@ -251,7 +254,7 @@ async function executeWebhook(
   const timeout = setTimeout(() => controller.abort(), 30_000);
 
   const requestHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   };
   if (config.headers) {
     Object.assign(requestHeaders, config.headers);
@@ -259,17 +262,17 @@ async function executeWebhook(
 
   try {
     const response = await fetch(config.url, {
-      method: config.method ?? 'POST',
+      method: config.method ?? "POST",
       headers: requestHeaders,
       body: config.data ? JSON.stringify(config.data) : undefined,
       signal: controller.signal,
-      redirect: 'manual',
+      redirect: "manual",
     });
 
     return await parseWebhookResponse(response);
   } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Webhook request timed out after 30 seconds');
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("Webhook request timed out after 30 seconds");
     }
     throw error;
   } finally {
@@ -284,14 +287,14 @@ async function executeNotification(
   config: unknown
 ): Promise<Record<string, unknown>> {
   if (!isNotificationConfig(config)) {
-    throw new Error('Invalid notification configuration: message is required');
+    throw new Error("Invalid notification configuration: message is required");
   }
 
   // For now, return success - can be extended to push notifications
   return {
     message: config.message,
-    channel: config.channel ?? 'default',
-    priority: config.priority ?? 'normal',
+    channel: config.channel ?? "default",
+    priority: config.priority ?? "normal",
     sent: true,
     timestamp: new Date().toISOString(),
   };
@@ -307,9 +310,9 @@ serve(async (req: Request) => {
   if (corsResponse) return corsResponse;
 
   // Only accept POST
-  if (req.method !== 'POST') {
+  if (req.method !== "POST") {
     return corsJsonResponse(
-      { error: 'method_not_allowed', message: 'Only POST is allowed' },
+      { error: "method_not_allowed", message: "Only POST is allowed" },
       405
     );
   }
@@ -318,12 +321,19 @@ serve(async (req: Request) => {
     const supabase = createSupabaseClient();
 
     // Authenticate user
-    const authHeader = req.headers.get('Authorization');
-    const { success, user, error: authError } = await authenticateUser(authHeader, supabase);
+    const authHeader = req.headers.get("Authorization");
+    const {
+      success,
+      user,
+      error: authError,
+    } = await authenticateUser(authHeader, supabase);
 
     if (!success || !user) {
       return corsJsonResponse(
-        { error: 'unauthorized', message: authError || 'Authentication failed' },
+        {
+          error: "unauthorized",
+          message: authError || "Authentication failed",
+        },
         401
       );
     }
@@ -334,11 +344,11 @@ serve(async (req: Request) => {
     // Validate automationId presence and type
     if (
       !automationId ||
-      typeof automationId !== 'string' ||
+      typeof automationId !== "string" ||
       automationId.trim().length === 0
     ) {
       return corsJsonResponse(
-        { error: 'validation_error', message: 'Invalid automationId' },
+        { error: "validation_error", message: "Invalid automationId" },
         400
       );
     }
@@ -349,8 +359,8 @@ serve(async (req: Request) => {
     if (!uuidRegex.test(automationId)) {
       return corsJsonResponse(
         {
-          error: 'validation_error',
-          message: 'Invalid automationId format (must be UUID)',
+          error: "validation_error",
+          message: "Invalid automationId format (must be UUID)",
         },
         400
       );
@@ -358,15 +368,16 @@ serve(async (req: Request) => {
 
     // Fetch automation
     const { data: automation, error: fetchError } = await supabase
-      .from('automations')
-      .select('*')
-      .eq('id', automationId)
+      .from("automations")
+      .select("*")
+      .eq("id", automationId)
+      .eq("user_id", user.id)
       .single();
 
     if (fetchError) {
-      if (fetchError.code === 'PGRST116') {
+      if (fetchError.code === "PGRST116") {
         return corsJsonResponse(
-          { error: 'not_found', message: 'Automation not found' },
+          { error: "not_found", message: "Automation not found" },
           404
         );
       }
@@ -377,7 +388,7 @@ serve(async (req: Request) => {
 
     if (!typedAutomation.is_active) {
       return corsJsonResponse(
-        { error: 'inactive', message: 'Automation is not active' },
+        { error: "inactive", message: "Automation is not active" },
         400
       );
     }
@@ -385,29 +396,32 @@ serve(async (req: Request) => {
     // Execute based on action_type
     let result: unknown;
     switch (typedAutomation.action_type) {
-      case 'send_email':
+      case "send_email":
         result = await executeEmailAction(typedAutomation.config);
         break;
-      case 'create_record':
-        result = await executeCreateRecord(typedAutomation.config, supabase);
+      case "create_record":
+        result = await executeCreateRecord(
+          typedAutomation.config,
+          supabase,
+          user.id
+        );
         break;
-      case 'webhook':
+      case "webhook":
         result = await executeWebhook(typedAutomation.config);
         break;
-      case 'notification':
+      case "notification":
         result = await executeNotification(typedAutomation.config);
         break;
       default:
-        throw new Error(
-          `Unknown action type: ${typedAutomation.action_type}`
-        );
+        throw new Error(`Unknown action type: ${typedAutomation.action_type}`);
     }
 
     // Update automation execution timestamp
     await supabase
-      .from('automations')
+      .from("automations")
       .update({ updated_at: new Date().toISOString() })
-      .eq('id', automationId);
+      .eq("id", automationId)
+      .eq("user_id", user.id);
 
     return corsJsonResponse({
       success: true,
@@ -415,14 +429,11 @@ serve(async (req: Request) => {
       result,
     });
   } catch (error) {
-    console.error('Automation execution error:', error);
+    console.error("Automation execution error:", error);
 
     const message =
-      error instanceof Error ? error.message : 'Unknown error occurred';
+      error instanceof Error ? error.message : "Unknown error occurred";
 
-    return corsJsonResponse(
-      { error: 'execution_error', message },
-      500
-    );
+    return corsJsonResponse({ error: "execution_error", message }, 500);
   }
 });

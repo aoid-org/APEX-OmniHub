@@ -191,6 +191,9 @@ jobs:
       - name: ESLint
         run: bun run lint
 
+      - name: Secret scan
+        run: bun run secret:scan
+
       - name: React singleton check
         run: bun run check:react
 
@@ -239,6 +242,19 @@ jobs:
       # ─────────────────────────────────────────────────────────────
       - name: Run OmniEval (deterministic eval gate)
         run: bun run eval:ci
+
+      - name: Run Armageddon CI certification evidence
+        run: bun run armageddon:certify:ci
+        env:
+          SIM_MODE: "true"
+
+      - name: Upload Armageddon evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: armageddon-evidence
+          path: artifacts/armageddon/latest.json
+          retention-days: 30
 
       - name: Upload OmniEval report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -358,4 +374,3 @@ jobs:
           name: playwright-screenshots
           path: test-results/
           retention-days: 7
-

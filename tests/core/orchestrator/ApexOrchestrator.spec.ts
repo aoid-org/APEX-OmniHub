@@ -2,43 +2,43 @@
  * Tests for ApexOrchestrator — tool execution with idempotency + validation.
  * @date 2026-02-09
  */
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   executeTool,
   setToolRunner,
-} from '../../../src/core/orchestrator/ApexOrchestrator';
-import { _resetForTesting } from '../../../src/core/orchestrator/ChronosLock';
+} from "../../../src/core/orchestrator/ApexOrchestrator";
+import { _resetForTesting } from "../../../src/core/orchestrator/ChronosLock";
 import type {
   DeviceProfile,
   ToolExecutionInput,
-} from '../../../src/core/types/index';
-import { TrustTier } from '../../../src/core/types/index';
+} from "../../../src/core/types/index";
+import { TrustTier } from "../../../src/core/types/index";
 
 function makeDevice(tier: TrustTier): DeviceProfile {
   return {
-    deviceId: 'test-device',
+    deviceId: "test-device",
     trustTier: tier,
-    capabilities: tier === TrustTier.GOD_MODE ? ['all'] : ['read_only'],
-    connectionId: 'conn-1',
+    capabilities: tier === TrustTier.GOD_MODE ? ["all"] : ["read_only"],
+    connectionId: "conn-1",
     authenticatedAt: new Date().toISOString(),
   };
 }
 
 function makeInput(
-  overrides: Partial<ToolExecutionInput> = {},
+  overrides: Partial<ToolExecutionInput> = {}
 ): ToolExecutionInput {
   return {
-    toolName: 'search_database',
-    args: { table: 'profiles' },
+    toolName: "search_database",
+    args: { table: "profiles" },
     device: makeDevice(TrustTier.GOD_MODE),
     idempotencyKey: `key-${Date.now()}`,
-    callId: 'call-1',
+    callId: "call-1",
     ...overrides,
   };
 }
 
-describe('ApexOrchestrator', () => {
+describe("ApexOrchestrator", () => {
   beforeEach(() => {
     _resetForTesting();
     setToolRunner(async (name) => ({
@@ -48,53 +48,61 @@ describe('ApexOrchestrator', () => {
     }));
   });
 
-  it('executes tool and returns success', async () => {
+  it("executes tool and returns success", async () => {
     const result = await executeTool(makeInput());
     expect(result.success).toBe(true);
-    expect(result.callId).toBe('call-1');
+    expect(result.callId).toBe("call-1");
   });
 
-  it('rejects access for insufficient tier', async () => {
+  it("rejects access for insufficient tier", async () => {
     const result = await executeTool(
       makeInput({
-        toolName: 'delete_record',
+        toolName: "delete_record",
         device: makeDevice(TrustTier.PERIPHERAL),
-      }),
+      })
     );
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Access denied');
+    expect(result.error).toContain("Access denied");
   });
 
-  it('returns cached result for duplicate idempotency key', async () => {
-    const key = 'dedup-key-1';
-    const first = await executeTool(
-      makeInput({ idempotencyKey: key }),
-    );
+  it("returns cached result for duplicate idempotency key after successful commit", async () => {
+    const key = "dedup-key-1";
+    let calls = 0;
+    setToolRunner(async (name) => {
+      calls += 1;
+      return { success: true, data: [], tool: name };
+    });
+
+    const first = await executeTool(makeInput({ idempotencyKey: key }));
     expect(first.success).toBe(true);
 
-    const second = await executeTool(
-      makeInput({ idempotencyKey: key }),
-    );
+    const second = await executeTool(makeInput({ idempotencyKey: key }));
     expect(second.success).toBe(true);
+    expect(calls).toBe(1);
+    expect(second.output).toEqual(first.output);
   });
 
-  it('rolls back on validation failure', async () => {
-    setToolRunner(async () => 'not-an-object');
-
-    const result = await executeTool(
-      makeInput({ toolName: 'send_email' }),
-    );
+  it("rolls back on unknown tool validation rejection", async () => {
+    const result = await executeTool(makeInput({ toolName: "future_tool" }));
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Validation failed');
+    expect(result.error).toContain("No validator registered");
   });
 
-  it('rolls back on tool execution error', async () => {
+  it("rolls back on validation failure", async () => {
+    setToolRunner(async () => "not-an-object");
+
+    const result = await executeTool(makeInput({ toolName: "send_email" }));
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Validation failed");
+  });
+
+  it("rolls back on tool execution error", async () => {
     setToolRunner(async () => {
-      throw new Error('Connection refused');
+      throw new Error("Connection refused");
     });
 
     const result = await executeTool(makeInput());
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Connection refused');
+    expect(result.error).toContain("Connection refused");
   });
 });
