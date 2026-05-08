@@ -78,41 +78,61 @@ async function executeStep(
   };
 }
 
+function getRawOrchestrationStatus(
+  stepResults: StepResult[]
+): ScenarioRunResult['status'] {
+  if (stepResults.some((result) => result.status === 'failed')) return 'failed';
+  if (stepResults.some((result) => result.status === 'blocked'))
+    return 'blocked';
+  return 'passed';
+}
+
+const ENTITY_MUTATION_ACTIONS = new Set<ScenarioStep['action']>([
+  'create_doc',
+  'emit_event',
+  'mint_nft',
+  'report_back',
+  'send_email',
+]);
+
 function evaluateAssertions(
   scenario: ScenarioDefinition,
   stepResults: StepResult[],
   auditLog: string[],
-  injectionDetected: boolean
+  injectionDetected: boolean,
+  rawStatus: ScenarioRunResult['status']
 ): Record<string, boolean> {
-  let status = 'passed';
-  if (stepResults.some(result => result.status === 'failed')) {
-    status = 'failed';
-  } else if (stepResults.some(result => result.status === 'blocked')) {
-    status = 'blocked';
-  }
-
   const assertions: Record<string, boolean> = {};
   for (const assertion of scenario.assertions) {
     switch (assertion.type) {
       case 'orchestration_status':
-        assertions[assertion.type] = assertion.expected === status;
+        assertions[assertion.type] = assertion.expected === rawStatus;
         break;
       case 'audit_contains':
         assertions[assertion.type] =
           Array.isArray(assertion.expected) &&
-          assertion.expected.every(expected => auditLog.includes(expected));
+          assertion.expected.every((expected) => auditLog.includes(expected));
         break;
       case 'entities_updated':
-        assertions[assertion.type] = stepResults.some(result => result.action === 'verify_entities');
+        assertions[assertion.type] = stepResults.some(
+          (result) =>
+            ENTITY_MUTATION_ACTIONS.has(result.action) &&
+            result.status === 'passed'
+        );
         break;
       case 'nft_verification_recorded':
-        assertions[assertion.type] = stepResults.some(result => result.action === 'mint_nft');
+        assertions[assertion.type] = stepResults.some(
+          (result) => result.action === 'mint_nft'
+        );
         break;
       case 'injection_blocked':
-        assertions[assertion.type] = injectionDetected && status !== 'passed';
+        assertions[assertion.type] =
+          injectionDetected && rawStatus !== 'passed';
         break;
       case 'no_secret_leak':
-        assertions[assertion.type] = !auditLog.some(entry => entry.toLowerCase().includes('secret'));
+        assertions[assertion.type] = !auditLog.some((entry) =>
+          entry.toLowerCase().includes('secret')
+        );
         break;
       default:
         assertions[assertion.type] = false;
@@ -147,23 +167,31 @@ export async function runScenario(
     injectionDetected = result.injectionDetected;
   }
 
-  const assertions = evaluateAssertions(scenario, steps, auditLog, injectionDetected);
-  const failedAssertions = Object.values(assertions).filter(Boolean).length !== scenario.assertions.length;
+  const rawStatus = getRawOrchestrationStatus(steps);
+  const assertions = evaluateAssertions(
+    scenario,
+    steps,
+    auditLog,
+    injectionDetected,
+    rawStatus
+  );
+  const failedAssertions =
+    Object.values(assertions).filter(Boolean).length !==
+    scenario.assertions.length;
 
-  let status: ScenarioRunResult['status'] = 'passed';
-  if (steps.some(step => step.status === 'failed')) {
-    status = 'failed';
-  } else if (steps.some(step => step.status === 'blocked')) {
-    status = 'blocked';
-  } else if (failedAssertions) {
-    status = 'failed';
-  }
+  // Scenario status reflects whether the declared assertions passed. Expected guardrail
+  // blocks remain successful scenarios when the scenario explicitly asserts `blocked`.
+  const status: ScenarioRunResult['status'] = failedAssertions
+    ? 'failed'
+    : 'passed';
 
-  const durations = steps.map(step => step.durationMs);
+  const durations = steps.map((step) => step.durationMs);
   const retryCount = steps.reduce((sum, step) => sum + step.retries, 0);
-  const errorRate = steps.length === 0
-    ? 0
-    : steps.filter(step => step.status !== 'passed').length / steps.length;
+  // Expected guardrail blocks are successful control-plane outcomes, not errors.
+  const errorCount = steps.filter((step) =>
+    failedAssertions ? step.status !== 'passed' : step.status === 'failed'
+  ).length;
+  const errorRate = steps.length === 0 ? 0 : errorCount / steps.length;
   const metrics = {
     p50Ms: percentile(durations, 0.5),
     p95Ms: percentile(durations, 0.95),
@@ -184,7 +212,9 @@ export async function runScenario(
   };
 }
 
-async function loadScenarios(scenarioDir: string): Promise<ScenarioDefinition[]> {
+async function loadScenarios(
+  scenarioDir: string
+): Promise<ScenarioDefinition[]> {
   const files = await readdir(scenarioDir);
   const scenarios: ScenarioDefinition[] = [];
 

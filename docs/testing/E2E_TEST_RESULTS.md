@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.5.1 | LAST_UPDATED=2026-03-25 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.5.1 | LAST_UPDATED=2026-05-08 -->
 # APEX OmniHub E2E Test Results Report
 
 **Date:** March 25, 2026 (Updated)
@@ -25,6 +25,19 @@
 | **Build Status** | Success |
 | **Build Time** | 13.15s |
 | **npm Vulnerabilities** | 0 |
+
+---
+
+## 2026-05-08 Chromium E2E Update
+
+The previously environment-blocked browser gate is now closed in this validation environment. `npx playwright install chromium` downloaded Chromium successfully, `npx playwright install-deps chromium` installed the missing Linux runtime dependencies, and `CI=1 ... npm run test:e2e:ci` completed with 21 passed and 3 skipped tests. The skipped tests are authenticated OmniDash flows that are intentionally skipped in CI preview mode.
+
+| Browser Gate | Result | Notes |
+| --- | --- | --- |
+| Chromium browser download | PASS | Browser artifacts downloaded from Playwright CDN. |
+| Linux browser dependencies | PASS | Missing `libatk-1.0.so.0` dependency remediated. |
+| Chromium E2E assertions | PASS | 21 passed / 3 skipped. |
+| Route sweep | PASS | `/dashboard` lacked an app shell but remained within the route sweep success threshold; no fatal browser failures remained. |
 
 ---
 
