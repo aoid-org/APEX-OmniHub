@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>APEX-SALES Lead Vault</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17" integrity="sha384-igm5BeiBt36UU4gqwWS7imYmelpTsZlQ45FZf+XBn9MuJbn4nQr7yx1yFydocC/K" crossorigin="anonymous"></script>
   <style>
     :root { --bg:#0A0A0A; --card:#111111; --gold:#C9A84C; --text:#F5F5F5; }
     body { background: var(--bg); color: var(--text); }
@@ -60,7 +60,19 @@
     <section id="summaryView" class="view hidden">
       <div class="card overflow-x-auto rounded-2xl p-5">
         <table class="w-full min-w-[760px] text-left text-sm">
-          <thead id="summaryHead" class="text-neutral-300"></thead>
+          <thead id="summaryHead" class="text-neutral-300">
+            <tr>
+              <th scope="col" class="px-3 py-2">Offer</th>
+              <th scope="col" class="px-3 py-2">New</th>
+              <th scope="col" class="px-3 py-2">Contacted</th>
+              <th scope="col" class="px-3 py-2">Replied</th>
+              <th scope="col" class="px-3 py-2">Call Booked</th>
+              <th scope="col" class="px-3 py-2">Proposal Sent</th>
+              <th scope="col" class="px-3 py-2">Closed Won</th>
+              <th scope="col" class="px-3 py-2">Closed Lost</th>
+              <th scope="col" class="px-3 py-2">Nurture</th>
+            </tr>
+          </thead>
           <tbody id="summaryBody"></tbody>
         </table>
       </div>
@@ -72,14 +84,14 @@
     <div class="mb-4 flex items-start justify-between gap-3">
       <div>
         <p class="gold text-xs font-semibold tracking-[0.3em]">LEAD DETAIL</p>
-        <h2 id="drawerName" class="text-2xl font-bold"></h2>
+        <h2 id="drawerName" class="text-2xl font-bold">Lead details</h2>
       </div>
       <button id="closeDrawer" class="rounded-lg border border-neutral-700 px-3 py-1 text-sm">Close</button>
     </div>
     <div id="drawerContent" class="space-y-4"></div>
   </aside>
 
-  <script>
+  <script type="module">
     const statuses = ['new','contacted','replied','call-booked','proposal-sent','closed-won','closed-lost','nurture'];
     const boardStatuses = ['new','contacted','replied','call-booked','proposal-sent'];
     const statusLabels = { 'new':'New', 'contacted':'Contacted', 'replied':'Replied', 'call-booked':'Call Booked', 'proposal-sent':'Proposal Sent', 'closed-won':'Closed Won', 'closed-lost':'Closed Lost', 'nurture':'Nurture' };
@@ -108,19 +120,24 @@
       const alert = document.getElementById('alert');
       alert.textContent = message;
       alert.className = `mb-4 rounded-lg border px-4 py-3 text-sm ${mode === 'error' ? 'border-red-500/40 bg-red-500/10 text-red-200' : 'border-green-500/40 bg-green-500/10 text-green-200'}`;
-      window.setTimeout(() => alert.classList.add('hidden'), 5000);
+      globalThis.setTimeout(() => alert.classList.add('hidden'), 5000);
     }
 
     async function api(path, options = {}) {
       const adminToken = token();
       if (!adminToken) throw new Error('Admin token is required.');
-      const response = await fetch(path, {
-        ...options,
-        headers: { 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json', ...(options.headers || {}) }
-      });
-      const payload = await response.json().catch(() => ({}));
+
+      const headers = { 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' };
+      if (options.headers) Object.assign(headers, options.headers);
+
+      const response = await fetch(path, { ...options, headers });
+      const payload = await response.json().catch(() => ({ error: { message: undefined } }));
       if (!response.ok) throw new Error(payload.error?.message || `Request failed: ${response.status}`);
       return payload.data;
+    }
+
+    function showError(error) {
+      showAlert(error instanceof Error ? error.message : 'Unexpected dashboard error.', 'error');
     }
 
     async function refresh() {
@@ -254,7 +271,11 @@
       const body = document.getElementById('summaryBody');
       head.replaceChildren(); body.replaceChildren();
       const headRow = el('tr', 'border-b border-neutral-800');
-      ['Offer', ...statuses.map(status => statusLabels[status])].forEach(label => headRow.append(el('th', 'px-3 py-2', label)));
+      ['Offer', ...statuses.map(status => statusLabels[status])].forEach(label => {
+        const header = el('th', 'px-3 py-2', label);
+        header.scope = 'col';
+        headRow.append(header);
+      });
       head.append(headRow);
       offers.forEach(offer => {
         const row = el('tr', 'border-b border-neutral-900');
@@ -288,17 +309,43 @@
         showAlert('Lead created.');
         await refresh();
         state.activeTab = 'board'; renderTabs();
-      } catch (error) { showAlert(error.message, 'error'); }
+      } catch (error) {
+        showError(error);
+      }
     });
 
-    document.querySelectorAll('.tab').forEach(button => button.addEventListener('click', () => { state.activeTab = button.dataset.tab; renderTabs(); }));
-    document.getElementById('refreshBtn').addEventListener('click', () => refresh().catch(error => showAlert(error.message, 'error')));
-    document.getElementById('tokenBtn').addEventListener('click', () => { const value = prompt('Enter APEX admin token', localStorage.getItem('apex_admin_token') || ''); if (value) localStorage.setItem('apex_admin_token', value.trim()); refresh().catch(error => showAlert(error.message, 'error')); });
+    document.querySelectorAll('.tab').forEach(button => button.addEventListener('click', () => {
+      state.activeTab = button.dataset.tab;
+      renderTabs();
+    }));
+    document.getElementById('refreshBtn').addEventListener('click', async () => {
+      try {
+        await refresh();
+      } catch (error) {
+        showError(error);
+      }
+    });
+    document.getElementById('tokenBtn').addEventListener('click', async () => {
+      const value = prompt('Enter APEX admin token', localStorage.getItem('apex_admin_token') || '');
+      if (value) {
+        localStorage.setItem('apex_admin_token', value.trim());
+      }
+
+      try {
+        await refresh();
+      } catch (error) {
+        showError(error);
+      }
+    });
     document.getElementById('closeDrawer').addEventListener('click', () => document.getElementById('drawer').classList.remove('drawer-open'));
 
     initFormOptions();
     renderTabs();
-    refresh().catch(error => showAlert(error.message, 'error'));
+    try {
+      await refresh();
+    } catch (error) {
+      showError(error);
+    }
   </script>
 </body>
 </html>

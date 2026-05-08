@@ -25,6 +25,23 @@ const OFFER_INTERESTS = new Set(['A-SBBL', 'B-Sprint', 'C-OmniHub', 'D-Armageddo
 const STATUSES = new Set(['new', 'contacted', 'replied', 'call-booked', 'proposal-sent', 'closed-won', 'closed-lost', 'nurture']);
 const EVENT_TYPES = new Set(['email-sent', 'email-replied', 'call', 'proposal', 'closed']);
 const PATCHABLE_FIELDS = new Set(['status', 'notes', 'next_action', 'next_action_due', 'last_contact_at']);
+const BEARER_TOKEN_PATTERN = /^Bearer\s+(.+)$/i;
+const LEAD_ID_PATH_PATTERN = /^\/leads\/([^/]+)$/;
+const LEAD_EVENTS_PATH_PATTERN = /^\/leads\/([^/]+)\/events$/;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const VALIDATION_ERROR_RESPONSES: Array<[string, number, string, string]> = [
+  ['expected_json', 415, 'expected_json', 'Request body must be JSON.'],
+  ['expected_object', 400, 'expected_object', 'JSON body must be an object.'],
+  ['name_required', 400, 'name_required', 'Lead name is required.'],
+  ['invalid_email', 400, 'invalid_email', 'Email address is invalid.'],
+  ['invalid_offer_interest', 400, 'invalid_offer_interest', 'Offer interest is invalid.'],
+  ['invalid_status', 400, 'invalid_status', 'Status is invalid.'],
+  ['invalid_date', 400, 'invalid_date', 'Date must use YYYY-MM-DD.'],
+  ['invalid_timestamp', 400, 'invalid_timestamp', 'Timestamp is invalid.'],
+  ['invalid_event_type', 400, 'invalid_event_type', 'Event type is invalid.'],
+  ['field_not_patchable', 400, 'field_not_patchable', 'Only status, notes, next_action, next_action_due, and last_contact_at can be patched.'],
+  ['empty_patch', 400, 'empty_patch', 'Patch body must include at least one supported field.'],
+];
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -66,7 +83,7 @@ function authenticate(request: Request, env: Env): Response | null {
   }
 
   const header = request.headers.get('Authorization') ?? '';
-  const match = header.match(/^Bearer\s+(.+)$/i);
+  const match = BEARER_TOKEN_PATTERN.exec(header);
   if (!match || !timingSafeEqual(match[1], env.APEX_ADMIN_TOKEN)) {
     return errorResponse(401, 'unauthorized', 'Valid bearer token required.');
   }
@@ -79,7 +96,7 @@ function replaceControlCharacters(value: string): string {
 
   for (let index = 0; index < value.length; index += 1) {
     const char = value[index];
-    const code = value.charCodeAt(index);
+    const code = value.codePointAt(index) ?? 0;
     output += code <= 31 || code === 127 ? ' ' : char;
   }
 
@@ -189,11 +206,10 @@ function validateEvent(payload: JsonRecord): JsonRecord {
   };
 }
 
-function idFromPath(pathname: string, suffix = ''): string | null {
-  const pattern = suffix ? new RegExp(`^/leads/([^/]+)${suffix}$`) : /^\/leads\/([^/]+)$/;
-  const match = pathname.match(pattern);
+function idFromPath(pathname: string, pattern: RegExp): string | null {
+  const match = pattern.exec(pathname);
   if (!match) return null;
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(match[1]) ? match[1] : null;
+  return UUID_PATTERN.test(match[1]) ? match[1] : null;
 }
 
 async function supabase(env: Env, path: string, init: RequestInit = {}): Promise<Response> {
@@ -316,36 +332,33 @@ async function pipelineSummary(env: Env): Promise<Response> {
   return jsonResponse({ data: { by_status: byStatus, by_offer_interest: byOfferInterest, matrix, contacted_this_week: contactedThisWeek, total_replied: totalReplied, conversion_rate: conversionRate } });
 }
 
+function validationErrorResponse(error: unknown): Response | null {
+  const message = error instanceof Error ? error.message : 'unknown_error';
+  const mapping = VALIDATION_ERROR_RESPONSES.find(([token]) => message.includes(token));
+  return mapping ? errorResponse(mapping[1], mapping[2], mapping[3]) : null;
+}
+
+async function routeApiRequest(request: Request, env: Env, url: URL): Promise<Response> {
+  const leadId = idFromPath(url.pathname, LEAD_ID_PATH_PATTERN);
+  const eventLeadId = idFromPath(url.pathname, LEAD_EVENTS_PATH_PATTERN);
+
+  if (request.method === 'GET' && url.pathname === '/leads') return listLeads(env, url);
+  if (request.method === 'POST' && url.pathname === '/leads') return createLead(env, request);
+  if (request.method === 'GET' && leadId) return getLead(env, leadId);
+  if (request.method === 'PATCH' && leadId) return patchLead(env, request, leadId);
+  if (request.method === 'POST' && eventLeadId) return addLeadEvent(env, request, eventLeadId);
+  if (request.method === 'GET' && url.pathname === '/pipeline') return pipelineSummary(env);
+  return errorResponse(404, 'not_found', 'Endpoint not found.');
+}
+
 async function handleApi(request: Request, env: Env): Promise<Response> {
   const authError = authenticate(request, env);
   if (authError) return authError;
 
-  const url = new URL(request.url);
-  const leadId = idFromPath(url.pathname);
-  const eventLeadId = idFromPath(url.pathname, '\\/events');
-
   try {
-    if (request.method === 'GET' && url.pathname === '/leads') return listLeads(env, url);
-    if (request.method === 'POST' && url.pathname === '/leads') return createLead(env, request);
-    if (request.method === 'GET' && leadId) return getLead(env, leadId);
-    if (request.method === 'PATCH' && leadId) return patchLead(env, request, leadId);
-    if (request.method === 'POST' && eventLeadId) return addLeadEvent(env, request, eventLeadId);
-    if (request.method === 'GET' && url.pathname === '/pipeline') return pipelineSummary(env);
-    return errorResponse(404, 'not_found', 'Endpoint not found.');
+    return await routeApiRequest(request, env, new URL(request.url));
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'unknown_error';
-    if (message.includes('expected_json')) return errorResponse(415, 'expected_json', 'Request body must be JSON.');
-    if (message.includes('expected_object')) return errorResponse(400, 'expected_object', 'JSON body must be an object.');
-    if (message.includes('name_required')) return errorResponse(400, 'name_required', 'Lead name is required.');
-    if (message.includes('invalid_email')) return errorResponse(400, 'invalid_email', 'Email address is invalid.');
-    if (message.includes('invalid_offer_interest')) return errorResponse(400, 'invalid_offer_interest', 'Offer interest is invalid.');
-    if (message.includes('invalid_status')) return errorResponse(400, 'invalid_status', 'Status is invalid.');
-    if (message.includes('invalid_date')) return errorResponse(400, 'invalid_date', 'Date must use YYYY-MM-DD.');
-    if (message.includes('invalid_timestamp')) return errorResponse(400, 'invalid_timestamp', 'Timestamp is invalid.');
-    if (message.includes('invalid_event_type')) return errorResponse(400, 'invalid_event_type', 'Event type is invalid.');
-    if (message.includes('field_not_patchable')) return errorResponse(400, 'field_not_patchable', 'Only status, notes, next_action, next_action_due, and last_contact_at can be patched.');
-    if (message.includes('empty_patch')) return errorResponse(400, 'empty_patch', 'Patch body must include at least one supported field.');
-    return errorResponse(502, 'upstream_error', 'Supabase request failed.');
+    return validationErrorResponse(error) ?? errorResponse(502, 'upstream_error', 'Supabase request failed.');
   }
 }
 
