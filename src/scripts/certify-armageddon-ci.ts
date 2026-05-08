@@ -43,25 +43,18 @@ const ITERATIONS = 250;
 const SEED = 424242;
 
 /**
- * Hardened PATH containing only fixed, non-writable system directories.
+ * Absolute path to the git binary, keyed by platform.
  *
- * Used as the execution environment for child processes to prevent PATH-hijacking
- * attacks where a malicious executable placed in a user-writable directory
- * earlier in the default PATH could shadow trusted binaries.
- *
- * Satisfies SonarQube rule typescript:S4036 —
- * "Make sure the PATH variable only contains fixed, unwriteable directories."
+ * Using an absolute path instead of a bare command name ("git") eliminates
+ * PATH-based resolution entirely — the OS executes the binary directly without
+ * consulting any PATH variable. This fully satisfies SonarQube typescript:S4036
+ * ("Searching OS commands in PATH is security-sensitive") because no PATH
+ * lookup occurs at all.
  */
-const SAFE_SYSTEM_PATH: string = Object.freeze(
+const GIT_BINARY: string =
   process.platform === "win32"
-    ? [
-        "C:\\Windows\\System32",
-        "C:\\Windows",
-        "C:\\Program Files\\Git\\cmd",
-        "C:\\Program Files\\Git\\bin",
-      ].join(";")
-    : ["/usr/bin", "/bin", "/usr/local/bin"].join(":")
-);
+    ? "C:\\Program Files\\Git\\cmd\\git.exe"
+    : "/usr/bin/git";
 
 function assertSimMode(): void {
   if (process.env.SIM_MODE !== "true") {
@@ -72,19 +65,16 @@ function assertSimMode(): void {
 }
 
 /**
- * Returns the current git commit SHA using spawnSync (no shell expansion).
+ * Returns the current git commit SHA.
  *
- * spawnSync with an argument array bypasses the OS shell entirely — no PATH
- * resolution ambiguity exists. The explicit env with SAFE_SYSTEM_PATH ensures
- * the git binary can only be resolved from known, non-writable system paths.
- *
- * Satisfies SonarQube typescript:S4036: PATH contains only fixed directories.
+ * Uses spawnSync with an absolute binary path and an argument array — no shell
+ * expansion, no PATH lookup. This is the canonical pattern to satisfy
+ * SonarQube typescript:S4036: PATH is never consulted.
  */
 function currentCommitSha(): string {
   try {
-    const result = spawnSync("git", ["rev-parse", "HEAD"], {
+    const result = spawnSync(GIT_BINARY, ["rev-parse", "HEAD"], {
       encoding: "utf8",
-      env: Object.freeze({ PATH: SAFE_SYSTEM_PATH }),
     });
     if (result.status !== 0 || result.error) return "unknown";
     return result.stdout.trim();
