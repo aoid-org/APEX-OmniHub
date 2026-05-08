@@ -109,3 +109,6 @@ ERRORS.md
 
 # Auto-generated security posture reports (local tooling output)
 reports/security/
+
+# Worldwide Wildcard generated reports
+tests/worldwide-wildcard/reports/
