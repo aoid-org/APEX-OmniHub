@@ -2,7 +2,7 @@
  * Tests for Veritas — tool output validation.
  * @date 2026-02-09
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { validate } from '../../../src/core/orchestrator/Veritas';
 
@@ -44,10 +44,17 @@ describe('Veritas', () => {
   });
 
   it('passes unknown tools through', () => {
-    const result = validate('some_future_tool', {
-      anything: true,
-    });
-    expect(result.valid).toBe(true);
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const result = validate('some_future_tool', {
+        anything: true,
+      });
+      expect(result.valid).toBe(true);
+    } finally {
+      consoleErrorSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
+    }
   });
 
   it('rejects non-object results', () => {

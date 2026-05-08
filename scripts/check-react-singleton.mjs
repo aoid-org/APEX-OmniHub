@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -17,80 +17,112 @@ const RESET = '\x1b[0m';
 function findWorkspaceRoot() {
   let currentDir = process.cwd();
 
-  // Just a simple safety valve to prevent infinite loops
+  // Safety valve prevents an accidental infinite parent-directory walk.
   let depth = 0;
   while (depth < 10) {
     if (existsSync(join(currentDir, 'package.json')) &&
-        (existsSync(join(currentDir, 'bun.lock')) || existsSync(join(currentDir, 'bun.lockb')) || existsSync(join(currentDir, 'package-lock.json')))) {
+        (existsSync(join(currentDir, 'package-lock.json')) || existsSync(join(currentDir, 'bun.lock')) || existsSync(join(currentDir, 'bun.lockb')))) {
       return currentDir;
     }
 
     const parentDir = join(currentDir, '..');
-    if (parentDir === currentDir) break; // reached root
+    if (parentDir === currentDir) break; // Reached filesystem root.
     currentDir = parentDir;
     depth++;
   }
 
-  return process.cwd(); // fallback
+  return process.cwd();
+}
+
+function commandExists(command) {
+  try {
+    const probe = process.platform === 'win32' ? 'where' : 'command';
+    const args = process.platform === 'win32' ? [command] : ['-v', command];
+    execFileSync(probe, args, { stdio: 'ignore', shell: process.platform !== 'win32' });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
- * Try to figure out if we're using npm or bun to list packages
+ * Resolve the package-tree command. npm is canonical; Bun remains an optional local fallback only.
  */
-function resolveNpmRunner() {
+function resolvePackageTreeRunner() {
   const root = findWorkspaceRoot();
 
-  if (existsSync(join(root, 'bun.lock')) || existsSync(join(root, 'bun.lockb'))) {
-    // Return bun command array
-    return { command: 'bun', args: ['pm', 'ls', '--all'] };
+  if (existsSync(join(root, 'package-lock.json'))) {
+    return { command: 'npm', argsFor: (packageName) => ['ls', packageName, '--all', '--json'] };
   }
 
-  return { command: 'npm', args: ['ls', '--all'] };
+  if ((existsSync(join(root, 'bun.lock')) || existsSync(join(root, 'bun.lockb'))) && commandExists('bun')) {
+    return { command: 'bun', argsFor: () => ['pm', 'ls', '--all'] };
+  }
+
+  return { command: 'npm', argsFor: (packageName) => ['ls', packageName, '--all', '--json'] };
+}
+
+function collectVersionsFromNpmTree(tree, packageName, versions = new Set()) {
+  if (!tree || typeof tree !== 'object') return versions;
+
+  const dependencies = tree.dependencies && typeof tree.dependencies === 'object' ? tree.dependencies : {};
+  for (const [name, dependency] of Object.entries(dependencies)) {
+    if (name === packageName && dependency && typeof dependency === 'object' && typeof dependency.version === 'string') {
+      versions.add(dependency.version);
+    }
+    collectVersionsFromNpmTree(dependency, packageName, versions);
+  }
+
+  return versions;
+}
+
+function collectVersionsFromTextTree(output, packageName) {
+  const versionRegex = new RegExp(
+    String.raw`(?:^|\n)[|│\s]*(?:[├└]──|[+\x60]--)?\s*${packageName}@([0-9]+\.[0-9]+\.[0-9]+(?:[-+][^\s]+)?)`,
+    'g',
+  );
+
+  const versions = new Set();
+  let match;
+  while ((match = versionRegex.exec(output)) !== null) {
+    versions.add(match[1]);
+  }
+  return versions;
+}
+
+function getPackageTreeOutput(command, args) {
+  try {
+    return execFileSync(command, args, {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+  } catch (error) {
+    // npm ls can exit non-zero for peer/dependency metadata issues while still returning a parseable tree.
+    if (error.stdout) return error.stdout.toString();
+    throw error;
+  }
 }
 
 function checkPackageVersions(packageName) {
   console.log(`Checking for multiple versions of ${packageName}...`);
 
   try {
-    const npmRunner = resolveNpmRunner();
+    const runner = resolvePackageTreeRunner();
+    const args = runner.argsFor(packageName);
 
-    // Check if we have multiple versions in the actual tree
-    // npm ls <package> returns non-zero if multiple versions are found that conflict,
-    // but we want to manually parse to be certain.
+    console.log(`Running: ${runner.command} ${args.join(' ')}`);
+    const output = getPackageTreeOutput(runner.command, args);
+    let versions;
 
-    let output;
-    try {
-      // Use the appropriate runner to get the dependency tree
-      let command = npmRunner.command;
-      let args = npmRunner.command === 'bun' ? ['pm', 'ls', '--all'] : ['ls', '--all'];
-
-      console.log(`Running: ${command} ${args.join(' ')}`);
-      output = execSync(`${command} ${args.join(' ')}`, { // NOSONAR
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'ignore'] // ignore stderr which might have warnings
-      });
-    } catch (e) {
-      // npm ls returns non-zero if there are missing peer deps, which is common
-      // We still get the output in e.stdout
-      if (e.stdout) {
-        output = e.stdout.toString();
-      } else {
-        throw e;
+    if (runner.command === 'npm') {
+      try {
+        versions = collectVersionsFromNpmTree(JSON.parse(output), packageName);
+      } catch (error) {
+        console.error(`${YELLOW}Could not parse npm JSON output for ${packageName}; falling back to text scan: ${error.message}${RESET}`);
+        versions = collectVersionsFromTextTree(output, packageName);
       }
-    }
-
-    // Extract all version numbers for the package
-    // Matches patterns like "react@18.2.0" or "├─ react@18.2.0"
-    const versionRegex = new RegExp(
-      String.raw`(?:^|\n)[|│\s]*(?:[├└]──|[+\x60]--)\s+${packageName}@([0-9]+\.[0-9]+\.[0-9]+(?:[-+][^\s]+)?)`,
-      'g',
-    );
-
-    const versions = new Set();
-    let match;
-
-    while ((match = versionRegex.exec(output)) !== null) {
-      versions.add(match[1]);
+    } else {
+      versions = collectVersionsFromTextTree(output, packageName);
     }
 
     if (versions.size === 0) {
@@ -120,7 +152,7 @@ function runCheck() {
   const reactDomValid = checkPackageVersions('react-dom');
 
   if (!reactValid || !reactDomValid) {
-    console.error(`\n${RED}Singleton validation failed. Multiple versions of React detected.${RESET}`);
+    console.error(`\n${RED}Singleton validation failed. See package-tree errors above.${RESET}`);
     process.exit(1);
   }
 

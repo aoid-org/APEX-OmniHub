@@ -18,10 +18,23 @@ vi.mock('@/lib/monitoring', () => ({
   logError: vi.fn().mockResolvedValue(undefined),
 }));
 
-// Suppress console.error during tests (ErrorBoundary logs to console)
-const originalError = console.error;
-beforeAll(() => { console.error = vi.fn(); });
-afterAll(() => { console.error = originalError; });
+
+function silenceExpectedRenderFailure() {
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const preventExpectedJsdomError = (event: ErrorEvent) => {
+    if (event.error instanceof Error && event.error.message === 'test-error') {
+      event.preventDefault();
+    }
+  };
+  window.addEventListener('error', preventExpectedJsdomError);
+
+  return () => {
+    window.removeEventListener('error', preventExpectedJsdomError);
+    consoleErrorSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+  };
+}
 
 // ── Problem child component ──────────────────────────────────────────
 function ThrowingChild({ shouldThrow = true }: Readonly<{ shouldThrow?: boolean }>) {
@@ -41,46 +54,64 @@ describe('ErrorBoundary', () => {
   });
 
   it('renders fallback UI when a child throws', () => {
-    render(
-      <ErrorBoundary>
-        <ThrowingChild />
-      </ErrorBoundary>
-    );
-    expect(screen.getByText('Something went wrong')).toBeTruthy();
-    expect(screen.getByText('test-error')).toBeTruthy();
+    const restoreExpectedError = silenceExpectedRenderFailure();
+    try {
+      render(
+        <ErrorBoundary>
+          <ThrowingChild />
+        </ErrorBoundary>
+      );
+      expect(screen.getByText('Something went wrong')).toBeTruthy();
+      expect(screen.getByText('test-error')).toBeTruthy();
+    } finally {
+      restoreExpectedError();
+    }
   });
 
   it('renders custom fallback when provided', () => {
-    render(
-      <ErrorBoundary fallback={<div data-testid="custom-fb">Custom fallback</div>}>
-        <ThrowingChild />
-      </ErrorBoundary>
-    );
-    expect(screen.getByTestId('custom-fb')).toBeTruthy();
-    expect(screen.getByText('Custom fallback')).toBeTruthy();
+    const restoreExpectedError = silenceExpectedRenderFailure();
+    try {
+      render(
+        <ErrorBoundary fallback={<div data-testid="custom-fb">Custom fallback</div>}>
+          <ThrowingChild />
+        </ErrorBoundary>
+      );
+      expect(screen.getByTestId('custom-fb')).toBeTruthy();
+      expect(screen.getByText('Custom fallback')).toBeTruthy();
+    } finally {
+      restoreExpectedError();
+    }
   });
 
   it('provides a "Try again" button that resets the boundary', () => {
-    render(
-      <ErrorBoundary>
-        <ThrowingChild />
-      </ErrorBoundary>
-    );
-    // Error state should show Try again
-    const tryAgainBtn = screen.getByText('Try again');
-    expect(tryAgainBtn).toBeTruthy();
-    // Clicking should reset – but since child still throws it will re-catch
-    fireEvent.click(tryAgainBtn);
-    // Boundary re-catches the error
-    expect(screen.getByText('Something went wrong')).toBeTruthy();
+    const restoreExpectedError = silenceExpectedRenderFailure();
+    try {
+      render(
+        <ErrorBoundary>
+          <ThrowingChild />
+        </ErrorBoundary>
+      );
+      const tryAgainBtn = screen.getByText('Try again');
+      expect(tryAgainBtn).toBeTruthy();
+      // Clicking resets; the same child intentionally rethrows and the boundary re-catches it.
+      fireEvent.click(tryAgainBtn);
+      expect(screen.getByText('Something went wrong')).toBeTruthy();
+    } finally {
+      restoreExpectedError();
+    }
   });
 
   it('provides a "Go home" button', () => {
-    render(
-      <ErrorBoundary>
-        <ThrowingChild />
-      </ErrorBoundary>
-    );
-    expect(screen.getByText('Go home')).toBeTruthy();
+    const restoreExpectedError = silenceExpectedRenderFailure();
+    try {
+      render(
+        <ErrorBoundary>
+          <ThrowingChild />
+        </ErrorBoundary>
+      );
+      expect(screen.getByText('Go home')).toBeTruthy();
+    } finally {
+      restoreExpectedError();
+    }
   });
 });
