@@ -23,10 +23,12 @@ async def test_planning_workflow():
             workflows=[PlanningWorkflow],
             activities=[dummy_generate_plan],
         ):
+            # FIX: Temporal SDK execute_workflow() accepts at most one
+            # positional arg after the workflow reference. Multiple
+            # workflow params must be passed via the args= keyword.
             result = await env.client.execute_workflow(
                 PlanningWorkflow.run,
-                "test goal",
-                {"info": "test"},
+                args=["test goal", {"info": "test"}],
                 id="test-planning-id",
                 task_queue="test-planning-queue",
             )
@@ -42,10 +44,11 @@ async def test_execution_workflow():
             workflows=[ExecutionWorkflow],
         ):
             plan_steps = [{"action": "test1"}, {"action": "test2"}]
+            # FIX: Same Temporal SDK signature issue — use args= keyword
+            # for multi-param workflows instead of positional arguments.
             result = await env.client.execute_workflow(
                 ExecutionWorkflow.run,
-                plan_steps,
-                {"ctx": "test"},
+                args=[plan_steps, {"ctx": "test"}],
                 id="test-execution-id",
                 task_queue="test-execution-queue",
             )

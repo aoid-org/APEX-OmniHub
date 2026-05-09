@@ -2,18 +2,18 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Mock } from 'vitest';
 import type { ReactNode } from 'react';
-import FilesModule from '../../../../apps/omnihub-site/src/components/omnidash/modules/FilesModule';
-import * as useOmniModuleStateModule from '../../../../src/hooks/useOmniModuleState';
-import * as localFilesDB from '../../../../src/lib/localFilesDB';
+import FilesModule from '../../apps/omnihub-site/dashboard/components/modules/FilesModule';
+import * as useOmniModuleStateModule from '../../apps/omnihub-site/src/hooks/useOmniModuleState';
+import * as localFilesDB from '../../src/lib/localFilesDB';
 import { toast } from 'sonner';
 
 // Mock dependencies
-vi.mock('../../../../src/hooks/useOmniModuleState', () => ({
+vi.mock('../../apps/omnihub-site/src/hooks/useOmniModuleState', () => ({
   useOmniModuleState: vi.fn(),
   triggerModuleAction: vi.fn(),
 }));
 
-vi.mock('../../../../src/lib/localFilesDB', () => ({
+vi.mock('../../src/lib/localFilesDB', () => ({
   saveLocalFile: vi.fn(),
 }));
 
@@ -26,7 +26,7 @@ vi.mock('sonner', () => ({
 }));
 
 // Mock ModuleShell
-vi.mock('../../../../apps/omnihub-site/src/components/omnidash/modules/ModuleShell', () => ({
+vi.mock('../../apps/omnihub-site/dashboard/components/modules/ModuleShell', () => ({
   ModuleShell: ({ children }: { children: ReactNode }) => (
     <div data-testid="module-shell">{children}</div>
   ),
