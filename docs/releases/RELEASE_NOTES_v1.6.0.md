@@ -116,5 +116,5 @@ All Gates Green — 2026-05-08
 © 2026 APEX Business Systems Ltd.
 ```
 
-*Prepared by APEX Business Systems Ltd. | Edmonton, AB, Canada*  
+*Prepared by APEX Business Systems Ltd. | Edmonton, AB, Canada*
 *Proprietary — Not for distribution without authorization*

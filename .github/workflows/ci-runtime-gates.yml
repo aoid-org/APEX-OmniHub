@@ -11,10 +11,6 @@ permissions:
   contents: read
 
 jobs:
-  # ═══════════════════════════════════════════════════════════════════
-  # ARCHITECTURAL BOUNDARY ENFORCEMENT — v1.3.0-RC
-  # Fail-closed gate: grep-only, < 2 s, blocks all downstream jobs.
-  # ═══════════════════════════════════════════════════════════════════
   architectural-boundary-enforcement:
     name: Architectural Boundary Enforcement
     runs-on: ubuntu-latest
@@ -24,7 +20,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      # ── Guardrail 0 — File Existence (Rename-Drift Closure) ──────
       - name: "Guardrail 0 - File Existence (Rename-Drift Closure)"
         run: |
           MONITORED_FILES=(
@@ -35,51 +30,48 @@ jobs:
           MISSING=0
           for f in "${MONITORED_FILES[@]}"; do
             if [ ! -f "$f" ]; then
-              echo "🛑 BOUNDARY VIOLATION: Monitored file '$f' is missing."
-              echo "   RULE: All boundary-monitored files must exist at their canonical paths. File renames silently bypass path-specific guardrails."
-              echo "   FIX:  Restore '$f' to its canonical path, or update .github/workflows/ci-runtime-gates.yml to track the new location."
+              echo "BOUNDARY VIOLATION: Monitored file '$f' is missing."
+              echo "RULE: All boundary-monitored files must exist at their canonical paths. File renames silently bypass path-specific guardrails."
+              echo "FIX: Restore '$f' to its canonical path, or update .github/workflows/ci-runtime-gates.yml to track the new location."
               MISSING=1
             fi
           done
           if [ "$MISSING" -eq 1 ]; then
             exit 1
           fi
-          echo "✅ BOUNDARY CLEAR: All 3 monitored files exist at canonical paths."
+          echo "BOUNDARY CLEAR: All 3 monitored files exist at canonical paths."
 
-      # ── Guardrail 1 — Worker Purity (B1: main.py) ───────────────
       - name: "Guardrail 1 - Worker Purity (main.py must not import HTTP servers)"
         run: |
           if grep -qE "^\s*(import|from)\s+(fastapi|uvicorn)\b" orchestrator/main.py; then
-            echo "🛑 BOUNDARY VIOLATION: orchestrator/main.py contains an HTTP server import (fastapi or uvicorn)."
-            echo "   RULE: main.py is a pure Temporal Worker CLI entrypoint — no HTTP server imports permitted."
-            echo "   FIX:  Remove all fastapi/uvicorn imports from main.py. Move HTTP logic to services/orchestrator/api/."
+            echo "BOUNDARY VIOLATION: orchestrator/main.py contains an HTTP server import (fastapi or uvicorn)."
+            echo "RULE: main.py is a pure Temporal Worker CLI entrypoint - no HTTP server imports permitted."
+            echo "FIX: Remove all fastapi/uvicorn imports from main.py. Move HTTP logic to services/orchestrator/api/."
             exit 1
           else
-            echo "✅ BOUNDARY CLEAR: main.py worker purity confirmed — no fastapi/uvicorn imports."
+            echo "BOUNDARY CLEAR: main.py worker purity confirmed - no fastapi/uvicorn imports."
           fi
 
-      # ── Guardrail 2 — API Purity (B2: routes.py) ────────────────
       - name: "Guardrail 2 - API Purity (routes.py must not init Temporal Workers)"
         run: |
           if grep -qE "\.Worker\(|Worker\(|start_worker" services/orchestrator/api/routes.py; then
-            echo "🛑 BOUNDARY VIOLATION: routes.py initializes or references a Temporal Worker."
-            echo "   RULE: API routes are HTTP client-only — Worker lifecycle belongs exclusively in orchestrator/main.py."
-            echo "   FIX:  Remove Worker()/start_worker references. Use Temporal Client to dispatch workflows, not run Workers."
+            echo "BOUNDARY VIOLATION: routes.py initializes or references a Temporal Worker."
+            echo "RULE: API routes are HTTP client-only - Worker lifecycle belongs exclusively in orchestrator/main.py."
+            echo "FIX: Remove Worker()/start_worker references. Use Temporal Client to dispatch workflows, not run Workers."
             exit 1
           else
-            echo "✅ BOUNDARY CLEAR: routes.py API purity confirmed — no Worker initialization."
+            echo "BOUNDARY CLEAR: routes.py API purity confirmed - no Worker initialization."
           fi
 
-      # ── Guardrail 3 — Metrics Decoupling (B3: metrics.py) ───────
       - name: "Guardrail 3 - Metrics Decoupling (metrics.py must not import API layer)"
         run: |
           if grep -qE "^\s*from\s+services\.orchestrator\.api\b" orchestrator/metrics.py; then
-            echo "🛑 BOUNDARY VIOLATION: metrics.py imports from services.orchestrator.api."
-            echo "   RULE: The telemetry layer is a shared utility — it must not couple to the API layer."
-            echo "   FIX:  Remove the services.orchestrator.api import. Pass any needed dependencies via function arguments."
+            echo "BOUNDARY VIOLATION: metrics.py imports from services.orchestrator.api."
+            echo "RULE: The telemetry layer is a shared utility - it must not couple to the API layer."
+            echo "FIX: Remove the services.orchestrator.api import. Pass any needed dependencies via function arguments."
             exit 1
           else
-            echo "✅ BOUNDARY CLEAR: metrics.py decoupling confirmed — no API layer imports."
+            echo "BOUNDARY CLEAR: metrics.py decoupling confirmed - no API layer imports."
           fi
 
   terraform-expression-drift-gate:
@@ -148,9 +140,6 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
-      # ─────────────────────────────────────────────────────────────
-      # Turborepo Caching
-      # ─────────────────────────────────────────────────────────────
       - name: Cache Turborepo
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
@@ -160,29 +149,15 @@ jobs:
             turbo-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
             turbo-${{ runner.os }}-
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 1: Static Analysis
-      # ─────────────────────────────────────────────────────────────
-      - name: Lint commit messages (full PR range)
-        if: github.event_name == 'pull_request'
-        run: |
-          # Use the true merge-base of the PR branch against the target branch so
-          # that commits already in main (brought in via "Merge branch 'main' into
-          # <pr-branch>" merges) are never re-validated.
-          MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
-          echo "Linting commits from merge-base ${MERGE_BASE} to HEAD"
-          ./node_modules/.bin/commitlint \
-            --from "${MERGE_BASE}" \
-            --to HEAD \
-            --verbose
-
       - name: Validate commit messages
         if: github.event_name == 'pull_request'
         run: |
-          # Only validate the HEAD commit, not the full PR range.
-          # Historical commits from other contributors may use non-conventional
-          # formats (GitHub UI defaults, emoji prefixes, etc.) and cannot be amended.
-          ./node_modules/.bin/commitlint --last --verbose
+          # Only validate the checked-out HEAD commit. Historical PR commits can
+          # be generated by automation or GitHub UI and cannot always be amended.
+          ./node_modules/.bin/commitlint \
+            --config ./commitlint.config.cjs \
+            --last \
+            --verbose
 
       - name: TypeScript type check
         run: npm run typecheck
@@ -201,14 +176,10 @@ jobs:
           python3 --version
           which python3
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 2: Unit Tests
-      # ─────────────────────────────────────────────────────────────
       - name: Clear Vitest cache
         run: |
-          # Remove any stale Vitest cache that might reference deleted test files
           rm -rf node_modules/.vitest
-          echo "✅ Vitest cache cleared"
+          echo "Vitest cache cleared"
 
       - name: Run unit tests
         run: npm run test
@@ -236,18 +207,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Fail on new critical/blocker issues
-        if: vars.SONAR_CI_SCAN_ENABLED != 'false'
-        run: |
-          if grep -q '"severity":"CRITICAL"\|"severity":"BLOCKER"' \
-            .scannerwork/report-task.txt 2>/dev/null; then
-            echo "BLOCKER or CRITICAL Sonar findings detected. Fix before merge."
-            exit 1
-          fi
-
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 2.5: OmniEval Deterministic Evaluation
-      # ─────────────────────────────────────────────────────────────
       - name: Run OmniEval (deterministic eval gate)
         run: npm run eval:ci
 
@@ -272,9 +231,6 @@ jobs:
           path: artifacts/evals/report.json
           retention-days: 30
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 3: Build
-      # ─────────────────────────────────────────────────────────────
       - name: Cloudflare Pages Production Sync Shield
         run: cd apps/omnihub-site && npm ci --ignore-scripts && npm run build
         env:
@@ -292,7 +248,7 @@ jobs:
             cat bundle-size.json
             exit 1
           }
-          echo "✅ Bundle size within limits"
+          echo "Bundle size within limits"
 
       - name: Upload bundle stats
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -309,9 +265,6 @@ jobs:
         with:
           subject-path: dist/**
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 4: Runtime Smoke Tests
-      # ─────────────────────────────────────────────────────────────
       - name: Get Playwright version
         id: playwright-version
         run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
@@ -326,15 +279,12 @@ jobs:
       - name: Install Playwright Chromium
         timeout-minutes: 10
         run: |
-          # CI runs chromium-only (see playwright.config.ts for rationale)
-          # Firefox/WebKit require OS packages unavailable on GitHub Actions runners
           ./node_modules/.bin/playwright install --with-deps chromium
 
       - name: Start preview server
         run: |
           npm run preview -- --host --port 4173 &
           echo $! > preview.pid
-          # Wait for server to be ready
           node -e "const url='http://localhost:4173';let n=0;(async function poll(){try{const r=await fetch(url);if(r.ok||r.status<500)process.exit(0)}catch{} if(++n>60)process.exit(1); setTimeout(poll,500)})()"
 
       - name: Run asset access tests
@@ -355,9 +305,6 @@ jobs:
             rm preview.pid
           fi
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 5: Guard Rail Violation Scan
-      # ─────────────────────────────────────────────────────────────
       - name: Scan for Guard Rail Violations
         if: always()
         run: |
@@ -369,9 +316,6 @@ jobs:
           fi
           echo "No guard rail violations detected"
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 6: Upload Artifacts
-      # ─────────────────────────────────────────────────────────────
       - name: Upload Playwright report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: failure()

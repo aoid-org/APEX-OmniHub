@@ -1,6 +1,6 @@
 # Open PR Triage — APEX-OmniHub v1.6.0
 
-**Generated:** 2026-05-08  
+**Generated:** 2026-05-08
 **Open PRs at time of audit:** Requires `gh pr list --state open` with GitHub authentication to verify current live count. The 2026-05-08 audit references 15 open PRs.
 
 ## Triage Protocol
@@ -40,5 +40,5 @@ After triage: 0 open PRs older than 7 days. Merge queue clear before v1.6.0 tag.
 
 ---
 
-*This document requires human review to populate PR-specific details.*  
+*This document requires human review to populate PR-specific details.*
 *The triage matrix and checklist above are ready to apply.*
