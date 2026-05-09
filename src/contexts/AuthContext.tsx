@@ -254,6 +254,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return <CloudSetupMessage />;
   }
 
+  // MFA Challenge State
+  const [mfaChallengeActive, setMfaChallengeActive] = useState(false);
+
+  useEffect(() => {
+    if (session?.user && !loading) {
+      // Check if device requires MFA (e.g., untrusted device)
+      const deviceId = localStorage.getItem('device_id');
+      if (deviceId) {
+        import('@/zero-trust/deviceRegistry').then(({ isDeviceAuthorized }) => {
+          const authResult = isDeviceAuthorized(deviceId);
+          if (!authResult.authorized && authResult.reason !== 'device_blocked') {
+            setMfaChallengeActive(true);
+          }
+        });
+      }
+    }
+  }, [session, loading]);
+
+  if (mfaChallengeActive) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
+        <div className="max-w-md w-full bg-gray-900 border border-red-500/30 rounded-xl p-8 text-center space-y-6">
+          <div className="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight">Security Challenge</h2>
+          <p className="text-gray-400">
+            This device is not fully trusted. Secondary authentication (MFA) is required to proceed.
+          </p>
+          <div className="pt-4 flex flex-col space-y-3">
+            <button 
+              onClick={() => setMfaChallengeActive(false)} 
+              className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Verify Identity
+            </button>
+            <button 
+              onClick={signOut} 
+              className="w-full py-3 bg-transparent border border-gray-700 hover:bg-gray-800 text-gray-300 font-medium rounded-lg transition-colors"
+            >
+              Cancel & Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AuthContext.Provider value={authValue}>
       {children}
