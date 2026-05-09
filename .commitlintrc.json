@@ -7,6 +7,7 @@
     ],
     "subject-max-length": [2, "always", 100],
     "body-max-line-length": [0, "always", 200],
+    "footer-max-line-length": [0, "always", 200],
     "type-empty": [0, "always"],
     "subject-empty": [0, "always"]
   }
