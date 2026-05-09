@@ -249,11 +249,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [loading, session, signOut, user],
   );
 
-  // Show setup message if Cloud is not configured
-  if (!cloudConfigured) {
-    return <CloudSetupMessage />;
-  }
-
   // MFA Challenge State
   const [mfaChallengeActive, setMfaChallengeActive] = useState(false);
 
@@ -271,6 +266,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
   }, [session, loading]);
+
+  // Show setup message if Cloud is not configured
+  if (!cloudConfigured) {
+    return <CloudSetupMessage />;
+  }
 
   if (mfaChallengeActive) {
     return (

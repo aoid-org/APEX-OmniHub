@@ -1,5 +1,8 @@
+from datetime import timedelta
 from typing import Any
+
 from temporalio import workflow
+
 
 @workflow.defn
 class PlanningWorkflow:
@@ -13,18 +16,25 @@ class PlanningWorkflow:
         )
         return dict(plan)
 
+
 @workflow.defn
 class ExecutionWorkflow:
     @workflow.run
-    async def run(self, plan_steps: list[dict[str, Any]], context: dict[str, Any]) -> dict[str, Any]:
+    async def run(
+        self, plan_steps: list[dict[str, Any]], context: dict[str, Any]
+    ) -> dict[str, Any]:
+        _ = context  # Unused
         workflow.logger.info("Starting Execution Workflow")
         # DAG Execution Logic
         return {"status": "executed", "steps_run": len(plan_steps)}
+
 
 @workflow.defn
 class VerificationWorkflow:
     @workflow.run
     async def run(self, results: dict[str, Any]) -> dict[str, Any]:
+        _ = results  # Unused
         workflow.logger.info("Starting Verification Workflow")
         # Verification Logic
         return {"status": "verified"}
+
