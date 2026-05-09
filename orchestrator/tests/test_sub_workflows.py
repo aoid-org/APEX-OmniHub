@@ -1,13 +1,18 @@
 import pytest
-from datetime import timedelta
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
-from orchestrator.workflows.sub_workflows import PlanningWorkflow, ExecutionWorkflow, VerificationWorkflow
+from orchestrator.workflows.sub_workflows import (
+    PlanningWorkflow,
+    ExecutionWorkflow,
+    VerificationWorkflow,
+)
 from temporalio import activity
 
+
 @activity.defn(name="generate_plan_with_llm")
-async def dummy_generate_plan(goal: str, context: dict) -> dict:
+async def dummy_generate_plan(goal: str, _context: dict) -> dict:
     return {"steps": [{"action": "test", "target": goal}]}
+
 
 @pytest.mark.asyncio
 async def test_planning_workflow():
@@ -27,6 +32,7 @@ async def test_planning_workflow():
             )
             assert result["steps"][0]["target"] == "test goal"
 
+
 @pytest.mark.asyncio
 async def test_execution_workflow():
     async with await WorkflowEnvironment.start_time_skipping() as env:
@@ -45,6 +51,7 @@ async def test_execution_workflow():
             )
             assert result["status"] == "executed"
             assert result["steps_run"] == 2
+
 
 @pytest.mark.asyncio
 async def test_verification_workflow():
