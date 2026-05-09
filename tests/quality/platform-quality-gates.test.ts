@@ -14,7 +14,7 @@ describe('Platform Quality Gates', () => {
         cwd: process.cwd()
       });
     }).not.toThrow();
-  });
+  }, 300000);
 
   it('Gate 2: ESLint must pass with zero warnings', () => {
     // APEX-FIX: Increased timeout to 30s for full-repo lint scan

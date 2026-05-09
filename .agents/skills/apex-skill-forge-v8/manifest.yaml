@@ -1,0 +1,22 @@
+name: apex-skill-forge
+version: 8.0.0
+archetype: orchestrator
+description: "Triggers: forge skill, create skill, build skill, scaffold skill, package skill, audit skill, ship skill. Actions: scaffold 6 archetypes, DAG-compatible execution, 12-dimension audit, tri-format packaging. Produces: production-grade skill packages for Claude, Universal LLM, and APEX OmniHub."
+context_budget: medium
+dag:
+  node_type: orchestrator
+  accepts:
+    - "application/json"
+    - "text/plain"
+  emits:
+    - "event:completion"
+    - "event:failure"
+  timeout_ms: 30000
+  retry_policy:
+    max: 3
+    backoff: "exponential"
+  idempotent: true
+  side_effects: false
+  omnihub_compatible: true
+  health_check_endpoint: "/health"
+  metrics_enabled: true

@@ -39,8 +39,10 @@ import jsonschema  # type: ignore
 from litellm import acompletion
 from pydantic import BaseModel
 from temporalio import activity
+from temporalio.exceptions import ApplicationError
 
 from activities.tool_registry import TOOL_REGISTRY, ToolContract, resolve_tool_name
+from metrics import record_llm_plan_attempt, record_llm_plan_outcome
 from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event
 from providers.database.base import DatabaseError
 from providers.database.factory import get_database_provider
@@ -216,17 +218,68 @@ def _raise_non_retryable_plan_error(message: str) -> NoReturn:
     raise ApplicationError(message, non_retryable=True)
 
 
-def _resolve_llm_model(context: dict[str, Any]) -> str:
+def _parse_model_candidates(raw_models: list[str | None]) -> list[str]:
+    """Return normalized, de-duplicated model candidates preserving order."""
+    seen: set[str] = set()
+    candidates: list[str] = []
+    for model in raw_models:
+        if not model:
+            continue
+        normalized = model.strip()
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        candidates.append(normalized)
+    return candidates
+
+
+def _resolve_model_candidates(context: dict[str, Any]) -> list[str]:
+    """
+    Resolve ordered model candidates for bounded fallback attempts.
+
+    Ordering:
+      1) explicitly requested model
+      2) tenant preferred model
+      3) system default model
+      4) env-configured fallback chain
+    """
     system_default_model = os.getenv("DEFAULT_LLM_MODEL", "gpt-4-turbo-preview")
     tenant_model = context.get("tenant_model")
     requested_model = context.get("requested_model")
-    resolved_model = requested_model or tenant_model or system_default_model
+    fallback_models_raw = os.getenv("LLM_FALLBACK_MODELS", "")
+    fallback_models = [item.strip() for item in fallback_models_raw.split(",")] if fallback_models_raw else []
 
     allowed_models = context.get("allowed_models", [])
-    if allowed_models and resolved_model not in allowed_models:
-        _raise_non_retryable_plan_error(f"Model {resolved_model} is not approved for this tenant")
+    if allowed_models:
+        if requested_model and requested_model not in allowed_models:
+            _raise_non_retryable_plan_error(
+                f"Model {requested_model} is not approved for this tenant"
+            )
+        if tenant_model and tenant_model not in allowed_models:
+            _raise_non_retryable_plan_error(
+                f"Model {tenant_model} is not approved for this tenant"
+            )
 
-    return resolved_model
+    candidates = _parse_model_candidates(
+        [requested_model, tenant_model, system_default_model, *fallback_models]
+    )
+    if allowed_models:
+        candidates = [model for model in candidates if model in allowed_models]
+
+    if not candidates:
+        _raise_non_retryable_plan_error("No approved model candidates available for plan generation")
+
+    max_attempts_raw = os.getenv("LLM_PLAN_MAX_MODEL_ATTEMPTS", "3").strip()
+    try:
+        max_attempts = max(1, int(max_attempts_raw))
+    except ValueError:
+        max_attempts = 3
+    return candidates[:max_attempts]
+
+
+def _resolve_llm_model(context: dict[str, Any]) -> str:
+    """Backward-compatible primary model resolver."""
+    return _resolve_model_candidates(context)[0]
 
 
 def _has_dependency_cycle(dependencies: dict[str, list[str]]) -> bool:
@@ -403,33 +456,83 @@ Output valid JSON matching the PlanStep schema."""
 
     try:
         safe_user_message = _build_safe_user_message(goal, context)
-        resolved_model = _resolve_llm_model(context)
+        model_candidates = _resolve_model_candidates(context)
+        temperature = float(os.getenv("DEFAULT_LLM_TEMPERATURE", "0.0"))
+        timeout_raw = os.getenv("LLM_PLAN_REQUEST_TIMEOUT_SECONDS", "45").strip()
+        try:
+            request_timeout = float(timeout_raw)
+        except ValueError:
+            request_timeout = 45.0
 
-        plan = await client.chat.completions.create(
-            model=resolved_model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": safe_user_message},
-            ],
-            response_model=GeneratedPlan,
-            temperature=float(os.getenv("DEFAULT_LLM_TEMPERATURE", "0.0")),
-        )
+        model_failures: list[tuple[str, Exception]] = []
+        for model_index, candidate_model in enumerate(model_candidates):
+            record_llm_plan_attempt()
+            try:
+                plan = await client.chat.completions.create(
+                    model=candidate_model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": safe_user_message},
+                    ],
+                    response_model=GeneratedPlan,
+                    temperature=temperature,
+                    timeout=request_timeout,
+                )
 
-        activity.logger.info(f"✓ Plan generated: {len(plan.steps)} steps")
-        _validate_generated_plan(plan)
+                activity.logger.info(
+                    "✓ Plan generated via model=%s, steps=%s",
+                    candidate_model,
+                    len(plan.steps),
+                )
+                _validate_generated_plan(plan)
 
-        # Store in semantic cache for future hits
-        if _semantic_cache:
-            await _semantic_cache.store_plan(
-                goal=goal,
-                plan_steps=[step.model_dump() for step in plan.steps],
+                # Store in semantic cache for future hits
+                if _semantic_cache:
+                    await _semantic_cache.store_plan(
+                        goal=goal,
+                        plan_steps=[step.model_dump() for step in plan.steps],
+                    )
+
+                if model_index == 0:
+                    record_llm_plan_outcome("primary_success")
+                else:
+                    record_llm_plan_outcome("fallback_success")
+                    activity.logger.warning(
+                        "Primary model failed for goal; fallback model succeeded: %s",
+                        candidate_model,
+                    )
+
+                # Return as dict for workflow
+                return {
+                    "plan_id": plan.plan_id,
+                    "steps": [step.model_dump() for step in plan.steps],
+                }
+            except Exception as candidate_error:
+                model_failures.append((candidate_model, candidate_error))
+                activity.logger.warning(
+                    "Plan generation attempt failed for model=%s: %s",
+                    candidate_model,
+                    candidate_error,
+                )
+
+        record_llm_plan_outcome("all_failed")
+
+        non_retryable_failures = [
+            error
+            for _, error in model_failures
+            if isinstance(error, ApplicationError) and getattr(error, "non_retryable", False)
+        ]
+        if non_retryable_failures and len(non_retryable_failures) == len(model_failures):
+            record_llm_plan_outcome("non_retryable_block")
+            _raise_non_retryable_plan_error(
+                "All configured models returned non-retryable plan validation errors"
             )
 
-        # Return as dict for workflow
-        return {
-            "plan_id": plan.plan_id,
-            "steps": [step.model_dump() for step in plan.steps],
-        }
+        if model_failures:
+            raise RuntimeError(
+                f"Plan generation failed across {len(model_failures)} model attempts"
+            ) from model_failures[-1][1]
+        raise RuntimeError("Plan generation failed with no model attempts executed")
 
     except Exception as e:
         activity.logger.error(f"Plan generation failed: {e!s}")

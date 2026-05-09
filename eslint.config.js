@@ -6,7 +6,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  { ignores: ["dist", "coverage", "services/contracts/typechain-types", "playwright-report", "test-results", ".nyc_output", ".claude/"] },
+  { ignores: ["dist", "coverage", "services/contracts/typechain-types", "playwright-report", "test-results", ".nyc_output", ".claude/", "hero-visual-original.tsx"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

@@ -261,6 +261,7 @@
     "serialize-javascript": "^7.0.3",
     "rollup": "^4.59.0",
     "immutable": "^4.3.8",
+<<<<<<< Updated upstream
     "axios": "^1.16.0",
     "postcss": "^8.5.10",
     "uuid": "^14.0.0",
@@ -269,6 +270,11 @@
     },
     "protobufjs": "7.5.5",
     "ip-address": "10.2.0"
+=======
+    "picomatch": ">=2.3.2",
+    "protobufjs": ">=7.5.5",
+    "axios": ">=1.16.0"
+>>>>>>> Stashed changes
   },
   "resolutions": {
     "h3": "^1.15.9",

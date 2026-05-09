@@ -1,6 +1,12 @@
 import { useOmniModuleState, triggerModuleAction } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
-import { useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+declare global {
+  interface Window {
+    triggerOmniFilesUpload?: () => void;
+  }
+}
 import { saveLocalFile } from '@/lib/localFilesDB';
 import { toast } from 'sonner';
 
@@ -24,6 +30,16 @@ export default function FilesModule({ onClose }: Props) {
 
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    window.triggerOmniFilesUpload = () => {
+      fileInputRef.current?.click();
+    };
+
+    return () => {
+      delete window.triggerOmniFilesUpload;
+    };
+  }, []);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,12 +71,15 @@ export default function FilesModule({ onClose }: Props) {
       />
       
       {/* Expose method to trigger the file picker from within ModuleShell actions */}
+<<<<<<< Updated upstream
       <script>{`
         globalThis.triggerOmniFilesUpload = () => {
           const input = document.querySelector('input[type="file"]');
           if (input) input.click();
         };
       `}</script>
+=======
+>>>>>>> Stashed changes
       {!state.loading && (
         <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">

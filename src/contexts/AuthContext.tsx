@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { CloudSetupMessage } from '@/components/CloudSetupMessage';
 import {
+  isDeviceAuthorized,
   markDeviceTrusted,
   syncOnLogin,
   startBackgroundDeviceSync,
@@ -253,6 +254,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [mfaChallengeActive, setMfaChallengeActive] = useState(false);
 
   useEffect(() => {
+<<<<<<< Updated upstream
     if (session?.user && !loading) {
       // Check if device requires MFA (e.g., untrusted device)
       const deviceId = localStorage.getItem('device_id');
@@ -286,6 +288,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
   }, [session, loading]);
+=======
+    if (!session?.user || loading) {
+      setMfaChallengeActive(false);
+      return;
+    }
+
+    const deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+      setMfaChallengeActive(false);
+      return;
+    }
+
+    try {
+      const authResult = isDeviceAuthorized(deviceId);
+      const requiresMfa =
+        authResult.authorized !== true && authResult.reason !== 'device_blocked';
+
+      setMfaChallengeActive(requiresMfa);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('Device authorization check failed:', error);
+      }
+
+      // Fail closed: do not let a broken device authorization check bypass MFA.
+      setMfaChallengeActive(true);
+    }
+  }, [session?.user, loading]);
+>>>>>>> Stashed changes
 
   // Show setup message if Cloud is not configured
   if (!cloudConfigured) {

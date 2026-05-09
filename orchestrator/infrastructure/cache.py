@@ -539,6 +539,7 @@ class SemanticCacheService:
             params = {"LOCATION": "Paris"}
             → [{"action": "book_flight", "to": "Paris"}]
         """
+<<<<<<< Updated upstream
         if not parameters:
             return plan_steps
 
@@ -559,6 +560,12 @@ class SemanticCacheService:
                 injected_step[key] = value
             injected.append(injected_step)
         return injected
+=======
+        replacements = self._build_replacement_pairs(
+            {f"{{{param_name}}}": param_value for param_name, param_value in parameters.items()}
+        )
+        return [self._transform_nested_values(step, replacements) for step in plan_steps]
+>>>>>>> Stashed changes
 
     def _parameterize_steps(
         self, plan_steps: list[dict[str, Any]], parameters: dict[str, str]
@@ -568,6 +575,7 @@ class SemanticCacheService:
 
         This converts a concrete plan into a reusable template.
         """
+<<<<<<< Updated upstream
         if not parameters:
             return plan_steps
 
@@ -599,6 +607,39 @@ class SemanticCacheService:
                 param_step[key] = value
             parameterized.append(param_step)
         return parameterized
+=======
+        replacements = self._build_replacement_pairs(
+            {param_value: f"{{{param_name}}}" for param_name, param_value in parameters.items()}
+        )
+        return [self._transform_nested_values(step, replacements) for step in plan_steps]
+
+    @staticmethod
+    def _build_replacement_pairs(replacement_map: dict[str, str]) -> list[tuple[str, str]]:
+        """
+        Build deterministic replacement pairs ordered by descending key length.
+
+        Longer keys are replaced first to avoid partial overlap corruption
+        (e.g., replacing "AB" before "ABC" would produce incorrect output).
+        """
+        return sorted(replacement_map.items(), key=lambda item: len(item[0]), reverse=True)
+
+    def _transform_nested_values(
+        self,
+        value: Any,
+        replacements: list[tuple[str, str]],
+    ) -> Any:
+        """Recursively apply string replacements across dict/list/string payloads."""
+        if isinstance(value, str):
+            transformed = value
+            for search_value, replacement_value in replacements:
+                transformed = transformed.replace(search_value, replacement_value)
+            return transformed
+        if isinstance(value, dict):
+            return {key: self._transform_nested_values(item, replacements) for key, item in value.items()}
+        if isinstance(value, list):
+            return [self._transform_nested_values(item, replacements) for item in value]
+        return value
+>>>>>>> Stashed changes
 
     @staticmethod
     def _generate_plan_id(_goal: str) -> str:
