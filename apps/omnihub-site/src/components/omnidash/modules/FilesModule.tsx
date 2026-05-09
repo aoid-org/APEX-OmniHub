@@ -56,7 +56,7 @@ export default function FilesModule({ onClose }: Props) {
       
       {/* Expose method to trigger the file picker from within ModuleShell actions */}
       <script>{`
-        window.triggerOmniFilesUpload = () => {
+        globalThis.triggerOmniFilesUpload = () => {
           const input = document.querySelector('input[type="file"]');
           if (input) input.click();
         };
