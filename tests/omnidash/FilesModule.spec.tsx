@@ -1,10 +1,10 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Mock } from 'vitest';
+// @vitest-environment jsdom
 import type { ReactNode } from 'react';
-import FilesModule from '../../apps/omnihub-site/dashboard/components/modules/FilesModule';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import FilesModule from '../../apps/omnihub-site/src/components/omnidash/modules/FilesModule';
 import * as useOmniModuleStateModule from '../../apps/omnihub-site/src/hooks/useOmniModuleState';
-import * as localFilesDB from '../../src/lib/localFilesDB';
+import * as localFilesDB from '../../apps/omnihub-site/src/lib/localFilesDB';
 import { toast } from 'sonner';
 
 // Mock dependencies
@@ -13,7 +13,7 @@ vi.mock('../../apps/omnihub-site/src/hooks/useOmniModuleState', () => ({
   triggerModuleAction: vi.fn(),
 }));
 
-vi.mock('../../src/lib/localFilesDB', () => ({
+vi.mock('../../apps/omnihub-site/src/lib/localFilesDB', () => ({
   saveLocalFile: vi.fn(),
 }));
 
@@ -26,7 +26,7 @@ vi.mock('sonner', () => ({
 }));
 
 // Mock ModuleShell
-vi.mock('../../apps/omnihub-site/dashboard/components/modules/ModuleShell', () => ({
+vi.mock('../../apps/omnihub-site/src/components/omnidash/modules/ModuleShell', () => ({
   ModuleShell: ({ children }: { children: ReactNode }) => (
     <div data-testid="module-shell">{children}</div>
   ),
@@ -42,8 +42,8 @@ describe('FilesModule', () => {
       loading: false,
       stats: [
         { label: 'Storage Used', value: '14.2 GB' },
-        { label: 'Total Files', value: '1,234' },
-      ],
+        { label: 'Total Files', value: '1,234' }
+      ]
     });
   });
 
@@ -59,7 +59,7 @@ describe('FilesModule', () => {
     (useOmniModuleStateModule.useOmniModuleState as Mock).mockReturnValue({
       id: 'files',
       loading: false,
-      stats: [],
+      stats: []
     });
 
     render(<FilesModule onClose={() => {}} />);
@@ -104,10 +104,25 @@ describe('FilesModule', () => {
     (useOmniModuleStateModule.useOmniModuleState as Mock).mockReturnValue({
       id: 'files',
       loading: true,
-      stats: [],
+      stats: []
     });
 
     render(<FilesModule onClose={() => {}} />);
     expect(screen.queryByText(/Storage Usage/i)).not.toBeInTheDocument();
+  });
+
+  it('registers and cleans up the global upload trigger', () => {
+    const { container, unmount } = render(<FilesModule onClose={() => {}} />);
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(fileInput).not.toBeNull();
+    fileInput.click = vi.fn();
+
+    window.triggerOmniFilesUpload?.();
+
+    expect(fileInput.click).toHaveBeenCalled();
+
+    unmount();
+
+    expect(window.triggerOmniFilesUpload).toBeUndefined();
   });
 });
