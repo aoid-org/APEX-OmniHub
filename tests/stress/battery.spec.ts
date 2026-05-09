@@ -74,7 +74,7 @@ describe('Battery Tests - Production Stress', () => {
             updates.push(i);
             updateCount++;
             resolve();
-          }, Math.random() * 10);
+          }, (i % 10) + 1);
         });
       });
 
