@@ -12,7 +12,10 @@ vi.mock('../../../src/omnihub-gateway/TemporalBridge', () => ({
     id: request.taskId,
     sessionId: request.taskId,
     state: 'submitted',
-    artifacts: [{ id: 'artifact-1' }],
+    artifacts: [
+      { id: 'artifact-1' },
+      { id: { nested: true }, name: { nested: true } },
+    ],
     metadata: { workflowRunning: true },
     workflowId: `wf-${request.context.tenantId}-${request.taskId}`,
   })),

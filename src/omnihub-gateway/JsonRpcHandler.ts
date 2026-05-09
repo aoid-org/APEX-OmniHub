@@ -377,6 +377,17 @@ function extractTaskId(params: Record<string, unknown>): string {
   return taskId;
 }
 
+function extractArtifactId(artifact: Record<string, unknown>): string {
+  const candidate = artifact['id'] ?? artifact['name'];
+  if (typeof candidate === 'string') {
+    return candidate;
+  }
+  if (typeof candidate === 'number' || typeof candidate === 'boolean') {
+    return String(candidate);
+  }
+  return '';
+}
+
 /**
  * Register standard A2A protocol methods on a handler.
  * All task lifecycle operations are durably executed via Temporal workflows.
@@ -402,9 +413,9 @@ export function registerA2AMethods(handler: JsonRpcHandler): void {
           correlationId: context.correlationId,
           workflowId: result.workflowId,
           taskId,
-          artifactIds: result.artifacts.map((artifact) =>
-            String(artifact['id'] ?? artifact['name'] ?? ''),
-          ),
+          artifactIds: result.artifacts
+            .map(extractArtifactId)
+            .filter((artifactId) => artifactId.length > 0),
         }),
       },
     };

@@ -155,22 +155,20 @@ export function routeTasks(
  * Get a summary of routing decisions for logging/monitoring.
  */
 export function summarizeDecision(decision: RouteDecision): string {
-  const parts = [
+  const overrideParts = decision.policyOverride
+    ? [
+        `[OVERRIDE: ${decision.policyOverride.rule.id}]`,
+        `[${decision.policyOverride.rule.description}]`,
+      ]
+    : [];
+  const fallbackParts = decision.usedFallback ? ['[FALLBACK]'] : [];
+
+  return [
     `[${decision.decisionId}]`,
     `→ ${decision.target}`,
     `(score=${decision.score.depthScore}, domain=${decision.score.domain})`,
-  ];
-
-  if (decision.policyOverride) {
-    parts.push(`[OVERRIDE: ${decision.policyOverride.rule.id}]`);
-    parts.push(`[${decision.policyOverride.rule.description}]`);
-  }
-
-  if (decision.usedFallback) {
-    parts.push('[FALLBACK]');
-  }
-
-  parts.push(`$${decision.estimatedCostUsd.toFixed(4)}`);
-
-  return parts.join(' ');
+    ...overrideParts,
+    ...fallbackParts,
+    `$${decision.estimatedCostUsd.toFixed(4)}`,
+  ].join(' ');
 }
