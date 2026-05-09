@@ -12,7 +12,7 @@ class PlanningWorkflow:
         plan = await workflow.execute_activity(
             "generate_plan_with_llm",
             args=[goal, context],
-            start_to_close_timeout=timedelta(seconds=30)
+            start_to_close_timeout=timedelta(seconds=30),
         )
         return dict(plan)
 
@@ -37,4 +37,3 @@ class VerificationWorkflow:
         workflow.logger.info("Starting Verification Workflow")
         # Verification Logic
         return {"status": "verified"}
-
