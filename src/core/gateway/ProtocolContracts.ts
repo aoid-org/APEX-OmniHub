@@ -23,6 +23,16 @@ export interface PaginatedList<T> {
   readonly nextCursor?: string;
 }
 
+export interface MCPListParams {
+  readonly cursor?: unknown;
+  readonly limit?: unknown;
+}
+
+export interface PaginatedMCPList<T> {
+  readonly items: readonly T[];
+  readonly nextCursor?: string;
+}
+
 export interface MCPToolContract {
   readonly name: string;
   readonly title?: string;
@@ -100,6 +110,22 @@ export function wrapMcpListResult<T>(kind: MCPListKind, items: readonly T[], cur
   };
 }
 
+export function paginateMcpList<T>(
+  items: readonly T[],
+  params: MCPListParams,
+  defaultLimit = 100,
+): PaginatedMCPList<T> {
+  const start = coerceCursorOffset(params.cursor);
+  const limit = coerceListLimit(params.limit, defaultLimit);
+  const page = items.slice(start, start + limit);
+  const nextOffset = start + page.length;
+
+  return {
+    items: page,
+    ...(nextOffset < items.length ? { nextCursor: String(nextOffset) } : {}),
+  };
+}
+
 export function unwrapMcpListResult<T>(result: unknown, kind: MCPListKind): PaginatedList<T> {
   if (Array.isArray(result)) {
     return { items: result as T[] };
@@ -133,6 +159,23 @@ export function deriveTraceMeta(input: {
     approvalId: input.approvalId,
     artifactIds: input.artifactIds ?? [],
   };
+}
+
+function coerceCursorOffset(cursor: unknown): number {
+  if (typeof cursor !== 'string' || cursor.length === 0) {
+    return 0;
+  }
+
+  const parsed = Number.parseInt(cursor, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function coerceListLimit(limit: unknown, fallback: number): number {
+  if (typeof limit !== 'number' || !Number.isFinite(limit)) {
+    return fallback;
+  }
+
+  return Math.max(1, Math.min(Math.floor(limit), 100));
 }
 
 function isSupportedMcpProtocolVersion(version: string): boolean {

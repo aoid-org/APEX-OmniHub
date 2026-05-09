@@ -29,6 +29,7 @@ import {
 import {
   buildMcpInitializeResult,
   deriveTraceMeta,
+  paginateMcpList,
   wrapMcpListResult,
 } from '../core/gateway/ProtocolContracts';
 import {
@@ -37,6 +38,9 @@ import {
   queryA2ATask,
   cancelA2ATask,
 } from './TemporalBridge';
+import { MCPHostManager } from '../core/mcp/MCPHostManager';
+import type { MCPToolSchema } from '../core/mcp/MCPToolDiscovery';
+import type { MCPPrompt, MCPResource } from '../core/mcp/MCPSessionManager';
 
 // ============================================================================
 // Method Handler Interface
@@ -185,6 +189,83 @@ export class JsonRpcMethodError extends Error {
 }
 
 // ============================================================================
+// MCP Registry Provider
+// ============================================================================
+
+export interface MCPRegistryProvider {
+  readonly listTools: () => readonly MCPToolSchema[];
+  readonly listResources: () => readonly MCPResource[];
+  readonly listPrompts: () => readonly MCPPrompt[];
+}
+
+function createMCPHostRegistryProvider(): MCPRegistryProvider {
+  const host = MCPHostManager.getInstance();
+  return {
+    listTools: () => host.discovery.getAllTools(),
+    listResources: () => Array.from(host.resources.values()).flat(),
+    listPrompts: () => Array.from(host.prompts.values()).flat(),
+  };
+}
+
+function toMcpTool(tool: MCPToolSchema): Record<string, unknown> {
+  return {
+    name: tool.name,
+    description: tool.description,
+    inputSchema: parametersToInputSchema(tool.parameters),
+    _meta: {
+      serverId: tool.serverId,
+      riskLevel: tool.riskLevel,
+    },
+  };
+}
+
+function toMcpResource(resource: MCPResource): Record<string, unknown> {
+  return {
+    uri: resource.uri,
+    name: resource.name,
+    description: resource.description,
+    ...(resource.mimeType ? { mimeType: resource.mimeType } : {}),
+    _meta: { serverId: resource.serverId },
+  };
+}
+
+function toMcpPrompt(prompt: MCPPrompt): Record<string, unknown> {
+  return {
+    name: prompt.name,
+    description: prompt.description,
+    arguments: prompt.arguments.map((argument) => ({
+      name: argument.name,
+      description: argument.description,
+      required: argument.required,
+    })),
+    _meta: { serverId: prompt.serverId },
+  };
+}
+
+function parametersToInputSchema(
+  parameters: MCPToolSchema['parameters'],
+): Record<string, unknown> {
+  const properties: Record<string, Record<string, unknown>> = {};
+  const required: string[] = [];
+
+  for (const parameter of parameters) {
+    properties[parameter.name] = {
+      type: parameter.type || 'string',
+      description: parameter.description,
+    };
+    if (parameter.required) {
+      required.push(parameter.name);
+    }
+  }
+
+  return {
+    type: 'object',
+    properties,
+    ...(required.length > 0 ? { required } : {}),
+  };
+}
+
+// ============================================================================
 // MCP Protocol Methods — Live Temporal Bindings
 // ============================================================================
 
@@ -192,16 +273,20 @@ export class JsonRpcMethodError extends Error {
  * Register standard MCP protocol methods on a handler.
  * All stateful operations dispatch through Temporal workflows.
  */
-export function registerMCPMethods(handler: JsonRpcHandler): void {
+export function registerMCPMethods(
+  handler: JsonRpcHandler,
+  registry: MCPRegistryProvider = createMCPHostRegistryProvider(),
+): void {
   // MCP initialize — capability negotiation (stateless, no Temporal needed)
   handler.registerMethod('initialize', async (params) =>
     buildMcpInitializeResult(params['protocolVersion']),
   );
 
   // MCP tools/list — enumerate available tools (stateless registry read)
-  handler.registerMethod('tools/list', async (params) =>
-    wrapMcpListResult('tools', [], params['cursor']),
-  );
+  handler.registerMethod('tools/list', async (params) => {
+    const page = paginateMcpList(registry.listTools().map(toMcpTool), params);
+    return wrapMcpListResult('tools', page.items, page.nextCursor);
+  });
 
   // MCP tools/call — execute a tool via Temporal durable workflow
   handler.registerMethod('tools/call', async (params, context) => {
@@ -233,9 +318,10 @@ export function registerMCPMethods(handler: JsonRpcHandler): void {
   });
 
   // MCP resources/list — stateless registry read
-  handler.registerMethod('resources/list', async (params) =>
-    wrapMcpListResult('resources', [], params['cursor']),
-  );
+  handler.registerMethod('resources/list', async (params) => {
+    const page = paginateMcpList(registry.listResources().map(toMcpResource), params);
+    return wrapMcpListResult('resources', page.items, page.nextCursor);
+  });
 
   // MCP resources/read — stateless resource fetch
   handler.registerMethod('resources/read', async (params) => {
@@ -249,9 +335,10 @@ export function registerMCPMethods(handler: JsonRpcHandler): void {
   });
 
   // MCP prompts/list — stateless registry read
-  handler.registerMethod('prompts/list', async (params) =>
-    wrapMcpListResult('prompts', [], params['cursor']),
-  );
+  handler.registerMethod('prompts/list', async (params) => {
+    const page = paginateMcpList(registry.listPrompts().map(toMcpPrompt), params);
+    return wrapMcpListResult('prompts', page.items, page.nextCursor);
+  });
 }
 
 // ============================================================================

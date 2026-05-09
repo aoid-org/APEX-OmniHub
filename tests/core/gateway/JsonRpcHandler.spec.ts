@@ -68,33 +68,142 @@ describe('JsonRpcHandler MCP/A2A protocol bindings', () => {
     });
   });
 
-  it('returns MCP list envelopes with pagination-ready cursors', async () => {
+  it('returns MCP registry-backed list envelopes with pagination-ready cursors', async () => {
     const { JsonRpcHandler, registerMCPMethods } = await import(
       '../../../src/omnihub-gateway/JsonRpcHandler'
     );
     const handler = new JsonRpcHandler();
-    registerMCPMethods(handler);
+    registerMCPMethods(handler, {
+      listTools: () => [
+        {
+          name: 'docs.search',
+          description: 'Search docs',
+          serverId: 'docs-server',
+          parameters: [
+            { name: 'query', type: 'string', description: 'Search query', required: true },
+          ],
+          riskLevel: 'read',
+        },
+        {
+          name: 'docs.update',
+          description: 'Update docs',
+          serverId: 'docs-server',
+          parameters: [],
+          riskLevel: 'write',
+        },
+      ],
+      listResources: () => [{
+        uri: 'resource://docs/1',
+        name: 'Doc 1',
+        description: 'First document',
+        mimeType: 'text/plain',
+        serverId: 'docs-server',
+      }],
+      listPrompts: () => [{
+        name: 'summarize',
+        description: 'Summarize a topic',
+        serverId: 'docs-server',
+        arguments: [{ name: 'topic', description: 'Topic', required: true }],
+      }],
+    });
 
     await expect(handler.handle({
       jsonrpc: '2.0',
       id: 'tools',
       method: 'tools/list',
-      params: { cursor: 'next-tools' },
-    }, context)).resolves.toMatchObject({ result: { tools: [], nextCursor: 'next-tools' } });
+      params: { limit: 1 },
+    }, context)).resolves.toMatchObject({
+      result: {
+        tools: [{
+          name: 'docs.search',
+          inputSchema: {
+            properties: { query: { type: 'string', description: 'Search query' } },
+            required: ['query'],
+          },
+          _meta: { serverId: 'docs-server', riskLevel: 'read' },
+        }],
+        nextCursor: '1',
+      },
+    });
 
     await expect(handler.handle({
       jsonrpc: '2.0',
       id: 'resources',
       method: 'resources/list',
       params: {},
-    }, context)).resolves.toMatchObject({ result: { resources: [] } });
+    }, context)).resolves.toMatchObject({
+      result: {
+        resources: [{ uri: 'resource://docs/1', _meta: { serverId: 'docs-server' } }],
+      },
+    });
 
     await expect(handler.handle({
       jsonrpc: '2.0',
       id: 'prompts',
       method: 'prompts/list',
       params: {},
-    }, context)).resolves.toMatchObject({ result: { prompts: [] } });
+    }, context)).resolves.toMatchObject({
+      result: {
+        prompts: [{ name: 'summarize', arguments: [{ name: 'topic', required: true }] }],
+      },
+    });
+  });
+
+
+
+  it('uses MCPHostManager caches as the default public registry source', async () => {
+    const { MCPHostManager } = await import('../../../src/core/mcp/MCPHostManager');
+    const { JsonRpcHandler, registerMCPMethods } = await import(
+      '../../../src/omnihub-gateway/JsonRpcHandler'
+    );
+    MCPHostManager.resetInstance();
+    const host = MCPHostManager.getInstance();
+    host.discovery.registerTools('host-server', [{
+      name: 'host.lookup',
+      description: 'Lookup from host cache',
+      serverId: 'host-server',
+      parameters: [],
+      riskLevel: 'read',
+    }]);
+    host.resources.set('host-server', [{
+      uri: 'resource://host/1',
+      name: 'Host Resource',
+      description: 'Cached resource',
+      serverId: 'host-server',
+    }]);
+    host.prompts.set('host-server', [{
+      name: 'host_prompt',
+      description: 'Cached prompt',
+      serverId: 'host-server',
+      arguments: [],
+    }]);
+
+    const handler = new JsonRpcHandler();
+    registerMCPMethods(handler);
+
+    await expect(handler.handle({
+      jsonrpc: '2.0',
+      id: 'host-tools',
+      method: 'tools/list',
+      params: {},
+    }, context)).resolves.toMatchObject({ result: { tools: [{ name: 'host.lookup' }] } });
+
+    await expect(handler.handle({
+      jsonrpc: '2.0',
+      id: 'host-resources',
+      method: 'resources/list',
+      params: {},
+    }, context)).resolves.toMatchObject({
+      result: { resources: [{ uri: 'resource://host/1' }] },
+    });
+
+    await expect(handler.handle({
+      jsonrpc: '2.0',
+      id: 'host-prompts',
+      method: 'prompts/list',
+      params: {},
+    }, context)).resolves.toMatchObject({ result: { prompts: [{ name: 'host_prompt' }] } });
+    MCPHostManager.resetInstance();
   });
 
   it('registers canonical A2A methods and isolates legacy aliases', async () => {

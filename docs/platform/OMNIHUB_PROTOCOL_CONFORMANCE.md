@@ -1,8 +1,8 @@
 # OmniHub Protocol Conformance Matrix
 
-**Document version:** 2026.05.09  
-**Repository version:** 1.6.0  
-**Last updated:** 2026-05-09  
+**Document version:** 2026.05.09.1
+**Repository version:** 1.6.0
+**Last updated:** 2026-05-09
 **Scope:** `src/omnihub-gateway/`, `src/core/mcp/`, `src/core/gateway/`, and their focused tests.
 
 ## Internal Engineering Delta Report
@@ -36,13 +36,13 @@ This layer intentionally does not own transport, policy, registry, execution, or
 | Capability | Implemented behavior | Remaining gap |
 | --- | --- | --- |
 | `initialize` | Negotiates supported versions and returns server capabilities, server info, and instructions. | Full lifecycle state enforcement for `notifications/initialized` remains transport/session-level future work. |
-| `tools/list` | Returns `{ tools, nextCursor? }`; accepts cursor for pagination-ready semantics. | Backing registry is currently empty in the public gateway handler. |
-| `resources/list` | Returns `{ resources, nextCursor? }`; accepts cursor for pagination-ready semantics. | Backing registry is currently empty in the public gateway handler. |
-| `prompts/list` | Returns `{ prompts, nextCursor? }`; accepts cursor for pagination-ready semantics. | Backing registry is currently empty in the public gateway handler. |
+| `tools/list` | Returns `{ tools, nextCursor? }` from existing `MCPHostManager` discovery cache with bounded pagination. | None for cache-backed list exposure; cache population still depends on configured MCP server connections. |
+| `resources/list` | Returns `{ resources, nextCursor? }` from existing `MCPHostManager` resource cache with bounded pagination. | None for cache-backed list exposure; cache population still depends on configured MCP server connections. |
+| `prompts/list` | Returns `{ prompts, nextCursor? }` from existing `MCPHostManager` prompt cache with bounded pagination. | None for cache-backed list exposure; cache population still depends on configured MCP server connections. |
 | `resources/read` | Returns `contents` array with URI, MIME type, and text. | Resource content storage remains outside this gateway handler. |
 | `tools/call` | Executes through the existing Temporal bridge and returns MCP content, `isError`, and trace metadata. | Structured output schemas are not advertised until backing tool registry metadata exists. |
 | HTTP protocol header | MCP transports attach `MCP-Protocol-Version`. | Per-session negotiated header variation is not persisted yet; current header uses the gateway-supported default. |
-| Host discovery | Parses standards-wrapped list envelopes and legacy bare arrays. | Pagination iteration is parser-ready but does not yet fetch subsequent pages. |
+| Host discovery | Parses standards-wrapped list envelopes and legacy bare arrays; public gateway lists now expose cached discovery data. | Pagination iteration for upstream server discovery is parser-ready but does not yet fetch subsequent upstream pages. |
 
 ## A2A Conformance Matrix
 
@@ -68,9 +68,12 @@ This layer intentionally does not own transport, policy, registry, execution, or
 
 Focused validation added or updated:
 
-- MCP initialize negotiation and list envelope tests.
+- MCP initialize negotiation, registry-backed list envelope, and bounded pagination tests.
 - MCP host discovery parsing for wrapped list envelopes and `inputSchema`-derived parameters.
 - MCP tool invocation path test coverage for approval gating and audit emission.
 - A2A canonical method registration and legacy alias behavior tests.
 - Deterministic routing explanation assertion.
 
+## Gap Decision — 2026-05-09
+
+Gateway-facing MCP registry data was implemented before lifecycle `notifications/initialized` enforcement. This order was selected because it reuses the existing `MCPHostManager` discovery/session caches, removes empty public list responses, and avoids introducing new session state into the stateless JSON-RPC gateway. Lifecycle enforcement remains the next MCP hardening target because it requires coordinated per-session transport state rather than only cache projection.

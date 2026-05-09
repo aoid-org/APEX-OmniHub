@@ -55,6 +55,7 @@ export {
   registerMCPMethods,
   registerA2AMethods,
   type MethodHandler,
+  type MCPRegistryProvider,
 } from './JsonRpcHandler';
 
 // SSE Manager
