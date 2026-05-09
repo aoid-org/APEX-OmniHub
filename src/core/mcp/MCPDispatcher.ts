@@ -22,6 +22,7 @@ import type {
   BridgeRiskLevel,
 } from './MCPHostManager';
 import { ToolInvocationSchema } from './MCPHostManager';
+import { deriveTraceMeta } from '../gateway/ProtocolContracts';
 
 // ============================================================================
 // Dispatcher
@@ -66,12 +67,16 @@ export class MCPDispatcher {
   ): Promise<ToolResult> {
     const startTime = Date.now();
     const parsed = ToolInvocationSchema.parse(invocation);
+    const traceMeta = deriveTraceMeta({ correlationId: parsed.correlationId });
 
     // 1. Look up tool
     const tool = discovery.getTool(parsed.toolName);
     if (!tool) {
       this.emitAudit({
         correlationId: parsed.correlationId,
+        requestId: traceMeta.requestId,
+        workflowId: traceMeta.workflowId,
+        approvalId: traceMeta.approvalId,
         toolName: parsed.toolName,
         serverId: 'unknown',
         riskLevel: 'read',
@@ -90,10 +95,10 @@ export class MCPDispatcher {
       };
     }
 
-    const riskLevel: BridgeRiskLevel = tool.riskLevel ?? 'read';
+    const riskLevel = resolveEffectiveRiskLevel(parsed.toolName, tool.riskLevel ?? 'read');
 
     // 2. Approval gate for risky operations
-    if (discovery.requiresApproval(parsed.toolName)) {
+    if (riskLevel !== 'read' || discovery.requiresApproval(parsed.toolName)) {
       const approved = await this.requestApproval({
         toolName: parsed.toolName,
         params: parsed.params,
@@ -104,6 +109,9 @@ export class MCPDispatcher {
       if (!approved) {
         this.emitAudit({
           correlationId: parsed.correlationId,
+          requestId: traceMeta.requestId,
+          workflowId: traceMeta.workflowId,
+          approvalId: traceMeta.approvalId,
           toolName: parsed.toolName,
           serverId: tool.serverId,
           riskLevel,
@@ -128,6 +136,9 @@ export class MCPDispatcher {
     if (transport?.status !== 'connected') {
       this.emitAudit({
         correlationId: parsed.correlationId,
+        requestId: traceMeta.requestId,
+        workflowId: traceMeta.workflowId,
+        approvalId: traceMeta.approvalId,
         toolName: parsed.toolName,
         serverId: tool.serverId,
         riskLevel,
@@ -150,8 +161,11 @@ export class MCPDispatcher {
       const response = await transport.send({
         jsonrpc: '2.0',
         id: parsed.correlationId,
-        method: `tools/${parsed.toolName}`,
-        params: parsed.params,
+        method: 'tools/call',
+        params: {
+          name: parsed.toolName,
+          arguments: parsed.params,
+        },
       });
 
       const success = !response.error;
@@ -173,6 +187,9 @@ export class MCPDispatcher {
       // 4. Persist audit entry
       this.emitAudit({
         correlationId: parsed.correlationId,
+        requestId: traceMeta.requestId,
+        workflowId: traceMeta.workflowId,
+        approvalId: traceMeta.approvalId,
         toolName: parsed.toolName,
         serverId: tool.serverId,
         riskLevel,
@@ -189,6 +206,9 @@ export class MCPDispatcher {
         err instanceof Error ? err.message : 'Tool invocation failed';
       this.emitAudit({
         correlationId: parsed.correlationId,
+        requestId: traceMeta.requestId,
+        workflowId: traceMeta.workflowId,
+        approvalId: traceMeta.approvalId,
         toolName: parsed.toolName,
         serverId: tool.serverId,
         riskLevel,
@@ -233,4 +253,19 @@ export class MCPDispatcher {
       // Audit persistence failures are silent — never block the pipeline
     }
   }
+}
+
+
+function resolveEffectiveRiskLevel(
+  toolName: string,
+  declaredRiskLevel: BridgeRiskLevel,
+): BridgeRiskLevel {
+  const normalized = toolName.toLowerCase();
+  if (/delete|destroy|drop|purge|revoke/.test(normalized)) {
+    return 'destructive';
+  }
+  if (/create|update|insert|modify|write|approve|execute/.test(normalized)) {
+    return declaredRiskLevel === 'destructive' ? 'destructive' : 'write';
+  }
+  return declaredRiskLevel;
 }

@@ -19,6 +19,7 @@
  */
 
 import { z } from 'zod';
+import { MCP_PROTOCOL_VERSION } from '../gateway/ProtocolContracts';
 import type { MCPTransportType } from './mcp.config';
 
 // ============================================================================
@@ -158,7 +159,10 @@ export class StdioTransport implements MCPTransport {
 
   /** Get auth headers for proxy requests */
   private getAuthHeaders(): Record<string, string> {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'MCP-Protocol-Version': MCP_PROTOCOL_VERSION,
+    };
     // Inject Supabase auth token if available (set by session management)
     if (typeof globalThis !== 'undefined' && '_supabaseAuthToken' in globalThis) {
       const token = (globalThis as Record<string, unknown>)['_supabaseAuthToken'];
@@ -280,6 +284,7 @@ export class StreamableHTTPTransport implements MCPTransport {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'MCP-Protocol-Version': MCP_PROTOCOL_VERSION,
           ...this.headers,
         },
         body: JSON.stringify(request),

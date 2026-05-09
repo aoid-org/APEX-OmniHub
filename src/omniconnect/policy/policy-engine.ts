@@ -112,27 +112,32 @@ export class PolicyEngine {
     return !hasMatch(deny) && (allow.length === 0 || hasMatch(allow));
   }
 
+  // ⚡ Bolt: Define regex outside function scope so we only compile once
+  private static readonly PII_REGEX = new RegExp(['email', 'phone', 'ssn', 'address', 'name', 'user_email', 'phoneNumber'].join('|'), 'i');
+  private static readonly EMOTIONAL_REGEX = new RegExp(['sentiment', 'emotion', 'mood', 'emotional', 'score', 'mood_score'].join('|'), 'i');
+
   private transform(event: CanonicalEvent, profile: AppFilterProfile): CanonicalEvent {
     const clone: CanonicalEvent = JSON.parse(JSON.stringify(event));
 
     const rules = [
       {
         enabled: profile.piiHandling !== 'allow',
-        keys: ['email', 'phone', 'ssn', 'address', 'name', 'user_email', 'phoneNumber'],
+        // ⚡ Bolt: Pre-compiled regex lookup is O(1) compared to O(N) array search inside object traversal. Reduces deep recursive overhead.
+        keysRegex: PolicyEngine.PII_REGEX,
         apply: (o: Record<string, unknown>, k: string) => {
           o[k] = profile.piiHandling === 'redact' ? '[REDACTED]' : '***';
         }
       },
       {
         enabled: !profile.emotionalDataEnabled,
-        keys: ['sentiment', 'emotion', 'mood', 'emotional', 'score', 'mood_score'],
+        keysRegex: PolicyEngine.EMOTIONAL_REGEX,
         apply: (o: Record<string, unknown>, k: string) => { delete o[k]; }
       }
     ];
 
     rules.forEach(r => {
       if (r.enabled) {
-        const check = (k: string) => r.keys.some(f => k.toLowerCase().includes(f.toLowerCase()));
+        const check = (k: string) => r.keysRegex.test(k);
         [clone.payload, clone.metadata].forEach(p => this.walk(p as Record<string, unknown>, check, r.apply));
       }
     });

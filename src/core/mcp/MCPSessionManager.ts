@@ -14,6 +14,7 @@ import type { MCPServerRegistry } from './MCPServerRegistry';
 import { MCPToolDiscovery, type MCPToolSchema } from './MCPToolDiscovery';
 import type { MCPTransport } from './MCPTransport';
 import type { BridgeRiskLevel } from './MCPHostManager';
+import { unwrapMcpListResult } from '../gateway/ProtocolContracts';
 
 // ============================================================================
 // Types
@@ -182,8 +183,10 @@ export class MCPSessionManager {
       });
 
       if (!response || response.error || !response.result) return [];
-      const tools = response.result;
-      if (!Array.isArray(tools)) return [];
+      const { items: tools } = unwrapMcpListResult<Record<string, unknown>>(
+        response.result,
+        'tools',
+      );
 
       return tools
         .filter((t): t is Record<string, unknown> => typeof t === 'object' && t !== null)
@@ -191,14 +194,7 @@ export class MCPSessionManager {
           name: coerceUnknownToString(t['name']),
           description: coerceUnknownToString(t['description']),
           serverId,
-          parameters: Array.isArray(t['parameters'])
-            ? (t['parameters'] as Array<Record<string, unknown>>).map((p) => ({
-                name: coerceUnknownToString(p['name']),
-                type: coerceUnknownToString(p['type'], 'string'),
-                description: coerceUnknownToString(p['description']),
-                required: Boolean(p['required']),
-              }))
-            : [],
+          parameters: coerceToolParameters(t),
           riskLevel: (t['riskLevel'] as BridgeRiskLevel) ?? 'read',
         }))
         .filter((t) => t.name.length > 0);
@@ -218,8 +214,10 @@ export class MCPSessionManager {
       });
 
       if (!response || response.error || !response.result) return [];
-      const items = response.result;
-      if (!Array.isArray(items)) return [];
+      const { items } = unwrapMcpListResult<Record<string, unknown>>(
+        response.result,
+        'resources',
+      );
 
       return items
         .filter((r): r is Record<string, unknown> => typeof r === 'object' && r !== null)
@@ -247,8 +245,10 @@ export class MCPSessionManager {
       });
 
       if (!response || response.error || !response.result) return [];
-      const items = response.result;
-      if (!Array.isArray(items)) return [];
+      const { items } = unwrapMcpListResult<Record<string, unknown>>(
+        response.result,
+        'prompts',
+      );
 
       return items
         .filter((p): p is Record<string, unknown> => typeof p === 'object' && p !== null)
@@ -280,4 +280,38 @@ function coerceUnknownToString(value: unknown, fallback = ''): string {
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (value === null || value === undefined) return fallback;
   return fallback;
+}
+
+function coerceToolParameters(
+  tool: Record<string, unknown>,
+): Array<{ name: string; type: string; description: string; required: boolean }> {
+  if (Array.isArray(tool['parameters'])) {
+    return (tool['parameters'] as Array<Record<string, unknown>>).map((parameter) => ({
+      name: coerceUnknownToString(parameter['name']),
+      type: coerceUnknownToString(parameter['type'], 'string'),
+      description: coerceUnknownToString(parameter['description']),
+      required: Boolean(parameter['required']),
+    }));
+  }
+
+  const inputSchema = tool['inputSchema'];
+  if (typeof inputSchema !== 'object' || inputSchema === null) {
+    return [];
+  }
+
+  const schema = inputSchema as Record<string, unknown>;
+  const properties = schema['properties'];
+  const required = Array.isArray(schema['required']) ? schema['required'].map(String) : [];
+  if (typeof properties !== 'object' || properties === null) {
+    return [];
+  }
+
+  return Object.entries(properties as Record<string, Record<string, unknown>>).map(
+    ([name, property]) => ({
+      name,
+      type: coerceUnknownToString(property['type'], 'string'),
+      description: coerceUnknownToString(property['description']),
+      required: required.includes(name),
+    }),
+  );
 }

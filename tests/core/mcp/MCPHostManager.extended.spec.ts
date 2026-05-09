@@ -313,3 +313,90 @@ describe('MCPHostManager extended', () => {
     );
   });
 });
+
+describe('MCPHostManager canonical list discovery', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    MCPHostManager.resetInstance();
+  });
+
+  afterEach(async () => {
+    const host = MCPHostManager.getInstance();
+    await host.disconnectServer('test-server').catch(() => undefined);
+    MCPHostManager.resetInstance();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('parses wrapped MCP list envelopes and tool inputSchema parameters', async () => {
+    const host = MCPHostManager.getInstance();
+    host.initialize(makeConfig(['tools', 'resources', 'prompts']));
+
+    const transport: MutableTransport = {
+      status: 'disconnected',
+      type: 'stdio',
+      connect: async () => {
+        transport.status = 'connected';
+      },
+      disconnect: async () => {
+        transport.status = 'disconnected';
+      },
+      send: async (request) => {
+        if (request.method === 'tools/list') {
+          return {
+            jsonrpc: '2.0',
+            id: request.id,
+            result: {
+              tools: [{
+                name: 'search_docs',
+                description: 'Search documents',
+                inputSchema: {
+                  type: 'object',
+                  properties: { query: { type: 'string', description: 'Query' } },
+                  required: ['query'],
+                },
+                riskLevel: 'read',
+              }],
+              nextCursor: 'next-tool-page',
+            },
+          };
+        }
+        if (request.method === 'resources/list') {
+          return {
+            jsonrpc: '2.0',
+            id: request.id,
+            result: {
+              resources: [{ uri: 'resource://1', name: 'Resource 1', description: 'desc' }],
+              nextCursor: 'next-resource-page',
+            },
+          };
+        }
+        if (request.method === 'prompts/list') {
+          return {
+            jsonrpc: '2.0',
+            id: request.id,
+            result: {
+              prompts: [{ name: 'prompt-1', description: 'Prompt 1', arguments: [] }],
+              nextCursor: 'next-prompt-page',
+            },
+          };
+        }
+        return { jsonrpc: '2.0', id: request.id, result: 'pong' };
+      },
+    };
+
+    (
+      host as unknown as {
+        transports: Map<string, MutableTransport>;
+      }
+    ).transports.set('test-server', transport);
+
+    await host.connectServer('test-server');
+
+    expect(host.discovery.getTool('search_docs')?.parameters).toEqual([
+      { name: 'query', type: 'string', description: 'Query', required: true },
+    ]);
+    expect(host.resources.get('test-server')).toHaveLength(1);
+    expect(host.prompts.get('test-server')).toHaveLength(1);
+  });
+});
