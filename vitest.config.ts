@@ -7,12 +7,30 @@ import path from 'node:path';
 const enableCoverage = process.env.VITEST_COVERAGE === 'true';
 
 export default defineConfig({
-  plugins: [],
+  plugins: [
+    // Resolve @/ to apps/omnihub-site/src/ when the importer is inside the omnihub-site app.
+    // This ensures vitest processes omnihub-site components with the correct alias context,
+    // matching the vi.mock() paths used in tests (which also resolve relative to omnihub-site/src).
+    {
+      name: 'omnihub-site-alias-resolver',
+      resolveId(id: string, importer: string | undefined) {
+        if (importer) {
+          const normalizedImporter = importer.replace(/\\/g, '/');
+          if (normalizedImporter.includes('apps/omnihub-site/') && id.startsWith('@/')) {
+            const appSrcRoot = path.resolve(__dirname, './apps/omnihub-site/src');
+            const newId = id.replace('@/', appSrcRoot + '/');
+            return this.resolve(newId, importer, { skipSelf: true });
+          }
+        }
+        return undefined;
+      },
+    },
+  ],
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
-    pool: 'forks', // Fix coverage race condition in CI
+    pool: enableCoverage ? 'threads' : 'forks', // Fix coverage race condition/OOM in CI
     include: [
       'tests/**/*.spec.ts',
       'tests/**/*.spec.tsx',
@@ -49,6 +67,7 @@ export default defineConfig({
     ],
     coverage: {
       enabled: enableCoverage,
+      include: ['src/**/*.ts', 'src/**/*.tsx'],
       provider: 'v8',
       reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
       reportsDirectory: './coverage',
@@ -85,22 +104,9 @@ export default defineConfig({
         // Web3/blockchain entitlements — tested via hardhat, not vitest.
         'src/lib/web3/**',
         // OmniHub Gateway — mostly integration-tested via orchestrator pytest suite.
-        // Tracer.ts and TemporalBridge.ts have unit tests; exclude everything else.
-        // (micromatch.isMatch doesn't honour negation overrides in an exclude array,
-        //  so list each excluded file explicitly rather than using a blanket glob + negation.)
-        'src/omnihub-gateway/AgentCard.ts',
-        'src/omnihub-gateway/IdempotencyManager.ts',
-        'src/omnihub-gateway/JsonRpcHandler.ts',
-        'src/omnihub-gateway/SSEManager.ts',
-        'src/omnihub-gateway/SemanticRouter.ts',
-        'src/omnihub-gateway/SupabaseIdempotencyStore.ts',
-        'src/omnihub-gateway/TokenEconomicsRouter.ts',
-        'src/omnihub-gateway/index.ts',
-        'src/omnihub-gateway/lambdaDispatchActivity.ts',
-        'src/omnihub-gateway/mcp-client.ts',
-        'src/omnihub-gateway/middleware/**',
-        'src/omnihub-gateway/router.ts',
-        'src/omnihub-gateway/types.ts',
+        // Explicitly include TemporalBridge for unit-level drift/coverage enforcement.
+        'src/omnihub-gateway/**',
+        '!src/omnihub-gateway/TemporalBridge.ts',
         // Infrastructure package — CDK stacks and Lambda workers require AWS.
         'packages/infrastructure/src/stack.ts',
         'packages/infrastructure/src/worker.ts',
@@ -133,10 +139,6 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      // INTENTIONAL SPLIT: '@' here resolves to ./src (root package code) while
-      // vite.config.ts and tsconfig.json resolve '@' to ./apps/omnihub-site/src.
-      // Tests under tests/ import root-package modules via '@/'; the app imports
-      // omnihub-site modules via '@/'. Do NOT align these — the split is load-bearing.
       'dashboard': path.resolve(__dirname, './apps/omnihub-site/dashboard'),
       '@/dashboard': path.resolve(__dirname, './apps/omnihub-site/dashboard'),
       '@': path.resolve(__dirname, './src'),
