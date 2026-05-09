@@ -539,33 +539,10 @@ class SemanticCacheService:
             params = {"LOCATION": "Paris"}
             → [{"action": "book_flight", "to": "Paris"}]
         """
-<<<<<<< Updated upstream
-        if not parameters:
-            return plan_steps
-
-        # Pre-compile regex from parameter keys for single-pass replacement
-        pattern = re.compile("|".join(re.escape(f"{{{k}}}") for k in parameters))
-
-        def _replace_func(match: re.Match[str]) -> str:
-            # Extract key from {KEY}
-            key = match.group(0)[1:-1]
-            return parameters.get(key, match.group(0))
-
-        injected = []
-        for step in plan_steps:
-            injected_step = {}
-            for key, value in step.items():
-                if isinstance(value, str):
-                    value = pattern.sub(_replace_func, value)
-                injected_step[key] = value
-            injected.append(injected_step)
-        return injected
-=======
         replacements = self._build_replacement_pairs(
             {f"{{{param_name}}}": param_value for param_name, param_value in parameters.items()}
         )
         return [self._transform_nested_values(step, replacements) for step in plan_steps]
->>>>>>> Stashed changes
 
     def _parameterize_steps(
         self, plan_steps: list[dict[str, Any]], parameters: dict[str, str]
@@ -575,39 +552,6 @@ class SemanticCacheService:
 
         This converts a concrete plan into a reusable template.
         """
-<<<<<<< Updated upstream
-        if not parameters:
-            return plan_steps
-
-        # Invert parameters: value -> {key}
-        # Sort values by length descending to match longest strings first
-        # (prevents partial matches if one parameter value is a substring of another)
-        sorted_params = sorted(
-            [(k, v) for k, v in parameters.items() if v], key=lambda x: len(x[1]), reverse=True
-        )
-
-        if not sorted_params:
-            return plan_steps
-
-        # Mapping for replacement
-        val_to_key = {v: f"{{{k}}}" for k, v in sorted_params}
-
-        # Pre-compile regex from parameter values for single-pass replacement
-        pattern = re.compile("|".join(re.escape(v) for _, v in sorted_params))
-
-        def _replace_func(match: re.Match[str]) -> str:
-            return val_to_key.get(match.group(0), match.group(0))
-
-        parameterized = []
-        for step in plan_steps:
-            param_step = {}
-            for key, value in step.items():
-                if isinstance(value, str):
-                    value = pattern.sub(_replace_func, value)
-                param_step[key] = value
-            parameterized.append(param_step)
-        return parameterized
-=======
         replacements = self._build_replacement_pairs(
             {param_value: f"{{{param_name}}}" for param_name, param_value in parameters.items()}
         )
@@ -639,7 +583,6 @@ class SemanticCacheService:
         if isinstance(value, list):
             return [self._transform_nested_values(item, replacements) for item in value]
         return value
->>>>>>> Stashed changes
 
     @staticmethod
     def _generate_plan_id(_goal: str) -> str:
