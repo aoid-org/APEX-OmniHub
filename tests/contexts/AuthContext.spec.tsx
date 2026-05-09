@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
 import { AuthProvider, useAuth } from '../../src/contexts/AuthContext';
 import { supabase } from '../../src/integrations/supabase/client';
 import * as deviceRegistry from '../../src/zero-trust/deviceRegistry';
@@ -56,15 +57,15 @@ const TestComponent = () => {
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    let onAuthChangeCallback: any = null;
-    (supabase.auth.onAuthStateChange as any).mockImplementation((cb: any) => {
-      onAuthChangeCallback = cb;
+
+    (supabase.auth.onAuthStateChange as Mock).mockImplementation(
+      (_cb: unknown) => {
       return { data: { subscription: { unsubscribe: vi.fn() } } };
-    });
-    
-    (supabase.auth.getSession as any).mockResolvedValue({
-      data: { session: null }
+      },
+    );
+
+    (supabase.auth.getSession as Mock).mockResolvedValue({
+      data: { session: null },
     });
   });
 
@@ -85,8 +86,8 @@ describe('AuthContext', () => {
   });
 
   it('renders children and handles initial session state', async () => {
-    (supabase.auth.getSession as any).mockResolvedValue({
-      data: { session: { user: { id: 'user-123' } } }
+    (supabase.auth.getSession as Mock).mockResolvedValue({
+      data: { session: { user: { id: 'user-123' } } },
     });
 
     render(
@@ -105,8 +106,8 @@ describe('AuthContext', () => {
 
   it('handles device sync when user is authenticated', async () => {
     const user = { id: 'user-456' };
-    (supabase.auth.getSession as any).mockResolvedValue({
-      data: { session: { user } }
+    (supabase.auth.getSession as Mock).mockResolvedValue({
+      data: { session: { user } },
     });
 
     render(
@@ -128,8 +129,8 @@ describe('AuthContext', () => {
 
   it('handles sign out correctly', async () => {
     const user = { id: 'user-789' };
-    (supabase.auth.getSession as any).mockResolvedValue({
-      data: { session: { user } }
+    (supabase.auth.getSession as Mock).mockResolvedValue({
+      data: { session: { user } },
     });
 
     render(
@@ -158,16 +159,16 @@ describe('AuthContext', () => {
 
   it('displays MFA challenge when device is not trusted', async () => {
     const user = { id: 'user-mfa' };
-    (supabase.auth.getSession as any).mockResolvedValue({
-      data: { session: { user } }
+    (supabase.auth.getSession as Mock).mockResolvedValue({
+      data: { session: { user } },
     });
     
     // Force localStorage to have a device_id so MFA check runs
     localStorage.setItem('device_id', 'test-device');
     
-    (deviceRegistry.isDeviceAuthorized as any).mockReturnValue({
+    (deviceRegistry.isDeviceAuthorized as Mock).mockReturnValue({
       authorized: false,
-      reason: 'untrusted'
+      reason: 'untrusted',
     });
 
     render(

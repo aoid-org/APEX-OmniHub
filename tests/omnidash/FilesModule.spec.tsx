@@ -1,5 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
+import type { ReactNode } from 'react';
 import FilesModule from '../../../../apps/omnihub-site/src/components/omnidash/modules/FilesModule';
 import * as useOmniModuleStateModule from '../../../../src/hooks/useOmniModuleState';
 import * as localFilesDB from '../../../../src/lib/localFilesDB';
@@ -25,7 +27,9 @@ vi.mock('sonner', () => ({
 
 // Mock ModuleShell
 vi.mock('../../../../apps/omnihub-site/src/components/omnidash/modules/ModuleShell', () => ({
-  ModuleShell: ({ children }: any) => <div data-testid="module-shell">{children}</div>,
+  ModuleShell: ({ children }: { children: ReactNode }) => (
+    <div data-testid="module-shell">{children}</div>
+  ),
 }));
 
 describe('FilesModule', () => {
@@ -33,13 +37,13 @@ describe('FilesModule', () => {
     vi.clearAllMocks();
     
     // Default state mock
-    (useOmniModuleStateModule.useOmniModuleState as any).mockReturnValue({
+    (useOmniModuleStateModule.useOmniModuleState as Mock).mockReturnValue({
       id: 'files',
       loading: false,
       stats: [
         { label: 'Storage Used', value: '14.2 GB' },
-        { label: 'Total Files', value: '1,234' }
-      ]
+        { label: 'Total Files', value: '1,234' },
+      ],
     });
   });
 
@@ -52,10 +56,10 @@ describe('FilesModule', () => {
   });
 
   it('handles missing stats gracefully', () => {
-    (useOmniModuleStateModule.useOmniModuleState as any).mockReturnValue({
+    (useOmniModuleStateModule.useOmniModuleState as Mock).mockReturnValue({
       id: 'files',
       loading: false,
-      stats: []
+      stats: [],
     });
 
     render(<FilesModule onClose={() => {}} />);
@@ -64,7 +68,7 @@ describe('FilesModule', () => {
   });
 
   it('handles file upload successfully', async () => {
-    (localFilesDB.saveLocalFile as any).mockResolvedValue(true);
+    (localFilesDB.saveLocalFile as Mock).mockResolvedValue(true);
     
     const { container } = render(<FilesModule onClose={() => {}} />);
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
@@ -83,7 +87,7 @@ describe('FilesModule', () => {
 
   it('handles file upload failure', async () => {
     const error = new Error('Storage full');
-    (localFilesDB.saveLocalFile as any).mockRejectedValue(error);
+    (localFilesDB.saveLocalFile as Mock).mockRejectedValue(error);
     
     const { container } = render(<FilesModule onClose={() => {}} />);
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
@@ -97,10 +101,10 @@ describe('FilesModule', () => {
   });
 
   it('does not render stats when loading', () => {
-    (useOmniModuleStateModule.useOmniModuleState as any).mockReturnValue({
+    (useOmniModuleStateModule.useOmniModuleState as Mock).mockReturnValue({
       id: 'files',
       loading: true,
-      stats: []
+      stats: [],
     });
 
     render(<FilesModule onClose={() => {}} />);
