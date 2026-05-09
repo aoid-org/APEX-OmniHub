@@ -107,6 +107,9 @@ export type ApprovalCallback = (
 
 export interface AuditEntry {
   readonly correlationId: string;
+  readonly requestId?: string;
+  readonly workflowId?: string;
+  readonly approvalId?: string;
   readonly toolName: string;
   readonly serverId: string;
   readonly riskLevel: BridgeRiskLevel;

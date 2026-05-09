@@ -27,6 +27,11 @@ import {
   type GatewayContext,
 } from './types';
 import {
+  buildMcpInitializeResult,
+  deriveTraceMeta,
+  wrapMcpListResult,
+} from '../core/gateway/ProtocolContracts';
+import {
   executeToolViaWorkflow,
   dispatchA2ATask,
   queryA2ATask,
@@ -189,23 +194,14 @@ export class JsonRpcMethodError extends Error {
  */
 export function registerMCPMethods(handler: JsonRpcHandler): void {
   // MCP initialize — capability negotiation (stateless, no Temporal needed)
-  handler.registerMethod('initialize', async () => ({
-    protocolVersion: '2025-03-26',
-    capabilities: {
-      tools: { listChanged: true },
-      resources: { subscribe: true, listChanged: true },
-      prompts: { listChanged: true },
-    },
-    serverInfo: {
-      name: 'omnihub-gateway',
-      version: '1.0.0',
-    },
-  }));
+  handler.registerMethod('initialize', async (params) =>
+    buildMcpInitializeResult(params['protocolVersion']),
+  );
 
   // MCP tools/list — enumerate available tools (stateless registry read)
-  handler.registerMethod('tools/list', async () => ({
-    tools: [],
-  }));
+  handler.registerMethod('tools/list', async (params) =>
+    wrapMcpListResult('tools', [], params['cursor']),
+  );
 
   // MCP tools/call — execute a tool via Temporal durable workflow
   handler.registerMethod('tools/call', async (params, context) => {
@@ -226,16 +222,20 @@ export function registerMCPMethods(handler: JsonRpcHandler): void {
       content: result.content,
       isError: result.isError,
       _meta: {
-        workflowId: result.workflowId,
+        ...deriveTraceMeta({
+          requestId: context.requestId,
+          correlationId: context.correlationId,
+          workflowId: result.workflowId,
+        }),
         durationMs: result.durationMs,
       },
     };
   });
 
   // MCP resources/list — stateless registry read
-  handler.registerMethod('resources/list', async () => ({
-    resources: [],
-  }));
+  handler.registerMethod('resources/list', async (params) =>
+    wrapMcpListResult('resources', [], params['cursor']),
+  );
 
   // MCP resources/read — stateless resource fetch
   handler.registerMethod('resources/read', async (params) => {
@@ -249,9 +249,9 @@ export function registerMCPMethods(handler: JsonRpcHandler): void {
   });
 
   // MCP prompts/list — stateless registry read
-  handler.registerMethod('prompts/list', async () => ({
-    prompts: [],
-  }));
+  handler.registerMethod('prompts/list', async (params) =>
+    wrapMcpListResult('prompts', [], params['cursor']),
+  );
 }
 
 // ============================================================================
@@ -265,7 +265,7 @@ type A2AMessage = {
 
 /** Extract and validate common A2A task params (id + message). */
 function extractTaskParams(params: Record<string, unknown>): { taskId: string; message: A2AMessage } {
-  const taskId = params['id'] as string | undefined;
+  const taskId = (params['id'] ?? params['taskId']) as string | undefined;
   if (!taskId) {
     throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
   }
@@ -283,7 +283,7 @@ function extractTaskParams(params: Record<string, unknown>): { taskId: string; m
 
 /** Extract and validate task ID from params. */
 function extractTaskId(params: Record<string, unknown>): string {
-  const taskId = params['id'] as string | undefined;
+  const taskId = (params['id'] ?? params['taskId']) as string | undefined;
   if (!taskId) {
     throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
   }
@@ -295,33 +295,7 @@ function extractTaskId(params: Record<string, unknown>): string {
  * All task lifecycle operations are durably executed via Temporal workflows.
  */
 export function registerA2AMethods(handler: JsonRpcHandler): void {
-  // A2A tasks/send — create or continue a task via Temporal workflow
-  handler.registerMethod('tasks/send', async (params, context) => {
-    const { taskId, message } = extractTaskParams(params);
-
-    return dispatchA2ATask({
-      taskId,
-      sessionId: params['sessionId'] as string | undefined,
-      message,
-      agentUrl: params['agentUrl'] as string | undefined,
-      context,
-    });
-  });
-
-  // A2A tasks/get — query task state from Temporal workflow
-  handler.registerMethod('tasks/get', async (params, context) => {
-    const taskId = extractTaskId(params);
-    return queryA2ATask(taskId, context.tenantId);
-  });
-
-  // A2A tasks/cancel — signal Temporal workflow to cancel
-  handler.registerMethod('tasks/cancel', async (params, context) => {
-    const taskId = extractTaskId(params);
-    return cancelA2ATask(taskId, context.tenantId);
-  });
-
-  // A2A tasks/sendSubscribe — dispatch task with SSE streaming flag
-  handler.registerMethod('tasks/sendSubscribe', async (params, context) => {
+  const sendMessage: MethodHandler = async (params, context) => {
     const { taskId, message } = extractTaskParams(params);
 
     const result = await dispatchA2ATask({
@@ -336,9 +310,103 @@ export function registerA2AMethods(handler: JsonRpcHandler): void {
       ...result,
       metadata: {
         ...result.metadata,
+        trace: deriveTraceMeta({
+          requestId: context.requestId,
+          correlationId: context.correlationId,
+          workflowId: result.workflowId,
+          taskId,
+          artifactIds: result.artifacts.map((artifact) =>
+            String(artifact['id'] ?? artifact['name'] ?? ''),
+          ),
+        }),
+      },
+    };
+  };
+
+  const sendStreamingMessage: MethodHandler = async (params, context) => {
+    const { taskId } = extractTaskParams(params);
+    const result = await sendMessage(params, context) as Record<string, unknown>;
+    const metadata = result['metadata'] as Record<string, unknown> | undefined;
+
+    return {
+      ...result,
+      metadata: {
+        ...metadata,
         streaming: true,
         sseChannel: `a2a-task-${taskId}`,
       },
     };
+  };
+
+  const getTask: MethodHandler = async (params, context) => {
+    const taskId = extractTaskId(params);
+    const result = await queryA2ATask(taskId, context.tenantId);
+    return {
+      ...result,
+      metadata: {
+        ...result.metadata,
+        trace: deriveTraceMeta({
+          requestId: context.requestId,
+          correlationId: context.correlationId,
+          workflowId: result.workflowId,
+          taskId,
+        }),
+      },
+    };
+  };
+
+  const cancelTask: MethodHandler = async (params, context) => {
+    const taskId = extractTaskId(params);
+    const result = await cancelA2ATask(taskId, context.tenantId);
+    return {
+      ...result,
+      metadata: {
+        ...result.metadata,
+        trace: deriveTraceMeta({
+          requestId: context.requestId,
+          correlationId: context.correlationId,
+          workflowId: result.workflowId,
+          taskId,
+        }),
+      },
+    };
+  };
+
+  const listTasks: MethodHandler = async (params) => ({
+    tasks: [],
+    nextPageToken: '',
+    pageSize: typeof params['pageSize'] === 'number' ? params['pageSize'] : 50,
+    totalSize: 0,
   });
+
+  const getExtendedAgentCard: MethodHandler = async () => ({
+    name: 'APEX OmniHub Gateway',
+    description: 'Governed A2A task gateway backed by durable Temporal workflows.',
+    url: 'https://omnihub.apex.local/a2a',
+    protocolVersion: '0.3',
+    capabilities: {
+      streaming: true,
+      pushNotifications: false,
+      stateTransitionHistory: true,
+      extendedAgentCard: true,
+    },
+    skills: [],
+    defaultInputModes: ['text/plain', 'application/json'],
+    defaultOutputModes: ['text/plain', 'application/json'],
+  });
+
+  // Canonical modern A2A JSON-RPC method bindings.
+  handler.registerMethod('SendMessage', sendMessage);
+  handler.registerMethod('SendStreamingMessage', sendStreamingMessage);
+  handler.registerMethod('GetTask', getTask);
+  handler.registerMethod('ListTasks', listTasks);
+  handler.registerMethod('CancelTask', cancelTask);
+  handler.registerMethod('SubscribeToTask', sendStreamingMessage);
+  handler.registerMethod('GetExtendedAgentCard', getExtendedAgentCard);
+
+  // Legacy compatibility aliases retained at the registration boundary only.
+  handler.registerMethod('tasks/send', sendMessage);
+  handler.registerMethod('tasks/get', getTask);
+  handler.registerMethod('tasks/cancel', cancelTask);
+  handler.registerMethod('tasks/sendSubscribe', sendStreamingMessage);
 }

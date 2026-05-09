@@ -53,6 +53,8 @@ export const RouteDecisionSchema = z.object({
   usedFallback: z.boolean(),
   /** Human-readable reasoning */
   reasoning: z.string(),
+  /** Deterministic route explanation signals for audit/replay */
+  routeExplanation: z.array(z.string()),
 });
 
 export type RouteDecision = z.infer<typeof RouteDecisionSchema>;
@@ -117,6 +119,14 @@ export function routeTask(taskDescription: string): RouteDecision {
     ? estimateCost(target, inputTokens, score.estimatedTokens)
     : 0;
 
+  const routeExplanation = [
+    `score:${score.depthScore}`,
+    `domain:${score.domain}`,
+    `target:${target}`,
+    policyOverride ? `policy:${policyOverride.rule.id}` : 'policy:none',
+    usedFallback ? 'fallback:true' : 'fallback:false',
+  ];
+
   return {
     decisionId,
     timestamp,
@@ -127,6 +137,7 @@ export function routeTask(taskDescription: string): RouteDecision {
     estimatedCostUsd,
     usedFallback,
     reasoning,
+    routeExplanation,
   };
 }
 
@@ -152,6 +163,7 @@ export function summarizeDecision(decision: RouteDecision): string {
 
   if (decision.policyOverride) {
     parts.push(`[OVERRIDE: ${decision.policyOverride.rule.id}]`);
+    parts.push(`[${decision.policyOverride.rule.description}]`);
   }
 
   if (decision.usedFallback) {

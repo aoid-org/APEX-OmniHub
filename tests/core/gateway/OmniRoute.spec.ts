@@ -275,6 +275,7 @@ describe('OmniRoute', () => {
       expect(summary).toContain(decision.decisionId);
       expect(summary).toContain(decision.target);
       expect(summary).toContain('$');
+      expect(decision.routeExplanation).toContain(`target:${decision.target}`);
     });
 
     it('includes FALLBACK label when fallback triggered', () => {
