@@ -236,6 +236,15 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Fail on new critical/blocker issues
+        if: vars.SONAR_CI_SCAN_ENABLED != 'false'
+        run: |
+          if grep -q '"severity":"CRITICAL"\|"severity":"BLOCKER"' \
+            .scannerwork/report-task.txt 2>/dev/null; then
+            echo "BLOCKER or CRITICAL Sonar findings detected. Fix before merge."
+            exit 1
+          fi
+
       # ─────────────────────────────────────────────────────────────
       # PHASE 2.5: OmniEval Deterministic Evaluation
       # ─────────────────────────────────────────────────────────────

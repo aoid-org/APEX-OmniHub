@@ -135,6 +135,13 @@ jobs:
             -Dsonar.qualitygate.wait=true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Fail on new critical/blocker issues
+        run: |
+          if grep -q '"severity":"CRITICAL"\|"severity":"BLOCKER"' \
+            .scannerwork/report-task.txt 2>/dev/null; then
+            echo "BLOCKER or CRITICAL Sonar findings detected. Fix before merge."
+            exit 1
+          fi
 
   readiness-report:
     name: Generate Readiness Report
