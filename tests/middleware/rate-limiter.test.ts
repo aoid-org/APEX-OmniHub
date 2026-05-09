@@ -67,14 +67,12 @@ describe('rateLimitMiddleware', () => {
     });
     const response = await rateLimitMiddleware(request);
     expect(response).not.toBeNull();
-    expect(response!.status).toBe(429);
-    const body = await response!.json();
-    expect(body.error).toContain('Rate Limit Exceeded');
+    expect(response?.status).toBe(429);
+    const body = await response?.json();
+    expect(body?.error).toContain('Rate Limit Exceeded');
   });
 
   it('should fail-closed with 503 when KV throws an error', async () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const brokenKV = {
       get: vi.fn().mockRejectedValue(new Error('KV subsystem failure')),
       put: vi.fn(),
@@ -85,12 +83,10 @@ describe('rateLimitMiddleware', () => {
     });
 
     const response = await rateLimitMiddleware(request, { RATE_LIMIT_KV: brokenKV });
-    consoleErrorSpy.mockRestore();
-    consoleWarnSpy.mockRestore();
     expect(response).not.toBeNull();
-    expect(response!.status).toBe(503);
-    const body = await response!.json();
-    expect(body.error).toContain('Service Unavailable');
+    expect(response?.status).toBe(503);
+    const body = await response?.json();
+    expect(body?.error).toContain('Service Unavailable');
   });
 
   it('should use "unknown_ip" if no headers are provided', async () => {

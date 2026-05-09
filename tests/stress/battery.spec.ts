@@ -134,7 +134,7 @@ describe('Battery Tests - Production Stress', () => {
 
       const addListener = () => {
         const listener = () => listenerCount++;
-        window.addEventListener('resize', listener);
+        globalThis.addEventListener('resize', listener);
         listeners.push(listener);
       };
 
@@ -145,11 +145,11 @@ describe('Battery Tests - Production Stress', () => {
 
       // Remove all listeners
       listeners.forEach(listener => {
-        window.removeEventListener('resize', listener);
+        globalThis.removeEventListener('resize', listener);
       });
 
       // Trigger event - should not increment
-      window.dispatchEvent(new Event('resize'));
+      globalThis.dispatchEvent(new Event('resize'));
       
       expect(listeners.length).toBe(50);
     });
@@ -493,4 +493,3 @@ describe('Battery Tests - Production Stress', () => {
     });
   });
 });
-
