@@ -1,7 +1,7 @@
-import { calculateBackoffDelay } from '@/lib/backoff';
-import { logAnalyticsEvent, logError } from '@/lib/monitoring';
-import { persistentGet, persistentSet } from '@/libs/persistence';
-import { supabase } from '@/integrations/supabase/client';
+import { calculateBackoffDelay } from '../lib/backoff';
+import { logAnalyticsEvent, logError } from '../lib/monitoring';
+import { persistentGet, persistentSet } from '../libs/persistence';
+import { supabase } from '../integrations/supabase/client';
 
 
 

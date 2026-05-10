@@ -1,0 +1,30 @@
+{
+  "_comment": "APEX OmniHub Skill Registration Schema Template",
+  "schema_version": "1.0.0",
+  "registration": {
+    "id": "${skill_name}",
+    "version": "${skill_version}",
+    "archetype": "${archetype}",
+    "path": "skills/${skill_name}",
+    "manifest": "skills/${skill_name}/MANIFEST.json",
+    "executor": "skills/${skill_name}/scripts/executor.py",
+    "health_check": "skills/${skill_name}/omnihub_integration/health_checks.py",
+    "enabled": true,
+    "auto_load": true,
+    "dag_compatible": true
+  },
+  "dag_metadata": {
+    "node_type": "${dag.node_type}",
+    "accepts": ["application/json", "text/plain"],
+    "emits": ["event:completion", "event:failure"],
+    "timeout_ms": 30000,
+    "retry_policy": {
+      "max": 3,
+      "backoff": "exponential"
+    },
+    "idempotent": true,
+    "side_effects": false
+  },
+  "created_by": "apex-skill-forge v8.0.0",
+  "copyright": "Copyright (c) 2026 APEX Business Systems Ltd. All Rights Reserved."
+}

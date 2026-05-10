@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<<<<<<< Updated upstream
 ## [1.6.0] - 2026-05-08
 
 ### 🔒 Security & Hardening
@@ -168,6 +169,26 @@ have been removed.
 - **`hotfix_dispatch` action is acknowledged but not executed** on the SBBL-HQ side in this release — the patch doc marks it 501 pending a hardened agent runtime on SBBL-HQ's side (v1.6.1 scope).
 
 ---
+=======
+### Added
+
+- **Bounded planner fallback chain** in `orchestrator/activities/tools.py` with deterministic model candidate resolution and strict attempt/time guards:
+  - `LLM_FALLBACK_MODELS`
+  - `LLM_PLAN_MAX_MODEL_ATTEMPTS`
+  - `LLM_PLAN_REQUEST_TIMEOUT_SECONDS`
+- **Planner resilience metrics** in `orchestrator/metrics.py`:
+  - `llm_plan_attempts_total`
+  - `llm_plan_outcomes_total`
+- **Operational moat runbook**: `docs/ops/APEX_RELIABILITY_MOAT.md`.
+- **New regression coverage**:
+  - `orchestrator/tests/test_llm_plan_resilience.py`
+  - `orchestrator/tests/test_llm_metrics.py`
+  - `orchestrator/tests/test_cache_recursive_hydration.py`
+
+### Changed
+
+- **Semantic cache hydration/parameterization** now recursively traverses nested dict/list payloads in `orchestrator/infrastructure/cache.py` to prevent partial plan-template rewrites and cache replay drift.
+>>>>>>> Stashed changes
 
 ## [1.5.1] - 2026-03-25
 

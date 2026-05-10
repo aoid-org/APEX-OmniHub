@@ -60,7 +60,7 @@ describe('Chaos Engine', () => {
         ...DEFAULT_CHAOS_CONFIG,
         seed: 42,
         duplicateRate: 0.15,
-        outOfOrderRate: 0.10,
+        outOfOrderRate: 0.1,
         timeoutRate: 0.05,
       };
 
@@ -87,7 +87,7 @@ describe('Chaos Engine', () => {
 
       // Allow 5% margin of error
       expect(duplicates / sampleSize).toBeCloseTo(0.15, 1);
-      expect(delays / sampleSize).toBeCloseTo(0.10, 1);
+      expect(delays / sampleSize).toBeCloseTo(0.1, 1);
       expect(timeouts / sampleSize).toBeCloseTo(0.05, 1);
     });
   });
