@@ -87,6 +87,10 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
                 <filter id="fxl"><feGaussianBlur in="SourceGraphic" stdDeviation="18" /></filter>
                 <filter id="coreGlow"><feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="b1" /><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b2" /><feMerge><feMergeNode in="b2" /><feMergeNode in="b1" /></feMerge></filter>
                 <filter id="fm"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                <filter id="textGlow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="gb1" /><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="gb2" /><feMerge><feMergeNode in="gb2" /><feMergeNode in="gb1" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                <filter id="dofShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="10" /></filter>
+                <radialGradient id="badge-bloom" cx="44%" cy="40%" r="56%"><stop offset="0%" stopColor="rgba(245,192,106,0.22)" /><stop offset="60%" stopColor="rgba(232,162,71,0.08)" /><stop offset="100%" stopColor="rgba(196,81,26,0)" /></radialGradient>
+                <radialGradient id="dof-depth" cx="62%" cy="64%" r="50%"><stop offset="0%" stopColor="rgba(0,0,0,0)" /><stop offset="70%" stopColor="rgba(15,5,0,0.18)" /><stop offset="100%" stopColor="rgba(15,5,0,0.36)" /></radialGradient>
                 <clipPath id="sclip"><circle cx="260" cy="265" r="152" /></clipPath>
               </defs>
               <circle cx="260" cy="265" r="240" fill="rgba(196,81,26,0.033)" />
@@ -179,10 +183,53 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
                 <animate attributeName="r" values="60;74;60" dur="2.6s" repeatCount="indefinite" />
                 <animate attributeName="opacity" values="0.45;0.85;0.45" dur="2.6s" repeatCount="indefinite" />
               </circle>
+              {/* ── APEX Core Badge ── fully inlined: no external load, no SW dependency, no CSP risk ── */}
               <g clipPath="url(#sclip)">
-                <image href="/assets/hero/apex-core-badge.svg" xlinkHref="/assets/hero/apex-core-badge.svg" x="202" y="203" width="116" height="124" preserveAspectRatio="xMidYMid meet" filter="url(#coreGlow)">
+                {/* Depth-of-field interior ambient bloom — simulates light scattering inside the orb */}
+                <circle cx="260" cy="265" r="66" fill="url(#badge-bloom)">
+                  <animate attributeName="r" values="60;72;60" dur="2.6s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.7;1;0.7" dur="2.6s" repeatCount="indefinite" />
+                </circle>
+                {/* Outer track ring */}
+                <circle cx="260" cy="265" r="46" fill="none" stroke="rgba(245,192,106,0.3)" strokeWidth="0.8">
+                  <animate attributeName="opacity" values="0.22;0.58;0.22" dur="2.6s" repeatCount="indefinite" />
+                  <animate attributeName="r" values="44;48;44" dur="2.6s" repeatCount="indefinite" />
+                </circle>
+                {/* Inner track ring */}
+                <circle cx="260" cy="265" r="34" fill="none" stroke="rgba(245,192,106,0.18)" strokeWidth="0.5">
+                  <animate attributeName="opacity" values="0.15;0.4;0.15" dur="2.6s" repeatCount="indefinite" />
+                </circle>
+                {/* Cardinal dots — 4 compass positions on outer track */}
+                <circle cx="260" cy="219" r="2.2" fill="rgba(245,192,106,0.9)" filter="url(#fm)">
+                  <animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="306" cy="265" r="2.2" fill="rgba(245,192,106,0.9)" filter="url(#fm)">
+                  <animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite" begin="0.65s" />
+                </circle>
+                <circle cx="260" cy="311" r="2.2" fill="rgba(245,192,106,0.9)" filter="url(#fm)">
+                  <animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite" begin="1.3s" />
+                </circle>
+                <circle cx="214" cy="265" r="2.2" fill="rgba(245,192,106,0.9)" filter="url(#fm)">
+                  <animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite" begin="1.95s" />
+                </circle>
+                {/* APEX wordmark — glowing white text, transparent bg */}
+                <text x="260" y="261" textAnchor="middle" dominantBaseline="central"
+                      fontFamily="Space Grotesk, system-ui, -apple-system, sans-serif"
+                      fontWeight="700" fontSize="23" letterSpacing="6"
+                      fill="rgba(255,255,255,0.96)" filter="url(#textGlow)">
                   <animate attributeName="opacity" values="0.82;1;0.82" dur="2.6s" repeatCount="indefinite" />
-                </image>
+                  APEX
+                </text>
+                {/* OMNIHUB sub-label */}
+                <text x="260" y="282" textAnchor="middle" dominantBaseline="central"
+                      fontFamily="Space Grotesk, system-ui, -apple-system, sans-serif"
+                      fontWeight="400" fontSize="7.5" letterSpacing="3.8"
+                      fill="rgba(255,255,255,0.52)">
+                  <animate attributeName="opacity" values="0.45;0.75;0.45" dur="2.6s" repeatCount="indefinite" />
+                  OMNIHUB
+                </text>
+                {/* Depth-of-field shadow — offset lower-right to simulate 3D depth inside sphere */}
+                <circle cx="276" cy="284" r="58" fill="url(#dof-depth)" filter="url(#dofShadow)" opacity="0.6" />
               </g>
               <circle cx="260" cy="265" r="90" fill="none" stroke="rgba(232,162,71,0.18)" strokeWidth="1.5">
                 <animate attributeName="r" from="90" to="155" dur="3s" repeatCount="indefinite" />
