@@ -1,0 +1,54 @@
+mode: proposal_only
+default_network_model_calls: false
+hosted_model_monthly_budget_usd: 0
+optional_pilot_budget_usd: 150
+max_model_cost_usd_per_run: 2
+release_lockfile: package-lock.json
+parity_lockfiles:
+  - bun.lock
+  - deno.lock
+  - orchestrator/requirements.lock
+moderate_supabase_functions:
+  - supabase/functions/platform-health/**
+  - supabase/functions/ops-voice-health/**
+  - supabase/functions/test-integration/**
+critical_paths:
+  - .github/workflows/**
+  - terraform/**
+  - contracts/**
+  - supabase/migrations/**
+  - hardhat.config.cts
+  - orchestrator/workflows/**
+  - orchestrator/activities/**
+  - orchestrator/security/**
+  - src/security/**
+  - src/zero-trust/**
+  - src/guardian/**
+  - supabase/functions/**
+  - '!supabase/functions/platform-health/**'
+  - '!supabase/functions/ops-voice-health/**'
+  - '!supabase/functions/test-integration/**'
+auto_pr_allowed:
+  high: false
+  critical: false
+auto_merge_allowed: false
+agent_generated_pr_lane: RED
+required_checks:
+  - Architectural Boundary Enforcement
+  - Terraform Expression Drift Gate
+  - build-and-test
+  - GitHub-native dependency review
+  - Quality Gates
+  - Security Gates
+  - Smoke Tests
+  - Production Readiness Summary
+  - Scan for Exposed Secrets
+  - Verify No .env Files
+  - Scan Dependencies for Vulnerabilities
+  - Security Invariant Checks
+  - Dependency Security Audit
+  - Code Quality Gates
+  - Test & Lint
+  - Security Scan
+  - Build Docker Image
+  - Lighthouse Audit
