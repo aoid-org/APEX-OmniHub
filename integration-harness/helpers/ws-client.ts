@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import WebSocket from 'ws';
-
 export async function assertWsConnects(url: string, token: string, timeoutMs: number): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const ws = new WebSocket(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -8,7 +8,6 @@ export async function assertWsConnects(url: string, token: string, timeoutMs: nu
     ws.on('error', (err) => { clearTimeout(timer); reject(err); });
   });
 }
-
 export async function waitForTelemetryEvent(url: string, pred: (e: any) => boolean, token: string, timeoutMs: number): Promise<any> {
   return new Promise<any>((resolve, reject) => {
     const ws = new WebSocket(url, { headers: { Authorization: `Bearer ${token}` } });

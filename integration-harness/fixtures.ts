@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { test as base, expect, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
@@ -32,11 +33,11 @@ async function signInToken(emailKey: string, passKey: string): Promise<string> {
 }
 
 export const test = base.extend<Fx>({
-  omnihubUrl: async ({}, use) => use(env('OMNIHUB_URL', env('OMNIHUB_BASE_URL', 'http://localhost:5173'))),
-  sbblUrl: async ({}, use) => use(env('SBBL_URL', env('SBBL_BASE_URL', 'http://localhost:8787'))),
+  omnihubUrl: async (_: Record<string, never>, use) => use(env('OMNIHUB_URL', env('OMNIHUB_BASE_URL', 'http://localhost:5173'))),
+  sbblUrl: async (_: Record<string, never>, use) => use(env('SBBL_URL', env('SBBL_BASE_URL', 'http://localhost:8787'))),
   omniPage: async ({ browser }, use) => { const p = await browser.newPage(); await use(p); await p.close(); },
   sbblPage: async ({ browser }, use) => { const p = await browser.newPage(); await use(p); await p.close(); },
-  sbblAdmin: async ({}, use) => {
+  sbblAdmin: async (_: Record<string, never>, use) => {
     const key = supabaseSvc() || supabaseAnon();
     if (!supabaseUrl() || !key) test.skip(true, 'Missing Supabase admin env');
     await use(createClient(supabaseUrl(), key));
@@ -45,11 +46,11 @@ export const test = base.extend<Fx>({
     if (!supabaseUrl() || !supabaseAnon()) test.skip(true, 'Missing Supabase anon env');
     await use(createClient(supabaseUrl(), supabaseAnon(), { global: { headers: { Authorization: `Bearer ${fanToken}` } } }));
   },
-  adminToken: async ({}, use) => {
+  adminToken: async (_: Record<string, never>, use) => {
     if (!env('INTEGRATION_ADMIN_EMAIL') || !env('INTEGRATION_ADMIN_PASSWORD')) test.skip(true, 'Missing admin creds');
     await use(await signInToken('INTEGRATION_ADMIN_EMAIL', 'INTEGRATION_ADMIN_PASSWORD'));
   },
-  fanToken: async ({}, use) => {
+  fanToken: async (_: Record<string, never>, use) => {
     if (!env('INTEGRATION_FAN_EMAIL') || !env('INTEGRATION_FAN_PASSWORD')) test.skip(true, 'Missing fan creds');
     await use(await signInToken('INTEGRATION_FAN_EMAIL', 'INTEGRATION_FAN_PASSWORD'));
   },
