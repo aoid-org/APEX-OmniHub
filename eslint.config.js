@@ -6,7 +6,22 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  { ignores: ["dist", "coverage", "services/contracts/typechain-types", "playwright-report", "test-results", ".nyc_output", ".claude/", "hero-visual-original.tsx"] },
+  {
+    ignores: [
+      "dist",
+      "coverage",
+      "services/contracts/typechain-types",
+      "playwright-report",
+      "test-results",
+      ".nyc_output",
+      ".claude/",
+      "hero-visual-original.tsx",
+      // Playwright integration-harness: fixtures use Playwright's `use` callback
+      // which ESLint misidentifies as React Hook violations. This is test infra,
+      // not React app code — react-hooks rules don't apply here.
+      "integration-harness/**",
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
