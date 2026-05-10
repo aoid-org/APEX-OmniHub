@@ -86,7 +86,7 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
                 </linearGradient>
                 <filter id="fg"><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <filter id="fxl"><feGaussianBlur in="SourceGraphic" stdDeviation="18" /></filter>
-                <filter id="coreGlow"><feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="b1" /><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b2" /><feMerge><feMergeNode in="b2" /><feMergeNode in="b1" /></feMerge></filter>
+                <filter id="coreGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="12" result="shadow" /><feOffset in="shadow" dx="0" dy="6" result="shadowOff" /><feFlood floodColor="rgba(0,0,0,0.45)" result="shadowColor" /><feComposite in="shadowColor" in2="shadowOff" operator="in" result="shadowFinal" /><feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="b1" /><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b2" /><feGaussianBlur in="SourceGraphic" stdDeviation="22" result="b3" /><feMerge><feMergeNode in="shadowFinal" /><feMergeNode in="b3" /><feMergeNode in="b2" /><feMergeNode in="b1" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <filter id="fm"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <filter id="textGlow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="gb1" /><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="gb2" /><feMerge><feMergeNode in="gb2" /><feMergeNode in="gb1" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <filter id="dofShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="10" /></filter>
@@ -191,10 +191,22 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
                   <animate attributeName="r" values="60;72;60" dur="2.6s" repeatCount="indefinite"/>
                   <animate attributeName="opacity" values="0.7;1;0.7" dur="2.6s" repeatCount="indefinite"/>
                 </circle>
-                {/* Brand badge PNG — 675×609 RGBA, transparent bg, centered on orb */}
-                <image href={apexBadgePng} x="170" y="184" width="180" height="162"
+                {/* Brand badge — 675×609 RGBA transparent PNG, Vite-imported (hashed URL, SW pre-cached) */}
+                <image href={apexBadgePng} x="150" y="166" width="220" height="198"
                        preserveAspectRatio="xMidYMid meet" filter="url(#coreGlow)">
-                  <animate attributeName="opacity" values="0.88;1;0.88" dur="2.6s" repeatCount="indefinite"/>
+                  {/* opacity breath — synced to pulsing ring */}
+                  <animate attributeName="opacity" values="0.88;1;0.88" dur="2.6s" repeatCount="indefinite"
+                    calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
+                  {/* float up/down */}
+                  <animate attributeName="y" values="166;158;166" dur="3.8s" repeatCount="indefinite"
+                    calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
+                  {/* scale-pulse: grow width symmetrically around centre-x=260 */}
+                  <animate attributeName="x" values="150;145;150" dur="2.6s" repeatCount="indefinite"
+                    calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
+                  <animate attributeName="width" values="220;230;220" dur="2.6s" repeatCount="indefinite"
+                    calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
+                  <animate attributeName="height" values="198;208;198" dur="2.6s" repeatCount="indefinite"
+                    calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
                 </image>
                 {/* Depth-of-field shadow — lower-right offset for 3D interior effect */}
                 <circle cx="276" cy="284" r="58" fill="url(#dof-depth)" filter="url(#dofShadow)" opacity="0.55"/>
