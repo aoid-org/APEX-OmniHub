@@ -10,7 +10,7 @@ const HIGH_RISK_PATTERNS: Array<{ name: string; pattern: RegExp; score: number }
   // Instruction override attempts
   { name: 'ignore_previous', pattern: /ignore\s+(all\s+)?(previous\s+|your\s+)?instructions/i, score: 90 },
   { name: 'disregard_previous', pattern: /disregard\s+(all\s+)?(previous\s+|your\s+)?instructions/i, score: 90 },
-  { name: 'forget_previous', pattern: /forget\s+(all\s+)?(previous\s+|your\s+)?instructions/i, score: 90 },
+  { name: 'forget_previous', pattern: /forget\s+(?:(?:all|your|previous)\s+)*instructions/i, score: 90 },
 
   // Role manipulation
   { name: 'you_are_now', pattern: /you\s+are\s+now\s+(a|an|the)/i, score: 85 },

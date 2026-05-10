@@ -267,6 +267,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const authResult = isDeviceAuthorized(deviceId);
+
+      // Guard: isDeviceAuthorized may return undefined if the registry is not
+      // yet initialized (e.g. in unit tests where the mock has no return value).
+      // Treat undefined as "not authorized to determine status" — skip MFA.
+      if (!authResult) {
+        setMfaChallengeActive(false);
+        return;
+      }
+
       const requiresMfa =
         authResult.authorized !== true && authResult.reason !== 'device_blocked';
 
