@@ -8,14 +8,14 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase, hasSupabaseConfig } from "@/lib/supabase";
-import { getModuleContent } from "@/dashboard/components/ModuleRegistry";
+import { supabase, hasSupabaseConfig } from "../lib/supabase";
+import { getModuleContent } from "../../dashboard/components/ModuleRegistry";
 import type {
   ModuleContent,
   ModuleStatItem,
   ModuleListItem,
   ModuleAction,
-} from "@/dashboard/components/ModuleRegistry";
+} from "../../dashboard/components/ModuleRegistry";
 
 export interface OmniModuleState {
   readonly moduleKey: string;

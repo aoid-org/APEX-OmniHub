@@ -13,7 +13,6 @@
     "allowJs": true,
     "noUnusedLocals": true,
     "strictNullChecks": true,
-    "strict": true,
-    "ignoreDeprecations": "5.0"
+    "strict": true
   }
 }
