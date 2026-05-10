@@ -7,6 +7,7 @@
 | Applies to release line | APEX-OmniHub v1.6.0+ |
 | Lifecycle status | Active proposal baseline |
 | Owner | @apexbusiness-systems |
+| Policy reference | `policy/rsi-policy.yaml` v1.2.0 |
 
 ## Scope and operating mode
 APEX OmniHub RSI is intentionally **proposal-only**. Automation may prepare evidence and proposals, but must not autonomously merge high-risk or critical-path changes.
