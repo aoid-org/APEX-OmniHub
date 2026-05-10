@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import apexBadgePng from '@/components/icons/apex-badge.png';
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { StructuredData } from '@/components/StructuredData';
@@ -183,53 +184,20 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
                 <animate attributeName="r" values="60;74;60" dur="2.6s" repeatCount="indefinite" />
                 <animate attributeName="opacity" values="0.45;0.85;0.45" dur="2.6s" repeatCount="indefinite" />
               </circle>
-              {/* ── APEX Core Badge ── fully inlined: no external load, no SW dependency, no CSP risk ── */}
+              {/* ── APEX Canonical Brand Badge ── Vite-imported PNG: hashed URL, SW pre-cached, never broken ── */}
               <g clipPath="url(#sclip)">
-                {/* Depth-of-field interior ambient bloom — simulates light scattering inside the orb */}
+                {/* Ambient bloom behind badge — depth warmth */}
                 <circle cx="260" cy="265" r="66" fill="url(#badge-bloom)">
-                  <animate attributeName="r" values="60;72;60" dur="2.6s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.7;1;0.7" dur="2.6s" repeatCount="indefinite" />
+                  <animate attributeName="r" values="60;72;60" dur="2.6s" repeatCount="indefinite"/>
+                  <animate attributeName="opacity" values="0.7;1;0.7" dur="2.6s" repeatCount="indefinite"/>
                 </circle>
-                {/* Outer track ring */}
-                <circle cx="260" cy="265" r="46" fill="none" stroke="rgba(245,192,106,0.3)" strokeWidth="0.8">
-                  <animate attributeName="opacity" values="0.22;0.58;0.22" dur="2.6s" repeatCount="indefinite" />
-                  <animate attributeName="r" values="44;48;44" dur="2.6s" repeatCount="indefinite" />
-                </circle>
-                {/* Inner track ring */}
-                <circle cx="260" cy="265" r="34" fill="none" stroke="rgba(245,192,106,0.18)" strokeWidth="0.5">
-                  <animate attributeName="opacity" values="0.15;0.4;0.15" dur="2.6s" repeatCount="indefinite" />
-                </circle>
-                {/* Cardinal dots — 4 compass positions on outer track */}
-                <circle cx="260" cy="219" r="2.2" fill="rgba(245,192,106,0.9)" filter="url(#fm)">
-                  <animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite" />
-                </circle>
-                <circle cx="306" cy="265" r="2.2" fill="rgba(245,192,106,0.9)" filter="url(#fm)">
-                  <animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite" begin="0.65s" />
-                </circle>
-                <circle cx="260" cy="311" r="2.2" fill="rgba(245,192,106,0.9)" filter="url(#fm)">
-                  <animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite" begin="1.3s" />
-                </circle>
-                <circle cx="214" cy="265" r="2.2" fill="rgba(245,192,106,0.9)" filter="url(#fm)">
-                  <animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite" begin="1.95s" />
-                </circle>
-                {/* APEX wordmark — glowing white text, transparent bg */}
-                <text x="260" y="261" textAnchor="middle" dominantBaseline="central"
-                      fontFamily="Space Grotesk, system-ui, -apple-system, sans-serif"
-                      fontWeight="700" fontSize="23" letterSpacing="6"
-                      fill="rgba(255,255,255,0.96)" filter="url(#textGlow)">
-                  <animate attributeName="opacity" values="0.82;1;0.82" dur="2.6s" repeatCount="indefinite" />
-                  APEX
-                </text>
-                {/* OMNIHUB sub-label */}
-                <text x="260" y="282" textAnchor="middle" dominantBaseline="central"
-                      fontFamily="Space Grotesk, system-ui, -apple-system, sans-serif"
-                      fontWeight="400" fontSize="7.5" letterSpacing="3.8"
-                      fill="rgba(255,255,255,0.52)">
-                  <animate attributeName="opacity" values="0.45;0.75;0.45" dur="2.6s" repeatCount="indefinite" />
-                  OMNIHUB
-                </text>
-                {/* Depth-of-field shadow — offset lower-right to simulate 3D depth inside sphere */}
-                <circle cx="276" cy="284" r="58" fill="url(#dof-depth)" filter="url(#dofShadow)" opacity="0.6" />
+                {/* Brand badge PNG — 675×609 RGBA, transparent bg, centered on orb */}
+                <image href={apexBadgePng} x="170" y="184" width="180" height="162"
+                       preserveAspectRatio="xMidYMid meet" filter="url(#coreGlow)">
+                  <animate attributeName="opacity" values="0.88;1;0.88" dur="2.6s" repeatCount="indefinite"/>
+                </image>
+                {/* Depth-of-field shadow — lower-right offset for 3D interior effect */}
+                <circle cx="276" cy="284" r="58" fill="url(#dof-depth)" filter="url(#dofShadow)" opacity="0.55"/>
               </g>
               <circle cx="260" cy="265" r="90" fill="none" stroke="rgba(232,162,71,0.18)" strokeWidth="1.5">
                 <animate attributeName="r" from="90" to="155" dur="3s" repeatCount="indefinite" />
