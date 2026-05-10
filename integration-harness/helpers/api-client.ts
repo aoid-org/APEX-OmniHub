@@ -1,25 +1,51 @@
-export async function sendOmniPortCommand(base: string, body: Record<string, unknown>, token: string, timeoutMs: number): Promise<Record<string, unknown>> {
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
+export type JsonObject = { [key: string]: JsonValue | undefined };
+
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
   const ctl = new AbortController();
-  const t = setTimeout(() => ctl.abort(), timeoutMs);
-  const res = await fetch(`${base}/api/omniport/command`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body), signal: ctl.signal });
-  clearTimeout(t);
-  const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${JSON.stringify(json)}`);
-  return json;
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: ctl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
-export async function fetchSbblLiveAccess(base: string, gameId: string, token: string, timeoutMs: number): Promise<Record<string, unknown>> {
-  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeoutMs);
-  const res = await fetch(`${base}/api/live-access?gameId=${encodeURIComponent(gameId)}`, { headers: { Authorization: `Bearer ${token}` }, signal: ctl.signal });
-  clearTimeout(t); return res.json() as Promise<Record<string, unknown>>;
+async function readJson(response: Response): Promise<JsonValue> {
+  return response.json().catch(() => ({}));
 }
-export async function redeemSbblAccessCode(base: string, accessCode: string, gameId: string, token: string, timeoutMs: number): Promise<Record<string, unknown>> {
-  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeoutMs);
-  const res = await fetch(`${base}/api/redeem-access-code`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ accessCode, gameId }), signal: ctl.signal });
-  clearTimeout(t); return res.json() as Promise<Record<string, unknown>>;
+
+export async function sendOmniPortCommand<T extends JsonValue = JsonObject>(base: string, body: JsonObject, token: string, timeoutMs: number): Promise<T> {
+  const json = await fetchWithTimeout(
+    `${base}/api/omniport/command`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) },
+    timeoutMs,
+  ).then(async (res) => {
+    const parsed = await readJson(res);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${JSON.stringify(parsed)}`);
+    return parsed;
+  });
+
+  return json as T;
 }
-export async function fetchOmniHubTelemetry(base: string, token: string, timeoutMs: number): Promise<Record<string, unknown>> {
-  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeoutMs);
-  const res = await fetch(`${base}/api/telemetry/snapshot`, { headers: { Authorization: `Bearer ${token}` }, signal: ctl.signal });
-  clearTimeout(t); if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json() as Promise<Record<string, unknown>>;
+
+export async function fetchSbblLiveAccess<T extends JsonValue = JsonObject>(base: string, gameId: string, token: string, timeoutMs: number): Promise<T> {
+  const res = await fetchWithTimeout(`${base}/api/live-access?gameId=${encodeURIComponent(gameId)}`, { headers: { Authorization: `Bearer ${token}` } }, timeoutMs);
+  return readJson(res) as Promise<T>;
+}
+
+export async function redeemSbblAccessCode<T extends JsonValue = JsonObject>(base: string, accessCode: string, gameId: string, token: string, timeoutMs: number): Promise<T> {
+  const res = await fetchWithTimeout(
+    `${base}/api/redeem-access-code`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ accessCode, gameId }) },
+    timeoutMs,
+  );
+  return readJson(res) as Promise<T>;
+}
+
+export async function fetchOmniHubTelemetry<T extends JsonValue = JsonObject>(base: string, token: string, timeoutMs: number): Promise<T> {
+  const res = await fetchWithTimeout(`${base}/api/telemetry/snapshot`, { headers: { Authorization: `Bearer ${token}` } }, timeoutMs);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return readJson(res) as Promise<T>;
 }
