@@ -27,8 +27,22 @@ docs/security/                        @apexbusiness-systems
 
 # Infrastructure as code
 terraform/                            @apexbusiness-systems
+contracts/                            @apexbusiness-systems
+hardhat.config.cts                    @apexbusiness-systems
+
+# Supabase critical functions
+supabase/functions/stripe-webhook/    @apexbusiness-systems
+supabase/functions/create-checkout/   @apexbusiness-systems
+supabase/functions/alchemy-webhook/   @apexbusiness-systems
+supabase/functions/verify-nft/        @apexbusiness-systems
+supabase/functions/web3-nonce/        @apexbusiness-systems
+supabase/functions/web3-verify/       @apexbusiness-systems
+supabase/functions/omnibridge-control/ @apexbusiness-systems
+supabase/functions/mcp-proxy/         @apexbusiness-systems
+supabase/functions/byom-proxy/        @apexbusiness-systems
+supabase/functions/execute-automation/ @apexbusiness-systems
 
 # Dependency changes — security review required
 package.json                          @apexbusiness-systems
-bun.lockb                             @apexbusiness-systems
+bun.lock                              @apexbusiness-systems
 orchestrator/pyproject.toml           @apexbusiness-systems
