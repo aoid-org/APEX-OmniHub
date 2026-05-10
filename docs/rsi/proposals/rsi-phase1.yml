@@ -1,0 +1,47 @@
+name: RSI Phase 1 (Proposed)
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+permissions: read-all
+
+jobs:
+  rsi-proposal:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate repository inventory
+        run: bash scripts/repo_inventory.sh
+
+      - name: Classify changed paths against RSI policy
+        run: |
+          python - <<'PY'
+          import pathlib, sys
+          protected=['.github/workflows/','terraform/','contracts/','supabase/migrations/','orchestrator/workflows/','orchestrator/activities/','orchestrator/security/','src/security/','src/zero-trust/','src/guardian/']
+          changed=[p.as_posix() for p in pathlib.Path('.').rglob('*') if p.is_file() and 'docs/rsi/proposals' in p.as_posix()]
+          bad=[p for p in changed if any(p.startswith(x) for x in protected)]
+          if bad:
+              print('Protected paths touched:',bad)
+              sys.exit(1)
+          print('Path classification completed.')
+          PY
+
+      - name: Run model gateway when enabled
+        if: ${{ env.RSI_ENABLE_HOSTED_MODEL == 'true' || env.RSI_MODEL_BASE_URL != '' }}
+        run: python tools/rsi/model_gateway.py
+
+      - name: Upload proposal artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rsi-proposal-artifacts
+          path: |
+            inventory/**
+            docs/rsi/proposals/**
