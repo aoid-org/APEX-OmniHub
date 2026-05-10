@@ -32,26 +32,26 @@ async function signInToken(emailKey: string, passKey: string): Promise<string> {
 }
 
 export const test = base.extend<Fx>({
-  omnihubUrl: async ({}, use) => use(env('OMNIHUB_URL', env('OMNIHUB_BASE_URL', 'http://localhost:5173'))),
-  sbblUrl: async ({}, use) => use(env('SBBL_URL', env('SBBL_BASE_URL', 'http://localhost:8787'))),
-  omniPage: async ({ browser }, use) => { const p = await browser.newPage(); await use(p); await p.close(); },
-  sbblPage: async ({ browser }, use) => { const p = await browser.newPage(); await use(p); await p.close(); },
-  sbblAdmin: async ({}, use) => {
+  omnihubUrl: async (_context, provideFixture) => provideFixture(env('OMNIHUB_URL', env('OMNIHUB_BASE_URL', 'http://localhost:5173'))),
+  sbblUrl: async (_context, provideFixture) => provideFixture(env('SBBL_URL', env('SBBL_BASE_URL', 'http://localhost:8787'))),
+  omniPage: async ({ browser }, provideFixture) => { const p = await browser.newPage(); await provideFixture(p); await p.close(); },
+  sbblPage: async ({ browser }, provideFixture) => { const p = await browser.newPage(); await provideFixture(p); await p.close(); },
+  sbblAdmin: async (_context, provideFixture) => {
     const key = supabaseSvc() || supabaseAnon();
     if (!supabaseUrl() || !key) test.skip(true, 'Missing Supabase admin env');
-    await use(createClient(supabaseUrl(), key));
+    await provideFixture(createClient(supabaseUrl(), key));
   },
-  sbblFan: async ({ fanToken }, use) => {
+  sbblFan: async ({ fanToken }, provideFixture) => {
     if (!supabaseUrl() || !supabaseAnon()) test.skip(true, 'Missing Supabase anon env');
-    await use(createClient(supabaseUrl(), supabaseAnon(), { global: { headers: { Authorization: `Bearer ${fanToken}` } } }));
+    await provideFixture(createClient(supabaseUrl(), supabaseAnon(), { global: { headers: { Authorization: `Bearer ${fanToken}` } } }));
   },
-  adminToken: async ({}, use) => {
+  adminToken: async (_context, provideFixture) => {
     if (!env('INTEGRATION_ADMIN_EMAIL') || !env('INTEGRATION_ADMIN_PASSWORD')) test.skip(true, 'Missing admin creds');
-    await use(await signInToken('INTEGRATION_ADMIN_EMAIL', 'INTEGRATION_ADMIN_PASSWORD'));
+    await provideFixture(await signInToken('INTEGRATION_ADMIN_EMAIL', 'INTEGRATION_ADMIN_PASSWORD'));
   },
-  fanToken: async ({}, use) => {
+  fanToken: async (_context, provideFixture) => {
     if (!env('INTEGRATION_FAN_EMAIL') || !env('INTEGRATION_FAN_PASSWORD')) test.skip(true, 'Missing fan creds');
-    await use(await signInToken('INTEGRATION_FAN_EMAIL', 'INTEGRATION_FAN_PASSWORD'));
+    await provideFixture(await signInToken('INTEGRATION_FAN_EMAIL', 'INTEGRATION_FAN_PASSWORD'));
   },
 });
 
