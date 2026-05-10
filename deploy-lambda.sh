@@ -38,7 +38,7 @@ export SUPABASE_ANON_KEY="$VITE_SUPABASE_ANON_KEY"
 cd "$(dirname "$0")/packages/infrastructure"
 
 # ── Install dependencies ─────────────────────────────────────────────
-echo "[APEX] Installing infrastructure dependencies..."
+echo "[APEX] Installing infrastructure dependencies from lockfile without lifecycle scripts..."
 bun install --frozen-lockfile --ignore-scripts
 
 # ── Bootstrap AWS environment (required for first-time accounts) ──────
