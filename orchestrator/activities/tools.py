@@ -247,7 +247,11 @@ def _resolve_model_candidates(context: dict[str, Any]) -> list[str]:
     tenant_model = context.get("tenant_model")
     requested_model = context.get("requested_model")
     fallback_models_raw = os.getenv("LLM_FALLBACK_MODELS", "")
-    fallback_models = [item.strip() for item in fallback_models_raw.split(",")] if fallback_models_raw else []
+    fallback_models = (
+        [item.strip() for item in fallback_models_raw.split(",")]
+        if fallback_models_raw
+        else []
+    )
 
     allowed_models = context.get("allowed_models", [])
     if allowed_models:
@@ -267,7 +271,9 @@ def _resolve_model_candidates(context: dict[str, Any]) -> list[str]:
         candidates = [model for model in candidates if model in allowed_models]
 
     if not candidates:
-        _raise_non_retryable_plan_error("No approved model candidates available for plan generation")
+        _raise_non_retryable_plan_error(
+            "No approved model candidates available for plan generation"
+        )
 
     max_attempts_raw = os.getenv("LLM_PLAN_MAX_MODEL_ATTEMPTS", "3").strip()
     try:

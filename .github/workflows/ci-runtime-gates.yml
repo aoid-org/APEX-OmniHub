@@ -7,11 +7,10 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  # ═══════════════════════════════════════════════════════════════════
-  # ARCHITECTURAL BOUNDARY ENFORCEMENT — v1.3.0-RC
-  # Fail-closed gate: grep-only, < 2 s, blocks all downstream jobs.
-  # ═══════════════════════════════════════════════════════════════════
   architectural-boundary-enforcement:
     name: Architectural Boundary Enforcement
     runs-on: ubuntu-latest
@@ -21,7 +20,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      # ── Guardrail 0 — File Existence (Rename-Drift Closure) ──────
       - name: "Guardrail 0 - File Existence (Rename-Drift Closure)"
         run: |
           MONITORED_FILES=(
@@ -32,51 +30,48 @@ jobs:
           MISSING=0
           for f in "${MONITORED_FILES[@]}"; do
             if [ ! -f "$f" ]; then
-              echo "🛑 BOUNDARY VIOLATION: Monitored file '$f' is missing."
-              echo "   RULE: All boundary-monitored files must exist at their canonical paths. File renames silently bypass path-specific guardrails."
-              echo "   FIX:  Restore '$f' to its canonical path, or update .github/workflows/ci-runtime-gates.yml to track the new location."
+              echo "BOUNDARY VIOLATION: Monitored file '$f' is missing."
+              echo "RULE: All boundary-monitored files must exist at their canonical paths. File renames silently bypass path-specific guardrails."
+              echo "FIX: Restore '$f' to its canonical path, or update .github/workflows/ci-runtime-gates.yml to track the new location."
               MISSING=1
             fi
           done
           if [ "$MISSING" -eq 1 ]; then
             exit 1
           fi
-          echo "✅ BOUNDARY CLEAR: All 3 monitored files exist at canonical paths."
+          echo "BOUNDARY CLEAR: All 3 monitored files exist at canonical paths."
 
-      # ── Guardrail 1 — Worker Purity (B1: main.py) ───────────────
       - name: "Guardrail 1 - Worker Purity (main.py must not import HTTP servers)"
         run: |
           if grep -qE "^\s*(import|from)\s+(fastapi|uvicorn)\b" orchestrator/main.py; then
-            echo "🛑 BOUNDARY VIOLATION: orchestrator/main.py contains an HTTP server import (fastapi or uvicorn)."
-            echo "   RULE: main.py is a pure Temporal Worker CLI entrypoint — no HTTP server imports permitted."
-            echo "   FIX:  Remove all fastapi/uvicorn imports from main.py. Move HTTP logic to services/orchestrator/api/."
+            echo "BOUNDARY VIOLATION: orchestrator/main.py contains an HTTP server import (fastapi or uvicorn)."
+            echo "RULE: main.py is a pure Temporal Worker CLI entrypoint - no HTTP server imports permitted."
+            echo "FIX: Remove all fastapi/uvicorn imports from main.py. Move HTTP logic to services/orchestrator/api/."
             exit 1
           else
-            echo "✅ BOUNDARY CLEAR: main.py worker purity confirmed — no fastapi/uvicorn imports."
+            echo "BOUNDARY CLEAR: main.py worker purity confirmed - no fastapi/uvicorn imports."
           fi
 
-      # ── Guardrail 2 — API Purity (B2: routes.py) ────────────────
       - name: "Guardrail 2 - API Purity (routes.py must not init Temporal Workers)"
         run: |
           if grep -qE "\.Worker\(|Worker\(|start_worker" services/orchestrator/api/routes.py; then
-            echo "🛑 BOUNDARY VIOLATION: routes.py initializes or references a Temporal Worker."
-            echo "   RULE: API routes are HTTP client-only — Worker lifecycle belongs exclusively in orchestrator/main.py."
-            echo "   FIX:  Remove Worker()/start_worker references. Use Temporal Client to dispatch workflows, not run Workers."
+            echo "BOUNDARY VIOLATION: routes.py initializes or references a Temporal Worker."
+            echo "RULE: API routes are HTTP client-only - Worker lifecycle belongs exclusively in orchestrator/main.py."
+            echo "FIX: Remove Worker()/start_worker references. Use Temporal Client to dispatch workflows, not run Workers."
             exit 1
           else
-            echo "✅ BOUNDARY CLEAR: routes.py API purity confirmed — no Worker initialization."
+            echo "BOUNDARY CLEAR: routes.py API purity confirmed - no Worker initialization."
           fi
 
-      # ── Guardrail 3 — Metrics Decoupling (B3: metrics.py) ───────
       - name: "Guardrail 3 - Metrics Decoupling (metrics.py must not import API layer)"
         run: |
           if grep -qE "^\s*from\s+services\.orchestrator\.api\b" orchestrator/metrics.py; then
-            echo "🛑 BOUNDARY VIOLATION: metrics.py imports from services.orchestrator.api."
-            echo "   RULE: The telemetry layer is a shared utility — it must not couple to the API layer."
-            echo "   FIX:  Remove the services.orchestrator.api import. Pass any needed dependencies via function arguments."
+            echo "BOUNDARY VIOLATION: metrics.py imports from services.orchestrator.api."
+            echo "RULE: The telemetry layer is a shared utility - it must not couple to the API layer."
+            echo "FIX: Remove the services.orchestrator.api import. Pass any needed dependencies via function arguments."
             exit 1
           else
-            echo "✅ BOUNDARY CLEAR: metrics.py decoupling confirmed — no API layer imports."
+            echo "BOUNDARY CLEAR: metrics.py decoupling confirmed - no API layer imports."
           fi
 
   terraform-expression-drift-gate:
@@ -92,15 +87,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: "20"
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.2.14"
+          node-version: "24"
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile --ignore-scripts
+        run: npm ci --ignore-scripts
 
       - name: Run Terraform expression drift tests
         id: terraform_drift_tests
@@ -117,6 +107,10 @@ jobs:
     needs: [architectural-boundary-enforcement, terraform-expression-drift-gate]
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout code
@@ -133,83 +127,62 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: "1.2.14"
+          bun-version: latest
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile --ignore-scripts
+        run: npm ci --ignore-scripts
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
-      # ─────────────────────────────────────────────────────────────
-      # Turborepo Caching
-      # ─────────────────────────────────────────────────────────────
       - name: Cache Turborepo
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .turbo
-          key: turbo-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ github.sha }}
+          key: turbo-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
           restore-keys: |
-            turbo-${{ runner.os }}-${{ hashFiles('bun.lock') }}-
+            turbo-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
             turbo-${{ runner.os }}-
-
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 1: Static Analysis
-      # ─────────────────────────────────────────────────────────────
-      - name: Lint commit messages (full PR range)
-        if: github.event_name == 'pull_request'
-        run: |
-          # Use the true merge-base of the PR branch against the target branch so
-          # that commits already in main (brought in via "Merge branch 'main' into
-          # <pr-branch>" merges) are never re-validated.
-          MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
-          echo "Linting commits from merge-base ${MERGE_BASE} to HEAD"
-          bunx @commitlint/cli \
-            --from "${MERGE_BASE}" \
-            --to HEAD \
-            --verbose
 
       - name: Validate commit messages
         if: github.event_name == 'pull_request'
         run: |
-          # Only validate the HEAD commit, not the full PR range.
-          # Historical commits from other contributors may use non-conventional
-          # formats (GitHub UI defaults, emoji prefixes, etc.) and cannot be amended.
-          bunx @commitlint/cli@20.5.0 --last --verbose
+          # Only validate the checked-out HEAD commit. Historical PR commits can
+          # be generated by automation or GitHub UI and cannot always be amended.
+          ./node_modules/.bin/commitlint \
+            --config ./commitlint.config.cjs \
+            --last \
+            --verbose
 
       - name: TypeScript type check
-        run: bun run typecheck
+        run: npm run typecheck
 
       - name: ESLint
-        run: bun run lint
+        run: npm run lint
 
       - name: Secret scan
         run: bun run secret:scan
 
       - name: React singleton check
-        run: bun run check:react
+        run: npm run check:react
 
       - name: Verify Python availability
         run: |
           python3 --version
           which python3
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 2: Unit Tests
-      # ─────────────────────────────────────────────────────────────
       - name: Clear Vitest cache
         run: |
-          # Remove any stale Vitest cache that might reference deleted test files
           rm -rf node_modules/.vitest
-          echo "✅ Vitest cache cleared"
+          echo "Vitest cache cleared"
 
       - name: Run unit tests
-        run: bun run test
+        run: npm run test
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -217,7 +190,7 @@ jobs:
           REQUIRE_SUPABASE_INTEGRATION_TESTS: "false"
 
       - name: Run JS coverage
-        run: bun run test:coverage
+        run: npm run test:coverage
 
       - name: Setup Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
@@ -234,11 +207,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 2.5: OmniEval Deterministic Evaluation
-      # ─────────────────────────────────────────────────────────────
       - name: Run OmniEval (deterministic eval gate)
-        run: bun run eval:ci
+        run: npm run eval:ci
 
       - name: Run Armageddon CI certification evidence
         run: bun run armageddon:certify:ci
@@ -261,27 +231,24 @@ jobs:
           path: artifacts/evals/report.json
           retention-days: 30
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 3: Build
-      # ─────────────────────────────────────────────────────────────
-      - name: Vercel Production Sync Shield
-        run: cd apps/omnihub-site && bun install --frozen-lockfile --omit=dev --ignore-scripts && bun run build
+      - name: Cloudflare Pages Production Sync Shield
+        run: cd apps/omnihub-site && npm ci --ignore-scripts && npm run build
         env:
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-key
           VITE_SUPABASE_PUBLISHABLE_KEY: test-key
 
       - name: Build production bundle
-        run: bun run build
+        run: npm run build
 
       - name: Bundle size check
         run: |
-          bunx size-limit@12.0.1 --json > bundle-size.json || {
-            echo "::error::Bundle size exceeds limits. Run 'bun run bundle:analyze' locally."
+          npm exec --no --ignore-scripts -- size-limit --json > bundle-size.json || {
+            echo "::error::Bundle size exceeds limits. Run 'npm run bundle:analyze' locally."
             cat bundle-size.json
             exit 1
           }
-          echo "✅ Bundle size within limits"
+          echo "Bundle size within limits"
 
       - name: Upload bundle stats
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -293,9 +260,11 @@ jobs:
             bundle-size.json
           retention-days: 30
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 4: Runtime Smoke Tests
-      # ─────────────────────────────────────────────────────────────
+      - name: Attest production bundle provenance
+        uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2
+        with:
+          subject-path: dist/**
+
       - name: Get Playwright version
         id: playwright-version
         run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
@@ -308,26 +277,23 @@ jobs:
           key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright Chromium
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
-          # CI runs chromium-only (see playwright.config.ts for rationale)
-          # Firefox/WebKit require OS packages unavailable on GitHub Actions runners
           ./node_modules/.bin/playwright install --with-deps chromium
 
       - name: Start preview server
         run: |
-          bun run preview -- --host --port 4173 &
+          npm run preview -- --host --port 4173 &
           echo $! > preview.pid
-          # Wait for server to be ready
-          npx wait-on@7.2.0 http://localhost:4173 --timeout 30000
+          node -e "const url='http://localhost:4173';let n=0;(async function poll(){try{const r=await fetch(url);if(r.ok||r.status<500)process.exit(0)}catch{} if(++n>60)process.exit(1); setTimeout(poll,500)})()"
 
       - name: Run asset access tests
-        run: bun run test:assets
+        run: npm run test:assets
         env:
           BASE_URL: http://localhost:4173
 
       - name: Run Playwright render tests
-        run: bun run test:e2e
+        run: npm run test:e2e
         env:
           BASE_URL: http://localhost:4173
 
@@ -339,9 +305,6 @@ jobs:
             rm preview.pid
           fi
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 5: Guard Rail Violation Scan
-      # ─────────────────────────────────────────────────────────────
       - name: Scan for Guard Rail Violations
         if: always()
         run: |
@@ -353,9 +316,6 @@ jobs:
           fi
           echo "No guard rail violations detected"
 
-      # ─────────────────────────────────────────────────────────────
-      # PHASE 6: Upload Artifacts
-      # ─────────────────────────────────────────────────────────────
       - name: Upload Playwright report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: failure()
@@ -370,80 +330,4 @@ jobs:
         with:
           name: playwright-screenshots
           path: test-results/
-          retention-days: 7
-
-  # ─────────────────────────────────────────────────────────────────
-  # OPTIONAL: Vercel Preview URL Tests
-  # Runs against deployed preview if available
-  # ─────────────────────────────────────────────────────────────────
-  preview-smoke-test:
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    if: github.event_name == 'pull_request'
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
-        with:
-          node-version: "20"
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.2.14"
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile --ignore-scripts
-
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        id: playwright-cache-preview
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright Chromium
-        timeout-minutes: 5
-        run: |
-          ./node_modules/.bin/playwright install --with-deps chromium
-
-      - name: Wait for Vercel Preview
-        uses: patrickedqvist/wait-for-vercel-preview@d7982701e6fcd3ae073bff929e408e004404d38d # v1.3.3
-        id: vercel-preview
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          max_timeout: 300
-          check_interval: 10
-          vercel_password: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-        continue-on-error: true
-
-      - name: Run asset tests against preview
-        if: steps.vercel-preview.outputs.url != ''
-        run: bun run test:assets
-        continue-on-error: true
-        env:
-          BASE_URL: ${{ steps.vercel-preview.outputs.url }}
-          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-
-      - name: Run Playwright tests against preview
-        if: steps.vercel-preview.outputs.url != ''
-        run: bun run test:e2e
-        continue-on-error: true
-        env:
-          BASE_URL: ${{ steps.vercel-preview.outputs.url }}
-
-      - name: Upload preview test artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: failure()
-        with:
-          name: preview-playwright-report
-          path: playwright-report/
           retention-days: 7

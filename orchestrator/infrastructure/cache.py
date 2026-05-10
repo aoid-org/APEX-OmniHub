@@ -579,7 +579,10 @@ class SemanticCacheService:
                 transformed = transformed.replace(search_value, replacement_value)
             return transformed
         if isinstance(value, dict):
-            return {key: self._transform_nested_values(item, replacements) for key, item in value.items()}
+            return {
+                key: self._transform_nested_values(item, replacements)
+                for key, item in value.items()
+            }
         if isinstance(value, list):
             return [self._transform_nested_values(item, replacements) for item in value]
         return value
