@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import WebSocket from 'ws';
-
 export async function assertWsConnects(url: string, token: string, timeoutMs: number): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const ws = new WebSocket(url, { headers: { Authorization: `Bearer ${token}` } });
