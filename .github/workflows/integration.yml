@@ -8,11 +8,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: cd integration-harness && npm install
-      - run: cd integration-harness && npx playwright install chromium
-      - run: cd integration-harness && bash run.sh
+        with:
+          node-version: '20'
+
+      - name: Checkout SBBL-HQ sibling repo
         env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          # Clone into sibling path expected by run.sh preflight.
+          git clone "https://x-access-token:${GH_PAT}@github.com/apexbusiness-systems/sbbl-hq.git" ../sbbl-hq
+
+      - name: Install OmniHub deps
+        run: npm install
+
+      - name: Install SBBL-HQ deps
+        run: cd ../sbbl-hq && npm install
+
+      - name: Install harness deps
+        run: cd integration-harness && npm install
+
+      - name: Install Playwright browser
+        run: cd integration-harness && npx playwright install chromium
+
+      - name: Run harness
+        run: cd integration-harness && bash run.sh
+        env:
+          OMNIHUB_REPO: ..
+          SBBL_REPO: ../sbbl-hq
           GH_PAT: ${{ secrets.GH_PAT }}
           SBBL_SUPABASE_URL: ${{ secrets.SBBL_SUPABASE_URL }}
           SBBL_SUPABASE_ANON_KEY: ${{ secrets.SBBL_SUPABASE_ANON_KEY }}
