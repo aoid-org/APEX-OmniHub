@@ -1,0 +1,15 @@
+{
+  "name": "apex-integration-harness",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test -c playwright.config.ts",
+    "e2e:local:win": "cmd /c run-e2e-local.cmd"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@supabase/supabase-js": "^2.56.0",
+    "dotenv": "^16.6.1",
+    "ws": "^8.18.0"
+  }
+}
