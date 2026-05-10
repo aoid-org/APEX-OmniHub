@@ -1,41 +1,31 @@
 # GitHub Admin Setup (Proposal)
 
-## Target repository ruleset
-- Ruleset name: `main-protection`
+| Field | Value |
+|---|---|
+| Document version | 1.2.0 |
+| Last updated (UTC) | 2026-05-10 |
+| Status | Proposal only (no fabricated admin state) |
+| Target ruleset | `main-protection` |
+
+## Target ruleset controls
 - Require pull requests.
-- Require CODEOWNERS reviews.
-- Dismiss stale approvals on new commits.
+- Require CODEOWNERS review.
+- Dismiss stale approvals after new commits.
 - Require conversation resolution before merge.
-- Require signed commits if available.
+- Require signed commits where available.
 - Disallow force pushes.
 - Disallow branch deletion.
-- Require these checks:
-  - Architectural Boundary Enforcement
-  - Terraform Expression Drift Gate
-  - build-and-test
-  - GitHub-native dependency review
-  - Quality Gates
-  - Security Gates
-  - Smoke Tests
-  - Production Readiness Summary
-  - Scan for Exposed Secrets
-  - Verify No .env Files
-  - Scan Dependencies for Vulnerabilities
-  - Security Invariant Checks
-  - Dependency Security Audit
-  - Code Quality Gates
-  - Test & Lint
-  - Security Scan
-  - Build Docker Image
-  - Lighthouse Audit
 
-## Environments
-- `staging` reviewers: `@apexbusiness-systems`
-- `production` reviewers: repo admin + `@apexbusiness-systems`; prevent self-review
-- `web3-production` reviewers: repo admin + security/platform reviewer
-- `release-provenance` reviewers: release owner/admin
+## Required checks contract
+Required checks must match `policy/rsi-policy.yaml` exactly to prevent branch protection drift.
 
-## Export current admin configuration (no fabricated values)
+## Environment protections
+- `staging`: reviewer `@apexbusiness-systems`
+- `production`: repo admin + `@apexbusiness-systems`; prevent self-review
+- `web3-production`: repo admin + security/platform reviewer
+- `release-provenance`: release owner/admin
+
+## Admin-state export commands
 ```bash
 export GH_REPO="apexbusiness-systems/APEX-OmniHub"
 gh api repos/$GH_REPO/rulesets
@@ -43,3 +33,7 @@ gh api repos/$GH_REPO/branches/main/protection
 gh api repos/$GH_REPO/environments
 gh api repos/$GH_REPO/actions/permissions
 ```
+
+## Change log
+- **2026-05-10 (v1.2.0):** added explicit controls section and drift-prevention statement.
+- **2026-05-10 (v1.1.0):** initial admin setup proposal published.
