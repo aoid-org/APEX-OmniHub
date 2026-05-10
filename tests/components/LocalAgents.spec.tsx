@@ -41,23 +41,43 @@ vi.mock('recharts', () => ({
   Cell: () => null,
 }));
 
-vi.mock('@/components/ui/select', () => ({
-  Select: ({ children, onValueChange, value }: {
-    children: React.ReactNode;
-    onValueChange?: (v: string) => void;
-    value?: string;
-  }) => (
-    <select data-testid="select" value={value} onChange={(e) => onValueChange?.(e.target.value)}>
-      {children}
-    </select>
-  ),
-  SelectContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => (
-    <option value={value}>{children}</option>
-  ),
-  SelectTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>,
-}));
+vi.mock('@/components/ui/select', () => {
+  const collectOptions = (children: React.ReactNode): React.ReactNode[] => {
+    const options: React.ReactNode[] = [];
+    React.Children.forEach(children, (child) => {
+      if (!React.isValidElement(child)) return;
+      const props = child.props as { children?: React.ReactNode; value?: string };
+      if (child.type === 'option') {
+        options.push(child);
+        return;
+      }
+      if (typeof props.value === 'string') {
+        options.push(<option key={props.value} value={props.value}>{props.children}</option>);
+        return;
+      }
+      options.push(...collectOptions(props.children));
+    });
+    return options;
+  };
+
+  return {
+    Select: ({ children, onValueChange, value }: {
+      children: React.ReactNode;
+      onValueChange?: (v: string) => void;
+      value?: string;
+    }) => (
+      <select data-testid="select" value={value} onChange={(e) => onValueChange?.(e.target.value)}>
+        {collectOptions(children)}
+      </select>
+    ),
+    SelectContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => (
+      <option value={value}>{children}</option>
+    ),
+    SelectTrigger: () => null,
+    SelectValue: () => null,
+  };
+});
 
 vi.mock('@/components/ui/card', () => ({
   Card: ({ children }: { children: React.ReactNode }) => <div data-testid="card">{children}</div>,

@@ -1,7 +1,7 @@
 /**
  * OmniCanvas — Spatial Canvas Host (Layer 2)
  * @version 1.0.0
- * @module apps/omnihub-site/src/components/omnidash/OmniCanvas
+ * @module apps/omnihub-site/dashboard/components/OmniCanvas
  *
  * The infinite canvas that hosts all WidgetShell and FloatingWindow instances.
  * Provides the coordinate space for widget positioning and handles canvas-level

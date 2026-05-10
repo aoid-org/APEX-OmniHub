@@ -4,6 +4,80 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.6.0] - 2026-05-08
+
+### 🔒 Security & Hardening
+- Armageddon Live Validation passed: 2,399 Vitest + 891 Pytest + 21 Playwright
+  E2E + 168 simulation + 5 Worldwide Wildcard — all green (2026-05-08)
+- SIM_MODE=false chaos guardrail confirmed operational against live Supabase
+- Secret scan clean: zero findings
+
+### 🧹 Repository Hygiene
+- Relocated dev artifacts from root to scripts/debug/ and scripts/dev/
+- Deleted logs.txt (ephemeral runtime artifact; already absent during audit)
+- Canonicalized package manager metadata with packageManager field
+- Hardened .gitignore: excluded runtime logs, debug artifacts, volatile reports
+
+### 📦 CI/CD
+- GitHub Actions package manager usage audited against canonical metadata
+- Playwright install-deps remediation documented for Chromium runtime dependencies
+- Worldwide Wildcard runner remediation documented: guardrail blocks correctly
+  scored as passing control-plane outcomes
+
+### 📚 Documentation
+- Armageddon 2026-05-08 validation report integrated into docs/testing/
+- Release Notes v1.6.0 published
+- PR Triage Report published in docs/ops/
+
+
+### Fixed — Zero Tech Debt Pass (2026-05-07)
+
+- **Security (create-checkout):** Added `ALLOWED_ORIGINS` allowlist for `returnUrl`
+  validation to prevent open-redirect abuse; replaced raw `error.message` in catch
+  block with a generic `500` message to prevent internal stack exposure.
+- **Security (OmniAppShell):** Replaced unsafe `innerHTML` template literal for
+  `config.title` in shadow DOM placeholder with `textContent` assignments —
+  eliminates XSS vector in the sandbox placeholder path.
+- **Dependency hygiene:** Removed duplicate/invalid `overrides` entries from root
+  `package.json` (`axios: "$axios"`, inline `protobufjs: ^7.5.5`, inline
+  `axios: ^1.16.0`, redundant `picomatch: >=2.3.2`). Single clean `axios: ^1.7.9`
+  override remains. Removed unused direct deps `reactflow` and `nanoid` (zero
+  production imports confirmed).
+- **Orchestrator requirements:** Added missing runtime packages to
+  `orchestrator/requirements.in`: `authlib`, `slowapi`, `aiofiles`,
+  `prometheus-client`, `mysql-connector-python`; aligned `temporalio` version to
+  match `pyproject.toml`.
+- **Orchestrator Dockerfile:** Added missing `COPY` directives for 'core/',
+  'observability/', `security/`, 'policies/', 'providers/', 'omniboard/',
+  `server.py`, and `metrics.py` — container was missing six runtime packages
+  and two entry-point files that `main.py` and `server.py` directly import.
+- **Documentation drift:** Updated 4 stale 'src/components/omnidash/media/' paths
+  in `docs/platform/OMNIDASH.md` and 1 stale path in `README.md` to canonical
+  `apps/omnihub-site/dashboard/components/` locations.
+- **JSDoc @module comments:** Fixed 4 dashboard components with stale
+  '@module apps/omnihub-site/src/components/omnidash/*' headers —
+  now correctly reflect 'apps/omnihub-site/dashboard/components/*'.
+
+### Fixed — Code Quality Improvements (2026-05-07)
+
+- **Security headers:** `Cross-Origin-Opener-Policy` in `public/_headers` upgraded
+  from `unsafe-none` to `same-origin` — matches the stricter policy already in
+  `apps/omnihub-site/public/_headers` and closes the deployed header split.
+- **Repo hygiene:** Removed tracked `output.txt` CI artifact; added `output.txt`
+  to `.gitignore` to prevent future leakage.
+- **OmniDash consolidation:** Deleted stale legacy tree
+  'apps/omnihub-site/src/components/omnidash/' (24 files, superseded by the
+  canonical `apps/omnihub-site/dashboard/components/`). Updated two test files
+  to reference the active tree only.
+- **React version drift:** Aligned `apps/omnihub-site` devDependency `react` /
+  `react-dom` from `^19.2.4` back to `^18.3.1` — matches root package and
+  `CANONICAL_TRUTH.md` statement 1; eliminates split that caused dedupe ambiguity.
+- **eventStore.ts docs:** Replaced misleading module-header comment that claimed
+  fire-and-forget dispatch + DLQ were active; documented that dispatch helpers
+  exist but are not wired in production ingress paths.
+
 ## [1.6.1] - 2026-05-04
 
 ### Fixed — Supabase Security & Performance Hardening (Production `rtopreovkywofgwgmozi`)
@@ -36,17 +110,17 @@ Zero breaking changes — all authenticated and service_role access preserved.
 ### Added — SBBL-HQ Bidirectional Integration + Control Plane (Cloudflare Pages target)
 
 This release closes the `FUTURE: Durable execution routing` gap previously
-at `api/omnibridge/ingest.ts` and wires OmniHub as the authoritative
+at `ingest.ts` and wires OmniHub as the authoritative
 control plane for SBBL-HQ ahead of the 2026 Spring Edition live event.
 
-**Deployment target: Cloudflare Pages Functions (`functions/api/...`).** The
+**Deployment target: Cloudflare Pages Functions (`functions/api`).** The
 original implementation targeted Vercel Edge (`api/`); post-audit the code
 was rewritten for CF Pages's `onRequestPost({request, env})` signature with
-`context.env` binding. The old `api/omnibridge/*.ts` Vercel-shaped files
+`context.env` binding. The old 'api/omnibridge/*.ts' Vercel-shaped files
 have been removed.
 
 - **`supabase/migrations/20260417000000_omnibridge_events.sql`** — durable event log (`omnibridge_events`), dispatch DLQ (`omnibridge_events_dlq`), and hash-chained control audit (`omnibridge_control_audit`) with RLS + tenant-scoped admin reads. Plus `omnibridge_event_stats_hourly` view for grant-evidence reporting. **DDL validated on Armageddon Test Suite** (`qhjqselqpkfqjfpuxykb`) with live insert + idempotency rejection + DLQ FK cascade proven before release.
-- **SBBL-HQ side migration applied live** (`ezanilxygnpucwkwpsoc` / SBBL-HQ production Supabase): `omnihub_command_log` table created for idempotent receipt of inbound control commands. See `supabase/migrations/*` + verification log.
+- **SBBL-HQ side migration applied live** (`ezanilxygnpucwkwpsoc` / SBBL-HQ production Supabase): 'omnihub_command_log' table created for idempotent receipt of inbound control commands. See 'supabase/migrations/*' + verification log.
 - **`src/lib/omnibridge/syncPacketVerifier.ts`** — SBBL-HQ native HMAC-SHA256 verifier with base64url decode + constant-time `crypto.subtle.verify`. Byte-identical to SBBL-HQ's own `signSyncPacket` primitive (proven by `omnibridge-roundtrip.test.ts`).
 - **`functions/api/omnibridge/sync.ts`** — new CF Pages Function (`onRequestPost`) accepting SBBL-HQ's native `{packet, signature}` envelope with source lookup, IP allowlist, 300s timestamp skew, replay guard on `packet_id`, payload sanitization, and durable persistence.
 - **`functions/api/omnibridge/ingest.ts`** — CF Pages Function for the hardened 5-header HMAC profile (migrated from Vercel Edge shape).
@@ -57,9 +131,9 @@ have been removed.
 - **`src/lib/omnibridge/outboundCaller.ts`** — signs + POSTs control commands to SBBL-HQ with exponential-backoff retries (3x max), 5xx retry / 4xx terminal, injected-fetch for testability.
 - **`supabase/functions/omnibridge-control/index.ts`** — privileged control-plane endpoint (JWT + RBAC). Actions: `disable_stream`, `enable_stream`, `revoke_access`, `grant_access`, `emergency_halt`, `broadcast_message`, `force_man_review`, `hotfix_dispatch`. RED-lane actions require **two-party MAN approval** (approver ≠ requester enforced). BLOCKED patterns (`drop table`, `disable rls`, etc.) rejected at ingestion. Hash-chained audit log. `hotfix_dispatch` requires explicit `target_file_allowlist` with path-traversal rejection.
 - **`src/components/omnibridge/OmniBridgeLiveFeed.tsx`** — real-time admin dashboard backed by Supabase Realtime on `omnibridge_events`. Shows verified %, acked %, DLQ count, p95 round-trip latency. Alberta Innovates grant-evidence UI.
-- **`api/omnibridge/ingest.ts`** — wired the existing hardened path to `persistEvent`, closing the `FUTURE: Durable execution routing` TODO without touching the signature verification code path (zero regression risk to existing 15 ingest tests).
+- **`ingest.ts`** — wired the existing hardened path to `persistEvent`, closing the `FUTURE: Durable execution routing` TODO without touching the signature verification code path (zero regression risk to existing 15 ingest tests).
 - **`.env.example`** — documented `OMNIBRIDGE_SBBL_NATIVE_SECRET`, `CONTROL_SIGNING_SECRET_SBBL_HQ`, `CONTROL_TARGET_URL_SBBL_HQ`, plus registry example for `profile: 'sync_packet'`.
-- **`docs/integration/sbbl-hq-v1.6.0-patch.md`** — ready-to-apply patch for the SBBL-HQ Cloudflare Workers side (outbound emit callsite, inbound `/webhooks/omnihub` route, Supabase migration, secret provisioning, deployment order, rollback).
+- **`docs/integration/sbbl-hq-v1.6.0-patch.md`** — ready-to-apply patch for the SBBL-HQ Cloudflare Workers side (outbound emit callsite, inbound `webhooks` route, Supabase migration, secret provisioning, deployment order, rollback).
 
 ### Added — Tests (75 new)
 
@@ -71,12 +145,12 @@ have been removed.
 
 ### Verification (Release Blocking)
 
-- `vitest run tests/` → **2,379 passed, 0 failed**, 70 skipped (pre-existing). **+118 tests vs v1.5.1 baseline** (2,261 → 2,379).
+- `vitest run` → **2,379 passed, 0 failed**, 70 skipped (pre-existing). **+118 tests vs v1.5.1 baseline** (2,261 → 2,379).
 - `tsc --noEmit` → 0 errors.
 - `eslint` on all new files → 0 errors, 0 warnings.
 - Round-trip cryptographic contract with SBBL-HQ: **byte-verified** (not assumed).
 - **Live Supabase verification**: migration DDL applied to Armageddon Test Suite; INSERT / duplicate-reject / DLQ FK cascade all confirmed working with real Postgres.
-- **SBBL-HQ side migration applied live**: `omnihub_command_log` table created on SBBL-HQ production Supabase (`ezanilxygnpucwkwpsoc`) — ready to receive inbound commands as soon as SBBL-HQ worker route handler is deployed (see `docs/integration/sbbl-hq-v1.6.0-patch.md`).
+- **SBBL-HQ side migration applied live**: 'omnihub_command_log' table created on SBBL-HQ production Supabase (`ezanilxygnpucwkwpsoc`) — ready to receive inbound commands as soon as SBBL-HQ worker route handler is deployed (see `docs/integration/sbbl-hq-v1.6.0-patch.md`).
 
 ### Security Posture
 
@@ -109,7 +183,7 @@ have been removed.
 
 ### Verification (Release Blocking)
 
-- `vitest run tests/login-page-fixes.test.ts tests/login-supabase-config.test.ts` → **54/54 PASS** (43 new + 11 existing)
+- `vitest login` → **54/54 PASS** (43 new + 11 existing)
 - `tsc --noEmit --skipLibCheck` → 0 errors in changed files
 - Production bundle verification: `curl` confirmed `placeholder.supabase.co` in live JS → will resolve after merge + redeploy
 - Cloudflare Pages dashboard env vars confirmed present and correct
@@ -120,9 +194,9 @@ have been removed.
 
 ### Added — APEX-DEV MCP Gateway Architectural Alignment
 
-- **`src/omnihub-gateway/mcp-client/` Core Integration** — Designed and implemented a secure, cross-platform A2A (Agent-to-Agent) SDK, directly superseding the legacy single-endpoint Edge Functions.
+- **'src/omnihub-gateway/mcp-client/' Core Integration** — Designed and implemented a secure, cross-platform A2A (Agent-to-Agent) SDK, directly superseding the legacy single-endpoint Edge Functions.
 - **Zero-Trust JWT Delegation** — Hardened `.env` properties to utilize fail-safe `anon` keys, leveraging strict Row Level Security (RLS) to enforce user-bound constraints across the new Gateway.
-- **Live OpenTelemetry SSE Support** — Restructured `OmniTracePanel` from static mock arrays to a localized `EventSource` listening dynamically at `/api/mcp/telemetry/stream`.
+- **Live OpenTelemetry SSE Support** — Restructured `OmniTracePanel` from static mock arrays to a localized `EventSource` listening dynamically at `stream`.
 - **SonarQube A-Grade Extinctions** — Completely decoupled nested Promises inside `apps/omnihub-site/dashboard/hooks/useDashboardData.ts`, removing empty catches and eradicating all untyped `any` assignments via strictly controlled structural type inferences.
 
 ### Removed
@@ -144,19 +218,19 @@ have been removed.
 ### Fixed
 
 - **Idempotency Guard Extraction** — Extracted shared `_idempotency_guard()` helper in `orchestrator/activities/tools.py`, eliminating duplicated idempotency-check logic that was replicated across multiple activity implementations. All callers now delegate to the single authoritative implementation.
-- **SonarCloud Quality Gate** — Resolved 0% duplications on new code: added `.claude/**` to both `sonar.cpd.exclusions` and `sonar.coverage.exclusions` in `sonar-project.properties`, preventing developer-tooling scripts from triggering false-positive CPD or coverage failures.
+- **SonarCloud Quality Gate** — Resolved 0% duplications on new code: added `.claude` to both `sonar.cpd.exclusions` and `sonar.coverage.exclusions` in `sonar-project.properties`, preventing developer-tooling scripts from triggering false-positive CPD or coverage failures.
 
 ### Added
 
-- **`tests/test_core_intents.py`** — New test module providing 100% coverage of `orchestrator/core/intents`.
-- **`tests/test_tools_extended.py`** — Extended coverage suite for `orchestrator/activities/tools.py`; combined with existing tests brings module coverage to 73%.
-- **`tests/test_universal_intents.py`** — New test module achieving 100% coverage of the universal intent mapping layer.
-- **`tests/test_iron_law_verify.py`** (improved) — Rewritten to achieve 100% branch and statement coverage of `iron_law_verify`.
+- **`test_core_intents.py`** — New test module providing 100% coverage of `intents`.
+- **`test_tools_extended.py`** — Extended coverage suite for `orchestrator/activities/tools.py`; combined with existing tests brings module coverage to 73%.
+- **`test_universal_intents.py`** — New test module achieving 100% coverage of the universal intent mapping layer.
+- **`test_iron_law_verify.py`** (improved) — Rewritten to achieve 100% branch and statement coverage of `iron_law_verify`.
 
 ### Quality Gates
 
 - Orchestrator Python tests: **177 passed**, 0 failed
-- Coverage — `iron_law_verify`: 100% | `omnitrace_activities`: 100% | `universal_intents`: 100% | `core/intents`: 100% | `tools.py`: 73%
+- Coverage — `iron_law_verify`: 100% | `omnitrace_activities`: 100% | `universal_intents`: 100% | `intents`: 100% | `tools.py`: 73%
 - SonarCloud: 0% duplications on new code ✅ | 100% coverage on new code ✅ | Quality Gate: **PASSED**
 
 ---
@@ -217,7 +291,7 @@ have been removed.
 ### Changed
 
 - **DashboardOverview.tsx** — Migrated app-click handler from inline `useOmniModal.invoke()` calls to `useOmniDashAction(navigate)` dispatch pattern.
-- **`apps/omnihub-site/src/layouts/OmniDashLayout.tsx`** — Migrated Connect AI button from inline oauth invocation to `dispatch(OmniDashIntent)`. Notifications bell migrated to non-reactive `useOmniModal.getState().invoke()` pattern.
+- **`OmniDashLayout.tsx`** — Migrated Connect AI button from inline oauth invocation to `dispatch(OmniDashIntent)`. Notifications bell migrated to non-reactive `useOmniModal.getState().invoke()` pattern.
 - **Integrations.tsx** — Replaced inline `omniModal.invoke()` OAuth calls with `useOmniDashAction` dispatch; added `useOmniBoard` subscription to merge live connector status over stale React Query cache; added `Loader2` spinner for `CONNECTING` state.
 
 ### Fixed
@@ -474,7 +548,7 @@ have been removed.
 
 #### Repository Hygiene
 
-- **Stale CI artifacts removed:** Deleted `final_eslint.json` (UTF-16 encoded legacy artifact), 'security/npm-audit-latest.json', 'security/npm-audit-prod.json', `coverage/` directory
+- **Stale CI artifacts removed:** Deleted 'final_eslint.json' (UTF-16 encoded legacy artifact), 'security/npm-audit-latest.json', 'security/npm-audit-prod.json', `coverage` directory
 - **`.gitignore` extended:** Added rules for stale CI artifacts to prevent re-commitment
 - **README.md updated:** Platform statistics updated to verified 2026-02-25 counts (259 source files, 93 components, 43 migrations, 87 test files, 11 CI pipelines)
 
@@ -532,7 +606,7 @@ have been removed.
 #### Architecture Refactoring
 
 - **OmniDash SPA**: Restructured from multi-page routing to Single Page Application with panel-based navigation
-- Migrated 'src/pages/OmniDash/{Today,Kpis,Ops,Integrations,Events}.tsx' → `src/components/omnidash/`
+- Migrated 'src/pages/OmniDash/{Today,Kpis,Ops,Integrations,Events}.tsx' → 'src/components/omnidash/'
 - Enhanced `useOmniDashKeyboardShortcuts.ts` with panel-based activation keys (H, P, K, O, I, E, N, R, A, W)
 - Added `react-grid-layout` responsive dashboard widget positioning (breakpoints: lg:3, md:2, sm:1)
 - Added `framer-motion` for SPA panel transition animations

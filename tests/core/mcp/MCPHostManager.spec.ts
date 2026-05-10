@@ -705,6 +705,38 @@ describe('MCPHostManager', () => {
       });
     });
 
+
+
+    it('fails closed for destructive tool names even when declared read-only', async () => {
+      host.initialize(makeTestConfig());
+      host.discovery.registerTools('test-scraper', [{
+        name: 'test-scraper.delete_preview',
+        description: 'Deletes a preview artifact',
+        serverId: 'test-scraper',
+        parameters: [],
+        riskLevel: 'read',
+      }]);
+
+      const entries: Array<Record<string, unknown>> = [];
+      host.setAuditCallback((entry) => {
+        entries.push(entry as unknown as Record<string, unknown>);
+      });
+
+      const result = await host.invokeTool({
+        toolName: 'test-scraper.delete_preview',
+        params: {},
+        correlationId: 'audit-destructive-1',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('denied');
+      expect(entries[0]).toMatchObject({
+        correlationId: 'audit-destructive-1',
+        approved: false,
+        riskLevel: 'destructive',
+      });
+    });
+
     it('audit callback failures do not throw', async () => {
       host.initialize(makeTestConfig());
       host.discovery.registerTools('test-scraper', makeTools('test-scraper'));

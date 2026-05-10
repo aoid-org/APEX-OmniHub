@@ -1,12 +1,12 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.1-L10N-PWA-HARDENING | LAST_UPDATED=2026-03-10 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.2-PROTOCOL-CONFORMANCE | LAST_UPDATED=2026-05-09 -->
 
 # APEX OmniHub Documentation
 
 **Enterprise AI Orchestration Platform**
 
-- **Document Version:** 2.3.2
-- **Platform Version:** 1.4.1
-- **Last Updated:** 2026-03-16
+- **Document Version:** 2.4.0
+- **Platform Version:** 1.6.0
+- **Last Updated:** 2026-05-09
 - **Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
@@ -49,6 +49,7 @@ Core platform components with dedicated documentation:
 | **OmniLink PWA**  | Mobile PWA capabilities         | [OMNILINK_MOBILE_PWA.md](platform/OMNILINK_MOBILE_PWA.md)         |
 | **OmniSentry**    | Health & monitoring system      | [OMNISENTRY.md](platform/OMNISENTRY.md)                           |
 | **Connector Kit** | Integration adapters            | [CONNECTOR_KIT.md](platform/CONNECTOR_KIT.md)                     |
+| **Protocol Conformance** | MCP/A2A gateway conformance     | [OMNIHUB_PROTOCOL_CONFORMANCE.md](platform/OMNIHUB_PROTOCOL_CONFORMANCE.md) |
 
 ---
 
@@ -290,3 +291,5 @@ docs/
 - All strategic status changes must be reflected in `docs/project-status/PRODUCTION_STATUS.md` and the latest audit artifact in `docs/audits/`.
 - Security posture updates must include refreshed `security/npm-audit-latest.json` and `security/npm-audit-prod.json` evidence files.
 - Remove transient logs/artifacts from source control (lint dumps, local reports, backup files) unless explicitly required for compliance evidence.
+
+## Platform

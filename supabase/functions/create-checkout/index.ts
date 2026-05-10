@@ -54,8 +54,15 @@ serve(async (req) => {
     }
 
     // Determine the base URL for success/cancel redirects.
-    // If body.returnUrl is provided and matches allowed origins, use it. Otherwise use origin.
-    const baseUrl = body.returnUrl || origin || 'https://apexomnihub.icu';
+    // Only allow known-good origins to prevent open-redirect abuse.
+    const ALLOWED_ORIGINS = [
+      'https://apexomnihub.icu',
+      'https://www.apexomnihub.icu',
+      'https://app.apexomnihub.icu',
+    ];
+    const candidateBase = body.returnUrl || origin || '';
+    const isAllowed = ALLOWED_ORIGINS.some((o) => candidateBase === o || candidateBase.startsWith(o + '/'));
+    const baseUrl = isAllowed ? candidateBase : 'https://apexomnihub.icu';
 
     // Verify if we have a customer already
     const { data: subscription } = await client
@@ -111,7 +118,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: 'INTERNAL_SERVER_ERROR',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: 'An unexpected error occurred. Please try again.',
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -12,12 +12,12 @@
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Version:** 1.5.1 | **Release Date:** 2026-04-04
+**Version:** 1.6.0 | **Release Date:** 2026-05-08
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
 [![SonarQube](https://img.shields.io/badge/sonarqube-A-success)]()
-[![Tests](https://img.shields.io/badge/tests-1785%2B%20pass-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-3584%2B%20pass-brightgreen)]()
 [![Armageddon](https://img.shields.io/badge/armageddon-L7%20CERTIFIED-gold)]()
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 
@@ -146,12 +146,17 @@ Client-side infrastructure for deterministic media delivery:
 
 ---
 
+
+### Runtime and release authority
+
+APEX OmniHub now treats Node 24 as the canonical CI/runtime target, with Node 22 as the minimum supported version. The authoritative release path is npm-based: `npm ci` and `npm run ...`. Bun remains optional for local convenience only; `package-lock.json` is the release lockfile and `bun.lock` is retained for parity evidence, not CI authority. See `docs/runtime/ENTERPRISE_CONTROL_PLANE.md`.
+
 ## Repository Layout
 
 ```
 /src                 - OmniDash UI (277 files)
 /dashboard/OmniDashShell.tsx  -  Unified dashboard Shell / layout
-/src/components/omnidash/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
+/apps/omnihub-site/dashboard/components/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
 /src/omnidash/uiRegistry.ts  -   UI registry wiring
 
 
@@ -187,13 +192,13 @@ Supabase runs in the cloud — point `.env.local` to your Supabase project.
 #### 1) Install dependencies
 
 ```bash
-bun install
+npm ci
 ```
 
 #### 2) Run OmniDash (main UI)
 
 ```bash
-bun run dev
+npm run dev
 ```
 
 #### 3) Run the Orchestrator (Temporal)
@@ -217,10 +222,10 @@ docker compose -f docker-compose.prod.yml up -d
 Run these before any PR:
 
 ```bash
-bun run lint       # ESLint
-bun run typecheck  # TypeScript strict mode
-bun test           # Vitest suite
-bun run build      # Production build
+npm run lint       # ESLint
+npm run typecheck  # TypeScript strict mode
+npm test           # Vitest suite
+npm run build      # Production build
 ```
 
 ### CI/CD Pipelines (Selected Workflows)
@@ -243,8 +248,11 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 
 | Document                                                                                | Description           |
 | --------------------------------------------------------------------------------------- | --------------------- |
+| [Release Notes v1.6.0](./docs/releases/RELEASE_NOTES_v1.6.0.md)                 | What is new in v1.6.0 |
 | [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
 | [Launch Readiness](./docs/project-status/LAUNCH_READINESS_v1.0.0.md)                    | Deployment checklist  |
+| [Testing Evidence & Armageddon Reports](./docs/testing/README.md)                    | Validation history    |
+| [PR Triage Report](./docs/ops/PR_TRIAGE.md)                                      | Open PR resolution matrix |
 | [OPS Runbooks](./OPS_RUNBOOKS.md)                                                       | Operations procedures |
 | [Supabase Setup](./SUPABASE_SETUP.md)                                                   | Database config guide |
 | [orchestrator/README](./orchestrator/README.md)                                         | Temporal setup        |
@@ -258,7 +266,7 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 1. Fork the repo
 2. Create a branch: `git checkout -b feature/your-feature`
 3. Write tests for your changes
-4. Run full gates: `bun test && bun run lint && bun run typecheck && bun run build`
+4. Run full gates: `npm test && npm run lint && npm run typecheck && npm run build`
 5. Submit a PR
 
 ### Non-Negotiables

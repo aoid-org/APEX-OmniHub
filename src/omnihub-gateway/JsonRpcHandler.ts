@@ -27,11 +27,20 @@ import {
   type GatewayContext,
 } from './types';
 import {
+  buildMcpInitializeResult,
+  deriveTraceMeta,
+  paginateMcpList,
+  wrapMcpListResult,
+} from '../core/gateway/ProtocolContracts';
+import {
   executeToolViaWorkflow,
   dispatchA2ATask,
   queryA2ATask,
   cancelA2ATask,
 } from './TemporalBridge';
+import { MCPHostManager } from '../core/mcp/MCPHostManager';
+import type { MCPToolSchema } from '../core/mcp/MCPToolDiscovery';
+import type { MCPPrompt, MCPResource } from '../core/mcp/MCPSessionManager';
 
 // ============================================================================
 // Method Handler Interface
@@ -180,6 +189,83 @@ export class JsonRpcMethodError extends Error {
 }
 
 // ============================================================================
+// MCP Registry Provider
+// ============================================================================
+
+export interface MCPRegistryProvider {
+  readonly listTools: () => readonly MCPToolSchema[];
+  readonly listResources: () => readonly MCPResource[];
+  readonly listPrompts: () => readonly MCPPrompt[];
+}
+
+function createMCPHostRegistryProvider(): MCPRegistryProvider {
+  const host = MCPHostManager.getInstance();
+  return {
+    listTools: () => host.discovery.getAllTools(),
+    listResources: () => Array.from(host.resources.values()).flat(),
+    listPrompts: () => Array.from(host.prompts.values()).flat(),
+  };
+}
+
+function toMcpTool(tool: MCPToolSchema): Record<string, unknown> {
+  return {
+    name: tool.name,
+    description: tool.description,
+    inputSchema: parametersToInputSchema(tool.parameters),
+    _meta: {
+      serverId: tool.serverId,
+      riskLevel: tool.riskLevel,
+    },
+  };
+}
+
+function toMcpResource(resource: MCPResource): Record<string, unknown> {
+  return {
+    uri: resource.uri,
+    name: resource.name,
+    description: resource.description,
+    ...(resource.mimeType ? { mimeType: resource.mimeType } : {}),
+    _meta: { serverId: resource.serverId },
+  };
+}
+
+function toMcpPrompt(prompt: MCPPrompt): Record<string, unknown> {
+  return {
+    name: prompt.name,
+    description: prompt.description,
+    arguments: prompt.arguments.map((argument) => ({
+      name: argument.name,
+      description: argument.description,
+      required: argument.required,
+    })),
+    _meta: { serverId: prompt.serverId },
+  };
+}
+
+function parametersToInputSchema(
+  parameters: MCPToolSchema['parameters'],
+): Record<string, unknown> {
+  const properties: Record<string, Record<string, unknown>> = {};
+  const required: string[] = [];
+
+  for (const parameter of parameters) {
+    properties[parameter.name] = {
+      type: parameter.type || 'string',
+      description: parameter.description,
+    };
+    if (parameter.required) {
+      required.push(parameter.name);
+    }
+  }
+
+  return {
+    type: 'object',
+    properties,
+    ...(required.length > 0 ? { required } : {}),
+  };
+}
+
+// ============================================================================
 // MCP Protocol Methods — Live Temporal Bindings
 // ============================================================================
 
@@ -187,25 +273,20 @@ export class JsonRpcMethodError extends Error {
  * Register standard MCP protocol methods on a handler.
  * All stateful operations dispatch through Temporal workflows.
  */
-export function registerMCPMethods(handler: JsonRpcHandler): void {
+export function registerMCPMethods(
+  handler: JsonRpcHandler,
+  registry: MCPRegistryProvider = createMCPHostRegistryProvider(),
+): void {
   // MCP initialize — capability negotiation (stateless, no Temporal needed)
-  handler.registerMethod('initialize', async () => ({
-    protocolVersion: '2025-03-26',
-    capabilities: {
-      tools: { listChanged: true },
-      resources: { subscribe: true, listChanged: true },
-      prompts: { listChanged: true },
-    },
-    serverInfo: {
-      name: 'omnihub-gateway',
-      version: '1.0.0',
-    },
-  }));
+  handler.registerMethod('initialize', async (params) =>
+    buildMcpInitializeResult(params['protocolVersion']),
+  );
 
   // MCP tools/list — enumerate available tools (stateless registry read)
-  handler.registerMethod('tools/list', async () => ({
-    tools: [],
-  }));
+  handler.registerMethod('tools/list', async (params) => {
+    const page = paginateMcpList(registry.listTools().map(toMcpTool), params);
+    return wrapMcpListResult('tools', page.items, page.nextCursor);
+  });
 
   // MCP tools/call — execute a tool via Temporal durable workflow
   handler.registerMethod('tools/call', async (params, context) => {
@@ -226,16 +307,21 @@ export function registerMCPMethods(handler: JsonRpcHandler): void {
       content: result.content,
       isError: result.isError,
       _meta: {
-        workflowId: result.workflowId,
+        ...deriveTraceMeta({
+          requestId: context.requestId,
+          correlationId: context.correlationId,
+          workflowId: result.workflowId,
+        }),
         durationMs: result.durationMs,
       },
     };
   });
 
   // MCP resources/list — stateless registry read
-  handler.registerMethod('resources/list', async () => ({
-    resources: [],
-  }));
+  handler.registerMethod('resources/list', async (params) => {
+    const page = paginateMcpList(registry.listResources().map(toMcpResource), params);
+    return wrapMcpListResult('resources', page.items, page.nextCursor);
+  });
 
   // MCP resources/read — stateless resource fetch
   handler.registerMethod('resources/read', async (params) => {
@@ -249,9 +335,10 @@ export function registerMCPMethods(handler: JsonRpcHandler): void {
   });
 
   // MCP prompts/list — stateless registry read
-  handler.registerMethod('prompts/list', async () => ({
-    prompts: [],
-  }));
+  handler.registerMethod('prompts/list', async (params) => {
+    const page = paginateMcpList(registry.listPrompts().map(toMcpPrompt), params);
+    return wrapMcpListResult('prompts', page.items, page.nextCursor);
+  });
 }
 
 // ============================================================================
@@ -265,7 +352,7 @@ type A2AMessage = {
 
 /** Extract and validate common A2A task params (id + message). */
 function extractTaskParams(params: Record<string, unknown>): { taskId: string; message: A2AMessage } {
-  const taskId = params['id'] as string | undefined;
+  const taskId = (params['id'] ?? params['taskId']) as string | undefined;
   if (!taskId) {
     throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
   }
@@ -283,11 +370,22 @@ function extractTaskParams(params: Record<string, unknown>): { taskId: string; m
 
 /** Extract and validate task ID from params. */
 function extractTaskId(params: Record<string, unknown>): string {
-  const taskId = params['id'] as string | undefined;
+  const taskId = (params['id'] ?? params['taskId']) as string | undefined;
   if (!taskId) {
     throw new JsonRpcMethodError(JSON_RPC_ERRORS.INVALID_PARAMS, 'Missing required param: id');
   }
   return taskId;
+}
+
+function extractArtifactId(artifact: Record<string, unknown>): string {
+  const candidate = artifact['id'] ?? artifact['name'];
+  if (typeof candidate === 'string') {
+    return candidate;
+  }
+  if (typeof candidate === 'number' || typeof candidate === 'boolean') {
+    return String(candidate);
+  }
+  return '';
 }
 
 /**
@@ -295,33 +393,7 @@ function extractTaskId(params: Record<string, unknown>): string {
  * All task lifecycle operations are durably executed via Temporal workflows.
  */
 export function registerA2AMethods(handler: JsonRpcHandler): void {
-  // A2A tasks/send — create or continue a task via Temporal workflow
-  handler.registerMethod('tasks/send', async (params, context) => {
-    const { taskId, message } = extractTaskParams(params);
-
-    return dispatchA2ATask({
-      taskId,
-      sessionId: params['sessionId'] as string | undefined,
-      message,
-      agentUrl: params['agentUrl'] as string | undefined,
-      context,
-    });
-  });
-
-  // A2A tasks/get — query task state from Temporal workflow
-  handler.registerMethod('tasks/get', async (params, context) => {
-    const taskId = extractTaskId(params);
-    return queryA2ATask(taskId, context.tenantId);
-  });
-
-  // A2A tasks/cancel — signal Temporal workflow to cancel
-  handler.registerMethod('tasks/cancel', async (params, context) => {
-    const taskId = extractTaskId(params);
-    return cancelA2ATask(taskId, context.tenantId);
-  });
-
-  // A2A tasks/sendSubscribe — dispatch task with SSE streaming flag
-  handler.registerMethod('tasks/sendSubscribe', async (params, context) => {
+  const sendMessage: MethodHandler = async (params, context) => {
     const { taskId, message } = extractTaskParams(params);
 
     const result = await dispatchA2ATask({
@@ -336,9 +408,103 @@ export function registerA2AMethods(handler: JsonRpcHandler): void {
       ...result,
       metadata: {
         ...result.metadata,
+        trace: deriveTraceMeta({
+          requestId: context.requestId,
+          correlationId: context.correlationId,
+          workflowId: result.workflowId,
+          taskId,
+          artifactIds: result.artifacts
+            .map(extractArtifactId)
+            .filter((artifactId) => artifactId.length > 0),
+        }),
+      },
+    };
+  };
+
+  const sendStreamingMessage: MethodHandler = async (params, context) => {
+    const { taskId } = extractTaskParams(params);
+    const result = await sendMessage(params, context) as Record<string, unknown>;
+    const metadata = result['metadata'] as Record<string, unknown> | undefined;
+
+    return {
+      ...result,
+      metadata: {
+        ...metadata,
         streaming: true,
         sseChannel: `a2a-task-${taskId}`,
       },
     };
+  };
+
+  const getTask: MethodHandler = async (params, context) => {
+    const taskId = extractTaskId(params);
+    const result = await queryA2ATask(taskId, context.tenantId);
+    return {
+      ...result,
+      metadata: {
+        ...result.metadata,
+        trace: deriveTraceMeta({
+          requestId: context.requestId,
+          correlationId: context.correlationId,
+          workflowId: result.workflowId,
+          taskId,
+        }),
+      },
+    };
+  };
+
+  const cancelTask: MethodHandler = async (params, context) => {
+    const taskId = extractTaskId(params);
+    const result = await cancelA2ATask(taskId, context.tenantId);
+    return {
+      ...result,
+      metadata: {
+        ...result.metadata,
+        trace: deriveTraceMeta({
+          requestId: context.requestId,
+          correlationId: context.correlationId,
+          workflowId: result.workflowId,
+          taskId,
+        }),
+      },
+    };
+  };
+
+  const listTasks: MethodHandler = async (params) => ({
+    tasks: [],
+    nextPageToken: '',
+    pageSize: typeof params['pageSize'] === 'number' ? params['pageSize'] : 50,
+    totalSize: 0,
   });
+
+  const getExtendedAgentCard: MethodHandler = async () => ({
+    name: 'APEX OmniHub Gateway',
+    description: 'Governed A2A task gateway backed by durable Temporal workflows.',
+    url: 'https://omnihub.apex.local/a2a',
+    protocolVersion: '0.3',
+    capabilities: {
+      streaming: true,
+      pushNotifications: false,
+      stateTransitionHistory: true,
+      extendedAgentCard: true,
+    },
+    skills: [],
+    defaultInputModes: ['text/plain', 'application/json'],
+    defaultOutputModes: ['text/plain', 'application/json'],
+  });
+
+  // Canonical modern A2A JSON-RPC method bindings.
+  handler.registerMethod('SendMessage', sendMessage);
+  handler.registerMethod('SendStreamingMessage', sendStreamingMessage);
+  handler.registerMethod('GetTask', getTask);
+  handler.registerMethod('ListTasks', listTasks);
+  handler.registerMethod('CancelTask', cancelTask);
+  handler.registerMethod('SubscribeToTask', sendStreamingMessage);
+  handler.registerMethod('GetExtendedAgentCard', getExtendedAgentCard);
+
+  // Legacy compatibility aliases retained at the registration boundary only.
+  handler.registerMethod('tasks/send', sendMessage);
+  handler.registerMethod('tasks/get', getTask);
+  handler.registerMethod('tasks/cancel', cancelTask);
+  handler.registerMethod('tasks/sendSubscribe', sendStreamingMessage);
 }

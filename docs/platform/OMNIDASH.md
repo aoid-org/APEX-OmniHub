@@ -59,10 +59,10 @@ Based on `src/pages/OmniDash/Today.tsx` and database schema.
 Media playback and caching subsystem integrated into the OmniDash UI.
 
 ### Components
-- **OmniMediaPlayer** (`src/components/omnidash/media/OmniMediaPlayer.tsx`) — Adaptive renderer for audio, video, and embed types.
-- **ClientComputeNode** (`src/components/omnidash/media/ClientComputeNode.tsx`) — Web Audio API graph compute for audio processing.
-- **GlobalMediaDock** (`src/components/omnidash/media/GlobalMediaDock.tsx`) — Persistent media player dock UI.
-- **UniversalModalEngine** (`src/components/omnidash/media/UniversalModalEngine.tsx`) — Schema-driven modal renderer (OAuth, form, selection, confirmation).
+- **OmniMediaPlayer** (`apps/omnihub-site/dashboard/components/media/OmniMediaPlayer.tsx`) — Adaptive renderer for audio, video, and embed types.
+- **ClientComputeNode** (`apps/omnihub-site/dashboard/components/media/ClientComputeNode.tsx`) — Web Audio API graph compute for audio processing.
+- **GlobalMediaDock** (`apps/omnihub-site/dashboard/components/media/GlobalMediaDock.tsx`) — Persistent media player dock UI.
+- **UniversalModalEngine** (`apps/omnihub-site/dashboard/components/media/UniversalModalEngine.tsx`) — Schema-driven modal renderer (OAuth, form, selection, confirmation).
 
 ### State Management (Zustand)
 - **`useOmniMedia`** (`src/stores/omniMediaStore.ts`) — Media playback state with single-stream enforcement and blob URL memory safety.

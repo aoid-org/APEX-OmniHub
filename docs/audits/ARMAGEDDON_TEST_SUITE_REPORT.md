@@ -447,6 +447,24 @@ Exit Code: 0 (SUCCESS)
 
 ---
 
+## 2026-05-08 LIVE VALIDATION ADDENDUM
+
+A follow-up Armageddon validation was executed on 2026-05-08 on branch `work` with `SIM_MODE=false` for live build/runtime validation and guard-railed chaos safety. The separate evidence report is `docs/testing/ARMAGEDDON_LIVE_VALIDATION_RESULTS_2026_05_08.md`.
+
+| Gate | Result | Notes |
+| --- | --- | --- |
+| Chromium install | PASS | `npx playwright install chromium` completed from `cdn.playwright.dev`. |
+| Browser OS dependencies | PASS | `npx playwright install-deps chromium` remediated missing `libatk-1.0.so.0`. |
+| Vitest aggregate | PASS | 2,399 passed / 85 skipped. |
+| Playwright Chromium CI | PASS | 21 passed / 3 skipped. |
+| Python orchestrator CI | PASS | 891 passed / 20 skipped. |
+| Worldwide Wildcard | PASS | 5 passed / 0 failed / score 100.0 after runner remediation. |
+| SIM_MODE=false chaos gate | PASS (safe block) | Live chaos execution blocked by design against the live Supabase URL. |
+
+The only non-zero command in the final validation set was the intentional `SIM_MODE=false` safety block; it is classified as a successful guard-rail assertion rather than a product failure.
+
+---
+
 ## FINAL VERDICT
 
 | Assessment               | Result                    |

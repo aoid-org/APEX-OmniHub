@@ -77,6 +77,8 @@ test-results/
 # Test artifacts
 concurrency_test_temp/
 
+output.txt
+
 # ── Root-level CI/build artifacts ────────────────────────────────────────────
 eslint_report*
 eslint_log*
@@ -107,3 +109,24 @@ ERRORS.md
 
 # Auto-generated security posture reports (local tooling output)
 reports/security/
+
+# Worldwide Wildcard generated reports
+tests/worldwide-wildcard/reports/
+
+# ─── Runtime & Debug Artifacts ─────────────────────────────────────────────
+debug_output/
+debug_test.cjs
+
+# ─── Volatile Test Reports (source-controlled evidence goes in docs/) ───────
+reports/*.json
+reports/*.xml
+reports/*.html
+
+# ─── OS & Editor Noise ───────────────────────────────────────────────────────
+Thumbs.db
+*.swp
+*.swo
+
+# ─── Package Manager Conflicts ───────────────────────────────────────────────
+# Uncomment the line below ONLY after package manager is fully canonicalized:
+# package-lock.json

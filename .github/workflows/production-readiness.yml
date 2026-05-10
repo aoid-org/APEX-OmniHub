@@ -30,30 +30,25 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: "20"
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.2.14"
+          node-version: "24"
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci --ignore-scripts
 
       - name: TypeScript compilation
-        run: npx tsc --noEmit
+        run: npm exec --no --ignore-scripts -- tsc --noEmit
 
       - name: ESLint validation
-        run: npx eslint . --max-warnings 0
+        run: npm exec --no --ignore-scripts -- eslint . --max-warnings 0
 
       - name: React singleton check
-        run: bun run check:react
+        run: npm run check:react
 
       - name: Run tests
-        run: bun run test
+        run: npm run test
 
       - name: Documentation drift check
-        run: bun run docs:check
+        run: npm run docs:check
 
       - name: Cloudflare Pages SPA Redirect Check
         run: test -f apps/omnihub-site/public/_redirects
@@ -151,24 +146,22 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: "20"
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: "1.2.14"
+          node-version: "24"
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci --ignore-scripts
 
       - name: Build production bundle
-        run: bun run build
+        run: npm run build
 
       - name: Install Playwright
-        run: npx playwright install chromium
+        run: npm exec --no --ignore-scripts -- playwright install chromium
+
+      - name: Install Playwright OS Dependencies
+        run: npm exec --no --ignore-scripts -- playwright install-deps chromium
 
       - name: Run E2E smoke tests
-        run: bun run test:e2e
+        run: npm run test:e2e
 
   readiness-summary:
     name: Production Readiness Summary

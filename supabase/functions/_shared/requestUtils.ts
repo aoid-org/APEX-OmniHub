@@ -1,3 +1,4 @@
+import { assertMutationEnvelope, type ApexExecutionEnvelope } from './apex-control-plane.ts';
 /**
  * Shared Request Utilities for Edge Functions
  *
@@ -129,4 +130,14 @@ export async function getAuthenticatedUser(
     }
 
     return { user, error: null };
+}
+
+export function getMutationEnvelope(req: Request, body: Record<string, unknown>, corsHeaders: Record<string, string>): { envelope: ApexExecutionEnvelope | null; error: Response | null } {
+    try {
+        const envelope = assertMutationEnvelope(req.method, body.envelope ?? body);
+        return { envelope, error: null };
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'invalid_mutation_envelope';
+        return { envelope: null, error: createErrorResponse('invalid_mutation_envelope', message, message === 'apex_stale_event' ? 409 : 400, corsHeaders) };
+    }
 }
