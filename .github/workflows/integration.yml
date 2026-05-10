@@ -19,16 +19,16 @@ jobs:
           git clone "https://x-access-token:${GH_PAT}@github.com/apexbusiness-systems/sbbl-hq.git" ../sbbl-hq
 
       - name: Install OmniHub deps
-        run: npm install
+        run: npm ci --ignore-scripts
 
       - name: Install SBBL-HQ deps
-        run: cd ../sbbl-hq && npm install
+        run: cd ../sbbl-hq && npm ci --ignore-scripts
 
       - name: Install harness deps
-        run: cd integration-harness && npm install
+        run: cd integration-harness && npm ci --ignore-scripts
 
       - name: Install Playwright browser
-        run: cd integration-harness && npx playwright install chromium
+        run: cd integration-harness && npm exec --no --ignore-scripts -- playwright install chromium
 
       - name: Run harness
         run: cd integration-harness && bash run.sh
