@@ -63,7 +63,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci --ignore-scripts --prefer-offline
+          npm ci --ignore-scripts
           node scripts/patch-capacitor-tar.cjs
 
       - name: Build web app
@@ -109,7 +109,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci --ignore-scripts --prefer-offline
+          npm ci --ignore-scripts
           node scripts/patch-capacitor-tar.cjs
 
       - name: Download web dist
@@ -179,7 +179,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci --ignore-scripts --prefer-offline
+          npm ci --ignore-scripts
           node scripts/patch-capacitor-tar.cjs
 
       - name: Download web dist

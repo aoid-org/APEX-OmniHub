@@ -91,35 +91,21 @@ jobs:
             echo "Using incremental secret scan from ${BASE_REF} to ${HEAD_REF}."
           fi
 
-      - name: Install TruffleHog binary
-        shell: bash
-        run: |
-          set -euo pipefail
-          # HTTPS is enforced: curl -sSfL fails on any redirect to non-HTTPS (--proto '=https').
-          # The URL is pinned to the official trufflesecurity installer at a specific version. # nosonar
-          curl --proto '=https' --tlsv1.2 -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin v3.82.7
-          trufflehog --version
-
       - name: Secret scanning with TruffleHog (commit range)
         if: steps.trufflehog-range.outputs.use_range == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          trufflehog git file://. \
-            --since-commit "${{ steps.trufflehog-range.outputs.base_ref }}" \
-            --branch "${{ steps.trufflehog-range.outputs.head_ref }}" \
-            --only-verified \
-            --exclude-paths .trufflehog-exclude-paths.txt
+        uses: trufflesecurity/trufflehog@6961f2bace57ab32b23b3ba40f8f420f6bc7e004 # v3.82.7
+        with:
+          path: ./
+          base: ${{ steps.trufflehog-range.outputs.base_ref }}
+          head: ${{ steps.trufflehog-range.outputs.head_ref }}
+          extra_args: --only-verified --exclude-paths .trufflehog-exclude-paths.txt
 
       - name: Secret scanning with TruffleHog (full repository fallback)
         if: steps.trufflehog-range.outputs.use_range == 'false'
-        shell: bash
-        run: |
-          set -euo pipefail
-          trufflehog filesystem . \
-            --only-verified \
-            --exclude-paths .trufflehog-exclude-paths.txt
-
+        uses: trufflesecurity/trufflehog@6961f2bace57ab32b23b3ba40f8f420f6bc7e004 # v3.82.7
+        with:
+          path: ./
+          extra_args: --only-verified --exclude-paths .trufflehog-exclude-paths.txt
       - name: npm audit for high and critical vulnerabilities
         run: |
           # Block on HIGH (CVSS >= 7.0) and CRITICAL vulnerabilities.
