@@ -249,6 +249,11 @@ ORCHESTRATOR_URL=http://orchestrator:8000
 # Temporal connection
 TEMPORAL_HOST=temporal.example.com:7233
 TEMPORAL_NAMESPACE=apex-production
+
+# Planner resilience (bounded fallback chain)
+LLM_FALLBACK_MODELS=gpt-4o-mini,claude-3-5-sonnet
+LLM_PLAN_MAX_MODEL_ATTEMPTS=3
+LLM_PLAN_REQUEST_TIMEOUT_SECONDS=45
 ```
 
 ## 📊 Monitoring & Observability

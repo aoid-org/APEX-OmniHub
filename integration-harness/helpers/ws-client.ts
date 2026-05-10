@@ -9,13 +9,18 @@ export async function assertWsConnects(url: string, token: string, timeoutMs: nu
   });
 }
 
-export async function waitForTelemetryEvent(url: string, pred: (e: any) => boolean, token: string, timeoutMs: number): Promise<any> {
-  return new Promise<any>((resolve, reject) => {
+export async function waitForTelemetryEvent(
+  url: string,
+  pred: (e: Record<string, unknown>) => boolean,
+  token: string,
+  timeoutMs: number,
+): Promise<Record<string, unknown>> {
+  return new Promise<Record<string, unknown>>((resolve, reject) => {
     const ws = new WebSocket(url, { headers: { Authorization: `Bearer ${token}` } });
     const timer = setTimeout(() => { ws.close(); reject(new Error(`No matching WS event within ${timeoutMs}ms`)); }, timeoutMs);
     ws.on('message', (msg) => {
       try {
-        const evt = JSON.parse(msg.toString());
+        const evt = JSON.parse(msg.toString()) as Record<string, unknown>;
         if (pred(evt)) { clearTimeout(timer); ws.close(); resolve(evt); }
       } catch { /* ignore non-json */ }
     });

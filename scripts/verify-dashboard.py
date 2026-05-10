@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
 
+
 def verify_dashboard(page):
     print("Navigating to http://localhost:8080/login...")
     page.goto("http://localhost:8080/login", wait_until="networkidle")
