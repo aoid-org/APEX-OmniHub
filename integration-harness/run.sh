@@ -18,7 +18,7 @@ OMNIHUB_PID=""; SBBL_PID=""
 EXTRA_ARGS=(); SPEC_FILTER=""
 while [[ $# -gt 0 ]]; do case $1 in --headed) HEADLESS=false; shift ;; --spec) SPEC_FILTER="$2"; shift 2 ;; *) EXTRA_ARGS+=("$1"); shift ;; esac; done
 for cmd in node npm curl; do command -v "$cmd" >/dev/null || { echo "missing $cmd"; exit 1; }; done
-[[ ! -d node_modules ]] && { npm install --ignore-scripts --silent; npx playwright install chromium --with-deps --quiet; }
+[[ ! -d node_modules ]] && { npm install --silent; npx playwright install chromium --with-deps; }
 
 set_alias() {
   local target="$1"; shift

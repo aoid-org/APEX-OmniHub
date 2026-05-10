@@ -254,41 +254,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [mfaChallengeActive, setMfaChallengeActive] = useState(false);
 
   useEffect(() => {
-<<<<<<< Updated upstream
-    if (session?.user && !loading) {
-      // Check if device requires MFA (e.g., untrusted device)
-      const deviceId = localStorage.getItem('device_id');
-      if (deviceId) {
-        import('@/zero-trust/deviceRegistry').then(({ isDeviceAuthorized }) => {
-          // FIX: Defensive null-check for isDeviceAuthorized return value.
-          // ROOT CAUSE: isDeviceAuthorized() may return undefined when the
-          // device registry has not been initialized or the device is unknown.
-          // The previous code accessed .authorized on an undefined result,
-          // causing TypeError in CI test runs.
-          try {
-            const authResult = isDeviceAuthorized(deviceId);
-            if (authResult && !authResult.authorized && authResult.reason !== 'device_blocked') {
-              setMfaChallengeActive(true);
-            }
-          } catch {
-            // Fail-closed: if device authorization check throws, do NOT
-            // block user — log and continue. MFA can be enforced at the
-            // route guard level as a secondary gate.
-            if (import.meta.env.DEV) {
-              console.warn('Device authorization check failed, continuing without MFA challenge');
-            }
-          }
-        }).catch(() => {
-          // Dynamic import failed — module not available. Fail-open for
-          // environments where zero-trust module is not bundled.
-          if (import.meta.env.DEV) {
-            console.warn('Zero-trust deviceRegistry module not available');
-          }
-        });
-      }
-    }
-  }, [session, loading]);
-=======
     if (!session?.user || loading) {
       setMfaChallengeActive(false);
       return;
@@ -315,7 +280,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setMfaChallengeActive(true);
     }
   }, [session?.user, loading]);
->>>>>>> Stashed changes
 
   // Show setup message if Cloud is not configured
   if (!cloudConfigured) {

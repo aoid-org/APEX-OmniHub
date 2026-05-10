@@ -70,16 +70,7 @@ export default function FilesModule({ onClose }: Props) {
         disabled={uploading} 
       />
       
-      {/* Expose method to trigger the file picker from within ModuleShell actions */}
-<<<<<<< Updated upstream
-      <script>{`
-        globalThis.triggerOmniFilesUpload = () => {
-          const input = document.querySelector('input[type="file"]');
-          if (input) input.click();
-        };
-      `}</script>
-=======
->>>>>>> Stashed changes
+      {/* File picker triggered via ref — no globalThis injection needed */}
       {!state.loading && (
         <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
