@@ -1,0 +1,27 @@
+name: integration-harness
+on:
+  push:
+    branches: [main, work, develop]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: cd integration-harness && npm install --ignore-scripts
+      - run: cd integration-harness && npx playwright install chromium
+      - run: cd integration-harness && bash run.sh
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          SBBL_SUPABASE_URL: ${{ secrets.SBBL_SUPABASE_URL }}
+          SBBL_SUPABASE_ANON_KEY: ${{ secrets.SBBL_SUPABASE_ANON_KEY }}
+          SBBL_SUPABASE_SERVICE_KEY: ${{ secrets.SBBL_SUPABASE_SERVICE_KEY }}
+          OMNIHUB_SUPABASE_URL: ${{ secrets.OMNIHUB_SUPABASE_URL }}
+          OMNIHUB_SUPABASE_ANON_KEY: ${{ secrets.OMNIHUB_SUPABASE_ANON_KEY }}
+          INTEGRATION_ADMIN_EMAIL: ${{ secrets.INTEGRATION_ADMIN_EMAIL }}
+          INTEGRATION_ADMIN_PASSWORD: ${{ secrets.INTEGRATION_ADMIN_PASSWORD }}
+          INTEGRATION_FAN_EMAIL: ${{ secrets.INTEGRATION_FAN_EMAIL }}
+          INTEGRATION_FAN_PASSWORD: ${{ secrets.INTEGRATION_FAN_PASSWORD }}
+          INTEGRATION_PPV_ACCESS_CODE: ${{ secrets.INTEGRATION_PPV_ACCESS_CODE }}
+          INTEGRATION_PPV_GAME_ID: ${{ secrets.INTEGRATION_PPV_GAME_ID }}

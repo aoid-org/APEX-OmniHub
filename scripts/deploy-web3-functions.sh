@@ -18,7 +18,7 @@ NC='\033[0m'
 # Check if supabase CLI is installed
 if ! command -v supabase &> /dev/null; then
     echo -e "${YELLOW}⚠${NC} Supabase CLI is not installed."
-    echo "Install it with: npm install -g supabase"
+    echo "Install it with: npm install -g supabase --ignore-scripts"
     exit 1
 fi
 

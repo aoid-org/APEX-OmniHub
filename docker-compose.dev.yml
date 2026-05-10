@@ -15,7 +15,7 @@ services:
   frontend:
     image: node:20-alpine
     working_dir: /app
-    command: sh -c "npm install -g bun && bun install && bun run dev"
+    command: sh -c "npm install -g bun --ignore-scripts && bun install --frozen-lockfile --ignore-scripts && bun run dev"
     volumes:
       - .:/app
       - /app/node_modules

@@ -39,7 +39,7 @@ cd "$(dirname "$0")/packages/infrastructure"
 
 # ── Install dependencies ─────────────────────────────────────────────
 echo "[APEX] Installing infrastructure dependencies..."
-bun install
+bun install --frozen-lockfile --ignore-scripts
 
 # ── Bootstrap AWS environment (required for first-time accounts) ──────
 echo "[APEX] Bootstrapping AWS environment..."
