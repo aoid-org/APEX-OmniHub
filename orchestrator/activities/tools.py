@@ -248,9 +248,7 @@ def _resolve_model_candidates(context: dict[str, Any]) -> list[str]:
     requested_model = context.get("requested_model")
     fallback_models_raw = os.getenv("LLM_FALLBACK_MODELS", "")
     fallback_models = (
-        [item.strip() for item in fallback_models_raw.split(",")]
-        if fallback_models_raw
-        else []
+        [item.strip() for item in fallback_models_raw.split(",")] if fallback_models_raw else []
     )
 
     allowed_models = context.get("allowed_models", [])
@@ -260,9 +258,7 @@ def _resolve_model_candidates(context: dict[str, Any]) -> list[str]:
                 f"Model {requested_model} is not approved for this tenant"
             )
         if tenant_model and tenant_model not in allowed_models:
-            _raise_non_retryable_plan_error(
-                f"Model {tenant_model} is not approved for this tenant"
-            )
+            _raise_non_retryable_plan_error(f"Model {tenant_model} is not approved for this tenant")
 
     candidates = _parse_model_candidates(
         [requested_model, tenant_model, system_default_model, *fallback_models]

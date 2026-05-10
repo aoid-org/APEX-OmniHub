@@ -33,9 +33,13 @@ def test_record_llm_plan_attempt_increments_counter() -> None:
 def test_record_llm_plan_outcome_increments_allowed_outcome() -> None:
     from metrics import llm_plan_outcomes, record_llm_plan_outcome
 
-    before = llm_plan_outcomes.labels(workflow_type="agent_saga", outcome="fallback_success")._value.get()
+    before = llm_plan_outcomes.labels(
+        workflow_type="agent_saga", outcome="fallback_success"
+    )._value.get()
     record_llm_plan_outcome("fallback_success")
-    after = llm_plan_outcomes.labels(workflow_type="agent_saga", outcome="fallback_success")._value.get()
+    after = llm_plan_outcomes.labels(
+        workflow_type="agent_saga", outcome="fallback_success"
+    )._value.get()
     assert after == before + 1
 
 
