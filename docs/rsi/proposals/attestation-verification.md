@@ -1,7 +1,10 @@
 # Attestation Verification Runbook (Proposal)
 
+- **Document version:** 1.1.0
+- **Last updated (UTC):** 2026-05-10
+- **Status:** Proposal only
+
 ## Internal verification (GitHub-native)
-Use GitHub CLI attestation verification for release artifacts:
 ```bash
 gh attestation verify <artifact-path-or-oci-ref> --repo apexbusiness-systems/APEX-OmniHub
 ```
@@ -9,8 +12,8 @@ gh attestation verify <artifact-path-or-oci-ref> --repo apexbusiness-systems/APE
 ## Enterprise/offline verification
 1. Download artifact bundle and provenance.
 2. Export trusted root/materials from approved internal trust store.
-3. Perform offline verification using enterprise-approved verifier against the trusted root.
-4. Record verification logs with release evidence.
+3. Verify offline with enterprise-approved verifier against trusted root.
+4. Store verification logs with release evidence.
 
-## Release gate
-Release **must fail** if artifact attestation cannot be verified.
+## Release gate requirement
+Release **fails** when attestation verification cannot be completed.

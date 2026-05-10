@@ -1,3 +1,5 @@
+policy_version: 1.1.0
+policy_last_updated_utc: 2026-05-10
 mode: proposal_only
 default_network_model_calls: false
 hosted_model_monthly_budget_usd: 0
