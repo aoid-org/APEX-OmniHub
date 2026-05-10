@@ -63,7 +63,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci --ignore-scripts
+          bash scripts/ci/install-js-deps.sh
           node scripts/patch-capacitor-tar.cjs
 
       - name: Build web app
@@ -109,7 +109,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci --ignore-scripts
+          bash scripts/ci/install-js-deps.sh
           node scripts/patch-capacitor-tar.cjs
 
       - name: Download web dist
@@ -179,7 +179,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci --ignore-scripts
+          bash scripts/ci/install-js-deps.sh
           node scripts/patch-capacitor-tar.cjs
 
       - name: Download web dist
