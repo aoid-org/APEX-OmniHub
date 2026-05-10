@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { test as base, expect, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
@@ -32,13 +33,10 @@ async function signInToken(emailKey: string, passKey: string): Promise<string> {
 }
 
 export const test = base.extend<Fx>({
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   omnihubUrl: async (_: Record<string, never>, use) => use(env('OMNIHUB_URL', env('OMNIHUB_BASE_URL', 'http://localhost:5173'))),
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   sbblUrl: async (_: Record<string, never>, use) => use(env('SBBL_URL', env('SBBL_BASE_URL', 'http://localhost:8787'))),
   omniPage: async ({ browser }, use) => { const p = await browser.newPage(); await use(p); await p.close(); },
   sbblPage: async ({ browser }, use) => { const p = await browser.newPage(); await use(p); await p.close(); },
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   sbblAdmin: async (_: Record<string, never>, use) => {
     const key = supabaseSvc() || supabaseAnon();
     if (!supabaseUrl() || !key) test.skip(true, 'Missing Supabase admin env');
@@ -48,12 +46,10 @@ export const test = base.extend<Fx>({
     if (!supabaseUrl() || !supabaseAnon()) test.skip(true, 'Missing Supabase anon env');
     await use(createClient(supabaseUrl(), supabaseAnon(), { global: { headers: { Authorization: `Bearer ${fanToken}` } } }));
   },
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   adminToken: async (_: Record<string, never>, use) => {
     if (!env('INTEGRATION_ADMIN_EMAIL') || !env('INTEGRATION_ADMIN_PASSWORD')) test.skip(true, 'Missing admin creds');
     await use(await signInToken('INTEGRATION_ADMIN_EMAIL', 'INTEGRATION_ADMIN_PASSWORD'));
   },
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   fanToken: async (_: Record<string, never>, use) => {
     if (!env('INTEGRATION_FAN_EMAIL') || !env('INTEGRATION_FAN_PASSWORD')) test.skip(true, 'Missing fan creds');
     await use(await signInToken('INTEGRATION_FAN_EMAIL', 'INTEGRATION_FAN_PASSWORD'));
