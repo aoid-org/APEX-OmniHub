@@ -30,3 +30,6 @@ git checkout -- .\run-e2e-local.ps1 .\run-e2e-local.cmd
 ## Artifacts
 - HTML report: `integration-harness/playwright-report/index.html`
 - traces/videos/screenshots: `integration-harness/playwright-results/`
+
+## Test Results Ledger
+- `integration-harness/TEST_RESULTS.md` (versioned + dated execution evidence)
