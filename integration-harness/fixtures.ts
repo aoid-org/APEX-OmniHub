@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import { test as base, expect, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
@@ -33,26 +32,26 @@ async function signInToken(emailKey: string, passKey: string): Promise<string> {
 }
 
 export const test = base.extend<Fx>({
-  omnihubUrl: async (_: Record<string, never>, use) => use(env('OMNIHUB_URL', env('OMNIHUB_BASE_URL', 'http://localhost:5173'))),
-  sbblUrl: async (_: Record<string, never>, use) => use(env('SBBL_URL', env('SBBL_BASE_URL', 'http://localhost:8787'))),
-  omniPage: async ({ browser }, use) => { const p = await browser.newPage(); await use(p); await p.close(); },
-  sbblPage: async ({ browser }, use) => { const p = await browser.newPage(); await use(p); await p.close(); },
-  sbblAdmin: async (_: Record<string, never>, use) => {
+  omnihubUrl: async (_args, runFixture) => runFixture(env('OMNIHUB_URL', env('OMNIHUB_BASE_URL', 'http://localhost:5173'))),
+  sbblUrl: async (_args, runFixture) => runFixture(env('SBBL_URL', env('SBBL_BASE_URL', 'http://localhost:8787'))),
+  omniPage: async ({ browser }, runFixture) => { const p = await browser.newPage(); await runFixture(p); await p.close(); },
+  sbblPage: async ({ browser }, runFixture) => { const p = await browser.newPage(); await runFixture(p); await p.close(); },
+  sbblAdmin: async (_args, runFixture) => {
     const key = supabaseSvc() || supabaseAnon();
     if (!supabaseUrl() || !key) test.skip(true, 'Missing Supabase admin env');
-    await use(createClient(supabaseUrl(), key));
+    await runFixture(createClient(supabaseUrl(), key));
   },
-  sbblFan: async ({ fanToken }, use) => {
+  sbblFan: async ({ fanToken }, runFixture) => {
     if (!supabaseUrl() || !supabaseAnon()) test.skip(true, 'Missing Supabase anon env');
-    await use(createClient(supabaseUrl(), supabaseAnon(), { global: { headers: { Authorization: `Bearer ${fanToken}` } } }));
+    await runFixture(createClient(supabaseUrl(), supabaseAnon(), { global: { headers: { Authorization: `Bearer ${fanToken}` } } }));
   },
-  adminToken: async (_: Record<string, never>, use) => {
+  adminToken: async (_args, runFixture) => {
     if (!env('INTEGRATION_ADMIN_EMAIL') || !env('INTEGRATION_ADMIN_PASSWORD')) test.skip(true, 'Missing admin creds');
-    await use(await signInToken('INTEGRATION_ADMIN_EMAIL', 'INTEGRATION_ADMIN_PASSWORD'));
+    await runFixture(await signInToken('INTEGRATION_ADMIN_EMAIL', 'INTEGRATION_ADMIN_PASSWORD'));
   },
-  fanToken: async (_: Record<string, never>, use) => {
+  fanToken: async (_args, runFixture) => {
     if (!env('INTEGRATION_FAN_EMAIL') || !env('INTEGRATION_FAN_PASSWORD')) test.skip(true, 'Missing fan creds');
-    await use(await signInToken('INTEGRATION_FAN_EMAIL', 'INTEGRATION_FAN_PASSWORD'));
+    await runFixture(await signInToken('INTEGRATION_FAN_EMAIL', 'INTEGRATION_FAN_PASSWORD'));
   },
 });
 
