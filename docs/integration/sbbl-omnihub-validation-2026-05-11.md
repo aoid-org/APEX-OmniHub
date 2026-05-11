@@ -358,6 +358,24 @@ the pattern is general.
 
 ---
 
+---
+
+## 8. Post-Validation CI Status
+
+**Recorded:** 2026-05-11 | **Branch:** `claude/audit-both-repos-rQnji`
+
+This section records the final CI gate outcomes following completion of the integration validation and associated fixes applied in this branch.
+
+| Gate | Result | Notes |
+|------|--------|-------|
+| **Secret scan (TruffleHog / gitleaks)** | **PASS** | 0 violations. Test HMAC fixture values prefixed with `test-` per CI pitfalls runbook entry added in this branch. |
+| **npm audit (`--omit=dev --audit-level=high`)** | **PASS** | 0 high/critical vulnerabilities. OTel patch (GHSA-q7rr-3cgh-j5r3 — 3 high severities) applied in APEX-OmniHub v1.6.1. Remaining known moderate vulns (`postcss <8.5.10`, `uuid 11.0.0–11.1.0`) do not affect the production bundle severity threshold. |
+| **SonarQube** | **PASS** | 0 duplicated lines flagged. `readJsonBody()` utility extracted from duplicate inline fetch-and-parse patterns across worker handlers, eliminating the duplication finding. |
+| **SBBL-HQ PR #502** | **MERGED** | Merged 2026-05-11. Companion PR implementing `handleOmnihubWebhook`, `handleOmniportCommand`, `deliverSyncEnvelope`, and hardened `handleSyncDrain` on the SBBL-HQ side. |
+| **APEX-OmniHub PR #1108** | **In review** | Pending `build-and-test` CI gate completion. All other required gates (security-gates, quality-gates, rls-posture-gate, ruff-gate) green. |
+
+---
+
 **Prepared by**: APEX Business Systems Ltd. Platform Engineering
 **Reproduce**: `cd APEX-OmniHub && node integration-harness/lib/deterministic-validator.mjs`
 **Branch**: `claude/audit-both-repos-rQnji` (both repositories)
