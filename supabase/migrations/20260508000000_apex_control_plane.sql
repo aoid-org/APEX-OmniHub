@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS apex_idempotency_ledger (
   intent_hash TEXT NOT NULL,
   trace_id TEXT NOT NULL,
   correlation_id TEXT NOT NULL,
-  actor_id UUID NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+  actor_id UUID NULL REFERENCES auth.users(id) ,
   device_id TEXT NOT NULL,
   operation TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('pending', 'completed', 'failed', 'duplicate', 'stale', 'compensated')),
@@ -120,7 +120,7 @@ CREATE POLICY "authenticated users can read enabled apex compensations"
 
 CREATE TABLE IF NOT EXISTS apex_policy_decisions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  principal UUID NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+  principal UUID NULL REFERENCES auth.users(id) ,
   action TEXT NOT NULL,
   resource TEXT NOT NULL,
   context JSONB NOT NULL DEFAULT '{}'::jsonb,
