@@ -6,6 +6,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-05-11
+
+### Security
+- Patched 3 high-severity OpenTelemetry CVEs (GHSA-q7rr-3cgh-j5r3 — Prometheus exporter
+  crash via malformed HTTP request): bumped `@opentelemetry/auto-instrumentations-node`
+  to ^0.75.0, `@opentelemetry/sdk-node` to ^0.217.0, `@opentelemetry/exporter-trace-otlp-http`
+  to ^0.217.0. npm audit --omit=dev --audit-level=high now exits clean.
+
+### Integration
+- OmniBridge: bidirectional HMAC-signed sync layer between APEX-OmniHub (control plane)
+  and SBBL-HQ (first production tenant) is now validated and documented.
+  - `integration-harness/lib/deterministic-validator.mjs` — 47-assertion zero-dependency
+    validator covering HMAC parity, envelope shape, bidirectional HTTP simulation, risk-lane
+    classification (13 cases), latency budget (200 packets), idempotency, tamper resistance,
+    clock-skew rejection.
+  - `docs/integration/sbbl-omnihub-validation-2026-05-11.md` — Alberta Innovates TDA
+    validation report: 4 gaps closed (P0/P0/P1/P2), 139 assertions across 3 test layers.
+
+### Fixed
+- Resolved secret-scan false positives in `integration-harness/lib/deterministic-validator.mjs`
+  by prefixing all test HMAC fixture keys with 'test-'.
+- Resolved SonarQube code duplication (1.7%, 10 lines) by extracting shared HTTP body
+  reader into `readJsonBody()` helper.
+
 ## [1.6.0] - 2026-05-08
 
 ### 🔒 Security & Hardening

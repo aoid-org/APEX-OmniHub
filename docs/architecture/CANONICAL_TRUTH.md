@@ -1,7 +1,7 @@
 # Canonical Truth File — Platform Topology & Deployment
 
-**Version:** 1.2.0
-**Last Updated:** 2026-05-06
+**Version:** 1.3.0
+**Last Updated:** 2026-05-11
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements
@@ -21,6 +21,8 @@
 13. **Path alias split is intentional and load-bearing.** `vite.config.ts` resolves `@/*` → `./apps/omnihub-site/src/*`. `vitest.config.ts` resolves `@/*` → `./src/*`. Do not align these — the split enables test isolation between root-package code and the omnihub-site app.
 14. **Dev server port is 8080.** `vite.config.ts` sets `server.port: 8080`. Documentation referencing port 5173 is incorrect.
 15. **`orchestrator/requirements.lock` must stay committed.** The `Dependency Security Audit` CI gate checks for its existence. Do not delete or gitignore it.
+16. **OmniBridge bidirectional integration is live as of v1.6.1 (2026-05-11).** The integration harness (`integration-harness/lib/deterministic-validator.mjs`) provides a 47-assertion zero-dependency validator for the HMAC-signed sync layer between APEX-OmniHub and SBBL-HQ. See `docs/integration/sbbl-omnihub-validation-2026-05-11.md` for the full validation report.
+17. **SBBL-HQ is the first registered production tenant.** It connects to APEX-OmniHub as the control plane via the OmniBridge sync protocol. Required secrets: `OMNIHUB_SIGNING_SECRET`, `OMNIHUB_SYNC_URL`, `OMNIHUB_VERIFY_KEY`. Inbound packets are verified with HMAC-SHA256 using `OMNIHUB_VERIFY_KEY`; outbound commands are signed with `OMNIHUB_SIGNING_SECRET`.
 
 ## Conflict Resolution Rule
 
