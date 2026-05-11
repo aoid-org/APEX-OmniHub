@@ -12,7 +12,7 @@ APEX OmniHub is a **Universal Sync Orchestrator** — an enterprise AI orchestra
 platform with governed execution across TypeScript, Python, SQL, and Web3 layers.
 
 ```
-Platform version:  1.5.1
+Platform version:  1.6.0
 Primary language:  TypeScript (React 18 + Vite 7)
 Orchestrator:      Python (Temporal.io)
 Database/Edge:     Supabase (PostgreSQL + Edge Functions)
@@ -259,6 +259,7 @@ failed. Fix the root gate, not the summary.
 | React context undefined / `createContext` error | Multiple React instances | Run `bun run check:react`; check `dedupe` in vite/vitest config |
 | `security-gates` failing in < 30s | TruffleHog or npm audit failing early | Check TruffleHog scan output; verify `package-lock.json` exists |
 | Coverage race condition (ENOENT) | Coverage enabled by default | Only enable via `VITEST_COVERAGE=true` or `bun run test:coverage` |
+| Secret scan flags test fixture values | Test HMAC key assignments without 'test-' prefix | Prefix fixture keys with 'test-' or 'mock-' |
 
 ---
 
@@ -399,6 +400,7 @@ Region:       ca-central-1
 - Gitleaks config: `.gitleaks.toml`.
 - No `.env` files may be committed (enforced by CI).
 - `npm audit --omit=dev --audit-level=high` must exit 0 (no high/critical production vulns).
+  0 vulnerabilities after 2026-05-11 OTel patch (was 3 high: GHSA-q7rr-3cgh-j5r3).
   Current known moderate vulns (acceptable): `postcss <8.5.10`, `uuid 11.0.0–11.1.0`.
 
 ---
@@ -415,7 +417,61 @@ Region:       ca-central-1
 | Branch protection | `docs/onboarding/BRANCH_PROTECTION.md` |
 | Canonical truth | `docs/architecture/CANONICAL_TRUTH.md` |
 | Supabase security posture | `docs/audits/SUPABASE_SECURITY_AUDIT_2026_05_04.md` |
+| OmniBridge integration validation | `docs/integration/sbbl-omnihub-validation-2026-05-11.md` |
 
 ---
 
-*Last verified: 2026-05-07 | Build status: TSC ✅ · ESLint ✅ · 2400 tests pass ✅ · Production build ✅*
+## 14. OmniBridge Integration
+
+OmniBridge is a bidirectional HMAC-signed sync layer connecting APEX-OmniHub (control plane)
+with SBBL-HQ (first production tenant). It was validated in sprint ending 2026-05-11 (PR #1108).
+
+### Integration Harness
+
+```
+integration-harness/lib/deterministic-validator.mjs
+```
+
+Zero-dependency Node.js validator covering:
+- HMAC parity between control plane and tenant
+- Envelope shape validation
+- Bidirectional HTTP simulation
+- Risk-lane classification (13 cases)
+- Latency budget verification (200 packets)
+- Idempotency guarantees
+- Tamper resistance
+- Clock-skew rejection
+
+**Total assertions:** 47
+
+**Run command:**
+```bash
+node integration-harness/lib/deterministic-validator.mjs
+```
+
+### SBBL-HQ Companion
+
+The SBBL-HQ side of this integration was merged in a companion PR in the SBBL-HQ repo.
+See `docs/integration/sbbl-omnihub-validation-2026-05-11.md` for the full Alberta Innovates
+TDA validation report (4 gaps closed: P0/P0/P1/P2, 139 assertions across 3 test layers).
+
+### Required Secrets (Edge Functions / CI)
+
+| Secret | Description |
+|---|---|
+| `OMNIHUB_SIGNING_SECRET` | HMAC signing secret for outbound packets to SBBL-HQ |
+| `OMNIHUB_SYNC_URL` | SBBL-HQ sync endpoint URL |
+| `OMNIHUB_VERIFY_KEY` | Key used to verify inbound packets from SBBL-HQ |
+
+These are secret-class variables — never use a `VITE_` prefix. Provision via
+Cloudflare Pages dashboard (for edge functions) or Supabase Vault (for Supabase Edge Functions).
+
+### Secret Scan Note
+
+`integration-harness/` is excluded from the secret scanner (`SCAN_EXCLUDED_PREFIXES` in
+`scripts/secret-scan.mjs`). All test HMAC fixture keys within the validator must use a
+`test-` or `mock-` prefix to avoid false positives if the exclusion is ever narrowed.
+
+---
+
+*Last verified: 2026-05-11 | Build status: TSC ✅ · ESLint ✅ · secret-scan ✅ · npm audit ✅ · 47-assertion validator ✅*

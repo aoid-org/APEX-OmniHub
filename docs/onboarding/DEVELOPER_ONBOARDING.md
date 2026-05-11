@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v2.0.0 | LAST_UPDATED=2026-05-06 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.1.0 | LAST_UPDATED=2026-05-11 -->
 # Developer Onboarding Guide
 
 > **Agent note:** The single most important file is `CLAUDE.md` at the repo root.
@@ -259,7 +259,66 @@ bun run sim:quick        # Quick simulation
 
 ---
 
+---
+
+## OmniBridge Integration
+
+OmniBridge is a bidirectional HMAC-signed sync layer connecting APEX-OmniHub (control plane)
+with SBBL-HQ (first production tenant). New developers should be aware of the following:
+
+### Validator
+
+The integration harness lives at:
+```
+integration-harness/lib/deterministic-validator.mjs
+```
+
+Run it with:
+```bash
+node integration-harness/lib/deterministic-validator.mjs
+```
+
+This is a zero-dependency 47-assertion validator that verifies HMAC parity, envelope shape,
+bidirectional HTTP simulation, risk-lane classification, latency budget, idempotency,
+tamper resistance, and clock-skew rejection.
+
+### Integration Documentation
+
+The full Alberta Innovates TDA validation report is at:
+```
+docs/integration/sbbl-omnihub-validation-2026-05-11.md
+```
+
+This report documents 4 gaps closed (P0/P0/P1/P2) and 139 assertions across 3 test layers.
+
+### Required Secrets
+
+To run the integration against live endpoints you need the following secrets in `.env.local`:
+
+| Secret | Description |
+|---|---|
+| `OMNIHUB_SIGNING_SECRET` | HMAC signing secret for outbound packets to SBBL-HQ |
+| `OMNIHUB_SYNC_URL` | SBBL-HQ sync endpoint URL |
+| `OMNIHUB_VERIFY_KEY` | Key used to verify inbound packets from SBBL-HQ |
+
+### Secret Scan Note
+
+`integration-harness/` is excluded from the secret scanner. All test HMAC fixture keys
+within the validator use the `test-` prefix to avoid false positives.
+
+---
+
+## Platform Version History
+
+| Version | Date | Key Change |
+|---|---|---|
+| v1.5.1 | 2026-05-07 | Zero tech-debt pass, Supabase security hardening |
+| v1.6.0 | 2026-05-08 | Armageddon live validation (2,399 Vitest + 891 Pytest + 21 E2E) |
+| v1.6.1 | 2026-05-11 | OTel CVE patch (GHSA-q7rr-3cgh-j5r3) + OmniBridge validation |
+
+---
+
 **Onboarding Owner:** Chief Platform Architect
-**Document Version:** 2.0.0
-**Last Updated:** 2026-05-06
+**Document Version:** v1.1.0
+**Last Updated:** 2026-05-11
 **Next Review:** Quarterly

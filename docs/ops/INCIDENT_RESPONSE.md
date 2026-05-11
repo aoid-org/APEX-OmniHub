@@ -1,8 +1,8 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-03-25 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.1-OMNIBRIDGE | LAST_UPDATED=2026-05-11 -->
 # Incident Response Playbook
 
-**Version:** 1.1.0
-**Last Updated:** 2026-03-25
+**Version:** 1.2.0
+**Last Updated:** 2026-05-11
 
 ## 1. Severity Levels
 
@@ -86,3 +86,168 @@ Three independent failures converged:
 - `tests/login-page-fixes.test.ts` asserts no real Supabase credentials in `wrangler.toml`
 - Login page proactively shows missing config banner (doesn't wait for user to click Sign In)
 - Developer Onboarding doc updated with `wrangler.toml` warning
+
+---
+
+### INC-OMNIBRIDGE-CMDINJECT — OmniBridge Command Injection Attempt (SEV-1)
+
+| Field | Value |
+|-------|-------|
+| **Severity** | SEV-1 (Critical — Security Breach) |
+| **Incident Type** | OmniBridge command injection attempt |
+
+#### Detection
+
+Two signals indicate a command injection attempt:
+
+1. **`log_admin_action` audit spike** — an unexpected surge in `log_admin_action` rows from a single `source_id` within a short window (e.g., > 50 commands/minute) suggests forged or replayed commands.
+2. **`ingress_failures` table spike** — a sudden increase in rows with `risk_score = 999` (BLOCKED lane) indicates the risk classifier is detecting and rejecting malicious payloads.
+
+```sql
+-- Check recent ingress failures
+SELECT source_id, COUNT(*) AS failure_count, MAX(created_at) AS latest
+FROM ingress_failures
+WHERE created_at > NOW() - INTERVAL '1 hour'
+  AND risk_score >= 999
+GROUP BY source_id
+ORDER BY failure_count DESC;
+
+-- Cross-reference with admin action log
+SELECT action_type, source_id, COUNT(*) AS count, MAX(created_at) AS latest
+FROM admin_action_log
+WHERE created_at > NOW() - INTERVAL '1 hour'
+GROUP BY action_type, source_id
+ORDER BY count DESC;
+```
+
+#### Containment
+
+Immediately rotate `OMNIHUB_SIGNING_SECRET` on **both** sides simultaneously:
+
+```bash
+# 1. Generate a new secret
+openssl rand -base64 48
+
+# 2. Update on OmniHub side (Supabase Vault)
+supabase secrets set OMNIHUB_SIGNING_SECRET=<new-value> --project-ref rtopreovkywofgwgmozi
+
+# 3. Update on SBBL-HQ side (Cloudflare Worker)
+wrangler secret put OMNIHUB_SIGNING_SECRET --env production
+# (paste the same new-value when prompted)
+```
+
+All in-flight packets signed with the old secret will be rejected once both sides have rotated. If you suspect only the inbound verify key is compromised, rotate `OMNIHUB_VERIFY_KEY` independently.
+
+#### Eradication
+
+Audit all received commands in the last 24 hours for anomalous patterns:
+
+```sql
+-- Audit all inbound commands in the last 24h
+SELECT id, source_id, action_type, risk_lane, command_id, created_at
+FROM admin_action_log
+WHERE created_at > NOW() - INTERVAL '24 hours'
+ORDER BY created_at DESC;
+
+-- Identify any BLOCKED commands that slipped past
+SELECT id, source_id, risk_score, payload_hash, created_at
+FROM ingress_failures
+WHERE created_at > NOW() - INTERVAL '24 hours'
+ORDER BY created_at DESC;
+```
+
+Review each RED-lane command that reached `pending_approval` status to determine if any MAN-quorum approval was obtained under false pretenses.
+
+#### Recovery
+
+Verify zero BLOCKED events in `ingress_failures` since the secret rotation:
+
+```sql
+-- Should return 0 rows after rotation
+SELECT COUNT(*) AS blocked_since_rotation
+FROM ingress_failures
+WHERE created_at > '<rotation-timestamp>'::timestamptz
+  AND risk_score >= 999;
+```
+
+Confirm normal delivery resumes by triggering a PING command and verifying `status = 'delivered'` in `omnibridge_events` within 10 seconds.
+
+---
+
+### INC-OMNIBRIDGE-DRAINFAIL — OmniBridge Sync Drain Failure (SEV-2)
+
+| Field | Value |
+|-------|-------|
+| **Severity** | SEV-2 (High — Core Feature Degraded) |
+| **Incident Type** | OmniBridge sync drain failure |
+
+#### Detection
+
+The `/sync/drain` worker on SBBL-HQ attempts delivery with up to 4 retries (exponential backoff: 0ms / 250ms / 1s / 4s). A drain failure is indicated when:
+
+- `deliverSyncEnvelope` logs show `attempt 4/4 failed` on any packet — visible in Cloudflare Worker tail logs:
+  ```bash
+  wrangler tail --env production --filter /sync/drain
+  # Look for: ERROR [drain] packet <id> failed after 4 attempts — marked stuck
+  ```
+- `omnibridge_outbox` records accumulate in `status = 'stuck'` state:
+  ```sql
+  SELECT id, tenant_id, packet_id, attempts, status, last_error, created_at
+  FROM omnibridge_outbox
+  WHERE status = 'stuck'
+  ORDER BY created_at DESC;
+  ```
+
+#### Containment
+
+1. **Check `OMNIHUB_SYNC_URL` env var on SBBL-HQ** — incorrect URL is the most common cause:
+   ```bash
+   wrangler secret list --env production
+   # Verify OMNIHUB_SYNC_URL is set and points to the correct OmniHub endpoint
+   ```
+
+2. **Verify OmniHub endpoint reachability** from outside the SBBL-HQ worker:
+   ```bash
+   curl -i -X POST https://<omnihub-sync-url>/api/omnibridge/sync \
+     -H "X-Omni-Source: sbbl-hq" \
+     -H "Content-Type: application/json" \
+     -d '{"test": true}'
+   # Expect 400 (bad envelope) — not 404 or timeout
+   ```
+
+3. **Check OmniHub edge function health** — confirm the Supabase Edge Function is deployed and running:
+   ```bash
+   supabase functions list --project-ref rtopreovkywofgwgmozi
+   ```
+
+#### Resolution
+
+Inspect `omnibridge_outbox` for stuck records and attempt manual re-queue or cancellation:
+
+```sql
+-- View stuck outbox records with error details
+SELECT id, tenant_id, packet_id, attempts, last_error, created_at, updated_at
+FROM omnibridge_outbox
+WHERE status = 'stuck'
+ORDER BY created_at ASC;
+
+-- Re-queue stuck records for retry (after fixing the underlying cause)
+UPDATE omnibridge_outbox
+SET status = 'pending', attempts = 0, last_error = NULL, updated_at = NOW()
+WHERE status = 'stuck'
+  AND tenant_id = 'sbbl-hq';
+
+-- Cancel stuck records that are no longer relevant (e.g., stale telemetry)
+UPDATE omnibridge_outbox
+SET status = 'cancelled', updated_at = NOW()
+WHERE status = 'stuck'
+  AND created_at < NOW() - INTERVAL '1 hour'
+  AND tenant_id = 'sbbl-hq';
+```
+
+Once the underlying connectivity issue is resolved, trigger the `/sync/drain` endpoint manually to flush the queue:
+
+```bash
+curl -X POST https://<sbbl-hq-worker-url>/sync/drain \
+  -H "Authorization: Bearer <service-token>"
+```

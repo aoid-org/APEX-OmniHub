@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v10.0 | LAST_UPDATED=2026-05-06 -->
+<!-- APEX_DOC_STAMP: VERSION=v10.1 | LAST_UPDATED=2026-05-11 -->
 # CI Runtime Gates
 
 Canonical runtime: Node 24. Minimum supported runtime: Node 22. CI and release gates use `npm ci` and `npm run ...`; Bun is optional local tooling only.
@@ -120,7 +120,8 @@ git show origin/main:package-lock.json > package-lock.json
 git add package-lock.json
 ```
 
-**Current npm audit status:** Only moderate severity vulns present (postcss, uuid).
+**Current npm audit status:** 0 high/critical production vulns after 2026-05-11 OTel patch
+(GHSA-q7rr-3cgh-j5r3). Only moderate severity vulns present (postcss, uuid).
 `npm audit --omit=dev --audit-level=high` exits 0 — no high/critical production vulns.
 
 ---
@@ -231,6 +232,17 @@ upstream gate (`quality-gates` or `security-gates`), not the summary job.
 | Gate 6 `SyntaxError` | `//` comment in `tsconfig.json` | Remove all comments from `tsconfig.json` |
 | `security-gates` skipped on fork PRs | `if` condition requires same repo | Expected behavior — not a failure |
 | Coverage race condition (ENOENT) | Coverage enabled by default | Only run via `VITEST_COVERAGE=true` |
+| Secret scan flags test fixture values | Test HMAC key assignments without 'test-' prefix | Prefix fixture keys with 'test-' or 'mock-' |
+
+### Secret Scan Exclusions
+
+`integration-harness/**` is excluded from the secret scanner via `SCAN_EXCLUDED_PREFIXES`
+in `scripts/secret-scan.mjs`. This exclusion was added in v1.6.1 (2026-05-11) to prevent
+false positives from the OmniBridge deterministic validator fixture keys.
+
+**Best practice:** Even within excluded directories, all test HMAC fixture keys must use a
+`test-` or `mock-` prefix. This ensures the exclusion can be narrowed in future without
+introducing new false positives.
 
 ---
 
