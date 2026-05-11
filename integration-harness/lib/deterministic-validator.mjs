@@ -198,7 +198,7 @@ async function T1_hmacParity() {
 
 async function T2_envelopeShape() {
   section('T2  SyncPacket envelope shape contract');
-  const secret = 'sbbl-omnihub-shared-sync-secret-256';
+  const secret = 'test-sbbl-omnihub-shared-sync-secret-256';
   const packet = {
     packet_id: crypto.randomUUID(),
     trace_id: crypto.randomUUID(),
@@ -222,7 +222,7 @@ async function T2_envelopeShape() {
 
 async function T3_sbbl2omnihub() {
   section('T3  SBBL → OmniHub sync packet verifies end-to-end');
-  const secret = 'integration-shared-secret-abcdef1234567890';
+  const secret = 'test-integration-shared-secret-abcdef1234567890';
   const packet = {
     packet_id: crypto.randomUUID(),
     trace_id: crypto.randomUUID(),
@@ -247,7 +247,7 @@ async function T3_sbbl2omnihub() {
 
 async function T4_omnihub2sbbl() {
   section('T4  OmniHub → SBBL command verifies end-to-end');
-  const secret = 'control-plane-omnihub-secret-fedcba98';
+  const secret = 'test-control-plane-omnihub-secret-fedcba98';
   const command = {
     command_id: crypto.randomUUID(),
     action: 'broadcast_message',
@@ -302,8 +302,8 @@ function T5_riskLaneParity() {
 async function T6_httpSimulation() {
   section('T6  Bidirectional HTTP simulation (real TCP over loopback)');
 
-  const SYNC_SECRET = 'sync-shared-secret-2026-q2-rotation';
-  const CMD_SECRET = 'cmd-shared-secret-2026-q2-rotation';
+  const SYNC_SECRET = 'test-sync-shared-secret-2026-q2-rotation';
+  const CMD_SECRET = 'test-cmd-shared-secret-2026-q2-rotation';
   const SBBL_SOURCE = 'sbbl-hq';
 
   const omniRequestsReceived = [];
