@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'bun:test';
-import { isAgentEvent, isApexStructuredResponse } from '../../src/lib/types/omniverse';
+import { describe, it, expect } from 'vitest';
+import { isAgentEvent, isApexStructuredResponse } from '@/lib/types/omniverse';
 
 describe('OmniVerse Type Guards', () => {
   describe('isAgentEvent', () => {
