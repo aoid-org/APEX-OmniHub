@@ -1,7 +1,7 @@
 # Canonical Truth File — Platform Topology & Deployment
 
-**Version:** 1.2.0
-**Last Updated:** 2026-05-06
+**Version:** 1.3.0
+**Last Updated:** 2026-05-11
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements
@@ -21,6 +21,46 @@
 13. **Path alias split is intentional and load-bearing.** `vite.config.ts` resolves `@/*` → `./apps/omnihub-site/src/*`. `vitest.config.ts` resolves `@/*` → `./src/*`. Do not align these — the split enables test isolation between root-package code and the omnihub-site app.
 14. **Dev server port is 8080.** `vite.config.ts` sets `server.port: 8080`. Documentation referencing port 5173 is incorrect.
 15. **`orchestrator/requirements.lock` must stay committed.** The `Dependency Security Audit` CI gate checks for its existence. Do not delete or gitignore it.
+16. **OmniBridge bidirectional integration is live as of v1.6.1 (2026-05-11).** The integration harness (`integration-harness/lib/deterministic-validator.mjs`) provides a 47-assertion zero-dependency validator for the HMAC-signed sync layer between APEX-OmniHub and SBBL-HQ. See `docs/integration/sbbl-omnihub-validation-2026-05-11.md` for the full validation report.
+17. **SBBL-HQ is the first registered production tenant.** It connects to APEX-OmniHub as the control plane via the OmniBridge sync protocol. Required secrets: `OMNIHUB_SIGNING_SECRET`, `OMNIHUB_SYNC_URL`, `OMNIHUB_VERIFY_KEY`. Inbound packets are verified with HMAC-SHA256 using `OMNIHUB_VERIFY_KEY`; outbound commands are signed with `OMNIHUB_SIGNING_SECRET`.
+
+## Tenant Registry
+
+**Last Updated:** 2026-05-11 | **Integration Status Authority:** This section is canonical for all tenant onboarding state.
+
+### tenant-001: SBBL-HQ
+
+| Field | Value |
+|-------|-------|
+| **Tenant ID** | `sbbl-hq` |
+| **Tenant Name** | SBBL-HQ (Southern Basketball League Headquarters) |
+| **Integration Status** | **ACTIVE** |
+| **Onboarded** | 2026-05-11 (SBBL-HQ PR #502 merged; APEX-OmniHub PR #1108 in review) |
+| **Validation Report** | `docs/integration/sbbl-omnihub-validation-2026-05-11.md` |
+
+**Endpoints:**
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /webhooks/omnihub` | Inbound command receiver (HMAC-verified, idempotent, risk-classified) |
+| `POST /api/omniport/command` | OmniPort diagnostic surface (Bearer JWT, allowlist: PING / ECHO / HEALTH_CHECK / TELEMETRY_SNAPSHOT) |
+| `POST /sync/drain` | Outbound telemetry sync to OmniHub (`/api/omnibridge/sync`) |
+
+**Secrets (must be provisioned in Cloudflare Worker environment):**
+
+| Secret | Description | Rotation Policy |
+|--------|-------------|-----------------|
+| `OMNIHUB_SIGNING_SECRET` | HMAC key for signing outbound SyncPackets sent to OmniHub | Rotate both sides simultaneously; min 256-bit entropy |
+| `OMNIHUB_SYNC_URL` | URL of the OmniHub `/api/omnibridge/sync` Pages Function endpoint | Update when OmniHub deployment URL changes |
+| `OMNIHUB_VERIFY_KEY` | Key for verifying inbound commands from OmniHub; falls back to `OMNIHUB_SIGNING_SECRET` in dev/staging | Rotate independently from signing secret in production |
+
+**Integration notes:**
+- Outbound sync uses the `{ packet, signature }` envelope with headers `X-Omni-Source`, `X-Omni-Signature`, `X-Omni-Packet-Id`, `X-Omni-Trace-Id`.
+- Inbound commands are pinned to `target_source === "sbbl-hq"` — commands addressed to other tenants are rejected `400`.
+- Risk-lane re-classification on SBBL ingress rejects `DROP/TRUNCATE/ALTER ROLE/DISABLE RLS/GRANT ALL` payloads regardless of signature validity.
+- All inbound actions are recorded via `log_admin_action` RPC for audit trail continuity.
+
+---
 
 ## Conflict Resolution Rule
 

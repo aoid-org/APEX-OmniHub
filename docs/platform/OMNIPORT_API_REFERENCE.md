@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-OMNIBRIDGE | LAST_UPDATED=2026-05-11 -->
 # OmniPort API Reference
 
 **The Proprietary Ingress Engine for APEX OmniHub**
@@ -485,6 +485,185 @@ try {
 
 ---
 
-**Document Version:** 1.0.0
-**Last Updated:** 2026-01-23
+---
+
+## SBBL-HQ OmniPort Endpoint — Canonical Reference Implementation
+
+**Added:** 2026-05-11 | **Scope:** APEX-OmniHub v1.6.1+ | **Related:** `docs/integration/sbbl-omnihub-validation-2026-05-11.md`
+
+The SBBL-HQ `/api/omniport/command` endpoint is the **canonical reference implementation** of the OmniPort protocol for tenant applications. It demonstrates the minimal conformant surface a tenant must expose to accept authenticated diagnostic commands from the OmniHub control plane.
+
+### Endpoint
+
+```
+POST /api/omniport/command
+```
+
+**Host:** SBBL-HQ Cloudflare Worker (`sbbl-hq.<zone>.workers.dev` in production)
+
+**Authentication:** Bearer JWT (verified against Supabase JWKS). Anonymous requests receive `401 Unauthorized`.
+
+**Content-Type:** `application/json`
+
+**Body size limit:** 64 KB
+
+### Supported Commands
+
+#### 1. PING
+
+Health-check handshake. Confirms the endpoint is reachable and the JWT is valid.
+
+**Request:**
+```json
+{
+  "command": "PING",
+  "correlation_id": "<uuid>",
+  "target_app": "sbbl-hq",
+  "issued_at": "<ISO-8601 timestamp>"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "command": "PING",
+  "status": "ok",
+  "correlation_id": "<uuid>",
+  "pong_at": "<ISO-8601 timestamp>",
+  "target_app": "sbbl-hq"
+}
+```
+
+---
+
+#### 2. ECHO
+
+Returns the request payload verbatim. Used for integration harness round-trip verification.
+
+**Request:**
+```json
+{
+  "command": "ECHO",
+  "correlation_id": "<uuid>",
+  "target_app": "sbbl-hq",
+  "issued_at": "<ISO-8601 timestamp>",
+  "payload": { "<any>": "<value>" }
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "command": "ECHO",
+  "status": "ok",
+  "correlation_id": "<uuid>",
+  "echo": { "<any>": "<value>" },
+  "echoed_at": "<ISO-8601 timestamp>"
+}
+```
+
+---
+
+#### 3. HEALTH_CHECK
+
+Returns the dependency health status of the SBBL-HQ worker (database connectivity, OmniBridge sync endpoint reachability, and KV store).
+
+**Request:**
+```json
+{
+  "command": "HEALTH_CHECK",
+  "correlation_id": "<uuid>",
+  "target_app": "sbbl-hq",
+  "issued_at": "<ISO-8601 timestamp>"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "command": "HEALTH_CHECK",
+  "status": "ok",
+  "correlation_id": "<uuid>",
+  "checked_at": "<ISO-8601 timestamp>",
+  "dependencies": {
+    "database": "healthy",
+    "omnibridge_sync": "healthy",
+    "kv_store": "healthy"
+  }
+}
+```
+
+Individual dependency values: `"healthy"` | `"degraded"` | `"unreachable"`
+
+If any dependency is `"unreachable"`, the response status changes to `"degraded"` but the HTTP status remains `200` (the endpoint itself is functional). Callers should alert on `status !== "ok"`.
+
+---
+
+#### 4. TELEMETRY_SNAPSHOT
+
+Returns a point-in-time snapshot of SBBL-HQ operational metrics for the OmniHub observability dashboard.
+
+**Request:**
+```json
+{
+  "command": "TELEMETRY_SNAPSHOT",
+  "correlation_id": "<uuid>",
+  "target_app": "sbbl-hq",
+  "issued_at": "<ISO-8601 timestamp>"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "command": "TELEMETRY_SNAPSHOT",
+  "status": "ok",
+  "correlation_id": "<uuid>",
+  "snapshot_at": "<ISO-8601 timestamp>",
+  "metrics": {
+    "active_leagues": 3,
+    "active_games": 0,
+    "ingress_failures_last_1h": 0,
+    "omnibridge_outbox_pending": 0,
+    "omnibridge_outbox_stuck": 0,
+    "last_sync_drain_at": "<ISO-8601 timestamp or null>"
+  }
+}
+```
+
+---
+
+### Error Responses
+
+| HTTP Status | Condition |
+|-------------|-----------|
+| `400 Bad Request` | Missing required fields, unsupported command, or malformed JSON |
+| `401 Unauthorized` | Missing or invalid Bearer JWT |
+| `405 Method Not Allowed` | Non-POST request |
+
+**400 response shape (unsupported command):**
+```json
+{
+  "error": "unsupported_command",
+  "message": "Command 'REBOOT' is not in the allowlist. Supported: PING, ECHO, HEALTH_CHECK, TELEMETRY_SNAPSHOT",
+  "correlation_id": "<uuid or null>"
+}
+```
+
+### Implementing the OmniPort Protocol in a New Tenant
+
+Any tenant onboarding onto APEX-OmniHub should implement this same endpoint shape:
+
+1. Expose `POST /api/omniport/command` with Bearer JWT auth.
+2. Implement at minimum `PING` (required for health monitoring by OmniHub).
+3. Pin `target_app` validation to the tenant's own ID (e.g., `target_app === "my-tenant-id"`).
+4. Return `correlation_id` in every response so the OmniHub control plane can match requests.
+5. Return `400` for unrecognized commands — do not silently drop them.
+
+See `docs/integration/sbbl-omnihub-validation-2026-05-11.md §Gap 3` for the full integration validation evidence.
+
+---
+
+**Document Version:** 1.1.0
+**Last Updated:** 2026-05-11
 **Maintained By:** APEX Platform Team
