@@ -101,7 +101,7 @@
     "@capacitor/android": "^6.2.1",
     "@capacitor/core": "^6.2.1",
     "@capacitor/device": "^6.0.3",
-    "@capacitor/ios": "^6.2.1",
+    "@capacitor/ios": "^8.3.3",
     "@capacitor/push-notifications": "^6.0.5",
     "@hookform/resolvers": "^3.10.0",
     "@opentelemetry/api": "^1.9.1",
