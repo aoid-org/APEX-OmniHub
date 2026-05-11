@@ -142,24 +142,6 @@ async function verifySyncPacket(envelope, secret, maxSkewSeconds = 300) {
   return ok ? { valid: true } : { valid: false, reason: 'bad_signature' };
 }
 
-<<<<<<< codex/resolve-code-duplication-in-deterministic-validator.mjs
-
-function buildSyncPacket(overrides = {}) {
-  return {
-    packet_id: crypto.randomUUID(),
-    trace_id: crypto.randomUUID(),
-    event_type: 'heartbeat',
-    entity_type: 'session',
-    entity_id: null,
-    league_id: null,
-    payload: {},
-    emitted_at: new Date().toISOString(),
-    ...overrides,
-  };
-}
-
-=======
->>>>>>> claude/audit-both-repos-rQnji
 // Mirror of risk-lane classifier (OmniHub omnibridge-control + SBBL omniport)
 const MANUAL_APPROVAL_PATTERNS = [
   /delete|purge/i,
@@ -218,24 +200,16 @@ async function T1_hmacParity() {
 async function T2_envelopeShape() {
   section('T2  SyncPacket envelope shape contract');
   const secret = 'test-sbbl-omnihub-shared-sync-secret-256';
-<<<<<<< codex/resolve-code-duplication-in-deterministic-validator.mjs
-  const packet = buildSyncPacket({
-=======
   const packet = {
     packet_id: crypto.randomUUID(),
     trace_id: crypto.randomUUID(),
->>>>>>> claude/audit-both-repos-rQnji
     event_type: 'game.started',
     entity_type: 'game',
     entity_id: 'game-001',
     league_id: 'wbl-2026',
     payload: { home: 'TeamA', away: 'TeamB' },
-<<<<<<< codex/resolve-code-duplication-in-deterministic-validator.mjs
-  });
-=======
     emitted_at: new Date().toISOString(),
   };
->>>>>>> claude/audit-both-repos-rQnji
   const envelope = await signSyncPacket(packet, secret);
 
   record('envelope passes isSyncPacketEnvelope', isSyncPacketEnvelope(envelope));
@@ -250,14 +224,6 @@ async function T2_envelopeShape() {
 async function T3_sbbl2omnihub() {
   section('T3  SBBL → OmniHub sync packet verifies end-to-end');
   const secret = 'test-integration-shared-secret-abcdef1234567890';
-<<<<<<< codex/resolve-code-duplication-in-deterministic-validator.mjs
-  const packet = buildSyncPacket({
-    event_type: 'broadcast.live',
-    entity_type: 'broadcast',
-    league_id: 'sbbl-spring-2026',
-    payload: { gameId: 'g-7', viewers: 312 },
-  });
-=======
   const packet = {
     packet_id: crypto.randomUUID(),
     trace_id: crypto.randomUUID(),
@@ -268,7 +234,6 @@ async function T3_sbbl2omnihub() {
     payload: { gameId: 'g-7', viewers: 312 },
     emitted_at: new Date().toISOString(),
   };
->>>>>>> claude/audit-both-repos-rQnji
   const envelope = await signSyncPacket(packet, secret);
   const result = await verifySyncPacket(envelope, secret);
   record('signed envelope verifies', result.valid, result.reason ?? '');
@@ -410,24 +375,16 @@ async function T6_httpSimulation() {
 
   try {
     // Round 1: SBBL → OmniHub sync packet
-<<<<<<< codex/resolve-code-duplication-in-deterministic-validator.mjs
-    const packet = buildSyncPacket({
-=======
     const packet = {
       packet_id: crypto.randomUUID(),
       trace_id: crypto.randomUUID(),
->>>>>>> claude/audit-both-repos-rQnji
       event_type: 'game.scored',
       entity_type: 'game',
       entity_id: 'game-abc',
       league_id: 'wbl',
       payload: { home_score: 88, away_score: 84 },
-<<<<<<< codex/resolve-code-duplication-in-deterministic-validator.mjs
-    });
-=======
       emitted_at: new Date().toISOString(),
     };
->>>>>>> claude/audit-both-repos-rQnji
     const envelope = await signSyncPacket(packet, SYNC_SECRET);
     const t0 = performance.now();
     const respSbblToOmni = await fetch(`http://127.0.0.1:${omniPort}/api/omnibridge/sync`, {
@@ -502,18 +459,12 @@ async function T6_httpSimulation() {
 async function T7_latencyBudget() {
   section('T7  Real-world latency budget');
   const secret = 'latency-test-secret-2026-q2-rotation';
-<<<<<<< codex/resolve-code-duplication-in-deterministic-validator.mjs
-  const packet = buildSyncPacket({
-    payload: { ts: Date.now() },
-  });
-=======
   const packet = {
     packet_id: crypto.randomUUID(), trace_id: crypto.randomUUID(),
     event_type: 'heartbeat', entity_type: 'session',
     entity_id: null, league_id: null, payload: { ts: Date.now() },
     emitted_at: new Date().toISOString(),
   };
->>>>>>> claude/audit-both-repos-rQnji
 
   const N = 200;
   const signTimes = [];
@@ -567,22 +518,12 @@ async function T8_idempotency() {
 async function T9_tamperResistance() {
   section('T9  Tamper resistance');
   const secret = 'tamper-test-secret-fedcba0987654321';
-<<<<<<< codex/resolve-code-duplication-in-deterministic-validator.mjs
-  const original = buildSyncPacket({
-    event_type: 'access.granted',
-    entity_type: 'entitlement',
-    entity_id: 'user-1',
-    league_id: 'wbl',
-    payload: { tier: 'basic' },
-  });
-=======
   const original = {
     packet_id: crypto.randomUUID(), trace_id: crypto.randomUUID(),
     event_type: 'access.granted', entity_type: 'entitlement',
     entity_id: 'user-1', league_id: 'wbl',
     payload: { tier: 'basic' }, emitted_at: new Date().toISOString(),
   };
->>>>>>> claude/audit-both-repos-rQnji
   const env = await signSyncPacket(original, secret);
 
   const flips = [
@@ -604,20 +545,12 @@ async function T9_tamperResistance() {
 async function T10_clockSkew() {
   section('T10 Clock-skew rejection (replay attack window)');
   const secret = 'clock-skew-test-1234567890abcdef';
-<<<<<<< codex/resolve-code-duplication-in-deterministic-validator.mjs
-  const stalePacket = buildSyncPacket({
-    event_type: 'late.event',
-    payload: { stale: true },
-    emitted_at: new Date(Date.now() - 10 * 60_000).toISOString(),
-  });
-=======
   const stalePacket = {
     packet_id: crypto.randomUUID(), trace_id: crypto.randomUUID(),
     event_type: 'late.event', entity_type: 'session',
     entity_id: null, league_id: null, payload: { stale: true },
     emitted_at: new Date(Date.now() - 10 * 60_000).toISOString(),
   };
->>>>>>> claude/audit-both-repos-rQnji
   const stale = await signSyncPacket(stalePacket, secret);
   const staleResult = await verifySyncPacket(stale, secret);
   record('10-min-stale packet → expired', !staleResult.valid && staleResult.reason === 'expired');
