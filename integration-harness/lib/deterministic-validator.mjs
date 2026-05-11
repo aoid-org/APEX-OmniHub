@@ -291,9 +291,37 @@ function T5_riskLaneParity() {
   ];
   for (const [entityType, payload, expected] of cases) {
     const actual = classifyRiskLane(entityType, payload);
-    const label = `${expected.padEnd(7)} ← ${String(entityType)}/${JSON.stringify(payload).slice(0, 40)}`;
+    // Explicit type guard: string primitives pass through; any widened type falls back to JSON.
+    const entityTypeStr = typeof entityType === 'string' ? entityType : JSON.stringify(entityType);
+    const label = `${expected.padEnd(7)} ← ${entityTypeStr}/${JSON.stringify(payload).slice(0, 40)}`;
     const mismatch = actual === expected ? '' : `got ${actual}`;
     record(label, actual === expected, mismatch);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HTTP utility — shared by T6 server handlers (eliminates chunk-read duplication)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Reads all chunks from an HTTP IncomingMessage and JSON-parses the body.
+ * On parse failure, sends 400 { error: 'invalid_json' } and returns null so
+ * the caller can `if (parsed === null) return;` without duplicating the
+ * error-response logic.
+ * @param {import('node:http').IncomingMessage} req
+ * @param {import('node:http').ServerResponse} res
+ * @returns {Promise<unknown | null>}
+ */
+async function readJsonBody(req, res) {
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const raw = Buffer.concat(chunks).toString('utf8');
+  try {
+    return JSON.parse(raw);
+  } catch {
+    res.writeHead(400);
+    res.end(JSON.stringify({ error: 'invalid_json' }));
+    return null;
   }
 }
 
@@ -313,12 +341,10 @@ async function T6_httpSimulation() {
 
   // OmniHub receiver: emulates /api/omnibridge/sync (Pages Function)
   const omniHubServer = createServer(async (req, res) => {
-    const chunks = [];
-    for await (const chunk of req) chunks.push(chunk);
-    const bodyRaw = Buffer.concat(chunks).toString('utf8');
     const sourceId = req.headers['x-omni-source'];
     if (!sourceId) { res.writeHead(400, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: 'missing_source_header' })); return; }
-    let parsed; try { parsed = JSON.parse(bodyRaw); } catch { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid_json' })); return; }
+    const parsed = await readJsonBody(req, res);
+    if (parsed === null) return;
     if (!isSyncPacketEnvelope(parsed)) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid_envelope' })); return; }
     const verify = await verifySyncPacket(parsed, SYNC_SECRET);
     if (!verify.valid) { res.writeHead(verify.reason === 'expired' ? 400 : 401); res.end(JSON.stringify({ error: verify.reason })); return; }
@@ -329,13 +355,11 @@ async function T6_httpSimulation() {
 
   // SBBL receiver: emulates /webhooks/omnihub (Worker handler)
   const sbblServer = createServer(async (req, res) => {
-    const chunks = [];
-    for await (const chunk of req) chunks.push(chunk);
-    const bodyRaw = Buffer.concat(chunks).toString('utf8');
     const cmdId = req.headers['x-omni-command-id'];
     const sig = req.headers['x-omni-signature'];
     if (!cmdId || !sig) { res.writeHead(400); res.end(JSON.stringify({ error: 'missing_command_headers' })); return; }
-    let parsed; try { parsed = JSON.parse(bodyRaw); } catch { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid_json' })); return; }
+    const parsed = await readJsonBody(req, res);
+    if (parsed === null) return;
     if (!parsed.command || typeof parsed.command !== 'object') { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid_envelope' })); return; }
     const ok = await hmacVerify(CMD_SECRET, JSON.stringify(parsed.command), sig);
     if (!ok) { res.writeHead(401); res.end(JSON.stringify({ error: 'bad_signature' })); return; }
