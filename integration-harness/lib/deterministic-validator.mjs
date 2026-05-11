@@ -46,7 +46,8 @@ let exitCode = 0;
 function record(name, ok, detail = '') {
   results.push({ name, ok, detail });
   const tag = ok ? '\x1b[32mPASS\x1b[0m' : '\x1b[31mFAIL\x1b[0m';
-  process.stdout.write(`  [${tag}] ${name}${detail ? ` — ${detail}` : ''}\n`);
+  const suffix = detail ? ` — ${detail}` : '';
+  process.stdout.write(`  [${tag}] ${name}${suffix}\n`);
   if (!ok) exitCode = 1;
 }
 
@@ -290,8 +291,9 @@ function T5_riskLaneParity() {
   ];
   for (const [entityType, payload, expected] of cases) {
     const actual = classifyRiskLane(entityType, payload);
-    record(`${expected.padEnd(7)} ← ${entityType}/${JSON.stringify(payload).slice(0, 40)}`, actual === expected,
-      actual !== expected ? `got ${actual}` : '');
+    const label = `${expected.padEnd(7)} ← ${String(entityType)}/${JSON.stringify(payload).slice(0, 40)}`;
+    const mismatch = actual === expected ? '' : `got ${actual}`;
+    record(label, actual === expected, mismatch);
   }
 }
 
@@ -469,7 +471,11 @@ async function T7_latencyBudget() {
 async function T8_idempotency() {
   section('T8  Idempotency / replay-detection');
   const seen = new Set();
-  const isDup = (key) => { if (seen.has(key)) return true; seen.add(key); return false; };
+  const isDup = (key) => {
+    if (seen.has(key)) { return true; }
+    seen.add(key);
+    return false;
+  };
 
   const sourceId = 'sbbl-hq';
   const pid = crypto.randomUUID();
@@ -532,10 +538,10 @@ async function T10_clockSkew() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Driver
+// Driver  (top-level await — valid in ES modules)
 // ─────────────────────────────────────────────────────────────────────────────
 
-(async () => {
+try {
   process.stdout.write('\x1b[1mAPEX-OmniHub ↔ SBBL-HQ Deterministic Integration Validator\x1b[0m\n');
   process.stdout.write(`Node ${process.version} · ${new Date().toISOString()}\n`);
 
@@ -557,7 +563,7 @@ async function T10_clockSkew() {
   if (failed > 0) process.stdout.write(` · \x1b[31m${failed} FAILED\x1b[0m`);
   process.stdout.write('\n');
   process.exit(exitCode);
-})().catch((e) => {
+} catch (e) {
   console.error('FATAL', e);
   process.exit(2);
-});
+}
