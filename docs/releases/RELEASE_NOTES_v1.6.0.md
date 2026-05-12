@@ -76,8 +76,7 @@ The following production surfaces remain fully operational and unchanged:
 
 | Item | Status | Owner |
 |------|--------|-------|
-| Open PR backlog pending triage | In-progress | See `docs/ops/PR_TRIAGE.md` |
-| WHIP/WHEP ingest server (`stream.sbbl-hq.icu`) | Separate SBBL-HQ repo concern | N/A for OmniHub |
+| Open PR backlog pending triage | In-progress | See `docs/ops/PR_TRIAGE.md` 
 | SSG/SEO for marketing site | Tracked as v1.7.0 target | APEX team |
 
 ---
