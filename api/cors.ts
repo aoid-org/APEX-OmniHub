@@ -78,22 +78,66 @@ export function isAllowedHost(hostname: string, allowlist: string[]): boolean {
  *   - IPv6 ULA:              fc00::/7
  */
 export function isPrivateOrReservedIp(hostname: string): boolean {
-  // Strip brackets from IPv6 literals, e.g. [::1] → ::1
-  const h = hostname.startsWith('[') && hostname.endsWith(']')
-    ? hostname.slice(1, -1)
-    : hostname;
-
-  // IPv6 checks
-  if (h.includes(':')) {
-    const lower = h.toLowerCase();
-    if (lower === '::1') return true;
-    if (lower.startsWith('fe80')) return true; // link-local
-    if (lower.startsWith('fc') || lower.startsWith('fd')) return true; // ULA
+  // 1. Normalize the hostname using the URL parser's built-in IP normalization.
+  // This handles non-standard IPv4 formats (decimal, hex, dword) by converting
+  // them to canonical x.x.x.x form.
+  let h = hostname;
+  try {
+    const probe = h.includes(':') && !h.startsWith('[') ? `[${h}]` : h;
+    const url = new URL(`https://${probe}`);
+    h = url.hostname;
+  } catch {
+    // If normalization fails, it's not a valid IP or hostname.
     return false;
   }
 
-  // IPv4 check — must match x.x.x.x
-  const parts = h.split('.');
+  // Strip brackets from IPv6 literals, e.g. [::1] → ::1
+  const normalized = h.startsWith('[') && h.endsWith(']')
+    ? h.slice(1, -1)
+    : h;
+
+  // IPv6 checks
+  if (normalized.includes(':')) {
+    const lower = normalized.toLowerCase();
+
+    // Loopback (::1)
+    if (lower === '::1' || lower === '0:0:0:0:0:0:0:1') return true;
+
+    // Link-local (fe80::/10)
+    if (lower.startsWith('fe80')) return true;
+
+    // Unique Local Address (fc00::/7)
+    if (lower.startsWith('fc') || lower.startsWith('fd')) return true;
+
+    // IPv4-mapped IPv6 (::ffff:0:0/96) or IPv4-compatible (::0:0/96)
+    // We check if it embeds a private IPv4.
+    if (lower.startsWith('::ffff:') || lower.startsWith('::')) {
+      const parts = lower.split(':');
+      const lastPart = parts[parts.length - 1];
+
+      // Handle dot-notation: ::ffff:127.0.0.1
+      if (lastPart.includes('.')) {
+        return isPrivateOrReservedIp(lastPart);
+      }
+
+      // Handle hex-notation: ::ffff:7f00:1 (normalized from ::ffff:127.0.0.1)
+      const hexParts = parts.slice(-2);
+      if (hexParts.length === 2 && hexParts.every(p => /^[0-9a-f]{1,4}$/.test(p) || p === '')) {
+         const highPart = hexParts[0] === '' ? 0 : parseInt(hexParts[0], 16);
+         const lowPart = hexParts[1] === '' ? 0 : parseInt(hexParts[1], 16);
+         const a = (highPart >> 8) & 0xff;
+         const b = highPart & 0xff;
+         const c = (lowPart >> 8) & 0xff;
+         const d = lowPart & 0xff;
+         return isPrivateOrReservedIp(`${a}.${b}.${c}.${d}`);
+      }
+    }
+
+    return false;
+  }
+
+  // IPv4 check — must match x.x.x.x (already normalized by URL parser above)
+  const parts = normalized.split('.');
   if (parts.length !== 4) return false;
   const octets = parts.map(Number);
   if (octets.some((o) => !Number.isInteger(o) || o < 0 || o > 255)) return false;
