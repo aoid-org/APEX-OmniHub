@@ -9,6 +9,10 @@ import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
 import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
+import {
+  OMNIDASH_SIDEBAR_WIDGETS,
+  type OmniDashSidebarWidget,
+} from '@/contracts/omnidash-sidebar-widgets';
 import { toast } from 'sonner';
 
 import imgBadge from "../../../src/assets/omnidash/apex-badge.svg";
@@ -48,11 +52,7 @@ interface SectionLabelProps {
   children: ReactNode;
 }
 
-interface NavEntry {
-  label: string;
-  iconIdx: number;
-  active: boolean;
-}
+type NavEntry = OmniDashSidebarWidget;
 
 interface NavItemProps {
   n: NavEntry;
@@ -281,20 +281,6 @@ const SectionLabel = ({ children }: SectionLabelProps) => (
 
 // DraggableWidget is imported from ./DraggableWidget (extracted for testability).
 
-// ─── Nav items ────────────────────────────────────────────────────────────────
-const NAV = [
-  { label:"OmniBoard",   iconIdx:0, active:true  },
-  { label:"BYOM",        iconIdx:4, active:false },
-  { label:"PhysiOmni",   iconIdx:5, active:false },
-  { label:"Audits",      iconIdx:1, active:false },
-  { label:"Links",       iconIdx:4, active:false },
-  { label:"Automations", iconIdx:7, active:false },
-  { label:"Workflows",   iconIdx:6, active:false },
-  { label:"Files",       iconIdx:8, active:false },
-  { label:"Billing",     iconIdx:3, active:false },
-  { label:"Settings",    iconIdx:2, active:false },
-];
-
 // ─── NavItem ──────────────────────────────────────────────────────────────────
 // ALL tiles use OmniBoard's exact look as the base.
 // isActive = brighter border + stronger glow only.
@@ -338,7 +324,12 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
     <button
       className="omni-nav-item"
       draggable
-      onDragStart={(e) => e.dataTransfer.setData('application/apex-tile', JSON.stringify({ id: n.label.toLowerCase(), label: n.label, iconIdx: n.iconIdx }))}
+      onDragStart={(e) =>
+        e.dataTransfer.setData(
+          'application/apex-tile',
+          JSON.stringify({ id: n.id, label: n.label, iconIdx: n.iconIdx }),
+        )
+      }
       onClick={onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
@@ -389,19 +380,6 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
   );
 };
 
-// ─── Module key map: sidebar label → omniModalStore module key
-const NAV_MODULE_KEY: Record<string, string> = {
-  BYOM:        'cockpit',
-  PhysiOmni:   'physiomni',
-  Audits:      'audits',
-  Links:       'links',
-  Automations: 'automations',
-  Workflows:   'workflows',
-  Files:       'files',
-  Billing:     'billing',
-  Settings:    'settings',
-};
-
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
 const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
   const { invoke } = useOmniModal();
@@ -418,16 +396,17 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
     }
   }, [signingOut]);
 
-  const handleNav = (label: string) => {
-    setActiveNav(label);
-    const moduleKey = NAV_MODULE_KEY[label];
-    if (!moduleKey) return; // OmniBoard — stays on main canvas
+  const handleNav = (widget: OmniDashSidebarWidget) => {
+    setActiveNav(widget.label);
+
+    if (!widget.moduleKey) return; // OmniBoard stays on main canvas
+
     invoke({
-      id: `nav-module-${moduleKey}`,
+      id: `nav-module-${widget.moduleKey}`,
       provider: 'omnidash',
       type: 'module',
-      title: label,
-      contextData: { moduleKey },
+      title: widget.label,
+      contextData: { moduleKey: widget.moduleKey },
       onComplete: async () => { setActiveNav('OmniBoard'); },
       onCancel: () => { setActiveNav('OmniBoard'); },
     });
@@ -443,8 +422,13 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
       gap:3,
       overflowY:"auto",
     }}>
-      {NAV.map((n) => (
-        <NavItem key={n.label} n={n} isActive={activeNav===n.label} onClick={() => handleNav(n.label)} />
+      {OMNIDASH_SIDEBAR_WIDGETS.map((widget) => (
+        <NavItem
+          key={widget.id}
+          n={widget}
+          isActive={activeNav === widget.label}
+          onClick={() => handleNav(widget)}
+        />
       ))}
 
       {/* Status Footer */}

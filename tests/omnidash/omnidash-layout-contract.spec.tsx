@@ -1,12 +1,18 @@
 /**
  * Omnidash Layout Contract Tests
- * Lock 3: Assert /omnidash route renders OmniDashLayout with correct sidebar nav from APP_REGISTRY.
+ * Lock 3: Assert product registry contracts stay decoupled from the OmniDash sidebar widget rail.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { readFileSync } from 'node:fs';
 import type { ReactNode } from 'react';
 import { APP_REGISTRY } from '../../packages/core/src/registry';
 import { OMNIDASH_CONTRACT, OMNIDASH_APP_COUNT } from '../../src/contracts/omnidash.contract';
+import {
+  FORBIDDEN_OMNIDASH_SIDEBAR_LABELS,
+  OMNIDASH_SIDEBAR_WIDGET_COUNT,
+  OMNIDASH_SIDEBAR_WIDGETS,
+} from '../../apps/omnihub-site/src/contracts/omnidash-sidebar-widgets';
 
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
@@ -30,7 +36,7 @@ describe('Omnidash Layout Contract', () => {
     vi.clearAllMocks();
   });
 
-  it('APP_REGISTRY contains exactly OMNIDASH_APP_COUNT entries for sidebar nav', () => {
+  it('APP_REGISTRY contains exactly OMNIDASH_APP_COUNT product entries', () => {
     expect(APP_REGISTRY).toHaveLength(OMNIDASH_APP_COUNT);
   });
 
@@ -47,25 +53,33 @@ describe('Omnidash Layout Contract', () => {
     }
   });
 
-  it('sidebar nav should be derived from APP_REGISTRY, not hardcoded', () => {
-    // Verify the SIDEBAR_NAV mapping in OmniDashLayout.tsx
-    // uses APP_REGISTRY.map() — this is a structural test.
-    // The layout file maps: APP_REGISTRY.map(entry => ({ key, label, icon, to, category }))
-    const navEntries = APP_REGISTRY.map(entry => ({
-      key: entry.key,
-      label: entry.label,
-      to: entry.routePath,
-      category: entry.category,
-    }));
+  it('APP_REGISTRY and OMNIDASH_CONTRACT are product-level contracts, not sidebar contracts', () => {
+    expect(APP_REGISTRY).toHaveLength(14);
+    expect(OMNIDASH_CONTRACT).toHaveLength(14);
+    expect(OMNIDASH_SIDEBAR_WIDGETS).toHaveLength(OMNIDASH_SIDEBAR_WIDGET_COUNT);
+    expect(OMNIDASH_SIDEBAR_WIDGET_COUNT).toBeLessThan(OMNIDASH_APP_COUNT);
 
-    // All 14 must be present with valid properties
-    expect(navEntries).toHaveLength(OMNIDASH_APP_COUNT);
-    for (const entry of navEntries) {
-      expect(entry.key).toBeTruthy();
-      expect(entry.label).toBeTruthy();
-      expect(entry.to).toMatch(/^\/omnidash/);
-      expect(entry.category).toBeTruthy();
+    const registryLabels = APP_REGISTRY.map(entry => entry.label);
+    const contractTitles = OMNIDASH_CONTRACT.map(app => app.title);
+    const productOnlyLabels = ['OmniSkills', 'Orchestrator', 'Fortress', 'OmniPort', 'Maestro'];
+    for (const productOnlyLabel of productOnlyLabels) {
+      expect(registryLabels).toContain(productOnlyLabel);
+      expect(contractTitles).toContain(productOnlyLabel);
     }
+
+    const sidebarLabels = OMNIDASH_SIDEBAR_WIDGETS.map(widget => widget.label);
+    for (const forbiddenSidebarLabel of FORBIDDEN_OMNIDASH_SIDEBAR_LABELS) {
+      expect(sidebarLabels).not.toContain(forbiddenSidebarLabel);
+    }
+  });
+
+  it('OmniDashShell uses OMNIDASH_SIDEBAR_WIDGETS as the only left-sidebar source of truth', () => {
+    const shellSource = readFileSync('apps/omnihub-site/dashboard/OmniDashShell.tsx', 'utf8');
+
+    expect(shellSource).toContain('OMNIDASH_SIDEBAR_WIDGETS.map');
+    expect(shellSource).toContain('@/contracts/omnidash-sidebar-widgets');
+    expect(shellSource).not.toMatch(/const\s+NAV\s*=/);
+    expect(shellSource).not.toMatch(/const\s+NAV_MODULE_KEY\s*=/);
   });
 
   it('OmniDashLayout route path is /omnidash in App.tsx routing', () => {
