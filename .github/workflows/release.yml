@@ -9,6 +9,9 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 permissions:
   contents: read
 
+env:
+  PRODUCTION_SITE_URL: https://apexomnihub.icu
+
 jobs:
   release:
     name: Release
@@ -24,10 +27,21 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: "24"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
       - name: Create Release PR or Publish
+        id: changesets
         uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1
         with:
           publish: npm run release
@@ -38,28 +52,41 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to Shadow-Stage (production-shadow)
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true'
         run: |
           echo "Deploying frontend to shadow slot..."
           npm run build -- --outDir dist/shadow
-          # Mock deploy to shadow environment
+          # Shadow-slot backend smoke target.
           echo "Deploying Python orchestrator to shadow slot..."
           cd orchestrator && pkill -f shadow || true && python -m uvicorn main:app --host 0.0.0.0 --port 8001 &
         env:
+          VITE_SITE_URL: ${{ env.PRODUCTION_SITE_URL }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Deterministic Validator CI Gate
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true'
         run: node integration-harness/lib/deterministic-validator.mjs
         env:
-          TARGET_URL: http://localhost:8001 # Production-shadow URL
+          TARGET_URL: http://localhost:8001
+
+      - name: Skip shadow deployment until slot config is explicitly enabled
+        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT != 'true'
+        run: |
+          echo "Skipping shadow deployment and routing flip."
+          echo "Set repository variable ENABLE_SHADOW_DEPLOYMENT=true only after the Cloudflare Pages shadow slot is provisioned and verified."
 
       - name: Atomic Routing Flip (Promote to Active)
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true' && vars.ENABLE_ATOMIC_ROUTING_FLIP == 'true'
         run: |
           echo "Executing atomic DNS/LB flip..."
           cd terraform/environments/production
           terraform init
           terraform apply -auto-approve -var="target_slot=production-shadow"
+
+      - name: Skip atomic routing flip until explicitly enabled
+        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true' && vars.ENABLE_ATOMIC_ROUTING_FLIP != 'true'
+        run: |
+          echo "Shadow deployment completed."
+          echo "Skipping routing flip because ENABLE_ATOMIC_ROUTING_FLIP is not true."
