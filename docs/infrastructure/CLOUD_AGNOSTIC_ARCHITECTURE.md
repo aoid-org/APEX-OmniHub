@@ -12,7 +12,7 @@
 
 This document defines a **cloud-agnostic reference architecture** for OmniHub/TradeLine/APEX as a universal "intent → verified execution" platform. The architecture prioritizes:
 
-- **Operator Supremacy:** Human-in-the-loop controls, emergency stop mechanisms
+- **Operator Supremacy:** Manual Approval Node controls, emergency stop mechanisms
 - **Zero Trust Security:** No implicit trust, least privilege, network segmentation
 - **Reliability by Default:** SRE discipline with SLIs/SLOs, fault isolation, continuous testing
 - **Reversibility:** All changes rollback-safe, infrastructure as code

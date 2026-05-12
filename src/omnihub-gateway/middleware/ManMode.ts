@@ -1,23 +1,23 @@
 /**
- * ManMode — Human-In-The-Loop (HITL) State Suspension
+ * ManMode — Manual Approval Node (MAN Mode) State Suspension
  * @version 1.0.0
  * @module src/omnihub-gateway/middleware/ManMode
  *
- * MAN Mode (Manual Override) is APEX's state suspension protocol
+ * MAN Mode (Manual Approval Node) is APEX's state suspension protocol
  * for high-stakes operations. When activated, it:
  *
  *   1. **Suspends** the current workflow/task state
  *   2. **Alerts** designated human operators via configured channels
- *   3. **Blocks** execution until human approval or rejection
+ *   3. **Blocks** execution until Manual Approval Node approval or rejection
  *   4. **Resumes** or **aborts** based on operator decision
  *
  * Integration:
  * - Triggered by TriforceGuardian when risk level exceeds threshold
  * - Integrates with Temporal for workflow state suspension
- * - SSE channel for real-time HITL alert delivery
+ * - SSE channel for real-time MAN Mode alert delivery
  *
  * APEX STANDARDS ENFORCED:
- * - Fail-closed: If HITL alert cannot be delivered, operation is denied
+ * - Fail-closed: If MAN Mode alert cannot be delivered, operation is denied
  * - Auditable: All suspensions and resolutions are logged
  * - Timeout: Suspended operations auto-deny after configurable timeout
  * - Non-blocking to gateway: Suspension is async; other requests continue
@@ -70,7 +70,7 @@ export interface ManModeAlert {
 }
 
 /**
- * Callback invoked when a HITL alert needs to be delivered.
+ * Callback invoked when a MAN Mode alert needs to be delivered.
  * Implementation should push to SSE channel, Slack, email, etc.
  */
 export type AlertDispatcher = (alert: ManModeAlert) => Promise<boolean>;
@@ -106,7 +106,7 @@ export class ManModeController {
   }
 
   /**
-   * Set the alert dispatcher for HITL notifications.
+   * Set the alert dispatcher for MAN Mode notifications.
    */
   setAlertDispatcher(dispatcher: AlertDispatcher): void {
     this.alertDispatcher = dispatcher;
@@ -139,12 +139,12 @@ export class ManModeController {
   }
 
   /**
-   * Suspend an operation and wait for human decision.
+   * Suspend an operation and wait for Manual Approval Node decision.
    *
    * Flow:
    * 1. Create suspension record
-   * 2. Dispatch HITL alert
-   * 3. Return a Promise that resolves when human decides (or timeout)
+   * 2. Dispatch MAN Mode alert
+   * 3. Return a Promise that resolves when operator decides (or timeout)
    */
   async suspend(
     request: JsonRpcRequest,
@@ -190,7 +190,7 @@ export class ManModeController {
       }
     }
 
-    // Wait for human decision or timeout
+    // Wait for Manual Approval Node decision or timeout
     return new Promise<ManModeDecision>((resolve) => {
       // Auto-timeout timer — cleaned up on resolve to prevent resource leaks
       const timer = setTimeout(() => {
@@ -205,8 +205,8 @@ export class ManModeController {
   }
 
   /**
-   * Resolve a suspended operation with a human decision.
-   * Called by the HITL UI or API when an operator makes a decision.
+   * Resolve a suspended operation with a Manual Approval Node decision.
+   * Called by the MAN Mode UI or API when an operator makes a decision.
    */
   resolve(suspensionId: string, decision: 'approved' | 'rejected', decidedBy: string): boolean {
     return this.resolveInternal(suspensionId, decision, decidedBy);
@@ -306,33 +306,33 @@ export function registerDefaultTriggers(controller: ManModeController): void {
   controller.addTrigger({
     methods: ['tools/call'],
     minRiskLevel: 'high',
-    reason: 'Tool execution with high risk level requires human approval',
+    reason: 'Tool execution with high risk level requires Manual Approval Node approval',
   });
 
   controller.addTrigger({
     methods: ['tasks/send'],
     minRiskLevel: 'critical',
-    reason: 'Critical A2A task dispatch requires human approval',
+    reason: 'Critical A2A task dispatch requires Manual Approval Node approval',
   });
 
   // Financial operations
   controller.addTrigger({
     methods: ['payments/execute', 'invoices/create', 'subscriptions/modify'],
     minRiskLevel: 'medium',
-    reason: 'Financial operations require human approval',
+    reason: 'Financial operations require Manual Approval Node approval',
   });
 
   // Destructive operations
   controller.addTrigger({
     methods: ['resources/delete', 'data/purge', 'agents/deregister'],
     minRiskLevel: 'low',
-    reason: 'Destructive operations always require human approval',
+    reason: 'Destructive operations always require Manual Approval Node approval',
   });
 
   // Deployment operations
   controller.addTrigger({
     methods: ['deploy/production', 'migrations/execute'],
     minRiskLevel: 'medium',
-    reason: 'Production deployments and migrations require human approval',
+    reason: 'Production deployments and migrations require Manual Approval Node approval',
   });
 }

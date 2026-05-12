@@ -1,6 +1,6 @@
-"""MAN Mode (Manual-Authorization-Needed) domain models.
+"""MAN Mode (Manual Approval Node) domain models.
 
-This module defines the core data structures for the human-in-the-loop
+This module defines the core data structures for the Manual Approval Node
 safety system that gates high-risk agent actions.
 """
 
@@ -86,7 +86,7 @@ class ManTaskDecision(BaseModel):
 class ManTask(BaseModel):
     """Durable approval task record.
 
-    Represents a single action awaiting human review.
+    Represents a single action awaiting Manual Approval Node review.
     Stored in man_tasks database table.
 
     Attributes:

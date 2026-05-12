@@ -329,7 +329,7 @@ export function isDeviceSource(
 
 /**
  * Keywords that trigger MAN Mode (Manual Approval Node)
- * These intents require human oversight before execution
+ * These intents require Manual Approval Node governance before execution
  */
 export const HIGH_RISK_INTENTS = ['delete', 'transfer', 'grant_access'] as const;
 

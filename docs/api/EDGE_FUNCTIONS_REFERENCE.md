@@ -34,7 +34,7 @@ Submit a natural language goal for the Tri-Force orchestration pipeline.
   "goal": "string — natural language instruction (required)",
   "context": "object — optional key-value context",
   "session_id": "string — optional conversation thread ID",
-  "man_mode": "boolean — require human approval for RED lane (default: true)"
+  "man_mode": "boolean — require Manual Approval Node approval for RED lane (default: true)"
 }
 ```
 

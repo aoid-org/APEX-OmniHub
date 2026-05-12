@@ -101,7 +101,7 @@ export const siteConfig = {
       'Assume breach by default',
       'Hardware-level allowlisting (Device Registry)',
       'Biometric hardware enclave signing (FaceID/TouchID)',
-      'Human oversight by architecture (MAN Mode)',
+      'Manual Approval Node governance by architecture (MAN Mode)',
       'EU AI Act Article 14 compliant gates',
       'Immutable audit logging (GDPR Art. 30)',
       'Forensic replay via OmniTrace',
@@ -109,9 +109,9 @@ export const siteConfig = {
   },
   manMode: {
     title: 'M.A.N.Mode',
-    subtitle: 'MAN Mode — Human-in-the-Loop Governance',
+    subtitle: 'MAN Mode — Manual Approval Node Governance',
     description:
-      'High-risk decision items are automatically flagged and held for human review. The workflow continues without interruption — only the flagged item is paused until an authorized operator approves or rejects it. Nothing irreversible executes without deliberate human sign-off.',
+      'High-risk decision items are automatically flagged and held at a Manual Approval Node. The workflow continues without interruption — only the flagged item is paused until an authorized operator approves, rejects, or escalates it. Nothing irreversible executes without an explicit approval record.',
   },
   footer: {
     copyright: '\u00A9 2026 APEX Business Systems. All rights reserved.',
@@ -182,10 +182,10 @@ export const techSpecsConfig = {
     {
       id: 'conscience',
       title: 'The Conscience (Governance Layer)',
-      description: 'Tri-Force Protocol ensures intent never bypasses policy. Human oversight by design.',
+      description: 'Tri-Force Protocol ensures intent never bypasses policy. Manual Approval Node governance by design.',
       details: [
         'Tri-Force: Guardian \u2192 Planner \u2192 Executor',
-        'MAN Mode human approval gates',
+        'MAN Mode (Manual Approval Node) gates',
         'EU AI Act Article 14 compliant oversight',
         'OmniLink single controlled port (9876)',
         'Canonical typed semantic event normalization',

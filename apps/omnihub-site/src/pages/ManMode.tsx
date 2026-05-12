@@ -8,8 +8,8 @@ export function ManModePage() {
   return (
     <Layout title="M.A.N.Mode">
       <SEOMeta
-        title="MAN Mode — Human-in-the-Loop AI Governance | APEX OmniHub"
-        description="Flag, hold, and review high-risk AI decisions before execution. MAN Mode keeps humans in control of every irreversible action."
+        title="MAN Mode — Manual Approval Node AI Governance | APEX OmniHub"
+        description="Flag, hold, and review high-risk AI decisions before execution. MAN Mode routes every irreversible action through a Manual Approval Node checkpoint."
         canonical="https://apexomnihub.icu/features/man-mode/"
         appendBrandSuffix={false}
       />
@@ -20,7 +20,7 @@ export function ManModePage() {
           {/* Header Section */}
           <div className="mb-12 text-center">
             <h1 className="heading-1 mb-4">M.A.N.Mode</h1>
-            <p className="text-xl text-accent">Manual Authorization Needed</p>
+            <p className="text-xl text-accent">Manual Approval Node</p>
           </div>
 
           {/* What It Is */}

@@ -89,7 +89,7 @@ A three-tier agent architecture designed to keep unsafe reasoning from reaching 
 - Event sourcing + deterministic replay
 - Saga-style compensation patterns
 - Idempotent task execution
-- Human approval gates (**MAN Mode** - `supabase/migrations/20260108120000_man_mode.sql`)
+- Manual Approval Node gates (**MAN Mode** - `supabase/migrations/20260108120000_man_mode.sql`)
 
 ### 3) Fortress Protocol (Security & Compliance)
 
@@ -254,7 +254,7 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 | [OPS Runbooks](./OPS_RUNBOOKS.md)                                                       | Operations procedures |
 | [Supabase Setup](./SUPABASE_SETUP.md)                                                   | Database config guide |
 | [orchestrator/README](./orchestrator/README.md)                                         | Temporal setup        |
-| [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                                     | Human-in-the-loop     |
+| [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                                     | Manual Approval Node     |
 | [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                             | Backend design        |
 
 ---

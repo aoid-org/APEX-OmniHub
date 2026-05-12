@@ -250,7 +250,7 @@ class TestManPolicy:
         assert result.risk_lane == RiskLane.RED
         assert result.requires_approval is True
         # reasoning should contain risk factor
-        assert "requires human approval" in result.reasoning
+        assert "requires Manual Approval Node approval" in result.reasoning
 
     def test_blocked_tool_blocked_lane(self):
         """Blocked tools should return BLOCKED lane."""

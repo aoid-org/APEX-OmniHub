@@ -7,7 +7,7 @@
       "name": "What is MAN Mode in APEX OmniHub?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "MAN Mode is a human-in-the-loop governance layer that automatically flags high-risk AI decisions and holds them for operator review before execution. The workflow continues on all other items while the flagged action awaits approval or rejection. Nothing irreversible executes without deliberate human sign-off."
+        "text": "MAN Mode is a Manual Approval Node governance layer that automatically flags high-risk AI decisions and holds them for Manual Approval Node review before execution. The workflow continues on all other items while the flagged action awaits approval or rejection. Nothing irreversible executes without an explicit approval record."
       }
     },
     {
@@ -15,7 +15,7 @@
       "name": "Is APEX OmniHub compliant with the EU AI Act?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "APEX OmniHub is designed with EU AI Act Article 14 compliance in mind, including mandatory human oversight mechanisms, full audit trails via OmniTrace, and configurable MAN Mode gates for high-risk automated decisions."
+        "text": "APEX OmniHub is designed with EU AI Act Article 14 compliance in mind, including mandatory Manual Approval Node governance mechanisms, full audit trails via OmniTrace, and configurable MAN Mode gates for high-risk automated decisions."
       }
     },
     {

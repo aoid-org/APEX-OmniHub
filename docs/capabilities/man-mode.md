@@ -1,13 +1,13 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # MAN Mode
 
-**Manual Authorization Needed**
+**Manual Approval Node**
 
 ---
 
 ## What this is in the repository
 
-MAN Mode is the human-in-the-loop control used to gate high-risk actions. In this repository, MAN Mode is implemented as detection and metadata tagging during ingestion, plus explicit fields in the Maestro and OmniPort pipelines.
+MAN Mode is the Manual Approval Node control used to gate high-risk actions. In this repository, MAN Mode is implemented as detection and metadata tagging during ingestion, plus explicit fields in the Maestro and OmniPort pipelines.
 
 ---
 

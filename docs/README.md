@@ -66,7 +66,7 @@ System design and technical specifications:
 | [General Tech Specs](architecture/GENERAL_TECH_SPECS.md)                            | Platform specifications     |
 | [Detailed System Design](architecture/DETAILED_SYSTEM_DESIGN.md)                    | Complete system design      |
 | [OmniLink Portability & SRE](architecture/OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md) | Integration bus strategy    |
-| [MAN Mode Workflows](architecture/MAN_MODE_WORKFLOW_DIAGRAMS.md)                    | Human-in-the-loop flows     |
+| [MAN Mode Workflows](architecture/MAN_MODE_WORKFLOW_DIAGRAMS.md)                    | Manual Approval Node flows     |
 | [Frontend Structure Map](architecture/frontend-map.md)                              | Frontend topology + diagram |
 
 ---

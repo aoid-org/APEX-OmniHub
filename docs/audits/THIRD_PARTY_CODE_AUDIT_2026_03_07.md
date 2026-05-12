@@ -157,7 +157,7 @@ The platform implements a well-defined five-plane architecture:
 | Web3 (verification, NFT, chain tx) | 4 | `20260101*`, `20260109*`, `20260123*` |
 | Emergency controls | 1 | `20260103000000` |
 | Paid access & admin | 3 | `20260107*`, `20260110*` |
-| MAN Mode (human-in-loop) | 2 | `20260108120000`, `20260119000000` |
+| MAN Mode (Manual Approval Node) | 2 | `20260108120000`, `20260119000000` |
 | OmniLink Universal Port | 1 | `20260111000000` |
 | OmniPort DLQ | 1 | `20260124000000` |
 | OmniTrace replay | 1 | `20260125000000` |
@@ -300,7 +300,7 @@ The platform implements a well-defined five-plane architecture:
 | Voice Processing | Live | `apex-voice/`, `ops-voice-health/` edge functions |
 | BYOM (Bring Your Own Model) | Live | `byom-cockpit/`, `byom-proxy/` edge functions |
 | Workflow Orchestration (Temporal) | Live | Full Python orchestrator with saga patterns |
-| MAN Mode (Human-in-the-Loop) | Live | SQL migrations + orchestrator activities |
+| MAN Mode (Manual Approval Node) | Live | SQL migrations + orchestrator activities |
 | Push Notifications | Live | `send-push-notification/` + Capacitor integration |
 | OmniLink Universal Connector | Live | `omnilink-agent/`, `omnilink-port/` |
 | OmniTrace Replay | Live | SQL migration + activities |
@@ -383,7 +383,7 @@ The platform implements a well-defined five-plane architecture:
 | **Universal Sync Orchestrator (USO)** | First-of-kind unified orchestration across AI, Web3, enterprise, and legacy systems | Highly Novel |
 | **Tri-Force Protocol** | Three-tier agent architecture (Guardian/Planner/Executor) with safety enforcement | Novel |
 | **Iron Law Verification Engine** | Evidence-based agent verification with TDD enforcement, visual truth, and shadow-prompt defense | Highly Novel |
-| **MAN Mode** | Human-in-the-loop approval gates for AI-driven workflows with full audit trail | Novel |
+| **MAN Mode** | Manual Approval Node gates for AI-driven workflows with full audit trail | Novel |
 | **OmniLink Universal Port** | Single-port integration pattern replacing scattered API calls | Novel |
 | **BYOM (Bring Your Own Model)** | Vendor-agnostic LLM integration via proxy pattern | Moderately Novel |
 | **Chaos Simulation Engine** | Built-in chaos engineering with burst/custom/eval modes and evidence collection | Novel |
@@ -453,7 +453,7 @@ APEX OmniHub combines elements of Temporal (workflow orchestration), Zapier (int
 | Universal Sync Orchestrator concept | 1.3x |
 | Tri-Force Protocol (governed autonomy) | 1.2x |
 | Iron Law Verification Engine | 1.2x |
-| MAN Mode (human-in-the-loop AI governance) | 1.15x |
+| MAN Mode (Manual Approval Node AI governance) | 1.15x |
 | Armageddon Test Suite | 1.1x |
 | Web3-native identity integration | 1.1x |
 | **Cumulative IP Premium** | **~2.0x** |
@@ -579,7 +579,7 @@ This codebase is certified as **PRODUCTION-GRADE** with:
 | `universal-adapter.ts` | Provider adaptation layer | `_shared/universal-adapter.ts` |
 | `validation.ts` | Input validation | `_shared/validation.ts` |
 
-### 10.3 OMEGA Module (Human-in-the-Loop Verification)
+### 10.3 OMEGA Module (Manual Approval Node Verification)
 
 Located in `/omega/` - XSS-safe HTTP API (SonarQube S5131 compliant) for AI code change verification:
 - Input validation: alphanumeric + hyphens (max 64 chars for IDs)

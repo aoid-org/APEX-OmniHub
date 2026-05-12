@@ -1,7 +1,7 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-15 -->
 # MAN Mode Workflow Diagrams
 
-> Manual Assistance Needed (MAN) Mode - Visual Architecture Reference
+> Manual Approval Node (MAN) Mode - Visual Architecture Reference
 
 ## Table of Contents
 
@@ -165,7 +165,7 @@ sequenceDiagram
         CT-->>W: {task_id, status: PENDING}
         W->>W: Continue workflow (non-blocking)
 
-        Note over H,DB: Async: Human reviews in dashboard
+        Note over H,DB: Async: Operator reviews in Manual Approval Node dashboard
         H->>DB: UPDATE man_tasks SET status=APPROVED
 
         Note over W,GT: Later: Check decision
@@ -346,7 +346,7 @@ flowchart LR
     style M2 fill:#1a1a1a,stroke:#f97316,color:#f97316
 ```
 
-**Key Insight**: RED lane actions do not block the workflow. The action is recorded for human review while subsequent steps continue executing. This prioritizes workflow throughput over synchronous approval.
+**Key Insight**: RED lane actions do not block the workflow. The action is recorded for Manual Approval Node review while subsequent steps continue executing. This prioritizes workflow throughput over synchronous approval.
 
 ---
 

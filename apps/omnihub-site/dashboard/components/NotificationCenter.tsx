@@ -1,7 +1,7 @@
 /**
  * NotificationCenter - Persistent notification overlay for MAN Mode risk events
  *
- * Displays RED-lane blocked tasks requiring human approval/denial.
+ * Displays RED-lane blocked tasks requiring Manual Approval Node decision handling.
  * Uses existing ui/Dialog primitive. No new route created.
  *
  * @module components/omnidash/NotificationCenter
