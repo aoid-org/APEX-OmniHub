@@ -267,7 +267,7 @@
     "ast-v8-to-istanbul": {
       "js-tokens": "^10.0.0"
     },
-    "protobufjs": "7.5.5",
+    "protobufjs": "^7.5.8",
     "ip-address": "10.2.0",
     "cookie": "0.7.2",
     "elliptic": "6.6.1",
