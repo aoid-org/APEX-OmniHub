@@ -1,7 +1,7 @@
 # Canonical Truth File — Platform Topology & Deployment
 
-**Version:** 1.3.0
-**Last Updated:** 2026-05-11
+**Version:** 1.4.0
+**Last Updated:** 2026-05-12
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements
@@ -23,6 +23,7 @@
 15. **`orchestrator/requirements.lock` must stay committed.** The `Dependency Security Audit` CI gate checks for its existence. Do not delete or gitignore it.
 16. **OmniBridge bidirectional integration is live as of v1.6.1 (2026-05-11).** The integration harness (`integration-harness/lib/deterministic-validator.mjs`) provides a 47-assertion zero-dependency validator for the HMAC-signed sync layer between APEX-OmniHub and SBBL-HQ. See `docs/integration/sbbl-omnihub-validation-2026-05-11.md` for the full validation report.
 17. **SBBL-HQ is the first registered production tenant.** It connects to APEX-OmniHub as the control plane via the OmniBridge sync protocol. Required secrets: `OMNIHUB_SIGNING_SECRET`, `OMNIHUB_SYNC_URL`, `OMNIHUB_VERIFY_KEY`. Inbound packets are verified with HMAC-SHA256 using `OMNIHUB_VERIFY_KEY`; outbound commands are signed with `OMNIHUB_SIGNING_SECRET`.
+18. **OmniDash left sidebar is a dedicated 9-widget rail contract.** The canonical source is `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`; `OmniDashShell.tsx` must render `OMNIDASH_SIDEBAR_WIDGETS` and must not define local `NAV` or `NAV_MODULE_KEY`. `APP_REGISTRY` and `src/contracts/omnidash.contract.ts` remain broader 14-app product/platform contracts, not sidebar contracts. Sidebar order is locked to: OmniBoard, PhysiOmni, Audits, Links, Automations, Workflows, Files, Billing, Settings. OmniSkills, Orchestrator, Fortress, OmniPort, Maestro, and BYOM are explicitly not left-sidebar widgets.
 
 ## Tenant Registry
 
