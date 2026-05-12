@@ -79,7 +79,7 @@ module "cloudflare" {
   origin_cname = local.origin_cname
 
   zone_id              = var.cloudflare_zone_id
-  domain               = "omnihub.dev"
+  domain               = "apexomnihub.icu"
   rate_limit_threshold = 200   # Higher limit for staging
   security_level       = "low" # Less strict for testing
 }
