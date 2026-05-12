@@ -1,6 +1,6 @@
 # Doc Reconciliation Matrix (Phase 2)
 
-Last Updated: 2026-04-26
+Last Updated: 2026-05-12
 
 | File | Status | Notes | Action |
 |---|---|---|---|
@@ -14,4 +14,4 @@ Last Updated: 2026-04-26
 | `docs/sim/RUNBOOK.md` | current | Safety rails and execution guidance are still strong. | maintain |
 | `orchestrator/README.md` | current | Matches worker/API split and Temporal architecture. | maintain |
 | `orchestrator/ARCHITECTURE.md` | current | Detailed and directionally correct. | maintain |
-
+| `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts` | current | Canonical 9-widget OmniDash left-sidebar rail contract; separate from `APP_REGISTRY` and `OMNIDASH_CONTRACT`. | maintain with sidebar contract tests |

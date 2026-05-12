@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.1.0 | LAST_UPDATED=2026-05-11 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.2.0 | LAST_UPDATED=2026-05-12 -->
 # Developer Onboarding Guide
 
 > **Agent note:** The single most important file is `CLAUDE.md` at the repo root.
@@ -15,8 +15,7 @@ bun --version    # Must be >= 1.2.14
 git --version    # Requires >= 2.40
 ```
 
-> **Critical:** This project uses **bun** as its package manager, not npm or yarn.
-> **Package manager:** Use `npm ci` for dependencies. `npm` is authoritative for builds, releases, and CI.
+> **Critical:** Use `npm ci` for dependencies. `npm` is authoritative for builds, releases, and CI; Bun is optional for local speed only.
 
 ---
 
@@ -131,6 +130,20 @@ The app imports omnihub-site modules via `@/`.
 
 ---
 
+
+## OmniDash Sidebar Contract Onboarding Note (Added 2026-05-12)
+
+The OmniDash left sidebar is a locked **9-widget rail**, not the broader product app registry.
+
+- Use `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts` for all left-sidebar widget labels, ids, icon indexes, and module keys.
+- Do not derive the left sidebar from `APP_REGISTRY` or `OMNIDASH_CONTRACT`; those remain 14-app product/platform contracts.
+- Do not add local `NAV` or `NAV_MODULE_KEY` constants to `apps/omnihub-site/dashboard/OmniDashShell.tsx`; ESLint blocks this drift.
+- Keep OmniSkills out of the left sidebar. It may remain available through header utility/module access.
+- Before changing the rail, run the focused contract suite:
+  ```bash
+  pnpm vitest run tests/omnidash/omnidash-sidebar-widgets.contract.spec.ts tests/omnidash/omnidash-layout-contract.spec.tsx tests/core/app-registry.spec.ts
+  ```
+
 ## Day 3: First Contribution (~4 hours)
 
 ### Development Workflow
@@ -236,6 +249,7 @@ npm run sim:quick        # Quick simulation
 6. **CSP `script-src` is `'self'` only.** Do not add `'unsafe-inline'`.
 7. **OmniLink port is 9876.** Do not change or expose alternative ports.
 8. **All new Supabase tables must have RLS enabled.** Enforced by `rls-posture-gate`.
+9. **OmniDash left sidebar is a 9-widget rail.** Use `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`; never derive the rail from `APP_REGISTRY` or `OMNIDASH_CONTRACT`.
 
 ---
 
@@ -319,6 +333,6 @@ within the validator use the `test-` prefix to avoid false positives.
 ---
 
 **Onboarding Owner:** Chief Platform Architect
-**Document Version:** v1.1.0
-**Last Updated:** 2026-05-11
+**Document Version:** v1.2.0
+**Last Updated:** 2026-05-12
 **Next Review:** Quarterly

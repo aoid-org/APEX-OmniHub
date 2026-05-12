@@ -1,11 +1,11 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.2 | LAST_UPDATED=2026-05-12 -->
 # Frontend Structure Map
 
 This document maps the main frontend topology in `APEX-OmniHub`, with a visual artifact for quick onboarding and architecture reviews.
 
 ## Scope
 
-The map focuses on the React/Vite application rooted under `src/`, its route shell, feature domains, shared libraries, and quality/testing entry points.
+The map focuses on the React/Vite application rooted under `apps/omnihub-site/` with `src/App.tsx` as the root shim, its route shell, feature domains, shared libraries, and quality/testing entry points.
 
 ## High-Level Topology
 
@@ -37,12 +37,21 @@ The map focuses on the React/Vite application rooted under `src/`, its route she
    - Playwright (`playwright.config.ts`) for runtime smoke/e2e.
    - Type/lint/build/security scripts in `package.json` + config files.
 
+
+6. **OmniDash Sidebar Widget Rail**
+   - Canonical contract: `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`
+   - Renderer: `apps/omnihub-site/dashboard/OmniDashShell.tsx`
+   - Tests: `tests/omnidash/omnidash-sidebar-widgets.contract.spec.ts` and `tests/omnidash/omnidash-layout-contract.spec.tsx`
+   - Drift guard: `eslint.config.js` rejects local `NAV` and `NAV_MODULE_KEY` in `OmniDashShell.tsx`
+   - Do not use `APP_REGISTRY` or `OMNIDASH_CONTRACT` as the left-sidebar source of truth.
+
+
 ## Visual Diagram Artifact
 
 ![APEX OmniHub frontend structure diagram](./frontend-structure-map.svg)
 
 ## Maintenance Notes
 
-- Update this map when `src/App.tsx` route groups change materially.
+- Update this map when `apps/omnihub-site/src/App.tsx` route groups or the OmniDash sidebar widget contract change materially.
 - Update domain boxes if new top-level frontend subsystems are added under `src/`.
 - Keep this file aligned with onboarding docs and architecture summaries.

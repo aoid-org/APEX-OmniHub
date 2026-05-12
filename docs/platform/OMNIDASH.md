@@ -1,5 +1,57 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.2 | LAST_UPDATED=2026-05-12 -->
 # OmniDash (Founder/Sales Dashboard)
+
+
+## OmniDash Left Sidebar Widget Rail Contract (v1.6.2 — 2026-05-12)
+
+The OmniDash left sidebar is a **widget rail**, not the product app registry. Do not derive it from `APP_REGISTRY` or `OMNIDASH_CONTRACT`.
+
+### Sidebar Source of Truth
+
+| Surface | Canonical file | Purpose |
+|---|---|---|
+| Left sidebar widget rail | `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts` | Locked 9-widget sidebar order, labels, icon indexes, and modal module keys |
+| Shell renderer | `apps/omnihub-site/dashboard/OmniDashShell.tsx` | Imports `OMNIDASH_SIDEBAR_WIDGETS`; must not define local `NAV` or `NAV_MODULE_KEY` |
+| Product/platform registry | `packages/core/src/registry.ts` | Broader 14-app product registry; not a sidebar contract |
+| OmniDash product contract | `src/contracts/omnidash.contract.ts` | Broader 14-app product contract derived from `APP_REGISTRY`; not a sidebar contract |
+
+### Locked Sidebar Order
+
+1. OmniBoard
+2. PhysiOmni
+3. Audits
+4. Links
+5. Automations
+6. Workflows
+7. Files
+8. Billing
+9. Settings
+
+### Explicit Sidebar Exclusions
+
+The following product/platform surfaces must **not** be added to the left sidebar unless the sidebar contract, tests, docs, and drift guards are intentionally changed together:
+
+- OmniSkills
+- Orchestrator
+- Fortress
+- OmniPort
+- Maestro
+- BYOM
+
+> `OmniSkills` remains valid as a header utility/module access point. Its exclusion applies only to the left sidebar widget rail.
+
+### Change Protocol
+
+1. Write/update failing tests first in `tests/omnidash/omnidash-sidebar-widgets.contract.spec.ts`.
+2. Update `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts` as the sole sidebar data source.
+3. Keep `packages/core/src/registry.ts` and `src/contracts/omnidash.contract.ts` product-level unless the change is explicitly a product registry change.
+4. Run:
+   ```bash
+   pnpm vitest run tests/omnidash/omnidash-sidebar-widgets.contract.spec.ts tests/omnidash/omnidash-layout-contract.spec.tsx tests/core/app-registry.spec.ts
+   pnpm lint
+   pnpm typecheck
+   npx tsx scripts/omnidash-blast-radius.ts
+   ```
 
 ## Setup
 - Ensure Supabase env vars are configured (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).

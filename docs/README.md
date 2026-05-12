@@ -1,12 +1,12 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.2-PROTOCOL-CONFORMANCE | LAST_UPDATED=2026-05-09 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.3-OMNIDASH-SIDEBAR-CONTRACT | LAST_UPDATED=2026-05-12 -->
 
 # APEX OmniHub Documentation
 
 **Enterprise AI Orchestration Platform**
 
-- **Document Version:** 2.4.0
-- **Platform Version:** 1.6.0
-- **Last Updated:** 2026-05-09
+- **Document Version:** 2.5.0
+- **Platform Version:** 1.6.2
+- **Last Updated:** 2026-05-12
 - **Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
@@ -14,6 +14,8 @@
 ## Quick Navigation
 
 **Start here:** [Canonical Repo Map](architecture/ARCHITECTURE_CANONICAL_MAP.md) — first-stop architecture + infrastructure map.
+
+**OmniDash sidebar rail source of truth:** `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`; see [OmniDash](platform/OMNIDASH.md), [Canonical Truth](architecture/CANONICAL_TRUTH.md), and [CI Guardrails Runbook](ops/OPS_RUNBOOKS_CI_GUARDRAILS.md).
 
 | Category                                            | Description                                |
 | --------------------------------------------------- | ------------------------------------------ |
@@ -43,7 +45,7 @@ Core platform components with dedicated documentation:
 | **OmniPolicy**    | Deterministic policy evaluation | [OMNIPOLICY.md](platform/OMNIPOLICY.md)                           |
 | **OmniEval**      | Security evaluation & CI gate   | [OMNIEVAL.md](platform/OMNIEVAL.md)                               |
 | **OmniPort**      | Ingress engine & API            | [OMNIPORT_API_REFERENCE.md](platform/OMNIPORT_API_REFERENCE.md)   |
-| **OmniDash**      | Executive dashboard             | [OMNIDASH.md](platform/OMNIDASH.md)                               |
+| **OmniDash**      | Executive dashboard + 9-widget sidebar rail contract | [OMNIDASH.md](platform/OMNIDASH.md)                               |
 | **OmniLink**      | Integration bus                 | [OMNILINK_MANIFESTO_LITE.md](platform/OMNILINK_MANIFESTO_LITE.md) |
 | **OmniBoard**     | Onboarding engine               | [OMNIBOARD.md](platform/OMNIBOARD.md)                             |
 | **OmniLink PWA**  | Mobile PWA capabilities         | [OMNILINK_MOBILE_PWA.md](platform/OMNILINK_MOBILE_PWA.md)         |

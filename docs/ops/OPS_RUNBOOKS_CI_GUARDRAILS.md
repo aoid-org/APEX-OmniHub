@@ -18,6 +18,7 @@
 4. [npm Lockfile Gate (ENOLOCK)](#npm-lockfile-gate-enolock)
 5. [TypeScript Config Invariants](#typescript-config-invariants)
 6. [OmniBridge Outbound Dispatch Ops](#omnibridge-outbound-dispatch-ops)
+7. [OmniDash Sidebar Widget Rail Drift](#omnidash-sidebar-widget-rail-drift)
 
 ---
 
@@ -499,3 +500,40 @@ add it to `CLAUDE.md` or `docs/architecture/CANONICAL_TRUTH.md` instead.
   }
 }
 ```
+
+
+---
+
+## OmniDash Sidebar Widget Rail Drift
+
+**Version:** 1.0 | **Date:** 2026-05-12 | **Scope:** OmniDash left sidebar only
+
+### Canonical Contract
+
+- Source of truth: `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`
+- Renderer: `apps/omnihub-site/dashboard/OmniDashShell.tsx`
+- Contract tests: `tests/omnidash/omnidash-sidebar-widgets.contract.spec.ts`
+- Layout/product separation tests: `tests/omnidash/omnidash-layout-contract.spec.tsx`
+- ESLint drift guard: `eslint.config.js`
+
+### Expected Left Sidebar Order
+
+`OmniBoard`, `PhysiOmni`, `Audits`, `Links`, `Automations`, `Workflows`, `Files`, `Billing`, `Settings`
+
+### Runbook: Sidebar Drift Detected
+
+1. Inspect `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`; confirm the widget array still contains exactly 9 entries in the expected order.
+2. Inspect `apps/omnihub-site/dashboard/OmniDashShell.tsx`; confirm it imports and maps `OMNIDASH_SIDEBAR_WIDGETS` and contains no local `NAV` or `NAV_MODULE_KEY` definitions.
+3. Confirm `packages/core/src/registry.ts` and `src/contracts/omnidash.contract.ts` still contain the broader product/platform registry state and were not edited to satisfy sidebar-only requirements.
+4. Run focused gates:
+   ```bash
+   pnpm vitest run tests/omnidash/omnidash-sidebar-widgets.contract.spec.ts tests/omnidash/omnidash-layout-contract.spec.tsx tests/core/app-registry.spec.ts
+   pnpm lint
+   pnpm typecheck
+   npx tsx scripts/omnidash-blast-radius.ts
+   ```
+5. If the blast-radius script reports more than five affected files for a sidebar-only change, stop and escalate as an architecture change.
+
+### Non-Negotiable Exclusions
+
+`OmniSkills`, `Orchestrator`, `Fortress`, `OmniPort`, `Maestro`, and `BYOM` are not left-sidebar widgets. `OmniSkills` may remain in the header utility/module access path.

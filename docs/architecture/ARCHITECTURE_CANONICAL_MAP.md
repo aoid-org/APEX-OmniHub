@@ -1,7 +1,7 @@
 # APEX OmniHub — Canonical Infrastructure & Architecture Map
 
-> **Version:** 2.2.0  
-> **Last updated:** 2026-05-04  
+> **Version:** 2.3.0<br>
+> **Last updated:** 2026-05-12<br>
 > **Status:** Canonical (source of truth)
 
 This document is optimized for **onboarding clarity** and **operator execution** while preserving value proposition context.
@@ -49,6 +49,17 @@ APEX OmniHub is a polyglot monorepo with five execution planes:
 - Entry: `src/main.tsx` mounts `App`.
 - `src/App.tsx` forwards to `apps/omnihub-site/src/App.tsx`.
 - Post-auth UX consolidates around OmniDash (`/omnidash`, `/dashboard`).
+
+
+### OmniDash Sidebar Widget Rail Boundary
+
+- **Left sidebar contract:** `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`.
+- **Renderer:** `apps/omnihub-site/dashboard/OmniDashShell.tsx` imports `OMNIDASH_SIDEBAR_WIDGETS`.
+- **Not a product registry:** Do not derive the left sidebar from `APP_REGISTRY` or `OMNIDASH_CONTRACT`.
+- **Locked order:** OmniBoard → PhysiOmni → Audits → Links → Automations → Workflows → Files → Billing → Settings.
+- **Excluded from left sidebar:** OmniSkills, Orchestrator, Fortress, OmniPort, Maestro, BYOM.
+- **Drift guard:** `eslint.config.js` blocks local `NAV` and `NAV_MODULE_KEY` definitions in `OmniDashShell.tsx`.
+
 
 ### Orchestrator Boundary
 - `orchestrator/main.py` = Temporal worker lifecycle.

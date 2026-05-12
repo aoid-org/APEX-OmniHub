@@ -1,6 +1,7 @@
 # APEX OmniHub — Agent & Developer Briefing
 
 **Canonical reference for all Claude Code agents and new contributors.**
+**Last Updated:** 2026-05-12
 When any other document conflicts with this file, treat this file as authoritative
 unless a newer dated `CANONICAL_TRUTH.md` entry explicitly supersedes it.
 
@@ -206,6 +207,21 @@ self-hosted and bundled by Vite.
 
 All OmniLink traffic flows through port `9876`. Do not add
 alternative ports or bypass this constraint.
+
+
+### 5.7 OmniDash Left Sidebar Is Not the Product Registry
+
+The OmniDash left sidebar is a dedicated 9-widget rail. Do not derive it from `APP_REGISTRY` or `OMNIDASH_CONTRACT`.
+
+| Concern | Source of truth |
+|---|---|
+| Left sidebar widgets | `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts` |
+| Product/platform app registry | `packages/core/src/registry.ts` |
+| OmniDash product contract | `src/contracts/omnidash.contract.ts` |
+
+Locked left-sidebar order: OmniBoard, PhysiOmni, Audits, Links, Automations, Workflows, Files, Billing, Settings.
+
+Excluded from the left sidebar: OmniSkills, Orchestrator, Fortress, OmniPort, Maestro, BYOM. OmniSkills may remain in the header utility/module access path.
 
 ---
 
