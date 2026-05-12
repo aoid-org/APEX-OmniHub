@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { execSync } from 'node:child_process';
 
 const scriptDir = new URL('.', import.meta.url).pathname;
-const migrationsDir = path.join(scriptDir, '../../supabase/migrations');
+const migrationsDir = process.env.MIGRATIONS_DIR ?? path.join(scriptDir, '../../supabase/migrations');
 
 // Determine target migrations based on git status
 let targetMigrations: string[] = [];

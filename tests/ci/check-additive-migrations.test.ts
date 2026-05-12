@@ -1,55 +1,42 @@
-import { expect, test, describe, beforeAll, afterAll } from 'vitest';
+import { expect, test, describe, afterAll } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 const scriptPath = path.join(process.cwd(), 'scripts/ci/check-additive-migrations.ts');
-const migrationsDir = path.join(process.cwd(), 'supabase/migrations');
-const tempMigrationsDir = path.join(process.cwd(), 'supabase/migrations_temp');
+
+// Each test run gets its own isolated temp directory — never touches supabase/migrations
+const suiteTemp = fs.mkdtempSync(path.join(os.tmpdir(), 'apex-additive-migrations-'));
+
+afterAll(() => {
+    fs.rmSync(suiteTemp, { recursive: true, force: true });
+});
+
+const runScript = (files: Record<string, string>) => {
+    const runDir = fs.mkdtempSync(path.join(suiteTemp, 'run-'));
+
+    for (const [name, content] of Object.entries(files)) {
+        fs.writeFileSync(path.join(runDir, name), content, 'utf8');
+    }
+
+    const result = spawnSync('bun', [scriptPath], {
+        encoding: 'utf8',
+        cwd: process.cwd(),
+        env: {
+            ...process.env,
+            // Force git diff fallback (no valid base ref) so the script scans all files in MIGRATIONS_DIR
+            GITHUB_BASE_REF: 'invalid_ref_that_causes_git_to_fail_999',
+            // Override migrations path to our isolated temp dir
+            MIGRATIONS_DIR: runDir,
+        },
+    });
+
+    fs.rmSync(runDir, { recursive: true, force: true });
+    return result;
+};
 
 describe('check-additive-migrations', () => {
-    beforeAll(() => {
-        // Move actual migrations to temp to isolate testing
-        if (fs.existsSync(migrationsDir)) {
-            fs.renameSync(migrationsDir, tempMigrationsDir);
-        }
-        fs.mkdirSync(migrationsDir, { recursive: true });
-
-        // Initialize dummy git in this folder or rely on the script's fallback behavior by making git fail or not find changes.
-        // The script falls back to "scanning all" if git fails or we can force it.
-    });
-
-    afterAll(() => {
-        // Restore actual migrations
-        fs.rmSync(migrationsDir, { recursive: true, force: true });
-        if (fs.existsSync(tempMigrationsDir)) {
-            fs.renameSync(tempMigrationsDir, migrationsDir);
-        }
-    });
-
-    const runScript = (files: Record<string, string>, _mockGitDiff: string[] = []) => {
-        // Write files
-        for (const [name, content] of Object.entries(files)) {
-            fs.writeFileSync(path.join(migrationsDir, name), content, 'utf8');
-        }
-
-        // We can't easily mock execSync across process boundaries without a wrapper.
-        // We will test the fallback mode which scans all files in migrationsDir, since that exercises the same logic.
-        const result = spawnSync('bun', [scriptPath], {
-            encoding: 'utf8',
-            cwd: process.cwd(),
-            // Pass an invalid base ref to force fallback if needed
-            env: { ...process.env, GITHUB_BASE_REF: 'invalid_ref_that_causes_git_to_fail_999' }
-        });
-
-        // Clean up
-        for (const name of Object.keys(files)) {
-            fs.unlinkSync(path.join(migrationsDir, name));
-        }
-
-        return result;
-    };
-
     test('DROP TABLE rejected', () => {
         const res = runScript({ 'test1.sql': 'DROP TABLE my_table;' });
         expect(res.status === 1 || res.status === 255 || res.status === null).toBe(true);
@@ -75,7 +62,7 @@ describe('check-additive-migrations', () => {
     });
 
     test('ALTER TYPE DROP VALUE rejected', () => {
-        const res = runScript({ 'test5.sql': 'ALTER TYPE my_enum DROP VALUE \'old_val\';' });
+        const res = runScript({ 'test5.sql': "ALTER TYPE my_enum DROP VALUE 'old_val';" });
         expect(res.status === 1 || res.status === 255 || res.status === null).toBe(true);
         expect(res.stderr).toContain('ALTER_TYPE_DROP');
     });
@@ -92,22 +79,22 @@ describe('check-additive-migrations', () => {
         expect(res.stdout).toContain('PASS');
     });
 
-    test('allowlisted rule accepted only with reason', () => {
+    test('allowlisted rule accepted with reason', () => {
         const res = runScript({
-            'test8.sql': '-- additive-allow: DROP_TABLE_VIEW removing old table\nDROP TABLE my_table;'
+            'test8.sql': '-- additive-allow: DROP_TABLE_VIEW removing old table\nDROP TABLE my_table;',
         });
         expect(res.status === 0 || res.status === null).toBe(true);
         expect(res.stdout).toContain('PASS');
     });
 
-    test('dynamic changed-file mode mock via env var logic', () => {
-        // Testing git diff is hard here without a full git setup.
-        // We assume the logic is covered by checking the fallback, but let's just make sure it passes when empty.
-        expect(true).toBe(true);
-    });
-
     test('fallback all-file scan mode', () => {
         const res = runScript({ 'test9.sql': 'SELECT 1;' });
+        expect(res.status === 0 || res.status === null).toBe(true);
+        expect(res.stdout).toContain('PASS');
+    });
+
+    test('empty migrations directory passes', () => {
+        const res = runScript({});
         expect(res.status === 0 || res.status === null).toBe(true);
         expect(res.stdout).toContain('PASS');
     });
