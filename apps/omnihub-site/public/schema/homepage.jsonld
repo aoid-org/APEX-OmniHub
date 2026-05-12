@@ -6,11 +6,11 @@
   "applicationCategory": "BusinessApplication",
   "applicationSubCategory": "Enterprise AI Orchestration",
   "operatingSystem": "Web",
-  "description": "Enterprise AI orchestration and control plane. Directable, Auditable, Reversible. Every action authorized, logged, and reversible. Human-in-the-loop governance for regulated industries.",
+  "description": "Enterprise AI orchestration and control plane. Directable, Auditable, Reversible. Every action authorized, logged, and reversible. Manual Approval Node governance for regulated industries.",
   "featureList": [
     "AI agent orchestration",
     "Audit trail with forensic replay",
-    "Human-in-the-loop MAN Mode governance",
+    "MAN Mode (Manual Approval Node) governance",
     "Reversible workflow execution",
     "EU AI Act Article 14 compliance",
     "GDPR Art. 30 audit logging",

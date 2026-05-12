@@ -20,7 +20,7 @@ from models.man_mode import ActionIntent, RiskLane, RiskTriageResult
 # SENSITIVE TOOLS CONFIGURATION
 # ============================================================================
 
-# Tools that require human approval (RED lane)
+# Tools that require Manual Approval Node approval (RED lane)
 SENSITIVE_TOOLS: set[str] = {
     # Financial operations
     "transfer_funds",
@@ -168,7 +168,7 @@ class ManPolicy:
             return RiskTriageResult(
                 task_id=uuid4().hex,
                 risk_lane=RiskLane.RED,
-                reasoning=f"Tool '{intent.tool_name}' requires human approval",
+                reasoning=f"Tool '{intent.tool_name}' requires Manual Approval Node approval",
                 requires_approval=True,
             )
 

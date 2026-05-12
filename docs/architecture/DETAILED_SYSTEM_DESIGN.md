@@ -30,7 +30,7 @@ The `orchestrator/` directory contains a Temporal.io-based workflow orchestratio
 - **Providers**: Database abstraction layer supporting Supabase (`orchestrator/providers/`)
 
 ### MAN Mode (Manual Approval Node)
-Human-in-the-loop safety gate for high-risk agent actions. When an action is classified as high-risk (RED lane), it is **isolated** (not executed) and sent for human approval. The workflow continues without blocking for efficiency.
+Manual Approval Node safety gate for high-risk agent actions. When an action is classified as high-risk (RED lane), it is **isolated** (not executed) and sent to a Manual Approval Node checkpoint. The workflow continues without blocking for efficiency.
 
 **Risk Classification Lanes:**
 | Lane | Behavior | Example Tools |

@@ -72,7 +72,7 @@ OWASP Top 10 for LLM Applications (v1.1) categories include:
 | **LLM06** | Sensitive Info Disclosure | Redacted logging; minimal event details; avoid storing secrets in audit payloads |
 | **LLM07** | Insecure Plugin Design | Enforce allowlists + explicit confirmations; tenant-scoped access control |
 | **LLM08** | Excessive Agency | Risk lanes + MAN mode; receipts before side effects; confirmation gating |
-| **LLM09** | Overreliance | Confidence gating; escalation paths; human approval for high-risk ops |
+| **LLM09** | Overreliance | Confidence gating; escalation paths; Manual Approval Node approval for high-risk ops |
 | **LLM10** | Model Theft | Protect artifacts; restrict access; detect anomalous usage patterns |
 
 ---

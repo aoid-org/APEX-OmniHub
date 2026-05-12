@@ -241,7 +241,7 @@ function TickerSection() {
   const items = [
     "Universal Sync", "Agent Governance", "Immutable Audit Log", "Policy Enforcement",
     "One-Click Rollback", "MAN Mode", "Tri-Force Architecture", "Zero Vendor Lock-In",
-    "200+ Integrations", "SOC 2 Aligned"
+    "Universal Integrations", "SOC 2 Aligned"
   ];
   const doubledItems = [...items, ...items];
 
@@ -444,8 +444,8 @@ function ReversibleSection() {
                         </svg>
                       </div>
                       <div>
-                        <div className="prule-n">Human-in-Loop</div>
-                        <div className="prule-d">High-risk actions require manual approval</div>
+                        <div className="prule-n">MAN Mode</div>
+                        <div className="prule-d">High-risk actions require Manual Approval Node approval</div>
                       </div>
                     </div>
                     <div className="toggle off"></div>
@@ -479,7 +479,7 @@ function CapabilitiesSection() {
   const capabilities = [
     {
       title: "Universal Connector Network",
-      desc: "200+ native integrations across CRMs, ERPs, cloud platforms, and data warehouses. Connect and govern from one surface.",
+      desc: "Universal compatibility across legacy, Web2, Web3, AI, NFT, and blockchain applications. Connect and govern from one surface without an arbitrary integration ceiling.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
           <path d="M3 10h14M10 3v14" stroke="#D4855A" strokeWidth="1.5" strokeLinecap="round" />
@@ -489,8 +489,8 @@ function CapabilitiesSection() {
       )
     },
     {
-      title: "Multi-Agent Orchestration",
-      desc: "Deploy, coordinate, and monitor multiple AI agents simultaneously. Each is scoped, authorized, and observable in real time.",
+      title: "SkillForge/OmniSkills",
+      desc: "Forge, install, and govern expert-level OmniSkills for any task or business use case, giving users task-ready agents with reusable skill memory and auditable execution paths.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
           <circle cx="10" cy="5" r="2.5" stroke="#D4855A" strokeWidth="1.4" fill="none" />
@@ -537,7 +537,7 @@ function CapabilitiesSection() {
     },
     {
       title: "MAN Mode",
-      desc: "Manual Autonomous Negotiation. Define the operational boundaries. AI executes within them with full traceability.",
+      desc: "Manual Approval Node. High-risk actions pause at an approval checkpoint while authorized operators approve, reject, or escalate with full traceability.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
           <path d="M10 3v4M10 13v4M3 10h4M13 10h4" stroke="#D4855A" strokeWidth="1.5" strokeLinecap="round" />
@@ -612,7 +612,7 @@ function MaestroSection() {
 function EnterpriseSection() {
   const cards = [
     { n: "SOC 2 Type II", d: "Security and availability controls validated by independent audit" },
-    { n: "EU AI Act Art. 14", d: "Human oversight requirements for high-risk AI systems" },
+    { n: "EU AI Act Art. 14", d: "Manual Approval Node governance requirements for high-risk AI systems" },
     { n: "GDPR Article 30", d: "Complete records of processing activities, always exportable" },
     { n: "ISO 27001", d: "Information security management system compatible architecture" },
     { n: "HIPAA-Ready", d: "Healthcare data handling architecture with BAA support" },

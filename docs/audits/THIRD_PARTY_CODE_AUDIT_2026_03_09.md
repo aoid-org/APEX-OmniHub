@@ -116,7 +116,7 @@ All metrics below were obtained by direct `find`, `wc -l`, `grep`, and source in
 - `agent_saga.py` — 1,431 LOC: LIFO saga compensation, event sourcing, risk triage, approval gating
 - `universal_saga.py` — 156 LOC: Cross-system USO orchestration
 - `universal_intents.py` — Universal Intent Registry for activity dispatch
-- `man_mode.py` — Human-in-the-loop: risk_triage → create_task → notify → check_decision
+- `man_mode.py` — Manual Approval Node: risk_triage → create_task → notify → check_decision
 - `iron_law_verify.py` — Physical AI safety gate with deductive, visual, and security verification layers
 
 **Architectural Boundaries (CI-Enforced, Verified):**
@@ -476,7 +476,7 @@ The `sonar-project.properties` confirms:
 | Authentication (OAuth) | FUNCTIONAL | `AuthContext.tsx`, `OAuthButtons.tsx`, Supabase Auth |
 | Protected Routes | FUNCTIONAL | `ProtectedRoute.tsx` in App.tsx |
 | Temporal Orchestration | FUNCTIONAL | `agent_saga.py` (1,431 LOC), `universal_saga.py` |
-| MAN Mode (HITL) | FUNCTIONAL | Full risk_triage → notify → check_decision workflow |
+| MAN Mode (Manual Approval Node) | FUNCTIONAL | Full risk_triage → notify → check_decision workflow |
 | Web3 Identity (SIWE) | FUNCTIONAL | `web3-verify/index.ts` (489 LOC) |
 | NFT Membership | FUNCTIONAL | `APEXMembershipNFT.sol` (257 LOC) |
 | Voice Interface | FUNCTIONAL | `VoiceInterface.tsx` (319 LOC) with exponential backoff + degraded mode + network recovery |
@@ -534,7 +534,7 @@ The `sonar-project.properties` confirms:
 |------------|-------------|---------------|
 | **Universal Sync Orchestrator (USO)** | Industry-first unified layer bridging AI, Web3, legacy, SaaS | Very Rare |
 | **Tri-Force Protocol** | Guardian → Planner → Executor three-tier agent governance with safety gates | Unique |
-| **MAN Mode** | Human-in-the-loop approval integrated directly into Temporal workflow orchestration | Rare |
+| **MAN Mode** | Manual Approval Node governance integrated directly into Temporal workflow orchestration | Rare |
 | **Architectural Boundary CI Enforcement** | CI-level guardrails preventing drift via grep-based boundary checks — 4 active guardrails | Very Rare |
 | **Deterministic Chaos Engineering Suite** | Seeded reproducible chaos with 8 red team + 8 golden eval scenarios | Rare |
 | **OmniModal Engine** | Intent-driven modal dispatch with Zod boundary validation and deterministic render mode | Unique |
@@ -555,7 +555,7 @@ The `sonar-project.properties` confirms:
 |-----------|--------|---------------|
 | AI/LLM Integration | 9.5/10 | BYOM cockpit (E2EE), prompt defense (dual-layer), semantic caching, ACRA v2.2 RAG memory |
 | Web3 Integration | 9.0/10 | SIWE, NFT membership, Alchemy webhooks, multi-chain (ETH/Polygon) |
-| Orchestration | 9.5/10 | Temporal.io — saga, event sourcing, DAG, HITL, USO patterns |
+| Orchestration | 9.5/10 | Temporal.io — saga, event sourcing, DAG, Manual Approval Node, USO patterns |
 | Security Architecture | 9.8/10 | Zero-trust, HMAC, SSRF, dual prompt defense, memory encryption, quarantine |
 | Chaos Engineering | 9.2/10 | Deterministic chaos, red team evals, stress testing, circuit breakers, persistent CB state |
 | Cross-Platform | 8.5/10 | Web (Vite) + iOS + Android (Capacitor) + Edge (Deno/Cloudflare Workers) |
@@ -578,7 +578,7 @@ This valuation applies four complementary methods:
 | Component | LOC / Files | Estimated Rebuild Cost | Reasoning |
 |-----------|------------|----------------------|-----------|
 | Frontend (React SPA, 207 TSX, 91K TS LOC) | 91,894 | $450,000 – $650,000 | Complex React SPA: 207 components, 13 hooks, 8 stores, 25 routes, i18n×6, mobile |
-| Orchestrator Python (70 files, 13K LOC) | 13,120 | $400,000 – $600,000 | Temporal.io saga patterns, event sourcing, security hardening, HITL |
+| Orchestrator Python (70 files, 13K LOC) | 13,120 | $400,000 – $600,000 | Temporal.io saga patterns, event sourcing, security hardening, Manual Approval Node governance |
 | Edge Functions (22 functions, 10K LOC) | 10,318 | $180,000 – $280,000 | Web3 auth, AI assistant, voice, BYOM E2EE, SSRF, rate limiting |
 | Database Schema (57 migrations, 7.4K LOC) | 7,437 | $120,000 – $180,000 | Comprehensive schema: RLS, pgvector, pgcrypto, audit logging, FSMs |
 | Smart Contract (257 LOC) | 257 | $50,000 – $80,000 | Audited ERC-721, multi-chain, gas-optimized |
@@ -614,7 +614,7 @@ This valuation applies four complementary methods:
 | Workato | $5.7B (Acquired) | Mature | Enterprise automation |
 | Mem0 / Zep | $20-50M (seed-Series A) | Early | AI agent memory (comparable to ACRA v2.2) |
 
-**APEX OmniHub's differentiated position:** No single comparable exists. APEX combines orchestration (Temporal-class), integration (Zapier/n8n-class), AI/LLM with HITL (new category), Web3 identity (unique), deterministic chaos engineering (rare), and now persistent RAG memory (Mem0-class) — all in one coherent platform.
+**APEX OmniHub's differentiated position:** No single comparable exists. APEX combines orchestration (Temporal-class), integration (Zapier/n8n-class), AI/LLM with Manual Approval Node governance (new category), Web3 identity (unique), deterministic chaos engineering (rare), and now persistent RAG memory (Mem0-class) — all in one coherent platform.
 
 ### 9.5 Valuation Summary
 
@@ -707,7 +707,7 @@ Based on comprehensive, repo-truth-verified analysis of **1,508 total files** an
 - **Production-Ready** — Architecture, security, and testing meet enterprise deployment standards
 - **Investment-Grade** — Code quality (0 SonarQube issues, 0 CVE high/critical, 0.0% duplication), innovation depth, and documentation justify Series A / strategic acquisition valuation
 - **Innovation Leader** — 16 identified novel IP assets create defensible competitive moats across orchestration, AI/Web3, security, memory, and chaos engineering
-- **Enterprise-Trustworthy** — HITL (MAN Mode), Zero-Trust, Dual-layer AI defense, pgcrypto memory encryption, Iron Law evidence verification
+- **Enterprise-Trustworthy** — Manual Approval Node (MAN Mode), Zero-Trust, Dual-layer AI defense, pgcrypto memory encryption, Iron Law evidence verification
 
 **Composite Audit Score: 94.3/100 — Grade: A**
 

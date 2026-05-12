@@ -300,7 +300,7 @@ class AgentWorkflow:
         self.step_results: dict[str, Any] = {}
         self.failed_step_id: str = ""
 
-        # MAN Mode: pending human decisions (step_id -> decision)
+        # MAN Mode: pending Manual Approval Node decisions (step_id -> decision)
         self.pending_decisions: dict[str, dict[str, Any]] = {}
 
         # MAN Mode 2.0: deferred steps awaiting approval
@@ -373,9 +373,9 @@ class AgentWorkflow:
     @workflow.signal
     async def submit_man_decision(self, decision: dict[str, Any]) -> None:
         """
-        Receive human approval/denial for MAN task (for audit logging).
+        Receive Manual Approval Node decision handling for MAN task (for audit logging).
 
-        Called by external system (API endpoint) when human makes a decision.
+        Called by external system (API endpoint) when an authorized operator makes a decision.
         Since the workflow does NOT block on RED lane actions, this signal
         is used for audit logging and potential future re-execution support.
 
@@ -866,12 +866,12 @@ class AgentWorkflow:
 
         Includes MAN Mode safety gate:
         - BLOCKED lane: Action is prohibited, raises ApplicationError
-        - RED lane: Action is DEFERRED (not executed), sent for human approval
+        - RED lane: Action is DEFERRED (not executed), sent to a Manual Approval Node checkpoint
         - YELLOW lane: Action executes with audit logging
         - GREEN lane: Action executes normally
 
         The workflow does NOT pause for RED lane actions. Instead, the action
-        is deferred and a MAN task is created for human review. The workflow
+        is deferred and a MAN task is created for Manual Approval Node review. The workflow
         continues with other steps while the deferred action awaits approval.
 
         Re-entry: Periodically checks for approved deferred steps and executes them.
@@ -959,7 +959,7 @@ class AgentWorkflow:
 
             deferred_result = {
                 "status": "deferred",
-                "reason": policy_result.get("reason", "Requires human approval"),
+                "reason": policy_result.get("reason", "Requires Manual Approval Node approval"),
                 "man_task_id": man_task_result.get("task_id"),
                 "step_id": step_id,
                 "tool_name": step["tool"],
@@ -1013,13 +1013,13 @@ class AgentWorkflow:
                 non_retryable=True,
             )
 
-        # RED lane: defer action and send for human approval (non-blocking)
+        # RED lane: defer action and send to a Manual Approval Node checkpoint (non-blocking)
         if lane == "RED":
             workflow.logger.warning(
-                f"  🛑 MAN Mode: Deferring {step['tool']} - sent for human approval"
+                f"  🛑 MAN Mode: Deferring {step['tool']} - sent to a Manual Approval Node checkpoint"
             )
 
-            # Create MAN task in database for human review
+            # Create MAN task in database for Manual Approval Node review
             man_task_result = await workflow.execute_activity(
                 "create_man_task",
                 args=[
@@ -1051,7 +1051,7 @@ class AgentWorkflow:
             # Return deferred result - workflow continues without blocking
             deferred_result = {
                 "status": "deferred",
-                "reason": triage_result.get("reason", "Requires human approval"),
+                "reason": triage_result.get("reason", "Requires Manual Approval Node approval"),
                 "man_task_id": man_task_result.get("task_id"),
                 "step_id": step_id,
                 "tool_name": step["tool"],

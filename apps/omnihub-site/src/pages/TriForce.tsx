@@ -37,7 +37,7 @@ const pillars = [
     icon: <IconExecute size={32} />,
     title: '3. Execute',
     description: 'Deterministic workflows with receipts, retries, rollback paths, and MAN Mode gates.',
-    details: 'The Execution layer ensures that workflows run reliably, predictably, and safely with built-in fault tolerance and human oversight.',
+    details: 'The Execution layer ensures that workflows run reliably, predictably, and safely with built-in fault tolerance and Manual Approval Node governance.',
     bulletPoints: [
       'Deterministic, repeatable execution paths',
       'Cryptographic receipts for every operation',

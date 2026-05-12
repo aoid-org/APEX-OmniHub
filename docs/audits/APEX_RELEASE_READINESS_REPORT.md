@@ -48,7 +48,7 @@ This report reflects the full state of the APEX-OmniHub monorepo as of **2026-05
 │  OmniHub Gateway (TypeScript — 13 modules)                  │
 │  JSON-RPC · SSE · Temporal Bridge · Semantic Router          │
 │  TriforceGuardian (JWT/mTLS/Schema/RBAC)                    │
-│  ManMode HITL · Idempotency · Token Economics               │
+│  MAN Mode (Manual Approval Node) · Idempotency · Token Economics               │
 ├─────────────────────────────────────────────────────────────┤
 │  Orchestrator (Python — FastAPI + Temporal)                  │
 │  2 Workflows · 11 Activities · 4 Security Modules            │
@@ -163,7 +163,7 @@ This report reflects the full state of the APEX-OmniHub monorepo as of **2026-05
 | mTLS | Client cert verification (inter-service) | Active |
 | Schema Validation | Zod per JSON-RPC method | Active |
 | Dynamic RBAC | Fail-closed, 4-tier trust | Active |
-| ManMode HITL | Timeout cleanup, memory pruning (500 cap) | **Hardened** |
+| MAN Mode (Manual Approval Node) | Timeout cleanup, memory pruning (500 cap) | **Hardened** |
 | SSRF Protection | DNS pinning, private IP blocking, IPv4-mapped IPv6 | **Hardened** |
 | Prompt Sanitization | Injection pattern detection | Active |
 | Request Signing | HMAC signature verification middleware | Active |

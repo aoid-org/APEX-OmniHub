@@ -57,7 +57,7 @@ The following production surfaces remain fully operational and unchanged:
 - **Supabase Edge Functions:** Validated serverless control plane
 - **OmniDash UI:** TypeScript/React dashboard surface
 - **OmniLink / OmniPort / OmniTrace:** Trinity connectivity layer
-- **MAN Mode:** Human-in-the-loop approval gates
+- **MAN Mode:** Manual Approval Node gates
 - **Web3 Identity:** SIWE + NFT verification
 - **Mobile:** Android + iOS Capacitor targets
 

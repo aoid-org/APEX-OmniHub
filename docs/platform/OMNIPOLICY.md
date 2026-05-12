@@ -105,7 +105,7 @@ Policies use exact string matching via `*_in` suffix fields:
   },
   "decision": "DEFER",
   "lane": "YELLOW",
-  "reason": "High-value financial operations require human approval"
+  "reason": "High-value financial operations require Manual Approval Node approval"
 }
 ```
 
@@ -125,7 +125,7 @@ OmniPolicy decisions integrate with MAN Mode lanes:
 | Lane | Decision | Action |
 |------|----------|--------|
 | `GREEN` | `ALLOW` | Proceed automatically |
-| `YELLOW` | `DEFER` | Require human approval |
+| `YELLOW` | `DEFER` | Require Manual Approval Node approval |
 | `RED` | `DENY` | Block with warning |
 | `BLOCKED` | `DENY` | Hard block, no override |
 

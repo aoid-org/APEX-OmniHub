@@ -98,7 +98,7 @@ def test_build_dag_structure(agent_workflow):
 def test_process_dag_results(agent_workflow):
     results = [
         ("step1", {"status": "success", "result": "ok"}),
-        ("step2", {"status": "deferred", "reason": "Requires human approval"}),
+        ("step2", {"status": "deferred", "reason": "Requires Manual Approval Node approval"}),
     ]
 
     executed = set()

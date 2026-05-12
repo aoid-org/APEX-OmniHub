@@ -175,7 +175,7 @@ All notable changes to the APEX OmniHub Marketing Site.
 - **Tri-Force Protocol section** - Connect, Translate, Execute pillars with linked cards
 - **Orchestrator section** - Central coordination capabilities with animated visual
 - **Zero-Trust Fortress Protocol section** - Security principles in navy variant
-- **MAN Mode section** - Manual Authorization Needed with warning iconography
+- **MAN Mode section** - Manual Approval Node with warning iconography
 - **Core Capabilities showcase** - Four capability cards linking to page anchors
 - **Privacy Policy page** (`/privacy.html`) - Full legal content
 - **Terms of Service page** (`/terms.html`) - Full legal content

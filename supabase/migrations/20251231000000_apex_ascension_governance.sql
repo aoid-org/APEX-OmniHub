@@ -126,7 +126,7 @@ INSERT INTO public.agent_policies (name, rule_logic, description, is_blocking, p
 ),
 (
     'financial_safety',
-    'Maximum transaction limit is $5,000 without explicit human approval. Flag any transaction above this threshold.',
+    'Maximum transaction limit is $5,000 without explicit Manual Approval Node approval. Flag any transaction above this threshold.',
     'Prevents unauthorized large financial transactions',
     true,
     90

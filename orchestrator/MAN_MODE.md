@@ -2,7 +2,7 @@
 
 ## Overview
 
-MAN Mode (Manual-Authorization-Needed) is a human-in-the-loop safety gate integrated into the APEX OmniHub Temporal Orchestrator. It provides automated risk classification and approval workflows for high-risk agent actions.
+MAN Mode (Manual Approval Node) is a governance safety gate integrated into the APEX OmniHub Temporal Orchestrator. It provides automated risk classification and approval workflows for high-risk agent actions.
 
 ## Architecture
 
@@ -100,7 +100,7 @@ risk_triage() ──► Lane?
 ```json
 {
   "status": "isolated",
-  "reason": "Tool 'delete_record' requires human approval",
+  "reason": "Tool 'delete_record' requires Manual Approval Node approval",
   "man_task_id": "uuid-of-man-task",
   "step_id": "step-3",
   "tool_name": "delete_record",
@@ -158,7 +158,7 @@ Persists approval task to database with idempotency.
 
 ### resolve_man_task
 
-Updates task with human decision (APPROVED/DENIED).
+Updates task with Manual Approval Node decision (APPROVED/DENIED).
 
 **Input**: task_id, status, reason, decided_by
 **Output**: success, task_id, status, workflow_id

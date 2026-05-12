@@ -91,7 +91,7 @@ END $$;
 -- NOTE: The table has no tenant_id or user_id column. The decided_by column
 --   (TEXT) is the closest identity binding available. If decided_by stores
 --   something other than auth.uid()::text (e.g., email or username), adjust
---   the WITH CHECK accordingly. Flagged for human review.
+--   the WITH CHECK accordingly. Flagged for Manual Approval Node review.
 -- REVIEW REQUIRED: Confirm decided_by stores auth.uid()::text at the
 --   application layer. If it stores email, change to:
 --   WITH CHECK (decided_by = (SELECT email FROM auth.users WHERE id = auth.uid()))

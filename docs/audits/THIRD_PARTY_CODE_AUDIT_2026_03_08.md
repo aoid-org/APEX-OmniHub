@@ -87,7 +87,7 @@ APEX OmniHub is a **production-grade Universal Sync Orchestrator (USO)** platfor
 - **Orchestration Engine:** Temporal.io with durable workflows, event sourcing, and saga compensation
 - **Primary Workflow:** `AgentWorkflow` with event sourcing + saga pattern (`orchestrator/workflows/agent_saga.py`)
 - **Universal Saga:** `UniversalOrchestratorWorkflow` for cross-system orchestration
-- **MAN Mode (Human-in-the-Loop):** Full approval workflow with risk triage, task creation, notification, and decision checking
+- **MAN Mode (Manual Approval Node):** Full approval workflow with risk triage, task creation, notification, and decision checking
 - **Configuration:** Pydantic Settings with type-safe environment loading (`orchestrator/config.py`)
 - **API Server:** FastAPI via `server.py` — cleanly separated from worker process
 
@@ -314,7 +314,7 @@ This is **uncommon in the industry** and demonstrates exceptional architectural 
 | Authentication (OAuth) | FUNCTIONAL | `AuthContext.tsx`, `OAuthButtons.tsx`, Supabase Auth |
 | Protected Routes | FUNCTIONAL | `ProtectedRoute.tsx` with redirect |
 | Temporal Orchestration | FUNCTIONAL | `agent_saga.py`, `universal_saga.py` |
-| MAN Mode (Human-in-the-Loop) | FUNCTIONAL | Full workflow: risk_triage → create_task → notify → check_decision |
+| MAN Mode (Manual Approval Node) | FUNCTIONAL | Full workflow: risk_triage → create_task → notify → check_decision |
 | Web3 Identity (SIWE) | FUNCTIONAL | `web3-verify/index.ts` — full SIWE flow |
 | NFT Membership | FUNCTIONAL | `APEXMembershipNFT.sol` — mint, batch mint, revoke |
 | Media Player | FUNCTIONAL | `OmniMediaPlayer.tsx`, `omniMediaStore.ts`, `EdgeCacheController.ts` |
@@ -365,7 +365,7 @@ This is **uncommon in the industry** and demonstrates exceptional architectural 
 |------------|-------------|---------------|
 | **Universal Sync Orchestrator (USO)** | Industry-first unified orchestration layer bridging AI, Web3, legacy, and SaaS systems | Very Rare |
 | **Tri-Force Protocol** | Three-tier agent governance (Guardian → Planner → Executor) with safety gates | Unique |
-| **MAN Mode** | Human-in-the-loop approval system integrated directly into workflow orchestration | Rare |
+| **MAN Mode** | Manual Approval Node checkpoint system integrated directly into workflow orchestration | Rare |
 | **Architectural Boundary CI Enforcement** | CI-level guardrails preventing architectural drift via grep-based boundary checks | Very Rare |
 | **Deterministic Chaos Engineering Suite** | Seeded, reproducible chaos testing with red team adversarial evals | Rare |
 | **OmniModal Engine** | Intent-driven modal dispatch with Zod boundary validation and deterministic render mode resolution | Unique |
@@ -384,7 +384,7 @@ This is **uncommon in the industry** and demonstrates exceptional architectural 
 |-----------|--------|---------------|
 | AI/LLM Integration | 9.5/10 | BYOM cockpit, prompt defense, semantic caching, cognition engine |
 | Web3 Integration | 9.0/10 | SIWE, NFT membership, multi-chain, Alchemy webhooks |
-| Orchestration | 9.5/10 | Temporal.io with saga, event sourcing, DAG execution, human-in-the-loop |
+| Orchestration | 9.5/10 | Temporal.io with saga, event sourcing, DAG execution, Manual Approval Node governance |
 | Security Architecture | 9.5/10 | Zero-trust, HMAC signing, SSRF protection, dual-layer prompt defense |
 | Chaos Engineering | 9.0/10 | Deterministic chaos, red team evals, stress testing, circuit breakers |
 | Cross-Platform | 8.5/10 | Web (Vite) + iOS + Android (Capacitor) + Edge (Deno/Cloudflare Workers) |
@@ -465,7 +465,7 @@ This valuation considers:
 3. **Chaos Engineering** — Deterministic, seeded chaos testing with red team adversarial scenarios is enterprise-grade
 4. **Event Sourcing + Saga** — Production-grade distributed workflow patterns with full audit trail
 5. **Cross-Stack Integration** — TypeScript + Python + Solidity + SQL + Terraform in a cohesive architecture
-6. **MAN Mode** — Human-in-the-loop approval system is a critical differentiator for enterprise trust
+6. **MAN Mode** — Manual Approval Node checkpoint system is a critical differentiator for enterprise trust
 7. **Smart Contract Security** — OpenZeppelin 5.1.0, ReentrancyGuard, Pausable, owner-controlled minting
 
 ### 10.2 Observations (Non-Critical)

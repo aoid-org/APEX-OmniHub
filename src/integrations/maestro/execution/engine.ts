@@ -288,7 +288,7 @@ export async function requestMANMode(
   // For now, we simulate a rejection for testing
   return {
     approved: false,
-    notes: 'MAN mode escalation simulated - requires human approval',
+    notes: 'MAN mode escalation simulated - requires Manual Approval Node approval',
   };
 }
 
