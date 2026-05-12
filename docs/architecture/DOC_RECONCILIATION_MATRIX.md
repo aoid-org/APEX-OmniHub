@@ -1,5 +1,10 @@
 # Doc Reconciliation Matrix (Phase 2)
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 Last Updated: 2026-05-12
 
 | File | Status | Notes | Action |

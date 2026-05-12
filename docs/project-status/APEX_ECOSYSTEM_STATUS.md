@@ -1,6 +1,11 @@
 <!-- APEX_DOC_STAMP: VERSION=v9.1-L10N-PWA-HARDENING | LAST_UPDATED=2026-03-10 -->
 # APEX Ecosystem Status
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 **Last Updated:** 2026-03-10
 **Platform Version:** 1.4.1
 **Status:** 🟢 PRODUCTION LIVE — Audit Score 94.3/100 (A)
@@ -71,7 +76,7 @@ Deterministic client-side infrastructure for media delivery.
 
 | Component | Location | Status |
 |-----------|----------|--------|
-| **Edge CORS Proxy** | `api/cors.ts` (Vercel Edge Runtime) | ✅ WinterCG-safe, Range passthrough |
+| **Edge CORS Proxy** | `edge/cors-proxy/edge-cors-proxy.js` (Cloudflare-first); `api/cors.ts` (Vercel Edge Runtime) retained as LEGACY reference | ✅ Cloudflare-first canonical; Vercel Edge Runtime is LEGACY historical/reference context |
 | **LRU Media Cache** | `src/lib/media/EdgeCacheController.ts` | ✅ 250 MB ceiling, localStorage ledger |
 | **Cloudflare Worker** | `edge/cors-proxy/edge-cors-proxy.js` | ✅ Stateless CORS proxy |
 

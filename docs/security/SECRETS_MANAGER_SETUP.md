@@ -1,5 +1,10 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # SECRETS MANAGER SETUP GUIDE
+
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
 **OmniHub/TradeLine/APEX - Secure Secrets Management**
 
 **Purpose:** Migrate from environment variables to centralized secrets manager

@@ -1,5 +1,21 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
 # OMNIHUB CLOUD-AGNOSTIC ARCHITECTURE
+
+## Canonical Provider Portability Status
+
+| Provider | Status |
+|---|---|
+| Cloudflare | VERIFIED |
+| Supabase | VERIFIED |
+| Temporal | VERIFIED |
+| Vite | VERIFIED |
+| AWS | PROPOSED |
+| Azure | PROPOSED |
+| GCP | PROPOSED |
+| On-prem | ARCHITECTURALLY POSSIBLE / UNVERIFIED |
+
+See `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for the authoritative claim taxonomy.
+
 **Global-Grade Infrastructure Blueprint for OmniHub/TradeLine/APEX**
 
 **Document Version:** 1.0

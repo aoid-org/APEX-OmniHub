@@ -1,6 +1,22 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Cloud Architecture Reference
 
+## Canonical Provider Portability Status
+
+| Provider | Status |
+|---|---|
+| Cloudflare | VERIFIED |
+| Supabase | VERIFIED |
+| Temporal | VERIFIED |
+| Vite | VERIFIED |
+| AWS | PROPOSED |
+| Azure | PROPOSED |
+| GCP | PROPOSED |
+| On-prem | ARCHITECTURALLY POSSIBLE / UNVERIFIED |
+
+See `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for the authoritative claim taxonomy.
+
+
 Copyright (c) 2025 APEX Business Systems Ltd. | https://apexbusiness-systems.com
 
 ## Service Mapping

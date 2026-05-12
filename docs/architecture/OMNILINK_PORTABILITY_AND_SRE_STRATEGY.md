@@ -1,6 +1,22 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-15 -->
 # OmniLink Architecture Output: Portability Matrix + SRE Package + Rollback/DR
 
+## Canonical Provider Portability Status
+
+| Provider | Status |
+|---|---|
+| Cloudflare | VERIFIED |
+| Supabase | VERIFIED |
+| Temporal | VERIFIED |
+| Vite | VERIFIED |
+| AWS | PROPOSED |
+| Azure | PROPOSED |
+| GCP | PROPOSED |
+| On-prem | ARCHITECTURALLY POSSIBLE / UNVERIFIED |
+
+See `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for the authoritative claim taxonomy.
+
+
 > **Evidence labeling**: statements are tagged as **VERIFIED** (from repo evidence) or **PROPOSED** (design guidance).
 
 ## 1) Portability Matrix (NO LOCK-IN)

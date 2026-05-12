@@ -1,3 +1,7 @@
+## Diligence Scope Note
+
+This document contains audit/valuation assertions and technical conclusions based on cited repository evidence and test artifacts. Simulation and Armageddon results must be interpreted according to `docs/architecture/CANONICAL_TRUTH_MATRIX.md`. Sandbox/mock-mode results are not equivalent to public production traffic proof unless explicitly marked VERIFIED LIVE EXECUTION. Valuation figures are audit/opinion estimates, not guaranteed transaction values.
+
 APEX-OmniHub v1.5.1 — Deep System Audit Report & Release Readiness Assessment
 Date: 2026-04-04
 Auditor: Claude (Opus 4.6) — Acting as CTO / Chief Platform Architect / DevSecOps Lead

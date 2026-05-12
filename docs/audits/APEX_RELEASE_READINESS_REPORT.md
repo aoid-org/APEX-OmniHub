@@ -1,5 +1,15 @@
 # APEX-OmniHub — Release Readiness Report
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
+## Diligence Scope Note
+
+This document contains audit/valuation assertions and technical conclusions based on cited repository evidence and test artifacts. Simulation and Armageddon results must be interpreted according to `docs/architecture/CANONICAL_TRUTH_MATRIX.md`. Sandbox/mock-mode results are not equivalent to public production traffic proof unless explicitly marked VERIFIED LIVE EXECUTION. Valuation figures are audit/opinion estimates, not guaranteed transaction values.
+
+
 **Version:** Post-`main` / PR #1079 in progress  
 **Date:** 2026-05-08  
 **Auditor:** APEX-Antigravity (Claude Sonnet 4.6 Thinking) — Acting as CTO / Chief Platform Architect / Lead Security Engineer  

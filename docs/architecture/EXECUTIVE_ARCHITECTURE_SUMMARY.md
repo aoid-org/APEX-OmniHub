@@ -1,6 +1,11 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-15 -->
 # APEX-OmniHub Technical Architecture Specification
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 **Document Owner:** CTO & Chief Platform Architect
 **Last Updated:** 2026-03-12
 **Status:** Production
@@ -10,7 +15,7 @@
 
 ## Executive Summary
 
-APEX-OmniHub is a production-grade, **Hybrid-Cloud AI Operating System**. It converges Web3 (Token-gating), Generative AI (Maestro), and **Physical Hardware Identity** into a unified control plane. This document reflects the "Unicorn-Class" architecture verified in the Feb 2026 audit.
+APEX-OmniHub is a production-grade, **Cloudflare-first enterprise orchestration platform with Supabase, Temporal, and OmniLink integration layers**. It converges Web3 (Token-gating), Generative AI (Maestro), and **Physical Hardware Identity** into a unified control plane. This document reflects the "Unicorn-Class" architecture verified in the Feb 2026 audit.
 
 **Core Value Proposition:**
 
@@ -18,7 +23,7 @@ APEX-OmniHub is a production-grade, **Hybrid-Cloud AI Operating System**. It con
 - **Cyber-Physical Security** with Zero-Trust Device Registry & Biometrics
 - **Edge-First Architecture** running locally on iOS/Android via Capacitor
 - **Enterprise Resilience** with Chaos Engineering & Self-Healing (OmniSentry)
-- **Edge Compute Layer** with deterministic LRU media cache and dual CORS proxy (Vercel + Cloudflare)
+- **Edge Compute Layer** with deterministic LRU media cache and Cloudflare-first CORS proxy. Historical Vercel proxy references are LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical.
 
 ---
 
@@ -47,7 +52,7 @@ APEX-OmniHub is a production-grade, **Hybrid-Cloud AI Operating System**. It con
 
 | Component              | Implementation                           | Purpose                           |
 | ---------------------- | ---------------------------------------- | --------------------------------- |
-| **Vercel Edge Proxy**  | `api/cors.ts`                            | WinterCG-safe CORS proxy (Edge)   |
+| **Vercel Edge Proxy**  | `api/cors.ts`                            | LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. |
 | **Cloudflare Worker**  | `edge/cors-proxy/edge-cors-proxy.js`     | CDN-level CORS proxy (stateless)  |
 | **LRU Cache Governor** | `lib/media/EdgeCacheController.ts`       | 250 MB ceiling, localStorage ledger |
 | **Lightweight Cache**  | `src/lib/media/EdgeCacheController.ts`   | Async prefetch + blob URL management |

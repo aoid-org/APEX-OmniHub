@@ -1,5 +1,10 @@
 # Annotated Pull Request Triage — 2026-05-06
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 **Scope:** Only the PRs annotated in the provided screenshot were audited.
 
 **Repository baseline:** `origin/main` at `40df877c` (`docs: comprehensive hardening pass — agent briefing, CI runbooks, onboarding`) plus the local review branch at `9854bb4` (`fix: enforce patched axios and protobufjs dependency resolutions (#1067)`).

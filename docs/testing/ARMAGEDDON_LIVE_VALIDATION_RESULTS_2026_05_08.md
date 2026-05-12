@@ -1,5 +1,16 @@
 # Armageddon Live Validation Results — 2026-05-08
 
+## Diligence Scope Note
+
+This document contains audit/valuation assertions and technical conclusions based on cited repository evidence and test artifacts. Simulation and Armageddon results must be interpreted according to `docs/architecture/CANONICAL_TRUTH_MATRIX.md`. Sandbox/mock-mode results are not equivalent to public production traffic proof unless explicitly marked VERIFIED LIVE EXECUTION. Valuation figures are audit/opinion estimates, not guaranteed transaction values.
+
+
+## Mandatory Simulation Disclaimer
+
+IMPORTANT:
+Chaos simulation results validate orchestration resilience and recovery behavior in controlled sandbox environments. These results are NOT representations of public production traffic volume or commercial customer load unless explicitly labeled VERIFIED LIVE EXECUTION.
+
+
 **Run date:** 2026-05-08  
 **Branch:** `work`  
 **Execution mode:** Live validation envelope with `SIM_MODE=false`; destructive chaos execution remained blocked by guard rails.  

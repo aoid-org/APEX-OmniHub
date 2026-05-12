@@ -1,5 +1,10 @@
 # SBBL-HQ Integration Patch — v1.6.0 Bidirectional Wiring
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 **Target repo:** `apexbusiness-systems/sbbl-hq`
 **Counterpart:** APEX-OmniHub v1.6.0 (this repo)
 **Audience:** SBBL-HQ maintainer / release engineer

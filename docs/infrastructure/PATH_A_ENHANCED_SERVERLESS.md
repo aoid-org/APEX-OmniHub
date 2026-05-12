@@ -1,5 +1,10 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
 # PATH A: ENHANCED SERVERLESS
+
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
 **Recommended Implementation for OmniHub/TradeLine/APEX**
 
 **Status:** ⭐ **RECOMMENDED** (Fastest, most cost-effective, aligns with current architecture)

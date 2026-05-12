@@ -1,6 +1,11 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
 # Migration Runbook: Lovable Cloud → Supabase + Vercel
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 **Purpose**: Step-by-step guide for migrating this app from Lovable Cloud backend to independent Supabase + Vercel deployment.
 
 **Last Updated**: 2025-12-18

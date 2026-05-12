@@ -1,6 +1,11 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.6.2 | LAST_UPDATED=2026-05-12 -->
 # OmniDash (Founder/Sales Dashboard)
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 
 ## OmniDash Left Sidebar Widget Rail Contract (v1.6.2 — 2026-05-12)
 
@@ -122,5 +127,5 @@ Media playback and caching subsystem integrated into the OmniDash UI.
 
 ### Edge Cache Integration
 - **LRU Cache Governor** (`lib/media/EdgeCacheController.ts`) — 250 MB ceiling, Cache API + localStorage ledger.
-- **CORS Proxy** — Dual-layer: Vercel Edge (`api/cors.ts`) + Cloudflare Worker (`edge/cors-proxy/edge-cors-proxy.js`).
+- **CORS Proxy** — Cloudflare Worker (`edge/cors-proxy/edge-cors-proxy.js`) is canonical. Vercel Edge (`api/cors.ts`) is LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical.
 

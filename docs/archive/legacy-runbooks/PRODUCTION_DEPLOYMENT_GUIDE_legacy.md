@@ -1,5 +1,10 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
 # PRODUCTION DEPLOYMENT GUIDE
+
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
 **Step-by-Step Deployment Manual**
 
 **Purpose:** Detailed instructions for deploying OmniHub to production

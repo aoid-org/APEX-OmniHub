@@ -1,6 +1,17 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
 # ARMAGEDDON TEST SUITE - Comprehensive System Validation Report
 
+## Diligence Scope Note
+
+This document contains audit/valuation assertions and technical conclusions based on cited repository evidence and test artifacts. Simulation and Armageddon results must be interpreted according to `docs/architecture/CANONICAL_TRUTH_MATRIX.md`. Sandbox/mock-mode results are not equivalent to public production traffic proof unless explicitly marked VERIFIED LIVE EXECUTION. Valuation figures are audit/opinion estimates, not guaranteed transaction values.
+
+
+## Mandatory Simulation Disclaimer
+
+IMPORTANT:
+Chaos simulation results validate orchestration resilience and recovery behavior in controlled sandbox environments. These results are NOT representations of public production traffic volume or commercial customer load unless explicitly labeled VERIFIED LIVE EXECUTION.
+
+
 ## EXECUTIVE SUMMARY
 
 | Metric                   | Value                                    |
@@ -16,7 +27,7 @@
 | **Skipped**              | 105                                      |
 | **Success Rate**         | 100%                                     |
 | **Level 7 Status**       | **CERTIFIED — 0.0000% Escape Rate**      |
-| **Overall Status**       | **PRODUCTION READY**                     |
+| **Overall Status**       | **simulation-framework complete**        |
 
 ---
 
@@ -498,7 +509,7 @@ LEVEL 7 STATUS:
   Battery 13 (Supply Chain):   CERTIFIED (0 escapes)
 
 AGGREGATE ESCAPE RATE: 0.0000%
-STATUS:       PRODUCTION READY
+STATUS:       simulation-framework complete
 CONFIDENCE:   MAXIMUM
 APPROVED BY:  Distinguished Engineer
               APEX Business Systems

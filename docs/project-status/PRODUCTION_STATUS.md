@@ -1,6 +1,11 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-03-25 -->
 # APEX OmniHub — Production Status
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 ```
  ██████╗ ███╗   ███╗███╗   ██╗██╗██╗  ██╗██╗   ██╗██████╗ 
 ██╔═══██╗████╗ ████║████╗  ██║██║██║  ██║██║   ██║██╔══██╗
@@ -13,7 +18,7 @@ E N T E R P R I S E   A I   P L A T F O R M
 
 | Status      | Architecture                 | Last Audit | Audit Score | Test Coverage             |
 | ----------- | ---------------------------- | ---------- | ----------- | ------------------------- |
-| **🟢 LIVE** | **Hybrid-Cloud Physical AI** | 2026-03-25 | **94.3/100 (A)** | Build gates PASS (lint/typecheck/build) |
+| **🟢 LIVE** | **Cloudflare-first enterprise orchestration platform with Supabase, Temporal, and OmniLink integration layers** | 2026-03-25 | **94.3/100 (A)** | Build gates PASS (lint/typecheck/build) |
 
 ---
 
@@ -50,7 +55,7 @@ APEX OmniHub is **PRODUCTION CERTIFIED** with maintained 2026-03-09 third-party 
 
 ### Edge Compute (v1.3.8)
 
-- [x] **Edge CORS Proxy**: Vercel Edge runtime (`api/cors.ts`) — WinterCG-safe, Range passthrough
+- [x] **Edge CORS Proxy**: Cloudflare Worker (`edge/cors-proxy/edge-cors-proxy.js`) is canonical; Vercel Edge runtime (`api/cors.ts`) is LEGACY — retained for historical/reference use
 - [x] **LRU Media Cache**: 250 MB ceiling, localStorage ledger, deterministic eviction (`lib/media/EdgeCacheController.ts`)
 - [x] **Cloudflare Worker**: Stateless CORS proxy deployed at `edge/cors-proxy/edge-cors-proxy.js`
 - [x] **SonarQube Compliance**: 3 code smells resolved (globalThis portability, dead assignment)
@@ -69,7 +74,7 @@ APEX OmniHub is **PRODUCTION CERTIFIED** with maintained 2026-03-09 third-party 
 | :-------------------- | :--------------: | :------------------------------------- |
 | **Code Quality**      |    ✅ **A+**     | "Unicorn-Class" Engineering Verdict    |
 | **Physical Security** |  ✅ **LOCKED**   | Device Registry + Biometrics Enforced  |
-| **Resilience**        |   ✅ **ELITE**   | Chaos Engine + Circuit Breakers Active |
+| **Resilience**        |   ✅ **ELITE**   | Chaos simulation framework + circuit breakers validated within referenced test scope |
 | **Armageddon L7**     | ✅ **CERTIFIED** | 0% Escape Rate — 40,000 Iterations     |
 | **Performance**       |   ✅ **FAST**    | <500ms P95, 70% Cache Hit, Edge-Native |
 | **Infrastructure**    |  ✅ **HYBRID**   | Docker Core + Serverless Edge + Mobile |
@@ -81,8 +86,8 @@ APEX OmniHub is **PRODUCTION CERTIFIED** with maintained 2026-03-09 third-party 
 
 ```
 Repository:  apexbusiness-systems/APEX-OmniHub
-Status:      PRODUCTION READY (v1.5.1)
-Type:        Cyber-Physical AI OS + Persistent Memory Platform
+Status:      VERIFIED engineering gates (v1.5.1)
+Type:        enterprise orchestration platform with cyber-physical integration capabilities where explicitly verified + Persistent Memory Platform
 Audit Score: 94.3/100 (A) — Third-Party Verified
 Updated:     2026-03-25
 ```

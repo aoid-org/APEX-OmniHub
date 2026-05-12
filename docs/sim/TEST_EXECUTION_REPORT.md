@@ -1,6 +1,12 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-03-25 -->
 # Chaos Simulation Test Execution Report
 
+## Mandatory Simulation Disclaimer
+
+IMPORTANT:
+Chaos simulation results validate orchestration resilience and recovery behavior in controlled sandbox environments. These results are NOT representations of public production traffic volume or commercial customer load unless explicitly labeled VERIFIED LIVE EXECUTION.
+
+
 **Date:** 2026-01-03
 **Framework Version:** 1.0.0
 **Test Runs:** 12 executions
@@ -272,7 +278,7 @@ The chaos simulation framework has been **successfully optimized and hardened** 
 5. ✅ All unit tests passing
 6. ✅ Production-ready guard rails (no sandbox escapes)
 
-**Final Assessment:** The framework is **PRODUCTION READY** for chaos testing scenarios. The 84.6-86.4% overall score reflects the intentional injection of chaos, and the 100% final success rate demonstrates excellent resilience.
+**Final Assessment:** The framework is **simulation-framework complete** for chaos testing scenarios. The 84.6-86.4% overall score reflects the intentional injection of chaos, and the 100% final success rate demonstrates excellent resilience.
 
 **Next Steps:**
 1. Integrate with real app adapters

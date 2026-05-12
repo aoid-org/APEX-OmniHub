@@ -489,6 +489,8 @@ have been removed.
 
 #### Vercel Edge CORS Proxy (`api/cors.ts`)
 
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical.
+
 - **Edge Runtime Handler:** Deployed a Vercel Edge Function at `/api/cors?source=<url>` for zero-latency cross-origin media proxying.
 - **WinterCG-Safe Headers:** Response headers reconstructed via `new Headers()` — upstream `Response` objects never mutated (immutable header compliance).
 - **Range Request Passthrough:** Forwards `Range` headers to upstream for media scrubbing and partial content delivery (HTTP 206).
