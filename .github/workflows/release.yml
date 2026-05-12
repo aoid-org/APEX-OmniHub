@@ -40,6 +40,11 @@ jobs:
           SIM_MODE: "true"
           TARGET_URL: "http://localhost:8001"
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+
       - name: Terraform Fmt & Plan
         run: |
           if [ -d "terraform/environments/production" ]; then
