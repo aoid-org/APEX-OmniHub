@@ -1,6 +1,6 @@
 # OPS_RUNBOOKS.md — APEX-OmniHub Operations Runbooks
 
-> **Status:** Current operations index (canonical). Last updated: 2026-05-06.
+> **Status:** Current operations index (canonical). Last updated: 2026-05-11.
 >
 > Related canonical docs:
 > - `CLAUDE.md` — agent briefing and verified commands (read first)
@@ -17,6 +17,7 @@
 3. [CI Guardrail Alerts](#ci-guardrail-alerts)
 4. [npm Lockfile Gate (ENOLOCK)](#npm-lockfile-gate-enolock)
 5. [TypeScript Config Invariants](#typescript-config-invariants)
+6. [OmniBridge Outbound Dispatch Ops](#omnibridge-outbound-dispatch-ops)
 
 ---
 
@@ -137,6 +138,20 @@ If the violation pattern appears in legitimate code (e.g., documentation):
 | `SLACK_BOT_TOKEN` | Slack notifications            |
 | `GITHUB_TOKEN`    | Issue creation (auto-provided) |
 
+
+## CI Pitfalls Quick Reference
+
+| Symptom | Root Cause | Fix |
+|---|---|---|
+| `ENOLOCK` in `npm audit` | `package-lock.json` not committed | Restore: `git add package-lock.json` |
+| `TS5103: Invalid value for --ignoreDeprecations` | Value set to `"6.0"` | Change to `"5.0"` in both tsconfig files |
+| `SyntaxError: Expected double-quoted property name` in Gate 6 | `//` comment in `tsconfig.json` | Remove all comments from `tsconfig.json` |
+| React context undefined / `createContext` error | Multiple React instances | Run `bun run check:react`; check `dedupe` in vite/vitest config |
+| `security-gates` failing in < 30s | TruffleHog or npm audit failing early | Check TruffleHog output; verify `package-lock.json` exists |
+| Coverage race condition (ENOENT) | Coverage enabled by default | Enable only via `VITEST_COVERAGE=true` or `bun run test:coverage` |
+| Secret scan flags test HMAC fixture values | Test HMAC key assignments without `test-` prefix | Prefix fixture keys with `test-` or `mock-` (e.g., `test-hmac-key-abc`) |
+
+---
 
 ## Legacy deep-dive archives
 
@@ -262,6 +277,184 @@ These do not affect the production bundle severity threshold.
 ---
 
 ## TypeScript Config Invariants
+
+---
+
+## OmniBridge Outbound Dispatch Ops
+
+**Added:** 2026-05-11 | **Scope:** APEX-OmniHub v1.6.1+ | **Related:** `docs/integration/sbbl-omnihub-validation-2026-05-11.md`
+
+OmniBridge is the bidirectional HMAC-signed sync layer between APEX-OmniHub (control plane) and
+SBBL-HQ (managed tenant). This section covers day-to-day operations for the outbound dispatch path.
+
+---
+
+### Verify Outbound Commands Are Reaching SBBL-HQ
+
+Two independent signals confirm delivery:
+
+**1. `omnibridge_events` table (OmniHub side)**
+
+```sql
+-- Check recent outbound events for a tenant
+SELECT id, tenant_id, event_type, status, created_at, attempts
+FROM omnibridge_events
+WHERE tenant_id = 'sbbl-hq'
+  AND direction = 'outbound'
+ORDER BY created_at DESC
+LIMIT 20;
+```
+
+Healthy: `status = 'delivered'`. Stuck: `status = 'pending'` with `attempts >= 3`.
+
+**2. `/sync/drain` worker logs (SBBL-HQ side)**
+
+```bash
+# Stream live logs from the SBBL-HQ Cloudflare Worker
+wrangler tail --env production --filter /sync/drain
+
+# Look for:
+#   INFO  [drain] delivered packet <packet_id> → 200 OK (<latency>ms)
+#   WARN  [drain] attempt 2/4 failed (503) — retrying in 1000ms
+#   ERROR [drain] packet <packet_id> failed after 4 attempts — marked stuck
+```
+
+If SBBL-HQ logs show no activity but `omnibridge_events` shows pending records,
+check `OMNIHUB_SYNC_URL` env var in the SBBL-HQ Worker (see "Sync Drain Failure" in
+`docs/ops/INCIDENT_RESPONSE.md`).
+
+---
+
+### Revoke a Tenant
+
+To immediately stop all outbound dispatch to a tenant without deleting its records:
+
+```sql
+-- Set tenant status to inactive in the source registry
+UPDATE omnibridge_source_registry
+SET status = 'inactive', updated_at = NOW()
+WHERE source_id = 'sbbl-hq';
+```
+
+The `omnibridge-control` edge function checks `status` on every dispatch attempt.
+Inactive tenants receive an immediate `403 Tenant Revoked` response; no HMAC signing
+or network call is made. Re-activate by setting `status = 'active'`.
+
+**Note:** Revoking does not flush in-flight packets already in `omnibridge_outbox`.
+Run the following to drain the stuck queue cleanly after revoking:
+
+```sql
+UPDATE omnibridge_outbox
+SET status = 'cancelled', updated_at = NOW()
+WHERE tenant_id = 'sbbl-hq' AND status = 'pending';
+```
+
+---
+
+### Rotate `OMNIHUB_SIGNING_SECRET`
+
+> Both sides must rotate simultaneously. A rolling window is NOT supported — any
+> packet signed with the old secret and received after the new secret is live will
+> fail HMAC verification.
+
+**Rotation procedure (zero-downtime window = ~5 minutes):**
+
+1. **Generate new secret** (min 256-bit entropy):
+   ```bash
+   openssl rand -base64 48
+   ```
+
+2. **Provision on OmniHub side** — update the Supabase Vault secret:
+   ```bash
+   supabase secrets set OMNIHUB_SIGNING_SECRET=<new-value> --project-ref rtopreovkywofgwgmozi
+   ```
+   Wait for the edge function to pick up the new secret (< 30s).
+
+3. **Provision on SBBL-HQ side** — update the Cloudflare Worker secret:
+   ```bash
+   wrangler secret put OMNIHUB_SIGNING_SECRET --env production
+   # (paste the same new-value when prompted)
+   ```
+   Wait for the Worker deployment to propagate (< 60s).
+
+4. **Verify** — trigger a test PING command from the OmniHub control plane and confirm
+   it appears as `delivered` in `omnibridge_events` within 10 seconds.
+
+5. **Rotate `OMNIHUB_VERIFY_KEY` separately** if SBBL-HQ uses an independent inbound
+   verify key (production recommended). Follow the same steps, updating only the
+   verify-key secret rather than the signing secret.
+
+---
+
+### RED-Lane Command Approval Workflow (MAN-Quorum)
+
+Any command classified as RED lane (high-risk intents: `revoke_access`, `grant_access`,
+`emergency_halt`, `force_man_review`, `hotfix_dispatch`) requires explicit MAN-quorum
+approval before the `outboundCaller.ts` will dispatch it.
+
+**Approval flow:**
+
+1. Operator submits command via OmniDash → `omnibridge-control` edge function classifies
+   it as RED and sets `requires_man_approval = true`.
+2. Record is written to `omnibridge_events` with `status = 'pending_approval'`.
+3. All online MANs receive a Slack notification in `#man-approvals` (via `alert-man-approval.yml`).
+4. A quorum of ≥ 2 MANs must approve via the OmniDash approval UI within 15 minutes, or
+   the command expires (`status = 'expired'`).
+5. On quorum achieved, `outboundCaller.ts` is invoked automatically; delivery status is
+   updated to `delivered` or `failed` in `omnibridge_events`.
+
+**Manual override (emergency, requires CTO sign-off):**
+
+```sql
+-- Directly approve a stuck RED-lane command (log your name in the reason field)
+UPDATE omnibridge_events
+SET status = 'approved', man_override_reason = 'CTO emergency override — <name> <timestamp>'
+WHERE id = '<event-uuid>' AND status = 'pending_approval';
+```
+
+This action is hash-chained into `omnibridge_control_audit` automatically via trigger.
+
+---
+
+### Emergency: Halt All Outbound Dispatch
+
+To immediately stop ALL outbound dispatch to ALL tenants (e.g., suspected key compromise):
+
+**Option A — Disable `outboundCaller` in the edge function (fastest, < 30s)**
+
+In `supabase/functions/omnibridge-control/index.ts`, set the kill-switch env var:
+
+```bash
+supabase secrets set OMNIBRIDGE_OUTBOUND_ENABLED=false --project-ref rtopreovkywofgwgmozi
+```
+
+The `outboundCaller.ts` reads this flag at invocation time. All new dispatch attempts
+will return `{ status: 'halted' }` without making network calls. Existing in-flight
+HTTP requests are not cancelled.
+
+**Option B — Revoke all tenant statuses (durable, survives env var reset)**
+
+```sql
+UPDATE omnibridge_source_registry
+SET status = 'inactive', updated_at = NOW()
+WHERE status = 'active';
+```
+
+**Restore normal operation:**
+
+```bash
+supabase secrets set OMNIBRIDGE_OUTBOUND_ENABLED=true --project-ref rtopreovkywofgwgmozi
+```
+
+Then re-activate individual tenants as confirmed-clean:
+
+```sql
+UPDATE omnibridge_source_registry
+SET status = 'active', updated_at = NOW()
+WHERE source_id = 'sbbl-hq';
+```
+
+---
 
 ### `ignoreDeprecations` Must Be `"5.0"`
 

@@ -60,6 +60,7 @@ System design and technical specifications:
 | Document                                                                            | Description                 |
 | ----------------------------------------------------------------------------------- | --------------------------- |
 | [Executive Architecture Summary](architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md)    | High-level technical specs  |
+| [Bounded-Context Map](./architecture/BOUNDED_CONTEXT_MAP.md) | Operational boundaries & handoffs |
 | [General Tech Specs](architecture/GENERAL_TECH_SPECS.md)                            | Platform specifications     |
 | [Detailed System Design](architecture/DETAILED_SYSTEM_DESIGN.md)                    | Complete system design      |
 | [OmniLink Portability & SRE](architecture/OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md) | Integration bus strategy    |
@@ -180,6 +181,7 @@ Developer resources and engineering principles:
 | ----------------------------------------------------------- | ------------------------- |
 | [Developer Onboarding](onboarding/DEVELOPER_ONBOARDING.md)  | 3-day onboarding guide    |
 | [System Knowledge Base](knowledge/SYSTEM_KNOWLEDGE_BASE.md) | Critical system knowledge |
+| [Developer Operating Model](knowledge/DEVELOPER_OPERATING_MODEL.md) | In-repo abstractions & simulator model |
 | [OmniDev Manifesto](knowledge/OMNIDEV_MANIFESTO.md)         | Engineering principles    |
 
 ---

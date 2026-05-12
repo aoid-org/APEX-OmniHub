@@ -202,25 +202,24 @@ class SagaContext:
             f"🔄 Starting Saga rollback ({len(self.compensation_stack)} compensations)"
         )
 
-        results = []
-        # Execute in reverse order (LIFO)
-        for compensation in reversed(self.compensation_stack):
+        async def _execute_compensation(comp: CompensationStep) -> dict[str, Any]:
             try:
                 result = await self.workflow_instance._execute_activity(
-                    compensation.activity_name,
-                    compensation.input,
-                    compensation.step_id,
+                    comp.activity_name,
+                    comp.input,
+                    comp.step_id,
                     is_compensation=True,
                 )
-                results.append({"step_id": compensation.step_id, "success": True, "result": result})
-                workflow.logger.info(f"✓ Compensation succeeded: {compensation.activity_name}")
-
+                workflow.logger.info(f"✓ Compensation succeeded: {comp.activity_name}")
+                return {"step_id": comp.step_id, "success": True, "result": result}
             except Exception as e:
                 # Log but continue (best-effort rollback)
-                workflow.logger.error(
-                    f"✗ Compensation failed: {compensation.activity_name} - {e!s}"
-                )
-                results.append({"step_id": compensation.step_id, "success": False, "error": str(e)})
+                workflow.logger.error(f"✗ Compensation failed: {comp.activity_name} - {e!s}")
+                return {"step_id": comp.step_id, "success": False, "error": str(e)}
+
+        # Execute in reverse order (LIFO) in parallel via asyncio.gather
+        tasks = [_execute_compensation(c) for c in reversed(self.compensation_stack)]
+        results = await asyncio.gather(*tasks)
 
         workflow.logger.info(f"✓ Saga rollback complete ({len(results)} compensations executed)")
         return results

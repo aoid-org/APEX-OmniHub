@@ -90,7 +90,7 @@ Updated:     2026-03-25
 
 ## 2026-03-01 Audit Addendum
 
-- **Edge Compute Layer shipped:** Vercel Edge CORS proxy + LRU media cache governor (250 MB ceiling, localStorage ledger, deterministic eviction).
+- **Edge Compute Layer shipped:** (Historical) Vercel Edge CORS proxy + LRU media cache governor (250 MB ceiling, localStorage ledger, deterministic eviction).
 - **SonarQube:** 3 code smells resolved — `globalThis.window`/`globalThis.location` for ES2020 portability, dead assignment removal.
 - Production dependency audit (`npm audit --omit=dev`) reports **0 high / 0 critical** vulnerabilities (1 moderate outstanding).
 - Full dependency graph continues to include dev-toolchain advisories and remains tracked as non-launch backlog.

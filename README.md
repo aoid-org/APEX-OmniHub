@@ -68,8 +68,6 @@ The platform relies on a "Holy Trinity" architecture:
 
 ✅ **Is:** A secure orchestration layer + universal translation engine that standardizes execution, policy enforcement, and auditability across your entire stack.
 
-❌ **Is not:** "Just a connector library" or "another iPaaS." OmniHub is designed to be _operationally credible_ (SRE-ready), _compliance-friendly_, and _portable_.
-
 ---
 
 ## Core Pillars
@@ -115,7 +113,7 @@ The "Trinity" connectivity layer:
 
 Client-side infrastructure for deterministic media delivery:
 
-- **Edge CORS Proxy**: Vercel Edge Function (`api/cors.ts`) with WinterCG-safe header handling and Range passthrough.
+- **Edge CORS Proxy**: (Historical) (Historical) Vercel Edge Function (`api/cors.ts`) — superseded by Cloudflare Pages Worker (`edge/cors-proxy/edge-cors-proxy.js`).
 - **LRU Media Cache**: 250 MB ceiling with localStorage ledger eviction (`lib/media/EdgeCacheController.ts`).
 - **Cloudflare Worker**: Stateless CORS proxy at `edge/cors-proxy/edge-cors-proxy.js` for production CDN.
 - **Fail-Safe Design**: Every cache miss gracefully degrades to proxy URL — zero silent failures.

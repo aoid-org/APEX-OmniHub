@@ -25,7 +25,7 @@ create table if not exists public.leads (
 
 create table if not exists public.lead_events (
   id uuid primary key default gen_random_uuid(),
-  lead_id uuid not null references public.leads(id) on delete cascade,
+  lead_id uuid not null references public.leads(id) ,
   event_type text,
   notes text,
   created_at timestamptz not null default now()
@@ -47,7 +47,7 @@ begin
 end;
 $$;
 
-drop trigger if exists touch_leads_updated_at on public.leads;
+-- drop trigger if exists touch_leads_updated_at on public.leads;
 create trigger touch_leads_updated_at
 before update on public.leads
 for each row
@@ -57,7 +57,7 @@ alter table public.leads enable row level security;
 alter table public.lead_events enable row level security;
 
 -- Supabase service keys bypass RLS, but this explicit policy documents the only accepted role.
-drop policy if exists service_role_full_access on public.leads;
+-- drop policy if exists service_role_full_access on public.leads;
 create policy service_role_full_access
 on public.leads
 as permissive
@@ -66,7 +66,7 @@ to service_role
 using (true)
 with check (true);
 
-drop policy if exists service_role_full_access on public.lead_events;
+-- drop policy if exists service_role_full_access on public.lead_events;
 create policy service_role_full_access
 on public.lead_events
 as permissive

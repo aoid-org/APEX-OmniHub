@@ -36,3 +36,30 @@ jobs:
           createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to Shadow-Stage (production-shadow)
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          echo "Deploying frontend to shadow slot..."
+          npm run build -- --outDir dist/shadow
+          # Mock deploy to shadow environment
+          echo "Deploying Python orchestrator to shadow slot..."
+          cd orchestrator && pkill -f shadow || true && python -m uvicorn main:app --host 0.0.0.0 --port 8001 &
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      - name: Deterministic Validator CI Gate
+        if: steps.changesets.outputs.published == 'true'
+        run: node integration-harness/lib/deterministic-validator.mjs
+        env:
+          TARGET_URL: http://localhost:8001 # Production-shadow URL
+
+      - name: Atomic Routing Flip (Promote to Active)
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          echo "Executing atomic DNS/LB flip..."
+          cd terraform/environments/production
+          terraform init
+          terraform apply -auto-approve -var="target_slot=production-shadow"

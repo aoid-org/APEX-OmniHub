@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v2.0.0 | LAST_UPDATED=2026-05-06 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.1.0 | LAST_UPDATED=2026-05-11 -->
 # Developer Onboarding Guide
 
 > **Agent note:** The single most important file is `CLAUDE.md` at the repo root.
@@ -16,7 +16,7 @@ git --version    # Requires >= 2.40
 ```
 
 > **Critical:** This project uses **bun** as its package manager, not npm or yarn.
-> All install commands use `bun install`. npm is only used for `npm audit` in CI.
+> **Package manager:** Use `npm ci` for dependencies. `npm` is authoritative for builds, releases, and CI.
 
 ---
 
@@ -27,7 +27,7 @@ git --version    # Requires >= 2.40
 ```bash
 git clone https://github.com/apexbusiness-systems/APEX-OmniHub.git
 cd APEX-OmniHub
-bun install
+npm ci
 cp .env.example .env.local
 ```
 
@@ -49,11 +49,11 @@ Edit `.env.local` with credentials from the team vault:
 ### Verify Installation
 
 ```bash
-bun run typecheck    # TypeScript compilation — must produce zero errors
-bun run lint         # ESLint — must produce zero warnings
-bun run test         # Full test suite (~2400 tests, ~70–90 s)
-bun run build        # Production Vite build → dist/
-bun run dev          # Dev server → http://localhost:8080
+npm run typecheck    # TypeScript compilation — must produce zero errors
+npm run lint         # ESLint — must produce zero warnings
+npm run test         # Full test suite (~2400 tests, ~70–90 s)
+npm run build        # Production Vite build → dist/
+npm run dev          # Dev server → http://localhost:8080
 ```
 
 > **Port:** The dev server runs on **port 8080**, not 5173. This is set in `vite.config.ts`.
@@ -140,13 +140,13 @@ The app imports omnihub-site modules via `@/`.
 git checkout -b feature/your-feature-name
 
 # Start dev server (port 8080)
-bun run dev
+npm run dev
 
 # Before committing — run all quality gates
-bun run typecheck    # zero errors
-bun run lint         # zero warnings
-bun run test         # all pass
-bun run build        # must succeed
+npm run typecheck    # zero errors
+npm run lint         # zero warnings
+npm run test         # all pass
+npm run build        # must succeed
 
 # Commit (Conventional Commits format enforced by commitlint)
 git add <specific-files>
@@ -171,11 +171,11 @@ chore(deps): bump protobufjs 7.5.4 → 7.5.5 (CVE-2026-41242)
 
 ### Pre-Commit Checklist
 
-- [ ] `bun run typecheck` — zero TypeScript errors
-- [ ] `bun run lint` — zero ESLint warnings
-- [ ] `bun run test` — all tests pass
-- [ ] `bun run build` — production build succeeds
-- [ ] No secrets in code (run `bun run secret:scan`)
+- [ ] `npm run typecheck` — zero TypeScript errors
+- [ ] `npm run lint` — zero ESLint warnings
+- [ ] `npm run test` — all tests pass
+- [ ] `npm run build` — production build succeeds
+- [ ] No secrets in code (run `npm run secret:scan`)
 - [ ] Commit message follows Conventional Commits format
 - [ ] `tsconfig.json` remains valid JSON (no `//` comments — breaks CI)
 
@@ -185,50 +185,50 @@ chore(deps): bump protobufjs 7.5.4 → 7.5.5 (CVE-2026-41242)
 
 ### Quality Gates
 ```bash
-bun run typecheck        # TypeScript — zero errors required
-bun run lint             # ESLint — zero warnings required
-bun run check:react      # React singleton (must be exactly one React instance)
-bun run test             # Full Vitest suite
-bun run docs:check       # Doc link + file-pointer integrity
-bun run build            # Production build
+npm run typecheck        # TypeScript — zero errors required
+npm run lint             # ESLint — zero warnings required
+npm run check:react      # React singleton (must be exactly one React instance)
+npm run test             # Full Vitest suite
+npm run docs:check       # Doc link + file-pointer integrity
+npm run build            # Production build
 ```
 
 ### Testing Scopes
 ```bash
-bun run test:unit        # Unit tests (tests/lib)
-bun run test:integration # Integration tests
-bun run test:e2e         # Playwright E2E (install first: bun run test:e2e:install)
-bun run test:assets      # Asset reachability smoke check
-bun run test:infra       # Infrastructure tests
-bun run test:py          # Python orchestrator tests
+npm run test:unit        # Unit tests (tests/lib)
+npm run test:integration # Integration tests
+npm run test:e2e         # Playwright E2E (install first: npm run test:e2e:install)
+npm run test:assets      # Asset reachability smoke check
+npm run test:infra       # Infrastructure tests
+npm run test:py          # Python orchestrator tests
 ```
 
 ### Security
 ```bash
 npm audit --omit=dev --audit-level=high   # Production dep audit
-bun run secret:scan      # Secret scanning
+npm run secret:scan      # Secret scanning
 ```
 
 ### Operations
 ```bash
-bun run smoke-test       # Post-deploy smoke tests
-bun run guardian:status  # Guardian health check
-bun run omnilink:health  # OmniLink health check
-bun run dr:test          # DR dry run
+npm run smoke-test       # Post-deploy smoke tests
+npm run guardian:status  # Guardian health check
+npm run omnilink:health  # OmniLink health check
+npm run dr:test          # DR dry run
 ```
 
 ### Simulation / Chaos
 ```bash
-bun run sim:chaos        # Chaos engineering run
-bun run sim:dry          # Dry run (no network)
-bun run sim:quick        # Quick simulation
+npm run sim:chaos        # Chaos engineering run
+npm run sim:dry          # Dry run (no network)
+npm run sim:quick        # Quick simulation
 ```
 
 ---
 
 ## Architecture Invariants — Never Break These
 
-1. **Package manager is bun.** Never commit changes that use `npm install` / `yarn install`.
+1. **Package manager is npm.** `npm ci` is the authoritative install path. Bun is allowed for local dev only.
 2. **Both lockfiles must stay committed.** `bun.lock` (installs) + `package-lock.json` (`npm audit` in CI).
 3. **`tsconfig.json` must be pure JSON.** No `//` or `/* */` comments — `JSON.parse` in the test suite will fail.
 4. **`ignoreDeprecations` must be `"5.0"`.** TypeScript 5.x rejects `"6.0"` with TS5103.
@@ -259,7 +259,66 @@ bun run sim:quick        # Quick simulation
 
 ---
 
+---
+
+## OmniBridge Integration
+
+OmniBridge is a bidirectional HMAC-signed sync layer connecting APEX-OmniHub (control plane)
+with SBBL-HQ (first production tenant). New developers should be aware of the following:
+
+### Validator
+
+The integration harness lives at:
+```
+integration-harness/lib/deterministic-validator.mjs
+```
+
+Run it with:
+```bash
+node integration-harness/lib/deterministic-validator.mjs
+```
+
+This is a zero-dependency 47-assertion validator that verifies HMAC parity, envelope shape,
+bidirectional HTTP simulation, risk-lane classification, latency budget, idempotency,
+tamper resistance, and clock-skew rejection.
+
+### Integration Documentation
+
+The full Alberta Innovates TDA validation report is at:
+```
+docs/integration/sbbl-omnihub-validation-2026-05-11.md
+```
+
+This report documents 4 gaps closed (P0/P0/P1/P2) and 139 assertions across 3 test layers.
+
+### Required Secrets
+
+To run the integration against live endpoints you need the following secrets in `.env.local`:
+
+| Secret | Description |
+|---|---|
+| `OMNIHUB_SIGNING_SECRET` | HMAC signing secret for outbound packets to SBBL-HQ |
+| `OMNIHUB_SYNC_URL` | SBBL-HQ sync endpoint URL |
+| `OMNIHUB_VERIFY_KEY` | Key used to verify inbound packets from SBBL-HQ |
+
+### Secret Scan Note
+
+`integration-harness/` is excluded from the secret scanner. All test HMAC fixture keys
+within the validator use the `test-` prefix to avoid false positives.
+
+---
+
+## Platform Version History
+
+| Version | Date | Key Change |
+|---|---|---|
+| v1.5.1 | 2026-05-07 | Zero tech-debt pass, Supabase security hardening |
+| v1.6.0 | 2026-05-08 | Armageddon live validation (2,399 Vitest + 891 Pytest + 21 E2E) |
+| v1.6.1 | 2026-05-11 | OTel CVE patch (GHSA-q7rr-3cgh-j5r3) + OmniBridge validation |
+
+---
+
 **Onboarding Owner:** Chief Platform Architect
-**Document Version:** 2.0.0
-**Last Updated:** 2026-05-06
+**Document Version:** v1.1.0
+**Last Updated:** 2026-05-11
 **Next Review:** Quarterly
