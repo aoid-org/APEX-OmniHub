@@ -1,6 +1,11 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.6.2 | LAST_UPDATED=2026-05-12 -->
 # Frontend Structure Map
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 This document maps the main frontend topology in `APEX-OmniHub`, with a visual artifact for quick onboarding and architecture reviews.
 
 ## Scope
@@ -28,7 +33,7 @@ The map focuses on the React/Vite application rooted under `apps/omnihub-site/` 
    - Core/support modules (`core`, `api`, `stores`, `utils`, `armageddon`, `lib/*`)
 
 4. **Edge Compute Layer (Root-level)**
-   - Vercel Edge CORS proxy (`api/cors.ts`)
+   - Vercel Edge CORS proxy (`api/cors.ts`) — LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical.
    - LRU media cache governor (`lib/media/EdgeCacheController.ts`)
    - Cloudflare Worker proxy (`edge/cors-proxy/edge-cors-proxy.js`)
 

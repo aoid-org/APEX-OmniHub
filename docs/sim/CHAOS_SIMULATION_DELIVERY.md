@@ -1,11 +1,17 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # 🎯 CHAOS SIMULATION FRAMEWORK - DELIVERY COMPLETE
 
+## Mandatory Simulation Disclaimer
+
+IMPORTANT:
+Chaos simulation results validate orchestration resilience and recovery behavior in controlled sandbox environments. These results are NOT representations of public production traffic volume or commercial customer load unless explicitly labeled VERIFIED LIVE EXECUTION.
+
+
 ## Mission Accomplished ✅
 
 **Delivered:** Deterministic, replayable chaos simulation framework for testing all 12 APEX apps under realistic failure conditions with autonomous isolation & recovery protocols.
 
-**Status:** ✅ **PRODUCTION READY**
+**Status:** ✅ **simulation-framework complete**
 **Branch:** `claude/root-cause-analysis-2Vvua`
 **Commits:** 2 (root cause analysis + chaos framework)
 **Total Lines:** ~6,800 lines (code + tests + docs)

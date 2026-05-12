@@ -1,6 +1,11 @@
 <!-- APEX_DOC_STAMP: VERSION=v10.1 | LAST_UPDATED=2026-05-11 -->
 # CI Runtime Gates
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 Canonical runtime: Node 24. Minimum supported runtime: Node 22. CI and release gates use `npm ci` and `npm run ...`; Bun is optional local tooling only.
 
 

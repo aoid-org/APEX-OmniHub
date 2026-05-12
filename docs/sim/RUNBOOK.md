@@ -2,6 +2,12 @@
 
 # Chaos Simulation RUNBOOK
 
+## Mandatory Simulation Disclaimer
+
+IMPORTANT:
+Chaos simulation results validate orchestration resilience and recovery behavior in controlled sandbox environments. These results are NOT representations of public production traffic volume or commercial customer load unless explicitly labeled VERIFIED LIVE EXECUTION.
+
+
 ## How to Run the APEX OmniHub Chaotic Client Simulation
 
 **Version:** 1.0

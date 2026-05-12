@@ -113,7 +113,7 @@ The "Trinity" connectivity layer:
 
 Client-side infrastructure for deterministic media delivery:
 
-- **Edge CORS Proxy**: (Historical) (Historical) Vercel Edge Function (`api/cors.ts`) — superseded by Cloudflare Pages Worker (`edge/cors-proxy/edge-cors-proxy.js`).
+- **Edge CORS Proxy**: (Historical) Vercel Edge Function (`api/cors.ts`) — superseded by Cloudflare Pages Worker (`edge/cors-proxy/edge-cors-proxy.js`). LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical.
 - **LRU Media Cache**: 250 MB ceiling with localStorage ledger eviction (`lib/media/EdgeCacheController.ts`).
 - **Cloudflare Worker**: Stateless CORS proxy at `edge/cors-proxy/edge-cors-proxy.js` for production CDN.
 - **Fail-Safe Design**: Every cache miss gracefully degrades to proxy URL — zero silent failures.

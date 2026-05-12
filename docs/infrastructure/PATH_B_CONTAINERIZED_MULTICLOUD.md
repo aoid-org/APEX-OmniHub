@@ -1,5 +1,21 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
 # PATH B: CONTAINERIZED MULTI-CLOUD
+
+## Canonical Provider Portability Status
+
+| Provider | Status |
+|---|---|
+| Cloudflare | VERIFIED |
+| Supabase | VERIFIED |
+| Temporal | VERIFIED |
+| Vite | VERIFIED |
+| AWS | PROPOSED |
+| Azure | PROPOSED |
+| GCP | PROPOSED |
+| On-prem | ARCHITECTURALLY POSSIBLE / UNVERIFIED |
+
+See `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for the authoritative claim taxonomy.
+
 **Alternative Implementation for OmniHub/TradeLine/APEX**
 
 **Status:** ⚠️ **ALTERNATIVE** (Maximum portability, higher complexity)
@@ -11,10 +27,10 @@
 **Strategy:** Migrate to containerized architecture with Kubernetes for true cloud-agnostic portability and maximum control.
 
 **Why This Path?**
-- ✅ **True Multi-Cloud:** Run on AWS, GCP, Azure, or on-premises without modification
+- ✅ **Provider portability design:** AWS, GCP, and Azure are PROPOSED targets; on-premises is ARCHITECTURALLY POSSIBLE / UNVERIFIED until live deployment evidence is cited
 - ✅ **Maximum Control:** Custom runtimes, fine-grained resource allocation
 - ✅ **No Vendor Lock-In:** Can migrate between clouds with Terraform changes only
-- ✅ **Enterprise-Ready:** Meets strict compliance requirements (on-prem, air-gapped)
+- ✅ **Enterprise-oriented design:** Compliance, on-prem, and air-gapped deployment paths require customer-specific validation
 - ✅ **Unlimited Scale:** No platform limits, scales to billions of users
 
 **When to Choose This Path:**

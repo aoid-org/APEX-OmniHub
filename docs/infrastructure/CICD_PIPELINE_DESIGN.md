@@ -1,5 +1,10 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
 # CI/CD PIPELINE DESIGN
+
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
 **Continuous Integration & Deployment for OmniHub/TradeLine/APEX**
 
 **Purpose:** Define automated pipelines for building, testing, and deploying OmniHub with operator-controlled safety gates.

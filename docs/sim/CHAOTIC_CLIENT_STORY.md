@@ -1,5 +1,11 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Chaotic Client Story: "Sarah's Terrible, Horrible, No Good, Very Bad Day"
+
+## Mandatory Simulation Disclaimer
+
+IMPORTANT:
+Chaos simulation results validate orchestration resilience and recovery behavior in controlled sandbox environments. These results are NOT representations of public production traffic volume or commercial customer load unless explicitly labeled VERIFIED LIVE EXECUTION.
+
 ## Full-System Integration Test - All 12 APEX Apps
 
 **Client:** Sarah Martinez (Sarah's Boutique)

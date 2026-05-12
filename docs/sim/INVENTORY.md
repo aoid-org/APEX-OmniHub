@@ -1,5 +1,11 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # APEX Ecosystem Inventory
+
+## Mandatory Simulation Disclaimer
+
+IMPORTANT:
+Chaos simulation results validate orchestration resilience and recovery behavior in controlled sandbox environments. These results are NOT representations of public production traffic volume or commercial customer load unless explicitly labeled VERIFIED LIVE EXECUTION.
+
 ## Chaotic Client Simulation - System Discovery
 **Date:** 2026-01-03
 **Repo:** apexbusiness-systems/APEX-OmniHub

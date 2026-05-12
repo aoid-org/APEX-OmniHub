@@ -1,6 +1,12 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.0-DOCS-LINK-RESTORE | LAST_UPDATED=2026-03-25 -->
 # Simulation Results Report
 
+## Mandatory Simulation Disclaimer
+
+IMPORTANT:
+Chaos simulation results validate orchestration resilience and recovery behavior in controlled sandbox environments. These results are NOT representations of public production traffic volume or commercial customer load unless explicitly labeled VERIFIED LIVE EXECUTION.
+
+
 This index exists to preserve historical documentation links that still point to `RESULTS_REPORT.md`.
 
 Use these canonical reports instead:

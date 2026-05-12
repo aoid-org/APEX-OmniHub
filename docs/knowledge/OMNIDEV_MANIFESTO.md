@@ -6,6 +6,11 @@ description: "Omniscient hyper-elite software engineering command center. Trigge
 
 # OmniDev
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 **Mission**: Enable 10x development velocity through omniscient software engineering mastery across all languages, frameworks, and domains.
 
 ## Decision Tree - Start Here

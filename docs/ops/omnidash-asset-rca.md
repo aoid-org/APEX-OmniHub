@@ -1,5 +1,10 @@
 # Incident RCA: OmniDash Asset Delivery Failure
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 **Date:** 2026-03-14
 **Status:** Fix implemented, deploy verification UNVERIFIED
 

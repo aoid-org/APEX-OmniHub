@@ -1,5 +1,26 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
 # PORTABILITY MATRIX
+
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
+## Canonical Provider Portability Status
+
+| Provider | Status |
+|---|---|
+| Cloudflare | VERIFIED |
+| Supabase | VERIFIED |
+| Temporal | VERIFIED |
+| Vite | VERIFIED |
+| AWS | PROPOSED |
+| Azure | PROPOSED |
+| GCP | PROPOSED |
+| On-prem | ARCHITECTURALLY POSSIBLE / UNVERIFIED |
+
+See `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for the authoritative claim taxonomy.
+
 **Multi-Cloud Swappable Components for OmniHub/TradeLine/APEX**
 
 **Purpose:** This document defines the **contract boundaries** for every infrastructure component, showing how to swap providers without changing application code.

@@ -1,5 +1,10 @@
 # APEX-OmniHub v1.6.0 — Release Readiness Report (FINAL, post-adversarial-audit)
 
+## Vercel Reference Classification
+
+LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
+
+
 **Date:** 2026-04-17
 **Branch:** `claude/setup-multi-project-env-c6DpV`
 **Head:** `c321e69`
