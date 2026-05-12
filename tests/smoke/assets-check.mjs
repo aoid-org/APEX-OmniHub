@@ -7,6 +7,7 @@
  * - manifest.webmanifest returning 401/403 (auth misconfiguration)
  * - Missing or broken favicon
  * - JS bundles not accessible
+ * - Login route or hero badge asset regressing in production
  *
  * @see docs/CI_RUNTIME_GATES.md
  */
@@ -71,6 +72,21 @@ async function checkAsset(url, description, expectStatus = 200) {
   }
 }
 
+function walkFiles(dir) {
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
+
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  return entries.flatMap((entry) => {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      return walkFiles(fullPath);
+    }
+    return [fullPath];
+  });
+}
+
 async function findFirstJsBundle() {
   const assetsDir = path.join(DIST_DIR, 'assets', 'js');
 
@@ -83,6 +99,19 @@ async function findFirstJsBundle() {
   return jsFile ? `/assets/js/${jsFile}` : null;
 }
 
+function findHeroBadgeAsset() {
+  const assetsDir = path.join(DIST_DIR, 'assets');
+  const badgeFile = walkFiles(assetsDir).find((filePath) =>
+    /^apex-badge-.*\.png$/.test(path.basename(filePath)),
+  );
+
+  if (!badgeFile) {
+    return null;
+  }
+
+  return `/${path.relative(DIST_DIR, badgeFile).split(path.sep).join('/')}`;
+}
+
 async function main() {
   console.log('\n📦 OmniLink APEX - Static Asset Access Check');
   console.log(`   Base URL: ${BASE_URL}`);
@@ -93,16 +122,27 @@ async function main() {
 
   const results = [];
 
-  // Critical assets that MUST return 200
+  // Critical assets and routes that MUST return 200
   const criticalAssets = [
     { path: '/manifest.webmanifest', description: 'PWA Manifest' },
     { path: '/favicon.ico', description: 'Favicon' },
+    { path: '/icon.png', description: 'Login icon' },
+    { path: '/login', description: 'Login route' },
     { path: '/', description: 'Index HTML' },
   ];
 
   for (const asset of criticalAssets) {
     const result = await checkAsset(`${BASE_URL}${asset.path}`, asset.description);
     results.push({ ...asset, ...result });
+  }
+
+  const heroBadgeAsset = findHeroBadgeAsset();
+  if (heroBadgeAsset) {
+    const result = await checkAsset(`${BASE_URL}${heroBadgeAsset}`, `Hero badge asset (${path.basename(heroBadgeAsset)})`);
+    results.push({ path: heroBadgeAsset, description: 'Hero badge asset', ...result });
+  } else {
+    log('fail', 'Hero badge asset: apex-badge-*.png not found in dist/assets');
+    results.push({ path: '/assets/apex-badge-*.png', description: 'Hero badge asset', status: 'fail' });
   }
 
   // Check a JS bundle if dist exists
