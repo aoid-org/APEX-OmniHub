@@ -85,20 +85,21 @@ function base64UrlToBytes(value) {
   } catch { return null; }
 }
 
-async function hmacSign(secret, data) {
-  const key = await crypto.subtle.importKey(
+async function importHmacKey(secret, usage) {
+  return crypto.subtle.importKey(
     'raw', encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
+    { name: 'HMAC', hash: 'SHA-256' }, false, [usage],
   );
+}
+
+async function hmacSign(secret, data) {
+  const key = await importHmacKey(secret, 'sign');
   const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(data));
   return base64UrlEncode(sig);
 }
 
 async function hmacVerify(secret, data, signatureB64Url) {
-  const key = await crypto.subtle.importKey(
-    'raw', encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' }, false, ['verify'],
-  );
+  const key = await importHmacKey(secret, 'verify');
   const sigBytes = base64UrlToBytes(signatureB64Url);
   if (!sigBytes) return false;
   return crypto.subtle.verify('HMAC', key, sigBytes, encoder.encode(data));
@@ -320,6 +321,11 @@ function T5_riskLaneParity() {
  * @param {import('node:http').ServerResponse} res
  * @returns {Promise<unknown | null>}
  */
+function respondJson(res, status, body) {
+  res.writeHead(status, { 'content-type': 'application/json' });
+  res.end(JSON.stringify(body));
+}
+
 async function readJsonBody(req, res) {
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
@@ -327,8 +333,7 @@ async function readJsonBody(req, res) {
   try {
     return JSON.parse(raw);
   } catch {
-    res.writeHead(400);
-    res.end(JSON.stringify({ error: 'invalid_json' }));
+    respondJson(res, 400, { error: 'invalid_json' });
     return null;
   }
 }
@@ -350,30 +355,28 @@ async function T6_httpSimulation() {
   // OmniHub receiver: emulates /api/omnibridge/sync (Pages Function)
   const omniHubServer = createServer(async (req, res) => {
     const sourceId = req.headers['x-omni-source'];
-    if (!sourceId) { res.writeHead(400, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: 'missing_source_header' })); return; }
+    if (!sourceId) { respondJson(res, 400, { error: 'missing_source_header' }); return; }
     const parsed = await readJsonBody(req, res);
     if (parsed === null) return;
-    if (!isSyncPacketEnvelope(parsed)) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid_envelope' })); return; }
+    if (!isSyncPacketEnvelope(parsed)) { respondJson(res, 400, { error: 'invalid_envelope' }); return; }
     const verify = await verifySyncPacket(parsed, SYNC_SECRET);
-    if (!verify.valid) { res.writeHead(verify.reason === 'expired' ? 400 : 401); res.end(JSON.stringify({ error: verify.reason })); return; }
+    if (!verify.valid) { respondJson(res, verify.reason === 'expired' ? 400 : 401, { error: verify.reason }); return; }
     omniRequestsReceived.push({ sourceId, packet: parsed.packet });
-    res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, packet_id: parsed.packet.packet_id }));
+    respondJson(res, 200, { ok: true, packet_id: parsed.packet.packet_id });
   });
 
   // SBBL receiver: emulates /webhooks/omnihub (Worker handler)
   const sbblServer = createServer(async (req, res) => {
     const cmdId = req.headers['x-omni-command-id'];
     const sig = req.headers['x-omni-signature'];
-    if (!cmdId || !sig) { res.writeHead(400); res.end(JSON.stringify({ error: 'missing_command_headers' })); return; }
+    if (!cmdId || !sig) { respondJson(res, 400, { error: 'missing_command_headers' }); return; }
     const parsed = await readJsonBody(req, res);
     if (parsed === null) return;
-    if (!parsed.command || typeof parsed.command !== 'object') { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid_envelope' })); return; }
+    if (!parsed.command || typeof parsed.command !== 'object') { respondJson(res, 400, { error: 'invalid_envelope' }); return; }
     const ok = await hmacVerify(CMD_SECRET, JSON.stringify(parsed.command), sig);
-    if (!ok) { res.writeHead(401); res.end(JSON.stringify({ error: 'bad_signature' })); return; }
+    if (!ok) { respondJson(res, 401, { error: 'bad_signature' }); return; }
     sbblCommandsReceived.push(parsed.command);
-    res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, command_id: parsed.command.command_id, accepted: true }));
+    respondJson(res, 200, { ok: true, command_id: parsed.command.command_id, accepted: true });
   });
 
   await new Promise((r) => omniHubServer.listen(0, '127.0.0.1', r));
