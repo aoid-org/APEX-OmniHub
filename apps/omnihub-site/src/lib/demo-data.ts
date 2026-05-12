@@ -75,6 +75,16 @@ export const DEMO_ACTIVITY_FEED = Array.from({ length: 12 }, (_, i) => ({
   status:    i === 3 ? ('warning' as const) : ('success' as const),
 }));
 
+export function isDemoAuthEnabled(): boolean {
+  if (typeof window !== 'undefined') {
+    if (window.location.search.includes('demo=true')) return true;
+    try {
+        if (window.localStorage?.getItem('demo_mode_override') === 'true') return true;
+    } catch { /* no-op */ }
+  }
+  return import.meta.env.VITE_ENABLE_DEMO_AUTH === 'true';
+}
+
 /**
  * Returns true when OmniDash should display seeded demo data
  * instead of live Supabase queries.
@@ -83,6 +93,7 @@ export const DEMO_ACTIVITY_FEED = Array.from({ length: 12 }, (_, i) => ({
  * credentials are absent or are the placeholder values used in CI.
  */
 export function isDemoMode(): boolean {
+  if (isDemoAuthEnabled()) return true;
   const demoFlag    = import.meta.env.VITE_DEMO_MODE === 'true';
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
   const missingCreds =

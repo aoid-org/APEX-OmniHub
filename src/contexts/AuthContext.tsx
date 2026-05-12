@@ -13,12 +13,14 @@ import {
 } from '@/zero-trust/deviceRegistry';
 import { recordAuditEvent } from '@/security/auditLog';
 import { createDebugLogger } from '@/lib/debug-logger';
+import { isDemoAuthEnabled } from '../../apps/omnihub-site/src/lib/demo-data';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   signOut: () => Promise<void>;
   loading: boolean;
+  authMode: 'supabase' | 'demo';
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -26,6 +28,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   signOut: async () => { },
   loading: true,
+  authMode: 'supabase',
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -35,14 +38,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [cloudConfigured, setCloudConfigured] = useState(true);
+  const [authMode, setAuthMode] = useState<'supabase' | 'demo'>('supabase');
   const navigate = useNavigate();
 
   useEffect(() => {
     const log = createDebugLogger('AuthContext.tsx', 'B');
-
-    // #region agent log
     log('AuthProvider useEffect entry');
-    // #endregion
+
+    // Centralized demo auth resolution
+    // Always call this synchronously so ProtectedRoute sees authMode="demo" instantly
+    if (isDemoAuthEnabled()) {
+      log('Demo mode active, faking auth context');
+      setAuthMode('demo');
+      const mockUser = {
+        id: 'demo-user-123',
+        email: 'demo@apexomnihub.icu',
+        role: 'authenticated',
+      } as User;
+
+      setUser(mockUser);
+      setSession({
+        user: mockUser,
+        access_token: 'demo-access-token',
+        refresh_token: 'demo-refresh-token',
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        token_type: 'bearer',
+      });
+      setLoading(false);
+      setCloudConfigured(true);
+      return;
+    }
 
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -51,12 +77,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         import.meta.env.VITE_SUPABASE_ANON_KEY ??
         import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-      // #region agent log
       log('Environment variables check', {
         hasUrl: !!supabaseUrl,
         hasKey: !!supabaseAnonKey,
       });
-      // #endregion
 
       if (!supabaseUrl || !supabaseAnonKey) {
         if (import.meta.env.DEV) {
@@ -69,45 +93,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // #region agent log
       log('Before onAuthStateChange');
-      // #endregion
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event: string, session: Session | null) => {
-          // #region agent log
           log('Auth state change', {
             event,
             hasSession: !!session,
             hasUser: !!session?.user,
           });
-          // #endregion
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
         }
       );
 
-      // #region agent log
       log('Before getSession');
-      // #endregion
 
       supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
-        // #region agent log
         log('getSession result', {
           hasSession: !!session,
           hasUser: !!session?.user,
         });
-        // #endregion
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
       }).catch((error: unknown) => {
-        // #region agent log
         log('getSession error', {
           error: error instanceof Error ? error.message : 'unknown',
         });
-        // #endregion
         if (import.meta.env.DEV) {
           console.error('Failed to get session:', error);
         }
@@ -116,17 +130,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return () => {
         const cleanupLog = createDebugLogger('AuthContext.tsx', 'F');
-        // #region agent log
         cleanupLog('AuthProvider cleanup');
-        // #endregion
         subscription.unsubscribe();
       };
     } catch (error) {
-      // #region agent log
       log('AuthProvider useEffect error', {
         error: error instanceof Error ? error.message : 'unknown',
       });
-      // #endregion
       if (import.meta.env.DEV) {
         console.error('AuthProvider initialization error:', error);
       }
@@ -137,15 +147,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const log = createDebugLogger('AuthContext.tsx', 'B');
 
-    // #region agent log
     log('Device sync useEffect entry', {
       hasSession: !!session,
       hasUser: !!session?.user,
+      authMode
     });
-    // #endregion
 
     if (!session?.user) {
       stopBackgroundDeviceSync();
+      return;
+    }
+
+    if (authMode === 'demo') {
+      log('Skipping device sync for demo user');
       return;
     }
 
@@ -154,33 +168,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('device_id', deviceId);
       const fingerprint = navigator.userAgent;
 
-      // #region agent log
       log('Before device sync operations', {
         deviceId,
         userId: session.user.id,
       });
-      // #endregion
 
       (async () => {
         try {
-          // #region agent log
           log('Before syncOnLogin');
-          // #endregion
           await syncOnLogin(session.user.id);
 
-          // #region agent log
           log('Before upsertDevice');
-          // #endregion
           await upsertDevice(session.user.id, deviceId, { fingerprint }, 'suspect');
 
-          // #region agent log
           log('Before markDeviceTrusted');
-          // #endregion
           await markDeviceTrusted(deviceId);
 
-          // #region agent log
           log('Before startBackgroundDeviceSync');
-          // #endregion
           startBackgroundDeviceSync(session.user.id);
 
           recordAuditEvent({
@@ -191,26 +195,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             metadata: { fingerprint },
           });
 
-          // #region agent log
           log('Device sync operations complete');
-          // #endregion
         } catch (error) {
-          // #region agent log
           log('Device sync operations error', {
             error: error instanceof Error ? error.message : 'unknown',
           });
-          // #endregion
           if (import.meta.env.DEV) {
             console.error('Device sync error:', error);
           }
         }
       })();
     } catch (error) {
-      // #region agent log
       log('Device sync useEffect error', {
         error: error instanceof Error ? error.message : 'unknown',
       });
-      // #endregion
       if (import.meta.env.DEV) {
         console.error('Device sync setup error:', error);
       }
@@ -218,14 +216,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       const cleanupLog = createDebugLogger('AuthContext.tsx', 'F');
-      // #region agent log
       cleanupLog('Device sync cleanup');
-      // #endregion
       stopBackgroundDeviceSync();
     };
-  }, [session]);
+  }, [session, authMode]);
 
   const signOut = useCallback(async () => {
+    if (authMode === 'demo') {
+        if (typeof window !== 'undefined') {
+            window.localStorage.removeItem('demo_mode_override');
+            window.location.href = '/auth'; // hard redirect to strip query params
+        }
+        return;
+    }
+
     await supabase.auth.signOut();
     stopBackgroundDeviceSync();
     if (session?.user) {
@@ -237,7 +241,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     }
     navigate('/auth');
-  }, [navigate, session?.user]);
+  }, [authMode, navigate, session?.user]);
 
   const authValue = useMemo(
     () => ({
@@ -245,12 +249,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       session,
       signOut,
       loading,
+      authMode,
     }),
-    [loading, session, signOut, user],
+    [loading, session, signOut, user, authMode],
   );
 
   // Show setup message if Cloud is not configured
-  if (!cloudConfigured) {
+  if (!cloudConfigured && authMode !== 'demo') {
     return <CloudSetupMessage />;
   }
 

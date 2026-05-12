@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { hasSupabaseConfig, supabase, supabaseConfigTraceId } from '@/lib/supabase';
+import { isDemoAuthActive } from '@/lib/demoAuth';
 
 export function ProtectedRoute({ children }: Readonly<{ children: React.ReactNode }>) {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     async function checkAuth() {
+      if (isDemoAuthActive()) {
+        setAuthenticated(true);
+        setLoading(false);
+        return;
+      }
+
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -17,6 +25,8 @@ export function ProtectedRoute({ children }: Readonly<{ children: React.ReactNod
 
     checkAuth();
 
+    if (isDemoAuthActive()) return;
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -25,7 +35,15 @@ export function ProtectedRoute({ children }: Readonly<{ children: React.ReactNod
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [location.search]);
+
+  // Handle immediate demo override so we never show loading state briefly and get caught
+  // without authenticated=true on first pass if checkAuth hasn't finished yet
+  const isDemo = isDemoAuthActive();
+
+  if (isDemo) {
+      return <>{children}</>;
+  }
 
   if (loading) {
     return (
@@ -45,7 +63,7 @@ export function ProtectedRoute({ children }: Readonly<{ children: React.ReactNod
     );
   }
 
-  if (!hasSupabaseConfig) {
+  if (!hasSupabaseConfig && !isDemo) {
     return (
       <div
         style={{

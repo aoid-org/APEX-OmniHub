@@ -1,19 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/**
- * Playwright configuration for OmniLink APEX runtime smoke tests.
- *
- * These tests validate that the deployed app actually renders
- * and critical assets are accessible - catching issues like:
- * - React context duplication (createContext errors)
- * - 401/403 on manifest.webmanifest
- * - Blank page deployments
- *
- * CI runs chromium-only for reliability (Firefox/WebKit require OS-level
- * dependencies that aren't available on all CI runners). Full cross-browser
- * testing runs locally.
- */
-
 const isCI = !!process.env.CI;
 
 const allProjects = [
@@ -50,8 +36,6 @@ const allProjects = [
   },
 ];
 
-// CI: chromium-based projects only (chromium + mobile-chrome)
-// Local: all browsers including Firefox and WebKit
 const ciProjects = allProjects.filter((p) =>
   ['chromium', 'mobile-chrome'].includes(p.name),
 );
@@ -64,7 +48,6 @@ export default defineConfig({
   workers: isCI ? 1 : undefined,
   reporter: 'html',
 
-  // Fast timeout for smoke tests
   timeout: 30_000,
   expect: {
     timeout: 10_000,
@@ -78,12 +61,10 @@ export default defineConfig({
 
   projects: isCI ? ciProjects : allProjects,
 
-  // Start preview server before running tests (only if BASE_URL not provided)
-  // In CI, the workflow manages the server manually
   webServer: process.env.BASE_URL ? undefined : {
-    command: 'npm run build && npm run preview',
+    command: 'VITE_ENABLE_DEMO_AUTH=true VITE_DEMO_MODE=true npm run build && VITE_ENABLE_DEMO_AUTH=true VITE_DEMO_MODE=true npm run preview',
     url: 'http://localhost:4173',
     reuseExistingServer: true,
-    timeout: 300_000, // 5 minutes for build + preview startup
+    timeout: 300_000,
   },
 });
