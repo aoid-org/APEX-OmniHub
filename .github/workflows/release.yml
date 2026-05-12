@@ -3,6 +3,8 @@ name: Release
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -13,9 +15,49 @@ env:
   PRODUCTION_SITE_URL: https://apexomnihub.icu
 
 jobs:
+  pr_validation:
+    name: PR Validation
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build
+        run: npm run build
+
+      - name: Validate workflow syntax
+        run: |
+          python3 -c "import yaml; yaml.safe_load(open('.github/workflows/release.yml'))"
+
+      - name: Deterministic Validator CI Gate (Sim Mode)
+        run: node integration-harness/lib/deterministic-validator.mjs
+        env:
+          SIM_MODE: "true"
+          TARGET_URL: "http://localhost:8001"
+
+      - name: Terraform Fmt & Plan
+        run: |
+          if [ -d "terraform/environments/production" ]; then
+            cd terraform/environments/production
+            terraform init -backend=false
+            terraform fmt -check
+            if [ -n "${{ secrets.TF_VAR_CLOUDFLARE_API_TOKEN }}" ]; then
+               terraform plan -var="target_slot=production-shadow"
+            else
+               echo "Skipping terraform plan due to missing secrets."
+            fi
+          fi
+
   release:
     name: Release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       contents: write
       pull-requests: write
@@ -80,7 +122,6 @@ jobs:
       - name: Atomic Routing Flip (Promote to Active)
         if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true' && vars.ENABLE_ATOMIC_ROUTING_FLIP == 'true'
         run: |
-          echo "Executing atomic DNS/LB flip..."
           cd terraform/environments/production
           terraform init
           terraform apply -auto-approve -var="target_slot=production-shadow"

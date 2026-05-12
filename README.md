@@ -14,12 +14,7 @@
 
 **Version:** 1.6.0 | **Release Date:** 2026-05-08
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
-[![SonarQube](https://img.shields.io/badge/sonarqube-A-success)]()
-[![Tests](https://img.shields.io/badge/tests-3584%2B%20pass-brightgreen)]()
-[![Armageddon](https://img.shields.io/badge/armageddon-L7%20CERTIFIED-gold)]()
-[![License](https://img.shields.io/badge/license-proprietary-red)]()
+[![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 
 ---
 
@@ -28,8 +23,7 @@
 **Before touching code, read the canonical architecture map:**
 
 - [ARCHITECTURE_CANONICAL_MAP.md](./docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
-- [Production Status (Current)](./docs/project-status/PRODUCTION_STATUS.md)
-- [Production Status Brief 04252006](./docs/project-status/PRODUCTION_STATUS_04252006.md)
+- [Production Certification Status (Current)](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)
 
 ---
 
@@ -144,7 +138,6 @@ Client-side infrastructure for deterministic media delivery:
 
 ---
 
-
 ### Runtime and release authority
 
 APEX OmniHub now treats Node 24 as the canonical CI/runtime target, with Node 22 as the minimum supported version. The authoritative release path is npm-based: `npm ci` and `npm run ...`. Bun remains optional for local convenience only; `package-lock.json` is the release lockfile and `bun.lock` is retained for parity evidence, not CI authority. See `docs/runtime/ENTERPRISE_CONTROL_PLANE.md`.
@@ -156,7 +149,6 @@ APEX OmniHub now treats Node 24 as the canonical CI/runtime target, with Node 22
 /dashboard/OmniDashShell.tsx  -  Unified dashboard Shell / layout
 /apps/omnihub-site/dashboard/components/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
 /src/omnidash/uiRegistry.ts  -   UI registry wiring
-
 
 /supabase/migrations - Database schema (50+ versioned SQL migrations)
 /supabase/functions  - Edge functions (22 serverless endpoints)
