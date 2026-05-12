@@ -1016,7 +1016,8 @@ class AgentWorkflow:
         # RED lane: defer action and send to a Manual Approval Node checkpoint (non-blocking)
         if lane == "RED":
             workflow.logger.warning(
-                f"  🛑 MAN Mode: Deferring {step['tool']} - sent to a Manual Approval Node checkpoint"
+                "  🛑 MAN Mode: Deferring %s - sent to a Manual Approval Node checkpoint",
+                step["tool"],
             )
 
             # Create MAN task in database for Manual Approval Node review
