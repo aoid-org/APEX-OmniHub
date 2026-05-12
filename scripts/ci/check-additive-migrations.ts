@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 // Fix for ES Modules in raw bun execution
 const scriptDir = new URL('.', import.meta.url).pathname;
@@ -26,7 +26,7 @@ for (const file of targetMigrations) {
   const lines = content.split('\n');
   const codeLines = lines.map(line => {
     const commentIdx = line.indexOf('--');
-    return commentIdx !== -1 ? line.substring(0, commentIdx) : line;
+    return commentIdx === -1 ? line : line.substring(0, commentIdx);
   });
 
   const cleanContent = codeLines.join('\n');
