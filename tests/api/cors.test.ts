@@ -126,6 +126,21 @@ describe('api/cors - isPrivateOrReservedIp', () => {
     expect(isPrivateOrReservedIp('2001:4860:4860::8888')).toBe(false); // NOSONAR
   });
 
+  it('blocks non-standard IPv4 formats (SSRF bypass vectors)', () => {
+    expect(isPrivateOrReservedIp('127.1')).toBe(true); // Decimal loopback
+    expect(isPrivateOrReservedIp('2130706433')).toBe(true); // DWORD loopback
+    expect(isPrivateOrReservedIp('0x7f000001')).toBe(true); // Hex loopback
+    expect(isPrivateOrReservedIp('0177.0.0.1')).toBe(true); // Octal loopback
+  });
+
+  it('blocks IPv4-mapped and IPv4-compatible IPv6 addresses', () => {
+    expect(isPrivateOrReservedIp('::ffff:127.0.0.1')).toBe(true);
+    expect(isPrivateOrReservedIp('[::ffff:127.0.0.1]')).toBe(true);
+    expect(isPrivateOrReservedIp('::ffff:7f00:1')).toBe(true); // Normalized hex
+    expect(isPrivateOrReservedIp('::127.0.0.1')).toBe(true);
+    expect(isPrivateOrReservedIp('::ffff:10.0.0.1')).toBe(true);
+  });
+
   it('ignores invalid formats', () => {
     expect(isPrivateOrReservedIp('not-an-ip')).toBe(false);
     expect(isPrivateOrReservedIp('1.2.3')).toBe(false);
