@@ -63,6 +63,23 @@ export default defineConfig(
       ],
     },
   },
+
+  // OmniDashShell sidebar must consume the dedicated widget rail contract.
+  {
+    files: ['apps/omnihub-site/dashboard/OmniDashShell.tsx'],
+    rules: {
+      'no-restricted-syntax': ['error',
+        {
+          selector: "VariableDeclarator[id.name='NAV']",
+          message: 'Do not define local OmniDash sidebar NAV. Import OMNIDASH_SIDEBAR_WIDGETS from apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts.',
+        },
+        {
+          selector: "VariableDeclarator[id.name='NAV_MODULE_KEY']",
+          message: 'Do not define local OmniDash sidebar module maps. Use the sidebar widget contract moduleKey.',
+        },
+      ],
+    },
+  },
   // Infrastructure & connectors: console.log guarded by import.meta.env.DEV,
   // console.warn/error used for operational diagnostics. All production-safe.
   {
