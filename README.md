@@ -14,11 +14,10 @@
 
 **Version:** 1.6.0 | **Release Date:** 2026-05-08
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
-[![SonarQube](https://img.shields.io/badge/sonarqube-A-success)]()
-[![Tests](https://img.shields.io/badge/tests-3584%2B%20pass-brightgreen)]()
-[![Armageddon](https://img.shields.io/badge/armageddon-L7%20CERTIFIED-gold)]()
+[![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
+[![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
+[![Orchestrator CI](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml)
+[![Security Regression Guard](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/security-regression-guard.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/security-regression-guard.yml)
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 
 ---

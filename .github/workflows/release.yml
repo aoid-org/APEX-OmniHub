@@ -38,7 +38,7 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts
+        run: bun install --frozen-lockfile
 
       - name: Create Release PR or Publish
         id: changesets
@@ -51,42 +51,149 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy to Shadow-Stage (production-shadow)
-        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true'
+      - name: Deploy to Shadow Slot (Cloudflare Pages)
+        if: |
+          steps.changesets.outputs.published == 'true' &&
+          vars.ENABLE_SHADOW_DEPLOYMENT == 'true' &&
+          secrets.CLOUDFLARE_API_TOKEN != '' &&
+          secrets.CLOUDFLARE_ACCOUNT_ID != '' &&
+          vars.CLOUDFLARE_SHADOW_PROJECT_NAME != ''
+        id: shadow_deploy
         run: |
-          echo "Deploying frontend to shadow slot..."
-          npm run build -- --outDir dist/shadow
-          # Shadow-slot backend smoke target.
-          echo "Deploying Python orchestrator to shadow slot..."
-          cd orchestrator && pkill -f shadow || true && python -m uvicorn main:app --host 0.0.0.0 --port 8001 &
+          echo "Building frontend for shadow deployment..."
+          bun run build
+          echo "Deploying to Cloudflare Pages shadow slot: ${{ vars.CLOUDFLARE_SHADOW_PROJECT_NAME }}"
+          npx --yes wrangler@latest pages deploy dist \
+            --project-name="${{ vars.CLOUDFLARE_SHADOW_PROJECT_NAME }}" \
+            --commit-dirty=true \
+            2>&1 | tee shadow-deploy.log
+          SHADOW_URL=$(grep -oP 'https://[^\s]+\.pages\.dev' shadow-deploy.log | head -1 || echo "")
+          echo "shadow_url=${SHADOW_URL}" >> "$GITHUB_OUTPUT"
+          echo "Shadow deployment URL: ${SHADOW_URL}"
         env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           VITE_SITE_URL: ${{ env.PRODUCTION_SITE_URL }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
-      - name: Deterministic Validator CI Gate
-        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true'
-        run: node integration-harness/lib/deterministic-validator.mjs
-        env:
-          TARGET_URL: http://localhost:8001
-
-      - name: Skip shadow deployment until slot config is explicitly enabled
-        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT != 'true'
+      - name: Shadow Health Check
+        if: steps.shadow_deploy.outputs.shadow_url != ''
+        id: shadow_health
         run: |
-          echo "Skipping shadow deployment and routing flip."
-          echo "Set repository variable ENABLE_SHADOW_DEPLOYMENT=true only after the Cloudflare Pages shadow slot is provisioned and verified."
+          SHADOW_URL="${{ steps.shadow_deploy.outputs.shadow_url }}"
+          echo "Polling ${SHADOW_URL}/health ..."
+          MAX_ATTEMPTS=10
+          WAIT=10
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "${SHADOW_URL}/health" || echo "000")
+            echo "Attempt $i/${MAX_ATTEMPTS}: HTTP ${HTTP_STATUS}"
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "health_result=pass" >> "$GITHUB_OUTPUT"
+              echo "Shadow health: PASS"
+              exit 0
+            fi
+            sleep $WAIT
+          done
+          echo "health_result=fail" >> "$GITHUB_OUTPUT"
+          echo "::error::Shadow health check failed after ${MAX_ATTEMPTS} attempts."
+          exit 1
+
+      - name: Deterministic Validator CI Gate
+        if: steps.shadow_health.outputs.health_result == 'pass'
+        id: validator
+        run: |
+          node integration-harness/lib/deterministic-validator.mjs
+          echo "validator_result=pass" >> "$GITHUB_OUTPUT"
+        env:
+          TARGET_URL: ${{ steps.shadow_deploy.outputs.shadow_url }}
+
+      - name: Skip shadow deployment — slot not provisioned
+        if: |
+          steps.changesets.outputs.published == 'true' &&
+          vars.ENABLE_SHADOW_DEPLOYMENT != 'true'
+        run: |
+          echo "Skipping shadow deployment: ENABLE_SHADOW_DEPLOYMENT is not 'true'."
+          echo "To enable: provision a Cloudflare Pages shadow slot and set repository variables."
+          echo "See docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md for requirements."
+
+      - name: Terraform Plan (shadow validated)
+        if: |
+          steps.changesets.outputs.published == 'true' &&
+          vars.ENABLE_SHADOW_DEPLOYMENT == 'true' &&
+          vars.ENABLE_ATOMIC_ROUTING_FLIP == 'true' &&
+          steps.validator.outputs.validator_result == 'pass'
+        id: tf_plan
+        run: |
+          cd terraform/environments/production
+          terraform init -input=false
+          terraform plan -input=false -out=tfplan -var="target_slot=production-shadow"
+          echo "tf_plan_result=pass" >> "$GITHUB_OUTPUT"
+        env:
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
 
       - name: Atomic Routing Flip (Promote to Active)
-        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true' && vars.ENABLE_ATOMIC_ROUTING_FLIP == 'true'
+        if: steps.tf_plan.outputs.tf_plan_result == 'pass'
+        environment: production-shadow
         run: |
-          echo "Executing atomic DNS/LB flip..."
+          echo "Executing Terraform apply with plan artifact..."
           cd terraform/environments/production
-          terraform init
-          terraform apply -auto-approve -var="target_slot=production-shadow"
+          terraform apply -input=false tfplan
+        env:
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
 
-      - name: Skip atomic routing flip until explicitly enabled
-        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true' && vars.ENABLE_ATOMIC_ROUTING_FLIP != 'true'
+      - name: Skip atomic routing flip — prerequisites not met
+        if: |
+          steps.changesets.outputs.published == 'true' &&
+          (vars.ENABLE_SHADOW_DEPLOYMENT != 'true' || vars.ENABLE_ATOMIC_ROUTING_FLIP != 'true')
         run: |
-          echo "Shadow deployment completed."
-          echo "Skipping routing flip because ENABLE_ATOMIC_ROUTING_FLIP is not true."
+          echo "Skipping routing flip."
+          echo "ENABLE_SHADOW_DEPLOYMENT=${{ vars.ENABLE_SHADOW_DEPLOYMENT }}"
+          echo "ENABLE_ATOMIC_ROUTING_FLIP=${{ vars.ENABLE_ATOMIC_ROUTING_FLIP }}"
+
+      - name: Upload release evidence
+        if: steps.changesets.outputs.published == 'true' || always()
+        run: |
+          SHADOW_URL="${{ steps.shadow_deploy.outputs.shadow_url || '' }}"
+          HEALTH="${{ steps.shadow_health.outputs.health_result || 'skipped' }}"
+          VALIDATOR="${{ steps.validator.outputs.validator_result || 'skipped' }}"
+          TF_RESULT="${{ steps.tf_plan.outputs.tf_plan_result || 'skipped' }}"
+          PUBLISHED="${{ steps.changesets.outputs.published }}"
+
+          if [ -z "$SHADOW_URL" ]; then
+            SHADOW_VERDICT="SHADOW_NOT_PROVISIONED"
+          elif [ "$HEALTH" = "pass" ] && [ "$VALIDATOR" = "pass" ]; then
+            SHADOW_VERDICT="SHADOW_VALIDATED"
+          else
+            SHADOW_VERDICT="SHADOW_FAILED"
+          fi
+
+          if [ "$PUBLISHED" = "true" ] && [ "$SHADOW_VERDICT" = "SHADOW_VALIDATED" ]; then
+            FINAL_VERDICT="CERTIFICATION_PENDING_FINAL_MAIN_CI"
+          else
+            FINAL_VERDICT="NOT_CERTIFIED_BLOCKED"
+          fi
+
+          cat > release-evidence.json <<EOF
+          {
+            "commit_sha": "${{ github.sha }}",
+            "workflow_run_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "published": "$PUBLISHED",
+            "shadow_url": "$SHADOW_URL",
+            "health_result": "$HEALTH",
+            "validator_result": "$VALIDATOR",
+            "terraform_result": "$TF_RESULT",
+            "final_verdict": "$FINAL_VERDICT",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+          cat release-evidence.json
+
+      - name: Upload release-evidence artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-evidence
+          path: release-evidence.json
+          retention-days: 90
