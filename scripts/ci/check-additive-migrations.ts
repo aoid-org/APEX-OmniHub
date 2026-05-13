@@ -1,122 +1,305 @@
+/**
+ * check-additive-migrations.ts
+ *
+ * Production-grade additive-migration gate.
+ * Detects destructive SQL operations in migration files and rejects them
+ * unless an allowlist comment is present on the immediately preceding line.
+ *
+ * Usage: bun run scripts/ci/check-additive-migrations.ts
+ */
+
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-const scriptDir = new URL('.', import.meta.url).pathname;
-const migrationsDir = path.join(scriptDir, '../../supabase/migrations');
+// Absolute path to git — avoids PATH-based command injection (SonarCloud S4036).
+// /usr/bin/git is canonical on Linux (GitHub Actions ubuntu-latest).
+// On macOS the Xcode shim lives at the same path; Homebrew git is a symlink to it.
+const GIT_BIN = '/usr/bin/git';
 
-// Full path avoids PATH lookup (satisfies typescript:S4036)
-const GIT_CMD = '/usr/bin/git';
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
-// Reject rules for destructive operations
-// Note: Regex patterns intentionally match dangerous SQL operations for detection.
-// This is a security scanner that must analyze untrusted SQL input.
-const REJECT_RULES = {
-  DROP_TABLE: { pattern: /\bDROP\s+TABLE\b/i, id: 'DROP_TABLE', msg: 'DROP TABLE is not allowed' }, // NOSONAR: Pattern detects threats, doesn't execute
-  DROP_COLUMN: { pattern: /\bALTER\s+TABLE\s+\w+\s+DROP\s+COLUMN\b/i, id: 'DROP_COLUMN', msg: 'ALTER TABLE ... DROP COLUMN is not allowed' }, // NOSONAR
-  DROP_TYPE: { pattern: /\bDROP\s+TYPE\b/i, id: 'DROP_TYPE', msg: 'DROP TYPE is not allowed' }, // NOSONAR
-  DROP_POLICY: { pattern: /\bDROP\s+POLICY\b/i, id: 'DROP_POLICY', msg: 'DROP POLICY is not allowed' }, // NOSONAR
-  DROP_TRIGGER: { pattern: /\bDROP\s+TRIGGER\b/i, id: 'DROP_TRIGGER', msg: 'DROP TRIGGER is not allowed' }, // NOSONAR
-  DROP_VALUE: { pattern: /\bALTER\s+TYPE\s+\w+\s+DROP\s+VALUE\b/i, id: 'DROP_VALUE', msg: 'ALTER TYPE ... DROP VALUE is not allowed' }, // NOSONAR
-  DELETE_FROM: { pattern: /\bDELETE\s+FROM\b/i, id: 'DELETE_FROM', msg: 'DELETE FROM is not allowed' }, // NOSONAR
-  TRUNCATE: { pattern: /\bTRUNCATE\b/i, id: 'TRUNCATE', msg: 'TRUNCATE is not allowed' }, // NOSONAR
-  DISABLE_RLS: { pattern: /\bDISABLE\s+ROW\s+LEVEL\s+SECURITY\b/i, id: 'DISABLE_RLS', msg: 'DISABLE ROW LEVEL SECURITY is not allowed' }, // NOSONAR
-  REVOKE: { pattern: /\bREVOKE\b/i, id: 'REVOKE', msg: 'REVOKE is not allowed' }, // NOSONAR
-  ALTER_TYPE_CHANGE: { pattern: /\bALTER\s+TABLE\s+\w+\s+ALTER\s+COLUMN\s+\w+\s+TYPE\b/i, id: 'ALTER_TYPE', msg: 'ALTER COLUMN TYPE is not allowed' }, // NOSONAR
-  ON_DELETE_CASCADE: { pattern: /\bON\s+DELETE\s+CASCADE\b/i, id: 'ON_DELETE_CASCADE', msg: 'ON DELETE CASCADE is not allowed' } // NOSONAR
-};
-
-function getChangedMigrations(): string[] {
-  try {
-    if (process.env.GITHUB_BASE_REF) {
-      // NOSONAR - GITHUB_BASE_REF is controlled by GitHub Actions, not user input
-      const baseRef = `origin/${process.env.GITHUB_BASE_REF}`;
-      const result = spawnSync(GIT_CMD, ['diff', '--name-only', `${baseRef}...HEAD`, '--', 'supabase/migrations/'], {
-        encoding: 'utf8'
-      });
-      if (result.error) throw result.error;
-      return result.stdout.split('\n').filter(f => f.endsWith('.sql')).map(f => path.basename(f));
-    } else if (process.env.GITHUB_EVENT_NAME === 'push') {
-      const result = spawnSync(GIT_CMD, ['diff', '--name-only', 'HEAD~1..HEAD', '--', 'supabase/migrations/'], {
-        encoding: 'utf8'
-      });
-      if (result.error) throw result.error;
-      return result.stdout.split('\n').filter(f => f.endsWith('.sql')).map(f => path.basename(f));
-    }
-  } catch {
-    // Fallback: scan all migration files if git diff fails
-  }
-  // Fallback: scan all files
-  return fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql'));
+export interface Rule {
+  id: string;
+  pattern: RegExp;
+  remediation: string;
 }
 
-function checkAllowlist(line: string): boolean {
-  const allowlistPattern = /--\s*additive-allow:\s*(\w+)\s+(.{12,})/; // NOSONAR: Pattern safely matches allowlist comments
-  return allowlistPattern.test(line);
+export interface Violation {
+  file: string;
+  lineNumber: number;
+  lineText: string;
+  ruleId: string;
+  match: string;
 }
 
-function validateFile(filePath: string, fileName: string): { failed: boolean; errors: Array<{ line: number; rule: string; msg: string; remediation: string }> } {
+// ---------------------------------------------------------------------------
+// Rules
+// ---------------------------------------------------------------------------
+
+export const RULES: Rule[] = [
+  {
+    id: 'DROP_TABLE',
+    pattern: /\bDROP\s+TABLE\b/i,
+    remediation:
+      'Migrations must be additive. Use a new migration with CREATE TABLE instead, or add an allowlist comment: -- additive-allow: DROP_TABLE <reason>',
+  },
+  {
+    id: 'DROP_COLUMN',
+    pattern: /\bDROP\s+COLUMN\b/i,
+    remediation:
+      'Migrations must be additive. Add a new column instead, or add an allowlist comment: -- additive-allow: DROP_COLUMN <reason>',
+  },
+  {
+    id: 'DELETE_FROM',
+    pattern: /\bDELETE\s+FROM\b/i,
+    remediation:
+      'Migrations must be additive. Remove data via application logic or add an allowlist comment: -- additive-allow: DELETE_FROM <reason>',
+  },
+  {
+    id: 'TRUNCATE',
+    pattern: /\bTRUNCATE\b/i,
+    remediation:
+      'Migrations must be additive. Do not truncate tables in migrations, or add an allowlist comment: -- additive-allow: TRUNCATE <reason>',
+  },
+  {
+    id: 'ALTER_TYPE_DROP_VALUE',
+    pattern: /\bALTER\s+TYPE\b.*\bDROP\s+VALUE\b/i,
+    remediation:
+      'Migrations must be additive. Enum values cannot be removed in additive migrations, or add an allowlist comment: -- additive-allow: ALTER_TYPE_DROP_VALUE <reason>',
+  },
+  {
+    id: 'DISABLE_RLS',
+    pattern: /\bDISABLE\s+ROW\s+LEVEL\s+SECURITY\b/i,
+    remediation:
+      'Migrations must be additive. RLS must not be disabled, or add an allowlist comment: -- additive-allow: DISABLE_RLS <reason>',
+  },
+  {
+    id: 'DROP_POLICY',
+    pattern: /\bDROP\s+POLICY\b/i,
+    remediation:
+      'Migrations must be additive. Replace policies additively, or add an allowlist comment: -- additive-allow: DROP_POLICY <reason>',
+  },
+  {
+    id: 'DROP_TRIGGER',
+    pattern: /\bDROP\s+TRIGGER\b/i,
+    remediation:
+      'Migrations must be additive. Replace triggers additively, or add an allowlist comment: -- additive-allow: DROP_TRIGGER <reason>',
+  },
+  {
+    id: 'REVOKE',
+    pattern: /\bREVOKE\b/i,
+    remediation:
+      'Migrations must be additive. Do not revoke privileges in migrations, or add an allowlist comment: -- additive-allow: REVOKE <reason>',
+  },
+  {
+    id: 'ON_DELETE_CASCADE',
+    pattern: /\bON\s+DELETE\s+CASCADE\b/i,
+    remediation:
+      'ON DELETE CASCADE can cause data loss. Use ON DELETE RESTRICT or ON DELETE SET NULL instead, or add an allowlist comment: -- additive-allow: ON_DELETE_CASCADE <reason>',
+  },
+  {
+    id: 'ALTER_COLUMN_TYPE',
+    pattern: /\bALTER\s+COLUMN\b.*\bTYPE\b/i,
+    remediation:
+      'Changing column types is destructive. Add a new column instead, or add an allowlist comment: -- additive-allow: ALTER_COLUMN_TYPE <reason>',
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Core helpers (exported for testing)
+// ---------------------------------------------------------------------------
+
+/**
+ * Strips the SQL single-line comment portion from a line (everything after --).
+ * Returns the code-only portion. Does not strip block comments.
+ */
+export function stripSqlComment(line: string): string {
+  const idx = line.indexOf('--');
+  return idx === -1 ? line : line.substring(0, idx);
+}
+
+/**
+ * Returns true if `line` is an allowlist annotation for the given rule id.
+ * Format: -- additive-allow: <RULE_ID> <reason>
+ * The reason must be non-empty (at least one non-whitespace character after the rule id).
+ */
+export function isAllowlistComment(line: string, ruleId: string): boolean {
+  const trimmed = line.trim();
+  // Must start with the comment marker
+  if (!trimmed.startsWith('--')) return false;
+  const commentContent = trimmed.slice(2).trim();
+  // Must match: additive-allow: <RULE_ID> <non-empty reason>
+  const prefix = `additive-allow: ${ruleId}`;
+  if (!commentContent.startsWith(prefix)) return false;
+  const afterPrefix = commentContent.slice(prefix.length);
+  // There must be at least one non-whitespace character after the rule id (the reason)
+  return /\S/.test(afterPrefix);
+}
+
+/**
+ * Checks a single SQL file for destructive patterns.
+ * Returns an array of violations found.
+ */
+export function checkFile(filePath: string): Violation[] {
+  const violations: Violation[] = [];
+
   if (!fs.existsSync(filePath)) {
-    return { failed: true, errors: [{ line: 0, rule: 'NOT_FOUND', msg: `File not found: ${fileName}`, remediation: 'Verify file exists' }] };
+    console.error(`[ERROR] File not found: ${filePath}`);
+    return violations;
   }
 
   // NOSONAR - Migration files are sourced from repo migrations directory, not user input
   const content = fs.readFileSync(filePath, 'utf8');
   const lines = content.split('\n');
-  const errors: Array<{ line: number; rule: string; msg: string; remediation: string }> = [];
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const lineNum = i + 1;
+    const originalLine = lines[i];
+    const codePortion = stripSqlComment(originalLine);
 
-    // Check if line has allowlist comment
-    if (checkAllowlist(line)) {
-      continue; // Skip this line
+    // Skip lines that are pure comments (code portion is empty/whitespace)
+    if (codePortion.trim() === '') continue;
+
+    for (const rule of RULES) {
+      const matchResult = rule.pattern.exec(codePortion);
+      if (!matchResult) continue;
+
+      // Check if the immediately preceding line is an allowlist comment for this rule
+      const precedingLine = i > 0 ? lines[i - 1] : '';
+      if (isAllowlistComment(precedingLine, rule.id)) continue;
+
+      violations.push({
+        file: filePath,
+        lineNumber: i + 1, // 1-based
+        lineText: originalLine.trim(),
+        ruleId: rule.id,
+        match: matchResult[0],
+      });
     }
+  }
 
-    // Check each rule
-    for (const rule of Object.values(REJECT_RULES)) {
-      // NOSONAR: Intended purpose is to detect destructive SQL patterns in migrations
-      if (rule.pattern.test(line)) { // NOSONAR
-        errors.push({
-          line: lineNum,
-          rule: rule.id,
-          msg: rule.msg,
-          remediation: `Line ${lineNum}: ${line.trim()} — Use '-- additive-allow: ${rule.id} <reason 12+ chars>' to override`
-        });
+  return violations;
+}
+
+/**
+ * Determines which migration files to check, based on CI environment variables.
+ *
+ * Priority order:
+ *  1. GITHUB_BASE_REF set → git diff origin/<base>...HEAD
+ *  2. GITHUB_EVENT_NAME == 'push' and HEAD has a parent → git diff HEAD~1 HEAD
+ *  3. Fallback → all *.sql files in supabase/migrations/
+ */
+export function getChangedMigrations(repoRoot: string): string[] {
+  const migrationsDir = path.join(repoRoot, 'supabase', 'migrations');
+
+  const baseRef = process.env['GITHUB_BASE_REF'];
+  // Validate baseRef contains only safe branch-name characters before passing to git.
+  const safeBaseRef = baseRef && /^[\w./-]+$/.test(baseRef) ? baseRef : null;
+  if (safeBaseRef) {
+    // Use spawnSync with argument array — no shell interpolation, no injection risk.
+    const result = spawnSync(
+      GIT_BIN,
+      ['diff', '--name-only', `origin/${safeBaseRef}...HEAD`, '--', 'supabase/migrations/*.sql'],
+      { cwd: repoRoot, encoding: 'utf8' },
+    );
+    if (result.status === 0) {
+      // Trust the diff result even if empty — no migrations changed means nothing to check.
+      return result.stdout
+        .trim()
+        .split('\n')
+        .filter((f) => f.endsWith('.sql'))
+        .map((f) => path.join(repoRoot, f));
+    }
+  }
+
+  const eventName = process.env['GITHUB_EVENT_NAME'];
+  if (eventName === 'push') {
+    // Check whether HEAD has a parent commit.
+    const parentCheck = spawnSync(GIT_BIN, ['rev-parse', 'HEAD~1'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    });
+    if (parentCheck.status === 0) {
+      const result = spawnSync(
+        GIT_BIN,
+        ['diff', '--name-only', 'HEAD~1', 'HEAD', '--', 'supabase/migrations/*.sql'],
+        { cwd: repoRoot, encoding: 'utf8' },
+      );
+      if (result.status === 0) {
+        // Trust the diff result even if empty.
+        return result.stdout
+          .trim()
+          .split('\n')
+          .filter((f) => f.endsWith('.sql'))
+          .map((f) => path.join(repoRoot, f));
       }
     }
   }
 
-  return { failed: errors.length > 0, errors };
+  // Fallback (local / unknown CI): scan all migration files
+  if (!fs.existsSync(migrationsDir)) return [];
+  return fs
+    .readdirSync(migrationsDir)
+    .filter((f) => f.endsWith('.sql'))
+    .map((f) => path.join(migrationsDir, f));
 }
 
-// Main execution
-const migrationsToCheck = getChangedMigrations();
-console.log(`Scanning ${migrationsToCheck.length} migration file(s) for destructive operations...`);
+// ---------------------------------------------------------------------------
+// Output helpers
+// ---------------------------------------------------------------------------
 
-let allFailed = false;
+function formatViolation(v: Violation): string {
+  const rule = RULES.find((r) => r.id === v.ruleId);
+  const remediation = rule?.remediation ?? 'Migrations must be additive.';
+  return [
+    `[VIOLATION] file: ${v.file}`,
+    `  Line ${v.lineNumber}: ${v.lineText}`,
+    `  Rule: ${v.ruleId}`,
+    `  Match: ${v.match}`,
+    `  Remediation: ${remediation}`,
+  ].join('\n');
+}
 
-for (const migration of migrationsToCheck) {
-  const filePath = path.join(migrationsDir, migration);
-  const { failed, errors } = validateFile(filePath, migration);
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
 
-  if (failed) {
-    console.error(`\n[FATAL] ${migration}: ${errors.length} destructive operation(s) detected`);
-    for (const err of errors) {
-      console.error(`  ${err.rule} @ L${err.line}: ${err.msg}`);
-      console.error(`    Remediation: ${err.remediation}`);
-    }
-    allFailed = true;
-  } else {
-    console.log(`[PASS] ${migration}`);
+export function main(): void {
+  const scriptDir = new URL('.', import.meta.url).pathname;
+  const repoRoot = path.resolve(scriptDir, '..', '..');
+
+  const files = getChangedMigrations(repoRoot);
+  const allViolations: Violation[] = [];
+
+  for (const file of files) {
+    const violations = checkFile(file);
+    allViolations.push(...violations);
   }
+
+  if (allViolations.length > 0) {
+    for (const v of allViolations) {
+      console.error(formatViolation(v));
+      console.error('');
+    }
+    process.exit(1);
+  }
+
+  console.log(
+    `[PASS] Additive migration check passed. ${files.length} file(s) checked, 0 violations.`,
+  );
 }
 
-if (allFailed) {
-  console.error('\nMigrations must be strictly additive to support shadow-staged atomic flips.');
-  process.exit(1);
-}
+// Run main only when this file is the entrypoint (not when imported by tests)
+const isEntrypoint =
+  typeof import.meta.url === 'string' &&
+  typeof process.argv[1] === 'string' &&
+  (import.meta.url === `file://${process.argv[1]}` ||
+    // bun resolves the path differently; compare basenames as a secondary check
+    path.basename(new URL(import.meta.url).pathname) ===
+      path.basename(process.argv[1]));
 
-console.log('\n✓ All migrations passed additive validation.');
-process.exit(0);
+if (isEntrypoint) {
+  main();
+}

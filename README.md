@@ -14,7 +14,10 @@
 
 **Version:** 1.6.0 | **Release Date:** 2026-05-08
 
-[![CI Status](https://github.com/apexbusiness-systems/apex-omnihub/actions/workflows/ci-runtime-gates.yml/badge.svg?branch=main)](https://github.com/apexbusiness-systems/apex-omnihub/actions/workflows/ci-runtime-gates.yml)
+[![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
+[![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
+[![Orchestrator CI](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/orchestrator-ci.yml)
+[![Security Regression Guard](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/security-regression-guard.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/security-regression-guard.yml)
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 
 ---
