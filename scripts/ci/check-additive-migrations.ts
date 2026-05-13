@@ -21,13 +21,19 @@ const REJECT_RULES = {
   ON_DELETE_CASCADE: { pattern: /\bON\s+DELETE\s+CASCADE\b/i, id: 'ON_DELETE_CASCADE', msg: 'ON DELETE CASCADE is not allowed' }
 };
 
+function escapeShellArg(arg: string): string {
+  // Escape shell argument safely by wrapping in single quotes and escaping single quotes
+  return `'${arg.replace(/'/g, "'\\''")}'`;
+}
+
 function getChangedMigrations(): string[] {
   try {
     if (process.env.GITHUB_BASE_REF) {
       // PR context: compare base to head
-      const baseRef = `origin/${process.env.GITHUB_BASE_REF}`;
+      const baseRef = escapeShellArg(`origin/${process.env.GITHUB_BASE_REF}`);
       const headRef = 'HEAD';
-      const output = execSync(`git diff --name-only ${baseRef}...${headRef} -- supabase/migrations/`).toString();
+      const cmd = `git diff --name-only ${baseRef}...${headRef} -- supabase/migrations/`;
+      const output = execSync(cmd, { shell: '/bin/bash' }).toString();
       return output.split('\n').filter(f => f.endsWith('.sql')).map(f => path.basename(f));
     } else if (process.env.GITHUB_EVENT_NAME === 'push') {
       // Push context: compare HEAD~1 to HEAD
