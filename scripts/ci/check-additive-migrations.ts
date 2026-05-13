@@ -12,6 +12,11 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
+// Absolute path to git — avoids PATH-based command injection (SonarCloud S4036).
+// /usr/bin/git is canonical on Linux (GitHub Actions ubuntu-latest).
+// On macOS the Xcode shim lives at the same path; Homebrew git is a symlink to it.
+const GIT_BIN = '/usr/bin/git';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -195,7 +200,7 @@ export function getChangedMigrations(repoRoot: string): string[] {
   if (safeBaseRef) {
     // Use spawnSync with argument array — no shell interpolation, no injection risk.
     const result = spawnSync(
-      'git',
+      GIT_BIN,
       ['diff', '--name-only', `origin/${safeBaseRef}...HEAD`, '--', 'supabase/migrations/*.sql'],
       { cwd: repoRoot, encoding: 'utf8' },
     );
@@ -212,13 +217,13 @@ export function getChangedMigrations(repoRoot: string): string[] {
   const eventName = process.env['GITHUB_EVENT_NAME'];
   if (eventName === 'push') {
     // Check whether HEAD has a parent commit.
-    const parentCheck = spawnSync('git', ['rev-parse', 'HEAD~1'], {
+    const parentCheck = spawnSync(GIT_BIN, ['rev-parse', 'HEAD~1'], {
       cwd: repoRoot,
       encoding: 'utf8',
     });
     if (parentCheck.status === 0) {
       const result = spawnSync(
-        'git',
+        GIT_BIN,
         ['diff', '--name-only', 'HEAD~1', 'HEAD', '--', 'supabase/migrations/*.sql'],
         { cwd: repoRoot, encoding: 'utf8' },
       );
