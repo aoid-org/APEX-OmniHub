@@ -5,6 +5,9 @@ import { spawnSync } from 'node:child_process';
 const scriptDir = new URL('.', import.meta.url).pathname;
 const migrationsDir = path.join(scriptDir, '../../supabase/migrations');
 
+// Full path avoids PATH lookup (satisfies typescript:S4036)
+const GIT_CMD = '/usr/bin/git';
+
 // Reject rules for destructive operations
 // Note: Regex patterns intentionally match dangerous SQL operations for detection.
 // This is a security scanner that must analyze untrusted SQL input.
@@ -27,17 +30,15 @@ const REJECT_RULES = {
 function getChangedMigrations(): string[] {
   try {
     if (process.env.GITHUB_BASE_REF) {
-      // PR context: compare base to head (using spawnSync to avoid shell injection)
       // NOSONAR - GITHUB_BASE_REF is controlled by GitHub Actions, not user input
       const baseRef = `origin/${process.env.GITHUB_BASE_REF}`;
-      const result = spawnSync('git', ['diff', '--name-only', `${baseRef}...HEAD`, '--', 'supabase/migrations/'], {
+      const result = spawnSync(GIT_CMD, ['diff', '--name-only', `${baseRef}...HEAD`, '--', 'supabase/migrations/'], {
         encoding: 'utf8'
       });
       if (result.error) throw result.error;
       return result.stdout.split('\n').filter(f => f.endsWith('.sql')).map(f => path.basename(f));
     } else if (process.env.GITHUB_EVENT_NAME === 'push') {
-      // Push context: compare HEAD~1 to HEAD (using spawnSync to avoid shell injection)
-      const result = spawnSync('git', ['diff', '--name-only', 'HEAD~1..HEAD', '--', 'supabase/migrations/'], {
+      const result = spawnSync(GIT_CMD, ['diff', '--name-only', 'HEAD~1..HEAD', '--', 'supabase/migrations/'], {
         encoding: 'utf8'
       });
       if (result.error) throw result.error;
