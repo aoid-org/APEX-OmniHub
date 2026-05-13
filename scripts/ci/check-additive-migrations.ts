@@ -10,7 +10,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -190,43 +190,43 @@ export function getChangedMigrations(repoRoot: string): string[] {
 
   const baseRef = process.env['GITHUB_BASE_REF'];
   if (baseRef) {
-    try {
-      const output = execSync(
-        `git diff --name-only origin/${baseRef}...HEAD -- supabase/migrations/*.sql`,
-        { cwd: repoRoot, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] },
-      );
+    // Use spawnSync with argument array — no shell interpolation, no injection risk.
+    const result = spawnSync(
+      'git',
+      ['diff', '--name-only', `origin/${baseRef}...HEAD`, '--', 'supabase/migrations/*.sql'],
+      { cwd: repoRoot, encoding: 'utf8' },
+    );
+    if (result.status === 0) {
       // Trust the diff result even if empty — no migrations changed means nothing to check.
-      return output
+      return (result.stdout as string)
         .trim()
         .split('\n')
         .filter((f) => f.endsWith('.sql'))
         .map((f) => path.join(repoRoot, f));
-    } catch {
-      // git command failed — fall through to next strategy
     }
   }
 
   const eventName = process.env['GITHUB_EVENT_NAME'];
   if (eventName === 'push') {
-    try {
-      // Check whether HEAD has a parent commit
-      execSync('git rev-parse HEAD~1', {
-        cwd: repoRoot,
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-      const output = execSync(
-        'git diff --name-only HEAD~1 HEAD -- supabase/migrations/*.sql',
-        { cwd: repoRoot, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] },
+    // Check whether HEAD has a parent commit.
+    const parentCheck = spawnSync('git', ['rev-parse', 'HEAD~1'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    });
+    if (parentCheck.status === 0) {
+      const result = spawnSync(
+        'git',
+        ['diff', '--name-only', 'HEAD~1', 'HEAD', '--', 'supabase/migrations/*.sql'],
+        { cwd: repoRoot, encoding: 'utf8' },
       );
-      // Trust the diff result even if empty.
-      return output
-        .trim()
-        .split('\n')
-        .filter((f) => f.endsWith('.sql'))
-        .map((f) => path.join(repoRoot, f));
-    } catch {
-      // git command failed or no parent — fall through to fallback
+      if (result.status === 0) {
+        // Trust the diff result even if empty.
+        return (result.stdout as string)
+          .trim()
+          .split('\n')
+          .filter((f) => f.endsWith('.sql'))
+          .map((f) => path.join(repoRoot, f));
+      }
     }
   }
 

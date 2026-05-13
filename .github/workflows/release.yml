@@ -147,19 +147,32 @@ jobs:
         if: |
           steps.changesets.outputs.published == 'true' &&
           (vars.ENABLE_SHADOW_DEPLOYMENT != 'true' || vars.ENABLE_ATOMIC_ROUTING_FLIP != 'true')
+        env:
+          SHADOW_ENABLED: ${{ vars.ENABLE_SHADOW_DEPLOYMENT }}
+          ROUTING_FLIP_ENABLED: ${{ vars.ENABLE_ATOMIC_ROUTING_FLIP }}
         run: |
           echo "Skipping routing flip."
-          echo "ENABLE_SHADOW_DEPLOYMENT=${{ vars.ENABLE_SHADOW_DEPLOYMENT }}"
-          echo "ENABLE_ATOMIC_ROUTING_FLIP=${{ vars.ENABLE_ATOMIC_ROUTING_FLIP }}"
+          echo "ENABLE_SHADOW_DEPLOYMENT=${SHADOW_ENABLED}"
+          echo "ENABLE_ATOMIC_ROUTING_FLIP=${ROUTING_FLIP_ENABLED}"
 
       - name: Upload release evidence
         if: steps.changesets.outputs.published == 'true' || always()
+        env:
+          GH_SHA: ${{ github.sha }}
+          GH_SERVER_URL: ${{ github.server_url }}
+          GH_REPOSITORY: ${{ github.repository }}
+          GH_RUN_ID: ${{ github.run_id }}
+          SHADOW_URL_RAW: ${{ steps.shadow_deploy.outputs.shadow_url || '' }}
+          HEALTH_RAW: ${{ steps.shadow_health.outputs.health_result || 'skipped' }}
+          VALIDATOR_RAW: ${{ steps.validator.outputs.validator_result || 'skipped' }}
+          TF_RESULT_RAW: ${{ steps.tf_plan.outputs.tf_plan_result || 'skipped' }}
+          PUBLISHED_RAW: ${{ steps.changesets.outputs.published }}
         run: |
-          SHADOW_URL="${{ steps.shadow_deploy.outputs.shadow_url || '' }}"
-          HEALTH="${{ steps.shadow_health.outputs.health_result || 'skipped' }}"
-          VALIDATOR="${{ steps.validator.outputs.validator_result || 'skipped' }}"
-          TF_RESULT="${{ steps.tf_plan.outputs.tf_plan_result || 'skipped' }}"
-          PUBLISHED="${{ steps.changesets.outputs.published }}"
+          SHADOW_URL="$SHADOW_URL_RAW"
+          HEALTH="$HEALTH_RAW"
+          VALIDATOR="$VALIDATOR_RAW"
+          TF_RESULT="$TF_RESULT_RAW"
+          PUBLISHED="$PUBLISHED_RAW"
 
           if [ -z "$SHADOW_URL" ]; then
             SHADOW_VERDICT="SHADOW_NOT_PROVISIONED"
@@ -175,17 +188,20 @@ jobs:
             FINAL_VERDICT="NOT_CERTIFIED_BLOCKED"
           fi
 
+          WORKFLOW_RUN_URL="${GH_SERVER_URL}/${GH_REPOSITORY}/actions/runs/${GH_RUN_ID}"
+          TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
           cat > release-evidence.json <<EOF
           {
-            "commit_sha": "${{ github.sha }}",
-            "workflow_run_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-            "published": "$PUBLISHED",
-            "shadow_url": "$SHADOW_URL",
-            "health_result": "$HEALTH",
-            "validator_result": "$VALIDATOR",
-            "terraform_result": "$TF_RESULT",
-            "final_verdict": "$FINAL_VERDICT",
-            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            "commit_sha": "${GH_SHA}",
+            "workflow_run_url": "${WORKFLOW_RUN_URL}",
+            "published": "${PUBLISHED}",
+            "shadow_url": "${SHADOW_URL}",
+            "health_result": "${HEALTH}",
+            "validator_result": "${VALIDATOR}",
+            "terraform_result": "${TF_RESULT}",
+            "final_verdict": "${FINAL_VERDICT}",
+            "timestamp": "${TIMESTAMP}"
           }
           EOF
           cat release-evidence.json
