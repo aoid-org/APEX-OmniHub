@@ -12,7 +12,6 @@ const STATIC_ASSETS = [
   '/index.html',
   '/manifest.webmanifest',
   '/favicon.png',
-  '/app_icon.svg',
 ];
 
 // Install event - cache static assets
