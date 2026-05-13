@@ -63,8 +63,11 @@ jobs:
       - name: Check real shadow deployment prerequisites
         if: steps.changesets.outputs.published == 'true' && github.ref == 'refs/heads/main'
         id: shadow_check
+        env:
+          SHADOW_URL: ${{ secrets.VITE_SHADOW_DEPLOY_URL }}
+          SHADOW_KEY: ${{ secrets.SHADOW_DEPLOY_API_KEY }}
         run: |
-          if [[ -z "${{ secrets.VITE_SHADOW_DEPLOY_URL }}" ]] || [[ -z "${{ secrets.SHADOW_DEPLOY_API_KEY }}" ]]; then
+          if [[ -z "$SHADOW_URL" ]] || [[ -z "$SHADOW_KEY" ]]; then
             echo "blocker=true" >> $GITHUB_OUTPUT
             echo "SHADOW_DEPLOYMENT_BLOCKED: Real shadow deployment URL or API key not configured"
             exit 0
