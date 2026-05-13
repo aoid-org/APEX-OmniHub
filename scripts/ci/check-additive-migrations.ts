@@ -303,6 +303,3 @@ const isEntrypoint =
 if (isEntrypoint) {
   main();
 }
-
-console.log('\n✓ All migrations passed additive validation.');
-process.exit(0);
