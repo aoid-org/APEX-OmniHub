@@ -5,11 +5,22 @@ import {
   hasValidSupabaseUrl,
 } from './supabaseConfig';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
-const supabaseAnonKey =
+const FALLBACK_URL = 'https://rtopreovkywofgwgmozi.supabase.co';
+// sb_publishable_ keys are client-safe by design (Supabase publishable key spec)
+const FALLBACK_KEY = 'sb_publishable_fhOZZrH8blDisp915SKTaw_GswiPZpk';
+
+function isValidKeyFormat(key: string): boolean {
+  return key.startsWith('eyJ') || key.startsWith('sb_publishable_');
+}
+
+const rawUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
+const supabaseUrl = hasValidSupabaseUrl(rawUrl) ? rawUrl : FALLBACK_URL;
+
+const rawKey =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
   '';
+const supabaseAnonKey = isValidKeyFormat(rawKey) ? rawKey : FALLBACK_KEY;
 
 const isValidSupabaseUrl = hasValidSupabaseUrl(supabaseUrl);
 
