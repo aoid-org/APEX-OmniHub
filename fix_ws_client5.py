@@ -1,4 +1,12 @@
-type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
+with open("integration-harness/helpers/ws-client.ts", "r") as f:
+    content = f.read()
+
+# Let's revert back to how it was essentially before but simply cast nicely, or use the Data type ws provides
+# In the original file: ws.on('message', (msg) => {
+# Since we have implicit any warning we need to type `msg`.
+# `WebSocket.Data` is the standard type from 'ws' library
+
+new_content = """type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
 
 import WebSocket from 'ws';
 
@@ -36,3 +44,9 @@ export async function waitForTelemetryEvent(url: string, pred: (e: JsonValue) =>
     ws.on('error', (err: Error) => { clearTimeout(timer); reject(err); });
   });
 }
+"""
+
+with open("integration-harness/helpers/ws-client.ts", "w") as f:
+    f.write(new_content)
+
+print("Patched ws-client.ts fully")
