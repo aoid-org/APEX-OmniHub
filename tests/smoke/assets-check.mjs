@@ -141,8 +141,8 @@ async function main() {
     const result = await checkAsset(`${BASE_URL}${heroBadgeAsset}`, `Hero badge asset (${path.basename(heroBadgeAsset)})`);
     results.push({ path: heroBadgeAsset, description: 'Hero badge asset', ...result });
   } else {
-    log('fail', 'Hero badge asset: apex-badge-*.png not found in dist/assets');
-    results.push({ path: '/assets/apex-badge-*.png', description: 'Hero badge asset', status: 'fail' });
+    log('warn', 'Hero badge asset: apex-badge-*.png not in dist/assets — badge is now inline SVG (no file asset required)');
+    results.push({ path: '/assets/apex-badge-*.png', description: 'Hero badge asset', status: 'skip' });
   }
 
   // Check a JS bundle if dist exists

@@ -27,8 +27,8 @@
 **Before touching code, read the canonical architecture map:**
 
 - [ARCHITECTURE_CANONICAL_MAP.md](./docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
-- [Production Status (Current)](./docs/project-status/PRODUCTION_STATUS.md)
-- [Production Status Brief 04252006](./docs/project-status/PRODUCTION_STATUS_04252006.md)
+- **[Production Certification Status](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)** (Current Production Authority)
+- [CI Status Policy](./docs/project-status/CI_STATUS_POLICY.md)
 
 ---
 
@@ -73,7 +73,7 @@ The platform relies on a "Holy Trinity" architecture:
 
 ### 1) Tri-Force Protocol (Governed Autonomy)
 
-A three-tier agent architecture designed to keep unsafe reasoning from reaching production:
+A 3-tier agent architecture designed to keep unsafe reasoning from reaching production:
 
 | Layer        | Role                             | Implementation             |
 | ------------ | -------------------------------- | -------------------------- |

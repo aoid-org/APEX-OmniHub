@@ -210,7 +210,11 @@ export const OmniBridgeLiveFeed: FC<OmniBridgeLiveFeedProps> = ({
 };
 
 function mergeUpdatedRow(prev: OmniBridgeEventRow[], row: OmniBridgeEventRow): OmniBridgeEventRow[] {
-  return prev.map((e) => (e.id === row.id ? row : e));
+  const index = prev.findIndex((e) => e.id === row.id);
+  if (index === -1) return prev;
+  const next = [...prev];
+  next[index] = row;
+  return next;
 }
 
 function getStateBadgeColor(state: OmniBridgeEventRow['dispatch_state'], verified: boolean): string {
