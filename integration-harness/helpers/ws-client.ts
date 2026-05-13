@@ -17,11 +17,10 @@ export async function waitForTelemetryEvent(url: string, pred: (e: JsonValue) =>
     const timer = setTimeout(() => { ws.close(); reject(new Error(`No matching WS event within ${timeoutMs}ms`)); }, timeoutMs);
     ws.on('message', (msg) => {
       try {
-        const msgStr = Buffer.isBuffer(msg)
-          ? msg.toString()
-          : Array.isArray(msg)
-            ? Buffer.concat(msg).toString()
-            : Buffer.from(msg as ArrayBuffer).toString();
+        const msgStr = Buffer.isBuffer(msg) ? msg.toString() :
+                       Array.isArray(msg) ? Buffer.concat(msg).toString() :
+                       msg instanceof ArrayBuffer ? Buffer.from(msg).toString() :
+                       String(msg);
         const evt: JsonValue = JSON.parse(msgStr) as JsonValue;
         if (pred(evt)) { clearTimeout(timer); ws.close(); resolve(evt); }
       } catch { /* ignore non-json */ }
