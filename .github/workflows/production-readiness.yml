@@ -93,7 +93,7 @@ jobs:
 
       - name: Secret scanning with TruffleHog (commit range)
         if: steps.trufflehog-range.outputs.use_range == 'true'
-        uses: trufflesecurity/trufflehog@17456f8c7d042d8c82c9a8ca9e937231f9f42e26 # v3.95.2
+        uses: trufflesecurity/trufflehog@0c381f12b3f9a934f33fc61bf003599f5323ff55 # v3.95.2
         with:
           path: ./
           base: ${{ steps.trufflehog-range.outputs.base_ref }}
@@ -102,7 +102,7 @@ jobs:
 
       - name: Secret scanning with TruffleHog (full repository fallback)
         if: steps.trufflehog-range.outputs.use_range == 'false'
-        uses: trufflesecurity/trufflehog@17456f8c7d042d8c82c9a8ca9e937231f9f42e26 # v3.95.2
+        uses: trufflesecurity/trufflehog@0c381f12b3f9a934f33fc61bf003599f5323ff55 # v3.95.2
         with:
           path: ./
           extra_args: --only-verified --exclude-paths .trufflehog-exclude-paths.txt

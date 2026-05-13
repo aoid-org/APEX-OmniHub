@@ -472,10 +472,11 @@ export function validateDeviceFingerprint(
 
   // Field count mismatch = hardware profile spoof
   if (storedKeys.length !== incomingKeys.length) {
+    const storedKeysSet = new Set(storedKeys);
     return {
       fingerprintValid: false,
       reason: 'field_count_mismatch',
-      mismatchedFields: incomingKeys.filter((k) => !storedKeys.includes(k)),
+      mismatchedFields: incomingKeys.filter((k) => !storedKeysSet.has(k)),
     };
   }
 
