@@ -74,7 +74,7 @@ The platform relies on a "Holy Trinity" architecture:
 
 ### 1) Tri-Force Protocol (Governed Autonomy)
 
-A three-tier agent architecture designed to keep unsafe reasoning from reaching production:
+A 3-tier agent architecture designed to keep unsafe reasoning from reaching production:
 
 | Layer        | Role                             | Implementation             |
 | ------------ | -------------------------------- | -------------------------- |
