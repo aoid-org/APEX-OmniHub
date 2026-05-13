@@ -200,7 +200,7 @@ export function getChangedMigrations(repoRoot: string): string[] {
     );
     if (result.status === 0) {
       // Trust the diff result even if empty — no migrations changed means nothing to check.
-      return (result.stdout as string)
+      return result.stdout
         .trim()
         .split('\n')
         .filter((f) => f.endsWith('.sql'))
@@ -223,7 +223,7 @@ export function getChangedMigrations(repoRoot: string): string[] {
       );
       if (result.status === 0) {
         // Trust the diff result even if empty.
-        return (result.stdout as string)
+        return result.stdout
           .trim()
           .split('\n')
           .filter((f) => f.endsWith('.sql'))

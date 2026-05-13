@@ -71,7 +71,7 @@ jobs:
           echo "Building frontend for shadow deployment..."
           bun run build
           echo "Deploying to Cloudflare Pages shadow slot: ${CF_SHADOW_PROJECT_NAME}"
-          npx --yes wrangler@latest pages deploy dist \
+          npx --yes --ignore-scripts wrangler@latest pages deploy dist \
             --project-name="${CF_SHADOW_PROJECT_NAME}" \
             --commit-dirty=true \
             2>&1 | tee shadow-deploy.log
