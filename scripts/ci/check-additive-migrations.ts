@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 
 const scriptDir = new URL('.', import.meta.url).pathname;
 const migrationsDir = path.join(scriptDir, '../../supabase/migrations');
@@ -21,24 +21,23 @@ const REJECT_RULES = {
   ON_DELETE_CASCADE: { pattern: /\bON\s+DELETE\s+CASCADE\b/i, id: 'ON_DELETE_CASCADE', msg: 'ON DELETE CASCADE is not allowed' }
 };
 
-function escapeShellArg(arg: string): string {
-  // Escape shell argument safely by wrapping in single quotes and escaping single quotes
-  return `'${arg.replace(/'/g, "'\\''")}'`;
-}
-
 function getChangedMigrations(): string[] {
   try {
     if (process.env.GITHUB_BASE_REF) {
-      // PR context: compare base to head
-      const baseRef = escapeShellArg(`origin/${process.env.GITHUB_BASE_REF}`);
-      const headRef = 'HEAD';
-      const cmd = `git diff --name-only ${baseRef}...${headRef} -- supabase/migrations/`;
-      const output = execSync(cmd, { shell: '/bin/bash' }).toString();
-      return output.split('\n').filter(f => f.endsWith('.sql')).map(f => path.basename(f));
+      // PR context: compare base to head (using spawnSync to avoid shell injection)
+      const baseRef = `origin/${process.env.GITHUB_BASE_REF}`;
+      const result = spawnSync('git', ['diff', '--name-only', `${baseRef}...HEAD`, '--', 'supabase/migrations/'], {
+        encoding: 'utf8'
+      });
+      if (result.error) throw result.error;
+      return result.stdout.split('\n').filter(f => f.endsWith('.sql')).map(f => path.basename(f));
     } else if (process.env.GITHUB_EVENT_NAME === 'push') {
-      // Push context: compare HEAD~1 to HEAD
-      const output = execSync('git diff --name-only HEAD~1..HEAD -- supabase/migrations/').toString();
-      return output.split('\n').filter(f => f.endsWith('.sql')).map(f => path.basename(f));
+      // Push context: compare HEAD~1 to HEAD (using spawnSync to avoid shell injection)
+      const result = spawnSync('git', ['diff', '--name-only', 'HEAD~1..HEAD', '--', 'supabase/migrations/'], {
+        encoding: 'utf8'
+      });
+      if (result.error) throw result.error;
+      return result.stdout.split('\n').filter(f => f.endsWith('.sql')).map(f => path.basename(f));
     }
   } catch {
     // Fallback: scan all migration files if git diff fails
