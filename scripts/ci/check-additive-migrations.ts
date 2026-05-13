@@ -195,12 +195,12 @@ export function getChangedMigrations(repoRoot: string): string[] {
         `git diff --name-only origin/${baseRef}...HEAD -- supabase/migrations/*.sql`,
         { cwd: repoRoot, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] },
       );
-      const files = output
+      // Trust the diff result even if empty — no migrations changed means nothing to check.
+      return output
         .trim()
         .split('\n')
         .filter((f) => f.endsWith('.sql'))
         .map((f) => path.join(repoRoot, f));
-      if (files.length > 0) return files;
     } catch {
       // git command failed — fall through to next strategy
     }
@@ -219,18 +219,18 @@ export function getChangedMigrations(repoRoot: string): string[] {
         'git diff --name-only HEAD~1 HEAD -- supabase/migrations/*.sql',
         { cwd: repoRoot, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] },
       );
-      const files = output
+      // Trust the diff result even if empty.
+      return output
         .trim()
         .split('\n')
         .filter((f) => f.endsWith('.sql'))
         .map((f) => path.join(repoRoot, f));
-      if (files.length > 0) return files;
     } catch {
       // git command failed or no parent — fall through to fallback
     }
   }
 
-  // Fallback: scan all migration files
+  // Fallback (local / unknown CI): scan all migration files
   if (!fs.existsSync(migrationsDir)) return [];
   return fs
     .readdirSync(migrationsDir)

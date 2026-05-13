@@ -67,6 +67,7 @@ BEGIN
       AND qual::text LIKE '%PENDING%'
   ) THEN
     -- Remove stale policy (may have USING(true)) before recreating
+    -- additive-allow: DROP_POLICY replacing stale operator_select policy to apply corrected USING clause
     DROP POLICY IF EXISTS "operator_select" ON public.man_tasks;
     CREATE POLICY "operator_select"
       ON public.man_tasks
@@ -107,6 +108,7 @@ BEGIN
       AND qual::text LIKE '%PENDING%'
   ) THEN
     -- Remove stale policy (may have USING(true)) before recreating
+    -- additive-allow: DROP_POLICY replacing stale operator_update policy to apply corrected USING clause
     DROP POLICY IF EXISTS "operator_update" ON public.man_tasks;
     CREATE POLICY "operator_update"
       ON public.man_tasks

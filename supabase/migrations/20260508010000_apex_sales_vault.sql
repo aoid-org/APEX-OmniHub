@@ -75,7 +75,9 @@ to service_role
 using (true)
 with check (true);
 
+-- additive-allow: REVOKE enforcing least-privilege — removing default grants before granting only to service_role
 revoke all on public.leads from public, anon, authenticated;
+-- additive-allow: REVOKE enforcing least-privilege — removing default grants before granting only to service_role
 revoke all on public.lead_events from public, anon, authenticated;
 grant all on public.leads to service_role;
 grant all on public.lead_events to service_role;
