@@ -92,8 +92,9 @@ jobs:
 
       - name: Health check real shadow deployment
         if: steps.changesets.outputs.published == 'true' && steps.shadow_check.outputs.blocker == 'false' && github.ref == 'refs/heads/main'
+        env:
+          SHADOW_URL: ${{ secrets.VITE_SHADOW_DEPLOY_URL }}
         run: |
-          SHADOW_URL="${{ secrets.VITE_SHADOW_DEPLOY_URL }}"
           echo "Checking health of shadow deployment: $SHADOW_URL/health"
           if curl -s -f "$SHADOW_URL/health" > /dev/null 2>&1; then
             echo "✓ Shadow deployment is healthy"
