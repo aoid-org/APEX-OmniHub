@@ -1,0 +1,8 @@
+{
+  "name": "apex-omnihub",
+  "version": "1.6.0",
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "packageManager": "bun@1.x"
+}
