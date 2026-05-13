@@ -59,30 +59,32 @@ jobs:
           secrets.CLOUDFLARE_ACCOUNT_ID != '' &&
           vars.CLOUDFLARE_SHADOW_PROJECT_NAME != ''
         id: shadow_deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_SHADOW_PROJECT_NAME: ${{ vars.CLOUDFLARE_SHADOW_PROJECT_NAME }}
+          VITE_SITE_URL: ${{ env.PRODUCTION_SITE_URL }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: |
           echo "Building frontend for shadow deployment..."
           bun run build
-          echo "Deploying to Cloudflare Pages shadow slot: ${{ vars.CLOUDFLARE_SHADOW_PROJECT_NAME }}"
+          echo "Deploying to Cloudflare Pages shadow slot: ${CF_SHADOW_PROJECT_NAME}"
           npx --yes wrangler@latest pages deploy dist \
-            --project-name="${{ vars.CLOUDFLARE_SHADOW_PROJECT_NAME }}" \
+            --project-name="${CF_SHADOW_PROJECT_NAME}" \
             --commit-dirty=true \
             2>&1 | tee shadow-deploy.log
           SHADOW_URL=$(grep -oP 'https://[^\s]+\.pages\.dev' shadow-deploy.log | head -1 || echo "")
           echo "shadow_url=${SHADOW_URL}" >> "$GITHUB_OUTPUT"
           echo "Shadow deployment URL: ${SHADOW_URL}"
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          VITE_SITE_URL: ${{ env.PRODUCTION_SITE_URL }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Shadow Health Check
         if: steps.shadow_deploy.outputs.shadow_url != ''
         id: shadow_health
+        env:
+          SHADOW_URL: ${{ steps.shadow_deploy.outputs.shadow_url }}
         run: |
-          SHADOW_URL="${{ steps.shadow_deploy.outputs.shadow_url }}"
           echo "Polling ${SHADOW_URL}/health ..."
           MAX_ATTEMPTS=10
           WAIT=10

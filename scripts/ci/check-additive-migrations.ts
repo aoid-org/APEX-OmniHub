@@ -189,11 +189,13 @@ export function getChangedMigrations(repoRoot: string): string[] {
   const migrationsDir = path.join(repoRoot, 'supabase', 'migrations');
 
   const baseRef = process.env['GITHUB_BASE_REF'];
-  if (baseRef) {
+  // Validate baseRef contains only safe branch-name characters before passing to git.
+  const safeBaseRef = baseRef && /^[\w./-]+$/.test(baseRef) ? baseRef : null;
+  if (safeBaseRef) {
     // Use spawnSync with argument array — no shell interpolation, no injection risk.
     const result = spawnSync(
       'git',
-      ['diff', '--name-only', `origin/${baseRef}...HEAD`, '--', 'supabase/migrations/*.sql'],
+      ['diff', '--name-only', `origin/${safeBaseRef}...HEAD`, '--', 'supabase/migrations/*.sql'],
       { cwd: repoRoot, encoding: 'utf8' },
     );
     if (result.status === 0) {
