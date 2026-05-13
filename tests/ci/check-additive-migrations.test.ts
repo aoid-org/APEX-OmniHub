@@ -5,6 +5,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 const scriptPath = path.join(process.cwd(), 'scripts/ci/check-additive-migrations.ts');
+// Use tsx from devDependencies — available after npm ci in all CI jobs (not bun-dependent)
+const tsxBin = path.join(process.cwd(), 'node_modules/.bin/tsx');
 
 // Each test run gets its own isolated temp directory — never touches supabase/migrations
 const suiteTemp = fs.mkdtempSync(path.join(os.tmpdir(), 'apex-additive-migrations-'));
@@ -20,7 +22,7 @@ const runScript = (files: Record<string, string>) => {
         fs.writeFileSync(path.join(runDir, name), content, 'utf8');
     }
 
-    const result = spawnSync('bun', [scriptPath], {
+    const result = spawnSync(tsxBin, [scriptPath], {
         encoding: 'utf8',
         cwd: process.cwd(),
         env: {
