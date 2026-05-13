@@ -14,11 +14,7 @@
 
 **Version:** 1.6.0 | **Release Date:** 2026-05-08
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Security](https://img.shields.io/badge/security-zero--trust-blue)]()
-[![SonarQube](https://img.shields.io/badge/sonarqube-A-success)]()
-[![Tests](https://img.shields.io/badge/tests-3584%2B%20pass-brightgreen)]()
-[![Armageddon](https://img.shields.io/badge/armageddon-L7%20CERTIFIED-gold)]()
+[![CI Status](https://github.com/apexbusiness-systems/apex-omnihub/actions/workflows/ci-runtime-gates.yml/badge.svg?branch=main)](https://github.com/apexbusiness-systems/apex-omnihub/actions/workflows/ci-runtime-gates.yml)
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 
 ---
@@ -28,8 +24,8 @@
 **Before touching code, read the canonical architecture map:**
 
 - [ARCHITECTURE_CANONICAL_MAP.md](./docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
-- [Production Status (Current)](./docs/project-status/PRODUCTION_STATUS.md)
-- [Production Status Brief 04252006](./docs/project-status/PRODUCTION_STATUS_04252006.md)
+- **[Production Certification Status](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)** (Current Production Authority)
+- [CI Status Policy](./docs/project-status/CI_STATUS_POLICY.md)
 
 ---
 
