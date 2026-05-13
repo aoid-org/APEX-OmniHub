@@ -11,20 +11,19 @@ const GIT_CMD = '/usr/bin/git';
 // Reject rules for destructive operations
 // Note: Regex patterns intentionally match dangerous SQL operations for detection.
 // This is a security scanner that must analyze untrusted SQL input.
-// NOSONAR - Patterns are designed to safely detect threats, not execute them
 const REJECT_RULES = {
-  DROP_TABLE: { pattern: /\bDROP\s+TABLE\b/i, id: 'DROP_TABLE', msg: 'DROP TABLE is not allowed' },
-  DROP_COLUMN: { pattern: /\bALTER\s+TABLE\s+\w+\s+DROP\s+COLUMN\b/i, id: 'DROP_COLUMN', msg: 'ALTER TABLE ... DROP COLUMN is not allowed' },
-  DROP_TYPE: { pattern: /\bDROP\s+TYPE\b/i, id: 'DROP_TYPE', msg: 'DROP TYPE is not allowed' },
-  DROP_POLICY: { pattern: /\bDROP\s+POLICY\b/i, id: 'DROP_POLICY', msg: 'DROP POLICY is not allowed' },
-  DROP_TRIGGER: { pattern: /\bDROP\s+TRIGGER\b/i, id: 'DROP_TRIGGER', msg: 'DROP TRIGGER is not allowed' },
-  DROP_VALUE: { pattern: /\bALTER\s+TYPE\s+\w+\s+DROP\s+VALUE\b/i, id: 'DROP_VALUE', msg: 'ALTER TYPE ... DROP VALUE is not allowed' },
-  DELETE_FROM: { pattern: /\bDELETE\s+FROM\b/i, id: 'DELETE_FROM', msg: 'DELETE FROM is not allowed' },
-  TRUNCATE: { pattern: /\bTRUNCATE\b/i, id: 'TRUNCATE', msg: 'TRUNCATE is not allowed' },
-  DISABLE_RLS: { pattern: /\bDISABLE\s+ROW\s+LEVEL\s+SECURITY\b/i, id: 'DISABLE_RLS', msg: 'DISABLE ROW LEVEL SECURITY is not allowed' },
-  REVOKE: { pattern: /\bREVOKE\b/i, id: 'REVOKE', msg: 'REVOKE is not allowed' },
-  ALTER_TYPE_CHANGE: { pattern: /\bALTER\s+TABLE\s+\w+\s+ALTER\s+COLUMN\s+\w+\s+TYPE\b/i, id: 'ALTER_TYPE', msg: 'ALTER COLUMN TYPE is not allowed' },
-  ON_DELETE_CASCADE: { pattern: /\bON\s+DELETE\s+CASCADE\b/i, id: 'ON_DELETE_CASCADE', msg: 'ON DELETE CASCADE is not allowed' }
+  DROP_TABLE: { pattern: /\bDROP\s+TABLE\b/i, id: 'DROP_TABLE', msg: 'DROP TABLE is not allowed' }, // NOSONAR: Pattern detects threats, doesn't execute
+  DROP_COLUMN: { pattern: /\bALTER\s+TABLE\s+\w+\s+DROP\s+COLUMN\b/i, id: 'DROP_COLUMN', msg: 'ALTER TABLE ... DROP COLUMN is not allowed' }, // NOSONAR
+  DROP_TYPE: { pattern: /\bDROP\s+TYPE\b/i, id: 'DROP_TYPE', msg: 'DROP TYPE is not allowed' }, // NOSONAR
+  DROP_POLICY: { pattern: /\bDROP\s+POLICY\b/i, id: 'DROP_POLICY', msg: 'DROP POLICY is not allowed' }, // NOSONAR
+  DROP_TRIGGER: { pattern: /\bDROP\s+TRIGGER\b/i, id: 'DROP_TRIGGER', msg: 'DROP TRIGGER is not allowed' }, // NOSONAR
+  DROP_VALUE: { pattern: /\bALTER\s+TYPE\s+\w+\s+DROP\s+VALUE\b/i, id: 'DROP_VALUE', msg: 'ALTER TYPE ... DROP VALUE is not allowed' }, // NOSONAR
+  DELETE_FROM: { pattern: /\bDELETE\s+FROM\b/i, id: 'DELETE_FROM', msg: 'DELETE FROM is not allowed' }, // NOSONAR
+  TRUNCATE: { pattern: /\bTRUNCATE\b/i, id: 'TRUNCATE', msg: 'TRUNCATE is not allowed' }, // NOSONAR
+  DISABLE_RLS: { pattern: /\bDISABLE\s+ROW\s+LEVEL\s+SECURITY\b/i, id: 'DISABLE_RLS', msg: 'DISABLE ROW LEVEL SECURITY is not allowed' }, // NOSONAR
+  REVOKE: { pattern: /\bREVOKE\b/i, id: 'REVOKE', msg: 'REVOKE is not allowed' }, // NOSONAR
+  ALTER_TYPE_CHANGE: { pattern: /\bALTER\s+TABLE\s+\w+\s+ALTER\s+COLUMN\s+\w+\s+TYPE\b/i, id: 'ALTER_TYPE', msg: 'ALTER COLUMN TYPE is not allowed' }, // NOSONAR
+  ON_DELETE_CASCADE: { pattern: /\bON\s+DELETE\s+CASCADE\b/i, id: 'ON_DELETE_CASCADE', msg: 'ON DELETE CASCADE is not allowed' } // NOSONAR
 };
 
 function getChangedMigrations(): string[] {
@@ -52,8 +51,7 @@ function getChangedMigrations(): string[] {
 }
 
 function checkAllowlist(line: string): boolean {
-  // NOSONAR - Pattern safely matches allowlist comments; no ReDoS risk
-  const allowlistPattern = /--\s*additive-allow:\s*(\w+)\s+(.{12,})/;
+  const allowlistPattern = /--\s*additive-allow:\s*(\w+)\s+(.{12,})/; // NOSONAR: Pattern safely matches allowlist comments
   return allowlistPattern.test(line);
 }
 
@@ -78,8 +76,8 @@ function validateFile(filePath: string, fileName: string): { failed: boolean; er
 
     // Check each rule
     for (const rule of Object.values(REJECT_RULES)) {
-      if (rule.pattern.test(line)) {
-        // NOSONAR - This is the intended purpose: detect and report destructive SQL operations
+      // NOSONAR: Intended purpose is to detect destructive SQL patterns in migrations
+      if (rule.pattern.test(line)) { // NOSONAR
         errors.push({
           line: lineNum,
           rule: rule.id,
