@@ -51,42 +51,105 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy to Shadow-Stage (production-shadow)
-        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true'
-        run: |
-          echo "Deploying frontend to shadow slot..."
-          npm run build -- --outDir dist/shadow
-          # Shadow-slot backend smoke target.
-          echo "Deploying Python orchestrator to shadow slot..."
-          cd orchestrator && pkill -f shadow || true && python -m uvicorn main:app --host 0.0.0.0 --port 8001 &
+      - name: Build frontend artifact
+        if: steps.changesets.outputs.published == 'true' && github.ref == 'refs/heads/main'
+        run: npm run build
         env:
           VITE_SITE_URL: ${{ env.PRODUCTION_SITE_URL }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
-      - name: Deterministic Validator CI Gate
-        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true'
+      - name: Check real shadow deployment prerequisites
+        if: steps.changesets.outputs.published == 'true' && github.ref == 'refs/heads/main'
+        id: shadow_check
+        run: |
+          if [[ -z "${{ secrets.VITE_SHADOW_DEPLOY_URL }}" ]] || [[ -z "${{ secrets.SHADOW_DEPLOY_API_KEY }}" ]]; then
+            echo "blocker=true" >> $GITHUB_OUTPUT
+            echo "SHADOW_DEPLOYMENT_BLOCKED: Real shadow deployment URL or API key not configured"
+            exit 0
+          fi
+          echo "blocker=false" >> $GITHUB_OUTPUT
+
+      - name: Log shadow deployment blocker
+        if: steps.changesets.outputs.published == 'true' && steps.shadow_check.outputs.blocker == 'true' && github.ref == 'refs/heads/main'
+        run: |
+          cat > release-evidence.json << 'EOF'
+          {
+            "workflow": "release",
+            "branch": "main",
+            "commit": "${{ github.sha }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "status": "NOT_CERTIFIED_BLOCKED",
+            "blocker": "SHADOW_DEPLOYMENT_NOT_CONFIGURED",
+            "message": "Real shadow deployment target (VITE_SHADOW_DEPLOY_URL, SHADOW_DEPLOY_API_KEY) not configured in GitHub secrets. Cannot proceed with production deployment."
+          }
+          EOF
+          echo "::notice::Shadow deployment prerequisites not met. Skipping atomic routing flip."
+
+      - name: Health check real shadow deployment
+        if: steps.changesets.outputs.published == 'true' && steps.shadow_check.outputs.blocker == 'false' && github.ref == 'refs/heads/main'
+        run: |
+          SHADOW_URL="${{ secrets.VITE_SHADOW_DEPLOY_URL }}"
+          echo "Checking health of shadow deployment: $SHADOW_URL/health"
+          if curl -s -f "$SHADOW_URL/health" > /dev/null 2>&1; then
+            echo "✓ Shadow deployment is healthy"
+          else
+            echo "✗ Shadow deployment health check failed"
+            exit 1
+          fi
+
+      - name: Run deterministic validator against shadow
+        if: steps.changesets.outputs.published == 'true' && steps.shadow_check.outputs.blocker == 'false' && github.ref == 'refs/heads/main'
         run: node integration-harness/lib/deterministic-validator.mjs
         env:
-          TARGET_URL: http://localhost:8001
+          TARGET_URL: ${{ secrets.VITE_SHADOW_DEPLOY_URL }}
 
-      - name: Skip shadow deployment until slot config is explicitly enabled
-        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT != 'true'
+      - name: Terraform format check
+        if: steps.changesets.outputs.published == 'true' && github.ref == 'refs/heads/main'
         run: |
-          echo "Skipping shadow deployment and routing flip."
-          echo "Set repository variable ENABLE_SHADOW_DEPLOYMENT=true only after the Cloudflare Pages shadow slot is provisioned and verified."
+          cd terraform
+          terraform fmt -check -recursive
 
-      - name: Atomic Routing Flip (Promote to Active)
-        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true' && vars.ENABLE_ATOMIC_ROUTING_FLIP == 'true'
+      - name: Terraform plan (production-shadow slot)
+        if: steps.changesets.outputs.published == 'true' && steps.shadow_check.outputs.blocker == 'false' && github.ref == 'refs/heads/main'
+        id: terraform_plan
         run: |
-          echo "Executing atomic DNS/LB flip..."
           cd terraform/environments/production
           terraform init
-          terraform apply -auto-approve -var="target_slot=production-shadow"
+          terraform plan -var="target_slot=production-shadow" -out=tfplan > plan.txt
+          cat plan.txt
 
-      - name: Skip atomic routing flip until explicitly enabled
-        if: steps.changesets.outputs.published == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true' && vars.ENABLE_ATOMIC_ROUTING_FLIP != 'true'
+      - name: Upload terraform plan artifact
+        if: steps.changesets.outputs.published == 'true' && steps.shadow_check.outputs.blocker == 'false' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b4de1fb015f0390 # v4
+        with:
+          name: terraform-plan
+          path: terraform/environments/production/tfplan
+          retention-days: 1
+
+      - name: Create release evidence
+        if: steps.changesets.outputs.published == 'true' && github.ref == 'refs/heads/main'
         run: |
-          echo "Shadow deployment completed."
-          echo "Skipping routing flip because ENABLE_ATOMIC_ROUTING_FLIP is not true."
+          cat > release-evidence.json << 'EOF'
+          {
+            "workflow": "release",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "published": true,
+            "shadow_blocker": ${{ steps.shadow_check.outputs.blocker || 'null' }},
+            "build_status": "success",
+            "terraform_plan_artifact": "terraform-plan",
+            "status": "${{ steps.shadow_check.outputs.blocker == 'true' && 'NOT_CERTIFIED_BLOCKED' || 'PENDING_APPROVAL' }}"
+          }
+          EOF
+          cat release-evidence.json
+
+      - name: Upload release evidence
+        if: steps.changesets.outputs.published == 'true' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b4de1fb015f0390 # v4
+        with:
+          name: release-evidence
+          path: release-evidence.json
+          retention-days: 30
