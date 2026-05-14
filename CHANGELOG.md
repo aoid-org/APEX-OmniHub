@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.6.1] - 2026-05-11
+## [1.6.3] - 2026-05-11
 
 ### Security
 - Patched 3 high-severity OpenTelemetry CVEs (GHSA-q7rr-3cgh-j5r3 — Prometheus exporter
@@ -30,9 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolved SonarQube code duplication (1.7%, 10 lines) by extracting shared HTTP body
   reader into `readJsonBody()` helper.
 
-## [1.6.0] - 2026-05-08
+## [1.6.2] - 2026-05-08
 
-### 🔒 Security & Hardening
+### Security & Hardening
 - Armageddon Live Validation passed: 2,399 Vitest + 891 Pytest + 21 Playwright
   E2E + 168 simulation + 5 Worldwide Wildcard — all green (2026-05-08)
 - SIM_MODE=false chaos guardrail confirmed operational against live Supabase
