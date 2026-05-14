@@ -127,6 +127,10 @@ Thumbs.db
 *.swp
 *.swo
 
+# ─── CI-generated release artifacts (uploaded as workflow artifacts, not committed) ──
+release-evidence.json
+shadow-preflight.json
+
 # ─── Package Manager Conflicts ───────────────────────────────────────────────
 # Uncomment the line below ONLY after package manager is fully canonicalized:
 # package-lock.json
