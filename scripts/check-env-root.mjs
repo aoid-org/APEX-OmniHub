@@ -55,10 +55,29 @@ if (missing.length > 0) {
   process.exit(0);
 }
 
+function getSupabaseClientKeySource() {
+  if (process.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+    return 'VITE_SUPABASE_PUBLISHABLE_KEY';
+  }
+
+  if (process.env.VITE_SUPABASE_ANON_KEY) {
+    return 'VITE_SUPABASE_ANON_KEY';
+  }
+
+  if (process.env.SUPABASE_PUBLISHABLE_KEY) {
+    return 'SUPABASE_PUBLISHABLE_KEY';
+  }
+
+  return 'SUPABASE_ANON_KEY';
+}
+
+const supabaseUrlSource = process.env.VITE_SUPABASE_URL
+  ? 'VITE_SUPABASE_URL'
+  : 'SUPABASE_URL';
+const supabaseClientKeySource = getSupabaseClientKeySource();
+
 // Diagnostic: log which env vars Vite will inline (values redacted)
 console.warn('\nAPEX BUILD GUARD — Environment variables OK:');
-console.warn(`   Supabase URL source = ${process.env.VITE_SUPABASE_URL ? 'VITE_SUPABASE_URL' : 'SUPABASE_URL'}`);
-console.warn(
-  `   Supabase client key source = ${process.env.VITE_SUPABASE_PUBLISHABLE_KEY ? 'VITE_SUPABASE_PUBLISHABLE_KEY' : process.env.VITE_SUPABASE_ANON_KEY ? 'VITE_SUPABASE_ANON_KEY' : process.env.SUPABASE_PUBLISHABLE_KEY ? 'SUPABASE_PUBLISHABLE_KEY' : 'SUPABASE_ANON_KEY'}`,
-);
+console.warn(`   Supabase URL source = ${supabaseUrlSource}`);
+console.warn(`   Supabase client key source = ${supabaseClientKeySource}`);
 console.warn('');

@@ -69,7 +69,7 @@ export async function signInWithSupabaseSession(page: Page): Promise<void> {
   await page.addInitScript(
     ({ key, value }: { key: string; value: Session }) => {
       // Match supabase-js browser persistence so the app authenticates normally on first load.
-      window.localStorage.setItem(key, JSON.stringify(value));
+      globalThis.localStorage.setItem(key, JSON.stringify(value));
     },
     { key: storageKey, value: session },
   );
