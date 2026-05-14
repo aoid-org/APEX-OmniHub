@@ -13,11 +13,19 @@
  * does NOT rebuild automatically on env-var changes.
  */
 
-const required = ['VITE_SUPABASE_URL'];
-const missing = required.filter((k) => !process.env[k]);
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseClientKey =
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY ||
+  process.env.SUPABASE_PUBLISHABLE_KEY ||
+  process.env.SUPABASE_ANON_KEY;
 
-if (!process.env.VITE_SUPABASE_ANON_KEY && !process.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
-  missing.push('VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY)');
+const missing = [];
+if (!supabaseUrl) {
+  missing.push('VITE_SUPABASE_URL (or SUPABASE_URL)');
+}
+if (!supabaseClientKey) {
+  missing.push('VITE_SUPABASE_PUBLISHABLE_KEY / VITE_SUPABASE_ANON_KEY (or SUPABASE_PUBLISHABLE_KEY / SUPABASE_ANON_KEY)');
 }
 
 if (missing.length > 0) {
@@ -47,13 +55,29 @@ if (missing.length > 0) {
   process.exit(0);
 }
 
+function getSupabaseClientKeySource() {
+  if (process.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+    return 'VITE_SUPABASE_PUBLISHABLE_KEY';
+  }
+
+  if (process.env.VITE_SUPABASE_ANON_KEY) {
+    return 'VITE_SUPABASE_ANON_KEY';
+  }
+
+  if (process.env.SUPABASE_PUBLISHABLE_KEY) {
+    return 'SUPABASE_PUBLISHABLE_KEY';
+  }
+
+  return 'SUPABASE_ANON_KEY';
+}
+
+const supabaseUrlSource = process.env.VITE_SUPABASE_URL
+  ? 'VITE_SUPABASE_URL'
+  : 'SUPABASE_URL';
+const supabaseClientKeySource = getSupabaseClientKeySource();
+
 // Diagnostic: log which env vars Vite will inline (values redacted)
 console.warn('\nAPEX BUILD GUARD — Environment variables OK:');
-console.warn(`   VITE_SUPABASE_URL = ${process.env.VITE_SUPABASE_URL?.slice(0, 30)}...`);
-console.warn(
-  `   VITE_SUPABASE_PUBLISHABLE_KEY = ${process.env.VITE_SUPABASE_PUBLISHABLE_KEY ? '[set]' : '[not set]'}`,
-);
-console.warn(
-  `   VITE_SUPABASE_ANON_KEY = ${process.env.VITE_SUPABASE_ANON_KEY ? '[set]' : '[not set]'}`,
-);
+console.warn(`   Supabase URL source = ${supabaseUrlSource}`);
+console.warn(`   Supabase client key source = ${supabaseClientKeySource}`);
 console.warn('');
