@@ -107,6 +107,7 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
       style={{ ...style, x, y, position: 'relative', zIndex: 'auto' as unknown as number }}
       whileDrag={{ scale: 1.015, zIndex: 999, cursor: 'grabbing' }}
       // Bind independent pointer attributes explicitly for `tile-stability.spec.tsx` Vitest coverage
+      data-testid={id}
       data-drag-active={testDragActive}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
