@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Version:** 1.6.0 | **Release Date:** 2026-05-08
+**Version:** 1.6.3 | **Release Date:** 2026-05-11
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -46,7 +46,7 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-04-04)
+## Platform Statistics (Repository Snapshot 2026-05-14)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
@@ -57,7 +57,7 @@ The platform relies on a "Holy Trinity" architecture:
 | **Edge Functions (`supabase/functions/`)**       | 22 function directories                           |
 | **Database Migrations (`supabase/migrations/`)** | 61 SQL migration files                            |
 | **CI/CD Workflows (`.github/workflows/`)**       | 14 workflow files                                 |
-| **Test Specs (`tests/` + `e2e/` + `sim/`)**     | 157 test specs (`*.test.ts`, `*.spec.ts`)         |
+| **Test Specs (`tests/` + `e2e/` + `sim/`)**     | 2,488 tests across 241+ spec files                |
 | **Custom Hooks (`src/`)**                        | 17 hook files matching `use*.ts*`                 |
 | **Orchestrator (Python)**                        | 83 files (Temporal workers, activities, security) |
 
@@ -146,7 +146,7 @@ Client-side infrastructure for deterministic media delivery:
 
 ### Runtime and release authority
 
-APEX OmniHub now treats Node 24 as the canonical CI/runtime target, with Node 22 as the minimum supported version. The authoritative release path is npm-based: `npm ci` and `npm run ...`. Bun remains optional for local convenience only; `package-lock.json` is the release lockfile and `bun.lock` is retained for parity evidence, not CI authority. See `docs/runtime/ENTERPRISE_CONTROL_PLANE.md`.
+APEX OmniHub requires Node.js 20.19+ and **bun** as the canonical package manager. `bun install --frozen-lockfile` is used for all installs; `npm` is used only for `npm audit --omit=dev`. Both `bun.lock` (canonical) and `package-lock.json` (required by `npm audit` in CI) are committed. See CLAUDE.md §2 for the full policy.
 
 ## Repository Layout
 
@@ -189,13 +189,13 @@ Supabase runs in the cloud — point `.env.local` to your Supabase project.
 #### 1) Install dependencies
 
 ```bash
-npm ci
+bun install
 ```
 
 #### 2) Run OmniDash (main UI)
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 #### 3) Run the Orchestrator (Temporal)
@@ -219,10 +219,10 @@ docker compose -f docker-compose.prod.yml up -d
 Run these before any PR:
 
 ```bash
-npm run lint       # ESLint
-npm run typecheck  # TypeScript strict mode
-npm test           # Vitest suite
-npm run build      # Production build
+bun run lint       # ESLint
+bun run typecheck  # TypeScript strict mode
+bun run test       # Vitest suite
+bun run build      # Production build
 ```
 
 ### CI/CD Pipelines (Selected Workflows)
@@ -263,7 +263,7 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 1. Fork the repo
 2. Create a branch: `git checkout -b feature/your-feature`
 3. Write tests for your changes
-4. Run full gates: `npm test && npm run lint && npm run typecheck && npm run build`
+4. Run full gates: `bun run test && bun run lint && bun run typecheck && bun run build`
 5. Submit a PR
 
 ### Non-Negotiables

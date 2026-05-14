@@ -35,7 +35,7 @@ It validates that sync packets follow the right shape, risk lanes are properly c
 
 ## 2. Chaos & Simulation Engine
 
-**Location:** `sim/cli.ts` (triggered via `npm run sim:*`)
+**Location:** `sim/cli.ts` (triggered via `bun run sim:*`)
 
 ### What it does
 Provides multiple operation modes (`chaos`, `dry`, `quick`, `burst`, `custom`) to inject jitter, failures, latency, and out-of-order execution into the application state to observe resilience.
@@ -55,7 +55,7 @@ Proves that our retry mechanisms, Dead Letter Queues (DLQ), and Orchestrator fai
 
 ## 3. Deterministic Evaluator (OmniEval)
 
-**Location:** `npm run eval:ci`
+**Location:** `bun run eval:ci`
 
 ### What it does
 Runs an evaluation gate to ensure output determinism across critical deterministic paths in the application.
@@ -74,7 +74,7 @@ Prevents unpredictable outputs from affecting stable state machines or policy ev
 
 ## 4. Secret Scanning & Audit
 
-**Location:** `scripts/secret-scan.mjs` and `npm audit --omit=dev`
+**Location:** `scripts/secret-scan.mjs` and `npm audit --omit=dev` (npm audit is the only npm command used — never `npm install`)
 
 ### What it does
 Locally verifiable security gates. The secret scanner prevents committing API keys, and the dependency scanner verifies production vulnerabilities (with strict enforcement).
@@ -83,7 +83,7 @@ Locally verifiable security gates. The secret scanner prevents committing API ke
 "Shift-left" security, giving immediate feedback without waiting for CI to fail.
 
 ### When to use it
-- Run `npm run secret:scan` and `npm run security:audit` before committing.
+- Run `bun run secret:scan` and `bun run security:audit` before committing.
 
 ### What it does NOT replace
 - Centralized secrets management and rotation.
