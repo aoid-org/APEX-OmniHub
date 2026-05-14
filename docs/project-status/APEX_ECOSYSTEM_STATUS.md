@@ -6,8 +6,8 @@
 LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
 
 
-**Last Updated:** 2026-03-10
-**Platform Version:** 1.4.1
+**Last Updated:** 2026-03-10 (historical snapshot — see PRODUCTION_CERTIFICATION_STATUS.md for current state)
+**Platform Version:** 1.4.1 (current: 1.6.0 — see CHANGELOG.md)
 **Status:** 🟢 PRODUCTION LIVE — Audit Score 94.3/100 (A)
 
 ---

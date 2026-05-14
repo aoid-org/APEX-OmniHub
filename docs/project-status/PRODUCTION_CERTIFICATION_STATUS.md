@@ -2,7 +2,7 @@
 
 > **This is the canonical source for current certification state.**
 > All other docs (PRODUCTION_STATUS.md, audit reports, README) defer here.
-> Last updated: 2026-05-13
+> Last updated: 2026-05-14
 
 ## Platform Facts
 
@@ -10,8 +10,9 @@
 |---|---|
 | Package version | 1.6.0 (from package.json) |
 | Latest inspected main commit | 58e93e1fd83b557d4926a058e9ea4237a743df2e |
+| Branch under review | `claude/resolve-tech-debt-PQTz1` |
 | Repo | apexbusiness-systems/APEX-OmniHub |
-| Branch inspected | main |
+| Local gate verification | 2026-05-14 — all gates clean (see §Local Gate Audit below) |
 
 ## Authority
 
@@ -42,6 +43,31 @@
 4. Merge this PR to main and confirm all required CI gates pass
 5. Confirm release workflow runs and produces `release-evidence.json` with `CERTIFIED` verdict
 6. Update this document to `CERTIFIED` with evidence link
+
+## Local Gate Audit — 2026-05-14 (branch: claude/resolve-tech-debt-PQTz1)
+
+All required quality gates verified clean locally. These must also pass on `main` CI post-merge to achieve `CERTIFIED`.
+
+| Gate | Command | Result |
+|---|---|---|
+| TypeScript | `bun run typecheck` | ✅ 0 errors |
+| ESLint | `bun run lint` | ✅ 0 warnings |
+| Tests | `bun run test` | ✅ 2488 passed, 0 failed |
+| Build | `bun run build` | ✅ succeeded (17s) |
+| Bundle size | `size-limit` | ✅ JS 115 KB / 800 KB, React 57 KB / 150 KB |
+| React singleton | `bun run check:react` | ✅ React 18.3.1 only |
+| Docs integrity | `bun run docs:check` | ✅ no broken links/pointers |
+| npm audit (prod) | `npm audit --omit=dev --audit-level=high` | ✅ 0 vulnerabilities |
+| Security posture | `bash scripts/security/security-posture-check.sh` | ✅ 9/9 (100%) |
+| Secret scan | `bun run secret:scan` | ✅ no secrets found |
+| Repo hygiene | `bash scripts/repo-hygiene-guard.sh` | ✅ no artifact files tracked |
+| RLS posture | `bash scripts/security/check_rls_posture.sh` | ✅ PASS |
+| Legal drift | `node scripts/compliance/check_legal_drift.mjs` | ✅ PASS |
+| Claims proof | `node scripts/compliance/check_claims_proof.mjs` | ✅ PASS |
+| Additive migrations (CI sim) | `GITHUB_BASE_REF=main bun run scripts/ci/check-additive-migrations.ts` | ✅ 4 files, 0 violations |
+| Armageddon certify | `bun run armageddon:certify:ci` | ✅ PASS |
+| OmniEval | `bun run eval:ci` | ✅ 16/16 passed (100%), 0 policy violations |
+| Infrastructure tests | `bun run test:infra` | ✅ 7 passed |
 
 ## Known Advisories (non-blocking)
 
