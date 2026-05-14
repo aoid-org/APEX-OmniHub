@@ -1,69 +1,142 @@
-# Shadow Deployment Blockers — 2026-05-13
+# Shadow Deployment Certification Blockers — 2026-05-14
 
-## Status: BLOCKED — Shadow slot not provisioned
+## Status: BLOCKED — external shadow infrastructure not yet verified
 
-A real shadow deployment to Cloudflare Pages cannot be executed from the release
-workflow until the following items are resolved. The release workflow has been
-hardened to skip shadow deployment when the required infrastructure and secrets
-are absent, rather than running a fake background process.
+A release cannot be marked `CERTIFIED` until a real Cloudflare Pages shadow deployment is provisioned, validated, and promoted through the protected Terraform approval path. The repository now has fail-closed preflight and evidence generation so CI cannot silently skip these blockers or emit a misleading certification verdict.
 
 ---
 
-## Required to Unblock Shadow Deployment
+## Active Blockers
 
-### 1. Cloudflare Pages Shadow Project
+| ID | Blocker | Severity | Automated control |
+|---|---|---:|---|
+| B-1 | Cloudflare Pages shadow slot is not verified as provisioned, or required Cloudflare secrets/vars are absent. | P0 | `scripts/ci/shadow-certification-preflight.mjs` checks `ENABLE_SHADOW_DEPLOYMENT`, Cloudflare credentials, project name, and health URL before deploy. |
+| B-2 | `release-evidence.json` with `CERTIFIED` or `CERTIFICATION_PENDING_FINAL_MAIN_CI` has not yet been produced by a real release run. | P0 | `.github/workflows/release.yml` always uploads `release-evidence.json`; `scripts/ci/write-release-evidence.mjs` computes the verdict from actual preflight/deploy/health/validator/Terraform outputs. |
+| B-3 | GitHub Environment `production-shadow` with required reviewer protection is not verified for Terraform apply approval. | P1 | `scripts/ci/shadow-certification-preflight.mjs` queries the GitHub Environments API and blocks certification when required reviewers are absent or unverifiable. |
 
-A dedicated Cloudflare Pages project must exist for shadow traffic. This is
-separate from the production project.
-
-**Action required:** Provision a Cloudflare Pages project named
-`apex-omnihub-shadow` (or update `CLOUDFLARE_SHADOW_PROJECT_NAME` variable).
-
-### 2. Required Repository Secrets / Variables
-
-| Name | Type | Description |
-|---|---|---|
-| `CLOUDFLARE_API_TOKEN` | Secret | CF API token with Pages:Edit permission |
-| `CLOUDFLARE_ACCOUNT_ID` | Secret | Cloudflare account ID |
-| `CLOUDFLARE_SHADOW_PROJECT_NAME` | Variable | Pages project name for shadow slot |
-| `ENABLE_SHADOW_DEPLOYMENT` | Variable | Must be set to `true` to enable the step |
-| `SHADOW_HEALTH_URL` | Variable | Full URL of the shadow deployment health endpoint |
-
-None of these are currently provisioned in the repository. Setting
-`ENABLE_SHADOW_DEPLOYMENT=true` without the above will cause the workflow to fail.
-
-### 3. Orchestrator Shadow Target
-
-The previous workflow used `python -m uvicorn main:app` started as a background
-process within the CI runner — this is not a real deployment. It has been removed.
-
-A real orchestrator shadow target must be a deployed instance (e.g., Cloud Run,
-Railway, Fly.io, or equivalent) with a stable URL. The health endpoint at
-`${SHADOW_HEALTH_URL}/health` must return HTTP 200.
-
-### 4. Terraform Environment Protection
-
-The Terraform apply step requires a GitHub Environment named `production-shadow`
-with required reviewers configured. This must be provisioned in the repository
-settings before atomic routing flips can be enabled.
+These blockers require external GitHub/Cloudflare configuration. Do **not** update this document to `CERTIFIED` until the release artifact from a real `main` workflow run proves the final verdict.
 
 ---
 
-## Interim Behavior (post-hardening)
+## Required Repository Configuration
 
-When `ENABLE_SHADOW_DEPLOYMENT` is not `true`, the workflow:
-1. Runs the Changesets action to create/update the Release PR or publish.
-2. Uploads a `release-evidence.json` artifact recording the commit SHA,
-   workflow run URL, shadow URL (none), health result (skipped), validator
-   result (skipped), Terraform result (skipped), and verdict `SHADOW_NOT_PROVISIONED`.
-3. Prints a clear skip message with instructions to provision the shadow slot.
+### Cloudflare Pages shadow project
 
-No fake services are started. No Terraform apply runs without plan + approval.
+Provision a dedicated Cloudflare Pages project for shadow traffic. The default expected name is:
+
+```text
+apex-omnihub-shadow
+```
+
+If a different project is used, set the repository variable below to the exact project name.
+
+### Required repository secrets
+
+| Name | Required value |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API token with permission to deploy Cloudflare Pages projects. |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID that owns the shadow Pages project. |
+| `TF_TOKEN` | Terraform token used by the production environment apply path, if atomic routing flip is enabled. |
+
+### Required repository variables
+
+| Name | Required value |
+|---|---|
+| `ENABLE_SHADOW_DEPLOYMENT` | `true` after the Cloudflare Pages shadow project and secrets are ready. |
+| `CLOUDFLARE_SHADOW_PROJECT_NAME` | Shadow Pages project name, for example `apex-omnihub-shadow`. |
+| `SHADOW_HEALTH_URL` | Full base URL for the shadow deployment health target. |
+| `ENABLE_ATOMIC_ROUTING_FLIP` | `true` only after `production-shadow` reviewers are configured. |
+
+### Where to get each required value
+
+Use GitHub repository **secrets** for credentials/tokens and GitHub repository **variables** for non-secret release switches and names. In GitHub, set them under **Settings → Secrets and variables → Actions**; use the **Secrets** tab for secret values and the **Variables** tab for boolean/name/URL values.
+
+| Name | GitHub storage | Where it comes from | Operator rule |
+|---|---|---|---|
+| `CLOUDFLARE_API_TOKEN` | Secret | Create it in the Cloudflare dashboard under **Account API Tokens**. Use a Pages-capable token that can deploy the shadow Pages project. | Never paste this token into logs, docs, local env dumps, or PR comments. Rotate it if exposed. |
+| `CLOUDFLARE_ACCOUNT_ID` | Secret | Copy it from the Cloudflare dashboard for the account that owns the shadow Pages project. | Treat as sensitive deployment metadata in this repo even though Cloudflare account IDs are less sensitive than API tokens. |
+| `TF_TOKEN` | Secret | Create an HCP Terraform/Terraform Cloud API token for the `omnihub` organization/workspace access path. Prefer a team/service-account token scoped to the `omnihub-production` workspace over a personal user token. | Required only when `ENABLE_ATOMIC_ROUTING_FLIP=true`; the workflow exposes it to Terraform CLI as `TF_TOKEN_app_terraform_io`. |
+| `ENABLE_SHADOW_DEPLOYMENT` | Variable | This is an operator-controlled GitHub Actions variable, not a vendor-generated value. | Set to `true` only after the Cloudflare Pages project, Cloudflare token, account ID, and shadow project name are configured. Otherwise keep it unset or `false`. |
+| `CLOUDFLARE_SHADOW_PROJECT_NAME` | Variable | Copy the exact Pages project name from Cloudflare **Workers & Pages**. The default planned value is `apex-omnihub-shadow`. | Must exactly match the project passed to `wrangler pages deploy --project-name`. |
+| `SHADOW_HEALTH_URL` | Variable | Use the stable shadow deployment base URL after the Pages project exists, usually `https://<cloudflare-shadow-project-name>.pages.dev` or a configured shadow custom domain. | The app must respond with HTTP 200 at `${SHADOW_HEALTH_URL}/health`; do not include trailing `/health` in the variable. |
+| `ENABLE_ATOMIC_ROUTING_FLIP` | Variable | This is an operator-controlled GitHub Actions variable, not a vendor-generated value. | Set to `true` only after `production-shadow` has required reviewers and `TF_TOKEN` is configured. Keep `false` if the release should validate shadow deploys without promoting routing. |
+
+Official setup references:
+
+- GitHub Actions secrets/variables: <https://docs.github.com/actions/learn-github-actions/variables>
+- GitHub deployment environments and required reviewers: <https://docs.github.com/actions/reference/workflows-and-actions/deployments-and-environments>
+- Cloudflare Pages API tokens and Pages project API: <https://developers.cloudflare.com/pages/configuration/api/>
+- HCP Terraform/Terraform Cloud API tokens: <https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/api-tokens>
+
+### Required GitHub Environment
+
+Create a GitHub Environment named:
+
+```text
+production-shadow
+```
+
+Configure required reviewers for Terraform apply approval. The release preflight treats the environment as blocked if the GitHub API cannot verify a `required_reviewers` protection rule.
 
 ---
 
-## Certification Impact
+## Automated Release Controls
 
-Deployment target absent → Certification verdict is `NOT_CERTIFIED_BLOCKED`
-until shadow slot is provisioned and a successful release run with all gates
-passing is recorded in `release-evidence.json`.
+The release workflow now enforces the following sequence:
+
+1. Run Changesets release/publish logic.
+2. Run `node scripts/ci/shadow-certification-preflight.mjs`.
+3. Deploy to Cloudflare Pages shadow slot only when preflight status is `pass`.
+4. Run shadow `/health` polling against the real deployment URL.
+5. Run deterministic validator against the real shadow URL.
+6. Run Terraform plan/apply only after shadow validation and the protected `production-shadow` environment approval path.
+7. Always upload `release-evidence.json` and `shadow-preflight.json` artifacts.
+8. Fail enabled shadow releases when preflight is blocked instead of silently skipping deployment.
+
+Interim, non-certified releases keep a machine-readable blocker list in `release-evidence.json` with verdict `NOT_CERTIFIED_BLOCKED` or `NOT_CERTIFIED_NO_RELEASE_PUBLISHED`.
+
+---
+
+## Local Preflight Commands
+
+Run these from the repository root:
+
+```bash
+npm run release:shadow-preflight
+npm run release:evidence
+```
+
+For strict local/CI gating, run:
+
+```bash
+node scripts/ci/shadow-certification-preflight.mjs --strict
+```
+
+The strict command exits non-zero until B-1 and B-3 are resolved.
+
+---
+
+## Path to `CERTIFIED`
+
+1. Provision the Cloudflare Pages shadow project.
+2. Set repository secrets:
+   - `CLOUDFLARE_API_TOKEN`
+   - `CLOUDFLARE_ACCOUNT_ID`
+   - `TF_TOKEN` when atomic routing flip is enabled.
+3. Set repository variables:
+   - `CLOUDFLARE_SHADOW_PROJECT_NAME`
+   - `SHADOW_HEALTH_URL`
+   - `ENABLE_SHADOW_DEPLOYMENT=true`
+   - `ENABLE_ATOMIC_ROUTING_FLIP=true` after Terraform approval protection is configured.
+4. Configure GitHub Environment `production-shadow` with required reviewers.
+5. Merge to `main` and confirm all required CI gates pass.
+6. Confirm the release workflow artifact `release-evidence.json` reports either:
+   - `CERTIFICATION_PENDING_FINAL_MAIN_CI` when shadow validation passed and final protected apply is still pending, or
+   - `CERTIFIED` when shadow validation and Terraform promotion passed.
+7. Update this document from `BLOCKED` to `CERTIFIED` with the release evidence artifact link.
+
+---
+
+## Certification Rule
+
+The only acceptable source of truth for certification is a `release-evidence.json` artifact produced by a real release workflow run on `main`. Manual claims, local mock evidence, skipped shadow deployments, or unverified environment settings do not certify the release.

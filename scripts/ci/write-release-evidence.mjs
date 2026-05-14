@@ -1,0 +1,79 @@
+#!/usr/bin/env node
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const OUTPUT_PATH = process.env.RELEASE_EVIDENCE_OUTPUT_PATH || 'release-evidence.json';
+const PREFLIGHT_PATH = process.env.PREFLIGHT_OUTPUT_PATH || 'shadow-preflight.json';
+
+function readPreflight() {
+  try {
+    return JSON.parse(readFileSync(PREFLIGHT_PATH, 'utf8'));
+  } catch (error) {
+    return {
+      status: 'blocked',
+      blockers: [
+        {
+          id: 'B-1',
+          severity: 'P0',
+          message: `Shadow preflight evidence unavailable: ${error instanceof Error ? error.message : String(error)}.`,
+          remediation: 'Run scripts/ci/shadow-certification-preflight.mjs before writing release evidence.',
+        },
+      ],
+    };
+  }
+}
+
+function value(name, fallback = '') {
+  return process.env[name] || fallback;
+}
+
+function computeVerdict({ published, preflight, shadowUrl, health, validator, terraform, terraformOutcome }) {
+  if (published !== 'true') {
+    return 'NOT_CERTIFIED_NO_RELEASE_PUBLISHED';
+  }
+
+  if (preflight.status !== 'pass') {
+    return 'NOT_CERTIFIED_BLOCKED';
+  }
+
+  if (!shadowUrl || health !== 'pass' || validator !== 'pass') {
+    return 'NOT_CERTIFIED_BLOCKED';
+  }
+
+  if (terraform === 'pass') {
+    return 'CERTIFIED';
+  }
+
+  if (terraformOutcome === 'skipped') {
+    return 'CERTIFICATION_PENDING_FINAL_MAIN_CI';
+  }
+
+  return 'NOT_CERTIFIED_BLOCKED';
+}
+
+const preflight = readPreflight();
+const published = value('PUBLISHED_RAW', 'false');
+const shadowUrl = value('SHADOW_URL_RAW');
+const health = value('HEALTH_RAW', 'skipped');
+const validator = value('VALIDATOR_RAW', 'skipped');
+const terraform = value('TF_RESULT_RAW', 'skipped');
+const terraformOutcome = value('TF_OUTCOME_RAW', 'skipped');
+const workflowRunUrl = `${value('GH_SERVER_URL', 'https://github.com')}/${value('GH_REPOSITORY', 'unknown/repository')}/actions/runs/${value('GH_RUN_ID', 'unknown')}`;
+
+const evidence = {
+  schema_version: 1,
+  commit_sha: value('GH_SHA', 'unknown'),
+  workflow_run_url: workflowRunUrl,
+  published,
+  shadow_url: shadowUrl,
+  health_result: health,
+  validator_result: validator,
+  terraform_result: terraform,
+  terraform_outcome: terraformOutcome,
+  shadow_preflight_status: preflight.status,
+  blockers: Array.isArray(preflight.blockers) ? preflight.blockers : [],
+  final_verdict: computeVerdict({ published, preflight, shadowUrl, health, validator, terraform, terraformOutcome }),
+  timestamp: new Date().toISOString(),
+};
+
+writeFileSync(OUTPUT_PATH, `${JSON.stringify(evidence, null, 2)}\n`);
+console.log(JSON.stringify(evidence, null, 2));

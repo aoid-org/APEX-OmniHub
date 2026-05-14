@@ -51,13 +51,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Shadow certification preflight
+        id: shadow_preflight
+        env:
+          ENABLE_SHADOW_DEPLOYMENT: ${{ vars.ENABLE_SHADOW_DEPLOYMENT }}
+          ENABLE_ATOMIC_ROUTING_FLIP: ${{ vars.ENABLE_ATOMIC_ROUTING_FLIP }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_SHADOW_PROJECT_NAME: ${{ vars.CLOUDFLARE_SHADOW_PROJECT_NAME }}
+          SHADOW_HEALTH_URL: ${{ vars.SHADOW_HEALTH_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          TF_TOKEN: ${{ secrets.TF_TOKEN }}
+        run: node scripts/ci/shadow-certification-preflight.mjs
+
       - name: Deploy to Shadow Slot (Cloudflare Pages)
         if: |
           steps.changesets.outputs.published == 'true' &&
-          vars.ENABLE_SHADOW_DEPLOYMENT == 'true' &&
-          secrets.CLOUDFLARE_API_TOKEN != '' &&
-          secrets.CLOUDFLARE_ACCOUNT_ID != '' &&
-          vars.CLOUDFLARE_SHADOW_PROJECT_NAME != ''
+          steps.shadow_preflight.outputs.status == 'pass'
         id: shadow_deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -111,13 +122,13 @@ jobs:
         env:
           TARGET_URL: ${{ steps.shadow_deploy.outputs.shadow_url }}
 
-      - name: Skip shadow deployment — slot not provisioned
+      - name: Skip shadow deployment — certification preflight blocked
         if: |
           steps.changesets.outputs.published == 'true' &&
-          vars.ENABLE_SHADOW_DEPLOYMENT != 'true'
+          steps.shadow_preflight.outputs.status != 'pass'
         run: |
-          echo "Skipping shadow deployment: ENABLE_SHADOW_DEPLOYMENT is not 'true'."
-          echo "To enable: provision a Cloudflare Pages shadow slot and set repository variables."
+          echo "Skipping shadow deployment because certification preflight is blocked."
+          cat shadow-preflight.json
           echo "See docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md for requirements."
 
       - name: Terraform Plan (shadow validated)
@@ -157,8 +168,8 @@ jobs:
           echo "ENABLE_SHADOW_DEPLOYMENT=${SHADOW_ENABLED}"
           echo "ENABLE_ATOMIC_ROUTING_FLIP=${ROUTING_FLIP_ENABLED}"
 
-      - name: Upload release evidence
-        if: steps.changesets.outputs.published == 'true' || always()
+      - name: Write release evidence
+        if: always()
         env:
           GH_SHA: ${{ github.sha }}
           GH_SERVER_URL: ${{ github.server_url }}
@@ -168,50 +179,26 @@ jobs:
           HEALTH_RAW: ${{ steps.shadow_health.outputs.health_result || 'skipped' }}
           VALIDATOR_RAW: ${{ steps.validator.outputs.validator_result || 'skipped' }}
           TF_RESULT_RAW: ${{ steps.tf_plan.outputs.tf_plan_result || 'skipped' }}
-          PUBLISHED_RAW: ${{ steps.changesets.outputs.published }}
-        run: |
-          SHADOW_URL="$SHADOW_URL_RAW"
-          HEALTH="$HEALTH_RAW"
-          VALIDATOR="$VALIDATOR_RAW"
-          TF_RESULT="$TF_RESULT_RAW"
-          PUBLISHED="$PUBLISHED_RAW"
-
-          if [ -z "$SHADOW_URL" ]; then
-            SHADOW_VERDICT="SHADOW_NOT_PROVISIONED"
-          elif [ "$HEALTH" = "pass" ] && [ "$VALIDATOR" = "pass" ]; then
-            SHADOW_VERDICT="SHADOW_VALIDATED"
-          else
-            SHADOW_VERDICT="SHADOW_FAILED"
-          fi
-
-          if [ "$PUBLISHED" = "true" ] && [ "$SHADOW_VERDICT" = "SHADOW_VALIDATED" ]; then
-            FINAL_VERDICT="CERTIFICATION_PENDING_FINAL_MAIN_CI"
-          else
-            FINAL_VERDICT="NOT_CERTIFIED_BLOCKED"
-          fi
-
-          WORKFLOW_RUN_URL="${GH_SERVER_URL}/${GH_REPOSITORY}/actions/runs/${GH_RUN_ID}"
-          TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-
-          cat > release-evidence.json <<EOF
-          {
-            "commit_sha": "${GH_SHA}",
-            "workflow_run_url": "${WORKFLOW_RUN_URL}",
-            "published": "${PUBLISHED}",
-            "shadow_url": "${SHADOW_URL}",
-            "health_result": "${HEALTH}",
-            "validator_result": "${VALIDATOR}",
-            "terraform_result": "${TF_RESULT}",
-            "final_verdict": "${FINAL_VERDICT}",
-            "timestamp": "${TIMESTAMP}"
-          }
-          EOF
-          cat release-evidence.json
+          TF_OUTCOME_RAW: ${{ steps.tf_plan.outcome || 'skipped' }}
+          PUBLISHED_RAW: ${{ steps.changesets.outputs.published || 'false' }}
+        run: node scripts/ci/write-release-evidence.mjs
 
       - name: Upload release-evidence artifact
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-evidence
-          path: release-evidence.json
+          path: |
+            release-evidence.json
+            shadow-preflight.json
           retention-days: 90
+
+      - name: Block enabled shadow release when certification preflight fails
+        if: |
+          steps.changesets.outputs.published == 'true' &&
+          vars.ENABLE_SHADOW_DEPLOYMENT == 'true' &&
+          steps.shadow_preflight.outputs.status != 'pass'
+        run: |
+          echo "::error::Shadow deployment was enabled, but certification preflight is blocked."
+          cat release-evidence.json
+          exit 1
