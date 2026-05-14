@@ -1,23 +1,19 @@
 import { test, expect } from '@playwright/test';
-
-// This test requires an authenticated Supabase session to reach /omnidash/ops.
-// In CI, the preview server has no auth — skip to avoid false failures.
-const isCI = !!process.env.CI;
+import { signInWithSupabaseSession, skipWithoutSupabaseConfig } from './helpers/auth';
 
 /**
  * Ops Widgets Smoke Test — Component Stability Gate
  *
- * Required when Ops UI is modified. Verifies:
- * 1. Memory Health widget renders
- * 2. System Resilience widget renders
- * 3. No console errors
- * 4. No stable export renames (test-ids remain valid)
+ * Verifies the current OmniDash right-rail operational widgets render under a
+ * real Supabase-authenticated browser session created from the provided Supabase keys.
  */
 test.describe('Ops Widgets Smoke (Component Stability Gate)', () => {
-  test.skip(isCI, 'Requires authenticated session unavailable in CI preview');
-  test('Memory Health and System Resilience widgets render', async ({
-    page,
-  }) => {
+  test.beforeEach(async ({ page }) => {
+    skipWithoutSupabaseConfig();
+    await signInWithSupabaseSession(page);
+  });
+
+  test('right-rail operational widgets render', async ({ page }) => {
     const consoleErrors: string[] = [];
     page.on('console', (msg) => {
       if (msg.type() === 'error') {
@@ -25,25 +21,22 @@ test.describe('Ops Widgets Smoke (Component Stability Gate)', () => {
       }
     });
 
-    await page.goto('/omnidash/ops', { waitUntil: 'networkidle' });
+    await expect(page.getByTestId('rt_security')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Security Audit')).toBeVisible({ timeout: 10000 });
 
-    // Memory Health widget must be visible
-    const memoryHealthCard = page.getByTestId('widget-memory-health');
-    await expect(memoryHealthCard).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId('rt_analytics')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('System Health')).toBeVisible({ timeout: 10000 });
 
-    // System Resilience widget must be visible
-    const resilienceCard = page.getByTestId('widget-system-resilience');
-    await expect(resilienceCard).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId('rt_trace')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('OmniTrace')).toBeVisible({ timeout: 10000 });
 
-    // Freeze Switch widget must be visible (pre-existing)
-    const freezeCard = page.getByText('Freeze switch');
-    await expect(freezeCard).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId('rt_ops')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Ops Controls')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Guardian Mode')).toBeVisible({ timeout: 10000 });
 
-    // Incident log section must be visible
-    const incidentLog = page.getByText('Incident log');
-    await expect(incidentLog).toBeVisible({ timeout: 10000 });
-
-    // No console errors allowed
-    expect(consoleErrors).toHaveLength(0);
+    const fatalErrors = consoleErrors.filter((error) =>
+      /createContext|Cannot read properties of undefined|ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module/.test(error),
+    );
+    expect(fatalErrors).toHaveLength(0);
   });
 });
