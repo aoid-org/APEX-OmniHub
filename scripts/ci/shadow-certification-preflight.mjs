@@ -154,7 +154,10 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+try {
+  await main();
+} catch (error) {
+  // Preserve the script's fail-closed behavior while using ES2022 top-level await.
   console.error(`shadow certification preflight failed: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
-});
+}
