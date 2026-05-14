@@ -47,6 +47,27 @@ If a different project is used, set the repository variable below to the exact p
 | `SHADOW_HEALTH_URL` | Full base URL for the shadow deployment health target. |
 | `ENABLE_ATOMIC_ROUTING_FLIP` | `true` only after `production-shadow` reviewers are configured. |
 
+### Where to get each required value
+
+Use GitHub repository **secrets** for credentials/tokens and GitHub repository **variables** for non-secret release switches and names. In GitHub, set them under **Settings → Secrets and variables → Actions**; use the **Secrets** tab for secret values and the **Variables** tab for boolean/name/URL values.
+
+| Name | GitHub storage | Where it comes from | Operator rule |
+|---|---|---|---|
+| `CLOUDFLARE_API_TOKEN` | Secret | Create it in the Cloudflare dashboard under **Account API Tokens**. Use a Pages-capable token that can deploy the shadow Pages project. | Never paste this token into logs, docs, local env dumps, or PR comments. Rotate it if exposed. |
+| `CLOUDFLARE_ACCOUNT_ID` | Secret | Copy it from the Cloudflare dashboard for the account that owns the shadow Pages project. | Treat as sensitive deployment metadata in this repo even though Cloudflare account IDs are less sensitive than API tokens. |
+| `TF_TOKEN` | Secret | Create an HCP Terraform/Terraform Cloud API token for the `omnihub` organization/workspace access path. Prefer a team/service-account token scoped to the `omnihub-production` workspace over a personal user token. | Required only when `ENABLE_ATOMIC_ROUTING_FLIP=true`; the workflow exposes it to Terraform CLI as `TF_TOKEN_app_terraform_io`. |
+| `ENABLE_SHADOW_DEPLOYMENT` | Variable | This is an operator-controlled GitHub Actions variable, not a vendor-generated value. | Set to `true` only after the Cloudflare Pages project, Cloudflare token, account ID, and shadow project name are configured. Otherwise keep it unset or `false`. |
+| `CLOUDFLARE_SHADOW_PROJECT_NAME` | Variable | Copy the exact Pages project name from Cloudflare **Workers & Pages**. The default planned value is `apex-omnihub-shadow`. | Must exactly match the project passed to `wrangler pages deploy --project-name`. |
+| `SHADOW_HEALTH_URL` | Variable | Use the stable shadow deployment base URL after the Pages project exists, usually `https://<cloudflare-shadow-project-name>.pages.dev` or a configured shadow custom domain. | The app must respond with HTTP 200 at `${SHADOW_HEALTH_URL}/health`; do not include trailing `/health` in the variable. |
+| `ENABLE_ATOMIC_ROUTING_FLIP` | Variable | This is an operator-controlled GitHub Actions variable, not a vendor-generated value. | Set to `true` only after `production-shadow` has required reviewers and `TF_TOKEN` is configured. Keep `false` if the release should validate shadow deploys without promoting routing. |
+
+Official setup references:
+
+- GitHub Actions secrets/variables: <https://docs.github.com/actions/learn-github-actions/variables>
+- GitHub deployment environments and required reviewers: <https://docs.github.com/actions/reference/workflows-and-actions/deployments-and-environments>
+- Cloudflare Pages API tokens and Pages project API: <https://developers.cloudflare.com/pages/configuration/api/>
+- HCP Terraform/Terraform Cloud API tokens: <https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/api-tokens>
+
 ### Required GitHub Environment
 
 Create a GitHub Environment named:
