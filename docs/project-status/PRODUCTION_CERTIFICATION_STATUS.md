@@ -9,10 +9,9 @@
 | Field | Value |
 |---|---|
 | Package version | 1.6.0 (from package.json) |
-| Latest inspected main commit | 58e93e1fd83b557d4926a058e9ea4237a743df2e |
-| Branch under review | `claude/resolve-tech-debt-PQTz1` |
+| Latest inspected main commit | 0f1365d (Merge PR #1153 — post-audit CodeX hardening) |
 | Repo | apexbusiness-systems/APEX-OmniHub |
-| Local gate verification | 2026-05-14 — all gates clean (see §Local Gate Audit below) |
+| Local gate verification | 2026-05-14 — all gates clean on current main (see §Local Gate Audit below) |
 
 ## Authority
 
@@ -40,13 +39,13 @@
 1. Provision Cloudflare Pages shadow slot (see `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md`)
 2. Set repository secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
 3. Set repository variables: `CLOUDFLARE_SHADOW_PROJECT_NAME`, `ENABLE_SHADOW_DEPLOYMENT=true`
-4. Merge this PR to main and confirm all required CI gates pass
+4. ~~Merge tech-debt branch to main~~ — **DONE** (PR #1149, #1152, #1153 merged 2026-05-14)
 5. Confirm release workflow runs and produces `release-evidence.json` with `CERTIFIED` verdict
 6. Update this document to `CERTIFIED` with evidence link
 
-## Local Gate Audit — 2026-05-14 (branch: claude/resolve-tech-debt-PQTz1)
+## Local Gate Audit — 2026-05-14 (main @ 0f1365d)
 
-All required quality gates verified clean locally. These must also pass on `main` CI post-merge to achieve `CERTIFIED`.
+All required quality gates verified clean on current main. CI must also confirm green post-push to achieve `CERTIFIED`.
 
 | Gate | Command | Result |
 |---|---|---|
@@ -94,4 +93,4 @@ All required quality gates verified clean locally. These must also pass on `main
 ## Owner
 
 APEX Business Systems — Release Engineering
-Updated by: Production Certification Hardening (2026-05-13)
+Updated by: Tech-debt resolution audit (2026-05-14) — main @ 0f1365d
