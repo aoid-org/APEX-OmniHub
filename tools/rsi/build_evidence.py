@@ -19,6 +19,7 @@ if _sys.path and _sys.path[0] == _rsi_dir:
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -33,6 +34,7 @@ SCHEMA_VERSION = "1.0.0"
 MAX_DIFF_SUMMARY_CHARS = 2000
 MAX_INVENTORY_CHARS = 500
 DOCS_PATTERNS = ["*.md", "*.txt", "docs/**", "*.rst", "*.adoc"]
+FALLBACK_DIFF_REF = "HEAD~1"
 
 
 def _run(cmd: list[str], capture: bool = True) -> subprocess.CompletedProcess[str]:
@@ -93,7 +95,7 @@ def _get_changed_files_ci(base_ref: str, head_ref: str) -> list[str]:
         # Fallback: diff against local base
         result = _run(["git", "diff", "--name-only", f"origin/{base_ref}...HEAD"])
     if result.returncode != 0:
-        result = _run(["git", "diff", "HEAD~1", "--name-only"])
+        result = _run(["git", "diff", FALLBACK_DIFF_REF, "--name-only"])
     return [p for p in result.stdout.strip().splitlines() if p]
 
 
@@ -103,42 +105,28 @@ def _get_changed_files_local(base_ref: str | None, head_ref: str | None) -> list
     elif base_ref:
         result = _run(["git", "diff", "--name-only", f"{base_ref}...HEAD"])
     else:
-        result = _run(["git", "diff", "HEAD~1", "--name-only"])
+        result = _run(["git", "diff", FALLBACK_DIFF_REF, "--name-only"])
     return [p for p in result.stdout.strip().splitlines() if p]
 
 
 def _get_diff_stats(changed_files: list[str]) -> dict[str, int]:
     if not changed_files:
         return {"total_files_changed": 0, "insertions": 0, "deletions": 0}
-    result = _run(["git", "diff", "--stat", "HEAD~1"])
-    insertions = 0
-    deletions = 0
-    for line in result.stdout.splitlines():
-        if "insertion" in line:
-            parts = line.split(",")
-            for part in parts:
-                part = part.strip()
-                if "insertion" in part:
-                    try:
-                        insertions = int(part.split()[0])
-                    except (ValueError, IndexError):
-                        pass
-                elif "deletion" in part:
-                    try:
-                        deletions = int(part.split()[0])
-                    except (ValueError, IndexError):
-                        pass
+    result = _run(["git", "diff", "--stat", FALLBACK_DIFF_REF])
+    summary = result.stdout.splitlines()[-1] if result.stdout.strip() else ""
+    ins = re.search(r"(\d+) insertion", summary)
+    dels = re.search(r"(\d+) deletion", summary)
     return {
         "total_files_changed": len(changed_files),
-        "insertions": insertions,
-        "deletions": deletions,
+        "insertions": int(ins.group(1)) if ins else 0,
+        "deletions": int(dels.group(1)) if dels else 0,
     }
 
 
 def _get_scoped_diff_summary(changed_files: list[str]) -> str:
     if not changed_files:
         return ""
-    result = _run(["git", "diff", "--stat", "HEAD~1", "--", *changed_files[:20]])
+    result = _run(["git", "diff", "--stat", FALLBACK_DIFF_REF, "--", *changed_files[:20]])
     summary = result.stdout[:MAX_DIFF_SUMMARY_CHARS]
     if len(result.stdout) > MAX_DIFF_SUMMARY_CHARS:
         summary = summary + "[TRUNCATED]"
@@ -179,6 +167,40 @@ def _build_candidate_test_plan(classified: dict[str, str]) -> list[str]:
     return list(dict.fromkeys(plan))  # deduplicate preserving order
 
 
+def _resolve_ci_context(
+    generation_mode: str | None,
+) -> tuple[list[str], str, str | None, str | None]:
+    """Return (changed_files, mode, base_ref, head_ref) for a CI-triggered run."""
+    env_base = os.getenv("GITHUB_BASE_REF", "")
+    env_head = os.getenv("GITHUB_HEAD_REF", "")
+    if env_base and env_head:
+        files = _get_changed_files_ci(env_base, env_head)
+        return files, generation_mode or "ci", env_base, env_head
+    print(
+        "WARNING: GITHUB_BASE_REF or GITHUB_HEAD_REF not set — "
+        f"falling back to {FALLBACK_DIFF_REF} local diff",
+        file=sys.stderr,
+    )
+    files = [p for p in _run(["git", "diff", FALLBACK_DIFF_REF, "--name-only"]).stdout.strip().splitlines() if p]
+    return files, "local-fallback", None, None
+
+
+def _resolve_local_context(
+    base_ref: str | None,
+    head_ref: str | None,
+    generation_mode: str | None,
+) -> tuple[list[str], str, str | None, str | None]:
+    """Return (changed_files, mode, base_ref, head_ref) for a local or dispatch run."""
+    if base_ref or head_ref:
+        return _get_changed_files_local(base_ref, head_ref), generation_mode or "local", base_ref, head_ref
+    if os.getenv("GITHUB_EVENT_NAME", "") == "workflow_dispatch":
+        result = _run(["git", "log", "HEAD~3..HEAD", "--name-only", "--format="])
+        files = [p for p in result.stdout.strip().splitlines() if p]
+        return files, "manual", None, None
+    files = [p for p in _run(["git", "diff", FALLBACK_DIFF_REF, "--name-only"]).stdout.strip().splitlines() if p]
+    return files, "local", None, None
+
+
 def build_evidence(
     ci_mode: bool = False,
     base_ref: str | None = None,
@@ -189,47 +211,10 @@ def build_evidence(
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
     INVENTORY_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Resolve generation mode
     if ci_mode:
-        env_base = os.getenv("GITHUB_BASE_REF", "")
-        env_head = os.getenv("GITHUB_HEAD_REF", "")
-        if env_base and env_head:
-            changed_files = _get_changed_files_ci(env_base, env_head)
-            mode = generation_mode or "ci"
-            b_ref: str | None = env_base
-            h_ref: str | None = env_head
-        else:
-            # Missing CI refs — warn and fall back
-            print(
-                "WARNING: GITHUB_BASE_REF or GITHUB_HEAD_REF not set — "
-                "falling back to HEAD~1 local diff",
-                file=sys.stderr,
-            )
-            changed_files = _run(["git", "diff", "HEAD~1", "--name-only"]).stdout.strip().splitlines()
-            changed_files = [p for p in changed_files if p]
-            mode = "local-fallback"
-            b_ref = None
-            h_ref = None
-    elif base_ref or head_ref:
-        changed_files = _get_changed_files_local(base_ref, head_ref)
-        mode = generation_mode or "local"
-        b_ref = base_ref
-        h_ref = head_ref
+        changed_files, mode, b_ref, h_ref = _resolve_ci_context(generation_mode)
     else:
-        # Check for workflow_dispatch manual context
-        event = os.getenv("GITHUB_EVENT_NAME", "")
-        if event == "workflow_dispatch":
-            result = _run(["git", "log", "HEAD~3..HEAD", "--name-only", "--format="])
-            changed_files = [p for p in result.stdout.strip().splitlines() if p]
-            mode = "manual"
-            b_ref = None
-            h_ref = None
-        else:
-            changed_files = _run(["git", "diff", "HEAD~1", "--name-only"]).stdout.strip().splitlines()
-            changed_files = [p for p in changed_files if p]
-            mode = "local"
-            b_ref = None
-            h_ref = None
+        changed_files, mode, b_ref, h_ref = _resolve_local_context(base_ref, head_ref, generation_mode)
 
     policy_version = _load_policy_version()
     protected_patterns, critical_patterns = _load_policy_patterns()

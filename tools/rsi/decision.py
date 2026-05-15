@@ -31,7 +31,6 @@ MAX_RECOMMENDED_REVIEWERS = 10
 def _risk_from_decision(
     decision: str,
     protected_hits: list[str],
-    critical_hits: list[str],
     changed_paths: list[str],
     classified_paths: dict[str, str],
 ) -> str:
@@ -119,7 +118,7 @@ def combine(
     abort = final_decision == "block"
 
     risk = _risk_from_decision(
-        final_decision, protected_hits, critical_hits, changed_paths, classified_paths
+        final_decision, protected_hits, changed_paths, classified_paths
     )
 
     policy_tests: list[str] = policy.get("required_tests", [])
