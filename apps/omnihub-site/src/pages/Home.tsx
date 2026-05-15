@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { StructuredData } from '@/components/StructuredData';
+import { HERO_BADGE_ASSET_PATH } from '@/lib/heroAssets';
 import '@/styles/landing.css';
 import homepageSchema from '../../public/schema/homepage.jsonld?raw';
 import organizationSchema from '../../public/schema/organization.jsonld?raw';
@@ -85,16 +86,7 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
                 </linearGradient>
                 <filter id="fg"><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <filter id="fxl"><feGaussianBlur in="SourceGraphic" stdDeviation="18" /></filter>
-                <filter id="coreGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="12" result="shadow" /><feOffset in="shadow" dx="0" dy="6" result="shadowOff" /><feFlood floodColor="rgba(0,0,0,0.45)" result="shadowColor" /><feComposite in="shadowColor" in2="shadowOff" operator="in" result="shadowFinal" /><feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="b1" /><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b2" /><feGaussianBlur in="SourceGraphic" stdDeviation="22" result="b3" /><feMerge><feMergeNode in="shadowFinal" /><feMergeNode in="b3" /><feMergeNode in="b2" /><feMergeNode in="b1" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <filter id="fm"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-                <filter id="textGlow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="gb1" /><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="gb2" /><feMerge><feMergeNode in="gb2" /><feMergeNode in="gb1" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-                <filter id="dofShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="10" /></filter>
-                <radialGradient id="core" cx="50%" cy="48%" r="58%">
-                  <stop offset="0%" stopColor="#ECFBFF" stopOpacity="0.95" />
-                  <stop offset="28%" stopColor="#B9EEFF" stopOpacity="0.72" />
-                  <stop offset="58%" stopColor="#5EC8FF" stopOpacity="0.28" />
-                  <stop offset="100%" stopColor="#5EC8FF" stopOpacity="0" />
-                </radialGradient>
                 <clipPath id="sclip"><circle cx="260" cy="265" r="152" /></clipPath>
               </defs>
               <circle cx="260" cy="265" r="240" fill="rgba(196,81,26,0.033)" />
@@ -187,33 +179,17 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
                 <animate attributeName="r" values="60;74;60" dur="2.6s" repeatCount="indefinite" />
                 <animate attributeName="opacity" values="0.45;0.85;0.45" dur="2.6s" repeatCount="indefinite" />
               </circle>
-              {/* ── APEX Canonical Brand Badge ── Inline SVG: zero external deps, cannot break ── */}
               <g clipPath="url(#sclip)">
-                <circle cx="260" cy="266" r="72" fill="rgba(118,222,255,.08)" filter="url(#fxl)" />
-                <circle cx="260" cy="266" r="54" fill="url(#core)" opacity=".9">
-                  <animate attributeName="opacity" values=".74;.98;.76" dur="2.8s" repeatCount="indefinite" />
-                </circle>
-                <ellipse cx="260" cy="289" rx="42" ry="14" fill="rgba(7,14,28,.34)" filter="url(#fg)" />
-                <g opacity=".95">
-                  <circle cx="260" cy="266" r="42" fill="none" stroke="rgba(120,219,255,.28)" strokeWidth="1.1">
-                    <animate attributeName="r" values="36;44;37" dur="2.8s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values=".22;.4;.2" dur="2.8s" repeatCount="indefinite" />
-                  </circle>
-                  <circle cx="260" cy="266" r="30" fill="none" stroke="rgba(170,235,255,.34)" strokeWidth="1">
-                    <animate attributeName="r" values="26;32;27" dur="2.8s" repeatCount="indefinite" begin=".2s" />
-                    <animate attributeName="opacity" values=".2;.38;.16" dur="2.8s" repeatCount="indefinite" begin=".2s" />
-                  </circle>
-                </g>
-                <g>
-                  <animateTransform attributeName="transform" type="translate" values="0 0;0 3;0 0" dur="4.6s" repeatCount="indefinite" />
-                  <animateTransform attributeName="transform" additive="sum" type="scale" values="1;1.03;.99;1" dur="2.8s" repeatCount="indefinite" />
-                  <circle cx="260" cy="266" r="45" fill="rgba(103,214,255,.08)" filter="url(#fg)" />
-                  <circle cx="260" cy="266" r="24" fill="rgba(255,255,255,.12)" filter="url(#fg)" />
-                  <rect x="232" y="238" width="56" height="56" rx="14" fill="rgba(14,165,233,.18)" stroke="rgba(146,226,255,.8)" strokeWidth="1" filter="url(#fg)" />
-                  <text x="260" y="272" textAnchor="middle" fontSize="15" fontWeight="700" fill="#dff8ff" fontFamily="Space Grotesk,sans-serif">APEX</text>
-                </g>
-                <ellipse cx="260" cy="254" rx="52" ry="34" fill="rgba(255,255,255,.08)" />
-                <ellipse cx="246" cy="248" rx="26" ry="12" fill="rgba(255,255,255,.12)" filter="url(#fg)" />
+                <image
+                  href={HERO_BADGE_ASSET_PATH}
+                  xlinkHref={HERO_BADGE_ASSET_PATH}
+                  x="206"
+                  y="211"
+                  width="108"
+                  height="108"
+                  preserveAspectRatio="xMidYMid meet"
+                  aria-label="APEX OmniHub core badge"
+                />
               </g>
               <circle cx="260" cy="265" r="90" fill="none" stroke="rgba(232,162,71,0.18)" strokeWidth="1.5">
                 <animate attributeName="r" from="90" to="155" dur="3s" repeatCount="indefinite" />

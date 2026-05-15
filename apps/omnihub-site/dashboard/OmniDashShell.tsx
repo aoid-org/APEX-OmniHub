@@ -15,7 +15,6 @@ import {
 } from '@/contracts/omnidash-sidebar-widgets';
 import { toast } from 'sonner';
 
-import imgBadge from "../../../src/assets/omnidash/apex-badge.svg";
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgAvatar from "../../../src/assets/omnidash/avatar-default.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
@@ -108,7 +107,7 @@ interface OpsControlsPanelProps {
 }
 
 // ─── APEX Brand Assets ────────────────────────────────────────────────────────
-const IMG_BADGE = imgBadge;
+const IMG_BADGE = "/assets/apex-core-badge.svg";
 const IMG_WORDMARK = imgWordmark;
 const IMG_AVATAR = imgAvatar;
 const IMG_ICONS = imgIcons;

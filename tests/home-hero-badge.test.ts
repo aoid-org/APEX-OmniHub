@@ -2,23 +2,21 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 
 const homeSource = readFileSync('apps/omnihub-site/src/pages/Home.tsx', 'utf8');
+const heroAssetsSource = readFileSync('apps/omnihub-site/src/lib/heroAssets.ts', 'utf8');
 
 describe('Homepage hero core badge wiring', () => {
-  it('uses inline SVG badge — no external PNG dependency', () => {
-    // Badge is now inline SVG (zero external deps, cannot produce broken-image).
-    // The old Vite-imported PNG was replaced because hash mismatches caused
-    // the <image> element to fail silently in production.
+  it('uses the committed SVG badge asset instead of the removed inline icon', () => {
     expect(homeSource).not.toContain("import apexBadgePng from '@/components/icons/apex-badge.png'");
     expect(homeSource).not.toContain('href={apexBadgePng}');
-    // Inline badge must declare the icy-core radial gradient
-    expect(homeSource).toContain('id="core"');
+    expect(homeSource).not.toContain('APEX Canonical Brand Badge');
+    expect(homeSource).not.toContain('id="core"');
+    expect(homeSource).toContain('href={HERO_BADGE_ASSET_PATH}');
+    expect(heroAssetsSource).toContain("/assets/apex-core-badge.svg");
   });
 
-  it('keeps the inline badge superimposed inside the orb clip path with pulse animation', () => {
+  it('keeps the badge asset superimposed inside the orb clip path', () => {
     expect(homeSource).toContain('clipPath="url(#sclip)"');
-    // Inline SVG badge elements
-    expect(homeSource).toContain('APEX');
-    expect(homeSource).toContain('animateTransform');
-    expect(homeSource).toContain('<animate attributeName="opacity"');
+    expect(homeSource).toContain('aria-label="APEX OmniHub core badge"');
+    expect(homeSource).toContain('preserveAspectRatio="xMidYMid meet"');
   });
 });
