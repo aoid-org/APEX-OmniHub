@@ -19,7 +19,6 @@ if _sys.path and _sys.path[0] == _rsi_dir:
 import argparse
 import json
 import os
-import re
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -114,12 +113,19 @@ def _get_diff_stats(changed_files: list[str]) -> dict[str, int]:
         return {"total_files_changed": 0, "insertions": 0, "deletions": 0}
     result = _run(["git", "diff", "--stat", FALLBACK_DIFF_REF])
     summary = result.stdout.splitlines()[-1] if result.stdout.strip() else ""
-    ins = re.search(r"(\d+) insertion", summary)
-    dels = re.search(r"(\d+) deletion", summary)
+    insertions = 0
+    deletions = 0
+    for token in summary.split(","):
+        parts = token.split()
+        if len(parts) >= 2 and parts[0].isdigit():
+            if "insertion" in parts[1]:
+                insertions = int(parts[0])
+            elif "deletion" in parts[1]:
+                deletions = int(parts[0])
     return {
         "total_files_changed": len(changed_files),
-        "insertions": int(ins.group(1)) if ins else 0,
-        "deletions": int(dels.group(1)) if dels else 0,
+        "insertions": insertions,
+        "deletions": deletions,
     }
 
 
