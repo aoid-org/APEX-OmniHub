@@ -88,6 +88,27 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
                 <filter id="fg"><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <filter id="fxl"><feGaussianBlur in="SourceGraphic" stdDeviation="18" /></filter>
                 <filter id="fm"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                <filter id="dofSoft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="0.9" /></filter>
+                <radialGradient id="badgeFade" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#fff" stopOpacity="1" />
+                  <stop offset="48%" stopColor="#fff" stopOpacity="0.95" />
+                  <stop offset="78%" stopColor="#fff" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+                </radialGradient>
+                <mask id="badgeFadeMask" maskUnits="userSpaceOnUse">
+                  <rect x="200" y="205" width="120" height="120" fill="url(#badgeFade)" />
+                </mask>
+                <radialGradient id="coreRecess" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="rgba(0,0,0,0)" />
+                  <stop offset="62%" stopColor="rgba(0,0,0,0)" />
+                  <stop offset="85%" stopColor="rgba(58,16,5,0.45)" />
+                  <stop offset="100%" stopColor="rgba(20,6,2,0.85)" />
+                </radialGradient>
+                <radialGradient id="coreInner" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="rgba(8,4,2,0.75)" />
+                  <stop offset="55%" stopColor="rgba(40,14,5,0.4)" />
+                  <stop offset="100%" stopColor="rgba(40,14,5,0)" />
+                </radialGradient>
                 <clipPath id="sclip"><circle cx="260" cy="265" r="152" /></clipPath>
               </defs>
               <circle cx="260" cy="265" r="240" fill="rgba(196,81,26,0.033)" />
@@ -181,6 +202,17 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
                 <animate attributeName="opacity" values="0.45;0.85;0.45" dur="2.6s" repeatCount="indefinite" />
               </circle>
               <g clipPath="url(#sclip)">
+                {/* Recessed dark well: makes the badge read as set inside a deep core */}
+                <circle cx="260" cy="265" r="80" fill="url(#coreInner)" filter="url(#fg)">
+                  <animate attributeName="r" values="76;84;76" dur="2.6s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.7;0.9;0.7" dur="2.6s" repeatCount="indefinite" />
+                </circle>
+                {/* Inner halo that pulses with the badge */}
+                <circle cx="260" cy="265" r="58" fill="rgba(245,192,106,0.18)" filter="url(#fg)">
+                  <animate attributeName="r" values="54;62;54" dur="2.6s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.35;0.7;0.35" dur="2.6s" repeatCount="indefinite" />
+                </circle>
+                {/* The badge — depth-of-field blur + radial fade mask + float */}
                 <image
                   href={HERO_BADGE_ASSET_PATH}
                   xlinkHref={HERO_BADGE_ASSET_PATH}
@@ -189,10 +221,15 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
                   width="108"
                   height="108"
                   preserveAspectRatio="xMidYMid meet"
+                  mask="url(#badgeFadeMask)"
+                  filter="url(#dofSoft)"
                   aria-label="APEX OmniHub core badge"
                 >
                   <animate attributeName="opacity" values="0.82;1;0.82" dur="2.6s" repeatCount="indefinite" />
+                  <animate attributeName="y" values="211;208;211" dur="4.2s" repeatCount="indefinite" />
                 </image>
+                {/* Vignette ring inside the orb — creates the "looking down into the core" depth */}
+                <circle cx="260" cy="265" r="152" fill="url(#coreRecess)" pointerEvents="none" />
               </g>
               <circle cx="260" cy="265" r="90" fill="none" stroke="rgba(232,162,71,0.18)" strokeWidth="1.5">
                 <animate attributeName="r" from="90" to="155" dur="3s" repeatCount="indefinite" />
