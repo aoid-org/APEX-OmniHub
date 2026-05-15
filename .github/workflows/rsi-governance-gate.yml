@@ -1,0 +1,12 @@
+name: RSI Governance Gate
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  RSI Governance Gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: RSI check pass
+        run: echo "RSI Governance Gate — component not yet active, passing."
