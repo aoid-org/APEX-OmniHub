@@ -5,8 +5,9 @@ on:
     branches: [main]
 
 jobs:
-  RSI Governance Gate:
+  rsi-governance-gate:
+    name: RSI Governance Gate
     runs-on: ubuntu-latest
     steps:
-      - name: RSI check pass
+      - name: Pass
         run: echo "RSI Governance Gate — component not yet active, passing."
