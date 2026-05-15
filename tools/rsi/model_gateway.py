@@ -151,7 +151,7 @@ def _call_model(  # noqa: C901
     req = urllib.request.Request(endpoint, data=body_bytes, headers=headers, method="POST")  # noqa: S310
 
     try:
-        with urllib.request.urlopen(req, timeout=MODEL_TIMEOUT_SECONDS) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=MODEL_TIMEOUT_SECONDS) as resp:  # noqa: S310  # NOSONAR
             raw = resp.read().decode("utf-8")
     except TimeoutError:
         return _error_result("TIMEOUT")
