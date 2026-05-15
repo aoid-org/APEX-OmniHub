@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { StructuredData } from '@/components/StructuredData';
-import { HERO_BADGE_ASSET_PATH } from '@/lib/heroAssets';
 import '@/styles/landing.css';
 import homepageSchema from '../../public/schema/homepage.jsonld?raw';
 import organizationSchema from '../../public/schema/organization.jsonld?raw';
@@ -27,11 +26,12 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
             <a
               href="#"
               className="pill pill-lg"
+              data-modal="request-access"
               onClick={(e) => { e.preventDefault(); onOpenModal(); }}
             >
               Request Early Access
             </a>
-            <a href="/demo.html" className="pill pill-lg pill-ghost">
+            <a href="/demo.html" className="pill pill-lg pill-ghost" data-cta="watch-demo">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <polygon points="5,3 13,8 5,13" fill="currentColor" opacity=".9" />
               </svg>
@@ -181,15 +181,17 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
               </circle>
               <g clipPath="url(#sclip)">
                 <image
-                  href={HERO_BADGE_ASSET_PATH}
-                  xlinkHref={HERO_BADGE_ASSET_PATH}
+                  href="/assets/hero/apex-core-badge.svg"
+                  xlinkHref="/assets/hero/apex-core-badge.svg"
                   x="206"
                   y="211"
                   width="108"
                   height="108"
                   preserveAspectRatio="xMidYMid meet"
                   aria-label="APEX OmniHub core badge"
-                />
+                >
+                  <animate attributeName="opacity" values="0.82;1;0.82" dur="2.6s" repeatCount="indefinite" />
+                </image>
               </g>
               <circle cx="260" cy="265" r="90" fill="none" stroke="rgba(232,162,71,0.18)" strokeWidth="1.5">
                 <animate attributeName="r" from="90" to="155" dur="3s" repeatCount="indefinite" />
