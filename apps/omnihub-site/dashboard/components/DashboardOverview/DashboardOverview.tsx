@@ -73,10 +73,13 @@ export const DashboardOverview = memo(function DashboardOverview({
     const defaultApps = APPS;
     if (!integrationsQuery.data) return defaultApps;
 
+    // ⚡ Bolt: Replace O(N*M) nested find with O(N+M) Map lookup to reduce CPU usage
+    const integrationsMap = new Map(
+      integrationsQuery.data.map(i => [i.name.toLowerCase(), i])
+    );
+
     return defaultApps.map((app) => {
-      const integration = integrationsQuery.data.find(
-        (i) => i.name.toLowerCase() === app.name.toLowerCase(),
-      );
+      const integration = integrationsMap.get(app.name.toLowerCase());
       if (integration) {
         return {
           ...app,
