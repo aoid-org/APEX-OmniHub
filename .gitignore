@@ -52,6 +52,9 @@ dev-server.log
 # Screenshots and artifacts
 artifacts/
 
+# RSI runtime-generated inventory (uploaded as CI artifact, not committed)
+inventory/
+
 # Hardhat
 cache/
 typechain-types/
