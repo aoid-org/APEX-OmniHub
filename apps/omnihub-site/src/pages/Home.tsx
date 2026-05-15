@@ -279,41 +279,73 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
                 </g>
               </g>
 
-              {/* ══ LAYER 6: Static label nodes ══ */}
-              <g transform="translate(26,50)">
-                <circle r="7" fill="rgba(96,165,250,0.1)" stroke="rgba(96,165,250,0.52)" strokeWidth="1" />
-                <circle r="3" fill="#60a5fa" filter="url(#fm)" />
-                <text x="12" y="4" fill="rgba(96,165,250,0.72)" fontSize="7.5" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">WEB3</text>
+              {/* ══ LAYER 6: Orbiting label nodes — global-space paths derived from each ring's projected ellipse ══ */}
+              {/* Ring A (tilt -18°, rx=225, ry=54): start=(-225,0)local → global(46,334.5); end=(225,0)local → global(474,195.5) */}
+              {/* Ring B (tilt  62°, rx=215, ry=52): start → global(159,75);  end → global(361,455) */}
+              {/* Ring C (tilt -55°, rx=210, ry=50 CCW): start → global(139.5,437); end → global(380.5,93) */}
+              {/* Ring D (tilt  14°, rx=178, ry=43): start → global(87,222);  end → global(433,308) */}
+
+              {/* WEB3 — Ring A CW, 15s, phase 0 */}
+              <g>
+                <animateMotion dur="15s" repeatCount="indefinite" path="M 46,334.5 A 225,54 -18 1 1 474,195.5 A 225,54 -18 1 1 46,334.5" />
+                <animate attributeName="opacity" values="0.9;0.22;0.9" dur="15s" repeatCount="indefinite" />
+                <circle r="6.5" fill="rgba(96,165,250,0.12)" stroke="rgba(96,165,250,0.62)" strokeWidth="1" />
+                <circle r="2.5" fill="#60a5fa" filter="url(#fm)" />
+                <text x="0" y="-11" textAnchor="middle" fill="rgba(96,165,250,0.88)" fontSize="7" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">WEB3</text>
               </g>
-              <g transform="translate(490,40)">
-                <circle r="7" fill="rgba(192,132,252,0.1)" stroke="rgba(192,132,252,0.52)" strokeWidth="1" />
-                <circle r="3" fill="#c084fc" filter="url(#fm)" />
-                <text x="-52" y="4" fill="rgba(192,132,252,0.72)" fontSize="7.5" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">AI CLOUD</text>
+
+              {/* ENTERPRISE — Ring A CW, 15s, phase -7.5s (180° offset) */}
+              <g>
+                <animateMotion dur="15s" begin="-7.5s" repeatCount="indefinite" path="M 46,334.5 A 225,54 -18 1 1 474,195.5 A 225,54 -18 1 1 46,334.5" />
+                <animate attributeName="opacity" values="0.9;0.22;0.9" dur="15s" begin="-7.5s" repeatCount="indefinite" />
+                <circle r="6.5" fill="rgba(232,162,71,0.12)" stroke="rgba(232,162,71,0.62)" strokeWidth="1" />
+                <circle r="2.5" fill="#E8A247" filter="url(#fm)" />
+                <text x="0" y="-11" textAnchor="middle" fill="rgba(232,162,71,0.88)" fontSize="7" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">ENTERPRISE</text>
               </g>
-              <g transform="translate(12,494)">
-                <circle r="7" fill="rgba(74,222,128,0.1)" stroke="rgba(74,222,128,0.52)" strokeWidth="1" />
-                <circle r="3" fill="#4ade80" filter="url(#fm)" />
-                <text x="12" y="4" fill="rgba(74,222,128,0.72)" fontSize="7.5" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">LEGACY</text>
+
+              {/* AI CLOUD — Ring B CW, 19s, phase 0 */}
+              <g>
+                <animateMotion dur="19s" repeatCount="indefinite" path="M 159,75 A 215,52 62 1 1 361,455 A 215,52 62 1 1 159,75" />
+                <animate attributeName="opacity" values="0.9;0.22;0.9" dur="19s" repeatCount="indefinite" />
+                <circle r="6.5" fill="rgba(192,132,252,0.12)" stroke="rgba(192,132,252,0.62)" strokeWidth="1" />
+                <circle r="2.5" fill="#c084fc" filter="url(#fm)" />
+                <text x="0" y="-11" textAnchor="middle" fill="rgba(192,132,252,0.88)" fontSize="7" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">AI CLOUD</text>
               </g>
-              <g transform="translate(260,8)">
-                <circle r="7" fill="rgba(251,191,36,0.1)" stroke="rgba(251,191,36,0.52)" strokeWidth="1" />
-                <circle r="3" fill="#fbbf24" filter="url(#fm)" />
-                <text x="-22" y="-11" fill="rgba(251,191,36,0.72)" fontSize="7.5" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">AI AGENTS</text>
+
+              {/* LEGACY — Ring B CW, 19s, phase -9.5s */}
+              <g>
+                <animateMotion dur="19s" begin="-9.5s" repeatCount="indefinite" path="M 159,75 A 215,52 62 1 1 361,455 A 215,52 62 1 1 159,75" />
+                <animate attributeName="opacity" values="0.9;0.22;0.9" dur="19s" begin="-9.5s" repeatCount="indefinite" />
+                <circle r="6.5" fill="rgba(74,222,128,0.12)" stroke="rgba(74,222,128,0.62)" strokeWidth="1" />
+                <circle r="2.5" fill="#4ade80" filter="url(#fm)" />
+                <text x="0" y="-11" textAnchor="middle" fill="rgba(74,222,128,0.88)" fontSize="7" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">LEGACY</text>
               </g>
-              <g transform="translate(510,300)">
-                <circle r="7" fill="rgba(232,162,71,0.1)" stroke="rgba(232,162,71,0.52)" strokeWidth="1" />
-                <circle r="3" fill="#E8A247" filter="url(#fm)" />
-                <text x="-72" y="-11" fill="rgba(232,162,71,0.72)" fontSize="7.5" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">ENTERPRISE</text>
+
+              {/* PHYSICAL AI — Ring C CCW, 17s, phase 0 (back-arc first → dim start) */}
+              <g>
+                <animateMotion dur="17s" repeatCount="indefinite" path="M 139.5,437 A 210,50 -55 1 0 380.5,93 A 210,50 -55 1 0 139.5,437" />
+                <animate attributeName="opacity" values="0.22;0.9;0.22" dur="17s" repeatCount="indefinite" />
+                <circle r="6.5" fill="rgba(56,189,248,0.12)" stroke="rgba(56,189,248,0.62)" strokeWidth="1" />
+                <circle r="2.5" fill="#38bdf8" filter="url(#fm)" />
+                <text x="0" y="-11" textAnchor="middle" fill="rgba(56,189,248,0.88)" fontSize="7" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">PHYSICAL AI</text>
               </g>
-              <g transform="translate(500,512)">
-                <circle r="7" fill="rgba(192,132,252,0.1)" stroke="rgba(192,132,252,0.45)" strokeWidth="1" />
-                <circle r="3" fill="#c084fc" filter="url(#fm)" />
-                <text x="-74" y="4" fill="rgba(192,132,252,0.68)" fontSize="7.5" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">BLOCKCHAIN</text>
+
+              {/* BLOCKCHAIN — Ring C CCW, 17s, phase -8.5s */}
+              <g>
+                <animateMotion dur="17s" begin="-8.5s" repeatCount="indefinite" path="M 139.5,437 A 210,50 -55 1 0 380.5,93 A 210,50 -55 1 0 139.5,437" />
+                <animate attributeName="opacity" values="0.22;0.9;0.22" dur="17s" begin="-8.5s" repeatCount="indefinite" />
+                <circle r="6.5" fill="rgba(192,132,252,0.12)" stroke="rgba(192,132,252,0.62)" strokeWidth="1" />
+                <circle r="2.5" fill="#c084fc" filter="url(#fm)" />
+                <text x="0" y="-11" textAnchor="middle" fill="rgba(192,132,252,0.88)" fontSize="7" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">BLOCKCHAIN</text>
               </g>
-              <g transform="translate(18,390)">
-                <circle r="7" fill="rgba(56,189,248,0.1)" stroke="rgba(56,189,248,0.52)" strokeWidth="1" />
-                <circle r="3" fill="#38bdf8" filter="url(#fm)" />
-                <text x="12" y="4" fill="rgba(56,189,248,0.72)" fontSize="7.5" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">PHYSICAL AI</text>
+
+              {/* AI AGENTS — Ring D CW, 11s, phase 0 */}
+              <g>
+                <animateMotion dur="11s" repeatCount="indefinite" path="M 87,222 A 178,43 14 1 1 433,308 A 178,43 14 1 1 87,222" />
+                <animate attributeName="opacity" values="0.95;0.22;0.95" dur="11s" repeatCount="indefinite" />
+                <circle r="6.5" fill="rgba(251,191,36,0.12)" stroke="rgba(251,191,36,0.62)" strokeWidth="1" />
+                <circle r="2.5" fill="#fbbf24" filter="url(#fm)" />
+                <text x="0" y="-11" textAnchor="middle" fill="rgba(251,191,36,0.88)" fontSize="7" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">AI AGENTS</text>
               </g>
 
               <text x="260" y="518" textAnchor="middle" fill="rgba(232,162,71,0.28)" fontSize="7.5" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="3.5">INTELLIGENCE, DESIGNED.</text>
