@@ -10,7 +10,19 @@ ignore = ["S101", "E501", "S108", "S110", "E741", "UP036", "S311"]
 [tool.ruff.lint.per-file-ignores]
 "**/{tests,scripts,docs,.claude}/**/*.py" = ["S", "E501", "C901"]
 "{tests,scripts,docs,.claude}/**/*.py" = ["S", "E501", "C901"]
+# sys.path manipulation before imports is intentional — prevents stdlib shadow when run as script
+"tools/rsi/*.py" = ["E402"]
 
 [tool.black]
 line-length = 88
 target-version = ['py311']
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "tests/rsi"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.rsi]
+artifact_dir = "artifacts/rsi"
+policy_file = "policy/rsi-policy.yaml"

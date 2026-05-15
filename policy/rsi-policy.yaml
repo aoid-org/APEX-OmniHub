@@ -1,6 +1,6 @@
-policy_version: 1.2.0
-policy_last_updated_utc: 2026-05-10
-mode: proposal_only
+policy_version: 1.3.0
+policy_last_updated_utc: 2026-05-15
+mode: live
 default_network_model_calls: false
 hosted_model_monthly_budget_usd: 0
 optional_pilot_budget_usd: 150
@@ -10,26 +10,39 @@ parity_lockfiles:
   - bun.lock
   - deno.lock
   - orchestrator/requirements.lock
+max_files_without_escalation: 50
 moderate_supabase_functions:
   - supabase/functions/platform-health/**
   - supabase/functions/ops-voice-health/**
   - supabase/functions/test-integration/**
-critical_paths:
+
+# protected_paths: ANY match triggers decision: block (highest priority)
+protected_paths:
   - .github/workflows/**
   - terraform/**
   - contracts/**
   - supabase/migrations/**
   - hardhat.config.cts
-  - orchestrator/workflows/**
-  - orchestrator/activities/**
   - orchestrator/security/**
   - src/security/**
   - src/zero-trust/**
   - src/guardian/**
+
+# critical_paths: ANY match (not negated) triggers decision: escalate
+critical_paths:
+  - orchestrator/workflows/**
+  - orchestrator/activities/**
   - supabase/functions/**
   - '!supabase/functions/platform-health/**'
   - '!supabase/functions/ops-voice-health/**'
   - '!supabase/functions/test-integration/**'
+
+recommended_reviewers:
+  - '@apexbusiness-systems/security'
+  - '@apexbusiness-systems/platform'
+security_reviewers:
+  - '@apexbusiness-systems/security'
+  - '@apexbusiness-systems/ciso'
 auto_pr_allowed:
   high: false
   critical: false
