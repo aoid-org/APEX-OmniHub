@@ -23,6 +23,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 ARTIFACT_DIR = Path(os.getenv("RSI_ARTIFACT_DIR", "artifacts/rsi"))
 MODEL_TIMEOUT_SECONDS = 30
@@ -107,11 +108,24 @@ def _validate_model_response(data: dict[str, Any]) -> str | None:
     return None
 
 
+def _require_https_endpoint(endpoint: str) -> None:
+    """Reject non-HTTPS endpoints — prevents credential exposure and SSRF via cleartext."""
+    parsed = urlparse(endpoint)
+    if parsed.scheme != "https":
+        raise ValueError(
+            f"RSI_MODEL_ENDPOINT must use https://, got scheme: {parsed.scheme!r}. "
+            "HTTP endpoints are not permitted."
+        )
+    if not parsed.netloc:
+        raise ValueError("RSI_MODEL_ENDPOINT must include a valid hostname.")
+
+
 def _call_model(  # noqa: C901
     endpoint: str,
     api_key: str,
     payload: dict[str, Any],
 ) -> dict[str, Any]:
+    _require_https_endpoint(endpoint)
     system_prompt = (
         "You are a release safety reviewer. Evaluate the following PR evidence "
         "and return ONLY a JSON object matching the schema below. "
@@ -219,6 +233,15 @@ def run_model_gateway() -> int:
             "RSI_MODEL_ENDPOINT or RSI_MODEL_API_KEY not configured — gateway skipped.",
             file=sys.stderr,
         )
+        return 0
+
+    try:
+        _require_https_endpoint(endpoint)
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        result = _error_result("UNKNOWN_ERROR")
+        out_path = ARTIFACT_DIR / "model_result.json"
+        out_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
         return 0
 
     payload = _build_request_payload(evidence, policy)
