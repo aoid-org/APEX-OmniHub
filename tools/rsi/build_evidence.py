@@ -38,7 +38,7 @@ FALLBACK_DIFF_REF = "HEAD~1"
 
 
 def _run(cmd: list[str], capture: bool = True) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, capture_output=capture, text=True, check=False)  # noqa: S603
+    return subprocess.run(cmd, capture_output=capture, text=True, check=False)  # noqa: S603  # NOSONAR
 
 
 def _load_policy_version() -> str:
