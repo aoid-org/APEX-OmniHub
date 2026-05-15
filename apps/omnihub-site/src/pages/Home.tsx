@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { StructuredData } from '@/components/StructuredData';
+import { HERO_BADGE_ASSET_PATH } from '@/lib/heroAssets';
 import '@/styles/landing.css';
 import homepageSchema from '../../public/schema/homepage.jsonld?raw';
 import organizationSchema from '../../public/schema/organization.jsonld?raw';
@@ -181,8 +182,8 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
               </circle>
               <g clipPath="url(#sclip)">
                 <image
-                  href="/assets/hero/apex-core-badge.svg"
-                  xlinkHref="/assets/hero/apex-core-badge.svg"
+                  href={HERO_BADGE_ASSET_PATH}
+                  xlinkHref={HERO_BADGE_ASSET_PATH}
                   x="206"
                   y="211"
                   width="108"
