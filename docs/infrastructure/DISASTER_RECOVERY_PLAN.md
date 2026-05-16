@@ -1,5 +1,12 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
 # DISASTER RECOVERY & BUSINESS CONTINUITY PLAN
+## Verification Status Legend
+
+> VERIFIED — Confirmed by implementation or repo evidence in this snapshot.
+> PROPOSED — Architecturally supported and documented, but not verified in this snapshot.
+> ARCHITECTURALLY POSSIBLE / UNVERIFIED — Compatible by design, but not yet verified in this snapshot.
+> All listed providers remain valid portability targets; none are deprecated by this legend.
+
 **DR/BCP for OmniHub/TradeLine/APEX**
 
 **Purpose:** Define recovery procedures, RPO/RTO targets, and failover strategies for catastrophic failures.
