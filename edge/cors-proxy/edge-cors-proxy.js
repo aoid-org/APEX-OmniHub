@@ -170,58 +170,6 @@ function capBodyStream(body) {
 
 export { MAX_UPSTREAM_BYTES, corsHeaders, isAllowedOrigin, isUnsafeHostname, validateTargetUrl };
 
-const JSON_HEADERS = { 'Content-Type': 'application/json', ...CORS_HEADERS };
-const EDGE_USER_AGENT = 'APEX-OmniMedia-EdgeProxy/1.0';
-
-function isAllowedProxyMethod(method) {
-  return method === 'GET' || method === 'HEAD';
-}
-
-function jsonError(message, status) {
-  return new Response(JSON.stringify({ error: message }), {
-    status,
-    headers: JSON_HEADERS,
-  });
-}
-
-function parseTargetUrl(targetUrl) {
-  if (!targetUrl) {
-    return { errorResponse: jsonError('APEX OmniMedia: Missing source parameter', 400) };
-  }
-
-  try {
-    return { target: new URL(targetUrl) };
-  } catch {
-    return { errorResponse: jsonError('APEX OmniMedia: Invalid source URL', 400) };
-  }
-}
-
-function buildUpstreamHeaders(request) {
-  const headers = { 'User-Agent': EDGE_USER_AGENT };
-  const range = request.headers.get('Range');
-
-  // Forward byte-range requests only when the client supplied a concrete range.
-  if (range) {
-    headers.Range = range;
-  }
-
-  return headers;
-}
-
-function withCorsHeaders(upstream) {
-  const proxyResponse = new Response(upstream.body, {
-    status: upstream.status,
-    statusText: upstream.statusText,
-    headers: upstream.headers,
-  });
-
-  for (const [key, value] of Object.entries(CORS_HEADERS)) {
-    proxyResponse.headers.set(key, value);
-  }
-
-  return proxyResponse;
-}
-
 export default {
   async fetch(request) {
     const origin = request.headers.get('Origin');
