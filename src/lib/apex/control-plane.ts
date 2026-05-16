@@ -142,7 +142,27 @@ export function parseExecutionEnvelope(value: unknown): ApexExecutionEnvelope {
   }
   if (typeof envelope.attempt !== 'number' || envelope.attempt < 1) throw new Error('apex_envelope_invalid_attempt');
   if (envelope.schema_version !== APEX_EXECUTION_ENVELOPE_SCHEMA_VERSION) throw new Error('apex_envelope_schema_version_unsupported');
-  return envelope as ApexExecutionEnvelope;
+
+  const readRequiredString = (field: string): string => {
+    const item = envelope[field];
+    if (typeof item !== 'string' || item === '') throw new Error(`apex_envelope_invalid_${field}`);
+    return item;
+  };
+
+  // Return an explicit envelope so runtime validation and TypeScript narrowing stay aligned.
+  return {
+    trace_id: readRequiredString('trace_id'),
+    correlation_id: readRequiredString('correlation_id'),
+    idempotency_key: readRequiredString('idempotency_key'),
+    intent_hash: readRequiredString('intent_hash'),
+    attempt: envelope.attempt,
+    stale_after: readRequiredString('stale_after'),
+    actor_id: readRequiredString('actor_id'),
+    device_id: readRequiredString('device_id'),
+    policy_version: readRequiredString('policy_version'),
+    compensation_ref: typeof envelope.compensation_ref === 'string' ? envelope.compensation_ref : null,
+    schema_version: APEX_EXECUTION_ENVELOPE_SCHEMA_VERSION,
+  };
 }
 
 export function assertMutationEnvelope(method: string, envelope: unknown, now: Date = new Date()): ApexExecutionEnvelope | null {

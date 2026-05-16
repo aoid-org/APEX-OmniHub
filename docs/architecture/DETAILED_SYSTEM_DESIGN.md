@@ -17,7 +17,7 @@
 - Audit logging: `src/security/auditLog.ts` (in-memory, extensible to persistent store), wired into auth and DR flows.
 - Zero-trust: Baseline metrics `src/zero-trust/baseline.ts`, device registry `src/zero-trust/deviceRegistry.ts`, CLI `npm run zero-trust:baseline`.
 - DR/Backup: Scripts under `scripts/dr/*` and `scripts/backup/verify_backup.ts`; runbook `docs/DR_RUNBOOK.md`, verification doc `docs/BACKUP_VERIFICATION.md`.
-- Dependency & security: `SECURITY_ADVISORIES.md`, `docs/dependency-scanning.md`, script `npm run security:audit`.
+- Dependency & security: `docs/security/SECURITY_ADVISORIES.md`, `docs/security/dependency-scanning.md`, script `npm run security:audit`.
 
 ## Temporal Orchestrator (Python Backend)
 

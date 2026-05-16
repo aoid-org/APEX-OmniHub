@@ -1,12 +1,12 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.3-OMNIDASH-SIDEBAR-CONTRACT | LAST_UPDATED=2026-05-12 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.4-SECURITY-DOC-AUDIT | LAST_UPDATED=2026-05-15 -->
 
 # APEX OmniHub Documentation
 
 **Enterprise AI Orchestration Platform**
 
-- **Document Version:** 2.5.0
-- **Platform Version:** 1.6.2
-- **Last Updated:** 2026-05-12
+- **Document Version:** 2.6.0
+- **Platform Version:** 1.6.0
+- **Last Updated:** 2026-05-15
 - **Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
@@ -121,13 +121,13 @@ Operational runbooks and procedures:
 
 | Document                                                   | Description                         |
 | ---------------------------------------------------------- | ----------------------------------- |
+| [CI Guardrails Runbook](ops/OPS_RUNBOOKS_CI_GUARDRAILS.md) | Canonical release/CI guardrail remediation |
 | [Operational Excellence](ops/OPERATIONAL_EXCELLENCE.md)    | Enterprise operations framework     |
-| [Operations Runbook](ops/OPS_RUNBOOK.md)                   | Master ops runbook (v2.0)           |
-| [Operations Runbook v1.3.8](ops/OPS_RUNBOOK_v1.3.8.md)     | Omnicognition/OmniRoute ops runbook |
-| [CI Guardrails Runbook](ops/OPS_RUNBOOKS_CI_GUARDRAILS.md) | Guardrail failure remediation       |
-| [OmniDash RCA](ops/omnidash-asset-rca.md)                  | Historic Incident RCA               |
 | [Incident Response](ops/INCIDENT_RESPONSE.md)              | Incident handling                   |
 | [Adaptive Nightly Eval](ops/adaptive-nightly-eval.md)      | Automated evaluation                |
+| [OmniDash RCA](ops/omnidash-asset-rca.md)                  | Historic Incident RCA               |
+| [Legacy Operations Runbook](ops/OPS_RUNBOOK.md)            | Deprecated read-only historical stub |
+| [Operations Runbook v1.3.8](ops/OPS_RUNBOOK_v1.3.8.md)     | Historical Omnicognition/OmniRoute runbook |
 
 ### Recovery Guides
 
@@ -153,7 +153,8 @@ Security controls, policies, and hardening:
 | [Zero Trust Baseline](security/zero-trust-baseline.md)                   | Zero trust model              |
 | [Prompt Defense](security/prompt-defense-tuning.md)                      | AI security                   |
 | [Device Registry](security/device-registry.md)                           | Device management             |
-| [Dependency Scanning](security/dependency-scanning.md)                   | Vulnerability scanning        |
+| [Dependency Scanning](security/dependency-scanning.md)                    | Dependency audit process and current advisory status |
+| [Security Advisory Handling](security/SECURITY_ADVISORIES.md)             | Advisory disposition log and remediation standard |
 | [ENV Exposure Advisory](security/ENV_FILE_EXPOSURE_ADVISORY.md)          | Environment security          |
 
 ---
@@ -256,6 +257,7 @@ Audit reports, remediation, and historical records:
 | [Third-Party Code Audit 2026-03-08](audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md)               | Third-party audit                                                      |
 | [**Third-Party Code Audit 2026-03-09 ← CURRENT**](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) | **Latest audit — 94.3/100 (A)**                                        |
 | [Annotated PR Triage 2026-05-06](audits/ANNOTATED_PR_TRIAGE_2026_05_06.md)                     | Current merge/update/close decisions for screenshot-annotated PR queue |
+| [Documentation Audit 2026-05-15](audits/DOCUMENTATION_AUDIT_2026-05-15.md)                      | Current documentation inventory, stale-document disposition, and validation evidence |
 
 ---
 

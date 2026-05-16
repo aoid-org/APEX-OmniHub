@@ -1,4 +1,4 @@
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent, useEffect, useCallback } from 'react';
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { Section } from '@/components/Section';
@@ -146,15 +146,19 @@ export function LoginPage() {
     }
   };
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     await supabase.auth.signOut();
     globalThis.window.location.reload();
-  };
+  }, []);
 
-  // Expose signOut for external use
-  if (typeof globalThis !== 'undefined') {
+  useEffect(() => {
+    // Keep the external sign-out hook synchronized without mutating globals during render.
     (globalThis as Record<string, unknown>).__omnihubSignOut = handleSignOut;
-  }
+
+    return () => {
+      delete (globalThis as Record<string, unknown>).__omnihubSignOut;
+    };
+  }, [handleSignOut]);
 
   return (
     <Layout title="Log In">

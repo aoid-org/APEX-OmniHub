@@ -80,7 +80,6 @@ each package's respective `node_modules/<package>/LICENSE` file.
 | react | 18.3.1 | MIT | https://github.com/facebook/react |
 | react-day-picker | 8.10.1 | MIT | https://github.com/gpbl/react-day-picker |
 | react-dom | 18.3.1 | MIT | https://github.com/facebook/react |
-| react-grid-layout | 2.2.2 | MIT | https://github.com/STRML/react-grid-layout |
 | react-hook-form | 7.71.2 | MIT | https://github.com/react-hook-form/react-hook-form |
 | react-i18next | 16.5.6 | MIT | https://github.com/i18next/react-i18next |
 | react-resizable-panels | 2.1.9 | MIT | https://github.com/bvaughn/react-resizable-panels |

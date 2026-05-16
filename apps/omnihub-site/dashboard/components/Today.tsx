@@ -27,7 +27,6 @@ import { useExecute } from "@/hooks/useExecute";
 import { useDemoStore } from "@/stores/demoStore";
 import { OmniTraceFeed } from "@/dashboard/components/OmniTraceFeed";
 import { HiddenMetric } from "./HiddenMetric";
-import { ResponsiveGridLayout, DragHandle, type Layout } from "./GridLayout";
 
 const ApexAgentAvatar = React.lazy(() => import("./ApexAgentAvatar"));
 
@@ -54,7 +53,6 @@ const WidgetCard = ({
 }: WidgetCardProps) => (
   <div key={id}>
     <Card className={`glass-card hover-lift ${bgClass} ${borderClass} rounded-2xl h-full relative`}>
-      <DragHandle visibilityClass="text-white/20" />
       <CardHeader className="py-3">
         <CardTitle className={`flex items-center gap-2 text-sm ${textClass}`}>
           <Icon className="h-4 w-4" /> {title}
@@ -87,37 +85,6 @@ const getBadgeStyles = (category: string) => {
   if (category === "outreach")
     return "border-sky-500/50 text-sky-600 dark:text-sky-400";
   return "border-amber-500/50 text-amber-600 dark:text-amber-400";
-};
-
-const omniDashLayouts: Partial<Record<string, Layout>> = {
-  lg: [
-    { i: "apex-agent", x: 0, y: 0, w: 3, h: 4, isResizable: false },
-    { i: "omnitrace", x: 0, y: 4, w: 3, h: 4, isResizable: false },
-    { i: "analytics", x: 0, y: 8, w: 1, h: 2, isResizable: false },
-    { i: "security", x: 1, y: 8, w: 1, h: 2, isResizable: false },
-    { i: "knowledge", x: 2, y: 8, w: 1, h: 2, isResizable: false },
-  ],
-  md: [
-    { i: "apex-agent", x: 0, y: 0, w: 3, h: 5, isResizable: false },
-    { i: "omnitrace", x: 0, y: 5, w: 3, h: 4, isResizable: false },
-    { i: "analytics", x: 0, y: 9, w: 1, h: 2, isResizable: false },
-    { i: "security", x: 1, y: 9, w: 1, h: 2, isResizable: false },
-    { i: "knowledge", x: 2, y: 9, w: 1, h: 2, isResizable: false },
-  ],
-  sm: [
-    { i: "apex-agent", x: 0, y: 0, w: 2, h: 8, isResizable: false },
-    { i: "omnitrace", x: 0, y: 8, w: 2, h: 4, isResizable: false },
-    { i: "analytics", x: 0, y: 12, w: 2, h: 2, isResizable: false },
-    { i: "security", x: 0, y: 14, w: 2, h: 2, isResizable: false },
-    { i: "knowledge", x: 0, y: 16, w: 2, h: 2, isResizable: false },
-  ],
-  xs: [
-    { i: "apex-agent", x: 0, y: 0, w: 1, h: 10, isResizable: false },
-    { i: "omnitrace", x: 0, y: 10, w: 1, h: 4, isResizable: false },
-    { i: "analytics", x: 0, y: 14, w: 1, h: 2, isResizable: false },
-    { i: "security", x: 0, y: 16, w: 1, h: 2, isResizable: false },
-    { i: "knowledge", x: 0, y: 18, w: 1, h: 2, isResizable: false },
-  ],
 };
 
 function useOmniDashTelemetry() {
@@ -199,32 +166,13 @@ function useOmniDashTelemetry() {
 
 export const Today = () => {
   const { itemsQuery, addMutation, handleNextAction, newTitle, setNewTitle } = useOmniDashTelemetry();
-  const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>(omniDashLayouts);
-
-  const onLayoutChange = (
-    _currentLayout: Layout,
-    allLayouts: Partial<Record<string, Layout>>
-  ) => {
-    setLayouts(allLayouts);
-  };
 
   return (
     <div className="py-2 w-full max-w-7xl mx-auto overflow-x-hidden">
-      <ResponsiveGridLayout
-        className="layout"
-        layouts={layouts}
-        breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
-        cols={{ lg: 3, md: 3, sm: 2, xs: 1, xxs: 1 }}
-        rowHeight={80}
-        onLayoutChange={onLayoutChange}
-        draggableHandle=".custom-drag-handle"
-        margin={[24, 24]}
-      >
+      <div data-testid="global-canvas-flow" className="flex flex-col gap-6">
         {/* APEX AGENT Unified Hero Section */}
-        <div key="apex-agent" className="col-span-full h-full">
+        <section>
           <Card className="glass-card animate-in border-[hsl(var(--accent))]/30 rounded-3xl h-full flex flex-col relative overflow-hidden bg-[#0A0D14]/90 shadow-2xl">
-            <DragHandle visibilityClass="text-white/20" />
-
             <div className="flex flex-col lg:flex-row h-full">
               {/* Left Column: Top 3 Outcomes */}
               <div className="flex-[0.8] p-5 lg:p-6 border-b lg:border-b-0 lg:border-r border-white/5 flex flex-col min-w-0 bg-white/[0.02]">
@@ -472,17 +420,16 @@ export const Today = () => {
               </div>
             </div>
           </Card>
-        </div>
+        </section>
 
         {/* OmniTrace Event Log */}
-        <div key="omnitrace">
+        <section>
           <Card className="glass-card hover-lift h-full overflow-hidden relative border border-white/5">
-            <DragHandle visibilityClass="text-white/20" />
             <div className="h-full overflow-hidden pt-2 pl-2">
               <OmniTraceFeed />
             </div>
           </Card>
-        </div>
+        </section>
 
         <WidgetCard
           id="analytics"
@@ -533,7 +480,7 @@ export const Today = () => {
           <HiddenMetric icon={Database} label="Vector Store" value="14.2 GB" valueClass="text-orange-200" />
           <HiddenMetric icon={Database} label="SQL Relational" value="2.1 GB" valueClass="text-rose-200" />
         </WidgetCard>
-      </ResponsiveGridLayout>
+      </div>
     </div>
   );
 };
