@@ -2,18 +2,8 @@
   "files": [],
   "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/dashboard/*": ["./apps/omnihub-site/dashboard/*"],
-      "@/*": ["./apps/omnihub-site/src/*"]
-    },
-    "noImplicitAny": true,
-    "noUnusedParameters": true,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "noUnusedLocals": true,
-    "strictNullChecks": true,
     "strict": true,
-    "ignoreDeprecations": "5.0"
+    "noImplicitAny": true,
+    "skipLibCheck": true
   }
 }
