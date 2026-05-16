@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Version:** 1.6.3 | **Release Date:** 2026-05-11
+**Release line:** 1.6.3 | **package.json version:** 1.6.0 | **Release Date:** 2026-05-11 | **Docs audit:** 2026-05-16
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -26,6 +26,7 @@
 
 **Before touching code, read the canonical architecture map:**
 
+- [DOCUMENTATION_RELEASE_INDEX.md](./docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
 - [ARCHITECTURE_CANONICAL_MAP.md](./docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
 - **[Production Certification Status](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)** (Current Production Authority)
 - [CI Status Policy](./docs/project-status/CI_STATUS_POLICY.md)
@@ -46,20 +47,20 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-05-14)
+## Platform Statistics (Repository Snapshot 2026-05-16)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
-| **Source Files (`src/`)**                        | 283 total files                                   |
-| **TypeScript/TSX (`src/`)**                      | 250 files                                         |
-| **React Components (`src/`)**                    | 85 `.tsx` component files                         |
-| **Page Routes (`src/pages/`)**                   | 33 page files                                     |
-| **Edge Functions (`supabase/functions/`)**       | 22 function directories                           |
-| **Database Migrations (`supabase/migrations/`)** | 61 SQL migration files                            |
-| **CI/CD Workflows (`.github/workflows/`)**       | 14 workflow files                                 |
-| **Test Specs (`tests/` + `e2e/` + `sim/`)**     | 2,488 tests across 241+ spec files                |
-| **Custom Hooks (`src/`)**                        | 17 hook files matching `use*.ts*`                 |
-| **Orchestrator (Python)**                        | 83 files (Temporal workers, activities, security) |
+| **Source Files (`src/`)**                        | 346 total files                                   |
+| **TypeScript/TSX (`src/`)**                      | 311 files                                         |
+| **React Components (`src/`)**                    | 94 `.tsx` component files                         |
+| **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
+| **Edge Functions (`supabase/functions/`)**       | 27 function directories                           |
+| **Database Migrations (`supabase/migrations/`)** | 74 SQL migration files                            |
+| **CI/CD Workflows (`.github/workflows/`)**       | 21 workflow files                                 |
+| **Test Specs (`tests/` + `e2e/` + `sim/`)**     | 229 spec/test source files; latest pass counts are recorded in certification status |
+| **Custom Hooks (`src/`)**                        | 21 hook files matching `use*.ts*`                 |
+| **Orchestrator (Python)**                        | 95 files (Temporal workers, activities, security) |
 
 ---
 
@@ -151,17 +152,17 @@ APEX OmniHub requires Node.js 20.19+ and **bun** as the canonical package manage
 ## Repository Layout
 
 ```
-/src                 - OmniDash UI (277 files)
+/src                 - Core frontend/domain source tree (346 files)
 /dashboard/OmniDashShell.tsx  -  Unified dashboard Shell / layout
 /apps/omnihub-site/dashboard/components/  -  Panels/widgets: (Today, Pipeline, KPIs, Ops, etc.)
 /src/omnidash/uiRegistry.ts  -   UI registry wiring
 
 
-/supabase/migrations - Database schema (50+ versioned SQL migrations)
-/supabase/functions  - Edge functions (22 serverless endpoints)
-/orchestrator        - Temporal workers and orchestration services (83 files)
-/tests               - Automated test suite (115 files)
-/.github/workflows   - CI/CD workflows (12 pipelines)
+/supabase/migrations - Database schema (74 versioned SQL migrations)
+/supabase/functions  - Edge functions (27 serverless endpoints)
+/orchestrator        - Temporal workers and orchestration services (95 Python files)
+/tests               - Automated test suite
+/.github/workflows   - CI/CD workflows (21 workflow files)
 ```
 
 ---
@@ -247,11 +248,12 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 | --------------------------------------------------------------------------------------- | --------------------- |
 | [Release Notes v1.6.0](./docs/releases/RELEASE_NOTES_v1.6.0.md)                 | What is new in v1.6.0 |
 | [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
-| [Launch Readiness](./docs/project-status/LAUNCH_READINESS_v1.0.0.md)                    | Deployment checklist  |
+| [Production Certification Status](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |
+| [Documentation Release Index](./docs/DOCUMENTATION_RELEASE_INDEX.md)                  | Current docs map, READMEs, status, audits, runbooks |
 | [Testing Evidence & Armageddon Reports](./docs/testing/README.md)                    | Validation history    |
 | [PR Triage Report](./docs/ops/PR_TRIAGE.md)                                      | Open PR resolution matrix |
-| [OPS Runbooks](./OPS_RUNBOOKS.md)                                                       | Operations procedures |
-| [Supabase Setup](./SUPABASE_SETUP.md)                                                   | Database config guide |
+| [OPS Runbooks](./docs/ops/OPS_RUNBOOKS_CI_GUARDRAILS.md)                               | Operations procedures |
+| [Supabase Setup](./docs/infrastructure/SUPABASE_SETUP.md)                               | Database config guide |
 | [orchestrator/README](./orchestrator/README.md)                                         | Temporal setup        |
 | [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                                     | Manual Approval Node     |
 | [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                             | Backend design        |

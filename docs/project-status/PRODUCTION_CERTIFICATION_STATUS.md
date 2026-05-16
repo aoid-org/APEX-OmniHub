@@ -2,7 +2,18 @@
 
 > **This is the canonical source for current certification state.**
 > All other docs (PRODUCTION_STATUS.md, audit reports, README) defer here.
-> Last updated: 2026-05-14
+> Last updated: 2026-05-16
+
+
+## 2026-05-16 Documentation Audit Addendum
+
+This documentation audit updates indexes, maps, README links, RSI branch-protection guidance, and drift records to current repo truth. It does **not** change the certification verdict. `NOT_CERTIFIED_BLOCKED` remains in force until the release workflow produces the required certification evidence and the active blockers below are resolved.
+
+Verified in this documentation pass:
+
+- `bun run docs:check` passes for docs links and explicit code pointers.
+- The current documentation index is `docs/DOCUMENTATION_RELEASE_INDEX.md`.
+- Current RSI repository evidence is live mode in `policy/rsi-policy.yaml` with `.github/workflows/rsi-governance.yml` present.
 
 ## Platform Facts
 
