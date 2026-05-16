@@ -98,7 +98,7 @@ export function DemoVideoPlayer({
   return (
     <div className="demo-video__container">
       <div className="demo-video__glow" aria-hidden="true" />
-      <video ref={videoRef} id={id} className="demo-video__player" autoPlay loop playsInline preload="metadata" controls>
+      <video ref={videoRef} id={id} className="demo-video__player" autoPlay muted={isMuted} loop playsInline preload="metadata" controls>
         <source src={sourceUrl} type="video/mp4" />
         <track kind="captions" src={captionUrl} srcLang="en" label="English" />
         Your browser does not support the video tag.
