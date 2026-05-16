@@ -194,6 +194,17 @@ Deno.serve(async (req) => {
       return corsJsonResponse({ error: 'invalid_address', message: 'Invalid Ethereum wallet address format' }, 400);
     }
 
+    if (!message && typedData) {
+      await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
+        reason: 'typed_data_only_unsupported',
+      });
+
+      return corsJsonResponse({
+        error: 'unsupported_verification_type',
+        message: 'typedData-only verification is not supported; include the SIWE message containing the nonce',
+      }, 400);
+    }
+
     // Validate signature format
     if (!isValidSignature(signature)) {
       await logAuditEvent(supabase, user!.id, 'wallet_verify_failed', normalizedAddress, {
@@ -422,6 +433,7 @@ Deno.serve(async (req) => {
       .from('wallet_nonces')
       .update({ used_at: new Date().toISOString() })
       .eq('nonce', messageNonce)
+      .eq('wallet_address', normalizedAddress)
       .eq('chain_id', resolvedChainId);
 
     // Get client metadata

@@ -54,6 +54,10 @@ psql "$SUPABASE_DB_URL" -f supabase/migrations/20260226000001_rollback.sql
 | `SUPABASE_URL`              | Yes      | Project API URL                     |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes      | Service role key (server-side only) |
 | `SUPABASE_DB_URL`           | Yes      | Direct PostgreSQL connection string |
+| `VITE_SUPABASE_URL`         | Yes      | Browser Supabase project URL        |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` / `VITE_SUPABASE_ANON_KEY` | Yes | Browser-safe Supabase publishable/anon key; values are never logged by the build guard |
+
+CI/production builds fail closed if browser Supabase variables are missing. Local UI-only development may opt out with `APEX_ALLOW_MISSING_SUPABASE_CONFIG=true`; do not set that override in CI, Cloudflare Pages, or production.
 
 ---
 
