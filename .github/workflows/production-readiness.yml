@@ -150,8 +150,24 @@ jobs:
       - name: Install Playwright OS Dependencies
         run: npm exec --no --ignore-scripts -- playwright install-deps chromium
 
+      - name: Start preview server
+        run: |
+          npm run preview -- --host --port 4173 &
+          echo $! > preview.pid
+          node -e "const url='http://localhost:4173';let n=0;(async function poll(){try{const r=await fetch(url);if(r.ok||r.status<500)process.exit(0)}catch{} if(++n>60)process.exit(1); setTimeout(poll,500)})()"
+
       - name: Run E2E smoke tests
         run: npm run test:e2e
+        env:
+          BASE_URL: http://localhost:4173
+
+      - name: Stop preview server
+        if: always()
+        run: |
+          if [ -f preview.pid ]; then
+            kill $(cat preview.pid) || true
+            rm preview.pid
+          fi
 
   readiness-summary:
     name: Production Readiness Summary
