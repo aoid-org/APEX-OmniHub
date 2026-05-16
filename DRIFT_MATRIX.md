@@ -20,3 +20,11 @@ Actual files changed in this pass:
 - `docs/ops/OPERATIONAL_EXCELLENCE.md`
 - `docs/knowledge/references/cloud.md`
 
+
+## 2026-05-16 Current-Tree Documentation Audit Pass
+
+- Created `docs/DOCUMENTATION_RELEASE_INDEX.md` as the current inventory and authority-order index for maps, READMEs, status documents, audits, and runbooks.
+- Updated `README.md` and `docs/README.md` to point onboarding agents to the current documentation index and certification authority, and refreshed top-level repo statistics from live file counts.
+- Updated `docs/rsi/BRANCH_PROTECTION_REQUIRED.md` to reflect current RSI live-mode repo evidence and the active RSI workflow while preserving the manual branch-protection caveat.
+- Updated `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`, `docs/architecture/DOC_RECONCILIATION_MATRIX.md`, and `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` with current-tree documentation audit notes without changing the certification verdict.
+- Corrected `.github/pull_request_template.md` onboarding link so the PR template resolves to the actual developer onboarding document.

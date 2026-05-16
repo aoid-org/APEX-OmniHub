@@ -6,7 +6,7 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 
 
 > **Version:** 2.3.0<br>
-> **Last updated:** 2026-05-12<br>
+> **Last updated:** 2026-05-16<br>
 > **Status:** Canonical (source of truth)
 
 This document is optimized for **onboarding clarity** and **operator execution** while preserving value proposition context.
@@ -45,6 +45,8 @@ APEX OmniHub is a polyglot monorepo with five execution planes:
 - **Build orchestration:** root `vite.config.ts` + app-level Vite config coexist.
 - **Legacy references to Vercel and `api/` may still exist in historical docs/scripts; treat them as non-canonical unless explicitly marked active.**
 - **Production Supabase project:** `rtopreovkywofgwgmozi` (ca-central-1, ACTIVE_HEALTHY). All public-schema tables have RLS enabled as of 2026-05-04. All SECURITY DEFINER functions have pinned `search_path = public` and revoked `anon` EXECUTE access. OmniBridge persistence layer (`omnibridge_events`, `omnibridge_events_dlq`, `omnibridge_control_audit`) is live since v1.6.1. See `docs/infrastructure/SUPABASE_SETUP.md` for the full security posture and `docs/audits/SUPABASE_SECURITY_AUDIT_2026_05_04.md` for the audit record.
+- **Documentation authority:** `docs/DOCUMENTATION_RELEASE_INDEX.md` is the current entry point for maps, READMEs, status records, audits, and runbooks.
+- **RSI governance:** `policy/rsi-policy.yaml` is `mode: live`; `.github/workflows/rsi-governance.yml` is the active RSI workflow, while `.github/workflows/rsi-governance-gate.yml` is a pass-through placeholder. See `docs/rsi/BRANCH_PROTECTION_REQUIRED.md`.
 
 ---
 
