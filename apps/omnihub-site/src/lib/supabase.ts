@@ -5,22 +5,21 @@ import {
   hasValidSupabaseUrl,
 } from './supabaseConfig';
 
-const FALLBACK_URL = 'https://rtopreovkywofgwgmozi.supabase.co';
-// sb_publishable_ keys are client-safe by design (Supabase publishable key spec)
-const FALLBACK_KEY = 'sb_publishable_fhOZZrH8blDisp915SKTaw_GswiPZpk';
+const PLACEHOLDER_URL = 'https://placeholder.supabase.co';
+const PLACEHOLDER_KEY = 'placeholder-anon-key';
 
 function isValidKeyFormat(key: string): boolean {
   return key.startsWith('eyJ') || key.startsWith('sb_publishable_');
 }
 
 const rawUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
-const supabaseUrl = hasValidSupabaseUrl(rawUrl) ? rawUrl : FALLBACK_URL;
+const supabaseUrl = hasValidSupabaseUrl(rawUrl) ? rawUrl : '';
 
 const rawKey =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
   '';
-const supabaseAnonKey = isValidKeyFormat(rawKey) ? rawKey : FALLBACK_KEY;
+const supabaseAnonKey = isValidKeyFormat(rawKey) ? rawKey : '';
 
 const isValidSupabaseUrl = hasValidSupabaseUrl(supabaseUrl);
 
@@ -36,8 +35,8 @@ if (!hasSupabaseConfig) {
 }
 
 export const supabase = createClient(
-  isValidSupabaseUrl ? supabaseUrl : 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-anon-key',
+  isValidSupabaseUrl ? supabaseUrl : PLACEHOLDER_URL,
+  supabaseAnonKey || PLACEHOLDER_KEY,
   {
     auth: {
       flowType: 'pkce',
