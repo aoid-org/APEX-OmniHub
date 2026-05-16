@@ -145,10 +145,7 @@ async function fetchWithSafeRedirects(targetUrl, request) {
 
 function enforceContentLength(upstream) {
   const contentLength = upstream.headers.get('Content-Length');
-  if (contentLength && Number(contentLength) > MAX_UPSTREAM_BYTES) {
-    return false;
-  }
-  return true;
+  return !(contentLength && Number(contentLength) > MAX_UPSTREAM_BYTES);
 }
 
 function sanitizeUpstreamHeaders(headers) {
@@ -218,15 +215,14 @@ export default {
         headers: sanitizeUpstreamHeaders(upstream.headers),
       });
 
-      for (const [key, value] of Object.entries(corsHeaders(origin))) {
-        proxyResponse.headers.set(key, value);
-      }
+      Object.entries(corsHeaders(origin)).forEach(([key, value]) => proxyResponse.headers.set(key, value));
 
       return proxyResponse;
     } catch (error) {
-      const status = error instanceof Error && error.message === 'unsafe_redirect' ? 400 : 502;
-      const message = status === 400 ? 'APEX OmniMedia: Unsafe upstream redirect' : 'APEX OmniMedia: Upstream fetch failed';
-      return jsonResponse(message, status, origin);
+      if (error instanceof Error && error.message === 'unsafe_redirect') {
+        return jsonResponse('APEX OmniMedia: Unsafe upstream redirect', 400, origin);
+      }
+      return jsonResponse('APEX OmniMedia: Upstream fetch failed', 502, origin);
     }
   },
 };
