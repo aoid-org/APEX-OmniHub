@@ -24,6 +24,7 @@ const REQUEST_SCHEMA = z.object({
 
 const INTEGRATION_SCHEMA = z.object({
   id: z.string().uuid(),
+  user_id: z.string().uuid(),
   type: z.enum(['slack', 'zapier', 'github', 'notion', 'google_drive']),
   config: z.record(z.string(), z.unknown()),
 });
@@ -55,12 +56,17 @@ serve(async (req) => {
 
     const { data: integration, error: fetchError } = await supabase
       .from('integrations')
-      .select('id, type, config')
+      .select('id, user_id, type, config')
       .eq('id', requestBody.integrationId)
-      .single();
+      .eq('user_id', authResult.user!.id)
+      .maybeSingle();
 
-    if (fetchError || !integration) {
-      throw new Error(fetchError?.message ?? 'Integration not found');
+    if (fetchError) {
+      throw new Error(fetchError.message);
+    }
+
+    if (!integration) {
+      return jsonResponse({ error: 'not_found' }, 404, corsHeaders);
     }
 
     const parsedIntegration = INTEGRATION_SCHEMA.parse(integration);
@@ -75,7 +81,8 @@ serve(async (req) => {
         status: testResult.connected ? 'active' : 'error',
         updated_at: new Date().toISOString(),
       })
-      .eq('id', requestBody.integrationId);
+      .eq('id', requestBody.integrationId)
+      .eq('user_id', authResult.user!.id);
 
     return jsonResponse(testResult, 200, corsHeaders);
   } catch (error) {

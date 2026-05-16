@@ -6,7 +6,7 @@
  * Endpoint: POST /web3-nonce
  *
  * Request Body:
- *   { "wallet_address": "0x..." }
+ *   { "wallet_address": "0x...", "chain_id": 1 }
  *
  * Response:
  *   { "nonce": "...", "expires_at": "...", "message": "..." }
@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body = await req.json();
-    const { wallet_address } = body;
+    const { wallet_address, chain_id } = body;
 
     // Validate wallet address
     if (!wallet_address || typeof wallet_address !== 'string') {
@@ -96,6 +96,8 @@ Deno.serve(async (req) => {
       return corsJsonResponse({ error: 'invalid_address', message: 'Invalid Ethereum wallet address format' }, 400);
     }
 
+    const resolvedChainId = Number.isInteger(chain_id) && chain_id > 0 ? chain_id : 1;
+
     // Initialize Supabase client
     const supabase = createSupabaseClient();
 
@@ -104,6 +106,7 @@ Deno.serve(async (req) => {
       .from('wallet_nonces')
       .select('nonce, expires_at')
       .eq('wallet_address', normalizedAddress)
+      .eq('chain_id', resolvedChainId)
       .is('used_at', null)
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
@@ -123,6 +126,7 @@ Deno.serve(async (req) => {
         expires_at: existingNonce.expires_at,
         message,
         wallet_address: normalizedAddress,
+        chain_id: resolvedChainId,
         reused: true,
       });
     }
@@ -137,6 +141,7 @@ Deno.serve(async (req) => {
       .insert({
         nonce,
         wallet_address: normalizedAddress,
+        chain_id: resolvedChainId,
         expires_at: expiresAt.toISOString(),
       });
 
@@ -154,6 +159,7 @@ Deno.serve(async (req) => {
       expires_at: expiresAt.toISOString(),
       message,
       wallet_address: normalizedAddress,
+      chain_id: resolvedChainId,
       reused: false,
     });
 

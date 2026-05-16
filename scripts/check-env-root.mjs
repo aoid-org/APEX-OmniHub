@@ -20,6 +20,14 @@ const supabaseClientKey =
   process.env.SUPABASE_PUBLISHABLE_KEY ||
   process.env.SUPABASE_ANON_KEY;
 
+
+const allowMissingSupabaseConfig = process.env.APEX_ALLOW_MISSING_SUPABASE_CONFIG === 'true';
+const isCiOrProduction =
+  process.env.CI === 'true' ||
+  process.env.NODE_ENV === 'production' ||
+  process.env.CF_PAGES === '1' ||
+  process.env.CF_PAGES === 'true';
+
 const missing = [];
 if (!supabaseUrl) {
   missing.push('VITE_SUPABASE_URL (or SUPABASE_URL)');
@@ -46,11 +54,11 @@ if (missing.length > 0) {
     '      does NOT trigger a redeploy. Use the dashboard "Retry" button',
   );
   console.warn('      or push an empty commit to force a rebuild.\n');
-  if (process.env.APEX_ALLOW_MISSING_SUPABASE_CONFIG === 'true') {
+  if (allowMissingSupabaseConfig && !isCiOrProduction) {
     console.warn(
-      'WARNING: Proceeding with build because APEX_ALLOW_MISSING_SUPABASE_CONFIG=true.',
+      'WARNING: Proceeding because APEX_ALLOW_MISSING_SUPABASE_CONFIG=true in local development.',
     );
-    console.warn('         Auth will show "Login is unavailable" until env vars are injected.\n');
+    console.warn('         Auth remains unavailable until env vars are configured.\n');
     process.exit(0);
   }
 
