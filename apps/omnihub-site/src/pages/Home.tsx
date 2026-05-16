@@ -348,7 +348,7 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
                 <text x="0" y="-11" textAnchor="middle" fill="rgba(251,191,36,0.88)" fontSize="7" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="1">AI AGENTS</text>
               </g>
 
-              <text x="260" y="518" textAnchor="middle" fill="rgba(232,162,71,0.28)" fontSize="7.5" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="3.5">INTELLIGENCE, DESIGNED.</text>
+              <text x="260" y="525" textAnchor="middle" fill="rgba(245,200,120,0.88)" fontSize="14" fontWeight="700" fontFamily="Space Grotesk,sans-serif" letterSpacing="4.5">INTELLIGENCE, DESIGNED.</text>
             </svg>
           </div>
         </div>
