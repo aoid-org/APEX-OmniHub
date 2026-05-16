@@ -28,9 +28,6 @@ import {
   Shield,
   Activity,
 } from 'lucide-react';
-import { ResponsiveGridLayout, DragHandle, type Layout } from './GridLayout';
-
-type ResponsiveLayouts = Partial<Record<string, Layout[]>>;
 
 /** Circuit-breaker status indicator */
 function circuitBreakerStatus(
@@ -88,28 +85,6 @@ export const Ops = () => {
     },
   });
 
-  /** Build a single-column stacked layout with optional height overrides */
-  const singleColumnLayout = (overrides?: Partial<Record<string, number>>): Layout => [
-    { i: 'freeze', x: 0, y: 0, w: 1, h: 2, isResizable: false },
-    { i: 'memoryhealth', x: 0, y: 2, w: 1, h: overrides?.memoryhealth ?? 4, isResizable: false },
-    { i: 'newlog', x: 0, y: 6, w: 1, h: overrides?.newlog ?? 5, isResizable: false },
-    { i: 'systemresilience', x: 0, y: 11, w: 1, h: 3, isResizable: false },
-    { i: 'incidentlog', x: 0, y: 14, w: 1, h: overrides?.incidentlog ?? 7, isResizable: false },
-  ] as Layout;
-
-  const [layouts, setLayouts] = useState<ResponsiveLayouts>({
-    lg: [
-      { i: 'freeze', x: 0, y: 0, w: 1, h: 2, isResizable: false },
-      { i: 'memoryhealth', x: 1, y: 0, w: 1, h: 4, isResizable: false },
-      { i: 'newlog', x: 0, y: 2, w: 1, h: 5, isResizable: false },
-      { i: 'systemresilience', x: 1, y: 4, w: 1, h: 3, isResizable: false },
-      { i: 'incidentlog', x: 0, y: 7, w: 2, h: 7, isResizable: false },
-    ],
-    md: singleColumnLayout(),
-    sm: singleColumnLayout(),
-    xs: singleColumnLayout({ memoryhealth: 5, newlog: 6, incidentlog: 8 }),
-    xxs: singleColumnLayout({ memoryhealth: 5, newlog: 6, incidentlog: 8 }),
-  });
 
   // Derive circuit-breaker status from error ratio
   const mh = memoryHealth.data;
@@ -124,20 +99,10 @@ export const Ops = () => {
 
   return (
     <div className="py-2 w-full mx-auto overflow-x-hidden">
-      <ResponsiveGridLayout
-        className="layout"
-        layouts={layouts}
-        breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
-        cols={{ lg: 2, md: 1, sm: 1, xs: 1, xxs: 1 }}
-        rowHeight={60}
-        onLayoutChange={(_layout: Layout[], allLayouts: ResponsiveLayouts) => setLayouts(allLayouts)}
-        draggableHandle=".custom-drag-handle"
-        margin={[16, 16]}
-      >
+      <div className="flex flex-col gap-4">
         {/* ── Freeze Switch ─────────────────────────── */}
         <div key="freeze">
-          <Card className="h-full relative group shadow-md border-white/5 bg-[#121622]/50">
-            <DragHandle />
+          <Card className="h-full relative shadow-md border-white/5 bg-[#121622]/50">
             <CardHeader>
               <CardTitle>Freeze switch</CardTitle>
             </CardHeader>
@@ -166,8 +131,7 @@ export const Ops = () => {
 
         {/* ── Memory Health (ACRA Observability) ──── */}
         <div key="memoryhealth" data-testid="widget-memory-health">
-          <Card className="h-full relative group shadow-md border-white/5 bg-[#121622]/50">
-            <DragHandle />
+          <Card className="h-full relative shadow-md border-white/5 bg-[#121622]/50">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2">
                 <Brain className="h-4 w-4 text-purple-400" />
@@ -248,8 +212,7 @@ export const Ops = () => {
 
         {/* ── Log New Incident ──────────────────────── */}
         <div key="newlog">
-          <Card className="h-full relative group shadow-md border-white/5 bg-[#121622]/50">
-            <DragHandle />
+          <Card className="h-full relative shadow-md border-white/5 bg-[#121622]/50">
             <CardHeader>
               <CardTitle>Log new incident</CardTitle>
             </CardHeader>
@@ -261,7 +224,7 @@ export const Ops = () => {
                   onChange={(e) =>
                     setForm((f) => ({ ...f, title: e.target.value }))
                   }
-                  className="cancel-drag border-white/10"
+                  className="border-white/10"
                 />
               </div>
               <div className="space-y-1">
@@ -275,7 +238,7 @@ export const Ops = () => {
                     }))
                   }
                 >
-                  <SelectTrigger className="cancel-drag border-white/10">
+                  <SelectTrigger className="border-white/10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -296,14 +259,14 @@ export const Ops = () => {
                       description: e.target.value,
                     }))
                   }
-                  className="cancel-drag border-white/10"
+                  className="border-white/10"
                 />
               </div>
               <div className="md:col-span-2 pt-2">
                 <Button
                   onClick={() => mutation.mutate()}
                   disabled={mutation.isPending}
-                  className="cancel-drag bg-[#3A455D] hover:bg-white/20 text-white"
+                  className="bg-[#3A455D] hover:bg-white/20 text-white"
                 >
                   Log incident
                 </Button>
@@ -314,8 +277,7 @@ export const Ops = () => {
 
         {/* ── System Resilience (ACRA Observability) ── */}
         <div key="systemresilience" data-testid="widget-system-resilience">
-          <Card className="h-full relative group shadow-md border-white/5 bg-[#0F131D]/80">
-            <DragHandle />
+          <Card className="h-full relative shadow-md border-white/5 bg-[#0F131D]/80">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-emerald-400" />
@@ -367,8 +329,7 @@ export const Ops = () => {
 
         {/* ── Incident Log ──────────────────────────── */}
         <div key="incidentlog">
-          <Card className="h-full flex flex-col relative group shadow-md border-white/5 bg-[#0F131D]/80">
-            <DragHandle />
+          <Card className="h-full flex flex-col relative shadow-md border-white/5 bg-[#0F131D]/80">
             <CardHeader>
               <CardTitle>Incident log</CardTitle>
             </CardHeader>
@@ -436,7 +397,7 @@ export const Ops = () => {
             </CardContent>
           </Card>
         </div>
-      </ResponsiveGridLayout>
+      </div>
     </div>
   );
 };

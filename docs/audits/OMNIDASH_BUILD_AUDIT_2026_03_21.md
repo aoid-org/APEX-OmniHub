@@ -114,14 +114,14 @@ The following components exist under `apps/omnihub-site/dashboard/components/` b
 |-----------|------|-------|
 | Approvals | `Approvals.tsx` | Man-mode approval UI — fully implemented, never mounted |
 | Entities | `Entities.tsx` | Entity management panel — never mounted |
-| Events | `Events.tsx` | Event stream panel, uses GridLayout — never mounted |
-| Kpis | `Kpis.tsx` | KPI metrics panel, uses GridLayout — never mounted |
+| Events | `Events.tsx` | Event stream panel, static GlobalCanvas-aligned flow — never mounted |
+| Kpis | `Kpis.tsx` | KPI metrics panel, static GlobalCanvas-aligned flow — never mounted |
 | LocalAgents | `LocalAgents.tsx` | Local agent listing — never mounted |
-| Ops | `Ops.tsx` | Operations panel, uses GridLayout — never mounted |
+| Ops | `Ops.tsx` | Operations panel, static GlobalCanvas-aligned flow — never mounted |
 | Pipeline | `Pipeline.tsx` | Pipeline visualization — never mounted |
 | Runs | `Runs.tsx` | Run execution history — never mounted |
 | Tasks | `Tasks.tsx` | Task management — never mounted |
-| Today | `Today.tsx` | Daily summary panel, uses GridLayout — never mounted |
+| Today | `Today.tsx` | Daily summary panel, static GlobalCanvas-aligned flow — never mounted |
 
 ### Dead Handler File
 

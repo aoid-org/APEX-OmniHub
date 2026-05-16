@@ -473,7 +473,7 @@ have been removed.
 
 ### Security
 
-- **Dependabot Alert #63 (RCE):** `serialize-javascript` pinned to `7.0.3` via npm overrides. Vulnerability count reduced from 6 to 2.
+- **Dependabot Alert #63 (RCE):** `serialize-javascript` pinned to `7.0.5` via npm overrides for the patched CPU-exhaustion DoS remediation.
 
 ### Quality Gates
 
@@ -634,7 +634,7 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 - **OmniDash SPA**: Restructured from multi-page routing to Single Page Application with panel-based navigation
 - Migrated 'src/pages/OmniDash/{Today,Kpis,Ops,Integrations,Events}.tsx' → 'src/components/omnidash/'
 - Enhanced `useOmniDashKeyboardShortcuts.ts` with panel-based activation keys (H, P, K, O, I, E, N, R, A, W)
-- Added `react-grid-layout` responsive dashboard widget positioning (breakpoints: lg:3, md:2, sm:1)
+- Added responsive dashboard widget positioning (later retired in favor of GlobalCanvas-owned static flow behavior)
 - Added `framer-motion` for SPA panel transition animations
 - Added `HiddenMetric.tsx` for sensitive data redaction with tooltip support
 - Added category-based badge color coding (outcome/outreach/metric)

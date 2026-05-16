@@ -10,9 +10,6 @@ import { useOmniDashSettings } from '@/omnidash/hooks';
 import { redactKpiDaily, redactAmount } from '@/omnidash/redaction';
 import { HiddenValue } from './HiddenMetric';
 import { LineChart, PlayCircle, AlertTriangle, MonitorPlay, CreditCard, DollarSign, Siren, Clock } from 'lucide-react';
-import { ResponsiveGridLayout, type Layout } from './GridLayout';
-
-type ResponsiveLayouts = Partial<Record<string, Layout[]>>;
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -74,38 +71,11 @@ export const Kpis = () => {
     },
   });
 
-  const [layouts, setLayouts] = useState<ResponsiveLayouts>({
-    lg: [
-      { i: 'update', x: 0, y: 0, w: 1, h: 4, isResizable: false },
-      { i: 'daily', x: 0, y: 4, w: 1, h: 6, isResizable: false }
-    ],
-    md: [
-      { i: 'update', x: 0, y: 0, w: 1, h: 4, isResizable: false },
-      { i: 'daily', x: 0, y: 4, w: 1, h: 6, isResizable: false }
-    ],
-    sm: [
-      { i: 'update', x: 0, y: 0, w: 1, h: 4, isResizable: false },
-      { i: 'daily', x: 0, y: 4, w: 1, h: 6, isResizable: false }
-    ],
-  });
-
   return (
     <div className="py-2 w-full mx-auto overflow-x-hidden">
-      <ResponsiveGridLayout
-        className="layout -mx-2"
-        layouts={layouts}
-        breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
-        cols={{ lg: 1, md: 1, sm: 1, xs: 1, xxs: 1 }}
-        rowHeight={80}
-        onLayoutChange={(_layout: Layout[], allLayouts: ResponsiveLayouts) => setLayouts(allLayouts)}
-        draggableHandle=".custom-drag-handle"
-        margin={[16, 16]}
-      >
-        <div key="update">
-          <Card className="h-full relative group shadow-md border-white/5 bg-[#121622]/50">
-            <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/0 group-hover:text-white/30 hover:text-white/60 transition-colors z-20">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
-            </div>
+      <div className="space-y-4">
+        <section>
+          <Card className="relative shadow-md border-white/5 bg-[#121622]/50">
             <CardHeader>
               <CardTitle>Update today</CardTitle>
             </CardHeader>
@@ -117,22 +87,19 @@ export const Kpis = () => {
                     type="number"
                     value={value ?? 0}
                     onChange={(e) => setForm((f) => ({ ...f, [key]: Number(e.target.value) }))}
-                    className="cancel-drag border-white/10"
+                    className="border-white/10"
                   />
                 </div>
               ))}
               <div className="md:col-span-3 pt-2">
-                <Button onClick={() => mutation.mutate()} disabled={mutation.isPending} className="cancel-drag">Save KPI for today</Button>
+                <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>Save KPI for today</Button>
               </div>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
-        <div key="daily">
-          <Card className="h-full flex flex-col relative group shadow-md border-white/5 bg-[#121622]/40">
-            <div className="custom-drag-handle absolute top-0 right-0 p-3 h-10 w-10 cursor-grab active:cursor-grabbing text-white/0 group-hover:text-white/30 hover:text-white/60 transition-colors z-20">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
-            </div>
+        <section>
+          <Card className="flex flex-col relative shadow-md border-white/5 bg-[#121622]/40">
             <CardHeader>
               <CardTitle>Daily KPIs</CardTitle>
             </CardHeader>
@@ -171,9 +138,9 @@ export const Kpis = () => {
             </Table>
           </CardContent>
         </Card>
+        </section>
       </div>
-    </ResponsiveGridLayout>
-  </div>
+    </div>
   );
 };
 

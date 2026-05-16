@@ -299,25 +299,21 @@ export function RequestAccessPage(): JSX.Element {
     useCase: '',
     website: '', // honeypot - must remain empty
   });
-  const [hasConsent, setHasConsent] = useState(false);
+  const [hasConsent, setHasConsent] = useState(() => {
+    // Hydrate consent from storage once without a post-render state cascade.
+    try {
+      return localStorage.getItem('apex_cooldown_consent') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    // Hydrate consent from storage on original pageload if previously opted in
-    try {
-      if (localStorage.getItem('apex_cooldown_consent') === 'true') {
-        setHasConsent(true);
-      }
-    } catch {
-      // Ignore
-    }
-  }, []);
-
-  // Track form load time for timing-based anti-abuse
-  const formStartTime = useRef<number>(Date.now());
+  // Track form load time for timing-based anti-abuse without calling impure APIs during render.
+  const formStartTime = useRef<number>(0);
 
   // Reset form start time on mount
   useEffect(() => {

@@ -1,8 +1,8 @@
 /**
  * Today.tsx – OmniDash Today widget tests
  *
- * Covers: rendering, grid layout, add-item mutation, badge styling,
- * responsive layout keys, and DragHandle presence.
+ * Covers: rendering, GlobalCanvas flow composition, add-item mutation,
+ * badge styling, and static card regions.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
@@ -78,16 +78,6 @@ vi.mock('@/dashboard/components/HiddenMetric', () => ({
   HiddenMetric: ({ value }: { value: string }) => <span>{value}</span>,
 }));
 
-vi.mock('react-grid-layout/legacy', () => {
-  const Responsive = ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="responsive-grid">{children}</div>
-  );
-  const WidthProvider = (C: React.ComponentType<{ children?: React.ReactNode }>) => C;
-  return { Responsive, WidthProvider };
-});
-
-vi.mock('react-grid-layout/css/styles.css', () => ({}));
-vi.mock('react-resizable/css/styles.css', () => ({}));
 
 // ── Helpers ───────────────────────────────────────────────────────────
 function createWrapper() {
@@ -115,7 +105,7 @@ describe('Today widget', () => {
     expect(container).toBeTruthy();
   });
 
-  it('renders the responsive grid container', async () => {
+  it('renders the GlobalCanvas flow container', async () => {
     const { Today } = await import('@/dashboard/components/Today');
     const Wrapper = createWrapper();
     render(
@@ -123,7 +113,7 @@ describe('Today widget', () => {
         <Today />
       </Wrapper>
     );
-    expect(screen.getByTestId('responsive-grid')).toBeTruthy();
+    expect(screen.getByTestId('global-canvas-flow')).toBeTruthy();
   });
 
   it('renders the Top 3 Outcomes heading', async () => {

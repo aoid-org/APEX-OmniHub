@@ -83,7 +83,7 @@ All notable changes to the APEX OmniHub Marketing Site.
 
 ### Security
 
-- **Dependabot Alert #63 (RCE):** `serialize-javascript` → `7.0.3` via npm overrides.
+- **Dependabot Alert #63 (RCE):** `serialize-javascript` → `7.0.5` via npm overrides for Dependabot alert #90.
 
 ### Quality Gates
 

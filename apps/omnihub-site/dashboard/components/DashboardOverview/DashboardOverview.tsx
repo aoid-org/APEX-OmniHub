@@ -21,7 +21,7 @@ import {
 } from "../../../../../packages/core/src/registry";
 import { useOmniGateway } from "@/stores/omniGatewayStore";
 import type { DashboardOverviewProps, ContextItem, AppEntry } from "./types";
-import { INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from "./data";
+import { APPS, INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from "./data";
 import { useAgentRecording } from "./hooks/useAgentRecording";
 import { AgentPane } from "./components/AgentPane";
 import { OmniSlatePane } from "./components/OmniSlatePane";

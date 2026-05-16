@@ -10,7 +10,7 @@
 
 ## Evidence Pointers
 - Audit logs: `src/security/auditLog.ts` (hooked into auth + DR flows).
-- Dependency scanning: `SECURITY_ADVISORIES.md`, `docs/dependency-scanning.md`.
+- Dependency scanning: `docs/security/SECURITY_ADVISORIES.md`, `docs/security/dependency-scanning.md`.
 - Zero-trust: `src/zero-trust/*`, `docs/zero-trust-baseline.md`, `docs/device-registry.md`.
 
 ## Next Steps
