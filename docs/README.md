@@ -1,24 +1,27 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.4-SECURITY-DOC-AUDIT | LAST_UPDATED=2026-05-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.5-DOC-RELEASE-INDEX | LAST_UPDATED=2026-05-16 -->
 
 # APEX OmniHub Documentation
 
 **Enterprise AI Orchestration Platform**
 
-- **Document Version:** 2.6.0
+- **Document Version:** 2.7.0
 - **Platform Version:** 1.6.0
-- **Last Updated:** 2026-05-15
-- **Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
+- **Last Updated:** 2026-05-16
+- **Current Documentation Index:** [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)
+- **Current Certification Authority:** [Production Certification Status](project-status/PRODUCTION_CERTIFICATION_STATUS.md)
+- **Historical Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
 
 ## Quick Navigation
 
-**Start here:** [Canonical Repo Map](architecture/ARCHITECTURE_CANONICAL_MAP.md) — first-stop architecture + infrastructure map.
+**Start here:** [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md) — current docs inventory, authority order, and anti-drift rules. Then read the [Canonical Repo Map](architecture/ARCHITECTURE_CANONICAL_MAP.md) for architecture + infrastructure context.
 
 **OmniDash sidebar rail source of truth:** `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`; see [OmniDash](platform/OMNIDASH.md), [Canonical Truth](architecture/CANONICAL_TRUTH.md), and [CI Guardrails Runbook](ops/OPS_RUNBOOKS_CI_GUARDRAILS.md).
 
 | Category                                            | Description                                |
 | --------------------------------------------------- | ------------------------------------------ |
+| [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md) | Current maps, READMEs, status, audits, and runbooks |
 | [Platform Modules](#platform-modules)               | Core Omni-\* module documentation          |
 | [Architecture](#architecture)                       | System design and technical specifications |
 | [Project Status](#project-status)                   | Current status and readiness reports       |
@@ -77,8 +80,10 @@ Current deployment state and ecosystem overview:
 
 | Document                                                    | Description              |
 | ----------------------------------------------------------- | ------------------------ |
-| [Production Status](project-status/PRODUCTION_STATUS.md)    | Current deployment state |
-| [Ecosystem Status](project-status/APEX_ECOSYSTEM_STATUS.md) | Platform overview        |
+| [Production Certification Status](project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |
+| [CI Status Policy](project-status/CI_STATUS_POLICY.md) | CI status interpretation |
+| [Production Status](project-status/PRODUCTION_STATUS.md)    | Historical deployment snapshot; defers to certification status |
+| [Ecosystem Status](project-status/APEX_ECOSYSTEM_STATUS.md) | Historical platform overview        |
 
 ---
 
@@ -257,7 +262,8 @@ Audit reports, remediation, and historical records:
 | [Third-Party Code Audit 2026-03-08](audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md)               | Third-party audit                                                      |
 | [**Third-Party Code Audit 2026-03-09 ← CURRENT**](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) | **Latest audit — 94.3/100 (A)**                                        |
 | [Annotated PR Triage 2026-05-06](audits/ANNOTATED_PR_TRIAGE_2026_05_06.md)                     | Current merge/update/close decisions for screenshot-annotated PR queue |
-| [Documentation Audit 2026-05-15](audits/DOCUMENTATION_AUDIT_2026-05-15.md)                      | Current documentation inventory, stale-document disposition, and validation evidence |
+| [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)                                      | Current docs inventory and authority order for maps, READMEs, status, audits, and runbooks |
+| [Documentation Audit 2026-05-15](audits/DOCUMENTATION_AUDIT_2026-05-15.md)                      | Historical documentation inventory, stale-document disposition, and validation evidence |
 
 ---
 
@@ -273,6 +279,7 @@ Audit reports, remediation, and historical records:
 ```
 docs/
 ├── README.md                 # This index
+├── DOCUMENTATION_RELEASE_INDEX.md # Current authority order and inventory
 ├── platform/                 # Core Omni-* modules
 ├── architecture/             # System design
 ├── project-status/           # Status and readiness
@@ -289,12 +296,12 @@ docs/
 
 ---
 
-**Last Updated:** March 16, 2026
-**Release:** v1.3.8
+**Last Updated:** May 16, 2026
+**Release:** v1.6.0
 
 ## Documentation Governance
 
-- All strategic status changes must be reflected in `docs/project-status/PRODUCTION_STATUS.md` and the latest audit artifact in `docs/audits/`.
+- All strategic status changes must be reflected in `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`, `docs/DOCUMENTATION_RELEASE_INDEX.md`, and the latest applicable audit/status artifact.
 - Security posture updates must include refreshed `security/npm-audit-latest.json` and `security/npm-audit-prod.json` evidence files.
 - Remove transient logs/artifacts from source control (lint dumps, local reports, backup files) unless explicitly required for compliance evidence.
 

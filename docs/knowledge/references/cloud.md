@@ -1,6 +1,13 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
 # Cloud Architecture Reference
 
+## Verification Status Legend
+
+> VERIFIED — Confirmed by implementation or repo evidence in this snapshot.
+> PROPOSED — Architecturally supported and documented, but not verified in this snapshot.
+> ARCHITECTURALLY POSSIBLE / UNVERIFIED — Compatible by design, but not yet verified in this snapshot.
+> All listed providers remain valid portability targets; none are deprecated by this legend.
+
 ## Canonical Provider Portability Status
 
 | Provider | Status |

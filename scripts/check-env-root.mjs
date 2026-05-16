@@ -46,13 +46,18 @@ if (missing.length > 0) {
     '      does NOT trigger a redeploy. Use the dashboard "Retry" button',
   );
   console.warn('      or push an empty commit to force a rebuild.\n');
-  console.warn(
-    'WARNING: Proceeding with build — auth will show "Login is unavailable"',
+  if (process.env.APEX_ALLOW_MISSING_SUPABASE_CONFIG === 'true') {
+    console.warn(
+      'WARNING: Proceeding with build because APEX_ALLOW_MISSING_SUPABASE_CONFIG=true.',
+    );
+    console.warn('         Auth will show "Login is unavailable" until env vars are injected.\n');
+    process.exit(0);
+  }
+
+  console.error(
+    'ERROR: Failing closed. Set APEX_ALLOW_MISSING_SUPABASE_CONFIG=true only for local development.',
   );
-  console.warn('         at runtime until env vars are correctly injected.\n');
-  // Exit 0 so the build proceeds — the Login page runtime check
-  // already surfaces a clear error to users when config is missing.
-  process.exit(0);
+  process.exit(1);
 }
 
 function getSupabaseClientKeySource() {

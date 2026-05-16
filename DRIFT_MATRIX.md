@@ -7,3 +7,24 @@
 | **Local Setup Truth** | One command `docker compose -f docker-compose.dev.yml up` starts frontend + Temporal + Redis. | `README.md` | Minor Error | None. Checked and verified to be correct. | Flagged but intentionally untouched |
 | **Production Status Framing** | OmniHub uses cloud Supabase, Cloudflare Pages, Temporal. | `docs/project-status/PRODUCTION_STATUS.md` | Legacy State | Updated to clearly frame Vercel elements as historical artifacts superseded by Cloudflare Pages. | Corrected |
 | **OmniDash left-sidebar source of truth** | Sidebar is a 9-widget rail owned by `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`; `APP_REGISTRY` and `OMNIDASH_CONTRACT` remain 14-app product/platform contracts. | `apps/omnihub-site/dashboard/OmniDashShell.tsx`, `docs/platform/OMNIDASH.md`, `docs/architecture/CANONICAL_TRUTH.md`, `docs/architecture/frontend-map.md`, `docs/ops/OPS_RUNBOOKS_CI_GUARDRAILS.md`, `docs/onboarding/DEVELOPER_ONBOARDING.md` | Contract Boundary Drift | Added sidebar contract docs, onboarding note, architecture map entries, runbook, ESLint drift guard, and contract tests. | Corrected 2026-05-12 |
+## 2026-05-12 Docs Drift Remediation Pass
+
+Actual files changed in this pass:
+- `docs/rsi/BRANCH_PROTECTION_REQUIRED.md`
+- `docs/architecture/LIB_DIRECTORY_POLICY.md`
+- `docs/infrastructure/PORTABILITY_MATRIX.md`
+- `docs/architecture/OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md`
+- `docs/infrastructure/DISASTER_RECOVERY_PLAN.md`
+- `docs/infrastructure/PATH_B_CONTAINERIZED_MULTICLOUD.md`
+- `docs/infrastructure/CLOUD_AGNOSTIC_ARCHITECTURE.md`
+- `docs/ops/OPERATIONAL_EXCELLENCE.md`
+- `docs/knowledge/references/cloud.md`
+
+
+## 2026-05-16 Current-Tree Documentation Audit Pass
+
+- Created `docs/DOCUMENTATION_RELEASE_INDEX.md` as the current inventory and authority-order index for maps, READMEs, status documents, audits, and runbooks.
+- Updated `README.md` and `docs/README.md` to point onboarding agents to the current documentation index and certification authority, and refreshed top-level repo statistics from live file counts.
+- Updated `docs/rsi/BRANCH_PROTECTION_REQUIRED.md` to reflect current RSI live-mode repo evidence and the active RSI workflow while preserving the manual branch-protection caveat.
+- Updated `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`, `docs/architecture/DOC_RECONCILIATION_MATRIX.md`, and `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` with current-tree documentation audit notes without changing the certification verdict.
+- Corrected `.github/pull_request_template.md` onboarding link so the PR template resolves to the actual developer onboarding document.

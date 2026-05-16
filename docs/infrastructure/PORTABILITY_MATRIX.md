@@ -1,6 +1,13 @@
 <!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
 # PORTABILITY MATRIX
 
+## Verification Status Legend
+
+> VERIFIED — Confirmed by implementation or repo evidence in this snapshot.
+> PROPOSED — Architecturally supported and documented, but not verified in this snapshot.
+> ARCHITECTURALLY POSSIBLE / UNVERIFIED — Compatible by design, but not yet verified in this snapshot.
+> All listed providers remain valid portability targets; none are deprecated by this legend.
+
 ## Vercel Reference Classification
 
 LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.

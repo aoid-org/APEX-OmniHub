@@ -40,4 +40,4 @@
 <!-- Anything they should pay special attention to, or known limitations. -->
 
 ---
-*Submitting this PR confirms you have read and followed the [APEX Engineering Standards](docs/onboarding/DEVELOPER_ONBOARDING.md).*
+*Submitting this PR confirms you have read and followed the [APEX Engineering Standards](../docs/onboarding/DEVELOPER_ONBOARDING.md).*
