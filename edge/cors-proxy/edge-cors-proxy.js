@@ -24,65 +24,88 @@ const CORS_HEADERS = {
   'Cross-Origin-Resource-Policy': 'cross-origin',
 };
 
+const JSON_HEADERS = { 'Content-Type': 'application/json', ...CORS_HEADERS };
+const EDGE_USER_AGENT = 'APEX-OmniMedia-EdgeProxy/1.0';
+
+function isAllowedProxyMethod(method) {
+  return method === 'GET' || method === 'HEAD';
+}
+
+function jsonError(message, status) {
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: JSON_HEADERS,
+  });
+}
+
+function parseTargetUrl(targetUrl) {
+  if (!targetUrl) {
+    return { errorResponse: jsonError('APEX OmniMedia: Missing source parameter', 400) };
+  }
+
+  try {
+    return { target: new URL(targetUrl) };
+  } catch {
+    return { errorResponse: jsonError('APEX OmniMedia: Invalid source URL', 400) };
+  }
+}
+
+function buildUpstreamHeaders(request) {
+  const headers = { 'User-Agent': EDGE_USER_AGENT };
+  const range = request.headers.get('Range');
+
+  // Forward byte-range requests only when the client supplied a concrete range.
+  if (range) {
+    headers.Range = range;
+  }
+
+  return headers;
+}
+
+function withCorsHeaders(upstream) {
+  const proxyResponse = new Response(upstream.body, {
+    status: upstream.status,
+    statusText: upstream.statusText,
+    headers: upstream.headers,
+  });
+
+  for (const [key, value] of Object.entries(CORS_HEADERS)) {
+    proxyResponse.headers.set(key, value);
+  }
+
+  return proxyResponse;
+}
+
 export default {
   /**
    * @param {Request} request - Incoming edge request
    * @returns {Promise<Response>}
    */
   async fetch(request) {
-    // Handle preflight OPTIONS
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: CORS_HEADERS });
     }
 
-    const url = new URL(request.url);
-    const targetUrl = url.searchParams.get('source');
-
-    if (!targetUrl) {
-      return new Response(
-        JSON.stringify({ error: 'APEX OmniMedia: Missing source parameter' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } },
-      );
+    if (!isAllowedProxyMethod(request.method)) {
+      return jsonError('APEX OmniMedia: Method not allowed', 405);
     }
 
-    // Validate URL format before proxying
-    try {
-      new URL(targetUrl);
-    } catch {
-      return new Response(
-        JSON.stringify({ error: 'APEX OmniMedia: Invalid source URL' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } },
-      );
+    const requestUrl = new URL(request.url);
+    const { target, errorResponse } = parseTargetUrl(requestUrl.searchParams.get('source'));
+
+    if (errorResponse) {
+      return errorResponse;
     }
 
     try {
-      // Proxy the request to the target media source
-      const upstream = await fetch(targetUrl, {
+      const upstream = await fetch(target.href, {
         method: request.method,
-        headers: {
-          'User-Agent': 'APEX-OmniMedia-EdgeProxy/1.0',
-          Range: request.headers.get('Range') || '',
-        },
+        headers: buildUpstreamHeaders(request),
       });
 
-      // Clone response to mutate headers
-      const proxyResponse = new Response(upstream.body, {
-        status: upstream.status,
-        statusText: upstream.statusText,
-        headers: upstream.headers,
-      });
-
-      // Force-inject CORS headers to authorize Web Audio API interception
-      for (const [key, value] of Object.entries(CORS_HEADERS)) {
-        proxyResponse.headers.set(key, value);
-      }
-
-      return proxyResponse;
+      return withCorsHeaders(upstream);
     } catch {
-      return new Response(
-        JSON.stringify({ error: 'APEX OmniMedia: Upstream fetch failed' }),
-        { status: 502, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } },
-      );
+      return jsonError('APEX OmniMedia: Upstream fetch failed', 502);
     }
   },
 };
