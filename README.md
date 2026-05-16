@@ -183,7 +183,7 @@ docker compose -f docker-compose.dev.yml up
 ```
 
 This starts: Frontend (port 8080) + Temporal worker + Temporal UI (port 8233) + Redis.
-Supabase runs in the cloud — point `.env.local` to your Supabase project.
+Supabase runs in the cloud — point `.env.local` to your Supabase project. Browser builds require `VITE_SUPABASE_URL` plus `VITE_SUPABASE_PUBLISHABLE_KEY` or legacy `VITE_SUPABASE_ANON_KEY`; CI/production builds fail closed when they are missing. For local UI-only work without Supabase, set `APEX_ALLOW_MISSING_SUPABASE_CONFIG=true`.
 
 ### Manual Setup (alternative)
 
