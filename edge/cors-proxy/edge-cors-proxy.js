@@ -198,7 +198,7 @@ export default {
       const proxyResponse = new Response(capBodyStream(upstream.body), {
         status: upstream.status,
         statusText: upstream.statusText,
-        headers: upstream.headers,
+        headers: sanitizeUpstreamHeaders(upstream.headers),
       });
 
       for (const [key, value] of Object.entries(corsHeaders(origin))) {
