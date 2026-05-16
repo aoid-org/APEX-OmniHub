@@ -31,6 +31,12 @@ describe('supabase.ts config guard (runtime coverage)', () => {
   });
 
   it('should have hasSupabaseConfig=true when valid env vars are set', async () => {
+    Object.assign(import.meta.env, {
+      VITE_SUPABASE_URL: 'https://example.supabase.co',
+      VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test_1234567890',
+    });
+    vi.resetModules();
+
     const mod = await import('@omnihub/lib/supabase');
     expect(mod.hasSupabaseConfig).toBe(true);
   });

@@ -20,6 +20,14 @@ const supabaseClientKey =
   process.env.SUPABASE_PUBLISHABLE_KEY ||
   process.env.SUPABASE_ANON_KEY;
 
+
+const allowMissingSupabaseConfig = process.env.APEX_ALLOW_MISSING_SUPABASE_CONFIG === 'true';
+const isCiOrProduction =
+  process.env.CI === 'true' ||
+  process.env.NODE_ENV === 'production' ||
+  process.env.CF_PAGES === '1' ||
+  process.env.CF_PAGES === 'true';
+
 const missing = [];
 if (!supabaseUrl) {
   missing.push('VITE_SUPABASE_URL (or SUPABASE_URL)');
@@ -46,13 +54,18 @@ if (missing.length > 0) {
     '      does NOT trigger a redeploy. Use the dashboard "Retry" button',
   );
   console.warn('      or push an empty commit to force a rebuild.\n');
-  console.warn(
-    'WARNING: Proceeding with build — auth will show "Login is unavailable"',
+  if (allowMissingSupabaseConfig && !isCiOrProduction) {
+    console.warn(
+      'WARNING: Proceeding because APEX_ALLOW_MISSING_SUPABASE_CONFIG=true in local development.',
+    );
+    console.warn('         Auth remains unavailable until env vars are configured.\n');
+    process.exit(0);
+  }
+
+  console.error(
+    'ERROR: Failing closed. Set APEX_ALLOW_MISSING_SUPABASE_CONFIG=true only for local development.',
   );
-  console.warn('         at runtime until env vars are correctly injected.\n');
-  // Exit 0 so the build proceeds — the Login page runtime check
-  // already surfaces a clear error to users when config is missing.
-  process.exit(0);
+  process.exit(1);
 }
 
 function getSupabaseClientKeySource() {

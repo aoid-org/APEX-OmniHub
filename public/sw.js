@@ -4,7 +4,73 @@
 const CACHE_VERSION = 'omnilink-v1';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_DYNAMIC = `${CACHE_VERSION}-dynamic`;
-const CACHE_API = `${CACHE_VERSION}-api`;
+
+
+function isSupabaseSensitiveRequest(url) {
+  return url.hostname.endsWith('.supabase.co') ||
+    url.pathname.startsWith('/rest/v1') ||
+    url.pathname.startsWith('/rpc') ||
+    url.pathname.startsWith('/functions/v1') ||
+    url.pathname.startsWith('/auth/v1');
+}
+
+function shouldBypassCache(request, url) {
+  if (request.method !== 'GET') return true;
+  if (isSupabaseSensitiveRequest(url)) return true;
+  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return true;
+  return false;
+}
+
+function safeAppUrl(input) {
+  const fallback = new URL('/', self.location.origin);
+  const allowedAppPaths = new Set([
+    '/',
+    '/launch',
+    '/auth',
+    '/login',
+    '/story',
+    '/tech-specs',
+    '/features/man-mode',
+    '/man-mode',
+    '/privacy',
+    '/terms',
+    '/request-access',
+    '/advanced-analytics',
+    '/ai-automation',
+    '/fortress',
+    '/maestro',
+    '/omniport',
+    '/orchestrator',
+    '/smart-integrations',
+    '/tri-force',
+    '/integrations/web3',
+    '/product/omnidash',
+    '/demo',
+    '/demo.html',
+    '/omnidash',
+    '/dashboard',
+  ]);
+  const legacyRouteMap = new Map([
+    ['/integrations', '/integrations/web3'],
+    ['/omnitrace', '/omnidash'],
+  ]);
+
+  try {
+    if (!input || typeof input !== 'string') return fallback.href;
+    const parsed = new URL(input, self.location.origin);
+    if (parsed.origin !== self.location.origin) return fallback.href;
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return fallback.href;
+
+    const canonicalPath = legacyRouteMap.get(parsed.pathname) || parsed.pathname;
+    if (!allowedAppPaths.has(canonicalPath)) return fallback.href;
+    parsed.pathname = canonicalPath;
+    parsed.username = '';
+    parsed.password = '';
+    return parsed.href;
+  } catch {
+    return fallback.href;
+  }
+}
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
@@ -58,14 +124,8 @@ globalThis.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
-    return;
-  }
-
-  // Skip Supabase auth/realtime requests (must go to network)
-  if (url.hostname.includes('supabase.co') &&
-    (url.pathname.includes('/auth/') || url.pathname.includes('/realtime/'))) {
+  // Sensitive Supabase/API traffic must never be cached or served stale.
+  if (shouldBypassCache(request, url)) {
     return;
   }
 
@@ -86,9 +146,7 @@ globalThis.addEventListener('fetch', (event) => {
 
           // Determine cache bucket
           let cacheName = CACHE_DYNAMIC;
-          if (url.hostname.includes('supabase.co')) {
-            cacheName = CACHE_API;
-          } else if (STATIC_ASSETS.includes(url.pathname)) {
+          if (STATIC_ASSETS.includes(url.pathname)) {
             cacheName = CACHE_STATIC;
           }
 
@@ -203,17 +261,20 @@ globalThis.addEventListener('notificationclick', (event) => {
     url = event.notification.data.url;
   }
 
+  const safeUrl = safeAppUrl(url);
+  const safePath = new URL(safeUrl).pathname;
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       // Focus existing window if available
       for (const client of clientList) {
-        if (client.url.includes(url.split('?')[0]) && 'focus' in client) {
+        if (new URL(client.url).pathname === safePath && 'focus' in client) {
           return client.focus();
         }
       }
       // Open new window if no existing window found
       if (clients.openWindow) {
-        return clients.openWindow(url);
+        return clients.openWindow(safeUrl);
       }
     })
   );
