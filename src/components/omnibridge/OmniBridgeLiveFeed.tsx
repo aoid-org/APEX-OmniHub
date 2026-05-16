@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, type FC } from 'react';
+import { useEffect, useState, useMemo, memo, type FC } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface OmniBridgeEventRow {
@@ -30,7 +30,8 @@ interface OmniBridgeLiveFeedProps {
  * Real-time admin feed backed by Supabase Realtime on omnibridge_events.
  * Grant-evidence UI: shows verification pass rate, dispatch acks, latency.
  */
-export const OmniBridgeLiveFeed: FC<OmniBridgeLiveFeedProps> = ({
+// ⚡ Bolt: Wrapped OmniBridgeLiveFeed in React.memo() to prevent unnecessary re-renders when parent states change.
+export const OmniBridgeLiveFeed: FC<OmniBridgeLiveFeedProps> = memo(({
   sourceFilter,
   windowSize = 100,
   tenantId,
@@ -184,22 +185,7 @@ export const OmniBridgeLiveFeed: FC<OmniBridgeLiveFeedProps> = ({
               </tr>
             ) : (
               events.map((e) => (
-                <tr key={e.id} className="border-b hover:bg-muted/50">
-                  <td className="py-2 pr-2 font-mono text-xs">
-                    {new Date(e.received_at).toLocaleTimeString()}
-                  </td>
-                  <td className="py-2 pr-2 font-mono text-xs">{e.source_id}</td>
-                  <td className="py-2 pr-2">{e.event_type}</td>
-                  <td className="py-2 pr-2">
-                    <span className="rounded bg-muted px-2 py-0.5 text-xs">{e.profile}</span>
-                  </td>
-                  <td className="py-2 pr-2">
-                    <StateBadge state={e.dispatch_state} verified={e.signature_verified} />
-                  </td>
-                  <td className="py-2 pr-2 font-mono text-xs text-muted-foreground">
-                    {e.trace_id ? `${e.trace_id.slice(0, 8)}...` : '—'}
-                  </td>
-                </tr>
+                <OmniBridgeEventRowItem key={e.id} event={e} />
               ))
             )}
           </tbody>
@@ -207,7 +193,7 @@ export const OmniBridgeLiveFeed: FC<OmniBridgeLiveFeedProps> = ({
       </div>
     </div>
   );
-};
+});
 
 function mergeUpdatedRow(prev: OmniBridgeEventRow[], row: OmniBridgeEventRow): OmniBridgeEventRow[] {
   const index = prev.findIndex((e) => e.id === row.id);
@@ -238,5 +224,26 @@ const StateBadge: FC<{ state: OmniBridgeEventRow['dispatch_state']; verified: bo
   const color = getStateBadgeColor(state, verified);
   return <span className={`rounded px-2 py-0.5 text-xs ${color}`}>{state}</span>;
 };
+
+// ⚡ Bolt: Extracted row into a memoized component.
+// This prevents React from re-rendering the entire 100-item table every time a single new event arrives.
+const OmniBridgeEventRowItem = memo(({ event: e }: { event: OmniBridgeEventRow }) => (
+  <tr className="border-b hover:bg-muted/50">
+    <td className="py-2 pr-2 font-mono text-xs">
+      {new Date(e.received_at).toLocaleTimeString()}
+    </td>
+    <td className="py-2 pr-2 font-mono text-xs">{e.source_id}</td>
+    <td className="py-2 pr-2">{e.event_type}</td>
+    <td className="py-2 pr-2">
+      <span className="rounded bg-muted px-2 py-0.5 text-xs">{e.profile}</span>
+    </td>
+    <td className="py-2 pr-2">
+      <StateBadge state={e.dispatch_state} verified={e.signature_verified} />
+    </td>
+    <td className="py-2 pr-2 font-mono text-xs text-muted-foreground">
+      {e.trace_id ? `${e.trace_id.slice(0, 8)}...` : '—'}
+    </td>
+  </tr>
+));
 
 export default OmniBridgeLiveFeed;
