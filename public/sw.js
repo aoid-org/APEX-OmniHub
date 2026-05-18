@@ -66,6 +66,7 @@ function safeAppUrl(input) {
     parsed.pathname = canonicalPath;
     parsed.username = '';
     parsed.password = '';
+    parsed.hash = parsed.hash || '';
     return parsed.href;
   } catch {
     return fallback.href;

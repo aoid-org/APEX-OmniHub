@@ -19,7 +19,6 @@ const ALLOWED_ORIGIN_HOSTS = new Set([
   'staging.omnihub.dev',
   'localhost',
   '127.0.0.1',
-  'apex-omnihub.pages.dev',
 ]);
 
 function isAllowedOrigin(origin) {
@@ -27,9 +26,7 @@ function isAllowedOrigin(origin) {
   try {
     const parsed = new URL(origin);
     return (parsed.protocol === 'https:' || parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') &&
-      (ALLOWED_ORIGIN_HOSTS.has(parsed.hostname) ||
-        parsed.hostname.endsWith('.apexomnihub.icu') ||
-        parsed.hostname.endsWith('.apex-omnihub.pages.dev'));
+      (ALLOWED_ORIGIN_HOSTS.has(parsed.hostname) || parsed.hostname.endsWith('.apexomnihub.icu'));
   } catch {
     return false;
   }
@@ -62,10 +59,6 @@ function isPlainIPv4(hostname) {
   return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname);
 }
 
-function isIpLiteral(hostname) {
-  return isPlainIPv4(hostname) || hostname.includes(':');
-}
-
 function isBlockedIPv4(hostname) {
   if (!isPlainIPv4(hostname)) return false;
   const parts = hostname.split('.').map(Number);
@@ -79,6 +72,10 @@ function isBlockedIPv4(hostname) {
     (a === 100 && b >= 64 && b <= 127) ||
     a >= 224
   );
+}
+
+function isIpLiteral(hostname) {
+  return isPlainIPv4(hostname) || hostname.includes(':');
 }
 
 function isUnsafeHostname(hostname) {
