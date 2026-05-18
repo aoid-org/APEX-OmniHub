@@ -139,8 +139,24 @@ export function LoginPage() {
       }
 
       globalThis.window.location.href = dashboardUrl;
-    } catch {
-      setError('An unexpected error occurred. Please try again.');
+    } catch (err) {
+      // TypeError("Failed to fetch") / NetworkError means the auth service is
+      // unreachable — Cloudflare Tunnel down, Docker stack not running, or CORS
+      // header stripped at the proxy layer. Surface an actionable message instead
+      // of the opaque "Failed to fetch" that browsers produce for cross-origin
+      // non-2xx responses without Access-Control-Allow-Origin.
+      const isNetworkFailure =
+        err instanceof TypeError &&
+        (err.message.toLowerCase().includes('failed to fetch') ||
+          err.message.toLowerCase().includes('networkerror') ||
+          err.message.toLowerCase().includes('load failed'));
+      if (isNetworkFailure) {
+        setError(
+          'Unable to reach the authentication service. Check that the backend is running and accessible, then try again.',
+        );
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
