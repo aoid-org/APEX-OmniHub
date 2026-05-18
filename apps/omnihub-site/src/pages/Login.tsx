@@ -140,16 +140,10 @@ export function LoginPage() {
 
       globalThis.window.location.href = dashboardUrl;
     } catch (err) {
-      // TypeError("Failed to fetch") / NetworkError means the auth service is
-      // unreachable — Cloudflare Tunnel down, Docker stack not running, or CORS
-      // header stripped at the proxy layer. Surface an actionable message instead
-      // of the opaque "Failed to fetch" that browsers produce for cross-origin
-      // non-2xx responses without Access-Control-Allow-Origin.
+      // TypeError("Failed to fetch" | "NetworkError" | "Load failed") = proxy/tunnel unreachable, not bad credentials.
+      const msg = err instanceof TypeError ? err.message.toLowerCase() : '';
       const isNetworkFailure =
-        err instanceof TypeError &&
-        (err.message.toLowerCase().includes('failed to fetch') ||
-          err.message.toLowerCase().includes('networkerror') ||
-          err.message.toLowerCase().includes('load failed'));
+        msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('load failed');
       if (isNetworkFailure) {
         setError(
           'Unable to reach the authentication service. Check that the backend is running and accessible, then try again.',
