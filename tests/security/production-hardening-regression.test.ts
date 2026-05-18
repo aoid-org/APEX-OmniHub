@@ -61,6 +61,8 @@ describe('Cloudflare CORS proxy SSRF and origin hardening', () => {
       'https://192.168.1.1/file.mp4',
       'https://169.254.169.254/latest/meta-data',
       'https://metadata.google.internal/computeMetadata/v1',
+      'https://8.8.8.8/file.mp4',
+      'https://[2001:4860:4860::8888]/file.mp4',
     ]) {
       expect(validateTargetUrl(target)).toMatchObject({ ok: false });
     }
@@ -73,12 +75,13 @@ describe('Cloudflare CORS proxy SSRF and origin hardening', () => {
 
     expect(response.status).toBe(403);
     expect(isAllowedOrigin('https://evil.example')).toBe(false);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull();
   });
 
   it('accepts an approved HTTPS media target and preserves Range', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('ok', {
       status: 206,
-      headers: { 'Content-Length': '2', 'Content-Range': 'bytes 0-1/2' },
+      headers: { 'Content-Length': '2', 'Content-Range': 'bytes 0-1/2', 'Set-Cookie': 'sid=upstream' },
     }));
 
     const response = await corsWorker.fetch(new Request('https://cors.apexomnihub.icu/?source=https%3A%2F%2Fmedia.example%2Fa.mp4', {
@@ -87,6 +90,7 @@ describe('Cloudflare CORS proxy SSRF and origin hardening', () => {
 
     expect(response.status).toBe(206);
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://apexomnihub.icu');
+    expect(response.headers.get('Set-Cookie')).toBeNull();
     expect(fetchMock.mock.calls[0][1]?.headers).toMatchObject({ Range: 'bytes=0-1' });
   });
 

@@ -64,9 +64,18 @@ function isBlockedIPv4(hostname) {
   const parts = hostname.split('.').map(Number);
   if (parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return true;
   const [a, b] = parts;
-  return a === 0 || a === 10 || a === 127 || a === 169 && b === 254 ||
-    a === 172 && b >= 16 && b <= 31 || a === 192 && b === 168 ||
-    a === 100 && b >= 64 && b <= 127 || a >= 224;
+  return (
+    a === 0 || a === 10 || a === 127 ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    (a === 100 && b >= 64 && b <= 127) ||
+    a >= 224
+  );
+}
+
+function isIpLiteral(hostname) {
+  return isPlainIPv4(hostname) || hostname.includes(':');
 }
 
 function isUnsafeHostname(hostname) {
@@ -74,11 +83,9 @@ function isUnsafeHostname(hostname) {
   if (!normalized || normalized === 'localhost' || normalized.endsWith('.localhost')) return true;
   if (normalized === 'metadata.google.internal') return true;
   if (/^(0x|0)[0-9a-f.]+$/i.test(normalized) || /^\d+$/.test(normalized)) return true;
-  if (normalized.includes(':')) {
-    return normalized === '::1' || normalized.startsWith('fe80:') ||
-      normalized.startsWith('fc') || normalized.startsWith('fd') ||
-      normalized.includes('ffff:127.') || normalized.includes('ffff:a00:') ||
-      normalized.includes('ffff:a9fe:');
+  if (isIpLiteral(normalized)) {
+    // Disallow IP literals entirely; DNS names are required so private/reserved IP bypass forms cannot be smuggled.
+    return true;
   }
   return isBlockedIPv4(normalized);
 }
@@ -139,6 +146,13 @@ function enforceContentLength(upstream) {
     return false;
   }
   return true;
+}
+
+function sanitizeUpstreamHeaders(headers) {
+  const sanitized = new Headers(headers);
+  sanitized.delete('Set-Cookie');
+  sanitized.delete('Set-Cookie2');
+  return sanitized;
 }
 
 function capBodyStream(body) {
