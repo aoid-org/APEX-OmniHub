@@ -24,14 +24,14 @@ ORIGIN="${SITE_ORIGIN:-https://sbbl-hq.icu}"
 KEY="${ANON_KEY:-}"
 TOKEN_URL="${HOST}/auth/v1/token?grant_type=password"
 
-RED='\033[0;31m'
-GRN='\033[0;32m'
-YLW='\033[0;33m'
-NC='\033[0m'
+RED=$'\033[0;31m'
+GRN=$'\033[0;32m'
+YLW=$'\033[0;33m'
+NC=$'\033[0m'
 
-pass() { echo -e "${GRN}PASS${NC}  $*"; }
-fail() { echo -e "${RED}FAIL${NC}  $*"; }
-info() { echo -e "${YLW}INFO${NC}  $*"; }
+pass() { echo "${GRN}PASS${NC}  $*"; }
+fail() { echo "${RED}FAIL${NC}  $*"; }
+info() { echo "${YLW}INFO${NC}  $*"; }
 
 check_header() {
   local label="$1" headers="$2" name="$3" expected="$4"
