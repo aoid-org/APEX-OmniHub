@@ -57,6 +57,8 @@ export function WorkflowBuilder() {
   const queryClient = useQueryClient();
   const canvasRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<DragState | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const latestPosRef = useRef<{ clientX: number; clientY: number } | null>(null);
 
   const [workflowName, setWorkflowName] = useState('New Workflow');
   const [schedule, setSchedule] = useState('');
@@ -161,33 +163,53 @@ export function WorkflowBuilder() {
   const onCanvasMouseMove = useCallback(
     (e: React.MouseEvent) => {
       if (!dragRef.current) return;
-      const { nodeId, startX, startY, originX, originY } = dragRef.current;
-      const svg = canvasRef.current;
-      if (!svg) return;
-      const ctm = svg.getScreenCTM();
-      if (!ctm) return;
-      const scale = ctm.a;
-      const dx = (e.clientX - startX) / scale;
-      const dy = (e.clientY - startY) / scale;
-      setNodes((prev) =>
-        prev.map((n) =>
-          n.id === nodeId
-            ? {
-                ...n,
-                position: {
-                  x: Math.max(0, Math.min(CANVAS_W - NODE_W, originX + dx)),
-                  y: Math.max(0, Math.min(CANVAS_H - NODE_H, originY + dy)),
-                },
-              }
-            : n,
-        ),
-      );
+
+      // ⚡ Bolt: Store latest coordinates to ensure we never process stale positions
+      latestPosRef.current = { clientX: e.clientX, clientY: e.clientY };
+
+      // ⚡ Bolt: Throttle React state updates to screen refresh rate (~60fps)
+      // High-polling mice (1000Hz) can cause massive React re-render queue flooding otherwise.
+      if (rafRef.current !== null) return;
+
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        if (!dragRef.current || !latestPosRef.current) return;
+
+        const { nodeId, startX, startY, originX, originY } = dragRef.current;
+        const { clientX, clientY } = latestPosRef.current;
+
+        const svg = canvasRef.current;
+        if (!svg) return;
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return;
+        const scale = ctm.a;
+        const dx = (clientX - startX) / scale;
+        const dy = (clientY - startY) / scale;
+
+        setNodes((prev) =>
+          prev.map((n) =>
+            n.id === nodeId
+              ? {
+                  ...n,
+                  position: {
+                    x: Math.max(0, Math.min(CANVAS_W - NODE_W, originX + dx)),
+                    y: Math.max(0, Math.min(CANVAS_H - NODE_H, originY + dy)),
+                  },
+                }
+              : n,
+          ),
+        );
+      });
     },
     [],
   );
 
   const onCanvasMouseUp = useCallback(() => {
     dragRef.current = null;
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
   }, []);
 
   // ── Canvas click (deselect / complete connection) ────────────────────────
