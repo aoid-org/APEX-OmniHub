@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.2.0 | LAST_UPDATED=2026-05-12 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.3.0 | LAST_UPDATED=2026-05-20 -->
 # Developer Onboarding Guide
 
 > **Agent note:** The single most important file is `CLAUDE.md` at the repo root.
@@ -10,12 +10,12 @@
 ## Prerequisites
 
 ```bash
-node --version   # Must be >= 20.19.0 (Node 22 LTS also accepted)
-bun --version    # Must be >= 1.2.14
+node --version   # Must be >= 22 (Node 22 LTS recommended; Node 24 also supported; range >=22 <25)
+bun --version    # >= 1.2.14 if used for local dev (optional)
 git --version    # Requires >= 2.40
 ```
 
-> **Critical:** Use `npm ci` for dependencies. `npm` is authoritative for builds, releases, and CI; Bun is optional for local speed only.
+> **Critical:** npm is the authoritative package manager for CI, releases, and the canonical lockfile (package-lock.json). Use `npm ci` for installing dependencies in CI and for clean installs. bun is optional for local development only — use `bun install` or `bun run` for speed if preferred, but never commit bun.lock changes unless you are explicitly working on lock file maintenance.
 
 ---
 
@@ -76,7 +76,9 @@ APEX OmniHub is a Universal Sync Orchestrator built on a "Holy Trinity":
 | Frontend (OmniDash) | `apps/omnihub-site/src/` | TypeScript / React 18 |
 | Frontend shim | `src/App.tsx` | Re-exports `apps/omnihub-site/src/App.tsx` |
 | Edge functions | `supabase/functions/` | TypeScript (Deno) |
-| Orchestrator | `orchestrator/` | Python 3.11+ (Temporal.io) |
+| Orchestrator (Temporal Worker) | `orchestrator/` | Python 3.11+ (Temporal.io) |
+| Orchestrator HTTP API + FSM | `services/orchestrator/` | Python 3.11+ (FastAPI) |
+| APEX Resilience Protocol | `omega/` | Python 3.11+ (independent) |
 | Infra-as-code | `terraform/` | HCL |
 
 ### Critical Architecture Files
@@ -101,6 +103,17 @@ orchestrator/
 ├── workflows/                      # Temporal workflow definitions
 └── security/                       # Guardian / policy enforcement
 ```
+
+### Python Services Disambiguation
+
+These paths are similarly named but serve distinct roles — always verify the target path before editing:
+
+| Path | Runtime | Role |
+|---|---|---|
+| `orchestrator/` | Python / Temporal | Worker lifecycle (`main.py`) + HTTP dispatch (`server.py`) |
+| `services/orchestrator/` | Python / FastAPI | HTTP API routes (`api/routes.py`) + deterministic FSM (`fsm.py`). Must NOT initialise Temporal Workers. |
+| `omega/` | Python / stdlib | APEX Resilience Protocol — human-in-the-loop verification engine (`engine.py`) + approval dashboard (`dashboard.py`). Runs independently. |
+| `src/core/orchestrator/` | TypeScript | Frontend/gateway contract types only |
 
 ### Path Alias Split — CRITICAL, DO NOT CHANGE
 
@@ -141,7 +154,7 @@ The OmniDash left sidebar is a locked **9-widget rail**, not the broader product
 - Keep OmniSkills out of the left sidebar. It may remain available through header utility/module access.
 - Before changing the rail, run the focused contract suite:
   ```bash
-  pnpm vitest run tests/omnidash/omnidash-sidebar-widgets.contract.spec.ts tests/omnidash/omnidash-layout-contract.spec.tsx tests/core/app-registry.spec.ts
+  npm run test:unit -- tests/omnidash/omnidash-sidebar-widgets.contract.spec.ts tests/omnidash/omnidash-layout-contract.spec.tsx tests/core/app-registry.spec.ts
   ```
 
 ## Day 3: First Contribution (~4 hours)
@@ -241,8 +254,8 @@ npm run sim:quick        # Quick simulation
 
 ## Architecture Invariants — Never Break These
 
-1. **Package manager is npm.** `npm ci` is the authoritative install path. Bun is allowed for local dev only.
-2. **Both lockfiles must stay committed.** `bun.lock` (installs) + `package-lock.json` (`npm audit` in CI).
+1. **npm is the authoritative package manager.** `npm ci` is the authoritative install path for CI and clean installs. `package-lock.json` is the canonical CI lockfile. bun is allowed for local dev only — never commit `bun.lock` changes unless explicitly working on lockfile maintenance.
+2. **Both lockfiles must stay committed.** `bun.lock` (local bun users) + `package-lock.json` (CI canonical; required by `npm audit`).
 3. **`tsconfig.json` must be pure JSON.** No `//` or `/* */` comments — `JSON.parse` in the test suite will fail.
 4. **`ignoreDeprecations` must be `"5.0"`.** TypeScript 5.x rejects `"6.0"` with TS5103.
 5. **One React instance.** Never introduce a secondary React dependency in sub-packages.
@@ -329,10 +342,11 @@ within the validator use the `test-` prefix to avoid false positives.
 | v1.5.1 | 2026-05-07 | Zero tech-debt pass, Supabase security hardening |
 | v1.6.0 | 2026-05-08 | Armageddon live validation (2,399 Vitest + 891 Pytest + 21 E2E) |
 | v1.6.1 | 2026-05-11 | OTel CVE patch (GHSA-q7rr-3cgh-j5r3) + OmniBridge validation |
+| v1.6.1 (pending) | 2026-05-20 | Shadow deployment slot provisioned (apex-omnihub-shadow.pages.dev), coverage thresholds raised, omega/ canonicalised |
 
 ---
 
 **Onboarding Owner:** Chief Platform Architect
-**Document Version:** v1.2.0
-**Last Updated:** 2026-05-12
+**Document Version:** v1.3.0
+**Last Updated:** 2026-05-20
 **Next Review:** Quarterly
