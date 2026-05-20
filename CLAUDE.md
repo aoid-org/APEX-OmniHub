@@ -203,6 +203,10 @@ Before committing: `npm run secret:scan`. Prefer deny-by-default. No bypassing a
 - `sonar-project.properties`: `src/`+`apps/`+`packages/` visible to SonarCloud coverage
 - `supabase/functions/stripe-webhook/index.ts`: `STRIPE_SECRET_KEY`+`STRIPE_WEBHOOK_SECRET` required; 503 on missing
 - `supabase/functions/_shared/requestSigning.ts`: `ORCHESTRATOR_SHARED_SECRET` required; throws on missing
+- `apps/omnihub-site/src/styles/theme.css`: `--color-text-muted` darkened `#94a3b8`→`#607090` (2.42:1→4.97:1 on white) — fixes Lighthouse `color-contrast` error on marketing pages
+- `apps/omnihub-site/src/components/ui/dialog.tsx`: dialog close button switched from `opacity-70` to `text-muted-foreground` — semantic color over transparency
+- `apps/omnihub-site/src/pages/ManMode.tsx`: three section headings replaced `opacity-70` with `style={{ color: 'var(--color-text-muted)' }}`
+- `apps/omnihub-site/src/pages/ComingSoon.tsx`, `apps/omnihub-site/src/pages/Launch/OnboardingWizard.tsx`: `text-gray-400`/`text-gray-500` → `text-muted-foreground`
 
 ---
 

@@ -55,3 +55,5 @@ Actual changes made in this pass:
 - Comprehensive documentation audit performed 2026-05-20: stale docs archived or updated, certification status and blocker docs updated to reflect B-1 and B-3 resolution.
 
 | 2026-05-20 | CLAUDE.md ultra-efficient rewrite + auto-update protocol | `CLAUDE.md` | 607-line manual rewritten to 264 lines — all facts preserved, tables replace prose, auto-update protocol added (§18), current known issues updated with Python/CI env notes |
+
+| 2026-05-20 | Lighthouse accessibility source fixes | `apps/omnihub-site/src/styles/theme.css`, `apps/omnihub-site/src/components/ui/dialog.tsx`, `apps/omnihub-site/src/pages/ManMode.tsx`, `apps/omnihub-site/src/pages/ComingSoon.tsx`, `apps/omnihub-site/src/pages/Launch/OnboardingWizard.tsx` | Darkened `--color-text-muted` token from #94a3b8 to #607090 (2.42:1→4.97:1 on white) to fix Lighthouse `color-contrast` error; replaced opacity-70 on dialog close + ManMode headings with explicit semantic color tokens; replaced text-gray-400/500 in ComingSoon + OnboardingWizard with text-muted-foreground |

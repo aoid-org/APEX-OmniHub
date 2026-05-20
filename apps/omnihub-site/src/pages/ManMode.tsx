@@ -25,7 +25,7 @@ export function ManModePage() {
 
           {/* What It Is */}
           <div className="card mb-8 p-8 border-l-4 border-l-accent">
-            <h3 className="heading-4 mb-2 uppercase text-sm tracking-wider opacity-70">What Is M.A.N.Mode?</h3>
+            <h3 className="heading-4 mb-2 uppercase text-sm tracking-wider" style={{ color: 'var(--color-text-muted)' }}>What Is M.A.N.Mode?</h3>
             <p className="text-secondary leading-relaxed">
               Think of M.A.N.Mode as a smart pause button. When your automated workflows encounter a high-stakes 
               decision (like a large financial transaction or a sensitive security change) the system automatically 
@@ -37,7 +37,7 @@ export function ManModePage() {
           {/* Core Principles */}
           <div className="grid md:grid-cols-2 gap-6 mb-12">
             <div className="card p-6">
-              <h3 className="heading-4 mb-4 uppercase text-sm tracking-wider opacity-70">How It Works</h3>
+              <h3 className="heading-4 mb-4 uppercase text-sm tracking-wider" style={{ color: 'var(--color-text-muted)' }}>How It Works</h3>
               <ul className="space-y-3 text-secondary text-sm">
                 <li className="flex gap-2">
                   <span className="text-accent font-bold">✓</span>
@@ -59,7 +59,7 @@ export function ManModePage() {
             </div>
             
             <div className="card p-6">
-              <h3 className="heading-4 mb-4 uppercase text-sm tracking-wider opacity-70">How You Get Notified</h3>
+              <h3 className="heading-4 mb-4 uppercase text-sm tracking-wider" style={{ color: 'var(--color-text-muted)' }}>How You Get Notified</h3>
               <ul className="space-y-3 text-secondary text-sm">
                 <li className="flex gap-2">
                   <span className="text-accent font-bold">→</span>

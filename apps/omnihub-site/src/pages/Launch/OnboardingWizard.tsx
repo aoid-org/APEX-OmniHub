@@ -202,14 +202,14 @@ export function OnboardingWizard() {
               <BrainCircuit className="w-8 h-8 text-blue-400" />
             </div>
             <h1 className="text-4xl font-bold tracking-tight">Define The Entity.</h1>
-            <p className="text-gray-400 text-lg">
+            <p className="text-muted-foreground text-lg">
               OmniHub adapts to <strong>any</strong> industry. Describe your business reality.
             </p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="business-description" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Business Description</label>
+              <label htmlFor="business-description" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Business Description</label>
               <textarea
                 id="business-description"
                 className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl p-4 mt-2 h-32 focus:ring-2 focus:ring-blue-500 outline-none transition text-lg"
@@ -219,7 +219,7 @@ export function OnboardingWizard() {
               />
             </div>
             <div>
-              <label htmlFor="primary-objective" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Primary Objective</label>
+              <label htmlFor="primary-objective" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Primary Objective</label>
               <input
                 id="primary-objective"
                 type="text"
@@ -252,14 +252,14 @@ export function OnboardingWizard() {
           <div className="space-y-6 opacity-60">
             <div className="p-6 border border-white/10 rounded-2xl bg-[#0A0A0A]">
               <h3 className="text-2xl font-bold text-white mb-2">Core Infrastructure</h3>
-              <p className="text-gray-400 mb-6">Standard operations generated for your business.</p>
+              <p className="text-muted-foreground mb-6">Standard operations generated for your business.</p>
               <div className="space-y-4">
                 {sessionData.skills.filter(s => s.tier === 'CORE').map(skill => (
                   <div key={skill.id} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
                     <div className="p-2 bg-gray-800 rounded-md"><Target className="w-4 h-4 text-gray-400"/></div>
                     <div>
                       <h4 className="font-bold text-sm">{skill.name}</h4>
-                      <p className="text-xs text-gray-500">{skill.description}</p>
+                      <p className="text-xs text-muted-foreground">{skill.description}</p>
                     </div>
                   </div>
                 ))}
@@ -284,7 +284,7 @@ export function OnboardingWizard() {
                 <Wallet className="w-8 h-8 text-emerald-500" />
               </div>
 
-              <p className="text-gray-400 mb-8">
+              <p className="text-muted-foreground mb-8">
                 Based on your inputs, OmniDev has architected these <strong>custom high-leverage agents</strong> to generate immediate ROI.
               </p>
 
@@ -301,7 +301,7 @@ export function OnboardingWizard() {
                           {skill.projected_monthly_revenue}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-400 leading-snug">{skill.description}</p>
+                      <p className="text-sm text-muted-foreground leading-snug">{skill.description}</p>
                     </div>
                   </div>
                 ))}
@@ -310,8 +310,8 @@ export function OnboardingWizard() {
               <div className="border-t border-white/10 pt-6 mt-auto">
                 <div className="flex justify-between items-end mb-6">
                   <div>
-                    <p className="text-sm text-gray-500">Monthly Licensing</p>
-                    <p className="text-3xl font-bold text-white">$49<span className="text-lg text-gray-500 font-normal">/mo</span></p>
+                    <p className="text-sm text-muted-foreground">Monthly Licensing</p>
+                    <p className="text-3xl font-bold text-white">$49<span className="text-lg text-muted-foreground font-normal">/mo</span></p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-emerald-400 mb-1">Est. 1st Month ROI</p>
@@ -335,7 +335,7 @@ export function OnboardingWizard() {
         <div className="max-w-md w-full space-y-6 animate-in slide-in-from-bottom duration-500">
           <div className="text-center">
             <h2 className="text-3xl font-bold mb-2">Secure Your Architecture</h2>
-            <p className="text-gray-400">Create an account to save your generated systems.</p>
+            <p className="text-muted-foreground">Create an account to save your generated systems.</p>
           </div>
 
           <div className="bg-[#0A0A0A] p-6 border border-white/10 rounded-2xl space-y-4">
@@ -354,13 +354,13 @@ export function OnboardingWizard() {
 
             <div className="relative py-4 flex items-center">
               <div className="flex-grow border-t border-white/10"></div>
-              <span className="mx-4 text-xs text-gray-500">OR</span>
+              <span className="mx-4 text-xs text-muted-foreground">OR</span>
               <div className="flex-grow border-t border-white/10"></div>
             </div>
 
             <form onSubmit={handleEmailAuth} className="space-y-4">
               <div>
-                <label htmlFor="onboarding-email" className="text-sm text-gray-400">Email</label>
+                <label htmlFor="onboarding-email" className="text-sm text-muted-foreground">Email</label>
                 <input
                   id="onboarding-email"
                   type="email"
@@ -371,7 +371,7 @@ export function OnboardingWizard() {
                 />
               </div>
               <div>
-                <label htmlFor="onboarding-password" className="text-sm text-gray-400">Password</label>
+                <label htmlFor="onboarding-password" className="text-sm text-muted-foreground">Password</label>
                 <input
                   id="onboarding-password"
                   type="password"
@@ -392,7 +392,7 @@ export function OnboardingWizard() {
               </button>
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-4">
+            <p className="text-center text-sm text-muted-foreground mt-4">
               {authState.mode === 'signup' ? 'Already have an account?' : "Don't have an account?"}
               <button
                 onClick={() => setAuthState({...authState, mode: authState.mode === 'signup' ? 'signin' : 'signup'})}
@@ -418,7 +418,7 @@ export function OnboardingWizard() {
           <h2 className="text-3xl font-bold">
             {sessionData.selectedTier === 'PRO' ? 'Preparing Secure Checkout' : 'Activating Your Architecture'}
           </h2>
-          <p className="text-gray-400 text-lg">
+          <p className="text-muted-foreground text-lg">
             {sessionData.selectedTier === 'PRO'
               ? 'Redirecting to Stripe...'
               : 'Provisioning initial systems to OmniDash...'}
