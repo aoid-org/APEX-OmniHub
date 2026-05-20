@@ -28,3 +28,15 @@ Actual files changed in this pass:
 - Updated `docs/rsi/BRANCH_PROTECTION_REQUIRED.md` to reflect current RSI live-mode repo evidence and the active RSI workflow while preserving the manual branch-protection caveat.
 - Updated `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`, `docs/architecture/DOC_RECONCILIATION_MATRIX.md`, and `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` with current-tree documentation audit notes without changing the certification verdict.
 - Corrected `.github/pull_request_template.md` onboarding link so the PR template resolves to the actual developer onboarding document.
+
+## 2026-05-20 Certification Infrastructure + Docs Remediation Pass
+
+Actual changes made in this pass:
+
+- `apex-omnihub-shadow` Cloudflare Pages shadow slot provisioned via Cloudflare API (B-1 resolved). GitHub repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` set. GitHub repository variables `CLOUDFLARE_SHADOW_PROJECT_NAME=apex-omnihub-shadow`, `ENABLE_SHADOW_DEPLOYMENT=true`, `SHADOW_HEALTH_URL=https://apex-omnihub-shadow.pages.dev/health`, and `ENABLE_ATOMIC_ROUTING_FLIP=true` set.
+- GitHub Environment `production-shadow` created with required-reviewer protection rule and `ENABLE_SHADOW_DEPLOYMENT=true` environment variable (B-3 resolved).
+- `omega/` APEX Resilience Protocol canonicalised in `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `CLAUDE.md`: added as a distinct runtime entry separate from `orchestrator/` and `services/orchestrator/`.
+- `orchestrator/` vs `services/orchestrator/` vs `omega/` disambiguation table added to both `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `CLAUDE.md` to prevent future confusion between the three similarly-named Python areas.
+- `vitest.config.ts` branch coverage threshold raised from 60 to 63 (statements 69→70, functions 71→72, lines 70→71) to match current passing test suite coverage.
+- Changeset `shadow-slot-coverage-docs.md` added for v1.6.1 patch release (PR #1184).
+- Comprehensive documentation audit performed 2026-05-20: stale docs archived or updated, certification status and blocker docs updated to reflect B-1 and B-3 resolution.
