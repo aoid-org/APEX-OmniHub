@@ -64,8 +64,7 @@ jobs:
 
             for (const prNumber of prNumbers) {
               try {
-                // BETA-T4: YELLOW LANE — mustBeGreen: false (user-confirmed)
-                // update_branch: true — keeps PR branch current with base
+                // BETA-T4: YELLOW LANE — update_branch: true — keeps PR branch current with base
                 await github.rest.pulls.updateBranch({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -74,7 +73,18 @@ jobs:
 
                 core.info(`Updated branch for PR #${prNumber}`);
 
-                // Merge with mustBeGreen: false — force-merges even if CI is failing
+                // Check mergeable_state before merging — only merge when CI is green
+                const prData = await github.rest.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber
+                });
+
+                if (prData.data.mergeable_state !== 'clean') {
+                  core.warning(`Skipping PR #${prNumber}: mergeable_state=${prData.data.mergeable_state} (CI not green)`);
+                  continue;
+                }
+
                 await github.rest.pulls.merge({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -95,5 +105,5 @@ jobs:
           echo "## Dependency Consolidation Report" >> $GITHUB_STEP_SUMMARY
           echo "- PRs processed: ${{ steps.find-prs.outputs.pr_count }}" >> $GITHUB_STEP_SUMMARY
           echo "- PR numbers: ${{ steps.find-prs.outputs.pr_numbers }}" >> $GITHUB_STEP_SUMMARY
-          echo "- mustBeGreen: false (force-merge enabled)" >> $GITHUB_STEP_SUMMARY
+          echo "- mustBeGreen: true (only merges when CI is green)" >> $GITHUB_STEP_SUMMARY
           echo "- update_branch: true" >> $GITHUB_STEP_SUMMARY
