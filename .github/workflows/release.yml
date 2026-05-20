@@ -57,10 +57,13 @@ jobs:
       # triggered this run is the version-PR merge commit (private repo path).
       - name: Detect release cut
         id: release_signal
+        env:
+          CHANGESETS_PUBLISHED: ${{ steps.changesets.outputs.published }}
+          HEAD_COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          if [ "${{ steps.changesets.outputs.published }}" = "true" ]; then
+          if [ "$CHANGESETS_PUBLISHED" = "true" ]; then
             echo "release_cut=true" >> "$GITHUB_OUTPUT"
-          elif echo "${{ github.event.head_commit.message }}" | grep -qF "chore: version packages"; then
+          elif echo "$HEAD_COMMIT_MSG" | grep -qF "chore: version packages"; then
             echo "release_cut=true" >> "$GITHUB_OUTPUT"
           else
             echo "release_cut=false" >> "$GITHUB_OUTPUT"
