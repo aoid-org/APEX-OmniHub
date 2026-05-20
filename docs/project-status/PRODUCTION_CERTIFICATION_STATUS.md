@@ -5,9 +5,26 @@
 > Last updated: 2026-05-20
 
 
+# Production Certification Status
+
+## 2026-05-20 B-2 Structural Fix Addendum
+
+B-2's structural root cause has been resolved as of 2026-05-20 (PR #1185, commit `a54bd7c`).
+
+The release workflow previously gated all shadow deployment and certification steps on `changesets.outputs.published == 'true'`. Because `package.json` has `"private": true`, `changeset publish` is always a no-op — `published` is always `'false'` — permanently blocking shadow certification regardless of actual release activity.
+
+PR #1185 decouples shadow deployment from npm publish semantics:
+
+- Added a `Detect release cut` step (`release_signal`) that sets `release_cut=true` when either the changesets action publishes (public repo path) **or** `git log -1 --format="%s"` detects a `"chore: version packages"` merge commit (private repo path).
+- All five `published == 'true'` gating conditions replaced with `release_signal.outputs.release_cut == 'true'`.
+- `write-release-evidence.mjs` updated: uses `releaseCut` in `computeVerdict`, reads `RELEASE_CUT_RAW`, emits `release_cut` in the JSON artifact, returns `NOT_CERTIFIED_NO_RELEASE_CUT` for no-release runs.
+- Script injection fix: `github.event.head_commit.message` removed from `run` block; commit subject now read via `git log` (not event payload).
+
+**B-2 evidence production still pending** — the structural path is clear, but `release-evidence.json` with a `CERTIFIED` verdict cannot be produced until the changesets version PR (`chore: version packages`) is created by the release workflow, merged to main, and the resulting release run completes the shadow deploy + health check sequence.
+
 ## 2026-05-20 Shadow Slot + Environment Provisioning Addendum
 
-B-1 and B-3 are now RESOLVED as of 2026-05-20. The apex-omnihub-shadow Cloudflare Pages project has been created and all required secrets and variables have been set in the GitHub repository. The production-shadow GitHub Environment has been created with required-reviewer protection. B-2 remains PENDING: `release-evidence.json` with a `CERTIFIED` verdict cannot be produced until PR #1184 merges to main and the release workflow runs and publishes changeset v1.6.1.
+B-1 and B-3 are RESOLVED as of 2026-05-20. The apex-omnihub-shadow Cloudflare Pages project has been created and all required secrets and variables have been set in the GitHub repository. The production-shadow GitHub Environment has been created with required-reviewer protection.
 
 Resolved in this pass:
 - `apex-omnihub-shadow` Cloudflare Pages shadow slot provisioned.
@@ -15,8 +32,6 @@ Resolved in this pass:
 - GitHub repository variables set: `CLOUDFLARE_SHADOW_PROJECT_NAME=apex-omnihub-shadow`, `ENABLE_SHADOW_DEPLOYMENT=true`, `SHADOW_HEALTH_URL=https://apex-omnihub-shadow.pages.dev/health`, `ENABLE_ATOMIC_ROUTING_FLIP=true`.
 - GitHub Environment `production-shadow` created with required-reviewer protection and `ENABLE_SHADOW_DEPLOYMENT=true` variable.
 
-Still pending:
-- B-2: Merge PR #1184 → release workflow publishes v1.6.1 → shadow deploy passes health check → Terraform plan → production-shadow reviewer approves → `release-evidence.json` written with `CERTIFIED` verdict.
 
 ## 2026-05-16 Documentation Audit Addendum
 
@@ -48,14 +63,14 @@ Verified in this documentation pass:
 
 ## Current Certification Verdict
 
-**`NOT_CERTIFIED_BLOCKED`** (B-2 only remains)
+**`NOT_CERTIFIED_BLOCKED`** — B-2 structural fix merged; evidence production pending changeset version PR
 
 ### Active Blockers
 
 | ID | Blocker | Severity | Status | Doc |
 |---|---|---|---|---|
 | B-1 | Shadow deployment slot not provisioned (no Cloudflare Pages shadow project, no `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` secrets set) | P0 | **RESOLVED 2026-05-20** — apex-omnihub-shadow project created; all 6 required secrets/variables set. | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
-| B-2 | `release-evidence.json` with `CERTIFIED` or `CERTIFICATION_PENDING_FINAL_MAIN_CI` verdict not yet produced by a real release run | P0 | **PENDING** — requires PR #1184 merge and release workflow run. | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
+| B-2 | `release-evidence.json` with `CERTIFIED` or `CERTIFICATION_PENDING_FINAL_MAIN_CI` verdict not yet produced by a real release run | P0 | **STRUCTURAL FIX MERGED 2026-05-20** (PR #1185) — workflow decoupled from npm publish; evidence production pending changesets version PR merge. | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
 | B-3 | GitHub Environment `production-shadow` for Terraform apply approval not yet configured | P1 | **RESOLVED 2026-05-20** — production-shadow GitHub Environment created with required-reviewer protection. | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
 
 ### Path to CERTIFIED
@@ -64,8 +79,9 @@ Verified in this documentation pass:
 2. ~~Set repository secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`~~ — **DONE** 2026-05-20
 3. ~~Set repository variables: `CLOUDFLARE_SHADOW_PROJECT_NAME`, `ENABLE_SHADOW_DEPLOYMENT=true`, `SHADOW_HEALTH_URL`, `ENABLE_ATOMIC_ROUTING_FLIP=true`~~ — **DONE** 2026-05-20
 4. ~~Configure GitHub Environment `production-shadow` with required reviewers~~ — **DONE** 2026-05-20
-5. Merge PR #1184 to main → release workflow publishes changeset v1.6.1 → shadow deploy to apex-omnihub-shadow → health check passes → Terraform plan → production-shadow environment reviewer approves → `release-evidence.json` written with `CERTIFIED` verdict
-6. Update this document to `CERTIFIED` with evidence link
+5. ~~Decouple release workflow from npm publish semantics~~ — **DONE** 2026-05-20 (PR #1185, commit `a54bd7c`). `release_signal` step detects version-PR merge via `git log`; all 5 gating conditions updated; `write-release-evidence.mjs` updated.
+6. Changesets version PR (`chore: version packages`) created by release workflow → merged to main → release workflow runs → shadow deploys to `apex-omnihub-shadow` → health check passes → Terraform plan → `production-shadow` reviewer approves → `release-evidence.json` written with `CERTIFIED` verdict
+7. Update this document to `CERTIFIED` with evidence link
 
 ## Local Gate Audit — 2026-05-14 (main @ 0f1365d)
 
@@ -117,4 +133,4 @@ All required quality gates verified clean on current main. CI must also confirm 
 ## Owner
 
 APEX Business Systems — Release Engineering
-Updated by: Tech-debt resolution audit (2026-05-14) — main @ 0f1365d
+Updated by: Tech-debt resolution audit (2026-05-14) — main @ 0f1365d; B-2 structural fix (2026-05-20) — main @ a54bd7c (PR #1185)
