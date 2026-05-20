@@ -6,17 +6,19 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Checkout SBBL-HQ sibling repo
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           # Clone into sibling path expected by run.sh preflight.
-          git clone "https://x-access-token:${GH_PAT}@github.com/apexbusiness-systems/sbbl-hq.git" ../sbbl-hq
+          # Use credential substitution so the token never appears in the clone URL in logs.
+          git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
+          git clone "https://github.com/apexbusiness-systems/sbbl-hq.git" ../sbbl-hq
 
       - name: Install OmniHub deps
         run: npm ci --ignore-scripts
