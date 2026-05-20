@@ -899,7 +899,7 @@ See separate documents:
 - [PATH A: Enhanced Serverless](./PATH_A_ENHANCED_SERVERLESS.md)
 - [PATH B: Containerized Multi-Cloud](./PATH_B_CONTAINERIZED_MULTICLOUD.md)
 - [SRE Package (SLIs/SLOs)](./SRE_PACKAGE.md)
-- [CI/CD Pipeline Design](./CICD_PIPELINE_DESIGN.md)
+- [CI Runtime Gates](./CI_RUNTIME_GATES.md)
 
 ---
 

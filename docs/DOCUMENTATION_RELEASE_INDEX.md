@@ -6,7 +6,7 @@
 
 | Fact | Current repo evidence |
 |---|---|
-| Documentation files under `docs/` | 166 Markdown files (5 documents marked archived in 2026-05-20 audit pass) |
+| Documentation files under `docs/` | 158 Markdown files (8 stale documents permanently deleted in 2026-05-20 audit pass — see CHANGELOG.md [Unreleased]) |
 | GitHub workflow files | 21 files in `.github/workflows/` |
 | Release/package versions | `CHANGELOG.md` latest release line is `1.6.3`; `package.json` declares `1.6.0` (v1.6.1 pending PR #1184) |
 | Canonical package manager | `bun.lock` is present; `package-lock.json` is retained for npm audit parity |
@@ -75,12 +75,10 @@
 
 ## Status and release documents
 
-- `docs/project-status/APEX_ECOSYSTEM_STATUS.md` _(archived 2026-05-20)_
 - `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.0.md` _(status update addendum added 2026-05-20)_
 - `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(NEW — created 2026-05-20; current onboarding entry point alongside PRODUCTION_CERTIFICATION_STATUS.md)_
 - `docs/project-status/CI_STATUS_POLICY.md` _(updated 2026-05-20)_
 - `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` _(B-1 RESOLVED, B-3 RESOLVED, B-2 PENDING — updated 2026-05-20)_
-- `docs/project-status/PRODUCTION_STATUS.md` _(archived 2026-05-20)_
 - `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` _(B-1/B-3 resolved — updated 2026-05-20)_
 - `docs/releases/RELEASE_NOTES_v1.6.0.md`
 
@@ -134,7 +132,7 @@
 - `docs/` — 6 Markdown file(s): `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
 - `docs/api/` — 2 Markdown file(s): `API_EXTENSION_GUIDE.md`, `EDGE_FUNCTIONS_REFERENCE.md`
 - `docs/architecture/` — 12 Markdown file(s): `ARCHITECTURE_CANONICAL_MAP.md`, `BOUNDED_CONTEXT_MAP.md`, `CANONICAL_TRUTH.md`, `CANONICAL_TRUTH_MATRIX.md`, `DETAILED_SYSTEM_DESIGN.md`, `DOC_RECONCILIATION_MATRIX.md`, `EXECUTIVE_ARCHITECTURE_SUMMARY.md`, `GENERAL_TECH_SPECS.md`, `LIB_DIRECTORY_POLICY.md`, `MAN_MODE_WORKFLOW_DIAGRAMS.md`, `OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md`, `frontend-map.md`
-- `docs/archive/legacy-runbooks/` — 4 Markdown file(s): `CI_RUNTIME_GATES_legacy.md`, `MIGRATION_RUNBOOK_legacy.md`, `OPS_RUNBOOK_legacy_2026-01-25.md`, `PRODUCTION_DEPLOYMENT_GUIDE_legacy.md`
+- `docs/archive/legacy-runbooks/` — 4 Markdown file(s): `CI_RUNTIME_GATES_legacy.md`, `MIGRATION_RUNBOOK_legacy.md`, `OPS_RUNBOOK_legacy_2026-01-25.md`, `PRODUCTION_DEPLOYMENT_GUIDE_legacy.md` _(pre-existing legacy archive — not modified in 2026-05-20 pass)_
 - `docs/audits/` — 17 Markdown file(s): `ANNOTATED_PR_TRIAGE_2026_05_06.md`, `AOID_RELEASE_READINESS_REPORT_4-4-2026.md`, `APEX_RELEASE_READINESS_REPORT.md`, `ARMAGEDDON_TEST_SUITE_REPORT.md`, `DOCUMENTATION_AUDIT_2026-05-15.md`, `FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md`, `M-04_OMNIHUB_19_POINT_AUDIT_2026-05-06.md`, `OMNIDASH_BUILD_AUDIT_2026_03_21.md`, `PRODUCTION_CERTIFICATION_EVIDENCE_2026-05-13.md`, `PRODUCTION_CERTIFICATION_PREFLIGHT_2026-05-13.md`, `RUNTIME_REMEDIATION_CALL_GRAPH.md`, `RUNTIME_REMEDIATION_RESULTS.md`, `SUPABASE_SECURITY_AUDIT_2026_05_04.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_07.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_08.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_09.md`, `VOICE_FORTRESS_TELEMETRY_AUDIT.md`
 - `docs/capabilities/` — 6 Markdown file(s): `fortress-protocol.md`, `maestro.md`, `man-mode.md`, `omniport.md`, `orchestrator.md`, `tri-force-protocol.md`
 - `docs/ci/` — 1 Markdown file(s): `CHAOS_CI_FIX.md`
@@ -142,14 +140,14 @@
 - `docs/compliance/sbom/` — 1 Markdown file(s): `README.md`
 - `docs/extensibility/` — 1 Markdown file(s): `PLUGIN_ARCHITECTURE.md`
 - `docs/guides/` — 5 Markdown file(s): `DR_RUNBOOK.md`, `NATIVE_PUSH_SETUP.md`, `NFT_VERIFICATION_RUNBOOK.md`, `WEB3_VERIFICATION_RUNBOOK.md`, `admin-secret-setup.md`
-- `docs/infrastructure/` — 22 Markdown file(s): `BACKUP_VERIFICATION.md`, `BLOCKCHAIN_CONFIG.md`, `BLOCKCHAIN_DEPLOYMENT_CHECKLIST.md`, `CICD_PIPELINE_DESIGN.md` _(archived 2026-05-20)_, `CI_RUNTIME_GATES.md`, `CLOUD_AGNOSTIC_ARCHITECTURE.md`, `COST_OPTIMIZATION.md`, `DEMO_MODE.md`, `DEPLOYMENT_ROLLOUT_PLAN.md` _(archived 2026-05-20)_, `DISASTER_RECOVERY_PLAN.md`, `DOPPLER_IMPLEMENTATION_GUIDE.md`, `EMERGENCY_CONTROLS_USAGE.md`, `MIGRATION_NOTES.md`, `MIGRATION_RUNBOOK.md`, `OBSERVABILITY_STACK_SETUP.md`, `PATH_A_ENHANCED_SERVERLESS.md`, `PATH_B_CONTAINERIZED_MULTICLOUD.md`, `PORTABILITY_MATRIX.md`, `PRODUCTION_DEPLOYMENT_GUIDE.md`, `PRODUCTION_ROLLOUT_PLAN.md` _(archived 2026-05-20)_, `SRE_PACKAGE.md`, `SUPABASE_SETUP.md`
+- `docs/infrastructure/` — 19 Markdown file(s): `BACKUP_VERIFICATION.md`, `BLOCKCHAIN_CONFIG.md`, `BLOCKCHAIN_DEPLOYMENT_CHECKLIST.md`, `CI_RUNTIME_GATES.md`, `CLOUD_AGNOSTIC_ARCHITECTURE.md`, `COST_OPTIMIZATION.md`, `DEMO_MODE.md`, `DISASTER_RECOVERY_PLAN.md`, `DOPPLER_IMPLEMENTATION_GUIDE.md`, `EMERGENCY_CONTROLS_USAGE.md`, `MIGRATION_NOTES.md`, `MIGRATION_RUNBOOK.md`, `OBSERVABILITY_STACK_SETUP.md`, `PATH_A_ENHANCED_SERVERLESS.md`, `PATH_B_CONTAINERIZED_MULTICLOUD.md`, `PORTABILITY_MATRIX.md`, `PRODUCTION_DEPLOYMENT_GUIDE.md`, `SRE_PACKAGE.md`, `SUPABASE_SETUP.md`
 - `docs/integration/` — 2 Markdown file(s): `sbbl-hq-v1.6.0-patch.md`, `sbbl-omnihub-validation-2026-05-11.md`
 - `docs/knowledge/` — 3 Markdown file(s): `DEVELOPER_OPERATING_MODEL.md`, `OMNIDEV_MANIFESTO.md`, `SYSTEM_KNOWLEDGE_BASE.md`
 - `docs/knowledge/references/` — 8 Markdown file(s): `cloud.md`, `databases.md`, `frameworks.md`, `languages.md`, `observability.md`, `scale.md`, `security.md`, `testing.md`
 - `docs/onboarding/` — 2 Markdown file(s): `BRANCH_PROTECTION.md`, `DEVELOPER_ONBOARDING.md`
 - `docs/ops/` — 10 Markdown file(s): `INCIDENT_RESPONSE.md`, `OPEN_PR_GOVERNANCE_2026-05-13.md`, `OPERATIONAL_EXCELLENCE.md`, `OPS_RUNBOOK.md`, `OPS_RUNBOOKS_CI_GUARDRAILS.md`, `OPS_RUNBOOK_v1.3.8.md`, `PR_TRIAGE.md`, `adaptive-nightly-eval.md`, `omnidash-asset-rca.md`, `repo-scope-context.md`
 - `docs/platform/` — 12 Markdown file(s): `CONNECTOR_KIT.md`, `OMNIBOARD.md`, `OMNIDASH.md`, `OMNIEVAL.md`, `OMNIHUB_PROTOCOL_CONFORMANCE.md`, `OMNILINK_MANIFESTO_LITE.md`, `OMNILINK_MOBILE_PWA.md`, `OMNILINK_PORT_DISCIPLINE.md`, `OMNIPOLICY.md`, `OMNIPORT_API_REFERENCE.md`, `OMNISENTRY.md`, `OMNITRACE.md`
-- `docs/project-status/` — 6 Markdown file(s): `APEX_ECOSYSTEM_STATUS.md` _(archived)_, `APEX_RELEASE_READINESS_REPORT_v1.6.0.md`, `APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(NEW 2026-05-20)_, `CI_STATUS_POLICY.md`, `PRODUCTION_CERTIFICATION_STATUS.md`, `PRODUCTION_STATUS.md` _(archived)_
+- `docs/project-status/` — 4 Markdown file(s): `APEX_RELEASE_READINESS_REPORT_v1.6.0.md`, `APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(NEW 2026-05-20)_, `CI_STATUS_POLICY.md`, `PRODUCTION_CERTIFICATION_STATUS.md`
 - `docs/quality/` — 1 Markdown file(s): `QUALITY_ASSURANCE_FRAMEWORK.md`
 - `docs/release/` — 1 Markdown file(s): `SHADOW_DEPLOYMENT_BLOCKERS.md`
 - `docs/releases/` — 1 Markdown file(s): `RELEASE_NOTES_v1.6.0.md`
@@ -195,9 +193,14 @@ Documents created, modified, or archived in this audit pass:
 | `docs/extensibility/PLUGIN_ARCHITECTURE.md` | Coming Soon → Planned, implementation status added |
 | `docs/api/EDGE_FUNCTIONS_REFERENCE.md` | Updated |
 
-### Archived (marked historical — files retained for traceability)
-| File | Notes |
+### Permanently Deleted
+| File | Reason |
 |---|---|
+| `docs/project-status/APEX_ECOSYSTEM_STATUS.md` | v1.4.1 snapshot, 71 days stale — superseded by PRODUCTION_CERTIFICATION_STATUS.md |
+| `docs/project-status/PRODUCTION_STATUS.md` | v1.5.1 snapshot, 56 days stale — superseded by PRODUCTION_CERTIFICATION_STATUS.md |
+| `docs/infrastructure/DEPLOYMENT_ROLLOUT_PLAN.md` | 8-week phased rollout from 2026-03-01 — all phases elapsed; Vercel-centric |
+| `docs/infrastructure/PRODUCTION_ROLLOUT_PLAN.md` | Duplicate phased rollout — superseded by PRODUCTION_DEPLOYMENT_GUIDE.md |
+| `docs/infrastructure/CICD_PIPELINE_DESIGN.md` | Design-phase planning doc predating live workflows — superseded by CI_RUNTIME_GATES.md |
 | `docs/project-status/PRODUCTION_STATUS.md` | Superseded by PRODUCTION_CERTIFICATION_STATUS.md |
 | `docs/project-status/APEX_ECOSYSTEM_STATUS.md` | Superseded by APEX_RELEASE_READINESS_REPORT_v1.6.1.md |
 | `docs/infrastructure/DEPLOYMENT_ROLLOUT_PLAN.md` | Superseded by current deployment guides |

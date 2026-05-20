@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- `docs/project-status/APEX_ECOSYSTEM_STATUS.md` — permanently deleted 2026-05-20. Was a v1.4.1 platform status snapshot last updated 2026-03-10 (71 days stale). Certification authority is `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`.
+- `docs/project-status/PRODUCTION_STATUS.md` — permanently deleted 2026-05-20. Was a v1.5.1 SEV-1 login-hotfix production status snapshot last updated 2026-03-25 (56 days stale). Superseded by `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`.
+- `docs/infrastructure/DEPLOYMENT_ROLLOUT_PLAN.md` — permanently deleted 2026-05-20. 8-week phased rollout timeline starting 2026-03-01; all phases elapsed. Vercel-centric deployment model superseded by Cloudflare Pages.
+- `docs/infrastructure/PRODUCTION_ROLLOUT_PLAN.md` — permanently deleted 2026-05-20. Duplicate phased rollout timeline; superseded by `docs/infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md`.
+- `docs/infrastructure/CICD_PIPELINE_DESIGN.md` — permanently deleted 2026-05-20. Design-phase CI/CD planning document predating the current live `.github/workflows/` configuration. Current CI truth is `docs/infrastructure/CI_RUNTIME_GATES.md`.
+
 ## [1.6.3] - 2026-05-11
 
 ### Security
