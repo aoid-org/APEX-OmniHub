@@ -190,7 +190,7 @@ function DemoCTA() {
     <Section variant="navy">
       <div style={{ textAlign: 'center' }}>
         <h2 className="heading-2">{demoConfig.cta.title}</h2>
-        <p className="text-lg mt-4" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="text-lg mt-4" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
           {demoConfig.cta.description}
         </p>
         <div className="mt-8">

@@ -31,8 +31,9 @@
   color: var(--color-white);
 }
 
-.section--navy .section__subtitle {
-  color: var(--color-text-muted);
+.section--navy .section__subtitle,
+.section--navy .text-muted {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .section--navy .heading-2 {
