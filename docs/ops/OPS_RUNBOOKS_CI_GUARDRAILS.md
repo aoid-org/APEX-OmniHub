@@ -555,3 +555,69 @@ add it to `CLAUDE.md` or `docs/architecture/CANONICAL_TRUTH.md` instead.
 ### Non-Negotiable Exclusions
 
 `OmniSkills`, `Orchestrator`, `Fortress`, `OmniPort`, `Maestro`, and `BYOM` are not left-sidebar widgets. `OmniSkills` may remain in the header utility/module access path.
+
+---
+
+## GitHub Actions SHA Pinning
+
+### Policy
+All GitHub Actions must use pinned commit SHAs. Floating tags (`@v3`, `@v4`) are forbidden because action maintainers can push breaking or malicious changes under these tags.
+
+### How to Pin
+1. Look up the latest release SHA on the action's GitHub releases page
+2. Replace `actions/checkout@v4` with `actions/checkout@<SHA> # v4.x.x`
+3. Repeat for all third-party actions in the workflow
+
+### Workflows Currently Pinned (2026-05-20)
+- `.github/workflows/integration.yml` — checkout, setup-node, all pinned
+- `.github/workflows/deploy-omnihub-proof.yml` — checkout, setup-node, wrangler-action, all pinned
+
+### Runbook: New Workflow Added
+1. Run `grep -r "uses:.*@v" .github/workflows/` to find any floating tags
+2. Pin each action: look up SHA at github.com/<org>/<action>/releases
+3. Verify: `npm run docs:check` (does not catch action versions, but use it anyway)
+4. PR must include the SHA pin — do not merge with floating tags
+
+---
+
+## Dependency Auto-Merge Gate
+
+### Policy
+`dependency-consolidation.yml` runs on a schedule. It only merges PRs where `mergeable_state === 'clean'` — all required status checks must pass.
+
+### How It Works
+1. Finds open PRs labelled for dependency consolidation
+2. Calls `github.rest.pulls.updateBranch` to rebase with base
+3. Calls `github.rest.pulls.get` to check `mergeable_state`
+4. If `mergeable_state !== 'clean'`: logs warning, skips merge
+5. If `mergeable_state === 'clean'`: merges with squash
+
+### Runbook: PR Not Auto-Merging
+1. Check the PR's required status checks — are they all green?
+2. Check for merge conflicts — rebase the PR branch
+3. If `mergeable_state` is `"blocked"` — there is a branch protection rule preventing merge even with green CI. Investigate the protection rules.
+
+---
+
+## Edge Function Secret Validation
+
+### Policy
+Supabase Edge Functions must never fall back to empty strings for required secrets. Missing secrets must cause an early exit with HTTP 503.
+
+### Pattern (required for all edge functions)
+```typescript
+// At the top of the serve() handler:
+const requiredSecret = Deno.env.get('MY_SECRET');
+if (!requiredSecret) {
+  return new Response('Function misconfigured', { status: 503 });
+}
+```
+
+### Functions Updated (2026-05-20)
+- `supabase/functions/stripe-webhook/index.ts` — STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET
+- `supabase/functions/_shared/requestSigning.ts` — ORCHESTRATOR_SHARED_SECRET (throws Error)
+
+### Runbook: Function Returns 503
+1. Check Supabase function secrets: `supabase secrets list` or Supabase Dashboard → Edge Functions → Secrets
+2. Add the required secret: `supabase secrets set MY_SECRET=<value>`
+3. Redeploy the function

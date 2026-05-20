@@ -40,6 +40,43 @@
 
 ---
 
+## Webhook Functions
+
+### POST /stripe-webhook
+
+Receives and validates Stripe payment events. Auth is HMAC-signed (no Bearer token).
+
+#### Required Secrets
+
+Both secrets must be set as Supabase function secrets before the function will handle any requests. If either is absent, the function returns **HTTP 503 "Webhook handler misconfigured"** immediately — no Stripe event processing occurs.
+
+| Secret | Purpose |
+|--------|---------|
+| `STRIPE_SECRET_KEY` | Stripe API client authentication |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signature verification |
+
+Set via:
+```bash
+supabase secrets set STRIPE_SECRET_KEY=sk_live_... --project-ref rtopreovkywofgwgmozi
+supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_... --project-ref rtopreovkywofgwgmozi
+```
+
+**Implementation note (updated 2026-05-20):** The Stripe client is instantiated inside the request handler, after secret validation, not at module level. Previous behavior used `?? ''` fallbacks that silently allowed the function to start with empty secrets and fail at runtime during Stripe API calls — this is now fixed. Missing secrets cause an early exit before any Stripe SDK call.
+
+---
+
+### Shared Utility: `_shared/requestSigning.ts`
+
+The `requestSigning` module signs and verifies HMAC-authenticated requests between internal services (e.g., `omnibridge-control` ↔ orchestrator).
+
+**Required secret:** `ORCHESTRATOR_SHARED_SECRET` must be set as a Supabase function secret. If absent, the module throws `Error('ORCHESTRATOR_SHARED_SECRET is required')` — previously it fell back to an empty-string HMAC, which produced structurally valid but cryptographically worthless signatures. That fallback has been removed.
+
+```bash
+supabase secrets set ORCHESTRATOR_SHARED_SECRET=<min-256-bit-value> --project-ref rtopreovkywofgwgmozi
+```
+
+---
+
 ## Core Endpoints
 
 ### POST /omnilink-agent
