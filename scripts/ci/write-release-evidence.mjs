@@ -26,9 +26,9 @@ function value(name, fallback = '') {
   return process.env[name] || fallback;
 }
 
-function computeVerdict({ published, preflight, shadowUrl, health, validator, terraform, terraformOutcome }) {
-  if (published !== 'true') {
-    return 'NOT_CERTIFIED_NO_RELEASE_PUBLISHED';
+function computeVerdict({ releaseCut, preflight, shadowUrl, health, validator, terraform, terraformOutcome }) {
+  if (releaseCut !== 'true') {
+    return 'NOT_CERTIFIED_NO_RELEASE_CUT';
   }
 
   if (preflight.status !== 'pass') {
@@ -52,6 +52,7 @@ function computeVerdict({ published, preflight, shadowUrl, health, validator, te
 
 const preflight = readPreflight();
 const published = value('PUBLISHED_RAW', 'false');
+const releaseCut = value('RELEASE_CUT_RAW', 'false');
 const shadowUrl = value('SHADOW_URL_RAW');
 const health = value('HEALTH_RAW', 'skipped');
 const validator = value('VALIDATOR_RAW', 'skipped');
@@ -64,6 +65,7 @@ const evidence = {
   commit_sha: value('GH_SHA', 'unknown'),
   workflow_run_url: workflowRunUrl,
   published,
+  release_cut: releaseCut,
   shadow_url: shadowUrl,
   health_result: health,
   validator_result: validator,
@@ -71,7 +73,7 @@ const evidence = {
   terraform_outcome: terraformOutcome,
   shadow_preflight_status: preflight.status,
   blockers: Array.isArray(preflight.blockers) ? preflight.blockers : [],
-  final_verdict: computeVerdict({ published, preflight, shadowUrl, health, validator, terraform, terraformOutcome }),
+  final_verdict: computeVerdict({ releaseCut, preflight, shadowUrl, health, validator, terraform, terraformOutcome }),
   timestamp: new Date().toISOString(),
 };
 

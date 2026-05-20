@@ -51,6 +51,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # This repo is private (package.json "private": true), so changesets/action
+      # will never set published == 'true'. Detect a version release by checking
+      # whether packages were published (public repo path) OR the commit that
+      # triggered this run is the version-PR merge commit (private repo path).
+      # NOTE: commit subject is read from git directly (not from the event payload)
+      # to avoid script-injection from user-controlled github.event.head_commit.message.
+      - name: Detect release cut
+        id: release_signal
+        env:
+          CHANGESETS_PUBLISHED: ${{ steps.changesets.outputs.published }}
+        run: |
+          if [ "$CHANGESETS_PUBLISHED" = "true" ]; then
+            echo "release_cut=true" >> "$GITHUB_OUTPUT"
+          elif git log -1 --format="%s" | grep -qF "chore: version packages"; then
+            echo "release_cut=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release_cut=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Shadow certification preflight
         id: shadow_preflight
         env:
@@ -67,7 +86,7 @@ jobs:
 
       - name: Deploy to Shadow Slot (Cloudflare Pages)
         if: |
-          steps.changesets.outputs.published == 'true' &&
+          steps.release_signal.outputs.release_cut == 'true' &&
           steps.shadow_preflight.outputs.status == 'pass'
         id: shadow_deploy
         env:
@@ -124,7 +143,7 @@ jobs:
 
       - name: Skip shadow deployment — certification preflight blocked
         if: |
-          steps.changesets.outputs.published == 'true' &&
+          steps.release_signal.outputs.release_cut == 'true' &&
           steps.shadow_preflight.outputs.status != 'pass'
         run: |
           echo "Skipping shadow deployment because certification preflight is blocked."
@@ -133,7 +152,7 @@ jobs:
 
       - name: Terraform Plan (shadow validated)
         if: |
-          steps.changesets.outputs.published == 'true' &&
+          steps.release_signal.outputs.release_cut == 'true' &&
           vars.ENABLE_SHADOW_DEPLOYMENT == 'true' &&
           vars.ENABLE_ATOMIC_ROUTING_FLIP == 'true' &&
           steps.validator.outputs.validator_result == 'pass'
@@ -158,7 +177,7 @@ jobs:
 
       - name: Skip atomic routing flip — prerequisites not met
         if: |
-          steps.changesets.outputs.published == 'true' &&
+          steps.release_signal.outputs.release_cut == 'true' &&
           (vars.ENABLE_SHADOW_DEPLOYMENT != 'true' || vars.ENABLE_ATOMIC_ROUTING_FLIP != 'true')
         env:
           SHADOW_ENABLED: ${{ vars.ENABLE_SHADOW_DEPLOYMENT }}
@@ -181,6 +200,7 @@ jobs:
           TF_RESULT_RAW: ${{ steps.tf_plan.outputs.tf_plan_result || 'skipped' }}
           TF_OUTCOME_RAW: ${{ steps.tf_plan.outcome || 'skipped' }}
           PUBLISHED_RAW: ${{ steps.changesets.outputs.published || 'false' }}
+          RELEASE_CUT_RAW: ${{ steps.release_signal.outputs.release_cut || 'false' }}
         run: node scripts/ci/write-release-evidence.mjs
 
       - name: Upload release-evidence artifact
@@ -195,7 +215,7 @@ jobs:
 
       - name: Block enabled shadow release when certification preflight fails
         if: |
-          steps.changesets.outputs.published == 'true' &&
+          steps.release_signal.outputs.release_cut == 'true' &&
           vars.ENABLE_SHADOW_DEPLOYMENT == 'true' &&
           steps.shadow_preflight.outputs.status != 'pass'
         run: |
