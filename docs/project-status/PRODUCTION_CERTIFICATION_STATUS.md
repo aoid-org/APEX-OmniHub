@@ -2,8 +2,21 @@
 
 > **This is the canonical source for current certification state.**
 > All other docs (PRODUCTION_STATUS.md, audit reports, README) defer here.
-> Last updated: 2026-05-16
+> Last updated: 2026-05-20
 
+
+## 2026-05-20 Shadow Slot + Environment Provisioning Addendum
+
+B-1 and B-3 are now RESOLVED as of 2026-05-20. The apex-omnihub-shadow Cloudflare Pages project has been created and all required secrets and variables have been set in the GitHub repository. The production-shadow GitHub Environment has been created with required-reviewer protection. B-2 remains PENDING: `release-evidence.json` with a `CERTIFIED` verdict cannot be produced until PR #1184 merges to main and the release workflow runs and publishes changeset v1.6.1.
+
+Resolved in this pass:
+- `apex-omnihub-shadow` Cloudflare Pages shadow slot provisioned.
+- GitHub repository secrets set: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+- GitHub repository variables set: `CLOUDFLARE_SHADOW_PROJECT_NAME=apex-omnihub-shadow`, `ENABLE_SHADOW_DEPLOYMENT=true`, `SHADOW_HEALTH_URL=https://apex-omnihub-shadow.pages.dev/health`, `ENABLE_ATOMIC_ROUTING_FLIP=true`.
+- GitHub Environment `production-shadow` created with required-reviewer protection and `ENABLE_SHADOW_DEPLOYMENT=true` variable.
+
+Still pending:
+- B-2: Merge PR #1184 → release workflow publishes v1.6.1 → shadow deploy passes health check → Terraform plan → production-shadow reviewer approves → `release-evidence.json` written with `CERTIFIED` verdict.
 
 ## 2026-05-16 Documentation Audit Addendum
 
@@ -35,23 +48,23 @@ Verified in this documentation pass:
 
 ## Current Certification Verdict
 
-**`NOT_CERTIFIED_BLOCKED`**
+**`NOT_CERTIFIED_BLOCKED`** (B-2 only remains)
 
 ### Active Blockers
 
-| ID | Blocker | Severity | Doc |
-|---|---|---|---|
-| B-1 | Shadow deployment slot not provisioned (no Cloudflare Pages shadow project, no `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` secrets set) | P0 | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
-| B-2 | `release-evidence.json` with `CERTIFIED` or `CERTIFICATION_PENDING_FINAL_MAIN_CI` verdict not yet produced by a real release run | P0 | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
-| B-3 | GitHub Environment `production-shadow` for Terraform apply approval not yet configured | P1 | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
+| ID | Blocker | Severity | Status | Doc |
+|---|---|---|---|---|
+| B-1 | Shadow deployment slot not provisioned (no Cloudflare Pages shadow project, no `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` secrets set) | P0 | **RESOLVED 2026-05-20** — apex-omnihub-shadow project created; all 6 required secrets/variables set. | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
+| B-2 | `release-evidence.json` with `CERTIFIED` or `CERTIFICATION_PENDING_FINAL_MAIN_CI` verdict not yet produced by a real release run | P0 | **PENDING** — requires PR #1184 merge and release workflow run. | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
+| B-3 | GitHub Environment `production-shadow` for Terraform apply approval not yet configured | P1 | **RESOLVED 2026-05-20** — production-shadow GitHub Environment created with required-reviewer protection. | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
 
 ### Path to CERTIFIED
 
-1. Provision Cloudflare Pages shadow slot (see `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md`)
-2. Set repository secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
-3. Set repository variables: `CLOUDFLARE_SHADOW_PROJECT_NAME`, `ENABLE_SHADOW_DEPLOYMENT=true`
-4. ~~Merge tech-debt branch to main~~ — **DONE** (PR #1149, #1152, #1153 merged 2026-05-14)
-5. Confirm release workflow runs and produces `release-evidence.json` with `CERTIFIED` verdict
+1. ~~Provision Cloudflare Pages shadow slot~~ — **DONE** 2026-05-20 (apex-omnihub-shadow created)
+2. ~~Set repository secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`~~ — **DONE** 2026-05-20
+3. ~~Set repository variables: `CLOUDFLARE_SHADOW_PROJECT_NAME`, `ENABLE_SHADOW_DEPLOYMENT=true`, `SHADOW_HEALTH_URL`, `ENABLE_ATOMIC_ROUTING_FLIP=true`~~ — **DONE** 2026-05-20
+4. ~~Configure GitHub Environment `production-shadow` with required reviewers~~ — **DONE** 2026-05-20
+5. Merge PR #1184 to main → release workflow publishes changeset v1.6.1 → shadow deploy to apex-omnihub-shadow → health check passes → Terraform plan → production-shadow environment reviewer approves → `release-evidence.json` written with `CERTIFIED` verdict
 6. Update this document to `CERTIFIED` with evidence link
 
 ## Local Gate Audit — 2026-05-14 (main @ 0f1365d)

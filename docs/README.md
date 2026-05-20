@@ -81,9 +81,8 @@ Current deployment state and ecosystem overview:
 | Document                                                    | Description              |
 | ----------------------------------------------------------- | ------------------------ |
 | [Production Certification Status](project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |
+| [Release Readiness v1.6.1](project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md) | Current release readiness report |
 | [CI Status Policy](project-status/CI_STATUS_POLICY.md) | CI status interpretation |
-| [Production Status](project-status/PRODUCTION_STATUS.md)    | Historical deployment snapshot; defers to certification status |
-| [Ecosystem Status](project-status/APEX_ECOSYSTEM_STATUS.md) | Historical platform overview        |
 
 ---
 
@@ -94,8 +93,7 @@ Deployment, cloud infrastructure, and DevOps:
 | Document                                                               | Description                    |
 | ---------------------------------------------------------------------- | ------------------------------ |
 | [Production Deployment](infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md) | Deployment guide               |
-| [CI/CD Pipeline](infrastructure/CICD_PIPELINE_DESIGN.md)               | Pipeline design                |
-| [CI Runtime Gates](infrastructure/CI_RUNTIME_GATES.md)                 | Quality gates                  |
+| [CI Runtime Gates](infrastructure/CI_RUNTIME_GATES.md)                 | Quality gates (canonical CI reference) |
 | [Disaster Recovery](infrastructure/DISASTER_RECOVERY_PLAN.md)          | DR procedures                  |
 | [Cloud Agnostic](infrastructure/CLOUD_AGNOSTIC_ARCHITECTURE.md)        | Multi-cloud support            |
 | [Supabase Setup Guide](infrastructure/SUPABASE_SETUP.md)               | Supabase project configuration |

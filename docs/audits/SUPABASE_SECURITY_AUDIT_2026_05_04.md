@@ -175,6 +175,12 @@ Before applying any change, these checks were performed and passed:
 
 ---
 
+## RLS Posture Update — 2026-05-20
+
+As of 2026-05-20, the RLS posture remains **VERIFIED**. No new schema changes have affected the audit verdict since 2026-05-04. All findings recorded in this document retain their documented resolution status. Open items (Leaked Password Protection, `vector` extension schema, unapplied local migrations) remain pending and have not changed in status.
+
+---
+
 ## File Inventory (New/Modified in This Session)
 
 | File | Action | Description |

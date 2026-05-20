@@ -82,25 +82,25 @@ This document defines a **cloud-agnostic reference architecture** for OmniHub/Tr
                     │
                     ▼
 ┌─────────────────────────────────────────────────────────┐
-│ EDGE LAYER (CDN + WAF + DDoS Protection)               │
-│ - Cloudflare / AWS CloudFront / GCP Cloud CDN          │
-│ - Rate limiting, bot detection                         │
+│ EDGE LAYER (CDN + WAF + DDoS Protection)                │
+│ - Cloudflare / AWS CloudFront / GCP Cloud CDN           │
+│ - Rate limiting, bot detection                          │
 └───────────────────┬─────────────────────────────────────┘
                     │
                     ▼
 ┌─────────────────────────────────────────────────────────┐
-│ FRONTEND DMZ (Public Subnet)                           │
-│ - Static assets (React SPA)                            │
-│ - No direct backend access                             │
+│ FRONTEND DMZ (Public Subnet)                            │
+│ - Static assets (React SPA)                             │
+│ - No direct backend access                              │
 └───────────────────┬─────────────────────────────────────┘
                     │
                     ▼
 ┌─────────────────────────────────────────────────────────┐
-│ API GATEWAY (Policy Decision/Enforcement Point)        │
-│ - Authentication (JWT verification)                    │
-│ - Authorization (scope/tenant checks)                  │
-│ - Rate limiting (distributed, Redis-backed)            │
-│ - Request logging (trace IDs)                          │
+│ API GATEWAY (Policy Decision/Enforcement Point)         │
+│ - Authentication (JWT verification)                     │
+│ - Authorization (scope/tenant checks)                   │
+│ - Rate limiting (distributed, Redis-backed)             │
+│ - Request logging (trace IDs)                           │
 └───────────────────┬─────────────────────────────────────┘
                     │
             ┌───────┴────────┐
@@ -115,18 +115,18 @@ This document defines a **cloud-agnostic reference architecture** for OmniHub/Tr
          │
          ▼
 ┌─────────────────────────────────────────────────────────┐
-│ EXECUTION LAYER (Private Subnet - NO INTERNET ACCESS)  │
+│ EXECUTION LAYER (Private Subnet - NO INTERNET ACCESS)   │
 │ - Workers/executors                                     │
-│ - Egress via NAT Gateway (allowlist-only)             │
-│ - Network policies: deny-all-by-default                │
+│ - Egress via NAT Gateway (allowlist-only)               │
+│ - Network policies: deny-all-by-default                 │
 └───────────────────┬─────────────────────────────────────┘
                     │
                     ▼
 ┌─────────────────────────────────────────────────────────┐
-│ DATA LAYER (Private Subnet - Isolated)                 │
-│ - PostgreSQL (primary data store)                      │
-│ - Redis (cache, rate limiting, queues)                 │
-│ - Secrets Manager (KMS-encrypted)                      │
+│ DATA LAYER (Private Subnet - Isolated)                  │
+│ - PostgreSQL (primary data store)                       │
+│ - Redis (cache, rate limiting, queues)                  │
+│ - Secrets Manager (KMS-encrypted)                       │
 │ - No public endpoints                                   │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -525,30 +525,30 @@ interface QueueMessage {
 ┌─────────────────────────────────────────────────────────┐
 │ PRODUCTION ENVIRONMENT                                  │
 │                                                         │
-│ ┌─────────────────────────────────────────────────┐    │
-│ │ Router (DNS or Load Balancer)                   │    │
-│ │ - Routes 100% traffic to ACTIVE environment     │    │
-│ └────────┬────────────────────────────────────────┘    │
+│ ┌─────────────────────────────────────────────────┐     │
+│ │ Router (DNS or Load Balancer)                   │     │
+│ │ - Routes 100% traffic to ACTIVE environment     │     │
+│ └────────┬────────────────────────────────────────┘     │
 │          │                                              │
 │          ├──────────────────────┬────────────────────── │
 │          ▼                      ▼                       │
-│ ┌─────────────────┐    ┌─────────────────┐            │
-│ │ BLUE (ACTIVE)   │    │ GREEN (STANDBY) │            │
-│ │ Version: v1.2.3 │    │ Version: v1.2.4 │            │
-│ │                 │    │                 │            │
-│ │ API Gateway     │    │ API Gateway     │            │
-│ │ Orchestrator    │    │ Orchestrator    │            │
-│ │ Executors (10)  │    │ Executors (10)  │            │
-│ └─────────────────┘    └─────────────────┘            │
+│ ┌─────────────────┐    ┌─────────────────┐              │
+│ │ BLUE (ACTIVE)   │    │ GREEN (STANDBY) │              │
+│ │ Version: v1.2.3 │    │ Version: v1.2.4 │              │
+│ │                 │    │                 │              │
+│ │ API Gateway     │    │ API Gateway     │              │
+│ │ Orchestrator    │    │ Orchestrator    │              │
+│ │ Executors (10)  │    │ Executors (10)  │              │
+│ └─────────────────┘    └─────────────────┘              │
 │          │                      │                       │
 │          └──────────────────────┘                       │
 │                     │                                   │
 │                     ▼                                   │
-│          ┌────────────────────┐                        │
-│          │ Shared Data Layer  │                        │
-│          │ - PostgreSQL       │                        │
-│          │ - Redis            │                        │
-│          └────────────────────┘                        │
+│          ┌────────────────────┐                         │
+│          │ Shared Data Layer  │                         │
+│          │ - PostgreSQL       │                         │
+│          │ - Redis            │                         │
+│          └────────────────────┘                         │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -692,11 +692,11 @@ terraform apply -auto-approve
          └──────────┬──────────────────┘
                     │
                     ▼
-         ┌────────────────────┐
+         ┌───────────────────────────────┐
          │ Global DNS (Route53/CloudDNS) │
-         │ - Health checks                │
-         │ - Automatic failover           │
-         └────────────────────┘
+         │ - Health checks               │
+         │ - Automatic failover          │
+         └───────────────────────────────┘
 ```
 
 **Failover Process:**
@@ -853,15 +853,15 @@ terraform apply -auto-approve
 │ ┌───────────────────────────────────────────────────┐   │
 │ │ Active Workflows: 142                             │   │
 │ │ Approval Queue: 7 pending                         │   │
-│ │ DLQ Messages: 2 (⚠️ investigate)                  │   │
+│ │ DLQ Messages: 2 (⚠️ investigate)                 │   │
 │ │ Error Rate: 0.12% (✅ within SLO)                │   │
 │ │ P95 Latency: 342ms (✅ within SLO)               │   │
-│ └───────────────────────────────────────────────────┘   │
+│ └──────────────────────────────────────────────────┘    │
 │                                                         │
 │ RECENT AUDIT LOG                                        │
-│ [2026-01-02 10:45] operator@apex.dev enabled SAFE_MODE │
-│ [2026-01-02 10:30] user@example.com approved workflow  │
-│ [2026-01-02 10:15] system auto-rejected expired request│
+│ [2026-01-02 10:45] operator@apex.dev enabled SAFE_MODE  │
+│ [2026-01-02 10:30] user@example.com approved workflow   │
+│ [2026-01-02 10:15] system auto-rejected expired request │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -899,7 +899,7 @@ See separate documents:
 - [PATH A: Enhanced Serverless](./PATH_A_ENHANCED_SERVERLESS.md)
 - [PATH B: Containerized Multi-Cloud](./PATH_B_CONTAINERIZED_MULTICLOUD.md)
 - [SRE Package (SLIs/SLOs)](./SRE_PACKAGE.md)
-- [CI/CD Pipeline Design](./CICD_PIPELINE_DESIGN.md)
+- [CI Runtime Gates](./CI_RUNTIME_GATES.md)
 
 ---
 

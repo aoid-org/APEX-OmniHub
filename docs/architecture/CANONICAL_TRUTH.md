@@ -1,7 +1,7 @@
 # Canonical Truth File — Platform Topology & Deployment
 
-**Version:** 1.4.0
-**Last Updated:** 2026-05-12
+**Version:** 1.6.0
+**Last Updated:** 2026-05-20
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements
@@ -9,9 +9,9 @@
 1. Frontend runtime is React 18.3.1 + Vite 7.
 2. `src/App.tsx` is a shim that re-exports `apps/omnihub-site/src/App.tsx`.
 3. Supabase Edge Functions under `supabase/functions/` are the canonical edge API layer.
-4. Orchestrator runtime boundary: `orchestrator/main.py` (worker) vs `orchestrator/server.py` (API).
+4. Orchestrator runtime boundary: `orchestrator/main.py` (Temporal Worker lifecycle) vs `orchestrator/server.py` (HTTP workflow dispatch). `services/orchestrator/` is a **separate** runtime: FastAPI HTTP API layer (`api/routes.py`) + deterministic FSM (`fsm.py`). It must not initialise Temporal Workers. `omega/` is the **APEX Resilience Protocol** — human-in-the-loop verification engine (`engine.py`) and HTTP approval dashboard (`dashboard.py`); it runs independently and is not a Temporal service.
 5. CI authority for gates: `.github/workflows/ci-runtime-gates.yml`.
-6. Current production web deployment topology is Cloudflare Pages aligned.
+6. Current production web deployment topology is Cloudflare Pages aligned. Production deployment: `apex-omnihub` (https://apexomnihub.icu). Shadow deployment slot: `apex-omnihub-shadow` (apex-omnihub-shadow.pages.dev, created 2026-05-20).
 7. Production Supabase project: `rtopreovkywofgwgmozi` (ca-central-1). All public-schema tables have RLS enabled as of 2026-05-04. Migrations are applied via Supabase MCP. See `docs/infrastructure/SUPABASE_SETUP.md` for full security posture.
 8. All SECURITY DEFINER functions in the public schema must have: (a) `search_path` pinned to `public`, (b) EXECUTE revoked from `anon` at minimum. Trigger and maintenance functions also revoke `authenticated`. Business-logic functions retain `authenticated` + `service_role` access.
 9. OmniBridge persistence layer (`omnibridge_events`, `omnibridge_events_dlq`, `omnibridge_control_audit`) is live in production as of v1.6.1 (2026-05-04). The `app_role` enum contains only `admin` and `user` — do not reference `super_admin` or `operator` in RLS policies.

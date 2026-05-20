@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.6.3 | **package.json version:** 1.6.0 | **Release Date:** 2026-05-11 | **Docs audit:** 2026-05-16
+**Release line:** 1.6.3 (target) | **package.json version:** 1.6.0 | **Changeset for 1.6.1 pending** | **Release Date:** 2026-05-11 | **Docs audit:** 2026-05-20
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -113,7 +113,7 @@ The "Trinity" connectivity layer:
 
 Client-side infrastructure for deterministic media delivery:
 
-- **Edge CORS Proxy**: (Historical) Vercel Edge Function (`api/cors.ts`) — superseded by Cloudflare Pages Worker (`edge/cors-proxy/edge-cors-proxy.js`). LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical.
+- **Edge CORS Proxy**: **[LEGACY]** Vercel Edge Function (`api/cors.ts`) — historical only, superseded by Cloudflare Pages Worker (`edge/cors-proxy/edge-cors-proxy.js`). Retained for reference; Cloudflare-first topology is canonical.
 - **LRU Media Cache**: 250 MB ceiling with localStorage ledger eviction (`lib/media/EdgeCacheController.ts`).
 - **Cloudflare Worker**: Stateless CORS proxy at `edge/cors-proxy/edge-cors-proxy.js` for production CDN.
 - **Fail-Safe Design**: Every cache miss gracefully degrades to proxy URL — zero silent failures.
@@ -147,7 +147,7 @@ Client-side infrastructure for deterministic media delivery:
 
 ### Runtime and release authority
 
-APEX OmniHub requires Node.js 20.19+ and **bun** as the canonical package manager. `bun install --frozen-lockfile` is used for all installs; `npm` is used only for `npm audit --omit=dev`. Both `bun.lock` (canonical) and `package-lock.json` (required by `npm audit` in CI) are committed. See CLAUDE.md §2 for the full policy.
+APEX OmniHub requires **Node.js 22+** (Node 22 LTS recommended; Node 24 also supported; supported range `>=22 <25`). **npm** is the authoritative package manager for CI, releases, and the canonical lockfile (`package-lock.json`). Use `npm ci` for clean installs in CI. bun is optional for local development — `bun install` or `bun run` may be used for speed, but `bun.lock` is not relied on by CI. Both `bun.lock` (local bun users) and `package-lock.json` (CI canonical; required by `npm audit`) are committed. Python 3.11+ is required for orchestrator services. See CLAUDE.md §2 for the full policy.
 
 ## Repository Layout
 
@@ -171,8 +171,8 @@ APEX OmniHub requires Node.js 20.19+ and **bun** as the canonical package manage
 
 ### Prerequisites
 
-- Node.js **20.19+** or **22.12+** (required by Vite 7; Node 18 reached EOL April 2025)
-- Python 3.10+
+- Node.js **22+** (Node 22 LTS recommended; Node 24 also supported; range `>=22 <25`)
+- Python **3.11+**
 - Docker & Docker Compose
 
 ### Full Stack — One Command (Recommended)
@@ -190,13 +190,15 @@ Supabase runs in the cloud — point `.env.local` to your Supabase project. Brow
 #### 1) Install dependencies
 
 ```bash
-bun install
+npm ci
+# or, for local dev speed: bun install
 ```
 
 #### 2) Run OmniDash (main UI)
 
 ```bash
-bun run dev
+npm run dev
+# or, for local dev speed: bun run dev
 ```
 
 #### 3) Run the Orchestrator (Temporal)
@@ -213,6 +215,13 @@ python -m main
 docker compose -f docker-compose.prod.yml up -d
 ```
 
+### Deployment Targets
+
+| Slot | URL | Notes |
+|---|---|---|
+| Production | https://apexomnihub.icu | Cloudflare Pages — canonical production |
+| Shadow | https://apex-omnihub-shadow.pages.dev | Shadow slot provisioned 2026-05-20 |
+
 ---
 
 ## CI / Quality Gates
@@ -220,10 +229,10 @@ docker compose -f docker-compose.prod.yml up -d
 Run these before any PR:
 
 ```bash
-bun run lint       # ESLint
-bun run typecheck  # TypeScript strict mode
-bun run test       # Vitest suite
-bun run build      # Production build
+npm run lint       # ESLint
+npm run typecheck  # TypeScript strict mode
+npm run test       # Vitest suite
+npm run build      # Production build
 ```
 
 ### CI/CD Pipelines (Selected Workflows)
@@ -265,7 +274,7 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 1. Fork the repo
 2. Create a branch: `git checkout -b feature/your-feature`
 3. Write tests for your changes
-4. Run full gates: `bun run test && bun run lint && bun run typecheck && bun run build`
+4. Run full gates: `npm run test && npm run lint && npm run typecheck && npm run build`
 5. Submit a PR
 
 ### Non-Negotiables

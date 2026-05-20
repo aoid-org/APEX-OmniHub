@@ -1,16 +1,25 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-15 -->
-# 🛠️ TECHNICAL SPECIFICATIONS: Temporal Platform v1.4.0
+<!-- APEX_DOC_STAMP: VERSION=v1.6.0 | LAST_UPDATED=2026-05-20 -->
+# TECHNICAL SPECIFICATIONS: Temporal Platform v1.6.0
 
 ## 1. Core Architecture (OMEGA Pattern)
 
-The APEX OmniHub v1.4.0 operates on the **OMEGA Architecture**, a high-availability event-driven system designed for autonomous AI agent orchestration.
+The APEX OmniHub v1.6.0 operates on the **OMEGA Architecture**, a high-availability event-driven system designed for autonomous AI agent orchestration.
 
 ### 1.1 Orchestration Layer
 *   **Engine**: Temporal.io Server (v1.24.2)
 *   **Hosting**: Self-hosted Docker Containers (Primary), K8s (Target)
 *   **Communication**: gRPC (Port 7233)
+*   **Temporal UI**: Port 8233
 *   **Namespace**: `default`
 *   **Task Queue**: `apex-orchestrator`
+
+**Python Service Disambiguation:**
+
+| Path | Runtime | Role |
+|------|---------|------|
+| `orchestrator/` | Python / Temporal | Worker lifecycle (`main.py`) + HTTP dispatch (`server.py`) |
+| `services/orchestrator/` | Python / FastAPI | HTTP API routes (`api/routes.py`) + deterministic FSM (`fsm.py`); must not init Temporal Workers |
+| `omega/` | Python / stdlib | APEX Resilience Protocol — human-in-the-loop verification engine (`engine.py`) + approval dashboard (`dashboard.py`); runs independently, not a Temporal service |
 
 ### 1.2 Data Persistence Layer
 *   **Database**: PostgreSQL 15 (Alpine)
@@ -19,7 +28,12 @@ The APEX OmniHub v1.4.0 operates on the **OMEGA Architecture**, a high-availabil
 *   **Backup Strategy**: Volume Snapshots (Daily)
 
 ### 1.3 Application Interface
-*   **Frontend**: React 18 + Vite (SPA)
+*   **Frontend**: React 18.3.1 + Vite 7.2.7 (SPA)
+*   **TypeScript**: 5.9.3
+*   **TanStack Query**: 5.83.0
+*   **Node Engine**: >=22 <25 (Node 24 in CI)
+*   **Python**: 3.11
+*   **Dev Server Port**: 8080
 *   **Gateway**: Supabase Edge Functions (Deno)
 *   **Protocol**: `useOmniStream` (WebSocket/SSE)
 *   **Security**: JWT + SHA-256 Signature Verification

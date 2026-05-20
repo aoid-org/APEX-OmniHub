@@ -1,7 +1,16 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.0 | LAST_UPDATED=2026-05-20 -->
 <!-- VALUATION_IMPACT: Plugin architecture enables ecosystem revenue streams (30% margins) and accelerates enterprise customization cycles by 5x. Demonstrates platform extensibility for multi-tenant deployments. Generated: 2026-02-03 -->
 
 # Plugin Architecture
+
+## Implementation Status (2026-05-20)
+
+| Phase | Status |
+|---|---|
+| Phase 1 — Plugin Discovery & Registry | ✅ Implemented |
+| Phase 2 — Plugin Lifecycle | ✅ Implemented |
+| Phase 3 — Sandboxing | 🔲 Planned |
+| Phase 4 — Execution Engine | 🔲 Planned |
 
 ## Executive Summary
 
@@ -36,6 +45,8 @@ pluginRegistry.register({
 
 ### Phase 3: Sandboxing (Proposed)
 
+> **Note:** This phase is architecturally planned but not yet implemented. Do not reference as current capability.
+
 ```typescript
 // Proposed API
 const sandbox = new PluginSandbox({
@@ -47,6 +58,8 @@ const sandbox = new PluginSandbox({
 ```
 
 ### Phase 4: Execution (Proposed)
+
+> **Note:** This phase is architecturally planned but not yet implemented. Do not reference as current capability.
 
 - **Hook Invocation:** Plugins receive events via registered hooks
 - **API Access:** Scoped API client with permission enforcement
@@ -140,13 +153,13 @@ securityAuditLogger.log({
 
 ```bash
 # Install from marketplace
-# npm run plugin:install custom-analytics (Coming Soon)
+# npm run plugin:install custom-analytics (Planned — not yet implemented)
 
 # Enable in admin dashboard
-# npm run plugin:enable custom-analytics (Coming Soon)
+# npm run plugin:enable custom-analytics (Planned — not yet implemented)
 
 # Verify installation
-# npm run plugin:verify custom-analytics (Coming Soon)
+# npm run plugin:verify custom-analytics (Planned — not yet implemented)
 ```
 
 ## Revenue Model

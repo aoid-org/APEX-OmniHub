@@ -1,7 +1,9 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.0 | LAST_UPDATED=2026-05-20 -->
 <!-- VALUATION_IMPACT: Comprehensive API extension guide reduces custom integration time by 60%, enabling faster enterprise adoption. Demonstrates API-first architecture for B2B revenue streams. Generated: 2026-02-03 -->
 
 # API Extension Guide
+
+> **Note:** Example URLs in this document (api.apex-omnihub.com, auth.apex-omnihub.com) are illustrative placeholders. The production API surface is delivered via Supabase Edge Functions at `https://rtopreovkywofgwgmozi.supabase.co/functions/v1/` and the frontend at `https://apexomnihub.icu`.
 
 ## API Architecture
 

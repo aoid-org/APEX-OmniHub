@@ -94,8 +94,9 @@ Major verified directories:
 | `supabase/migrations/` | SQL migrations; treat schema edits as high-risk. |
 | `functions/api/` | API/function handlers outside Supabase function tree. |
 | `api/` | API middleware/routes used by serverless/function surfaces. |
-| `orchestrator/` | Python orchestration area referenced by package scripts. Verify contents before editing. |
-| `services/orchestrator/` | Python service/orchestrator code and tests. Do not assume it is interchangeable with `orchestrator/`. |
+| `orchestrator/` | **Temporal Worker** — `main.py` is the worker lifecycle entrypoint; `server.py` is HTTP workflow dispatch. This is the canonical Python runtime. |
+| `services/orchestrator/` | **HTTP API layer** — FastAPI routes (`api/routes.py`) + deterministic FSM (`fsm.py`). Must not initialise Temporal Workers (enforced by CI guardrail). |
+| `omega/` | **APEX Resilience Protocol** — Human-in-the-loop verification engine (`engine.py`) and HTTP approval dashboard (`dashboard.py`). Not a Temporal service; runs independently. XSS-defended via markupsafe. Covered by pytest `--cov=../omega`. |
 | `apex-resilience/` | Resilience framework, scripts, and tests. |
 | `sim/`, `sandbox/` | Simulation and sandbox tooling. |
 | `android/`, `ios/` | Capacitor mobile shells. |
@@ -103,7 +104,15 @@ Major verified directories:
 | `docs/`, `reports/` | Architecture, status, audits, reports. |
 | `public/` | Static assets, PWA files, redirects, headers, manifest, service worker. |
 
-There are similarly named areas (`orchestrator/`, `services/orchestrator/`, `src/core/orchestrator/`, `src/omnihub-gateway/`). Always verify the target path before editing.
+**Similarly-named area disambiguation** — always verify the target path before editing:
+
+| Path | Runtime | Role |
+| --- | --- | --- |
+| `orchestrator/` | Python / Temporal | Worker lifecycle + HTTP dispatch |
+| `services/orchestrator/` | Python / FastAPI | HTTP API + deterministic FSM |
+| `omega/` | Python / stdlib | Human-in-the-loop verification (independent) |
+| `src/core/orchestrator/` | TypeScript | Frontend/gateway contract types only |
+| `src/omnihub-gateway/` | TypeScript / Node | Edge gateway, MCP client, routing |
 
 ---
 
