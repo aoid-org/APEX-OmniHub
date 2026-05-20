@@ -2,6 +2,19 @@
 
 | Topic | Canonical Truth | Conflicting File(s) | Issue Type | Exact Fix Made | Disposition |
 | --- | --- | --- | --- | --- | --- |
+## 2026-05-20 Tech Debt Audit + CI Hardening Pass
+
+| Topic | Canonical Truth | Conflicting/Changed File(s) | Issue Type | Exact Fix Made | Disposition |
+|-------|----------------|----------------------------|-----------|----------------|-------------|
+| GitHub Action SHA pinning | All GH Actions must use pinned commit SHAs | `.github/workflows/integration.yml`, `.github/workflows/deploy-omnihub-proof.yml` | Security drift | Pinned checkout@v4→SHA, setup-node@v4→SHA, wrangler-action@v3→SHA | Corrected 2026-05-20 |
+| Node version in CI | package.json engines requires >=22 <25 | `.github/workflows/integration.yml` node-version: '20' | Version drift | Changed node-version to '24' | Corrected 2026-05-20 |
+| GH_PAT exposure in clone URL | Secrets must not appear in logged URLs | `.github/workflows/integration.yml` git clone with token in URL | Security drift | Replaced with git config credential substitution | Corrected 2026-05-20 |
+| Dependency auto-merge gate | Auto-merge must only occur when CI is green | `.github/workflows/dependency-consolidation.yml` force-merging CI-failing PRs | CI integrity | Added mergeable_state === 'clean' check before merge | Corrected 2026-05-20 |
+| Lighthouse CI enforcement | Accessibility must be enforced as hard gate | `.lighthouserc.json` — accessibility and color-contrast were 'warn' | Quality drift | Changed categories:accessibility and color-contrast to 'error' | Corrected 2026-05-20 |
+| SonarCloud coverage scope | Frontend src/apps/packages must be in coverage | `sonar-project.properties` — src/**, apps/**, packages/** excluded | Coverage gap | Removed those three globs from sonar.coverage.exclusions | Corrected 2026-05-20 |
+| Stripe webhook secret validation | Missing secrets must return 503, not silently fail | `supabase/functions/stripe-webhook/index.ts` — ?? '' fallback | Security gap | Moved reads inside handler, added explicit 503 guard | Corrected 2026-05-20 |
+| ORCHESTRATOR_SHARED_SECRET validation | Missing signing secret must throw, not use empty string | `supabase/functions/_shared/requestSigning.ts` — ?? '' fallback | Security gap | Throws Error if secret absent | Corrected 2026-05-20 |
+
 | **Package Manager Authority** | `npm` is authoritative for CI/releases (`package-lock.json`), Node 24 is target. `bun` is optional/local. | `CLAUDE.md`, `docs/architecture/CANONICAL_TRUTH.md`, `docs/onboarding/DEVELOPER_ONBOARDING.md` | Authority Contradiction | Updated onboarding commands to use `npm`, clarified `bun` is optional local-only in `CLAUDE.md` and `CANONICAL_TRUTH.md`. | Corrected |
 | **Hosting Target** | Cloudflare Pages is the canonical web runtime & edge compute platform. | `README.md`, `docs/project-status/PRODUCTION_STATUS.md` | Legacy State | Marked Vercel Edge proxy mentions as historical / legacy. | Corrected / Marked historical |
 | **Local Setup Truth** | One command `docker compose -f docker-compose.dev.yml up` starts frontend + Temporal + Redis. | `README.md` | Minor Error | None. Checked and verified to be correct. | Flagged but intentionally untouched |

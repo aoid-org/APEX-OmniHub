@@ -55,6 +55,14 @@ This policy is enforced by:
 - Code review: Reviewers must reject PRs that add static CI/certification badges
 - Docs drift reconciliation: run periodically as part of production certification hardening
 
+## CI Security Requirements (updated 2026-05-20)
+
+All GitHub Actions workflows MUST:
+- Pin third-party actions to commit SHAs (never floating tags like `@v4`)
+- Use `node-version: '24'` to match engines constraint `>=22 <25`
+- Never embed secrets (GH_PAT, tokens) in git clone URLs — use `git config url.insteadOf`
+- Auto-merge workflows must gate on `mergeable_state === 'clean'` before merging
+
 ## Last Updated
 
 2026-05-20

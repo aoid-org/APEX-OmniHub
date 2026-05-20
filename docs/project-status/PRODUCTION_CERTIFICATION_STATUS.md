@@ -28,6 +28,33 @@ Verified in this documentation pass:
 - The current documentation index is `docs/DOCUMENTATION_RELEASE_INDEX.md`.
 - Current RSI repository evidence is live mode in `policy/rsi-policy.yaml` with `.github/workflows/rsi-governance.yml` present.
 
+## 2026-05-20 Tech Debt Audit Addendum
+
+A comprehensive tech debt audit was performed on 2026-05-20 (branch: claude/audit-tech-debt-Pmwkx).
+All changes are verified by actual code execution. Certification verdict unchanged (B-2 still pending).
+
+**CI Hardening:**
+- `integration.yml`: action SHAs pinned, node upgraded 20→24, GH_PAT URL masking applied
+- `deploy-omnihub-proof.yml`: action SHAs + wrangler-action@v3 SHA pinned
+- `dependency-consolidation.yml`: auto-merge now gated on `mergeable_state === 'clean'`
+- `.lighthouserc.json`: `categories:accessibility` and `color-contrast` enforced as CI errors
+
+**Security Hardening:**
+- `supabase/functions/stripe-webhook/index.ts`: STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET explicitly required; returns 503 if absent
+- `supabase/functions/_shared/requestSigning.ts`: ORCHESTRATOR_SHARED_SECRET throws on missing (prevents empty-key HMAC bypass)
+
+**Quality Hardening:**
+- `sonar-project.properties`: `src/**`, `apps/**`, `packages/**` removed from `sonar.coverage.exclusions` — frontend coverage now visible to SonarCloud
+
+**Verified Test Results (2026-05-20):**
+- `npm run typecheck`: PASS
+- `npm run test`: 213 files, 2505 tests PASS, 3 files / 70 tests SKIP (Supabase not configured in env)
+- `npm run build`: PASS (2429 modules, 44s, no warnings)
+- `npm run docs:check`: PASS
+- `npm run check:react`: PASS (React 18.3.1 singleton)
+- Python ruff check: PASS (all checks passed, 95 files formatted)
+- Python pytest: ENVIRONMENT-LIMITED (temporalio/numpy not installed in audit environment)
+
 ## Platform Facts
 
 | Field | Value |
