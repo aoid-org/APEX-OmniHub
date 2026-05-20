@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.0 | LAST_UPDATED=2026-05-20 -->
 # APEX-OmniHub Technical Architecture Specification
 
 ## Vercel Reference Classification
@@ -7,9 +7,9 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 
 
 **Document Owner:** CTO & Chief Platform Architect
-**Last Updated:** 2026-03-12
+**Last Updated:** 2026-05-20
 **Status:** Production
-**Version:** 1.4.0
+**Version:** 1.6.0
 
 ---
 
@@ -59,12 +59,14 @@ APEX-OmniHub is a production-grade, **Cloudflare-first enterprise orchestration 
 
 ### 1.4 Backend Stack (The Brain)
 
-| Layer            | Technology        | Purpose                          |
-| ---------------- | ----------------- | -------------------------------- |
-| **Orchestrator** | Python (FastAPI)  | Heavy AI Logic & Agents          |
-| **Engine**       | Temporal.io       | Durable Execution & Retries      |
-| **Database**     | Supabase (PG)     | Relational Data & Edge Functions |
-| **Vector DB**    | Supabase pgvector | Semantic Memory (RAG)            |
+| Layer                    | Technology        | Purpose                                    |
+| ------------------------ | ----------------- | ------------------------------------------ |
+| **Temporal Worker**      | Python / Temporal | Durable workflow execution (`orchestrator/`) |
+| **HTTP API + FSM**       | Python / FastAPI  | HTTP routes + deterministic FSM (`services/orchestrator/`) |
+| **Resilience Protocol**  | Python / stdlib   | APEX Resilience Protocol — human-in-the-loop verification engine + approval dashboard (`omega/`); runs independently, not Temporal |
+| **Engine**               | Temporal.io       | Durable Execution & Retries                |
+| **Database**             | Supabase (PG)     | Relational Data & Edge Functions           |
+| **Vector DB**            | Supabase pgvector | Semantic Memory (RAG)                      |
 
 ---
 
@@ -99,9 +101,13 @@ graph TD
 │   ├── src/lib/biometric/    # Hardware Security Module
 │   └── capacitor.config.ts   # Native Bridge Config
 │
-├── orchestrator/             # The AI Brain (Python)
+├── orchestrator/             # Temporal Worker (Python) — main.py worker lifecycle, server.py HTTP dispatch
 │   ├── activities/           # Agent Capabilities
 │   └── workflows/            # Durable Logic
+│
+├── services/orchestrator/    # FastAPI HTTP API + deterministic FSM (must not init Temporal Workers)
+│
+├── omega/                    # APEX Resilience Protocol — engine.py (human-in-the-loop verification) + dashboard.py (approval UI); runs independently
 │
 ├── supabase/                 # The Data Layer
 │   ├── migrations/           # SQL Schema (inc. device_registry)
@@ -114,13 +120,13 @@ graph TD
 
 | Service        | Port/URL            | Purpose                |
 | -------------- | ------------------- | ---------------------- |
-| Frontend Dev   | localhost:5173      | Vite dev server        |
+| Frontend Dev   | localhost:8080      | Vite dev server        |
 | Orchestrator   | localhost:8000      | FastAPI backend        |
-| Temporal UI    | localhost:8080      | Workflow visualization |
+| Temporal UI    | localhost:8233      | Workflow visualization |
 | Realtime Audio | wss://api.openai... | Voice Stream (Proxied) |
 | Local DB       | localhost:54322     | Supabase PostgreSQL    |
 
 ---
 
-**Document Version:** 1.4.0
-**Last Audit:** 2026-03-12
+**Document Version:** 1.6.0
+**Last Audit:** 2026-05-20

@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.0 | LAST_UPDATED=2026-05-20 -->
 # APEX / OmniHub — Technical Specification & Architecture
 
 ## Overview
@@ -18,6 +18,16 @@
 - Zero-trust: Baseline metrics `src/zero-trust/baseline.ts`, device registry `src/zero-trust/deviceRegistry.ts`, CLI `npm run zero-trust:baseline`.
 - DR/Backup: Scripts under `scripts/dr/*` and `scripts/backup/verify_backup.ts`; runbook `docs/DR_RUNBOOK.md`, verification doc `docs/BACKUP_VERIFICATION.md`.
 - Dependency & security: `docs/security/SECURITY_ADVISORIES.md`, `docs/security/dependency-scanning.md`, script `npm run security:audit`.
+
+## Python Services Disambiguation
+
+**Critical:** Three Python runtimes exist and must not be conflated:
+
+| Path | Runtime | Role |
+|------|---------|------|
+| `orchestrator/` | Python / Temporal | Worker lifecycle (`main.py`) + HTTP workflow dispatch (`server.py`) |
+| `services/orchestrator/` | Python / FastAPI | HTTP API layer (`api/routes.py`) + deterministic FSM (`fsm.py`). Must not initialise Temporal Workers (enforced by CI guardrail). |
+| `omega/` | Python / stdlib | **APEX Resilience Protocol** — human-in-the-loop verification engine (`engine.py`) and HTTP approval dashboard (`dashboard.py`). Runs independently. Not a Temporal service. XSS-defended via markupsafe. Covered by pytest `--cov=../omega`. |
 
 ## Temporal Orchestrator (Python Backend)
 
@@ -119,8 +129,13 @@ const status = getOmniPortStatus();
 
 **Performance:** E2E ingestion < 50ms. FNV-1a hash for browser+Node.js compatibility. 27 unit tests covering speed, moat logic, shield, and safety net scenarios.
 
+## Deployment Topology
+- **Production**: Cloudflare Pages — `apex-omnihub` (https://apexomnihub.icu)
+- **Shadow Slot**: `apex-omnihub-shadow` (apex-omnihub-shadow.pages.dev, created 2026-05-20) — used for pre-production validation.
+- **Supabase Project**: `rtopreovkywofgwgmozi` (ca-central-1)
+
 ## Runtime & Ops
-- Build: Vite with SWC, terser minification, chunk splitting (`vite.config.ts`), console stripping in production.
+- Build: Vite 7.2.7 with SWC, terser minification, chunk splitting (`vite.config.ts`), console stripping in production. Dev server on port **8080**.
 - Env: Requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Auth provider guards missing env and surfaces setup message.
 - Scripts/CLI (idempotent):
   - Tests: `npm test`, `npm run test:prompt-defense`.
@@ -161,7 +176,7 @@ const status = getOmniPortStatus();
 - Audit logging on security-sensitive actions (login/logout, DR tests, backup verification).
 
 ## Irrelevant / Non-core Artifacts (keep under review)
-- `bun.lockb`: active lockfile; Bun is the standard package manager for local and CI workflows.
+- `bun.lock`: optional local lockfile; **npm is the authoritative package manager** for CI/releases. `npm ci` is the canonical install path. Bun is allowed for optional local speed.
 - `src/App.css`: Vite starter styles currently unused; safe to remove or leave inert.
 - Placeholder assets under `public/` and `src/assets/`—verify necessity before pruning.
 

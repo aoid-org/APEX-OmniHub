@@ -1,6 +1,7 @@
 # Bounded-Context Engineering Map
 
-> **Version:** 1.0.0
+> **Version:** 1.6.0
+> **Last Updated:** 2026-05-20
 > **Status:** Canonical
 > **Purpose:** Provides a practical mapping of operational domains, handoff boundaries, and canonical directories for contributors.
 
@@ -34,13 +35,31 @@
 - **Canonical Docs:** `docs/infrastructure/SUPABASE_SETUP.md`
 
 ## 4. Workflow (Temporal) Orchestrator Plane
-- **Purpose:** Python-based state machine for durable, idempotent workflows and compensations.
+- **Purpose:** Python-based durable workflow execution via Temporal.io.
 - **Primary Directories:**
-  - `orchestrator/` (Temporal Python worker and API)
-- **Primary Entrypoints:** `orchestrator/main.py` (worker), `orchestrator/server.py` (API interface)
+  - `orchestrator/` (Temporal Python worker and HTTP dispatch)
+- **Primary Entrypoints:** `orchestrator/main.py` (worker lifecycle), `orchestrator/server.py` (HTTP workflow dispatch)
 - **Expected Quality Gates:** `npm run lint:py` (Ruff), `npm run test:py` (Pytest).
 - **Handoff Boundaries:** Dispatched from Edge Functions; executes Python activities that communicate with external APIs and Data Plane.
 - **Canonical Docs:** `orchestrator/README.md`, `orchestrator/ARCHITECTURE.md`
+
+## 4a. HTTP API + FSM Plane (services/orchestrator)
+- **Purpose:** FastAPI HTTP API layer and deterministic finite-state machine for workflow state transitions. Must not initialise Temporal Workers (enforced by CI guardrail).
+- **Primary Directories:**
+  - `services/orchestrator/` (FastAPI routes and FSM)
+- **Primary Entrypoints:** `services/orchestrator/api/routes.py` (HTTP routes), `services/orchestrator/fsm.py` (deterministic FSM)
+- **Expected Quality Gates:** Ruff lint, Pytest.
+- **Handoff Boundaries:** Receives HTTP requests; drives state transitions and proxies to Temporal Worker plane as needed.
+- **Canonical Docs:** `docs/architecture/CANONICAL_TRUTH.md`
+
+## 4b. APEX Resilience Protocol Plane (omega)
+- **Purpose:** Human-in-the-loop verification engine for high-risk workflow actions. Provides a web-based approval dashboard. Runs independently — not a Temporal service.
+- **Primary Directories:**
+  - `omega/` (engine and dashboard)
+- **Primary Entrypoints:** `omega/engine.py` (verification engine), `omega/dashboard.py` (HTTP approval dashboard)
+- **Expected Quality Gates:** `pytest --cov=../omega`
+- **Handoff Boundaries:** Receives escalated high-risk actions from Orchestrator/MAN Mode; human approvers interact via dashboard; approved actions are returned to calling plane.
+- **Canonical Docs:** `docs/architecture/CANONICAL_TRUTH.md`
 
 ## 5. Web3 / Contracts Plane
 - **Purpose:** Blockchain identity (SIWE) and smart contracts (NFT verification).
