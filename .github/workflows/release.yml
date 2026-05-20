@@ -55,15 +55,16 @@ jobs:
       # will never set published == 'true'. Detect a version release by checking
       # whether packages were published (public repo path) OR the commit that
       # triggered this run is the version-PR merge commit (private repo path).
+      # NOTE: commit subject is read from git directly (not from the event payload)
+      # to avoid script-injection from user-controlled github.event.head_commit.message.
       - name: Detect release cut
         id: release_signal
         env:
           CHANGESETS_PUBLISHED: ${{ steps.changesets.outputs.published }}
-          HEAD_COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
           if [ "$CHANGESETS_PUBLISHED" = "true" ]; then
             echo "release_cut=true" >> "$GITHUB_OUTPUT"
-          elif echo "$HEAD_COMMIT_MSG" | grep -qF "chore: version packages"; then
+          elif git log -1 --format="%s" | grep -qF "chore: version packages"; then
             echo "release_cut=true" >> "$GITHUB_OUTPUT"
           else
             echo "release_cut=false" >> "$GITHUB_OUTPUT"
