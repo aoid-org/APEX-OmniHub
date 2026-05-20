@@ -45,7 +45,10 @@ export async function buildSignedHeaders(
   bodyRaw: string,
   traceId: string,
 ): Promise<Record<string, string>> {
-  const secret = Deno.env.get('ORCHESTRATOR_SHARED_SECRET') ?? '';
+  const secret = Deno.env.get('ORCHESTRATOR_SHARED_SECRET');
+  if (!secret) {
+    throw new Error('ORCHESTRATOR_SHARED_SECRET is required');
+  }
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const bodyHash = await sha256Hex(encoder.encode(bodyRaw));
   const canonical = `${method}\n${path}\n${timestamp}\n${traceId}\n${bodyHash}`;

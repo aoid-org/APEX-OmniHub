@@ -2,14 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import Stripe from "https://esm.sh/stripe@14.18.0?target=deno";
 
-const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
-const stripeWebhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-
-const stripe = new Stripe(stripeSecretKey ?? '', {
-  apiVersion: '2023-10-16',
-  httpClient: Stripe.createFetchHttpClient(),
-});
-
 // Create a service role client to execute the RPC
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -34,7 +26,7 @@ function parseSkills(skillsStr: string | undefined): unknown[] {
   }
 }
 
-async function getSubscriptionPeriod(stripeSubscriptionId: string): Promise<SubscriptionPeriod> {
+async function getSubscriptionPeriod(stripe: Stripe, stripeSubscriptionId: string): Promise<SubscriptionPeriod> {
   try {
     const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
     return {
@@ -50,7 +42,7 @@ async function getSubscriptionPeriod(stripeSubscriptionId: string): Promise<Subs
   }
 }
 
-async function handleCheckoutSessionCompleted(event: Stripe.Event): Promise<Response | null> {
+async function handleCheckoutSessionCompleted(stripe: Stripe, event: Stripe.Event): Promise<Response | null> {
   const session = event.data.object as Stripe.Checkout.Session;
 
   const userId = session.metadata?.user_id;
@@ -65,7 +57,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event): Promise<Resp
   }
 
   const { currentPeriodStart, currentPeriodEnd } = stripeSubscriptionId
-    ? await getSubscriptionPeriod(stripeSubscriptionId)
+    ? await getSubscriptionPeriod(stripe, stripeSubscriptionId)
     : { currentPeriodStart: null, currentPeriodEnd: null };
 
   const { data, error } = await supabaseAdmin.rpc('activate_client_subscription', {
@@ -87,7 +79,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event): Promise<Resp
   return null;
 }
 
-async function processStripeEvent(event: Stripe.Event): Promise<Response> {
+async function processStripeEvent(stripe: Stripe, event: Stripe.Event): Promise<Response> {
   if (event.type !== 'checkout.session.completed') {
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
@@ -95,7 +87,7 @@ async function processStripeEvent(event: Stripe.Event): Promise<Response> {
     });
   }
 
-  const errorResponse = await handleCheckoutSessionCompleted(event);
+  const errorResponse = await handleCheckoutSessionCompleted(stripe, event);
   if (errorResponse) {
     return errorResponse;
   }
@@ -107,6 +99,18 @@ async function processStripeEvent(event: Stripe.Event): Promise<Response> {
 }
 
 serve(async (req) => {
+  // Require secrets before processing any request; return 503 if misconfigured.
+  const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+  const stripeWebhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+  if (!stripeSecretKey || !stripeWebhookSecret) {
+    return new Response('Webhook handler misconfigured', { status: 503 });
+  }
+
+  const stripe = new Stripe(stripeSecretKey, {
+    apiVersion: '2023-10-16',
+    httpClient: Stripe.createFetchHttpClient(),
+  });
+
   const signature = req.headers.get('stripe-signature');
   if (!signature) {
     return new Response('Missing Stripe signature', { status: 400 });
@@ -117,14 +121,14 @@ serve(async (req) => {
   try {
     const body = await req.text();
     // Verify signature
-    event = stripe.webhooks.constructEvent(body, signature, stripeWebhookSecret ?? '');
+    event = stripe.webhooks.constructEvent(body, signature, stripeWebhookSecret);
   } catch (err) {
     console.error('Webhook signature verification failed.', err);
     return new Response('Webhook signature verification failed.', { status: 400 });
   }
 
   try {
-    return await processStripeEvent(event);
+    return await processStripeEvent(stripe, event);
   } catch (error) {
     console.error('Error processing webhook', error);
     return new Response('Internal Server Error', { status: 500 });
