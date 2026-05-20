@@ -53,3 +53,5 @@ Actual changes made in this pass:
 - `vitest.config.ts` branch coverage threshold raised from 60 to 63 (statements 69→70, functions 71→72, lines 70→71) to match current passing test suite coverage.
 - Changeset `shadow-slot-coverage-docs.md` added for v1.6.1 patch release (PR #1184).
 - Comprehensive documentation audit performed 2026-05-20: stale docs archived or updated, certification status and blocker docs updated to reflect B-1 and B-3 resolution.
+
+| 2026-05-20 | CLAUDE.md ultra-efficient rewrite + auto-update protocol | `CLAUDE.md` | 607-line manual rewritten to 264 lines — all facts preserved, tables replace prose, auto-update protocol added (§18), current known issues updated with Python/CI env notes |
