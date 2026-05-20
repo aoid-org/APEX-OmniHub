@@ -1,607 +1,600 @@
 # CLAUDE.md — APEX OmniHub Agent Operating Manual
 
-**Purpose:** This file is the root operating context for Claude/agent sessions in this repository. It exists to reduce hallucination, prevent unsafe edits, and make every code change traceable to verified repo facts.
+**Purpose:** Root operating context for Claude/agent sessions. Prevents hallucination, unsafe edits, and untraceable changes.
+**Last verified:** 2026-05-20 · main @ `a54bd7c`
+**Critical rule:** Facts not verified from this file or an explicit user instruction → mark `[UNVERIFIED]`. If this file conflicts with a subsystem file, read that file before acting.
 
-**Last verified:** 2026-05-14 from the repository contents in this checkout.
-
-**Critical rule:** If this file conflicts with a more specific in-repo file for a subsystem, inspect that file before acting. If a fact is not verified from the repo or from an explicit user instruction, mark it as `[UNVERIFIED]` instead of guessing.
+**Self-update protocol (§28):** After every verified/validated workflow, append an entry to the §27 Completed Workflow Log and update affected fact tables in the relevant sections. Only write facts confirmed by direct code inspection or successful command output.
 
 ---
 
-## 1. Non-Negotiable Agent Rules
+## §1 Non-Negotiable Rules
 
-### 1.1 Truth and Verification
+### 1.1 Truth
+- Never invent paths, scripts, APIs, env vars, test results, migrations, or deployment behavior.
+- Verify file existence with `find`/`rg` before referencing. Verify all call sites with `rg` before changing exported names.
+- If behavior is inferred from code (not docs), say so. If a command was not run, say so. If a command fails due to environment limits, report the exact failure — do not reframe as a code failure.
 
-- Do **not** invent paths, scripts, APIs, env vars, test results, migrations, or deployment behavior.
-- Before referencing a file, verify it with `rg --files`, `find`, or direct reads.
-- Before changing an interface or public contract, find all call sites with `rg`.
-- If behavior is inferred from code rather than documentation, state that it is an inference.
-- If a command was not run, say it was not run.
-- If a command fails due to environment limitations, report the exact failure and do not reframe it as a code failure.
-
-### 1.2 Scope Control
-
-- Make the smallest working change that satisfies the task.
-- Do not refactor unrelated modules while fixing a localized issue.
+### 1.2 Scope
+- Smallest working change only. No opportunistic refactors.
 - Do not delete files, rewrite history, rotate credentials, alter production schemas, or change auth/security posture unless explicitly requested.
-- Do not add runtime dependencies unless the performance, security, maintenance, and bundle-size tradeoff is stated.
-- Never log secrets or print full env values. Redact tokens, keys, cookies, JWTs, and webhook secrets.
+- Do not add runtime dependencies without stating the performance/security/bundle tradeoff.
+- Never log secrets or print full env values.
 
-### 1.3 Coding Standards
-
-- TypeScript must stay strict-compatible. Avoid `any`; use `unknown`, typed interfaces, or generics.
-- Never wrap imports in `try/catch` blocks.
-- Prefer explicit control flow over nested ternaries when readability suffers.
-- Prefer `globalThis` for portable browser/global access when feasible.
-- Keep non-obvious logic commented with one concise decision-point comment.
-- Use existing stack primitives before adding new abstractions.
-
----
-
-## 2. Verified Repo Identity
-
-APEX OmniHub is a proprietary Universal Sync Orchestrator / governed execution platform. The README describes the system as the coordination layer for OmniHub, OmniLink, and OmniPort and points contributors to the canonical architecture and project-status docs.
-
-Verified root metadata:
-
-| Fact | Verified source |
-| --- | --- |
-| Package name | `package.json` → `apex-omnihub` |
-| Package version | `package.json` → `1.6.0` |
-| Module type | `package.json` → `type: module` |
-| Node engine | `package.json` → `>=22 <25` |
-| Frontend toolchain | Vite + React SWC plugin in `vite.config.ts` |
-| React runtime | React 18 dependency in `package.json` |
-| Mobile wrapper | Capacitor config in `capacitor.config.ts`; Android app id `com.apexbusiness.omnilink` |
-| E2E runner | Playwright config in `playwright.config.ts` |
-| Unit/integration runner | Vitest config in `vitest.config.ts` |
-| Python lint target | Ruff config in `pyproject.toml` |
-
-Do not repeat old README snapshot counts as current facts unless you recalculate them. Some README statistics are dated snapshots and may drift.
+### 1.3 Code standards
+- TypeScript: strict-compatible. No `any` — use `unknown`, typed interfaces, or generics.
+- Never wrap imports in `try/catch`.
+- Prefer explicit control flow over nested ternaries.
+- Prefer `globalThis` for portable browser/global access.
+- Comments: one concise line for non-obvious WHY only. No what/how/caller comments.
+- Use existing stack primitives before adding abstractions.
 
 ---
 
-## 3. Canonical Documentation Map
+## §2 Verified Repo Identity
 
-Read these before architecture-level changes:
+| Fact | Value | Source |
+|---|---|---|
+| Package name | `apex-omnihub` | `package.json` |
+| Package version | `1.6.0` | `package.json` (pending changeset) |
+| Private | `true` | `package.json` |
+| Module type | `type: module` | `package.json` |
+| Node engine | `>=22 <25` | `package.json` |
+| Frontend toolchain | Vite + `@vitejs/plugin-react-swc` | `vite.config.ts` |
+| React runtime | React 18 | `package.json` |
+| Mobile wrapper | Capacitor — `com.apexbusiness.omnilink` / `OmniLink` | `capacitor.config.ts` |
+| E2E runner | Playwright | `playwright.config.ts` |
+| Unit/integration runner | Vitest | `vitest.config.ts` |
+| Python lint | Ruff, Python 3.11 target, line 88 | `pyproject.toml` |
+| Changeset access | `restricted` | `.changeset/config.json` |
+| Latest main commit | `a54bd7c` (2026-05-20) | git log |
+| Production URL | `https://apexomnihub.icu` | `.github/workflows/release.yml` env |
+| Cloudflare account ID | `0e1bce84773a0d1ce340145ea195e86f` | CI workflows (non-secret) |
 
-- `README.md` — high-level product overview and start-here links.
-- `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` — canonical architecture map.
-- `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` — production certification authority.
-- `docs/project-status/CI_STATUS_POLICY.md` — CI status policy.
-- `docs/testing/README.md` — testing documentation.
-- `docs/extensibility/PLUGIN_ARCHITECTURE.md` — plugin/extensibility architecture.
-- `docs/api/EDGE_FUNCTIONS_REFERENCE.md` — Supabase edge function reference.
-- `docs/api/API_EXTENSION_GUIDE.md` — API extension guidance.
-- `CONTRIBUTING.md` — contribution workflow.
-
-When editing docs, keep links and file pointers accurate. Prefer `npm run docs:check` for validation when feasible.
+Do not cite README snapshot counts as current — they drift. Recalculate if needed.
 
 ---
 
-## 4. Repository Topology
+## §3 Canonical Documentation Map
 
-Major verified directories:
+Read before architecture-level changes:
 
-| Path | Purpose / caution |
-| --- | --- |
-| `src/` | Root TypeScript entry, shared libraries, gateway/orchestration modules, contracts, components, integrations. |
-| `apps/omnihub-site/src/` | Main React app implementation consumed by root `src/App.tsx`. |
-| `apps/omnihub-site/dashboard/` | OmniDash shell/widgets; high-risk UI surface with test selectors and drag behavior. |
-| `tests/` | Vitest, Playwright, integration, infra, security, and domain test suites. |
-| `tests/e2e-playwright/` | Playwright E2E specs configured by `playwright.config.ts`. |
-| `supabase/functions/` | Supabase Edge Functions using Deno-style runtime patterns. |
-| `supabase/migrations/` | SQL migrations; treat schema edits as high-risk. |
-| `functions/api/` | API/function handlers outside Supabase function tree. |
-| `api/` | API middleware/routes used by serverless/function surfaces. |
-| `orchestrator/` | **Temporal Worker** — `main.py` is the worker lifecycle entrypoint; `server.py` is HTTP workflow dispatch. This is the canonical Python runtime. |
-| `services/orchestrator/` | **HTTP API layer** — FastAPI routes (`api/routes.py`) + deterministic FSM (`fsm.py`). Must not initialise Temporal Workers (enforced by CI guardrail). |
-| `omega/` | **APEX Resilience Protocol** — Human-in-the-loop verification engine (`engine.py`) and HTTP approval dashboard (`dashboard.py`). Not a Temporal service; runs independently. XSS-defended via markupsafe. Covered by pytest `--cov=../omega`. |
-| `apex-resilience/` | Resilience framework, scripts, and tests. |
-| `sim/`, `sandbox/` | Simulation and sandbox tooling. |
-| `android/`, `ios/` | Capacitor mobile shells. |
-| `packages/` | Package subtrees, including infrastructure and sales package areas. |
-| `docs/`, `reports/` | Architecture, status, audits, reports. |
-| `public/` | Static assets, PWA files, redirects, headers, manifest, service worker. |
+| File | Authority |
+|---|---|
+| `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` | Canonical architecture map |
+| `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` | Certification authority |
+| `docs/project-status/CI_STATUS_POLICY.md` | CI status interpretation |
+| `docs/DOCUMENTATION_RELEASE_INDEX.md` | Doc inventory + authority order |
+| `docs/infrastructure/CI_RUNTIME_GATES.md` | Quality gates (canonical CI reference) |
+| `docs/testing/README.md` | Test strategy |
+| `docs/extensibility/PLUGIN_ARCHITECTURE.md` | Plugin architecture |
+| `docs/api/EDGE_FUNCTIONS_REFERENCE.md` | Supabase edge function API |
+| `docs/api/API_EXTENSION_GUIDE.md` | REST/WebSocket extension |
+| `CONTRIBUTING.md` | Contribution workflow |
+| `docs/ops/OPS_RUNBOOKS_CI_GUARDRAILS.md` | CI guardrail remediation |
 
-**Similarly-named area disambiguation** — always verify the target path before editing:
+When editing docs: `npm run docs:check` validates links and code pointers.
+
+---
+
+## §4 Repository Topology
+
+### Major directories
+
+| Path | Runtime | Role / Caution |
+|---|---|---|
+| `src/` | TypeScript/Node | Shared libs, gateway, contracts, components, integrations |
+| `apps/omnihub-site/src/` | React 18 | Main app — consumed by root `src/App.tsx` |
+| `apps/omnihub-site/dashboard/` | React 18 | OmniDash shell/widgets — **high-risk**: test selectors + drag |
+| `tests/` | Vitest/Playwright | All test suites |
+| `tests/e2e-playwright/` | Playwright | E2E specs per `playwright.config.ts` |
+| `supabase/functions/` | Deno-like | Supabase Edge Functions |
+| `supabase/migrations/` | SQL | Schema migrations — **high-risk** |
+| `functions/api/` | Node | API handlers outside Supabase tree |
+| `api/` | Node | API middleware/routes |
+| `orchestrator/` | Python/Temporal | **Temporal Worker** — `main.py` = worker lifecycle, `server.py` = HTTP dispatch |
+| `services/orchestrator/` | Python/FastAPI | **HTTP API layer** — `api/routes.py` + `fsm.py`. Must NOT init Temporal workers |
+| `omega/` | Python/stdlib | **APEX Resilience Protocol** — `engine.py` + `dashboard.py`. XSS-guarded via markupsafe. Independent process. |
+| `apex-resilience/` | Python | Resilience framework, scripts, tests |
+| `sim/`, `sandbox/` | Mixed | Simulation + sandbox tooling |
+| `android/`, `ios/` | Capacitor | Mobile shells (generated) |
+| `packages/` | Mixed | Package subtrees incl. infrastructure, sales |
+| `terraform/environments/production/` | Terraform | IaC for production/shadow slot routing |
+| `public/` | Static | PWA assets, manifest, SW, redirects, headers |
+| `integration-harness/` | Node | Deterministic validator + CI harness |
+
+### Path disambiguation (critical — most common hallucination source)
 
 | Path | Runtime | Role |
-| --- | --- | --- |
+|---|---|---|
 | `orchestrator/` | Python / Temporal | Worker lifecycle + HTTP dispatch |
 | `services/orchestrator/` | Python / FastAPI | HTTP API + deterministic FSM |
-| `omega/` | Python / stdlib | Human-in-the-loop verification (independent) |
-| `src/core/orchestrator/` | TypeScript | Frontend/gateway contract types only |
+| `omega/` | Python / stdlib | Human-in-the-loop approval (independent) |
+| `src/core/orchestrator/` | TypeScript | Frontend/gateway contract types ONLY |
 | `src/omnihub-gateway/` | TypeScript / Node | Edge gateway, MCP client, routing |
 
 ---
 
-## 5. App Entry and Routing Facts
+## §5 App Entry and Routing
 
-Verified app entry chain:
+Chain (verified from source):
+1. `index.html` → Vite app
+2. `src/main.tsx` → React root, global styles, renders `src/App.tsx`
+3. `src/App.tsx` → re-exports `apps/omnihub-site/src/App.tsx`
+4. `apps/omnihub-site/src/App.tsx` → React Router routes, wraps OmniDash surface
+5. `apps/omnihub-site/dashboard/OmniDashShell.tsx` → post-auth shell
 
-1. `index.html` loads the Vite app.
-2. `src/main.tsx` creates the React root, imports global styles, and renders `src/App.tsx`.
-3. `src/App.tsx` re-exports `apps/omnihub-site/src/App.tsx`.
-4. `apps/omnihub-site/src/App.tsx` owns React Router routes and wraps the protected OmniDash surface.
-5. `apps/omnihub-site/dashboard/OmniDashShell.tsx` is the post-auth OmniDash shell.
-
-Routing invariant verified in `apps/omnihub-site/src/App.tsx`:
-
-- Pre-auth routes include landing, login/auth, legal, request access, and product/marketing pages.
-- Post-auth OmniDash is the protected app surface.
-- `ProtectedRoute` and `OmniDashProvider` are part of the authenticated flow.
-
-Do not create a second post-auth shell unless the task explicitly changes architecture.
+Pre-auth routes: landing, login/auth, legal, request access, product/marketing.
+Post-auth: OmniDash (guarded by `ProtectedRoute` + `OmniDashProvider`).
+Do not create a second post-auth shell unless architecture explicitly changes.
 
 ---
 
-## 6. Module Resolution and Alias Rules
+## §6 Module Resolution Aliases
 
-Verified TypeScript aliases in `tsconfig.json`:
+### TypeScript (`tsconfig.json`)
+| Alias | Resolves to |
+|---|---|
+| `@/dashboard/*` | `./apps/omnihub-site/dashboard/*` |
+| `@/*` | `./apps/omnihub-site/src/*` |
 
-```text
-@/dashboard/* -> ./apps/omnihub-site/dashboard/*
-@/*           -> ./apps/omnihub-site/src/*
-```
+### Vite (`vite.config.ts`)
+| Alias | Resolves to |
+|---|---|
+| `dashboard` | `./apps/omnihub-site/dashboard` |
+| `@/dashboard` | `./apps/omnihub-site/dashboard` |
+| `@` | `./apps/omnihub-site/src` |
 
-Verified Vite aliases in `vite.config.ts`:
-
-```text
-dashboard    -> ./apps/omnihub-site/dashboard
-@/dashboard  -> ./apps/omnihub-site/dashboard
-@            -> ./apps/omnihub-site/src
-```
-
-Operational guidance:
-
-- In the Vite app, `@/...` means `apps/omnihub-site/src/...`.
-- Use `@/dashboard/...` or `dashboard/...` for dashboard shell files.
-- Do not “fix” aliases by pointing everything at root `src/` without checking Vitest and app build behavior.
-- If changing aliases, validate `npm run typecheck`, `npm run test`, and targeted imports.
+In the Vite app, `@/...` means `apps/omnihub-site/src/...`. Do not re-point aliases to root `src/` without verifying Vitest + build behavior. If changing aliases: validate `npm run typecheck`, `npm run test`, and targeted imports.
 
 ---
 
-## 7. Package Manager and Lockfile Policy
+## §7 Package Manager and Lockfile Policy
 
-Verified lockfiles present:
+Lockfiles present: `package-lock.json`, `bun.lock`, `packages/infrastructure/bun.lock`.
+Scripts in root `package.json` are npm-compatible. Playwright web server: `npm run build && npm run preview`.
 
-- `package-lock.json`
-- `bun.lock`
-- `packages/infrastructure/bun.lock`
-
-Verified scripts are defined in root `package.json` and are npm-compatible. Existing configs also invoke npm directly, including Playwright web server command `npm run build && npm run preview`.
-
-Default guidance for agents in this repo:
-
-- Use `npm run <script>` for root package scripts unless the user explicitly requests Bun.
-- Do not run `npm install`, `bun install`, `pnpm install`, or `yarn install` just to make a task work.
+- **Default:** use `npm run <script>` unless user explicitly requests Bun.
+- Do not run any package-manager install command to make a task work.
 - Do not modify lockfiles unless dependency changes are the requested task.
-- If dependency installation is necessary, state why before changing lockfiles and verify both package and lockfile diffs.
+- If installation is necessary: state why, verify both package and lockfile diffs.
 
 ---
 
-## 8. Core Commands
+## §8 Core Commands
 
-Run commands from repo root unless noted.
+Run from repo root unless noted.
 
-### 8.1 Development and Build
-
+### Build / Dev
 ```bash
-npm run dev          # Vite dev server; configured port 8080
-npm run build        # Production build; runs prebuild first
-npm run build:dev    # Development-mode build
-npm run preview      # Vite preview; configured port 4173
-npm run build:seo    # Generate sitemap then build
+npm run dev           # Vite dev server — port 8080
+npm run build         # Production build (runs prebuild first)
+npm run build:dev     # Dev-mode build
+npm run preview       # Vite preview — port 4173
+npm run build:seo     # Sitemap then build
 ```
 
-### 8.2 Type, Lint, and Docs
-
+### Type / Lint / Docs
 ```bash
-npm run typecheck    # tsc -p tsconfig.json --noEmit
-npm run lint         # eslint .
-npm run check:react  # React singleton check
-npm run docs:check   # doc link and code-pointer checks
+npm run typecheck     # tsc -p tsconfig.json --noEmit
+npm run lint          # eslint .
+npm run check:react   # React singleton check
+npm run docs:check    # Broken link + code-pointer validation
 ```
 
-### 8.3 Tests
-
+### Tests
 ```bash
-npm run test                 # Vitest full suite
-npm run test:unit            # tests/lib
-npm run test:integration     # tests/integration
-npm run test:infra           # infrastructure tests
-npm run test:assets          # static asset smoke check
-npm run test:prompt-defense  # prompt-defense tests
-npm run test:e2e             # Playwright all configured projects
-npm run test:e2e:ci          # Playwright chromium project
-npm run test:e2e:install     # Install Playwright Chromium
+npm run test                  # Vitest full suite
+npm run test:unit             # tests/lib
+npm run test:integration      # tests/integration
+npm run test:infra            # infrastructure tests
+npm run test:assets           # static asset smoke
+npm run test:prompt-defense   # prompt-defense suite
+npm run test:e2e              # Playwright all projects
+npm run test:e2e:ci           # Playwright chromium only
+npm run test:e2e:install      # Install Playwright Chromium
 ```
 
-### 8.4 Python
-
+### Python
 ```bash
-npm run lint:py      # cd orchestrator && ruff check + format check
-npm run format:py    # cd orchestrator && ruff format
-npm run test:py      # cd orchestrator && pytest -q
-npm run ci:py        # lint:py + test:py
+npm run lint:py       # cd orchestrator && ruff check + format check
+npm run format:py     # cd orchestrator && ruff format
+npm run test:py       # cd orchestrator && pytest -q
+npm run ci:py         # lint:py + test:py
 ```
 
-### 8.5 Security, Ops, and Specialized Gates
-
+### Security / Ops / Gates
 ```bash
-npm run secret:scan          # secret scanner wrapper
-npm run security:audit       # npm audit JSON output to security/npm-audit-latest.json
-npm run smoke-test           # deployment smoke test script
-npm run guardian:status      # Guardian status check
-npm run omnilink:health      # OmniLink health check
-npm run zero-trust:baseline  # zero-trust baseline CLI
-npm run dr:test              # disaster recovery dry run
-npm run ci:runtime-gates     # check:react + assets + infra + e2e
+npm run secret:scan           # Secret scanner
+npm run security:audit        # npm audit → security/npm-audit-latest.json
+npm run smoke-test            # Deployment smoke test
+npm run guardian:status       # Guardian status
+npm run omnilink:health       # OmniLink health check
+npm run zero-trust:baseline   # Zero-trust baseline CLI
+npm run dr:test               # Disaster recovery dry run
+npm run ci:runtime-gates      # check:react + assets + infra + e2e
 ```
 
-Only claim a gate passed if you ran it and saw a passing exit code.
+Only claim a gate passed if you ran it and saw exit code 0.
 
 ---
 
-## 9. Environment Variables and Secret Handling
+## §9 Environment Variables
 
-### 9.1 Public Browser Supabase Variables
+### Public browser (VITE_* — exposed by Vite, treat as public-only)
+| Name | Fallback name |
+|---|---|
+| `VITE_SUPABASE_URL` | `SUPABASE_URL` |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | `SUPABASE_PUBLISHABLE_KEY` |
+| `VITE_SUPABASE_ANON_KEY` | `SUPABASE_ANON_KEY` |
 
-Verified public browser config names:
+`scripts/check-env-root.mjs` validates presence before build (logs names only, never values).
+`vite.config.ts` exposes only browser-safe Supabase vars + `VITE_IS_CI`.
 
-```text
-VITE_SUPABASE_URL
-VITE_SUPABASE_PUBLISHABLE_KEY
-VITE_SUPABASE_ANON_KEY
+### Server/admin (never expose to browser or `import.meta.env`)
 ```
-
-Verified fallback names used by build/test helpers:
-
-```text
-SUPABASE_URL
-SUPABASE_PUBLISHABLE_KEY
-SUPABASE_ANON_KEY
-```
-
-Operational rules:
-
-- `VITE_*` values are browser-exposed by Vite. Treat them as public-only.
-- Never expose `SUPABASE_SERVICE_ROLE_KEY`, JWT secrets, Stripe secrets, webhook secrets, private keys, or admin tokens through `import.meta.env` or frontend code.
-- `scripts/check-env-root.mjs` validates Supabase env availability before build and logs only source names, not values.
-- `vite.config.ts` uses `loadEnv` and `define` to expose only browser-safe Supabase variables and `VITE_IS_CI`.
-
-### 9.2 Server/Admin Variables
-
-Server-side modules may reference variables such as:
-
-```text
 SUPABASE_SERVICE_ROLE_KEY
 SUPABASE_JWT_SECRET
 ```
 
-These are not browser-safe. If a task touches server/admin env handling, verify runtime context first.
+### CI secrets (GitHub Actions only — never commit or log)
+```
+CLOUDFLARE_API_TOKEN
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+VITE_SUPABASE_PUBLISHABLE_KEY
+TF_TOKEN
+```
 
 ---
 
-## 10. Supabase and Auth Architecture
+## §10 Supabase and Auth
 
-Verified frontend Supabase client:
+Verified frontend client: `apps/omnihub-site/src/lib/supabase.ts`
+- `@supabase/supabase-js` `createClient`
+- Prefers `VITE_SUPABASE_PUBLISHABLE_KEY`; falls back to `VITE_SUPABASE_ANON_KEY`
+- PKCE auth flow; browser localStorage when `globalThis.window` exists
 
-- `apps/omnihub-site/src/lib/supabase.ts`
-- Uses `@supabase/supabase-js` `createClient`.
-- Prefers `VITE_SUPABASE_PUBLISHABLE_KEY`, falls back to `VITE_SUPABASE_ANON_KEY`.
-- Uses PKCE auth flow and browser localStorage when `globalThis.window` exists.
+Auth context: `src/contexts/AuthContext.tsx` — checks Supabase URL + browser-safe key envs.
 
-Verified auth context references:
-
-- `src/contexts/AuthContext.tsx` checks Supabase URL and browser-safe key envs.
-- Login UI surfaces missing browser config guidance.
-
-E2E auth helper:
-
-- `tests/e2e-playwright/helpers/auth.ts` creates a real Supabase session by using provided email/password credentials or anonymous sign-in.
-- It seeds Supabase-compatible auth state into `globalThis.localStorage` via Playwright `page.addInitScript`.
-- It skips when Supabase config is absent or unreachable from the test runner.
+E2E auth helper: `tests/e2e-playwright/helpers/auth.ts`
+- Creates real Supabase session via email/password or anonymous sign-in
+- Seeds auth state into `globalThis.localStorage` via `page.addInitScript`
+- Skips when Supabase config absent or unreachable
 
 Do not replace real auth flows with fake tokens unless explicitly testing a mocked unit boundary.
 
 ---
 
-## 11. Vite Build and Bundle Invariants
+## §11 Vite Build and Bundle Invariants
 
-Verified `vite.config.ts` behavior:
+Verified `vite.config.ts`:
+- Dev server: host `::`, port `8080`
+- Preview: port `4173`
+- `envPrefix: 'VITE_'`
+- Build target: `es2020`
+- Minification: `terser` with console/debugger removal
+- React dedupe: `react`, `react-dom`
+- Manual chunks: React, Web3, Radix UI, Supabase, charting, motion, i18n
+- Node-only packages externalized from browser bundle
 
-- React plugin: `@vitejs/plugin-react-swc`.
-- Dev server host: `::`; port: `8080`.
-- Preview port: `4173`.
-- `envPrefix: 'VITE_'`.
-- React dedupe includes `react` and `react-dom`.
-- Build target is `es2020`.
-- Production minification uses `terser` with console/debugger removal.
-- Manual chunks split React, Web3, Radix UI, Supabase, charting, motion, and i18n dependencies.
-- Some Node-only packages are externalized from the browser bundle.
-
-Bundle safety rules:
-
-- Keep Node-only packages out of browser paths unless Vite externalization/polyfill behavior is verified.
-- Do not import server-only modules into React components.
-- If changing chunking or externals, run `npm run build` and inspect warnings.
+Rules: keep Node-only packages out of browser paths. Do not import server-only modules into React components. If changing chunking/externals: run `npm run build` and inspect warnings.
 
 ---
 
-## 12. Testing Strategy and Known Constraints
+## §12 Testing Strategy
 
-### 12.1 Vitest
+### Vitest
+- Targeted specs for localized changes + `npm run typecheck`
+- Shared lib / contract changes: narrow target + typecheck
+- React component changes: include relevant component tests
 
-- Use targeted Vitest specs for localized changes where possible.
-- For shared library or contract changes, run the narrow target plus `npm run typecheck`.
-- If changing React components, include relevant component tests when present.
+### Playwright (`playwright.config.ts`)
+- Test dir: `tests/e2e-playwright`
+- Base URL: `BASE_URL` env or `http://localhost:4173`
+- Web server: `npm run build && npm run preview`
+- CI: `chromium`, `mobile-chrome`; Local also: Firefox, mobile Safari, iPad
+- Traces: first retry; screenshots: failure only
 
-### 12.2 Playwright
+Rules:
+- Missing browser binaries: `npm run test:e2e:install` (not a code failure)
+- Authenticated E2E: use `tests/e2e-playwright/helpers/auth.ts` unless testing login UI
+- Selectors: role/name or `data-testid`; no brittle CSS chains
 
-Verified `playwright.config.ts`:
-
-- Test dir: `tests/e2e-playwright`.
-- Base URL: `BASE_URL` or `http://localhost:4173`.
-- Local web server command: `npm run build && npm run preview`.
-- CI projects: `chromium` and `mobile-chrome`; local projects include Firefox, mobile Safari, and iPad.
-- Traces are on first retry; screenshots only on failure.
-
-Operational rules:
-
-- If Playwright browser binaries are missing, run or recommend `npm run test:e2e:install` rather than misdiagnosing test code.
-- Authenticated E2E specs should use `tests/e2e-playwright/helpers/auth.ts` unless the test specifically exercises login UI.
-- Stable selectors should use role/name or `data-testid`; avoid brittle CSS chains.
-
-### 12.3 Environment-Limited Test Runs
-
-When a command fails because browsers, services, network, or credentials are unavailable:
-
-1. Capture the exact command.
-2. Capture the exact blocker.
-3. Mark the result as an environment limitation, not a code failure.
-4. Do not claim the covered behavior passed.
+### Environment-limited failures
+Capture exact command + exact blocker. Mark as environment limitation. Do not claim behavior passed.
 
 ---
 
-## 13. ESLint, SonarQube, and Maintainability Rules
+## §13 ESLint and SonarCloud
 
-Verified ESLint highlights:
+ESLint enforced:
+- `@typescript-eslint/no-explicit-any` → error
+- `no-console` → warning (exceptions: scripts/tests/infra files)
+- React hooks rules enabled
+- OmniDash app names restricted in dashboard surfaces — use contracts
+- `OmniDashShell.tsx` must consume sidebar widget contracts (not local NAV maps)
 
-- `@typescript-eslint/no-explicit-any` is an error for TypeScript files.
-- `no-console` is a warning generally, with targeted exceptions for scripts/tests/infrastructure files.
-- React hooks recommended rules are enabled.
-- OmniDash app names are restricted in specific dashboard surfaces; use contracts instead of hardcoded names.
-- `OmniDashShell.tsx` must consume sidebar widget contracts rather than local NAV maps.
-
-SonarQube/SonarCloud guidance:
-
-- Prefer explicit statements over nested ternaries for multi-branch selection.
-- Prefer portable globals (`globalThis`) where applicable.
-- Keep code smells fixed in touched areas; do not silence rules without documented justification.
-- Check `sonar-project.properties` before modifying coverage/exclusion behavior.
+SonarCloud rules:
+- Explicit statements over nested ternaries
+- Prefer `globalThis` for portability
+- No `${{ github.event.* }}` in `run:` blocks — use `env:` vars to prevent script injection
+- Check `sonar-project.properties` before modifying coverage/exclusion
 
 ---
 
-## 14. OmniDash and Dashboard Guardrails
+## §14 OmniDash and Dashboard Guardrails
 
-High-risk files and concepts:
-
+High-risk files:
 - `apps/omnihub-site/dashboard/OmniDashShell.tsx`
 - `apps/omnihub-site/dashboard/DraggableWidget.tsx`
 - `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`
 - `src/contracts/omnidash.contract.ts`
 
 Rules:
-
-- Do not hardcode OmniDash app/module names in restricted dashboard surfaces; use existing contracts.
-- Preserve `data-testid` attributes used by Playwright/Vitest unless tests are updated in the same change.
-- Drag behavior in `DraggableWidget` uses threshold and localStorage persistence. Changes should include pointer/drag test coverage when feasible.
-- Post-auth interactions should remain inside OmniDash/modals/PiP unless the route architecture is intentionally changed.
+- Never hardcode OmniDash app/module names in restricted dashboard surfaces — use existing contracts
+- Preserve `data-testid` attributes unless tests updated in same change
+- `DraggableWidget`: threshold + localStorage persistence — changes need pointer/drag test coverage
+- Post-auth interactions stay inside OmniDash/modals/PiP unless architecture explicitly changes
 
 ---
 
-## 15. Supabase Edge Functions and Serverless Code
+## §15 Supabase Edge Functions and Serverless
 
-Verified function areas:
-
-- `supabase/functions/*` — Supabase Edge Functions.
-- `functions/api/*` — API function handlers.
-- `api/*` — API middleware/routes.
+Areas:
+- `supabase/functions/*` — Supabase Edge Functions (Deno-like runtime)
+- `functions/api/*` — API handlers (outside Supabase tree)
+- `api/*` — API middleware/routes
 
 Rules:
-
-- Supabase Edge Functions may run in Deno-like environments; do not assume Node APIs are available.
-- Cloudflare/Workers-style code may rely on Web Crypto and web-standard `fetch`/`Request`/`Response`.
-- Do not use Node `Buffer`, filesystem, or process APIs in edge/runtime code unless the target runtime supports them and tests prove it.
+- Edge Functions: do not assume Node APIs. Web Crypto + web-standard `fetch`/`Request`/`Response` only.
+- No Node `Buffer`, filesystem, or `process` APIs in edge/runtime code.
 - Keep CORS and auth checks explicit.
-- Never weaken webhook signature verification or JWT validation to make tests pass.
+- Never weaken webhook signature verification or JWT validation to pass tests.
 
 ---
 
-## 16. Database, Migrations, and RLS
+## §16 Database, Migrations, and RLS
 
-Migration directories:
-
-- `supabase/migrations/`
-- `supabase/migrations/rollback/`
+Migration dirs: `supabase/migrations/`, `supabase/migrations/rollback/`
 
 Rules:
-
-- Treat migration changes as high-risk.
-- Verify existing table/policy/function names with `rg` before authoring SQL.
-- Keep migrations additive when possible.
-- Do not drop tables, columns, policies, or indexes without an explicit rollback strategy and user approval.
-- For RLS changes, run or recommend security/RLS posture checks where applicable, such as `scripts/security/check_rls_posture.sh` if relevant.
+- Migration changes = high-risk. Verify existing table/policy/function names with `rg` first.
+- Keep migrations additive. No drops without explicit rollback strategy + user approval.
+- RLS changes: run `scripts/security/check_rls_posture.sh` where applicable.
 
 ---
 
-## 17. Python and Orchestrator Areas
+## §17 Python and Orchestrator
 
-Verified Python config:
-
-- `pyproject.toml` configures Ruff with Python 3.11 target and line length 88.
-- Root package scripts run Python checks inside `orchestrator/`.
+Config: Ruff, Python 3.11 target, line length 88 (`pyproject.toml`). Scripts run checks inside `orchestrator/`.
 
 Rules:
-
-- Do not assume `orchestrator/`, `services/orchestrator/`, and `src/core/orchestrator/` are the same runtime.
-- Use Ruff for lint/format consistency.
-- Keep security-sensitive code explicit; avoid broad exception swallowing.
-- If a Python command fails because `orchestrator/` dependencies are missing, report the missing dependency/environment issue.
+- The five Python areas are distinct runtimes — never conflate (see §4 disambiguation table).
+- Use Ruff for lint/format.
+- No broad exception swallowing in security-sensitive code.
+- Missing `orchestrator/` deps → report missing dep, not a code failure.
 
 ---
 
-## 18. Mobile / Capacitor
+## §18 Mobile / Capacitor
 
-Verified `capacitor.config.ts`:
-
-- `appId`: `com.apexbusiness.omnilink`
-- `appName`: `OmniLink`
-- `webDir`: `dist`
-- Push notification presentation options: badge, sound, alert.
+`capacitor.config.ts`: `appId=com.apexbusiness.omnilink`, `appName=OmniLink`, `webDir=dist`, push: badge/sound/alert.
 
 Rules:
-
-- Web changes affecting mobile must still build into `dist` before Capacitor sync/build.
-- Do not edit generated Android/iOS artifacts unless the mobile task requires it.
-- If changing PWA/static assets, check `public/manifest.webmanifest`, icons, `public/sw.js`, redirects, and headers as relevant.
-
----
-
-## 19. Security and Compliance Guardrails
-
-Never commit or expose:
-
-- Service-role keys.
-- Private keys or mnemonics.
-- JWT signing secrets.
-- Stripe/webhook secrets.
-- OAuth client secrets.
-- Raw production customer data.
-
-Before committing, consider running:
-
-```bash
-npm run secret:scan
-```
-
-For security-sensitive changes:
-
-- Prefer deny-by-default behavior.
-- Preserve audit trails and error context without leaking sensitive data.
-- Do not bypass auth, RLS, CORS, CSP, rate limits, or signature checks without explicit authorization.
-- Document any accepted risk in the relevant security/audit docs.
+- Web changes affecting mobile: must build into `dist` before Capacitor sync/build.
+- Do not edit generated Android/iOS artifacts unless mobile task requires it.
+- PWA/static asset changes: check `public/manifest.webmanifest`, icons, `public/sw.js`, redirects, headers.
 
 ---
 
-## 20. Git and PR Workflow for Agents
+## §19 Security and Compliance Guardrails
 
-Before edits:
+Never commit or expose: service-role keys, private keys/mnemonics, JWT secrets, Stripe/webhook secrets, OAuth client secrets, raw production customer data.
 
-```bash
-git status --short --branch
-```
+Pre-commit: `npm run secret:scan`
 
-During edits:
-
-- Keep diffs focused.
-- Do not overwrite user changes.
-- If unexpected modified files exist, inspect before touching them.
-- Commit only files related to the requested task.
-
-Commit guidance:
-
-- Existing commitlint allows conventional commits and ignores non-conventional first lines, but prefer clear conventional commits unless instructed otherwise.
-- If a user provides an exact commit message, use it exactly.
-- If the environment has no git remote, commit locally and report that push cannot be completed from this checkout.
-
-After edits:
-
-```bash
-git diff --check
-git status --short --branch
-```
-
-Run the smallest relevant validation suite and report all commands exactly.
+Security-sensitive changes:
+- Deny-by-default behavior
+- Preserve audit trails without leaking sensitive data
+- Do not bypass auth, RLS, CORS, CSP, rate limits, or signature checks without explicit authorization
+- Document accepted risk in `docs/security/SECURITY_ADVISORIES.md`
 
 ---
 
-## 21. Response Contract for Claude/Agents
+## §20 Git and PR Workflow
 
-For code changes, final responses should include:
+Pre-edit: `git status --short --branch`
+Post-edit: `git diff --check && git status --short --branch`
 
-1. **Diagnosis** — what was wrong or missing.
-2. **Solution** — what changed and why.
-3. **Code** — key files changed, with paths.
-4. **Verification** — exact commands and pass/fail/environment-limited status.
-5. **Next Action** — one explicit action.
+Commit rules:
+- Focused diffs only. Commit only task-related files.
+- Conventional commits preferred. Use exact message if user provides one.
+- No `--no-verify`, no `--amend` to fix hook failures (create new commit).
+- No force-push to main.
 
-Never state that tests passed unless they were executed successfully.
-
----
-
-## 22. Hallucination Prevention Checklist
-
-Before answering or editing, ask:
-
-- Did I verify the file path exists?
-- Did I inspect the relevant config instead of relying on memory?
-- Did I search for call sites before changing exported names or contracts?
-- Did I avoid claiming current status from stale dated docs?
-- Did I avoid exposing secrets or creating browser access to server-only env vars?
-- Did I run the relevant validation, or clearly state why I could not?
-- Did I keep the patch within scope?
-
-If any answer is “no,” stop and verify before proceeding.
+PR rules:
+- After push: always create a draft PR if none exists.
+- Stage specific files (not `git add .` or `git add -A`) to avoid accidental secret/binary inclusion.
 
 ---
 
-## 23. Fast Triage Recipes
+## §21 Response Contract
+
+For code changes:
+1. **Diagnosis** — what was wrong or missing
+2. **Solution** — what changed and why
+3. **Code** — key files changed with paths
+4. **Verification** — exact commands + pass/fail/env-limited status
+5. **Next Action** — one explicit action
+
+Never claim tests passed unless exit code 0 was observed.
+
+---
+
+## §22 Hallucination Prevention Checklist
+
+Before acting, confirm:
+- [ ] File path verified to exist?
+- [ ] Config inspected (not recalled from memory)?
+- [ ] Call sites searched before changing exported names?
+- [ ] Not citing status from stale dated docs?
+- [ ] No secrets or server env vars exposed to browser?
+- [ ] Validation run (or explicitly stated why not)?
+- [ ] Patch within scope?
+
+If any is "no" — stop and verify first.
+
+---
+
+## §23 Fast Triage Recipes
 
 ### Build failure after env changes
-
-1. Inspect `scripts/check-env-root.mjs`.
-2. Inspect `vite.config.ts` `loadEnv` and `define` blocks.
-3. Inspect `apps/omnihub-site/src/lib/supabase.ts`.
-4. Run `npm run typecheck`.
-5. Run `npm run build` if environment permits.
+1. `scripts/check-env-root.mjs`
+2. `vite.config.ts` → `loadEnv` + `define` blocks
+3. `apps/omnihub-site/src/lib/supabase.ts`
+4. `npm run typecheck`
+5. `npm run build` (if env permits)
 
 ### Authenticated E2E failure
-
-1. Inspect `tests/e2e-playwright/helpers/auth.ts`.
-2. Confirm `VITE_SUPABASE_URL`/`SUPABASE_URL` and browser-safe key env vars exist.
-3. Confirm Playwright browsers are installed with `npm run test:e2e:install` if launch fails.
-4. Run the specific spec with `CI=1 npx playwright test <spec> --project=chromium`.
+1. `tests/e2e-playwright/helpers/auth.ts`
+2. Confirm `VITE_SUPABASE_URL` + browser-safe key vars exist
+3. `npm run test:e2e:install` if browser launch fails
+4. `CI=1 npx playwright test <spec> --project=chromium`
 
 ### OmniDash selector/test failure
-
-1. Inspect the component for role/name or `data-testid` selectors.
-2. Inspect related contracts before hardcoding module names.
-3. Prefer accessible selectors first, `data-testid` second.
-4. Update tests and component in the same patch if selector contract intentionally changes.
+1. Component: check role/name or `data-testid` selectors
+2. Read related contracts before hardcoding module names
+3. Update tests + component in same patch if selector contract changes
 
 ### React duplicate/context failure
-
-1. Run `npm run check:react`.
-2. Inspect Vite/Vitest alias and dedupe config.
-3. Do not add nested React dependencies or import React from app-local `node_modules`.
+1. `npm run check:react`
+2. Check Vite/Vitest alias + dedupe config
+3. Do not add nested React deps or import React from app-local `node_modules`
 
 ### Docs pointer failure
+1. `npm run docs:check`
+2. Fix broken paths or stale anchors
+3. Do not remove doc checks to make CI pass
 
-1. Run `npm run docs:check`.
-2. Fix broken file paths or stale anchors.
-3. Do not remove doc checks to make CI pass.
+### SonarCloud script injection failure
+Symptom: E Security Rating on new code for `run:` block using `${{ github.event.* }}`.
+Fix: Move the expression to `env:` block; reference as `$ENV_VAR_NAME` in shell.
+Alternative: Read from git directly (`git log -1 --format="%s"`) instead of event payload.
+
+### Release workflow not triggering shadow deploy
+Symptom: `release_cut=false` on a version PR merge.
+Check: `git log -1 --format="%s"` on the merge commit — must contain `"chore: version packages"`.
+Check: `steps.changesets.outputs.published` — should be `'true'` for public repos.
+See: `.github/workflows/release.yml` → `release_signal` step.
 
 ---
 
-## 24. Current Known Environment Notes
+## §24 Environment Notes (Operational, Non-Permanent)
 
-These are operational notes for agent sessions, not permanent product facts:
+- Repository may be checked out without a git remote in some automation environments. Verify with `git remote -v` before claiming a push.
+- Playwright tests may fail if browser binaries missing. Install: `npm run test:e2e:install`.
+- Network-dependent Supabase tests may skip/fail if Auth is unreachable from runner.
+- CI ECONNRESET on `npm ci` / `bun install`: transient GitHub Actions network failure — push a retrigger commit.
 
-- This repository may be checked out without a configured git remote in some automation environments. Verify with `git remote -v` before claiming a push.
-- Playwright tests may fail to launch if browser binaries are missing. The intended install command is `npm run test:e2e:install`.
-- Network-dependent Supabase tests may skip or fail if Supabase Auth is unreachable from the runner.
+---
 
-Keep this section updated when environment assumptions change.
+## §25 Release Workflow Architecture
+
+**File:** `.github/workflows/release.yml` — triggers on `push` to `main`.
+
+### Changesets and private-package detection
+
+`changesets/action` creates a version PR (`chore: version packages`) or publishes. For `"private": true` repos, `published` is always `'false'` — npm publish is a no-op.
+
+**`release_signal` step** (id: `release_signal`) decouples shadow deployment from npm publish:
+```yaml
+env:
+  CHANGESETS_PUBLISHED: ${{ steps.changesets.outputs.published }}
+run: |
+  if [ "$CHANGESETS_PUBLISHED" = "true" ]; then
+    echo "release_cut=true" >> "$GITHUB_OUTPUT"
+  elif git log -1 --format="%s" | grep -qF "chore: version packages"; then
+    echo "release_cut=true" >> "$GITHUB_OUTPUT"
+  else
+    echo "release_cut=false" >> "$GITHUB_OUTPUT"
+  fi
+```
+Note: reads commit subject via `git log` (not `github.event.head_commit.message`) to prevent script injection.
+
+All 5 shadow deployment gates use `steps.release_signal.outputs.release_cut == 'true'`.
+
+### Release evidence
+`scripts/ci/write-release-evidence.mjs` writes `release-evidence.json`. Key env vars: `RELEASE_CUT_RAW`, `PUBLISHED_RAW`, `SHADOW_URL_RAW`, `HEALTH_RAW`, `VALIDATOR_RAW`, `TF_RESULT_RAW`, `TF_OUTCOME_RAW`.
+
+**Verdict enum:**
+| Value | Meaning |
+|---|---|
+| `CERTIFIED` | Release cut + shadow health + validator + terraform all pass |
+| `CERTIFICATION_PENDING_FINAL_MAIN_CI` | Gates pass; terraform skipped |
+| `NOT_CERTIFIED_NO_RELEASE_CUT` | `release_cut != 'true'` (non-release push) |
+| `NOT_CERTIFIED_BLOCKED` | Release cut but a gate failed |
+
+### Shadow certification sequence
+`release_cut=true` → `shadow_preflight` (pass required) → shadow deploy to `apex-omnihub-shadow` → `/health` poll (10×10s) → `deterministic-validator.mjs` → Terraform plan → `production-shadow` env reviewer approves → Terraform apply → `write-release-evidence.mjs`.
+
+---
+
+## §26 Cloudflare and Shadow Deployment Facts
+
+| Key | Value |
+|---|---|
+| Production CF Pages project | `apex-omnihub` |
+| Production URL | `https://apexomnihub.icu` |
+| Shadow CF Pages project | `apex-omnihub-shadow` |
+| Shadow health URL | `https://apex-omnihub-shadow.pages.dev/health` |
+| CF account ID | `0e1bce84773a0d1ce340145ea195e86f` (non-secret) |
+| GitHub Environment | `production-shadow` (required-reviewer protection) |
+| Terraform path | `terraform/environments/production/` |
+
+Required GitHub secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `TF_TOKEN`.
+Required GitHub vars: `CLOUDFLARE_SHADOW_PROJECT_NAME=apex-omnihub-shadow`, `ENABLE_SHADOW_DEPLOYMENT=true`, `ENABLE_ATOMIC_ROUTING_FLIP=true`, `SHADOW_HEALTH_URL=https://apex-omnihub-shadow.pages.dev/health`.
+
+Shadow preflight: `scripts/ci/shadow-certification-preflight.mjs` — writes `shadow-preflight.json`.
+Evidence artifact: `release-evidence.json` + `shadow-preflight.json` (retained 90 days).
+
+Cert blockers (as of 2026-05-20):
+- B-1 RESOLVED 2026-05-20 — shadow slot provisioned, all secrets/vars set
+- B-2 STRUCTURAL FIX MERGED 2026-05-20 (PR #1185, `a54bd7c`) — evidence pending changesets version PR
+- B-3 RESOLVED 2026-05-20 — `production-shadow` GitHub Environment created
+
+---
+
+## §27 Completed Workflow Log
+
+Append an entry here after every agent-completed, verified workflow. Format: `YYYY-MM-DD | PR# / commit | Description | Key changed files`.
+
+| Date | Ref | Description | Key files |
+|---|---|---|---|
+| 2026-05-20 | PR #1184 / `2310ed0` | Shadow slot provisioned, coverage floors raised, omega/orchestrator topology canonicalised, docs audited | `.github/workflows/release.yml`, `vitest.config.ts`, `omega/`, `services/orchestrator/`, docs/ |
+| 2026-05-20 | commit `16c1425` | 8 stale docs permanently deleted (CHANGELOG logged first): `CICD_PIPELINE_DESIGN.md`, `DEPLOYMENT_ROLLOUT_PLAN.md`, `PRODUCTION_ROLLOUT_PLAN.md`, `APEX_ECOSYSTEM_STATUS.md`, `PRODUCTION_STATUS.md` + 3 archive copies | `docs/infrastructure/`, `docs/project-status/`, `docs/archive/`, `CHANGELOG.md` |
+| 2026-05-20 | PR #1185 / `a54bd7c` | B-2 structural fix: decouple shadow deployment from npm publish for private packages; SonarCloud script injection fix | `.github/workflows/release.yml`, `scripts/ci/write-release-evidence.mjs` |
+| 2026-05-20 | PR #1187 / `191e547` | Certification status updated: B-2 structural fix documented, path-to-certified updated | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` |
+
+---
+
+## §28 CLAUDE.md Self-Update Protocol
+
+**When to update this file:**
+- After a PR merges that changes repo structure, commands, env vars, paths, or CI behavior
+- After new secrets/variables are set in GitHub (record names only, never values)
+- After certification state changes (B-1/B-2/B-3 in §26)
+- After new architectural facts are verified from source (not from docs)
+
+**How to update:**
+1. Add a row to §27 Completed Workflow Log
+2. Update the affected fact table in the relevant section
+3. Update `Last verified:` date and `main @` commit in the header
+4. Commit with message: `docs(claude): update agent operating context [YYYY-MM-DD]`
+5. Do NOT add speculative or unverified facts — mark anything uncertain as `[UNVERIFIED]`
+
+**What NOT to add:**
+- Contents of other docs (link to them instead)
+- Operational decisions that belong in CHANGELOG or PR descriptions
+- Facts that may change frequently (PR numbers, CI run IDs)
+- Hallucinated command options or file paths
