@@ -6,7 +6,7 @@
 
 | Fact | Current repo evidence |
 |---|---|
-| Documentation files under `docs/` | 158 Markdown files (8 stale documents permanently deleted in 2026-05-20 audit pass — see CHANGELOG.md [Unreleased]) |
+| Documentation files under `docs/` | 161 Markdown files (8 stale documents permanently deleted in 2026-05-20 audit pass — see CHANGELOG.md [Unreleased]; 1 new audit report added 2026-05-20) |
 | GitHub workflow files | 21 files in `.github/workflows/` |
 | Release/package versions | `CHANGELOG.md` latest release line is `1.6.3`; `package.json` declares `1.6.0` (v1.6.1 pending PR #1184) |
 | Canonical package manager | `bun.lock` is present; `package-lock.json` is retained for npm audit parity |
@@ -100,6 +100,7 @@
 - `docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_07.md`
 - `docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_08.md`
 - `docs/audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md`
+- `docs/audits/TECH_DEBT_AUDIT_2026_05_20.md` — Full repo tech debt audit performed 2026-05-20; 6 issues fixed.
 - `docs/audits/VOICE_FORTRESS_TELEMETRY_AUDIT.md`
 - `docs/DRIFT_AUDIT_2026_05_12.md`
 - `docs/DRIFT_REMEDIATION_REPORT_2026_05_12.md`
@@ -133,7 +134,7 @@
 - `docs/api/` — 2 Markdown file(s): `API_EXTENSION_GUIDE.md`, `EDGE_FUNCTIONS_REFERENCE.md`
 - `docs/architecture/` — 12 Markdown file(s): `ARCHITECTURE_CANONICAL_MAP.md`, `BOUNDED_CONTEXT_MAP.md`, `CANONICAL_TRUTH.md`, `CANONICAL_TRUTH_MATRIX.md`, `DETAILED_SYSTEM_DESIGN.md`, `DOC_RECONCILIATION_MATRIX.md`, `EXECUTIVE_ARCHITECTURE_SUMMARY.md`, `GENERAL_TECH_SPECS.md`, `LIB_DIRECTORY_POLICY.md`, `MAN_MODE_WORKFLOW_DIAGRAMS.md`, `OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md`, `frontend-map.md`
 - `docs/archive/legacy-runbooks/` — 4 Markdown file(s): `CI_RUNTIME_GATES_legacy.md`, `MIGRATION_RUNBOOK_legacy.md`, `OPS_RUNBOOK_legacy_2026-01-25.md`, `PRODUCTION_DEPLOYMENT_GUIDE_legacy.md` _(pre-existing legacy archive — not modified in 2026-05-20 pass)_
-- `docs/audits/` — 17 Markdown file(s): `ANNOTATED_PR_TRIAGE_2026_05_06.md`, `AOID_RELEASE_READINESS_REPORT_4-4-2026.md`, `APEX_RELEASE_READINESS_REPORT.md`, `ARMAGEDDON_TEST_SUITE_REPORT.md`, `DOCUMENTATION_AUDIT_2026-05-15.md`, `FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md`, `M-04_OMNIHUB_19_POINT_AUDIT_2026-05-06.md`, `OMNIDASH_BUILD_AUDIT_2026_03_21.md`, `PRODUCTION_CERTIFICATION_EVIDENCE_2026-05-13.md`, `PRODUCTION_CERTIFICATION_PREFLIGHT_2026-05-13.md`, `RUNTIME_REMEDIATION_CALL_GRAPH.md`, `RUNTIME_REMEDIATION_RESULTS.md`, `SUPABASE_SECURITY_AUDIT_2026_05_04.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_07.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_08.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_09.md`, `VOICE_FORTRESS_TELEMETRY_AUDIT.md`
+- `docs/audits/` — 18 Markdown file(s): `ANNOTATED_PR_TRIAGE_2026_05_06.md`, `AOID_RELEASE_READINESS_REPORT_4-4-2026.md`, `APEX_RELEASE_READINESS_REPORT.md`, `ARMAGEDDON_TEST_SUITE_REPORT.md`, `DOCUMENTATION_AUDIT_2026-05-15.md`, `FULL_CODE_AUDIT_AND_VALUATION_2026_03_06.md`, `M-04_OMNIHUB_19_POINT_AUDIT_2026-05-06.md`, `OMNIDASH_BUILD_AUDIT_2026_03_21.md`, `PRODUCTION_CERTIFICATION_EVIDENCE_2026-05-13.md`, `PRODUCTION_CERTIFICATION_PREFLIGHT_2026-05-13.md`, `RUNTIME_REMEDIATION_CALL_GRAPH.md`, `RUNTIME_REMEDIATION_RESULTS.md`, `SUPABASE_SECURITY_AUDIT_2026_05_04.md`, `TECH_DEBT_AUDIT_2026_05_20.md` _(NEW 2026-05-20)_, `THIRD_PARTY_CODE_AUDIT_2026_03_07.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_08.md`, `THIRD_PARTY_CODE_AUDIT_2026_03_09.md`, `VOICE_FORTRESS_TELEMETRY_AUDIT.md`
 - `docs/capabilities/` — 6 Markdown file(s): `fortress-protocol.md`, `maestro.md`, `man-mode.md`, `omniport.md`, `orchestrator.md`, `tri-force-protocol.md`
 - `docs/ci/` — 1 Markdown file(s): `CHAOS_CI_FIX.md`
 - `docs/compliance/` — 9 Markdown file(s): `DATA_RETENTION_POLICY.md`, `EVIDENCE_CHECKLIST.md`, `GDPR_COMPLIANCE.md`, `GDPR_WORKFLOWS.md`, `OMNILINK_HYBRID_CERTIFICATION.md`, `PRIVACY_POLICY.md`, `SOC2_READINESS.md`, `TERMS_OF_SERVICE.md`, `THIRD_PARTY_NOTICES.md`
@@ -168,6 +169,7 @@ Documents created, modified, or archived in this audit pass:
 | File | Notes |
 |---|---|
 | `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` | New release readiness report for v1.6.1 |
+| `docs/audits/TECH_DEBT_AUDIT_2026_05_20.md` | Full repo tech debt audit; 6 issues fixed (CI action pinning, secret guards, Lighthouse/SonarCloud coverage) |
 
 ### Modified
 | File | Change Summary |
