@@ -6,7 +6,7 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-03-25 -->
 # APEX OmniHub — Production Status
 
-> **Note:** For current certification state, see [PRODUCTION_CERTIFICATION_STATUS.md](./PRODUCTION_CERTIFICATION_STATUS.md).
+> **Note:** For current certification state, see [PRODUCTION_CERTIFICATION_STATUS.md](../../project-status/PRODUCTION_CERTIFICATION_STATUS.md).
 > This document is a historical snapshot and is NOT authoritative for current certification.
 
 ## Vercel Reference Classification
