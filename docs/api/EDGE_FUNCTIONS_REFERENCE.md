@@ -1,24 +1,42 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.2 | LAST_UPDATED=2026-03-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.0 | LAST_UPDATED=2026-05-20 -->
 # APEX OmniHub — Edge Functions API Reference
 
-**Base URL:** `https://[SUPABASE_PROJECT_REF].supabase.co/functions/v1/`
+**Base URL:** `https://rtopreovkywofgwgmozi.supabase.co/functions/v1/`
 **Auth:** All endpoints require `Authorization: Bearer <token>` unless noted.
 
 ## Quick Reference
 
+31 Edge Functions deployed as of 2026-05-20.
+
 | Function | Method | Auth Required | Purpose |
 |----------|--------|---------------|---------|
+| `apex-assistant` | POST | Yes (anon) | AI conversation handler |
+| `apex-voice` | POST | Yes (anon) | Real-time voice processing |
+| `byom-cockpit` | POST | Yes (anon) | Bring-Your-Own-Model cockpit interface |
+| `byom-proxy` | POST | Yes (anon) | Bring-Your-Own-Model proxy relay |
+| `mcp-proxy` | POST | Yes (anon) | MCP protocol proxy |
 | `omnilink-agent` | POST | Yes (anon or service) | Submit agent goal for orchestration |
 | `omnilink-eval` | POST | Yes (service only) | Run evaluation suite |
 | `omnilink-port` | POST | Yes (anon) | Universal connector input normalization |
+| `omnilink-retry-scheduler` | POST | Yes (service) | Retry scheduler for failed omnilink tasks |
 | `trigger-workflow` | POST | Yes (service) | Dispatch Temporal workflow |
-| `apex-assistant` | POST | Yes (anon) | AI conversation handler |
-| `apex-voice` | POST | Yes (anon) | Real-time voice processing |
-| `web3-verify` | POST | No | SIWE wallet authentication |
-| `verify-nft` | POST | Yes (anon) | NFT ownership verification |
-| `send-push-notification` | POST | Yes (service) | Mobile push delivery |
-| `platform-health` | GET | No | Platform health check |
 | `execute-automation` | POST | Yes (service) | Direct workflow execution |
+| `omni-runs` | POST | Yes (anon or service) | Run tracking and management |
+| `test-integration` | POST | Yes (service) | Integration smoke testing |
+| `omnibridge-control` | POST | Yes (service) | OmniBridge command and control |
+| `generate-business-skills` | POST | Yes (anon) | AI-powered business skill generation |
+| `activate-client` | POST | Yes (service) | Client onboarding activation |
+| `platform-health` | GET | No | Platform health check |
+| `ops-voice-health` | GET | No | Voice subsystem health check |
+| `alchemy-webhook` | POST | No (HMAC-signed) | Alchemy blockchain event webhook |
+| `verify-nft` | POST | Yes (anon) | NFT ownership verification |
+| `web3-nonce` | GET | No | Generate SIWE nonce |
+| `web3-verify` | POST | No | SIWE wallet authentication |
+| `create-checkout` | POST | Yes (anon) | Stripe checkout session creation |
+| `stripe-webhook` | POST | No (HMAC-signed) | Stripe payment event webhook |
+| `send-push-notification` | POST | Yes (service) | Mobile push delivery |
+| `storage-upload-url` | POST | Yes (anon) | Generate signed storage upload URL |
+| `_shared` | — | — | Shared utilities directory (not a callable endpoint) |
 
 ---
 
@@ -87,14 +105,14 @@ All endpoints except `web3-verify` and `platform-health` require authentication.
 **Anon key** (for user-facing calls, subject to RLS):
 ```bash
 curl -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-     https://[REF].supabase.co/functions/v1/omnilink-agent \
+     https://rtopreovkywofgwgmozi.supabase.co/functions/v1/omnilink-agent \
      -d '{"goal": "List my recent tasks"}'
 ```
 
 **Service role key** (server-to-server only, bypasses RLS — never use client-side):
 ```bash
 curl -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
-     https://[REF].supabase.co/functions/v1/trigger-workflow \
+     https://rtopreovkywofgwgmozi.supabase.co/functions/v1/trigger-workflow \
      -d '{"workflow_type": "agent", "input": {}}'
 ```
 
