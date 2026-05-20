@@ -69,9 +69,24 @@ APEX OmniHub is a polyglot monorepo with five execution planes:
 
 
 ### Orchestrator Boundary
-- `orchestrator/main.py` = Temporal worker lifecycle.
-- `orchestrator/server.py` = HTTP ingress + workflow dispatch.
-- Boundary validated by CI architectural guardrails.
+
+There are three distinct Python areas — do not conflate them:
+
+| Area | Role |
+|---|---|
+| `orchestrator/` | **Temporal Worker** — `main.py` is the worker lifecycle entrypoint; `server.py` is the HTTP ingress for workflow dispatch. This is the primary Python runtime. |
+| `services/orchestrator/` | **HTTP API layer** — FastAPI routes in `api/routes.py` that act as a thin glue between HTTP requests and the deterministic FSM in `fsm.py`. Boundary-enforced: `routes.py` must not initialise Temporal Workers (CI guardrail). |
+| `src/core/orchestrator/` | **TypeScript contract layer** — TypeScript types and interfaces used by the frontend/gateway to describe orchestration intent. No Python runtime. |
+
+**`omega/` — APEX Resilience Protocol (Human-in-the-Loop Verification)**
+- `omega/engine.py` = `VerificationEngine`: create/approve/reject verification requests, XSS-safe storage via `markupsafe`.
+- `omega/dashboard.py` = Lightweight `ThreadingHTTPServer` dashboard for reviewing pending approvals. Serves `/api/pending`, `/api/approve`, `/api/reject`.
+- `omega/data/` = Shared data structures. `omega/examples/` = Usage samples.
+- **Not a Temporal service.** Runs independently; used by the APEX Resilience Protocol for change-approval gates.
+- **Coverage:** included in orchestrator pytest CI via `--cov=../omega` (see `ci-runtime-gates.yml`).
+- **Security posture:** 4-layer XSS defence (input validation → storage-time escape → retrieval-time escape → `X-Content-Type-Options: nosniff`). Reviewed in `omega/SECURITY_REVIEW.md`.
+
+Boundary validated by CI architectural guardrails (`ci-runtime-gates.yml` Guardrails 0–3).
 
 ### Edge Boundary
 - HTTP/auth/cors wrappers centralized in `supabase/functions/_shared`.

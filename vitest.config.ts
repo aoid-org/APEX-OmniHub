@@ -119,14 +119,16 @@ export default defineConfig({
         '.git/**',
         '.cache/**'
       ],
-      // Coverage thresholds — recalibrated to measured actuals (2026-03-21).
-      // Stmts: 69.80%, Branch: 61.68%, Funcs: 71.59%, Lines: 70.81%
-      // North-star target: 80% (SonarCloud quality gate).
+      // Coverage thresholds — raised 2026-05-20 from measured actuals (2026-03-21).
+      // Actuals: Stmts 69.80%, Branch 61.68%, Funcs 71.59%, Lines 70.81%
+      // North-star target: 80% (SonarCloud quality gate). Next milestone: 75% branches.
+      // Increase incrementally as focused tests are added to src/core/,
+      // src/omniconnect/, and src/omnihub-gateway/ conditional paths.
       thresholds: {
-        statements: 69,
-        branches: 60,
-        functions: 71,
-        lines: 70,
+        statements: 70,
+        branches: 63,
+        functions: 72,
+        lines: 71,
       },
     },
     testTimeout: 30000,
