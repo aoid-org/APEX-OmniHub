@@ -193,3 +193,16 @@ python scripts/apex_optimize.py input.txt --stats --output optimized.txt
 _APEX-Memory v2.0.1 -- Proprietary Technology of APEX Business Systems Ltd._
 > **Updated:** 2026-04-09
 _Patent Pending. All Rights Reserved. Unauthorized use prohibited._
+
+---
+
+## 2026-05-20 Tech Debt Audit Outcomes
+
+The following fixes were verified and committed on branch `claude/audit-tech-debt-Pmwkx`:
+
+- **CI**: Action SHAs pinned in `integration.yml` and `deploy-omnihub-proof.yml` — eliminates supply-chain drift from floating action tags.
+- **CI**: `dependency-consolidation.yml` now requires CI green before merge — prevents dependency PRs bypassing quality gates.
+- **CI**: Lighthouse accessibility and color-contrast checks upgraded to errors — failures now block CI instead of emitting warnings.
+- **Security**: Stripe webhook secrets now explicitly required at startup — missing config returns 503 instead of silently failing signature verification.
+- **Security**: `ORCHESTRATOR_SHARED_SECRET` now throws on missing — eliminates unauthenticated fallback path in orchestrator dispatch.
+- **Quality**: SonarCloud now measures frontend coverage — `src/`, `apps/`, and `packages/` directories are no longer excluded from coverage metrics.
