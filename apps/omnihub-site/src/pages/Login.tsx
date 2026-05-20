@@ -139,8 +139,18 @@ export function LoginPage() {
       }
 
       globalThis.window.location.href = dashboardUrl;
-    } catch {
-      setError('An unexpected error occurred. Please try again.');
+    } catch (err) {
+      // TypeError("Failed to fetch" | "NetworkError" | "Load failed") = proxy/tunnel unreachable, not bad credentials.
+      const msg = err instanceof TypeError ? err.message.toLowerCase() : '';
+      const isNetworkFailure =
+        msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('load failed');
+      if (isNetworkFailure) {
+        setError(
+          'Unable to reach the authentication service. Check that the backend is running and accessible, then try again.',
+        );
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
