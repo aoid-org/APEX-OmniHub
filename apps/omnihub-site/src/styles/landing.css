@@ -5,7 +5,7 @@
   --copper:#D4855A;--gold:#E8A247;--gold2:#F5C06A;
   --ember:#C4511A;--ember2:#D46025;
   --t1:rgba(255,255,255,0.93);--t2:rgba(255,255,255,0.52);
-  --t3:rgba(255,255,255,0.26);--t4:rgba(255,255,255,0.09);
+  --t3:rgba(255,255,255,0.50);--t4:rgba(255,255,255,0.09);
   --font:'Space Grotesk',sans-serif;--ease:cubic-bezier(0.16,1,0.3,1);--max:1260px;
 }
 .landing-root{font-family:var(--font);background:var(--bg);color:var(--t1);overflow-x:hidden;-webkit-font-smoothing:antialiased}

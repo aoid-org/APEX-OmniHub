@@ -40,7 +40,7 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
             </a>
           </div>
           <p className="hero-trust rv d3">
-            SOC 2 Aligned<span>&middot;</span>EU AI Act Art. 14<span>&middot;</span>GDPR Art. 30<span>&middot;</span>Trusted in regulated industries
+            SOC 2 Aligned<span aria-hidden="true">&middot;</span>EU AI Act Art. 14<span aria-hidden="true">&middot;</span>GDPR Art. 30<span aria-hidden="true">&middot;</span>Trusted in regulated industries
           </p>
         </div>
         <div className="hero-right rv d1">
@@ -369,7 +369,7 @@ function TickerSection() {
     <div className="ticker">
       <div className="ticker-track">
         {doubledItems.map((item, idx) => (
-          <div key={idx} className="ticker-item">{item}<span className="ticker-dot">&middot;</span></div>
+          <div key={idx} className="ticker-item">{item}<span className="ticker-dot" aria-hidden="true">&middot;</span></div>
         ))}
       </div>
     </div>
