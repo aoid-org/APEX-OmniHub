@@ -1,17 +1,18 @@
 # Documentation Release Index
 
-> Current repo-truth index generated for the 2026-05-16 documentation audit. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below.
+> Current repo-truth index generated for the 2026-05-20 documentation audit. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below.
 
 ## Current Repo Facts Verified in This Pass
 
 | Fact | Current repo evidence |
 |---|---|
-| Documentation files under `docs/` | 162 Markdown files |
+| Documentation files under `docs/` | 166 Markdown files (5 documents marked archived in 2026-05-20 audit pass) |
 | GitHub workflow files | 21 files in `.github/workflows/` |
-| Release/package versions | `CHANGELOG.md` latest release line is `1.6.3`; `package.json` declares `1.6.0` |
+| Release/package versions | `CHANGELOG.md` latest release line is `1.6.3`; `package.json` declares `1.6.0` (v1.6.1 pending PR #1184) |
 | Canonical package manager | `bun.lock` is present; `package-lock.json` is retained for npm audit parity |
 | RSI mode | `policy/rsi-policy.yaml` declares `mode: live`; `.github/workflows/rsi-governance.yml` is present |
-| Production certification | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` remains the current authority and still reports `NOT_CERTIFIED_BLOCKED` until release evidence proves certification |
+| Production certification | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` remains the current authority. B-1: RESOLVED, B-3: RESOLVED, B-2: PENDING |
+| Shadow deployment slot | `apex-omnihub-shadow.pages.dev` provisioned 2026-05-20; GitHub Environment: `production-shadow` |
 
 ## Documentation Authority Order
 
@@ -38,6 +39,7 @@
 - `docs/architecture/CANONICAL_TRUTH.md`
 - `docs/architecture/CANONICAL_TRUTH_MATRIX.md`
 - `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`
+- `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(current onboarding entry point for release status — created 2026-05-20)_
 - `docs/architecture/DOC_RECONCILIATION_MATRIX.md`
 
 ## Current maps
@@ -73,12 +75,13 @@
 
 ## Status and release documents
 
-- `docs/project-status/APEX_ECOSYSTEM_STATUS.md`
-- `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.0.md`
-- `docs/project-status/CI_STATUS_POLICY.md`
-- `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`
-- `docs/project-status/PRODUCTION_STATUS.md`
-- `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md`
+- `docs/project-status/APEX_ECOSYSTEM_STATUS.md` _(archived 2026-05-20)_
+- `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.0.md` _(status update addendum added 2026-05-20)_
+- `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(NEW — created 2026-05-20; current onboarding entry point alongside PRODUCTION_CERTIFICATION_STATUS.md)_
+- `docs/project-status/CI_STATUS_POLICY.md` _(updated 2026-05-20)_
+- `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` _(B-1 RESOLVED, B-3 RESOLVED, B-2 PENDING — updated 2026-05-20)_
+- `docs/project-status/PRODUCTION_STATUS.md` _(archived 2026-05-20)_
+- `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` _(B-1/B-3 resolved — updated 2026-05-20)_
 - `docs/releases/RELEASE_NOTES_v1.6.0.md`
 
 ## Audit documents
@@ -139,14 +142,14 @@
 - `docs/compliance/sbom/` — 1 Markdown file(s): `README.md`
 - `docs/extensibility/` — 1 Markdown file(s): `PLUGIN_ARCHITECTURE.md`
 - `docs/guides/` — 5 Markdown file(s): `DR_RUNBOOK.md`, `NATIVE_PUSH_SETUP.md`, `NFT_VERIFICATION_RUNBOOK.md`, `WEB3_VERIFICATION_RUNBOOK.md`, `admin-secret-setup.md`
-- `docs/infrastructure/` — 22 Markdown file(s): `BACKUP_VERIFICATION.md`, `BLOCKCHAIN_CONFIG.md`, `BLOCKCHAIN_DEPLOYMENT_CHECKLIST.md`, `CICD_PIPELINE_DESIGN.md`, `CI_RUNTIME_GATES.md`, `CLOUD_AGNOSTIC_ARCHITECTURE.md`, `COST_OPTIMIZATION.md`, `DEMO_MODE.md`, `DEPLOYMENT_ROLLOUT_PLAN.md`, `DISASTER_RECOVERY_PLAN.md`, `DOPPLER_IMPLEMENTATION_GUIDE.md`, `EMERGENCY_CONTROLS_USAGE.md`, `MIGRATION_NOTES.md`, `MIGRATION_RUNBOOK.md`, `OBSERVABILITY_STACK_SETUP.md`, `PATH_A_ENHANCED_SERVERLESS.md`, `PATH_B_CONTAINERIZED_MULTICLOUD.md`, `PORTABILITY_MATRIX.md`, `PRODUCTION_DEPLOYMENT_GUIDE.md`, `PRODUCTION_ROLLOUT_PLAN.md`, `SRE_PACKAGE.md`, `SUPABASE_SETUP.md`
+- `docs/infrastructure/` — 22 Markdown file(s): `BACKUP_VERIFICATION.md`, `BLOCKCHAIN_CONFIG.md`, `BLOCKCHAIN_DEPLOYMENT_CHECKLIST.md`, `CICD_PIPELINE_DESIGN.md` _(archived 2026-05-20)_, `CI_RUNTIME_GATES.md`, `CLOUD_AGNOSTIC_ARCHITECTURE.md`, `COST_OPTIMIZATION.md`, `DEMO_MODE.md`, `DEPLOYMENT_ROLLOUT_PLAN.md` _(archived 2026-05-20)_, `DISASTER_RECOVERY_PLAN.md`, `DOPPLER_IMPLEMENTATION_GUIDE.md`, `EMERGENCY_CONTROLS_USAGE.md`, `MIGRATION_NOTES.md`, `MIGRATION_RUNBOOK.md`, `OBSERVABILITY_STACK_SETUP.md`, `PATH_A_ENHANCED_SERVERLESS.md`, `PATH_B_CONTAINERIZED_MULTICLOUD.md`, `PORTABILITY_MATRIX.md`, `PRODUCTION_DEPLOYMENT_GUIDE.md`, `PRODUCTION_ROLLOUT_PLAN.md` _(archived 2026-05-20)_, `SRE_PACKAGE.md`, `SUPABASE_SETUP.md`
 - `docs/integration/` — 2 Markdown file(s): `sbbl-hq-v1.6.0-patch.md`, `sbbl-omnihub-validation-2026-05-11.md`
 - `docs/knowledge/` — 3 Markdown file(s): `DEVELOPER_OPERATING_MODEL.md`, `OMNIDEV_MANIFESTO.md`, `SYSTEM_KNOWLEDGE_BASE.md`
 - `docs/knowledge/references/` — 8 Markdown file(s): `cloud.md`, `databases.md`, `frameworks.md`, `languages.md`, `observability.md`, `scale.md`, `security.md`, `testing.md`
 - `docs/onboarding/` — 2 Markdown file(s): `BRANCH_PROTECTION.md`, `DEVELOPER_ONBOARDING.md`
 - `docs/ops/` — 10 Markdown file(s): `INCIDENT_RESPONSE.md`, `OPEN_PR_GOVERNANCE_2026-05-13.md`, `OPERATIONAL_EXCELLENCE.md`, `OPS_RUNBOOK.md`, `OPS_RUNBOOKS_CI_GUARDRAILS.md`, `OPS_RUNBOOK_v1.3.8.md`, `PR_TRIAGE.md`, `adaptive-nightly-eval.md`, `omnidash-asset-rca.md`, `repo-scope-context.md`
 - `docs/platform/` — 12 Markdown file(s): `CONNECTOR_KIT.md`, `OMNIBOARD.md`, `OMNIDASH.md`, `OMNIEVAL.md`, `OMNIHUB_PROTOCOL_CONFORMANCE.md`, `OMNILINK_MANIFESTO_LITE.md`, `OMNILINK_MOBILE_PWA.md`, `OMNILINK_PORT_DISCIPLINE.md`, `OMNIPOLICY.md`, `OMNIPORT_API_REFERENCE.md`, `OMNISENTRY.md`, `OMNITRACE.md`
-- `docs/project-status/` — 5 Markdown file(s): `APEX_ECOSYSTEM_STATUS.md`, `APEX_RELEASE_READINESS_REPORT_v1.6.0.md`, `CI_STATUS_POLICY.md`, `PRODUCTION_CERTIFICATION_STATUS.md`, `PRODUCTION_STATUS.md`
+- `docs/project-status/` — 6 Markdown file(s): `APEX_ECOSYSTEM_STATUS.md` _(archived)_, `APEX_RELEASE_READINESS_REPORT_v1.6.0.md`, `APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(NEW 2026-05-20)_, `CI_STATUS_POLICY.md`, `PRODUCTION_CERTIFICATION_STATUS.md`, `PRODUCTION_STATUS.md` _(archived)_
 - `docs/quality/` — 1 Markdown file(s): `QUALITY_ASSURANCE_FRAMEWORK.md`
 - `docs/release/` — 1 Markdown file(s): `SHADOW_DEPLOYMENT_BLOCKERS.md`
 - `docs/releases/` — 1 Markdown file(s): `RELEASE_NOTES_v1.6.0.md`
@@ -158,6 +161,61 @@
 - `docs/sim/` — 9 Markdown file(s): `ARCHITECTURE.md`, `CHAOS_SIMULATION_DELIVERY.md`, `CHAOTIC_CLIENT_SIMULATION_REPORT.md`, `CHAOTIC_CLIENT_STORY.md`, `INVENTORY.md`, `RESULTS_REPORT.md`, `RUNBOOK.md`, `SANDBOX_TEST_RESULTS_TEMPLATE.md`, `TEST_EXECUTION_REPORT.md`
 - `docs/testing/` — 4 Markdown file(s): `ARMAGEDDON_LIVE_VALIDATION_RESULTS_2026_05_08.md`, `E2E_TEST_RESULTS.md`, `README.md`, `worldwide-wildcard-tests.md`
 - `docs/valuation/` — 1 Markdown file(s): `PLATFORM_VALUATION_BRIEF.md`
+
+## 2026-05-20 Documentation Audit Pass
+
+Documents created, modified, or archived in this audit pass:
+
+### Created
+| File | Notes |
+|---|---|
+| `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` | New release readiness report for v1.6.1 |
+
+### Modified
+| File | Change Summary |
+|---|---|
+| `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` | `omega/` and `orchestrator/` disambiguation added |
+| `CLAUDE.md` | `omega/` and `orchestrator/` disambiguation added |
+| `vitest.config.ts` | Coverage thresholds raised (branches 60→63, north-star 75%) |
+| `.changeset/shadow-slot-coverage-docs.md` | v1.6.1 changeset |
+| `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` | B-1 RESOLVED, B-3 RESOLVED |
+| `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` | B-1/B-3 resolved |
+| `DRIFT_MATRIX.md` | 2026-05-20 entry added |
+| `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.0.md` | Status update addendum added |
+| `docs/project-status/CI_STATUS_POLICY.md` | Updated |
+| `docs/testing/README.md` | Coverage thresholds updated |
+| `docs/architecture/CANONICAL_TRUTH.md` | Updated |
+| `docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md` | Updated |
+| `docs/architecture/GENERAL_TECH_SPECS.md` | Updated |
+| `docs/architecture/DETAILED_SYSTEM_DESIGN.md` | Updated |
+| `docs/onboarding/DEVELOPER_ONBOARDING.md` | pnpm fix, package manager fix, Node/Python version fix |
+| `README.md` | Node requirement fix |
+| `CONTRIBUTING.md` | Package manager policy updated |
+| `docs/api/API_EXTENSION_GUIDE.md` | Placeholder URL notice added |
+| `docs/extensibility/PLUGIN_ARCHITECTURE.md` | Coming Soon → Planned, implementation status added |
+| `docs/api/EDGE_FUNCTIONS_REFERENCE.md` | Updated |
+
+### Archived (marked historical — files retained for traceability)
+| File | Notes |
+|---|---|
+| `docs/project-status/PRODUCTION_STATUS.md` | Superseded by PRODUCTION_CERTIFICATION_STATUS.md |
+| `docs/project-status/APEX_ECOSYSTEM_STATUS.md` | Superseded by APEX_RELEASE_READINESS_REPORT_v1.6.1.md |
+| `docs/infrastructure/DEPLOYMENT_ROLLOUT_PLAN.md` | Superseded by current deployment guides |
+| `docs/infrastructure/PRODUCTION_ROLLOUT_PLAN.md` | Superseded by current deployment guides |
+| `docs/infrastructure/CICD_PIPELINE_DESIGN.md` | Superseded by CI_RUNTIME_GATES.md and workflow YAML |
+
+### Certification status (as of 2026-05-20)
+| Blocker | Status |
+|---|---|
+| B-1 | RESOLVED |
+| B-2 | PENDING |
+| B-3 | RESOLVED |
+
+### Deployment topology addition
+- Shadow deployment slot: `apex-omnihub-shadow.pages.dev` (provisioned 2026-05-20)
+- GitHub Environment: `production-shadow` (created 2026-05-20)
+
+---
 
 ## Verification Commands for This Index
 

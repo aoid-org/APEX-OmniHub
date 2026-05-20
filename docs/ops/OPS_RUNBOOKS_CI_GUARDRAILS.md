@@ -1,6 +1,6 @@
 # OPS_RUNBOOKS.md — APEX-OmniHub Operations Runbooks
 
-> **Status:** Current operations index (canonical). Last updated: 2026-05-11.
+> **Status:** Current operations index (canonical). Last updated: 2026-05-20.
 >
 > Related canonical docs:
 > - `CLAUDE.md` — agent briefing and verified commands (read first)
@@ -105,6 +105,24 @@ psql "$SUPABASE_DB_URL" -f supabase/migrations/20260226000001_rollback.sql
 ---
 
 ## CI Guardrail Alerts
+
+### Architectural Boundary Disambiguation (updated 2026-05-20)
+
+The repository contains three Python runtime areas that must not be confused:
+
+| Path | Runtime | Role |
+|---|---|---|
+| `orchestrator/` | Python / Temporal | Temporal Worker lifecycle (`main.py`) + HTTP workflow dispatch (`server.py`) |
+| `services/orchestrator/` | Python / FastAPI | HTTP API layer (`api/routes.py`) + deterministic FSM (`fsm.py`). Must NOT initialize Temporal Workers. |
+| `omega/` | Python / stdlib | APEX Resilience Protocol — Human-in-the-loop verification engine (`engine.py`) and HTTP approval dashboard (`dashboard.py`). Runs independently; not a Temporal service. XSS-defended via markupsafe. Covered by pytest `--cov=../omega`. |
+
+The architectural boundary enforcement gate (Phase A in `ci-runtime-gates.yml`) monitors all three of the following files for cross-boundary import violations:
+
+- `orchestrator/main.py` — Temporal Worker entrypoint
+- `services/orchestrator/api/routes.py` — HTTP API routes (must not import Temporal Worker code)
+- `orchestrator/metrics.py` — Metrics module (must not be imported in business logic paths)
+
+If a guardrail violation fires for any of these files, fix the import boundary before any other work. Do not move code between `orchestrator/`, `services/orchestrator/`, and `omega/` without updating the canonical architecture map.
 
 ### Overview
 

@@ -1,3 +1,5 @@
+> Last reviewed: 2026-05-20. B-1 and B-3 have been RESOLVED since this audit was written (see notes below). B-2 remains pending. No new code changes affect the certification gate logic documented here.
+
 # Production Certification Evidence Pack — 2026-05-13
 
 ## Files Changed
@@ -113,8 +115,8 @@ PRs #1117–1120 reviewed via GitHub MCP. Governance doc created at `docs/securi
 **`NOT_CERTIFIED_BLOCKED`**
 
 Blockers:
-1. Shadow deployment slot not provisioned (no Cloudflare Pages project, no required secrets)
+1. Shadow deployment slot not provisioned (no Cloudflare Pages project, no required secrets) **(RESOLVED 2026-05-20)**
 2. `release-evidence.json` with passing verdict not yet produced by a real release run
-3. GitHub Environment `production-shadow` for Terraform apply approval not configured
+3. GitHub Environment `production-shadow` for Terraform apply approval not configured **(RESOLVED 2026-05-20)**
 
 All local code gates pass. Certification becomes `CERTIFICATION_PENDING_FINAL_MAIN_CI` once this PR merges and main CI runs green.
