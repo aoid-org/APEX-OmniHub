@@ -188,3 +188,13 @@ runs. Commits are pushed to `claude/setup-multi-project-env-c6DpV` on
 - `c321e69` fix(security-headers): CF Pages _headers COOP + CSP
 
 **Final release verdict: GO on the OmniHub side. Code is production-safe today; activation depends on operator completing §6 prerequisites.**
+
+---
+
+## 2026-05-20 Status Update
+
+- **B-1 RESOLVED (2026-05-20)** — apex-omnihub-shadow shadow deployment slot provisioned.
+- **B-3 RESOLVED (2026-05-20)** — production-shadow GitHub Environment created.
+- **B-2 PENDING** — release-evidence.json requires PR #1184 merge + release workflow run.
+- **SonarCloud: 0 new issues, 0 hotspots (2026-05-20, PR #1184).**
+- **Vitest coverage thresholds raised: statements 70, branches 63, functions 72, lines 71.**

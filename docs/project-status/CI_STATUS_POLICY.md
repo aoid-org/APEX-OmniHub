@@ -30,8 +30,31 @@ https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/<workflow
 Static `img.shields.io/badge/...` badges are forbidden for CI/security/test status claims.
 The License badge is exempt (it is not a CI claim).
 
+## Workflow Registry (verified 2026-05-20)
+
+The repository has 21 active GitHub Actions workflows. RSI-related workflows:
+- `rsi-governance.yml` — **active RSI governance workflow (live mode)**
+- `rsi-governance-gate.yml` — pass-through placeholder (not the live gate)
+
+## Coverage Thresholds (updated 2026-05-20)
+
+Current Vitest coverage thresholds (vitest.config.ts):
+
+| Metric | Threshold | North-Star Target |
+|---|---|---|
+| Statements | 70 | — |
+| Branches | 63 | 80% |
+| Functions | 72 | — |
+| Lines | 71 | — |
+
+Previous thresholds (pre-2026-05-20): statements 69, branches 60, functions 71, lines 70.
+
 ## Enforcement
 
 This policy is enforced by:
 - Code review: Reviewers must reject PRs that add static CI/certification badges
 - Docs drift reconciliation: run periodically as part of production certification hardening
+
+## Last Updated
+
+2026-05-20
