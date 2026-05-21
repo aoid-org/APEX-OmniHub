@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.5-DOC-RELEASE-INDEX | LAST_UPDATED=2026-05-16 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.5-DOC-RELEASE-INDEX | LAST_UPDATED=2026-05-20 -->
 
 # APEX OmniHub Documentation
 
@@ -6,7 +6,7 @@
 
 - **Document Version:** 2.7.0
 - **Platform Version:** 1.6.0
-- **Last Updated:** 2026-05-16
+- **Last Updated:** 2026-05-20
 - **Current Documentation Index:** [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)
 - **Current Certification Authority:** [Production Certification Status](project-status/PRODUCTION_CERTIFICATION_STATUS.md)
 - **Historical Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
@@ -294,7 +294,7 @@ docs/
 
 ---
 
-**Last Updated:** May 16, 2026
+**Last Updated:** May 20, 2026
 **Release:** v1.6.0
 
 ## Documentation Governance

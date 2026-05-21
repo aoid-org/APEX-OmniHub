@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.0 | LAST_UPDATED=2026-05-06 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.0 | LAST_UPDATED=2026-05-20 -->
 # Repo Scope Context (Senior DevOps Prep)
 
 > **Note:** Verified facts as of 2026-05-06 with confirmed build status.

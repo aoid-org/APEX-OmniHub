@@ -5,16 +5,16 @@
 | ID | Severity | Status | Resolution Date | Next Action |
 |---|---|---|---|---|
 | B-1 | P0 | **RESOLVED** | 2026-05-20 | No action required. apex-omnihub-shadow project created via Cloudflare API; all 6 required secrets/variables set in GitHub repository. |
-| B-2 | P0 | **PENDING** | — | Merge PR #1184 to trigger release workflow and publish changeset v1.6.1. |
+| B-2 | P0 | **STRUCTURAL FIX MERGED 2026-05-20** | PR #1185 (`a54bd7c`) | Release workflow decoupled from npm publish; evidence pending changesets version PR merge. |
 | B-3 | P1 | **RESOLVED** | 2026-05-20 | No action required. production-shadow GitHub Environment created with required-reviewer protection rule. |
 
 ---
 
-## Status: BLOCKED (B-2 only) — release-evidence.json not yet produced
+## Status: BLOCKED (B-2 only) — structural fix merged (PR #1185); evidence production pending changesets version PR
 
 A release cannot be marked `CERTIFIED` until a real Cloudflare Pages shadow deployment is provisioned, validated, and promoted through the protected Terraform approval path. The repository now has fail-closed preflight and evidence generation so CI cannot silently skip these blockers or emit a misleading certification verdict.
 
-B-1 and B-3 were resolved 2026-05-20. B-2 remains pending until PR #1184 merges to main and the release workflow runs.
+B-1 and B-3 were resolved 2026-05-20. B-2 structural root cause resolved 2026-05-20 via PR #1185: the release workflow now detects private-package releases via `git log` commit subject (not npm publish). Evidence production pending the changesets version PR (`chore: version packages`) merge to main.
 
 ---
 
@@ -23,7 +23,7 @@ B-1 and B-3 were resolved 2026-05-20. B-2 remains pending until PR #1184 merges 
 | ID | Blocker | Severity | Status | Automated control |
 |---|---|---:|---|---|
 | B-1 | Cloudflare Pages shadow slot is not verified as provisioned, or required Cloudflare secrets/vars are absent. | P0 | **RESOLVED 2026-05-20** — apex-omnihub-shadow project created via Cloudflare API; all 6 required secrets/variables set in GitHub repository. | `scripts/ci/shadow-certification-preflight.mjs` checks `ENABLE_SHADOW_DEPLOYMENT`, Cloudflare credentials, project name, and health URL before deploy. |
-| B-2 | `release-evidence.json` with `CERTIFIED` or `CERTIFICATION_PENDING_FINAL_MAIN_CI` has not yet been produced by a real release run. | P0 | **PENDING** — merge PR #1184 to trigger release workflow and publish changeset v1.6.1. | `.github/workflows/release.yml` always uploads `release-evidence.json`; `scripts/ci/write-release-evidence.mjs` computes the verdict from actual preflight/deploy/health/validator/Terraform outputs. |
+| B-2 | `release-evidence.json` with `CERTIFIED` or `CERTIFICATION_PENDING_FINAL_MAIN_CI` has not yet been produced by a real release run. | P0 | **STRUCTURAL FIX MERGED 2026-05-20** (PR #1185) — workflow decoupled from npm publish; `release_signal` step reads commit subject via `git log`; evidence pending changesets version PR merge. | `.github/workflows/release.yml` always uploads `release-evidence.json`; `scripts/ci/write-release-evidence.mjs` computes the verdict from actual preflight/deploy/health/validator/Terraform outputs. |
 | B-3 | GitHub Environment `production-shadow` with required reviewer protection is not verified for Terraform apply approval. | P1 | **RESOLVED 2026-05-20** — production-shadow GitHub Environment created with required-reviewer protection rule. | `scripts/ci/shadow-certification-preflight.mjs` queries the GitHub Environments API and blocks certification when required reviewers are absent or unverifiable. |
 
 These blockers require external GitHub/Cloudflare configuration. Do **not** update this document to `CERTIFIED` until the release artifact from a real `main` workflow run proves the final verdict.

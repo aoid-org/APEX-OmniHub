@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-03-25 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-05-20 -->
 # Migration Notes: Lovable Cloud → Supabase + Cloudflare Pages
 
 ## Vercel Reference Classification
