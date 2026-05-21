@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.6.1-OMNIBRIDGE | LAST_UPDATED=2026-05-11 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.1-OMNIBRIDGE | LAST_UPDATED=2026-05-20 -->
 # Incident Response Playbook
 
 ## Vercel Reference Classification
@@ -7,7 +7,7 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 
 
 **Version:** 1.2.0
-**Last Updated:** 2026-05-11
+**Last Updated:** 2026-05-20
 
 ## 1. Severity Levels
 

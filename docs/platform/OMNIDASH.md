@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.6.2 | LAST_UPDATED=2026-05-12 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.2 | LAST_UPDATED=2026-05-20 -->
 # OmniDash (Founder/Sales Dashboard)
 
 ## Vercel Reference Classification

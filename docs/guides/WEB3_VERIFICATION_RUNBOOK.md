@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-02-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-05-20 -->
 # Web3 Verification Module - RUNBOOK
 
 ## Vercel Reference Classification
@@ -766,7 +766,7 @@ Before deploying to production:
 
 ---
 
-**Last Updated:** 2026-01-10
+**Last Updated:** 2026-05-20
 **Next Review:** After 1 week of production usage
 
 **Maintainer:** APEX OmniHub Team

@@ -27,7 +27,7 @@
 
 ## Tenant Registry
 
-**Last Updated:** 2026-05-11 | **Integration Status Authority:** This section is canonical for all tenant onboarding state.
+**Last Updated:** 2026-05-20 | **Integration Status Authority:** This section is canonical for all tenant onboarding state.
 
 ### tenant-001: SBBL-HQ
 

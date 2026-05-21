@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-05-20 -->
 # EMERGENCY CONTROLS - USAGE GUIDE
 **Operator Supremacy Controls for OmniHub Edge Functions**
 
@@ -456,5 +456,5 @@ psql $DATABASE_URL -c "SELECT kill_switch FROM emergency_controls;"
 ---
 
 **Document Status:** ✅ COMPLETE
-**Last Updated:** 2026-01-03
+**Last Updated:** 2026-05-20
 **Owner:** DevOps Team

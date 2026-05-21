@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.1-OMNIBRIDGE | LAST_UPDATED=2026-05-11 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-OMNIBRIDGE | LAST_UPDATED=2026-05-20 -->
 # OmniPort API Reference
 
 **The Proprietary Ingress Engine for APEX OmniHub**
@@ -665,5 +665,5 @@ See `docs/integration/sbbl-omnihub-validation-2026-05-11.md §Gap 3` for the ful
 ---
 
 **Document Version:** 1.1.0
-**Last Updated:** 2026-05-11
+**Last Updated:** 2026-05-20
 **Maintained By:** APEX Platform Team

@@ -1,6 +1,6 @@
 # NFT Verification — Ops Runbook
 
-**Last Updated:** 2026-02-20  
+**Last Updated:** 2026-05-20  
 **Owned by:** OmniLink APEX Ops  
 **Related functions:** `verify-nft`, `alchemy-webhook`
 
