@@ -1,0 +1,33 @@
+# APEX gitleaks configuration.
+# Extends defaults: https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml
+# Adds APEX-specific allowlist rules so governance templates that REFERENCE
+# example secret-shaped strings do not produce false positives.
+
+title = "APEX gitleaks"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "apex-supabase-service-role"
+description = "Supabase service_role key shape"
+regex = '''(?i)eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}'''
+tags = ["supabase", "jwt"]
+
+[[rules]]
+id = "apex-stripe-live"
+description = "Stripe live key shape"
+regex = '''sk_live_[A-Za-z0-9]{20,}'''
+tags = ["stripe"]
+
+[allowlist]
+description = "APEX governance docs and templates"
+paths = [
+  '''governance/.*\.md''',
+  '''docs/.*\.md''',
+  '''\.github/.*\.md''',
+  '''README\.md''',
+  '''CHANGELOG\.md''',
+  '''.*\.example$''',
+  '''.*\.sample$''',
+]

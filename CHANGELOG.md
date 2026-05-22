@@ -1,3 +1,159 @@
+
+## Governance
+
+# Changelog
+
+All notable changes to the APEX Bible governance package are recorded here.
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: SemVer.
+
+---
+
+## [1.1.0] — 2026-05-22
+
+### Fixed (critical)
+
+- **`ci/scripts/apex_policy_check.py` self-flagging bug.** The v1.0.0 script
+  scanned `.json` files for forbidden substrings, then read its own
+  `apex-policy.config.json` which contained those very strings as
+  configuration values (`"TODO: rollback"`, `"skip governance"`). The script
+  would fail CI on itself on a clean repo. Fixed by:
+  - exempting the policy config file from self-scanning
+  - exempting documentation directories (`governance/`, `docs/`, `.github/`)
+    AND repo-root documentation files (`README.md`, `CHANGELOG.md`,
+    `CONTRIBUTING.md`, `SECURITY.md`, `LICENSE`) from forbidden-pattern scans
+    (these directories and files DESCRIBE the patterns)
+  - replacing substring matching for forbidden names with identifier-boundary
+    regex (`\b(class|function|interface|type|const|let|var|def|struct|enum) Foo\b`),
+    eliminating false positives like `ResourceManager.ts` triggering on
+    `"Manager"` substring
+
+### Removed (correctness)
+
+- Bare `"Manager"` from `forbidden_names` (replaced with specific god-object
+  patterns: `AppManager`, `GlobalManager`, `OmniManager`, `MegaService`,
+  `UtilityService`, `CommonService`). Bare `"Manager"` produced too many
+  false positives on legitimate names (`CacheManager`, `ConnectionManager`).
+
+### Added
+
+#### CI
+
+- `.github/gitleaks.toml` — real secret-scan config with APEX allowlist
+- `--json` and `--strict-docs` flags on `apex_policy_check.py`
+- `governance-gate` aggregator job in workflow (the one to require in branch
+  protection)
+- real `gitleaks`, `osv-scanner`, and `CodeQL` jobs replacing `echo` placeholders
+- `concurrency:` group on workflow
+- `permissions:` block scoped to least-required
+- RFC marker enforcer that detects architecture-impacting paths and requires
+  an RFC link in the PR body
+
+#### Doctrine
+
+- principle 11: Data Has Classification
+- principle 12: Cost Is A Feature Requirement
+- principle 13: Disposability And Deprecation Are Engineered
+- doctrine-wide policy index citing every companion document
+
+#### Data & Privacy
+
+- `governance/data/DATA_CLASSIFICATION.md` (P0–P4 tiers, PIPEDA/GDPR rights,
+  breach SLAs)
+
+#### FinOps
+
+- `governance/finops/COST_BUDGET_POLICY.md` (tags, budget tiers, AI cost caps,
+  dashboards, storage lifecycle)
+
+#### Release & Versioning
+
+- `governance/release/RELEASE_POLICY.md` (T1–T4 service tiers, branching,
+  canary, hotfix, feature flags)
+- `governance/api/API_VERSIONING_POLICY.md` (path versioning, idempotency,
+  webhooks, breaking-vs-non-breaking matrix)
+- `governance/deprecation/DEPRECATION_POLICY.md` (lifecycle stages, EOL
+  approval, minimum timelines)
+
+#### Supply Chain
+
+- `governance/supply-chain/SUPPLY_CHAIN_POLICY.md` (SBOM, cosign, CVE SLAs,
+  GitHub Actions pinning, vendor review)
+
+#### Observability
+
+- `governance/observability/SLO_POLICY.md` (tier SLOs, error budgets,
+  burn-rate alerts, metric naming, log retention, trace sampling, dashboards)
+
+#### Security
+
+- `governance/security/THREAT_MODEL_TEMPLATE.md` (STRIDE + AI-specific
+  threats)
+- `governance/security/INCIDENT_DISCLOSURE.md` (regulator SLAs, comms,
+  required artifacts)
+- repo-root `SECURITY.md` (vulnerability reporting)
+
+#### Operations
+
+- `governance/ops/ON_CALL_POLICY.md` (response SLAs, paging tiers,
+  compensation, anti-burnout rules)
+- `governance/ops/DR_POLICY.md` (RPO/RTO per tier, restore drill cadence)
+- `governance/ops/POSTMORTEM_TEMPLATE.md`
+- `governance/ops/RUNBOOK_TEMPLATE.md`
+
+#### AI Governance
+
+- `governance/ai/AI_KILL_SWITCH.md` (soft pause / hard stop / full kill,
+  60-second time-to-kill requirement)
+- `governance/ai/AI_EVAL_POLICY.md` (eval sets, red-team, model pinning,
+  prompt-injection defense, drift monitoring)
+
+#### Onboarding
+
+- `governance/onboarding/MERGE_ACCESS_CHECKLIST.md` v1.1 with time-bound
+  milestones and two scored exercises (Architecture Review + Rollback &
+  Observability)
+
+#### Navigation & Polish
+
+- `governance/INDEX.md` — single navigation map
+- `governance/rubrics/RUBRIC_SCORING_GUIDE.md` — per-category scoring
+  criteria
+- repo-root `LICENSE` (proprietary; rights reserved to APEX Business Systems
+  LTD)
+- repo-root `CONTRIBUTING.md`
+- `Makefile` extended with `apex-policy-json`, `apex-validate`,
+  `apex-install`, `apex-verify` targets
+- `package_manifest.json` v1.1 listing all files with SHA-256 hashes
+
+### Verified
+
+- `apex_policy_check.py` passes on its own repo (0 violations, exit 0)
+- All required RFC sections satisfied in templates
+- All cross-references between docs resolve
+
+---
+
+## [1.0.0] — 2026-05-22
+
+Initial release.
+
+- `APEX_BUILD_DOCTRINE.md` (10 principles)
+- CI policy gates document
+- RFC template + usage policy
+- Global AI prompt + usage doc
+- Architecture review gates + template
+- Merge rights policy
+- GitHub workflow (with placeholder secret scan and dep audit)
+- PR template + CODEOWNERS + RFC issue template
+- Engineering onboarding + initial merge access checklist
+- Observability baseline
+- Security baseline
+- Testing doctrine
+- Incident response baseline
+- ADR template + first ADR (adopt the Bible)
+- 100-point build rubric
+- Makefile + README + package manifest
+
 # Changelog
 
 All notable changes to the APEX OmniHub platform.

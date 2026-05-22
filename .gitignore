@@ -137,3 +137,5 @@ shadow-preflight.json
 # ─── Package Manager Conflicts ───────────────────────────────────────────────
 # Uncomment the line below ONLY after package manager is fully canonicalized:
 # package-lock.json
+.apex-bible-integration/
+.apex-bible-source/

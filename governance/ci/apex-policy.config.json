@@ -1,0 +1,71 @@
+{
+  "version": "1.1.0",
+  "max_module_lines": 500,
+  "forbidden_names": [
+    "GodObject",
+    "AppManager",
+    "GlobalManager",
+    "OmniManager",
+    "MegaService",
+    "UtilityService",
+    "CommonService",
+    "Helpers",
+    "MiscUtils"
+  ],
+  "forbidden_patterns": [
+    "global_state",
+    "shared_mutable",
+    "TODO: rollback",
+    "TODO rollback",
+    "FIXME: rollback",
+    "skip governance",
+    "// @ts-nocheck",
+    "# type: ignore[all]",
+    "any as unknown as",
+    "process.env.DEBUG_BYPASS"
+  ],
+  "required_rfc_sections": [
+    "Problem",
+    "Exact User",
+    "Workflow",
+    "Current Pain",
+    "Proposed Change",
+    "Business Capability",
+    "Ownership Boundary",
+    "Data Flow",
+    "Contracts",
+    "Failure Modes",
+    "Observability",
+    "Rollback Strategy",
+    "Security Impact",
+    "Scalability Impact",
+    "IN SCOPE",
+    "OUT OF SCOPE",
+    "Success Metrics"
+  ],
+  "production_file_globs": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "server/**/*.ts",
+    "workers/**/*.ts",
+    "services/**/*.ts",
+    "supabase/functions/**/*.ts"
+  ],
+  "documentation_dirs_exempt_from_pattern_scan": [
+    "governance",
+    "docs",
+    ".github"
+  ],
+  "documentation_files_exempt_from_pattern_scan": [
+    "README.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "LICENSE"
+  ],
+  "notes": "v1.1.0 removed bare 'Manager' from forbidden_names to eliminate false positives on legitimate names like ResourceManager / CacheManager. God-object detection is now identifier-aware (class/function/interface/type/const Foo) and filename-stem-exact, not arbitrary substring. Documentation directories AND repo-root documentation files are exempt from forbidden-pattern scans because they DESCRIBE the forbidden patterns by name."
+}
