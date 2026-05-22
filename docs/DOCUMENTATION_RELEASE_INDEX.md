@@ -8,7 +8,7 @@
 |---|---|
 | Documentation files under `docs/` | 161 Markdown files (8 stale documents permanently deleted in 2026-05-20 audit pass — see CHANGELOG.md [Unreleased]; 1 new audit report added 2026-05-20) |
 | GitHub workflow files | 21 files in `.github/workflows/` |
-| Release/package versions | `CHANGELOG.md` latest release line is `1.6.3`; `package.json` declares `1.6.0` (v1.6.1 pending PR #1184) |
+| Release/package versions | `CHANGELOG.md` latest release line is `1.6.3`; `package.json` declares `1.6.0` (v1.6.1 pending changesets version PR) |
 | Canonical package manager | `bun.lock` is present; `package-lock.json` is retained for npm audit parity |
 | RSI mode | `policy/rsi-policy.yaml` declares `mode: live`; `.github/workflows/rsi-governance.yml` is present |
 | Production certification | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` remains the current authority. B-1: RESOLVED, B-3: RESOLVED, B-2: PENDING |

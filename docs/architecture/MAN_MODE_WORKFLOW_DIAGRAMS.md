@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-05-20 -->
 # MAN Mode Workflow Diagrams
 
 > Manual Approval Node (MAN) Mode - Visual Architecture Reference

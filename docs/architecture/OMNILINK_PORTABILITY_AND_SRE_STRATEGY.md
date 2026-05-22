@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-03-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-05-20 -->
 # OmniLink Architecture Output: Portability Matrix + SRE Package + Rollback/DR
 
 ## Verification Status Legend

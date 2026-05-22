@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-05-20 -->
 # DOPPLER SECRETS MANAGER - IMPLEMENTATION GUIDE
 
 ## Vercel Reference Classification
@@ -478,6 +478,6 @@ After Doppler setup:
 ---
 
 **Document Status:** ✅ READY FOR IMPLEMENTATION
-**Last Updated:** 2026-01-03
+**Last Updated:** 2026-05-20
 **Owner:** DevOps Team
 **Related:** `SECRETS_MANAGER_SETUP.md`, `SECRETS_INVENTORY_AND_ROTATION.md`

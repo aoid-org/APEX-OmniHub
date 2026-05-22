@@ -1,10 +1,10 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.0-SERIALIZE-JAVASCRIPT-90 | LAST_UPDATED=2026-05-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.0-SERIALIZE-JAVASCRIPT-90 | LAST_UPDATED=2026-05-20 -->
 
 # Security Advisory Handling
 
 - **Document Version:** 1.0.0
 - **Platform Version:** 1.6.0
-- **Last Updated:** 2026-05-15
+- **Last Updated:** 2026-05-20
 - **Owner:** APEX Engineering / Security
 - **Status:** Active
 

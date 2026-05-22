@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.1-MARKETING-REFRESH | LAST_UPDATED=2026-02-26 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.1-MARKETING-REFRESH | LAST_UPDATED=2026-05-20 -->
 # APEX OmniHub Platform Brief (Repository-Verified)
 
 - **Document Version:** 9.0.0

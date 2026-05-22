@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v2.1 | LAST_UPDATED=2026-04-26 -->
+<!-- APEX_DOC_STAMP: VERSION=v2.1 | LAST_UPDATED=2026-05-20 -->
 # Production Deployment Guide (Cloudflare Pages + Supabase)
 
 ## Purpose

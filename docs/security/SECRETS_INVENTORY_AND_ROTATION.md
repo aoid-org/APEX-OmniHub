@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-03-25 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.5.1-LOGIN-HOTFIX | LAST_UPDATED=2026-05-20 -->
 # SECRETS INVENTORY & ROTATION GUIDE
 
 ## Vercel Reference Classification
@@ -7,7 +7,7 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 
 **OmniHub/TradeLine/APEX - Comprehensive Secrets Management**
 
-**Last Updated:** 2026-03-25
+**Last Updated:** 2026-05-20
 **Owner:** DevOps Team
 **Review Cycle:** Quarterly
 **Version:** 1.1.0

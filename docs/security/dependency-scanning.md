@@ -1,10 +1,10 @@
-<!-- APEX_DOC_STAMP: VERSION=v9.0-ADVISORY-90-REMEDIATION | LAST_UPDATED=2026-05-15 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.0-ADVISORY-90-REMEDIATION | LAST_UPDATED=2026-05-20 -->
 
 # Dependency Scanning
 
 - **Document Version:** 2.0.0
 - **Platform Version:** 1.6.0
-- **Last Updated:** 2026-05-15
+- **Last Updated:** 2026-05-20
 - **Status:** Active
 
 ---

@@ -53,11 +53,11 @@ Don't repeat README snapshot counts as facts without recalculating.
 **Disambiguation (verify path before editing):**
 
 | Path | Runtime | Role |
-| --- | --- | --- |
+|---|---|---|
 | `orchestrator/` | Python / Temporal | Worker lifecycle + HTTP dispatch |
 | `services/orchestrator/` | Python / FastAPI | HTTP API + deterministic FSM |
-| `omega/` | Python / stdlib | Human-in-the-loop verification (independent) |
-| `src/core/orchestrator/` | TypeScript | Frontend/gateway contract types only |
+| `omega/` | Python / stdlib | Human-in-the-loop approval (independent) |
+| `src/core/orchestrator/` | TypeScript | Frontend/gateway contract types ONLY |
 | `src/omnihub-gateway/` | TypeScript / Node | Edge gateway, MCP client, routing |
 
 ---
@@ -222,7 +222,11 @@ After: `git diff --check && git status --short --branch`. Report all validation 
 
 Code changes must include: **1. Diagnosis** · **2. Solution** · **3. Files changed (with paths)** · **4. Verification (exact commands + pass/fail/env-limited)** · **5. Next Action**. Never claim tests passed unless executed.
 
----
+### Authenticated E2E failure
+1. `tests/e2e-playwright/helpers/auth.ts`
+2. Confirm `VITE_SUPABASE_URL` + browser-safe key vars exist
+3. `npm run test:e2e:install` if browser launch fails
+4. `CI=1 npx playwright test <spec> --project=chromium`
 
 ## 18. Agent Auto-Update Protocol
 
@@ -243,7 +247,7 @@ Every session making verified, committed changes MUST update this file before fi
 
 Before answering/editing: Did I verify the file path? · Did I inspect config (not memory)? · Did I search call sites before changing exports/contracts? · Did I avoid claiming status from stale docs? · Did I avoid exposing secrets via frontend? · Did I run validation or state why not? · Did I keep the patch in scope? → **If any "no," stop and verify.**
 
----
+**File:** `.github/workflows/release.yml` — triggers on `push` to `main`.
 
 ## 20. Fast Triage Recipes
 
