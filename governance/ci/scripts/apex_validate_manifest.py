@@ -26,7 +26,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path.cwd()
-MANIFEST_PATH = ROOT / "package_manifest.json"
+MANIFEST_FILENAME = "package_manifest.json"
+MANIFEST_PATH = ROOT / MANIFEST_FILENAME
 
 INCLUDED_DIRS = ("governance", ".github")
 INCLUDED_TOP_FILES = (
@@ -46,20 +47,26 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def _scan_dir(d: str) -> list[Path]:
+    out: list[Path] = []
+    base = ROOT / d
+    if not base.is_dir():
+        return out
+    for p in base.rglob("*"):
+        if not p.is_file():
+            continue
+        if p.name in SKIP_NAMES:
+            continue
+        if any(part in SKIP_DIRS for part in p.relative_to(ROOT).parts):
+            continue
+        out.append(p)
+    return out
+
+
 def discover_files() -> list[Path]:
     out: list[Path] = []
     for d in INCLUDED_DIRS:
-        base = ROOT / d
-        if not base.is_dir():
-            continue
-        for p in base.rglob("*"):
-            if not p.is_file():
-                continue
-            if p.name in SKIP_NAMES:
-                continue
-            if any(part in SKIP_DIRS for part in p.relative_to(ROOT).parts):
-                continue
-            out.append(p)
+        out.extend(_scan_dir(d))
     for f in INCLUDED_TOP_FILES:
         p = ROOT / f
         if p.is_file():
@@ -108,12 +115,30 @@ def regenerate() -> int:
     manifest = build_manifest(version=version)
     # Self-exclude the manifest file itself from its own entries
     # (chicken-and-egg: hash would change after writing).
-    manifest["files"] = [f for f in manifest["files"] if f["path"] != "package_manifest.json"]
+    manifest["files"] = [f for f in manifest["files"] if f["path"] != MANIFEST_FILENAME]
     manifest["file_count"] = len(manifest["files"])
 
     MANIFEST_PATH.write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"Regenerated manifest with {manifest['file_count']} files at version {manifest['version']}.")
     return 0
+
+
+def _find_errors(declared: dict, actual: dict) -> list[str]:
+    errors: list[str] = []
+    for path in declared:
+        if path not in actual:
+            errors.append(f"Declared in manifest but missing on disk: {path}")
+    for path in actual:
+        if path not in declared:
+            errors.append(f"On disk but not declared in manifest: {path}")
+    for path, entry in declared.items():
+        if path in actual:
+            actual_hash = sha256_file(actual[path])
+            if actual_hash != entry.get("sha256"):
+                errors.append(f"SHA-256 mismatch: {path}")
+                errors.append(f"  declared: {entry.get('sha256')}")
+                errors.append(f"  actual:   {actual_hash}")
+    return errors
 
 
 def validate() -> int:
@@ -128,29 +153,9 @@ def validate() -> int:
 
     declared = {f["path"]: f for f in manifest.get("files", [])}
     actual = {str(p.relative_to(ROOT)).replace("\\", "/"): p for p in discover_files()}
-    # Exclude the manifest itself from the actual set.
-    actual.pop("package_manifest.json", None)
+    actual.pop(MANIFEST_FILENAME, None)
 
-    errors: list[str] = []
-
-    # 1. Files declared but missing on disk
-    for path in declared:
-        if path not in actual:
-            errors.append(f"Declared in manifest but missing on disk: {path}")
-
-    # 2. Files on disk but not declared
-    for path in actual:
-        if path not in declared:
-            errors.append(f"On disk but not declared in manifest: {path}")
-
-    # 3. Hash mismatches
-    for path, entry in declared.items():
-        if path in actual:
-            actual_hash = sha256_file(actual[path])
-            if actual_hash != entry.get("sha256"):
-                errors.append(f"SHA-256 mismatch: {path}")
-                errors.append(f"  declared: {entry.get('sha256')}")
-                errors.append(f"  actual:   {actual_hash}")
+    errors = _find_errors(declared, actual)
 
     if errors:
         print("APEX manifest validation failed:\n")

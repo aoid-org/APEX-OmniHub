@@ -149,6 +149,41 @@ def load_config() -> dict:
         sys.exit(2)
 
 
+def _scan_file_errors(
+    path: Path,
+    strict_docs: bool,
+    forbidden_names: list[str],
+    forbidden_patterns: list[str],
+    max_module_lines: int,
+) -> list[str] | None:
+    """Return None to skip the file; otherwise return a (possibly empty) list of violations."""
+    rel_parts = path.relative_to(ROOT).parts
+    if any(part in SKIP_DIRS for part in rel_parts):
+        return None
+    if path.suffix not in TEXT_SUFFIXES:
+        return None
+    if is_config_self(path):
+        return None
+    try:
+        content = path.read_text(errors="ignore")
+    except OSError:
+        return None
+
+    rel = str(path.relative_to(ROOT))
+    in_docs = is_documentation_path(rel_parts)
+    errors: list[str] = []
+    if not in_docs:
+        for hit in check_forbidden_names(content, path.name, forbidden_names):
+            errors.append(f"Forbidden god-object style name detected: {hit} in {rel}")
+    if not in_docs or strict_docs:
+        for hit in check_forbidden_patterns(content, forbidden_patterns):
+            errors.append(f"Forbidden pattern detected: '{hit}' in {rel}")
+    size_err = check_module_size(path, content, max_module_lines)
+    if size_err:
+        errors.append(size_err)
+    return errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="APEX policy check")
     parser.add_argument("--json", action="store_true", help="Emit JSON report on stdout")
@@ -168,36 +203,13 @@ def main() -> int:
     for path in ROOT.rglob("*"):
         if not path.is_file():
             continue
-        rel_parts = path.relative_to(ROOT).parts
-        if any(part in SKIP_DIRS for part in rel_parts):
+        file_errors = _scan_file_errors(
+            path, args.strict_docs, forbidden_names, forbidden_patterns, max_module_lines
+        )
+        if file_errors is None:
             continue
-        if path.suffix not in TEXT_SUFFIXES:
-            continue
-        if is_config_self(path):
-            continue
-
-        try:
-            content = path.read_text(errors="ignore")
-        except OSError:
-            continue
-
         files_scanned += 1
-        rel = str(path.relative_to(ROOT))
-        in_docs = is_documentation_path(rel_parts)
-
-        # Forbidden names — only meaningful in code or filenames; skip docs.
-        if not in_docs:
-            for hit in check_forbidden_names(content, path.name, forbidden_names):
-                errors.append(f"Forbidden god-object style name detected: {hit} in {rel}")
-
-        # Forbidden patterns — exempt documentation directories unless --strict-docs.
-        if not in_docs or args.strict_docs:
-            for hit in check_forbidden_patterns(content, forbidden_patterns):
-                errors.append(f"Forbidden pattern detected: '{hit}' in {rel}")
-
-        size_err = check_module_size(path, content, max_module_lines)
-        if size_err:
-            errors.append(size_err)
+        errors.extend(file_errors)
 
     errors.extend(check_rfc_completeness(ROOT, required_rfc_sections))
 
