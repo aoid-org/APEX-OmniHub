@@ -41,3 +41,55 @@
 
 ---
 *Submitting this PR confirms you have read and followed the [APEX Engineering Standards](../docs/onboarding/DEVELOPER_ONBOARDING.md).*
+
+---
+
+## APEX Build Governance
+
+# PR Checklist
+
+## User / Workflow
+
+- [ ] Exact user identified
+- [ ] Workflow improved
+- [ ] Pain removed or reduced
+- [ ] Success metric defined
+
+## Scope
+
+- [ ] IN SCOPE defined
+- [ ] OUT OF SCOPE defined
+- [ ] No unapproved scope expansion
+
+## Architecture
+
+- [ ] No god object introduced
+- [ ] Domain boundaries preserved
+- [ ] No cross-domain database writes
+- [ ] Contracts documented
+- [ ] Ownership clear
+- [ ] Failure modes documented
+
+## Production Safety
+
+- [ ] Rollback path defined
+- [ ] Observability added or preserved
+- [ ] Security impact reviewed
+- [ ] Performance impact reviewed
+- [ ] Regression risk addressed
+- [ ] Overload risk addressed
+
+## Governance
+
+RFC required: Yes | No
+RFC link: <link>
+Architecture review required: Yes | No
+Architecture review link: <link>
+
+## AI Usage
+
+AI assisted: Yes | No
+If yes:
+- [ ] AI output reviewed by human
+- [ ] No uncontrolled autonomous behavior introduced
+- [ ] AI-generated changes preserve doctrine

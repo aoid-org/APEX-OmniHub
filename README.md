@@ -302,3 +302,104 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 ╚═╝  ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝
 Intelligence Designed. Engineering the Impossible.
 ```
+
+---
+
+# APEX Bible Governance
+
+# APEX Bible Complete Package
+
+Version: **1.1.0**
+Canonical governance package for APEX-level builds.
+
+> **Single nav:** see [`governance/INDEX.md`](governance/INDEX.md).
+> **Doctrine:** see [`governance/doctrine/APEX_BUILD_DOCTRINE.md`](governance/doctrine/APEX_BUILD_DOCTRINE.md).
+
+---
+
+## What This Locks In
+
+- canonical build doctrine (13 principles)
+- architecture review gates + merge-rights policy
+- RFC template + usage policy
+- CI policy gates (with a working policy-check script, not placeholders)
+- secret scanning (gitleaks), dependency vuln scan (osv-scanner), SAST (CodeQL)
+- service tiers (T1–T4) with SLOs and error budgets
+- data classification (P0–P4) + privacy SLAs
+- FinOps tags + budget tiers + AI cost caps
+- release management + API versioning + deprecation lifecycle
+- supply-chain controls (SBOM, signing, vendor review)
+- DR (RPO/RTO) + on-call SLAs + postmortem + runbook templates
+- threat model template (STRIDE + AI-specific)
+- incident disclosure SLAs (PIPEDA/GDPR-aware)
+- AI governance: prompt, kill switch, evaluation policy
+- engineering onboarding with two scored merge-rights exercises
+- 100-point build rubric + per-category scoring guide
+
+## Drop-In Install
+
+Copy this package into the root of your repository:
+
+```text
+/.github
+/governance
+/CHANGELOG.md
+/CONTRIBUTING.md
+/LICENSE
+/Makefile
+/README.md
+/SECURITY.md
+/package_manifest.json
+```
+
+## Implementation Order (Day 1)
+
+1. Commit [`governance/doctrine/APEX_BUILD_DOCTRINE.md`](governance/doctrine/APEX_BUILD_DOCTRINE.md).
+2. Enable [`.github/workflows/apex-governance.yml`](.github/workflows/apex-governance.yml). Mark the `governance-gate` job as a **required status check** in branch protection.
+3. Require PRs to use [`.github/pull_request_template.md`](.github/pull_request_template.md).
+4. Add reviewers in [`.github/CODEOWNERS`](.github/CODEOWNERS) (adjust team handles to match your org).
+5. Require architecture review before granting merge rights (see [`governance/architecture/MERGE_RIGHTS_POLICY.md`](governance/architecture/MERGE_RIGHTS_POLICY.md)).
+6. Install [`governance/ai/AI_AGENT_SYSTEM_PROMPT.md`](governance/ai/AI_AGENT_SYSTEM_PROMPT.md) into all internal AI agents.
+7. Run `make apex-policy` locally to confirm green.
+
+## Implementation Order (Week 1)
+
+8. Classify every data store per [`governance/data/DATA_CLASSIFICATION.md`](governance/data/DATA_CLASSIFICATION.md).
+9. Tag every cloud resource per [`governance/finops/COST_BUDGET_POLICY.md`](governance/finops/COST_BUDGET_POLICY.md).
+10. Assign each service a tier per [`governance/release/RELEASE_POLICY.md`](governance/release/RELEASE_POLICY.md).
+11. Declare SLOs per [`governance/observability/SLO_POLICY.md`](governance/observability/SLO_POLICY.md).
+12. Write runbooks for the top-5 alerts per T1/T2 service using [`governance/ops/RUNBOOK_TEMPLATE.md`](governance/ops/RUNBOOK_TEMPLATE.md).
+13. Verify kill switches per [`governance/ai/AI_KILL_SWITCH.md`](governance/ai/AI_KILL_SWITCH.md) for every production AI feature.
+
+## Mandatory Rule
+
+No feature, AI-generated change, refactor, or infrastructure update may merge unless it preserves:
+
+- user workflow clarity
+- modularity
+- idempotency
+- observability
+- rollback capability
+- domain boundaries
+- regression resistance
+- overload resistance
+- data classification compliance
+- cost attribution
+- AI kill-switch availability
+
+## Local Commands
+
+```sh
+make apex-policy        # run policy check (human-readable)
+make apex-policy-json   # run policy check (JSON report)
+make apex-validate      # validate package structure + manifest
+make apex-verify        # full local validation (policy + structure)
+make apex-install       # print install instructions for a target repo
+make apex-zip           # build distributable zip
+```
+
+## Versioning
+
+This package follows SemVer. See [`CHANGELOG.md`](CHANGELOG.md).
+Contribute via [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Report security issues per [`SECURITY.md`](SECURITY.md).

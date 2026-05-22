@@ -1,0 +1,12 @@
+# APEX governance ownership
+/governance/ @apex-architecture @apex-leadership
+/.github/workflows/ @apex-devops @apex-architecture
+/.github/CODEOWNERS @apex-leadership
+
+# Architecture-impacting paths. Adjust to match repo structure.
+/src/domains/ @apex-architecture
+/src/services/ @apex-architecture
+/src/workers/ @apex-architecture
+/src/ai/ @apex-architecture @apex-ai-governance
+/db/ @apex-architecture @apex-devops
+/infra/ @apex-devops @apex-architecture

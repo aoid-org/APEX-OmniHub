@@ -1,0 +1,169 @@
+name: apex-governance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel stale runs on the same PR/branch.
+concurrency:
+  group: apex-governance-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  security-events: write   # required by SARIF upload from secret-scan job
+
+jobs:
+  apex-policy:
+    name: APEX policy gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run APEX policy check
+        run: python governance/ci/scripts/apex_policy_check.py
+
+      - name: Emit JSON report (artifact)
+        if: always()
+        run: python governance/ci/scripts/apex_policy_check.py --json > apex-policy-report.json || true
+
+      - name: Upload policy report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-policy-report
+          path: apex-policy-report.json
+          retention-days: 14
+
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config-path: .github/gitleaks.toml
+
+  dependency-audit:
+    name: Dependency vulnerability scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install osv-scanner
+        run: |
+          set -euo pipefail
+          OSV_VERSION="1.9.2"
+          curl -fSL -o /tmp/osv-scanner \
+            "https://github.com/google/osv-scanner/releases/download/v${OSV_VERSION}/osv-scanner_linux_amd64"
+          chmod +x /tmp/osv-scanner
+          sudo mv /tmp/osv-scanner /usr/local/bin/osv-scanner
+          osv-scanner --version
+
+      - name: Run osv-scanner
+        run: |
+          # Recursively scan the workspace; skip if no manifests present.
+          if find . -maxdepth 4 \( -name "package-lock.json" -o -name "pnpm-lock.yaml" \
+              -o -name "yarn.lock" -o -name "bun.lockb" -o -name "requirements.txt" \
+              -o -name "Pipfile.lock" -o -name "poetry.lock" -o -name "Cargo.lock" \
+              -o -name "go.sum" -o -name "Gemfile.lock" \) -print -quit | grep -q .; then
+            osv-scanner --recursive --skip-git .
+          else
+            echo "No dependency manifests detected; skipping osv-scan."
+          fi
+
+  sast:
+    name: Static analysis (SAST)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript,python
+        continue-on-error: true
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        continue-on-error: true
+
+  rfc-architecture-marker:
+    name: RFC + architecture review marker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enforce RFC link on architecture-impacting PRs
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # If any changed file matches architecture-impacting paths, require RFC link in PR body.
+          changed=$(git diff --name-only origin/${{ github.base_ref }}...HEAD || git diff --name-only HEAD~1 HEAD || true)
+          echo "Changed files:"
+          echo "$changed"
+          requires_rfc=0
+          for f in $changed; do
+            case "$f" in
+              src/domains/*|src/services/*|src/workers/*|src/ai/*|db/*|infra/*|supabase/migrations/*|governance/doctrine/*)
+                requires_rfc=1
+                ;;
+            esac
+          done
+          if [ "$requires_rfc" = "1" ]; then
+            echo "Architecture-impacting changes detected. RFC link required in PR body."
+            if ! echo "$PR_BODY" | grep -Eqi 'RFC[- ]?link|governance/rfc|/issues/[0-9]+|/pull/[0-9]+'; then
+              echo "::error::Missing RFC link in PR body for architecture-impacting change."
+              exit 1
+            fi
+            echo "RFC marker present."
+          else
+            echo "No architecture-impacting paths changed. Skipping RFC requirement."
+          fi
+
+  governance-gate:
+    name: Governance gate (required for branch protection)
+    runs-on: ubuntu-latest
+    needs: [apex-policy, secret-scan, dependency-audit, sast, rfc-architecture-marker]
+    if: always()
+    steps:
+      - name: Aggregate result
+        run: |
+          if [ "${{ needs.apex-policy.result }}" != "success" ] || \
+             [ "${{ needs.secret-scan.result }}" != "success" ] || \
+             [ "${{ needs.dependency-audit.result }}" != "success" ] || \
+             [ "${{ needs.rfc-architecture-marker.result }}" != "success" ]; then
+            echo "::error::APEX governance gate FAILED."
+            echo "apex-policy: ${{ needs.apex-policy.result }}"
+            echo "secret-scan: ${{ needs.secret-scan.result }}"
+            echo "dependency-audit: ${{ needs.dependency-audit.result }}"
+            echo "sast: ${{ needs.sast.result }}"
+            echo "rfc-architecture-marker: ${{ needs.rfc-architecture-marker.result }}"
+            exit 1
+          fi
+          echo "APEX governance gate passed."

@@ -1,0 +1,388 @@
+{
+  "package": "APEX_BIBLE_COMPLETE_PACKAGE",
+  "version": "1.1.0",
+  "created_for": "APEX Business Systems LTD",
+  "primary_entrypoints": {
+    "doctrine": "governance/doctrine/APEX_BUILD_DOCTRINE.md",
+    "index": "governance/INDEX.md",
+    "ci": ".github/workflows/apex-governance.yml",
+    "rfc": "governance/rfc/RFC_TEMPLATE.md",
+    "ai_prompt": "governance/ai/AI_AGENT_SYSTEM_PROMPT.md",
+    "merge_rights": "governance/architecture/MERGE_RIGHTS_POLICY.md",
+    "rubric": "governance/rubrics/APEX_BUILD_RUBRIC_100.md",
+    "rubric_guide": "governance/rubrics/RUBRIC_SCORING_GUIDE.md"
+  },
+  "file_count": 74,
+  "files": [
+    {
+      "path": ".github/CODEOWNERS",
+      "sha256": "8283543f4787ebf78bc9a4e186a49b339b31bf4fbda391682c545c3f130296f4",
+      "bytes": 456
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/rfc_request.md",
+      "sha256": "7aed8c124d233c2e045ab99ccfc034f33534d5a635dd3d0f11f18ad567c78873",
+      "bytes": 431
+    },
+    {
+      "path": ".github/PR_NATIVE_WRAPPER.md",
+      "sha256": "76ecdbed30dacf0f614eb86857a39fa10ad93380e80d6420b4a697c8d8557db2",
+      "bytes": 4374
+    },
+    {
+      "path": ".github/SECURITY.md",
+      "sha256": "5e8722af0a284e21dd755f92b042a5590fffe0c1e8d5529e12477947734da92f",
+      "bytes": 2025
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "sha256": "20675a0b32af69e43291dfa39fa16096d3d1faab39b97f2437715b912e1aa263",
+      "bytes": 2086
+    },
+    {
+      "path": ".github/gitleaks.toml",
+      "sha256": "314750970eb580222078013c40558c9fc8b58984a38b12bf626059b4bf835521",
+      "bytes": 879
+    },
+    {
+      "path": ".github/pull_request_template.md",
+      "sha256": "3db78e751d1a6d1dbaad3038ec23f3f12f50f20350b9d15f517a4b922fdca2ca",
+      "bytes": 2643
+    },
+    {
+      "path": ".github/scripts/check_system_usage.sh",
+      "sha256": "d22c4e675f7720315687e79fbd9051dabf229287848ebb19eafdf575b1a82f30",
+      "bytes": 4252
+    },
+    {
+      "path": ".github/workflows/alert-guard-rail-violation.yml",
+      "sha256": "b00559e0d85e98760c32fbd30ecab206d0d0dda79d1c3a21dc05b0f6b0d32cf3",
+      "bytes": 2425
+    },
+    {
+      "path": ".github/workflows/apex-governance.yml",
+      "sha256": "97b3977256cb4912eea8238ee4a8550822a34edaed56b03697d86ccb2f504e97",
+      "bytes": 5717
+    },
+    {
+      "path": ".github/workflows/cd-staging.yml",
+      "sha256": "0b726ddddbf6ae7cfc1fb73aa757b76109771910ffe70351af2c92768ad67009",
+      "bytes": 7533
+    },
+    {
+      "path": ".github/workflows/chaos-simulation-ci.yml",
+      "sha256": "1d4b4980e552530dd62111a95ae4b979f0dd3ef85cad22868d974fe94bb97571",
+      "bytes": 14787
+    },
+    {
+      "path": ".github/workflows/ci-runtime-gates.yml",
+      "sha256": "d7d38c155ad637e8323c6ce765349ffcd4e6fe3ff1b93df41fd2c3dac3785e56",
+      "bytes": 12587
+    },
+    {
+      "path": ".github/workflows/compliance.yml",
+      "sha256": "4f9da6d27f27863cf2c5632b6324d8d0cbb3e5d3520d48bb8b6a9d675d24353a",
+      "bytes": 7478
+    },
+    {
+      "path": ".github/workflows/dependency-consolidation.yml",
+      "sha256": "5a1dff9360c09b1069af6cfa11917413c16cf4464feaa18c0f90a99407781b0d",
+      "bytes": 3653
+    },
+    {
+      "path": ".github/workflows/dependency-review.yml",
+      "sha256": "89b6ad84463a6537bea4acfc0b503dcf60a139903df313ccfee3b2237482a5e1",
+      "bytes": 519
+    },
+    {
+      "path": ".github/workflows/deploy-omnihub-proof.yml",
+      "sha256": "ecab9c347d1c063cf4b01c11f12744130d7050a5f263c9d1232f19bc07c99981",
+      "bytes": 942
+    },
+    {
+      "path": ".github/workflows/deploy-web3-functions.yml",
+      "sha256": "4de140f6078683ed53d9ac4be9519bb21ec160bec6fcb9be14694543f8f09cd7",
+      "bytes": 5349
+    },
+    {
+      "path": ".github/workflows/integration.yml",
+      "sha256": "3fa31539d335b942ce6cabc936b2d0277bc32df818bbf93f81d63112b68ccd98",
+      "bytes": 1936
+    },
+    {
+      "path": ".github/workflows/lighthouse.yml",
+      "sha256": "6826a5bded7eb34cb9de22a0b4e0ce6e2b66e1aa31e3be5f85e9225d9ed7d37f",
+      "bytes": 1217
+    },
+    {
+      "path": ".github/workflows/mobile-build-verify.yml",
+      "sha256": "b8cb2b5033717ca36734f9765c431d99f222129c5e854953aa98b1278cf3f1fa",
+      "bytes": 10508
+    },
+    {
+      "path": ".github/workflows/nightly-evaluation.yml",
+      "sha256": "f86311547add09449cf22b61ca560619af50fa4a14fda6a333e4a9e5f55c8508",
+      "bytes": 6396
+    },
+    {
+      "path": ".github/workflows/orchestrator-ci.yml",
+      "sha256": "6c8df901d511cd49608867c8849177b2f7921aef2b287625907d5b4b44805065",
+      "bytes": 6557
+    },
+    {
+      "path": ".github/workflows/production-readiness.yml",
+      "sha256": "0cbe150f660c386a90640e6f90a701e899fe42489fae6dee02eaf76a56abe870",
+      "bytes": 7296
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "sha256": "6c5ba76c16f313c6e75a3fc95126fa9b19ce8cf8e0863f68f1871e49ebcd7572",
+      "bytes": 9291
+    },
+    {
+      "path": ".github/workflows/rsi-governance-gate.yml",
+      "sha256": "36c482d1f79b076a0720c98c5d9ce925895bfb25c93a901f7dcf143e44d5355d",
+      "bytes": 264
+    },
+    {
+      "path": ".github/workflows/rsi-governance.yml",
+      "sha256": "6f396b3a676296c13364561994f7d9469a5ac5293e65c8dce1f3ba41a5e3966a",
+      "bytes": 4255
+    },
+    {
+      "path": ".github/workflows/secret-scanning.yml",
+      "sha256": "274b2e813ad70177539e0c7f4d19ab81249e479e4d5277d8f6c7eb8e5c845860",
+      "bytes": 8476
+    },
+    {
+      "path": ".github/workflows/security-guards.yml",
+      "sha256": "2221cc6bfba58c559d34eb9d4e12406d885a602319cb65f1075b0b1fd879e4be",
+      "bytes": 346
+    },
+    {
+      "path": ".github/workflows/security-regression-guard.yml",
+      "sha256": "64a2137ee855cb87923f94c0684bd93a9249b25d0dd8ab192402e0506d9e52ab",
+      "bytes": 6298
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "611bb6b990a3b138d48aa45a7460fc0e033411f70fa240d522ef2c02f3b6bcf1",
+      "bytes": 60622
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "1729faec82c2b983ad38184d12ba81b8079c9490cd78146f9b973dcc3af0b648",
+      "bytes": 3651
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "63638752518148ade8fedf1438054b342939a1dfb840768a45eff36adf2c2ae0",
+      "bytes": 373
+    },
+    {
+      "path": "Makefile",
+      "sha256": "71be58a48513155e5e291ce0c381bd8952510cef4f556d4d5efcf43c308047a8",
+      "bytes": 2006
+    },
+    {
+      "path": "README.md",
+      "sha256": "5926ec308fd9fe36a81d2ce9588c978eea553c157ae8a1bdccd9c3ec5a64d400",
+      "bytes": 19492
+    },
+    {
+      "path": "SECURITY.md",
+      "sha256": "9a9a203430905a566df78d4e7217e2719345b556dea55b9148ebba31884787b1",
+      "bytes": 1611
+    },
+    {
+      "path": "governance/INDEX.md",
+      "sha256": "7a4f232f7dfd8dd18cab2a3dd7b41eae5ad285912acf8edefa36dd1be1e3a61d",
+      "bytes": 4631
+    },
+    {
+      "path": "governance/adr/0001-adopt-apex-bible.md",
+      "sha256": "3d6aa6382631e46d6df3e8b49e672d754786d99b5c9f29b7b9b15c6681ce2618",
+      "bytes": 853
+    },
+    {
+      "path": "governance/ai/AI_AGENT_SYSTEM_PROMPT.md",
+      "sha256": "81528ef440225f5bbdce270cb657ac7421684bb2a8c0433bcc41f1addd58f859",
+      "bytes": 1200
+    },
+    {
+      "path": "governance/ai/AI_EVAL_POLICY.md",
+      "sha256": "047fef82b3dac04ad7e5d9f84b281eb53b14e924f82984321cef7beb137bfca8",
+      "bytes": 2628
+    },
+    {
+      "path": "governance/ai/AI_KILL_SWITCH.md",
+      "sha256": "205fecb3613e37e3e056ff49f967dc6b9c2af2b843ba6ec9b37f45a69d2f955c",
+      "bytes": 1910
+    },
+    {
+      "path": "governance/ai/GLOBAL_AI_PROMPT_USAGE.md",
+      "sha256": "1246822ac5bfd7ab7251d34caf5776a1a0452244d05904293aae5c4bc06fa98d",
+      "bytes": 852
+    },
+    {
+      "path": "governance/api/API_VERSIONING_POLICY.md",
+      "sha256": "7abc3609c6577ab9f5e8190ad9c164391145bab353b546642c74b63f2785162b",
+      "bytes": 2015
+    },
+    {
+      "path": "governance/architecture/ARCHITECTURE_REVIEW_GATES.md",
+      "sha256": "973f12c93fff9dc8131a3a50fa72068f9c07c8b5b6ee09e0c81535a82fc598e1",
+      "bytes": 1136
+    },
+    {
+      "path": "governance/architecture/ARCHITECTURE_REVIEW_TEMPLATE.md",
+      "sha256": "cb7b141664a22f0fbed82ef67c9a2c422ccd07845be757ceb166159697353a5a",
+      "bytes": 754
+    },
+    {
+      "path": "governance/architecture/MERGE_RIGHTS_POLICY.md",
+      "sha256": "7d88b5bc723255763a106176eb40b3e300423815f69b72c907581ed489df1220",
+      "bytes": 1404
+    },
+    {
+      "path": "governance/ci/CI_POLICY_GATES.md",
+      "sha256": "2e600b4f6b87d8241b49441bd274fe8c8af526af08870177697c30f26eca0367",
+      "bytes": 1125
+    },
+    {
+      "path": "governance/ci/apex-policy.config.json",
+      "sha256": "330e3f7b59739b3e313abdbbdf976f988c56915990dc0c424d3820339fe6e3a9",
+      "bytes": 1847
+    },
+    {
+      "path": "governance/ci/scripts/apex_policy_check.py",
+      "sha256": "ad064e3898ab2095294cb0ef89db153ec3bacf1b8e5844c5f47eb2982d9943a7",
+      "bytes": 8260
+    },
+    {
+      "path": "governance/ci/scripts/apex_validate_manifest.py",
+      "sha256": "ac110b2560d17341df4ba64543c9873cd5f96545c73e84694b4af026206560b5",
+      "bytes": 5725
+    },
+    {
+      "path": "governance/data/DATA_CLASSIFICATION.md",
+      "sha256": "20dc595333905635ee63837259eaafde7cd81f4664f43709de0941f38b327c58",
+      "bytes": 3603
+    },
+    {
+      "path": "governance/deprecation/DEPRECATION_POLICY.md",
+      "sha256": "6212d62b5ee10ea8d7ff3b0305323691b498575548aa340cf94aaf84795970dd",
+      "bytes": 1808
+    },
+    {
+      "path": "governance/doctrine/APEX_BUILD_DOCTRINE.md",
+      "sha256": "480dcfe693c8a9f65df1e58216ff38cffc1ef927ca7121dd9d453d3a7bb1dcf6",
+      "bytes": 6949
+    },
+    {
+      "path": "governance/finops/COST_BUDGET_POLICY.md",
+      "sha256": "a43da7c639c5b0fb4fbc87729c7c4b43900169917a580d5b391b84d8a6eee574",
+      "bytes": 2874
+    },
+    {
+      "path": "governance/observability/OBSERVABILITY_BASELINE.md",
+      "sha256": "cab97cae5b6e48c2139512d89496208ef676b67e3f792f7d08c3b4f949e82b22",
+      "bytes": 539
+    },
+    {
+      "path": "governance/observability/SLO_POLICY.md",
+      "sha256": "137d8ea422b97f0e8f9dc301ace06506b2e6fead40c2e0ea5cb066cac52a3581",
+      "bytes": 2951
+    },
+    {
+      "path": "governance/onboarding/ENGINEERING_ONBOARDING.md",
+      "sha256": "410647754af6594229a838f1d9575aa085bde0af7385aa567694ce014ba24961",
+      "bytes": 957
+    },
+    {
+      "path": "governance/onboarding/MERGE_ACCESS_CHECKLIST.md",
+      "sha256": "7a76fa5337c298145af932a18d78243569bdc9f3d0d514870f90696501a16822",
+      "bytes": 5191
+    },
+    {
+      "path": "governance/ops/DR_POLICY.md",
+      "sha256": "9172b41b3fc34e0c662f3e5088ed56a0bdc4f42715972f75c71041dea9e9456c",
+      "bytes": 1685
+    },
+    {
+      "path": "governance/ops/INCIDENT_RESPONSE.md",
+      "sha256": "d715c913c2c489fc94fb302f3032fbd1ff7073cf85232a467404d584310407b8",
+      "bytes": 674
+    },
+    {
+      "path": "governance/ops/ON_CALL_POLICY.md",
+      "sha256": "5f197d07a7738e530cefbfa4c447018ac6f788495c2c708d9213307542185327",
+      "bytes": 1585
+    },
+    {
+      "path": "governance/ops/POSTMORTEM_TEMPLATE.md",
+      "sha256": "8001112f7e4a7ebd27d2da9a8d9ad21417ae1a7d8a46a7e203c3876b48ec5e2f",
+      "bytes": 1980
+    },
+    {
+      "path": "governance/ops/RUNBOOK_TEMPLATE.md",
+      "sha256": "98925972af1307b9807f7866af0e2ea29a1d866084083142c92edd87336963ab",
+      "bytes": 1795
+    },
+    {
+      "path": "governance/release/RELEASE_POLICY.md",
+      "sha256": "0c78ee68decdb00e4faec27dbe76aef1bfe80f98a7d6e802c26aa55715d7352b",
+      "bytes": 3116
+    },
+    {
+      "path": "governance/rfc/RFC_TEMPLATE.md",
+      "sha256": "6a413c9de2e24a8f7ecab55bface1a72cc2cd574110049c52bf61ee775f8dea2",
+      "bytes": 2223
+    },
+    {
+      "path": "governance/rfc/RFC_USAGE_POLICY.md",
+      "sha256": "038a73fb0a9e11f8bd20dfd202c8cb7d18664fd49bd6e4aa47469bae116604a3",
+      "bytes": 872
+    },
+    {
+      "path": "governance/rubrics/APEX_BUILD_RUBRIC_100.md",
+      "sha256": "b652020752a515c0f7e8fd0f28a7009cd036ee5595b7818b59ef2340869ec250",
+      "bytes": 981
+    },
+    {
+      "path": "governance/rubrics/RUBRIC_SCORING_GUIDE.md",
+      "sha256": "fbd7db2bcd2f68b1f7c73c27cd96799add1643f988ac5c9d7ffb1dab1f5a120d",
+      "bytes": 4942
+    },
+    {
+      "path": "governance/security/INCIDENT_DISCLOSURE.md",
+      "sha256": "15c298b47899fb51fd6b3aa94af1a0f2422d608b517a15be4959e0e7668a11c6",
+      "bytes": 2383
+    },
+    {
+      "path": "governance/security/SECURITY_BASELINE.md",
+      "sha256": "fe9452420af749252b531ca8aa439dbf4065c4768057c5b62cf9e3179bd90652",
+      "bytes": 652
+    },
+    {
+      "path": "governance/security/THREAT_MODEL_TEMPLATE.md",
+      "sha256": "41f4d9398b5c1b961c68a66b1fc7f89a344cbfe3aab8f73ab446952a782295c6",
+      "bytes": 2277
+    },
+    {
+      "path": "governance/supply-chain/SUPPLY_CHAIN_POLICY.md",
+      "sha256": "bcf1e9faf3f9e5f635ca312a95a96761e2d1d0a6605f6f28a732f9ca90ceca7b",
+      "bytes": 2401
+    },
+    {
+      "path": "governance/templates/ARCHITECTURE_DECISION_RECORD.md",
+      "sha256": "22294af0826ebaf398ce82343f9eab0469c8d4501fcc3652b6ecad0158b4344a",
+      "bytes": 512
+    },
+    {
+      "path": "governance/testing/TESTING_DOCTRINE.md",
+      "sha256": "04f32caa7c700a0eaa4a8eee4cd020e6771f1781894d48fb6e3c5ffd28dcccec",
+      "bytes": 649
+    }
+  ]
+}
