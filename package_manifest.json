@@ -61,8 +61,8 @@
     },
     {
       "path": ".github/workflows/apex-governance.yml",
-      "sha256": "97b3977256cb4912eea8238ee4a8550822a34edaed56b03697d86ccb2f504e97",
-      "bytes": 5717
+      "sha256": "14d98a74c6b1ad71abb4414f784f2adfa70a15136263dbca17e654a8d600b07d",
+      "bytes": 6020
     },
     {
       "path": ".github/workflows/cd-staging.yml",
