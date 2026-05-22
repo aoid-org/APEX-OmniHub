@@ -61,8 +61,8 @@
     },
     {
       "path": ".github/workflows/apex-governance.yml",
-      "sha256": "14d98a74c6b1ad71abb4414f784f2adfa70a15136263dbca17e654a8d600b07d",
-      "bytes": 6020
+      "sha256": "09f20b7f01d24304060b976aec12ac886c5c055fbc34742d6f759641352ceeaf",
+      "bytes": 6668
     },
     {
       "path": ".github/workflows/cd-staging.yml",
@@ -256,13 +256,13 @@
     },
     {
       "path": "governance/ci/scripts/apex_policy_check.py",
-      "sha256": "ad064e3898ab2095294cb0ef89db153ec3bacf1b8e5844c5f47eb2982d9943a7",
-      "bytes": 8260
+      "sha256": "de4241dd86ba1dd1b689563427234880eebea46512f17ca0b770e43aab4018ba",
+      "bytes": 8559
     },
     {
       "path": "governance/ci/scripts/apex_validate_manifest.py",
-      "sha256": "ac110b2560d17341df4ba64543c9873cd5f96545c73e84694b4af026206560b5",
-      "bytes": 5725
+      "sha256": "86ad5f36baac71e6a67290de5a066e69fd043bdbec98c03bc01af567cbb2ec53",
+      "bytes": 5779
     },
     {
       "path": "governance/data/DATA_CLASSIFICATION.md",
