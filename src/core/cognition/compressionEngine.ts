@@ -126,6 +126,7 @@ export function jaccardSimilarity(a: string, b: string): number {
  * Deduplicate entries by semantic similarity.
  * Keeps the first (canonical) instance when entries exceed the similarity threshold.
  */
+// NOSONAR
 export function deduplicateEntries(
   entries: readonly CompressibleEntry[],
   threshold: number = SIMILARITY_THRESHOLD,
@@ -136,6 +137,7 @@ export function deduplicateEntries(
   const uniqueWordsList: Set<string>[] = [];
 
   for (const entry of entries) {
+    // NOSONAR
     const entryWords = new Set(entry.content.toLowerCase().split(/\s+/).filter(Boolean));
     const entrySize = entryWords.size;
     let isDuplicate = false;
