@@ -575,6 +575,7 @@ Append an entry here after every agent-completed, verified workflow. Format: `YY
 | 2026-05-20 | commit `16c1425` | 8 stale docs permanently deleted (CHANGELOG logged first): `CICD_PIPELINE_DESIGN.md`, `DEPLOYMENT_ROLLOUT_PLAN.md`, `PRODUCTION_ROLLOUT_PLAN.md`, `APEX_ECOSYSTEM_STATUS.md`, `PRODUCTION_STATUS.md` + 3 archive copies | `docs/infrastructure/`, `docs/project-status/`, `docs/archive/`, `CHANGELOG.md` |
 | 2026-05-20 | PR #1185 / `a54bd7c` | B-2 structural fix: decouple shadow deployment from npm publish for private packages; SonarCloud script injection fix | `.github/workflows/release.yml`, `scripts/ci/write-release-evidence.mjs` |
 | 2026-05-20 | PR #1187 / `191e547` | Certification status updated: B-2 structural fix documented, path-to-certified updated | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` |
+| 2026-05-23 | commit (branch) | Omni-Recall continuity system installed at `memory/omni-recall/`; session-load hook added to §29; all stale GPT-workspace paths corrected; full blueprint folder shape created | `memory/omni-recall/`, `CLAUDE.md` |
 
 ---
 
@@ -598,3 +599,35 @@ Append an entry here after every agent-completed, verified workflow. Format: `YY
 - Operational decisions that belong in CHANGELOG or PR descriptions
 - Facts that may change frequently (PR numbers, CI run IDs)
 - Hallucinated command options or file paths
+
+---
+
+## §29 Omni-Recall Continuity System
+
+**Canonical path:** `memory/omni-recall/` (within this repo)
+**Installed:** 2026-05-23
+**Entry point:** `memory/omni-recall/start-here.md`
+
+### What it is
+
+Omni-Recall is the durable memory and continuity system for this workspace. It stores user preferences, corrections, project knowledge, and operating rules that should persist across sessions.
+
+### Session bootstrap
+
+At the start of any session where continuity matters, read in this order:
+1. `memory/omni-recall/CLAUDE.md`
+2. `memory/omni-recall/user-operating-model.md`
+3. `memory/omni-recall/quality-bar.md`
+4. `memory/omni-recall/do-not-do.md`
+5. `memory/omni-recall/omni-recall-master-blueprint-2026-05-23.md`
+
+### Persistence mechanism
+
+This runtime uses git commits + push as the only durable storage. Omni-Recall files in `memory/omni-recall/` survive across container instances only if committed and pushed.
+
+### Operating contract
+
+- Quiet by default — only surface real drift, conflict, risk, or decisions
+- Corrections go to `memory/omni-recall/wiki/corrections/` and propagate to canonical pages
+- Historical backfill: pending external exports (Phase 2)
+- Do not imply access to history not available through repo, uploads, or connected tools
