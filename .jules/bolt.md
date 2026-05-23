@@ -5,3 +5,6 @@
 ## YYYY-MM-DD - WorkflowBuilder Canvas Drag Optimization
 **Learning:** High-polling mice (e.g. 1000Hz) trigger `onMouseMove` excessively in React, which can flood the render queue and cause visual lag during SVG node drags. Standard debouncing/throttling might skip important final coordinate updates or stutter.
 **Action:** Always use `requestAnimationFrame` for high-frequency interactive canvas/SVG state updates (e.g. node dragging), tracking the `latestPosRef` and clearing the frame loop when interaction ceases, to perfectly sync with the browser refresh rate (~60 FPS).
+## 2025-02-16 - O(N^2) Array Search within deduplicateEntries optimization
+**Learning:** Re-calculating string parsing logic to check for word intersections inside an `O(N^2)` similarity deduplication nested loop caused serious bottlenecks because `Set` allocations add overhead.
+**Action:** When deduplicating objects via word matching or set calculations within an array, extract the calculated properties (like `Set` objects of words) into a separate lookup array or object to cache the value upfront and operate strictly with lookups in the subsequent comparison step.

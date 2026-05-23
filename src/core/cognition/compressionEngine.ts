@@ -132,12 +132,44 @@ export function deduplicateEntries(
 ): DeduplicationResult {
   const unique: CompressibleEntry[] = [];
 
+  // ⚡ Bolt: Cache tokenized sets to prevent O(N^2) string splits and Set instantiations
+  const uniqueWordsList: Set<string>[] = [];
+
   for (const entry of entries) {
-    const isDuplicate = unique.some(
-      (existing) => jaccardSimilarity(existing.content, entry.content) >= threshold,
-    );
+    const entryWords = new Set(entry.content.toLowerCase().split(/\s+/).filter(Boolean));
+    const entrySize = entryWords.size;
+    let isDuplicate = false;
+
+    for (let i = 0; i < unique.length; i++) {
+      const existingWords = uniqueWordsList[i];
+      const existingSize = existingWords.size;
+
+      if (entrySize === 0 && existingSize === 0) {
+        if (threshold <= 1) {
+          isDuplicate = true;
+          break;
+        }
+      } else if (entrySize === 0 || existingSize === 0) {
+        continue;
+      } else {
+        let intersection = 0;
+        for (const word of entryWords) {
+          if (existingWords.has(word)) intersection++;
+        }
+
+        const union = entrySize + existingSize - intersection;
+        const similarity = union === 0 ? 0 : intersection / union;
+
+        if (similarity >= threshold) {
+          isDuplicate = true;
+          break;
+        }
+      }
+    }
+
     if (!isDuplicate) {
       unique.push(entry);
+      uniqueWordsList.push(entryWords);
     }
   }
 
