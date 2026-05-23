@@ -1,0 +1,26 @@
+# Omni-Recall
+- Purpose: persistent GPT-operated continuity system for knowledge, preferences, corrections, and project memory.
+- Root: `/workspace/memory/omni-recall/`
+- Use raw evidence first, compiled wiki second, user-operating rules third.
+- Treat `/raw/` as immutable source material.
+- Treat `/wiki/` as AI-maintained canonical knowledge.
+- Prefer concise, linked markdown pages over long narrative dumps.
+- Keep claims traceable to raw evidence, repo evidence, tool evidence, or explicit user statements.
+- Never imply hidden access to full account history, model weights, or always-on hooks.
+- Retroactive backfill only from available exports, uploads, repos, and connected tools.
+- If historical data is missing, say so plainly and mark backfill pending.
+- Capture meaningful corrections in `/wiki/corrections/` and promote stable ones to directives or `user-operating-model.md`.
+- Separate verified fact from inference and claimed-but-unverified evidence.
+- Default timezone for user-facing date interpretation: `America/Edmonton`.
+- Use absolute dates when clarity matters.
+- Optimize for "wind, not dashboard": quiet by default, surface only real drift, conflict, risk, or decisions.
+- Prioritize these memory objects: projects, decisions, directives, user patterns, open loops, corrections.
+- Deduplicate aggressively; update canonical pages instead of spawning near-duplicates.
+- Do not overwrite raw evidence to "clean it up."
+- Do not create broad summaries when a canonical page update is enough.
+- Common failure modes to avoid:
+- pretending inaccessible history was ingested
+- storing temporary preferences as permanent rules
+- mixing audit claims with verified system truth
+- repeating corrected framing
+- producing noisy status output without need
