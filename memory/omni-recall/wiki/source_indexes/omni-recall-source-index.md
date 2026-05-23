@@ -26,3 +26,18 @@ Track canonical source records that materially define Omni-Recall.
    - Type: original zip extraction
    - Status: archived — live system is at `memory/omni-recall/`
    - Role: immutable record of initial package state
+
+5. Claude Code session memory `project_aup.md` (2026-05-14)
+   - Type: prior session memory export
+   - Status: promoted — see `wiki/projects/apex-aup.md`
+   - Role: source of APEX-AUP project facts
+
+6. GitHub API `apexbusiness-systems` org repo list (2026-05-23)
+   - Type: tool evidence
+   - Status: captured — see `wiki/projects/apex-omnihub.md`
+   - Role: full product portfolio snapshot
+
+7. GitHub API `APEX-OmniHub` repo root listing (2026-05-23)
+   - Type: tool evidence
+   - Status: captured — see `wiki/projects/apex-omnihub.md`
+   - Role: monorepo structure record
