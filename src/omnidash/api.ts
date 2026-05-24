@@ -309,11 +309,10 @@ export async function fetchHealthSnapshot(userId: string): Promise<{ lastUpdated
     )
   );
 
-  const lastUpdated = latest.filter(Boolean).sort((a, b) => {
-    if (a < b) return -1;
-    if (a > b) return 1;
-    return 0;
-  }).reverse()[0] ?? null;
+  const lastUpdated = latest.filter(Boolean).reduce((max, current) => {
+    return (current !== null && (!max || current > max)) ? current : max;
+  }, null as string | null);
+
   return { lastUpdated };
 }
 
