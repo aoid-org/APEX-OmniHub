@@ -1,13 +1,16 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-05-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.0-LAUNCH | LAST_UPDATED=2026-03-01 -->
 # OmniBoard: Connect-Only Onboarding Engine
 
 ## Definition
 
-OmniBoard is a deterministic, connect-only onboarding engine that outputs a verified Connection Spec and stops, performing no workflow logic, schema mapping, or automation.
+OmniBoard is a deterministic, connect-only onboarding engine that outputs a verified Connection Spec and stops, performing no workflow logic, schema mapping, or automation. It is the universal 3rd-party app integration engine that streamlines how you connect any external application (e.g., Claude, ChatGPT, Microsoft Word, Salesforce).
+
+**Connect AI (BYOM) Integration:** In addition to standard 3rd-party apps, OmniBoard powers the "Connect AI" (internally BYOM - Bring Your Own Model) onboarding flow. By using this engine, Connect AI acts as a first-class OAuth mechanism, allowing users to log in using their LLM accounts and use their own AI as the agent in their workspace.
 
 ## NON-NEGOTIABLE SCOPE
 
-- **Connect-Only**: Connects apps only.
+- **Connect-Only**: Connects 3rd-party apps (Claude, MS Word, etc.) and AI Models (Connect AI / BYOM) only.
+- **Unified Identity**: Connect AI (BYOM) operates as an OAuth login flow through this engine.
 - **No Orchestration**: MUST NOT ask about triggers, actions, workflows, or automation.
 - **Output**: Verified Connection Spec.
 - **Zero Drift**: Workflow logic remains in OmniLink/OmniHub; execution in OmniPort.
