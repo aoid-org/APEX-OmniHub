@@ -5,3 +5,6 @@
 ## YYYY-MM-DD - WorkflowBuilder Canvas Drag Optimization
 **Learning:** High-polling mice (e.g. 1000Hz) trigger `onMouseMove` excessively in React, which can flood the render queue and cause visual lag during SVG node drags. Standard debouncing/throttling might skip important final coordinate updates or stutter.
 **Action:** Always use `requestAnimationFrame` for high-frequency interactive canvas/SVG state updates (e.g. node dragging), tracking the `latestPosRef` and clearing the frame loop when interaction ceases, to perfectly sync with the browser refresh rate (~60 FPS).
+## 2026-05-24 - Replaced O(N log N) sort with O(N) reduce for finding max string date
+**Learning:** Sorting an array of date strings using `.sort().reverse()[0]` just to find the latest date introduces unnecessary O(N log N) overhead. While N might be small in certain cases, it's an inefficient pattern for finding a simple maximum.
+**Action:** Use `.reduce((max, current) => (current !== null && (!max || current > max)) ? current : max, null)` for an O(N) iteration that correctly finds the maximum string value without array mutation or sorting overhead.
