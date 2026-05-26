@@ -15,3 +15,4 @@ Each correction should capture:
 
 1. [[001-migration-linter-preceding-line]] — Fixes additive migration check exceptions.
 2. [[002-sonarqube-prng-hotspot]] — Resolves SonarQube S2245 PRNG security hotspots.
+3. [[003-sonar-coverage-migrations-exclusion]] — Excludes SQL DDL migrations from SonarCloud coverage constraints.
