@@ -35,7 +35,7 @@ import {
   Vibrate,
   Zap,
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -63,8 +63,16 @@ interface AlertEvent {
   acknowledged: boolean;
 }
 
-// ── Mock Telemetry Generator ────────────────────────────────────────────────
-// Generates realistic sensor data for chart rendering during pilot setup.
+// Cryptographically secure random helper to resolve S2245 security hotspots
+function getSecureRandom(): number {
+  const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
+  if (cryptoObj && cryptoObj.getRandomValues) {
+    const array = new Uint32Array(1);
+    cryptoObj.getRandomValues(array);
+    return array[0] / 4294967296; // 2^32
+  }
+  return 0.5; // Constant fallback to prevent security hotspots in testing/legacy environments
+}
 
 function generateMockTelemetry(count: number): TelemetryPoint[] {
   const now = Date.now();
@@ -82,10 +90,10 @@ function generateMockTelemetry(count: number): TelemetryPoint[] {
         second: '2-digit',
         hour12: false,
       }),
-      vibration_x: +(baseVibration + spike + Math.random() * 0.5).toFixed(2),
-      vibration_y: +(baseVibration * 0.8 + Math.random() * 0.4).toFixed(2),
-      vibration_z: +(baseVibration * 0.6 + Math.random() * 0.3).toFixed(2),
-      temperature_c: +(42.0 + Math.sin(i * 0.1) * 3 + Math.random() * 0.5).toFixed(1),
+      vibration_x: +(baseVibration + spike + getSecureRandom() * 0.5).toFixed(2),
+      vibration_y: +(baseVibration * 0.8 + getSecureRandom() * 0.4).toFixed(2),
+      vibration_z: +(baseVibration * 0.6 + getSecureRandom() * 0.3).toFixed(2),
+      temperature_c: +(42.0 + Math.sin(i * 0.1) * 3 + getSecureRandom() * 0.5).toFixed(1),
     });
   }
 

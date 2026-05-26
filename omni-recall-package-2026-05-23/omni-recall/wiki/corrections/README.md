@@ -14,3 +14,4 @@ Each correction should capture:
 ## Seeded Entries:
 
 1. [[001-migration-linter-preceding-line]] — Fixes additive migration check exceptions.
+2. [[002-sonarqube-prng-hotspot]] — Resolves SonarQube S2245 PRNG security hotspots.
