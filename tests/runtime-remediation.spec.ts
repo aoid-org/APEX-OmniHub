@@ -54,12 +54,13 @@ describe("runtime remediation source gates", () => {
       "supabase/functions/execute-automation/index.ts",
       "utf8"
     );
-    expect(source).toContain(
+    const normalizedSource = source.replace(/\r\n/g, '\n');
+    expect(normalizedSource).toContain(
       '.eq("id", automationId)\n      .eq("user_id", user.id)'
     );
-    expect(source).toContain(
-      '.eq("id", automationId)\n      .eq("user_id", user.id)'
-    );
+    // Note: The file has it twice, so checking once is fine, or we can check match count, but previous test checked toContain twice which is redundant.
+    const matchCount = (normalizedSource.match(/\.eq\("id", automationId\)\n {6}\.eq\("user_id", user\.id\)/g) || []).length;
+    expect(matchCount).toBe(2);
     expect(source).not.toContain("'users',");
     expect(source).not.toContain("'audit_logs',");
     expect(source).toContain("Record owner mismatch");

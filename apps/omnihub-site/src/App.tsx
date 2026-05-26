@@ -25,6 +25,7 @@ import { SmartIntegrationsPage } from "@/pages/SmartIntegrations";
 import { TechSpecsPage } from "@/pages/TechSpecs";
 import { TriForcePage } from "@/pages/TriForce";
 import OmniDash from "@/pages/product/OmniDash";
+import { PhysiOmniPilotPage } from "@/pages/PhysiOmniPilot";
 
 type AppRoute = {
   readonly path: string;
@@ -84,6 +85,7 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/product/omnidash", element: <OmniDash />, isPublic: true, routeName: "OmniDash" },
   { path: "/demo", element: <DemoPage />, isPublic: true, routeName: "Demo" },
   { path: "/demo.html", element: <DemoPage />, isPublic: true, routeName: "Demo" },
+  { path: "/physiomni-pilot", element: <PhysiOmniPilotPage />, isPublic: true, routeName: "PhysiOmni Pilot" },
 ];
 
 function App() {
@@ -102,8 +104,14 @@ function App() {
         ))}
 
         {/* OmniDash — the single post-auth surface */}
+        {/* BUG-008 FIX: /omnidash had no wildcard — sub-paths like /omnidash/pipeline
+            matched the catch-all * and redirected back to /omnidash instead of rendering.
+            Now: base route + wildcard both serve OmniDashShell; the shell reads
+            useLocation() to set active nav section. */}
         <Route path="/omnidash" element={createProtectedElement(OmniDashApp, false, "OmniDash")} />
+        <Route path="/omnidash/*" element={createProtectedElement(OmniDashApp, false, "OmniDash")} />
         <Route path="/dashboard" element={createProtectedElement(OmniDashApp, false, "Dashboard")} />
+        <Route path="/dashboard/*" element={createProtectedElement(OmniDashApp, false, "Dashboard")} />
 
         {/* All unmatched routes → OmniDash (SPA catch-all) */}
         <Route path="*" element={<Navigate to="/omnidash" replace />} />
