@@ -1,8 +1,9 @@
 # Omni-Recall User Patterns Seed
+**Version:** 1.1.0 | **Date:** 2026-05-26 | **Author:** Lead AI Co-Founder | **Status:** Audited & Active
 
 ## One-Line Definition
 
-Seed record of stable user tendencies inferred from repeated Omni-Recall design requests on 2026-05-23.
+Seed record of stable user tendencies inferred from repeated Omni-Recall design and execution requests on `2026-05-26`.
 
 ## Why It Matters
 
@@ -10,21 +11,21 @@ This page helps future runs converge faster on the user's preferred operating st
 
 ## Current State
 
-Observed patterns with provisional confidence:
-- prefers systems over one-off answers
-- wants retroactive continuity, not only forward memory
-- values signal density and decisive structure
-- dislikes maintenance-heavy or noisy solutions
-- wants truthfulness about runtime limits
-- wants corrections to propagate permanently
+Observed patterns with high confidence:
+- Prefers systems and deterministic database schemas over ad hoc templates.
+- Wants retroactive continuity preserved inside memory folders.
+- Values signal density, professional tone, and decisive structures.
+- Dislikes generic conversational chatter, process bloat, or soft summaries.
+- Demands 100% compliance with automated CI/CD checks, branch protection policies, and linter constraints.
+- Prefers command-line execution (e.g. CLI edge function deploys) over manual dashboard clicks when token access is supplied.
 
 ## Source References
 
-- `/workspace/user_files/01-Pasted-text-26-.txt`
-- `/workspace/memory/omni-recall/user-operating-model.md`
+- `omni-recall-package-2026-05-23/omni-recall/user-operating-model.md`
+- `C:\Users\sinyo\OMNILINK-APEX HUB\APEX-OmniLink\APEX-OmniHub\APEX-OmniHub\scripts\ci\check-additive-migrations.ts`
 
 ## Downstream Implications
 
-- favor canonical protocols
-- avoid generic summaries
-- distinguish implementable-now from phase-2 capability
+- Favor canonical protocols and precise preceding-line SQL linter comments.
+- Avoid generic explanations or soft hedging words.
+- Ingest operational and deployment evidence immediately upon success.
