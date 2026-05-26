@@ -19,6 +19,7 @@
 
 CREATE TABLE IF NOT EXISTS public.physiomni_devices (
   id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- additive-allow: ON_DELETE_CASCADE Clean up devices if tenant is deleted
   tenant_id    uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   device_serial text       NOT NULL,
   device_name   text,
@@ -131,6 +132,7 @@ CREATE TYPE public.physiomni_severity AS ENUM (
 
 CREATE TABLE IF NOT EXISTS public.physiomni_alerts (
   id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- additive-allow: ON_DELETE_CASCADE Clean up alerts if tenant is deleted
   tenant_id       uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   device_serial   text        NOT NULL,
   severity        public.physiomni_severity NOT NULL DEFAULT 'warning',
