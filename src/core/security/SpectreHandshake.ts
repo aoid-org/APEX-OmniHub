@@ -1,128 +1,160 @@
 /**
  * SpectreHandshake — Device authentication and classification.
  *
- * Extracts credentials from inbound connection headers,
- * validates the bearer token prefix, and maps the device
- * identifier to a TrustTier + capabilities via Aegis models.
+ * Implements Zero-Trust API Key validation:
+ * - High-entropy key format (ak_live_[tenant]_[random])
+ * - Stored hash validation with timing-safe comparison
+ * - Strict expiry and revocation checks
  *
  * @module core/security/SpectreHandshake
- * @version 1.0.0
- * @date 2026-02-09
+ * @version 2.0.0
+ * @date 2026-05-27
  */
 
-import {
-  type DeviceCapability,
-  type DeviceProfile,
-  TrustTier,
-} from '../types/index';
-
-/* ------------------------------------------------------------------ */
-/*  Device → Trust mapping (static, deterministic)                     */
-/* ------------------------------------------------------------------ */
-
-interface DeviceClassification {
-  readonly trustTier: TrustTier;
-  readonly capabilities: ReadonlyArray<DeviceCapability>;
-}
-
-const DEVICE_CLASSIFICATIONS: Record<string, DeviceClassification> = {
-  gumdrop: {
-    trustTier: TrustTier.PERIPHERAL,
-    capabilities: ['audio_in', 'audio_out', 'log_insight'],
-  },
-  'operator-desktop': {
-    trustTier: TrustTier.OPERATOR,
-    capabilities: [
-      'file_system',
-      'deploy_service',
-      'create_invoice',
-    ],
-  },
-  'apex-admin': {
-    trustTier: TrustTier.GOD_MODE,
-    capabilities: ['all'],
-  },
-};
-
-const DEFAULT_CLASSIFICATION: DeviceClassification = {
-  trustTier: TrustTier.PUBLIC,
-  capabilities: ['read_only'],
-};
-
-const AUTH_PREFIX = 'Bearer apex_sk_';
-
-/* ------------------------------------------------------------------ */
-/*  Errors                                                             */
-/* ------------------------------------------------------------------ */
+import { timingSafeEqual, createHash } from 'node:crypto';
+import type { DeviceProfile } from '../types/index';
+import { TrustTier } from '../types/index';
+import { AEGIS_MATRIX } from './AegisMatrix';
 
 export class SpectreAuthError extends Error {
-  constructor(
-    message: string,
-    public readonly statusCode: number = 403,
-  ) {
+  constructor(message: string, public readonly statusCode: number = 403) {
     super(message);
     this.name = 'SpectreAuthError';
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Header extraction helpers                                          */
-/* ------------------------------------------------------------------ */
+export interface AegisKeyRecord {
+  keyId: string;
+  tenantId: string;
+  keyHash: string; // sha256 of the random portion
+  trustTier: TrustTier;
+  status: 'active' | 'revoked' | 'expired';
+  expiresAt?: string;
+  environment: 'production' | 'staging' | 'development';
+  audience: string[];
+}
+
+/**
+ * Interface for database lookup of API keys.
+ */
+export interface AegisKeyStore {
+  lookupKey(prefix: string): Promise<AegisKeyRecord | null>;
+  updateLastUsed(keyId: string): Promise<void>;
+}
+
+// In-memory store for testing (will be replaced by Supabase adapter in production)
+let _keyStore: AegisKeyStore | null = null;
+
+export function setKeyStore(store: AegisKeyStore): void {
+  _keyStore = store;
+}
 
 type HeaderSource =
   | { get(name: string): string | null | undefined }
   | Record<string, string | undefined>;
 
-function getHeader(
-  source: HeaderSource,
-  name: string,
-): string | undefined {
-  if (typeof (source as { get?: unknown }).get === 'function') {
-    const val = (source as { get(n: string): string | null }).get(
-      name,
-    );
+function getHeader(source: HeaderSource, name: string): string | undefined {
+  if (typeof (source as any).get === 'function') {
+    const val = (source as any).get(name);
     return val ?? undefined;
   }
-  return (source as Record<string, string | undefined>)[name];
+  return (source as any)[name];
 }
 
-/* ------------------------------------------------------------------ */
-/*  Public API                                                         */
-/* ------------------------------------------------------------------ */
+function hashSecret(secret: string): string {
+  return createHash('sha256').update(secret).digest('hex');
+}
 
 /**
- * Authenticate and classify an inbound device connection.
+ * Authenticate and classify an inbound device connection using zero-trust principles.
  *
- * @param headers     - request or upgrade headers
- * @param connectionId - unique connection identifier (pre-generated)
+ * @param headers - request or upgrade headers
+ * @param connectionId - unique connection identifier
  * @returns DeviceProfile on success
  * @throws SpectreAuthError on missing/invalid credentials
  */
-export function authenticate(
+export async function authenticate(
   headers: HeaderSource,
   connectionId: string,
-): DeviceProfile {
+): Promise<DeviceProfile> {
+  if (!_keyStore) {
+    throw new Error('AegisKeyStore not initialized');
+  }
+
   const auth = getHeader(headers, 'authorization');
   if (!auth) {
     throw new SpectreAuthError('Missing authorization header');
   }
 
-  if (!auth.startsWith(AUTH_PREFIX)) {
-    throw new SpectreAuthError(
-      'Invalid authorization format',
-    );
+  const parts = auth.split(' ');
+  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+    throw new SpectreAuthError('Invalid authorization format');
   }
 
-  const deviceId =
-    getHeader(headers, 'x-apex-device-id') ?? 'unknown';
+  const token = parts[1];
+  
+  // Format: ak_live_[tenantId]_[random32]
+  const match = token.match(/^ak_(live|test)_([a-zA-Z0-9]+)_([a-zA-Z0-9]{32,})$/);
+  if (!match) {
+    throw new SpectreAuthError('Invalid API key format');
+  }
 
-  const classification =
-    DEVICE_CLASSIFICATIONS[deviceId] ?? DEFAULT_CLASSIFICATION;
+  const environment = match[1] === 'live' ? 'production' : 'test';
+  const tenantId = match[2];
+  const secretPart = match[3];
+
+  const prefix = token.slice(0, 16); // e.g. ak_live_tenant_xxxx
+  const record = await _keyStore.lookupKey(prefix);
+
+  if (!record) {
+    throw new SpectreAuthError('API key not found or revoked');
+  }
+
+  if (record.tenantId !== tenantId) {
+    throw new SpectreAuthError('Tenant mismatch');
+  }
+
+  if (record.status !== 'active') {
+    throw new SpectreAuthError(`API key is ${record.status}`);
+  }
+
+  if (record.expiresAt && new Date(record.expiresAt).getTime() < Date.now()) {
+    throw new SpectreAuthError('API key expired');
+  }
+
+  // Timing-safe comparison of the hash
+  const providedHash = hashSecret(secretPart);
+  const providedBuffer = Buffer.from(providedHash, 'hex');
+  const storedBuffer = Buffer.from(record.keyHash, 'hex');
+
+  if (providedBuffer.length !== storedBuffer.length) {
+    throw new SpectreAuthError('Invalid API key signature');
+  }
+
+  if (!timingSafeEqual(providedBuffer, storedBuffer)) {
+    throw new SpectreAuthError('Invalid API key signature');
+  }
+
+  // GOD_MODE must be restricted and break-glass only.
+  // We check for a special header to activate GOD_MODE, otherwise it acts as OPERATOR.
+  let effectiveTier = record.trustTier;
+  if (record.trustTier === TrustTier.GOD_MODE) {
+    const breakGlass = getHeader(headers, 'x-apex-break-glass');
+    if (breakGlass !== 'true') {
+      // Degrade to operator unless explicit break-glass is requested
+      effectiveTier = TrustTier.OPERATOR;
+    }
+  }
+
+  // Asynchronously update last used
+  _keyStore.updateLastUsed(record.keyId).catch((err) => {
+    console.error('Failed to update key last_used metadata', err);
+  });
 
   return {
-    deviceId,
-    trustTier: classification.trustTier,
-    capabilities: classification.capabilities,
+    deviceId: record.keyId,
+    trustTier: effectiveTier,
+    capabilities: AEGIS_MATRIX[effectiveTier] ?? ['read_only'],
     connectionId,
     authenticatedAt: new Date().toISOString(),
   };

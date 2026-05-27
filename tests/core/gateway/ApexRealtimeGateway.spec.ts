@@ -1,8 +1,9 @@
 /**
  * Tests for ApexRealtimeGateway (Nexus) — parsing, routing, lifecycle.
- * @date 2026-02-09
+ * @date 2026-05-27
  */
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createHash } from 'node:crypto';
 
 import {
   buildSessionUpdate,
@@ -18,11 +19,21 @@ import {
 } from '../../../src/core/gateway/ApexRealtimeGateway';
 import { setToolRunner } from '../../../src/core/orchestrator/ApexOrchestrator';
 import { _resetForTesting } from '../../../src/core/orchestrator/ChronosLock';
-import { SpectreAuthError } from '../../../src/core/security/SpectreHandshake';
+import { setKeyStore, SpectreAuthError, type AegisKeyStore, type AegisKeyRecord } from '../../../src/core/security/SpectreHandshake';
 import { TrustTier } from '../../../src/core/types/index';
 import type { DeviceProfile } from '../../../src/core/types/index';
 
+const hashSecret = (secret: string) => createHash('sha256').update(secret).digest('hex');
+
+const validTenant = 't1';
+const validSecret = '12345678901234567890123456789012'; // 32 chars
+const validAuth = `Bearer ak_live_${validTenant}_${validSecret}`;
+const validPrefix = `ak_live_${validTenant}_${validSecret}`.slice(0, 16);
+
 describe('ApexRealtimeGateway', () => {
+  let mockStore: AegisKeyStore;
+  let mockRecord: AegisKeyRecord;
+
   beforeEach(() => {
     _resetForTesting();
     setToolRunner(async (name) => ({
@@ -30,6 +41,26 @@ describe('ApexRealtimeGateway', () => {
       data: [],
       tool: name,
     }));
+
+    mockRecord = {
+      keyId: 'key-1',
+      tenantId: validTenant,
+      keyHash: hashSecret(validSecret),
+      trustTier: TrustTier.PERIPHERAL,
+      status: 'active',
+      environment: 'production',
+      audience: [],
+    };
+
+    mockStore = {
+      lookupKey: vi.fn(async (prefix: string) => {
+        if (prefix === validPrefix) return mockRecord;
+        return null;
+      }),
+      updateLastUsed: vi.fn(async () => {}),
+    };
+
+    setKeyStore(mockStore);
   });
 
   describe('generateIdempotencyKey', () => {
@@ -116,7 +147,7 @@ describe('ApexRealtimeGateway', () => {
   describe('routeToolCall', () => {
     it('returns item.create and response.create events', async () => {
       const device: DeviceProfile = {
-        deviceId: 'apex-admin',
+        deviceId: 'key-1',
         trustTier: TrustTier.GOD_MODE,
         capabilities: ['all'],
         connectionId: 'c1',
@@ -147,30 +178,27 @@ describe('ApexRealtimeGateway', () => {
   });
 
   describe('handleUpgrade', () => {
-    it('returns connection state on valid auth', () => {
-      const state = handleUpgrade({
-        authorization: 'Bearer apex_sk_test123',
-        'x-apex-device-id': 'gumdrop',
+    it('returns connection state on valid auth', async () => {
+      const state = await handleUpgrade({
+        authorization: validAuth,
       });
       expect(state.device.trustTier).toBe(TrustTier.PERIPHERAL);
       expect(state.connectionId).toBeTruthy();
     });
 
-    it('throws SpectreAuthError on invalid auth', () => {
-      expect(() =>
+    it('throws SpectreAuthError on invalid auth', async () => {
+      await expect(
         handleUpgrade({
           authorization: 'Bearer wrong',
-          'x-apex-device-id': 'gumdrop',
-        }),
-      ).toThrow(SpectreAuthError);
+        })
+      ).rejects.toThrow(SpectreAuthError);
     });
   });
 
   describe('hasQueueCapacity', () => {
-    it('returns true when queue is empty', () => {
-      const state = handleUpgrade({
-        authorization: 'Bearer apex_sk_test123',
-        'x-apex-device-id': 'gumdrop',
+    it('returns true when queue is empty', async () => {
+      const state = await handleUpgrade({
+        authorization: validAuth,
       });
       expect(hasQueueCapacity(state)).toBe(true);
     });
@@ -188,7 +216,7 @@ describe('ApexRealtimeGateway', () => {
   describe('buildSessionUpdate', () => {
     it('includes filtered tools in session payload', () => {
       const device: DeviceProfile = {
-        deviceId: 'gumdrop',
+        deviceId: 'key-1',
         trustTier: TrustTier.PERIPHERAL,
         capabilities: ['audio_in', 'audio_out'],
         connectionId: 'c1',
@@ -204,10 +232,9 @@ describe('ApexRealtimeGateway', () => {
   });
 
   describe('cleanup', () => {
-    it('clears timers and queue without error', () => {
-      const state = handleUpgrade({
-        authorization: 'Bearer apex_sk_test123',
-        'x-apex-device-id': 'gumdrop',
+    it('clears timers and queue without error', async () => {
+      const state = await handleUpgrade({
+        authorization: validAuth,
       });
       state.messageQueue.push('msg1', 'msg2');
       cleanup(state);
