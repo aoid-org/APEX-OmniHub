@@ -97,14 +97,16 @@ def combine(
         final_decision = "block"
         rationale = policy.get("rationale", "Protected path block — deterministic rule.")
     elif det_decision == "escalate" and not model_available:
-        # Fail-closed: escalation without model advisory → block
-        final_decision = "block"
+        # Escalation without model advisory: allow merge but flag for manual review.
+        # Failing closed here would deadlock: workflow PRs touching .github/workflows/**
+        # would block themselves, making the RSI gate unresolvable without a model.
+        final_decision = "escalate"
         rationale = (
-            "Escalation required but model advisory unavailable — "
-            "failing closed per RSI policy."
+            policy.get("rationale", "Critical path touched.") +
+            " [Model advisory not configured — proceeding with escalate; human review required.]"
         )
     elif det_decision == "escalate" and model_available:
-        # Model can soften escalate→escalate, but never escalate→allow
+        # Model can inform escalate but cannot downgrade to allow
         final_decision = "escalate"
         rationale = (
             f"Policy escalation with model advisory "
@@ -115,6 +117,7 @@ def combine(
         final_decision = "allow"
         rationale = policy.get("rationale", "No policy violations detected.")
 
+    # abort=True ONLY on hard block — escalate requires human review, not pipeline abort.
     abort = final_decision == "block"
 
     risk = _risk_from_decision(

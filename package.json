@@ -75,7 +75,7 @@
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:publish": "changeset publish",
-    "release": "bun run build && bun run changeset:publish",
+    "release": "bun run verify:release && bun run changeset:publish",
     "prebuild": "node scripts/check-env-root.mjs && node scripts/generate-sitemap.mjs",
     "armageddon:certify": "tsx src/scripts/certify-armageddon.ts",
     "armageddon:certify:ci": "tsx src/scripts/certify-armageddon-ci.ts",
@@ -84,7 +84,18 @@
     "rsi:evidence": "python3 tools/rsi/build_evidence.py",
     "rsi:dry": "RSI_DRY_RUN=1 python3 tools/rsi/build_evidence.py && python3 tools/rsi/policy_engine.py && python3 tools/rsi/decision.py && cat artifacts/rsi/decision.json",
     "rsi:ci": "python3 tools/rsi/build_evidence.py --ci && python3 tools/rsi/policy_engine.py && python3 tools/rsi/decision.py",
-    "rsi:test": "python3 -m pytest tests/rsi/ -v --tb=short"
+    "rsi:test": "python3 -m pytest tests/rsi/ -v --tb=short",
+    "verify:types": "tsc -b --noEmit",
+    "verify:lint": "bun run lint && bun run lint:py",
+    "verify:test": "bun run test && bun run test:py",
+    "verify:build": "bun run build",
+    "verify:security": "bun run secret:scan && bun run security:audit",
+    "verify:assets": "bun run test:assets",
+    "verify:supabase-security": "node scripts/ci/verify-supabase-security.mjs",
+    "verify:claim-hygiene": "node scripts/ci/verify-claim-hygiene.mjs",
+    "verify:ci-integrity": "node scripts/ci/verify-ci-integrity.mjs",
+    "verify:supply-chain": "node scripts/ci/verify-supply-chain.mjs",
+    "verify:release": "node scripts/ci/verify-release.mjs"
   },
   "size-limit": [
     {

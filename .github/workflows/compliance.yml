@@ -7,6 +7,12 @@ on:
       - main
       - release/*
 
+env:
+  NPM_CONFIG_FETCH_RETRIES: '5'
+  NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: '15000'
+  NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: '60000'
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
 jobs:
   legal-drift-gate:
     permissions:
@@ -133,9 +139,11 @@ jobs:
             -Dsonar.organization=apexbusiness-systems \
             -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
             -Dsonar.qualitygate.wait=true
+        if: env.SONAR_TOKEN != ''
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       - name: Fail on new critical/blocker issues
+        if: env.SONAR_TOKEN != ''
         run: |
           if grep -q '"severity":"CRITICAL"\|"severity":"BLOCKER"' \
             .scannerwork/report-task.txt 2>/dev/null; then

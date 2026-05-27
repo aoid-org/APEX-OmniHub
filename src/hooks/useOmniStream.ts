@@ -199,7 +199,8 @@ export function useOmniStream(
         }
       });
 
-    channelRef.current = channel;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    channelRef.current = channel as any;
   }, [sessionId, mergeEvent]);
 
   /**

@@ -180,7 +180,8 @@ export async function verifyM2MToken(token: string, secret: string): Promise<M2M
   const valid = await crypto.subtle.verify(
     'HMAC',
     key,
-    signatureBytes,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    signatureBytes as any,
     encoder.encode(signingInput),
   );
 

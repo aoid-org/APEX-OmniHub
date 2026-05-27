@@ -565,7 +565,7 @@ describe('PWA Analytics', () => {
       await new Promise(r => setTimeout(r, 0));
 
       expect(spy).toHaveBeenCalled();
-      const sessionEndCall = spy.mock.calls.find((call: [string, Record<string, unknown>]) => call[0] === 'pwa.session.end') as [string, Record<string, unknown>] | undefined;
+      const sessionEndCall = spy.mock.calls.find((call: any[]) => call[0] === 'pwa.session.end') as [string, Record<string, unknown>] | undefined;
       if (!sessionEndCall) throw new Error('pwa.session.end event not found');
 
       expect(sessionEndCall).toBeDefined();

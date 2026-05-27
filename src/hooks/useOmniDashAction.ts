@@ -1,1 +1,1 @@
-export { useOmniDashAction, type OmniDashIntent } from '@/omnidash/useOmniDashAction';
+export { useOmniDashAction, type OmniDashIntent, type OmniDashConnectStatus } from '@/omnidash/useOmniDashAction';

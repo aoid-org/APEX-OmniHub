@@ -12,7 +12,7 @@ const mockChannel = {
   on: vi.fn(),
   subscribe: vi.fn(),
 };
-const mockChannelFactory = vi.fn(() => mockChannel);
+const mockChannelFactory = vi.fn((..._args: any[]) => mockChannel);
 const mockRemoveChannel = vi.fn();
 
 const mockFetchSettings = vi.fn();

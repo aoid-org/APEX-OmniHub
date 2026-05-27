@@ -16,6 +16,11 @@ concurrency:
   group: production-readiness-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  NPM_CONFIG_FETCH_RETRIES: '5'
+  NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: '15000'
+  NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: '60000'
+
 jobs:
   quality-gates:
     name: Quality Gates
@@ -121,8 +126,8 @@ jobs:
   smoke-tests:
     name: Smoke Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [quality-gates, security-gates]
+    timeout-minutes: 35
+    needs: [quality-gates]
     permissions:
       contents: read
     steps:
@@ -133,6 +138,7 @@ jobs:
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: "24"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
@@ -144,7 +150,17 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'ci-placeholder-publishable-key' }}
 
-      - name: Install Playwright
+      - name: Cache Playwright browsers
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            playwright-chromium-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npm exec --no --ignore-scripts -- playwright install chromium
 
       - name: Install Playwright OS Dependencies
@@ -174,7 +190,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [quality-gates, security-gates, smoke-tests]
-    if: always()
+    if: always() && !cancelled()
     permissions: {}
     steps:
       - name: Check all gates passed

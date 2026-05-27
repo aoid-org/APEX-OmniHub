@@ -34,7 +34,7 @@ const makeIntent = (overrides: Partial<OmniDashIntent> = {}): OmniDashIntent => 
   routePath: '/omnidash/integrations/quickbooks',
   dashboardStatus: 'Partial',
   ...overrides,
-}) as OmniDashIntent;
+});
 
 const setupStores = () => {
   const hydrateConnector = vi.fn();
@@ -46,10 +46,10 @@ const setupStores = () => {
       hydrateConnector,
       setConnectorStatus,
     };
-    return selector(state);
+    return selector(state as any);
   });
 
-  vi.mocked(useOmniModal.getState).mockReturnValue({ invoke });
+  vi.mocked(useOmniModal.getState).mockReturnValue({ invoke } as any);
 
   return { hydrateConnector, setConnectorStatus, invoke };
 };

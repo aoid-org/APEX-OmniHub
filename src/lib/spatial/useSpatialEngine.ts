@@ -17,7 +17,11 @@
  */
 
 import { useRef, useCallback, useEffect } from 'react';
-import { QuadTree, type SpatialEntity, type Bounds } from './QuadTree';
+import { QuadTree, type Point, type Rectangle } from './QuadTree';
+
+export type Bounds = Rectangle;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SpatialEntity = Point<any>;
 
 // ============================================================================
 // Types
@@ -47,7 +51,8 @@ export interface SpatialEngineAPI {
   /** Current transform (read-only ref — do not mutate directly) */
   transformRef: React.RefObject<SpatialTransform>;
   /** The QuadTree for spatial queries */
-  quadTree: React.RefObject<QuadTree>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  quadTree: React.RefObject<QuadTree<any>>;
   /** Apply a translation delta (pan) */
   pan: (dx: number, dy: number) => void;
   /** Apply zoom centered at a viewport point */
@@ -97,7 +102,8 @@ export function useSpatialEngine(options: SpatialEngineOptions = {}): SpatialEng
   } = options;
 
   const transformRef = useRef<SpatialTransform>({ tx: 0, ty: 0, scale: 1 });
-  const quadTreeRef = useRef<QuadTree>(new QuadTree(worldBounds));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const quadTreeRef = useRef<QuadTree<any>>(new QuadTree<any>(worldBounds));
   const rafIdRef = useRef<number>(0);
   const dirtyRef = useRef(false);
   const targetElementRef = useRef<HTMLElement | null>(null);
@@ -190,7 +196,8 @@ export function useSpatialEngine(options: SpatialEngineOptions = {}): SpatialEng
   }, []);
 
   const removeEntity = useCallback((id: string) => {
-    quadTreeRef.current.remove(id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (quadTreeRef.current as any).remove(id);
   }, []);
 
   return {

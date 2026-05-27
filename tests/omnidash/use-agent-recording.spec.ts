@@ -38,7 +38,7 @@ const mockStream = {
 };
 
 describe('useAgentRecording', () => {
-  let addTraceLog: ReturnType<typeof vi.fn>;
+  let addTraceLog: any;
 
   beforeEach(() => {
     addTraceLog = vi.fn();

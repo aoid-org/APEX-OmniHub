@@ -5,7 +5,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import React from 'react';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────
 
@@ -43,7 +42,7 @@ import { ConnectorKit } from '@/components/ConnectorKit';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────
 
-const mockIntegration = {
+const mockIntegration: any = {
   id: 'meta-business',
   name: 'Meta Business',
   provider: 'meta',
@@ -51,6 +50,8 @@ const mockIntegration = {
   scopes: ['pages_read', 'ads_read'],
   authType: 'oauth2' as const,
   icon: '/icons/meta.svg',
+  type: 'meta',
+  requiresApiKey: true,
 };
 
 // ─── Tests ────────────────────────────────────────────────────────────────

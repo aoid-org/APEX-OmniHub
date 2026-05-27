@@ -13,9 +13,7 @@ export default function OmniSkillsModule({ onClose }: Props) {
   const navigate = useNavigate();
 
   // Derive live counts from registry/live stats — never hardcode.
-  const activeStat = state.stats.find(s => s.label === 'Active Skills');
   const freeSkillsStat = state.stats.find(s => s.label === 'Free Skills Used');
-  const _activeCount = activeStat?.value ?? '0';
   const freeSkillsStr = freeSkillsStat?.value ?? '0/3';
   
   const [used, total] = freeSkillsStr.split('/').map(n => Number.parseInt(n, 10));

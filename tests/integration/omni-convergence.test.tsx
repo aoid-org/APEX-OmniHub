@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import React, { type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { loadSkill } from '../../src/core/skills/SkillRegistry';
 import { OmniLinkShell } from '../../src/layouts/OmniLinkShell';
 

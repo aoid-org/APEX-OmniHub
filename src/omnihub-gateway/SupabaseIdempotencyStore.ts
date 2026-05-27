@@ -14,7 +14,8 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { IdempotencyStore, IdempotencyEntry } from './types';
+import type { IdempotencyEntry } from './types';
+import type { IdempotencyStore } from './IdempotencyManager';
 
 export class SupabaseIdempotencyStore implements IdempotencyStore {
   constructor(private readonly supabase: SupabaseClient) {}
