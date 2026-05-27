@@ -122,7 +122,7 @@ jobs:
     name: Smoke Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [quality-gates, security-gates]
+    needs: [quality-gates]
     permissions:
       contents: read
     steps:
@@ -174,7 +174,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [quality-gates, security-gates, smoke-tests]
-    if: always()
+    if: always() && !cancelled()
     permissions: {}
     steps:
       - name: Check all gates passed
