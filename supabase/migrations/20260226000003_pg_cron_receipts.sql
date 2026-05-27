@@ -17,10 +17,11 @@ BEGIN
     CREATE INDEX IF NOT EXISTS idx_receipts_cleanup
       ON receipts (created_at, status);
 
-    -- additive-allow: DELETE_FROM Clean up processed receipts older than 30 days
+    -- Schedule: every day at 03:00 UTC
     PERFORM cron.schedule(
       'clean-receipts',
       '0 3 * * *',
+      -- additive-allow: DELETE_FROM Clean up processed receipts older than 30 days
       $$DELETE FROM receipts
         WHERE created_at < NOW() - INTERVAL '30 days'
           AND status = 'processed';$$
