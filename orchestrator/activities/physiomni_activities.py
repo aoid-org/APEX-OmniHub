@@ -14,23 +14,25 @@ import os
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from supabase import Client, create_client
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
+
+from providers.database.factory import get_database_provider
 
 # ── 1. SECURE CLIENT INITIALIZATION ──────────────────────────────────────────
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY", "")
 
 
-def get_supabase_client() -> Client:
-    """Instantiate a secure Supabase client."""
-    if not SUPABASE_URL or not SUPABASE_KEY:
-        raise ApplicationError(
-            "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables must be defined.",
-            non_retryable=True,
-        )
-    return create_client(SUPABASE_URL, SUPABASE_KEY)
+def get_supabase_client() -> Any:
+    """Get the active database provider's client instance securely."""
+    db = get_database_provider()
+    if hasattr(db, "client"):
+        return db.client
+    raise ApplicationError(
+        "Active database provider does not expose a client instance.",
+        non_retryable=True,
+    )
 
 
 # ── 2. COMPUTE 14-DAY BASELINE ACTIVITY ─────────────────────────────────────
