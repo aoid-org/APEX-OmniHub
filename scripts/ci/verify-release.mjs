@@ -1,3 +1,5 @@
+// APEX-OmniHub Production Release Verification Suite
+// Sonar-clean: S5443, S1126, S2486, S4036 addressed.
 import { spawnSync, spawn } from "node:child_process";
 import process from "node:process";
 import fs from "node:fs";
@@ -6,124 +8,124 @@ import path from "node:path";
 console.log("=== APEX-OmniHub Production Release Verification Suite ===");
 
 const verifyScripts = [
-  { name: "verify:ci-integrity", desc: "CI configuration & integrity scan" },
-  { name: "verify:types", desc: "TypeScript referenced project typecheck" },
-  { name: "verify:lint", desc: "Strict ESLint & Ruff checks" },
-  { name: "verify:test", desc: "Vitest & Pytest verification" },
-  { name: "verify:build", desc: "Vite production compilation" },
-  { name: "verify:security", desc: "Secrets & npm audit checks" },
-  { name: "verify:assets", desc: "Production assets resolution checks" },
+  { name: "verify:ci-integrity",      desc: "CI configuration & integrity scan" },
+  { name: "verify:types",             desc: "TypeScript referenced project typecheck" },
+  { name: "verify:lint",              desc: "Strict ESLint & Ruff checks" },
+  { name: "verify:test",              desc: "Vitest & Pytest verification" },
+  { name: "verify:build",             desc: "Vite production compilation" },
+  { name: "verify:security",          desc: "Secrets & npm audit checks" },
+  { name: "verify:assets",            desc: "Production assets resolution checks" },
   { name: "verify:supabase-security", desc: "Supabase table RLS & functions audit" },
-  { name: "verify:claim-hygiene", desc: "Launch badge & public copy alignment" },
-  { name: "verify:supply-chain", desc: "Dependency provenance & lockfile checks" }
+  { name: "verify:claim-hygiene",     desc: "Launch badge & public copy alignment" },
+  { name: "verify:supply-chain",      desc: "Dependency provenance & lockfile checks" },
 ];
 
-function sanitizePath() {
-  const currentPath = process.env.PATH || "";
-  const separator = process.platform === "win32" ? ";" : ":";
-  const paths = currentPath.split(separator);
-  
-  const safePaths = paths.filter(p => {
-    if (!p) return false;
-    if (!path.isAbsolute(p)) return false;
+// Allowlist of PATH entries that are safe for subprocess execution.
+// Uses an allowlist (not a blocklist) to avoid S5443 false positives on
+// writable-directory detection — we never create files here, only filter PATH.
+const WIN_PATH_ALLOWLIST = [
+  String.raw`\bun\bin`,
+  String.raw`\program files\`,
+  String.raw`\windows\system32`,
+  String.raw`\windows\`,
+];
+const UNIX_PATH_ALLOWLIST = [
+  "/.bun/bin",
+  "/usr/local/bin",
+  "/usr/bin",
+  "/bin",
+  "/opt/",
+];
 
-    const lower = p.toLowerCase();
-    if (process.platform === "win32") {
-      const isWritableDir = lower.includes(String.raw`\temp`) || lower.includes(String.raw`\appdata`) || lower.includes(String.raw`\users\`) || lower.includes(".");
-      return !isWritableDir || lower.includes(String.raw`\.bun\bin`);
-    }
-    const isWritableDir = lower.includes("/tmp") || lower.includes("/home/") || lower.includes("/users/");
-    return !isWritableDir || lower.includes("/.bun/bin");
-  });
-  
-  return safePaths.join(separator);
+function isSafePathEntry(p) {
+  if (!p || !path.isAbsolute(p)) return false;
+  const lower = p.toLowerCase();
+  const allowlist = process.platform === "win32" ? WIN_PATH_ALLOWLIST : UNIX_PATH_ALLOWLIST;
+  return allowlist.some((safe) => lower.includes(safe));
+}
+
+function sanitizePath() {
+  const currentPath = process.env.PATH ?? "";
+  const separator = process.platform === "win32" ? ";" : ":";
+  return currentPath.split(separator).filter(isSafePathEntry).join(separator);
 }
 
 function findSystemPkgManager(isWin) {
-  if (isWin) {
-    const winPaths = [
-      String.raw`C:\Program Files\bun\bun.exe`,
-      String.raw`C:\Program Files\nodejs\node.exe`
-    ];
-    for (const p of winPaths) {
-      if (fs.existsSync(p)) return p;
-    }
-  } else {
-    const unixPaths = [
-      "/usr/local/bin/bun",
-      "/usr/bin/bun",
-      "/bin/bun"
-    ];
-    for (const p of unixPaths) {
-      if (fs.existsSync(p)) return p;
-    }
-  }
-  return null;
+  const candidates = isWin
+    ? [String.raw`C:\Program Files\bun\bun.exe`, String.raw`C:\Program Files\nodejs\node.exe`]
+    : ["/usr/local/bin/bun", "/usr/bin/bun", "/bin/bun"];
+  return candidates.find((p) => fs.existsSync(p)) ?? null;
 }
 
 function findAbsolutePkgManager() {
   const isWin = process.platform === "win32";
   const binaryName = isWin ? "bun.exe" : "bun";
-  
-  // 1. Check npm_execpath (set by package manager during execution)
+
+  // 1. Respect npm_execpath set by the calling package manager
   if (process.env.npm_execpath && fs.existsSync(process.env.npm_execpath)) {
     return process.env.npm_execpath;
   }
-  
-  // 2. Check user's home directory for bun
-  const homeDir = process.env.USERPROFILE || process.env.HOME || "";
+
+  // 2. User-local bun installation
+  const homeDir = process.env.USERPROFILE ?? process.env.HOME ?? "";
   if (homeDir) {
     const localBun = path.join(homeDir, ".bun", "bin", binaryName);
-    if (fs.existsSync(localBun)) {
-      return localBun;
-    }
+    if (fs.existsSync(localBun)) return localBun;
   }
-  
-  // 3. Fallback to standard system locations
+
+  // 3. Well-known system locations
   const systemPath = findSystemPkgManager(isWin);
   if (systemPath) return systemPath;
-  
-  // 4. Ultimate fallback (let system search)
+
+  // 4. Ultimate fallback
   return isWin ? "bun.cmd" : "bun";
 }
 
+// Downstream gates that are declared but not yet fully implemented — honest failures allowed.
+const DOWNSTREAM_GATES = new Set([
+  "verify:supabase-security",
+  "verify:claim-hygiene",
+  "verify:supply-chain",
+  "verify:types",
+  "verify:assets",
+]);
+
 let failed = false;
 const pkgManager = findAbsolutePkgManager();
+const safeEnv = { ...process.env, PATH: sanitizePath() };
 console.log(`[INFO] Operating under package manager: ${pkgManager}`);
 
 for (const script of verifyScripts) {
   console.log(`\nRunning ${script.name} [${script.desc}]...`);
-  let serverProcess;
-  
+  let serverProcess = null;
+
   if (script.name === "verify:assets") {
     console.log("[INFO] Starting background Vite preview server for asset checks...");
-    // Use the absolute path to pkgManager and sanitized PATH to prevent S4036 PATH vulnerability
-    serverProcess = spawn(pkgManager, ["run", "preview"], { 
+    // shell: false + absolute binary path prevents S4036 PATH-injection vulnerability.
+    serverProcess = spawn(pkgManager, ["run", "preview"], {
       stdio: "ignore",
-      env: { ...process.env, PATH: sanitizePath() },
-      shell: false 
+      env: safeEnv,
+      shell: false,
     });
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000)); // eslint-disable-line no-await-in-loop
   }
 
   try {
-    // Use absolute path pkgManager, sanitized PATH and spawnSync to prevent S4036 PATH vulnerability
-    const result = spawnSync(pkgManager, ["run", script.name], { 
+    const result = spawnSync(pkgManager, ["run", script.name], {
       stdio: "inherit",
-      env: { ...process.env, PATH: sanitizePath() },
-      shell: false 
+      env: safeEnv,
+      shell: false,
     });
     if (result.status !== 0) {
       throw new Error(`Command failed with status ${result.status}`);
     }
     console.log(`✓ ${script.name} PASSED.`);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+  } catch (err) {
+    // Consume the error — message is always logged so the catch is never empty (S2486).
+    const message = err instanceof Error ? err.message : String(err);
     console.error(`\n❌ ${script.name} FAILED: ${message}`);
 
-    // Check if this is a known downstream unimplemented gate
-    const isDownstream = ["verify:supabase-security", "verify:claim-hygiene", "verify:supply-chain", "verify:types", "verify:assets"].includes(script.name);
-    if (isDownstream) {
+    if (DOWNSTREAM_GATES.has(script.name)) {
       console.log(`[INFO] Honest failure allowed on downstream unimplemented gate "${script.name}".`);
     } else {
       console.log(`[CRITICAL] Required gate "${script.name}" failed.`);
@@ -136,9 +138,7 @@ for (const script of verifyScripts) {
     }
   }
 
-  if (failed) {
-    break;
-  }
+  if (failed) break;
 }
 
 if (failed) {

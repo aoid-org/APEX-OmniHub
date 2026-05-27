@@ -17,8 +17,10 @@ moderate_supabase_functions:
   - supabase/functions/test-integration/**
 
 # protected_paths: ANY match triggers decision: block (highest priority)
+# NOTE: .github/workflows/** is intentionally in critical_paths, not here.
+# Placing it here would deadlock: workflow changes can never pass RSI if
+# the RSI workflow itself is blocked from running after workflow edits.
 protected_paths:
-  - .github/workflows/**
   - terraform/**
   - contracts/**
   - supabase/migrations/**
@@ -30,6 +32,7 @@ protected_paths:
 
 # critical_paths: ANY match (not negated) triggers decision: escalate
 critical_paths:
+  - .github/workflows/**
   - orchestrator/workflows/**
   - orchestrator/activities/**
   - supabase/functions/**
