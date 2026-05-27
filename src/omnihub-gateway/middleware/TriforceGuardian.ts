@@ -204,8 +204,8 @@ export function extractBearerToken(authHeader: string | undefined | null): strin
 export function createJWTInterceptor(config?: Partial<JWTConfig>): GuardianInterceptor {
   const cfg: JWTConfig = {
     ...DEFAULT_JWT_CONFIG,
-    supabaseUrl: (typeof process !== 'undefined' ? process.env?.['SUPABASE_URL'] : undefined) ?? DEFAULT_JWT_CONFIG.supabaseUrl,
-    supabaseServiceRoleKey: (typeof process !== 'undefined' ? process.env?.['SUPABASE_SERVICE_ROLE_KEY'] : undefined) ?? DEFAULT_JWT_CONFIG.supabaseServiceRoleKey,
+    supabaseUrl: (typeof process === 'undefined' ? undefined : process.env?.['SUPABASE_URL']) ?? DEFAULT_JWT_CONFIG.supabaseUrl,
+    supabaseServiceRoleKey: (typeof process === 'undefined' ? undefined : process.env?.['SUPABASE_SERVICE_ROLE_KEY']) ?? DEFAULT_JWT_CONFIG.supabaseServiceRoleKey,
     ...config,
   };
 

@@ -34,7 +34,7 @@ const makeIntent = (overrides: Partial<OmniDashIntent> = {}): OmniDashIntent => 
   routePath: '/omnidash/integrations/quickbooks',
   dashboardStatus: 'Partial',
   ...overrides,
-}) as OmniDashIntent;
+});
 
 const setupStores = () => {
   const hydrateConnector = vi.fn();

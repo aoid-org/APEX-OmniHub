@@ -26,20 +26,16 @@ const workflowFiles = fs.readdirSync(WORKFLOWS_DIR).filter(file => file.endsWith
 // Track workflow names and job names to detect duplicates
 const workflowNames = new Map();
 const allJobs = new Set();
-const workflowJobMap = new Map();
-
 for (const file of workflowFiles) {
   const filePath = path.join(WORKFLOWS_DIR, file);
   const content = fs.readFileSync(filePath, "utf8");
   const lines = content.split(/\r?\n/);
 
   let workflowName = "";
-  const jobsInFile = [];
 
   // Parse workflow name and job IDs using a robust stateful parser
   let inJobsBlock = false;
-  for (let i = 0; i < lines.length; i++) {
-    const rawLine = lines[i];
+  for (const rawLine of lines) {
     const line = rawLine.trim();
 
     // Skip comments
@@ -47,7 +43,7 @@ for (const file of workflowFiles) {
 
     // Detect workflow name
     const nameMatch = line.match(/^name:\s*(?:"([^"]+)"|'([^']+)'|([^#\n]+))/i);
-    if (nameMatch && !workflowName) {
+    if (nameMatch && workflowName === "") {
       workflowName = (nameMatch[1] || nameMatch[2] || nameMatch[3]).trim();
     }
 
@@ -64,16 +60,13 @@ for (const file of workflowFiles) {
 
     if (inJobsBlock) {
       // A job key has exactly 2 spaces indentation followed by a word and a colon
-      const jobKeyMatch = rawLine.match(/^  ([a-zA-Z0-9_-]+):\s*$/);
+      const jobKeyMatch = rawLine.match(/^ {2}([a-zA-Z0-9_-]+):\s*$/);
       if (jobKeyMatch) {
         const jobId = jobKeyMatch[1];
-        jobsInFile.push(jobId);
         allJobs.add(jobId);
       }
     }
   }
-
-  workflowJobMap.set(file, { name: workflowName, jobs: jobsInFile });
 
   if (workflowName) {
     if (workflowNames.has(workflowName)) {
@@ -128,9 +121,7 @@ for (const file of workflowFiles) {
 }
 
 // 2. Read docs/release/branch-protection.md and verify job name matching
-if (!fs.existsSync(BRANCH_PROTECTION_FILE)) {
-  logError(`Branch protection documentation not found at ${BRANCH_PROTECTION_FILE}`);
-} else {
+if (fs.existsSync(BRANCH_PROTECTION_FILE)) {
   const bpContent = fs.readFileSync(BRANCH_PROTECTION_FILE, "utf8");
   
   // Extract required job IDs from the markdown file using regex
@@ -147,13 +138,15 @@ if (!fs.existsSync(BRANCH_PROTECTION_FILE)) {
     console.log(`Parsed ${requiredJobs.length} required checks from branch-protection.md:`, requiredJobs);
     
     for (const job of requiredJobs) {
-      if (!allJobs.has(job)) {
-        logError(`Required branch protection job "${job}" is declared in docs, but does NOT exist in any workflow!`);
-      } else {
+      if (allJobs.has(job)) {
         console.log(`✓ Required check "${job}" matches a workflow job.`);
+      } else {
+        logError(`Required branch protection job "${job}" is declared in docs, but does NOT exist in any workflow!`);
       }
     }
   }
+} else {
+  logError(`Branch protection documentation not found at ${BRANCH_PROTECTION_FILE}`);
 }
 
 if (hasErrors) {

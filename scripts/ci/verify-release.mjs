@@ -18,6 +18,60 @@ const verifyScripts = [
   { name: "verify:supply-chain", desc: "Dependency provenance & lockfile checks" }
 ];
 
+function sanitizePath() {
+  const currentPath = process.env.PATH || "";
+  const separator = process.platform === "win32" ? ";" : ":";
+  const paths = currentPath.split(separator);
+  
+  const safePaths = paths.filter(p => {
+    if (!p) return false;
+    if (!path.isAbsolute(p)) return false;
+    
+    if (process.platform === "win32") {
+      const lower = p.toLowerCase();
+      if (lower.includes("\\temp") || lower.includes("\\appdata") || lower.includes("\\users\\") || lower.includes(".")) {
+        if (lower.includes("\\.bun\\bin")) {
+          return true;
+        }
+        return false;
+      }
+    } else {
+      const lower = p.toLowerCase();
+      if (lower.includes("/tmp") || lower.includes("/home/") || lower.includes("/users/")) {
+        if (lower.includes("/.bun/bin")) {
+          return true;
+        }
+        return false;
+      }
+    }
+    return true;
+  });
+  
+  return safePaths.join(separator);
+}
+
+function findSystemPkgManager(isWin) {
+  if (isWin) {
+    const winPaths = [
+      "C:\\Program Files\\bun\\bun.exe",
+      "C:\\Program Files\\nodejs\\node.exe"
+    ];
+    for (const p of winPaths) {
+      if (fs.existsSync(p)) return p;
+    }
+  } else {
+    const unixPaths = [
+      "/usr/local/bin/bun",
+      "/usr/bin/bun",
+      "/bin/bun"
+    ];
+    for (const p of unixPaths) {
+      if (fs.existsSync(p)) return p;
+    }
+  }
+  return null;
+}
+
 function findAbsolutePkgManager() {
   const isWin = process.platform === "win32";
   const binaryName = isWin ? "bun.exe" : "bun";
@@ -37,86 +91,70 @@ function findAbsolutePkgManager() {
   }
   
   // 3. Fallback to standard system locations
-  const winPaths = [
-    "C:\\Program Files\\bun\\bun.exe",
-    "C:\\Program Files\\nodejs\\node.exe"
-  ];
-  if (isWin) {
-    for (const p of winPaths) {
-      if (fs.existsSync(p)) return p;
-    }
-  } else {
-    const unixPaths = [
-      "/usr/local/bin/bun",
-      "/usr/bin/bun",
-      "/bin/bun"
-    ];
-    for (const p of unixPaths) {
-      if (fs.existsSync(p)) return p;
-    }
-  }
+  const systemPath = findSystemPkgManager(isWin);
+  if (systemPath) return systemPath;
   
   // 4. Ultimate fallback (let system search)
   return isWin ? "bun.cmd" : "bun";
 }
 
-async function run() {
-  let failed = false;
-  const pkgManager = findAbsolutePkgManager();
-  console.log(`[INFO] Operating under package manager: ${pkgManager}`);
+let failed = false;
+const pkgManager = findAbsolutePkgManager();
+console.log(`[INFO] Operating under package manager: ${pkgManager}`);
 
-  for (const script of verifyScripts) {
-    console.log(`\nRunning ${script.name} [${script.desc}]...`);
-    let serverProcess;
+for (const script of verifyScripts) {
+  console.log(`\nRunning ${script.name} [${script.desc}]...`);
+  let serverProcess;
+  
+  if (script.name === "verify:assets") {
+    console.log("[INFO] Starting background Vite preview server for asset checks...");
+    // Use the absolute path to pkgManager and sanitized PATH to prevent S4036 PATH vulnerability
+    serverProcess = spawn(pkgManager, ["run", "preview"], { 
+      stdio: "ignore",
+      env: { ...process.env, PATH: sanitizePath() },
+      shell: false 
+    });
+    await new Promise(resolve => setTimeout(resolve, 3000));
+  }
+
+  try {
+    // Use absolute path pkgManager, sanitized PATH and spawnSync to prevent S4036 PATH vulnerability
+    const result = spawnSync(pkgManager, ["run", script.name], { 
+      stdio: "inherit",
+      env: { ...process.env, PATH: sanitizePath() },
+      shell: false 
+    });
+    if (result.status !== 0) {
+      throw new Error(`Command failed with status ${result.status}`);
+    }
+    console.log(`✓ ${script.name} PASSED.`);
+  } catch (error) {
+    console.error(`\n❌ ${script.name} FAILED.`);
     
-    if (script.name === "verify:assets") {
-      try {
-        console.log("[INFO] Starting background Vite preview server for asset checks...");
-        // Use the absolute path to pkgManager to prevent S4036 PATH vulnerability
-        serverProcess = spawn(pkgManager, ["run", "preview"], { stdio: "ignore" });
-        await new Promise(resolve => setTimeout(resolve, 3000));
-      } catch (err) {
-        console.error("Failed to start preview server:", err);
-      }
+    // Check if this is a known downstream unimplemented gate
+    const isDownstream = ["verify:supabase-security", "verify:claim-hygiene", "verify:supply-chain", "verify:types", "verify:assets"].includes(script.name);
+    if (isDownstream) {
+      console.log(`[INFO] Honest failure allowed on downstream unimplemented gate "${script.name}".`);
+    } else {
+      console.log(`[CRITICAL] Required gate "${script.name}" failed.`);
+      failed = true;
     }
-
-    try {
-      // Use absolute path pkgManager with spawnSync to prevent S4036 PATH vulnerability
-      const result = spawnSync(pkgManager, ["run", script.name], { stdio: "inherit" });
-      if (result.status !== 0) {
-        throw new Error(`Command failed with status ${result.status}`);
-      }
-      console.log(`✓ ${script.name} PASSED.`);
-    } catch (error) {
-      console.error(`\n❌ ${script.name} FAILED.`);
-      
-      // Check if this is a known downstream unimplemented gate
-      const isDownstream = ["verify:supabase-security", "verify:claim-hygiene", "verify:supply-chain", "verify:types", "verify:assets"].includes(script.name);
-      if (isDownstream) {
-        console.log(`[INFO] Honest failure allowed on downstream unimplemented gate "${script.name}".`);
-      } else {
-        console.log(`[CRITICAL] Required gate "${script.name}" failed.`);
-        failed = true;
-      }
-    } finally {
-      if (serverProcess) {
-        console.log("[INFO] Stopping background Vite preview server...");
-        serverProcess.kill("SIGTERM");
-      }
-    }
-
-    if (failed) {
-      break;
+  } finally {
+    if (serverProcess) {
+      console.log("[INFO] Stopping background Vite preview server...");
+      serverProcess.kill("SIGTERM");
     }
   }
 
   if (failed) {
-    console.log("\n❌ Release verification FAILED on one or more gates.");
-    process.exit(1);
-  } else {
-    console.log("\n🚀 All release verification gates PASSED. Production GO achieved!");
-    process.exit(0);
+    break;
   }
 }
 
-run();
+if (failed) {
+  console.log("\n❌ Release verification FAILED on one or more gates.");
+  process.exit(1);
+} else {
+  console.log("\n🚀 All release verification gates PASSED. Production GO achieved!");
+  process.exit(0);
+}
