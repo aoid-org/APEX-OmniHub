@@ -1,5 +1,5 @@
-policy_version: 1.3.0
-policy_last_updated_utc: 2026-05-15
+policy_version: 1.3.1
+policy_last_updated_utc: 2026-05-27
 mode: live
 default_network_model_calls: false
 hosted_model_monthly_budget_usd: 0
@@ -20,10 +20,13 @@ moderate_supabase_functions:
 # NOTE: .github/workflows/** is intentionally in critical_paths, not here.
 # Placing it here would deadlock: workflow changes can never pass RSI if
 # the RSI workflow itself is blocked from running after workflow edits.
+# NOTE: supabase/migrations/** intentionally moved to critical_paths (2026-05-27).
+# Migrations are reviewed human-in-loop via escalate; a hard block prevents all
+# legitimate security-hardening PRs that provision new DB infrastructure (e.g.
+# AEGIS, CHRONOS). escalate enforces the review requirement without aborting.
 protected_paths:
   - terraform/**
   - contracts/**
-  - supabase/migrations/**
   - hardhat.config.cts
   - orchestrator/security/**
   - src/security/**
@@ -35,6 +38,7 @@ critical_paths:
   - .github/workflows/**
   - orchestrator/workflows/**
   - orchestrator/activities/**
+  - supabase/migrations/**
   - supabase/functions/**
   - '!supabase/functions/platform-health/**'
   - '!supabase/functions/ops-voice-health/**'
