@@ -121,7 +121,7 @@ jobs:
       contents: read
     env:
       SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY || '' }}
-    if: vars.SONAR_PROJECT_KEY != '' && secrets.SONAR_TOKEN != ''
+    if: ${{ vars.SONAR_PROJECT_KEY != '' && secrets.SONAR_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
