@@ -214,6 +214,8 @@ jobs:
       - name: Build iOS (simulator — no signing required)
         working-directory: ios/App
         run: |
+          set -o pipefail
+          # Capture full xcodebuild output for post-failure diagnostics.
           xcodebuild \
             -project App.xcodeproj \
             -scheme App \
@@ -224,10 +226,17 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=YES \
             build \
-            2>&1 | tee /tmp/xcodebuild.log | grep -E "error:|warning:|Build (succeeded|FAILED)"
-          # Check for build failure in log (grep exits 1 if no match, so use log file)
-          if grep -q "BUILD FAILED" /tmp/xcodebuild.log; then
-            echo "::error::xcodebuild reported BUILD FAILED"
+            2>&1 | tee /tmp/xcodebuild.log
+
+          # Emit concise diagnostics without making grep output the pass/fail gate.
+          if ! grep -E 'error:|warning:|\*\* BUILD (SUCCEEDED|FAILED) \*\*' /tmp/xcodebuild.log; then
+            echo 'No warning/error summary lines matched; see full /tmp/xcodebuild.log artifact in runner logs.'
+          fi
+
+          # Enforce explicit success marker from xcodebuild log.
+          if ! grep -q '\*\* BUILD SUCCEEDED \*\*' /tmp/xcodebuild.log; then
+            echo "::error::xcodebuild did not report BUILD SUCCEEDED"
+            tail -n 200 /tmp/xcodebuild.log
             exit 1
           fi
 
