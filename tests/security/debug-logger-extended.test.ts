@@ -54,7 +54,7 @@ describe('debug-logger — extended coverage', () => {
 
   describe('debugLog — PROD mode without explicit debug logging', () => {
     it('returns early without logging when PROD=true and VITE_DEBUG_LOGGING not set', () => {
-      vi.stubEnv('PROD', 'true');
+      vi.stubEnv('PROD', 'true' as any);
       // VITE_DEBUG_LOGGING is not 'true' so should early-return
       debugLog({ location: 'ProdComponent', message: 'should be silent' });
       // console.log should NOT be called (early return in PROD)

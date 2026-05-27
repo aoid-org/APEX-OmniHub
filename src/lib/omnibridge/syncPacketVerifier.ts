@@ -125,8 +125,8 @@ export async function verifySyncPacket(
       false,
       ['verify'],
     );
-    // crypto.subtle.verify performs constant-time verification internally.
-    const ok = await crypto.subtle.verify('HMAC', key, sigBytes, encoder.encode(canonicalBody));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ok = await crypto.subtle.verify('HMAC', key, sigBytes as any, encoder.encode(canonicalBody));
     return ok ? { valid: true } : { valid: false, reason: 'bad_signature' };
   } catch {
     return { valid: false, reason: 'bad_signature' };

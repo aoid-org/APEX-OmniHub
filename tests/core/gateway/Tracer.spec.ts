@@ -10,7 +10,7 @@ const { mockTracer, mockGetTracer, mockSdkStart, mockNodeSdk } = vi.hoisted(() =
   };
 
   const tracer = {
-    startActiveSpan: vi.fn((name, options, context, callback) => {
+    startActiveSpan: vi.fn((_name, options, context, callback) => {
       // Support both startActiveSpan(name, callback) and longer overloads.
       let cb = callback;
       if (typeof options === 'function') {
@@ -26,7 +26,7 @@ const { mockTracer, mockGetTracer, mockSdkStart, mockNodeSdk } = vi.hoisted(() =
   const getTracer = vi.fn(() => tracer);
   const sdkStart = vi.fn();
   // Arrow functions cannot be used with `new`; use a regular function so NodeSDK can be constructed.
-  const nodeSdk = vi.fn(function () { return { start: sdkStart }; });
+  const nodeSdk = vi.fn(function (_opts?: unknown) { return { start: sdkStart }; });
 
   return {
     mockTracer: tracer,
@@ -64,7 +64,6 @@ vi.mock(
       constructor(opts: unknown) { mockNodeSdk(opts); }
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -72,7 +71,6 @@ vi.mock(
   () => ({
     getNodeAutoInstrumentations: vi.fn(() => []),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -80,15 +78,14 @@ vi.mock(
   () => ({
     OTLPTraceExporter: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
   '@opentelemetry/resources',
   () => ({
     Resource: vi.fn(),
+    resourceFromAttributes: vi.fn(() => ({})),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -96,7 +93,6 @@ vi.mock(
   () => ({
     ATTR_SERVICE_NAME: 'service.name',
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -104,7 +100,6 @@ vi.mock(
   () => ({
     ATTR_DEPLOYMENT_ENVIRONMENT_NAME: 'deployment.environment.name',
   }),
-  { virtual: true },
 );
 
 describe('Gateway Tracer', () => {

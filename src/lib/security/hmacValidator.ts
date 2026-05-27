@@ -112,8 +112,8 @@ export async function validateHMAC(
     const key = await importKey(secret);
     const signatureBytes = hexToBuffer(signature);
 
-    // crypto.subtle.verify performs constant-time comparison internally
-    return crypto.subtle.verify('HMAC', key, signatureBytes, encoder.encode(payload));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return crypto.subtle.verify('HMAC', key, signatureBytes as any, encoder.encode(payload));
   } catch {
     return false;
   }

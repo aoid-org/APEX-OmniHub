@@ -24,8 +24,13 @@
 
     "baseUrl": ".",
     "paths": {
+      "dashboard/*": ["./apps/omnihub-site/dashboard/*"],
       "@/dashboard/*": ["./apps/omnihub-site/dashboard/*"],
-      "@/*": ["./apps/omnihub-site/src/*"]
+      "@/*": [
+        "./src/*",
+        "./apps/omnihub-site/src/*"
+      ],
+      "@omnihub/*": ["./apps/omnihub-site/src/*"]
     },
     "ignoreDeprecations": "5.0"
   },

@@ -48,7 +48,8 @@ function bytesToHex(bytes: Uint8Array): string {
 
 async function importKey(): Promise<CryptoKey> {
   const keyBytes = hexToBytes(getKeyHex());
-  return crypto.subtle.importKey('raw', keyBytes, { name: ALGORITHM }, false, [
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return crypto.subtle.importKey('raw', keyBytes as any, { name: ALGORITHM }, false, [
     'encrypt',
     'decrypt',
   ]);
@@ -85,7 +86,8 @@ async function decryptToken(packedBlob: string): Promise<string> {
   combined.set(ciphertext);
   combined.set(authTag, ciphertext.length);
 
-  const decryptedBuffer = await crypto.subtle.decrypt({ name: ALGORITHM, iv }, key, combined);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const decryptedBuffer = await crypto.subtle.decrypt({ name: ALGORITHM, iv: iv as any }, key, combined as any);
   return new TextDecoder().decode(decryptedBuffer);
 }
 

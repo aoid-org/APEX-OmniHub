@@ -184,7 +184,7 @@ describe('ROUND-TRIP: OmniHub → SBBL-HQ outbound command signing', () => {
     );
     const sigBytes = base64UrlToBytes(signature);
     const ok = await crypto.subtle.verify(
-      'HMAC', verifyKey, sigBytes,
+      'HMAC', verifyKey, sigBytes as any,
       new TextEncoder().encode(JSON.stringify(command)),
     );
     expect(ok).toBe(true);
@@ -209,7 +209,7 @@ describe('ROUND-TRIP: OmniHub → SBBL-HQ outbound command signing', () => {
     );
     const sigBytes = base64UrlToBytes(signature);
     const ok = await crypto.subtle.verify(
-      'HMAC', verifyKey, sigBytes,
+      'HMAC', verifyKey, sigBytes as any,
       new TextEncoder().encode(JSON.stringify(tampered)),
     );
     expect(ok).toBe(false);

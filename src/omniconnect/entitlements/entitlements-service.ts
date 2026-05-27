@@ -96,8 +96,9 @@ export class EntitlementsService {
     if (!this.supabase) return;
 
     try {
-      const { error } = await this.supabase
-        .from('tenant_entitlements')
+      const { error } = await (this.supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('tenant_entitlements') as any)
         .insert({
           tenant_id: tenantId,
           user_id: userId,
@@ -165,8 +166,8 @@ export class EntitlementsService {
       }
 
       return (data || []).map((row: Record<string, unknown>) => ({
-        appId: row.app_id,
-        feature: row.feature_key,
+        appId: typeof row.app_id === 'string' ? row.app_id : '',
+        feature: typeof row.feature_key === 'string' ? row.feature_key : '',
         granted: true
       }));
     } catch (e) {

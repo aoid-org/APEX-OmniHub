@@ -39,11 +39,11 @@ describeIf('Paid Access Integration with OmniDash', () => {
 
   // Helper to insert subscription
   const insertSubscription = (tier: string, status: string, dates?: Record<string, string>) =>
-    ctx.adminClient.from('subscriptions').insert({ user_id: ctx.testUserId, tier, status, ...dates });
+    ctx!.adminClient.from('subscriptions').insert({ user_id: ctx!.testUserId, tier, status, ...dates });
 
   // Helper to query omnidash_settings
   const querySettings = () =>
-    ctx.anonClient.from('omnidash_settings').select('*').eq('user_id', ctx.testUserId).maybeSingle();
+    ctx!.anonClient.from('omnidash_settings').select('*').eq('user_id', ctx!.testUserId).maybeSingle();
 
   describe('RLS Policies - omnidash_settings table', () => {
     it.each([
@@ -77,7 +77,7 @@ describeIf('Paid Access Integration with OmniDash', () => {
     type OmniDashTable = typeof tables[number];
 
     const queryTable = (table: OmniDashTable) =>
-      ctx.anonClient.from(table).select('*').eq('user_id', ctx.testUserId);
+      ctx!.anonClient.from(table).select('*').eq('user_id', ctx!.testUserId);
 
     it.each(tables)('should allow paid user to access %s', async (table) => {
       await insertSubscription('starter', 'active', subscriptionDates.active30Days());
@@ -94,8 +94,8 @@ describeIf('Paid Access Integration with OmniDash', () => {
 
   describe('Admins maintain access (backward compatibility)', () => {
     it('should allow admin user even with free tier', async () => {
-      await ctx.adminClient.from('user_roles').insert({ user_id: ctx.testUserId, role: 'admin' });
-      await ctx.adminClient.from('subscriptions').upsert({ user_id: ctx.testUserId, tier: 'free', status: 'active' });
+      await ctx!.adminClient.from('user_roles').insert({ user_id: ctx!.testUserId, role: 'admin' });
+      await ctx!.adminClient.from('subscriptions').upsert({ user_id: ctx!.testUserId, tier: 'free', status: 'active' });
       const { error } = await querySettings();
       expect(error).toBeNull();
     });
@@ -105,11 +105,11 @@ describeIf('Paid Access Integration with OmniDash', () => {
     it('should grant full OmniDash access to paid user', async () => {
       await insertSubscription('pro', 'active', subscriptionDates.active30Days());
 
-      const { data: isPaid } = await ctx.adminClient.rpc('is_paid_user', { _user_id: ctx.testUserId });
+      const { data: isPaid } = await ctx!.adminClient.rpc('is_paid_user', { _user_id: ctx!.testUserId });
       expect(isPaid).toBe(true);
 
-      const { error: insertError } = await ctx.anonClient.from('omnidash_settings').insert({
-        user_id: ctx.testUserId,
+      const { error: insertError } = await ctx!.anonClient.from('omnidash_settings').insert({
+        user_id: ctx!.testUserId,
         demo_mode: false,
         show_connected_ecosystem: true,
         anonymize_kpis: false,
@@ -117,10 +117,10 @@ describeIf('Paid Access Integration with OmniDash', () => {
       });
       expect(insertError).toBeNull();
 
-      const { data: settings, error: selectError } = await ctx.anonClient
+      const { data: settings, error: selectError } = await ctx!.anonClient
         .from('omnidash_settings')
         .select('*')
-        .eq('user_id', ctx.testUserId)
+        .eq('user_id', ctx!.testUserId)
         .single();
 
       expect(selectError).toBeNull();

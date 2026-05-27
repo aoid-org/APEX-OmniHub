@@ -89,11 +89,11 @@ interface MockUseAccountReturn {
 /** Exact shape returned by useWalletVerification that the component destructures. */
 interface MockWalletVerificationReturn {
   walletState: WalletState;
-  verify: () => void;
+  verify: () => Promise<void>;
   disconnect: () => void;
-  address?: `0x${string}`;
+  address: `0x${string}` | undefined;
   isConnected: boolean;
-  chainId?: number;
+  chainId: number | undefined;
 }
 
 // ─── Reusable mock factories ───────────────────────────────────────────────
@@ -129,7 +129,7 @@ function makeVerificationReturn(
 ): MockWalletVerificationReturn {
   return {
     walletState: { status: 'disconnected', isVerified: false },
-    verify: vi.fn(),
+    verify: vi.fn(() => Promise.resolve()),
     disconnect: vi.fn(),
     address: undefined,
     isConnected: false,

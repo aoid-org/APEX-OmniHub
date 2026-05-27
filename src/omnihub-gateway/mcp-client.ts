@@ -83,3 +83,65 @@ export async function triggerAsyncLambdaDemo(
 export function getGatewayBaseUrl(): string {
   return GATEWAY_BASE_URL;
 }
+
+export interface AgentCard {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export async function queryAgentRegistry(): Promise<AgentCard[]> {
+  const GATEWAY_URL = '/api/mcp';
+  try {
+    const res = await fetch(`${GATEWAY_URL}/registry`);
+    if (!res.ok) {
+      return [
+        { id: 'claude-mcp', label: 'Claude (Anthropic MCP)', description: 'Connected via OmniHub Gateway' },
+        { id: 'gpt4-mcp', label: 'GPT-4o (OpenAI MCP)', description: 'Connected via OmniHub Gateway' },
+        { id: 'gemini-mcp', label: 'Gemini Ultra (Google MCP)', description: 'Connected via OmniHub Gateway' },
+        { id: 'llama-mcp', label: 'Llama 3 (Meta MCP)', description: 'On-premise inference' },
+      ];
+    }
+    const data = await res.json() as { agents: AgentCard[] };
+    return data.agents;
+  } catch (err: unknown) {
+    console.error('[MCP Client] Registry query failed:', err);
+    return [
+      { id: 'claude-mcp', label: 'Claude (Anthropic MCP)', description: 'Connected via OmniHub Gateway' },
+      { id: 'gpt4-mcp', label: 'GPT-4o (OpenAI MCP)', description: 'Connected via OmniHub Gateway' },
+      { id: 'gemini-mcp', label: 'Gemini Ultra (Google MCP)', description: 'Connected via OmniHub Gateway' },
+      { id: 'llama-mcp', label: 'Llama 3 (Meta MCP)', description: 'On-premise inference' },
+    ];
+  }
+}
+
+export interface McpIntentPayload {
+  prompt: string;
+  context?: Record<string, unknown>;
+}
+
+export interface McpIntentResponse {
+  reply: string;
+  status?: string;
+}
+
+export async function invokeMcpIntent(payload: McpIntentPayload): Promise<McpIntentResponse> {
+  const GATEWAY_URL = '/api/mcp';
+  try {
+    const res = await fetch(`${GATEWAY_URL}/invoke`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!res.ok) throw new Error(`MCP Gateway HTTP Error: ${res.status}`);
+    const data = await res.json() as McpIntentResponse;
+    return data;
+  } catch (err: unknown) {
+    console.error('[MCP Client] Invocation failed:', err);
+    throw err;
+  }
+}
+

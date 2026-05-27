@@ -12,7 +12,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import React from 'react';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────
 
@@ -197,7 +196,7 @@ describe('SkillForgeWidget (OmniSkills)', () => {
       });
       // Click the last Forge Skill button (footer action, not the trigger)
       const forgeButtons = screen.getAllByRole('button', { name: /forge skill/i });
-      fireEvent.click(forgeButtons.at(-1));
+      fireEvent.click(forgeButtons.at(-1)!);
       await waitFor(() => {
         expect(mockMutate).toHaveBeenCalled();
       });

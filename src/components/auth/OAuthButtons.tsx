@@ -19,7 +19,8 @@ export function OAuthButtons({ redirectTo, disabled = false }: OAuthButtonsProps
     setLoadingProvider(provider);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        provider: provider as any,
         options: {
           redirectTo: redirectTo ?? `${globalThis.location.origin}/auth`,
         },

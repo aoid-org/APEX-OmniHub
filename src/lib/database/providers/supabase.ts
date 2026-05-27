@@ -21,7 +21,6 @@ import type {
 
 export class SupabaseDatabase implements IDatabase {
   private readonly client: SupabaseClient
-  private userContext: string | null = null
   private debug: boolean
 
   constructor(options: {
@@ -484,9 +483,9 @@ export class SupabaseDatabase implements IDatabase {
   }
 
   setUserContext(userId: string): void {
-    this.userContext = userId
-    // In Supabase, RLS is handled automatically via JWT
-    // This method is for compatibility with other providers
+    if (this.debug) {
+      console.log('[SupabaseDatabase] Setting user context for compatibility:', userId)
+    }
   }
 
   // -------------------------------------------------------------------------

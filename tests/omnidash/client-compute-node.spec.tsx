@@ -60,7 +60,7 @@ describe('ClientComputeNode', () => {
 
     it('renders null when currentMedia.type is "embed"', () => {
       useOmniMedia.setState({
-        currentMedia: { type: 'embed', source: 'https://youtube.com/watch?v=abc', title: 'Test' },
+        currentMedia: { id: 'test-id', provider: 'test-provider', type: 'embed', source: 'https://youtube.com/watch?v=abc', title: 'Test' },
         isPlaying: false,
         volume: 1,
       });
@@ -73,6 +73,8 @@ describe('ClientComputeNode', () => {
     it('renders a video element for video type', () => {
       useOmniMedia.setState({
         currentMedia: {
+          id: 'test-id',
+          provider: 'test-provider',
           type: 'video',
           source: 'https://example.com/video.mp4',
           poster: 'https://example.com/poster.jpg',
@@ -90,7 +92,7 @@ describe('ClientComputeNode', () => {
 
     it('sets crossOrigin="anonymous" on video element', () => {
       useOmniMedia.setState({
-        currentMedia: { type: 'video', source: 'https://cdn.example.com/v.mp4', title: 'V' },
+        currentMedia: { id: 'test-id', provider: 'test-provider', type: 'video', source: 'https://cdn.example.com/v.mp4', title: 'V' },
         isPlaying: false,
         volume: 1,
       });
@@ -105,6 +107,8 @@ describe('ClientComputeNode', () => {
     it('renders an audio element for audio type', () => {
       useOmniMedia.setState({
         currentMedia: {
+          id: 'test-id',
+          provider: 'test-provider',
           type: 'audio',
           source: 'https://example.com/track.mp3',
           title: 'Test Track',
@@ -121,7 +125,7 @@ describe('ClientComputeNode', () => {
 
     it('sets crossOrigin="anonymous" on audio element', () => {
       useOmniMedia.setState({
-        currentMedia: { type: 'audio', source: 'https://cdn.example.com/track.mp3', title: 'T' },
+        currentMedia: { id: 'test-id', provider: 'test-provider', type: 'audio', source: 'https://cdn.example.com/track.mp3', title: 'T' },
         isPlaying: false,
         volume: 1,
       });
@@ -134,7 +138,7 @@ describe('ClientComputeNode', () => {
   describe('AudioContext lifecycle', () => {
     it('closes AudioContext on unmount to prevent hardware leaks', () => {
       useOmniMedia.setState({
-        currentMedia: { type: 'audio', source: 'https://cdn.example.com/t.mp3', title: 'T' },
+        currentMedia: { id: 'test-id', provider: 'test-provider', type: 'audio', source: 'https://cdn.example.com/t.mp3', title: 'T' },
         isPlaying: false,
         volume: 1,
       });
@@ -154,7 +158,7 @@ describe('ClientComputeNode', () => {
       const ref = createRef<Handle>();
 
       useOmniMedia.setState({
-        currentMedia: { type: 'audio', source: 'https://cdn.example.com/x.mp3', title: 'X' },
+        currentMedia: { id: 'test-id', provider: 'test-provider', type: 'audio', source: 'https://cdn.example.com/x.mp3', title: 'X' },
         isPlaying: false,
         volume: 1,
       });

@@ -193,7 +193,7 @@ describe('Performance Utilities', () => {
   describe('memoize', () => {
     it('caches results', () => {
       const func = vi.fn((x: number) => x * 2);
-      const memoized = memoize(func);
+      const memoized = memoize(func as any);
 
       expect(memoized(2)).toBe(4);
       expect(memoized(2)).toBe(4);
@@ -205,7 +205,7 @@ describe('Performance Utilities', () => {
 
     it('caches based on all arguments', () => {
       const func = vi.fn((a: number, b: number) => a + b);
-      const memoized = memoize(func);
+      const memoized = memoize(func as any);
 
       expect(memoized(1, 2)).toBe(3);
       expect(memoized(1, 2)).toBe(3);

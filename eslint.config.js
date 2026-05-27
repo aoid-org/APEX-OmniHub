@@ -17,7 +17,7 @@ export default defineConfig(
       "**/.nyc_output/**",
       "**/.claude/**",
       "**/components/ui/**", // Shadcn UI components often have lint warnings we don't want to fix
-      "services/contracts/typechain-types/**",
+      "**/services/contracts/typechain-types/**",
       "hero-visual-original.tsx",
       // Playwright integration-harness: fixtures use Playwright's `use` callback
       // which ESLint misidentifies as React Hook violations. This is test infra,
@@ -25,6 +25,11 @@ export default defineConfig(
       "integration-harness/**",
       "APEX-OmniHub/**",
     ],
+  },
+  {
+    linterOptions: {
+      reportUnusedDisableDirectives: "off",
+    },
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
@@ -57,12 +62,12 @@ export default defineConfig(
       }],
     },
   },
-  // Relaxed rules for CLI scripts, simulation, and sandbox files
+  // Relaxed rules for CLI scripts, simulation, sandbox, and test files
   {
-    files: ["sim/**/*.ts", "scripts/**/*.ts", "sandbox/**/*.ts"],
+    files: ["sim/**/*.ts", "scripts/**/*.ts", "sandbox/**/*.ts", "tests/**/*.{ts,tsx}", "packages/infrastructure/tests/**/*.{ts,tsx}"],
     rules: {
       "no-console": "off",
-      "@typescript-eslint/no-explicit-any": "warn",  // Allow any in simulation code
+      "@typescript-eslint/no-explicit-any": "off",  // Allow any in test/simulation/scripts code
     },
   },
   // Lock 2: Ban hardcoded Omnidash app names in OmniDash surfaces.

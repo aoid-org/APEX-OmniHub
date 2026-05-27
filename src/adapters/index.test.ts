@@ -1,4 +1,4 @@
-import { expect, test, describe } from 'bun:test';
+import { expect, test, describe } from 'vitest';
 import { toOmniDashUI, toOmniDashUIList } from './index';
 import type { RegistryApp } from './types';
 

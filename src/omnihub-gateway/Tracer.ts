@@ -10,7 +10,7 @@
 // Type-only import — erased by TypeScript at compile time, never reaches browser bundle.
 import type { NodeSDK as NodeSDKType } from '@opentelemetry/sdk-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from '@opentelemetry/semantic-conventions/incubating';
 import { trace, SpanStatusCode, Tracer, Span } from '@opentelemetry/api';
@@ -47,7 +47,7 @@ export async function initGatewayTracer(config: TracerConfig): Promise<NodeSDKTy
     import('@opentelemetry/auto-instrumentations-node'),
   ]);
 
-  const resource = new Resource({
+  const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: config.serviceName || 'omnihub-gateway',
     [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: process.env.NODE_ENV || 'production',
   });

@@ -9,6 +9,13 @@ import {
   _clearQueueForTests
 } from '../../src/lib/offline';
 
+function setNavigatorOnLine(onLine: boolean) {
+  Object.defineProperty(globalThis.navigator, 'onLine', {
+    value: onLine,
+    configurable: true,
+  });
+}
+
 describe('offline utils', () => {
   let memoryStore: Record<string, string> = {};
   let simulateQuotaExceeded: ((key: string) => boolean) | null = null;
@@ -46,7 +53,7 @@ describe('offline utils', () => {
 
     const lsProxy = new Proxy(memoryStore, {
       get: (target, prop) => {
-        if (prop in ls) return (ls as Record<string, unknown>)[prop];
+        if (typeof prop === 'string' && prop in ls) return (ls as Record<string, unknown>)[prop];
         return target[prop as string];
       },
       ownKeys: (target) => Object.keys(target),
@@ -84,12 +91,12 @@ describe('offline utils', () => {
 
   describe('isOnline', () => {
     it('returns true when navigator is online', () => {
-      globalThis.navigator.onLine = true;
+      setNavigatorOnLine(true);
       expect(isOnline()).toBe(true);
     });
 
     it('returns false when navigator is offline', () => {
-      globalThis.navigator.onLine = false;
+      setNavigatorOnLine(false);
       expect(isOnline()).toBe(false);
     });
   });
@@ -276,7 +283,7 @@ describe('offline utils', () => {
     });
 
     it('processes queued requests successfully when online', async () => {
-      globalThis.navigator.onLine = true;
+      setNavigatorOnLine(true);
 
       let callCount = 0;
       const req = vi.fn(() => {
@@ -296,7 +303,7 @@ describe('offline utils', () => {
     });
 
     it('does not process requests when offline', async () => {
-      globalThis.navigator.onLine = false;
+      setNavigatorOnLine(false);
 
       const req = vi.fn(() => Promise.resolve('ok'));
       queueOfflineRequest(req);
@@ -307,7 +314,7 @@ describe('offline utils', () => {
     });
 
     it('handles failed requests with retries', async () => {
-      globalThis.navigator.onLine = true;
+      setNavigatorOnLine(true);
       // Mock console.error
       vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -326,7 +333,7 @@ describe('offline utils', () => {
     });
 
     it('respects nextRetryTime', async () => {
-      globalThis.navigator.onLine = true;
+      setNavigatorOnLine(true);
       vi.spyOn(console, 'error').mockImplementation(() => {});
 
       let reqCalls = 0;
@@ -357,7 +364,7 @@ describe('offline utils', () => {
     });
 
     it('stops retrying after MAX_RETRIES', async () => {
-      globalThis.navigator.onLine = true;
+      setNavigatorOnLine(true);
       vi.spyOn(console, 'error').mockImplementation(() => {});
 
       let reqCalls = 0;

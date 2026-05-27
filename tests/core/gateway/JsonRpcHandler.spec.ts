@@ -44,6 +44,7 @@ const context: GatewayContext = {
   deviceId: 'device-1',
   trustTier: 'OPERATOR',
   idempotencyKey: 'idem-1',
+  timestamp: new Date().toISOString(),
 };
 
 describe('JsonRpcHandler MCP/A2A protocol bindings', () => {

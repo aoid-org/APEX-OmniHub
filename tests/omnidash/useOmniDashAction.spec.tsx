@@ -46,10 +46,10 @@ const setupStores = () => {
       hydrateConnector,
       setConnectorStatus,
     };
-    return selector(state);
+    return selector(state as any);
   });
 
-  vi.mocked(useOmniModal.getState).mockReturnValue({ invoke });
+  vi.mocked(useOmniModal.getState).mockReturnValue({ invoke } as any);
 
   return { hydrateConnector, setConnectorStatus, invoke };
 };

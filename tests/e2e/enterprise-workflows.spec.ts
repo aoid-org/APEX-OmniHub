@@ -108,7 +108,7 @@ class MetricsCollector {
     return {
       count: values.length,
       min: sorted[0],
-      max: sorted.at(-1),
+      max: sorted.at(-1)!,
       avg: values.reduce((a, b) => a + b, 0) / values.length,
       p50: sorted[Math.floor(sorted.length * 0.5)],
       p95: sorted[Math.floor(sorted.length * 0.95)],
@@ -270,7 +270,7 @@ describe('Enterprise Workflow E2E Tests', () => {
       const entries: AuditEntry[] = [];
 
       const addEntry = (action: string) => {
-        const previousHash = entries.length > 0 ? entries.at(-1).hash : '0';
+        const previousHash = entries.length > 0 ? entries.at(-1)!.hash : '0';
         const entry: AuditEntry = {
           id: crypto.randomUUID(),
           timestamp: new Date().toISOString(),

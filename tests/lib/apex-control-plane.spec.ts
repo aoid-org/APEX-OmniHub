@@ -38,7 +38,7 @@ describe('APEX execution envelope', () => {
 });
 
 describe('Guardian policy decision fabric', () => {
-  const makeEnvelope = async (deviceId = 'device-1', policyVersion = APEX_POLICY_VERSION) => createExecutionEnvelope({ actor_id: 'user-1', device_id: deviceId, action: 'admin.rotate_key', resource: 'secret:stripe', stale_after: '2099-01-01T00:00:00.000Z', policy_version: policyVersion });
+  const makeEnvelope = async (deviceId = 'device-1', policyVersion: string = APEX_POLICY_VERSION) => createExecutionEnvelope({ actor_id: 'user-1', device_id: deviceId, action: 'admin.rotate_key', resource: 'secret:stripe', stale_after: '2099-01-01T00:00:00.000Z', policy_version: policyVersion as any });
   const rules = [{ id: 'apex.guardian.admin.rotate_key', effect: 'allow' as const, reason_code: 'ADMIN_CONTEXT_VALID', policy_version: APEX_POLICY_VERSION, actions: ['admin.rotate_key'], resources: ['secret:stripe'], required_context: ['mfa_verified'], allowed_device_ids: ['device-1'] }];
 
   it('allows when privileged context and device match', async () => {

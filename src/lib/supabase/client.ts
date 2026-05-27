@@ -25,5 +25,6 @@ export function createSupabaseClient(options?: SupabaseClientOptions): SupabaseC
      console.error('CRITICAL SECURITY WARNING: Service Role Key passed to client factory in browser environment. It is ignored, but this is a security risk.');
   }
 
-  return supabase;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return supabase as any;
 }

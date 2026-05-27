@@ -7,7 +7,7 @@
  * - RED lane: queue for MAN Mode manual approval
  */
 
-import type { RiskLane } from '../omniconnect/types/ingress';
+import type { RiskLane } from '../integrations/maestro/types';
 import { requestOmniLink } from '../integrations/omnilink';
 
 export interface OutreachPayload {

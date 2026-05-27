@@ -5,7 +5,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import React from 'react';
 
 // ─── Mock AccessContext ───────────────────────────────────────────────────
 
@@ -97,7 +96,7 @@ describe('AccessGate', () => {
   it('is fail-closed: denies if any required scope is missing', () => {
     withScopes(['authenticated']); // has one but not the other
     render(
-      <AccessGate requiredScopes={['authenticated', 'billing']}>
+      <AccessGate requiredScopes={['authenticated', 'admin']}>
         <div>Billing Panel</div>
       </AccessGate>
     );

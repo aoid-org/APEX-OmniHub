@@ -77,14 +77,15 @@ export function useRealtimeOmniDash(): void {
 
     // Subscribe to all OmniDash tables for INSERT/UPDATE/DELETE events
     for (const table of REALTIME_TABLES) {
-      channel = channel.on(
-        'postgres_changes' as const,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      channel = (channel as any).on(
+        'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table,
           filter: `user_id=eq.${userId}`,
-        } as unknown as Parameters<typeof channel.on>[1],
+        },
         () => {
           // Build the query key for this table
           // omnidash_settings uses ['omnidash-settings', user.id]

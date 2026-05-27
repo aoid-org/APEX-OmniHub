@@ -123,7 +123,7 @@ describe('Cloudflare CORS proxy SSRF and origin hardening', () => {
 });
 
 describe('test-integration ownership scoping', () => {
-  const source = readFileSync('supabase/functions/test-integration/index.ts', 'utf8');
+  const source = readFileSync('supabase/functions/test-integration/index.ts', 'utf8').replace(/\r\n/g, '\n');
 
   it('scopes client-provided integrationId reads to the authenticated user', () => {
     expect(source).toContain(".select('id, user_id, type, config')");
@@ -173,7 +173,7 @@ describe('service worker sensitive traffic and notification URL hardening', () =
 
 describe('Web3 nonce chain binding', () => {
   it('creates/reuses nonces scoped by chain_id', () => {
-    const source = readFileSync('supabase/functions/web3-nonce/index.ts', 'utf8');
+    const source = readFileSync('supabase/functions/web3-nonce/index.ts', 'utf8').replace(/\r\n/g, '\n');
     expect(source).toContain('const { wallet_address, chain_id } = body');
     expect(source).toContain('const resolvedChainId = Number.isInteger(chain_id) && chain_id > 0 ? chain_id : 1');
     expect(source).toContain(".eq('wallet_address', normalizedAddress)\n      .eq('chain_id', resolvedChainId)");
@@ -181,7 +181,7 @@ describe('Web3 nonce chain binding', () => {
   });
 
   it('verifies and consumes nonces scoped by nonce, wallet_address, and chain_id', () => {
-    const source = readFileSync('supabase/functions/web3-verify/index.ts', 'utf8');
+    const source = readFileSync('supabase/functions/web3-verify/index.ts', 'utf8').replace(/\r\n/g, '\n');
     expect(source).toContain(".eq('nonce', messageNonce)\n      .eq('wallet_address', normalizedAddress)\n      .eq('chain_id', resolvedChainId)");
     expect(source).toContain("reason: 'typed_data_only_unsupported'");
     expect(source).toContain("error: 'unsupported_verification_type'");

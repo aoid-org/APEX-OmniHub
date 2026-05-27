@@ -30,11 +30,11 @@ describeIf('Admin Role Unification (integration)', () => {
 
   // Helper to query user_roles
   const queryUserRole = () =>
-    ctx.adminClient.from('user_roles').select('role').eq('user_id', ctx.testUserId).maybeSingle();
+    ctx!.adminClient.from('user_roles').select('role').eq('user_id', ctx!.testUserId).maybeSingle();
 
   // Helper to claim admin access
   const claimAdminAccess = (secret: string) =>
-    (ctx.anonClient as unknown as { rpc: (fn: string, args: Record<string, unknown>) => unknown }).rpc('claim_admin_access', { secret_key: secret });
+    (ctx!.anonClient as unknown as { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: any; error: any }> }).rpc('claim_admin_access', { secret_key: secret });
 
   describe('claim_admin_access() function', () => {
     it('should set app_metadata AND insert into user_roles table', async () => {
@@ -42,7 +42,7 @@ describeIf('Admin Role Unification (integration)', () => {
       expect(claimError).toBeNull();
       expect(claimResult).toBe(true);
 
-      const { data: userData, error: userError } = await ctx.adminClient.auth.admin.getUserById(ctx.testUserId);
+      const { data: userData, error: userError } = await ctx!.adminClient.auth.admin.getUserById(ctx!.testUserId);
       expect(userError).toBeNull();
       expect(userData.user?.app_metadata?.admin).toBe(true);
       expect(userData.user?.app_metadata?.role).toBe('admin');
@@ -57,7 +57,7 @@ describeIf('Admin Role Unification (integration)', () => {
       expect(claimError).toBeNull();
       expect(claimResult).toBe(false);
 
-      const { data: userData } = await ctx.adminClient.auth.admin.getUserById(ctx.testUserId);
+      const { data: userData } = await ctx!.adminClient.auth.admin.getUserById(ctx!.testUserId);
       expect(userData.user?.app_metadata?.admin).toBeUndefined();
 
       const { data: roleData } = await queryUserRole();
@@ -71,10 +71,10 @@ describeIf('Admin Role Unification (integration)', () => {
       expect(claimError).toBeNull();
       expect(claimResult).toBe(true);
 
-      const { data: roleData, error: roleError } = await ctx.adminClient
+      const { data: roleData, error: roleError } = await ctx!.adminClient
         .from('user_roles')
         .select('role')
-        .eq('user_id', ctx.testUserId);
+        .eq('user_id', ctx!.testUserId);
       expect(roleError).toBeNull();
       expect(roleData).toHaveLength(1);
     });
@@ -82,7 +82,7 @@ describeIf('Admin Role Unification (integration)', () => {
 
   describe('app_metadata trigger sync', () => {
     it('should auto-insert into user_roles when app_metadata.admin=true is set', async () => {
-      await ctx.adminClient.auth.admin.updateUserById(ctx.testUserId, {
+      await ctx!.adminClient.auth.admin.updateUserById(ctx!.testUserId, {
         app_metadata: { admin: true, role: 'admin' },
       });
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -93,12 +93,12 @@ describeIf('Admin Role Unification (integration)', () => {
     });
 
     it('should auto-delete from user_roles when app_metadata.admin=false is set', async () => {
-      await ctx.adminClient.auth.admin.updateUserById(ctx.testUserId, {
+      await ctx!.adminClient.auth.admin.updateUserById(ctx!.testUserId, {
         app_metadata: { admin: true, role: 'admin' },
       });
-      await (ctx.adminClient as unknown as SupabaseClient).from('user_roles').insert({ user_id: ctx.testUserId, role: 'admin' });
+      await (ctx!.adminClient as unknown as SupabaseClient).from('user_roles').insert({ user_id: ctx!.testUserId, role: 'admin' });
 
-      await ctx.adminClient.auth.admin.updateUserById(ctx.testUserId, {
+      await ctx!.adminClient.auth.admin.updateUserById(ctx!.testUserId, {
         app_metadata: { admin: false },
       });
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -110,21 +110,21 @@ describeIf('Admin Role Unification (integration)', () => {
 
   describe('is_admin() RLS function', () => {
     it('should return true for users in user_roles table with role=admin', async () => {
-      await (ctx.adminClient as unknown as SupabaseClient).from('user_roles').insert({ user_id: ctx.testUserId, role: 'admin' });
-      const { data, error } = await (ctx.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx.testUserId });
+      await (ctx!.adminClient as unknown as SupabaseClient).from('user_roles').insert({ user_id: ctx!.testUserId, role: 'admin' });
+      const { data, error } = await (ctx!.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx!.testUserId });
       expect(error).toBeNull();
       expect(data).toBe(true);
     });
 
     it('should return false for users not in user_roles table', async () => {
-      const { data, error } = await (ctx.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx.testUserId });
+      const { data, error } = await (ctx!.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx!.testUserId });
       expect(error).toBeNull();
       expect(data).toBe(false);
     });
 
     it('should return false for users with non-admin roles', async () => {
-      await (ctx.adminClient as unknown as SupabaseClient).from('user_roles').insert({ user_id: ctx.testUserId, role: 'user' });
-      const { data, error } = await (ctx.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx.testUserId });
+      await (ctx!.adminClient as unknown as SupabaseClient).from('user_roles').insert({ user_id: ctx!.testUserId, role: 'user' });
+      const { data, error } = await (ctx!.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx!.testUserId });
       expect(error).toBeNull();
       expect(data).toBe(false);
     });
@@ -134,13 +134,13 @@ describeIf('Admin Role Unification (integration)', () => {
     it('should grant full admin access via claim_admin_access() -> RLS check passes', async () => {
       await claimAdminAccess('checklist-complete-2026');
 
-      const { data: isAdminResult } = await (ctx.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx.testUserId });
+      const { data: isAdminResult } = await (ctx!.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx!.testUserId });
       expect(isAdminResult).toBe(true);
 
-      const { error: settingsError } = await ctx.anonClient
+      const { error: settingsError } = await ctx!.anonClient
         .from('omnidash_settings')
         .select('*')
-        .eq('user_id', ctx.testUserId)
+        .eq('user_id', ctx!.testUserId)
         .maybeSingle();
       expect(settingsError).toBeNull();
     });
@@ -148,13 +148,13 @@ describeIf('Admin Role Unification (integration)', () => {
     it('should maintain consistency across all three systems', async () => {
       await claimAdminAccess('checklist-complete-2026');
 
-      const { data: userData } = await ctx.adminClient.auth.admin.getUserById(ctx.testUserId);
+      const { data: userData } = await ctx!.adminClient.auth.admin.getUserById(ctx!.testUserId);
       expect(userData.user?.app_metadata?.admin).toBe(true);
 
       const { data: roleData } = await queryUserRole();
       expect((roleData as unknown as { role: string })?.role).toBe('admin');
 
-      const { data: isAdminResult } = await (ctx.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx.testUserId });
+      const { data: isAdminResult } = await (ctx!.adminClient as unknown as SupabaseClient).rpc('is_admin', { _user_id: ctx!.testUserId });
       expect(isAdminResult).toBe(true);
     });
   });

@@ -120,9 +120,9 @@ describe('BUG FAMILY A — Spatial Resistance: Drag Threshold', () => {
     const { container } = render(
       React.createElement(DraggableWidget, null, React.createElement('div', null, 'content')),
     );
-    const widget = container.querySelector('[data-drag-active]');
+    const widget = container.querySelector('[data-drag-active]') as HTMLElement;
     expect(widget).not.toBeNull();
-    expect(widget!.dataset.dragActive).toBe('false');
+    expect(widget.dataset.dragActive).toBe('false');
   });
 
   it('DraggableWidget does NOT activate drag when pointer moves < 8px from origin (edge contact resistance)', () => {
