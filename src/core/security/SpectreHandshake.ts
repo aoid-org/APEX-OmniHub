@@ -53,12 +53,18 @@ type HeaderSource =
   | { get(name: string): string | null | undefined }
   | Record<string, string | undefined>;
 
+type HeadersLike = { get(name: string): string | null | undefined };
+
+function isHeadersLike(s: HeaderSource): s is HeadersLike {
+  return typeof (s as Partial<HeadersLike>).get === 'function';
+}
+
 function getHeader(source: HeaderSource, name: string): string | undefined {
-  if (typeof (source as any).get === 'function') {
-    const val = (source as any).get(name);
+  if (isHeadersLike(source)) {
+    const val = source.get(name);
     return val ?? undefined;
   }
-  return (source as any)[name];
+  return (source as Record<string, string | undefined>)[name];
 }
 
 function hashSecret(secret: string): string {
@@ -99,7 +105,7 @@ export async function authenticate(
     throw new SpectreAuthError('Invalid API key format');
   }
 
-  const environment = match[1] === 'live' ? 'production' : 'test';
+  const tokenEnv: 'production' | 'staging' = match[1] === 'live' ? 'production' : 'staging';
   const tenantId = match[2];
   const secretPart = match[3];
 
@@ -108,6 +114,12 @@ export async function authenticate(
 
   if (!record) {
     throw new SpectreAuthError('API key not found or revoked');
+  }
+
+  // Validate the token's environment signal against the record
+  // 'development' records are allowed in all environments for local testing
+  if (record.environment !== tokenEnv && record.environment !== 'development') {
+    throw new SpectreAuthError('API key environment mismatch');
   }
 
   if (record.tenantId !== tenantId) {
