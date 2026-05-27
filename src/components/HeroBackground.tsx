@@ -75,10 +75,9 @@ export const HeroBackground = () => {
 
     // Helper: Find and draw connections for a node
     const processConnections = (node: Node, nodeIndex: number) => {
-      node.connections = [];
-      for (let j = 0; j < nodes.length; j++) {
-        if (nodeIndex === j) continue;
-
+      // ⚡ Bolt: Optimized O(n^2) distance checks to O(n^2/2) by only checking forward pairs
+      // This prevents drawing duplicate lines between the same two nodes (A->B and B->A)
+      for (let j = nodeIndex + 1; j < nodes.length; j++) {
         const otherNode = nodes[j];
         const dx = otherNode.x - node.x;
         const dy = otherNode.y - node.y;
@@ -86,6 +85,7 @@ export const HeroBackground = () => {
 
         if (distance < connectionDistance) {
           node.connections.push(j);
+          otherNode.connections.push(nodeIndex); // Maintain bidirectional connection data
           drawConnection(node, otherNode, distance);
         }
       }
@@ -129,7 +129,10 @@ export const HeroBackground = () => {
       ctx.fillRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
 
       // Update and render nodes
-      nodes.forEach((node, i) => {
+      nodes.forEach((node, _i) => {
+        // Clear connections from previous frame
+        node.connections = [];
+
         // Update position
         node.x += node.vx;
         node.y += node.vy;
@@ -137,8 +140,10 @@ export const HeroBackground = () => {
         // Boundary bounce
         if (node.x < 0 || node.x > canvas.offsetWidth) node.vx *= -1;
         if (node.y < 0 || node.y > canvas.offsetHeight) node.vy *= -1;
+      });
 
-        // Draw connections (behind nodes)
+      // Draw connections (behind nodes)
+      nodes.forEach((node, i) => {
         processConnections(node, i);
       });
 
