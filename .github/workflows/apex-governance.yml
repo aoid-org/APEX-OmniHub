@@ -37,7 +37,10 @@ jobs:
 
       - name: Emit JSON report (artifact)
         if: always()
-        run: python governance/ci/scripts/apex_policy_check.py --json > apex-policy-report.json
+        run: |
+          set +e
+          python governance/ci/scripts/apex_policy_check.py --json > apex-policy-report.json
+          exit 0
 
       - name: Upload policy report
         if: always()
