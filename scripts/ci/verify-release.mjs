@@ -24,10 +24,10 @@ const verifyScripts = [
 // Uses an allowlist (not a blocklist) to avoid S5443 false positives on
 // writable-directory detection — we never create files here, only filter PATH.
 const WIN_PATH_ALLOWLIST = [
-  "\\bun\\bin",
-  "\\program files\\",
-  "\\windows\\system32",
-  "\\windows\\",
+  "/bun/bin",
+  "/program files/",
+  "/windows/system32",
+  "/windows/",
 ];
 const UNIX_PATH_ALLOWLIST = [
   "/.bun/bin",
@@ -39,9 +39,9 @@ const UNIX_PATH_ALLOWLIST = [
 
 function isSafePathEntry(p) {
   if (!p || !path.isAbsolute(p)) return false;
-  const lower = p.toLowerCase();
+  const normalized = p.toLowerCase().replace(/\\/g, "/");
   const allowlist = process.platform === "win32" ? WIN_PATH_ALLOWLIST : UNIX_PATH_ALLOWLIST;
-  return allowlist.some((safe) => lower.includes(safe));
+  return allowlist.some((safe) => normalized.includes(safe));
 }
 
 function sanitizePath() {
@@ -52,7 +52,7 @@ function sanitizePath() {
 
 function findSystemPkgManager(isWin) {
   const candidates = isWin
-    ? ["C:\\Program Files\\bun\\bun.exe", "C:\\Program Files\\nodejs\\node.exe"]
+    ? ["C:/Program Files/bun/bun.exe", "C:/Program Files/nodejs/node.exe"]
     : ["/usr/local/bin/bun", "/usr/bin/bun", "/bin/bun"];
   return candidates.find((p) => fs.existsSync(p)) ?? null;
 }
