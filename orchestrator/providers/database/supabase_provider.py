@@ -45,6 +45,11 @@ ALLOWED_TABLES = frozenset(
         # Agent execution tables
         "agent_runs",
         "idempotency_ledger",
+        # PhysiOmni Pilot tables
+        "physiomni_devices",
+        "physiomni_telemetry",
+        "physiomni_alerts",
+        "physiomni_baselines",
     ]
 )
 
