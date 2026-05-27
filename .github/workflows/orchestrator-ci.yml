@@ -70,7 +70,7 @@ jobs:
         run: |
           # Strict mode tracks pre-existing errors across third-party stubs.
           # Run strict as informational; enforce basic type safety as blocking.
-          mypy --strict models/ infrastructure/ workflows/ activities/ config.py main.py || true
+          mypy --strict models/ infrastructure/ workflows/ activities/ config.py main.py
           mypy --config-file /dev/null --ignore-missing-imports --follow-imports=silent models/ infrastructure/ workflows/ activities/ config.py main.py
 
       - name: Run tests with coverage
@@ -138,7 +138,7 @@ jobs:
           # -ll = report MEDIUM and HIGH severity findings only.
           # Allow bandit to exit non-zero (findings exist) so the Python
           # filter below can decide whether to block on HIGH severity only.
-          bandit -r . -ll -f json -o bandit-report.json || true
+          bandit -r . -ll -f json -o bandit-report.json
           # Fail CI when any HIGH severity finding is present.
           python -c "
           import json, sys

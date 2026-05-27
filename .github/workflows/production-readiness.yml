@@ -165,7 +165,7 @@ jobs:
         if: always()
         run: |
           if [ -f preview.pid ]; then
-            kill $(cat preview.pid) || true
+            kill $(cat preview.pid)
             rm preview.pid
           fi
 
