@@ -1,4 +1,4 @@
-name: RSI Governance Gate
+name: RSI Governance Gate Compatibility
 
 on:
   pull_request:
