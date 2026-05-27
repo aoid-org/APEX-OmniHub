@@ -1,224 +1,35 @@
-name: Release
+name: Production Release Gate
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
+  workflow_dispatch:
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+concurrency: production-release-gate-${{ github.ref }}
 
 permissions:
   contents: read
 
-env:
-  PRODUCTION_SITE_URL: https://apexomnihub.icu
-
 jobs:
-  release:
-    name: Release
+  verify-release:
+    name: Verify Release (Fail Closed)
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      id-token: write
-      attestations: write
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
-        with:
-          node-version: "24"
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: latest
+          bun-version: 1.2.15
 
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
 
-      - name: Create Release PR or Publish
-        id: changesets
-        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1
-        with:
-          publish: npm run release
-          title: "chore: version packages"
-          commit: "chore: version packages [skip ci]"
-          createGithubReleases: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify CI integrity
+        run: bun run verify:ci-integrity
 
-      # This repo is private (package.json "private": true), so changesets/action
-      # will never set published == 'true'. Detect a version release by checking
-      # whether packages were published (public repo path) OR the commit that
-      # triggered this run is the version-PR merge commit (private repo path).
-      # NOTE: commit subject is read from git directly (not from the event payload)
-      # to avoid script-injection from user-controlled github.event.head_commit.message.
-      - name: Detect release cut
-        id: release_signal
-        env:
-          CHANGESETS_PUBLISHED: ${{ steps.changesets.outputs.published }}
-        run: |
-          if [ "$CHANGESETS_PUBLISHED" = "true" ]; then
-            echo "release_cut=true" >> "$GITHUB_OUTPUT"
-          elif git log -1 --format="%s" | grep -qF "chore: version packages"; then
-            echo "release_cut=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "release_cut=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Shadow certification preflight
-        id: shadow_preflight
-        env:
-          ENABLE_SHADOW_DEPLOYMENT: ${{ vars.ENABLE_SHADOW_DEPLOYMENT }}
-          ENABLE_ATOMIC_ROUTING_FLIP: ${{ vars.ENABLE_ATOMIC_ROUTING_FLIP }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_SHADOW_PROJECT_NAME: ${{ vars.CLOUDFLARE_SHADOW_PROJECT_NAME }}
-          SHADOW_HEALTH_URL: ${{ vars.SHADOW_HEALTH_URL }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          TF_TOKEN: ${{ secrets.TF_TOKEN }}
-        run: node scripts/ci/shadow-certification-preflight.mjs
-
-      - name: Deploy to Shadow Slot (Cloudflare Pages)
-        if: |
-          steps.release_signal.outputs.release_cut == 'true' &&
-          steps.shadow_preflight.outputs.status == 'pass'
-        id: shadow_deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CF_SHADOW_PROJECT_NAME: ${{ vars.CLOUDFLARE_SHADOW_PROJECT_NAME }}
-          VITE_SITE_URL: ${{ env.PRODUCTION_SITE_URL }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-        run: |
-          echo "Building frontend for shadow deployment..."
-          bun run build
-          echo "Deploying to Cloudflare Pages shadow slot: ${CF_SHADOW_PROJECT_NAME}"
-          npx --yes --ignore-scripts wrangler@latest pages deploy dist \
-            --project-name="${CF_SHADOW_PROJECT_NAME}" \
-            --commit-dirty=true \
-            2>&1 | tee shadow-deploy.log
-          SHADOW_URL=$(grep -oP 'https://[^\s]+\.pages\.dev' shadow-deploy.log | head -1 || echo "")
-          echo "shadow_url=${SHADOW_URL}" >> "$GITHUB_OUTPUT"
-          echo "Shadow deployment URL: ${SHADOW_URL}"
-
-      - name: Shadow Health Check
-        if: steps.shadow_deploy.outputs.shadow_url != ''
-        id: shadow_health
-        env:
-          SHADOW_URL: ${{ steps.shadow_deploy.outputs.shadow_url }}
-        run: |
-          echo "Polling ${SHADOW_URL}/health ..."
-          MAX_ATTEMPTS=10
-          WAIT=10
-          for i in $(seq 1 $MAX_ATTEMPTS); do
-            HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "${SHADOW_URL}/health" || echo "000")
-            echo "Attempt $i/${MAX_ATTEMPTS}: HTTP ${HTTP_STATUS}"
-            if [ "$HTTP_STATUS" = "200" ]; then
-              echo "health_result=pass" >> "$GITHUB_OUTPUT"
-              echo "Shadow health: PASS"
-              exit 0
-            fi
-            sleep $WAIT
-          done
-          echo "health_result=fail" >> "$GITHUB_OUTPUT"
-          echo "::error::Shadow health check failed after ${MAX_ATTEMPTS} attempts."
-          exit 1
-
-      - name: Deterministic Validator CI Gate
-        if: steps.shadow_health.outputs.health_result == 'pass'
-        id: validator
-        run: |
-          node integration-harness/lib/deterministic-validator.mjs
-          echo "validator_result=pass" >> "$GITHUB_OUTPUT"
-        env:
-          TARGET_URL: ${{ steps.shadow_deploy.outputs.shadow_url }}
-
-      - name: Skip shadow deployment — certification preflight blocked
-        if: |
-          steps.release_signal.outputs.release_cut == 'true' &&
-          steps.shadow_preflight.outputs.status != 'pass'
-        run: |
-          echo "Skipping shadow deployment because certification preflight is blocked."
-          cat shadow-preflight.json
-          echo "See docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md for requirements."
-
-      - name: Terraform Plan (shadow validated)
-        if: |
-          steps.release_signal.outputs.release_cut == 'true' &&
-          vars.ENABLE_SHADOW_DEPLOYMENT == 'true' &&
-          vars.ENABLE_ATOMIC_ROUTING_FLIP == 'true' &&
-          steps.validator.outputs.validator_result == 'pass'
-        id: tf_plan
-        run: |
-          cd terraform/environments/production
-          terraform init -input=false
-          terraform plan -input=false -out=tfplan -var="target_slot=production-shadow"
-          echo "tf_plan_result=pass" >> "$GITHUB_OUTPUT"
-        env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
-
-      - name: Atomic Routing Flip (Promote to Active)
-        if: steps.tf_plan.outputs.tf_plan_result == 'pass'
-        environment: production-shadow
-        run: |
-          echo "Executing Terraform apply with plan artifact..."
-          cd terraform/environments/production
-          terraform apply -input=false tfplan
-        env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
-
-      - name: Skip atomic routing flip — prerequisites not met
-        if: |
-          steps.release_signal.outputs.release_cut == 'true' &&
-          (vars.ENABLE_SHADOW_DEPLOYMENT != 'true' || vars.ENABLE_ATOMIC_ROUTING_FLIP != 'true')
-        env:
-          SHADOW_ENABLED: ${{ vars.ENABLE_SHADOW_DEPLOYMENT }}
-          ROUTING_FLIP_ENABLED: ${{ vars.ENABLE_ATOMIC_ROUTING_FLIP }}
-        run: |
-          echo "Skipping routing flip."
-          echo "ENABLE_SHADOW_DEPLOYMENT=${SHADOW_ENABLED}"
-          echo "ENABLE_ATOMIC_ROUTING_FLIP=${ROUTING_FLIP_ENABLED}"
-
-      - name: Write release evidence
-        if: always()
-        env:
-          GH_SHA: ${{ github.sha }}
-          GH_SERVER_URL: ${{ github.server_url }}
-          GH_REPOSITORY: ${{ github.repository }}
-          GH_RUN_ID: ${{ github.run_id }}
-          SHADOW_URL_RAW: ${{ steps.shadow_deploy.outputs.shadow_url || '' }}
-          HEALTH_RAW: ${{ steps.shadow_health.outputs.health_result || 'skipped' }}
-          VALIDATOR_RAW: ${{ steps.validator.outputs.validator_result || 'skipped' }}
-          TF_RESULT_RAW: ${{ steps.tf_plan.outputs.tf_plan_result || 'skipped' }}
-          TF_OUTCOME_RAW: ${{ steps.tf_plan.outcome || 'skipped' }}
-          PUBLISHED_RAW: ${{ steps.changesets.outputs.published || 'false' }}
-          RELEASE_CUT_RAW: ${{ steps.release_signal.outputs.release_cut || 'false' }}
-        run: node scripts/ci/write-release-evidence.mjs
-
-      - name: Upload release-evidence artifact
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: release-evidence
-          path: |
-            release-evidence.json
-            shadow-preflight.json
-          retention-days: 90
-
-      - name: Block enabled shadow release when certification preflight fails
-        if: |
-          steps.release_signal.outputs.release_cut == 'true' &&
-          vars.ENABLE_SHADOW_DEPLOYMENT == 'true' &&
-          steps.shadow_preflight.outputs.status != 'pass'
-        run: |
-          echo "::error::Shadow deployment was enabled, but certification preflight is blocked."
-          cat release-evidence.json
-          exit 1
+      - name: Verify release gates
+        run: bun run verify:release

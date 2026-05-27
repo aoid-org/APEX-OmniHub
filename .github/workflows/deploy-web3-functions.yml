@@ -125,11 +125,11 @@ jobs:
 
             if [ "${HTTP_CODE}" == "200" ]; then
               echo "✅ Healthcheck passed (HTTP 200)"
-              cat /tmp/response.json || true
+              cat /tmp/response.json
               exit 0
             else
               echo "⚠️ Attempt $i failed with HTTP ${HTTP_CODE}"
-              cat /tmp/response.json || true
+              cat /tmp/response.json
               echo ""
 
               if [ $i -lt $MAX_RETRIES ]; then
