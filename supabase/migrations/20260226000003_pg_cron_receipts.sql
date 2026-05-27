@@ -17,7 +17,7 @@ BEGIN
     CREATE INDEX IF NOT EXISTS idx_receipts_cleanup
       ON receipts (created_at, status);
 
-    -- Schedule: every day at 03:00 UTC
+    -- additive-allow: DELETE_FROM Clean up processed receipts older than 30 days
     PERFORM cron.schedule(
       'clean-receipts',
       '0 3 * * *',

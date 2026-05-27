@@ -25,12 +25,15 @@ BEGIN
 END;
 $$;
 
+-- additive-allow: REVOKE Hardening function execution permissions
 REVOKE ALL ON FUNCTION public.current_tenant_id_from_jwt() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.current_tenant_id_from_jwt() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.current_tenant_id_from_jwt() TO service_role;
 
 -- 2) Replace policies that depended on current_setting('app.current_tenant', TRUE).
+-- additive-allow: DROP_POLICY Re-creating tenant isolation policy additively
 DROP POLICY IF EXISTS idempotency_receipts_tenant_isolation ON public.idempotency_receipts;
+-- additive-allow: DROP_POLICY Re-creating service role policy additively
 DROP POLICY IF EXISTS idempotency_receipts_service_role ON public.idempotency_receipts;
 
 -- Tenant-scoped policy sourced from JWT tenant_id (no SET LOCAL app.current_tenant required).

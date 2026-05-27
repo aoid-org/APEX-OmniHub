@@ -22,6 +22,7 @@ $$;
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS public.workflows (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- additive-allow: ON_DELETE_CASCADE Clean up workflows when user is deleted
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   definition JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -62,7 +63,9 @@ CREATE TRIGGER set_workflows_updated_at
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS public.workflow_runs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- additive-allow: ON_DELETE_CASCADE Clean up workflow runs when workflow is deleted
   workflow_id UUID NOT NULL REFERENCES public.workflows(id) ON DELETE CASCADE,
+  -- additive-allow: ON_DELETE_CASCADE Clean up workflow runs when user is deleted
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'running', 'success', 'failed')),
