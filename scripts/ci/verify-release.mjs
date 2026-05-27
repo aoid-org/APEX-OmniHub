@@ -39,7 +39,7 @@ const UNIX_PATH_ALLOWLIST = [
 
 function isSafePathEntry(p) {
   if (!p || !path.isAbsolute(p)) return false;
-  const normalized = p.toLowerCase().replace(/\\/g, "/");
+  const normalized = p.toLowerCase().replaceAll("\\", "/");
   const allowlist = process.platform === "win32" ? WIN_PATH_ALLOWLIST : UNIX_PATH_ALLOWLIST;
   return allowlist.some((safe) => normalized.includes(safe));
 }
