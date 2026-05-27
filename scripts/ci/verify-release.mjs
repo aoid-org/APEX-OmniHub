@@ -1,5 +1,7 @@
-import { execSync, exec } from "node:child_process";
+import { spawnSync, spawn } from "node:child_process";
 import process from "node:process";
+import fs from "node:fs";
+import path from "node:path";
 
 console.log("=== APEX-OmniHub Production Release Verification Suite ===");
 
@@ -16,8 +18,52 @@ const verifyScripts = [
   { name: "verify:supply-chain", desc: "Dependency provenance & lockfile checks" }
 ];
 
+function findAbsolutePkgManager() {
+  const isWin = process.platform === "win32";
+  const binaryName = isWin ? "bun.exe" : "bun";
+  
+  // 1. Check npm_execpath (set by package manager during execution)
+  if (process.env.npm_execpath && fs.existsSync(process.env.npm_execpath)) {
+    return process.env.npm_execpath;
+  }
+  
+  // 2. Check user's home directory for bun
+  const homeDir = process.env.USERPROFILE || process.env.HOME || "";
+  if (homeDir) {
+    const localBun = path.join(homeDir, ".bun", "bin", binaryName);
+    if (fs.existsSync(localBun)) {
+      return localBun;
+    }
+  }
+  
+  // 3. Fallback to standard system locations
+  const winPaths = [
+    "C:\\Program Files\\bun\\bun.exe",
+    "C:\\Program Files\\nodejs\\node.exe"
+  ];
+  if (isWin) {
+    for (const p of winPaths) {
+      if (fs.existsSync(p)) return p;
+    }
+  } else {
+    const unixPaths = [
+      "/usr/local/bin/bun",
+      "/usr/bin/bun",
+      "/bin/bun"
+    ];
+    for (const p of unixPaths) {
+      if (fs.existsSync(p)) return p;
+    }
+  }
+  
+  // 4. Ultimate fallback (let system search)
+  return isWin ? "bun.cmd" : "bun";
+}
+
 async function run() {
   let failed = false;
+  const pkgManager = findAbsolutePkgManager();
+  console.log(`[INFO] Operating under package manager: ${pkgManager}`);
 
   for (const script of verifyScripts) {
     console.log(`\nRunning ${script.name} [${script.desc}]...`);
@@ -26,7 +72,8 @@ async function run() {
     if (script.name === "verify:assets") {
       try {
         console.log("[INFO] Starting background Vite preview server for asset checks...");
-        serverProcess = exec("bun run preview");
+        // Use the absolute path to pkgManager to prevent S4036 PATH vulnerability
+        serverProcess = spawn(pkgManager, ["run", "preview"], { stdio: "ignore" });
         await new Promise(resolve => setTimeout(resolve, 3000));
       } catch (err) {
         console.error("Failed to start preview server:", err);
@@ -34,7 +81,11 @@ async function run() {
     }
 
     try {
-      execSync(`bun run ${script.name}`, { stdio: "inherit" });
+      // Use absolute path pkgManager with spawnSync to prevent S4036 PATH vulnerability
+      const result = spawnSync(pkgManager, ["run", script.name], { stdio: "inherit" });
+      if (result.status !== 0) {
+        throw new Error(`Command failed with status ${result.status}`);
+      }
       console.log(`✓ ${script.name} PASSED.`);
     } catch (error) {
       console.error(`\n❌ ${script.name} FAILED.`);
