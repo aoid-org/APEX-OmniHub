@@ -47,6 +47,14 @@ from activities.man_mode import (
 from activities.notify_man_task import notify_man_task
 from activities.omni_policy import evaluate_policy_activity
 from activities.omnitrace_activities import get_omnitrace_activities
+from activities.physiomni_activities import (
+    compute_14_day_baseline,
+    dispatch_work_order_activity,
+    evaluate_baseline,
+    evaluate_baseline_activity,
+    log_physiomni_alert,
+    man_mode_escalation_activity,
+)
 from activities.resolve_intent import resolve_intent
 from activities.tools import (
     call_webhook,
@@ -66,6 +74,7 @@ from activities.universal_intents import (
 from config import settings
 from metrics import start_metrics_server
 from workflows.agent_saga import AgentWorkflow
+from workflows.physiomni_saga import PhysiOmniAnomalySaga
 from workflows.universal_saga import UniversalOrchestratorWorkflow
 
 # Configure logging
@@ -148,7 +157,7 @@ async def start_worker() -> None:
     worker = Worker(
         client,
         task_queue=settings.temporal_task_queue,
-        workflows=[AgentWorkflow, UniversalOrchestratorWorkflow],
+        workflows=[AgentWorkflow, UniversalOrchestratorWorkflow, PhysiOmniAnomalySaga],
         activities=[
             # Planning activities
             check_semantic_cache,
@@ -179,6 +188,13 @@ async def start_worker() -> None:
             system_health_check,
             system_echo,
             system_list_intents,
+            # PhysiOmni Pilot activities
+            compute_14_day_baseline,
+            evaluate_baseline,
+            evaluate_baseline_activity,
+            log_physiomni_alert,
+            man_mode_escalation_activity,
+            dispatch_work_order_activity,
         ],
         max_concurrent_workflow_tasks=settings.temporal_max_workflow_tasks,
         max_concurrent_activities=settings.temporal_max_activities,
