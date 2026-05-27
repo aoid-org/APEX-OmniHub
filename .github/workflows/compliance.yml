@@ -11,6 +11,7 @@ env:
   NPM_CONFIG_FETCH_RETRIES: '5'
   NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: '15000'
   NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: '60000'
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 jobs:
   legal-drift-gate:
@@ -121,7 +122,7 @@ jobs:
       contents: read
     env:
       SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY || '' }}
-    if: ${{ vars.SONAR_PROJECT_KEY != '' && secrets.SONAR_TOKEN != '' }}
+    if: vars.SONAR_PROJECT_KEY != '' && env.SONAR_TOKEN != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

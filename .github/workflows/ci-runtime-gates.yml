@@ -14,6 +14,7 @@ env:
   NPM_CONFIG_FETCH_RETRIES: '5'
   NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: '15000'
   NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: '60000'
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 jobs:
   architectural-boundary-enforcement:
@@ -211,7 +212,7 @@ jobs:
         run: cd orchestrator && pip install -r requirements.txt && pytest --cov=. --cov=../omega --cov-report=xml:coverage.xml
 
       - name: SonarCloud Scan
-        if: ${{ vars.SONAR_CI_SCAN_ENABLED != 'false' && secrets.SONAR_TOKEN != '' }}
+        if: vars.SONAR_CI_SCAN_ENABLED != 'false' && env.SONAR_TOKEN != ''
         uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
