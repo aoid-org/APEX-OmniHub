@@ -16,6 +16,11 @@ concurrency:
   group: production-readiness-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  NPM_CONFIG_FETCH_RETRIES: '5'
+  NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: '15000'
+  NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: '60000'
+
 jobs:
   quality-gates:
     name: Quality Gates

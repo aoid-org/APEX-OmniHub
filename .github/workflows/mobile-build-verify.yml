@@ -42,6 +42,9 @@ concurrency:
 env:
   NODE_VERSION: '24'
   JAVA_VERSION: '17'
+  NPM_CONFIG_FETCH_RETRIES: '5'
+  NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: '15000'
+  NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: '60000'
 
 jobs:
   # ──────────────────────────────────────────────────────────────────────────

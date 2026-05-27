@@ -7,6 +7,11 @@ on:
       - main
       - release/*
 
+env:
+  NPM_CONFIG_FETCH_RETRIES: '5'
+  NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: '15000'
+  NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: '60000'
+
 jobs:
   legal-drift-gate:
     permissions:
