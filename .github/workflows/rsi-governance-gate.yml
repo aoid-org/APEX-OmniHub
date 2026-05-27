@@ -31,5 +31,64 @@ jobs:
       - name: Install RSI dependencies
         run: pip install --only-binary :all: -r tools/rsi/requirements.txt
 
-      - name: Execute RSI governance gate
+      - name: Prepare RSI evidence directories
+        run: |
+          mkdir -p artifacts/rsi
+          mkdir -p inventory
+
+      - name: Generate repository inventory
+        run: bash scripts/repo_inventory.sh > inventory/repo-inventory.txt
+
+      - name: Execute RSI governance policy chain
         run: python3 tools/rsi/build_evidence.py --ci && python3 tools/rsi/policy_engine.py && python3 tools/rsi/decision.py
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+
+      - name: Validate RSI decision schema
+        run: |
+          python3 - <<'PYEOF'
+          import json, sys
+          d = json.load(open("artifacts/rsi/decision.json"))
+          required = ["decision", "risk", "abort", "rationale", "policy_version"]
+          missing = [k for k in required if k not in d]
+          if missing:
+              print(f"SCHEMA ERROR: missing keys: {missing}", file=sys.stderr)
+              sys.exit(1)
+          if d["decision"] not in ("allow", "escalate", "block"):
+              print(f"SCHEMA ERROR: invalid decision value: {d['decision']}", file=sys.stderr)
+              sys.exit(1)
+          if not isinstance(d["abort"], bool):
+              print("SCHEMA ERROR: abort must be bool", file=sys.stderr)
+              sys.exit(1)
+          print(f"decision.json valid: decision={d['decision']} risk={d['risk']} abort={d['abort']}")
+          PYEOF
+
+      - name: Upload RSI compatibility artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: rsi-governance-compat-artifacts
+          path: |
+            artifacts/rsi/evidence.json
+            artifacts/rsi/policy_result.json
+            artifacts/rsi/model_result.json
+            artifacts/rsi/decision.json
+            inventory/repo-inventory.txt
+          retention-days: 30
+
+      - name: Fail compatibility gate on RSI block
+        run: |
+          ABORT=$(python3 -c "import json; d=json.load(open('artifacts/rsi/decision.json')); print(str(d['abort']).lower())")
+          DECISION=$(python3 -c "import json; d=json.load(open('artifacts/rsi/decision.json')); print(d['decision'])")
+          RATIONALE=$(python3 -c "import json; d=json.load(open('artifacts/rsi/decision.json')); print(d['rationale'])")
+          echo "RSI decision: $DECISION | abort: $ABORT"
+          echo "Rationale: $RATIONALE"
+          if [ "$ABORT" = "true" ]; then
+            echo "::error title=RSI Governance Block::$RATIONALE"
+            exit 1
+          fi
