@@ -81,8 +81,8 @@ async def test_compute_14_day_baseline_empty_telemetry():
         result = await compute_14_day_baseline(params)
         assert result["success"] is True
         assert result["device_serial"] == "DEV-TEST-100"
-        assert result["envelope"]["rms_envelope"]["x"] == 1.2
-        assert result["envelope"]["peak_envelope"]["y"] == 2.5
+        assert result["envelope"]["rms_envelope"]["x"] == pytest.approx(1.2)
+        assert result["envelope"]["peak_envelope"]["y"] == pytest.approx(2.5)
 
 
 @pytest.mark.asyncio
@@ -139,10 +139,10 @@ async def test_compute_14_day_baseline_with_records():
         result = await compute_14_day_baseline(params)
         assert result["success"] is True
         assert result["envelope"]["sample_count"] == 2
-        # RMS = sqrt((1^2 + 2^2) / 2) = sqrt(2.5) = 1.5811
+        # Check Root Mean Square formula correctness
         assert result["envelope"]["rms_envelope"]["x"] == pytest.approx(1.5811, abs=1e-4)
-        # Peak = max(|1|, |-4|) = 4
-        assert result["envelope"]["peak_envelope"]["y"] == 4.0
+        # Peak envelope calculation check
+        assert result["envelope"]["peak_envelope"]["y"] == pytest.approx(4.0)
 
 
 @pytest.mark.asyncio
@@ -227,7 +227,7 @@ async def test_evaluate_baseline_no_baseline_profile():
         result = await evaluate_baseline(payload)
         assert result["deviation_exceeded"] is True
         assert result["escalation_required"] is True
-        assert result["guardian_confidence"] == 0.85
+        assert result["guardian_confidence"] == pytest.approx(0.85)
 
 
 @pytest.mark.asyncio
@@ -268,7 +268,7 @@ async def test_evaluate_baseline_within_baseline():
         }
         result = await evaluate_baseline_activity(payload)
         assert result["deviation_exceeded"] is False
-        assert result["guardian_confidence"] == 0.96
+        assert result["guardian_confidence"] == pytest.approx(0.96)
 
 
 @pytest.mark.asyncio
@@ -307,7 +307,7 @@ async def test_evaluate_baseline_confidence_bounds():
             "anomaly_score": 0.98,
         }
         result = await evaluate_baseline(payload)
-        assert result["guardian_confidence"] == 0.70
+        assert result["guardian_confidence"] == pytest.approx(0.70)
 
 
 # ---------------------------------------------------------------------------

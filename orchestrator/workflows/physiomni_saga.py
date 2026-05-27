@@ -54,6 +54,27 @@ class PhysiOmniAnomalySaga:
         """Signal to reject safety bypass."""
         self._rejected = True
 
+    async def _poll_for_approval(self, task_id: str) -> bool:
+        """Poll the manual decision status and sleep deterministically."""
+        while True:
+            if self._approved:
+                return True
+            if self._rejected:
+                return False
+
+            decision = await workflow.execute_activity(
+                "check_man_decision",
+                args=[{"task_id": task_id}],
+                start_to_close_timeout=timedelta(seconds=10),
+                retry_policy=RetryPolicy(maximum_attempts=2),
+            )
+
+            if decision.get("decided"):
+                status = decision.get("status")
+                return status == "APPROVED"
+
+            await workflow.sleep(timedelta(seconds=10))
+
     @workflow.run
     async def run(self, telemetry_payload: dict[str, Any]) -> dict[str, Any]:
         workflow.logger.info(
@@ -139,33 +160,7 @@ class PhysiOmniAnomalySaga:
             workflow.logger.info(f"PhysiOmniSaga: Safety override task created with ID {task_id}")
 
             # Polling wait loop using check_man_decision (existing orchestrator activity)
-            is_approved = False
-            while not is_approved:
-                # Wait condition checks both standard Temporal signals and manual database decisions
-                if self._approved:
-                    is_approved = True
-                    break
-                if self._rejected:
-                    is_approved = False
-                    break
-
-                decision = await workflow.execute_activity(
-                    "check_man_decision",
-                    args=[{"task_id": task_id}],
-                    start_to_close_timeout=timedelta(seconds=10),
-                    retry_policy=RetryPolicy(maximum_attempts=2),
-                )
-
-                if decision.get("decided"):
-                    status = decision.get("status")
-                    if status == "APPROVED":
-                        is_approved = True
-                        break
-                    is_approved = False
-                    break
-
-                # Sleep deterministically using Temporal clock
-                await workflow.sleep(timedelta(seconds=10))
+            is_approved = await self._poll_for_approval(task_id)
 
             if not is_approved:
                 workflow.logger.error("PhysiOmniSaga: Safety override request rejected or expired.")
