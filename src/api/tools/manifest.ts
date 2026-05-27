@@ -187,12 +187,12 @@ export interface ManifestHandlerResult {
  * @param headers - request headers (Map-like or plain object)
  * @param connectionId - unique connection id
  */
-export function handleManifestRequest(
+export async function handleManifestRequest(
   headers: HeaderSource,
   connectionId: string,
-): ManifestHandlerResult {
+): Promise<ManifestHandlerResult> {
   try {
-    const device = authenticate(headers, connectionId);
+    const device = await authenticate(headers, connectionId);
     const manifest = filterManifest(device);
     return { status: 200, body: manifest };
   } catch (err: unknown) {

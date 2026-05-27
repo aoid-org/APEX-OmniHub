@@ -217,13 +217,13 @@ export async function routeToolCall(
  * @returns connection state on success
  * @throws SpectreAuthError on failure
  */
-export function handleUpgrade(
+export async function handleUpgrade(
   headers:
     | { get(name: string): string | null | undefined }
     | Record<string, string | undefined>,
-): ConnectionState {
+): Promise<ConnectionState> {
   const connectionId = generateConnectionId();
-  const device = authenticate(headers, connectionId);
+  const device = await authenticate(headers, connectionId);
 
   return {
     device,
