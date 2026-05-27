@@ -114,6 +114,10 @@ export async function authenticate(
     throw new SpectreAuthError('Tenant mismatch');
   }
 
+  if (record.environment !== environment) {
+    throw new SpectreAuthError('Environment mismatch');
+  }
+
   if (record.status !== 'active') {
     throw new SpectreAuthError(`API key is ${record.status}`);
   }

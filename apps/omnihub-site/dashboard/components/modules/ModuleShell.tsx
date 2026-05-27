@@ -107,12 +107,12 @@ export const ModuleShell = memo(function ModuleShell({
         <span
           className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
           style={{
-            background: state.isLive ? 'rgba(52,211,153,0.1)' : 'rgba(161,161,170,0.1)',
-            color: state.isLive ? '#34d399' : '#a1a1aa',
-            border: `1px solid ${state.isLive ? 'rgba(52,211,153,0.3)' : 'rgba(161,161,170,0.3)'}`,
+            background: state.stateKind === 'live' ? 'rgba(52,211,153,0.1)' : state.stateKind === 'demo' ? 'rgba(167,139,250,0.1)' : state.stateKind === 'unavailable' ? 'rgba(239,68,68,0.1)' : 'rgba(161,161,170,0.1)',
+            color: state.stateKind === 'live' ? '#34d399' : state.stateKind === 'demo' ? '#a78bfa' : state.stateKind === 'unavailable' ? '#ef4444' : '#a1a1aa',
+            border: `1px solid ${state.stateKind === 'live' ? 'rgba(52,211,153,0.3)' : state.stateKind === 'demo' ? 'rgba(167,139,250,0.3)' : state.stateKind === 'unavailable' ? 'rgba(239,68,68,0.3)' : 'rgba(161,161,170,0.3)'}`,
           }}
         >
-          {state.isLive ? 'LIVE' : 'LOCAL'}
+          {state.stateKind.toUpperCase()}
         </span>
       </div>
 
