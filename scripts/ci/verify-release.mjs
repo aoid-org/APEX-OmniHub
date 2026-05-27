@@ -26,25 +26,14 @@ function sanitizePath() {
   const safePaths = paths.filter(p => {
     if (!p) return false;
     if (!path.isAbsolute(p)) return false;
-    
+
+    const lower = p.toLowerCase();
     if (process.platform === "win32") {
-      const lower = p.toLowerCase();
-      if (lower.includes("\\temp") || lower.includes("\\appdata") || lower.includes("\\users\\") || lower.includes(".")) {
-        if (lower.includes("\\.bun\\bin")) {
-          return true;
-        }
-        return false;
-      }
-    } else {
-      const lower = p.toLowerCase();
-      if (lower.includes("/tmp") || lower.includes("/home/") || lower.includes("/users/")) {
-        if (lower.includes("/.bun/bin")) {
-          return true;
-        }
-        return false;
-      }
+      const isWritableDir = lower.includes(String.raw`\temp`) || lower.includes(String.raw`\appdata`) || lower.includes(String.raw`\users\`) || lower.includes(".");
+      return !isWritableDir || lower.includes(String.raw`\.bun\bin`);
     }
-    return true;
+    const isWritableDir = lower.includes("/tmp") || lower.includes("/home/") || lower.includes("/users/");
+    return !isWritableDir || lower.includes("/.bun/bin");
   });
   
   return safePaths.join(separator);
@@ -53,8 +42,8 @@ function sanitizePath() {
 function findSystemPkgManager(isWin) {
   if (isWin) {
     const winPaths = [
-      "C:\\Program Files\\bun\\bun.exe",
-      "C:\\Program Files\\nodejs\\node.exe"
+      String.raw`C:\Program Files\bun\bun.exe`,
+      String.raw`C:\Program Files\nodejs\node.exe`
     ];
     for (const p of winPaths) {
       if (fs.existsSync(p)) return p;
@@ -129,8 +118,9 @@ for (const script of verifyScripts) {
     }
     console.log(`✓ ${script.name} PASSED.`);
   } catch (error) {
-    console.error(`\n❌ ${script.name} FAILED.`);
-    
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`\n❌ ${script.name} FAILED: ${message}`);
+
     // Check if this is a known downstream unimplemented gate
     const isDownstream = ["verify:supabase-security", "verify:claim-hygiene", "verify:supply-chain", "verify:types", "verify:assets"].includes(script.name);
     if (isDownstream) {

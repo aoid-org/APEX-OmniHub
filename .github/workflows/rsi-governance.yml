@@ -31,7 +31,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install RSI dependencies
-        run: "pip install --only-binary :all: -r tools/rsi/requirements.txt"
+        run: "pip install --only-binary :all: --require-hashes -r tools/rsi/requirements.txt"
 
       - name: Create artifact directories
         run: |
