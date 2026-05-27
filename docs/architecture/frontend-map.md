@@ -53,7 +53,7 @@ The map focuses on the React/Vite application rooted under `apps/omnihub-site/` 
 
 ## Visual Diagram Artifact
 
-![APEX OmniHub frontend structure diagram](./frontend-structure-map.svg)
+> **Note:** The SVG diagram (`frontend-structure-map.svg`) was removed in the Cloudflare-first topology migration (2026-05-20). The textual topology above is the current canonical reference. A regenerated diagram will be added in a future docs sprint.
 
 ## Maintenance Notes
 
