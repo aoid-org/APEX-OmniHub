@@ -37,7 +37,7 @@ jobs:
 
       - name: Emit JSON report (artifact)
         if: always()
-        run: python governance/ci/scripts/apex_policy_check.py --json > apex-policy-report.json || true
+        run: python governance/ci/scripts/apex_policy_check.py --json > apex-policy-report.json
 
       - name: Upload policy report
         if: always()
@@ -139,7 +139,7 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
           # If any changed file matches architecture-impacting paths, require RFC link in PR body.
-          changed=$(git diff --name-only origin/${{ github.base_ref }}...HEAD || git diff --name-only HEAD~1 HEAD || true)
+          changed=$(git diff --name-only origin/${{ github.base_ref }}...HEAD || git diff --name-only HEAD~1 HEAD)
           echo "Changed files:"
           echo "$changed"
           requires_rfc=0
