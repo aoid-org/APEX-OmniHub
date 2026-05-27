@@ -206,7 +206,9 @@ fi
 """
     with open(script_path, "w") as f:
         f.write(script_content)
-    os.chmod(script_path, 0o755)
+    # AegisKernel: Restrict file permissions to owner-only for maximum security (CWE-732)
+    import stat
+    os.chmod(script_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
     print(f"Generated flashing script: {script_path}")
     print(f"Stored node certificates under: {cert_dir}/")
@@ -220,7 +222,7 @@ def main():
 
     # Step 1: Generate cryptographic mTLS certs
     ca_pem, client_pem, client_key, fingerprint = generate_ca_and_device_credentials(device_serial)
-    print(f"Generated cryptographically secure credentials.")
+    print("Generated cryptographically secure credentials.")
     print(f"Client Certificate fingerprint: {fingerprint}")
 
     # Step 2: Register in Supabase database
