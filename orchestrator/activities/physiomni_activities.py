@@ -355,9 +355,7 @@ async def dispatch_work_order_activity(params: dict[str, Any]) -> dict[str, Any]
         physical_actions_enabled = (
             os.getenv("PHYSIOMNI_PHYSICAL_ACTIONS_ENABLED", "false").lower() == "true"
         )
-        kill_switch_active = (
-            os.getenv("PHYSIOMNI_KILL_SWITCH_ACTIVE", "false").lower() == "true"
-        )
+        kill_switch_active = os.getenv("PHYSIOMNI_KILL_SWITCH_ACTIVE", "false").lower() == "true"
 
         if kill_switch_active:
             activity.logger.warning(f"Kill switch active! Aborting actuation for {device_serial}.")
