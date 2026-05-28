@@ -36,22 +36,32 @@ describe('PolicyEngine', () => {
   };
 
   const baseProf: AppFilterProfile = {
-    appId, allowedEventTypes: [EventType.SOCIAL_POST_VIEWED, EventType.COMMENT],
-    piiHandling: 'allow', emotionalDataEnabled: true,
-    contentCategories: { allow: [], deny: [] },
+    appId,
+    allowedEventTypes: Object.values(EventType),
+    contentCategories: { allow: ['matchme', 'sentiment', 'email', 'phone'], deny: [] },
+    piiHandling: 'allow',
+    emotionalDataEnabled: true,
     rateLimit: { eventsPerMinute: 100, burstLimit: 10 }
   };
 
   beforeEach(() => { pe = new PolicyEngine(); });
 
   it('works without profile', async () => {
-    const res = await pe.filter([mkEv('1', EventType.FOLLOW)], 'none', 'c1');
-    expect(res).toHaveLength(1);
+    const res = await pe.filter([mkEv('1', EventType.FOLLOW)], 'none', 'corr1');
+    expect(res).toHaveLength(0); // Fails closed
   });
 
   it('filters by type', async () => {
+    const baseProf = {
+      appId: 'app1',
+      allowedEventTypes: [EventType.SOCIAL_POST_VIEWED],
+      contentCategories: { allow: ['matchme'], deny: [] },
+      piiHandling: 'allow' as const,
+      emotionalDataEnabled: true,
+    };
     await pe.setProfile(baseProf);
-    const res = await pe.filter([mkEv('1', EventType.SOCIAL_POST_VIEWED), mkEv('2', EventType.FOLLOW)], appId, 'c1');
+    const ev = mkEv('1', EventType.SOCIAL_POST_VIEWED, { data: 'matchme' });
+    const res = await pe.filter([ev], 'app1', 'corr2');
     expect(res).toHaveLength(1);
     expect(res[0].eventId).toBe('1');
   });
@@ -71,27 +81,31 @@ describe('PolicyEngine', () => {
 
   it('strips emotions', async () => {
     await pe.setProfile({ ...baseProf, emotionalDataEnabled: false });
-    const res = await pe.filter([mkEv('1', EventType.COMMENT, { sentiment: 'pos' }, { mood: 'joy' })], appId, 'c1');
+    const ev = mkEv('1', EventType.COMMENT, { sentiment: 0.8, other: 'data', matchme: true });
+    const res = await pe.filter([ev], appId, 'c1');
     expect(res[0].payload.sentiment).toBeUndefined();
     expect(res[0].metadata.mood).toBeUndefined();
   });
 
   it('masks pii', async () => {
     await pe.setProfile({ ...baseProf, piiHandling: 'mask' });
-    const res = await pe.filter([mkEv('1', EventType.COMMENT, { email: 'a@b.c' })], appId, 'c1');
+    const ev = mkEv('1', EventType.COMMENT, { email: 'test@example.com', other: 'data', matchme: true });
+    const res = await pe.filter([ev], appId, 'c1');
     expect(res[0].payload.email).toBe('***');
   });
 
   it('redacts pii', async () => {
     await pe.setProfile({ ...baseProf, piiHandling: 'redact' });
-    const res = await pe.filter([mkEv('1', EventType.COMMENT, { phone: '123' })], appId, 'c1');
+    const ev = mkEv('1', EventType.COMMENT, { phone: '123-456-7890', matchme: true });
+    const res = await pe.filter([ev], appId, 'c1');
     expect(res[0].payload.phone).toBe('[REDACTED]');
   });
 
   describe('validateEvent', () => {
     it('passes valid event', async () => {
       await pe.setProfile(baseProf);
-      const res = await pe.validateEvent(mkEv('1', EventType.COMMENT), appId);
+      const ev = mkEv('1', EventType.COMMENT, { matchme: true });
+      const res = await pe.validateEvent(ev, appId);
       expect(res.valid).toBe(true);
       expect(res.reasons).toHaveLength(0);
     });
@@ -132,7 +146,8 @@ describe('PolicyEngine', () => {
 
     it('passes sensitive data with explicit opt-in', async () => {
       await pe.setProfile(baseProf);
-      const ev = mkEv('1', EventType.COMMENT, {}, {}, DataClassification.SENSITIVE);
+      const ev = mkEv('1', EventType.COMMENT, { matchme: true });
+      ev.classification = DataClassification.SENSITIVE;
       ev.consentFlags.explicit_opt_in = true;
       const res = await pe.validateEvent(ev, appId);
       expect(res.valid).toBe(true);
@@ -161,7 +176,7 @@ describe('PolicyEngine', () => {
       const prof = { ...baseProf, allowedEventTypes: [...baseProf.allowedEventTypes, EventType.HISTORICAL_IMPORT] };
       await pe.setProfile(prof);
 
-      const ev = mkEv('1', EventType.HISTORICAL_IMPORT, {}, {}, DataClassification.PUBLIC);
+      const ev = mkEv('1', EventType.HISTORICAL_IMPORT, { matchme: true }, {}, DataClassification.PUBLIC);
       ev.timestamp = new Date(Date.now() - 25 * 3600 * 1000).toISOString();
 
       const res = await pe.validateEvent(ev, appId);

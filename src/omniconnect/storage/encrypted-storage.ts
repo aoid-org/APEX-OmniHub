@@ -139,7 +139,7 @@ export class EncryptedTokenStorage {
     });
 
     if (!res.ok) return null;
-    const data = await res.json() as any[];
+    const data = await res.json() as Array<Record<string, unknown>>;
     if (!data || data.length === 0) return null;
 
     const session = data[0];
@@ -176,7 +176,7 @@ export class EncryptedTokenStorage {
       headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
     });
     if (!res.ok) return [];
-    return this.decryptSessions(await res.json() as any[]);
+    return this.decryptSessions(await res.json() as Array<Record<string, unknown>>);
   }
 
   async listByProvider(userId: string, provider: string): Promise<StoredSession[]> {
@@ -185,7 +185,7 @@ export class EncryptedTokenStorage {
       headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
     });
     if (!res.ok) return [];
-    return this.decryptSessions(await res.json() as any[]);
+    return this.decryptSessions(await res.json() as Array<Record<string, unknown>>);
   }
 
   async getLastSync(connectorId: string): Promise<Date> {
@@ -206,7 +206,7 @@ export class EncryptedTokenStorage {
     });
   }
 
-  private async decryptSessions(rawSessions: any[]): Promise<StoredSession[]> {
+  private async decryptSessions(rawSessions: Array<Record<string, unknown>>): Promise<StoredSession[]> {
     const results = await Promise.allSettled(
       rawSessions.map(async (session) => {
         const decryptedTokenValue = await decryptToken(session.token);
