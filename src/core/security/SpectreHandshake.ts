@@ -53,12 +53,18 @@ type HeaderSource =
   | { get(name: string): string | null | undefined }
   | Record<string, string | undefined>;
 
+type HeadersLike = { get(name: string): string | null | undefined };
+
+function isHeadersLike(s: HeaderSource): s is HeadersLike {
+  return typeof (s as Partial<HeadersLike>).get === 'function';
+}
+
 function getHeader(source: HeaderSource, name: string): string | undefined {
-  if (typeof (source as any).get === 'function') {
-    const val = (source as any).get(name);
+  if (isHeadersLike(source)) {
+    const val = source.get(name);
     return val ?? undefined;
   }
-  return (source as any)[name];
+  return (source as Record<string, string | undefined>)[name];
 }
 
 function hashSecret(secret: string): string {
