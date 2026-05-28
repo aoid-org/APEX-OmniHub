@@ -12,6 +12,8 @@ import { createAdapter } from "../_shared/universal-adapter.ts";
 import { FlightControl } from "../_shared/flight-control.ts";
 import { RateLimiter } from "../_shared/rate-limiter.ts";
 import { assertUrlSafe } from "../_shared/ssrf-protection.ts";
+// Note: In Deno edge functions, shared packages might need explicit .ts paths depending on setup.
+import { ModelProviderRegistrySchema, type ModelProviderConfig } from "../../packages/schema/byom/registry.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? '';
@@ -59,6 +61,27 @@ function jsonResponse(data: unknown, status: number, corsHeaders: Record<string,
   });
 }
 
+// Mock registry lookup for now - in production this would fetch from 'omnihub_model_registry' table
+async function getProviderConfig(tenantId: string, provider: Provider): Promise<ModelProviderConfig | null> {
+  const isByomEnabled = Deno.env.get('BYOM_ENABLED') === 'true';
+  if (!isByomEnabled) return null;
+  
+  // Mock config matching the required safety schemas
+  return ModelProviderRegistrySchema.parse({
+    provider_id: provider,
+    tenant_id: tenantId,
+    endpoint: resolveProviderEndpoint(provider),
+    auth_secret_ref: `vault/byom/${provider}`,
+    provider_type: provider === 'openai' ? 'openai-compatible' : 'anthropic-compatible',
+    allowed_models: ['gpt-4', 'gpt-3.5-turbo', 'claude-3-sonnet'],
+    max_cost_usd: 10.0,
+    max_latency_ms: 30000,
+    retention_mode: 'ephemeral',
+    pii_policy: 'redact',
+    tool_use_permissions: ['none'],
+  });
+}
+
 serve(async (req: Request) => {
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
@@ -83,6 +106,43 @@ serve(async (req: Request) => {
 
     await RateLimiter.checkLimit(supabase, user.id);
 
+    const tenantId = user.user_metadata?.tenant_id ?? user.id;
+
+    // Load registry config
+    const providerConfig = await getProviderConfig(tenantId, provider);
+    if (!providerConfig || providerConfig.provider_type === 'disabled') {
+      return jsonResponse({ error: 'Provider is disabled or not configured in registry' }, 403, corsHeaders);
+    }
+
+    if (!providerConfig.allowed_models.includes(model)) {
+      return jsonResponse({ error: `Model ${model} is not allowed by governance policy` }, 403, corsHeaders);
+    }
+    
+    // Check tenant budget (mock logic for max_cost_usd)
+    const { data: currentSpendData } = await supabase
+      .from('omnihub_audit_log')
+      .select('details')
+      .eq('tenant_id', tenantId)
+      .eq('action', 'BYOM_AUDIT_SPAN');
+      
+    let totalSpend = 0;
+    if (currentSpendData) {
+      for (const row of currentSpendData) {
+         totalSpend += ((row.details as Record<string, number>)?.cost_incurred || 0);
+      }
+    }
+    
+    if (totalSpend >= providerConfig.max_cost_usd) {
+       // Log rejection
+       await supabase.from('omnihub_audit_log').insert({
+         action: 'BYOM_AUDIT_SPAN',
+         tenant_id: tenantId,
+         actor_id: user.id,
+         details: { status: 'blocked_budget', provider, model, cost_incurred: 0 }
+       });
+       return jsonResponse({ error: 'Tenant AI budget exceeded' }, 403, corsHeaders);
+    }
+
     const { data: connection, error: connectionError } = await supabase
       .from('provider_connections')
       .select('credential_ciphertext')
@@ -95,16 +155,21 @@ serve(async (req: Request) => {
       return jsonResponse({ error: 'Provider not connected' }, 404, corsHeaders);
     }
 
-    const tenantId = user.user_metadata?.tenant_id ?? user.id;
     const ciphertext = new Uint8Array(connection.credential_ciphertext as number[]);
     const apiKey = await cockpitCrypto.decrypt(ciphertext, { tenantId });
 
     const preFlight = FlightControl.preFlight(messages as Message[]);
     if (!preFlight.allowed) {
+      await supabase.from('omnihub_audit_log').insert({
+        action: 'BYOM_AUDIT_SPAN',
+        tenant_id: tenantId,
+        actor_id: user.id,
+        details: { status: 'blocked_pii', provider, model, cost_incurred: 0, reason: preFlight.violation }
+      });
       return jsonResponse({
         error: 'Safety Violation',
         code: preFlight.violation,
-        details: 'Input blocked by Flight Control',
+        details: 'Input blocked by Flight Control (Prompt Injection or PII policy)',
       }, 400, corsHeaders);
     }
 
@@ -144,14 +209,21 @@ serve(async (req: Request) => {
           controller.close();
 
           const region = req.headers.get('x-region') ?? 'us';
-          await supabase.from('usage_metering').insert({
+          const estimatedCost = (inputTokens * 0.00001) + (outputTokens * 0.00003); // mock cost calculation
+          
+          await supabase.from('omnihub_audit_log').insert({
+            action: 'BYOM_AUDIT_SPAN',
             tenant_id: tenantId,
-            user_id: user.id,
-            provider,
-            model,
-            input_tokens: inputTokens,
-            output_tokens: outputTokens,
-            region,
+            actor_id: user.id,
+            details: {
+              provider_id: provider,
+              model,
+              input_tokens: inputTokens,
+              output_tokens: outputTokens,
+              cost_incurred: estimatedCost,
+              status: 'success',
+              region
+            }
           });
         } catch (error) {
           controller.error(error);

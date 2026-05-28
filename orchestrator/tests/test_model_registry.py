@@ -11,7 +11,7 @@ def base_config():
         provider_id="test_provider",
         tenant_id="tenant_1",
         endpoint="https://api.test.com",
-        auth_secret_reference="sec-123",
+        auth_secret_reference="sec-123",  # noqa: S106
         allowed_models=["test-model"],
         max_cost=10.0,
         max_latency=1000.0,
@@ -44,13 +44,13 @@ def test_disabled_provider_with_fallback(registry, base_config):
     base_config.enabled = False
     base_config.fallback_provider_id = "fallback_prov"
     registry.register_provider(base_config)
-    
+
     fallback_config = base_config.model_copy()
     fallback_config.provider_id = "fallback_prov"
     fallback_config.enabled = True
     fallback_config.fallback_provider_id = None
     registry.register_provider(fallback_config)
-    
+
     result = registry.execute_with_governance("test_provider", "tenant_1", "Hello")
     assert "fallback_prov" in result
     assert registry.audit_logs[0]["action"] == "fallback_triggered"

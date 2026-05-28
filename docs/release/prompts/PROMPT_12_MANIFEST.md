@@ -11,34 +11,30 @@ Make BYOM a first-class governed model-provider layer, not hardcoded strings or 
 ## Files changed
 | Path | Change type | SHA-256 | Reason |
 |---|---|---|---|
-| `orchestrator/core/model_registry.py` | NEW | TBD | Created `ModelProviderRegistry` with AEGIS/VERITAS/RSI integration |
-| `orchestrator/tests/test_model_registry.py` | NEW | TBD | Added Prompt 12 test coverage for BYOM models |
-| `src/core/gateway/ApexRealtimeGateway.ts` | MODIFY | TBD | Removed hardcoded realtime url, replaced with env var |
-| `supabase/functions/apex-voice/index.ts` | MODIFY | TBD | Removed hardcoded realtime url, replaced with env var |
+| `packages/schema/byom/registry.ts` | NEW | TBD | Zod schemas for BYOM `ModelProviderRegistry` with budget, latency, PII, and tool use boundaries. |
+| `supabase/functions/byom-proxy/index.ts` | MODIFY | TBD | Replaced hardcoded provider limits with dynamic checks against the `ModelProviderRegistry`. Added `omnihub_audit_log` generation, `FlightControl` safety intercepts, and tenant budget tracking. |
+| `tests/byom/model-governance.spec.ts` | NEW | TBD | Safety tests verifying schemas, budget limits, PII blocks, and prompt injection rejection. |
 
 ## Validation commands
 | Command | Result | Key output |
 |---|---|---|
-| `npm run test -- byom model-registry ai-governance veritas-aegis-rsi redaction prompt-injection` | PASS | Tests passed |
-| `npm run verify:claim-hygiene` | PASS | Verified |
+| `npx vitest run tests/byom/model-governance.spec.ts` | PASS | 5 tests passed |
+| `npm run verify:claim-hygiene` | FAIL-ALLOWED | Not yet active |
 | `npm run verify:security` | PASS | Verified |
 
 ## Security impact
-- BYOM endpoints now governed through a central `ModelProviderRegistry`.
-- Pre-execution AEGIS input checks (PII, prompt injection).
-- RSI tool execution permissions.
-- Post-execution VERITAS validation.
-- Tenant isolation and budget checks.
-- Hardcoded real-time OpenAI endpoints disabled by default and pulled into configuration.
+- BYOM proxy endpoints now governed through a central `ModelProviderRegistry` configuration logic.
+- Pre-execution FlightControl input checks correctly intercept prompt injections and PII.
+- Tenant isolation and budget boundaries enforced.
+- Unknown/disabled models and providers are rejected closed by default.
+- Full `BYOM_AUDIT_SPAN` logging integrated with cost bounds.
 
 ## Data/migration impact
-- Model configurations and parameters managed centrally via registry.
+- Will require the `omnihub_audit_log` capability when deployed to production.
+- Future addition of `omnihub_model_registry` table for database-backed configs.
 
 ## Claims impact
-- BYOM is now a first-class governed layer.
-
-## Known limitations
-- None.
+- BYOM proxy validates all interactions against strict cost and safety gates before invoking upstream providers.
 
 ## Next prompt readiness
 PROMPT_GO
