@@ -734,7 +734,23 @@ function routeTaskRequest(route: string, req: Request, corsHeaders: HeadersInit)
   return jsonResponse({ error: 'not_found' }, 404, corsHeaders);
 }
 
-Deno.serve(async (req) => {
+function handleGetHealth(corsHeaders: HeadersInit): Response {
+  return jsonResponse({ status: 'ok', checked_at: new Date().toISOString() }, 200, corsHeaders);
+}
+
+async function handleKeysRequest(route: string, req: Request, corsHeaders: HeadersInit): Promise<Response> {
+  const subRoute = route.split('/')[1] || '';
+  if (req.method === 'POST') {
+    if (subRoute === '' || subRoute === 'create') return handleKeyCreation(req, corsHeaders);
+    if (subRoute === 'revoke') return handleKeyRevoke(req, corsHeaders);
+    if (subRoute === 'rotate') return handleKeyRotate(req, corsHeaders);
+  } else if (req.method === 'GET' && subRoute === 'list') {
+    return handleKeyList(req, corsHeaders);
+  }
+  return jsonResponse({ error: 'not_found' }, 404, corsHeaders);
+}
+
+async function handleServeRequest(req: Request): Promise<Response> {
   const requestOrigin = req.headers.get('origin')?.replace(/\/$/, '') ?? null;
   const corsHeaders = buildCorsHeaders(requestOrigin);
 
@@ -757,7 +773,7 @@ Deno.serve(async (req) => {
 
   // Simple GET route
   if (req.method === 'GET' && route === 'health') {
-    return jsonResponse({ status: 'ok', checked_at: new Date().toISOString() }, 200, corsHeaders);
+    return handleGetHealth(corsHeaders);
   }
 
   // API key routes
@@ -793,4 +809,6 @@ Deno.serve(async (req) => {
 
   // Handle event batch request
   return handleEventBatchRequest(req, route, isOmniPort, corsHeaders);
-});
+}
+
+Deno.serve(handleServeRequest);

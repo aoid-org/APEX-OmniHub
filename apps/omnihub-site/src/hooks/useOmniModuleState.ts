@@ -53,6 +53,29 @@ function registryStateFor(appKey: string): OmniModuleState {
   };
 }
 
+async function performLiveStateFetch(appKey: string): Promise<Partial<ModuleContent>> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("No active user session");
+  }
+
+  const { data, error } = await supabase.functions.invoke(
+    "omnilink-port/module-state",
+    {
+      body: { module_key: appKey },
+    }
+  );
+
+  if (error || !data) {
+    throw error || new Error("Failed to invoke module state function");
+  }
+
+  return data as Partial<ModuleContent>;
+}
+
 export function useOmniModuleState(appKey: string): OmniModuleState {
   const baselineState = useMemo(() => registryStateFor(appKey), [appKey]);
   const [liveState, setLiveState] = useState<LiveModuleState>(() => ({

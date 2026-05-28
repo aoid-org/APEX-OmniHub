@@ -79,11 +79,7 @@ async function buildHardenedSignature(
   sourceId: string,
   bodyRaw: string,
 ): Promise<string> {
-  const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(bodyRaw));
-  const bodyHash = Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-  const canonical = `${method}\n${path}\n${timestamp}\n${traceId}\n${sourceId}\n${bodyHash}`;
+  const canonical = `${method}\n${path}\n${timestamp}\n${traceId}\n${sourceId}\n${bodyRaw}`;
   return generateHMAC(canonical, secret);
 }
 

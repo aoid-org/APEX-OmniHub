@@ -32,6 +32,36 @@ const TREND_COLORS: Readonly<Record<string, string>> = {
   stable: '#6b7280',
 };
 
+interface StateStyle {
+  readonly background: string;
+  readonly color: string;
+  readonly border: string;
+}
+
+const STATE_KIND_STYLES: Readonly<Record<string, StateStyle>> = {
+  live: {
+    background: 'rgba(52,211,153,0.1)',
+    color: '#34d399',
+    border: '1px solid rgba(52,211,153,0.3)',
+  },
+  demo: {
+    background: 'rgba(167,139,250,0.1)',
+    color: '#a78bfa',
+    border: '1px solid rgba(167,139,250,0.3)',
+  },
+  unavailable: {
+    background: 'rgba(239,68,68,0.1)',
+    color: '#ef4444',
+    border: '1px solid rgba(239,68,68,0.3)',
+  },
+};
+
+const DEFAULT_STATE_STYLE: StateStyle = {
+  background: 'rgba(161,161,170,0.1)',
+  color: '#a1a1aa',
+  border: '1px solid rgba(161,161,170,0.3)',
+};
+
 interface ModuleShellProps {
   readonly state: OmniModuleState;
   readonly onClose: () => void;

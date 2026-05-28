@@ -9,7 +9,7 @@
  */
 
 
-const encoder = new TextEncoder();
+
 
 export interface HardenedHeaders {
   sourceId: string;
@@ -37,15 +37,7 @@ export function extractHardenedHeaders(request: Request): HardenedHeaders | null
   return { sourceId, keyId, timestamp, traceId, signature };
 }
 
-/**
- * Computes SHA-256 hex digest of a raw string body.
- */
-async function sha256Hex(data: string): Promise<string> {
-  const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(data));
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
+
 
 /**
  * Computes the canonical signature string for hardened mode.
