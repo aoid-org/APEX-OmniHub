@@ -4,7 +4,7 @@ import { SessionToken } from '@/omniconnect/types/connector';
 import { randomBytes } from 'node:crypto';
 
 describe('EncryptedTokenStorage', () => {
-  const TEST_KEY = randomBytes(32).toString('hex');
+  const _TEST_KEY = randomBytes(32).toString('hex');
   const INVALID_KEY_SHORT = randomBytes(16).toString('hex');
 
   let storage: EncryptedTokenStorage;

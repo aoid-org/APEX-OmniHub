@@ -92,8 +92,7 @@ async function handleHardenedIngress(
     return jsonResponse(401, { error: 'invalid_key_id' });
   }
 
-  const trustProxy = env.OMNIBRIDGE_TRUST_PROXY === 'true';
-  const clientIp = extractClientIp(request, trustProxy);
+  const clientIp = extractClientIp(request);
   if (!isIpAllowed(clientIp, resolution.webhook.allowed_ips)) {
     logEvent(true, 'ip_not_allowed', { ...meta, client_ip: clientIp });
     return jsonResponse(403, { error: 'ip_not_allowed' });

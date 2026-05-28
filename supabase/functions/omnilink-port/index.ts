@@ -315,7 +315,7 @@ async function handleModuleState(req: Request, corsHeaders: HeadersInit): Promis
   if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
   
   // Accept either JWT or API Key for module state
-  let tenantId: string | null = null;
+  let _tenantId: string | null = null;
   const token = authHeader.replace('Bearer ', '').trim();
   const apiKey = await loadApiKey(token);
   
@@ -323,12 +323,12 @@ async function handleModuleState(req: Request, corsHeaders: HeadersInit): Promis
     if (!enforcePermission(apiKey.scopes ?? {}, 'module_state:read')) {
       return jsonResponse({ error: 'permission_denied' }, 403, corsHeaders);
     }
-    tenantId = apiKey.tenant_id;
+    _tenantId = apiKey.tenant_id;
   } else {
     const userClient = createAnonClient(authHeader);
     const { data: { user } } = await userClient.auth.getUser();
     if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
-    tenantId = user.id;
+    _tenantId = user.id;
   }
 
   const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
@@ -738,7 +738,7 @@ function handleGetHealth(corsHeaders: HeadersInit): Response {
   return jsonResponse({ status: 'ok', checked_at: new Date().toISOString() }, 200, corsHeaders);
 }
 
-async function handleKeysRequest(route: string, req: Request, corsHeaders: HeadersInit): Promise<Response> {
+async function _handleKeysRequest(route: string, req: Request, corsHeaders: HeadersInit): Promise<Response> {
   const subRoute = route.split('/')[1] || '';
   if (req.method === 'POST') {
     if (subRoute === '' || subRoute === 'create') return handleKeyCreation(req, corsHeaders);

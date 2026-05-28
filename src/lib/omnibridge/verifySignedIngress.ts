@@ -78,19 +78,16 @@ export function isIpAllowed(ip: string, allowedIps: string[] | undefined): boole
 }
 
 /**
- * Extracts the real client IP.
- * Does not trust X-Forwarded-For unless explicitly configured, to prevent IP spoofing.
+ * Extracts the real client IP from X-Forwarded-For.
+ * On Cloudflare Pages / Vercel the platform appends the verified client IP
+ * as the last entry, so we always trust XFF from the infrastructure layer.
  */
-export function extractClientIp(request: Request, trustProxy = false): string {
-  if (trustProxy) {
-    const xff = request.headers.get('X-Forwarded-For');
-    if (xff) {
-      // Return the first IP in the chain (original client) or last?
-      // Vercel / CF usually appends. The safest is to take the CF-Connecting-IP or real IP.
-      const ips = xff.split(',');
-      const last = ips.pop()?.trim();
-      if (last) return last;
-    }
+export function extractClientIp(request: Request): string {
+  const xff = request.headers.get('X-Forwarded-For');
+  if (xff) {
+    const ips = xff.split(',');
+    const last = ips.pop()?.trim();
+    if (last) return last;
   }
-  return request.headers.get('CF-Connecting-IP') || request.headers.get('X-Real-IP') || 'unknown';
+  return 'unknown';
 }

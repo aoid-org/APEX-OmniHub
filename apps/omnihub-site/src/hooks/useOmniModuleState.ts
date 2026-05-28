@@ -53,7 +53,7 @@ function registryStateFor(appKey: string): OmniModuleState {
   };
 }
 
-async function performLiveStateFetch(appKey: string): Promise<Partial<ModuleContent>> {
+async function _performLiveStateFetch(appKey: string): Promise<Partial<ModuleContent>> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
