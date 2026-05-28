@@ -110,7 +110,10 @@ jobs:
           RATIONALE=$(python3 -c "import json; d=json.load(open('artifacts/rsi/decision.json')); print(d['rationale'])")
           echo "RSI decision: $DECISION | abort: $ABORT"
           echo "Rationale: $RATIONALE"
-          if [ "$ABORT" = "true" ]; then
+          # Fail on abort:true (block) OR decision:escalate (human review required).
+          # escalate means the policy engine cannot auto-allow — a human must review before merge.
+          if [ "$ABORT" = "true" ] || [ "$DECISION" = "escalate" ]; then
             echo "::error title=RSI Governance Block::$RATIONALE"
+            echo "::error title=RSI Governance Block::decision=$DECISION abort=$ABORT — merge blocked until human review clears escalation."
             exit 1
           fi
