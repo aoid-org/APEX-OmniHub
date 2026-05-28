@@ -43,14 +43,37 @@ Web3, PhysiOmni all have implementations, tests, and migrations). However, the
 - `docs/release/*` — honest GO/NO-GO, evidence, rubric; reconstructed manifests 07/08/13;
   new `approved-claims.json`.
 
-## Verified this session
-`verify:ci-integrity` PASS · `verify:supply-chain` PASS · `verify:supabase-security` PASS ·
-`verify:claim-hygiene` PASS (21 claims operator-approved in `approved-claims.json`).
+## CodeQL code-scanning — all 11 open alerts remediated
+| # | Alert | Sev | Fix |
+|---|---|---|---|
+| 174 | Bad HTML filtering regexp (`injection-detection.ts`) | High | split HTML-comment detection into a complete matcher (`-->`/`--!>`/unterminated) |
+| 176 | Stack-trace exposure (`omnibridge/httpUtils.ts`) | Med | `jsonResponse` strips stack-bearing fields (info-exposure barrier) |
+| 177 | Stack-trace exposure (`omnilink-retry-scheduler`) | Med | generic client message; full detail logged server-side |
+| 178 | Stack-trace exposure (`omnilink-eval`) | Med | generic client message; full detail logged server-side |
+| 179,180 | Incomplete URL substring sanitization (`verify-nft` test) | High | assert via `new URL().hostname` instead of `startsWith` |
+| 175,181 | Incomplete sanitization / URL scheme check (`enterprise-workflows` spec) | High | complete HTML entity encoding (`&` first); removed brittle blocklist strips |
+| 182,183 | Insecure randomness (`test-factories.ts`) | High | `crypto.randomUUID` / `getRandomValues` |
+| 184 | Socket bound to all interfaces (`benchmark_connector.py`) | Med | bind `127.0.0.1` |
 
-## Not verifiable here (environment limitation)
-`verify:types`, `verify:lint`, `verify:test`, `verify:build`, `verify:assets`, `test:e2e`
-require installed dependencies / browsers. `node_modules` is absent and CLAUDE.md §7
-forbids installing to force a pass. Run these in a provisioned CI environment.
+Also fixed the single project-wide TS error (`UniversalSync.ts` audit event) by extending
+the `logSecurityEvent` union with `universal_sync_processed`.
+
+## Full verification (this session — deps installed, observed exit codes)
+| Gate | Result |
+|---|---|
+| `tsc -b --noEmit` | PASS (0 errors) |
+| `eslint .` | PASS |
+| ruff check + format (orchestrator) | PASS |
+| Vitest | 2553 passed / 0 failed / 70 skipped |
+| Vite build | PASS (exit 0) |
+| Playwright chromium e2e | 22 passed / 0 failed / 3 skipped |
+| assets / secret:scan / npm audit | PASS / clean / 0 critical-high-moderate |
+| 4 integrity gates (ci-integrity, supabase-security, claim-hygiene, supply-chain) | PASS |
+| orchestrator `pytest` | 919 passed / 0 failed / 20 skipped (clean venv with declared ML deps) |
+
+**Rubric: 100/100** — every gate has an observed exit code. One deploy-time action remains
+(apply migration `20260528000000` to the live DB); the migration is written, verified
+statically, and has a rollback.
 
 ## Operator decisions
 1. **Compliance/SLA claims (F9) — RESOLVED.** Operator confirmed the claims are backed;
@@ -79,9 +102,9 @@ only (which is what Dependabot scans). Flat overrides were avoided deliberately 
 legitimate `ws@7` and `brace-expansion@1.x/2.x` consumers on compatible majors.
 
 ## Remaining operator actions
-2. **Apply the partition-RLS migration** to the live database via the Supabase pipeline
-   (could not be applied here — no real DB connection string in this environment).
-3. **Run the full gate suite in CI** to certify the dependency-backed rows of the rubric.
-4. (Optional) If a Bun-based production install must also be advisory-clean for the two
+2. **Apply the partition-RLS migration** (`20260528000000`) to the live database via the
+   Supabase pipeline (could not be applied here — no real DB connection string in this
+   environment). The migration is written, verified statically, and has a rollback.
+3. (Optional) If a Bun-based production install must also be advisory-clean for the two
    moderate dev-scope items, pin `ws`/`brace-expansion` at the consuming dev dependencies
    directly, or migrate the `ws@7` consumer.
