@@ -28,10 +28,24 @@ const workflowFiles = fs
   .readdirSync(WORKFLOWS_DIR)
   .filter((file) => file.endsWith(".yml") || file.endsWith(".yaml"));
 
+// Fake-gate name patterns: job IDs that indicate the job is not a real enforcement gate.
+const FAKE_GATE_PATTERNS = [
+  /^always[-_]?pass/i,
+  /^skip[-_]?rsi/i,
+  /^dummy[-_]?gate/i,
+  /^placeholder[-_]?gate/i,
+  /^no[-_]?op[-_]?gate/i,
+  /^fake[-_]?gate/i,
+  /^noop[-_]?check/i,
+];
+
 // Track workflow names (dedup) and job IDs (used later for branch-protection check)
 const workflowNames = new Map();
 // allJobIds: Map<jobId, filename> — used in branch-protection verification below.
 const allJobIds = new Map();
+// allJobDisplayNames: Map<displayName, filename> — detects duplicate governance check names
+// that would conflict in GitHub branch protection settings.
+const allJobDisplayNames = new Map();
 
 for (const file of workflowFiles) {
   const filePath = path.join(WORKFLOWS_DIR, file);
@@ -70,7 +84,27 @@ for (const file of workflowFiles) {
       // Job keys have exactly 2-space indentation: "  jobId:"
       const jobKeyMatch = rawLine.match(/^ {2}([a-zA-Z0-9_-]+):\s*$/);
       if (jobKeyMatch) {
-        allJobIds.set(jobKeyMatch[1], file);
+        const jobId = jobKeyMatch[1];
+        allJobIds.set(jobId, file);
+        // Check for fake gate name patterns
+        for (const pattern of FAKE_GATE_PATTERNS) {
+          if (pattern.test(jobId)) {
+            logError(`Fake gate name detected: job ID "${jobId}" in ${file} matches forbidden pattern "${pattern}"`);
+          }
+        }
+      }
+      // Collect job-level display names (4-space indent: "    name: ...")
+      const jobNameMatch = rawLine.match(/^ {4}name:\s*(?:"([^"]+)"|'([^']+)'|([^#\n]+))/);
+      if (jobNameMatch) {
+        const displayName = (jobNameMatch[1] ?? jobNameMatch[2] ?? jobNameMatch[3]).trim();
+        if (displayName && allJobDisplayNames.has(displayName)) {
+          logError(
+            `Duplicate job display name "${displayName}" detected in ${file} and ${allJobDisplayNames.get(displayName)}. ` +
+            `This causes a GitHub branch-protection name collision — only one job check will match.`
+          );
+        } else if (displayName) {
+          allJobDisplayNames.set(displayName, file);
+        }
       }
     }
   }
@@ -85,7 +119,12 @@ for (const file of workflowFiles) {
     }
   }
 
-  const isRequiredWorkflow = ["release.yml", "rsi-governance.yml", "ci-runtime-gates.yml"].includes(file);
+  const isRequiredWorkflow = [
+    "release.yml",
+    "rsi-governance.yml",
+    "ci-runtime-gates.yml",
+    "apex-governance.yml", // governance gate is required — must be fail-closed
+  ].includes(file);
 
   // Line-by-line requirement checks
   for (let i = 0; i < lines.length; i++) {
