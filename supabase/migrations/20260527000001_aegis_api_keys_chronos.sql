@@ -112,6 +112,7 @@ DECLARE
   deleted_count integer;
 BEGIN
   -- additive-allow: DELETE_FROM TTL expiry cleanup inside SECURITY DEFINER helper function; removes no schema-level data, only expired runtime lock rows
+  -- additive-allow: DELETE_FROM releasing expired locks
   DELETE FROM public.chronos_distributed_locks
   WHERE expires_at < now();
   GET DIAGNOSTICS deleted_count = ROW_COUNT;

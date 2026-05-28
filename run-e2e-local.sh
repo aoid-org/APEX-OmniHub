@@ -3,7 +3,7 @@ set -euo pipefail
 echo "BASH_SCRIPT_STARTED"
 
 export NVM_DIR="$HOME/.nvm"
-if [ -s "$NVM_DIR/nvm.sh" ]; then
+if [[ -s "$NVM_DIR/nvm.sh" ]]; then
   . "$NVM_DIR/nvm.sh"
   nvm use 20 >/dev/null
 fi
@@ -20,8 +20,8 @@ echo "PWD=$(pwd)"
 echo "OMNIHUB_REPO=$OMNIHUB_REPO"
 echo "SBBL_REPO=$SBBL_REPO"
 
-test -d "$OMNIHUB_REPO" || { echo "OMNIHUB_REPO missing"; exit 2; }
-test -d "$SBBL_REPO" || { echo "SBBL_REPO missing"; exit 2; }
+[[ -d "$OMNIHUB_REPO" ]] || { echo "OMNIHUB_REPO missing"; exit 2; }
+[[ -d "$SBBL_REPO" ]] || { echo "SBBL_REPO missing"; exit 2; }
 
 cd "$OMNIHUB_REPO/integration-harness"
 

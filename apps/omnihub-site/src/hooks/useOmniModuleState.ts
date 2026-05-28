@@ -53,6 +53,29 @@ function registryStateFor(appKey: string): OmniModuleState {
   };
 }
 
+async function performLiveStateFetch(appKey: string): Promise<Partial<ModuleContent>> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("No active user session");
+  }
+
+  const { data, error } = await supabase.functions.invoke(
+    "omnilink-port/module-state",
+    {
+      body: { module_key: appKey },
+    }
+  );
+
+  if (error || !data) {
+    throw error || new Error("Failed to invoke module state function");
+  }
+
+  return data as Partial<ModuleContent>;
+}
+
 export function useOmniModuleState(appKey: string): OmniModuleState {
   const baselineState = useMemo(() => registryStateFor(appKey), [appKey]);
   const [liveState, setLiveState] = useState<LiveModuleState>(() => ({
@@ -79,44 +102,10 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
       }
 
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user || cancelled) {
-          if (!cancelled) {
-            setLiveState({
-              key: appKey,
-              loading: false,
-              error: null,
-              stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
-            });
-          }
-          return;
-        }
-
-        const { data, error } = await supabase.functions.invoke(
-          "omnilink-port/module-state",
-          {
-            body: { module_key: appKey },
-          }
-        );
-
+        const live = await performLiveStateFetch(appKey);
         if (cancelled) {
           return;
         }
-
-        if (error || !data) {
-          setLiveState({
-            key: appKey,
-            loading: false,
-            error: null,
-            stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
-          });
-          return;
-        }
-
-        const live = data as Partial<ModuleContent>;
         setLiveState({
           key: appKey,
           headline: live.headline,
@@ -125,7 +114,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
           actions: live.actions,
           loading: false,
           error: null,
-          stateKind: 'live',
+          stateKind: "live",
         });
       } catch {
         if (!cancelled) {
