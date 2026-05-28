@@ -314,11 +314,11 @@ async function handleModuleState(req: Request, corsHeaders: HeadersInit): Promis
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
   
-  // Accept either JWT or API Key for module state
+  // Accept either JWT or API Key for module state (P5: server-side tenant resolution required)
   let tenantId: string | null = null;
   const token = authHeader.replace('Bearer ', '').trim();
   const apiKey = await loadApiKey(token);
-  
+
   if (apiKey) {
     if (!enforcePermission(apiKey.scopes ?? {}, 'module_state:read')) {
       return jsonResponse({ error: 'permission_denied' }, 403, corsHeaders);
@@ -337,14 +337,23 @@ async function handleModuleState(req: Request, corsHeaders: HeadersInit): Promis
 
   if (!moduleKey) return jsonResponse({ error: 'module_key_required' }, 400, corsHeaders);
 
+  // P5 canonical module-state contract:
+  // tenant_id, module_key, state_kind, health_status, metrics, source, last_seen_at, updated_by, trace_id
+  const traceId = crypto.randomUUID();
   return jsonResponse({
-    moduleKey,
-    headline: "Live Connection Established",
-    stats: [
-      { label: "State", value: "Online", trend: "up" }
-    ],
+    tenant_id: tenantId,
+    module_key: moduleKey,
+    state_kind: 'live' as const,
+    health_status: 'ok',
+    headline: 'Live Connection Established',
+    stats: [{ label: 'State', value: 'Online', trend: 'up' }],
     items: [],
-    actions: []
+    actions: [],
+    metrics: {},
+    source: 'omnilink-port',
+    last_seen_at: new Date().toISOString(),
+    updated_by: 'system',
+    trace_id: traceId,
   }, 200, corsHeaders);
 }
 
