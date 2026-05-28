@@ -11,7 +11,7 @@ from uuid import uuid4
 import pytest
 from temporalio.exceptions import ApplicationError
 
-# Import activities in isolation by patching temporal/database boundaries
+# Import activities and saga in isolation by patching temporal/database boundaries
 with patch("temporalio.activity.defn", lambda _name=None, **_kw: lambda f: f):
     with patch("providers.database.factory.get_database_provider") as mock_get_db:
         from activities.physiomni_activities import (
@@ -22,8 +22,7 @@ with patch("temporalio.activity.defn", lambda _name=None, **_kw: lambda f: f):
             man_mode_escalation_activity,
             dispatch_work_order_activity,
         )
-
-from workflows.physiomni_saga import PhysiOmniAnomalySaga
+        from workflows.physiomni_saga import PhysiOmniAnomalySaga
 
 
 # ---------------------------------------------------------------------------
