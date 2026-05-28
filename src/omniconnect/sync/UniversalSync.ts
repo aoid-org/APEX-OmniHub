@@ -77,7 +77,7 @@ export class UniversalSyncEngine {
         idempotencyStore.add(envelope.idempotencyKey);
         proofStateStore.set(recordKey, { version: existing ? existing.version + 1 : 1, data: envelope.afterPayload });
       }
-    } catch (e) {
+    } catch {
       envelope.syncStatus = SyncStatus.FAILED_RETRYABLE;
     }
 
