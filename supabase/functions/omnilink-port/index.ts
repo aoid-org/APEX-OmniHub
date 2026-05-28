@@ -778,15 +778,7 @@ async function handleServeRequest(req: Request): Promise<Response> {
 
   // API key routes
   if (route.startsWith('keys')) {
-    const subRoute = route.split('/')[1] || '';
-    if (req.method === 'POST') {
-      if (subRoute === '' || subRoute === 'create') return handleKeyCreation(req, corsHeaders);
-      if (subRoute === 'revoke') return handleKeyRevoke(req, corsHeaders);
-      if (subRoute === 'rotate') return handleKeyRotate(req, corsHeaders);
-    } else if (req.method === 'GET' && subRoute === 'list') {
-      return handleKeyList(req, corsHeaders);
-    }
-    return jsonResponse({ error: 'not_found' }, 404, corsHeaders);
+    return handleKeysRequest(route, req, corsHeaders);
   }
 
   // Module state route

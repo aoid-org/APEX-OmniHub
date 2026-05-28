@@ -76,6 +76,7 @@ async function buildRequest(opts: {
     'Content-Type': 'application/json',
     'X-Omni-Source': opts.sourceHeader ?? 'sbbl-hq',
     'X-Forwarded-For': opts.ip ?? '198.51.100.10',
+    'CF-Connecting-IP': opts.ip ?? '198.51.100.10',
   };
   return new Request('https://example.com/api/omnibridge/sync', {
     method: 'POST',
@@ -165,7 +166,7 @@ describe('functions/api/omnibridge/sync', () => {
     const env = baseEnv();
     const req = new Request('https://example.com/api/omnibridge/sync', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Omni-Source': 'sbbl-hq', 'X-Forwarded-For': '198.51.100.10' },
+      headers: { 'Content-Type': 'application/json', 'X-Omni-Source': 'sbbl-hq', 'X-Forwarded-For': '198.51.100.10', 'CF-Connecting-IP': '198.51.100.10' },
       body: '{not-json',
     });
     const res = await onRequest({ request: req, env });
@@ -177,7 +178,7 @@ describe('functions/api/omnibridge/sync', () => {
     const huge = 'x'.repeat(300_000);
     const req = new Request('https://example.com/api/omnibridge/sync', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Omni-Source': 'sbbl-hq', 'X-Forwarded-For': '198.51.100.10' },
+      headers: { 'Content-Type': 'application/json', 'X-Omni-Source': 'sbbl-hq', 'X-Forwarded-For': '198.51.100.10', 'CF-Connecting-IP': '198.51.100.10' },
       body: JSON.stringify({ blob: huge }),
     });
     const res = await onRequest({ request: req, env });

@@ -21,6 +21,18 @@ export interface StoredSession extends SessionToken {
   encryptionKeyId: string;
 }
 
+interface SessionRow {
+  tenant_id: string;
+  connector_id: string;
+  provider: string;
+  user_id: string;
+  token: string;
+  encryption_key_id: string;
+  scopes: string[];
+  created_at: string;
+  last_sync_at?: string;
+}
+
 function getKeyHex(): string {
   const keyHex =
     (typeof process !== 'undefined' && process.env?.[KEY_ENV_VAR]) ||
@@ -139,7 +151,7 @@ export class EncryptedTokenStorage {
     });
 
     if (!res.ok) return null;
-    const data = await res.json() as Array<Record<string, unknown>>;
+    const data = await res.json() as SessionRow[];
     if (!data || data.length === 0) return null;
 
     const session = data[0];
@@ -154,7 +166,9 @@ export class EncryptedTokenStorage {
         createdAt: new Date(session.created_at),
         lastSyncAt: session.last_sync_at ? new Date(session.last_sync_at) : undefined,
         encryptedToken: session.token,
-        encryptionKeyId: session.encryption_key_id
+        encryptionKeyId: session.encryption_key_id,
+        tenantId: session.tenant_id || 'default',
+        expiresAt: new Date(session.created_at)
       };
     } catch (error) {
       console.error(`Security Alert: Failed to decrypt session for ${connectorId}`, error);
@@ -176,7 +190,7 @@ export class EncryptedTokenStorage {
       headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
     });
     if (!res.ok) return [];
-    return this.decryptSessions(await res.json() as Array<Record<string, unknown>>);
+    return this.decryptSessions(await res.json() as SessionRow[]);
   }
 
   async listByProvider(userId: string, provider: string): Promise<StoredSession[]> {
@@ -185,7 +199,7 @@ export class EncryptedTokenStorage {
       headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
     });
     if (!res.ok) return [];
-    return this.decryptSessions(await res.json() as Array<Record<string, unknown>>);
+    return this.decryptSessions(await res.json() as SessionRow[]);
   }
 
   async getLastSync(connectorId: string): Promise<Date> {
@@ -206,11 +220,11 @@ export class EncryptedTokenStorage {
     });
   }
 
-  private async decryptSessions(rawSessions: Array<Record<string, unknown>>): Promise<StoredSession[]> {
+  private async decryptSessions(rawSessions: SessionRow[]): Promise<StoredSession[]> {
     const results = await Promise.allSettled(
       rawSessions.map(async (session) => {
         const decryptedTokenValue = await decryptToken(session.token);
-        return {
+        const stored: StoredSession = {
           connectorId: session.connector_id,
           provider: session.provider,
           userId: session.user_id,
@@ -219,8 +233,11 @@ export class EncryptedTokenStorage {
           createdAt: new Date(session.created_at),
           lastSyncAt: session.last_sync_at ? new Date(session.last_sync_at) : undefined,
           encryptedToken: session.token,
-          encryptionKeyId: session.encryption_key_id
+          encryptionKeyId: session.encryption_key_id,
+          tenantId: session.tenant_id || 'default',
+          expiresAt: new Date(session.created_at)
         };
+        return stored;
       }),
     );
     return results

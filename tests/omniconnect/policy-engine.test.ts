@@ -58,6 +58,7 @@ describe('PolicyEngine', () => {
       contentCategories: { allow: ['matchme'], deny: [] },
       piiHandling: 'allow' as const,
       emotionalDataEnabled: true,
+      rateLimit: { eventsPerMinute: 100, burstLimit: 10 }
     };
     await pe.setProfile(baseProf);
     const ev = mkEv('1', EventType.SOCIAL_POST_VIEWED, { data: 'matchme' });
