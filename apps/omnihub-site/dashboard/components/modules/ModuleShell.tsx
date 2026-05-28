@@ -38,7 +38,7 @@ interface StateStyle {
   readonly border: string;
 }
 
-const _STATE_KIND_STYLES: Readonly<Record<string, StateStyle>> = {
+const STATE_KIND_STYLES: Readonly<Record<string, StateStyle>> = {
   live: {
     background: 'rgba(52,211,153,0.1)',
     color: '#34d399',
@@ -56,7 +56,7 @@ const _STATE_KIND_STYLES: Readonly<Record<string, StateStyle>> = {
   },
 };
 
-const _DEFAULT_STATE_STYLE: StateStyle = {
+const DEFAULT_STATE_STYLE: StateStyle = {
   background: 'rgba(161,161,170,0.1)',
   color: '#a1a1aa',
   border: '1px solid rgba(161,161,170,0.3)',

@@ -66,16 +66,19 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
   useEffect(() => {
     let cancelled = false;
 
+    const safeSetLiveState = (state: Omit<LiveModuleState, "key">) => {
+      if (!cancelled) {
+        setLiveState({ key: appKey, ...state });
+      }
+    };
+
     async function fetchLiveState() {
       if (!hasSupabaseConfig) {
-        if (!cancelled) {
-          setLiveState({
-            key: appKey,
-            loading: false,
-            error: null,
-            stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'local',
-          });
-        }
+        safeSetLiveState({
+          loading: false,
+          error: null,
+          stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'local',
+        });
         return;
       }
 
@@ -85,14 +88,11 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
         } = await supabase.auth.getUser();
 
         if (!user || cancelled) {
-          if (!cancelled) {
-            setLiveState({
-              key: appKey,
-              loading: false,
-              error: null,
-              stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
-            });
-          }
+          safeSetLiveState({
+            loading: false,
+            error: null,
+            stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
+          });
           return;
         }
 
@@ -108,8 +108,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
         }
 
         if (error || !data) {
-          setLiveState({
-            key: appKey,
+          safeSetLiveState({
             loading: false,
             error: null,
             stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
@@ -118,25 +117,21 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
         }
 
         const live = data as Partial<ModuleContent>;
-        setLiveState({
-          key: appKey,
+        safeSetLiveState({
           headline: live.headline,
           stats: live.stats,
           items: live.items,
           actions: live.actions,
           loading: false,
           error: null,
-          stateKind: 'live',
+          stateKind: "live",
         });
       } catch {
-        if (!cancelled) {
-          setLiveState({
-            key: appKey,
-            loading: false,
-            error: null,
-            stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
-          });
-        }
+        safeSetLiveState({
+          loading: false,
+          error: null,
+          stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
+        });
       }
     }
 
