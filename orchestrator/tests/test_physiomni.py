@@ -23,7 +23,6 @@ with patch("temporalio.activity.defn", lambda _name=None, **_kw: lambda f: f):
             dispatch_work_order_activity,
         )
 
-from workflows.physiomni_saga import PhysiOmniAnomalySaga
 
 
 # ---------------------------------------------------------------------------
