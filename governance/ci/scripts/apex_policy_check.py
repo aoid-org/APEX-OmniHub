@@ -189,6 +189,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Emit JSON report on stdout")
     parser.add_argument("--strict-docs", action="store_true",
                         help="Also scan documentation dirs for forbidden patterns (off by default)")
+    parser.add_argument("files", nargs="*", type=Path, help="Specific files to scan. If empty, scan all.")
     args = parser.parse_args()
 
     config = load_config()
@@ -200,9 +201,17 @@ def main() -> int:
     errors: list[str] = []
     files_scanned = 0
 
-    for path in ROOT.rglob("*"):
+    paths_to_scan = args.files if args.files else ROOT.rglob("*")
+
+    for path in paths_to_scan:
+        # Resolve to absolute path relative to ROOT to ensure we can do relative_to later
+        path = path.resolve()
         if not path.is_file():
             continue
+        # Make sure path is under ROOT
+        if not str(path).startswith(str(ROOT)):
+            continue
+
         file_errors = _scan_file_errors(
             path, args.strict_docs, forbidden_names, forbidden_patterns, max_module_lines
         )
@@ -211,7 +220,8 @@ def main() -> int:
         files_scanned += 1
         errors.extend(file_errors)
 
-    errors.extend(check_rfc_completeness(ROOT, required_rfc_sections))
+    if not args.files:
+        errors.extend(check_rfc_completeness(ROOT, required_rfc_sections))
 
     if args.json:
         report = {

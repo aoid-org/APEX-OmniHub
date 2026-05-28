@@ -26,18 +26,17 @@ import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Loader2, ExternalLink, CheckCircle2, Minimize2, Maximize2, X, GripHorizontal } from 'lucide-react';
+import { Minimize2, Maximize2, X, GripHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SPRING_DAMPED, GPU_STYLE } from '@/lib/motionPresets';
 import { registerOmniAppShell } from '@/lib/OmniAppShell';
 import { sanitiseIframeUrl, getSandboxAttribute } from '@/lib/iframeOriginPolicy';
 import { ModuleRenderer } from './ModuleRenderer';
+import { DialogModeRenderer } from './OmniSpatialDialogRenderers';
 
 // Register the sandbox Custom Element on module load
 registerOmniAppShell();
@@ -48,247 +47,6 @@ registerOmniAppShell();
 
 /** Apple-grade fluid spring for spatial canvas */
 const SPATIAL_SPRING = { type: 'spring' as const, mass: 0.5, damping: 25, stiffness: 300, restDelta: 0.001 };
-
-// ============================================================================
-// Sub-Components: Form Modal (schema-driven field renderer)
-// ============================================================================
-
-interface FormField {
-  key?: string;
-  label?: string;
-  type?: string;
-  placeholder?: string;
-  required?: boolean;
-}
-
-function FormModalRenderer({
-  modal,
-  isProcessing,
-  onAction,
-  onClose,
-}: Readonly<{
-  modal: OmniModalConfig;
-  isProcessing: boolean;
-  onAction: (payload: Record<string, unknown>) => void;
-  onClose: () => void;
-}>) {
-  const [formValues, setFormValues] = useState<Record<string, string>>({});
-
-  const schemaFields = modal.schema?.fields as ReadonlyArray<FormField> | undefined;
-
-  // Default fields when no schema provided
-  const defaultFields: FormField[] = [
-    { key: 'name', label: 'Name', type: 'text', placeholder: 'Enter name…' },
-    { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Enter description…' },
-  ];
-
-  const fields = (schemaFields && schemaFields.length > 0) ? schemaFields : defaultFields;
-
-  const handleChange = (key: string, value: string) => {
-    setFormValues(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleSubmit = () => {
-    onAction({ status: 'submitted', data: formValues });
-  };
-
-  return (
-    <div className="py-4">
-      <div className="space-y-4">
-        {fields.map((field, idx) => {
-          const key = field.key ?? String(idx);
-          const label = field.label ?? `Field ${idx + 1}`;
-          const type = field.type ?? 'text';
-          const placeholder = field.placeholder ?? '';
-          const inputClass =
-            'w-full rounded-lg border border-border/50 bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground';
-          const renderFieldInput = () => {
-            if (type === 'textarea') {
-              return (
-                <textarea
-                  className={`${inputClass} min-h-[80px] resize-none`}
-                  placeholder={placeholder}
-                  value={formValues[key] ?? ''}
-                  onChange={e => handleChange(key, e.target.value)}
-                  disabled={isProcessing}
-                />
-              );
-            }
-            if (type === 'select' && modal.schema?.options) {
-              return (
-                <select
-                  className={inputClass}
-                  value={formValues[key] ?? ''}
-                  onChange={e => handleChange(key, e.target.value)}
-                  disabled={isProcessing}
-                >
-                  <option value="">Select…</option>
-                  {(modal.schema.options as ReadonlyArray<{ value: string; label: string }>).map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              );
-            }
-            return (
-              <input
-                type={type}
-                className={inputClass}
-                placeholder={placeholder}
-                value={formValues[key] ?? ''}
-                onChange={e => handleChange(key, e.target.value)}
-                disabled={isProcessing}
-              />
-            );
-          };
-          return (
-            <div key={key} className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">
-                {label}
-                {field.required && <span className="text-destructive ml-1">*</span>}
-              </label>
-              {renderFieldInput()}
-            </div>
-          );
-        })}
-      </div>
-      <DialogFooter className="mt-6">
-        <Button variant="outline" onClick={onClose} disabled={isProcessing}>
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} disabled={isProcessing}>
-          {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Submit
-        </Button>
-      </DialogFooter>
-    </div>
-  );
-}
-
-// ============================================================================
-// Sub-Components: Dialog Mode
-// ============================================================================
-
-function DialogModeRenderer({
-  modal,
-  isProcessing,
-  onAction,
-  onClose,
-}: Readonly<{
-  modal: OmniModalConfig;
-  isProcessing: boolean;
-  onAction: (payload: Record<string, unknown>) => void;
-  onClose: () => void;
-}>) {
-  switch (modal.type) {
-    case 'oauth':
-      return (
-        <div className="flex flex-col gap-4 py-4">
-          <p className="text-sm text-muted-foreground">
-            Connect your <strong>{modal.provider}</strong> account to
-            synchronize data directly into OmniBoard.
-          </p>
-          <Button
-            onClick={() => onAction({ action: 'init_oauth' })}
-            disabled={isProcessing}
-            className="w-full"
-          >
-            {isProcessing ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <ExternalLink className="mr-2 h-4 w-4" />
-            )}
-            Authorize {modal.provider}
-          </Button>
-        </div>
-      );
-
-    case 'form':
-      return (
-        <FormModalRenderer
-          modal={modal}
-          isProcessing={isProcessing}
-          onAction={onAction}
-          onClose={onClose}
-        />
-      );
-
-    case 'selection':
-      return (
-        <div className="py-4">
-          <div className="space-y-2">
-            {modal.schema?.items &&
-            Array.isArray(modal.schema.items)
-              ? (modal.schema.items as ReadonlyArray<Record<string, unknown>>).map(
-                  (item, idx) => {
-                    const itemKey = typeof item.id === 'string' || typeof item.id === 'number'
-                      ? String(item.id)
-                      : String(idx);
-                    let itemLabel = `Option ${String(idx + 1)}`;
-                    if (typeof item.label === 'string') {
-                      itemLabel = item.label;
-                    } else if (typeof item.name === 'string') {
-                      itemLabel = item.name;
-                    }
-                    return (
-                      <button
-                        key={itemKey}
-                        type="button"
-                        className="w-full text-left px-4 py-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors text-sm"
-                        onClick={() => onAction({ selected: item })}
-                        disabled={isProcessing}
-                      >
-                        {itemLabel}
-                      </button>
-                    );
-                  },
-                )
-              : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No selection items provided.
-                </p>
-              )}
-          </div>
-        </div>
-      );
-
-    case 'confirmation':
-      return (
-        <div className="py-4">
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose} disabled={isProcessing}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => onAction({ confirmed: true })}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-              )}
-              Confirm
-            </Button>
-          </DialogFooter>
-        </div>
-      );
-
-    case 'module':
-      return (
-        <ModuleRenderer
-          moduleKey={
-            typeof modal.contextData?.moduleKey === 'string'
-              ? modal.contextData.moduleKey
-              : modal.id
-          }
-          onClose={onClose}
-        />
-      );
-
-    default:
-      return null;
-  }
-}
 
 // ============================================================================
 // Sub-Components: Spatial Mode
@@ -410,8 +168,6 @@ export function OmniSpatialHost() {
   }, []);
 
   const handleOpenChange = useCallback((open: boolean) => {
-    // We only rely on onOpenChange for the ESCAPE key dismissal.
-    // Outside clicks are now handled by our explicit custom backdrop.
     if (!open && activeModal) {
       if (Date.now() - mountTime.current < 300) return;
       abortModal('USER_DISMISSED');
@@ -458,15 +214,13 @@ export function OmniSpatialHost() {
   }), [isPiP]);
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // DIALOG MODE — Radix Dialog with shadcn/ui (existing UniversalModalEngine)
+  // DIALOG MODE
   // ═══════════════════════════════════════════════════════════════════════════
   const renderDialogMode = () => {
     const hasDescription = Boolean(activeModal?.description);
-
     const dialogOpen = isOpen && renderMode === 'dialog';
     return (
       <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
-        {/* Custom explicit backdrop — only rendered when modal is open to avoid blocking page interactions */}
         {dialogOpen && (
           <button
             type="button"
@@ -486,7 +240,6 @@ export function OmniSpatialHost() {
               : 'z-[9001] sm:max-w-[425px]'
           }
           {...(hasDescription ? {} : { 'aria-describedby': undefined })}
-          // Hard-disable Radix's unreliable DismissableLayer event tracking
           onInteractOutside={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
         >
@@ -512,7 +265,7 @@ export function OmniSpatialHost() {
   };
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // SPATIAL MODE — Framer Motion canvas with PiP (existing OmniMediaModal)
+  // SPATIAL MODE
   // ═══════════════════════════════════════════════════════════════════════════
   const renderSpatialMode = () => {
     if (!activeModal || renderMode !== 'spatial') return null;
@@ -521,7 +274,6 @@ export function OmniSpatialHost() {
       <AnimatePresence>
         {isOpen && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-index-omnimodal, 500)' as unknown as number, pointerEvents: 'none' }}>
-            {/* BACKDROP */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: isPiP ? 0 : 1 }}
@@ -533,8 +285,6 @@ export function OmniSpatialHost() {
               }}
               onClick={isPiP ? undefined : closeModal}
             />
-
-            {/* SPATIAL CANVAS */}
             <motion.div
               layout
               data-pip={isPiP}
@@ -550,7 +300,6 @@ export function OmniSpatialHost() {
               onDragEnd={() => setIsDragging(false)}
               style={spatialCanvasStyle}
             >
-              {/* WINDOW CONTROLS */}
               <motion.div
                 layout
                 style={{
@@ -566,7 +315,6 @@ export function OmniSpatialHost() {
                     <GripHorizontal style={{ color: 'rgba(255,255,255,0.3)', width: 20, height: 20, marginLeft: 8 }} />
                   </div>
                 ) : <div style={{ flex: 1 }} />}
-
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 12,
                   background: 'rgba(0,0,0,0.5)', padding: '6px 12px', borderRadius: 999,
@@ -590,13 +338,9 @@ export function OmniSpatialHost() {
                   </button>
                 </div>
               </motion.div>
-
-              {/* EVENT SHIELD */}
               {isDragging && (
                 <div style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'transparent' }} />
               )}
-
-              {/* PAYLOAD */}
               <div style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0 }}>
                 <SpatialPayloadRenderer payload={activeModal} />
               </div>
@@ -608,7 +352,7 @@ export function OmniSpatialHost() {
   };
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // SANDBOX MODE — Shadow DOM Custom Element
+  // SANDBOX MODE
   // ═══════════════════════════════════════════════════════════════════════════
   const renderSandboxMode = () => {
     if (!activeModal || renderMode !== 'sandbox' || !isOpen) return null;
@@ -628,7 +372,6 @@ export function OmniSpatialHost() {
         }}
         data-testid="omni-sandbox-overlay"
       >
-        {/* BACKDROP */}
         <button
           type="button"
           style={{
@@ -639,8 +382,6 @@ export function OmniSpatialHost() {
           onClick={closeModal}
           aria-label="Close sandbox"
         />
-
-        {/* SANDBOX CONTAINER */}
         <motion.div
           initial={{ opacity: 0, scale: 0.92, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -662,7 +403,6 @@ export function OmniSpatialHost() {
             ...GPU_STYLE,
           }}
         >
-          {/* TITLE BAR */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '12px 20px',
@@ -701,8 +441,6 @@ export function OmniSpatialHost() {
               <X size={16} />
             </button>
           </div>
-
-          {/* SHADOW DOM HOST */}
           <div style={{ flex: 1, overflow: 'hidden' }}>
             {/* @ts-expect-error — Custom element not in JSX.IntrinsicElements */}
             <omni-app-shell
@@ -729,3 +467,6 @@ export function OmniSpatialHost() {
     </>
   );
 }
+
+// Re-export ModuleRenderer for consumers that previously imported it from here
+export { ModuleRenderer };

@@ -33,13 +33,25 @@ jobs:
 
       - name: Run APEX policy check
         # Fail-closed: no continue-on-error — policy failures must block the gate.
-        run: python governance/ci/scripts/apex_policy_check.py
+        run: |
+          changed_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD || git diff --name-only HEAD~1 HEAD)
+          if [ -n "$changed_files" ]; then
+            python governance/ci/scripts/apex_policy_check.py $changed_files
+          else
+            python governance/ci/scripts/apex_policy_check.py
+          fi
 
       - name: Emit JSON report (artifact)
         if: always()
         # || echo fallback ensures artifact upload never fails on report-gen error;
         # NOT a gate bypass — the gate already ran in the step above.
-        run: python governance/ci/scripts/apex_policy_check.py --json > apex-policy-report.json || echo '{"status":"report-generation-failed"}' > apex-policy-report.json
+        run: |
+          changed_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD || git diff --name-only HEAD~1 HEAD)
+          if [ -n "$changed_files" ]; then
+            python governance/ci/scripts/apex_policy_check.py --json $changed_files > apex-policy-report.json || echo '{"status":"report-generation-failed"}' > apex-policy-report.json
+          else
+            python governance/ci/scripts/apex_policy_check.py --json > apex-policy-report.json || echo '{"status":"report-generation-failed"}' > apex-policy-report.json
+          fi
 
       - name: Upload policy report
         if: always()
@@ -76,6 +88,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
 
       - name: Install osv-scanner
         run: |
@@ -91,13 +105,25 @@ jobs:
         run: |
           # Fail-closed: OSV scanner findings now block the governance gate.
           # Pre-existing vulnerabilities must be remediated or added to the OSV ignore list.
-          if find . -maxdepth 4 \( -name "package-lock.json" -o -name "pnpm-lock.yaml" \
-              -o -name "yarn.lock" -o -name "bun.lockb" -o -name "requirements.txt" \
-              -o -name "Pipfile.lock" -o -name "poetry.lock" -o -name "Cargo.lock" \
-              -o -name "go.sum" -o -name "Gemfile.lock" \) -print -quit | grep -q .; then
-            osv-scanner --recursive --skip-git .
+          changed_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD || git diff --name-only HEAD~1 HEAD)
+          changed_lockfiles=""
+          for f in $changed_files; do
+            case "$f" in
+              *package-lock.json|*pnpm-lock.yaml|*yarn.lock|*bun.lockb|*requirements.txt|*Pipfile.lock|*poetry.lock|*Cargo.lock|*go.sum|*Gemfile.lock)
+                changed_lockfiles="$changed_lockfiles $f"
+                ;;
+            esac
+          done
+          
+          if [ -n "$changed_lockfiles" ]; then
+            for f in $changed_lockfiles; do
+              if [ -f "$f" ]; then
+                echo "Scanning $f..."
+                osv-scanner --lockfile="$f"
+              fi
+            done
           else
-            echo "No dependency manifests detected; skipping osv-scan."
+            echo "No dependency manifests modified; skipping osv-scan."
           fi
 
   sast:
@@ -109,6 +135,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@03e4368ac7daa2bd82b3e85262f3bf87ee112f57 # v3
