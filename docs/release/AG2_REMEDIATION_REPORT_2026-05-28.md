@@ -57,7 +57,31 @@ forbids installing to force a pass. Run these in a provisioned CI environment.
    recorded in `approved-claims.json` with sign-off. Keep the underlying audit/contract
    evidence on file outside the repo.
 
+## Dependabot advisories (default branch) — RESOLVED
+The 3 open Dependabot alerts (all scanned from `package-lock.json`) were remediated via
+`package.json` `overrides`:
+
+| Advisory | Sev | Fix |
+|---|---|---|
+| `tmp` Path Traversal (GHSA-ph9p-34f9-6g65) | **High** | override `tmp` `0.2.5` → `^0.2.7` (prior pin was *below* the patched `0.2.6`) |
+| `qs` DoS (GHSA-q8mj-m7cp-5q26) | Moderate | override `qs` → `^6.15.2` |
+| `ws` uninitialized memory (GHSA-58qx-3vcg-4xpx) | Moderate | override `ws@^8.0.0` → `^8.21.0` (8.x only; `ws@7` consumer untouched) |
+| `brace-expansion` DoS (GHSA-jxxr-4gwj-5jf2) | Moderate | override `brace-expansion@^5.0.0` → `^5.0.6` (5.x only) — extra, beyond the 3 alerts |
+
+`npm audit` after the fix: **0 critical / 0 high / 0 moderate** (was 16 high — those were all
+hardhat-toolchain chains rooted at the vulnerable `tmp`; patching `tmp` cleared the chain).
+Lockfiles regenerated lockfile-only (no `node_modules` install).
+
+**Note on `bun.lock`:** Bun does not honor `package@range` override keys (a pre-existing
+repo limitation — see the `picomatch@^2.0.0` overrides). So the flat `tmp`/`qs` fixes apply
+to both lockfiles, but the scoped `ws`/`brace-expansion` fixes apply to `package-lock.json`
+only (which is what Dependabot scans). Flat overrides were avoided deliberately to keep the
+legitimate `ws@7` and `brace-expansion@1.x/2.x` consumers on compatible majors.
+
 ## Remaining operator actions
 2. **Apply the partition-RLS migration** to the live database via the Supabase pipeline
    (could not be applied here — no real DB connection string in this environment).
 3. **Run the full gate suite in CI** to certify the dependency-backed rows of the rubric.
+4. (Optional) If a Bun-based production install must also be advisory-clean for the two
+   moderate dev-scope items, pin `ws`/`brace-expansion` at the consuming dev dependencies
+   directly, or migrate the `ws@7` consumer.
