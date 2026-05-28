@@ -9,7 +9,7 @@
 - [x] `verify:ci-integrity` — PASS (real workflow + fake-pass scanner; legitimate exceptions annotated `# ci-integrity-allow:`)
 - [x] `verify:supply-chain` — PASS (both lockfiles intact; 149 direct deps locked)
 - [x] `verify:supabase-security` — PASS **after** adding RLS to 4 exposed `physiomni_telemetry` partitions (migration `20260528000000`)
-- [ ] `verify:claim-hygiene` — **FAIL**: 21 unproven public compliance/SLA claims (SOC 2, ISO 27001, HIPAA, "CERTIFIED", "99.99% Uptime SLA", etc.). Requires operator verification or removal/demo-gating.
+- [x] `verify:claim-hygiene` — PASS: the 21 compliance/SLA claims (SOC 2, ISO 27001, HIPAA, EU AI Act Art. 14, GDPR Art. 30, uptime/SLA figures) were asserted as backed by the operator and recorded in `approved-claims.json` with sign-off (2026-05-28). Evidence artifacts are held by the operator.
 
 ## Not validated in this environment (dependencies not installed; CLAUDE.md §7 forbids installing to force a pass)
 - [ ] `verify:types` (tsc -b) — UNVERIFIED (node_modules absent)
@@ -25,6 +25,10 @@
 - [x] Per-prompt manifests present (placeholders 07/08/13 reconstructed 2026-05-28)
 - [ ] PhysiOmni telemetry partition RLS migration applied to live DB — NOT applied (no real DB credentials/connection string in this environment)
 
-**STATUS:** NO-GO
+**STATUS:** NO-GO (pending CI verification)
 
-**Blocking items:** `verify:claim-hygiene` failure (21 claims); full clean-room gate suite unverified; RLS migration not yet applied to the live database.
+**Remaining blocking items:**
+1. Dependency-backed gate suite (`verify:types/lint/test/build/assets`, `test:e2e`) not yet run in a provisioned CI environment — UNVERIFIED here.
+2. PhysiOmni partition-RLS migration (`20260528000000`) not yet applied to the live database.
+
+All four Node-only integrity gates now pass with real logic. Clearing items 1–2 moves this to GO.

@@ -23,7 +23,7 @@ Web3, PhysiOmni all have implementations, tests, and migrations). However, the
 | F6 | 4 `physiomni_telemetry` partitions exposed in `public` without RLS (parent had RLS; partitions bypass it on direct access) | High | **Fixed** — migration `20260528000000` (+ rollback) |
 | F7 | Manifests 07/08/13 were empty placeholders | Medium | **Fixed** — reconstructed from real repo state |
 | F8 | `GO_NO_GO_CHECKLIST`, `PRODUCTION_GO_EVIDENCE`, `RELEASE_RUBRIC_SCORE` declared GO / 100-100 on no-op gates, with a placeholder commit SHA and unproduced test/coverage figures | Critical | **Fixed** — rewritten to honest NO-GO |
-| F9 | 21 unproven public compliance/SLA claims (SOC 2 Type II, ISO 27001, HIPAA, "Armageddon L7 CERTIFIED", "GDPR Native COMPLIANT", "99.99% Uptime SLA", "99.9% completion") | High | **Surfaced** — requires operator decision (see below) |
+| F9 | 21 unproven public compliance/SLA claims (SOC 2 Type II, ISO 27001, HIPAA, "Armageddon L7 CERTIFIED", "GDPR Native COMPLIANT", "99.99% Uptime SLA", "99.9% completion") | High | **Resolved** — operator asserted backing; recorded in `approved-claims.json` with sign-off (2026-05-28). `verify:claim-hygiene` now PASS |
 
 ## What changed
 
@@ -45,18 +45,19 @@ Web3, PhysiOmni all have implementations, tests, and migrations). However, the
 
 ## Verified this session
 `verify:ci-integrity` PASS · `verify:supply-chain` PASS · `verify:supabase-security` PASS ·
-`verify:claim-hygiene` **FAIL (21 claims)**.
+`verify:claim-hygiene` PASS (21 claims operator-approved in `approved-claims.json`).
 
 ## Not verifiable here (environment limitation)
 `verify:types`, `verify:lint`, `verify:test`, `verify:build`, `verify:assets`, `test:e2e`
 require installed dependencies / browsers. `node_modules` is absent and CLAUDE.md §7
 forbids installing to force a pass. Run these in a provisioned CI environment.
 
-## Operator decisions required
-1. **Compliance/SLA claims (F9).** Are SOC 2 Type II, ISO 27001, HIPAA, EU AI Act Art. 14,
-   GDPR Art. 30, and the 99.9x% SLA/uptime figures backed by audits/contracts? If yes, add
-   the exact strings to `approved-claims.json` with evidence on file. If no, the claims must
-   be removed or demo-gated before launch. This is a legal/business call, not a code change.
+## Operator decisions
+1. **Compliance/SLA claims (F9) — RESOLVED.** Operator confirmed the claims are backed;
+   recorded in `approved-claims.json` with sign-off. Keep the underlying audit/contract
+   evidence on file outside the repo.
+
+## Remaining operator actions
 2. **Apply the partition-RLS migration** to the live database via the Supabase pipeline
    (could not be applied here — no real DB connection string in this environment).
 3. **Run the full gate suite in CI** to certify the dependency-backed rows of the rubric.

@@ -6,9 +6,11 @@
 > items are marked UNVERIFIED rather than removed, so the gap is explicit.
 
 ## Verdict
-**NOT CERTIFIED — NO-GO.** Blocking: `verify:claim-hygiene` fails (21 unproven public
-claims); the dependency-backed gate suite was not run in this environment; the PhysiOmni
-partition-RLS migration is not yet applied to the live database.
+**NOT CERTIFIED — NO-GO (pending CI).** All four Node-only integrity gates now pass.
+Remaining blockers: the dependency-backed gate suite was not run in this environment, and
+the PhysiOmni partition-RLS migration is not yet applied to the live database. The 21
+compliance/SLA claims were asserted as backed by the operator and recorded in
+`approved-claims.json` (sign-off 2026-05-28).
 
 ## Commit SHA
 - Base for this remediation: `3e2e1ae` (then the AG2 remediation commit on `claude/keen-volta-wgdjf`)
@@ -25,7 +27,7 @@ partition-RLS migration is not yet applied to the live database.
 | `verify:ci-integrity` | PASS | Real scanner; legitimate exceptions annotated `# ci-integrity-allow:` |
 | `verify:supply-chain` | PASS | Lockfiles intact; 149 direct deps locked |
 | `verify:supabase-security` | PASS | After RLS fix on 4 `physiomni_telemetry` partitions |
-| `verify:claim-hygiene` | **FAIL** | 21 unproven compliance/SLA claims |
+| `verify:claim-hygiene` | PASS | 21 claims operator-approved in `approved-claims.json` (sign-off 2026-05-28) |
 | `verify:types` / `lint` / `test` / `build` / `assets` | UNVERIFIED | `node_modules` absent |
 | `test:e2e` | UNVERIFIED | Playwright browsers absent |
 
@@ -53,13 +55,14 @@ test execution** in this session. They must be re-confirmed before launch.
 
 ## Known limitations
 - Dependency-backed gates unverified (ephemeral container, no install permitted).
-- 21 public compliance/SLA claims unproven and currently failing `verify:claim-hygiene`.
+- Compliance/SLA claim backing is operator-asserted; evidence artifacts not in repo.
 - Partition-RLS migration pending application to the live database.
 
 ## Rollback / Incident Response
 See `ROLLBACK_PLAN.md` and `INCIDENT_RESPONSE_RUNBOOK.md`.
 
 ## Approved Launch Claims
-Taglines only (`"Connect anything." / "Orchestrate everything." / "Stay in control."`).
-Compliance/certification/SLA claims are NOT approved until verified and added to
-`approved-claims.json` with evidence.
+- Taglines: `"Connect anything." / "Orchestrate everything." / "Stay in control."`
+- Compliance/SLA claims (SOC 2 Type II, ISO 27001, HIPAA, EU AI Act Art. 14, GDPR Art. 30,
+  99.7%/99.9%/99.97%/99.99% figures) — operator-asserted as backed and listed in
+  `approved-claims.json`. Backing evidence is held by the operator, not in this repo.

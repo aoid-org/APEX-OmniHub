@@ -13,7 +13,7 @@
 | Type safety and code quality | 0/5 | `verify:types` UNVERIFIED (deps not installed) |
 | Security/auth/RBAC/tenant | 0/10 | Code present; auth/RBAC test suites not run this session |
 | Durable orchestration | 0/8 | Code present; tests not run this session |
-| OmniDash truthfulness | 0/6 | Contract present; `verify:claim-hygiene` FAILS on marketing-surface claims |
+| OmniDash truthfulness | 0/6 | Contract present; `verify:claim-hygiene` PASS, but module-state test suite not run this session |
 | OmniLink/OmniPort | 0/6 | Code present; tests not run this session |
 | OmniBridge | 0/5 | Code present; tests not run this session |
 | OmniConnect/OmniBoard | 0/5 | Code present; tests not run this session |
@@ -26,10 +26,10 @@
 | Observability/audit/SLO | 0/5 | Code present; tests not run this session |
 | Supabase/RLS/secrets/privacy | 6/6 | `verify:supabase-security` now real and PASSING after partition-RLS fix |
 | Supply chain/provenance | 4/4 | `verify:supply-chain` now real and PASSING (lockfiles intact, deps locked) |
-| PWA/assets/accessibility/claims | 0/4 | `verify:claim-hygiene` FAILS (21 unproven claims); assets unverified |
+| PWA/assets/accessibility/claims | 1/4 | `verify:claim-hygiene` PASS (21 claims operator-approved); assets/a11y/PWA unverified |
 | Release evidence/rollback | 3/6 | Docs present and now honest; evidence pack incomplete pending real clean-room run |
 
-**TOTAL (verified this session):** 20/100
+**TOTAL (verified this session):** 21/100
 
 **Interpretation:** This score measures *verified evidence in this environment*, not the
 quality of the underlying code. Re-run the full suite in a dependency-installed CI
