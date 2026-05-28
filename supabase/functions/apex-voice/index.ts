@@ -116,8 +116,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   socket.onopen = (): void => {
     logEvent("log", "client_connected");
+    const REALTIME_ENDPOINT = Deno.env.get('REALTIME_MODEL_ENDPOINT');
+    const IS_REALTIME_ENABLED = Deno.env.get('REALTIME_ENABLED') === 'true';
+
+    if (!IS_REALTIME_ENABLED || !REALTIME_ENDPOINT) {
+      logEvent("error", "realtime_disabled");
+      socket.close(1008, "Realtime Endpoint Disabled");
+      return;
+    }
+
     openAISocket = new WebSocket(
-      "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17",
+      REALTIME_ENDPOINT,
       ["realtime", "openai-beta.realtime-v1"]
     );
 

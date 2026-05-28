@@ -30,9 +30,10 @@ import { filterManifest } from '../../api/tools/manifest';
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-/** OpenAI Realtime WebSocket endpoint. */
-export const OPENAI_REALTIME_URL =
-  'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17';
+/** OpenAI Realtime WebSocket endpoint (Env Driven & Disabled by Default). */
+export const OPENAI_REALTIME_URL = process.env.REALTIME_MODEL_ENDPOINT || '';
+export const IS_REALTIME_ENABLED = process.env.REALTIME_ENABLED === 'true';
+
 const PING_INTERVAL_MS = 30_000;
 const IDLE_TIMEOUT_MS = 300_000;
 const TOOL_EXEC_TIMEOUT_MS = 30_000;
@@ -222,6 +223,10 @@ export async function handleUpgrade(
     | { get(name: string): string | null | undefined }
     | Record<string, string | undefined>,
 ): Promise<ConnectionState> {
+  if (!IS_REALTIME_ENABLED || !OPENAI_REALTIME_URL) {
+    throw new Error('Realtime endpoint is currently disabled or not configured in production path.');
+  }
+
   const connectionId = generateConnectionId();
   const device = await authenticate(headers, connectionId);
 
