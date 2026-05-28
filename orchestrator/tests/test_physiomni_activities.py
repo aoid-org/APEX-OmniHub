@@ -25,7 +25,6 @@ with patch("temporalio.activity.defn", lambda _name=None, **_kw: lambda f: f):
         )
 
 
-
 # ---------------------------------------------------------------------------
 # HELPERS
 # ---------------------------------------------------------------------------
@@ -420,4 +419,3 @@ async def test_dispatch_work_order_actions_disabled():
         result = await dispatch_work_order_activity(params)
         assert result["status"] == "no-op"
         assert result["audit_id"] is None
-
