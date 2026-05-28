@@ -7,6 +7,9 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string;
   readonly VITE_SUPABASE_ANON_KEY: string;
   readonly VITE_MAESTRO_ENABLED: string;
+  readonly VITE_PHYSIOMNI_DEMO_ENABLED?: string;
+  readonly VITE_PHYSIOMNI_LIVE_ENABLED?: string;
+  readonly VITE_PHYSIOMNI_PHYSICAL_ACTIONS_ENABLED?: string;
 }
 
 interface ImportMeta {

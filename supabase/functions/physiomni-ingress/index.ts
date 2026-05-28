@@ -16,6 +16,7 @@
 
 import { buildCorsHeaders, handlePreflight } from '../_shared/cors.ts';
 import { createServiceClient } from '../_shared/supabaseClient.ts';
+import { RateLimiter } from '../_shared/rate-limiter.ts';
 
 // ── Threshold Constants ─────────────────────────────────────────────────────
 const VIBRATION_CRITICAL_THRESHOLD = 15.0;
@@ -240,6 +241,38 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const data = validation.data;
   const requestId = crypto.randomUUID();
   const supabase = createServiceClient();
+
+  // ── 0. Security, Rate Limiting & Gating ─────────────────────────────────────
+  const isLiveEnabled = Deno.env.get('PHYSIOMNI_LIVE_ENABLED') === 'true';
+  const isDemoEnabled = Deno.env.get('PHYSIOMNI_DEMO_ENABLED') !== 'false';
+
+  if (!isLiveEnabled && !isDemoEnabled) {
+    return jsonResponse(
+      { error: 'ingress_disabled', message: 'PhysiOmni ingress is completely disabled' },
+      403,
+      corsHeaders,
+    );
+  }
+
+  try {
+    await RateLimiter.checkLimit(supabase, data.device_serial, 60, 60);
+  } catch (err) {
+    return jsonResponse(
+      { error: 'rate_limit_exceeded', message: (err as Error).message },
+      429,
+      corsHeaders,
+    );
+  }
+
+  // Placeholder for HMAC signed telemetry validation & replay protection
+  const signature = req.headers.get('x-physiomni-signature');
+  if (isLiveEnabled && !signature) {
+    return jsonResponse(
+      { error: 'unauthorized', message: 'Signed telemetry required for live mode' },
+      401,
+      corsHeaders,
+    );
+  }
 
   // ── 1. Insert telemetry (idempotent via UNIQUE on device_serial + captured_at)
   const { error: telemetryError } = await supabase

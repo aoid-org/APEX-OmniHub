@@ -6,6 +6,7 @@ Covers:
 2. workflows/physiomni_saga.py (100% coverage goal)
 """
 
+import os
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 import pytest
@@ -22,7 +23,6 @@ with patch("temporalio.activity.defn", lambda _name=None, **_kw: lambda f: f):
             man_mode_escalation_activity,
             dispatch_work_order_activity,
         )
-
 
 
 # ---------------------------------------------------------------------------
@@ -379,13 +379,43 @@ async def test_dispatch_work_order_activity_success():
     client_mock.table.return_value.insert.return_value.execute.return_value = insert_resp
 
     with patch("activities.physiomni_activities.get_database_provider", return_value=db):
+        with patch.dict(
+            os.environ,
+            {"PHYSIOMNI_PHYSICAL_ACTIONS_ENABLED": "true", "PHYSIOMNI_KILL_SWITCH_ACTIVE": "false"},
+        ):
+            params = {
+                "tenant_id": str(uuid4()),
+                "device_serial": "DEV-ACTUATE-10",
+            }
+            result = await dispatch_work_order_activity(params)
+            assert result["status"] == "dispatched"
+            assert result["audit_id"] == "audit-log-uuid-10"
+
+
+@pytest.mark.asyncio
+async def test_dispatch_work_order_kill_switch():
+    """Actuation should be aborted if kill switch is active."""
+    with patch.dict(os.environ, {"PHYSIOMNI_KILL_SWITCH_ACTIVE": "true"}):
         params = {
             "tenant_id": str(uuid4()),
             "device_serial": "DEV-ACTUATE-10",
         }
         result = await dispatch_work_order_activity(params)
-        assert result["status"] == "dispatched"
-        assert result["audit_id"] == "audit-log-uuid-10"
+        assert result["status"] == "aborted"
+        assert result["audit_id"] is None
 
 
-# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_dispatch_work_order_actions_disabled():
+    """Actuation should be no-op if physical actions are disabled."""
+    with patch.dict(
+        os.environ,
+        {"PHYSIOMNI_PHYSICAL_ACTIONS_ENABLED": "false", "PHYSIOMNI_KILL_SWITCH_ACTIVE": "false"},
+    ):
+        params = {
+            "tenant_id": str(uuid4()),
+            "device_serial": "DEV-ACTUATE-10",
+        }
+        result = await dispatch_work_order_activity(params)
+        assert result["status"] == "no-op"
+        assert result["audit_id"] is None

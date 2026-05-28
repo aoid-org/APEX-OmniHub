@@ -30,9 +30,20 @@ import { filterManifest } from '../../api/tools/manifest';
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-/** OpenAI Realtime WebSocket endpoint. */
-export const OPENAI_REALTIME_URL =
-  'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17';
+/**
+ * OpenAI Realtime WebSocket endpoint (Env Driven & Disabled by Default).
+ *
+ * DESIGN NOTE: These module-level exports expose the *current* snapshot of the
+ * env at import time and are intentionally kept for external consumers (e.g.
+ * health-check routes) that need a stable reference.
+ *
+ * `handleUpgrade` reads `process.env` lazily on every call so that test
+ * harnesses can override these values via `vi.stubEnv` without needing to
+ * reload the module.  Do NOT cache these in `handleUpgrade`.
+ */
+export const OPENAI_REALTIME_URL = process.env.REALTIME_MODEL_ENDPOINT || '';
+export const IS_REALTIME_ENABLED = process.env.REALTIME_ENABLED === 'true';
+
 const PING_INTERVAL_MS = 30_000;
 const IDLE_TIMEOUT_MS = 300_000;
 const TOOL_EXEC_TIMEOUT_MS = 30_000;
@@ -238,6 +249,18 @@ export async function handleUpgrade(
     | { get(name: string): string | null | undefined }
     | Record<string, string | undefined>,
 ): Promise<ConnectionState> {
+  // FIX: Read env lazily (per-call) so vi.stubEnv() works in test harnesses.
+  // ROOT CAUSE: Module-level IS_REALTIME_ENABLED / OPENAI_REALTIME_URL are
+  //   evaluated once at import time and cannot be overridden by vi.stubEnv
+  //   after the module is loaded, causing all handleUpgrade tests to throw in
+  //   CI where these env vars are not set.
+  // CHANGE: Local reads here; the exported constants remain for external consumers.
+  const isEnabled = process.env.REALTIME_ENABLED === 'true';
+  const realtimeUrl = process.env.REALTIME_MODEL_ENDPOINT || '';
+  if (!isEnabled || !realtimeUrl) {
+    throw new Error('Realtime endpoint is currently disabled or not configured in production path.');
+  }
+
   const connectionId = generateConnectionId();
   const device = await authenticate(headers, connectionId);
 

@@ -15,11 +15,13 @@ export default function PhysiOmniModule({ onClose }: Props) {
     // Target matches the pilot tenant requirements
     const logoUrl = 'https://raw.githubusercontent.com/lucide-react/lucide/main/icons/shield.svg';
     const brandColor = '#F97316';
-    const tenantId = 'e28bbd91-4cf6-4444-8d4e-120a1337beef'; // pristine pilot tenant
+    const tenantId = 'demo-tenant-id'; // static for now, tenant binding enforced in Prompt 11
     
     const url = `/physiomni-pilot?logo=${encodeURIComponent(logoUrl)}&color=${encodeURIComponent(brandColor)}&tenant=${tenantId}`;
     window.open(url, '_blank');
   };
+
+  const isDemo = state?.stateKind === 'demo';
 
   return (
     <ModuleShell state={state} onClose={onClose}>
@@ -28,8 +30,13 @@ export default function PhysiOmniModule({ onClose }: Props) {
         <div className="rounded-xl border border-border/40 p-4 bg-card/60 backdrop-blur-md">
           <div className="flex items-center gap-2 mb-3">
             <Radio className="w-4 h-4 text-orange-500 animate-pulse" />
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
               Nordic Hardware Pilot Status
+              {isDemo && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-orange-500/20 text-orange-400">
+                  DEMO
+                </span>
+              )}
             </h4>
           </div>
           
