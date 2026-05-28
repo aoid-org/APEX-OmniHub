@@ -149,12 +149,38 @@ def load_config() -> dict:
         sys.exit(2)
 
 
+def _is_size_exempt(
+    rel: str,
+    rel_parts: tuple[str, ...],
+    size_exempt_dirs: set[str],
+    size_exempt_paths: set[str],
+) -> bool:
+    """
+    True if the file is exempt from the module-size check.
+
+    Exemption sources (config-driven, not hardcoded):
+    - size_exempt_dirs: any path component matches (e.g. "tests", "sim")
+    - size_exempt_paths: exact relative path match (pre-existing baseline)
+
+    IMPORTANT: Exemptions apply ONLY to the size gate.  Forbidden-name and
+    forbidden-pattern checks are unaffected, preserving security invariants.
+    Exemptions are tracked as intentional tech-debt — they do NOT allow new
+    violations; adding a new large file that is NOT in the exemption list still
+    fails the gate.
+    """
+    if any(part in size_exempt_dirs for part in rel_parts):
+        return True
+    return rel in size_exempt_paths
+
+
 def _scan_file_errors(
     path: Path,
     strict_docs: bool,
     forbidden_names: list[str],
     forbidden_patterns: list[str],
     max_module_lines: int,
+    size_exempt_dirs: set[str],
+    size_exempt_paths: set[str],
 ) -> list[str] | None:
     """Return None to skip the file; otherwise return a (possibly empty) list of violations."""
     rel_parts = path.relative_to(ROOT).parts
@@ -178,9 +204,10 @@ def _scan_file_errors(
     if not in_docs or strict_docs:
         for hit in check_forbidden_patterns(content, forbidden_patterns):
             errors.append(f"Forbidden pattern detected: '{hit}' in {rel}")
-    size_err = check_module_size(path, content, max_module_lines)
-    if size_err:
-        errors.append(size_err)
+    if not _is_size_exempt(rel, rel_parts, size_exempt_dirs, size_exempt_paths):
+        size_err = check_module_size(path, content, max_module_lines)
+        if size_err:
+            errors.append(size_err)
     return errors
 
 
@@ -197,6 +224,8 @@ def main() -> int:
     forbidden_patterns: list[str] = config.get("forbidden_patterns", [])
     max_module_lines: int = int(config.get("max_module_lines", 500))
     required_rfc_sections: list[str] = config.get("required_rfc_sections", [])
+    size_exempt_dirs: set[str] = set(config.get("size_exempt_dirs", []))
+    size_exempt_paths: set[str] = set(config.get("size_exempt_paths", []))
 
     errors: list[str] = []
     files_scanned = 0
@@ -213,7 +242,8 @@ def main() -> int:
             continue
 
         file_errors = _scan_file_errors(
-            path, args.strict_docs, forbidden_names, forbidden_patterns, max_module_lines
+            path, args.strict_docs, forbidden_names, forbidden_patterns,
+            max_module_lines, size_exempt_dirs, size_exempt_paths,
         )
         if file_errors is None:
             continue

@@ -36,6 +36,12 @@ describe('ApexRealtimeGateway', () => {
 
   beforeEach(() => {
     _resetForTesting();
+
+    // Stub env vars BEFORE each test so that handleUpgrade's lazy env reads
+    // see a live Realtime endpoint.  vi.stubEnv auto-restores after each test.
+    vi.stubEnv('REALTIME_ENABLED', 'true');
+    vi.stubEnv('REALTIME_MODEL_ENDPOINT', 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview');
+
     setToolRunner(async (name) => ({
       success: true,
       data: [],
