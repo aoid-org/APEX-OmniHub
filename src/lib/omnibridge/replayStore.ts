@@ -8,37 +8,32 @@
  * @license Proprietary - APEX Business Systems Ltd.
  */
 
+import { acquireAsync } from '../../core/orchestrator/ChronosLock';
+
 export interface ReplayStore {
   /**
    * Check if an idempotency key or composite replay key has already been processed.
    * Returns true if the key is a duplicate (already processed).
    */
-  isDuplicate(key: string): boolean;
-
-  // async checkAndSet(key: string, ttl: number): Promise<boolean>;
+  isDuplicate(key: string): Promise<boolean>;
 }
 
-const processedKeys = new Set<string>();
-const MAX_IDEMPOTENCY_KEYS = 10_000;
-
-class InMemoryReplayStore implements ReplayStore {
-  public isDuplicate(key: string): boolean {
-    if (processedKeys.has(key)) {
+class DurableReplayStore implements ReplayStore {
+  public async isDuplicate(key: string): Promise<boolean> {
+    try {
+      const { isNew } = await acquireAsync(key, { toolName: 'omnibridge_ingest' });
+      return !isNew;
+    } catch (e) {
+      // In case of store failure, fail-closed is safer for idempotency, 
+      // but we could also fail-open if availability > exactly-once.
+      // Default to fail-closed (act as duplicate).
+      console.error('ReplayStore failure:', e);
       return true;
     }
-
-    // Evict oldest entries if we exceed the cap to bound memory
-    if (processedKeys.size >= MAX_IDEMPOTENCY_KEYS) {
-      const firstKey = processedKeys.values().next().value as string;
-      processedKeys.delete(firstKey);
-    }
-
-    processedKeys.add(key);
-    return false;
   }
 }
 
-export const replayStore = new InMemoryReplayStore();
+export const replayStore = new DurableReplayStore();
 
 /**
  * Generates a hardened mode replay key.
@@ -58,5 +53,7 @@ export function getLegacyIdempotencyKey(key: string): string {
  * Clears the in-memory store. Useful for testing.
  */
 export function clearReplayStore(): void {
-  processedKeys.clear();
+  import('../../core/orchestrator/ChronosLock').then(({ _resetForTesting }) => {
+    _resetForTesting();
+  });
 }

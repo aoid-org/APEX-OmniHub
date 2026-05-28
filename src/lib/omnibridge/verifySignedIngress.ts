@@ -49,6 +49,7 @@ async function sha256Hex(data: string): Promise<string> {
 
 /**
  * Computes the canonical signature string for hardened mode.
+ * HMAC must use raw request bytes to prevent bypasses via whitespace manipulation.
  */
 export async function computeCanonicalString(
   method: string,
@@ -58,8 +59,7 @@ export async function computeCanonicalString(
   sourceId: string,
   bodyRaw: string
 ): Promise<string> {
-  const bodyHash = await sha256Hex(bodyRaw);
-  return `${method}\n${path}\n${timestamp}\n${traceId}\n${sourceId}\n${bodyHash}`;
+  return `${method}\n${path}\n${timestamp}\n${traceId}\n${sourceId}\n${bodyRaw}`;
 }
 
 /**
@@ -86,15 +86,19 @@ export function isIpAllowed(ip: string, allowedIps: string[] | undefined): boole
 }
 
 /**
- * Extracts the real client IP, considering X-Forwarded-For.
+ * Extracts the real client IP.
+ * Does not trust X-Forwarded-For unless explicitly configured, to prevent IP spoofing.
  */
-export function extractClientIp(request: Request): string {
-  const xff = request.headers.get('X-Forwarded-For');
-  if (xff) {
-    // Vercel apps get the real client IP as the last IP appended by the trusted proxy
-    const ips = xff.split(',');
-    const last = ips.pop()?.trim();
-    if (last) return last;
+export function extractClientIp(request: Request, trustProxy = false): string {
+  if (trustProxy) {
+    const xff = request.headers.get('X-Forwarded-For');
+    if (xff) {
+      // Return the first IP in the chain (original client) or last?
+      // Vercel / CF usually appends. The safest is to take the CF-Connecting-IP or real IP.
+      const ips = xff.split(',');
+      const last = ips.pop()?.trim();
+      if (last) return last;
+    }
   }
-  return 'unknown';
+  return request.headers.get('CF-Connecting-IP') || request.headers.get('X-Real-IP') || 'unknown';
 }

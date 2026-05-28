@@ -203,7 +203,7 @@ export async function recordDispatchFailure(
 export async function updateDispatchState(
   input: {
     event_uuid: string;
-    state: 'dispatching' | 'dispatched' | 'acknowledged' | 'dlq';
+    state: 'accepted' | 'normalized' | 'persisted' | 'dispatching' | 'dispatched' | 'acknowledged' | 'dlq' | 'failed_retryable' | 'failed_terminal';
     error?: string;
     attempts_delta?: number;
     dispatch_target?: string;

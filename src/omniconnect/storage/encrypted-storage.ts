@@ -96,29 +96,66 @@ async function decryptToken(packedBlob: string): Promise<string> {
  * Compatible with browser, Capacitor (iOS/Android), and Deno edge environments.
  */
 export class EncryptedTokenStorage {
-  private storage = new Map<string, StoredSession>();
+  private getSupabaseConfig() {
+    const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new Error('Missing Supabase configuration');
+    return { url, key };
+  }
 
   async store(sessionToken: SessionToken): Promise<void> {
     const encryptedTokenValue = await encryptToken(sessionToken.token);
+    const { url, key } = this.getSupabaseConfig();
 
-    const storedSession: StoredSession = {
-      ...sessionToken,
+    const storedSession = {
+      tenant_id: 'default', // In a real multi-tenant app, extract from context
+      connector_id: sessionToken.connectorId,
+      provider: sessionToken.provider,
+      user_id: sessionToken.userId,
       token: encryptedTokenValue,
-      createdAt: new Date(),
-      encryptedToken: encryptedTokenValue,
-      encryptionKeyId: 'env-var',
+      encryption_key_id: 'env-var',
+      scopes: sessionToken.scopes || [],
+      created_at: new Date().toISOString(),
     };
 
-    this.storage.set(sessionToken.connectorId, storedSession);
+    const res = await fetch(`${url}/rest/v1/connector_sessions?on_conflict=tenant_id,connector_id`, {
+      method: 'POST',
+      headers: {
+        'apikey': key,
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify([storedSession]),
+    });
+
+    if (!res.ok) throw new Error(`Failed to store session: ${res.status}`);
   }
 
   async get(connectorId: string): Promise<StoredSession | null> {
-    const session = this.storage.get(connectorId);
-    if (!session) return null;
+    const { url, key } = this.getSupabaseConfig();
+    const res = await fetch(`${url}/rest/v1/connector_sessions?connector_id=eq.${encodeURIComponent(connectorId)}&limit=1`, {
+      headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+    });
 
+    if (!res.ok) return null;
+    const data = await res.json() as any[];
+    if (!data || data.length === 0) return null;
+
+    const session = data[0];
     try {
       const decryptedTokenValue = await decryptToken(session.token);
-      return { ...session, token: decryptedTokenValue };
+      return {
+        connectorId: session.connector_id,
+        provider: session.provider,
+        userId: session.user_id,
+        token: decryptedTokenValue,
+        scopes: session.scopes,
+        createdAt: new Date(session.created_at),
+        lastSyncAt: session.last_sync_at ? new Date(session.last_sync_at) : undefined,
+        encryptedToken: session.token,
+        encryptionKeyId: session.encryption_key_id
+      };
     } catch (error) {
       console.error(`Security Alert: Failed to decrypt session for ${connectorId}`, error);
       return null;
@@ -126,49 +163,70 @@ export class EncryptedTokenStorage {
   }
 
   async delete(connectorId: string): Promise<void> {
-    this.storage.delete(connectorId);
+    const { url, key } = this.getSupabaseConfig();
+    await fetch(`${url}/rest/v1/connector_sessions?connector_id=eq.${encodeURIComponent(connectorId)}`, {
+      method: 'DELETE',
+      headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+    });
   }
 
   async listActive(userId: string): Promise<StoredSession[]> {
-    const sessions = Array.from(this.storage.values()).filter(
-      (session) => session.userId === userId,
-    );
-    return this.decryptSessions(sessions);
+    const { url, key } = this.getSupabaseConfig();
+    const res = await fetch(`${url}/rest/v1/connector_sessions?user_id=eq.${encodeURIComponent(userId)}`, {
+      headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+    });
+    if (!res.ok) return [];
+    return this.decryptSessions(await res.json() as any[]);
   }
 
   async listByProvider(userId: string, provider: string): Promise<StoredSession[]> {
-    const sessions = Array.from(this.storage.values()).filter(
-      (session) => session.userId === userId && session.provider === provider,
-    );
-    return this.decryptSessions(sessions);
+    const { url, key } = this.getSupabaseConfig();
+    const res = await fetch(`${url}/rest/v1/connector_sessions?user_id=eq.${encodeURIComponent(userId)}&provider=eq.${encodeURIComponent(provider)}`, {
+      headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+    });
+    if (!res.ok) return [];
+    return this.decryptSessions(await res.json() as any[]);
   }
 
   async getLastSync(connectorId: string): Promise<Date> {
-    const session = this.storage.get(connectorId);
+    const session = await this.get(connectorId);
     return session?.lastSyncAt ?? new Date(0);
   }
 
   async updateLastSync(connectorId: string, lastSyncAt: Date): Promise<void> {
-    const session = this.storage.get(connectorId);
-    if (session) {
-      session.lastSyncAt = lastSyncAt;
-    }
+    const { url, key } = this.getSupabaseConfig();
+    await fetch(`${url}/rest/v1/connector_sessions?connector_id=eq.${encodeURIComponent(connectorId)}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': key,
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ last_sync_at: lastSyncAt.toISOString() }),
+    });
   }
 
-  private async decryptSessions(sessions: StoredSession[]): Promise<StoredSession[]> {
+  private async decryptSessions(rawSessions: any[]): Promise<StoredSession[]> {
     const results = await Promise.allSettled(
-      sessions.map(async (session) => {
+      rawSessions.map(async (session) => {
         const decryptedTokenValue = await decryptToken(session.token);
-        return { ...session, token: decryptedTokenValue };
+        return {
+          connectorId: session.connector_id,
+          provider: session.provider,
+          userId: session.user_id,
+          token: decryptedTokenValue,
+          scopes: session.scopes,
+          createdAt: new Date(session.created_at),
+          lastSyncAt: session.last_sync_at ? new Date(session.last_sync_at) : undefined,
+          encryptedToken: session.token,
+          encryptionKeyId: session.encryption_key_id
+        };
       }),
     );
     return results
       .map((r, i) => {
         if (r.status === 'fulfilled') return r.value;
-        console.error(
-          `Security Alert: Failed to decrypt session for ${sessions[i].connectorId}`,
-          r.reason,
-        );
+        console.error(`Security Alert: Failed to decrypt session for ${rawSessions[i].connector_id}`, r.reason);
         return null;
       })
       .filter((s): s is StoredSession => s !== null);
