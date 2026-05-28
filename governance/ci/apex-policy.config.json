@@ -67,5 +67,45 @@
     "SECURITY.md",
     "LICENSE"
   ],
-  "notes": "v1.1.0 removed bare 'Manager' from forbidden_names to eliminate false positives on legitimate names like ResourceManager / CacheManager. God-object detection is now identifier-aware (class/function/interface/type/const Foo) and filename-stem-exact, not arbitrary substring. Documentation directories AND repo-root documentation files are exempt from forbidden-pattern scans because they DESCRIBE the forbidden patterns by name."
+  "notes": "v1.1.0 removed bare 'Manager' from forbidden_names to eliminate false positives on legitimate names like ResourceManager / CacheManager. God-object detection is now identifier-aware (class/function/interface/type/const Foo) and filename-stem-exact, not arbitrary substring. Documentation directories AND repo-root documentation files are exempt from forbidden-pattern scans because they DESCRIBE the forbidden patterns by name.",
+  "size_exempt_dirs_note": "Directories listed here are exempt from the module-size gate ONLY (forbidden-name and forbidden-pattern checks still apply). These represent test suites, simulation harnesses, and sandbox code where line-count limits are deliberately relaxed. Add new directories here only with a governance rationale.",
+  "size_exempt_dirs": [
+    "tests",
+    "sim",
+    "sandbox"
+  ],
+  "size_exempt_paths_note": "Individual file paths exempt from the module-size gate. These are PRE-EXISTING violations baselined as tech-debt on 2026-05-28 (Prompt 11 governance hardening). Each file MUST be tracked in a refactoring ticket before next major release. Do NOT add new files here without a linked tech-debt issue.",
+  "size_exempt_paths": [
+    "orchestrator/tests/test_cache.py",
+    "orchestrator/tests/test_man_mode.py",
+    "orchestrator/tests/test_man_mode_activities.py",
+    "orchestrator/tests/test_omni_policy.py",
+    "orchestrator/tests/test_omnitrace_extended.py",
+    "orchestrator/tests/test_physiomni.py",
+    "orchestrator/tests/test_supabase_provider.py",
+    "orchestrator/tests/test_tools_extended.py",
+    "orchestrator/activities/tools.py",
+    "orchestrator/infrastructure/cache.py",
+    "orchestrator/observability/omnitrace.py",
+    "orchestrator/workflows/agent_saga.py",
+    "packages/apex-sales/src/worker.ts",
+    "src/components/ui/sidebar.tsx",
+    "src/features/registry.ts",
+    "src/lib/database/providers/supabase.ts",
+    "src/lib/storage/providers/supabase.ts",
+    "src/lib/web3/entitlements.ts",
+    "src/omniconnect/ingress/OmniPort.ts",
+    "src/omnihub-gateway/JsonRpcHandler.ts",
+    "src/omnihub-gateway/middleware/TriforceGuardian.ts",
+    "src/zero-trust/deviceRegistry.ts",
+    "supabase/functions/byom-cockpit/index.ts",
+    "supabase/functions/omnilink-port/index.ts",
+    "supabase/functions/trigger-workflow/index.ts",
+    "supabase/functions/web3-verify/index.ts",
+    "apps/omnihub-site/dashboard/OmniDashShell.tsx",
+    "apps/omnihub-site/dashboard/components/OmniSpatialHost.tsx",
+    "apps/omnihub-site/src/components/physiomni/PhysiOmniWhiteLabelDash.tsx",
+    "apps/omnihub-site/src/pages/Home.tsx",
+    "apps/omnihub-site/src/pages/RequestAccess.tsx"
+  ]
 }
