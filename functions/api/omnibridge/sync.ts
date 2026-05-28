@@ -101,7 +101,7 @@ export const onRequestPost: OnRequestPost = async ({ request, env }) => {
   const envelope = parsed as SyncPacketEnvelope;
 
   const replayKey = getHardenedReplayKey(sourceId, envelope.packet.packet_id);
-  if (replayStore.isDuplicate(replayKey)) {
+  if (await replayStore.isDuplicate(replayKey)) {
     logEvent(true, 'replay_detected', { source_id: sourceId, packet_id: envelope.packet.packet_id });
     return jsonResponse(409, { error: 'replay_detected' });
   }

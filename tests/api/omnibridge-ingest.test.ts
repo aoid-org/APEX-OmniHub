@@ -107,6 +107,7 @@ async function buildHardenedRequest(
       'X-Omni-Trace-Id': traceId,
       'X-Omni-Signature': signature,
       'X-Forwarded-For': ip,
+      'CF-Connecting-IP': ip,
     },
     body: bodyRaw,
   });

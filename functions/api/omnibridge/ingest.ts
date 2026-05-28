@@ -77,7 +77,7 @@ async function handleHardenedIngress(
   }
 
   const replayKey = getHardenedReplayKey(sourceId, traceId);
-  if (replayStore.isDuplicate(replayKey)) {
+  if (await replayStore.isDuplicate(replayKey)) {
     logEvent(true, 'replay_detected', meta);
     return jsonResponse(409, { error: 'replay_detected' });
   }
@@ -211,7 +211,7 @@ async function handleLegacyIngress(request: Request, rawBody: string, env: Env):
 
   if (envelope.idempotency_key) {
     const key = getLegacyIdempotencyKey(envelope.idempotency_key);
-    if (replayStore.isDuplicate(key)) {
+    if (await replayStore.isDuplicate(key)) {
       return jsonResponse(200, { received: true, event_id: envelope.event_id, duplicate: true });
     }
   }

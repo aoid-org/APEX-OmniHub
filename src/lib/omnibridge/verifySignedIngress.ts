@@ -41,6 +41,7 @@ export function extractHardenedHeaders(request: Request): HardenedHeaders | null
 
 /**
  * Computes the canonical signature string for hardened mode.
+ * HMAC must use raw request bytes to prevent bypasses via whitespace manipulation.
  */
 export async function computeCanonicalString(
   method: string,
@@ -77,12 +78,13 @@ export function isIpAllowed(ip: string, allowedIps: string[] | undefined): boole
 }
 
 /**
- * Extracts the real client IP, considering X-Forwarded-For.
+ * Extracts the real client IP from X-Forwarded-For.
+ * On Cloudflare Pages / Vercel the platform appends the verified client IP
+ * as the last entry, so we always trust XFF from the infrastructure layer.
  */
 export function extractClientIp(request: Request): string {
   const xff = request.headers.get('X-Forwarded-For');
   if (xff) {
-    // Vercel apps get the real client IP as the last IP appended by the trusted proxy
     const ips = xff.split(',');
     const last = ips.pop()?.trim();
     if (last) return last;

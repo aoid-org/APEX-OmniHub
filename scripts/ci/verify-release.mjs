@@ -28,6 +28,8 @@ const WIN_PATH_ALLOWLIST = [
   "/program files/",
   "/windows/system32",
   "/windows/",
+  "/python",
+  "/appdata/",
 ];
 const UNIX_PATH_ALLOWLIST = [
   "/.bun/bin",

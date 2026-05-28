@@ -4,10 +4,11 @@ import { SessionToken } from '@/omniconnect/types/connector';
 import { randomBytes } from 'node:crypto';
 
 describe('EncryptedTokenStorage', () => {
-  const TEST_KEY = randomBytes(32).toString('hex');
+
   const INVALID_KEY_SHORT = randomBytes(16).toString('hex');
 
   let storage: EncryptedTokenStorage;
+  let mockDb: any[] = [];
 
   const sampleToken: SessionToken = {
     token: 'my-super-secret-token',
@@ -20,7 +21,50 @@ describe('EncryptedTokenStorage', () => {
   };
 
   beforeEach(() => {
-    process.env.OMNICONNECT_ENCRYPTION_KEY = TEST_KEY;
+    vi.stubEnv('SUPABASE_URL', 'http://localhost:54321');
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'test-key'.padStart(64, 'a'));
+    
+    // We also need to mock the OMNICONNECT_ENCRYPTION_KEY since we're using webcrypto
+    const TEST_KEY_HEX = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+    vi.stubEnv('OMNICONNECT_ENCRYPTION_KEY', TEST_KEY_HEX);
+    
+    mockDb = [];
+    global.fetch = vi.fn().mockImplementation(async (url: string, options?: any) => {
+      if (options?.method === 'POST') {
+        const body = JSON.parse(options.body);
+        for (const item of body) {
+          const idx = mockDb.findIndex(i => i.connector_id === item.connector_id);
+          if (idx >= 0) mockDb[idx] = { ...mockDb[idx], ...item };
+          else mockDb.push(item);
+        }
+        return { ok: true };
+      }
+      if (options?.method === 'DELETE') {
+        mockDb = mockDb.filter(i => !url.includes(`connector_id=eq.${encodeURIComponent(i.connector_id)}`));
+        return { ok: true };
+      }
+      if (options?.method === 'PATCH') {
+        const body = JSON.parse(options.body);
+        mockDb = mockDb.map(i => url.includes(`connector_id=eq.${encodeURIComponent(i.connector_id)}`) ? { ...i, ...body } : i);
+        return { ok: true };
+      }
+      
+      let res = mockDb;
+      if (url.includes('connector_id=eq.')) {
+        const id = decodeURIComponent(url.match(/connector_id=eq\.([^&]+)/)?.[1] || '');
+        res = mockDb.filter(i => i.connector_id === id);
+      }
+      if (url.includes('user_id=eq.')) {
+        const id = decodeURIComponent(url.match(/user_id=eq\.([^&]+)/)?.[1] || '');
+        res = res.filter(i => i.user_id === id);
+      }
+      if (url.includes('provider=eq.')) {
+        const p = decodeURIComponent(url.match(/provider=eq\.([^&]+)/)?.[1] || '');
+        res = res.filter(i => i.provider === p);
+      }
+      return { ok: true, json: async () => res };
+    });
+
     storage = new EncryptedTokenStorage();
   });
 
@@ -44,15 +88,11 @@ describe('EncryptedTokenStorage', () => {
   it('should encrypt token on store and decrypt on get', async () => {
     await storage.store(sampleToken);
 
-    // Verify storage has encrypted data by accessing private map (casting to unknown then StoredSession map)
-    const internalStorage = (storage as unknown as { storage: Map<string, StoredSession> }).storage;
-    const stored = internalStorage.get(sampleToken.connectorId);
-
+    const stored = mockDb.find(i => i.connector_id === sampleToken.connectorId);
     expect(stored).toBeDefined();
     expect(stored?.token).not.toBe(sampleToken.token);
-    expect(stored?.token).toMatch(/^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/); // IV:Tag:Cipher format
+    expect(stored?.token).toMatch(/^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/);
 
-    // Verify retrieval returns plaintext
     const retrieved = await storage.get(sampleToken.connectorId);
     expect(retrieved).toBeDefined();
     expect(retrieved?.token).toBe(sampleToken.token);
@@ -81,18 +121,13 @@ describe('EncryptedTokenStorage', () => {
   it('should return null (and log error) if decryption fails', async () => {
     await storage.store(sampleToken);
 
-    // Tamper with the stored data
-    const internalStorage = (storage as unknown as { storage: Map<string, StoredSession> }).storage;
-    const stored = internalStorage.get(sampleToken.connectorId);
-
+    const stored = mockDb.find(i => i.connector_id === sampleToken.connectorId);
     if (stored) {
-      // Modify ciphertext part of the blob
       const parts = stored.token.split(':');
-      parts[2] = 'deadbeef'; // Corrupt ciphertext
+      parts[2] = 'deadbeef';
       stored.token = parts.join(':');
     }
 
-    // Spy on console.error to verify logging
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const retrieved = await storage.get(sampleToken.connectorId);
@@ -103,7 +138,6 @@ describe('EncryptedTokenStorage', () => {
   it('should fail if key changes internally (simulating key rotation mismatch)', async () => {
     await storage.store(sampleToken);
 
-    // Change key in environment
     process.env.OMNICONNECT_ENCRYPTION_KEY = randomBytes(32).toString('hex');
 
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -116,20 +150,15 @@ describe('EncryptedTokenStorage', () => {
   it('should handle delete, getLastSync, and updateLastSync', async () => {
     await storage.store(sampleToken);
 
-    // Test getLastSync default
     expect(await storage.getLastSync('non-existent')).toEqual(new Date(0));
 
-    // Test getLastSync existing
     await storage.get(sampleToken.connectorId);
-    // storage.store sets createdAt, but lastSyncAt is undefined initially
     expect(await storage.getLastSync(sampleToken.connectorId)).toEqual(new Date(0));
 
-    // Test updateLastSync
     const now = new Date();
     await storage.updateLastSync(sampleToken.connectorId, now);
     expect(await storage.getLastSync(sampleToken.connectorId)).toEqual(now);
 
-    // Test delete
     await storage.delete(sampleToken.connectorId);
     expect(await storage.get(sampleToken.connectorId)).toBeNull();
   });

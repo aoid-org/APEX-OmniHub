@@ -314,21 +314,21 @@ async function handleModuleState(req: Request, corsHeaders: HeadersInit): Promis
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
   
-  // Accept either JWT or API Key for module state (P5: server-side tenant resolution required)
-  let tenantId: string | null = null;
+  // Accept either JWT or API Key for module state
+  let _tenantId: string | null = null;
   const token = authHeader.replace('Bearer ', '').trim();
   const apiKey = await loadApiKey(token);
-
+  
   if (apiKey) {
     if (!enforcePermission(apiKey.scopes ?? {}, 'module_state:read')) {
       return jsonResponse({ error: 'permission_denied' }, 403, corsHeaders);
     }
-    tenantId = apiKey.tenant_id;
+    _tenantId = apiKey.tenant_id;
   } else {
     const userClient = createAnonClient(authHeader);
     const { data: { user } } = await userClient.auth.getUser();
     if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
-    tenantId = user.id;
+    _tenantId = user.id;
   }
 
   const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
@@ -337,23 +337,14 @@ async function handleModuleState(req: Request, corsHeaders: HeadersInit): Promis
 
   if (!moduleKey) return jsonResponse({ error: 'module_key_required' }, 400, corsHeaders);
 
-  // P5 canonical module-state contract:
-  // tenant_id, module_key, state_kind, health_status, metrics, source, last_seen_at, updated_by, trace_id
-  const traceId = crypto.randomUUID();
   return jsonResponse({
-    tenant_id: tenantId,
-    module_key: moduleKey,
-    state_kind: 'live' as const,
-    health_status: 'ok',
-    headline: 'Live Connection Established',
-    stats: [{ label: 'State', value: 'Online', trend: 'up' }],
+    moduleKey,
+    headline: "Live Connection Established",
+    stats: [
+      { label: "State", value: "Online", trend: "up" }
+    ],
     items: [],
-    actions: [],
-    metrics: {},
-    source: 'omnilink-port',
-    last_seen_at: new Date().toISOString(),
-    updated_by: 'system',
-    trace_id: traceId,
+    actions: []
   }, 200, corsHeaders);
 }
 
@@ -747,7 +738,7 @@ function handleGetHealth(corsHeaders: HeadersInit): Response {
   return jsonResponse({ status: 'ok', checked_at: new Date().toISOString() }, 200, corsHeaders);
 }
 
-async function handleKeysRequest(route: string, req: Request, corsHeaders: HeadersInit): Promise<Response> {
+async function _handleKeysRequest(route: string, req: Request, corsHeaders: HeadersInit): Promise<Response> {
   const subRoute = route.split('/')[1] || '';
   if (req.method === 'POST') {
     if (subRoute === '' || subRoute === 'create') return handleKeyCreation(req, corsHeaders);

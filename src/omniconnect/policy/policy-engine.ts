@@ -22,8 +22,8 @@ export class PolicyEngine {
   ): Promise<CanonicalEvent[]> {
     const profile = await this.getProfile(appId);
     if (!profile) {
-      if (import.meta.env.DEV) console.log(`[${correlationId}] No policy profile for app ${appId}. Passing through.`);
-      return events;
+      console.warn(`[${correlationId}] SECURITY BLOCK: No policy profile for app ${appId}. Failing closed.`);
+      return [];
     }
 
     if (import.meta.env.DEV) console.log(`[${correlationId}] Applying policy filter for app ${appId}, ${events.length} events`);
@@ -104,12 +104,15 @@ export class PolicyEngine {
     if (!profile.allowedEventTypes.includes(event.eventType)) return false;
 
     const { allow, deny } = profile.contentCategories;
-    if (allow.length === 0 && deny.length === 0) return true;
-
     const body = JSON.stringify({ p: event.payload, m: event.metadata }).toLowerCase();
     const hasMatch = (list: string[]) => list.some(c => body.includes(c.toLowerCase()));
 
-    return !hasMatch(deny) && (allow.length === 0 || hasMatch(allow));
+    if (deny.length > 0 && hasMatch(deny)) return false;
+    
+    // Fail closed: if allow list is empty, we do not allow any payload that hasn't been explicitly allowed
+    if (allow.length === 0) return false;
+    
+    return hasMatch(allow);
   }
 
   // ⚡ Bolt: Define regex outside function scope so we only compile once

@@ -53,28 +53,6 @@ function registryStateFor(appKey: string): OmniModuleState {
   };
 }
 
-async function performLiveStateFetch(appKey: string): Promise<Partial<ModuleContent>> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("No active user session");
-  }
-
-  const { data, error } = await supabase.functions.invoke(
-    "omnilink-port/module-state",
-    {
-      body: { module_key: appKey },
-    }
-  );
-
-  if (error || !data) {
-    throw error || new Error("Failed to invoke module state function");
-  }
-
-  return data as Partial<ModuleContent>;
-}
 
 export function useOmniModuleState(appKey: string): OmniModuleState {
   const baselineState = useMemo(() => registryStateFor(appKey), [appKey]);
@@ -88,26 +66,58 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
   useEffect(() => {
     let cancelled = false;
 
+    const safeSetLiveState = (state: Omit<LiveModuleState, "key">) => {
+      if (!cancelled) {
+        setLiveState({ key: appKey, ...state });
+      }
+    };
+
     async function fetchLiveState() {
       if (!hasSupabaseConfig) {
-        if (!cancelled) {
-          setLiveState({
-            key: appKey,
-            loading: false,
-            error: null,
-            stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'local',
-          });
-        }
+        safeSetLiveState({
+          loading: false,
+          error: null,
+          stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'local',
+        });
         return;
       }
 
       try {
-        const live = await performLiveStateFetch(appKey);
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user || cancelled) {
+          safeSetLiveState({
+            loading: false,
+            error: null,
+            stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
+          });
+          return;
+        }
+
+        const { data, error } = await supabase.functions.invoke(
+          "omnilink-port/module-state",
+          {
+            body: { module_key: appKey },
+          }
+        );
+
         if (cancelled) {
           return;
         }
-        setLiveState({
-          key: appKey,
+
+        if (error || !data) {
+          safeSetLiveState({
+            loading: false,
+            error: null,
+            stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
+          });
+          return;
+        }
+
+        const live = data as Partial<ModuleContent>;
+        safeSetLiveState({
           headline: live.headline,
           stats: live.stats,
           items: live.items,
@@ -117,14 +127,11 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
           stateKind: "live",
         });
       } catch {
-        if (!cancelled) {
-          setLiveState({
-            key: appKey,
-            loading: false,
-            error: null,
-            stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
-          });
-        }
+        safeSetLiveState({
+          loading: false,
+          error: null,
+          stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
+        });
       }
     }
 

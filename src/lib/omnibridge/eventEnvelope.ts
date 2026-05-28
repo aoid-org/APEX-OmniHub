@@ -11,6 +11,8 @@
  * @license Proprietary - APEX Business Systems Ltd.
  */
 
+export type DeliveryStatus = 'accepted' | 'normalized' | 'persisted' | 'dispatched' | 'failed_retryable' | 'failed_terminal';
+
 export interface EventEnvelope {
   event_id: string;
   event_type: string;
@@ -21,6 +23,7 @@ export interface EventEnvelope {
   trace_id: string | null;
   source_id: string | null;
   received_at: string;
+  delivery_status: DeliveryStatus;
 }
 
 /**
@@ -52,7 +55,8 @@ export function normalizeHardenedEvent(
     idempotency_key: idempotencyKey ?? null,
     trace_id: traceId,
     source_id: sourceId,
-    received_at: new Date().toISOString()
+    received_at: new Date().toISOString(),
+    delivery_status: 'normalized'
   };
 }
 
@@ -98,6 +102,7 @@ export function normalizeLegacyEvent(
     idempotency_key: idempotencyKey,
     trace_id: null,
     source_id: null,
-    received_at: new Date().toISOString()
+    received_at: new Date().toISOString(),
+    delivery_status: 'normalized'
   };
 }
