@@ -2,7 +2,7 @@
  * Tests for ApexRealtimeGateway (Nexus) — parsing, routing, lifecycle.
  * @date 2026-05-27
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createHash } from 'node:crypto';
 
 import {
@@ -15,6 +15,7 @@ import {
   hasQueueCapacity,
   isFunctionCallDone,
   parseToolCall,
+  resolveRealtimeEndpoint,
   routeToolCall,
 } from '../../../src/core/gateway/ApexRealtimeGateway';
 import { setToolRunner } from '../../../src/core/orchestrator/ApexOrchestrator';
@@ -141,6 +142,39 @@ describe('ApexRealtimeGateway', () => {
       };
       const parsed = parseToolCall(event, 'dev-1');
       expect(parsed?.args).toEqual({});
+    });
+  });
+
+
+
+  describe('resolveRealtimeEndpoint', () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    const originalRealtimeUrl = process.env.OPENAI_REALTIME_URL;
+
+    beforeEach(() => {
+      delete process.env.OPENAI_REALTIME_URL;
+      process.env.NODE_ENV = 'test';
+    });
+
+    afterEach(() => {
+      process.env.NODE_ENV = originalNodeEnv;
+      if (originalRealtimeUrl) {
+        process.env.OPENAI_REALTIME_URL = originalRealtimeUrl;
+      } else {
+        delete process.env.OPENAI_REALTIME_URL;
+      }
+    });
+
+    it('uses configured endpoint when provided', () => {
+      process.env.OPENAI_REALTIME_URL = 'wss://realtime.example/ws';
+      expect(resolveRealtimeEndpoint()).toBe('wss://realtime.example/ws');
+    });
+
+    it('throws in production when endpoint is not configured', () => {
+      process.env.NODE_ENV = 'production';
+      expect(() => resolveRealtimeEndpoint()).toThrow(
+        'Realtime endpoint is currently disabled or not configured in production path.',
+      );
     });
   });
 

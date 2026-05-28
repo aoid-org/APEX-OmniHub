@@ -38,6 +38,22 @@ const IDLE_TIMEOUT_MS = 300_000;
 const TOOL_EXEC_TIMEOUT_MS = 30_000;
 const MAX_QUEUE_SIZE = 64;
 
+
+function isProductionRuntime(): boolean {
+  return process.env.NODE_ENV === 'production';
+}
+
+export function resolveRealtimeEndpoint(): string {
+  const configured = process.env.OPENAI_REALTIME_URL?.trim();
+  if (configured) {
+    return configured;
+  }
+  if (isProductionRuntime()) {
+    throw new Error('Realtime endpoint is currently disabled or not configured in production path.');
+  }
+  return OPENAI_REALTIME_URL;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
