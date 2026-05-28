@@ -100,7 +100,7 @@ jobs:
 
       - name: Run Terraform expression drift tests
         id: terraform_drift_tests
-        continue-on-error: true
+        continue-on-error: true # ci-integrity-allow: outcome captured; next step fails the gate via `exit 1` on failure
         run: npm run test:infra:coverage
 
       - name: Annotate Terraform expression drift failure
@@ -316,7 +316,7 @@ jobs:
         if: always()
         run: |
           if [ -f preview.pid ]; then
-            kill $(cat preview.pid) || true
+            kill $(cat preview.pid) || true # ci-integrity-allow: best-effort cleanup of preview server pid
             rm preview.pid
           fi
 

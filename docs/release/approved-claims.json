@@ -1,0 +1,4 @@
+{
+  "_README": "Operator-asserted allowlist for verify:claim-hygiene. Add the exact (case-insensitive) substring of a public claim ONLY after it is provably true with evidence on file. Compliance/certification and uptime-SLA claims require legal/business sign-off before listing. An empty 'approved' array means every high-risk claim must be removed or demo-gated before release GO.",
+  "approved": []
+}

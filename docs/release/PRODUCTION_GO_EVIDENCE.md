@@ -1,70 +1,65 @@
 # APEX-OmniHub Production GO Evidence
 
+> Corrected 2026-05-28. The prior version asserted PASS results (coverage, p99, "tests
+> passed") that were not produced by any executed command, and left the commit SHA as a
+> placeholder. Statements below are limited to what was actually observed. Unobserved
+> items are marked UNVERIFIED rather than removed, so the gap is explicit.
+
+## Verdict
+**NOT CERTIFIED — NO-GO.** Blocking: `verify:claim-hygiene` fails (21 unproven public
+claims); the dependency-backed gate suite was not run in this environment; the PhysiOmni
+partition-RLS migration is not yet applied to the live database.
+
 ## Commit SHA
-- [insert commit sha here]
+- Base for this remediation: `3e2e1ae` (then the AG2 remediation commit on `claude/keen-volta-wgdjf`)
 
 ## Environment Matrix
-- OS: Linux (sandbox/wsl)
-- Node: v22+
-- Python: 3.12.13
-- Package Manager: bun/npm
+- OS: Linux (ephemeral remote container)
+- Node: v22+; Python: 3.12 (orchestrator targets 3.11)
+- Package manager: npm primary (`package-lock.json`); `bun.lock` also committed
+- `node_modules`: **not installed** — dependency-backed gates cannot run here
+
+## Verify-gate results (this session)
+| Gate | Result | Notes |
+|---|---|---|
+| `verify:ci-integrity` | PASS | Real scanner; legitimate exceptions annotated `# ci-integrity-allow:` |
+| `verify:supply-chain` | PASS | Lockfiles intact; 149 direct deps locked |
+| `verify:supabase-security` | PASS | After RLS fix on 4 `physiomni_telemetry` partitions |
+| `verify:claim-hygiene` | **FAIL** | 21 unproven compliance/SLA claims |
+| `verify:types` / `lint` / `test` / `build` / `assets` | UNVERIFIED | `node_modules` absent |
+| `test:e2e` | UNVERIFIED | Playwright browsers absent |
 
 ## Capability Matrix
-- Core Engine: PROVEN_LIVE
-- SSO/Auth: PROVEN_LIVE
-- PhysiOmni (physical automation): PROVEN_DEMO
-- Omniverse Gateway: PROVEN_LIVE
-- ARMAGEDDON: PROVEN_DEMO
+Capability classifications are carried over from the prior doc and are **unverified by
+test execution** in this session. They must be re-confirmed before launch.
 
-## Secrets Required
-- VITE_SUPABASE_URL
-- VITE_SUPABASE_PUBLISHABLE_KEY
-- VITE_SUPABASE_ANON_KEY (fallback)
-- RESEND_API_KEY
-- OPENAI_API_KEY
-(No values exposed here)
+## Secrets Required (names only)
+- `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_ANON_KEY` (fallback)
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only), `RESEND_API_KEY`, `OPENAI_API_KEY`
 
-## Migration Status
-- Migrations 1-74 applied and rollback verified.
+## Migration / RLS Status
+- New migration `20260528000000_physiomni_telemetry_partition_rls.sql` (+ rollback) enables
+  RLS on 4 telemetry partitions that were exposed in `public` without RLS.
+- **Not yet applied to a live database** — this environment has no real DB connection
+  string (placeholder `SUPABASE_URL` len 12, `SUPABASE_SERVICE_ROLE_KEY` len 25; no
+  `SUPABASE_DB_URL`/`DATABASE_URL`). Apply via the Supabase migration pipeline.
 
-## RLS Status
-- RLS verified on all exposed tables via verify:supabase-security.
-
-## Branch Protection Checks
-- branch-protection.md aligned with CI workflows.
-
-## Test Coverage Summary
-- > 80% coverage on core paths.
-- e2e, unit, and integration tests passed.
-
-## Security/Dependency Scan Summary
-- npm audit passing.
-- no hardcoded secrets found.
-- S2245, S4036, S5443 sonar issues resolved.
+## Test Coverage / Performance / Accessibility
+- UNVERIFIED this session. Do not cite coverage %, p99, or SLA figures as evidence until
+  a real run produces them.
 
 ## SBOM / Provenance
-- Lockfile checked and in repo (bun.lock & package-lock.json)
-
-## Performance/SLO
-- Core paths respond under 200ms
-- P99 meets acceptable guidelines.
-
-## Accessibility Summary
-- A11y tests included.
+- `package-lock.json` and `bun.lock` present and consistent with `package.json` (verified by `verify:supply-chain`).
 
 ## Known limitations
-- None for PROVEN_LIVE capabilities.
+- Dependency-backed gates unverified (ephemeral container, no install permitted).
+- 21 public compliance/SLA claims unproven and currently failing `verify:claim-hygiene`.
+- Partition-RLS migration pending application to the live database.
 
-## Rollback Plan
-See ROLLBACK_PLAN.md
-
-## Migration Rollback Plan
-Documented in individual migration notes and ROLLBACK_PLAN.md.
-
-## Incident Response Runbook
-See INCIDENT_RESPONSE_RUNBOOK.md
+## Rollback / Incident Response
+See `ROLLBACK_PLAN.md` and `INCIDENT_RESPONSE_RUNBOOK.md`.
 
 ## Approved Launch Claims
-- "Connect anything."
-- "Orchestrate everything."
-- "Stay in control."
+Taglines only (`"Connect anything." / "Orchestrate everything." / "Stay in control."`).
+Compliance/certification/SLA claims are NOT approved until verified and added to
+`approved-claims.json` with evidence.
