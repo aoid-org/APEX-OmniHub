@@ -381,7 +381,10 @@ async def test_dispatch_work_order_activity_success():
     client_mock.table.return_value.insert.return_value.execute.return_value = insert_resp
 
     with patch("activities.physiomni_activities.get_database_provider", return_value=db):
-        with patch.dict(os.environ, {"PHYSIOMNI_PHYSICAL_ACTIONS_ENABLED": "true", "PHYSIOMNI_KILL_SWITCH_ACTIVE": "false"}):
+        with patch.dict(
+            os.environ,
+            {"PHYSIOMNI_PHYSICAL_ACTIONS_ENABLED": "true", "PHYSIOMNI_KILL_SWITCH_ACTIVE": "false"},
+        ):
             params = {
                 "tenant_id": str(uuid4()),
                 "device_serial": "DEV-ACTUATE-10",
@@ -389,6 +392,7 @@ async def test_dispatch_work_order_activity_success():
             result = await dispatch_work_order_activity(params)
             assert result["status"] == "dispatched"
             assert result["audit_id"] == "audit-log-uuid-10"
+
 
 @pytest.mark.asyncio
 async def test_dispatch_work_order_kill_switch():
@@ -402,10 +406,14 @@ async def test_dispatch_work_order_kill_switch():
         assert result["status"] == "aborted"
         assert result["audit_id"] is None
 
+
 @pytest.mark.asyncio
 async def test_dispatch_work_order_actions_disabled():
     """Actuation should be no-op if physical actions are disabled."""
-    with patch.dict(os.environ, {"PHYSIOMNI_PHYSICAL_ACTIONS_ENABLED": "false", "PHYSIOMNI_KILL_SWITCH_ACTIVE": "false"}):
+    with patch.dict(
+        os.environ,
+        {"PHYSIOMNI_PHYSICAL_ACTIONS_ENABLED": "false", "PHYSIOMNI_KILL_SWITCH_ACTIVE": "false"},
+    ):
         params = {
             "tenant_id": str(uuid4()),
             "device_serial": "DEV-ACTUATE-10",

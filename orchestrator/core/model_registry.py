@@ -9,9 +9,10 @@ from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
+
 class ModelProviderConfig(BaseModel):
     provider_id: str
-    provider_type: str = "openai-compatible" # openai-compatible, anthropic-compatible, local
+    provider_type: str = "openai-compatible"  # openai-compatible, anthropic-compatible, local
     tenant_id: str
     endpoint: str
     auth_secret_reference: str
@@ -25,6 +26,7 @@ class ModelProviderConfig(BaseModel):
     enabled: bool = True
     fallback_provider_id: str | None = None
     current_cost: float = 0.0
+
 
 class ModelProviderRegistry:
     """
@@ -51,7 +53,7 @@ class ModelProviderRegistry:
         tenant_id: str,
         prompt: str,
         tools: list[str] = None,
-        estimated_cost: float = 0.0
+        estimated_cost: float = 0.0,
     ) -> str:
         """
         Execute a prompt through a provider, enforcing AEGIS and VERITAS rules.
@@ -129,14 +131,16 @@ class ModelProviderRegistry:
 
         # Tool-call safety check (injection)
         if "system_rm" in response and validator_profile == "safe_tools_only":
-             raise ValueError("VERITAS Blocked: Unsafe system tool call proposed by model.")
+            raise ValueError("VERITAS Blocked: Unsafe system tool call proposed by model.")
 
         return response
 
     def _emit_audit(self, tenant_id: str, provider_id: str, action: str, details: str):
-        self.audit_logs.append({
-            "tenant_id": tenant_id,
-            "provider_id": provider_id,
-            "action": action,
-            "details": details
-        })
+        self.audit_logs.append(
+            {
+                "tenant_id": tenant_id,
+                "provider_id": provider_id,
+                "action": action,
+                "details": details,
+            }
+        )
