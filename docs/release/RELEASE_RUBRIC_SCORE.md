@@ -39,4 +39,3 @@ all four integrity gates. All 11 CodeQL alerts (7 High / 4 Medium) are remediate
 migration `20260528000000` (PhysiOmni partition RLS) to the live database. The migration is
 written, has a rollback, and passes `verify:supabase-security` statically — applying it is a
 standard deployment step that no clean-room build can perform.
-
