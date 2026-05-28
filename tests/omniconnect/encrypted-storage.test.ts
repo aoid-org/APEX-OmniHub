@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { EncryptedTokenStorage } from '@/omniconnect/storage/encrypted-storage';
+import { EncryptedTokenStorage, StoredSession } from '@/omniconnect/storage/encrypted-storage';
 import { SessionToken } from '@/omniconnect/types/connector';
 import { randomBytes } from 'node:crypto';
 
