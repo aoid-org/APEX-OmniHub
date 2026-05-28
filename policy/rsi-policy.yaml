@@ -36,6 +36,8 @@ protected_paths:
 # critical_paths: ANY match (not negated) triggers decision: escalate
 critical_paths:
   - .github/workflows/**
+  - '!.github/workflows/apex-governance.yml'
+  - '!.github/workflows/rsi-governance.yml'
   - orchestrator/workflows/**
   - orchestrator/activities/**
   - supabase/migrations/**
