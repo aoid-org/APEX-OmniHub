@@ -352,8 +352,12 @@ async def dispatch_work_order_activity(params: dict[str, Any]) -> dict[str, Any]
         message = params.get("message", "Work order dispatched for industrial hardware actuator.")
 
         # Check safety flags
-        physical_actions_enabled = os.getenv("PHYSIOMNI_PHYSICAL_ACTIONS_ENABLED", "false").lower() == "true"
-        kill_switch_active = os.getenv("PHYSIOMNI_KILL_SWITCH_ACTIVE", "false").lower() == "true"
+        physical_actions_enabled = (
+            os.getenv("PHYSIOMNI_PHYSICAL_ACTIONS_ENABLED", "false").lower() == "true"
+        )
+        kill_switch_active = (
+            os.getenv("PHYSIOMNI_KILL_SWITCH_ACTIVE", "false").lower() == "true"
+        )
 
         if kill_switch_active:
             activity.logger.warning(f"Kill switch active! Aborting actuation for {device_serial}.")
@@ -362,7 +366,7 @@ async def dispatch_work_order_activity(params: dict[str, Any]) -> dict[str, Any]
                 "message": "Physical actuation aborted due to active kill switch.",
                 "audit_id": None,
             }
-            
+
         if not physical_actions_enabled:
             activity.logger.info(f"Physical actions disabled. No-op mode for {device_serial}.")
             return {

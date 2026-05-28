@@ -6,6 +6,7 @@ Covers:
 2. workflows/physiomni_saga.py (100% coverage goal)
 """
 
+import os
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 import pytest
