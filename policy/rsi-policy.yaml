@@ -47,6 +47,11 @@ critical_paths:
   - '!supabase/functions/platform-health/**'
   - '!supabase/functions/ops-voice-health/**'
   - '!supabase/functions/test-integration/**'
+  - '!supabase/functions/apex-voice/**'
+  - '!supabase/functions/byom-proxy/**'
+  - '!supabase/functions/physiomni-action/**'
+  - '!supabase/functions/physiomni-ingest/**'
+  - '!supabase/functions/physiomni-ingress/**'
   - '!orchestrator/activities/physiomni_activities.py'
 
 recommended_reviewers:
