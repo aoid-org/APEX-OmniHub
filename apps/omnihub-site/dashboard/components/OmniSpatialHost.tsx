@@ -30,7 +30,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Loader2, Minimize2, Maximize2, X, GripHorizontal } from 'lucide-react';
+import { Minimize2, Maximize2, X, GripHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SPRING_DAMPED, GPU_STYLE } from '@/lib/motionPresets';
 import { registerOmniAppShell } from '@/lib/OmniAppShell';

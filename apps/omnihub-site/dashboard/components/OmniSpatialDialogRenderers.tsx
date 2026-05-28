@@ -11,7 +11,6 @@
 import { useState } from 'react';
 import type { OmniModalConfig } from '@/stores/omniModalStore';
 import {
-  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
