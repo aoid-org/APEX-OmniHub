@@ -36,6 +36,7 @@ import { Loader2, ExternalLink, CheckCircle2, Minimize2, Maximize2, X, GripHoriz
 import { motion, AnimatePresence } from 'framer-motion';
 import { SPRING_DAMPED, GPU_STYLE } from '@/lib/motionPresets';
 import { registerOmniAppShell } from '@/lib/OmniAppShell';
+import { sanitiseIframeUrl, getSandboxAttribute } from '@/lib/iframeOriginPolicy';
 import { ModuleRenderer } from './ModuleRenderer';
 
 // Register the sandbox Custom Element on module load
@@ -300,8 +301,28 @@ function SpatialPayloadRenderer({ payload }: Readonly<{ payload: OmniModalConfig
   const processId = payload.contextData?.processId as string | undefined;
 
   switch (appType) {
-    case 'media':
-      return <iframe className="omni-spatial-iframe" src={url} allow="autoplay; encrypted-media" title={payload.title} />;
+    case 'media': {
+      const isDemoMode = typeof process !== 'undefined' ? process.env.VITE_IS_DEMO_MODE === 'true' : false;
+      const result = sanitiseIframeUrl(url, isDemoMode);
+      if (!result.allowed) {
+        return (
+          <div className="flex h-full w-full flex-col items-center justify-center bg-destructive/10 text-destructive p-8 text-center">
+            <h3 className="text-lg font-semibold mb-2">Media Blocked</h3>
+            <p className="mb-4">This media source was blocked by the APEX Origin Policy.</p>
+            <p className="font-mono text-xs opacity-80 bg-background/50 p-2 rounded">Reason: {result.reason}</p>
+          </div>
+        );
+      }
+      return (
+        <iframe
+          className="omni-spatial-iframe"
+          src={url}
+          allow="autoplay; encrypted-media"
+          title={payload.title}
+          sandbox={getSandboxAttribute(result.profile)}
+        />
+      );
+    }
     case 'editor':
       return <div className="omni-spatial-editor">{initialContent}</div>;
     case 'terminal':

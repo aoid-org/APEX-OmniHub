@@ -17,6 +17,7 @@
  */
 
 import DOMPurify from 'dompurify';
+import { sanitiseIframeUrl, getSandboxAttribute } from './iframeOriginPolicy';
 
 // ============================================================================
 // Configuration Types
@@ -140,13 +141,41 @@ class OmniAppShellElement extends HTMLElement {
     container.className = 'omni-sandbox-container';
 
     if (config.entryUrl) {
-      // Render as iframe inside shadow DOM for full isolation
-      const iframe = document.createElement('iframe');
-      iframe.className = 'omni-sandbox-iframe';
-      iframe.src = config.entryUrl;
-      iframe.title = config.title ?? 'Integration';
-      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
-      container.appendChild(iframe);
+      // 1. Sanitise URL against APEX Origin Policy
+      const isDemoMode = typeof process !== 'undefined' ? process.env.VITE_IS_DEMO_MODE === 'true' : false;
+      const result = sanitiseIframeUrl(config.entryUrl, isDemoMode);
+
+      if (!result.allowed) {
+        // Blocked by policy — render security placeholder
+        const placeholder = document.createElement('div');
+        placeholder.className = 'omni-sandbox-placeholder';
+        const heading = document.createElement('h3');
+        heading.style.color = '#ef4444'; // Red for security block
+        heading.textContent = 'Integration Blocked';
+        const desc1 = document.createElement('p');
+        desc1.textContent = 'This integration was blocked by the APEX Origin Policy.';
+        const desc2 = document.createElement('p');
+        desc2.style.fontFamily = 'monospace';
+        desc2.style.fontSize = '12px';
+        desc2.style.marginTop = '12px';
+        desc2.textContent = `Reason: ${result.reason}`;
+        placeholder.appendChild(heading);
+        placeholder.appendChild(desc1);
+        placeholder.appendChild(desc2);
+        container.appendChild(placeholder);
+      } else {
+        // 2. Render as iframe inside shadow DOM for full isolation
+        const iframe = document.createElement('iframe');
+        iframe.className = 'omni-sandbox-iframe';
+        iframe.src = config.entryUrl;
+        iframe.title = config.title ?? 'Integration';
+        
+        // 3. Apply profile-specific sandbox capabilities
+        const sandboxAttr = getSandboxAttribute(result.profile);
+        iframe.setAttribute('sandbox', sandboxAttr);
+        
+        container.appendChild(iframe);
+      }
     } else if (config.htmlContent) {
       // Render raw HTML inside shadow DOM
       const wrapper = document.createElement('div');

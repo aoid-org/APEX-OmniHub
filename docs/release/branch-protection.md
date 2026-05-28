@@ -26,6 +26,11 @@ The following exact job names must be configured as required status checks in Gi
    - **Job ID / Name**: `release` (defined in `.github/workflows/release.yml`)
    - **Workflow Name**: `Release`
 
+6. **Governance gate (required for branch protection)**
+   - **Job ID / Name**: `governance-gate` (defined in `.github/workflows/apex-governance.yml`)
+   - **Workflow Name**: `apex-governance`
+   - **Note**: This gate is fail-closed — `apex-policy` failures now block merge (no `continue-on-error`).
+
 ---
 
 ## Scanner Mapping
@@ -33,3 +38,20 @@ The following exact job names must be configured as required status checks in Gi
 The CI integrity scanner (`verify:ci-integrity`) validates that:
 - Every job listed above actually exists in the respective workflow files.
 - The names and IDs match exactly without any drift.
+- No required workflow contains `|| true` or `continue-on-error: true` on gate steps.
+- No job ID matches a known fake-gate name pattern.
+- No duplicate job display names exist across workflows (GitHub branch-protection collision risk).
+
+---
+
+## Manual GitHub Setup Required
+
+> [!IMPORTANT]
+> The following settings must be applied **manually** in GitHub repository settings. They cannot be enforced via code alone.
+
+1. Navigate to **Settings → Branches → Branch Protection Rules** for `main` / `master`.
+2. Enable **Require status checks to pass before merging**.
+3. Add each job from the list above as a required status check.
+4. Enable **Require branches to be up to date before merging**.
+5. Enable **Do not allow bypassing the above settings** (disables admin bypass).
+
