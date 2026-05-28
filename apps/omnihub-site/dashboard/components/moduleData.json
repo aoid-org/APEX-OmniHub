@@ -14,7 +14,7 @@
      ["dev-oura", "Oura Ring Gen 3", "active", "Sleep Score 88 | Readiness 91"],
      ["dev-garmin", "Garmin Fenix 7", "active", "VO2 Max 48 | Steps 9,240"],
      ["dev-cgm", "Dexcom G7", "pending", "Glucose monitoring \u2014 awaiting sync"]],
-    [["sync-devices", "Sync All Devices", "primary"], ["export-data", "Export Health Data", "secondary"]]],
+    [["sync-devices", "Sync All Devices", "primary"], ["export-data", "Export Health Data", "secondary"]], true],
 
   ["audits", "Governance, compliance, and security audit trail.",
     [["Events (24h)", "1,247", "stable"], ["Violations", "0", "stable"], ["Compliance", "100%", "stable"]],
@@ -22,7 +22,7 @@
      ["aud-002", "GDPR Data Processing Audit", "active", "Next review: 2026-04-15"],
      ["aud-003", "Zero-Trust Policy Enforcement", "active", "847 policy checks passed today"],
      ["aud-004", "API Access Audit Trail", "active", "3,892 authenticated requests logged"]],
-    [["export-audit", "Export Audit Log", "primary"], ["run-compliance", "Run Compliance Check", "secondary"]]],
+    [["export-audit", "Export Audit Log", "primary"], ["run-compliance", "Run Compliance Check", "secondary"]], true],
 
   ["links", "Connected services and integration endpoints.",
     [["Active Links", "14", "up"], ["Throughput", "8.2K/hr", "up"], ["Error Rate", "0.02%", "down"]],
@@ -64,7 +64,7 @@
      ["inv-feb", "INV-2026-0002 \u2014 February 2026", "active", "$4,200.00 | Paid Feb 1"],
      ["inv-jan", "INV-2026-0001 \u2014 January 2026", "active", "$4,200.00 | Paid Jan 1"],
      ["usage-api", "API Usage \u2014 Current Period", "active", "142K / 500K requests (28.4%)"]],
-    [["manage-plan", "Manage Plan", "primary"], ["download-invoices", "Download Invoices", "secondary"]]],
+    [["manage-plan", "Manage Plan", "primary"], ["download-invoices", "Download Invoices", "secondary"]], true],
 
   ["settings", "Platform configuration and operational preferences.",
     [["Environment", "Production"], ["Region", "us-east-1"], ["Version", "v1.4.0"]],
@@ -95,7 +95,7 @@
      ["int-hubspot", "HubSpot Marketing", "pending", "Awaiting OAuth consent"],
      ["int-jira", "Jira Cloud", "inactive", "Available \u2014 not configured"],
      ["int-zendesk", "Zendesk Support", "inactive", "Available \u2014 not configured"]],
-    [["add-integration", "Add Integration", "primary"], ["sync-all", "Sync All", "secondary"]]],
+    [["add-integration", "Add Integration", "primary"], ["sync-all", "Sync All", "secondary"]], true],
 
   ["omnitrace", "Distributed tracing, observability, and diagnostics.",
     [["Active Spans", "1,247", "up"], ["P99 Latency", "38ms", "down"], ["Error Rate", "0.04%", "stable"]],
@@ -104,7 +104,7 @@
      ["trace-worker", "Background Worker Traces", "active", "340 spans/min | Avg: 180ms"],
      ["trace-edge", "Edge Function Traces", "active", "420 spans/min | Avg: 24ms | Cold: 8%"],
      ["trace-mcp", "MCP Tool Invocation Traces", "active", "48 spans/min | Avg: 210ms"]],
-    [["search-traces", "Search Traces", "primary"], ["export-spans", "Export Spans", "secondary"]]],
+    [["search-traces", "Search Traces", "primary"], ["export-spans", "Export Spans", "secondary"]], true],
 
   ["agent", "Voice-powered AI agent for hands-free platform control.",
     [["Active Sessions", "3", "up"], ["Intent Accuracy", "94.2%", "up"], ["Avg Response", "1.2s", "down"]],
@@ -113,5 +113,5 @@
      ["agent-action", "Action Executor", "active", "42 bound actions | Temporal workflow dispatch"],
      ["agent-context", "Context Manager", "active", "Session memory | 8-turn window | RAG-augmented"],
      ["agent-tts", "Text-to-Speech", "active", "ElevenLabs | 3 voice profiles | <200ms latency"]],
-    [["start-session", "New Session", "primary"], ["view-history", "Session History", "secondary"]]]
+    [["start-session", "New Session", "primary"], ["view-history", "Session History", "secondary"]], true]
 ]

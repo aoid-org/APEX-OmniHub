@@ -1,0 +1,265 @@
+1) Locked strategic thesis
+
+Sell OmniHub.
+Validate FLOWBills.
+Monetize TradeLine.
+Fund capacity with YEP.
+Fund traction with Digital Traction.
+Use Voucher/PDP only after the LOI is real.
+
+That structure is consistent with the internal grant sprint, the 90-day execution docs, and the product architecture: OmniHub is the flagship orchestration narrative; TradeLine and FLOWBills are the immediate monetization surfaces.
+
+2) Current truth baseline you should pitch from
+
+Use this proof stack in every grant deck, LOI packet, and enterprise one-pager:
+
+APEX OmniHub v1.4.0
+
+Production live
+
+22 edge functions
+
+57 database migrations
+
+25 declared routes
+
+207 TSX components
+
+22 OmniDash components / functional dashboard surface
+
+Repo-truth third-party audit: 94.3/100
+
+0 CVE high/critical
+
+0 SonarQube issues
+
+0.0% duplication 
+
+docs(audit): full third-party c…
+
+That is your current evidence-backed enterprise proof pack. Do not use older counts if this pack exists. 
+
+docs(audit): full third-party c…
+
+3) Product-to-grant mapping
+A) OmniHub
+
+Role: flagship narrative and enterprise control-tower pitch
+Positioning: “APEX OmniHub — Universal Sync Orchestrator (USO) for governed execution across disconnected systems.” This is directly consistent with the current repo README and the master blueprint’s control-tower language.
+
+B) TradeLine
+
+Role: fast-cash traction MVP
+Grant lane: Digital Traction
+Why: the internal operating docs consistently treat TradeLine as the fastest monetizable SMB wedge, with targets around rapid customer acquisition, onboarding, billing, and scaling toward 15+ active clients.
+
+C) FLOWBills
+
+Role: enterprise pilot / LOI wedge
+Grant lane: Voucher → PDP
+Why: both the grant plan and lazy-CEO roadmap center the enterprise LOI around FLOWBills and an invoice-processing proof surface. The internal roadmap explicitly sets the goal of securing 1 enterprise LOI (FLOWBills) while using TradeLine for cash-flow clients.
+
+4) Immediate action checklist — final version
+
+ Generate Grant-Ready Pack
+
+CRA BN
+
+incorporation certificate
+
+GST34 / revenue proof
+
+interim financials
+
+12-month forecast
+
+per-grant ledger structure
+This is directly aligned with the grant sprint checklist. 
+
+GRANT RESEARCH
+
+ Secure the LOI
+
+pre-draft it
+
+bring it into the AMII/partner conversation
+
+exit with signed LOI, redlines, or named reviewer + deadline
+The LOI remains the gating artifact for PDP.
+
+ Submit NRC IRAP YEP
+
+anchor on commercialization capacity, pilot hardening, connector work, and automation bandwidth
+This matches the grant sprint’s “fast lane (capacity)” role for YEP. 
+
+GRANT RESEARCH
+
+ Nominate one Digital Traction MVP
+
+final answer: TradeLine 24/7
+This preserves the one-MVP discipline required by the grant plan and matches the 90-day monetization focus.
+
+ Lock the proof pack
+
+latest repo audit summary
+
+production status
+
+one-page OmniHub USO narrative
+
+one-page FLOWBills pilot brief
+
+one-page TradeLine traction brief
+This prevents grant copy from drifting away from repo reality. 
+
+docs(audit): full third-party c…
+
+5) Phase 1 — LOI lane
+Objective
+
+Use the meeting / partner motion to secure a pilot artifact, not just goodwill.
+
+What to say
+
+Lead with OmniHub as the enterprise story, then narrow the ask to a FLOWBills pilot. That is the cleanest bridge between flagship narrative and grantable operational use case. It also matches the internal pilot logic in the 90-day execution materials, which repeatedly position invoice automation and enterprise pilot support as the most credible enterprise wedge.
+
+Success condition
+
+One of these must happen:
+
+signed LOI
+
+redlined LOI
+
+named approver + dated next step within 48 hours
+
+Anything softer than that is not treated as success.
+
+6) Phase 2 — fast cash lane
+YEP
+
+Submit immediately for engineering/commercialization bandwidth. Use it to fund work that directly improves monetization and grant readiness:
+
+pilot hardening
+
+connector / integration stabilization
+
+measurement / audit packaging
+
+billing and onboarding automation
+
+commercialization support around TradeLine and FLOWBills.
+
+Digital Traction
+
+Run TradeLine 24/7 as the single traction MVP. The internal plans already give you the execution logic: rapid SMB validation, billing setup, dashboards, referral loop, and scaling toward 15+ active customers.
+
+Outreach engine
+
+This plan is no longer theory: the repo trail confirms local agents including apex_sales_agent.py and lead-gen connectors exist under /local-agents/. That means the lazy-CEO outbound motion is repo-real and can support the pipeline-building part of this plan. 
+
+docs(audit): enrich audit repor…
+
+7) Phase 3 — enterprise hardening lane
+Voucher
+
+Use Voucher for third-party validation and buyer-readiness work around FLOWBills:
+
+security review
+
+compliance assessment
+
+enterprise packaging
+
+pilot-readiness artifacts
+That is consistent with the grant sprint’s vendor and compliance discipline. 
+
+GRANT RESEARCH
+
+PDP
+
+Do not submit PDP before the LOI is signed or effectively committed. The revised plan enforces that sequence.
+
+8) Non-negotiable corrections now embedded in the final plan
+Use these verified claims
+
+OmniHub is a USO / governed execution platform.
+
+TradeLine and FLOWBills are active monetization surfaces in the internal strategy.
+
+Repo baseline is v1.4.0, production live, audit-backed. 
+
+docs(audit): full third-party c…
+
+Local sales automation and OmniLink infrastructure are repo-real.
+
+Remove or label these
+
+UNVERIFIED: exact repo presence of invoice-intake, ocr-extract, rag-search, flowbills-compliance-hook.
+Validation plan: targeted repo grep or re-upload the expired docs if those identifiers live outside the currently accessible repo/doc set.
+
+UNVERIFIED: AMII-specific Google Cloud credit path for your exact partner conversation.
+Validation plan: confirm directly with the AMII program rep or current AMII program docs. The grant research supports this only as leverage, not as guaranteed funding. 
+
+GRANT RESEARCH
+
+MISSING: hard evidence of CanExport eligibility (3 FTE + $300K revenue proof) in the accessible source set.
+IMPACT: CanExport cannot be marked GO.
+ASSUMING: hold CanExport in pending state until finance produces the proof pack. 
+
+GRANT RESEARCH
+
+9) Final re-handoff — 100/100 version
+Operating thesis
+
+OmniHub is the flagship story.
+FLOWBills wins the LOI.
+TradeLine wins the fast cash.
+YEP buys bandwidth.
+Digital Traction buys momentum.
+Voucher/PDP buy enterprise trust — only after proof exists.
+
+This week’s execution order
+
+
+GRANT RESEARCH
+
+Pre-draft and push the FLOWBills LOI. 
+
+APEX Plan
+
+File YEP. 
+
+GRANT RESEARCH
+
+Lock TradeLine 24/7 as the Digital Traction MVP.
+
+Build the repo-proof grant pack from the current audit and production status. 
+
+docs(audit): full third-party c…
+
+Run the pipeline through the verified outbound stack and local-agent motion.
+
+Success criteria
+
+By the next checkpoint, success means:
+
+LOI signed or redlined
+
+YEP submitted
+
+Digital Traction MVP locked
+
+repo-proof pack finished
+
+CanExport marked GO or killed
+
+Voucher/PDP held until enterprise artifact exists.
+
+Final note
+
+Some earlier uploaded files in this workspace have expired. This audit is grounded in the currently accessible plan docs, grant research, and live repo-connected materials. Re-upload the expired files if you want me to run a second-pass delta audit against those too.
+
+Highest-impact next action
+
+Build a single 3-page evidence pack today: page 1 = OmniHub USO proof, page 2 = FLOWBills pilot/LOI ask, page 3 = TradeLine traction MVP for Digital Traction — all anchored to the 2026-03-09 v1.4.0 repo audit baseline.

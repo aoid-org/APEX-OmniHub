@@ -105,7 +105,7 @@ export async function authenticate(
     throw new SpectreAuthError('Invalid API key format');
   }
 
-  const tokenEnv: 'production' | 'staging' = match[1] === 'live' ? 'production' : 'staging';
+  const environment = match[1] === 'live' ? 'production' : 'test';
   const tenantId = match[2];
   const secretPart = match[3];
 
@@ -116,14 +116,12 @@ export async function authenticate(
     throw new SpectreAuthError('API key not found or revoked');
   }
 
-  // Validate the token's environment signal against the record
-  // 'development' records are allowed in all environments for local testing
-  if (record.environment !== tokenEnv && record.environment !== 'development') {
-    throw new SpectreAuthError('API key environment mismatch');
-  }
-
   if (record.tenantId !== tenantId) {
     throw new SpectreAuthError('Tenant mismatch');
+  }
+
+  if (record.environment !== environment) {
+    throw new SpectreAuthError('Environment mismatch');
   }
 
   if (record.status !== 'active') {

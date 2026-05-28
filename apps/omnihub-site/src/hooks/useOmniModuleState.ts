@@ -25,7 +25,7 @@ export interface OmniModuleState {
   readonly actions: readonly ModuleAction[];
   readonly loading: boolean;
   readonly error: string | null;
-  readonly isLive: boolean;
+  readonly stateKind: 'live' | 'demo' | 'local' | 'unavailable';
 }
 
 type LiveModuleState = Readonly<{
@@ -36,7 +36,7 @@ type LiveModuleState = Readonly<{
   actions?: readonly ModuleAction[];
   loading: boolean;
   error: string | null;
-  isLive: boolean;
+  stateKind: 'live' | 'demo' | 'local' | 'unavailable';
 }>;
 
 function registryStateFor(appKey: string): OmniModuleState {
@@ -49,8 +49,31 @@ function registryStateFor(appKey: string): OmniModuleState {
     actions: reg?.actions ?? [],
     loading: true,
     error: null,
-    isLive: false,
+    stateKind: reg?.stateKind ?? 'local',
   };
+}
+
+async function performLiveStateFetch(appKey: string): Promise<Partial<ModuleContent>> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("No active user session");
+  }
+
+  const { data, error } = await supabase.functions.invoke(
+    "omnilink-port/module-state",
+    {
+      body: { module_key: appKey },
+    }
+  );
+
+  if (error || !data) {
+    throw error || new Error("Failed to invoke module state function");
+  }
+
+  return data as Partial<ModuleContent>;
 }
 
 export function useOmniModuleState(appKey: string): OmniModuleState {
@@ -59,7 +82,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
     key: appKey,
     loading: true,
     error: null,
-    isLive: false,
+    stateKind: baselineState.stateKind,
   }));
 
   useEffect(() => {
@@ -72,51 +95,17 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
             key: appKey,
             loading: false,
             error: null,
-            isLive: false,
+            stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'local',
           });
         }
         return;
       }
 
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user || cancelled) {
-          if (!cancelled) {
-            setLiveState({
-              key: appKey,
-              loading: false,
-              error: null,
-              isLive: false,
-            });
-          }
-          return;
-        }
-
-        const { data, error } = await supabase.functions.invoke(
-          "omnilink-port",
-          {
-            body: { action: "get_module_state", module_key: appKey },
-          }
-        );
-
+        const live = await performLiveStateFetch(appKey);
         if (cancelled) {
           return;
         }
-
-        if (error || !data) {
-          setLiveState({
-            key: appKey,
-            loading: false,
-            error: null,
-            isLive: false,
-          });
-          return;
-        }
-
-        const live = data as Partial<ModuleContent>;
         setLiveState({
           key: appKey,
           headline: live.headline,
@@ -125,7 +114,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
           actions: live.actions,
           loading: false,
           error: null,
-          isLive: true,
+          stateKind: "live",
         });
       } catch {
         if (!cancelled) {
@@ -133,7 +122,7 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
             key: appKey,
             loading: false,
             error: null,
-            isLive: false,
+            stateKind: baselineState.stateKind === 'demo' ? 'demo' : 'unavailable',
           });
         }
       }
@@ -144,21 +133,27 @@ export function useOmniModuleState(appKey: string): OmniModuleState {
     return () => {
       cancelled = true;
     };
-  }, [appKey]);
+  }, [appKey, baselineState.stateKind]);
 
   if (liveState.key !== appKey) {
     return baselineState;
   }
 
+  // Fall back to baseline fields ONLY if not live and not unavailable
+  // Actually, if unavailable, we should still return some baseline shape but strictly 'unavailable'.
+  // We'll keep baseline stats/items if demo or local, but empty them if unavailable?
+  // The Prompt: "Fetch failure renders UNAVAILABLE unless explicit demo fallback flag is set."
+  const useBaseline = liveState.stateKind === 'demo' || liveState.stateKind === 'local';
+
   return {
     ...baselineState,
     headline: liveState.headline ?? baselineState.headline,
-    stats: liveState.stats ?? baselineState.stats,
-    items: liveState.items ?? baselineState.items,
-    actions: liveState.actions ?? baselineState.actions,
+    stats: useBaseline ? baselineState.stats : (liveState.stats ?? []),
+    items: useBaseline ? baselineState.items : (liveState.items ?? []),
+    actions: useBaseline ? baselineState.actions : (liveState.actions ?? []),
     loading: liveState.loading,
     error: liveState.error,
-    isLive: liveState.isLive,
+    stateKind: liveState.stateKind,
   };
 }
 

@@ -40,14 +40,16 @@ export interface ModuleContent {
   readonly stats: readonly ModuleStatItem[];
   readonly items: readonly ModuleListItem[];
   readonly actions: readonly ModuleAction[];
+  readonly stateKind?: 'live' | 'demo' | 'local' | 'unavailable';
+  readonly isDemo?: boolean;
 }
 
 // ── Hydration ─────────────────────────────────────────────────
 
-type RawModule = [string, string, string[][], string[][], string[][]];
+type RawModule = [string, string, string[][], string[][], string[][], boolean?];
 
 function hydrate(raw: RawModule): ModuleContent {
-  const [key, headline, stats, items, actions] = raw;
+  const [key, headline, stats, items, actions, isDemo] = raw;
   return {
     moduleKey: key,
     headline,
@@ -62,6 +64,8 @@ function hydrate(raw: RawModule): ModuleContent {
     actions: actions.map((a) => ({
       id: a[0], label: a[1], variant: a[2] as ActionVariant,
     })),
+    isDemo: isDemo ?? false,
+    stateKind: isDemo ? 'demo' : 'local',
   };
 }
 

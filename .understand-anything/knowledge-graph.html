@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<!-- APEX-OmniHub Knowledge Graph v2.0 — Enhanced -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX-OmniHub Knowledge Graph</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #060818; --panel: #0d1224; --border: #1e2d4a;
+    --text: #e2e8f0; --muted: #64748b; --accent: #6366f1;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* ── Header ── */
+  header { padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; flex-shrink: 0; z-index: 10; }
+  .logo { font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; }
+  .stats { display: flex; gap: 16px; margin-left: auto; }
+  .stat { font-size: 11px; color: var(--muted); }
+  .stat b { color: var(--text); }
+
+  /* ── Controls ── */
+  #controls { padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex-shrink: 0; }
+  .btn { padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text); font-size: 11px; cursor: pointer; transition: all .15s; }
+  .btn:hover, .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .sep { width: 1px; height: 20px; background: var(--border); }
+  input[type=range] { accent-color: var(--accent); width: 80px; }
+  label { font-size: 11px; color: var(--muted); }
+  #search { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 11px; width: 180px; outline: none; }
+  #search:focus { border-color: var(--accent); }
+
+  /* ── Layout ── */
+  #main { display: flex; flex: 1; overflow: hidden; }
+  #graph-area { flex: 1; position: relative; overflow: hidden; }
+  svg { width: 100%; height: 100%; }
+
+  /* ── Sidebar ── */
+  #sidebar { width: 280px; background: var(--panel); border-left: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; }
+  #sidebar-content { padding: 16px; flex: 1; }
+  .sidebar-title { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .layer-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; transition: background .1s; font-size: 12px; margin-bottom: 2px; }
+  .layer-item:hover { background: rgba(255,255,255,.05); }
+  .layer-item.dimmed { opacity: .3; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .layer-count { margin-left: auto; font-size: 10px; color: var(--muted); }
+
+  /* ── Node tooltip / detail panel ── */
+  #detail { margin-top: 20px; }
+  #detail h3 { font-size: 13px; font-weight: 600; margin-bottom: 8px; word-break: break-all; }
+  .detail-row { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .detail-row b { color: var(--text); }
+  .file-list { margin-top: 8px; }
+  .file-item { font-size: 10px; color: var(--muted); padding: 2px 0; border-bottom: 1px solid var(--border); word-break: break-all; }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; text-transform: uppercase; margin: 1px; }
+
+  /* ── Legend / trinity section ── */
+  #trinity { padding: 12px 16px; border-top: 1px solid var(--border); }
+  .trinity-card { border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+  .trinity-card h4 { font-size: 11px; font-weight: 700; margin-bottom: 4px; }
+  .trinity-card p { font-size: 10px; color: var(--muted); line-height: 1.4; }
+
+  /* ── Tooltip ── */
+  #tooltip { position: absolute; pointer-events: none; background: rgba(13,18,36,.95); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 12px; max-width: 240px; display: none; z-index: 100; box-shadow: 0 8px 32px rgba(0,0,0,.5); }
+  #tooltip strong { display: block; margin-bottom: 4px; color: #fff; font-size: 13px; }
+  #tooltip .tt-meta { color: var(--muted); font-size: 11px; }
+
+  /* ── SVG node/link styles ── */
+  .link { stroke: rgba(100,116,139,.3); stroke-width: 1; }
+  .link.highlighted { stroke: rgba(99,102,241,.8); stroke-width: 2; }
+  .node circle { stroke: rgba(255,255,255,.15); stroke-width: 1; cursor: pointer; transition: stroke .15s; }
+  .node circle:hover { stroke: #fff; stroke-width: 2; }
+  .node.selected circle { stroke: #fff; stroke-width: 2.5; }
+  .node.dimmed circle { opacity: .2; }
+  .node.dimmed text { opacity: .1; }
+  .node text { font-size: 9px; fill: rgba(255,255,255,.7); pointer-events: none; }
+
+  /* ── Mini map ── */
+  #minimap { position: absolute; bottom: 16px; right: 16px; width: 140px; height: 90px; background: rgba(13,18,36,.8); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+
+  /* ── Tour overlay ── */
+  #tour-overlay { display:none; position:fixed; inset:0; z-index:200; pointer-events:none; }
+  #tour-card { display:none; position:fixed; bottom:80px; left:50%; transform:translateX(-50%); width:480px; background:var(--panel); border:1px solid var(--accent); border-radius:12px; padding:20px 24px; z-index:201; pointer-events:all; box-shadow:0 0 60px rgba(99,102,241,.3); }
+  #tour-card h2 { font-size:15px; font-weight:700; margin-bottom:8px; color:#fff; }
+  #tour-card p { font-size:12px; color:var(--muted); line-height:1.6; }
+  #tour-nav { display:flex; gap:8px; margin-top:14px; align-items:center; }
+  #tour-progress { font-size:10px; color:var(--muted); margin-left:auto; }
+  .tour-dot { width:6px; height:6px; border-radius:50%; background:var(--border); display:inline-block; margin:0 2px; transition:background .2s; }
+  .tour-dot.active { background:var(--accent); }
+
+  /* ── Watch badge ── */
+  #watch-badge { display:none; position:fixed; top:52px; right:16px; font-size:10px; padding:3px 10px; border-radius:20px; z-index:50; font-weight:600; }
+  #watch-badge.building { background:#f59e0b; color:#000; }
+  #watch-badge.ready { background:#10b981; color:#000; }
+  #watch-badge.error { background:#ef4444; color:#fff; }
+
+  /* ── Heatmap legend ── */
+  #heatmap-legend { display:none; position:absolute; bottom:16px; left:16px; background:rgba(13,18,36,.9); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:10px; }
+  #heatmap-legend .hl-row { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  #heatmap-legend .hl-swatch { width:12px; height:12px; border-radius:2px; }
+
+  /* ── Drill panel ── */
+  #drill-panel { display:none; position:absolute; top:10px; left:10px; background:rgba(13,18,36,.95); border:1px solid var(--border); border-radius:8px; padding:12px; max-height:60vh; overflow-y:auto; width:220px; font-size:11px; z-index:50; }
+  #drill-panel h4 { font-size:11px; font-weight:700; margin-bottom:8px; color:var(--accent); }
+  .drill-file { padding:3px 0; border-bottom:1px solid var(--border); color:var(--muted); cursor:pointer; word-break:break-all; }
+  .drill-file:hover { color:var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">⬡ APEX-OmniHub</span>
+  <span style="font-size:12px;color:var(--muted)">Knowledge Graph</span>
+  <div class="stats">
+    <span class="stat" id="stat-nodes"><b>—</b> modules</span>
+    <span class="stat" id="stat-edges"><b>—</b> edges</span>
+    <span class="stat" id="stat-files"><b>1,743</b> files</span>
+    <span class="stat" id="stat-langs"><b>38</b> languages</span>
+  </div>
+</header>
+
+<div id="controls">
+  <input type="text" id="search" placeholder="🔍 Search modules…">
+  <div class="sep"></div>
+  <button class="btn active" data-view="layer">By Layer</button>
+  <button class="btn" data-view="domain">By Domain</button>
+  <div class="sep"></div>
+  <label>Strength</label>
+  <input type="range" id="strength" min="50" max="600" value="200">
+  <div class="sep"></div>
+  <button class="btn" id="btn-reset">Reset View</button>
+  <button class="btn" id="btn-labels">Labels</button>
+  <div class="sep"></div>
+  <button class="btn" data-view="heatmap">🌡 Heatmap</button>
+  <div class="sep"></div>
+  <button class="btn" id="btn-chain" title="Shift+Click node for dep chain">⛓ Dep Flow</button>
+  <button class="btn" id="btn-tour">▶ Tour</button>
+</div>
+
+<div id="main">
+  <div id="graph-area">
+    <div id="watch-badge"></div>
+    <div id="heatmap-legend"></div>
+    <div id="drill-panel"></div>
+    <svg id="svg"></svg>
+    <div id="tooltip"></div>
+    <svg id="minimap"></svg>
+  </div>
+  <div id="sidebar">
+    <div id="sidebar-content">
+      <div class="sidebar-title">Layers</div>
+      <div id="layer-list"></div>
+      <div id="detail" style="display:none"></div>
+    </div>
+    <div id="trinity">
+      <div class="sidebar-title">Holy Trinity</div>
+      <div class="trinity-card" style="border-color:#6366f133">
+        <h4 style="color:#6366f1">⬡ React / Vite SPA</h4>
+        <p>OmniDash · OmniConnect · Web3 Wallet · Voice AI · Zero-Trust Auth · Capacitor Mobile</p>
+      </div>
+      <div class="trinity-card" style="border-color:#10b98133">
+        <h4 style="color:#10b981">⚙ Temporal Orchestrator</h4>
+        <p>Python agent sagas · Universal workflows · Intent registry · Policy engine · Prometheus telemetry</p>
+      </div>
+      <div class="trinity-card" style="border-color:#3b82f633">
+        <h4 style="color:#3b82f6">🗄 Supabase Platform</h4>
+        <p>28 Edge Functions · Postgres migrations · Auth · Realtime · Stripe webhooks · NFT verify</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tour card -->
+<div id="tour-card">
+  <h2 id="tour-title"></h2>
+  <p id="tour-body"></p>
+  <div id="tour-nav">
+    <button class="btn" id="tour-prev">← Prev</button>
+    <button class="btn" id="tour-next">Next →</button>
+    <button class="btn" id="tour-close" style="border-color:#ef4444;color:#ef4444">✕ Exit</button>
+    <span id="tour-progress"></span>
+  </div>
+  <div id="tour-dots" style="margin-top:10px;text-align:center"></div>
+</div>
+
+<script>
+const GRAPH_PATH = 'knowledge-graph.json';
+let graph, sim, svgEl, gEl, nodeEls, linkEls, labelsOn = true;
+let activeView = 'layer', activeFilter = new Set();
+
+async function init() {
+  graph = await fetch(GRAPH_PATH).then(r => r.json());
+
+  document.getElementById('stat-nodes').innerHTML = `<b>${graph.nodes.length}</b> modules`;
+  document.getElementById('stat-edges').innerHTML = `<b>${graph.edges.length}</b> edges`;
+
+  buildLegend();
+  buildGraph();
+  setupControls();
+}
+
+function buildLegend() {
+  const list = document.getElementById('layer-list');
+  list.innerHTML = '';
+  const groups = activeView === 'layer' ? graph.layers : graph.domains;
+  groups.forEach(g => {
+    const count = graph.nodes.filter(n => activeView === 'layer' ? n.layerId === g.id : n.domain === g.id).length;
+    if (count === 0) return;
+    const el = document.createElement('div');
+    el.className = 'layer-item' + (activeFilter.size && !activeFilter.has(g.id) ? ' dimmed' : '');
+    el.innerHTML = `<div class="dot" style="background:${g.color}"></div><span>${g.name}</span><span class="layer-count">${count}</span>`;
+    el.addEventListener('click', () => {
+      if (activeFilter.has(g.id)) activeFilter.delete(g.id);
+      else activeFilter.add(g.id);
+      applyFilter();
+      buildLegend();
+    });
+    list.appendChild(el);
+  });
+}
+
+function buildGraph() {
+  svgEl = d3.select('#svg');
+  svgEl.selectAll('*').remove();
+
+  const W = document.getElementById('graph-area').clientWidth;
+  const H = document.getElementById('graph-area').clientHeight;
+
+  const defs = svgEl.append('defs');
+  defs.append('marker').attr('id','arrow').attr('viewBox','0 -4 8 8').attr('refX',12).attr('refY',0)
+    .attr('markerWidth',6).attr('markerHeight',6).attr('orient','auto')
+    .append('path').attr('d','M0,-4L8,0L0,4').attr('fill','rgba(100,116,139,.4)');
+
+  gEl = svgEl.append('g');
+
+  const zoom = d3.zoom().scaleExtent([.05, 4]).on('zoom', e => gEl.attr('transform', e.transform));
+  svgEl.call(zoom);
+
+  // Build link & node data
+  const nodeById = {};
+  graph.nodes.forEach(n => nodeById[n.id] = n);
+
+  linkEls = gEl.append('g').selectAll('line')
+    .data(graph.edges.filter(e => nodeById[e.source] && nodeById[e.target]))
+    .join('line').attr('class','link').attr('marker-end','url(#arrow)');
+
+  nodeEls = gEl.append('g').selectAll('g')
+    .data(graph.nodes).join('g').attr('class','node')
+    .call(d3.drag().on('start', dragstart).on('drag', dragged).on('end', dragend))
+    .on('mouseover', showTooltip).on('mousemove', moveTooltip).on('mouseout', hideTooltip)
+    .on('click', selectNode);
+
+  nodeEls.append('circle')
+    .attr('r', d => d.size)
+    .attr('fill', d => getColor(d));
+
+  nodeEls.append('text').attr('dy', d => d.size + 10).attr('text-anchor','middle').text(d => {
+    const parts = d.label.split(' / ');
+    return parts[parts.length - 1];
+  });
+
+  sim = d3.forceSimulation(graph.nodes)
+    .force('link', d3.forceLink(graph.edges).id(d => d.id).distance(80).strength(.3))
+    .force('charge', d3.forceManyBody().strength(-getStrength()))
+    .force('center', d3.forceCenter(W / 2, H / 2))
+    .force('collision', d3.forceCollide().radius(d => d.size + 4))
+    .on('tick', ticked);
+
+  applyFilter();
+}
+
+function _baseGetColor(d) {
+  if (activeView === 'layer') {
+    const l = graph.layers.find(x => x.id === d.layerId);
+    return l ? l.color : '#64748b';
+  } else {
+    const dom = graph.domains.find(x => x.id === d.domain);
+    return dom ? dom.color : '#64748b';
+  }
+}
+function getColor(d) {
+  if (activeView === 'heatmap') return heatColor(d.lineCount || 0);
+  return _baseGetColor(d);
+}
+
+function ticked() {
+  linkEls.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+         .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+  nodeEls.attr('transform', d => `translate(${d.x},${d.y})`);
+}
+
+function dragstart(e, d) { if (!e.active) sim.alphaTarget(.3).restart(); d.fx = d.x; d.fy = d.y; }
+function dragged(e, d) { d.fx = e.x; d.fy = e.y; }
+function dragend(e, d) { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }
+
+function applyFilter() {
+  if (!nodeEls) return;
+  nodeEls.classed('dimmed', d => {
+    if (activeFilter.size === 0) return false;
+    const key = activeView === 'layer' ? d.layerId : d.domain;
+    return !activeFilter.has(key);
+  });
+  linkEls.classed('highlighted', false);
+
+  const searchTerm = document.getElementById('search').value.toLowerCase();
+  if (searchTerm) {
+    nodeEls.classed('dimmed', d => !d.label.toLowerCase().includes(searchTerm) && !d.domain.includes(searchTerm));
+  }
+
+  nodeEls.select('circle').attr('fill', d => getColor(d));
+}
+
+let selectedNode = null;
+function selectNode(e, d) {
+  // Shift+Click = dep chain mode
+  if (e.shiftKey) {
+    e.stopPropagation();
+    const chain = computeChain(d.id);
+    nodeEls.classed('dimmed', n => !chain.nodes.has(n.id));
+    linkEls.classed('highlighted', edge => chain.edges.has(edge));
+    showDetail(d, chain.nodes);
+    showDrillPanel(d);
+    return;
+  }
+  e.stopPropagation();
+  if (selectedNode === d.id) { selectedNode = null; clearDetail(); nodeEls.classed('selected', false); linkEls.classed('highlighted', false); document.getElementById('drill-panel').style.display='none'; return; }
+  selectedNode = d.id;
+  nodeEls.classed('selected', n => n.id === d.id);
+  const connected = new Set();
+  graph.edges.forEach(edge => {
+    const srcId = typeof edge.source === 'object' ? edge.source.id : edge.source;
+    const tgtId = typeof edge.target === 'object' ? edge.target.id : edge.target;
+    if (srcId === d.id) connected.add(tgtId);
+    if (tgtId === d.id) connected.add(srcId);
+  });
+  linkEls.classed('highlighted', edge => {
+    const s = typeof edge.source === 'object' ? edge.source.id : edge.source;
+    const t = typeof edge.target === 'object' ? edge.target.id : edge.target;
+    return s === d.id || t === d.id;
+  });
+  showDetail(d, connected);
+  showDrillPanel(d);
+}
+
+function showDetail(d, connected) {
+  const panel = document.getElementById('detail');
+  const layer = graph.layers.find(l => l.id === d.layerId) || {};
+  const domain = graph.domains.find(x => x.id === d.domain) || {};
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <h3>${d.label}</h3>
+    <div class="detail-row"><b>Layer:</b> <span class="badge" style="background:${layer.color}22;color:${layer.color}">${layer.name || d.layerId}</span></div>
+    <div class="detail-row"><b>Domain:</b> <span class="badge" style="background:${domain.color}22;color:${domain.color}">${domain.name || d.domain}</span></div>
+    <div class="detail-row"><b>Files:</b> ${d.fileCount} &nbsp;|&nbsp; <b>Lines:</b> ${d.lineCount.toLocaleString()}</div>
+    <div class="detail-row"><b>Languages:</b> ${d.languages.join(', ')}</div>
+    <div class="detail-row"><b>Connections:</b> ${connected.size} modules</div>
+    <div class="file-list">
+      <div class="sidebar-title" style="margin-top:10px">Key files</div>
+      ${d.files.map(f => `<div class="file-item">${f}</div>`).join('')}
+    </div>`;
+}
+
+function clearDetail() { document.getElementById('detail').style.display = 'none'; }
+
+function showTooltip(e, d) {
+  const tt = document.getElementById('tooltip');
+  const layer = graph.layers.find(l => l.id === d.layerId) || {};
+  tt.style.display = 'block';
+  tt.innerHTML = `<strong>${d.label}</strong><div class="tt-meta">${layer.name} &bull; ${d.fileCount} files &bull; ${d.lineCount.toLocaleString()} lines</div>`;
+  moveTooltip(e);
+}
+function moveTooltip(e) {
+  const tt = document.getElementById('tooltip');
+  const rect = document.getElementById('graph-area').getBoundingClientRect();
+  let x = e.clientX - rect.left + 12, y = e.clientY - rect.top + 12;
+  if (x + 250 > rect.width) x -= 260;
+  tt.style.left = x + 'px'; tt.style.top = y + 'px';
+}
+function hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
+
+function getStrength() { return -parseInt(document.getElementById('strength').value); }
+
+function setupControls() {
+  document.querySelectorAll('[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isHeatmap = btn.dataset.view === 'heatmap';
+      activeView = btn.dataset.view;
+      activeFilter.clear();
+      document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b === btn));
+      if (isHeatmap) {
+        showHeatmapLegend(true);
+        if (nodeEls) nodeEls.select('circle').attr('fill', d => heatColor(d.lineCount || 0));
+      } else {
+        showHeatmapLegend(false);
+        buildLegend();
+        applyFilter();
+      }
+    });
+  });
+
+  document.getElementById('strength').addEventListener('input', () => {
+    if (sim) sim.force('charge', d3.forceManyBody().strength(getStrength())).alpha(.3).restart();
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    svgEl.transition().duration(500).call(d3.zoom().transform, d3.zoomIdentity);
+    activeFilter.clear(); buildLegend(); applyFilter();
+  });
+
+  document.getElementById('btn-labels').addEventListener('click', function() {
+    labelsOn = !labelsOn;
+    this.classList.toggle('active', labelsOn);
+    nodeEls.selectAll('text').style('display', labelsOn ? null : 'none');
+  });
+
+  document.getElementById('search').addEventListener('input', () => applyFilter());
+
+  svgEl.on('click', () => { selectedNode = null; clearDetail(); nodeEls.classed('selected', false); linkEls.classed('highlighted', false); });
+}
+
+// ══════════════════════════════════════════════════════════════
+// ENHANCEMENT 1: Heatmap color
+function heatColor(lines) {
+  const stops = [[0,'#1e3a5f'],[200,'#1d4ed8'],[500,'#7c3aed'],[1000,'#db2777'],[3000,'#dc2626'],[10000,'#ff6b00']];
+  for (let i=1;i<stops.length;i++) if (lines<=stops[i][0]) {
+    const t=(lines-stops[i-1][0])/(stops[i][0]-stops[i-1][0]);
+    const a=parseInt(stops[i-1][1].slice(1),16),b=parseInt(stops[i][1].slice(1),16);
+    return '#'+[16,8,0].map(s=>Math.round(((a>>s)&255)+t*(((b>>s)&255)-((a>>s)&255))).toString(16).padStart(2,'0')).join('');
+  }
+  return '#ff6b00';
+}
+
+function showHeatmapLegend(show) {
+  const el=document.getElementById('heatmap-legend');
+  if (!show) { el.style.display='none'; return; }
+  el.style.display='block';
+  el.innerHTML='<b style="color:#e2e8f0;font-size:11px">Complexity</b>';
+  [[0,'< 200'],[200,'200–500'],[500,'500–1k'],[1000,'1k–3k'],[3000,'3k–10k'],[10000,'> 10k']].forEach(([v,l])=>{
+    el.innerHTML+=`<div class="hl-row"><div class="hl-swatch" style="background:${heatColor(v+1)}"></div>${l} lines</div>`;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// ENHANCEMENT 2: Dependency chain traversal
+let chainMode = false;
+function computeChain(nodeId) {
+  const vis=new Set([nodeId]), edgesIn=new Set(), q=[nodeId];
+  while(q.length) {
+    const cur=q.shift();
+    graph.edges.forEach(e=>{
+      const s=typeof e.source==='object'?e.source.id:e.source;
+      const t=typeof e.target==='object'?e.target.id:e.target;
+      if(t===cur&&!vis.has(s)){vis.add(s);q.push(s);edgesIn.add(e);}
+      if(s===cur&&!vis.has(t)){vis.add(t);q.push(t);edgesIn.add(e);}
+    });
+  }
+  return {nodes:vis,edges:edgesIn};
+}
+
+// ══════════════════════════════════════════════════════════════
+// ENHANCEMENT 3: Drill-down panel
+function showDrillPanel(d) {
+  const panel=document.getElementById('drill-panel');
+  panel.style.display='block';
+  const allFiles=graph.nodes.find(n=>n.id===d.id)?.files||[];
+  panel.innerHTML=`<h4>📁 ${d.label}</h4>${allFiles.map(f=>`<div class="drill-file">${f}</div>`).join('')}<div style="margin-top:6px;font-size:10px;color:var(--muted)">${d.fileCount} total files in module</div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// ENHANCEMENT 4: Tour
+const TOUR=[{title:'⬡ APEX-OmniHub — 1,743 Files',body:'This graph maps your entire codebase across 204 modules, 3 architecture pillars, 26 frameworks. Navigate with the controls or press Next.',layer:null},{title:'① React / Vite SPA (L0)',body:'Frontend: OmniDash · OmniConnect · Web3 wallet · Voice AI · Zero-Trust auth gate. Built with React 18, Vite 7, TailwindCSS, Zustand, Wagmi, Framer Motion.',layer:'L0'},{title:'② Edge Functions (L1)',body:'28 Deno-hosted Supabase Edge Functions. Key: omnilink-agent (AI), stripe-webhook, verify-nft, mcp-proxy, omni-runs. All TypeScript, zero cold-start.',layer:'L1'},{title:'③ Temporal Orchestrator (L2)',body:'Python Temporal workflows. agent_saga.py (57k lines) is the core saga engine. universal_saga.py handles cross-domain sync. FastAPI REST via server.py.',layer:'L2'},{title:'④ Supabase Data Layer (L3)',body:'PostgreSQL + Auth + Realtime + Storage. Migrations manage schema. Zero-Trust RLS policies enforce row-level isolation.',layer:'L3'},{title:'⑤ Web3 / Chain (L4)',body:'Hardhat + Solidity contracts. SIWE auth. NFT gating. Wagmi + Ethers.js frontend. Alchemy webhooks for on-chain events.',layer:'L4'},{title:'⑥ Infra / CI (L5)',body:'15+ GitHub Actions workflows: ci-runtime-gates, chaos-simulation-ci, cd-staging, compliance. Terraform cloud infra. Docker Compose local stack.',layer:'L5'},{title:'⑦ Agent System (L6)',body:'APEX AI protocols: omnidev-v2, APEX-POWER-20X, omnitest, apex-data-architect. Cursor superpowers + Claude skills. The meta-layer driving dev velocity.',layer:'L6'},{title:'✓ Explore!',body:'Switch Layer/Domain/Heatmap views. Shift+Click any node for dep chain. Click nodes for drill-down. Search to isolate modules. Press Escape to exit.',layer:null}];
+let tourStep=-1;
+
+function startTour() {
+  tourStep=0;
+  document.getElementById('tour-card').style.display='block';
+  renderTourStep();
+}
+function renderTourStep() {
+  if(tourStep<0||tourStep>=TOUR.length){endTour();return;}
+  const s=TOUR[tourStep];
+  document.getElementById('tour-title').textContent=s.title;
+  document.getElementById('tour-body').textContent=s.body;
+  document.getElementById('tour-progress').textContent=`${tourStep+1} / ${TOUR.length}`;
+  const dots=document.getElementById('tour-dots');
+  dots.innerHTML=TOUR.map((_,i)=>`<span class="tour-dot${i===tourStep?' active':''}"></span>`).join('');
+  // Filter graph to highlight layer
+  if(s.layer&&nodeEls) {
+    activeFilter.clear();
+    activeFilter.add(s.layer);
+    activeView='layer';
+    buildLegend();
+    applyFilter();
+  } else if(!s.layer&&nodeEls) {
+    activeFilter.clear();
+    buildLegend();
+    applyFilter();
+  }
+}
+function endTour() {
+  document.getElementById('tour-card').style.display='none';
+  tourStep=-1;
+  activeFilter.clear();
+  buildLegend();
+  applyFilter();
+}
+
+// ══════════════════════════════════════════════════════════════
+// ENHANCEMENT 5: Watch mode
+let lastWatchTs=0;
+function startWatcher() {
+  const badge=document.getElementById('watch-badge');
+  setInterval(async()=>{
+    try {
+      const m=await fetch('/api/meta?_='+Date.now()).then(r=>r.ok?r.json():null);
+      if(!m)return;
+      badge.style.display='block';
+      if(m.ts>lastWatchTs&&lastWatchTs>0&&m.status==='ready') {
+        lastWatchTs=m.ts;
+        badge.className='ready'; badge.textContent='✓ Updated';
+        const g=await fetch('knowledge-graph.json?_='+m.ts).then(r=>r.json());
+        graph=g; buildGraph(); buildLegend();
+        setTimeout(()=>{badge.style.display='none';},2000);
+      } else if(m.status==='building') {
+        if(lastWatchTs===0)lastWatchTs=m.ts;
+        badge.className='building'; badge.textContent='⟳ Rebuilding…';
+      } else if(m.status==='ready'&&lastWatchTs===0) {
+        lastWatchTs=m.ts;
+        badge.style.display='none';
+      }
+    } catch{ badge.style.display='none'; }
+  },3000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// Close drill panel on bg click
+svgEl?.on('click.drill', ()=>{ document.getElementById('drill-panel').style.display='none'; });
+
+// Close drill panel on bg clicks
+document.getElementById('btn-tour')?.addEventListener('click',startTour);
+document.getElementById('tour-next')?.addEventListener('click',()=>{tourStep++;renderTourStep();});
+document.getElementById('tour-prev')?.addEventListener('click',()=>{tourStep=Math.max(0,tourStep-1);renderTourStep();});
+document.getElementById('tour-close')?.addEventListener('click',endTour);
+document.getElementById('btn-chain')?.addEventListener('click',function(){chainMode=!chainMode;this.classList.toggle('active',chainMode);this.title=chainMode?'Shift+Click active — click node for chain':'Shift+Click node for dep chain';});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape')endTour(); if(e.key==='ArrowRight'&&tourStep>=0){tourStep++;renderTourStep();} if(e.key==='ArrowLeft'&&tourStep>0){tourStep--;renderTourStep();} });
+
+// Start watcher
+startWatcher();
+
+init().catch(err => {
+  document.body.innerHTML = `<div style="padding:40px;color:#ef4444;font-family:monospace">
+    <h2>Failed to load knowledge-graph.json</h2>
+    <p style="margin-top:8px;color:#94a3b8">Serve this file from a local HTTP server:<br>
+    <code style="color:#6366f1">npx serve .understand-anything</code><br>then open <code>http://localhost:3000/knowledge-graph.html</code></p>
+    <pre style="margin-top:12px;font-size:11px;color:#64748b">${err}</pre>
+  </div>`;
+});
+</script>
+</body>
+</html>

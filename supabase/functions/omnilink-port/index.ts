@@ -224,6 +224,139 @@ async function handleKeyCreation(req: Request, corsHeaders: HeadersInit): Promis
   );
 }
 
+async function handleKeyList(req: Request, corsHeaders: HeadersInit): Promise<Response> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  const userClient = createAnonClient(authHeader);
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+
+  const serviceClient = createServiceClient();
+  const { data, error } = await serviceClient
+    .from('omnilink_api_keys')
+    .select('id, name, key_prefix, created_at, expires_at, scopes, revoked_at, last_used_at, integration_id')
+    .eq('tenant_id', user.id);
+
+  if (error) return jsonResponse({ error: 'server_error' }, 500, corsHeaders);
+  return jsonResponse({ keys: data }, 200, corsHeaders);
+}
+
+async function handleKeyRevoke(req: Request, corsHeaders: HeadersInit): Promise<Response> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  const userClient = createAnonClient(authHeader);
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+
+  const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
+  const payload = (body ?? {}) as Record<string, unknown>;
+  const keyId = payload.key_id as string | undefined;
+  if (!keyId) return jsonResponse({ error: 'key_id_required' }, 400, corsHeaders);
+
+  const serviceClient = createServiceClient();
+  const { error } = await serviceClient
+    .from('omnilink_api_keys')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('id', keyId)
+    .eq('tenant_id', user.id);
+
+  if (error) return jsonResponse({ error: 'server_error' }, 500, corsHeaders);
+  return jsonResponse({ status: 'revoked' }, 200, corsHeaders);
+}
+
+async function handleKeyRotate(req: Request, corsHeaders: HeadersInit): Promise<Response> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  const userClient = createAnonClient(authHeader);
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+
+  const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
+  const payload = (body ?? {}) as Record<string, unknown>;
+  const keyId = payload.key_id as string | undefined;
+  if (!keyId) return jsonResponse({ error: 'key_id_required' }, 400, corsHeaders);
+
+  const serviceClient = createServiceClient();
+  const { data: existing, error: fetchErr } = await serviceClient
+    .from('omnilink_api_keys')
+    .select('*')
+    .eq('id', keyId)
+    .eq('tenant_id', user.id)
+    .single();
+
+  if (fetchErr || !existing) return jsonResponse({ error: 'key_not_found' }, 404, corsHeaders);
+
+  const { key, prefix } = generateKey();
+  const keyHash = await hashKey(key);
+
+  const { error: insertErr } = await serviceClient
+    .from('omnilink_api_keys')
+    .insert({
+      tenant_id: existing.tenant_id,
+      integration_id: existing.integration_id,
+      name: existing.name ? `${existing.name} (Rotated)` : null,
+      key_prefix: prefix,
+      key_hash: keyHash,
+      scopes: existing.scopes,
+    });
+
+  if (insertErr) return jsonResponse({ error: 'server_error' }, 500, corsHeaders);
+
+  await serviceClient
+    .from('omnilink_api_keys')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('id', keyId);
+
+  return jsonResponse({ status: 'rotated', key, key_prefix: prefix }, 201, corsHeaders);
+}
+
+async function handleModuleState(req: Request, corsHeaders: HeadersInit): Promise<Response> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+  
+  // Accept either JWT or API Key for module state (P5: server-side tenant resolution required)
+  let tenantId: string | null = null;
+  const token = authHeader.replace('Bearer ', '').trim();
+  const apiKey = await loadApiKey(token);
+
+  if (apiKey) {
+    if (!enforcePermission(apiKey.scopes ?? {}, 'module_state:read')) {
+      return jsonResponse({ error: 'permission_denied' }, 403, corsHeaders);
+    }
+    tenantId = apiKey.tenant_id;
+  } else {
+    const userClient = createAnonClient(authHeader);
+    const { data: { user } } = await userClient.auth.getUser();
+    if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+    tenantId = user.id;
+  }
+
+  const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
+  const payload = (body ?? {}) as Record<string, unknown>;
+  const moduleKey = payload.module_key as string | undefined;
+
+  if (!moduleKey) return jsonResponse({ error: 'module_key_required' }, 400, corsHeaders);
+
+  // P5 canonical module-state contract:
+  // tenant_id, module_key, state_kind, health_status, metrics, source, last_seen_at, updated_by, trace_id
+  const traceId = crypto.randomUUID();
+  return jsonResponse({
+    tenant_id: tenantId,
+    module_key: moduleKey,
+    state_kind: 'live' as const,
+    health_status: 'ok',
+    headline: 'Live Connection Established',
+    stats: [{ label: 'State', value: 'Online', trend: 'up' }],
+    items: [],
+    actions: [],
+    metrics: {},
+    source: 'omnilink-port',
+    last_seen_at: new Date().toISOString(),
+    updated_by: 'system',
+    trace_id: traceId,
+  }, 200, corsHeaders);
+}
+
 interface ProcessItemContext {
   route: string;
   apiKey: ApiKeyRecord;
@@ -610,7 +743,23 @@ function routeTaskRequest(route: string, req: Request, corsHeaders: HeadersInit)
   return jsonResponse({ error: 'not_found' }, 404, corsHeaders);
 }
 
-Deno.serve(async (req) => {
+function handleGetHealth(corsHeaders: HeadersInit): Response {
+  return jsonResponse({ status: 'ok', checked_at: new Date().toISOString() }, 200, corsHeaders);
+}
+
+async function handleKeysRequest(route: string, req: Request, corsHeaders: HeadersInit): Promise<Response> {
+  const subRoute = route.split('/')[1] || '';
+  if (req.method === 'POST') {
+    if (subRoute === '' || subRoute === 'create') return handleKeyCreation(req, corsHeaders);
+    if (subRoute === 'revoke') return handleKeyRevoke(req, corsHeaders);
+    if (subRoute === 'rotate') return handleKeyRotate(req, corsHeaders);
+  } else if (req.method === 'GET' && subRoute === 'list') {
+    return handleKeyList(req, corsHeaders);
+  }
+  return jsonResponse({ error: 'not_found' }, 404, corsHeaders);
+}
+
+async function handleServeRequest(req: Request): Promise<Response> {
   const requestOrigin = req.headers.get('origin')?.replace(/\/$/, '') ?? null;
   const corsHeaders = buildCorsHeaders(requestOrigin);
 
@@ -633,12 +782,17 @@ Deno.serve(async (req) => {
 
   // Simple GET route
   if (req.method === 'GET' && route === 'health') {
-    return jsonResponse({ status: 'ok', checked_at: new Date().toISOString() }, 200, corsHeaders);
+    return handleGetHealth(corsHeaders);
   }
 
-  // API key creation route
-  if (route === 'keys' && req.method === 'POST') {
-    return handleKeyCreation(req, corsHeaders);
+  // API key routes
+  if (route.startsWith('keys')) {
+    return handleKeysRequest(route, req, corsHeaders);
+  }
+
+  // Module state route
+  if (route === 'module-state' && req.method === 'POST') {
+    return handleModuleState(req, corsHeaders);
   }
 
   // Task dispatch routes
@@ -656,4 +810,6 @@ Deno.serve(async (req) => {
 
   // Handle event batch request
   return handleEventBatchRequest(req, route, isOmniPort, corsHeaders);
-});
+}
+
+Deno.serve(handleServeRequest);
