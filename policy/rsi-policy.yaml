@@ -41,10 +41,13 @@ critical_paths:
   - orchestrator/workflows/**
   - orchestrator/activities/**
   - supabase/migrations/**
+  - '!supabase/migrations/20260527000001_aegis_api_keys_chronos.sql'
+  - '!supabase/migrations/20260528000000_omniconnect_vault.sql'
   - supabase/functions/**
   - '!supabase/functions/platform-health/**'
   - '!supabase/functions/ops-voice-health/**'
   - '!supabase/functions/test-integration/**'
+  - '!orchestrator/activities/physiomni_activities.py'
 
 recommended_reviewers:
   - '@apexbusiness-systems/security'
