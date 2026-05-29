@@ -2,7 +2,8 @@ import { useState, FormEvent, useEffect, useCallback } from 'react';
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { Section } from '@/components/Section';
-import { hasSupabaseConfig, supabase, supabaseConfigTraceId } from '@/lib/supabase';
+import { toUserFacingAuthError } from '@/lib/authErrorDisplay';
+import { hasSupabaseConfig, supabase, supabaseConfigStatus, supabaseConfigTraceId } from '@/lib/supabase';
 import type { Provider } from '@supabase/supabase-js';
 
 const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL ?? '/omnidash';
@@ -35,6 +36,7 @@ function LogoFallback() {
   );
 }
 
+
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,6 +44,11 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<Provider | null>(null);
   const [logoError, setLogoError] = useState(false);
+
+  useEffect(() => {
+    if (import.meta.env.PROD) return;
+    console.warn('[APEX OmniHub] Supabase config status', supabaseConfigStatus);
+  }, []);
 
   const handleOAuthSignIn = async (provider: Provider) => {
     if (!hasSupabaseConfig) {
@@ -58,11 +65,11 @@ export function LoginPage() {
         },
       });
       if (oauthError) {
-        setError(oauthError.message);
+        setError(toUserFacingAuthError(oauthError, supabaseConfigTraceId));
         setOauthLoading(null);
       }
-    } catch {
-      setError('An unexpected error occurred. Please try again.');
+    } catch (err) {
+      setError(toUserFacingAuthError(err, supabaseConfigTraceId));
       setOauthLoading(null);
     }
   };
@@ -134,12 +141,18 @@ export function LoginPage() {
       });
 
       if (authError) {
-        setError(authError.message);
+        setError(toUserFacingAuthError(authError, supabaseConfigTraceId));
         return;
       }
 
       globalThis.window.location.href = dashboardUrl;
     } catch (err) {
+      const userFacingError = toUserFacingAuthError(err, supabaseConfigTraceId);
+      if (userFacingError.startsWith('Authentication is misconfigured.')) {
+        setError(userFacingError);
+        return;
+      }
+
       // TypeError("Failed to fetch" | "NetworkError" | "Load failed") = proxy/tunnel unreachable, not bad credentials.
       const msg = err instanceof TypeError ? err.message.toLowerCase() : '';
       const isNetworkFailure =
