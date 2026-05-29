@@ -285,6 +285,9 @@
     "protobufjs": "^7.5.8",
     "ip-address": "10.2.0",
     "cookie": "0.7.2",
+    "react-router": {
+      "cookie": "^1.0.1"
+    },
     "elliptic": "6.6.1",
     "tmp": "^0.2.7",
     "qs": "^6.15.2",
