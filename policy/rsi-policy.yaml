@@ -44,6 +44,7 @@ critical_paths:
   - '!.github/workflows/orchestrator-ci.yml'
   - '!.github/workflows/production-readiness.yml'
   - '!.github/workflows/secret-scanning.yml'
+  - '!.github/workflows/release.yml'
   - orchestrator/workflows/**
   - orchestrator/activities/**
   - supabase/migrations/**
