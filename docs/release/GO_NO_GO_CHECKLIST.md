@@ -26,6 +26,4 @@
 - [x] Per-prompt manifests present (placeholders 07/08/13 reconstructed 2026-05-28)
 - [x] PhysiOmni partition-RLS migration applied to live DB — APPLIED (verified)
 
-**STATUS:** GO. Every automated gate passed with real, observed exit codes and all 11 CodeQL
-alerts are cleared. One deploy-time action remains (not a build gate): apply migration
-`20260528000000` (PhysiOmni partition RLS) to the live database.
+**STATUS:** GO. Every automated gate passed with real, observed exit codes. All 11 CodeQL alerts are cleared. Migration `20260528000000` (PhysiOmni partition RLS) has been applied to the live database and verified.
