@@ -6,7 +6,9 @@
 import type { InjectionDetectionResult } from '../types';
 
 // High-risk injection patterns that always block
-const HIGH_RISK_PATTERNS: Array<{ name: string; pattern: RegExp; score: number }> = [
+type InjectionPattern = { name: string; score: number; pattern?: RegExp; check?: (input: string) => boolean };
+
+const HIGH_RISK_PATTERNS: InjectionPattern[] = [
   // Instruction override attempts
   { name: 'ignore_previous', pattern: /ignore\s+(all\s+)?(previous\s+|your\s+)?instructions/i, score: 90 },
   { name: 'disregard_previous', pattern: /disregard\s+(all\s+)?(previous\s+|your\s+)?instructions/i, score: 90 },
@@ -32,7 +34,16 @@ const HIGH_RISK_PATTERNS: Array<{ name: string; pattern: RegExp; score: number }
   // Delimiter injection
   { name: 'delimiter_injection', pattern: /\[?(system|user|assistant)\]?\s*:/i, score: 85 },
   { name: 'xml_injection', pattern: /<\/?(?:system|prompt|instruction|context|role)>/i, score: 85 },
-  { name: 'comment_injection', pattern: /(?:\/\*|\*\/|<!--|-->|#\s*system)/i, score: 80 },
+  {
+    name: 'comment_injection',
+    check: (input: string) =>
+      input.includes('/*') ||
+      input.includes('*/') ||
+      input.includes('<!--') ||
+      input.includes('-->') ||
+      input.toLowerCase().includes('# system'),
+    score: 80,
+  },
 
   // Data exfiltration
   { name: 'send_to', pattern: /send\s+(?:.*?\s+)?to\s+/i, score: 75 },
@@ -57,7 +68,7 @@ const HIGH_RISK_PATTERNS: Array<{ name: string; pattern: RegExp; score: number }
 ];
 
 // Medium-risk patterns that may be suspicious but could be legitimate
-const MEDIUM_RISK_PATTERNS: Array<{ name: string; pattern: RegExp; score: number }> = [
+const MEDIUM_RISK_PATTERNS: InjectionPattern[] = [
   // Encoded payloads - base64 detection
   {
     name: 'base64_payload',
@@ -123,13 +134,13 @@ const BLOCK_THRESHOLD = 70;
  */
 function checkPatterns(
   input: string,
-  patterns: Array<{ name: string; pattern: RegExp; score: number }>,
+  patterns: InjectionPattern[],
   result: InjectionDetectionResult,
   threshold: number,
   alwaysBlockHighScore: boolean
 ): void {
-  for (const { name, pattern, score } of patterns) {
-    if (pattern.test(input)) {
+  for (const { name, pattern, check, score } of patterns) {
+    if ((pattern?.test(input) ?? false) || (check?.(input) ?? false)) {
       result.detected = true;
       result.patterns_matched.push(name);
       result.risk_score = Math.max(result.risk_score, score);

@@ -177,8 +177,7 @@ export default async function handler(req: Request): Promise<Response> {
   } catch (error) {
     console.error('Evaluation error:', error);
     return new Response(JSON.stringify({
-      error: 'Evaluation failed',
-      message: error instanceof Error ? error.message : String(error)
+      error: 'Evaluation failed'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -340,7 +339,7 @@ async function runSingleEvaluation(supabase: SupabaseClient, evalCaseId: string)
         response_quality: 0,
         security_check_passed: false,
         performance_ms: Date.now() - startTime,
-        error_message: error instanceof Error ? error.message : String(error),
+        error_message: 'Evaluation case failed',
         metadata: { error_timestamp: new Date().toISOString() }
       })
       .select()
@@ -358,7 +357,7 @@ async function runSingleEvaluation(supabase: SupabaseClient, evalCaseId: string)
       response_quality: 0,
       security_check_passed: false,
       performance_ms: Date.now() - startTime,
-      agent_response: `Error: ${error instanceof Error ? error.message : String(error)}`
+      agent_response: 'Error: Evaluation case failed'
     };
   }
 }

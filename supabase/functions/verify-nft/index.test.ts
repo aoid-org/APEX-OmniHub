@@ -91,11 +91,13 @@ Deno.test('getNFTsForOwner URL is constructed correctly', () => {
   const baseUrl = `https://${networkSlug}.g.alchemy.com/nft/v3/${apiKey}`;
   const url = `${baseUrl}/getNFTsForOwner?owner=${owner}&contractAddresses[]=${contract}&pageSize=1`;
 
-  assertEquals(url.includes('getNFTsForOwner'), true);
-  assertEquals(url.includes(owner), true);
-  assertEquals(url.includes(contract), true);
-  assertEquals(url.includes('pageSize=1'), true);
-  assertEquals(url.startsWith('https://eth-mainnet.g.alchemy.com'), true);
+  const parsedUrl = new URL(url);
+  assertEquals(parsedUrl.protocol, 'https:');
+  assertEquals(parsedUrl.hostname, 'eth-mainnet.g.alchemy.com');
+  assertEquals(parsedUrl.pathname, `/nft/v3/${apiKey}/getNFTsForOwner`);
+  assertEquals(parsedUrl.searchParams.get('owner'), owner);
+  assertEquals(parsedUrl.searchParams.get('contractAddresses[]'), contract);
+  assertEquals(parsedUrl.searchParams.get('pageSize'), '1');
 });
 
 Deno.test('getOwnersForNFT URL is constructed correctly', () => {
@@ -107,10 +109,12 @@ Deno.test('getOwnersForNFT URL is constructed correctly', () => {
   const baseUrl = `https://${networkSlug}.g.alchemy.com/nft/v3/${apiKey}`;
   const url = `${baseUrl}/getOwnersForNFT?contractAddress=${contract}&tokenId=${tokenId}`;
 
-  assertEquals(url.includes('getOwnersForNFT'), true);
-  assertEquals(url.includes(contract), true);
-  assertEquals(url.includes('tokenId=42'), true);
-  assertEquals(url.startsWith('https://polygon-mainnet.g.alchemy.com'), true);
+  const parsedUrl = new URL(url);
+  assertEquals(parsedUrl.protocol, 'https:');
+  assertEquals(parsedUrl.hostname, 'polygon-mainnet.g.alchemy.com');
+  assertEquals(parsedUrl.pathname, `/nft/v3/${apiKey}/getOwnersForNFT`);
+  assertEquals(parsedUrl.searchParams.get('contractAddress'), contract);
+  assertEquals(parsedUrl.searchParams.get('tokenId'), tokenId);
 });
 
 // ── Ownership check logic ─────────────────────────────────────────────────────

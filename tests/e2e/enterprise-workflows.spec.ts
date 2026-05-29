@@ -50,14 +50,17 @@ function generateCSRFToken(): string {
 
 /** Sanitize HTML to prevent XSS */
 function sanitizeHTML(text: string): string {
-  return text
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
-    .replaceAll(/javascript:/gi, '')
-    .replaceAll(/on\w+=/gi, '');
+  const entityMap: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+
+  return text.replaceAll(/[&<>"']/g, (character) => entityMap[character]);
 }
+
 
 /** Process operations with controlled concurrency */
 async function processInParallel<T>(
