@@ -2,29 +2,43 @@ import { createClient } from '@supabase/supabase-js';
 import {
   createSupabaseConfigTraceId,
   hasSupabaseConfigValue,
+  getSupabaseBrowserKeyKind,
   hasValidSupabaseUrl,
+  isBrowserSafeSupabaseKey,
 } from './supabaseConfig';
 
 const PLACEHOLDER_URL = 'https://placeholder.supabase.co';
 const PLACEHOLDER_KEY = 'placeholder-anon-key';
 
-function isValidKeyFormat(key: string): boolean {
-  return key.startsWith('eyJ') || key.startsWith('sb_publishable_');
-}
-
-const rawUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
+const rawUrl = (import.meta.env.VITE_SUPABASE_URL ?? '').trim();
 const supabaseUrl = hasValidSupabaseUrl(rawUrl) ? rawUrl : '';
 
 const rawKey =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  '';
-const supabaseAnonKey = isValidKeyFormat(rawKey) ? rawKey : '';
+  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+const keyKind = getSupabaseBrowserKeyKind(rawKey);
+const supabaseAnonKey = isBrowserSafeSupabaseKey(rawKey) ? rawKey : '';
 
 const isValidSupabaseUrl = hasValidSupabaseUrl(supabaseUrl);
 
 export const hasSupabaseConfig = hasSupabaseConfigValue(supabaseUrl, supabaseAnonKey);
 export const supabaseConfigTraceId = createSupabaseConfigTraceId();
+
+const urlHost = (() => {
+  if (!supabaseUrl) return '';
+  try {
+    return new URL(supabaseUrl).host;
+  } catch {
+    return '';
+  }
+})();
+
+export const supabaseConfigStatus = {
+  hasUrl: Boolean(supabaseUrl),
+  hasKey: Boolean(supabaseAnonKey),
+  urlHost,
+  keyKind,
+  traceId: supabaseConfigTraceId,
+};
 
 if (!hasSupabaseConfig) {
   console.error(
