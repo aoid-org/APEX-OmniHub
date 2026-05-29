@@ -48,7 +48,7 @@ export interface DurableIdempotencyStore {
 /* ------------------------------------------------------------------ */
 
 class InMemoryIdempotencyStore implements DurableIdempotencyStore {
-  private store = new Map<string, IdempotencyRecord>();
+  private readonly store = new Map<string, IdempotencyRecord>();
 
   async get(key: string): Promise<IdempotencyRecord | null> {
     return this.store.get(key) ?? null;
@@ -77,8 +77,20 @@ class InMemoryIdempotencyStore implements DurableIdempotencyStore {
   }
 
   async deletePending(key: string): Promise<boolean> {
+    return this.deletePendingSync(key);
+  }
+
+  getSync(key: string): IdempotencyRecord | undefined {
+    return this.store.get(key);
+  }
+
+  setSync(key: string, record: IdempotencyRecord): void {
+    this.store.set(key, record);
+  }
+
+  deletePendingSync(key: string): boolean {
     const record = this.store.get(key);
-    if (!record || record.state !== IdempotencyState.PENDING) return false;
+    if (record?.state !== IdempotencyState.PENDING) return false;
     this.store.delete(key);
     return true;
   }
@@ -118,7 +130,7 @@ export function acquire(
   // Synchronous shim over the in-memory store for backward compat.
   // The in-memory store ops are synchronous by nature; Promise.resolve wraps are transparent.
   const inMem = _store as InMemoryIdempotencyStore;
-  const existing = inMem['store']?.get(key);
+  const existing = inMem.getSync(key);
   if (existing) return { isNew: false, record: existing };
 
   const record: IdempotencyRecord = {
@@ -126,7 +138,7 @@ export function acquire(
     state: IdempotencyState.PENDING,
     createdAt: new Date().toISOString(),
   };
-  inMem['store']?.set(key, record);
+  inMem.setSync(key, record);
   return { isNew: true, record };
 }
 
@@ -136,9 +148,9 @@ export function acquire(
  */
 export function commit(key: string, result?: unknown): boolean {
   const inMem = _store as InMemoryIdempotencyStore;
-  const record = inMem['store']?.get(key);
+  const record = inMem.getSync(key);
   if (!record || record.state !== IdempotencyState.PENDING) return false;
-  inMem['store']?.set(key, {
+  inMem.setSync(key, {
     ...record,
     state: IdempotencyState.COMPLETED,
     completedAt: new Date().toISOString(),
@@ -153,10 +165,9 @@ export function commit(key: string, result?: unknown): boolean {
  */
 export function rollback(key: string): boolean {
   const inMem = _store as InMemoryIdempotencyStore;
-  const record = inMem['store']?.get(key);
+  const record = inMem.getSync(key);
   if (!record || record.state !== IdempotencyState.PENDING) return false;
-  inMem['store']?.delete(key);
-  return true;
+  return inMem.deletePendingSync(key);
 }
 
 /**
@@ -165,7 +176,7 @@ export function rollback(key: string): boolean {
  */
 export function lookup(key: string): IdempotencyRecord | undefined {
   const inMem = _store as InMemoryIdempotencyStore;
-  return inMem['store']?.get(key);
+  return inMem.getSync(key);
 }
 
 /* ------------------------------------------------------------------ */

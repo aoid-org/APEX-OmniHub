@@ -80,7 +80,7 @@ export async function executeTool(
   }
 
   // 2. Idempotency check
-  const lock = ChronosLock.acquire(idempotencyKey);
+  const lock = await ChronosLock.acquireAsync(idempotencyKey, { toolName, deviceId: device.deviceId });
   if (!lock.isNew) {
     return {
       success: true,
@@ -95,7 +95,7 @@ export async function executeTool(
   try {
     rawResult = await _toolRunner(toolName, args);
   } catch (err: unknown) {
-    ChronosLock.rollback(idempotencyKey);
+    await ChronosLock.rollbackAsync(idempotencyKey);
     const msg =
       err instanceof Error ? err.message : 'Tool execution failed';
     return { success: false, callId, output: null, error: msg };
@@ -104,7 +104,7 @@ export async function executeTool(
   // 4. Validate output
   const validation = Veritas.validate(toolName, rawResult);
   if (!validation.valid) {
-    ChronosLock.rollback(idempotencyKey);
+    await ChronosLock.rollbackAsync(idempotencyKey);
     return {
       success: false,
       callId,
@@ -114,7 +114,7 @@ export async function executeTool(
   }
 
   // 5. Commit
-  ChronosLock.commit(idempotencyKey, rawResult);
+  await ChronosLock.commitAsync(idempotencyKey, rawResult);
 
   return { success: true, callId, output: rawResult };
 }

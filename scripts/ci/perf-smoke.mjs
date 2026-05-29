@@ -3,9 +3,9 @@
  * Enforces basic SLO budgets for build size and simulated execution latency.
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -83,7 +83,9 @@ async function run() {
   process.exit(0);
 }
 
-run().catch(err => {
+try {
+  await run();
+} catch (err) {
   console.error(err);
   process.exit(1);
-});
+}

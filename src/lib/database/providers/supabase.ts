@@ -76,10 +76,10 @@ export class SupabaseDatabase implements IDatabase {
           )
           break
         case 'like':
-          q = q.like(filter.column, filter.value as string)
+          q = q.like(filter.column, String(filter.value))
           break
         case 'ilike':
-          q = q.ilike(filter.column, filter.value as string)
+          q = q.ilike(filter.column, String(filter.value))
           break
         default:
           console.warn(`[SupabaseDatabase] Unknown operator: ${filter.operator}`)

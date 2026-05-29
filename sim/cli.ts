@@ -47,17 +47,17 @@ function parseArgs(): CLIOptions {
     if (arg === '--mode') {
       options.mode = args[++i] as CLIOptions['mode'];
     } else if (arg === '--seed') {
-      options.seed = parseInt(args[++i]);
+      options.seed = Number.parseInt(args[++i]);
     } else if (arg === '--chaos') {
       options.chaos = args[++i] as CLIOptions['chaos'];
     } else if (arg === '--beats') {
-      options.beats = parseInt(args[++i]);
+      options.beats = Number.parseInt(args[++i]);
     } else if (arg === '--scenario') {
       options.scenario = args[++i];
     } else if (arg === '--rate') {
-      options.rate = parseInt(args[++i]);
+      options.rate = Number.parseInt(args[++i]);
     } else if (arg === '--duration') {
-      options.duration = parseInt(args[++i]);
+      options.duration = Number.parseInt(args[++i]);
     } else if (arg === '--validate') {
       options.validate = true;
     }
@@ -82,7 +82,7 @@ function getFullStoryBeats(): Beat[] {
         from: '+1-555-0123',
         to: '+1-555-BOUTIQUE',
         timestamp: new Date().toISOString(),
-      } as CallReceivedPayload,
+      } satisfies CallReceivedPayload,
       target: ['omnihub', 'jubeelove'],
       expectedOutcome: 'Call logged despite duplicate',
       observability: 'agent_runs table',
@@ -173,7 +173,7 @@ function getFullStoryBeats(): Beat[] {
         scheduledFor: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
         serviceType: 'Pickup - Repaired Jacket',
         notes: 'Zipper and lining repair completed',
-      } as AppointmentScheduledPayload,
+      } satisfies AppointmentScheduledPayload,
       target: ['omnihub', 'aspiral'],
       expectedOutcome: 'Appointment booked',
       observability: 'appointments table',

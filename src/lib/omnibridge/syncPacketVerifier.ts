@@ -57,24 +57,22 @@ function base64UrlToBytes(value: string): Uint8Array | null {
   }
 }
 
+const SYNC_PACKET_STRING_FIELDS = ['packet_id', 'trace_id', 'event_type', 'entity_type', 'emitted_at'] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasRequiredPacketStrings(packet: Record<string, unknown>): boolean {
+  return SYNC_PACKET_STRING_FIELDS.every((field) => typeof packet[field] === 'string' && packet[field].length > 0);
+}
+
 export function isSyncPacketEnvelope(value: unknown): value is SyncPacketEnvelope {
-  if (!value || typeof value !== 'object') return false;
-  const env = value as Record<string, unknown>;
-  const packet = env.packet;
-  const signature = env.signature;
-  if (typeof signature !== 'string' || signature.length === 0) return false;
-  if (!packet || typeof packet !== 'object') return false;
-  const p = packet as Record<string, unknown>;
-  if (typeof p.packet_id !== 'string' || p.packet_id.length === 0) return false;
-  if (typeof p.trace_id !== 'string' || p.trace_id.length === 0) return false;
-  if (typeof p.event_type !== 'string' || p.event_type.length === 0) return false;
-  if (typeof p.entity_type !== 'string' || p.entity_type.length === 0) return false;
-  if (typeof p.emitted_at !== 'string' || p.emitted_at.length === 0) return false;
-  if (!p.payload || typeof p.payload !== 'object' || Array.isArray(p.payload)) return false;
-  // Optional-but-typed fields
-  if (p.entity_id !== null && typeof p.entity_id !== 'string') return false;
-  if (p.league_id !== null && typeof p.league_id !== 'string') return false;
-  return true;
+  if (!isRecord(value) || typeof value.signature !== 'string' || value.signature.length === 0) return false;
+  if (!isRecord(value.packet) || !hasRequiredPacketStrings(value.packet)) return false;
+  if (!isRecord(value.packet.payload)) return false;
+  return (value.packet.entity_id === null || typeof value.packet.entity_id === 'string')
+    && (value.packet.league_id === null || typeof value.packet.league_id === 'string');
 }
 
 /**

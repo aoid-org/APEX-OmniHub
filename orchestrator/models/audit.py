@@ -375,10 +375,10 @@ class AuditLogger:
             data = response.data
 
             return [AuditLogEntry(**(row if isinstance(row, dict) else {})) for row in data]
-        except Exception as e:
+        except Exception:
             import logging
 
-            logging.error(f"Failed to query audit events: {e}")
+            logging.exception("Failed to query audit events")
             return []
 
     def validate_integrity(self, events: list[AuditLogEntry]) -> bool:

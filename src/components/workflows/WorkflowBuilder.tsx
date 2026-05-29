@@ -81,7 +81,7 @@ export function WorkflowBuilder() {
         .eq('is_active', true)
         .order('created_at', { ascending: false });
       if (error) throw new Error(error.message);
-      return (data ?? []) as SkillRecord[];
+      return (data ?? []).map((skill) => skill);
     },
   });
 

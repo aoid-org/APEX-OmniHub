@@ -60,7 +60,7 @@ export async function handleReportIncident(
     .select('id')
     .single();
   if (error) return { ok: false, error: error.message };
-  return { ok: true, data: data as { id: string } };
+  return { ok: true, data };
 }
 
 // ── KPI Entry ─────────────────────────────────────────────────────────────────
