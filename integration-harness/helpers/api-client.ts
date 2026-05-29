@@ -23,5 +23,9 @@ export async function redeemSbblAccessCode(base: string, accessCode: string, gam
 export async function fetchOmniHubTelemetry(base: string, token: string, timeoutMs: number): Promise<JsonValue> {
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeoutMs);
   const res = await fetch(`${base}/api/telemetry/snapshot`, { headers: { Authorization: `Bearer ${token}` }, signal: ctl.signal });
-  clearTimeout(t); if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json();
+  clearTimeout(t);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+  return res.json();
 }

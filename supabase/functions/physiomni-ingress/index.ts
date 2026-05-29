@@ -19,8 +19,8 @@ import { createServiceClient } from '../_shared/supabaseClient.ts';
 import { RateLimiter } from '../_shared/rate-limiter.ts';
 
 // ── Threshold Constants ─────────────────────────────────────────────────────
-const VIBRATION_CRITICAL_THRESHOLD = 15.0;
-const VIBRATION_WARNING_THRESHOLD = 10.0;
+const VIBRATION_CRITICAL_THRESHOLD = 15;
+const VIBRATION_WARNING_THRESHOLD = 10;
 
 // ── Payload Schema ──────────────────────────────────────────────────────────
 
@@ -149,13 +149,19 @@ interface AlertEvaluation {
   message: string;
 }
 
+type AlertResponse = {
+  alert_id: string | null;
+  severity: AlertEvaluation['severity'];
+  alert_type: string;
+} | null;
+
 function evaluateThresholds(data: PhysiOmniPayload): AlertEvaluation {
   const absX = Math.abs(data.vibration_x);
   const absY = Math.abs(data.vibration_y);
   const absZ = Math.abs(data.vibration_z);
   const maxVibration = Math.max(absX, absY, absZ);
 
-  // Critical: any axis exceeds 15.0g → MAN_MODE escalation
+  // Critical: any axis exceeds 15g → MAN_MODE escalation
   if (absX > VIBRATION_CRITICAL_THRESHOLD) {
     return {
       shouldAlert: true,
@@ -165,14 +171,21 @@ function evaluateThresholds(data: PhysiOmniPayload): AlertEvaluation {
     };
   }
 
-  // Warning: any axis exceeds 10.0g
+  // Warning: any axis exceeds 10g
   if (maxVibration > VIBRATION_WARNING_THRESHOLD) {
-    const axis = absX > VIBRATION_WARNING_THRESHOLD ? 'x' : absY > VIBRATION_WARNING_THRESHOLD ? 'y' : 'z';
+    let axis: 'x' | 'y' | 'z' = 'z';
+    if (absX > VIBRATION_WARNING_THRESHOLD) {
+      axis = 'x';
+    } else if (absY > VIBRATION_WARNING_THRESHOLD) {
+      axis = 'y';
+    }
+    const vibrationKey: keyof PhysiOmniPayload = `vibration_${axis}`;
+    const vibrationValue = data[vibrationKey];
     return {
       shouldAlert: true,
       severity: 'warning',
       alertType: `vibration_warning_${axis}`,
-      message: `WARNING: vibration_${axis}=${data[`vibration_${axis}` as keyof PhysiOmniPayload]}g exceeds ${VIBRATION_WARNING_THRESHOLD}g warning threshold on ${data.device_serial}.`,
+      message: `WARNING: vibration_${axis}=${vibrationValue}g exceeds ${VIBRATION_WARNING_THRESHOLD}g warning threshold on ${data.device_serial}.`,
     };
   }
 
@@ -182,6 +195,45 @@ function evaluateThresholds(data: PhysiOmniPayload): AlertEvaluation {
     alertType: 'none',
     message: '',
   };
+}
+
+function buildAlertResponse(evaluation: AlertEvaluation, alertId: string | null): AlertResponse {
+  if (!evaluation.shouldAlert) return null;
+  return {
+    alert_id: alertId,
+    severity: evaluation.severity,
+    alert_type: evaluation.alertType,
+  };
+}
+
+async function parseJsonBody(req: Request, headers: Record<string, string>): Promise<{ body?: unknown; response?: Response }> {
+  try {
+    const raw = await req.text();
+    if (!raw) {
+      return { response: jsonResponse({ error: 'empty_body', message: 'Request body is empty' }, 400, headers) };
+    }
+    return { body: JSON.parse(raw) };
+  } catch {
+    return { response: jsonResponse({ error: 'invalid_json', message: 'Request body is not valid JSON' }, 400, headers) };
+  }
+}
+
+function rejectInvalidMethod(req: Request, headers: Record<string, string>): Response | null {
+  if (req.method === 'POST') return null;
+  return jsonResponse({ error: 'method_not_allowed', message: 'Only POST is accepted' }, 405, headers);
+}
+
+function enforceIngressGate(corsHeaders: Record<string, string>): Response | null {
+  const isLiveEnabled = Deno.env.get('PHYSIOMNI_LIVE_ENABLED') === 'true';
+  const isDemoEnabled = Deno.env.get('PHYSIOMNI_DEMO_ENABLED') !== 'false';
+  if (isLiveEnabled || isDemoEnabled) return null;
+  return jsonResponse({ error: 'ingress_disabled', message: 'PhysiOmni ingress is completely disabled' }, 403, corsHeaders);
+}
+
+function requiresLiveSignature(req: Request, corsHeaders: Record<string, string>): Response | null {
+  const isLiveEnabled = Deno.env.get('PHYSIOMNI_LIVE_ENABLED') === 'true';
+  if (!isLiveEnabled || req.headers.get('x-physiomni-signature')) return null;
+  return jsonResponse({ error: 'unauthorized', message: 'Signed telemetry required for live mode' }, 401, corsHeaders);
 }
 
 // ── Main Handler ────────────────────────────────────────────────────────────
@@ -195,34 +247,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return handlePreflight(req);
   }
 
-  // Only POST allowed
-  if (req.method !== 'POST') {
-    return jsonResponse(
-      { error: 'method_not_allowed', message: 'Only POST is accepted' },
-      405,
-      corsHeaders,
-    );
-  }
+  const methodError = rejectInvalidMethod(req, corsHeaders);
+  if (methodError) return methodError;
 
-  // Parse request body
-  let body: unknown;
-  try {
-    const raw = await req.text();
-    if (!raw) {
-      return jsonResponse(
-        { error: 'empty_body', message: 'Request body is empty' },
-        400,
-        corsHeaders,
-      );
-    }
-    body = JSON.parse(raw);
-  } catch {
-    return jsonResponse(
-      { error: 'invalid_json', message: 'Request body is not valid JSON' },
-      400,
-      corsHeaders,
-    );
-  }
+  const parsedBody = await parseJsonBody(req, corsHeaders);
+  if (parsedBody.response) return parsedBody.response;
+  const body = parsedBody.body;
 
   // Validate payload
   const validation = validatePayload(body);
@@ -243,16 +273,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const supabase = createServiceClient();
 
   // ── 0. Security, Rate Limiting & Gating ─────────────────────────────────────
-  const isLiveEnabled = Deno.env.get('PHYSIOMNI_LIVE_ENABLED') === 'true';
-  const isDemoEnabled = Deno.env.get('PHYSIOMNI_DEMO_ENABLED') !== 'false';
-
-  if (!isLiveEnabled && !isDemoEnabled) {
-    return jsonResponse(
-      { error: 'ingress_disabled', message: 'PhysiOmni ingress is completely disabled' },
-      403,
-      corsHeaders,
-    );
-  }
+  const gateError = enforceIngressGate(corsHeaders);
+  if (gateError) return gateError;
 
   try {
     await RateLimiter.checkLimit(supabase, data.device_serial, 60, 60);
@@ -265,14 +287,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   // Placeholder for HMAC signed telemetry validation & replay protection
-  const signature = req.headers.get('x-physiomni-signature');
-  if (isLiveEnabled && !signature) {
-    return jsonResponse(
-      { error: 'unauthorized', message: 'Signed telemetry required for live mode' },
-      401,
-      corsHeaders,
-    );
-  }
+  const signatureError = requiresLiveSignature(req, corsHeaders);
+  if (signatureError) return signatureError;
 
   // ── 1. Insert telemetry (idempotent via UNIQUE on device_serial + captured_at)
   const { error: telemetryError } = await supabase
@@ -354,10 +370,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
       // Non-blocking: telemetry was saved, alert escalation is best-effort
     } else {
       alertId = alertData?.id ?? null;
-      console.info(
-        `[physiomni-ingress] Alert escalated: severity=${evaluation.severity} ` +
-        `alert_id=${alertId} device=${data.device_serial} tenant=${data.tenant_id}`,
-      );
+      const alertLogMessage = [
+        `[physiomni-ingress] Alert escalated: severity=${evaluation.severity}`,
+        `alert_id=${alertId}`,
+        `device=${data.device_serial}`,
+        `tenant=${data.tenant_id}`,
+      ].join(' ');
+      console.info(alertLogMessage);
     }
   }
 
@@ -368,13 +387,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       status: 'ingested',
       device_serial: data.device_serial,
       captured_at: data.timestamp,
-      alert: evaluation.shouldAlert
-        ? {
-            alert_id: alertId,
-            severity: evaluation.severity,
-            alert_type: evaluation.alertType,
-          }
-        : null,
+      alert: buildAlertResponse(evaluation, alertId),
     },
     evaluation.severity === 'critical' ? 201 : 200,
     corsHeaders,

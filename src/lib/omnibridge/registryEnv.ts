@@ -20,7 +20,7 @@ export interface RegistryEnv {
   [key: string]: string | undefined;
 }
 
-const parseErrors = new WeakMap<object, Error | null>();
+const parseErrors = new WeakMap<RegistryEnv, Error | null>();
 
 function validateWebhookShape(w: Record<string, unknown>): boolean {
   if (typeof w.source_id !== 'string') return false;
@@ -55,33 +55,33 @@ function validateRecord(record: unknown): record is M2MClientRecord {
 function parseClients(env: RegistryEnv): M2MClientRecord[] | null {
   const raw = env.OMNIBRIDGE_M2M_CLIENTS;
   if (!raw) {
-    parseErrors.set(env as object, new Error('OMNIBRIDGE_M2M_CLIENTS is not configured'));
+    parseErrors.set(env, new Error('OMNIBRIDGE_M2M_CLIENTS is not configured'));
     return null;
   }
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) {
-      parseErrors.set(env as object, new Error('OMNIBRIDGE_M2M_CLIENTS must be a JSON array'));
+      parseErrors.set(env, new Error('OMNIBRIDGE_M2M_CLIENTS must be a JSON array'));
       return null;
     }
     const out: M2MClientRecord[] = [];
     for (const item of parsed) {
       if (!validateRecord(item)) {
-        parseErrors.set(env as object, new Error('Malformed client record'));
+        parseErrors.set(env, new Error('Malformed client record'));
         return null;
       }
       out.push(item);
     }
-    parseErrors.set(env as object, null);
+    parseErrors.set(env, null);
     return out;
   } catch (e) {
-    parseErrors.set(env as object, new Error(`Failed to parse OMNIBRIDGE_M2M_CLIENTS: ${e instanceof Error ? e.message : String(e)}`));
+    parseErrors.set(env, new Error(`Failed to parse OMNIBRIDGE_M2M_CLIENTS: ${e instanceof Error ? e.message : String(e)}`));
     return null;
   }
 }
 
 export function lastRegistryErrorFromEnv(env: RegistryEnv): Error | null {
-  return parseErrors.get(env as object) ?? null;
+  return parseErrors.get(env) ?? null;
 }
 
 export function resolveSyncPacketSourceFromEnv(

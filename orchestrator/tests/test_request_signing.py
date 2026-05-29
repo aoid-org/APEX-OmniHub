@@ -130,7 +130,7 @@ class TestVerifyRequest:
 
     def test_mismatched_trace_id(self):
         body = b'{"test":"data"}'
-        ts, tid, sig = _sign(trace_id="trace-1", body=body)
+        ts, _, sig = _sign(trace_id="trace-1", body=body)
         result = verify_request("POST", "/api/v1/goals", ts, "trace-2", sig, body)
         assert result == "signature_mismatch"
 

@@ -244,8 +244,7 @@ export async function runWWWCT(options: RunnerOptions): Promise<ReportBundle> {
   let blockedCount = 0;
   let totalScore = 0;
 
-  for (let i = 0; i < results.length; i++) {
-    const result = results[i];
+  for (const result of results) {
     if (result.status === 'passed') passedCount++;
     else if (result.status === 'failed') failedCount++;
     else if (result.status === 'blocked') blockedCount++;

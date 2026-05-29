@@ -120,10 +120,11 @@ describe('OmniSupportWidget', () => {
   describe('form submission', () => {
     it('submits and constructs mailto link correctly', () => {
       // Spy on location.href setter
-      const locationSetter = vi.spyOn(globalThis, 'location', 'get').mockReturnValue({
+      const mockLocation: Location = {
         ...globalThis.location,
         href: '',
-      } as Location);
+      };
+      const locationSetter = vi.spyOn(globalThis, 'location', 'get').mockReturnValue(mockLocation);
         Object.defineProperty(globalThis, 'location', {
         value: { href: '' },
         writable: true,

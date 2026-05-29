@@ -204,8 +204,7 @@ async function checkCache(
     }
 
     if (data) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const cachedData = data.data as any;
+      const cachedData = data.data;
       const hasEntitlement = cachedData?.balance > 0;
       return { hit: true, hasEntitlement, data: cachedData };
     }

@@ -35,7 +35,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SPRING_DAMPED, GPU_STYLE } from '@/lib/motionPresets';
 import { registerOmniAppShell } from '@/lib/OmniAppShell';
 import { sanitiseIframeUrl, getSandboxAttribute } from '@/lib/iframeOriginPolicy';
-import { ModuleRenderer } from './ModuleRenderer';
 import { DialogModeRenderer } from './OmniSpatialDialogRenderers';
 
 // Register the sandbox Custom Element on module load
@@ -62,23 +61,23 @@ function SpatialPayloadRenderer({ payload }: Readonly<{ payload: OmniModalConfig
     case 'media': {
       const isDemoMode = typeof process !== 'undefined' ? process.env.VITE_IS_DEMO_MODE === 'true' : false;
       const result = sanitiseIframeUrl(url, isDemoMode);
-      if (!result.allowed) {
+      if (result.allowed) {
         return (
-          <div className="flex h-full w-full flex-col items-center justify-center bg-destructive/10 text-destructive p-8 text-center">
-            <h3 className="text-lg font-semibold mb-2">Media Blocked</h3>
-            <p className="mb-4">This media source was blocked by the APEX Origin Policy.</p>
-            <p className="font-mono text-xs opacity-80 bg-background/50 p-2 rounded">Reason: {result.reason}</p>
-          </div>
+          <iframe
+            className="omni-spatial-iframe"
+            src={url}
+            allow="autoplay; encrypted-media"
+            title={payload.title}
+            sandbox={getSandboxAttribute(result.profile)}
+          />
         );
       }
       return (
-        <iframe
-          className="omni-spatial-iframe"
-          src={url}
-          allow="autoplay; encrypted-media"
-          title={payload.title}
-          sandbox={getSandboxAttribute(result.profile)}
-        />
+        <div className="flex h-full w-full flex-col items-center justify-center bg-destructive/10 text-destructive p-8 text-center">
+          <h3 className="text-lg font-semibold mb-2">Media Blocked</h3>
+          <p className="mb-4">This media source was blocked by the APEX Origin Policy.</p>
+          <p className="font-mono text-xs opacity-80 bg-background/50 p-2 rounded">Reason: {result.reason}</p>
+        </div>
       );
     }
     case 'editor':
@@ -469,4 +468,4 @@ export function OmniSpatialHost() {
 }
 
 // Re-export ModuleRenderer for consumers that previously imported it from here
-export { ModuleRenderer };
+export { ModuleRenderer } from './ModuleRenderer';
