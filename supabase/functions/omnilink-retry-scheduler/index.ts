@@ -68,7 +68,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Retry scheduler failed:", error);
-    return new Response(JSON.stringify({ error: "Retry scheduler failed" }), {
+    return new Response(JSON.stringify({ error: String(error) }), {
       headers: { "Content-Type": "application/json" },
       status: 500,
     });

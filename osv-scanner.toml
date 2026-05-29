@@ -1,0 +1,4 @@
+[[IgnoredVulns]]
+id = "GHSA-848j-6mx2-7j84"
+ignoreUntil = 2026-08-31
+reason = "No patched elliptic release exists as of 2026-05-29; finding is dev-only via Hardhat gas/network tooling and not shipped in production runtime bundles. Re-evaluate before expiry."
