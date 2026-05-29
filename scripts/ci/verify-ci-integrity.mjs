@@ -95,7 +95,7 @@ function parseJobDisplayNames(lines) {
       currentJob = jobMatch[2];
       continue;
     }
-    const nameMatch = line.match(/^\s+name:\s*(.+)$/);
+    const nameMatch = line.match(/^\s+name:(.*)$/);
     if (nameMatch && currentJob) {
       names.push({ jobId: currentJob, name: nameMatch[1].trim().replace(/^["']|["']$/g, "") });
       currentJob = null;
