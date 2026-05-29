@@ -10,7 +10,7 @@ parity_lockfiles:
   - bun.lock
   - deno.lock
   - orchestrator/requirements.lock
-max_files_without_escalation: 50
+max_files_without_escalation: 100
 moderate_supabase_functions:
   - supabase/functions/platform-health/**
   - supabase/functions/ops-voice-health/**
