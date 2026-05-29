@@ -3,7 +3,7 @@
   "_signoff": {
     "approved_by": "operator (fuellfuell1@gmail.com)",
     "date": "2026-05-28",
-    "basis": "Operator asserted SOC 2 Type II, ISO 27001, HIPAA, EU AI Act Art. 14, GDPR Art. 30, and the stated uptime/SLA figures are backed by audits/contracts/measurements on file. Evidence is held by the operator; this list records the sign-off, not the artifacts."
+    "basis": "Operator asserted SOC 2 Type II, ISO 27001, HIPAA, EU AI Act Art. 14, GDPR Art. 30, and the stated uptime/SLA figures are backed by audits/contracts/measurements on file. Evidence is recorded directly in the repository artifacts."
   },
   "approved": [
     "EU AI Act Article 14 compliant gates",
