@@ -145,7 +145,19 @@ class OmniAppShellElement extends HTMLElement {
       const isDemoMode = typeof process !== 'undefined' ? process.env.VITE_IS_DEMO_MODE === 'true' : false;
       const result = sanitiseIframeUrl(config.entryUrl, isDemoMode);
 
-      if (!result.allowed) {
+      if (result.allowed) {
+        // 2. Render as iframe inside shadow DOM for full isolation
+        const iframe = document.createElement('iframe');
+        iframe.className = 'omni-sandbox-iframe';
+        iframe.src = config.entryUrl;
+        iframe.title = config.title ?? 'Integration';
+
+        // 3. Apply profile-specific sandbox capabilities
+        const sandboxAttr = getSandboxAttribute(result.profile);
+        iframe.setAttribute('sandbox', sandboxAttr);
+
+        container.appendChild(iframe);
+      } else {
         // Blocked by policy — render security placeholder
         const placeholder = document.createElement('div');
         placeholder.className = 'omni-sandbox-placeholder';
@@ -163,18 +175,6 @@ class OmniAppShellElement extends HTMLElement {
         placeholder.appendChild(desc1);
         placeholder.appendChild(desc2);
         container.appendChild(placeholder);
-      } else {
-        // 2. Render as iframe inside shadow DOM for full isolation
-        const iframe = document.createElement('iframe');
-        iframe.className = 'omni-sandbox-iframe';
-        iframe.src = config.entryUrl;
-        iframe.title = config.title ?? 'Integration';
-        
-        // 3. Apply profile-specific sandbox capabilities
-        const sandboxAttr = getSandboxAttribute(result.profile);
-        iframe.setAttribute('sandbox', sandboxAttr);
-        
-        container.appendChild(iframe);
       }
     } else if (config.htmlContent) {
       // Render raw HTML inside shadow DOM

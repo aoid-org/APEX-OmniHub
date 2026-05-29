@@ -64,9 +64,9 @@ export function setupMonitoringTestEnv(): void {
   if (typeof document === 'undefined') {
     globalObj.document = {
       visibilityState: 'visible',
-      addEventListener: vi.fn() as unknown as (type: string, listener: EventListenerOrEventListenerObject) => void,
-      removeEventListener: vi.fn() as unknown as (type: string, listener: EventListenerOrEventListenerObject) => void,
-      dispatchEvent: vi.fn() as unknown as (event: Event) => boolean,
+      addEventListener: vi.fn<(type: string, listener: EventListenerOrEventListenerObject) => void>(),
+      removeEventListener: vi.fn<(type: string, listener: EventListenerOrEventListenerObject) => void>(),
+      dispatchEvent: vi.fn<(event: Event) => boolean>(),
     } as unknown as Document;
   }
 

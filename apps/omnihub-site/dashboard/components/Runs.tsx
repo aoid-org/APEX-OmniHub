@@ -30,7 +30,7 @@ function truncateWorkflowId(id: string): string {
   return `${id.slice(0, 10)}...${id.slice(-8)}`;
 }
 
-function formatPayload(data: Record<string, unknown> | null, maxLength: number = 500): string {
+function formatPayload(data: unknown, maxLength: number = 500): string {
   if (!data) return '(empty)';
   const str = JSON.stringify(data, null, 2);
   if (str.length <= maxLength) return str;
@@ -278,7 +278,7 @@ function RunDetailPanel({ workflowId }: { readonly workflowId: string }) {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <pre className="mt-2 text-xs bg-background p-3 rounded border overflow-x-auto max-h-48 overflow-y-auto">
-            {formatPayload(detail.replay_bundle as unknown as Record<string, unknown>, 2000)}
+            {formatPayload(detail.replay_bundle, 2000)}
           </pre>
         </CollapsibleContent>
       </Collapsible>

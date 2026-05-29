@@ -130,7 +130,7 @@ export async function showLocalNotification(payload: NotificationPayload): Promi
     ...(payload.actions ? { actions: payload.actions } : {}),
     ...(payload.image ? { image: payload.image } : {}),
   };
-  await registration.showNotification(payload.title, notificationOptions as NotificationOptions);
+  await registration.showNotification(payload.title, notificationOptions);
 
   void logAnalyticsEvent('push.notification.shown', {
     tag: payload.tag,

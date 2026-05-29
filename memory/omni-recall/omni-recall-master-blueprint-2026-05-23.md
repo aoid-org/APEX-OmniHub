@@ -1,13 +1,13 @@
 # Omni-Recall Master Blueprint
 
 Saved: 2026-05-23
-Status: Active operating blueprint for future GPT-based runs
+Status: Active operating blueprint for multi-agent AI runs (Claude Code primary runtime; Google Jules, Google Antigravity, OpenAI Codex, and Dependabot also commit to this repo)
 Purpose: Retroactive, low-noise, self-maintaining knowledge and preference system adapted to this runtime's real capabilities
 
 ## 1. Non-Negotiable Reality Check
 
 This blueprint is only valid if it distinguishes between:
-- Implementable now in this GPT agent runtime
+- Implementable now in this Claude Code / multi-agent runtime
 - Implementable later with added exports, connectors, or platform support
 
 The system must never imply global account scraping, hidden model-weight updates, or native always-on hooks unless those capabilities are actually available.
@@ -95,9 +95,9 @@ The target experience is "wind, not dashboard."
 - No bloated essays
 - Prefer precise directives over motivational language
 
-## 7. GPT Runtime Adaptation Rules
+## 7. Runtime Adaptation Rules
 
-This system is adapted for a GPT agent that does not control its own base model or platform hooks.
+This system is adapted for a Claude Code agent (one of several AI agents committing to this repo) that does not control its own base model or platform hooks.
 
 Therefore:
 - "Implement into the system" means durable memory plus future-run operating rules

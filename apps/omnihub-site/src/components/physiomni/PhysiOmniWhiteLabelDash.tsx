@@ -65,8 +65,8 @@ interface AlertEvent {
 
 // Cryptographically secure random helper to resolve S2245 security hotspots
 function getSecureRandom(): number {
-  const cryptoObj = typeof window !== 'undefined' ? window.crypto : (typeof globalThis !== 'undefined' ? globalThis.crypto : null);
-  if (cryptoObj && cryptoObj.getRandomValues) {
+  const cryptoObj = globalThis.crypto;
+  if (cryptoObj?.getRandomValues) {
     const array = new Uint32Array(1);
     cryptoObj.getRandomValues(array);
     return array[0] / 4294967296; // 2^32
@@ -80,8 +80,8 @@ function generateMockTelemetry(count: number): TelemetryPoint[] {
 
   for (let i = count - 1; i >= 0; i--) {
     const time = new Date(now - i * 5000);
-    const baseVibration = 2.0 + Math.sin(i * 0.3) * 1.5;
-    const spike = i === Math.floor(count * 0.7) ? 8.0 : 0;
+    const baseVibration = 2 + Math.sin(i * 0.3) * 1.5;
+    const spike = i === Math.floor(count * 0.7) ? 8 : 0;
 
     points.push({
       time: time.toLocaleTimeString('en-US', {
@@ -93,7 +93,7 @@ function generateMockTelemetry(count: number): TelemetryPoint[] {
       vibration_x: +(baseVibration + spike + getSecureRandom() * 0.5).toFixed(2),
       vibration_y: +(baseVibration * 0.8 + getSecureRandom() * 0.4).toFixed(2),
       vibration_z: +(baseVibration * 0.6 + getSecureRandom() * 0.3).toFixed(2),
-      temperature_c: +(42.0 + Math.sin(i * 0.1) * 3 + getSecureRandom() * 0.5).toFixed(1),
+      temperature_c: +(42 + Math.sin(i * 0.1) * 3 + getSecureRandom() * 0.5).toFixed(1),
     });
   }
 
@@ -141,7 +141,7 @@ const INITIAL_EVENTS: AlertEvent[] = [
 
 // ── Severity Badge Component ────────────────────────────────────────────────
 
-function SeverityBadge({ severity }: { severity: AlertEvent['severity'] }) {
+function SeverityBadge({ severity }: Readonly<{ severity: AlertEvent['severity'] }>) {
   const config = {
     critical: {
       icon: AlertTriangle,
@@ -184,7 +184,7 @@ export default function PhysiOmniWhiteLabelDash({
   tenantLogoUrl,
   brandHexColor,
   tenantId,
-}: PhysiOmniWhiteLabelDashProps) {
+}: Readonly<PhysiOmniWhiteLabelDashProps>) {
   const [telemetryData] = useState<TelemetryPoint[]>(() => generateMockTelemetry(60));
   const [events, setEvents] = useState<AlertEvent[]>(INITIAL_EVENTS);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');

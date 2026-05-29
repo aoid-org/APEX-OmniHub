@@ -15,6 +15,8 @@ It exists to reduce rediscovery, preserve durable project and preference memory,
 - Runtime: Claude Code (ephemeral container; git repo is durable persistence)
 - Session-load hook: repo root CLAUDE.md §29
 - Historical backfill: pending external exports
+- Multi-agent repo (verified 2026-05-29): Google Jules, Google Antigravity, OpenAI Codex, Dependabot also commit here — never assume Claude is the sole author.
+- Last verified: 2026-05-29 · HEAD `d1e83b0` · branch `claude/peaceful-volta-FFsX3`
 
 ## Non-Negotiable Rules
 

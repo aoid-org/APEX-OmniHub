@@ -70,7 +70,7 @@ const HARDCODED_TIMEOUT_MS = 3_000;
  * Returns null when required values aren't set — caller decides how to fail.
  */
 function readSupabaseConfig(env: EventStoreEnv | undefined): { url: string; serviceKey: string } | null {
-  const source: EventStoreEnv = env ?? (typeof process !== 'undefined' ? process.env as EventStoreEnv : {});
+  const source = env ?? (typeof process !== 'undefined' ? process.env : {});
   const url = source.SUPABASE_URL ?? source.VITE_SUPABASE_URL;
   const serviceKey = source.SUPABASE_SERVICE_ROLE_KEY;
   if (url && serviceKey) return { url, serviceKey };

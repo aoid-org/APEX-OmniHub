@@ -117,21 +117,18 @@ async function signCommand(command, secret) {
 }
 
 // Mirror of APEX-OmniHub/src/lib/omnibridge/syncPacketVerifier.ts::isSyncPacketEnvelope
+const REQUIRED_SYNC_FIELDS = ['packet_id', 'trace_id', 'event_type', 'entity_type', 'emitted_at'];
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
 function isSyncPacketEnvelope(value) {
-  if (!value || typeof value !== 'object') return false;
-  const env = value;
-  if (typeof env.signature !== 'string' || env.signature.length === 0) return false;
-  const p = env.packet;
-  if (!p || typeof p !== 'object') return false;
-  if (typeof p.packet_id !== 'string' || p.packet_id.length === 0) return false;
-  if (typeof p.trace_id !== 'string' || p.trace_id.length === 0) return false;
-  if (typeof p.event_type !== 'string' || p.event_type.length === 0) return false;
-  if (typeof p.entity_type !== 'string' || p.entity_type.length === 0) return false;
-  if (typeof p.emitted_at !== 'string' || p.emitted_at.length === 0) return false;
-  if (!p.payload || typeof p.payload !== 'object' || Array.isArray(p.payload)) return false;
-  if (p.entity_id !== null && typeof p.entity_id !== 'string') return false;
-  if (p.league_id !== null && typeof p.league_id !== 'string') return false;
-  return true;
+  const packet = isPlainObject(value) ? value.packet : null;
+  return isPlainObject(packet)
+    && typeof value.signature === 'string'
+    && value.signature.length > 0
+    && REQUIRED_SYNC_FIELDS.every((field) => typeof packet[field] === 'string' && packet[field].length > 0)
+    && isPlainObject(packet.payload)
+    && [packet.entity_id, packet.league_id].every((field) => field === null || typeof field === 'string');
 }
 
 async function verifySyncPacket(envelope, secret, maxSkewSeconds = 300) {
