@@ -249,7 +249,7 @@ async def submit_workflow(goal: str, user_id: str = "test-user") -> None:
         result = await handle.result()
         logger.info(f"✅ Workflow completed: {result}")
     except Exception as e:
-        logger.error(f"❌ Workflow failed: {str(e)}")
+        logger.exception(f"❌ Workflow failed: {str(e)}")
         raise
 
 

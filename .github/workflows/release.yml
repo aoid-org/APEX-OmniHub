@@ -1,8 +1,9 @@
-name: Release
+name: Clean-Room Final Certification
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -46,31 +47,10 @@ jobs:
       - name: Run Release verification suite
         run: bun run verify:release
 
-      - name: Create Release PR or Publish
-        id: changesets
-        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1
-        with:
-          publish: npm run release
-          title: "chore: version packages"
-          commit: "chore: version packages [skip ci]"
-          createGithubReleases: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # This repo is private (package.json "private": true), so changesets/action
-      # will never set published == 'true'. Detect a version release by checking
-      # whether packages were published (public repo path) OR the commit that
-      # triggered this run is the version-PR merge commit (private repo path).
-      # NOTE: commit subject is read from git directly (not from the event payload)
-      # to avoid script-injection from user-controlled github.event.head_commit.message.
       - name: Detect release cut
         id: release_signal
-        env:
-          CHANGESETS_PUBLISHED: ${{ steps.changesets.outputs.published }}
         run: |
-          if [ "$CHANGESETS_PUBLISHED" = "true" ]; then
-            echo "release_cut=true" >> "$GITHUB_OUTPUT"
-          elif git log -1 --format="%s" | grep -qF "chore: version packages"; then
+          if git log -1 --format="%s" | grep -qF "chore: version packages"; then
             echo "release_cut=true" >> "$GITHUB_OUTPUT"
           else
             echo "release_cut=false" >> "$GITHUB_OUTPUT"
@@ -205,7 +185,7 @@ jobs:
           VALIDATOR_RAW: ${{ steps.validator.outputs.validator_result || 'skipped' }}
           TF_RESULT_RAW: ${{ steps.tf_plan.outputs.tf_plan_result || 'skipped' }}
           TF_OUTCOME_RAW: ${{ steps.tf_plan.outcome || 'skipped' }}
-          PUBLISHED_RAW: ${{ steps.changesets.outputs.published || 'false' }}
+          PUBLISHED_RAW: 'false'
           RELEASE_CUT_RAW: ${{ steps.release_signal.outputs.release_cut || 'false' }}
         run: node scripts/ci/write-release-evidence.mjs
 

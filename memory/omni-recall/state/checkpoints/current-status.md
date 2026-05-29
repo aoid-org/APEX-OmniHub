@@ -1,13 +1,13 @@
 # Current Status
 
-- date: 2026-05-23
-- omni_recall_status: installed
+- date: 2026-05-28
+- omni_recall_status: active
 - installation_path: memory/omni-recall/ (APEX-OmniHub repo)
 - runtime: claude-code-ephemeral-container
 - persistence_mechanism: git-commit-push
 - session_load_hook: repo-CLAUDE.md-section-29
 - historical_backfill_status: pending_external_exports
-- correction_ledger_status: active_template_seeded
+- correction_ledger_status: active (entry added 2026-05-28: fake-pass gate detection)
 - source_index_status: active
 - canonical_blueprint_status: active
 - full_folder_shape_status: complete
