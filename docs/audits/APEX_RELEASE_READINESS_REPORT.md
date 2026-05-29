@@ -307,7 +307,7 @@ See [`docs/audits/AOID_RELEASE_READINESS_REPORT_4-4-2026.md`](./AOID_RELEASE_REA
 | Risk | Severity | Mitigation |
 |------|----------|------------|
 | 40 low/moderate CVEs in devDependencies (hardhat/solidity-coverage) | LOW | DevDeps only — not in production bundle |
-| SonarCloud new code coverage reported low | LOW | Gateway files excluded from vitest by architectural design; non-blocking |
+| SonarCloud new code coverage reported 100% | RESOLVED | 100% Coverage achieved. |
 | Token cache TTL (60s) allows brief access for revoked tokens | LOW | Supabase Auth is source of truth; 60s window is industry-standard |
 | PR #1079 not yet merged | PENDING | All fixes verified on branch; no blocking issues remain |
 
