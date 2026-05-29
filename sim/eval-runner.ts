@@ -528,8 +528,8 @@ export async function runEvaluation(fixturesDir: string): Promise<EvalReport> {
     // counting via a loop is less brittle if the pass_rate calculation ever changes.
     let passedCount = 0;
     let failedCount = 0;
-    for (let i = 0; i < results.length; i++) {
-        if (results[i].passed) passedCount++;
+    for (const result of results) {
+        if (result.passed) passedCount++;
         else failedCount++;
     }
 

@@ -155,7 +155,7 @@ describe('supabaseConfigTraceId generation (runtime)', () => {
 });
 
 
-function RuntimeLoginHarness({ signInWithPassword }: { signInWithPassword: () => Promise<{ error: { message: string } | null }> }) {
+function RuntimeLoginHarness({ signInWithPassword }: Readonly<{ signInWithPassword: () => Promise<{ error: { message: string } | null }> }>) {
   const [error, setError] = useState('');
   const traceId = 'cfg-test123';
 

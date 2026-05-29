@@ -75,7 +75,7 @@ echo ""
 
 # ── 3. POST with bad credentials ──────────────────────────────────────────
 info "Step 3: POST (intentionally bad credentials)"
-if [ -z "$KEY" ]; then
+if [[ -z "$KEY" ]]; then
   info "ANON_KEY not set — skipping POST probe (set ANON_KEY env var to enable)"
   POST_PASS=1
 else
@@ -102,7 +102,7 @@ echo ""
 
 # ── Summary ────────────────────────────────────────────────────────────────
 echo "=== Summary ==="
-if [ "$OPTIONS_PASS" -eq 0 ] && [ "$POST_PASS" -eq 0 ]; then
+if [[ "$OPTIONS_PASS" -eq 0 && "$POST_PASS" -eq 0 ]]; then
   pass "CORS headers present on OPTIONS and POST. Login should work once credentials are valid."
   exit 0
 else

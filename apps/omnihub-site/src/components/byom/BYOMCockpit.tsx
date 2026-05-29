@@ -33,7 +33,7 @@ export const BYOMCockpit = memo(function BYOMCockpit() {
           .select('id, provider_name, status, model_id, connected_at')
           .order('provider_name');
         if (!cancelled && data) {
-          setConnections(data as ProviderConnection[]);
+          setConnections(data);
         }
       } finally {
         if (!cancelled) setLoading(false);

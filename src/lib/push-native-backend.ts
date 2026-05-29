@@ -13,7 +13,7 @@ export async function registerTokenWithBackend(token: string, platform: string):
     // Get device info with type assertions
     const { Device } = await import('@capacitor/device');
     const deviceInfo = await Device.getInfo() as unknown as { appVersion: string; osVersion: string; model: string };
-    const deviceId = await Device.getId() as { identifier: string };
+    const deviceId = await Device.getId();
 
     // Upsert token
     const { error } = await supabase.rpc('upsert_push_device_token', {

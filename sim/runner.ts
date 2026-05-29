@@ -544,7 +544,7 @@ export async function quickTest(scenario: string = 'Quick Test'): Promise<Simula
           outcome: 'answered',
           summary: 'Test call',
           actionItems: [],
-        } as CallCompletedPayload,
+        } satisfies CallCompletedPayload,
         expectedOutcome: 'Event processed successfully',
         observability: 'Check agent_runs table',
       },
