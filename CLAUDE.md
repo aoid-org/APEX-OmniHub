@@ -1,7 +1,7 @@
 # CLAUDE.md — APEX OmniHub Agent Operating Manual
 
 **Purpose:** Root operating context for Claude/agent sessions. Prevents hallucination, unsafe edits, and untraceable changes.
-**Last verified:** 2026-05-20 · main @ `a54bd7c`
+**Last verified:** 2026-05-29 · main @ `d1e83b0` (other agents — Jules, Antigravity, Codex, Dependabot — also move `main`; always verify HEAD with `git log`)
 **Critical rule:** Facts not verified from this file or an explicit user instruction → mark `[UNVERIFIED]`. If this file conflicts with a subsystem file, read that file before acting.
 
 **Self-update protocol (§28):** After every verified/validated workflow, append an entry to the §27 Completed Workflow Log and update affected fact tables in the relevant sections. Only write facts confirmed by direct code inspection or successful command output.
@@ -47,7 +47,7 @@
 | Unit/integration runner | Vitest | `vitest.config.ts` |
 | Python lint | Ruff, Python 3.11 target, line 88 | `pyproject.toml` |
 | Changeset access | `restricted` | `.changeset/config.json` |
-| Latest main commit | `a54bd7c` (2026-05-20) | git log |
+| Latest main commit | `d1e83b0` (2026-05-29) | git log |
 | Production URL | `https://apexomnihub.icu` | `.github/workflows/release.yml` env |
 | Cloudflare account ID | `0e1bce84773a0d1ce340145ea195e86f` | CI workflows (non-secret) |
 
