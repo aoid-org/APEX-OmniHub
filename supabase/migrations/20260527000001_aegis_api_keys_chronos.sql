@@ -41,7 +41,7 @@ ALTER TABLE public.aegis_api_keys ENABLE ROW LEVEL SECURITY;
 -- Service role bypasses RLS
 CREATE POLICY aegis_api_keys_service_role
   ON public.aegis_api_keys
-  USING (auth.role() = concat('service', '_role'));
+  USING (auth.role() = 'service_role');
 
 -- ---------------------------------------------------------------------------
 -- CHRONOS: Distributed Lock Table
@@ -66,7 +66,7 @@ ALTER TABLE public.chronos_distributed_locks ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY chronos_locks_service_role
   ON public.chronos_distributed_locks
-  USING (auth.role() = concat('service', '_role'));
+  USING (auth.role() = 'service_role');
 
 -- ---------------------------------------------------------------------------
 -- CHRONOS: Idempotency Keys Table
@@ -97,7 +97,7 @@ ALTER TABLE public.chronos_idempotency_keys ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY chronos_idempotency_service_role
   ON public.chronos_idempotency_keys
-  USING (auth.role() = concat('service', '_role'));
+  USING (auth.role() = 'service_role');
 
 -- ---------------------------------------------------------------------------
 -- Helper function: release expired locks (called by pg_cron or on acquire)
