@@ -19,7 +19,9 @@ export interface BaselineMetrics {
 export function computeBaseline(logs: ActivityLog[]): BaselineMetrics[] {
   const buckets = new Map<string, ActivityLog[]>();
 
-  for (const log of logs) {
+  // Use a fast for loop instead of .forEach
+  for (let i = 0; i < logs.length; i++) {
+    const log = logs[i];
     const key = `${log.userId}:${log.deviceId}`;
     let bucket = buckets.get(key);
     if (!bucket) {
