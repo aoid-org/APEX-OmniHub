@@ -2,7 +2,7 @@ import { useState, FormEvent, useEffect, useCallback } from 'react';
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { Section } from '@/components/Section';
-import { hasSupabaseConfig, supabase, supabaseConfigTraceId } from '@/lib/supabase';
+import { hasSupabaseConfig, supabase, supabaseConfigStatus, supabaseConfigTraceId } from '@/lib/supabase';
 import type { Provider } from '@supabase/supabase-js';
 
 const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL ?? '/omnidash';
@@ -35,6 +35,23 @@ function LogoFallback() {
   );
 }
 
+
+function isSupabaseAuthMisconfiguration(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('invalid api key') ||
+    normalized.includes('401') ||
+    normalized.includes('/auth/v1/token')
+  );
+}
+
+function toUserFacingAuthError(message: string): string {
+  if (isSupabaseAuthMisconfiguration(message)) {
+    return `Authentication is misconfigured. Contact an administrator. (Trace: ${supabaseConfigTraceId})`;
+  }
+  return message;
+}
+
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,6 +59,11 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<Provider | null>(null);
   const [logoError, setLogoError] = useState(false);
+
+  useEffect(() => {
+    if (import.meta.env.PROD) return;
+    console.info('[APEX OmniHub] Supabase config status', supabaseConfigStatus);
+  }, []);
 
   const handleOAuthSignIn = async (provider: Provider) => {
     if (!hasSupabaseConfig) {
@@ -58,7 +80,7 @@ export function LoginPage() {
         },
       });
       if (oauthError) {
-        setError(oauthError.message);
+        setError(toUserFacingAuthError(oauthError.message));
         setOauthLoading(null);
       }
     } catch {
@@ -134,7 +156,7 @@ export function LoginPage() {
       });
 
       if (authError) {
-        setError(authError.message);
+        setError(toUserFacingAuthError(authError.message));
         return;
       }
 

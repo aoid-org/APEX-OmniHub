@@ -141,6 +141,9 @@ export default defineConfig({
       // omnihub-site modules via '@/'. Do NOT align these — the split is load-bearing.
       'dashboard': path.resolve(__dirname, './apps/omnihub-site/dashboard'),
       '@/dashboard': path.resolve(__dirname, './apps/omnihub-site/dashboard'),
+      '@/components': path.resolve(__dirname, './apps/omnihub-site/src/components'),
+      '@/lib': path.resolve(__dirname, './apps/omnihub-site/src/lib'),
+      '@/pages': path.resolve(__dirname, './apps/omnihub-site/src/pages'),
       '@': path.resolve(__dirname, './src'),
       '@omnihub': path.resolve(__dirname, './apps/omnihub-site/src'),
       'react': path.resolve(__dirname, 'node_modules/react'),
