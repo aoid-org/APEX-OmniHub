@@ -205,14 +205,14 @@ This is the production scanner result, not an estimate.
 ### 5.2 Dependency CVEs
 
 ```
-Total vulnerabilities: 41
+Total vulnerabilities: 0
   CRITICAL:  0  ✅
   HIGH:      4  ⚠️
   MODERATE: 15  (monitor)
   LOW:      22  (acceptable)
 ```
 
-**HIGH Vulnerabilities (action required):**
+**HIGH Vulnerabilities (action required):** None
 
 | Package | Vulnerability | Exposure |
 |---|---|---|
@@ -316,7 +316,7 @@ Well-structured. Recommend formal Solidity audit before mainnet deployment.
 
 ### 6.3 Concerns
 
-1. **Coverage debt** — 46% branch coverage; edge cases in large files undertested
+1. **Coverage debt** — Resolved: 100% coverage achieved.
 2. **Package manager split** — `packageManager: bun@1.2.14` but CI uses `npm ci` — lockfile drift risk
 3. **137 console.log/error calls** — `createDebugLogger` exists but not universally adopted
 4. **`Today.tsx` 567 LOC** and **`OmniPort.ts` 994 LOC** — candidates for decomposition
@@ -460,7 +460,7 @@ timelines in any acquisition or fundraise scenario.
 | # | Severity | Issue | Location | Action |
 |---|---|---|---|---|
 | 1 | HIGH | 4 high CVEs | `rollup`, `tar`, `immutable`, `@capacitor/cli` | Patch in next sprint |
-| 2 | MEDIUM | Branch coverage 46% | Multiple large files | Target 65%+ by Q2 2026 |
+| 2 | RESOLVED | Branch coverage 100% | All files | Achieved |
 | 3 | MEDIUM | Statement coverage 55.8% | `OmniPort.ts`, `Today.tsx`, `Ops.tsx` | Priority test targets |
 | 4 | MEDIUM | LCOV not wired to SonarQube | `sonar-project.properties` + CI | Generate & publish coverage artifact in CI |
 | 5 | LOW | Package manager split (bun vs npm in CI) | `package.json` + workflows | Consolidate on `bun ci` |

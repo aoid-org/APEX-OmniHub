@@ -95,7 +95,7 @@ Deno.test('getNFTsForOwner URL is constructed correctly', () => {
   assertEquals(url.includes(owner), true);
   assertEquals(url.includes(contract), true);
   assertEquals(url.includes('pageSize=1'), true);
-  assertEquals(url.startsWith('https://eth-mainnet.g.alchemy.com'), true);
+  assertEquals(new URL(url).hostname, 'eth-mainnet.g.alchemy.com');
 });
 
 Deno.test('getOwnersForNFT URL is constructed correctly', () => {
@@ -110,7 +110,7 @@ Deno.test('getOwnersForNFT URL is constructed correctly', () => {
   assertEquals(url.includes('getOwnersForNFT'), true);
   assertEquals(url.includes(contract), true);
   assertEquals(url.includes('tokenId=42'), true);
-  assertEquals(url.startsWith('https://polygon-mainnet.g.alchemy.com'), true);
+  assertEquals(new URL(url).hostname, 'polygon-mainnet.g.alchemy.com');
 });
 
 // ── Ownership check logic ─────────────────────────────────────────────────────

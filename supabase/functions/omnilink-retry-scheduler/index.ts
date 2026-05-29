@@ -67,8 +67,9 @@ serve(async (req) => {
     }
 
   } catch (error) {
+    // Log full detail server-side; return a generic message so internals are not exposed.
     console.error("Retry scheduler failed:", error);
-    return new Response(JSON.stringify({ error: String(error) }), {
+    return new Response(JSON.stringify({ error: "retry_scheduler_failed" }), {
       headers: { "Content-Type": "application/json" },
       status: 500,
     });

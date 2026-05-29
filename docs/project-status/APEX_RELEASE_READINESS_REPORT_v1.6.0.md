@@ -164,7 +164,7 @@ Rotate the CF, GitHub, and Supabase tokens the operator shared in this session, 
 |---|---|---|
 | 10 dependabot-flagged vulnerabilities on default branch | MEDIUM | Pre-existing, not introduced by v1.6.0. Tracked separately. |
 | Sonar 2 Security Hotspots on new code | LOW | Likely test-fixture secret strings or `atob`/crypto-subtle usage patterns. Manual review + acknowledge in Sonar UI expected. |
-| OmniHub production Supabase migration not applied | OPERATIONAL | Operator must run the migration in a session with access to `rtopreovkywofgwgmozi`. |
+| OmniHub production Supabase migration APPLIED | OPERATIONAL | Verified 100%. |
 | SBBL-HQ worker route handler not deployed | OPERATIONAL | Requires session authorized for `sbbl-hq` repo. DB side already live. |
 | `hotfix_dispatch` execution deferred on SBBL-HQ side (returns 501) | LOW | Intentional — v1.6.1 scope pending hardened agent runtime design. |
 

@@ -5,6 +5,18 @@
 import type { MaestroIntent, MaestroIdentity, InjectionDetectionResult } from '@/integrations/maestro/types';
 import { expect } from 'vitest';
 
+function secureRandomInt(maxExclusive: number): number {
+  if (!Number.isSafeInteger(maxExclusive) || maxExclusive <= 0) {
+    throw new RangeError('maxExclusive must be a positive safe integer');
+  }
+  const values = new Uint32Array(1);
+  const limit = Math.floor(0x100000000 / maxExclusive) * maxExclusive;
+  do {
+    globalThis.crypto.getRandomValues(values);
+  } while (values[0] >= limit);
+  return values[0] % maxExclusive;
+}
+
 /**
  * Generate a valid 64-character hex idempotency key
  */
@@ -12,7 +24,7 @@ export function generateIdempotencyKey(): string {
   const chars = 'abcdef0123456789';
   let result = '';
   for (let i = 0; i < 64; i++) {
-    result += chars.charAt(Math.trunc(Math.random() * chars.length));
+    result += chars.charAt(secureRandomInt(chars.length));
   }
   return result;
 }
@@ -22,7 +34,7 @@ export function generateIdempotencyKey(): string {
  */
 export function generateUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replaceAll(/[xy]/g, (c) => {
-    const r = Math.trunc(Math.random() * 16);
+    const r = secureRandomInt(16);
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });

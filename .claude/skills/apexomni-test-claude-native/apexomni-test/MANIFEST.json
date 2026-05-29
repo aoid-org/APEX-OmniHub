@@ -1,0 +1,40 @@
+{
+  "name": "apexomni-test",
+  "version": "1.0.0",
+  "supersedes": ["omni-test", "webapp-testing"],
+  "type": "claude-native",
+  "license": "Proprietary - APEX Business Systems Ltd. Edmonton, AB, Canada. Copyright © 2026 All Rights Reserved",
+  "description": "20x omnipotent software testing intelligence. 48 test types. 10 execution modes. 20-item quality rubric. First-pass perfection.",
+  "activation": "automatic",
+  "archetype": "domain+guardian+toolkit",
+  "tools_required": ["bash_tool", "create_file", "str_replace", "view"],
+  "llm_agnostic": false,
+  "install_path": "/mnt/skills/user/apexomni-test/",
+  "install_command": "cp -r apexomni-test/ /mnt/skills/user/",
+  "compatibility": {
+    "claude": {
+      "versions": ["claude-3-5-sonnet", "claude-3-7-sonnet", "claude-opus-4", "claude-sonnet-4", "claude-haiku-4", "all future claude versions"],
+      "mode": "native",
+      "tools_required": ["bash_tool", "create_file", "str_replace", "view"]
+    }
+  },
+  "metrics": {
+    "test_types_covered": 48,
+    "execution_modes": 10,
+    "quality_rubric_items": 20,
+    "pitfalls_documented": 14,
+    "pre_test_checkpoints": 22,
+    "ai_llm_metrics": 15,
+    "security_layers": "OWASP Top 10 + CWE-25 + CVSS + STRIDE",
+    "performance_slo_tiers": "p50/p95/p99/p999",
+    "compliance_frameworks": ["GDPR", "SOC2 Type II", "HIPAA", "PCI-DSS", "ISO 27001"],
+    "mutation_score_target": "85% overall, 95% critical paths",
+    "flakiness_budget": "0.1% max tolerated flake rate",
+    "upgrade_factor": "20x vs omni-test v3.0"
+  },
+  "dag_hooks": {
+    "emits": ["test_suite_generated", "audit_complete", "strategy_complete", "ci_ready"],
+    "listens": ["code_ready", "pr_opened", "deploy_triggered"],
+    "compose_with": ["apex-qa", "omnidev-v2", "apex-master-debug", "apex-dev"]
+  }
+}

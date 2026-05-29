@@ -201,7 +201,7 @@ class OmniBoardService:
                 )
                 return response.status_code == 200
             except Exception as e:
-                logger.error(f"API key validation failed: {e}")
+                logger.exception(f"API key validation failed: {e}")
                 return False
 
     @classmethod
@@ -299,7 +299,7 @@ class OmniBoardService:
                 latency_ms = int((time.time() - start) * 1000)
                 ping_ok = response.status_code == 200
             except Exception as e:
-                logger.error(f"Ping failed: {e}")
+                logger.exception(f"Ping failed: {e}")
                 ping_ok = False
                 latency_ms = 0
 

@@ -310,7 +310,7 @@ export async function logAnalyticsEvent(
  * Log security event
  */
 export async function logSecurityEvent(
-  eventType: 'auth_failed' | 'rate_limit' | 'suspicious_activity' | 'csrf_attempt',
+  eventType: 'auth_failed' | 'rate_limit' | 'suspicious_activity' | 'csrf_attempt' | 'universal_sync_processed',
   details?: Record<string, unknown>
 ): Promise<void> {
   if (import.meta.env.DEV) {

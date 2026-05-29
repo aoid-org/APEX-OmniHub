@@ -150,7 +150,7 @@ class OmniHubConnector:
                 logger.warning(f"Unexpected claim response: {result}")
                 return None
         except aiohttp.ClientError as e:
-            logger.error(f"Claim task request failed: {e}")
+            logger.exception(f"Claim task request failed: {e}")
             raise
 
     async def complete_task(
@@ -249,7 +249,7 @@ class OmniHubConnector:
                     )
                     await asyncio.sleep(backoff)
                 else:
-                    logger.error(f"Request failed after {max_retries} attempts: {e}")
+                    logger.exception(f"Request failed after {max_retries} attempts: {e}")
                     raise
 
         raise OmniHubRetryExhaustedException("Retry loop exhausted without success")
@@ -315,7 +315,7 @@ class TaskWorker:
                 self.running = False
                 raise
             except Exception as e:
-                logger.error(f"Worker loop error: {e}", exc_info=True)
+                logger.exception(f"Worker loop error: {e}", exc_info=True)
                 await asyncio.sleep(poll_interval)
 
         logger.info("TaskWorker stopped")
@@ -357,7 +357,7 @@ class TaskWorker:
             )
 
         except Exception as e:
-            logger.error(f"Task {task_id} failed: {e}", exc_info=True)
+            logger.exception(f"Task {task_id} failed: {e}", exc_info=True)
             await self.connector.complete_task(
                 task_id=task_id,
                 status="failed",
