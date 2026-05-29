@@ -18,7 +18,7 @@ export const ConnectorKit = ({ integration, onConnect }: ConnectorKitProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const [generatedKey, setGeneratedKey] = useState<{ key: string; prefix: string } | null>(null);
 
-    const serverUrl = import.meta.env.VITE_SUPABASE_URL || 'https://api.apex-omnihub.com'; // Fallback or env
+    const serverUrl = import.meta.env.VITE_SUPABASE_URL || 'https://api.apexomnihub.icu'; // Fallback or env
     const publicUrl = import.meta.env.VITE_PUBLIC_URL || globalThis.location.origin;
 
     const handleGenerateKey = async () => {

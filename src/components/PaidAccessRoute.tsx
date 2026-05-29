@@ -174,7 +174,7 @@ const UpgradePrompt = ({ currentTier, requiredTier }: UpgradePromptProps) => {
           </div>
 
           <p className="text-xs text-center text-muted-foreground">
-            Questions? Contact support@omnihub.com
+            Questions? Contact info-outreach@apexomnihub.icu
           </p>
         </CardContent>
       </Card>
