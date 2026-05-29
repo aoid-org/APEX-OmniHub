@@ -288,7 +288,8 @@ class ResponseAnalyzer {
     }
   }
 
-  _evaluateTechnical(analysis, response, responseLower, isVague, jargonCount, questionCount, agentPayload, hasStructuredList) {
+  _evaluateTechnical(analysis, response, responseLower, technicalSignals, agentPayload) {
+    const { isVague, jargonCount, questionCount, hasStructuredList } = technicalSignals;
     if (jargonCount <= 2) {
       analysis.userExperienceScore += 1;
       analysis.technicalAccuracy += 1;
@@ -395,11 +396,13 @@ class ResponseAnalyzer {
       analysis,
       response,
       signals.responseLower,
-      signals.isVague,
-      signals.jargonCount,
-      signals.questionCount,
+      {
+        isVague: signals.isVague,
+        jargonCount: signals.jargonCount,
+        questionCount: signals.questionCount,
+        hasStructuredList: signals.hasStructuredList,
+      },
       agentPayload,
-      signals.hasStructuredList,
     );
     this._evaluateScenarioAndSkills(analysis, response, scenario, agentPayload, detectedSkills);
 

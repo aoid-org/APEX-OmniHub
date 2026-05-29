@@ -211,6 +211,38 @@ def _scan_file_errors(
     return errors
 
 
+def _is_scan_candidate(path: Path) -> bool:
+    """Resolve and validate a candidate path before content scanning."""
+    resolved = path.resolve()
+    return resolved.is_file() and str(resolved).startswith(str(ROOT))
+
+
+def _scan_paths(
+    paths_to_scan: Iterable[Path],
+    strict_docs: bool,
+    forbidden_names: list[str],
+    forbidden_patterns: list[str],
+    max_module_lines: int,
+    size_exempt_dirs: set[str],
+    size_exempt_paths: set[str],
+) -> tuple[int, list[str]]:
+    errors: list[str] = []
+    files_scanned = 0
+    for raw_path in paths_to_scan:
+        path = raw_path.resolve()
+        if not _is_scan_candidate(path):
+            continue
+        file_errors = _scan_file_errors(
+            path, strict_docs, forbidden_names, forbidden_patterns,
+            max_module_lines, size_exempt_dirs, size_exempt_paths,
+        )
+        if file_errors is None:
+            continue
+        files_scanned += 1
+        errors.extend(file_errors)
+    return files_scanned, errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="APEX policy check")
     parser.add_argument("--json", action="store_true", help="Emit JSON report on stdout")
@@ -227,28 +259,11 @@ def main() -> int:
     size_exempt_dirs: set[str] = set(config.get("size_exempt_dirs", []))
     size_exempt_paths: set[str] = set(config.get("size_exempt_paths", []))
 
-    errors: list[str] = []
-    files_scanned = 0
-
     paths_to_scan = args.files if args.files else ROOT.rglob("*")
-
-    for path in paths_to_scan:
-        # Resolve to absolute path relative to ROOT to ensure we can do relative_to later
-        path = path.resolve()
-        if not path.is_file():
-            continue
-        # Make sure path is under ROOT
-        if not str(path).startswith(str(ROOT)):
-            continue
-
-        file_errors = _scan_file_errors(
-            path, args.strict_docs, forbidden_names, forbidden_patterns,
-            max_module_lines, size_exempt_dirs, size_exempt_paths,
-        )
-        if file_errors is None:
-            continue
-        files_scanned += 1
-        errors.extend(file_errors)
+    files_scanned, errors = _scan_paths(
+        paths_to_scan, args.strict_docs, forbidden_names, forbidden_patterns,
+        max_module_lines, size_exempt_dirs, size_exempt_paths,
+    )
 
     if not args.files:
         errors.extend(check_rfc_completeness(ROOT, required_rfc_sections))

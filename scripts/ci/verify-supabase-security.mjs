@@ -29,7 +29,7 @@ if (!fs.existsSync(migrationsDir)) {
 const files = fs
   .readdirSync(migrationsDir)
   .filter((f) => f.endsWith(".sql"))
-  .sort();
+  .sort((a, b) => a.localeCompare(b));
 
 const created = new Map(); // schema.table -> first file that created it
 const rlsEnabled = new Set(); // schema.table

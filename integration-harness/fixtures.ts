@@ -54,5 +54,3 @@ export const test = base.extend<Fx>({
     await runFixture(await signInToken('INTEGRATION_FAN_EMAIL', 'INTEGRATION_FAN_PASSWORD'));
   },
 });
-
-export { expect };

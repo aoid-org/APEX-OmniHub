@@ -7,7 +7,7 @@ import '@/styles/landing.css';
 import homepageSchema from '../../public/schema/homepage.jsonld?raw';
 import organizationSchema from '../../public/schema/organization.jsonld?raw';
 
-function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
+function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
   return (
     <section className="hero hov-section">
       <div className="hero-glow-l"></div>
@@ -24,14 +24,14 @@ function HeroSection({ onOpenModal }: { onOpenModal: () => void }) {
             <div className="htile">DEDUCE</div>
           </div>
           <div className="hero-ctas rv d2">
-            <a
-              href="#"
+            <button
+              type="button"
               className="pill pill-lg"
               data-modal="request-access"
-              onClick={(e) => { e.preventDefault(); onOpenModal(); }}
+              onClick={onOpenModal}
             >
               Request Early Access
-            </a>
+            </button>
             <a href="/demo.html" className="pill pill-lg pill-ghost" data-cta="watch-demo">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <polygon points="5,3 13,8 5,13" fill="currentColor" opacity=".9" />
@@ -369,7 +369,7 @@ function TickerSection() {
     <div className="ticker">
       <div className="ticker-track">
         {doubledItems.map((item, idx) => (
-          <div key={idx} className="ticker-item">{item}<span className="ticker-dot">&middot;</span></div>
+          <div key={`${item}-${idx < items.length ? 'primary' : 'mirror'}`} className="ticker-item">{item}<span className="ticker-dot">&middot;</span></div>
         ))}
       </div>
     </div>
@@ -680,7 +680,7 @@ function CapabilitiesSection() {
           </div>
           <div className="cap-grid">
             {capabilities.map((cap, idx) => (
-              <div key={idx} className={`cap-card rv d${idx % 4}`}>
+              <div key={cap.title} className={`cap-card rv d${idx % 4}`}>
                 <div className="cap-ico">{cap.icon}</div>
                 <div className="cap-ttl">{cap.title}</div>
                 <div className="cap-dsc">{cap.desc}</div>
@@ -714,8 +714,8 @@ function MaestroSection() {
           <p style={{ fontSize: '13.5px', color: 'var(--t2)', lineHeight: '1.72', letterSpacing: '-.1px', textAlign: 'justify', textIndent: '2em' }}>Enterprise AI must serve your organization's intent. As the system scales, MAESTRO ensures authority scales with it.</p>
         </div>
         <div className="maestro-rows rv d2">
-          {rows.map((row, idx) => (
-            <div key={idx} className="m-row">
+          {rows.map((row) => (
+            <div key={row.l} className="m-row">
               <div className="m-l">{row.l}</div>
               <div>
                 <div className="m-word">{row.word}</div>
@@ -753,7 +753,7 @@ function EnterpriseSection() {
           </div>
           <div className="comp-grid">
             {cards.map((card, idx) => (
-              <div key={idx} className={`comp-card rv d${idx % 4}`}>
+              <div key={card.n} className={`comp-card rv d${idx % 4}`}>
                 <div className="comp-chk">&#10003;</div>
                 <div className="comp-n">{card.n}</div>
                 <div className="comp-d">{card.d}</div>
@@ -766,7 +766,7 @@ function EnterpriseSection() {
   );
 }
 
-function CTASection({ onOpenModal }: { onOpenModal: () => void }) {
+function CTASection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
   return (
     <section className="cta-sec hov-section" id="cta">
       <div className="cta-bg"></div>
@@ -776,13 +776,13 @@ function CTASection({ onOpenModal }: { onOpenModal: () => void }) {
         <h2 className="cta-h2 rv">Take operational<br />authority back.</h2>
         <p className="cta-sub rv d1">Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production.</p>
         <div className="cta-btns rv d2">
-          <a
-            href="#"
+          <button
+            type="button"
             className="pill pill-lg"
-            onClick={(e) => { e.preventDefault(); onOpenModal(); }}
+            onClick={onOpenModal}
           >
             Request Early Access
-          </a>
+          </button>
           <a href="/demo.html" className="pill pill-lg pill-ghost">Schedule a Demo</a>
         </div>
         <p className="cta-note rv d3">No vendor lock-in. No black boxes. No surprises.</p>
@@ -797,21 +797,21 @@ function RequestAccessModal({
   formStatus,
   formError,
   onSubmit
-}: {
+}: Readonly<{
   isOpen: boolean;
   onClose: () => void;
   formStatus: 'idle' | 'success';
   formError: string;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-}) {
+}>) {
   return (
-    <div
+    <dialog
       id="ra-modal"
       className={`modal-overlay ${isOpen ? 'open' : ''}`}
       aria-hidden={!isOpen}
-      role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
+      open={isOpen}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="modal-card">
@@ -850,7 +850,7 @@ function RequestAccessModal({
           <div className="modal-success-txt">We will be in touch shortly.</div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 

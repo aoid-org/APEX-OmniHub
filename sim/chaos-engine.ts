@@ -207,7 +207,7 @@ export class ChaosEngine {
       // Update EMA pipeline with current network delay if network latency is simulated
       // This allows the mathematical window to slide deterministically.
       if (latencies.length > 0) {
-        this.anomalyDetector.ingest({ latencyMs: latencies[latencies.length - 1], isError: errorCount > 0 });
+        this.anomalyDetector.ingest({ latencyMs: latencies.at(-1)!, isError: errorCount > 0 });
       }
     }
 

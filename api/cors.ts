@@ -77,82 +77,48 @@ export function isAllowedHost(hostname: string, allowlist: string[]): boolean {
  *   - IPv6 link-local:       fe80::/10
  *   - IPv6 ULA:              fc00::/7
  */
-export function isPrivateOrReservedIp(hostname: string): boolean {
-  // 1. Normalize the hostname using the URL parser's built-in IP normalization.
-  // This handles non-standard IPv4 formats (decimal, hex, dword) by converting
-  // them to canonical x.x.x.x form.
-  let h = hostname;
+function normalizeHostname(hostname: string): string | null {
   try {
-    const probe = h.includes(':') && !h.startsWith('[') ? `[${h}]` : h;
-    const url = new URL(`https://${probe}`);
-    h = url.hostname;
+    const probe = hostname.includes(':') && !hostname.startsWith('[') ? `[${hostname}]` : hostname;
+    const parsed = new URL(`https://${probe}`).hostname;
+    return parsed.startsWith('[') && parsed.endsWith(']') ? parsed.slice(1, -1) : parsed;
   } catch {
-    // If normalization fails, it's not a valid IP or hostname.
-    return false;
+    return null;
   }
+}
 
-  // Strip brackets from IPv6 literals, e.g. [::1] → ::1
-  const normalized = h.startsWith('[') && h.endsWith(']')
-    ? h.slice(1, -1)
-    : h;
+function ipv4FromEmbeddedIpv6(lower: string): string | null {
+  if (!lower.startsWith('::ffff:') && !lower.startsWith('::')) return null;
+  const parts = lower.split(':');
+  const lastPart = parts.at(-1) ?? '';
+  if (lastPart.includes('.')) return lastPart;
+  const hexParts = parts.slice(-2);
+  if (hexParts.length !== 2 || !hexParts.every((p) => /^[0-9a-f]{1,4}$/.test(p) || p === '')) return null;
+  const highPart = hexParts[0] === '' ? 0 : Number.parseInt(hexParts[0], 16);
+  const lowPart = hexParts[1] === '' ? 0 : Number.parseInt(hexParts[1], 16);
+  return `${(highPart >> 8) & 0xff}.${highPart & 0xff}.${(lowPart >> 8) & 0xff}.${lowPart & 0xff}`;
+}
 
-  // IPv6 checks
-  if (normalized.includes(':')) {
-    const lower = normalized.toLowerCase();
+function isReservedIpv6(normalized: string): boolean {
+  const lower = normalized.toLowerCase();
+  if (lower === '::1' || lower === '0:0:0:0:0:0:0:1') return true;
+  if (lower.startsWith('fe80') || lower.startsWith('fc') || lower.startsWith('fd')) return true;
+  const embeddedIpv4 = ipv4FromEmbeddedIpv6(lower);
+  return embeddedIpv4 ? isPrivateOrReservedIp(embeddedIpv4) : false;
+}
 
-    // Loopback (::1)
-    if (lower === '::1' || lower === '0:0:0:0:0:0:0:1') return true;
-
-    // Link-local (fe80::/10)
-    if (lower.startsWith('fe80')) return true;
-
-    // Unique Local Address (fc00::/7)
-    if (lower.startsWith('fc') || lower.startsWith('fd')) return true;
-
-    // IPv4-mapped IPv6 (::ffff:0:0/96) or IPv4-compatible (::0:0/96)
-    // We check if it embeds a private IPv4.
-    if (lower.startsWith('::ffff:') || lower.startsWith('::')) {
-      const parts = lower.split(':');
-      const lastPart = parts[parts.length - 1];
-
-      // Handle dot-notation: ::ffff:127.0.0.1
-      if (lastPart.includes('.')) {
-        return isPrivateOrReservedIp(lastPart);
-      }
-
-      // Handle hex-notation: ::ffff:7f00:1 (normalized from ::ffff:127.0.0.1)
-      const hexParts = parts.slice(-2);
-      if (hexParts.length === 2 && hexParts.every(p => /^[0-9a-f]{1,4}$/.test(p) || p === '')) {
-         const highPart = hexParts[0] === '' ? 0 : parseInt(hexParts[0], 16);
-         const lowPart = hexParts[1] === '' ? 0 : parseInt(hexParts[1], 16);
-         const a = (highPart >> 8) & 0xff;
-         const b = highPart & 0xff;
-         const c = (lowPart >> 8) & 0xff;
-         const d = lowPart & 0xff;
-         return isPrivateOrReservedIp(`${a}.${b}.${c}.${d}`);
-      }
-    }
-
-    return false;
-  }
-
-  // IPv4 check — must match x.x.x.x (already normalized by URL parser above)
-  const parts = normalized.split('.');
-  if (parts.length !== 4) return false;
-  const octets = parts.map(Number);
-  if (octets.some((o) => !Number.isInteger(o) || o < 0 || o > 255)) return false;
-
+function isReservedIpv4(normalized: string): boolean {
+  const octets = normalized.split('.').map(Number);
+  if (octets.length !== 4 || octets.some((o) => !Number.isInteger(o) || o < 0 || o > 255)) return false;
   const [a, b] = octets;
-  return (
-    a === 127 ||                              // loopback
-    a === 0 ||                               // reserved zero block
-    a === 10 ||                              // RFC 1918
-    (a === 172 && b >= 16 && b <= 31) ||    // RFC 1918
-    (a === 192 && b === 168) ||             // RFC 1918
-    (a === 169 && b === 254) ||             // link-local / metadata
-    (a === 100 && b >= 64 && b <= 127) ||   // shared address space
-    a >= 224                                 // multicast + reserved
-  );
+  return a === 127 || a === 0 || a === 10 || (a === 172 && b >= 16 && b <= 31)
+    || (a === 192 && b === 168) || (a === 169 && b === 254) || (a === 100 && b >= 64 && b <= 127) || a >= 224;
+}
+
+export function isPrivateOrReservedIp(hostname: string): boolean {
+  const normalized = normalizeHostname(hostname);
+  if (!normalized) return false;
+  return normalized.includes(':') ? isReservedIpv6(normalized) : isReservedIpv4(normalized);
 }
 
 // ---------------------------------------------------------------------------

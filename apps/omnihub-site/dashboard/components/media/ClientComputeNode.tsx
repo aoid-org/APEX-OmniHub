@@ -100,14 +100,18 @@ export const ClientComputeNode = forwardRef<ClientComputeNodeHandle>(
 
     if (!currentMedia || currentMedia.type === 'embed') return null;
 
-    const setMediaRef = (el: HTMLMediaElement | null) => {
+    const setVideoRef = (el: HTMLVideoElement | null) => {
+      mediaRef.current = el;
+    };
+
+    const setAudioRef = (el: HTMLAudioElement | null) => {
       mediaRef.current = el;
     };
 
     if (currentMedia.type === 'video') {
       return (
         <video
-          ref={setMediaRef as React.Ref<HTMLVideoElement>}
+          ref={setVideoRef}
           src={currentMedia.source}
           poster={currentMedia.poster}
           crossOrigin="anonymous"
@@ -122,7 +126,7 @@ export const ClientComputeNode = forwardRef<ClientComputeNodeHandle>(
 
     return (
       <audio
-        ref={setMediaRef as React.Ref<HTMLAudioElement>}
+        ref={setAudioRef}
         src={currentMedia.source}
         crossOrigin="anonymous"
         className="hidden"

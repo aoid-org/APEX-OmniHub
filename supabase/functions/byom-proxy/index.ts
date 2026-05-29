@@ -74,7 +74,7 @@ async function getProviderConfig(tenantId: string, provider: Provider): Promise<
     auth_secret_ref: `vault/byom/${provider}`,
     provider_type: provider === 'openai' ? 'openai-compatible' : 'anthropic-compatible',
     allowed_models: ['gpt-4', 'gpt-3.5-turbo', 'claude-3-sonnet'],
-    max_cost_usd: 10.0,
+    max_cost_usd: 10,
     max_latency_ms: 30000,
     retention_mode: 'ephemeral',
     pii_policy: 'redact',
