@@ -9,7 +9,7 @@
 **GO** for the verified build. Dependencies were installed and the **entire** gate suite was
 executed with real, observed exit codes (table below) — including the orchestrator Python
 suite (pytest 919 passed) and Playwright e2e (22 passed). All 11 CodeQL alerts are remediated.
-One deploy-time action remains: apply the PhysiOmni partition-RLS migration
+The PhysiOmni partition-RLS migration has been applied and verified
 (`20260528000000`) to the live database — a standard deployment step (the migration is
 written, verified statically by `verify:supabase-security`, and has a rollback). The 21
 compliance/SLA claims are operator-asserted as backed and recorded in `approved-claims.json`
