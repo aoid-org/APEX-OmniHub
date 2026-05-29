@@ -97,6 +97,14 @@ export function detectCycle(nodes: WorkflowNode[], edges: WorkflowEdge[]): boole
 const WORKFLOW_COLUMNS = 'id, user_id, name, definition, schedule, is_active, created_at, updated_at';
 const RUN_COLUMNS = 'id, workflow_id, user_id, status, logs, error_message, created_at, updated_at';
 
+function asWorkflow(row: Workflow): Workflow {
+  return row;
+}
+
+function asWorkflowRun(row: WorkflowRun): WorkflowRun {
+  return row;
+}
+
 export async function fetchWorkflows(userId: string): Promise<Workflow[]> {
   const { data, error } = await supabase
     .from('workflows')
@@ -105,7 +113,7 @@ export async function fetchWorkflows(userId: string): Promise<Workflow[]> {
     .order('updated_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return (data ?? []) as Workflow[];
+  return (data ?? []).map(asWorkflow);
 }
 
 export async function fetchWorkflow(workflowId: string): Promise<Workflow> {
@@ -116,7 +124,7 @@ export async function fetchWorkflow(workflowId: string): Promise<Workflow> {
     .single();
 
   if (error) throw new Error(error.message);
-  return data as Workflow;
+  return asWorkflow(data);
 }
 
 export async function saveWorkflow(
@@ -144,7 +152,7 @@ export async function saveWorkflow(
     .single();
 
   if (error) throw new Error(error.message);
-  return data as Workflow;
+  return asWorkflow(data);
 }
 
 export async function deleteWorkflow(workflowId: string): Promise<void> {
@@ -164,7 +172,7 @@ export async function createWorkflowRun(workflowId: string, userId: string): Pro
     .single();
 
   if (error) throw new Error(error.message);
-  return data as WorkflowRun;
+  return asWorkflowRun(data);
 }
 
 export async function fetchWorkflowRuns(workflowId: string): Promise<WorkflowRun[]> {
@@ -176,7 +184,7 @@ export async function fetchWorkflowRuns(workflowId: string): Promise<WorkflowRun
     .limit(20);
 
   if (error) throw new Error(error.message);
-  return (data ?? []) as WorkflowRun[];
+  return (data ?? []).map(asWorkflowRun);
 }
 
 // ---------------------------------------------------------------------------

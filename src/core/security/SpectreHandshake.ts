@@ -59,7 +59,7 @@ interface HeadersLike {
 }
 
 function isHeadersLike(source: HeaderSource): source is HeadersLike {
-  return typeof (source as HeadersLike).get === 'function';
+  return 'get' in source && typeof source.get === 'function';
 }
 
 function getHeader(source: HeaderSource, name: string): string | undefined {
@@ -67,7 +67,7 @@ function getHeader(source: HeaderSource, name: string): string | undefined {
     const val = source.get(name);
     return val ?? undefined;
   }
-  return (source as Record<string, string | undefined>)[name];
+  return source[name];
 }
 
 function hashSecret(secret: string): string {
@@ -103,7 +103,8 @@ export async function authenticate(
   const token = parts[1];
   
   // Format: ak_live_[tenantId]_[random32]
-  const match = token.match(/^ak_(live|test)_([a-zA-Z0-9]+)_([a-zA-Z0-9]{32,})$/);
+  const keyPattern = /^ak_(live|test)_([a-zA-Z0-9]+)_([a-zA-Z0-9]{32,})$/;
+  const match = keyPattern.exec(token);
   if (!match) {
     throw new SpectreAuthError('Invalid API key format');
   }

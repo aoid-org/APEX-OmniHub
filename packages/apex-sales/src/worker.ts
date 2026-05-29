@@ -203,8 +203,7 @@ function authenticate(request: Request, env: Env): Response | null {
 function replaceControlCharacters(value: string): string {
   let output = "";
 
-  for (let index = 0; index < value.length; index += 1) {
-    const char = value[index];
+  for (const char of value) {
     const code = value.codePointAt(index) ?? 0;
     output += code <= 31 || code === 127 ? " " : char;
   }
@@ -228,8 +227,7 @@ function collapseWhitespace(value: string): string {
   let output = "";
   let previousWasSpace = false;
 
-  for (let index = 0; index < value.length; index += 1) {
-    const char = value[index];
+  for (const char of value) {
     const currentIsSpace = isWhitespace(char);
     if (!currentIsSpace) {
       output += char;
@@ -272,8 +270,8 @@ function isEmailAddress(value: string): boolean {
   const domain = value.slice(atIndex + 1);
   if (
     domain.length < 3 ||
-    domain[0] === "." ||
-    domain[domain.length - 1] === "."
+    domain.startsWith(".") ||
+    domain.endsWith(".")
   )
     return false;
   if (!domain.includes(".")) return false;

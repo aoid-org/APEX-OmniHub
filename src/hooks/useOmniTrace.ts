@@ -42,7 +42,7 @@ export function useOmniTrace(workflowId?: string) {
 
       const { data, error } = await query;
       if (!error && data && mounted) {
-        setTraces(data as TraceEvent[]);
+        setTraces(data);
       }
       if (mounted) setIsTracing(false);
     };

@@ -64,7 +64,7 @@ function has422Error(error: unknown): boolean {
     typeof error === 'object' &&
     error !== null &&
     'status' in error &&
-    Number((error as { status: unknown }).status) === 422;
+    Number(error.status) === 422;
   const hasMessage422 = error instanceof Error && error.message.includes('422');
   return hasStatus422 || hasMessage422;
 }

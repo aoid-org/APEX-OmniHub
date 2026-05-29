@@ -19,7 +19,6 @@
 import {
   verifySyncPacket,
   isSyncPacketEnvelope,
-  type SyncPacketEnvelope,
 } from '../../../src/lib/omnibridge/syncPacketVerifier';
 import {
   resolveSyncPacketSourceFromEnv,
@@ -98,7 +97,7 @@ export const onRequestPost: OnRequestPost = async ({ request, env }) => {
     logEvent(true, 'invalid_envelope', { source_id: sourceId });
     return jsonResponse(400, { error: 'invalid_envelope' });
   }
-  const envelope = parsed as SyncPacketEnvelope;
+  const envelope = parsed;
 
   const replayKey = getHardenedReplayKey(sourceId, envelope.packet.packet_id);
   if (await replayStore.isDuplicate(replayKey)) {
