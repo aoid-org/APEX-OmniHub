@@ -55,13 +55,17 @@ function generateCSRFToken(): string {
  * payload), which is more complete than brittle scheme/event blocklist stripping.
  */
 function sanitizeHTML(text: string): string {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
+  const entityMap: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+
+  return text.replaceAll(/[&<>"']/g, (character) => entityMap[character]);
 }
+
 
 /** Process operations with controlled concurrency */
 async function processInParallel<T>(
