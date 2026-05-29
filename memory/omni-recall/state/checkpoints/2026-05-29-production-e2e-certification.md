@@ -34,7 +34,15 @@
 3. **Live-DB integration tests** (`tests/omnidash/paid-access-integration`, `admin-unification`) gate on `hasServiceKey` (real JWT service key + real URL). With a production service-role key in env they RUN and fail at an unreachable admin API (fetch failed in beforeEach) — no test body executes, no prod writes. Main CI `build-and-test` does not inject the service key, so they skip there. Certification run was repeated WITHOUT the service key → full green.
 4. **Chaos sim safety:** `sim/guard-rails.ts` hard-blocks production `.supabase.co` URLs; `sim/idempotency.ts` short-circuits all DB writes when `SIM_MODE=true`. Sim was run with production creds stripped from the subprocess and URL pointed at localhost — defense in depth.
 
-## Limitations (honest)
+## Authenticated E2E — GAP CLOSED (2026-05-29, later in session)
+- User supplied real OmniHub credentials; validated via signInWithPassword (token issued, email confirmed, role=authenticated).
+- Full Playwright suite re-run authenticated: **50/50 passed, 0 skipped** (chromium + mobile-chrome). The 6 previously-skipped auth specs (omniboard-wiring ×4, ops-widgets-smoke ×2) now execute.
+- Found + fixed one brittle test: `ops-widgets-smoke` asserted desktop-only right-rail testids on mobile; OmniDashShell renders those panels in the mobile insights drawer (`{isDesktop && ...}` line 1600 / drawer line 1660). Made the spec viewport-aware (commit `5d77eed`). Product behavior verified correct via screenshot — was a test bug, not a product defect.
+- Authenticated OmniDash screenshots captured (desktop + mobile): held on /omnidash, app-shell mounted, 0 fatal JS errors.
+- Credentials handled in /tmp only (mode 600), never committed; password absent from repo tree.
+
+## Remaining limitations (honest)
 - Full Armageddon Level-7 (10k iterations, Temporal worker + Supabase telemetry) NOT run — Temporal not provisioned in sandbox. CI-sim variant run instead, which self-labels as not-full-certification.
-- Authenticated post-auth UI interaction coverage (sidebar modules, drag/drop, OmniSlate) remains gap per route inventory; not executable without live auth in-sandbox.
+- Deeper authenticated interaction coverage (per-module modal content, drag/drop persistence, OmniSlate chat send) beyond the existing auth specs not yet automated — existing specs cover render + modal-open wiring.
 - Python `test:py` (pytest) requires orchestrator deps incl. `temporalio` (not installed); not run.
+- Branch merged main (now `dba09ec`) twice (local + UI); reconciled in merge `1ac8a04` preserving both agents' §27 facts.
