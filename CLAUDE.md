@@ -576,6 +576,7 @@ Append an entry here after every agent-completed, verified workflow. Format: `YY
 | 2026-05-20 | PR #1185 / `a54bd7c` | B-2 structural fix: decouple shadow deployment from npm publish for private packages; SonarCloud script injection fix | `.github/workflows/release.yml`, `scripts/ci/write-release-evidence.mjs` |
 | 2026-05-20 | PR #1187 / `191e547` | Certification status updated: B-2 structural fix documented, path-to-certified updated | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` |
 | 2026-05-23 | commit (branch) | Omni-Recall continuity system installed at `memory/omni-recall/`; session-load hook added to §29; all stale GPT-workspace paths corrected; full blueprint folder shape created | `memory/omni-recall/`, `CLAUDE.md` |
+| 2026-05-29 | branch `claude/peaceful-volta-FFsX3` / `6dd4ed4` | Production E2E certification: full local pipeline green (typecheck, lint, react-singleton, full Vitest 2546 passed/0 failed in CI-env, real prod build, Playwright 44 passed, asset smoke, armageddon CI PASS, chaos sim 100/100). Omni-Recall multi-agent drift corrected; CLAUDE.md HEAD refreshed to `d1e83b0`. | `memory/omni-recall/`, `CLAUDE.md` |
 
 ---
 
