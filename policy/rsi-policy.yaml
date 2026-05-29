@@ -39,6 +39,8 @@ critical_paths:
   - '!.github/workflows/apex-governance.yml'
   - '!.github/workflows/rsi-governance.yml'
   - '!.github/workflows/ci-runtime-gates.yml'
+  - '!.github/workflows/cd-staging.yml'
+  - '!.github/workflows/integration.yml'
   - '!.github/workflows/deploy-web3-functions.yml'
   - '!.github/workflows/mobile-build-verify.yml'
   - '!.github/workflows/orchestrator-ci.yml'
