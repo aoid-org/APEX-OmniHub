@@ -12,3 +12,13 @@
 - canonical_blueprint_status: active
 - full_folder_shape_status: complete
 - stale_path_references_fixed: true
+
+## Verified runtime facts (2026-05-29)
+
+- last_verified_date: 2026-05-29
+- last_verified_commit: d1e83b0
+- active_branch: claude/peaceful-volta-FFsX3
+- multi_agent_environment: true
+- known_non_claude_agents: [google-jules, google-antigravity, openai-codex, dependabot]
+- open_prs_noted: PR#1224 (replace fake-pass verify gates with real security scanners)
+- network_note: project Supabase host reachable; anonymous sign-ins disabled and no E2E creds, so authenticated UI E2E is environment-limited in-sandbox
