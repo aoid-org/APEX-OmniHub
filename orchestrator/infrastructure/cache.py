@@ -395,7 +395,7 @@ class SemanticCacheService:
                 query_params={"vec": embedding_bytes},
             )
         except Exception as e:
-            logger.error(f"Vector search failed: {e}")
+            logger.exception(f"Vector search failed: {e}")
             return None
 
         # Step 4: Check similarity threshold

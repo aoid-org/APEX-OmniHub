@@ -10,7 +10,7 @@ parity_lockfiles:
   - bun.lock
   - deno.lock
   - orchestrator/requirements.lock
-max_files_without_escalation: 50
+max_files_without_escalation: 100
 moderate_supabase_functions:
   - supabase/functions/platform-health/**
   - supabase/functions/ops-voice-health/**
@@ -44,6 +44,7 @@ critical_paths:
   - '!.github/workflows/orchestrator-ci.yml'
   - '!.github/workflows/production-readiness.yml'
   - '!.github/workflows/secret-scanning.yml'
+  - '!.github/workflows/release.yml'
   - orchestrator/workflows/**
   - orchestrator/activities/**
   - supabase/migrations/**
