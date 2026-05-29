@@ -214,7 +214,8 @@ jobs:
       - name: Run local-agents Python coverage
         run: |
           cd local-agents
-          pip install -r requirements.txt pytest pytest-cov pytest-asyncio
+          pip install --only-binary :all: -r requirements.txt
+          pip install --only-binary :all: pytest==8.3.5 pytest-cov==6.1.1 pytest-asyncio==0.26.0
           pytest test_benchmark_connector.py --cov=benchmark_connector --cov-report=xml:coverage.xml || true # ci-integrity-allow: coverage generation over failure
 
 

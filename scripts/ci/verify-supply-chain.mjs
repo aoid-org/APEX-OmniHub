@@ -55,10 +55,12 @@ for (const group of depGroups) {
 const npmLock = path.join(repoRoot, "package-lock.json");
 if (fs.existsSync(npmLock)) {
   const lockText = fs.readFileSync(npmLock, "utf8");
-  const directDeps = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) };
+  const directDeps = Object.assign({}, pkg.dependencies, pkg.devDependencies);
   const missing = Object.keys(directDeps).filter((name) => !lockText.includes(`"node_modules/${name}"`));
   if (missing.length > 0) {
-    errors.push(`package-lock.json is out of sync — not locked: ${missing.slice(0, 10).join(", ")}${missing.length > 10 ? ` (+${missing.length - 10})` : ""}`);
+    const shown = missing.slice(0, 10).join(", ");
+    const overflow = missing.length > 10 ? ` (+${missing.length - 10})` : "";
+    errors.push(`package-lock.json is out of sync — not locked: ${shown}${overflow}`);
   } else {
     notes.push(`all ${Object.keys(directDeps).length} direct dependencies present in package-lock.json`);
   }

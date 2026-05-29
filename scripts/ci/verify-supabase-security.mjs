@@ -38,9 +38,10 @@ const serviceKeyHits = [];
 
 const qualify = (schema, table) => `${(schema ?? "public").toLowerCase()}.${table.toLowerCase()}`;
 
-const createRe = /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:"?([a-z0-9_]+)"?\.)?"?([a-z0-9_]+)"?/gi;
-const rlsRe = /alter\s+table\s+(?:only\s+)?(?:if\s+exists\s+)?(?:"?([a-z0-9_]+)"?\.)?"?([a-z0-9_]+)"?\s+enable\s+row\s+level\s+security/gi;
-const dropRe = /drop\s+table\s+(?:if\s+exists\s+)?(?:"?([a-z0-9_]+)"?\.)?"?([a-z0-9_]+)"?/gi;
+const tblIdent = `(?:"?([a-z0-9_]+)"?\\.)?"?([a-z0-9_]+)"?`;
+const createRe = new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?${tblIdent}`, "gi");
+const rlsRe = new RegExp(`alter\\s+table\\s+(?:only\\s+)?(?:if\\s+exists\\s+)?${tblIdent}\\s+enable\\s+row\\s+level\\s+security`, "gi");
+const dropRe = new RegExp(`drop\\s+table\\s+(?:if\\s+exists\\s+)?${tblIdent}`, "gi");
 // Supabase service-role JWTs embed this role claim; a literal in SQL is a leak.
 const serviceKeyRe = /service_role.*ey[A-Za-z0-9_-]{20,}|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/;
 

@@ -66,12 +66,12 @@ function parseWorkflowJobs(lines) {
     }
     if (!inJobs) continue;
     const indent = line.search(/\S/);
-    if (line.trim() !== "" && indent <= jobsIndent && !/^jobs:/.test(line)) {
+    if (line.trim() !== "" && indent <= jobsIndent && !line.startsWith("jobs:")) {
       inJobs = false;
       continue;
     }
     const jobMatch = line.match(/^(\s{2,})([A-Za-z0-9_-]+):\s*$/);
-    if (jobMatch && jobMatch[1].length === jobsIndent + 2) {
+    if (jobMatch?.[1].length === jobsIndent + 2) {
       jobs.push({ id: jobMatch[2] });
     }
   }
@@ -91,7 +91,7 @@ function parseJobDisplayNames(lines) {
     }
     if (!inJobs) continue;
     const jobMatch = line.match(/^(\s{2,})([A-Za-z0-9_-]+):\s*$/);
-    if (jobMatch && jobMatch[1].length === jobsIndent + 2) {
+    if (jobMatch?.[1].length === jobsIndent + 2) {
       currentJob = jobMatch[2];
       continue;
     }
