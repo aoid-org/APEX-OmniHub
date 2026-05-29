@@ -206,7 +206,8 @@ async function handleLegacyIngress(request: Request, rawBody: string, env: Env):
   try {
     envelope = normalizeLegacyEvent(parsedBody, generateSecureId());
   } catch (e) {
-    return jsonResponse(400, { error: 'invalid_payload', detail: e instanceof Error ? e.message : String(e) });
+    console.warn('[omnibridge/ingest] normalizeLegacyEvent failed', e);
+    return jsonResponse(400, { error: 'invalid_payload' });
   }
 
   if (envelope.idempotency_key) {
