@@ -34,8 +34,54 @@ export function hasValidSupabaseUrl(url: string): boolean {
   }
 }
 
+export type SupabaseBrowserKeyKind = 'missing' | 'jwt' | 'publishable' | 'anon' | 'secret' | 'invalid';
+
+function hasPrefixedValue(key: string, prefix: string): boolean {
+  return key.startsWith(prefix) && key.length > prefix.length;
+}
+
+function decodeJwtPayload(key: string): Record<string, unknown> | null {
+  const parts = key.split('.');
+  const payload = parts[1];
+
+  if (parts.length !== 3 || !payload || typeof globalThis.atob !== 'function') {
+    return null;
+  }
+
+  try {
+    const base64 = payload.replaceAll('-', '+').replaceAll('_', '/').padEnd(Math.ceil(payload.length / 4) * 4, '=');
+    return JSON.parse(globalThis.atob(base64)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+export function getSupabaseBrowserKeyKind(key: string): SupabaseBrowserKeyKind {
+  const trimmedKey = key.trim();
+
+  if (!trimmedKey) return 'missing';
+  if (hasPrefixedValue(trimmedKey, 'sb_secret_') || trimmedKey.toLowerCase().includes('service_role')) return 'secret';
+  if (hasPrefixedValue(trimmedKey, 'sb_publishable_')) return 'publishable';
+  if (hasPrefixedValue(trimmedKey, 'sb_anon_')) return 'anon';
+
+  if (trimmedKey.startsWith('eyJ')) {
+    const payload = decodeJwtPayload(trimmedKey);
+    if (!payload) return 'invalid';
+    // Supabase legacy service-role JWTs must never be accepted by browser config.
+    if (payload.role === 'service_role') return 'secret';
+    return 'jwt';
+  }
+
+  return 'invalid';
+}
+
+export function isBrowserSafeSupabaseKey(key: string): boolean {
+  const kind = getSupabaseBrowserKeyKind(key);
+  return kind === 'jwt' || kind === 'publishable' || kind === 'anon';
+}
+
 export function hasSupabaseConfigValue(url: string, anonKey: string): boolean {
-  return hasValidSupabaseUrl(url) && anonKey.length > 0;
+  return hasValidSupabaseUrl(url.trim()) && isBrowserSafeSupabaseKey(anonKey.trim());
 }
 
 export function createSupabaseConfigTraceId(): string {
