@@ -4,6 +4,15 @@
 - Canonical root: `memory/omni-recall/` (within the APEX-OmniHub repo)
 - Installed: 2026-05-23 on branch `claude/optimistic-mccarthy-w982b`
 
+## Multi-Agent Environment (verified 2026-05-29)
+
+- This repo receives commits from **multiple AI agents**, not only Claude Code:
+  **Google Jules, Google Antigravity, OpenAI Codex, and Dependabot** all commit here.
+- Do **not** assume Claude authored a given commit, branch, or current state.
+- The root `CLAUDE.md` can lag reality (other agents move `main`); treat its
+  commit/date facts as hints and verify HEAD with `git log` before relying on them.
+- Verified HEAD at this audit: `d1e83b0` (CodeX #1226); branch `claude/peaceful-volta-FFsX3`.
+
 ## Runtime Facts (Claude Code / ephemeral container)
 
 - Persistence mechanism: git commits + push to `origin`. The repo IS the workspace.
