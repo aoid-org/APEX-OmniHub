@@ -55,7 +55,7 @@ for (const group of depGroups) {
 const npmLock = path.join(repoRoot, "package-lock.json");
 if (fs.existsSync(npmLock)) {
   const lockText = fs.readFileSync(npmLock, "utf8");
-  const directDeps = Object.assign({}, pkg.dependencies, pkg.devDependencies);
+  const directDeps = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) };
   const missing = Object.keys(directDeps).filter((name) => !lockText.includes(`"node_modules/${name}"`));
   if (missing.length > 0) {
     const shown = missing.slice(0, 10).join(", ");

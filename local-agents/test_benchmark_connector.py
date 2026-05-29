@@ -1,7 +1,9 @@
-import sys
+import asyncio
 import os
+import sys
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 # Ensure we can import benchmark_connector
 sys.path.insert(0, os.path.dirname(__file__))
@@ -26,6 +28,7 @@ async def test_mock_events_handler_missing_idempotency_key():
             self.return_json_exc = return_json_exc
 
         async def json(self):
+            await asyncio.sleep(0)  # mimic the async I/O yield of a real request.json()
             if self.return_json_exc:
                 raise ValueError("Invalid JSON")
             return {}
@@ -43,6 +46,7 @@ async def test_mock_events_handler_server_error():
             self.headers = headers
 
         async def json(self):
+            await asyncio.sleep(0)  # mimic the async I/O yield of a real request.json()
             raise RuntimeError("Force server error")
 
     req = MockRequest(headers={"X-Idempotency-Key": "123"})
@@ -58,13 +62,14 @@ async def test_run_one_exception():
 
         # Make emit_event async and raise a specific exception
         async def mock_emit(*args, **kwargs):
+            await asyncio.sleep(0)  # mimic the async I/O yield of a real emit_event()
             raise ConnectionError("Simulated emit error")
 
         mock_conn.emit_event = mock_emit
 
         # Async mock for close
         async def mock_close():
-            pass
+            await asyncio.sleep(0)  # mimic the async I/O yield of a real close()
         mock_conn.close = mock_close
 
         mock_conn_cls.return_value = mock_conn
