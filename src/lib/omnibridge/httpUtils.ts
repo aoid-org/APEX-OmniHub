@@ -6,8 +6,25 @@
  * @license Proprietary - APEX Business Systems Ltd.
  */
 
+// Recursively strip stack-trace-bearing fields so internal error detail can never reach
+// a client through a response body (defends the jsonResponse sink against info exposure).
+const REDACTED_KEYS = new Set(['stack', 'stacktrace', 'stack_trace']);
+function redactErrorDetail(value: unknown): unknown {
+  if (value instanceof Error) return { name: value.name };
+  if (Array.isArray(value)) return value.map(redactErrorDetail);
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (REDACTED_KEYS.has(k.toLowerCase())) continue;
+      out[k] = redactErrorDetail(v);
+    }
+    return out;
+  }
+  return value;
+}
+
 export function jsonResponse(status: number, body: Record<string, unknown>): Response {
-  return new Response(JSON.stringify(body), {
+  return new Response(JSON.stringify(redactErrorDetail(body)), {
     status,
     headers: { 'Content-Type': 'application/json' },
   });

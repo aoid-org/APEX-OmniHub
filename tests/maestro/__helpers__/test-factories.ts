@@ -9,23 +9,16 @@ import { expect } from 'vitest';
  * Generate a valid 64-character hex idempotency key
  */
 export function generateIdempotencyKey(): string {
-  const chars = 'abcdef0123456789';
-  let result = '';
-  for (let i = 0; i < 64; i++) {
-    result += chars.charAt(Math.trunc(Math.random() * chars.length));
-  }
-  return result;
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
  * Generate a valid UUID v4
  */
 export function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replaceAll(/[xy]/g, (c) => {
-    const r = Math.trunc(Math.random() * 16);
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  return crypto.randomUUID();
 }
 
 /**

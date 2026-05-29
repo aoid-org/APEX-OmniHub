@@ -48,15 +48,19 @@ function generateCSRFToken(): string {
   return Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
 }
 
-/** Sanitize HTML to prevent XSS */
+/**
+ * Sanitize HTML to prevent XSS via complete entity encoding.
+ * `&` is escaped first so subsequent entities cannot be double-decoded; encoding
+ * `<>"'` fully neutralizes tag/attribute injection (and any `javascript:`/`on*=`
+ * payload), which is more complete than brittle scheme/event blocklist stripping.
+ */
 function sanitizeHTML(text: string): string {
   return text
+    .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
-    .replaceAll(/javascript:/gi, '')
-    .replaceAll(/on\w+=/gi, '');
+    .replaceAll("'", '&#39;');
 }
 
 /** Process operations with controlled concurrency */

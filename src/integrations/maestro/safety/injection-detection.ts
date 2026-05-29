@@ -32,7 +32,10 @@ const HIGH_RISK_PATTERNS: Array<{ name: string; pattern: RegExp; score: number }
   // Delimiter injection
   { name: 'delimiter_injection', pattern: /\[?(system|user|assistant)\]?\s*:/i, score: 85 },
   { name: 'xml_injection', pattern: /<\/?(?:system|prompt|instruction|context|role)>/i, score: 85 },
-  { name: 'comment_injection', pattern: /(?:\/\*|\*\/|<!--|-->|#\s*system)/i, score: 80 },
+  { name: 'comment_injection', pattern: /\/\*|\*\/|#\s*system/i, score: 80 },
+  // Complete HTML-comment matcher: opener through a normal or malformed terminator
+  // (--!>) or end-of-input, so partial/unterminated comment injection cannot slip past.
+  { name: 'html_comment_injection', pattern: /<!--[\s\S]*?(?:--!?>|$)/, score: 80 },
 
   // Data exfiltration
   { name: 'send_to', pattern: /send\s+(?:.*?\s+)?to\s+/i, score: 75 },

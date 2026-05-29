@@ -175,10 +175,10 @@ export default async function handler(req: Request): Promise<Response> {
     });
 
   } catch (error) {
+    // Log full detail server-side; return a generic message so internals are not exposed.
     console.error('Evaluation error:', error);
     return new Response(JSON.stringify({
-      error: 'Evaluation failed',
-      message: error instanceof Error ? error.message : String(error)
+      error: 'Evaluation failed'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

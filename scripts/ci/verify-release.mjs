@@ -83,14 +83,10 @@ function findAbsolutePkgManager() {
   return isWin ? "bun.cmd" : "bun";
 }
 
-// Downstream gates that are declared but not yet fully implemented — honest failures allowed.
-const DOWNSTREAM_GATES = new Set([
-  "verify:supabase-security",
-  "verify:claim-hygiene",
-  "verify:supply-chain",
-  "verify:types",
-  "verify:assets",
-]);
+// Every verify gate is now fully implemented with real checks, so none may fail silently.
+// A non-empty allowlist here would re-introduce the fake-pass mechanism this suite exists
+// to prevent (Prompts 1, 9, 18). Keep it empty: every gate is required and fail-closed.
+const DOWNSTREAM_GATES = new Set([]);
 
 let failed = false;
 const pkgManager = findAbsolutePkgManager();
@@ -147,6 +143,6 @@ if (failed) {
   console.log("\n❌ Release verification FAILED on one or more gates.");
   process.exit(1);
 } else {
-  console.log("\n🚀 All release verification gates PASSED. Production GO achieved!");
+  console.log("\n✓ All release verification gates PASSED. Release evidence may be regenerated.");
   process.exit(0);
 }

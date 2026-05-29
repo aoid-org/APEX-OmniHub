@@ -1,4 +1,4 @@
-requests
-python-dotenv
-pandas
-colorama
+requests==2.34.2
+python-dotenv==1.2.2
+pandas==3.0.3
+colorama==0.4.6
