@@ -52,7 +52,7 @@ async function handleOAuthExchange(
     resource_type: "provider_connection",
     metadata: { provider, has_context: !!authPayload.context },
   }).then(({ error }) => {
-    if (error) console.error("[omnilink-agent] audit log error:", error.message);
+    if (error) console.error("[apex-agent] audit log error:", error.message);
   });
 
   return jsonResponse({
@@ -184,7 +184,7 @@ serve(async (req) => {
         .update({ workflow_id: data.workflowId })
         .eq("id", traceId);
       if (updateErr) {
-        console.error(`[omnilink-agent] Failed to update workflow_id for run ${traceId}:`, updateErr.message);
+        console.error(`[apex-agent] Failed to update workflow_id for run ${traceId}:`, updateErr.message);
       }
     }
 

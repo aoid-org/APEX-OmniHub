@@ -30,7 +30,7 @@
 
 ### Implementation
 
-**File:** `supabase/functions/omnilink-agent/index.ts`
+**File:** `supabase/functions/apex-agent/index.ts`
 
 ```typescript
 // Current (EXPENSIVE):
@@ -224,7 +224,7 @@ const metrics = {
 
 ## Action Items
 
-- [ ] Update omnilink-agent to use gpt-4o-mini for Guardian
+- [ ] Update apex-agent to use gpt-4o-mini for Guardian
 - [ ] Add cost tracking middleware
 - [ ] Implement per-user rate limits
 - [ ] Set up cost alert thresholds

@@ -89,7 +89,7 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 | Abstract Component | Serverless Implementation |
 |--------------------|---------------------------|
 | **Edge / API Gateway** | Cloudflare Workers + Vercel Edge Functions |
-| **Orchestrator** | Supabase Edge Function: `omnilink-agent` + approval queue (PostgreSQL) |
+| **Orchestrator** | Supabase Edge Function: `apex-agent` + approval queue (PostgreSQL) |
 | **Executor Pool** | Supabase Edge Functions (isolated by design) |
 | **Event Bus** | Supabase Realtime (optional) or Upstash for async jobs |
 | **Primary Database** | Supabase PostgreSQL (managed) |
@@ -784,7 +784,7 @@ export async function sendLog(message: string, level: string, context: Record<st
 
 **Usage in Edge Function:**
 ```typescript
-// supabase/functions/omnilink-agent/index.ts
+// supabase/functions/apex-agent/index.ts
 import { sendMetric, sendLog } from '../_shared/datadog.ts';
 import { enforceEmergencyControls } from '../_shared/emergency-controls.ts';
 

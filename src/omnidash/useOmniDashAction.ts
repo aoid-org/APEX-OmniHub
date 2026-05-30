@@ -24,7 +24,7 @@
  * APEX STANDARDS ENFORCED:
  * - Atomic Idempotency: Same intent always produces identical OmniModalConfig id
  * - Zero-Config Onboarding: No credential surface in the client — all token
- *   exchange delegated to supabase.functions.invoke('omnilink-agent')
+ *   exchange delegated to supabase.functions.invoke('apex-agent')
  * - Single-Modal: useOmniModal enforces no-stack — invoke() replaces previous
  * - Overload-Free: onCancel fully absorbs ABORTED without UI errors
  * - Intent-Driven: resolveIntentModalType() deterministically maps intent → type
@@ -224,7 +224,7 @@ export function useOmniDashAction(navigate?: (path: string) => void): {
             // intent; the Edge Function orchestrates the provider handshake
             // and returns a sanitized session descriptor.
             const { data, error } = await supabase.functions.invoke(
-              'omnilink-agent',
+              'apex-agent',
               {
                 body: {
                   action: 'oauth_exchange',

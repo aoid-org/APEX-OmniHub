@@ -248,8 +248,8 @@ async function runSingleEvaluation(supabase: SupabaseClient, evalCaseId: string)
   const startTime = Date.now();
 
   try {
-    // Call omnilink-agent with the eval case message
-    const agentResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/omnilink-agent`, {
+    // Call apex-agent with the eval case message
+    const agentResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/apex-agent`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

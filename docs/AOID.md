@@ -79,7 +79,7 @@ The data layer is a sovereign, self-hosted Supabase deployment providing real-ti
 
 **Key Capabilities:**
 - **28 Production Edge Functions** — Deno-native serverless compute deployed at the network edge:
-  - `omnilink-agent` — AI orchestration entrypoint
+  - `apex-agent` — AI orchestration entrypoint
   - `stripe-webhook` — Real-time billing event processing
   - `verify-nft` — On-chain NFT ownership verification
   - `mcp-proxy` — Model Context Protocol bridge for LLM tool calls
@@ -112,7 +112,7 @@ The data layer is a sovereign, self-hosted Supabase deployment providing real-ti
 │   L0: CLIENT   │   L1: EDGE               │   L2: ORCHESTRATION        │
 │                │                          │                            │
 │  React/Vite    │  28 Supabase Edge Fns    │  Temporal Workflows        │
-│  OmniDash      │  omnilink-agent          │  agent_saga.py (57k LOC)   │
+│  OmniDash      │  apex-agent          │  agent_saga.py (57k LOC)   │
 │  OmniConnect   │  stripe-webhook          │  universal_saga.py         │
 │  Voice AI      │  verify-nft              │  intent_registry.py        │
 │  Web3 Wallet   │  mcp-proxy               │  FastAPI Gateway           │

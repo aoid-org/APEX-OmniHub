@@ -1,5 +1,5 @@
 /**
- * useSSEStream — React Hook for SSE token streaming from apex-assistant
+ * useSSEStream — React Hook for SSE token streaming from APEX Agent
  *
  * Uses fetch + ReadableStream (NOT EventSource) for full control over
  * request headers and authorization. Parses the standard SSE wire format
@@ -57,7 +57,7 @@ function getDefaultEndpoint(): string {
   const base =
     (import.meta !== undefined && (import.meta as unknown as Record<string, Record<string, string>>).env?.VITE_SUPABASE_URL) ?? '';
   if (!base) return '';
-  return `${base.replace(/\/{1,10}$/, '')}/functions/v1/apex-assistant`;
+  return `${base.replace(/\/{1,10}$/, '')}/functions/v1/apex-agent`;
 }
 
 /**

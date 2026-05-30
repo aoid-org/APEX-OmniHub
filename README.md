@@ -133,7 +133,7 @@ Client-side infrastructure for deterministic media delivery:
 | ------------------------ | -------------------------- |
 | `apex-assistant`         | AI conversation handler    |
 | `apex-voice`             | Real-time voice processing |
-| `omnilink-agent`         | Agent orchestration        |
+| `apex-agent`         | Agent orchestration        |
 | `omnilink-port`          | Universal connector        |
 | `trigger-workflow`       | Temporal dispatch          |
 | `verify-nft`             | NFT ownership check        |
