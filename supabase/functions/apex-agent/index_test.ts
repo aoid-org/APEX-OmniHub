@@ -1,5 +1,5 @@
 /**
- * Unit tests for omnilink-agent edge function validation logic.
+ * Unit tests for apex-agent edge function validation logic.
  *
  * Tests the HTTP status code semantics and guardian behavior
  * without requiring a running Supabase instance.

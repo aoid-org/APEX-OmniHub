@@ -262,7 +262,7 @@ class ChaoticClientSimulator {
     };
 
     try {
-      // STEP 1: Send to omnilink-agent
+      // STEP 1: Send to apex-agent
       console.log('📤 Sending message to OmniLink Agent...');
       console.log(`Message preview: "${clientMessage.substring(0, 100)}..."`);
 
@@ -318,7 +318,7 @@ class ChaoticClientSimulator {
 
     try {
       const response = await fetch(
-        `${this.supabaseUrl}/functions/v1/omnilink-agent`,
+        `${this.supabaseUrl}/functions/v1/apex-agent`,
         {
           method: 'POST',
           headers: {

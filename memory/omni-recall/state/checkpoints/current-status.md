@@ -28,6 +28,14 @@
 - verification: `tsc --noEmit` exit 0, `npm run build` exit 0.
 - release rubric: M-03 completed, release-evidence.json generated.
 
+## Latest session (2026-05-30) — APEX Agent Global Rename + OmniSlate Fix
+- branch: claude/tender-goldberg-dYWdK
+- scope: Crisis-mode audit continued. Global rename of omnilink-agent → apex-agent across all code, scripts, CI, docs, and omni-recall. OmniSlate error fixed (invokeMcpIntent now routes to Supabase apex-agent function with JWT auth). Feature registry id apex-assistant → apex-agent. SSE stream endpoint updated. Demo event cache updated.
+- key outcome: 0 remaining `omnilink-agent` references in production code paths. All calls go through `apex-agent` Supabase Edge Function. Vitest 2578/2578 pass.
+- agent_canonical_name: APEX Agent (user-facing) / apex-agent (Supabase function slug)
+- supabase_function: supabase/functions/apex-agent/ (was omnilink-agent — renamed via git mv)
+- verification: tsc exit 0, eslint exit 0, Vitest 2578/2578 pass.
+
 ## Verified runtime facts (2026-05-29) — production E2E certification session
 - last_verified_date: 2026-05-29
 - last_verified_commit: dba09ec (base)

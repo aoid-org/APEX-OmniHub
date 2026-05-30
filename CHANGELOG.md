@@ -470,7 +470,7 @@ have been removed.
   - Accepts `OmniDashIntent` (appKey, provider, label, category, routePath, dashboardStatus, contextData).
   - Pure `resolveIntentModalType()` function deterministically maps intent to modal directive.
   - Priority rules: (1) Partial → oauth, (2) spatial appType → spatial renderMode, (3) entryUrl → microfrontend, (4) Live SPA → router navigate.
-  - Zero-Config OAuth: delegates proxy exchange to `supabase.functions.invoke('omnilink-agent')` — no credentials client-side.
+  - Zero-Config OAuth: delegates proxy exchange to `supabase.functions.invoke('apex-agent')` — no credentials client-side.
   - Sanitizes backend payloads via `SECRET_KEY_PATTERN` regex before OmniBoard hydration.
   - `onCancel` cleanly absorbs ABORTED state to `NEEDS_AUTH` — never throws unhandled rejections.
   - `navigate` injected as optional parameter to maintain Router-context independence in non-routing callers.
