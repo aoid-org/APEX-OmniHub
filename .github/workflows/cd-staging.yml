@@ -20,7 +20,7 @@ jobs:
       run:
         working-directory: terraform/environments/staging
     env:
-      HAS_TF_SECRETS: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+      HAS_TF_SECRETS: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.TF_API_TOKEN != '' }}
 
     steps:
       - name: Checkout code
@@ -103,14 +103,19 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
       - name: Install dependencies
-        run: npm ci --ignore-scripts
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Run tests
-        run: npm run test:unit
+        run: bun run test:unit
 
       - name: Build application
-        run: npm run build
+        run: bun run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.STAGING_SUPABASE_KEY }}
@@ -139,13 +144,13 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Wait for deployment
         run: sleep 30 # Wait for staging deployment to stabilize
 
       - name: Run smoke tests
-        run: npm run test:e2e
+        run: bun run test:e2e
         continue-on-error: true
         env:
           STAGING_URL: https://staging.omnihub.dev

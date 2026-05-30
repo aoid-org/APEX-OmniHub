@@ -46,3 +46,9 @@
 - Deeper authenticated interaction coverage (per-module modal content, drag/drop persistence, OmniSlate chat send) beyond the existing auth specs not yet automated — existing specs cover render + modal-open wiring.
 - Python `test:py` (pytest) requires orchestrator deps incl. `temporalio` (not installed); not run.
 - Branch merged main (now `dba09ec`) twice (local + UI); reconciled in merge `1ac8a04` preserving both agents' §27 facts.
+
+## OmniDash Real-Time Observability Upgrade (M-03)
+- Fully successfully implemented M-03 zero mock data requirements.
+- Validated all 7 Recharts panels with deterministic data subscriptions to Supabase channels.
+- TypeScript definitions (`Task`) and `recharts` dependencies added and verified with exit 0.
+- All gates including lint, typecheck, build ran successfully.

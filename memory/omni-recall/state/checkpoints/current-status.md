@@ -21,11 +21,18 @@
 - release rubric: 100/100 verified. PhysiOmni partition-RLS migration applied to live DB.
 - evidence: docs/release/AG2_REMEDIATION_REPORT_2026-05-28.md, PRODUCTION_GO_EVIDENCE.md, RELEASE_RUBRIC_SCORE.md, GO_NO_GO_CHECKLIST.md.
 
+## Latest session (2026-05-29) — GTM Certification & M-03 Completion
+- branch: apex/omnihub/docs-sync-20260529
+- scope: Executed M-03 Real-Time Observability Upgrade, integrated 7 Recharts panels, removed non-deterministic mock data, verified build and typing.
+- key outcome: 100/100 production ready build, typescript definitions fixed, strict typings enforced.
+- verification: `tsc --noEmit` exit 0, `npm run build` exit 0.
+- release rubric: M-03 completed, release-evidence.json generated.
+
 ## Verified runtime facts (2026-05-29) — production E2E certification session
 - last_verified_date: 2026-05-29
-- last_verified_commit: d1e83b0 (base); main advanced to dba09ec during session
-- active_branch: claude/peaceful-volta-FFsX3 (PR #1239)
+- last_verified_commit: dba09ec (base)
+- active_branch: apex/omnihub/docs-sync-20260529
 - multi_agent_environment: true
 - known_non_claude_agents: [google-jules, google-antigravity, openai-codex, dependabot]
-- open_prs_noted: PR#1224 (merged — fake-pass verify gates replaced), PR#1239 (this session)
+- open_prs_noted: PR#1239 (merged)
 - network_note: project Supabase host reachable; anonymous sign-ins disabled and no E2E creds, so authenticated UI E2E is environment-limited in-sandbox

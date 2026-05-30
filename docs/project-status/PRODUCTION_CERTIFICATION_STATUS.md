@@ -2,7 +2,7 @@
 
 > **This is the canonical source for current certification state.**
 > All other docs (PRODUCTION_STATUS.md, audit reports, README) defer here.
-> Last updated: 2026-05-20
+> Last updated: 2026-05-29
 
 
 # Production Certification Status
@@ -48,9 +48,9 @@ Verified in this documentation pass:
 | Field | Value |
 |---|---|
 | Package version | 1.6.0 (from package.json) |
-| Latest inspected main commit | 0f1365d (Merge PR #1153 — post-audit CodeX hardening) |
+| Latest inspected main commit | dba09ec (Merge PR #1239 — post-audit CodeX hardening) |
 | Repo | apexbusiness-systems/APEX-OmniHub |
-| Local gate verification | 2026-05-14 — all gates clean on current main (see §Local Gate Audit below) |
+| Local gate verification | 2026-05-29 — all gates clean on current main (M-03 completed) |
 
 ## Authority
 
