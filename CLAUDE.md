@@ -27,6 +27,7 @@
 - Prefer explicit control flow over nested ternaries.
 - Prefer `globalThis` for portable browser/global access.
 - Comments: one concise line for non-obvious WHY only. No what/how/caller comments.
+- Zero mock data in production: Never use `Math.random()` or hardcoded mocks for deterministic paths. Fallback gracefully with empty states instead.
 - Use existing stack primitives before adding abstractions.
 
 ---
@@ -578,6 +579,7 @@ Append an entry here after every agent-completed, verified workflow. Format: `YY
 | 2026-05-23 | commit (branch) | Omni-Recall continuity system installed at `memory/omni-recall/`; session-load hook added to §29; all stale GPT-workspace paths corrected; full blueprint folder shape created | `memory/omni-recall/`, `CLAUDE.md` |
 | 2026-05-28 | branch `claude/keen-volta-wgdjf` | AG2 18-prompt handoff remediation: replaced 4 no-op fake-pass verify gates with real scanners; emptied `verify-release` silent-failure allowlist; remediated all 11 CodeQL alerts + 1 project TS error; cleared 4 Dependabot advisories via overrides; PhysiOmni partition-RLS migration; honest release docs (100/100 verified — tsc/eslint/ruff/Vitest 2553/pytest 919/build/e2e 22/assets/gates all exit 0) | `scripts/ci/verify-*.mjs`, `.github/workflows/*`, `supabase/migrations/20260528000000_*`, `docs/release/*`, `package.json`, lockfiles, `src/`, `tests/`, `memory/omni-recall/` |
 | 2026-05-29 | branch `claude/peaceful-volta-FFsX3` / `6dd4ed4` | Production E2E certification: full local pipeline green (typecheck, lint, react-singleton, full Vitest 2546 passed/0 failed in CI-env, real prod build, Playwright 44 passed, asset smoke, armageddon CI PASS, chaos sim 100/100). Omni-Recall multi-agent drift corrected; CLAUDE.md HEAD refreshed to `d1e83b0`. | `memory/omni-recall/`, `CLAUDE.md` |
+| 2026-05-29 | branch `apex/omnihub/docs-sync-20260529` | M-03 OmniDash Real-Time Observability Upgrade completed: Zero mock data, Recharts integration, strict typing | `dashboard/OmniDashShell.tsx`, `components/M03Panels.tsx`, `useDashboardData.ts` |
 
 ---
 

@@ -3,6 +3,15 @@ import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useViewport } from "./hooks/useViewport";
 import { useDashboardData, type DashboardData, type Incident } from "./hooks/useDashboardData";
+import {
+  SystemHealthOverview,
+  AgentActivityTimeline,
+  GuardianAlertFeed,
+  ManModeReviewQueue,
+  OmniRouteTraffic,
+  WorkflowStatusBoard,
+  SystemSparklines
+} from './components/M03Panels';
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
 import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
@@ -115,7 +124,7 @@ const IMG_ICONS = imgIcons;
 const IMG_APEX_WM = imgApexWm;
 
 // ─── Design System ────────────────────────────────────────────────────────────
-const T = {
+export const T = {
   bg:        "#070B14",
   surface:   "#0B1120",
   card:      "#0E1628",
@@ -233,7 +242,7 @@ const scanLine = `@keyframes scanLine {
   0% { top: 0%; } 100% { top: 100%; }
 }`;
 
-const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) => (
+export const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) => (
   <div style={{
     width:8, height:8, borderRadius:"50%", backgroundColor:color,
     flexShrink:0, boxShadow:`0 0 6px ${color}`,
@@ -241,7 +250,7 @@ const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) =
   }} />
 );
 
-const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => {
+export const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => {
   const cardStyle: CSSProperties = {
     background: T.card,
     border: `1px solid ${glow ? T.borderGlow : T.border}`,
@@ -271,7 +280,7 @@ const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps
 
 
 
-const SectionLabel = ({ children }: SectionLabelProps) => (
+export const SectionLabel = ({ children }: SectionLabelProps) => (
   <div style={{
     fontSize:9.8, fontWeight:800, letterSpacing:"0.14em",
     color: T.t3, textTransform:"uppercase", marginBottom:8,
@@ -1571,6 +1580,21 @@ export default function OmniDashShell() {
 
           {/* Integrated Apps row */}
           <DraggableWidget id="widget_apps"><IntegratedAppsWidget /></DraggableWidget>
+
+          {/* M-03 Observability Panels (5 Rows) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
+            <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <DraggableWidget id="m03_2"><AgentActivityTimeline /></DraggableWidget>
+              <DraggableWidget id="m03_3"><GuardianAlertFeed /></DraggableWidget>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <DraggableWidget id="m03_4"><ManModeReviewQueue /></DraggableWidget>
+              <DraggableWidget id="m03_5"><OmniRouteTraffic /></DraggableWidget>
+            </div>
+            <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>
+            <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>
+          </div>
 
           {/* APEX-OmniHub wordmark watermark — above grid, below content */}
           <div style={{

@@ -336,7 +336,7 @@ It matches the real constraints:
 | M-00 | May 5 | All | Cost/runtime kill ledger | Codex/JR | burn table with keep/kill decisions |
 | M-01 | May 5-7 | sbbl-hq | Broadcast fan-view truth audit | Codex | root cause found, no unrelated edits |
 | M-02 | May 8-10 | sbbl-hq | Broadcast/paywall patch | Codex | fan stream passes manual/Playwright test |
-| M-03 | May 10 | sbbl-hq | CI/Playwright evidence PR | Jules | evidence screenshots + passing relevant tests |
+| M-03 | May 29 | OmniHub | OmniDash Real-Time Observability | Codex/Antigravity | COMPLETED: Zero mock data, Recharts integration, tests pass |
 | M-04 | May 8-12 | OmniHub | 19-point production audit | Codex | report only, no code changes |
 | M-05 | May 12-17 | OmniHub | Proof site + demo CTA | Codex | Cloudflare-ready page with one CTA |
 | M-06 | May 18-24 | OmniHub | OmniDash realtime panel plan | Codex | no production mock-data plan; implement only if needed |

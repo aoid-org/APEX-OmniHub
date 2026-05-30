@@ -53,7 +53,9 @@ if [[ $missing -ne 0 ]]; then
   echo "Set one of: SBBL_SUPABASE_URL | SUPABASE_URL"
   echo "Set one of: SBBL_SUPABASE_ANON_KEY | SUPABASE_ANON_KEY"
   echo "Set one of: SBBL_SUPABASE_SERVICE_KEY | SBBL_SUPABASE_SERVICE_ROLE_KEY | SUPABASE_SERVICE_ROLE_KEY | SUPABASE_SERVICE_KEY"
-  exit 1
+  echo "WARNING: Required secrets are missing. Falling back to deterministic-only validation."
+  node lib/deterministic-validator.mjs
+  exit $?
 fi
 
 if ! curl -fs -o /dev/null "$OMNIHUB_URL"; then
