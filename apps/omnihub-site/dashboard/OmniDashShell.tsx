@@ -124,6 +124,7 @@ const IMG_ICONS = imgIcons;
 const IMG_APEX_WM = imgApexWm;
 
 // ─── Design System ────────────────────────────────────────────────────────────
+// eslint-disable-next-line react-refresh/only-export-components
 export const T = {
   bg:        "#070B14",
   surface:   "#0B1120",
