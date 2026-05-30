@@ -314,7 +314,7 @@ export const FEATURE_REGISTRY: readonly FeatureDefinition[] = [
     icon: Layers,
     category: 'core',
     requiredScopes: ['authenticated'],
-    isEnabled: true,
+    isEnabled: false, // No route handler exists yet — App.tsx catch-all falls through to /omnidash
     order: 15,
   },
 
