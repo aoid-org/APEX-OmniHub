@@ -147,7 +147,23 @@ export function useDashboardData(): DashboardData {
     }
 
     void load();
-    return () => { cancelled = true; };
+
+    const channel = supabase.channel('dashboard-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'omnidash_kpi_daily' }, () => {
+        if (!cancelled) setRefreshKey(k => k + 1);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'omnidash_incidents' }, () => {
+        if (!cancelled) setRefreshKey(k => k + 1);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'omnidash_settings' }, () => {
+        if (!cancelled) setRefreshKey(k => k + 1);
+      })
+      .subscribe();
+
+    return () => { 
+      cancelled = true; 
+      supabase.removeChannel(channel);
+    };
   }, [userId, refreshKey]);
 
   const kpiSummary: KpiSummary = kpiHistory[0]
