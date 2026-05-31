@@ -1,7 +1,7 @@
 # CLAUDE.md — APEX OmniHub Agent Operating Manual
 
 **Purpose:** Root operating context for Claude/agent sessions. Prevents hallucination, unsafe edits, and untraceable changes.
-**Last verified:** 2026-05-29 · main @ `dba09ec` (other agents — Jules, Antigravity, Codex, Dependabot — also move `main`; always verify HEAD with `git log`)
+**Last verified:** 2026-05-31 · main @ `7a2c45ed` (other agents — Jules, Antigravity, Codex, Dependabot — also move `main`; always verify HEAD with `git log`)
 **Critical rule:** Facts not verified from this file or an explicit user instruction → mark `[UNVERIFIED]`. If this file conflicts with a subsystem file, read that file before acting.
 
 **Self-update protocol (§28):** After every verified/validated workflow, append an entry to the §27 Completed Workflow Log and update affected fact tables in the relevant sections. Only write facts confirmed by direct code inspection or successful command output.
@@ -48,7 +48,9 @@
 | Unit/integration runner | Vitest | `vitest.config.ts` |
 | Python lint | Ruff, Python 3.11 target, line 88 | `pyproject.toml` |
 | Changeset access | `restricted` | `.changeset/config.json` |
-| Latest main commit | `d1e83b0` (2026-05-29) | git log |
+| Latest main commit | `7a2c45ed` (2026-05-31) | git log |
+| APEX Agent function slug | `apex-agent` (Supabase Edge Function) | `supabase/functions/apex-agent/` |
+| APEX Agent display name | `APEX Agent` | canonical across all code, docs, CI |
 | Production URL | `https://apexomnihub.icu` | `.github/workflows/release.yml` env |
 | Cloudflare account ID | `0e1bce84773a0d1ce340145ea195e86f` | CI workflows (non-secret) |
 
@@ -477,6 +479,20 @@ If any is "no" — stop and verify first.
 1. `npm run docs:check`
 2. Fix broken paths or stale anchors
 3. Do not remove doc checks to make CI pass
+
+### APEX Agent invocation failure (OmniSlate error)
+1. `apps/omnihub-site/src/omnihub-gateway/mcp-client/index.ts` — primary call site
+2. Supabase URL must be set: `VITE_SUPABASE_URL` in env
+3. User must be authenticated: `supabase.auth.getSession()` returns a non-null `access_token`
+4. Function slug is `apex-agent`: `${SUPABASE_URL}/functions/v1/apex-agent`
+5. Body must include `{ query: string, traceId: UUID }` — NOT `{ prompt }` (omnilink-agent legacy format)
+6. NEVER use `apex-assistant` — deprecated, returns 410 Gone; redirect points to `apex-agent`
+7. Guardian rate-limit (429): check `OMNI_GUARDIAN_ENABLED` env on Edge Function
+
+### Naming drift prevention
+- Canonical function slug: `apex-agent` — never `omnilink-agent` or `apex-assistant`
+- Canonical display name: `APEX Agent` — never `APEX Assistant` or `OmniLink Agent`
+- If drift is found: run `grep -rn "omnilink-agent" src/ apps/ tests/ --include="*.ts" --include="*.tsx"` — must return zero results
 
 ### SonarCloud script injection failure
 Symptom: E Security Rating on new code for `run:` block using `${{ github.event.* }}`.

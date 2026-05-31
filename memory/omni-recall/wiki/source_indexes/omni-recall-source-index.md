@@ -1,5 +1,7 @@
 # Omni-Recall Source Index
 
+Last index update: 2026-05-31 (post PR #1251 merge — apex-agent unification complete)
+
 ## Purpose
 
 Track canonical source records that materially define Omni-Recall.
@@ -26,3 +28,8 @@ Track canonical source records that materially define Omni-Recall.
    - Type: original zip extraction
    - Status: archived — live system is at `memory/omni-recall/`
    - Role: immutable record of initial package state
+
+5. `current-status.md` (state/checkpoints/)
+   - Type: session checkpoint log
+   - Status: active — updated after each verified session
+   - Role: canonical source for per-session outcomes, verified HEAD, and runtime facts

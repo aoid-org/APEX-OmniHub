@@ -79,7 +79,40 @@ serve(async (req) => {
       });
     }
 
-    // (In production, dispatch to IoT bridge using mTLS here)
+    // Dispatch command to device via persistent command queue + Realtime broadcast
+    const { data: commandRecord, error: cmdError } = await supabase
+      .from('physiomni_device_commands')
+      .insert({
+        device_id,
+        tenant_id,
+        command: action,
+        status: 'QUEUED',
+        approved_by: approved_by ?? null,
+        bypass_policy: bypass_policy ?? null,
+        metadata: { dispatched_via: 'physiomni-action', audit_logged: true },
+      })
+      .select('id')
+      .single();
+
+    if (cmdError || !commandRecord) {
+      console.error('[physiomni-action] Command queue insert failed:', cmdError?.message);
+      return new Response(JSON.stringify({ error: 'Failed to queue device command' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Broadcast to Realtime channel — device subscribes to physiomni:device:{device_id}
+    await supabase.channel(`physiomni:device:${device_id}`).send({
+      type: 'broadcast',
+      event: 'device_command',
+      payload: {
+        command_id: commandRecord.id,
+        command: action,
+        approved_by,
+        timestamp: new Date().toISOString(),
+      },
+    });
 
     return new Response(
       JSON.stringify({ success: true, message: 'Action dispatched successfully' }),

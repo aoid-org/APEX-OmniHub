@@ -154,10 +154,15 @@ export const DashboardOverview = memo(function DashboardOverview({
     setLambdaDispatching(true);
     addTraceLog("DISPATCHING: Lambda async orchestration via Temporal...");
     try {
-      // Stub replacement for removed triggerAsyncLambdaDemo
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      const uuid = crypto.randomUUID?.() || "demo-workflow-id";
-      addTraceLog(`DISPATCHED: ${uuid.slice(0, 24)}...`);
+      const { data, error } = await supabase.functions.invoke('trigger-workflow', {
+        body: {
+          workflowType: 'lambda-dispatch',
+          taskData: { source: 'dashboard-overview', triggeredAt: new Date().toISOString() },
+        },
+      });
+      if (error) throw error;
+      const workflowId = (data as { workflowId?: string })?.workflowId ?? 'dispatched';
+      addTraceLog(`DISPATCHED: ${workflowId}`);
     } catch (err) {
       addTraceLog(
         `ERROR: ${err instanceof Error ? err.message : "Lambda dispatch failed"}`,

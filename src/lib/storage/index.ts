@@ -39,20 +39,10 @@ export function createStorage(options: StorageFactoryOptions): IStorage {
       })
 
     case 's3':
-      // Future implementation
-      throw new Error('AWS S3 provider not yet implemented')
-
     case 'gcs':
-      // Future implementation
-      throw new Error('Google Cloud Storage provider not yet implemented')
-
     case 'azure':
-      // Future implementation
-      throw new Error('Azure Blob Storage provider not yet implemented')
-
     case 'r2':
-      // Future implementation
-      throw new Error('Cloudflare R2 provider not yet implemented')
+      throw new Error(`Storage provider "${options.provider}" is not yet implemented. Set VITE_STORAGE_PROVIDER=supabase or remove the env var to use the default.`)
 
     default:
       throw new Error(`Unknown storage provider: ${options.provider}`)

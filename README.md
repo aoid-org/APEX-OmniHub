@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.6.3 (target) | **package.json version:** 1.6.0 | **Changeset for 1.6.1 pending** | **Release Date:** 2026-05-29 | **Docs audit:** 2026-05-29
+**Release line:** 1.6.3 (target) | **package.json version:** 1.6.0 | **Release Date:** 2026-05-31 | **Docs audit:** 2026-05-31
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -47,7 +47,7 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-05-16)
+## Platform Statistics (Repository Snapshot 2026-05-31)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
@@ -56,7 +56,7 @@ The platform relies on a "Holy Trinity" architecture:
 | **React Components (`src/`)**                    | 94 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
 | **Edge Functions (`supabase/functions/`)**       | 27 function directories                           |
-| **Database Migrations (`supabase/migrations/`)** | 74 SQL migration files                            |
+| **Database Migrations (`supabase/migrations/`)** | 77 SQL migration files                            |
 | **CI/CD Workflows (`.github/workflows/`)**       | 21 workflow files                                 |
 | **Test Specs (`tests/` + `e2e/` + `sim/`)**     | 229 spec/test source files; latest pass counts are recorded in certification status |
 | **Custom Hooks (`src/`)**                        | 21 hook files matching `use*.ts*`                 |
@@ -131,9 +131,9 @@ Client-side infrastructure for deterministic media delivery:
 
 | Function                 | Purpose                    |
 | ------------------------ | -------------------------- |
-| `apex-assistant`         | AI conversation handler    |
+| `apex-assistant`         | AI handler (deprecated — returns 410, use apex-agent) |
 | `apex-voice`             | Real-time voice processing |
-| `apex-agent`         | Agent orchestration        |
+| `apex-agent`             | APEX Agent — primary AI orchestration endpoint |
 | `omnilink-port`          | Universal connector        |
 | `trigger-workflow`       | Temporal dispatch          |
 | `verify-nft`             | NFT ownership check        |
@@ -158,7 +158,7 @@ APEX OmniHub requires **Node.js 22+** (Node 22 LTS recommended; Node 24 also sup
 /src/omnidash/uiRegistry.ts  -   UI registry wiring
 
 
-/supabase/migrations - Database schema (74 versioned SQL migrations)
+/supabase/migrations - Database schema (77 versioned SQL migrations)
 /supabase/functions  - Edge functions (27 serverless endpoints)
 /orchestrator        - Temporal workers and orchestration services (95 Python files)
 /tests               - Automated test suite
