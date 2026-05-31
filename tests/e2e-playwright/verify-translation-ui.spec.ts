@@ -1,4 +1,4 @@
-﻿/**
+/**
  * verify-translation-ui.spec.ts
  *
  * E2E test: Verifies the full Translation Module UI flow in OmniDash.
@@ -15,6 +15,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 test('verify translation UI and endpoints', async ({ page }, testInfo) => {
+  page.on('console', msg => console.log(`[BROWSER_${msg.type().toUpperCase()}]`, msg.text()));
+  page.on('pageerror', error => console.log('BROWSER_PAGEERROR:', error.message));
   testInfo.setTimeout(90000);
   // ΓöÇΓöÇ 0. Inject Playwright flag to disable intervals ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   await page.addInitScript(() => {
