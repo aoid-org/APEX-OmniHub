@@ -153,7 +153,7 @@ jobs:
 
   readiness-report:
     name: Generate Readiness Report
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: false # Deactivated per user request
     runs-on: ubuntu-latest
     permissions:
       contents: write
