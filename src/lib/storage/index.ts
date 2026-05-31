@@ -42,7 +42,7 @@ export function createStorage(options: StorageFactoryOptions): IStorage {
     case 'gcs':
     case 'azure':
     case 'r2':
-      throw new Error(`Storage provider "${options.provider}" is not implemented. Set VITE_STORAGE_PROVIDER=supabase or remove the env var to use the default.`)
+      throw new Error(`Storage provider "${options.provider}" is not yet implemented. Set VITE_STORAGE_PROVIDER=supabase or remove the env var to use the default.`)
 
     default:
       throw new Error(`Unknown storage provider: ${options.provider}`)
