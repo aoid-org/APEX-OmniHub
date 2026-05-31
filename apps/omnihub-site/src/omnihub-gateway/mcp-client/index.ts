@@ -55,7 +55,8 @@ export interface McpIntentResponse {
 }
 
 export async function invokeMcpIntent(payload: McpIntentPayload): Promise<McpIntentResponse> {
-  const supabaseUrl = (import.meta.env?.VITE_SUPABASE_URL ?? '').replace(/\/+$/, '');
+  // FIX(S5852): bounded quantifier prevents ReDoS via super-linear backtracking
+  const supabaseUrl = (import.meta.env?.VITE_SUPABASE_URL ?? '').replace(/\/{1,100}$/u, '');
 
   if (supabaseUrl) {
     // Route to APEX Agent (apex-agent) Supabase Edge Function with session auth

@@ -47,6 +47,7 @@ critical_paths:
   - '!.github/workflows/production-readiness.yml'
   - '!.github/workflows/secret-scanning.yml'
   - '!.github/workflows/release.yml'
+  - '!.github/workflows/nightly-evaluation.yml'
   - orchestrator/workflows/**
   - orchestrator/activities/**
   - supabase/migrations/**
@@ -59,6 +60,7 @@ critical_paths:
   - '!supabase/functions/ops-voice-health/**'
   - '!supabase/functions/test-integration/**'
   - '!supabase/functions/apex-voice/**'
+  - '!supabase/functions/apex-agent/**'
   - '!supabase/functions/byom-proxy/**'
   - '!supabase/functions/physiomni-action/**'
   - '!supabase/functions/physiomni-ingest/**'

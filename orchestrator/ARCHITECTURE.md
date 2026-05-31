@@ -26,7 +26,7 @@ The APEX Orchestrator is a production-grade AI agent orchestration platform impl
                      ▼
 ┌────────────────────────────────────────────────────────────────┐
 │ 2. TYPESCRIPT EDGE FUNCTION (Supabase)                         │
-│    - OmniLink Agent receives request                           │
+│    - APEX Agent receives request                              │
 │    - Creates EventEnvelope with trace context                  │
 │    - POSTs to Python orchestrator                              │
 └────────────────────┬───────────────────────────────────────────┘
