@@ -143,6 +143,7 @@ export default defineConfig({
       '@/dashboard': path.resolve(__dirname, './apps/omnihub-site/dashboard'),
       '@': path.resolve(__dirname, './src'),
       '@omnihub': path.resolve(__dirname, './apps/omnihub-site/src'),
+      'recharts': path.resolve(__dirname, 'tests/__mocks__/recharts.tsx'),
       'react': path.resolve(__dirname, 'node_modules/react'),
       'react/jsx-runtime': path.resolve(__dirname, 'node_modules/react/jsx-runtime'),
       'react/jsx-dev-runtime': path.resolve(__dirname, 'node_modules/react/jsx-dev-runtime'),
