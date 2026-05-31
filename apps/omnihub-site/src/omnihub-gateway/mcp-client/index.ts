@@ -78,14 +78,18 @@ export async function invokeMcpIntent(payload: McpIntentPayload): Promise<McpInt
 
     const data = await res.json() as Record<string, unknown>;
     // apex-agent returns orchestrator data ({ workflowId, status }); map to McpIntentResponse
-    const reply =
-      typeof data.workflowId === 'string'
-        ? `Workflow queued: ${data.workflowId}`
-        : typeof data.reply === 'string'
-          ? data.reply
-          : 'Request submitted to APEX Agent.';
-    const status = typeof data.status === 'string' ? data.status : undefined;
-    return { reply, ...(status !== undefined ? { status } : {}) };
+    let reply = 'Request submitted to APEX Agent.';
+    if (typeof data.workflowId === 'string') {
+      reply = `Workflow queued: ${data.workflowId}`;
+    } else if (typeof data.reply === 'string') {
+      reply = data.reply;
+    }
+
+    const response: McpIntentResponse = { reply };
+    if (typeof data.status === 'string') {
+      response.status = data.status;
+    }
+    return response;
   }
 
   // Fallback: Cloudflare gateway proxy path (production Cloudflare Worker)
