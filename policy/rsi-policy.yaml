@@ -40,6 +40,7 @@ critical_paths:
   - '!.github/workflows/rsi-governance.yml'
   - '!.github/workflows/ci-runtime-gates.yml'
   - '!.github/workflows/cd-staging.yml'
+  - '!.github/workflows/deploy-production-cf-direct.yml'
   - '!.github/workflows/integration.yml'
   - '!.github/workflows/deploy-web3-functions.yml'
   - '!.github/workflows/mobile-build-verify.yml'
