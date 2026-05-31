@@ -804,8 +804,27 @@ function RequestAccessModal({
   formError: string;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 }>) {
+  const dialogRef = React.useRef<HTMLDialogElement>(null);
+  React.useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const handleClick = (e: MouseEvent) => {
+      if (e.target === dialog) onClose();
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target === dialog && (e.key === 'Enter' || e.key === ' ')) onClose();
+    };
+    dialog.addEventListener('click', handleClick);
+    dialog.addEventListener('keydown', handleKeyDown);
+    return () => {
+      dialog.removeEventListener('click', handleClick);
+      dialog.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
+
   return (
     <dialog
+      ref={dialogRef}
       id="ra-modal"
       className={`modal-overlay ${isOpen ? 'open' : ''}`}
       aria-hidden={!isOpen}

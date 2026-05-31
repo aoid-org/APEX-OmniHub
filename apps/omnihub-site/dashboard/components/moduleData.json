@@ -6,7 +6,7 @@
      ["sk-codegen", "Code Generation", "active", "TypeScript, Python, SQL synthesis"],
      ["sk-rag", "RAG Pipeline", "pending", "Retrieval-augmented generation"],
      ["sk-voice", "Voice Transcription", "inactive", "Whisper-based real-time STT"]],
-    [["activate-all", "Activate All", "primary"], ["manage-bundles", "Manage Bundles", "secondary"]]],
+    [["activate-all", "Activate All", "primary"], ["manage-bundles", "Manage Bundles", "secondary"]], true],
 
   ["physiomni", "Physical operations and device telemetry.",
     [["Connected Devices", "8", "stable"], ["Data Points/hr", "2,400", "up"], ["Uptime", "99.7%", "stable"]],
@@ -31,7 +31,7 @@
      ["lnk-slack", "Slack Workspace", "active", "Synced 1m ago | 230 events/hr"],
      ["lnk-gh", "GitHub Enterprise", "active", "Synced 3m ago | Webhooks active"],
      ["lnk-stripe", "Stripe Payments", "error", "Token expired \u2014 re-authorize required"]],
-    [["add-link", "Add Connection", "primary"], ["test-all", "Test All Links", "secondary"]]],
+    [["add-link", "Add Connection", "primary"], ["test-all", "Test All Links", "secondary"]], true],
 
   ["automations", "Workflow automation rules and triggers.",
     [["Active Rules", "23", "up"], ["Executions (24h)", "1,892", "up"], ["Success Rate", "99.8%", "stable"]],
@@ -40,7 +40,7 @@
      ["auto-alert", "Anomaly Alert Dispatch", "active", "Trigger: Metric threshold | Runs: 12/day"],
      ["auto-backup", "Nightly Data Backup", "active", "Trigger: Cron 02:00 UTC | Last: Success"],
      ["auto-onboard", "Customer Onboarding Flow", "pending", "Trigger: Signup event | Draft"]],
-    [["create-rule", "Create Automation", "primary"], ["view-logs", "View Execution Logs", "secondary"]]],
+    [["create-rule", "Create Automation", "primary"], ["view-logs", "View Execution Logs", "secondary"]], true],
 
   ["workflows", "Visual workflow definitions and process studio.",
     [["Workflows", "9", "stable"], ["Active Runs", "3", "up"], ["Avg Duration", "4.2s", "down"]],
@@ -48,7 +48,7 @@
      ["wf-deploy", "CI/CD Deploy Pipeline", "active", "12 steps | Last run: 18m ago | 8.3s"],
      ["wf-report", "Weekly KPI Report Generator", "active", "5 steps | Next run: Mon 08:00 UTC"],
      ["wf-nurture", "Lead Nurture Sequence", "pending", "9 steps | Draft \u2014 awaiting approval"]],
-    [["create-workflow", "New Workflow", "primary"], ["import", "Import Template", "secondary"]]],
+    [["create-workflow", "New Workflow", "primary"], ["import", "Import Template", "secondary"]], true],
 
   ["files", "Document management and file operations.",
     [["Total Files", "2,847", "up"], ["Storage Used", "14.2 GB", "up"], ["Shared Links", "89", "stable"]],
@@ -56,7 +56,7 @@
      ["file-invoices", "invoices/2026/", "active", "892 files | 340 MB | Auto-synced"],
      ["file-reports", "reports/weekly/", "active", "52 files | 89 MB | Generated"],
      ["file-templates", "templates/", "active", "18 files | 4.2 MB | Shared"]],
-    [["upload", "Upload Files", "primary"], ["browse", "Browse Storage", "secondary"]]],
+    [["upload", "Upload Files", "primary"], ["browse", "Browse Storage", "secondary"]], true],
 
   ["billing", "Subscription management and usage analytics.",
     [["Plan", "Enterprise"], ["MRR", "$4,200", "stable"], ["Next Invoice", "Apr 1", "stable"]],
@@ -73,7 +73,7 @@
      ["set-webhooks", "Webhook Notifications", "active", "6 endpoints configured | HMAC-SHA256"],
      ["set-retention", "Data Retention Policy", "active", "90-day rolling window | Auto-archive"],
      ["set-sandbox", "Sandbox Mode", "inactive", "Isolated test environment \u2014 disabled"]],
-    [["save-settings", "Save Changes", "primary"], ["reset-defaults", "Reset Defaults", "destructive"]]],
+    [["save-settings", "Save Changes", "primary"], ["reset-defaults", "Reset Defaults", "destructive"]], true],
 
   ["dashboard", "Platform overview and system health monitoring.",
     [["Systems Online", "14", "stable"], ["Uptime", "99.97%", "stable"], ["Active Users", "23", "up"]],
@@ -82,7 +82,7 @@
      ["sys-cache", "Redis Cache", "active", "Healthy | Hit rate: 98.4% | Memory: 1.2GB"],
      ["sys-queue", "Message Queue", "active", "Healthy | 0 backlog | Throughput: 840/s"],
      ["sys-cdn", "CDN Edge Network", "active", "Healthy | 12 PoPs | Cache hit: 94%"]],
-    [["refresh-status", "Refresh Status", "primary"], ["view-incidents", "View Incidents", "secondary"]]],
+    [["refresh-status", "Refresh Status", "primary"], ["view-incidents", "View Incidents", "secondary"]], true],
 
   ["integrations", "Third-party service connections and data sync.",
     [["Connected", "9", "up"], ["Available", "24", "stable"], ["Sync Health", "96%", "stable"]],
