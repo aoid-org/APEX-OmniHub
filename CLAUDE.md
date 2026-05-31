@@ -37,7 +37,7 @@
 | Fact | Value | Source |
 |---|---|---|
 | Package name | `apex-omnihub` | `package.json` |
-| Package version | `1.6.0` | `package.json` (pending changeset) |
+| Package version | `1.7.0` | `package.json` (pending changeset) |
 | Private | `true` | `package.json` |
 | Module type | `type: module` | `package.json` |
 | Node engine | `>=22 <25` | `package.json` |

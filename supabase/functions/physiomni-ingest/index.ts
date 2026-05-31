@@ -71,20 +71,73 @@ serve(async (req) => {
       });
     }
 
-    // (In production, verify HMAC signature here using device secret)
-    if (signature.length < 64) {
-      return new Response(JSON.stringify({ error: 'Invalid signature format' }), {
-        status: 403,
+    // Verify HMAC-SHA256 signature using device's shared secret
+    const hmacSecret = Deno.env.get('PHYSIOMNI_DEVICE_HMAC_SECRET');
+    if (hmacSecret) {
+      const encoder = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(hmacSecret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['verify'],
+      );
+      const message = `${device_id}:${tenant_id}:${timestamp}:${parsed.data.nonce}`;
+      let sigBytes: Uint8Array;
+      try {
+        sigBytes = Uint8Array.from(
+          signature.match(/.{1,2}/g)!.map((b) => parseInt(b, 16)),
+        );
+      } catch {
+        return new Response(JSON.stringify({ error: 'Malformed signature encoding' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const valid = await crypto.subtle.verify('HMAC', keyMaterial, sigBytes, encoder.encode(message));
+      if (!valid) {
+        return new Response(JSON.stringify({ error: 'Signature verification failed' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // Persist telemetry — idempotent via UNIQUE(device_serial, captured_at)
+    const { error: insertError } = await supabase
+      .from('physiomni_telemetry')
+      .upsert(
+        {
+          tenant_id,
+          device_serial: device_id,
+          vibration_x: parsed.data.payload.vibration_x,
+          vibration_y: parsed.data.payload.vibration_y,
+          vibration_z: parsed.data.payload.vibration_z,
+          temperature_c: parsed.data.payload.temp_c,
+          captured_at: timestamp,
+          metadata: { nonce: parsed.data.nonce, source: 'physiomni-ingest' },
+        },
+        { onConflict: 'device_serial,captured_at', ignoreDuplicates: true },
+      );
+
+    if (insertError) {
+      console.error('[physiomni-ingest] DB insert error:', insertError.message);
+      return new Response(JSON.stringify({ error: 'Telemetry persistence failed' }), {
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Log telemetry to persistent store (timeseries db)
-    // Note: this is a mock implementation for the telemetry ingestion success
+    // Update device last_seen_at
+    await supabase
+      .from('physiomni_devices')
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq('device_serial', device_id)
+      .eq('tenant_id', tenant_id);
 
     return new Response(
       JSON.stringify({ success: true, message: 'Telemetry ingested successfully', timestamp: new Date().toISOString() }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
     );
   } catch (err: unknown) {
     return new Response(

@@ -8299,19 +8299,19 @@
       "fileCategory": "code"
     },
     {
-      "path": "supabase/functions/omnilink-agent/guardian.ts",
+      "path": "supabase/functions/apex-agent/guardian.ts",
       "language": "typescript",
       "sizeLines": 152,
       "fileCategory": "code"
     },
     {
-      "path": "supabase/functions/omnilink-agent/index_test.ts",
+      "path": "supabase/functions/apex-agent/index_test.ts",
       "language": "typescript",
       "sizeLines": 83,
       "fileCategory": "code"
     },
     {
-      "path": "supabase/functions/omnilink-agent/index.ts",
+      "path": "supabase/functions/apex-agent/index.ts",
       "language": "typescript",
       "sizeLines": 198,
       "fileCategory": "code"
@@ -8449,7 +8449,7 @@
       "fileCategory": "data"
     },
     {
-      "path": "supabase/migrations/20251221000000_omnilink_agentic_rag.sql",
+      "path": "supabase/migrations/20251221000000_apex_agentic_rag.sql",
       "language": "sql",
       "sizeLines": 181,
       "fileCategory": "data"
@@ -13194,17 +13194,17 @@
       "supabase/functions/_shared/http.ts",
       "supabase/functions/_shared/auth.ts"
     ],
-    "supabase/functions/omnilink-agent/guardian.ts": [],
-    "supabase/functions/omnilink-agent/index_test.ts": [
-      "supabase/functions/omnilink-agent/guardian.ts",
+    "supabase/functions/apex-agent/guardian.ts": [],
+    "supabase/functions/apex-agent/index_test.ts": [
+      "supabase/functions/apex-agent/guardian.ts",
       "supabase/functions/_shared/validation.ts"
     ],
-    "supabase/functions/omnilink-agent/index.ts": [
+    "supabase/functions/apex-agent/index.ts": [
       "supabase/functions/_shared/cors.ts",
       "supabase/functions/_shared/supabaseClient.ts",
       "supabase/functions/_shared/requestSigning.ts",
       "supabase/functions/_shared/validation.ts",
-      "supabase/functions/omnilink-agent/guardian.ts"
+      "supabase/functions/apex-agent/guardian.ts"
     ],
     "supabase/functions/omnilink-eval/index.ts": [
       "supabase/functions/_shared/auth.ts",
@@ -13263,7 +13263,7 @@
     "supabase/migrations/20251004223451_c5a8ff24-a2fd-40df-b1c4-07e61a829bc3.sql": [],
     "supabase/migrations/20251218000000_create_audit_logs_table.sql": [],
     "supabase/migrations/20251218000001_create_device_registry_table.sql": [],
-    "supabase/migrations/20251221000000_omnilink_agentic_rag.sql": [],
+    "supabase/migrations/20251221000000_apex_agentic_rag.sql": [],
     "supabase/migrations/20251221000001_omnilink_ops_pack.sql": [],
     "supabase/migrations/20251224000002_omnidash.sql": [],
     "supabase/migrations/20251231000000_apex_ascension_governance.sql": [],

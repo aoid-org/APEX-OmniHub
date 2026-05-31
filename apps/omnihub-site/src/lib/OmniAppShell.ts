@@ -142,7 +142,10 @@ class OmniAppShellElement extends HTMLElement {
 
     if (config.entryUrl) {
       // 1. Sanitise URL against APEX Origin Policy
-      const isDemoMode = typeof process !== 'undefined' ? process.env.VITE_IS_DEMO_MODE === 'true' : false;
+      let isDemoMode = false;
+      if (typeof process !== 'undefined') {
+        isDemoMode = process.env.VITE_IS_DEMO_MODE === 'true';
+      }
       const result = sanitiseIframeUrl(config.entryUrl, isDemoMode);
 
       if (result.allowed) {
@@ -210,9 +213,8 @@ class OmniAppShellElement extends HTMLElement {
  * will not re-register if already defined.
  */
 export function registerOmniAppShell(): void {
-  if (!customElements.get(SHELL_TAG)) {
-    customElements.define(SHELL_TAG, OmniAppShellElement);
-  }
+  if (customElements.get(SHELL_TAG)) return;
+  customElements.define(SHELL_TAG, OmniAppShellElement);
 }
 
 export { SHELL_TAG };

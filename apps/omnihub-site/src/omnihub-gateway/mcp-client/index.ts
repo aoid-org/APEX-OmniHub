@@ -24,23 +24,13 @@ export async function queryAgentRegistry(): Promise<AgentCard[]> {
   try {
     const res = await fetch(`${GATEWAY_URL}/registry`);
     if (!res.ok) {
-      return [
-        { id: 'claude-mcp', label: 'Claude (Anthropic MCP)', description: 'Connected via OmniHub Gateway' },
-        { id: 'gpt4-mcp', label: 'GPT-4o (OpenAI MCP)', description: 'Connected via OmniHub Gateway' },
-        { id: 'gemini-mcp', label: 'Gemini Ultra (Google MCP)', description: 'Connected via OmniHub Gateway' },
-        { id: 'llama-mcp', label: 'Llama 3 (Meta MCP)', description: 'On-premise inference' },
-      ];
+      return [];
     }
     const data = await res.json() as { agents: AgentCard[] };
     return data.agents;
   } catch (err: unknown) {
     console.error('[MCP Client] Registry query failed:', err);
-    return [
-      { id: 'claude-mcp', label: 'Claude (Anthropic MCP)', description: 'Connected via OmniHub Gateway' },
-      { id: 'gpt4-mcp', label: 'GPT-4o (OpenAI MCP)', description: 'Connected via OmniHub Gateway' },
-      { id: 'gemini-mcp', label: 'Gemini Ultra (Google MCP)', description: 'Connected via OmniHub Gateway' },
-      { id: 'llama-mcp', label: 'Llama 3 (Meta MCP)', description: 'On-premise inference' },
-    ];
+    return [];
   }
 }
 

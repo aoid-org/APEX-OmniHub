@@ -81,7 +81,7 @@ export default function Tasks() {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             policy: { require_approval: true }
-          } as Task;
+          };
         });
       }
       const { data, error } = await supabase
