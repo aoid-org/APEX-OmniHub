@@ -63,8 +63,12 @@ export default defineConfig({
       '@/dashboard': resolve(__dirname, './dashboard'),
       '@omniconnect': resolve(__dirname, '../../src/omniconnect'),
       '@': resolve(__dirname, './src'),
+      'react': resolve(__dirname, '../../node_modules/react'),
+      'react-dom': resolve(__dirname, '../../node_modules/react-dom'),
+      'react-i18next': resolve(__dirname, '../../node_modules/react-i18next'),
+      'i18next': resolve(__dirname, '../../node_modules/i18next'),
     },
-    dedupe: ['react', 'react-dom'],
+    dedupe: ['react', 'react-dom', 'react-router-dom', 'react-router', 'react-i18next', 'i18next'],
   },
   build: {
     outDir: 'dist',
