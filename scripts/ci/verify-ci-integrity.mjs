@@ -32,6 +32,10 @@ function isAllowed(lines, index) {
   return current.includes(ALLOW_TOKEN) || (previous.trim().startsWith("#") && previous.includes(ALLOW_TOKEN));
 }
 
+function isYamlCommentLine(line) {
+  return line.trimStart().startsWith("#");
+}
+
 // 1. Required job IDs are parsed from branch-protection.md so the scanner cannot
 //    drift from the documented contract.
 function parseRequiredJobs() {
@@ -119,7 +123,11 @@ function scanWorkflows(required) {
     const isRequired = requiredWorkflows.has(file);
 
     lines.forEach((line, i) => {
-      if (/\|\|\s*true\b/.test(line) && !isAllowed(lines, i)) {
+      if (
+        /\|\|\s*true\b/.test(line) &&
+        !isYamlCommentLine(line) &&
+        !isAllowed(lines, i)
+      ) {
         record("masked-failure", `${rel(full)}:${i + 1}`, "`|| true` suppresses command exit code");
       }
       // Per the release contract, continue-on-error only defeats branch protection on
