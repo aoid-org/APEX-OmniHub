@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v10.1 | LAST_UPDATED=2026-05-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v10.1 | LAST_UPDATED=2026-05-31 -->
 # CI Runtime Gates
 
 ## Vercel Reference Classification
