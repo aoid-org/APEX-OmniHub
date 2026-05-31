@@ -57,6 +57,9 @@ vi.mock('@/dashboard/components/modules/BillingModule', () => ({
 vi.mock('@/dashboard/components/modules/SettingsModule', () => ({
   default: () => <div data-testid="mod-settings" />,
 }));
+vi.mock('@/dashboard/components/modules/TranslationModule', () => ({
+  default: () => <div data-testid="mod-translation" />,
+}));
 
 import { ModuleRenderer } from '@/dashboard/components/ModuleRenderer';
 
@@ -96,7 +99,7 @@ describe('ModuleRenderer', () => {
     // Verify Suspense boundary renders for each known module key
     it.each([
       'physiomni', 'audits', 'links', 'automations',
-      'workflows', 'files', 'billing', 'settings',
+      'workflows', 'files', 'billing', 'settings', 'translation'
     ])('does not show unavailable fallback for key "%s"', (key) => {
       render(<ModuleRenderer moduleKey={key} onClose={vi.fn()} />);
       expect(screen.queryByText('Module data unavailable.')).not.toBeInTheDocument();
