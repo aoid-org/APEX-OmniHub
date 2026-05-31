@@ -86,7 +86,7 @@ interface OmniLinkRequestOptions {
 
 | Function | Purpose | Integration Type | Status |
 |----------|---------|------------------|--------|
-| `omnilink-agent` | AI Agent (Guardian/Planner/Executor) | HTTP POST | ✅ Production |
+| `apex-agent` | AI Agent (Guardian/Planner/Executor) | HTTP POST | ✅ Production |
 | `omnilink-eval` | Agent evaluation system | HTTP POST | ✅ Production |
 | `apex-assistant` | General AI assistant | HTTP POST | ✅ Production |
 | `apex-voice` | Voice processing | HTTP POST | ✅ Production |
@@ -170,7 +170,7 @@ await request({
                       ▼
         ┌─────────────────────────────┐
         │   Supabase Functions        │
-        │  • omnilink-agent           │
+        │  • apex-agent           │
         │  • apex-assistant           │
         │  • execute-automation       │
         └─────────────┬───────────────┘
@@ -194,7 +194,7 @@ await request({
 3. ✅ **FLOWBills** - Call `src/pages/apps/FLOWBills.tsx` logic
 4. ✅ **Jubee.Love** - Call `src/pages/apps/JubeeLove.tsx` logic
 5. ✅ **KeepSafe** - Call `src/pages/apps/KeepSafe.tsx` logic
-6. ✅ **OmniLink Agent** - Call `supabase/functions/omnilink-agent/` via HTTP
+6. ✅ **OmniLink Agent** - Call `supabase/functions/apex-agent/` via HTTP
 7. ✅ **APEX Assistant** - Call `supabase/functions/apex-assistant/` via HTTP
 
 ### Apps to Stub (Create Contracts)
@@ -209,7 +209,7 @@ await request({
 ## 🛡️ Security & Guard Rails (Existing)
 
 ### Guardian Security Layer
-**Location:** `supabase/functions/omnilink-agent/index.ts`
+**Location:** `supabase/functions/apex-agent/index.ts`
 
 **Features:**
 - Prompt injection detection (regex + LLM)

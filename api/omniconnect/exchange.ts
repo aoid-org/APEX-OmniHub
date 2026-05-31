@@ -83,7 +83,7 @@ export default async function handler(request: Request): Promise<Response> {
     }
 
     const { supabaseUrl, publishableKey } = requiredConfig();
-    const upstream = await fetch(`${supabaseUrl}/functions/v1/omnilink-agent`, {
+    const upstream = await fetch(`${supabaseUrl}/functions/v1/apex-agent`, {
       method: 'POST',
       headers: {
         Authorization: authHeader,

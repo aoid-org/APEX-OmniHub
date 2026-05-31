@@ -29,7 +29,7 @@ vi.mock('@supabase/supabase-js', () => ({
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MockSupabase = ReturnType<typeof createClient> & { ai: any; rpc: any; from: any };
 
-describe('OmniLink Agentic RAG', () => {
+describe('APEX Agent Agentic RAG', () => {
   let mockSupabase: MockSupabase;
   let skillRegistry: SkillRegistry; // NOSONAR
 

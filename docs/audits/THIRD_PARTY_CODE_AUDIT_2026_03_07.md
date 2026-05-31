@@ -96,7 +96,7 @@ The platform implements a well-defined five-plane architecture:
 |---|---|---|
 | `apex-assistant` | AI conversation handler | AI/LLM |
 | `apex-voice` | Real-time voice processing | AI/Voice |
-| `omnilink-agent` | Agent orchestration | Orchestration |
+| `apex-agent` | Agent orchestration | Orchestration |
 | `omnilink-port` | Universal connector | Integration |
 | `omnilink-eval` | Evaluation engine | Testing |
 | `omnilink-retry-scheduler` | Retry with backoff | Reliability |
@@ -307,7 +307,7 @@ The platform implements a well-defined five-plane architecture:
 | Workflow Orchestration (Temporal) | Live | Full Python orchestrator with saga patterns |
 | MAN Mode (Manual Approval Node) | Live | SQL migrations + orchestrator activities |
 | Push Notifications | Live | `send-push-notification/` + Capacitor integration |
-| OmniLink Universal Connector | Live | `omnilink-agent/`, `omnilink-port/` |
+| OmniLink Universal Connector | Live | `apex-agent/`, `omnilink-port/` |
 | OmniTrace Replay | Live | SQL migration + activities |
 | Edge CORS Proxy | Live | `api/cors.ts` (hardened) |
 | Rate Limiting | Live | `api/middleware/rate-limiter.ts` (fail-closed) |

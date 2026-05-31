@@ -99,7 +99,7 @@ All metrics below were obtained by direct `find`, `wc -l`, `grep`, and source in
 
 **New in v1.4.0 (verified):**
 - **OmniBoard Zustand Store** (`src/stores/omniBoardStore.ts`, 187 LOC): Full connector hydration lifecycle — `OmniBoardConnectorRecord`, `OmniBoardConnectorStatus` (`LIVE | CONNECTING | NEEDS_AUTH | ERROR`), atomic upsert, evict-on-signout
-- **Universal OmniDash Interaction Interceptor** (`src/omnidash/useOmniDashAction.ts`, 442 LOC): Pure `resolveIntentModalType()` — deterministic intent-to-modal dispatch, zero-config OAuth via `omnilink-agent` edge function, `SECRET_KEY_PATTERN` payload sanitization
+- **Universal OmniDash Interaction Interceptor** (`src/omnidash/useOmniDashAction.ts`, 442 LOC): Pure `resolveIntentModalType()` — deterministic intent-to-modal dispatch, zero-config OAuth via `apex-agent` edge function, `SECRET_KEY_PATTERN` payload sanitization
 - **OmniDash Integrations Live Status** (`src/components/omnidash/Integrations.tsx`, 389 LOC): Real-time connector status overlay via `useOmniBoard`, `CONNECTING` spinner state
 
 **Architecture Quality:**
@@ -134,7 +134,7 @@ All metrics below were obtained by direct `find`, `wc -l`, `grep`, and source in
 
 22 serverless edge functions with 10,318 LOC total:
 - **Core Intelligence:** `apex-assistant`, `apex-voice` (218 LOC), `omnilink-eval` (367 LOC), `byom-cockpit` (495 LOC), `byom-proxy`
-- **Connectivity:** `omnilink-agent`, `omnilink-port` (664 LOC — largest function), `omnilink-retry-scheduler`
+- **Connectivity:** `apex-agent`, `omnilink-port` (664 LOC — largest function), `omnilink-retry-scheduler`
 - **Web3:** `web3-verify` (489 LOC, full SIWE), `web3-nonce`, `verify-nft`, `alchemy-webhook` (363 LOC)
 - **Operations:** `trigger-workflow` (404 LOC), `execute-automation` (428 LOC), `omni-runs` (290 LOC), `send-push-notification` (251 LOC), `storage-upload-url`
 - **Infrastructure:** `supabase_healthcheck` (208 LOC), `ops-voice-health`, `test-integration`, `generate-business-skills`

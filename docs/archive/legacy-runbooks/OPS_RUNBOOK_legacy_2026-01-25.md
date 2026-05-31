@@ -21,7 +21,7 @@ This runbook provides operational procedures for the OmniLink Agentic RAG system
 ## System Architecture
 
 ### Core Components
-- **omnilink-agent**: Main agent runtime with dynamic skill loading
+- **apex-agent**: Main agent runtime with dynamic skill loading
 - **omnilink-eval**: Automated evaluation system
 - **OmniTrace**: Workflow observability and replay support
 - **OmniPolicy**: Deterministic policy evaluation for tool execution
@@ -50,7 +50,7 @@ This runbook provides operational procedures for the OmniLink Agentic RAG system
 
 2. **Edge Functions**
    ```bash
-   supabase functions deploy omnilink-agent
+   supabase functions deploy apex-agent
    supabase functions deploy omnilink-eval
    ```
 
@@ -66,7 +66,7 @@ This runbook provides operational procedures for the OmniLink Agentic RAG system
 #### Emergency Rollback (Complete System)
 ```bash
 # Disable all agent functions
-supabase functions delete omnilink-agent
+supabase functions delete apex-agent
 supabase functions delete omnilink-eval
 
 # Revert database to previous migration

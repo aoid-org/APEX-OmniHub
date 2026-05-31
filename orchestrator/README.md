@@ -16,7 +16,7 @@ Production-grade AI Agent Orchestration Platform with Temporal.io, Event Sourcin
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ TypeScript Edge Functions (Supabase)                         │
-│   - OmniLink Agent                                           │
+│   - APEX Agent                                               │
 │   - Event Publishers (sim/contracts)                         │
 └─────────────────┬────────────────────────────────────────────┘
                   │ EventEnvelope (JSON/HTTP)
