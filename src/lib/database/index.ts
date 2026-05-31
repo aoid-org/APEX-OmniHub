@@ -39,12 +39,8 @@ export function createDatabase(options: DatabaseFactoryOptions): IDatabase {
       })
 
     case 'postgresql':
-      // Future implementation
-      throw new Error('PostgreSQL provider not yet implemented')
-
     case 'planetscale':
-      // Future implementation
-      throw new Error('PlanetScale provider not yet implemented')
+      throw new Error(`Database provider "${options.provider}" is not implemented. Set VITE_DATABASE_PROVIDER=supabase or remove the env var to use the default.`)
 
     default:
       throw new Error(`Unknown database provider: ${options.provider}`)

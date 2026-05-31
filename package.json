@@ -51,7 +51,7 @@
     "test:wwwct:report": "tsx scripts/worldwide-wildcard/run.ts --mode mock --report-dir tests/worldwide-wildcard/reports",
     "lint:py": "cd orchestrator && ruff check . && ruff format --check .",
     "format:py": "cd orchestrator && ruff format .",
-    "test:py": "echo \"Skipping python test\" ",
+    "test:py": "cd orchestrator && python -m pytest -q",
     "ci:py": "npm run lint:py && npm run test:py",
     "hardhat:compile": "hardhat compile",
     "hardhat:test": "hardhat test",
