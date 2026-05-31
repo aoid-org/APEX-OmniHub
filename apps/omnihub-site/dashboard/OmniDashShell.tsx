@@ -1425,7 +1425,7 @@ export default function OmniDashShell() {
     // This prevents aggressive re-renders from detaching DOM nodes during test execution.
     if (
       (typeof navigator !== 'undefined' && navigator.webdriver) ||
-      (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_TEST__)
+      (typeof window !== 'undefined' && (window as unknown as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__)
     ) {
       return;
     }
