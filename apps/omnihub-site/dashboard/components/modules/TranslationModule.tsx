@@ -1,11 +1,32 @@
+/**
+ * TranslationModule — Real semantic translation panel for OmniDash.
+ * Uses the deterministic local SemanticTranslator (no external API).
+ *
+ * OWNED BY: APEX Business Systems Ltd.
+ */
 import { useState } from 'react';
 import { ModuleShell } from './ModuleShell';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LOCALES } from '@/i18n/locales';
+import { SemanticTranslator } from '@omniconnect/translation/translator';
+import type { OmniModuleState } from '@/hooks/useOmniModuleState';
 
 interface Props {
   readonly onClose: () => void;
 }
+
+const translator = new SemanticTranslator();
+
+const MODULE_STATE: OmniModuleState = {
+  moduleKey: 'translation',
+  headline: 'Semantic Translation Engine · Local Provider',
+  stats: [],
+  items: [],
+  actions: [],
+  loading: false,
+  error: null,
+  stateKind: 'live',
+};
 
 export default function TranslationModule({ onClose }: Props) {
   const { t } = useTranslation();
@@ -14,25 +35,28 @@ export default function TranslationModule({ onClose }: Props) {
   const [translatedText, setTranslatedText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [metadata, setMetadata] = useState<Record<string, unknown> | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleTranslate = async () => {
     if (!sourceText.trim()) return;
-    
+
     setIsTranslating(true);
+    setErrorMsg(null);
+
     try {
-      // Create a pseudo-event for the translation endpoint
-      let payloadObj = {};
+      let payloadObj: Record<string, unknown> = {};
       let isJson = false;
       try {
-        payloadObj = JSON.parse(sourceText);
+        payloadObj = JSON.parse(sourceText) as Record<string, unknown>;
         isJson = true;
       } catch {
         payloadObj = { text: sourceText };
       }
 
+      const corrId = crypto.randomUUID();
       const event = {
         eventId: crypto.randomUUID(),
-        correlationId: crypto.randomUUID(),
+        correlationId: corrId,
         tenantId: 'local',
         userId: 'local',
         source: 'TranslationModule',
@@ -43,63 +67,53 @@ export default function TranslationModule({ onClose }: Props) {
         timestamp: new Date().toISOString(),
         consentFlags: {},
         metadata: { locale: targetLang },
-        payload: payloadObj
+        payload: payloadObj,
       };
 
-      // We'll simulate a call to the translator here, or we can use SemanticTranslator directly if it's accessible.
-      // Since it's in src/omniconnect, which is a different app, we might need to import it or simulate the API call.
-      // We will import SemanticTranslator.
-      const { SemanticTranslator } = await import('@/../../../src/omniconnect/translation/translator');
-      const translator = new SemanticTranslator();
-      const results = await translator.translate([event], 'omnihub-site', event.correlationId);
-      
+      const results = await translator.translate([event], 'omnihub-site', corrId);
       const result = results[0];
-      if (result.payload._translation_status === 'DROPPED' || result.payload._translation_status === 'FAILED') {
+
+      const status = result.payload._translation_status;
+      if (status === 'DROPPED' || status === 'FAILED') {
         setTranslatedText(JSON.stringify(result.payload, null, 2));
+        setErrorMsg(`Translation ${String(status).toLowerCase()}: check payload schema.`);
       } else {
-        if (isJson) {
-          setTranslatedText(JSON.stringify(result.payload, null, 2));
-        } else {
-          setTranslatedText(String(result.payload.text));
-        }
+        setTranslatedText(
+          isJson
+            ? JSON.stringify(result.payload, null, 2)
+            : String(result.payload.text ?? '')
+        );
       }
+
       setMetadata({
         provider: 'Local Deterministic Provider',
         sourceLocale: 'auto',
         targetLocale: targetLang,
-        verified: result.metadata.verified
+        verified: result.metadata.verified ?? false,
       });
     } catch (err) {
-      console.error(err);
-      setTranslatedText('Translation failed.');
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMsg(`Error: ${msg}`);
+      setTranslatedText('');
     } finally {
       setIsTranslating(false);
     }
   };
 
-  const mockState = {
-    moduleKey: 'translation',
-    title: t('translation.title', 'Semantic Translation'),
-    description: '',
-    loading: false,
-    stats: [],
-    items: [],
-    actions: []
-  };
-
   return (
-    <ModuleShell state={mockState as unknown as Parameters<typeof ModuleShell>[0]['state']} onClose={onClose} onAction={async () => true}>
+    <ModuleShell state={MODULE_STATE} onClose={onClose} onAction={async () => true}>
       <div className="space-y-4">
         <div className="rounded-lg border border-border/30 bg-muted/10 overflow-hidden p-3 space-y-3">
           <div>
             <label className="text-xs font-medium text-muted-foreground block mb-1">
               {t('translation.source_text', 'Source Text or JSON Payload')}
             </label>
-            <textarea 
+            <textarea
+              id="translation-source-input"
               className="w-full text-sm rounded border border-border/30 bg-background px-3 py-2 min-h-[100px]"
               value={sourceText}
               onChange={(e) => setSourceText(e.target.value)}
-              placeholder='e.g., "Hello" or {"message": "Hello"}'
+              placeholder='e.g., Hello'
             />
           </div>
           <div className="flex items-center gap-2">
@@ -107,6 +121,7 @@ export default function TranslationModule({ onClose }: Props) {
               {t('translation.target_language', 'Target Language')}:
             </label>
             <select
+              id="translation-target-lang"
               className="text-sm rounded border border-border/30 bg-background px-2 py-1"
               value={targetLang}
               onChange={(e) => setTargetLang(e.target.value)}
@@ -118,13 +133,17 @@ export default function TranslationModule({ onClose }: Props) {
               ))}
             </select>
           </div>
-          <button 
+          <button
+            id="translation-translate-btn"
             onClick={handleTranslate}
             disabled={isTranslating || !sourceText.trim()}
             className="w-full py-2 bg-primary text-primary-foreground rounded text-sm font-medium disabled:opacity-50"
           >
             {isTranslating ? '...' : t('translation.translate', 'Translate')}
           </button>
+          {errorMsg && (
+            <div className="text-xs text-red-500 px-1">{errorMsg}</div>
+          )}
         </div>
 
         {translatedText && (
@@ -134,14 +153,15 @@ export default function TranslationModule({ onClose }: Props) {
                 <label className="text-xs font-medium text-muted-foreground">
                   {t('translation.translated_text', 'Translated Output')}
                 </label>
-                <button 
-                  onClick={() => navigator.clipboard.writeText(translatedText)}
+                <button
+                  onClick={() => void navigator.clipboard.writeText(translatedText)}
                   className="text-xs text-blue-500 hover:text-blue-600"
                 >
                   {t('translation.copy', 'Copy')}
                 </button>
               </div>
-              <textarea 
+              <textarea
+                id="translation-output"
                 className="w-full text-sm rounded border border-border/30 bg-background px-3 py-2 min-h-[100px]"
                 value={translatedText}
                 readOnly
@@ -149,7 +169,7 @@ export default function TranslationModule({ onClose }: Props) {
             </div>
             {metadata && (
               <div className="text-[10px] text-muted-foreground border-t border-border/30 pt-2">
-                <div>Provider: {metadata.provider}</div>
+                <div>Provider: {String(metadata.provider)}</div>
                 <div>Verified: {metadata.verified ? 'Yes' : 'No'}</div>
               </div>
             )}
