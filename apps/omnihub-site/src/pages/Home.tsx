@@ -812,6 +812,7 @@ function RequestAccessModal({
       aria-modal="true"
       aria-labelledby="modal-title"
       open={isOpen}
+      // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="modal-card">

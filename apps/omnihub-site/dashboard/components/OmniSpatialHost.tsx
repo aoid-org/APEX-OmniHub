@@ -59,7 +59,10 @@ function SpatialPayloadRenderer({ payload }: Readonly<{ payload: OmniModalConfig
 
   switch (appType) {
     case 'media': {
-      const isDemoMode = typeof process !== 'undefined' ? process.env.VITE_IS_DEMO_MODE === 'true' : false;
+      let isDemoMode = false;
+      if (typeof process !== 'undefined') {
+        isDemoMode = process.env.VITE_IS_DEMO_MODE === 'true';
+      }
       const result = sanitiseIframeUrl(url, isDemoMode);
       if (result.allowed) {
         return (
@@ -91,9 +94,10 @@ function SpatialPayloadRenderer({ payload }: Readonly<{ payload: OmniModalConfig
 
 /** Check if viewport is mobile-sized */
 function isMobileViewport(): boolean {
-  return typeof globalThis !== 'undefined' && 'innerWidth' in globalThis
-    ? globalThis.innerWidth < 640
-    : false;
+  if (typeof globalThis !== 'undefined' && 'innerWidth' in globalThis) {
+    return globalThis.innerWidth < 640;
+  }
+  return false;
 }
 
 function getPipStyles(): CSSProperties {
@@ -167,7 +171,8 @@ export function OmniSpatialHost() {
   }, []);
 
   const handleOpenChange = useCallback((open: boolean) => {
-    if (!open && activeModal) {
+    if (open) return;
+    if (activeModal) {
       if (Date.now() - mountTime.current < 300) return;
       abortModal('USER_DISMISSED');
     }
@@ -272,7 +277,7 @@ export function OmniSpatialHost() {
     return (
       <AnimatePresence>
         {isOpen && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-index-omnimodal, 500)' as unknown as number, pointerEvents: 'none' }}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-index-omnimodal, 500)', pointerEvents: 'none' }}>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: isPiP ? 0 : 1 }}
@@ -366,7 +371,7 @@ export function OmniSpatialHost() {
       <div
         style={{
           position: 'fixed', inset: 0,
-          zIndex: 'var(--z-index-omnimodal, 500)' as unknown as number,
+          zIndex: 'var(--z-index-omnimodal, 500)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
         data-testid="omni-sandbox-overlay"

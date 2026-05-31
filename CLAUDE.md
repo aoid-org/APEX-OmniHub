@@ -37,7 +37,7 @@
 | Fact | Value | Source |
 |---|---|---|
 | Package name | `apex-omnihub` | `package.json` |
-| Package version | `1.6.0` | `package.json` (pending changeset) |
+| Package version | `1.7.0` | `package.json` (pending changeset) |
 | Private | `true` | `package.json` |
 | Module type | `type: module` | `package.json` |
 | Node engine | `>=22 <25` | `package.json` |
@@ -580,6 +580,7 @@ Append an entry here after every agent-completed, verified workflow. Format: `YY
 | 2026-05-28 | branch `claude/keen-volta-wgdjf` | AG2 18-prompt handoff remediation: replaced 4 no-op fake-pass verify gates with real scanners; emptied `verify-release` silent-failure allowlist; remediated all 11 CodeQL alerts + 1 project TS error; cleared 4 Dependabot advisories via overrides; PhysiOmni partition-RLS migration; honest release docs (100/100 verified — tsc/eslint/ruff/Vitest 2553/pytest 919/build/e2e 22/assets/gates all exit 0) | `scripts/ci/verify-*.mjs`, `.github/workflows/*`, `supabase/migrations/20260528000000_*`, `docs/release/*`, `package.json`, lockfiles, `src/`, `tests/`, `memory/omni-recall/` |
 | 2026-05-29 | branch `claude/peaceful-volta-FFsX3` / `6dd4ed4` | Production E2E certification: full local pipeline green (typecheck, lint, react-singleton, full Vitest 2546 passed/0 failed in CI-env, real prod build, Playwright 44 passed, asset smoke, armageddon CI PASS, chaos sim 100/100). Omni-Recall multi-agent drift corrected; CLAUDE.md HEAD refreshed to `d1e83b0`. | `memory/omni-recall/`, `CLAUDE.md` |
 | 2026-05-29 | branch `apex/omnihub/docs-sync-20260529` | M-03 OmniDash Real-Time Observability Upgrade completed: Zero mock data, Recharts integration, strict typing | `dashboard/OmniDashShell.tsx`, `components/M03Panels.tsx`, `useDashboardData.ts` |
+| 2026-05-31 | current session | Resolved ESLint warnings in M03Panels, OmniSpatialHost, Tasks, OmniAppShell, Home, and fixtures. Updated package.json overrides for Bun compatibility. Tagged build 1.7.0 release. | `apps/omnihub-site/`, `integration-harness/`, `package.json` |
 
 ---
 
