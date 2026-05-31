@@ -164,11 +164,42 @@ async def test_call_webhook_ssrf_blocked():
 
 
 @pytest.mark.asyncio
-async def test_search_youtube():
+async def test_search_youtube_no_api_key(monkeypatch):
+    monkeypatch.delenv("YOUTUBE_API_KEY", raising=False)
     result = await search_youtube({"query": "cats"})
+    assert result["success"] is False
+    assert "YOUTUBE_API_KEY" in result["error"]
+    assert result["videos"] == []
+
+
+@pytest.mark.asyncio
+async def test_search_youtube_success(monkeypatch):
+    monkeypatch.setenv("YOUTUBE_API_KEY", "test-key")
+    fake_response = MagicMock()
+    fake_response.status_code = 200
+    fake_response.json.return_value = {
+        "items": [
+            {
+                "id": {"videoId": "abc123"},
+                "snippet": {
+                    "title": "Funny cats compilation",
+                    "description": "Very cute cats",
+                    "channelTitle": "CatsChannel",
+                    "publishedAt": "2024-01-01T00:00:00Z",
+                },
+            }
+        ]
+    }
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.get = AsyncMock(return_value=fake_response)
+    with patch("httpx.AsyncClient", return_value=mock_client):
+        result = await search_youtube({"query": "cats"})
     assert result["success"] is True
     assert len(result["videos"]) == 1
-    assert "cats" in result["videos"][0]["title"]
+    assert result["videos"][0]["title"] == "Funny cats compilation"
+    assert "abc123" in result["videos"][0]["url"]
 
 
 @pytest.mark.asyncio
