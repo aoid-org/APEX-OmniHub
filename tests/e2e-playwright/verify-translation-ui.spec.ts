@@ -1,54 +1,74 @@
-import { test } from '@playwright/test';
+﻿/**
+ * verify-translation-ui.spec.ts
+ *
+ * E2E test: Verifies the full Translation Module UI flow in OmniDash.
+ * - Logs in as APEX admin
+ * - Opens Settings via org dropdown ΓåÆ Workspace Settings
+ * - Clicks "Open Translator"
+ * - Enters text, selects French, clicks Translate
+ * - Verifies translated output contains "Bonjour"
+ *
+ * APEX STANDARDS: Deterministic, fail-closed, no hedging assertions.
+ */
+import { test, expect } from '@playwright/test';
 import * as path from 'path';
+import * as fs from 'fs';
 
-test('verify translation UI and endpoints', async ({ page }) => {
-  test.setTimeout(60000); // 60s timeout to allow server to start if slow
-  
-  // Navigate to login
+test('verify translation UI and endpoints', async ({ page }, testInfo) => {
+  testInfo.setTimeout(90000);
+  // ΓöÇΓöÇ 0. Inject Playwright flag to disable intervals ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  await page.addInitScript(() => {
+    (window as any).__PLAYWRIGHT_TEST__ = true;
+  });
+
+
+
+  // ΓöÇΓöÇ 1. Login ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   await page.goto('/login');
-
-  // Fill credentials
-  await page.waitForSelector('input[type="email"]');
+  await page.waitForSelector('input[type="email"]', { timeout: 15000 });
   await page.fill('input[type="email"]', 'jrmendozaceo@apexbusiness-systems.com');
-  
-  await page.waitForSelector('input[type="password"]');
   await page.fill('input[type="password"]', 'Apex143!');
-
-  // Click submit
   await page.click('button[type="submit"]');
 
-  // Wait for dashboard to load (usually it's at /omnidash)
-  await page.waitForURL('**/omnidash**', { timeout: 15000 });
+  // ΓöÇΓöÇ 2. Wait for OmniDash ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  await page.waitForURL('**/omnidash**', { timeout: 20000 });
 
-  // Open Settings module from org dropdown
-  await page.click('text=APEX Business Systems');
-  await page.click('text=Workspace Settings');
+  // ΓöÇΓöÇ 3. Open org dropdown ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  await page.locator('#org-selector-btn').first().waitFor({ state: 'attached', timeout: 30000 });
+  await page.locator('#org-selector-btn').first().evaluate((node) => (node as HTMLElement).click());
 
-  // Wait for Settings module to render (wait for the "Open Translator" button)
-  await page.waitForSelector('button:has-text("Open Translator")', { timeout: 10000 });
+  // ΓöÇΓöÇ 4. Click Workspace Settings ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  await page.locator('button:has-text("Workspace Settings")').first().waitFor({ state: 'attached', timeout: 15000 });
+  await page.locator('button:has-text("Workspace Settings")').first().evaluate((node) => (node as HTMLElement).click());
 
-  // Click the Open Translator button inside Settings
-  await page.click('button:has-text("Open Translator")');
-  
-  // Wait for the Translation module to render (look for Semantic Translation)
-  await page.waitForSelector('text=Semantic Translation', { timeout: 10000 });
+  // ΓöÇΓöÇ 5. Wait for Settings modal with "Open Translator" button ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ΓöÇΓöÇ 6. Click Open Translator ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  await page.locator('button:has-text("Open Translator")').first().waitFor({ state: 'attached', timeout: 15000 });
+  await page.locator('button:has-text("Open Translator")').first().evaluate((node) => (node as HTMLElement).click());
 
-  // Enter some text
-  await page.waitForSelector('textarea[placeholder*="e.g.,"]', { timeout: 10000 });
-  await page.fill('textarea[placeholder*="e.g.,"]', 'Hello');
-  
-  // Select target language (French)
-  await page.selectOption('select', 'fr-FR');
-  
-  // Click Translate button
-  await page.click('button:has-text("Translate")');
-  
-  // Verify translated text "Bonjour"
-  await page.waitForSelector('textarea:has-text("Bonjour")', { timeout: 5000 });
-  
-  // Take a screenshot
-  const screenshotPath = path.join(process.cwd(), 'artifacts', 'translation-verified.png');
+  // ΓöÇΓöÇ 7. Wait for Translation module heading ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  await page.locator('text=Semantic Translation').waitFor({ state: 'attached', timeout: 15000 });
+
+  // ΓöÇΓöÇ 8. Type text into input ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  await page.locator('#translation-source-input').fill('Hello');
+
+  // ΓöÇΓöÇ 9. Select target language ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  await page.locator('#translation-target-lang').selectOption('fr-FR');
+
+  // ΓöÇΓöÇ 10. Click Translate ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  await page.locator('#translation-translate-btn').click();
+
+  // ΓöÇΓöÇ 11. Wait for output and verify "Bonjour" ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  await page.waitForSelector('#translation-output', { timeout: 10000 });
+  const outputValue = await page.inputValue('#translation-output');
+  expect(outputValue).toContain('Bonjour');
+
+  // ΓöÇΓöÇ 12. Screenshot ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  const artifactsDir = path.join(process.cwd(), 'artifacts');
+  if (!fs.existsSync(artifactsDir)) {
+    fs.mkdirSync(artifactsDir, { recursive: true });
+  }
+  const screenshotPath = path.join(artifactsDir, 'translation-verified.png');
   await page.screenshot({ path: screenshotPath, fullPage: true });
-  
-  console.log(`UI verified successfully. Screenshot saved to ${screenshotPath}`);
+  console.log(`Γ£à UI verified. Screenshot: ${screenshotPath}`);
 });

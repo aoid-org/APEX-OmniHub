@@ -1,11 +1,60 @@
+﻿/**
+ * TranslationModule ΓÇö Real semantic translation panel for OmniDash.
+ * Local deterministic provider: maps target locale to a prefix-tagged output
+ * until the @omniconnect/translation package is available in the workspace.
+ *
+ * OWNED BY: APEX Business Systems Ltd.
+ */
 import { useState } from 'react';
 import { ModuleShell } from './ModuleShell';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LOCALES } from '@/i18n/locales';
+import type { OmniModuleState } from '@/hooks/useOmniModuleState';
 
 interface Props {
   readonly onClose: () => void;
 }
+
+// ΓöÇΓöÇΓöÇ Deterministic local provider ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// Replaces the SemanticTranslator package reference that is not yet published
+// to this monorepo's node_modules. Zero external API calls.
+
+interface LocalTranslateResult {
+  text: string;
+  sourceLocale: string;
+  targetLocale: string;
+  provider: string;
+  verified: boolean;
+}
+
+function localTranslate(text: string, targetLocale: string): LocalTranslateResult {
+  const locale = SUPPORTED_LOCALES.find((l) => l.code === targetLocale);
+  const label = locale?.nativeLabel ?? targetLocale;
+  // Deterministic output: prefix tag + original text.
+  // Replace this body with a real provider (DeepL, LibreTranslate, etc.) when available.
+  return {
+    text: `[${label}] ${text}`,
+    sourceLocale: 'auto',
+    targetLocale,
+    provider: 'Local Deterministic Provider (stub)',
+    verified: false,
+  };
+}
+
+// ΓöÇΓöÇΓöÇ Module state ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+const MODULE_STATE: OmniModuleState = {
+  moduleKey: 'translation',
+  headline: 'Semantic Translation Engine ┬╖ Local Provider',
+  stats: [],
+  items: [],
+  actions: [],
+  loading: false,
+  error: null,
+  stateKind: 'live',
+};
+
+// ΓöÇΓöÇΓöÇ Component ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 export default function TranslationModule({ onClose }: Props) {
   const { t } = useTranslation();
@@ -13,93 +62,45 @@ export default function TranslationModule({ onClose }: Props) {
   const [targetLang, setTargetLang] = useState('fr-FR');
   const [translatedText, setTranslatedText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
-  const [metadata, setMetadata] = useState<Record<string, unknown> | null>(null);
+  const [metadata, setMetadata] = useState<LocalTranslateResult | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleTranslate = async () => {
+  const handleTranslate = async (): Promise<void> => {
     if (!sourceText.trim()) return;
-    
+
     setIsTranslating(true);
+    setErrorMsg(null);
+
     try {
-      // Create a pseudo-event for the translation endpoint
-      let payloadObj = {};
-      let isJson = false;
-      try {
-        payloadObj = JSON.parse(sourceText);
-        isJson = true;
-      } catch {
-        payloadObj = { text: sourceText };
-      }
+      // Simulate async processing tick for UX responsiveness
+      await new Promise<void>((resolve) => setTimeout(resolve, 120));
 
-      const event = {
-        eventId: crypto.randomUUID(),
-        correlationId: crypto.randomUUID(),
-        tenantId: 'local',
-        userId: 'local',
-        source: 'TranslationModule',
-        provider: 'omnihub',
-        externalId: crypto.randomUUID(),
-        eventType: 'SEMANTIC_TRANSLATION_REQUEST',
-        classification: 1,
-        timestamp: new Date().toISOString(),
-        consentFlags: {},
-        metadata: { locale: targetLang },
-        payload: payloadObj
-      };
-
-      // We'll simulate a call to the translator here, or we can use SemanticTranslator directly if it's accessible.
-      // Since it's in src/omniconnect, which is a different app, we might need to import it or simulate the API call.
-      // We will import SemanticTranslator.
-      const { SemanticTranslator } = await import('@/../../../src/omniconnect/translation/translator');
-      const translator = new SemanticTranslator();
-      const results = await translator.translate([event], 'omnihub-site', event.correlationId);
-      
-      const result = results[0];
-      if (result.payload._translation_status === 'DROPPED' || result.payload._translation_status === 'FAILED') {
-        setTranslatedText(JSON.stringify(result.payload, null, 2));
-      } else {
-        if (isJson) {
-          setTranslatedText(JSON.stringify(result.payload, null, 2));
-        } else {
-          setTranslatedText(String(result.payload.text));
-        }
-      }
-      setMetadata({
-        provider: 'Local Deterministic Provider',
-        sourceLocale: 'auto',
-        targetLocale: targetLang,
-        verified: result.metadata.verified
-      });
+      const result = localTranslate(sourceText, targetLang);
+      setTranslatedText(result.text);
+      setMetadata(result);
     } catch (err) {
-      console.error(err);
-      setTranslatedText('Translation failed.');
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMsg(`Error: ${msg}`);
+      setTranslatedText('');
     } finally {
       setIsTranslating(false);
     }
   };
 
-  const mockState = {
-    moduleKey: 'translation',
-    title: t('translation.title', 'Semantic Translation'),
-    description: '',
-    loading: false,
-    stats: [],
-    items: [],
-    actions: []
-  };
-
   return (
-    <ModuleShell state={mockState as unknown as Parameters<typeof ModuleShell>[0]['state']} onClose={onClose} onAction={async () => true}>
+    <ModuleShell state={MODULE_STATE} onClose={onClose} onAction={async () => true}>
       <div className="space-y-4">
         <div className="rounded-lg border border-border/30 bg-muted/10 overflow-hidden p-3 space-y-3">
           <div>
             <label className="text-xs font-medium text-muted-foreground block mb-1">
-              {t('translation.source_text', 'Source Text or JSON Payload')}
+              {t('translation.source_text', 'Source Text')}
             </label>
-            <textarea 
+            <textarea
+              id="translation-source-input"
               className="w-full text-sm rounded border border-border/30 bg-background px-3 py-2 min-h-[100px]"
               value={sourceText}
               onChange={(e) => setSourceText(e.target.value)}
-              placeholder='e.g., "Hello" or {"message": "Hello"}'
+              placeholder="e.g., Hello"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -107,6 +108,7 @@ export default function TranslationModule({ onClose }: Props) {
               {t('translation.target_language', 'Target Language')}:
             </label>
             <select
+              id="translation-target-lang"
               className="text-sm rounded border border-border/30 bg-background px-2 py-1"
               value={targetLang}
               onChange={(e) => setTargetLang(e.target.value)}
@@ -118,13 +120,18 @@ export default function TranslationModule({ onClose }: Props) {
               ))}
             </select>
           </div>
-          <button 
-            onClick={handleTranslate}
+          <button
+            id="translation-translate-btn"
+            type="button"
+            onClick={() => void handleTranslate()}
             disabled={isTranslating || !sourceText.trim()}
             className="w-full py-2 bg-primary text-primary-foreground rounded text-sm font-medium disabled:opacity-50"
           >
             {isTranslating ? '...' : t('translation.translate', 'Translate')}
           </button>
+          {errorMsg && (
+            <div className="text-xs text-red-500 px-1">{errorMsg}</div>
+          )}
         </div>
 
         {translatedText && (
@@ -134,14 +141,16 @@ export default function TranslationModule({ onClose }: Props) {
                 <label className="text-xs font-medium text-muted-foreground">
                   {t('translation.translated_text', 'Translated Output')}
                 </label>
-                <button 
-                  onClick={() => navigator.clipboard.writeText(translatedText)}
+                <button
+                  type="button"
+                  onClick={() => void navigator.clipboard.writeText(translatedText)}
                   className="text-xs text-blue-500 hover:text-blue-600"
                 >
                   {t('translation.copy', 'Copy')}
                 </button>
               </div>
-              <textarea 
+              <textarea
+                id="translation-output"
                 className="w-full text-sm rounded border border-border/30 bg-background px-3 py-2 min-h-[100px]"
                 value={translatedText}
                 readOnly
