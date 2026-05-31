@@ -7,12 +7,17 @@
  *
  * @vitest-environment jsdom
  */
+import { fireEvent, render, screen } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { useState, type FormEvent } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createSupabaseConfigTraceId,
   hasSupabaseConfigValue,
   hasValidSupabaseUrl,
 } from '../apps/omnihub-site/src/lib/supabaseConfig';
+import { toUserFacingAuthError } from '../apps/omnihub-site/src/lib/authErrorDisplay';
 
 describe('supabase.ts config guard (runtime coverage)', () => {
   const originalEnv = { ...import.meta.env };
@@ -90,15 +95,15 @@ describe('hasSupabaseConfig validation logic (runtime)', () => {
   const evaluateConfig = (url: string, key: string) => hasSupabaseConfigValue(url, key);
 
   it('should accept valid https URL with non-empty key', () => {
-    expect(evaluateConfig(buildUrl(httpsProtocol, 'rtopreovkywofgwgmozi.supabase.co'), 'eyJhbGci...')).toBe(true);
+    expect(evaluateConfig(buildUrl(httpsProtocol, 'rtopreovkywofgwgmozi.supabase.co'), 'sb_publishable_runtime_1234567890')).toBe(true);
   });
 
   it('should accept valid http URL (local dev)', () => {
-    expect(evaluateConfig(buildUrl(httpProtocol, 'localhost:54321'), 'local-key')).toBe(true);
+    expect(evaluateConfig(buildUrl(httpProtocol, 'localhost:54321'), 'sb_anon_local_123')).toBe(true);
   });
 
   it('should accept HTTPS with mixed case', () => {
-    expect(evaluateConfig(buildUrl('HTTPS', 'example.supabase.co'), 'key')).toBe(true);
+    expect(evaluateConfig(buildUrl('HTTPS', 'example.supabase.co'), 'sb_publishable_key_123')).toBe(true);
   });
 
   it('should reject empty URL', () => {
@@ -106,20 +111,24 @@ describe('hasSupabaseConfig validation logic (runtime)', () => {
   });
 
   it('should reject URL without protocol', () => {
-    expect(evaluateConfig('rtopreovkywofgwgmozi.supabase.co', 'key')).toBe(false);
+    expect(evaluateConfig('rtopreovkywofgwgmozi.supabase.co', 'sb_publishable_key_123')).toBe(false);
   });
 
   it('should reject URL with only protocol prefix text', () => {
-    expect(evaluateConfig('placeholder', 'key')).toBe(false);
+    expect(evaluateConfig('placeholder', 'sb_publishable_key_123')).toBe(false);
   });
 
   it('should reject ftp protocol', () => {
     expect(hasValidSupabaseUrl(buildUrl(ftpProtocol, 'supabase.co'))).toBe(false);
-    expect(evaluateConfig(buildUrl(ftpProtocol, 'supabase.co'), 'key')).toBe(false);
+    expect(evaluateConfig(buildUrl(ftpProtocol, 'supabase.co'), 'sb_publishable_key_123')).toBe(false);
   });
 
   it('should reject empty anon key', () => {
     expect(evaluateConfig(buildUrl(httpsProtocol, 'valid.supabase.co'), '')).toBe(false);
+  });
+
+  it('should reject wrong-format anon key', () => {
+    expect(evaluateConfig(buildUrl(httpsProtocol, 'valid.supabase.co'), 'not-a-browser-key')).toBe(false);
   });
 
   it('should reject both empty', () => {
@@ -144,5 +153,54 @@ describe('supabaseConfigTraceId generation (runtime)', () => {
       ids.add(createSupabaseConfigTraceId());
     }
     expect(ids.size).toBeGreaterThanOrEqual(99);
+  });
+});
+
+function RuntimeLoginHarness({ signInWithPassword }: { signInWithPassword: () => Promise<{ error: { message: string } | null }> }) {
+  const [error, setError] = useState('');
+  const traceId = 'cfg-test123';
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    const { error: authError } = await signInWithPassword();
+
+    if (authError) {
+      setError(toUserFacingAuthError(authError, traceId));
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <button type="submit">Sign in</button>
+      {error ? <p role="alert">{error}</p> : null}
+    </form>
+  );
+}
+
+describe('login entry bootstrap', () => {
+  it('should wrap the standalone login page in BrowserRouter for Layout navigation hooks', () => {
+    const loginEntry = readFileSync(resolve(__dirname, '../apps/omnihub-site/src/login.tsx'), 'utf8');
+
+    expect(loginEntry).toContain("import { BrowserRouter } from 'react-router-dom';");
+    expect(loginEntry).toContain('<BrowserRouter>');
+    expect(loginEntry).toContain('<LoginPage />');
+  });
+});
+
+describe('login invalid api key handling', () => {
+  it('should render admin-safe auth misconfigured message instead of raw invalid api key', async () => {
+    const signInWithPassword = vi.fn(async () => ({ error: { message: 'Invalid API key' } }));
+
+    render(<RuntimeLoginHarness signInWithPassword={signInWithPassword} />);
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toContain('Authentication is misconfigured. Contact an administrator.');
+    expect(alert.textContent).toContain('Trace: cfg-test123');
+    expect(alert.textContent).not.toContain('Invalid API key');
+  });
+
+  it('should preserve normal invalid credential auth messages', () => {
+    expect(toUserFacingAuthError({ message: 'Invalid login credentials' }, 'cfg-test123')).toBe('Invalid login credentials');
   });
 });
