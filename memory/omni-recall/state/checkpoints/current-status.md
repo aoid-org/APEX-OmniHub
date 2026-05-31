@@ -36,11 +36,21 @@
 - supabase_function: supabase/functions/apex-agent/ (was omnilink-agent — renamed via git mv)
 - verification: tsc exit 0, eslint exit 0, Vitest 2578/2578 pass.
 
-## Verified runtime facts (2026-05-29) — production E2E certification session
-- last_verified_date: 2026-05-29
-- last_verified_commit: dba09ec (base)
-- active_branch: apex/omnihub/docs-sync-20260529
+## Latest session (2026-05-31) — PR #1251 merged + full verification
+- branch: claude/tender-goldberg-dYWdK (merged via PR #1251 → main)
+- scope: Post-merge verification. Pulled main HEAD 7a2c45ed. Confirmed zero naming drift. Committed pending migration rename. Updated CLAUDE.md, certification status, all docs.
+- key outcome: PR #1251 merged and confirmed green. All CI: tsc/eslint/Vitest 2578/SonarCloud QG passed/Chaos 100×3 seeds/RSI allow. 3 DB migrations confirmed applied to live Supabase. CLAUDE.md HEAD updated to 7a2c45ed.
+- verification: grep omnilink-agent → zero hits. tsc exit 0. eslint exit 0. Vitest 2578/2578.
+- codex_post_merge_changes: Auto-fix `7a2c45ed` simplified MCP response mapping (CodeX). Both changes already pulled.
+
+## Verified runtime facts (2026-05-31) — post-PR-1251-merge audit
+- last_verified_date: 2026-05-31
+- last_verified_commit: 7a2c45ed (Auto-fix applied by CodeX: simplify MCP response mapping)
+- active_branch: main
 - multi_agent_environment: true
 - known_non_claude_agents: [google-jules, google-antigravity, openai-codex, dependabot]
-- open_prs_noted: PR#1239 (merged)
-- network_note: project Supabase host reachable; anonymous sign-ins disabled and no E2E creds, so authenticated UI E2E is environment-limited in-sandbox
+- open_prs_noted: PR#1251 (merged 2026-05-31)
+- apex_agent_canonical_slug: apex-agent
+- apex_agent_supabase_function: supabase/functions/apex-agent/
+- db_migrations_applied_to_production: 20260527000001 (aegis/chronos), 20260528000000 (physiomni-rls), 20260528000001 (omniconnect-vault)
+- naming_drift: zero — confirmed by grep across all ts/tsx/yaml/json/yml/sh files
