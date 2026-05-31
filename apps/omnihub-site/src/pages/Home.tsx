@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { StructuredData } from '@/components/StructuredData';
