@@ -831,8 +831,6 @@ function RequestAccessModal({
       aria-modal="true"
       aria-labelledby="modal-title"
       open={isOpen}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) onClose(); }}
     >
       <div className="modal-card">
         <button className="modal-close" id="modal-close" aria-label="Close" onClick={onClose}>&times;</button>
