@@ -87,7 +87,7 @@ class OmniBoardFSM:
             return context, "I didn't understand that. Please wait or try again."
 
         except Exception as e:
-            logger.error(f"FSM Error: {str(e)}", exc_info=True)
+            logger.exception(f"FSM Error: {str(e)}", exc_info=True)
             # Transition to RECOVERY_RETRY on error
             context.state = OmniBoardState.RECOVERY_RETRY
             return context, "Something went wrong. Let's try that step again."

@@ -114,7 +114,7 @@ export SUPABASE_SERVICE_ROLE_KEY="your-service-key"
 node run-simulation.js
 ```
 
-This calls the **real omnilink-agent** function and tests the full system.
+This calls the **real apex-agent** function and tests the full system.
 
 ## 📈 Output
 
@@ -188,7 +188,7 @@ The simulator automatically detects:
 This simulation exercises:
 
 ### Backend Components
-- ✅ **omnilink-agent** - Tri-Force agent (Guardian/Planner/Executor)
+- ✅ **apex-agent** - Tri-Force agent (Guardian/Planner/Executor)
 - ✅ **Guardian** - Constitutional AI security layer
 - ✅ **Planner** - Request decomposition
 - ✅ **Executor** - Skill orchestration
@@ -262,7 +262,7 @@ Point to your Supabase instance and test real agent behavior!
 ## 📚 Learn More
 
 - **System Architecture:** `/docs/TECH_SPEC_ARCHITECTURE.md`
-- **AI Agent Design:** `/supabase/functions/omnilink-agent/index.ts`
+- **AI Agent Design:** `/supabase/functions/apex-agent/index.ts`
 - **Security Features:** `/docs/zero-trust-baseline.md`
 - **Production Status:** `/docs/PRODUCTION_STATUS.md`
 

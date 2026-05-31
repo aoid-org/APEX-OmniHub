@@ -149,8 +149,8 @@ jobs:
       run: |
         echo "Performing basic health checks..."
         # Check if required files exist
-        if [ ! -f "supabase/functions/omnilink-agent/index.ts" ]; then
-          echo "ERROR: omnilink-agent function missing"
+        if [ ! -f "supabase/functions/apex-agent/index.ts" ]; then
+          echo "ERROR: apex-agent function missing"
           exit 1
         fi
 

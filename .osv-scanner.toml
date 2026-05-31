@@ -1,0 +1,14 @@
+# OSV Scanner ignore list — APEX OmniHub
+# Pre-existing vulnerabilities that cannot be patched upstream (no fixed version available)
+# and are scoped to dev/toolchain dependencies only (not production bundle).
+#
+# Review cadence: check for patches on each dependency minor bump.
+
+[[IgnoredVulns]]
+id = "GHSA-848j-6mx2-7j84"
+reason = """
+Low-severity: elliptic uses a cryptographic primitive with a risky implementation.
+elliptic@6.6.1 is pinned via package.json overrides (no patched version released by upstream).
+Affected only in the hardhat/ethers dev toolchain — not imported in any production bundle.
+Reviewed and accepted: 2026-05-28. Re-evaluate when upstream releases a patch.
+"""

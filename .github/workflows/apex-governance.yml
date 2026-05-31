@@ -119,7 +119,7 @@ jobs:
             for f in $changed_lockfiles; do
               if [ -f "$f" ]; then
                 echo "Scanning $f..."
-                osv-scanner --lockfile="$f"
+                osv-scanner --config .osv-scanner.toml --lockfile="$f"
               fi
             done
           else

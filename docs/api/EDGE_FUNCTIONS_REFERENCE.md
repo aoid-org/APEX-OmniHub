@@ -15,7 +15,7 @@
 | `byom-cockpit` | POST | Yes (anon) | Bring-Your-Own-Model cockpit interface |
 | `byom-proxy` | POST | Yes (anon) | Bring-Your-Own-Model proxy relay |
 | `mcp-proxy` | POST | Yes (anon) | MCP protocol proxy |
-| `omnilink-agent` | POST | Yes (anon or service) | Submit agent goal for orchestration |
+| `apex-agent` | POST | Yes (anon or service) | Submit agent goal for orchestration |
 | `omnilink-eval` | POST | Yes (service only) | Run evaluation suite |
 | `omnilink-port` | POST | Yes (anon) | Universal connector input normalization |
 | `omnilink-retry-scheduler` | POST | Yes (service) | Retry scheduler for failed omnilink tasks |
@@ -42,7 +42,7 @@
 
 ## Core Endpoints
 
-### POST /omnilink-agent
+### POST /apex-agent
 
 Submit a natural language goal for the Tri-Force orchestration pipeline.
 
@@ -105,7 +105,7 @@ All endpoints except `web3-verify` and `platform-health` require authentication.
 **Anon key** (for user-facing calls, subject to RLS):
 ```bash
 curl -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-     https://rtopreovkywofgwgmozi.supabase.co/functions/v1/omnilink-agent \
+     https://rtopreovkywofgwgmozi.supabase.co/functions/v1/apex-agent \
      -d '{"goal": "List my recent tasks"}'
 ```
 

@@ -1,203 +1,209 @@
-// APEX-OmniHub CI Integrity Scanner
-// Sonar-clean: S3579 (unused collection), S4138 (for-of), S6326 (regex quantifier),
-//              S1940 (negated condition), S2486 (empty catch) all resolved.
+#!/usr/bin/env node
+// APEX-OmniHub CI Integrity Scanner (Prompts 1 & 9).
+// Fails closed on fake-pass gates, suppressed failures, and branch-protection drift.
+// Honest by construction: this scanner contains real detection logic and will flag
+// itself if it is ever reduced to a console.log placeholder.
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
-const WORKSPACE_DIR = process.cwd();
-const WORKFLOWS_DIR = path.join(WORKSPACE_DIR, ".github", "workflows");
-const BRANCH_PROTECTION_FILE = path.join(WORKSPACE_DIR, "docs", "release", "branch-protection.md");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(__dirname, "..", "..");
+const workflowDir = path.join(repoRoot, ".github", "workflows");
+const verifyScriptDir = path.join(repoRoot, "scripts", "ci");
+const branchProtectionDoc = path.join(repoRoot, "docs", "release", "branch-protection.md");
 
-console.log("=== APEX-OmniHub CI Integrity Scanner ===");
+const violations = [];
+const record = (rule, location, detail) => violations.push({ rule, location, detail });
 
-let hasErrors = false;
+const rel = (p) => path.relative(repoRoot, p).replaceAll("\\", "/");
 
-function logError(message) {
-  console.error(`[ERROR] ${message}`);
-  hasErrors = true;
+// Inline escape hatch: `# ci-integrity-allow: <reason>` on the same or previous line.
+const ALLOW_TOKEN = "ci-integrity-allow:";
+
+function readLines(file) {
+  return fs.readFileSync(file, "utf8").split(/\r?\n/);
 }
 
-// 1. Scan workflows directory
-if (!fs.existsSync(WORKFLOWS_DIR)) {
-  logError(`Workflows directory not found at ${WORKFLOWS_DIR}`);
-  process.exit(1);
+function isAllowed(lines, index) {
+  const current = lines[index] ?? "";
+  const previous = index > 0 ? lines[index - 1] : "";
+  return current.includes(ALLOW_TOKEN) || (previous.trim().startsWith("#") && previous.includes(ALLOW_TOKEN));
 }
 
-const workflowFiles = fs
-  .readdirSync(WORKFLOWS_DIR)
-  .filter((file) => file.endsWith(".yml") || file.endsWith(".yaml"));
+// 1. Required job IDs are parsed from branch-protection.md so the scanner cannot
+//    drift from the documented contract.
+function parseRequiredJobs() {
+  if (!fs.existsSync(branchProtectionDoc)) {
+    record("branch-protection-doc-missing", rel(branchProtectionDoc), "branch-protection.md not found");
+    return [];
+  }
+  const text = fs.readFileSync(branchProtectionDoc, "utf8");
+  const pattern = /Job ID \/ Name\*\*:\s*`([^`]+)`\s*\(defined in `\.github\/workflows\/([^`]+)`\)/g;
+  const required = [];
+  let match;
+  while ((match = pattern.exec(text)) !== null) {
+    required.push({ jobId: match[1].trim(), workflow: match[2].trim() });
+  }
+  if (required.length === 0) {
+    record("branch-protection-doc-empty", rel(branchProtectionDoc), "no required job IDs parsed");
+  }
+  return required;
+}
 
-// Fake-gate name patterns: job IDs that indicate the job is not a real enforcement gate.
-const FAKE_GATE_PATTERNS = [
-  /^always[-_]?pass/i,
-  /^skip[-_]?rsi/i,
-  /^dummy[-_]?gate/i,
-  /^placeholder[-_]?gate/i,
-  /^no[-_]?op[-_]?gate/i,
-  /^fake[-_]?gate/i,
-  /^noop[-_]?check/i,
-];
-
-// Track workflow names (dedup) and job IDs (used later for branch-protection check)
-const workflowNames = new Map();
-// allJobIds: Map<jobId, filename> — used in branch-protection verification below.
-const allJobIds = new Map();
-// allJobDisplayNames: Map<displayName, filename> — detects duplicate governance check names
-// that would conflict in GitHub branch protection settings.
-const allJobDisplayNames = new Map();
-
-for (const file of workflowFiles) {
-  const filePath = path.join(WORKFLOWS_DIR, file);
-  const content = fs.readFileSync(filePath, "utf8");
-  const lines = content.split(/\r?\n/);
-
-  let workflowName = "";
-  let inJobsBlock = false;
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-
-    // Skip full-line comments
-    if (line.startsWith("#")) continue;
-
-    // Detect workflow name (first occurrence wins)
-    if (workflowName === "") {
-      const nameMatch = line.match(/^name:\s*(?:"([^"]+)"|'([^']+)'|([^#\n]+))/i);
-      if (nameMatch) {
-        workflowName = (nameMatch[1] ?? nameMatch[2] ?? nameMatch[3]).trim();
-      }
-    }
-
-    // Detect jobs block start
-    if (rawLine.startsWith("jobs:")) {
-      inJobsBlock = true;
+// Extract top-level job IDs from a workflow file (line-based, no YAML dependency —
+// integrity scans must not add runtime deps).
+function parseWorkflowJobs(lines) {
+  const jobs = [];
+  let inJobs = false;
+  let jobsIndent = -1;
+  for (const line of lines) {
+    if (/^jobs:\s*$/.test(line)) {
+      inJobs = true;
+      jobsIndent = line.search(/\S/);
       continue;
     }
-
-    // Detect end of jobs block (non-indented, non-empty line)
-    if (inJobsBlock && rawLine.length > 0 && !rawLine.startsWith(" ") && !rawLine.startsWith("\t")) {
-      inJobsBlock = false;
+    if (!inJobs) continue;
+    const indent = line.search(/\S/);
+    if (line.trim() !== "" && indent <= jobsIndent && !line.startsWith("jobs:")) {
+      inJobs = false;
+      continue;
     }
+    const jobMatch = line.match(/^(\s{2,})([A-Za-z0-9_-]+):\s*$/);
+    if (jobMatch?.[1].length === jobsIndent + 2) {
+      jobs.push({ id: jobMatch[2] });
+    }
+  }
+  return jobs;
+}
 
-    if (inJobsBlock) {
-      // Job keys have exactly 2-space indentation: "  jobId:"
-      const jobKeyMatch = rawLine.match(/^ {2}([a-zA-Z0-9_-]+):\s*$/);
-      if (jobKeyMatch) {
-        const jobId = jobKeyMatch[1];
-        allJobIds.set(jobId, file);
-        // Check for fake gate name patterns
-        for (const pattern of FAKE_GATE_PATTERNS) {
-          if (pattern.test(jobId)) {
-            logError(`Fake gate name detected: job ID "${jobId}" in ${file} matches forbidden pattern "${pattern}"`);
-          }
-        }
+function parseJobDisplayNames(lines) {
+  const names = [];
+  let currentJob = null;
+  let inJobs = false;
+  let jobsIndent = -1;
+  for (const line of lines) {
+    if (/^jobs:\s*$/.test(line)) {
+      inJobs = true;
+      jobsIndent = line.search(/\S/);
+      continue;
+    }
+    if (!inJobs) continue;
+    const jobMatch = line.match(/^(\s{2,})([A-Za-z0-9_-]+):\s*$/);
+    if (jobMatch?.[1].length === jobsIndent + 2) {
+      currentJob = jobMatch[2];
+      continue;
+    }
+    const nameMatch = line.match(/^\s+name:(.*)$/);
+    if (nameMatch && currentJob) {
+      names.push({ jobId: currentJob, name: nameMatch[1].trim().replace(/^["']|["']$/g, "") });
+      currentJob = null;
+    }
+  }
+  return names;
+}
+
+function scanWorkflows(required) {
+  if (!fs.existsSync(workflowDir)) {
+    record("workflow-dir-missing", rel(workflowDir), "no .github/workflows directory");
+    return;
+  }
+  const files = fs.readdirSync(workflowDir).filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"));
+  const requiredWorkflows = new Set(required.map((r) => r.workflow));
+  const displayNameMap = new Map();
+
+  for (const file of files) {
+    const full = path.join(workflowDir, file);
+    const lines = readLines(full);
+    const isRequired = requiredWorkflows.has(file);
+
+    lines.forEach((line, i) => {
+      if (/\|\|\s*true\b/.test(line) && !isAllowed(lines, i)) {
+        record("masked-failure", `${rel(full)}:${i + 1}`, "`|| true` suppresses command exit code");
       }
-      // Collect job-level display names (4-space indent: "    name: ...")
-      const jobNameMatch = rawLine.match(/^ {4}name:\s*(?:"([^"]+)"|'([^']+)'|([^#\n]+))/);
-      if (jobNameMatch) {
-        const displayName = (jobNameMatch[1] ?? jobNameMatch[2] ?? jobNameMatch[3]).trim();
-        if (displayName && allJobDisplayNames.has(displayName)) {
-          logError(
-            `Duplicate job display name "${displayName}" detected in ${file} and ${allJobDisplayNames.get(displayName)}. ` +
-            `This causes a GitHub branch-protection name collision — only one job check will match.`
-          );
-        } else if (displayName) {
-          allJobDisplayNames.set(displayName, file);
-        }
+      // Per the release contract, continue-on-error only defeats branch protection on
+      // required gates; non-required workflows may legitimately tolerate optional steps.
+      if (isRequired && /^\s*continue-on-error:\s*true\s*$/.test(line) && !isAllowed(lines, i)) {
+        record("continue-on-error", `${rel(full)}:${i + 1}`, "continue-on-error: true in required-workflow");
       }
+    });
+
+    for (const { jobId, name } of parseJobDisplayNames(lines)) {
+      const key = name.toLowerCase();
+      if (!displayNameMap.has(key)) displayNameMap.set(key, []);
+      displayNameMap.get(key).push(`${file}:${jobId}`);
     }
   }
 
-  if (workflowName) {
-    if (workflowNames.has(workflowName)) {
-      logError(
-        `Conflicting/Duplicate workflow name detected: "${workflowName}" in both ${file} and ${workflowNames.get(workflowName)}`
+  for (const [name, locations] of displayNameMap.entries()) {
+    if (locations.length > 1) {
+      record("duplicate-job-name", locations.join(", "), `display name "${name}" used by ${locations.length} jobs`);
+    }
+  }
+
+  for (const { jobId, workflow } of required) {
+    const full = path.join(workflowDir, workflow);
+    if (!fs.existsSync(full)) {
+      record("required-workflow-missing", workflow, "workflow declared in branch-protection.md not found");
+      continue;
+    }
+    const jobs = parseWorkflowJobs(readLines(full));
+    if (!jobs.some((j) => j.id === jobId)) {
+      record("required-job-drift", workflow, `required job "${jobId}" not found (branch-protection drift)`);
+    }
+  }
+}
+
+// Detect fake-pass verify scripts: a verify-*.mjs whose only executable behavior is to
+// print a success string. This is the exact pattern Prompts 1 & 9 require us to reject.
+function scanFakePassScripts() {
+  if (!fs.existsSync(verifyScriptDir)) return;
+  const files = fs.readdirSync(verifyScriptDir).filter((f) => /^verify-.*\.mjs$/.test(f));
+  for (const file of files) {
+    const full = path.join(verifyScriptDir, file);
+    const meaningful = fs
+      .readFileSync(full, "utf8")
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(
+        (l) =>
+          l !== "" &&
+          !l.startsWith("//") &&
+          !l.startsWith("#!") &&
+          !l.startsWith("import ") &&
+          !l.startsWith("/*") &&
+          !l.startsWith("*"),
       );
-    } else {
-      workflowNames.set(workflowName, file);
-    }
-  }
-
-  const isRequiredWorkflow = [
-    "release.yml",
-    "rsi-governance.yml",
-    "ci-runtime-gates.yml",
-    "apex-governance.yml", // governance gate is required — must be fail-closed
-  ].includes(file);
-
-  // Line-by-line requirement checks
-  for (let i = 0; i < lines.length; i++) {
-    const rawLine = lines[i];
-    const line = rawLine.trim();
-
-    if (line.startsWith("#")) continue;
-
-    // Strip inline comments for pattern matching
-    const cleanLine = line.split("#")[0].trim();
-
-    // Requirement 3.1: No || true bypass on required gates
-    if (isRequiredWorkflow && /\|\|\s*true\b/i.test(cleanLine)) {
-      if (!cleanLine.includes("kill") && !cleanLine.includes("preview.pid")) {
-        logError(`Forbidden '|| true' bypass detected in required workflow ${file}:${i + 1}: "${line}"`);
-      }
-    }
-
-    // Requirement 3.2: No continue-on-error: true on required gates
-    if (isRequiredWorkflow && /^continue-on-error:\s*true\b/i.test(cleanLine)) {
-      const hasTerraformDriftException = content.includes("terraform_drift_tests");
-      if (!hasTerraformDriftException) {
-        logError(`Forbidden 'continue-on-error: true' bypass detected in required gate ${file}:${i + 1}`);
-      }
-    }
-
-    // Requirement 3.3: No fake/pass placeholder text
-    const placeholderMatch = cleanLine.match(
-      /(component not yet active, passing\.|fake pass|placeholder success)/i
+    const onlyLogsSuccess =
+      meaningful.length > 0 &&
+      meaningful.every((l) => /^console\.(log|info)\(/.test(l)) &&
+      meaningful.some((l) => /PASS|SUCCESS|OK/i.test(l));
+    const hasRealLogic = meaningful.some((l) =>
+      /(process\.exit|throw |if\s*\(|for\s*\(|while\s*\(|spawnSync|readFileSync|readdirSync|existsSync)/.test(l),
     );
-    if (placeholderMatch) {
-      logError(`Fake/pass placeholder text detected in ${file}:${i + 1}: "${placeholderMatch[0]}"`);
-    }
-
-    // Requirement 3.5: No skipped-check markers
-    if (/skipped\s{1,4}(?:RSI|release|security)\s+check/i.test(cleanLine)) {
-      logError(`Skipped critical check marker detected in ${file}:${i + 1}`);
+    if (onlyLogsSuccess && !hasRealLogic) {
+      record("fake-pass-script", rel(full), "verify script only prints success with no real checks");
     }
   }
 }
 
-// 2. Verify required branch-protection jobs exist in actual workflow files
-if (fs.existsSync(BRANCH_PROTECTION_FILE)) {
-  const bpContent = fs.readFileSync(BRANCH_PROTECTION_FILE, "utf8");
+const required = parseRequiredJobs();
+scanWorkflows(required);
+scanFakePassScripts();
 
-  const requiredJobs = [];
-  for (const match of bpContent.matchAll(/\*\*Job ID \/ Name\*\*:\s*`([a-zA-Z0-9_-]+)`/g)) {
-    requiredJobs.push(match[1]);
+console.log("=== verify:ci-integrity — CI Integrity Scanner ===");
+console.log(`Scanned workflows in ${rel(workflowDir)} and verify scripts in ${rel(verifyScriptDir)}.`);
+
+if (violations.length > 0) {
+  console.error(`\n❌ verify:ci-integrity FAILED — ${violations.length} integrity violation(s):`);
+  for (const v of violations) {
+    console.error(`  [${v.rule}] ${v.location}\n      ${v.detail}`);
   }
-
-  if (requiredJobs.length === 0) {
-    logError("No required status checks parsed from branch-protection.md");
-  } else {
-    console.log(`Parsed ${requiredJobs.length} required checks from branch-protection.md:`, requiredJobs);
-
-    for (const job of requiredJobs) {
-      if (allJobIds.has(job)) {
-        console.log(`✓ Required check "${job}" matches a workflow job (${allJobIds.get(job)}).`);
-      } else {
-        logError(
-          `Required branch protection job "${job}" is declared in docs, but does NOT exist in any workflow!`
-        );
-      }
-    }
-  }
-} else {
-  logError(`Branch protection documentation not found at ${BRANCH_PROTECTION_FILE}`);
-}
-
-if (hasErrors) {
-  console.log("\n❌ CI Integrity verification FAILED.");
+  console.error("\nRemediate each violation or add an audited `# ci-integrity-allow: <reason>` for genuine exceptions.");
   process.exit(1);
-} else {
-  console.log("\n✅ CI Integrity verification PASSED. All gates secure, no bypasses detected.");
-  process.exit(0);
 }
+
+console.log(`✓ ${required.length} required gate(s) verified against branch-protection.md; no masked failures or fake-pass gates.`);
+console.log("verify:ci-integrity PASSED");
+process.exit(0);

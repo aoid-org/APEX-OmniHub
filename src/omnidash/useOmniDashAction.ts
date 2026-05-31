@@ -24,7 +24,7 @@
  * APEX STANDARDS ENFORCED:
  * - Atomic Idempotency: Same intent always produces identical OmniModalConfig id
  * - Zero-Config Onboarding: No credential surface in the client — all token
- *   exchange delegated to supabase.functions.invoke('omnilink-agent')
+ *   exchange delegated to supabase.functions.invoke('apex-agent')
  * - Single-Modal: useOmniModal enforces no-stack — invoke() replaces previous
  * - Overload-Free: onCancel fully absorbs ABORTED without UI errors
  * - Intent-Driven: resolveIntentModalType() deterministically maps intent → type
@@ -37,10 +37,7 @@ import { useCallback } from 'react';
 import { useOmniModal } from '../stores/omniModalStore';
 import type { OmniModalConfig, ModalType, RenderMode } from '../stores/omniModalStore';
 import { useOmniBoard } from '../stores/omniBoardStore';
-import type {
-  OmniBoardConnectorRecord,
-  ConnectorStatus,
-} from '../stores/omniBoardStore';
+import type { OmniBoardConnectorRecord } from '../stores/omniBoardStore';
 import { supabase } from '../integrations/supabase/client';
 import type { AppRegistryCategory } from '../../packages/core/src/registry';
 
@@ -192,10 +189,10 @@ export function useOmniDashAction(navigate?: (path: string) => void): {
   dispatch: (intent: OmniDashIntent) => void;
 } {
   const hydrateConnector = useOmniBoard(
-    (s) => s.hydrateConnector as (record: OmniBoardConnectorRecord) => void,
+    (s) => s.hydrateConnector,
   );
   const setConnectorStatus = useOmniBoard(
-    (s) => s.setConnectorStatus as (appKey: string, status: ConnectorStatus) => void,
+    (s) => s.setConnectorStatus,
   );
 
   const dispatch = useCallback(
@@ -227,7 +224,7 @@ export function useOmniDashAction(navigate?: (path: string) => void): {
             // intent; the Edge Function orchestrates the provider handshake
             // and returns a sanitized session descriptor.
             const { data, error } = await supabase.functions.invoke(
-              'omnilink-agent',
+              'apex-agent',
               {
                 body: {
                   action: 'oauth_exchange',

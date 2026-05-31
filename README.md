@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.6.3 (target) | **package.json version:** 1.6.0 | **Changeset for 1.6.1 pending** | **Release Date:** 2026-05-11 | **Docs audit:** 2026-05-20
+**Release line:** 1.6.3 (target) | **package.json version:** 1.6.0 | **Changeset for 1.6.1 pending** | **Release Date:** 2026-05-29 | **Docs audit:** 2026-05-29
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -133,7 +133,7 @@ Client-side infrastructure for deterministic media delivery:
 | ------------------------ | -------------------------- |
 | `apex-assistant`         | AI conversation handler    |
 | `apex-voice`             | Real-time voice processing |
-| `omnilink-agent`         | Agent orchestration        |
+| `apex-agent`         | Agent orchestration        |
 | `omnilink-port`          | Universal connector        |
 | `trigger-workflow`       | Temporal dispatch          |
 | `verify-nft`             | NFT ownership check        |

@@ -228,8 +228,7 @@ export class MetricsCollector {
     }
 
     // Single pass to bucket by app
-    for (let i = 0; i < this.latencyMetrics.length; i++) {
-      const m = this.latencyMetrics[i];
+    for (const m of this.latencyMetrics) {
       // Find matching app - typically operation starts with app name
       for (const app of apps) {
         if (m.operation.startsWith(app)) {
@@ -249,7 +248,7 @@ export class MetricsCollector {
       const len = bucket.durations.length;
       const avgLatency = len > 0 ? bucket.sum / len : 0;
 
-      const durations = bucket.durations.sort((a, b) => a - b);
+      const durations = bucket.durations.toSorted((a, b) => a - b);
       const p95Latency = len > 0 ? this.percentile(durations, 0.95) : 0;
 
       metrics.push({

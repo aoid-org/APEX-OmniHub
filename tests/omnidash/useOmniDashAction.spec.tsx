@@ -110,7 +110,7 @@ describe('useOmniDashAction', () => {
     await config.onComplete({ authorizationCode: 'abc' });
 
     expect(setConnectorStatus).toHaveBeenCalledWith('quickbooks', 'CONNECTING');
-    expect(mockSupabaseInvoke).toHaveBeenCalledWith('omnilink-agent', {
+    expect(mockSupabaseInvoke).toHaveBeenCalledWith('apex-agent', {
       body: {
         action: 'oauth_exchange',
         provider: 'quickbooks',

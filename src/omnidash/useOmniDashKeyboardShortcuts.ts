@@ -40,7 +40,7 @@ export function useOmniDashKeyboardShortcuts(
       if (match) {
         event.preventDefault();
         // key === 'home' means Today - close all panels
-        openPanel(match.key === 'home' ? null : match.key as PanelKey);
+        openPanel(match.key === 'home' ? null : match.key);
       }
     };
 

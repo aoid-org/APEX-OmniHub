@@ -33,7 +33,7 @@ All notable changes to the APEX OmniHub Marketing Site.
 - **`src/stores/omniBoardStore.ts`** (root shared store) — Connector hydration state accessible across all OmniDash surface areas.
 - **`src/omnidash/useOmniDashAction.ts`** (root shared hook) — Universal interaction interceptor wiring OmniDash app triggers to the Universal Modal Engine.
   - Deterministic `resolveIntentModalType()`: Partial → oauth, spatial appType → spatial, entryUrl → microfrontend, Live SPA → navigate.
-  - Zero-Config OAuth proxy via `supabase.functions.invoke('omnilink-agent')`.
+  - Zero-Config OAuth proxy via `supabase.functions.invoke('apex-agent')`.
   - Sanitized payload → `OmniBoardStore` hydration on success.
   - Router-context-independent: `navigate` is an optional injected parameter.
 

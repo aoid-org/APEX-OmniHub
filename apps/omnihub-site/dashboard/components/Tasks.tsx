@@ -81,8 +81,8 @@ export default function Tasks() {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             policy: { require_approval: true }
-          };
-        }) as Task[];
+          } as Task;
+        });
       }
       const { data, error } = await supabase
         .from("omnilink_orchestration_requests")
@@ -193,12 +193,12 @@ export default function Tasks() {
 
   // ⚡ Bolt: Memoized task status counting to prevent O(n) recalculations on every render
   const statusCounts = useMemo(() => {
-    return tasks?.reduce(
+    return tasks?.reduce<Record<string, number>>(
       (acc, task) => {
         acc[task.status] = (acc[task.status] ?? 0) + 1;
         return acc;
       },
-      {} as Record<string, number>
+      {}
     );
   }, [tasks]);
 

@@ -204,7 +204,7 @@ self.addEventListener('message', (event) => {
 
   if (event.data?.type === 'SKIP_WAITING') {
     console.log('[SW] Received SKIP_WAITING message');
-    self.skipWaiting();
+    globalThis.skipWaiting();
   }
 });
 

@@ -175,10 +175,10 @@ export default async function handler(req: Request): Promise<Response> {
     });
 
   } catch (error) {
+    // Log full detail server-side; return a generic message so internals are not exposed.
     console.error('Evaluation error:', error);
     return new Response(JSON.stringify({
-      error: 'Evaluation failed',
-      message: error instanceof Error ? error.message : String(error)
+      error: 'Evaluation failed'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -248,8 +248,8 @@ async function runSingleEvaluation(supabase: SupabaseClient, evalCaseId: string)
   const startTime = Date.now();
 
   try {
-    // Call omnilink-agent with the eval case message
-    const agentResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/omnilink-agent`, {
+    // Call apex-agent with the eval case message
+    const agentResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/apex-agent`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

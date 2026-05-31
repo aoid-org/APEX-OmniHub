@@ -74,13 +74,15 @@ async def mock_events_handler(request):
                 {"results": [{"status": "ingested", "id": str(uuid.uuid4())}]}
             )
     except Exception as e:
-        logger.error(f"Server error: {e}")
+        logger.exception(f"Server error: {e}")
         return web.json_response({"error": str(e)}, status=500)
 
 
 def find_free_port():
+    # Bind to loopback only; the mock benchmark server is local and must not be
+    # reachable on all interfaces.
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("", 0))
+        s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
 
 
@@ -123,7 +125,7 @@ async def run_benchmark():
             )
             return "success"
         except Exception as e:
-            logger.error(f"Task {i} failed: {e}")
+            logger.exception(f"Task {i} failed: {e}")
             return e
 
     logger.info(
@@ -145,7 +147,7 @@ async def run_benchmark():
     # Analyze results
     failures = [r for r in results if r != "success"]
     if failures:
-        logger.error(f"Encountered {len(failures)} failures.")
+        logger.exception(f"Encountered {len(failures)} failures.")
         return 1
 
     logger.info("=" * 40)
@@ -170,10 +172,10 @@ async def run_benchmark():
         logger.info("The implementation correctly handles concurrency.")
         return 0
     else:
-        logger.error(
+        logger.exception(
             f"❌ FAILURE: Duration ({duration:.2f}s) suggests sequential blocking or high overhead."
         )
-        logger.error(f"Threshold was {threshold:.2f}s")
+        logger.exception(f"Threshold was {threshold:.2f}s")
         return 1
 
 

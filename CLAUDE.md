@@ -1,7 +1,7 @@
 # CLAUDE.md — APEX OmniHub Agent Operating Manual
 
 **Purpose:** Root operating context for Claude/agent sessions. Prevents hallucination, unsafe edits, and untraceable changes.
-**Last verified:** 2026-05-20 · main @ `a54bd7c`
+**Last verified:** 2026-05-29 · main @ `dba09ec` (other agents — Jules, Antigravity, Codex, Dependabot — also move `main`; always verify HEAD with `git log`)
 **Critical rule:** Facts not verified from this file or an explicit user instruction → mark `[UNVERIFIED]`. If this file conflicts with a subsystem file, read that file before acting.
 
 **Self-update protocol (§28):** After every verified/validated workflow, append an entry to the §27 Completed Workflow Log and update affected fact tables in the relevant sections. Only write facts confirmed by direct code inspection or successful command output.
@@ -27,6 +27,7 @@
 - Prefer explicit control flow over nested ternaries.
 - Prefer `globalThis` for portable browser/global access.
 - Comments: one concise line for non-obvious WHY only. No what/how/caller comments.
+- Zero mock data in production: Never use `Math.random()` or hardcoded mocks for deterministic paths. Fallback gracefully with empty states instead.
 - Use existing stack primitives before adding abstractions.
 
 ---
@@ -47,7 +48,7 @@
 | Unit/integration runner | Vitest | `vitest.config.ts` |
 | Python lint | Ruff, Python 3.11 target, line 88 | `pyproject.toml` |
 | Changeset access | `restricted` | `.changeset/config.json` |
-| Latest main commit | `a54bd7c` (2026-05-20) | git log |
+| Latest main commit | `d1e83b0` (2026-05-29) | git log |
 | Production URL | `https://apexomnihub.icu` | `.github/workflows/release.yml` env |
 | Cloudflare account ID | `0e1bce84773a0d1ce340145ea195e86f` | CI workflows (non-secret) |
 
@@ -576,6 +577,10 @@ Append an entry here after every agent-completed, verified workflow. Format: `YY
 | 2026-05-20 | PR #1185 / `a54bd7c` | B-2 structural fix: decouple shadow deployment from npm publish for private packages; SonarCloud script injection fix | `.github/workflows/release.yml`, `scripts/ci/write-release-evidence.mjs` |
 | 2026-05-20 | PR #1187 / `191e547` | Certification status updated: B-2 structural fix documented, path-to-certified updated | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` |
 | 2026-05-23 | commit (branch) | Omni-Recall continuity system installed at `memory/omni-recall/`; session-load hook added to §29; all stale GPT-workspace paths corrected; full blueprint folder shape created | `memory/omni-recall/`, `CLAUDE.md` |
+| 2026-05-28 | branch `claude/keen-volta-wgdjf` | AG2 18-prompt handoff remediation: replaced 4 no-op fake-pass verify gates with real scanners; emptied `verify-release` silent-failure allowlist; remediated all 11 CodeQL alerts + 1 project TS error; cleared 4 Dependabot advisories via overrides; PhysiOmni partition-RLS migration; honest release docs (100/100 verified — tsc/eslint/ruff/Vitest 2553/pytest 919/build/e2e 22/assets/gates all exit 0) | `scripts/ci/verify-*.mjs`, `.github/workflows/*`, `supabase/migrations/20260528000000_*`, `docs/release/*`, `package.json`, lockfiles, `src/`, `tests/`, `memory/omni-recall/` |
+| 2026-05-29 | branch `claude/peaceful-volta-FFsX3` / `6dd4ed4` | Production E2E certification: full local pipeline green (typecheck, lint, react-singleton, full Vitest 2546 passed/0 failed in CI-env, real prod build, Playwright 44 passed, asset smoke, armageddon CI PASS, chaos sim 100/100). Omni-Recall multi-agent drift corrected; CLAUDE.md HEAD refreshed to `d1e83b0`. | `memory/omni-recall/`, `CLAUDE.md` |
+| 2026-05-29 | branch `apex/omnihub/docs-sync-20260529` | M-03 OmniDash Real-Time Observability Upgrade completed: Zero mock data, Recharts integration, strict typing | `dashboard/OmniDashShell.tsx`, `components/M03Panels.tsx`, `useDashboardData.ts` |
+| 2026-05-30 | branch `claude/tender-goldberg-dYWdK` / `22e8b00` | Crisis-mode full-system audit: disabled orphaned `/translation` registry entry (no route handler), added 17-test APEX Agent workflow invocation suite. All gates: tsc/eslint/react-singleton clean, Vitest 2578/2578, E2E 22 passed, build clean, assets 7/7, Python CI clean. | `src/features/registry.ts`, `tests/integration/apex-agent-workflow.spec.ts`, `public/sitemap.xml` |
 
 ---
 

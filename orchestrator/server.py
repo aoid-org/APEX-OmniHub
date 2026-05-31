@@ -134,7 +134,7 @@ async def create_goal(request: GoalRequest) -> dict[str, str] | JSONResponse:
             raise
 
     except Exception:
-        logger.error("Unhandled exception", exc_info=True)
+        logger.exception("Unhandled exception", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error") from None
 
 
@@ -202,7 +202,7 @@ async def execute_intent(request: Request) -> dict[str, str]:
         return {"workflowId": handle.id, "status": "started"}
 
     except Exception:
-        logger.error("Intent execution failed", exc_info=True)
+        logger.exception("Intent execution failed", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error") from None
 
 

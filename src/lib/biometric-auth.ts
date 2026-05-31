@@ -17,7 +17,7 @@ export interface BiometricCredential {
 
 export interface BiometricAuthOptions {
   rpName: string; // Relying Party name (e.g., "APEX OmniLink")
-  rpId: string; // Domain (e.g., "omnihub.com")
+  rpId: string; // Domain (e.g., "apexomnihub.icu")
   userName: string; // User's email or username
   userId: Uint8Array; // Unique user identifier
   challenge: Uint8Array; // Server-generated challenge

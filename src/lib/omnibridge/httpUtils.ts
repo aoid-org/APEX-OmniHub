@@ -6,8 +6,26 @@
  * @license Proprietary - APEX Business Systems Ltd.
  */
 
+function redactUnsafeResponseValue(value: unknown): unknown {
+  if (value instanceof Error) {
+    return { name: value.name || 'Error' };
+  }
+  if (Array.isArray(value)) {
+    return value.map(redactUnsafeResponseValue);
+  }
+  if (value !== null && typeof value === 'object') {
+    const redacted: Record<string, unknown> = {};
+    for (const [key, childValue] of Object.entries(value as Record<string, unknown>)) {
+      if (/^(stack|cause)$/i.test(key)) continue;
+      redacted[key] = redactUnsafeResponseValue(childValue);
+    }
+    return redacted;
+  }
+  return value;
+}
+
 export function jsonResponse(status: number, body: Record<string, unknown>): Response {
-  return new Response(JSON.stringify(body), {
+  return new Response(JSON.stringify(redactUnsafeResponseValue(body)), {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
