@@ -61,24 +61,36 @@ function jsonResponse(data: unknown, status: number, corsHeaders: Record<string,
   });
 }
 
-// Mock registry lookup for now - in production this would fetch from 'omnihub_model_registry' table
 async function getProviderConfig(tenantId: string, provider: Provider): Promise<ModelProviderConfig | null> {
   const isByomEnabled = Deno.env.get('BYOM_ENABLED') === 'true';
   if (!isByomEnabled) return null;
-  
-  // Mock config matching the required safety schemas
+
+  const { data, error } = await supabase
+    .from('omnihub_model_registry')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .eq('provider_id', provider)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[byom-proxy] Registry lookup error:', error.message);
+    return null;
+  }
+  if (!data) return null;
+
   return ModelProviderRegistrySchema.parse({
-    provider_id: provider,
-    tenant_id: tenantId,
-    endpoint: resolveProviderEndpoint(provider),
-    auth_secret_ref: `vault/byom/${provider}`,
-    provider_type: provider === 'openai' ? 'openai-compatible' : 'anthropic-compatible',
-    allowed_models: ['gpt-4', 'gpt-3.5-turbo', 'claude-3-sonnet'],
-    max_cost_usd: 10,
-    max_latency_ms: 30000,
-    retention_mode: 'ephemeral',
-    pii_policy: 'redact',
-    tool_use_permissions: ['none'],
+    provider_id: data.provider_id,
+    tenant_id: data.tenant_id,
+    endpoint: data.endpoint ?? resolveProviderEndpoint(provider),
+    auth_secret_ref: data.auth_secret_ref,
+    provider_type: data.provider_type,
+    allowed_models: data.allowed_models,
+    max_cost_usd: data.max_cost_usd,
+    max_latency_ms: data.max_latency_ms ?? 30000,
+    retention_mode: data.retention_mode,
+    pii_policy: data.pii_policy,
+    tool_use_permissions: data.tool_use_permissions,
   });
 }
 
@@ -118,7 +130,7 @@ serve(async (req: Request) => {
       return jsonResponse({ error: `Model ${model} is not allowed by governance policy` }, 403, corsHeaders);
     }
     
-    // Check tenant budget (mock logic for max_cost_usd)
+    // Check tenant accumulated spend against registry budget cap
     const { data: currentSpendData } = await supabase
       .from('omnihub_audit_log')
       .select('details')
@@ -209,7 +221,7 @@ serve(async (req: Request) => {
           controller.close();
 
           const region = req.headers.get('x-region') ?? 'us';
-          const estimatedCost = (inputTokens * 0.00001) + (outputTokens * 0.00003); // mock cost calculation
+          const estimatedCost = (inputTokens * 0.00001) + (outputTokens * 0.00003); // approximate token cost: refine per provider pricing sheet
           
           await supabase.from('omnihub_audit_log').insert({
             action: 'BYOM_AUDIT_SPAN',

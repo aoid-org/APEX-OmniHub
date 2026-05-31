@@ -63,6 +63,7 @@ from activities.tools import (
     delete_record,
     generate_plan_with_llm,
     search_database,
+    search_youtube,
     send_email,
     setup_activities,
 )
@@ -164,6 +165,7 @@ async def start_worker() -> None:
             generate_plan_with_llm,
             # Tool execution activities
             search_database,
+            search_youtube,
             create_record,
             delete_record,
             send_email,
