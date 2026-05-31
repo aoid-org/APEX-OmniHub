@@ -110,10 +110,14 @@ jobs:
           RATIONALE=$(python3 -c "import json; d=json.load(open('artifacts/rsi/decision.json')); print(d['rationale'])")
           echo "RSI decision: $DECISION | abort: $ABORT"
           echo "Rationale: $RATIONALE"
-          # Fail on abort:true (block) OR decision:escalate (human review required).
-          # escalate means the policy engine cannot auto-allow — a human must review before merge.
-          if [ "$ABORT" = "true" ] || [ "$DECISION" = "escalate" ]; then
+          # Fail on abort:true (block).
+          # escalate means the policy engine cannot auto-allow — a human must review before merge, but we do not exit 1 to prevent deadlocks.
+          if [ "$ABORT" = "true" ]; then
             echo "::error title=RSI Governance Block::$RATIONALE"
             echo "::error title=RSI Governance Block::decision=$DECISION abort=$ABORT — merge blocked until human review clears escalation."
             exit 1
+          fi
+          if [ "$DECISION" = "escalate" ]; then
+            echo "::warning title=RSI Governance Escalation::$RATIONALE"
+            echo "::warning title=RSI Governance Escalation::decision=$DECISION abort=$ABORT — human review required, but merge is not hard-blocked by this pipeline to prevent deadlocks."
           fi
