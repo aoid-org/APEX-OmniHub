@@ -1,0 +1,168 @@
+# ============================================================================
+# Direct Production Cloudflare Pages Deploy (GOVERNED)
+# ============================================================================
+#
+# WHY THIS WORKFLOW EXISTS
+# ------------------------
+# This is the corrected replacement for the broken direct-deploy proposed in
+# PR #1262. That proposal deployed to a NON-EXISTENT Cloudflare Pages project
+# ("omnihub"), bypassed the §25 governed release pipeline, and used a
+# false-green smoke test (a 200 on apexomnihub.icu/login passes regardless,
+# because that domain is served by the already-healthy `apex-omnihub`
+# project — the curl never proves THIS deploy went anywhere).
+#
+# CENTRAL CORRECTION
+# ------------------
+#   * Target project is `apex-omnihub` (the real project serving
+#     https://apexomnihub.icu), driven by a repo VARIABLE and NEVER hardcoded
+#     to "omnihub".
+#   * Production upload is gated behind the `production-shadow` GitHub
+#     Environment (required-reviewer protection) so a HUMAN must approve before
+#     anything is pushed to production. This does NOT replace or bypass the
+#     §25 shadow-certified release pipeline in release.yml — it reuses the same
+#     human approval gate. Prefer release.yml for normal releases; this
+#     workflow is a manual, reviewer-gated break-glass / re-deploy path.
+#   * Build env comes from GitHub Secrets (VITE_SUPABASE_*) as the single
+#     source of truth. `npm run build` runs `prebuild` -> check-env-root.mjs,
+#     which fails closed if those vars are missing.
+#   * The smoke test fetches the DEPLOYED production bundle and ASSERTS the
+#     correct Supabase URL is baked in and the key has the expected shape,
+#     and FAILS if the bundle still points at placeholder.supabase.co.
+#   * wrangler errors fail the job (no `|| true`).
+#
+# GOVERNANCE NOTE
+# ---------------
+# Adding/modifying a .github/workflows/** file will (correctly) trip the RSI
+# Governance Gate as a RED-lane change requiring human review. That is
+# expected and acceptable for a production-deploy workflow.
+#
+# EXPECTED GitHub config (names only — never values):
+#   Secrets:   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID,
+#              VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY,
+#              VITE_SUPABASE_PUBLISHABLE_KEY
+#   Variables: CLOUDFLARE_PRODUCTION_PROJECT_NAME (default apex-omnihub),
+#              EXPECTED_SUPABASE_HOST (default rtopreovkywofgwgmozi.supabase.co)
+#   Environment: production-shadow (required-reviewer protection)
+# ============================================================================
+
+name: Deploy Production (Cloudflare Pages, governed)
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why is a direct production deploy being run?"
+        required: true
+        type: string
+
+concurrency: deploy-production-cf-direct
+
+permissions:
+  contents: read
+
+env:
+  PRODUCTION_SITE_URL: https://apexomnihub.icu
+
+jobs:
+  # --------------------------------------------------------------------------
+  # Guard: no-op cleanly on forks / when required config is absent.
+  # --------------------------------------------------------------------------
+  preflight:
+    name: Preflight (config guard)
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.guard.outputs.ready }}
+    steps:
+      - name: Verify required secrets/vars are present
+        id: guard
+        env:
+          HAS_CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+          HAS_SUPA_URL: ${{ secrets.VITE_SUPABASE_URL != '' }}
+          HAS_SUPA_PUB: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY != '' }}
+        run: |
+          if [ "$HAS_CF_TOKEN" = "true" ] && \
+             [ "$HAS_CF_ACCOUNT" = "true" ] && \
+             [ "$HAS_SUPA_URL" = "true" ] && \
+             [ "$HAS_SUPA_PUB" = "true" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "Required deploy configuration present."
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Required secrets/vars absent (likely a fork). Skipping production deploy."
+          fi
+
+  # --------------------------------------------------------------------------
+  # Deploy: gated behind the production-shadow Environment (human approval).
+  # --------------------------------------------------------------------------
+  deploy:
+    name: Build and deploy to production (reviewer-gated)
+    needs: preflight
+    if: needs.preflight.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    environment: production-shadow
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: "24"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Validate build environment (fails closed)
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: node scripts/check-env-root.mjs
+
+      - name: Build production bundle (env from GitHub Secrets)
+        env:
+          CI: "true"
+          VITE_SITE_URL: ${{ env.PRODUCTION_SITE_URL }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: bun run build
+
+      - name: Deploy to Cloudflare Pages (production)
+        id: cf_deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Defaults to the REAL project. Never "omnihub".
+          CF_PROJECT_NAME: ${{ vars.CLOUDFLARE_PRODUCTION_PROJECT_NAME || 'apex-omnihub' }}
+        run: |
+          set -euo pipefail
+          echo "Deploying dist/ to Cloudflare Pages project: ${CF_PROJECT_NAME}"
+          # No `|| true`: a wrangler failure must fail the job.
+          npx --yes --ignore-scripts wrangler@latest pages deploy dist \
+            --project-name="${CF_PROJECT_NAME}" \
+            --branch=main \
+            --commit-dirty=true \
+            2>&1 | tee cf-deploy.log
+          DEPLOY_URL=$(grep -oiE 'https://[a-z0-9.-]+\.pages\.dev' cf-deploy.log | head -1 || echo "")
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "::error::Could not parse a deployment URL from wrangler output."
+            exit 1
+          fi
+          echo "deploy_url=${DEPLOY_URL}" >> "$GITHUB_OUTPUT"
+          echo "Deployment preview URL: ${DEPLOY_URL}"
+
+      - name: Real smoke test (assert deployed bundle config)
+        env:
+          PROD_URL: ${{ env.PRODUCTION_SITE_URL }}
+          DEPLOY_URL: ${{ steps.cf_deploy.outputs.deploy_url }}
+          EXPECTED_SUPABASE_HOST: ${{ vars.EXPECTED_SUPABASE_HOST || 'rtopreovkywofgwgmozi.supabase.co' }}
+        run: node scripts/ci/verify-deployed-bundle.mjs
