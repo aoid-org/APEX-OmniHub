@@ -125,7 +125,7 @@ export const TOUR_STEPS = [
   },
   {
     title: '② Edge Functions — Layer 1',
-    body: '28 Deno-hosted Supabase Edge Functions. Key ones: omnilink-agent (AI orchestration), stripe-webhook (billing), verify-nft (NFT gating), mcp-proxy (MCP bridge), omni-runs (workflow trigger).',
+    body: '28 Deno-hosted Supabase Edge Functions. Key ones: apex-agent (APEX Agent AI orchestration), stripe-webhook (billing), verify-nft (NFT gating), mcp-proxy (MCP bridge), omni-runs (workflow trigger).',
     highlight: 'L1',
     layer: 'L1',
   },

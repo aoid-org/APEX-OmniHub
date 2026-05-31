@@ -44,3 +44,11 @@ Promote a new rule to durable memory only if it is:
 - explicitly stated as a stable preference, or
 - repeated across multiple interactions, or
 - a correction with broad future applicability
+
+## Verified Project Facts (2026-05-31)
+
+- Canonical AI agent name: APEX Agent (user-facing) / apex-agent (Supabase function slug)
+- OmniSlate routes through: `invokeMcpIntent` → `${SUPABASE_URL}/functions/v1/apex-agent`
+- Deprecated: apex-assistant (returns 410 Gone), omnilink-agent (abolished)
+- Production DB migrations applied: 20260527000001, 20260528000000, 20260528000001
+- Verified HEAD: 7a2c45ed (main, 2026-05-31)

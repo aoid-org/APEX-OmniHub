@@ -1,7 +1,7 @@
 # CLAUDE.md — APEX OmniHub Agent Operating Manual
 
 **Purpose:** Root operating context for Claude/agent sessions. Prevents hallucination, unsafe edits, and untraceable changes.
-**Last verified:** 2026-05-29 · main @ `dba09ec` (other agents — Jules, Antigravity, Codex, Dependabot — also move `main`; always verify HEAD with `git log`)
+**Last verified:** 2026-05-31 · main @ `7a2c45ed` (other agents — Jules, Antigravity, Codex, Dependabot — also move `main`; always verify HEAD with `git log`)
 **Critical rule:** Facts not verified from this file or an explicit user instruction → mark `[UNVERIFIED]`. If this file conflicts with a subsystem file, read that file before acting.
 
 **Self-update protocol (§28):** After every verified/validated workflow, append an entry to the §27 Completed Workflow Log and update affected fact tables in the relevant sections. Only write facts confirmed by direct code inspection or successful command output.
@@ -37,7 +37,7 @@
 | Fact | Value | Source |
 |---|---|---|
 | Package name | `apex-omnihub` | `package.json` |
-| Package version | `1.6.0` | `package.json` (pending changeset) |
+| Package version | `1.7.0` | `package.json` (pending changeset) |
 | Private | `true` | `package.json` |
 | Module type | `type: module` | `package.json` |
 | Node engine | `>=22 <25` | `package.json` |
@@ -48,7 +48,9 @@
 | Unit/integration runner | Vitest | `vitest.config.ts` |
 | Python lint | Ruff, Python 3.11 target, line 88 | `pyproject.toml` |
 | Changeset access | `restricted` | `.changeset/config.json` |
-| Latest main commit | `d1e83b0` (2026-05-29) | git log |
+| Latest main commit | `7a2c45ed` (2026-05-31) | git log |
+| APEX Agent function slug | `apex-agent` (Supabase Edge Function) | `supabase/functions/apex-agent/` |
+| APEX Agent display name | `APEX Agent` | canonical across all code, docs, CI |
 | Production URL | `https://apexomnihub.icu` | `.github/workflows/release.yml` env |
 | Cloudflare account ID | `0e1bce84773a0d1ce340145ea195e86f` | CI workflows (non-secret) |
 
@@ -478,6 +480,20 @@ If any is "no" — stop and verify first.
 2. Fix broken paths or stale anchors
 3. Do not remove doc checks to make CI pass
 
+### APEX Agent invocation failure (OmniSlate error)
+1. `apps/omnihub-site/src/omnihub-gateway/mcp-client/index.ts` — primary call site
+2. Supabase URL must be set: `VITE_SUPABASE_URL` in env
+3. User must be authenticated: `supabase.auth.getSession()` returns a non-null `access_token`
+4. Function slug is `apex-agent`: `${SUPABASE_URL}/functions/v1/apex-agent`
+5. Body must include `{ query: string, traceId: UUID }` — NOT `{ prompt }` (omnilink-agent legacy format)
+6. NEVER use `apex-assistant` — deprecated, returns 410 Gone; redirect points to `apex-agent`
+7. Guardian rate-limit (429): check `OMNI_GUARDIAN_ENABLED` env on Edge Function
+
+### Naming drift prevention
+- Canonical function slug: `apex-agent` — never `omnilink-agent` or `apex-assistant`
+- Canonical display name: `APEX Agent` — never `APEX Assistant` or `OmniLink Agent`
+- If drift is found: run `grep -rn "omnilink-agent" src/ apps/ tests/ --include="*.ts" --include="*.tsx"` — must return zero results
+
 ### SonarCloud script injection failure
 Symptom: E Security Rating on new code for `run:` block using `${{ github.event.* }}`.
 Fix: Move the expression to `env:` block; reference as `$ENV_VAR_NAME` in shell.
@@ -581,6 +597,7 @@ Append an entry here after every agent-completed, verified workflow. Format: `YY
 | 2026-05-29 | branch `claude/peaceful-volta-FFsX3` / `6dd4ed4` | Production E2E certification: full local pipeline green (typecheck, lint, react-singleton, full Vitest 2546 passed/0 failed in CI-env, real prod build, Playwright 44 passed, asset smoke, armageddon CI PASS, chaos sim 100/100). Omni-Recall multi-agent drift corrected; CLAUDE.md HEAD refreshed to `d1e83b0`. | `memory/omni-recall/`, `CLAUDE.md` |
 | 2026-05-29 | branch `apex/omnihub/docs-sync-20260529` | M-03 OmniDash Real-Time Observability Upgrade completed: Zero mock data, Recharts integration, strict typing | `dashboard/OmniDashShell.tsx`, `components/M03Panels.tsx`, `useDashboardData.ts` |
 | 2026-05-30 | branch `claude/tender-goldberg-dYWdK` / `22e8b00` | Crisis-mode full-system audit: disabled orphaned `/translation` registry entry (no route handler), added 17-test APEX Agent workflow invocation suite. All gates: tsc/eslint/react-singleton clean, Vitest 2578/2578, E2E 22 passed, build clean, assets 7/7, Python CI clean. | `src/features/registry.ts`, `tests/integration/apex-agent-workflow.spec.ts`, `public/sitemap.xml` |
+| 2026-05-31 | PR #1251 / `7a2c45ed` (merged) | Global rename omnilink-agent → apex-agent across entire codebase: Supabase function dir renamed (git mv), all endpoint strings, useOmniDashAction invoke, useSSEStream, mcp-client (now routes to apex-agent with JWT auth + bounded ReDoS-safe regex), feature registry id/label, demo event cache, CI health check, RSI policy exclusions, SonarCloud S5852 fixed. 3 pending DB migrations applied to production (AEGIS/CHRONOS, PhysiOmni partition RLS, OmniConnect Vault). All CI green: tsc/eslint/Vitest 2578/Sonar QG passed/Chaos 100/100×3 seeds/RSI allow. Drift = 0. | `supabase/functions/apex-agent/`, `src/features/registry.ts`, `src/lib/streaming/useSSEStream.ts`, `src/omnidash/useOmniDashAction.ts`, `apps/omnihub-site/src/omnihub-gateway/mcp-client/index.ts`, `api/omniconnect/exchange.ts`, `supabase/functions/omnilink-eval/index.ts`, `policy/rsi-policy.yaml`, `supabase/migrations/20260527000001_*`, `20260528000000_*`, `20260528000001_*`, 9+ doc files |
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "name": "apex-omnihub",
   "private": true,
-  "version": "1.6.0",
+  "version": "1.7.0",
   "type": "module",
   "engines": {
     "node": ">=22 <25"
@@ -51,7 +51,7 @@
     "test:wwwct:report": "tsx scripts/worldwide-wildcard/run.ts --mode mock --report-dir tests/worldwide-wildcard/reports",
     "lint:py": "cd orchestrator && ruff check . && ruff format --check .",
     "format:py": "cd orchestrator && ruff format .",
-    "test:py": "echo \"Skipping python test\" ",
+    "test:py": "cd orchestrator && python -m pytest -q",
     "ci:py": "npm run lint:py && npm run test:py",
     "hardhat:compile": "hardhat compile",
     "hardhat:test": "hardhat test",
@@ -279,20 +279,13 @@
     "axios": "^1.16.0",
     "postcss": "^8.5.10",
     "uuid": "^14.0.0",
-    "ast-v8-to-istanbul": {
-      "js-tokens": "^10.0.0"
-    },
+    "js-tokens": "^10.0.0",
     "protobufjs": "^7.5.8",
     "ip-address": "10.2.0",
     "cookie": ">=0.7.2",
     "elliptic": "6.6.1",
     "tmp": "0.2.7",
-    "ethjs-unit": {
-      "bn.js": "4.12.3"
-    },
-    "number-to-bn": {
-      "bn.js": "4.12.3"
-    },
+    "bn.js": "4.12.3",
     "qs": "6.15.2",
     "ws": "8.21.0",
     "brace-expansion@^5.0.0": "5.0.6"

@@ -872,19 +872,56 @@ async def search_youtube(params: dict[str, Any]) -> dict[str, Any]:
         List of videos
     """
     query = params.get("query")
+    if not query:
+        return {"success": False, "error": "query parameter is required", "videos": []}
+
+    api_key = os.environ.get("YOUTUBE_API_KEY")
+    if not api_key:
+        return {
+            "success": False,
+            "error": "YouTube integration not configured — YOUTUBE_API_KEY env var is missing",
+            "videos": [],
+        }
+
     activity.logger.info(f"Searching YouTube for: {query}")
 
-    # Mock response
-    return {
-        "success": True,
-        "videos": [
-            {
-                "title": f"Video about {query}",
-                "url": "https://youtube.com/watch?v=mock123",
-                "description": "A very interesting video",
+    import httpx
+
+    max_results = int(params.get("max_results", 5))
+    url = "https://www.googleapis.com/youtube/v3/search"
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        resp = await client.get(
+            url,
+            params={
+                "part": "snippet",
+                "q": query,
+                "type": "video",
+                "maxResults": max_results,
+                "key": api_key,
+            },
+        )
+        if resp.status_code != 200:
+            activity.logger.error(f"YouTube API error {resp.status_code}: {resp.text[:200]}")
+            return {
+                "success": False,
+                "error": f"YouTube API returned HTTP {resp.status_code}",
+                "videos": [],
             }
-        ],
-    }
+        data = resp.json()
+
+    videos = [
+        {
+            "title": item["snippet"]["title"],
+            "url": f"https://www.youtube.com/watch?v={item['id']['videoId']}",
+            "description": item["snippet"]["description"],
+            "channel": item["snippet"]["channelTitle"],
+            "published_at": item["snippet"]["publishedAt"],
+        }
+        for item in data.get("items", [])
+        if item.get("id", {}).get("videoId")
+    ]
+
+    return {"success": True, "videos": videos, "total_results": len(videos)}
 
 
 @activity.defn(name="update_agent_run_completion")

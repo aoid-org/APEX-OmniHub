@@ -145,12 +145,8 @@ export async function handleTriggerLambda(
       status: 'dispatched',
     });
 
-    // Simulate async completion callback (in production, Lambda calls back)
-    // This broadcasts WORKFLOW_COMPLETE after a brief delay to demonstrate
-    // the full round-trip to the UI.
-    setTimeout(() => {
-      broadcastWorkflowComplete(sseManager, workflowId, functionName);
-    }, 2500);
+    // Lambda completes async: Temporal receives completion via taskToken callback from Lambda.
+    // No simulation needed — clients track progress via SSE workflow_dispatched event.
   }
 
   // ── Response ──────────────────────────────────────────────────────
