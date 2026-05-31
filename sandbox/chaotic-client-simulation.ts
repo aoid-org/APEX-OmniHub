@@ -1,7 +1,7 @@
 /**
  * CHAOTIC CLIENT SIMULATION
  *
- * Real-world user story testing the entire OmniLink-APEX integrated system.
+ * Real-world user story testing the entire APEX Agent integrated system.
  *
  * CLIENT PROFILE: "Sarah's Boutique"
  * - Owner: Sarah Martinez
@@ -263,10 +263,10 @@ class ChaoticClientSimulator {
 
     try {
       // STEP 1: Send to apex-agent
-      console.log('📤 Sending message to OmniLink Agent...');
+      console.log('📤 Sending message to APEX Agent...');
       console.log(`Message preview: "${clientMessage.substring(0, 100)}..."`);
 
-      const agentResponse = await this.callOmniLinkAgent(clientMessage);
+      const agentResponse = await this.callApexAgent(clientMessage);
       result.agentResponse = agentResponse.response;
       result.guardianStatus = {
         safe: agentResponse.safe,
@@ -305,9 +305,9 @@ class ChaoticClientSimulator {
   }
 
   /**
-   * Call the OmniLink Agent API
+   * Call the APEX Agent API
    */
-  private async callOmniLinkAgent(message: string): Promise<AgentResponse> {
+  private async callApexAgent(message: string): Promise<AgentResponse> {
     // In a real simulation, this would call the actual Supabase function
     // For sandbox mode, we'll simulate the response structure
 
@@ -554,7 +554,7 @@ Which of these would you like to tackle first?`;
     console.log('╔' + '═'.repeat(78) + '╗');
     console.log('║' + ' '.repeat(20) + 'CHAOTIC CLIENT SIMULATION' + ' '.repeat(33) + '║');
     console.log('║' + ' '.repeat(78) + '║');
-    console.log('║  Testing OmniLink-APEX with realistic non-technical user scenarios' + ' '.repeat(10) + '║');
+    console.log('║  Testing APEX Agent with realistic non-technical user scenarios' + ' '.repeat(13) + '║');
     console.log('╚' + '═'.repeat(78) + '╝');
     console.log('\n');
 

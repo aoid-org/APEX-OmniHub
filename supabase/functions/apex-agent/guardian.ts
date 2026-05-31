@@ -1,5 +1,5 @@
 /**
- * Guardian Gate - Edge-first validation and moderation for OmniLink requests
+ * Guardian Gate - Edge-first validation and moderation for APEX Agent requests
  *
  * This module provides cheap, fast validation before expensive orchestrator calls.
  * Designed to prevent malicious input, spam, and nonsensical requests.

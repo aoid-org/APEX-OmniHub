@@ -1,4 +1,4 @@
-// Shared types for OmniLink Agentic RAG system
+// Shared types for APEX Agent Agentic RAG system
 // Extended for APEX ASCENSION Tri-Force Architecture
 
 export type JsonSchema = {
