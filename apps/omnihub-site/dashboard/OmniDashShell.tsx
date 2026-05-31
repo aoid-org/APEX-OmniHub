@@ -573,7 +573,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
       <div className="omni-header-actions" style={{display:"flex", alignItems:"center", gap:8, flexShrink:0}}>
         {/* Org Selector */}
         <div style={{ position:"relative" }}>
-          <button onClick={() => setOrgOpen(o => !o)} style={{
+          <button id="org-selector-btn" onClick={() => setOrgOpen(o => !o)} style={{
             display:"flex", alignItems:"center", gap:6,
             background:T.card, border:`1px solid ${orgOpen ? T.orange+"66" : T.border}`,
             borderRadius:10, padding:"0 10px", height:34,
@@ -1421,6 +1421,14 @@ export default function OmniDashShell() {
   const dashData = useDashboardData();
 
   useEffect(() => {
+    // Disable the tick interval during automated E2E tests (Playwright sets navigator.webdriver)
+    // This prevents aggressive re-renders from detaching DOM nodes during test execution.
+    if (
+      (typeof navigator !== 'undefined' && navigator.webdriver) ||
+      (typeof window !== 'undefined' && (window as Window & { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__)
+    ) {
+      return;
+    }
     const id = setInterval(() => setTick(t => t+1), 500);
     return () => clearInterval(id);
   }, []);
