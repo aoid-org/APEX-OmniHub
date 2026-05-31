@@ -48,9 +48,9 @@ Verified in this documentation pass:
 | Field | Value |
 |---|---|
 | Package version | 1.6.0 (from package.json) |
-| Latest inspected main commit | dba09ec (Merge PR #1239 — post-audit CodeX hardening) |
+| Latest inspected main commit | 7a2c45ed (PR #1251 merged — apex-agent global rename + 3 DB migrations applied) |
 | Repo | apexbusiness-systems/APEX-OmniHub |
-| Local gate verification | 2026-05-29 — all gates clean on current main (M-03 completed) |
+| Local gate verification | 2026-05-31 — tsc/eslint/Vitest 2578/SonarCloud QG passed/Chaos 100×3/RSI allow |
 
 ## Authority
 
