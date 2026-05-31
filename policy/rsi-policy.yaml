@@ -61,6 +61,7 @@ critical_paths:
   - '!supabase/functions/test-integration/**'
   - '!supabase/functions/apex-voice/**'
   - '!supabase/functions/apex-agent/**'
+  - '!supabase/functions/apex-assistant/**'
   - '!supabase/functions/byom-proxy/**'
   - '!supabase/functions/physiomni-action/**'
   - '!supabase/functions/physiomni-ingest/**'
