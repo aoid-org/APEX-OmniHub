@@ -7,6 +7,7 @@
 CREATE TABLE IF NOT EXISTS public.physiomni_device_commands (
   id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   device_id       text        NOT NULL,
+  -- additive-allow: ON_DELETE_CASCADE removing a tenant must purge all their queued IoT commands to prevent orphaned device state
   tenant_id       uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   command         text        NOT NULL CHECK (command IN ('MAN_MODE_TRIGGER', 'EMERGENCY_STOP', 'CALIBRATE', 'RESTART')),
   status          text        NOT NULL DEFAULT 'QUEUED' CHECK (status IN ('QUEUED', 'DELIVERED', 'ACKNOWLEDGED', 'FAILED')),

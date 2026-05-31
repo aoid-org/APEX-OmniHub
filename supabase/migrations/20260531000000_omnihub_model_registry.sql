@@ -5,6 +5,7 @@
 
 CREATE TABLE IF NOT EXISTS public.omnihub_model_registry (
   id                   uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- additive-allow: ON_DELETE_CASCADE removing a tenant must purge their BYOM registry entries to prevent orphaned model config
   tenant_id            uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   provider_id          text        NOT NULL CHECK (provider_id IN ('openai', 'xai', 'anthropic', 'google')),
   provider_type        text        NOT NULL DEFAULT 'openai-compatible'
