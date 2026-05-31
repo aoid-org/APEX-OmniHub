@@ -804,17 +804,33 @@ function RequestAccessModal({
   formError: string;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 }>) {
+  const dialogRef = React.useRef<HTMLDialogElement>(null);
+  React.useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const handleClick = (e: MouseEvent) => {
+      if (e.target === dialog) onClose();
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target === dialog && (e.key === 'Enter' || e.key === ' ')) onClose();
+    };
+    dialog.addEventListener('click', handleClick);
+    dialog.addEventListener('keydown', handleKeyDown);
+    return () => {
+      dialog.removeEventListener('click', handleClick);
+      dialog.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
+
   return (
     <dialog
+      ref={dialogRef}
       id="ra-modal"
       className={`modal-overlay ${isOpen ? 'open' : ''}`}
       aria-hidden={!isOpen}
       aria-modal="true"
       aria-labelledby="modal-title"
       open={isOpen}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) onClose(); }}
-      role="presentation"
     >
       <div className="modal-card">
         <button className="modal-close" id="modal-close" aria-label="Close" onClick={onClose}>&times;</button>

@@ -57,9 +57,6 @@ on:
 
 concurrency: deploy-production-cf-direct
 
-permissions:
-  contents: read
-
 env:
   PRODUCTION_SITE_URL: https://apexomnihub.icu
 
@@ -70,6 +67,8 @@ jobs:
   preflight:
     name: Preflight (config guard)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       ready: ${{ steps.guard.outputs.ready }}
     steps:

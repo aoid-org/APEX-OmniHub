@@ -20,7 +20,7 @@ set -euo pipefail
 
 # Guard: "omnihub" is NOT a real Cloudflare Pages project. The production
 # project serving apexomnihub.icu is "apex-omnihub". Refuse the known-bad value.
-if [ "${CF_PAGES_PROJECT}" = "omnihub" ]; then
+if [[ "${CF_PAGES_PROJECT}" == "omnihub" ]]; then
   echo "ERROR: CF_PAGES_PROJECT=\"omnihub\" does not exist as a CF Pages project." >&2
   echo "       Use \"apex-omnihub\" (production) or \"apex-omnihub-shadow\" (shadow)." >&2
   exit 1
