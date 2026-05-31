@@ -6,7 +6,7 @@
 # Prerequisites:
 #   export CF_API_TOKEN=<your-cloudflare-api-token>
 #   export CF_ACCOUNT_ID=<your-cloudflare-account-id>
-#   export CF_PAGES_PROJECT=<your-cf-pages-project-name>   # e.g. "omnihub"
+#   export CF_PAGES_PROJECT=<your-cf-pages-project-name>   # production: "apex-omnihub" (NOT "omnihub" — that project does not exist)
 #   export SUPABASE_ANON_KEY=<your-supabase-anon-key>
 #   export SUPABASE_URL=<your-supabase-url>
 # ============================================================
@@ -17,6 +17,14 @@ set -euo pipefail
 : "${CF_PAGES_PROJECT:?CF_PAGES_PROJECT must be set}"
 : "${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY must be set}"
 : "${SUPABASE_URL:?SUPABASE_URL must be set}"
+
+# Guard: "omnihub" is NOT a real Cloudflare Pages project. The production
+# project serving apexomnihub.icu is "apex-omnihub". Refuse the known-bad value.
+if [[ "${CF_PAGES_PROJECT}" == "omnihub" ]]; then
+  echo "ERROR: CF_PAGES_PROJECT=\"omnihub\" does not exist as a CF Pages project." >&2
+  echo "       Use \"apex-omnihub\" (production) or \"apex-omnihub-shadow\" (shadow)." >&2
+  exit 1
+fi
 
 BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/${CF_PAGES_PROJECT}"
 
