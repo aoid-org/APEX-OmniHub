@@ -794,7 +794,7 @@ Deno.serve(async (req) => {
 
   try {
     // Check emergency controls
-    await enforceEmergencyControls('omnilink_agent');
+    await enforceEmergencyControls('apex_agent');
 
     // Process request
     const body = await req.json();

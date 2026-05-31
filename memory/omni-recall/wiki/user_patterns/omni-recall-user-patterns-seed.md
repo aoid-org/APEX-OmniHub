@@ -17,11 +17,14 @@ Observed patterns with provisional confidence:
 - dislikes maintenance-heavy or noisy solutions
 - wants truthfulness about runtime limits
 - wants corrections to propagate permanently
+- demands zero naming drift — enforces canonical agent name (APEX Agent / apex-agent) across all code, CI, docs, and memory
+- expects build to be clean on first pass — zero tolerance for silently broken paths
 
 ## Source References
 
 - `memory/omni-recall/raw/historical_exports/2026-05-23-user-upload-omni-recall-blueprint.md`
 - `memory/omni-recall/user-operating-model.md`
+- `memory/omni-recall/state/checkpoints/current-status.md`
 
 ## Downstream Implications
 

@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.6.0 | LAST_UPDATED=2026-05-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.0 | LAST_UPDATED=2026-05-31 -->
 # APEX OmniHub — Edge Functions API Reference
 
 **Base URL:** `https://rtopreovkywofgwgmozi.supabase.co/functions/v1/`
@@ -6,11 +6,13 @@
 
 ## Quick Reference
 
-31 Edge Functions deployed as of 2026-05-20.
+31 Edge Functions deployed as of 2026-05-31.
+
+> **Deprecation notice:** `apex-assistant` is deprecated and returns **410 Gone** — all clients must use `apex-agent`. `omnilink-agent` is abolished.
 
 | Function | Method | Auth Required | Purpose |
 |----------|--------|---------------|---------|
-| `apex-assistant` | POST | Yes (anon) | AI conversation handler |
+| `apex-assistant` | POST | — | **DEPRECATED — 410 Gone. Use `apex-agent`.** |
 | `apex-voice` | POST | Yes (anon) | Real-time voice processing |
 | `byom-cockpit` | POST | Yes (anon) | Bring-Your-Own-Model cockpit interface |
 | `byom-proxy` | POST | Yes (anon) | Bring-Your-Own-Model proxy relay |

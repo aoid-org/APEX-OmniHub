@@ -22,3 +22,10 @@ The system should:
 - prefer canonical updates over duplicate notes
 - promote stable corrections into durable memory
 - remain honest about missing access or incomplete backfill
+
+## Last Verified Session
+
+- Date: 2026-05-31
+- HEAD: 7a2c45ed (CodeX auto-fix: simplify MCP response mapping)
+- Branch: main (PR #1251 merged)
+- Key fact: APEX Agent is the canonical agent name (apex-agent slug). Zero omnilink-agent references remain.
