@@ -198,6 +198,9 @@ SELECT public.ensure_service_role_policy('tool_invocations');
 SELECT public.ensure_service_role_policy('eval_cases');
 SELECT public.ensure_service_role_policy('eval_results');
 
+-- Drop the migration-only helper after its final use so it cannot become a public RPC surface.
+DROP FUNCTION IF EXISTS public.ensure_service_role_policy(text);
+
 CREATE POLICY "eval_results_select_via_case" ON public.eval_results
 FOR SELECT TO authenticated
 USING (eval_case_id IN (

@@ -46,7 +46,7 @@ USING (true);
 -- Helper: idempotently attach a service_role ALL policy to any table.
 -- Shared by subsequent migrations — defined once here to avoid duplication.
 CREATE OR REPLACE FUNCTION public.ensure_service_role_policy(p_table text)
-RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+RETURNS void LANGUAGE plpgsql SECURITY INVOKER SET search_path = public AS $$
 DECLARE
   v_policy text := format('%s_all_service_role', p_table);
 BEGIN
@@ -56,12 +56,16 @@ BEGIN
       AND tablename = p_table
       AND policyname = v_policy
   ) THEN
+    -- Quote both identifiers with %I so table-derived policy names cannot inject SQL.
     EXECUTE format(
-      'CREATE POLICY "%s" ON public.%I FOR ALL TO service_role USING (true) WITH CHECK (true);',
+      'CREATE POLICY %I ON public.%I FOR ALL TO service_role USING (true) WITH CHECK (true);',
       v_policy, p_table
     );
   END IF;
 END $$;
+
+-- Migration-only helper: never expose policy DDL helpers through PostgREST RPC.
+REVOKE ALL ON FUNCTION public.ensure_service_role_policy(text) FROM PUBLIC, anon, authenticated;
 
 -- Allow service_role full access (for skill registration)
 SELECT public.ensure_service_role_policy('agent_skills');
