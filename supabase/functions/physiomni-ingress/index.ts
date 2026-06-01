@@ -43,6 +43,12 @@ type ValidationResult = {
   field: string;
 };
 
+type ParsedJsonBody = {
+  body?: unknown;
+  rawBody?: string;
+  response?: Response;
+};
+
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
@@ -206,13 +212,13 @@ function buildAlertResponse(evaluation: AlertEvaluation, alertId: string | null)
   };
 }
 
-async function parseJsonBody(req: Request, headers: Record<string, string>): Promise<{ body?: unknown; response?: Response }> {
+async function parseJsonBody(req: Request, headers: Record<string, string>): Promise<ParsedJsonBody> {
   try {
     const raw = await req.text();
     if (!raw) {
       return { response: jsonResponse({ error: 'empty_body', message: 'Request body is empty' }, 400, headers) };
     }
-    return { body: JSON.parse(raw) };
+    return { body: JSON.parse(raw), rawBody: raw };
   } catch {
     return { response: jsonResponse({ error: 'invalid_json', message: 'Request body is not valid JSON' }, 400, headers) };
   }
@@ -230,10 +236,72 @@ function enforceIngressGate(corsHeaders: Record<string, string>): Response | nul
   return jsonResponse({ error: 'ingress_disabled', message: 'PhysiOmni ingress is completely disabled' }, 403, corsHeaders);
 }
 
-function requiresLiveSignature(req: Request, corsHeaders: Record<string, string>): Response | null {
+function timingSafeEqual(a: string, b: string): boolean {
+  const left = new TextEncoder().encode(a);
+  const right = new TextEncoder().encode(b);
+  const maxLength = Math.max(left.length, right.length);
+  let diff = left.length ^ right.length;
+
+  for (let i = 0; i < maxLength; i += 1) {
+    // Compare every position so mismatched lengths do not leak early-exit timing.
+    diff |= (left[i] ?? 0) ^ (right[i] ?? 0);
+  }
+
+  return diff === 0;
+}
+
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+async function computeTelemetrySignature(secret: string, timestamp: string, rawBody: string): Promise<{ hex: string; base64url: string }> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(`${timestamp}.${rawBody}`));
+  const bytes = new Uint8Array(signature);
+  return { hex: bytesToHex(bytes), base64url: bytesToBase64Url(bytes) };
+}
+
+async function requiresLiveSignature(req: Request, rawBody: string, corsHeaders: Record<string, string>): Promise<Response | null> {
   const isLiveEnabled = Deno.env.get('PHYSIOMNI_LIVE_ENABLED') === 'true';
-  if (!isLiveEnabled || req.headers.get('x-physiomni-signature')) return null;
-  return jsonResponse({ error: 'unauthorized', message: 'Signed telemetry required for live mode' }, 401, corsHeaders);
+  if (!isLiveEnabled) return null;
+
+  const secret = Deno.env.get('PHYSIOMNI_INGRESS_HMAC_SECRET') ?? '';
+  if (!secret) {
+    console.error('[physiomni-ingress] PHYSIOMNI_INGRESS_HMAC_SECRET is required in live mode');
+    return jsonResponse({ error: 'server_misconfigured', message: 'Telemetry signing is not configured' }, 503, corsHeaders);
+  }
+
+  const timestamp = req.headers.get('x-physiomni-timestamp') ?? '';
+  const provided = (req.headers.get('x-physiomni-signature') ?? '').replace(/^sha256=/i, '');
+  if (!timestamp || !provided) {
+    return jsonResponse({ error: 'unauthorized', message: 'Signed telemetry required for live mode' }, 401, corsHeaders);
+  }
+
+  const timestampMs = Date.parse(timestamp);
+  if (Number.isNaN(timestampMs) || Math.abs(Date.now() - timestampMs) > 5 * 60 * 1000) {
+    return jsonResponse({ error: 'unauthorized', message: 'Telemetry signature timestamp is outside the allowed window' }, 401, corsHeaders);
+  }
+
+  const expected = await computeTelemetrySignature(secret, timestamp, rawBody);
+  const valid = timingSafeEqual(provided, expected.hex) || timingSafeEqual(provided, expected.base64url);
+  if (!valid) {
+    return jsonResponse({ error: 'unauthorized', message: 'Invalid telemetry signature' }, 401, corsHeaders);
+  }
+
+  return null;
 }
 
 // ── Main Handler ────────────────────────────────────────────────────────────
@@ -253,6 +321,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const parsedBody = await parseJsonBody(req, corsHeaders);
   if (parsedBody.response) return parsedBody.response;
   const body = parsedBody.body;
+  const rawBody = parsedBody.rawBody ?? '';
 
   // Validate payload
   const validation = validatePayload(body);
@@ -286,8 +355,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     );
   }
 
-  // Placeholder for HMAC signed telemetry validation & replay protection
-  const signatureError = requiresLiveSignature(req, corsHeaders);
+  const signatureError = await requiresLiveSignature(req, rawBody, corsHeaders);
   if (signatureError) return signatureError;
 
   // ── 1. Insert telemetry (idempotent via UNIQUE on device_serial + captured_at)
