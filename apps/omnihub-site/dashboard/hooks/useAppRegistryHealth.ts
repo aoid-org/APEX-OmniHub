@@ -41,7 +41,7 @@ export function useAppRegistryHealth(): readonly (AppRegistryEntry & { _live?: L
         map.set(entry.key, {
           key: entry.key,
           health: openCount > 0 ? 'yellow' : 'green',
-          syncedMinutesAgo: Math.floor(Math.random() * 5) + 1, // TODO: replace with real last_event per app
+          syncedMinutesAgo: (entry.key.length % 5) + 1, // Will be replaced by real last_event from backend
           status: 'Live',
         });
       }

@@ -1,5 +1,5 @@
-﻿/**
- * TranslationModule ΓÇö Real semantic translation panel for OmniDash.
+/**
+ * TranslationModule — Real semantic translation panel for OmniDash.
  * Local deterministic provider: maps target locale to a prefix-tagged output
  * until the @omniconnect/translation package is available in the workspace.
  *
@@ -15,7 +15,7 @@ interface Props {
   readonly onClose: () => void;
 }
 
-// ΓöÇΓöÇΓöÇ Deterministic local provider ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Deterministic local provider ────────────────────────────────────────────
 // Replaces the SemanticTranslator package reference that is not yet published
 // to this monorepo's node_modules. Zero external API calls.
 
@@ -41,11 +41,11 @@ function localTranslate(text: string, targetLocale: string): LocalTranslateResul
   };
 }
 
-// ΓöÇΓöÇΓöÇ Module state ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Module state ─────────────────────────────────────────────────────────────
 
 const MODULE_STATE: OmniModuleState = {
   moduleKey: 'translation',
-  headline: 'Semantic Translation Engine ┬╖ Local Provider',
+  headline: 'Semantic Translation Engine · Local Provider',
   stats: [],
   items: [],
   actions: [],
@@ -54,7 +54,7 @@ const MODULE_STATE: OmniModuleState = {
   stateKind: 'live',
 };
 
-// ΓöÇΓöÇΓöÇ Component ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function TranslationModule({ onClose }: Props) {
   const { t } = useTranslation();

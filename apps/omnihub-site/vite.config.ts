@@ -61,6 +61,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@/dashboard': resolve(__dirname, './dashboard'),
+      '@omniconnect': resolve(__dirname, '../../src/omniconnect'),
       '@': resolve(__dirname, './src'),
       'react': resolve(__dirname, '../../node_modules/react'),
       'react-dom': resolve(__dirname, '../../node_modules/react-dom'),
