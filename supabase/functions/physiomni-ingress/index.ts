@@ -206,13 +206,13 @@ function buildAlertResponse(evaluation: AlertEvaluation, alertId: string | null)
   };
 }
 
-async function parseJsonBody(req: Request, headers: Record<string, string>): Promise<{ body?: unknown; response?: Response }> {
+async function parseJsonBody(req: Request, headers: Record<string, string>): Promise<{ body?: unknown; rawBody?: string; response?: Response }> {
   try {
     const raw = await req.text();
     if (!raw) {
       return { response: jsonResponse({ error: 'empty_body', message: 'Request body is empty' }, 400, headers) };
     }
-    return { body: JSON.parse(raw) };
+    return { body: JSON.parse(raw), rawBody: raw };
   } catch {
     return { response: jsonResponse({ error: 'invalid_json', message: 'Request body is not valid JSON' }, 400, headers) };
   }
@@ -230,10 +230,60 @@ function enforceIngressGate(corsHeaders: Record<string, string>): Response | nul
   return jsonResponse({ error: 'ingress_disabled', message: 'PhysiOmni ingress is completely disabled' }, 403, corsHeaders);
 }
 
-function requiresLiveSignature(req: Request, corsHeaders: Record<string, string>): Response | null {
-  const isLiveEnabled = Deno.env.get('PHYSIOMNI_LIVE_ENABLED') === 'true';
-  if (!isLiveEnabled || req.headers.get('x-physiomni-signature')) return null;
-  return jsonResponse({ error: 'unauthorized', message: 'Signed telemetry required for live mode' }, 401, corsHeaders);
+function hexToBytes(value: string): Uint8Array | null {
+  if (!/^[0-9a-f]+$/i.test(value) || value.length % 2 !== 0) return null;
+  const bytes = new Uint8Array(value.length / 2);
+  for (let i = 0; i < bytes.length; i += 1) {
+    bytes[i] = Number.parseInt(value.slice(i * 2, i * 2 + 2), 16);
+  }
+  return bytes;
+}
+
+function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    diff |= a[i] ^ b[i];
+  }
+  return diff === 0;
+}
+
+function rejectStaleTelemetry(data: PhysiOmniPayload, corsHeaders: Record<string, string>): Response | null {
+  const capturedAt = Date.parse(data.timestamp);
+  const maxSkewMs = 5 * 60 * 1000;
+  if (Math.abs(Date.now() - capturedAt) <= maxSkewMs) return null;
+  return jsonResponse({ error: 'stale_telemetry', message: 'Telemetry timestamp is outside the 5 minute replay window' }, 403, corsHeaders);
+}
+
+async function verifyRequestSignature(
+  req: Request,
+  rawBody: string,
+  corsHeaders: Record<string, string>,
+): Promise<Response | null> {
+  const secret = Deno.env.get('PHYSIOMNI_DEVICE_HMAC_SECRET');
+  if (!secret) {
+    return jsonResponse({ error: 'ingress_not_configured', message: 'Device HMAC verification is not configured' }, 503, corsHeaders);
+  }
+
+  const signature = req.headers.get('x-physiomni-signature')?.trim() ?? '';
+  const provided = hexToBytes(signature);
+  if (!provided) {
+    return jsonResponse({ error: 'unauthorized', message: 'Valid x-physiomni-signature header is required' }, 401, corsHeaders);
+  }
+
+  // HMAC covers the exact JSON bytes consumed by the handler so tenant/device fields cannot be forged in transit.
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const expected = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(rawBody)));
+  if (constantTimeEqual(provided, expected)) return null;
+
+  return jsonResponse({ error: 'unauthorized', message: 'Telemetry signature verification failed' }, 401, corsHeaders);
 }
 
 // ── Main Handler ────────────────────────────────────────────────────────────
@@ -253,6 +303,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const parsedBody = await parseJsonBody(req, corsHeaders);
   if (parsedBody.response) return parsedBody.response;
   const body = parsedBody.body;
+  const rawBody = parsedBody.rawBody ?? '';
 
   // Validate payload
   const validation = validatePayload(body);
@@ -276,6 +327,29 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const gateError = enforceIngressGate(corsHeaders);
   if (gateError) return gateError;
 
+  const freshnessError = rejectStaleTelemetry(data, corsHeaders);
+  if (freshnessError) return freshnessError;
+
+  const signatureError = await verifyRequestSignature(req, rawBody, corsHeaders);
+  if (signatureError) return signatureError;
+
+  // Service-role writes are only safe after the supplied tenant/device pair is bound to an active registered device.
+  const { data: device, error: deviceError } = await supabase
+    .from('physiomni_devices')
+    .select('id')
+    .eq('device_serial', data.device_serial)
+    .eq('tenant_id', data.tenant_id)
+    .eq('is_active', true)
+    .single();
+
+  if (deviceError || !device) {
+    return jsonResponse(
+      { error: 'device_not_authorized', message: 'Device is not active or is not registered for this tenant' },
+      403,
+      corsHeaders,
+    );
+  }
+
   try {
     await RateLimiter.checkLimit(supabase, data.device_serial, 60, 60);
   } catch (err) {
@@ -285,10 +359,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       corsHeaders,
     );
   }
-
-  // Placeholder for HMAC signed telemetry validation & replay protection
-  const signatureError = requiresLiveSignature(req, corsHeaders);
-  if (signatureError) return signatureError;
 
   // ── 1. Insert telemetry (idempotent via UNIQUE on device_serial + captured_at)
   const { error: telemetryError } = await supabase

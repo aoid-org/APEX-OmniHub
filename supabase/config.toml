@@ -78,7 +78,7 @@ verify_jwt = true  # All BYOM credential operations require authenticated user
 # PhysiOmni — Physical-Edge Sensor Ingress (Phase 1 Pilot)
 # Version: 1.0.0 | Date: 2026-05-26
 [functions.physiomni-ingress]
-verify_jwt = false  # Device auth via mTLS at transport layer; service_role used internally
+verify_jwt = false  # Device auth enforced in-function via HMAC + active tenant/device binding
 # Environment Variables for Edge Functions
 # These blockchain-related secrets must be set in production environment:
 # - WEB3_PRIVATE_KEY: OmniLink EVM private key for transaction signing
@@ -86,6 +86,7 @@ verify_jwt = false  # Device auth via mTLS at transport layer; service_role used
 # - ALCHEMY_API_KEY_POLYGON: Alchemy API key for Polygon RPC access
 # - MEMBERSHIP_NFT_ADDRESS: Deployed APEXMembershipNFT contract address
 # - ALCHEMY_WEBHOOK_SIGNING_KEY: Secret for verifying Alchemy webhook signatures
+# - PHYSIOMNI_DEVICE_HMAC_SECRET: Shared secret for signed PhysiOmni telemetry ingress
 #
 # Set these in Supabase Dashboard → Project Settings → Edge Functions → Environment Variables
 # DO NOT hardcode these values in code - they must be loaded from environment
