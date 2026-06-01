@@ -138,7 +138,6 @@ def test_output_file_written(tmp_artifacts_dir, tmp_path):
     assert "decision" in data
 
 
-
 def test_repository_policy_escalates_rsi_gate_mutation():
     """Checked-in policy must route RSI gate edits to human review without self-deadlocking."""
     repo_root = Path(__file__).parents[2]

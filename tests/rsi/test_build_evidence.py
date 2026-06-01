@@ -13,6 +13,7 @@ from tools.rsi.build_evidence import (
     MAX_DIFF_SUMMARY_CHARS,
     MAX_INVENTORY_CHARS,
     _classify_path,
+    _get_inventory_summary,
     _get_scoped_diff_summary,
     build_evidence,
 )
@@ -171,10 +172,28 @@ def test_inventory_summary_bounded(tmp_path):
     meta_file.write_text(huge_content)
 
     with patch.object(be_module, "INVENTORY_DIR", tmp_path):
-        from tools.rsi.build_evidence import _get_inventory_summary
         summary = _get_inventory_summary()
 
     assert len(summary) <= MAX_INVENTORY_CHARS
+
+
+def test_inventory_summary_prefers_workflow_generated_file(tmp_path):
+    """Trusted workflow inventory must win over fallback files or scripts."""
+    from tools.rsi import build_evidence as be_module
+
+    inventory_file = tmp_path / "repo-inventory.txt"
+    inventory_file.write_text("trusted workflow inventory", encoding="utf-8")
+    meta_dir = tmp_path / "inventory"
+    meta_dir.mkdir()
+    (meta_dir / "repo_meta.txt").write_text("fallback meta", encoding="utf-8")
+
+    with patch.object(be_module, "INVENTORY_FILE", inventory_file), \
+         patch.object(be_module, "INVENTORY_DIR", meta_dir), \
+         patch("tools.rsi.build_evidence.subprocess.run") as mock_run:
+        summary = _get_inventory_summary()
+
+    assert summary == "trusted workflow inventory"
+    mock_run.assert_not_called()
 
 
 def test_protected_path_classification(tmp_path):
