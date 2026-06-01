@@ -55,7 +55,16 @@ export default function TranslationModule({ onClose }: Props) {
   const [targetLang, setTargetLang] = useState('fr-FR');
   const [translatedText, setTranslatedText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
-  const [metadata] = useState<any>({ confidence: 0.98, engine: 'local' });
+  // FIX: replace `any` with concrete inline type — satisfies @typescript-eslint/no-explicit-any
+  // ROOT CAUSE: useState<any> on metadata object failed --max-warnings 0 ESLint gate
+  // CHANGE: typed to exact shape consumed by the render (provider + verified)
+  interface TranslationMetadata {
+    confidence: number;
+    engine: string;
+    provider?: string;
+    verified?: boolean;
+  }
+  const [metadata] = useState<TranslationMetadata>({ confidence: 0.98, engine: 'local' });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleTranslate = async (): Promise<void> => {
