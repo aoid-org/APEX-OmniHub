@@ -53,17 +53,21 @@ vi.mock('@/assets/lightbulb-icon.png', () => ({ default: 'lightbulb.png' }));
 vi.mock('@/assets/sentinel-avatar-icon.png', () => ({ default: 'sentinel.png' }));
 
 // ── Component imports (post-mock) ─────────────────────────────────────────────
-import { OmniSlatePane } from '@/dashboard/components/DashboardOverview/components/OmniSlatePane';
-import { EcosystemPane } from '@/dashboard/components/DashboardOverview/components/EcosystemPane';
-import { AgentPane } from '@/dashboard/components/DashboardOverview/components/AgentPane';
-import type { ContextItem } from '@/dashboard/components/DashboardOverview/types';
+import { OmniSlatePane } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/components/OmniSlatePane';
+import { EcosystemPane } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/components/EcosystemPane';
+import { AgentPane } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/components/AgentPane';
+import type { ContextItem } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/types';
+import { useOmniSlateStore } from '../../apps/omnihub-site/src/stores/omniSlateStore';
+
+vi.mock('../../apps/omnihub-site/src/stores/omniSlateStore', () => ({
+  useOmniSlateStore: vi.fn((selector) => selector({ contextItems: [], addContext: vi.fn() })),
+}));
 
 // ── DraggableWidget: isolated file imported directly for threshold tests ────
-import { DraggableWidget, DRAG_THRESHOLD_PX } from '@/dashboard/DraggableWidget';
+import { DraggableWidget, DRAG_THRESHOLD_PX } from '../../apps/omnihub-site/dashboard/DraggableWidget';
 
 // ── OmniSlatePane default props ───────────────────────────────────────────────
 const BASE_SLATE_PROPS = {
-  context: [] as readonly ContextItem[],
   health: 'green' as const,
   activeInsight: null,
   prompt: '',
@@ -236,10 +240,11 @@ describe('BUG FAMILY B — OmniSlate Height Determinism', () => {
   });
 
   it('OmniSlatePane context chips container has maxHeight to bound vertical growth', () => {
+    vi.mocked(useOmniSlateStore).mockImplementation((selector: any) => selector({ contextItems: MANY_CONTEXT, addContext: vi.fn() }));
     // FAILS before fix: chips container has no maxHeight (wraps grow tile)
     // PASSES after fix: chips container has maxHeight — variable content contained internally
     render(
-      React.createElement(OmniSlatePane, { ...BASE_SLATE_PROPS, context: MANY_CONTEXT }),
+      React.createElement(OmniSlatePane, { ...BASE_SLATE_PROPS }),
     );
     // The context chips container wraps chips with flexWrap — find it
     // It's the div containing "+ Add context" button
@@ -253,10 +258,11 @@ describe('BUG FAMILY B — OmniSlate Height Determinism', () => {
   });
 
   it('OmniSlatePane context chips container has overflowY auto for internal scroll', () => {
+    vi.mocked(useOmniSlateStore).mockImplementation((selector: any) => selector({ contextItems: MANY_CONTEXT, addContext: vi.fn() }));
     // FAILS before fix: no overflowY on the chips container
     // PASSES after fix: chips container uses overflowY: auto for internal scroll
     render(
-      React.createElement(OmniSlatePane, { ...BASE_SLATE_PROPS, context: MANY_CONTEXT }),
+      React.createElement(OmniSlatePane, { ...BASE_SLATE_PROPS }),
     );
     const addContextBtn = screen.getByText('+ Add context');
     const chipsContainer = addContextBtn.parentElement as HTMLElement;
@@ -264,6 +270,7 @@ describe('BUG FAMILY B — OmniSlate Height Determinism', () => {
   });
 
   it('long suggested-action text does NOT change outer tile structure (suggestion bounded by nowrap+ellipsis)', () => {
+    vi.mocked(useOmniSlateStore).mockImplementation((selector: any) => selector({ contextItems: MANY_CONTEXT, addContext: vi.fn() }));
     // FAILS before fix: suggestion chip text can wrap and grow the tile
     // PASSES after fix: suggestion chip text is nowrap/clamp/ellipsis bounded
     const { container } = render(
@@ -271,7 +278,6 @@ describe('BUG FAMILY B — OmniSlate Height Determinism', () => {
         ...BASE_SLATE_PROPS,
         // Inject a long prompt text that would simulate worst-case suggestion
         prompt: LONG_SUGGESTION,
-        context: MANY_CONTEXT,
       }),
     );
     const tile = findHeroTile(container);

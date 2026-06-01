@@ -396,7 +396,7 @@ async function resolveModuleState(
 
       return {
         moduleKey: 'workflows',
-        headline: `${workflows.length} Workflow${workflows.length !== 1 ? 's' : ''} Defined`,
+        headline: `${workflows.length} Workflow${workflows.length === 1 ? '' : 's'} Defined`,
         stats: [
           { label: 'Workflows', value: String(workflows.length), trend: 'stable' },
           { label: 'Active', value: String(active), trend: active > 0 ? 'up' : 'stable' },
@@ -428,7 +428,7 @@ async function resolveModuleState(
 
       return {
         moduleKey: 'automations',
-        headline: `${activeCount} Active Automation Rule${activeCount !== 1 ? 's' : ''}`,
+        headline: `${activeCount} Active Automation Rule${activeCount === 1 ? '' : 's'}`,
         stats: [
           { label: 'Total Rules', value: String(automations.length), trend: 'stable' },
           { label: 'Active', value: String(activeCount), trend: activeCount > 0 ? 'up' : 'stable' },
@@ -462,7 +462,7 @@ async function resolveModuleState(
 
       return {
         moduleKey: 'files',
-        headline: `${files.length} File${files.length !== 1 ? 's' : ''} in Storage`,
+        headline: `${files.length} File${files.length === 1 ? '' : 's'} in Storage`,
         stats: [
           { label: 'Total Files', value: String(files.length), trend: 'stable' },
           { label: 'Storage Used', value: `${totalGB} GB`, trend: 'stable' },
@@ -516,7 +516,11 @@ async function resolveModuleState(
           {
             id: 'current-sub',
             label: `${tier.toUpperCase()} — ${status}`,
-            status: status === 'active' ? 'active' : status === 'past_due' ? 'error' : 'pending',
+            status: ((): 'active' | 'error' | 'pending' => {
+              if (status === 'active') return 'active';
+              if (status === 'past_due') return 'error';
+              return 'pending';
+            })(),
             detail: subscription.current_period_end
               ? `Renews ${periodEnd}`
               : 'No active period',
@@ -548,7 +552,7 @@ async function resolveModuleState(
 
       return {
         moduleKey: 'links',
-        headline: `${connections.length} Connected App${connections.length !== 1 ? 's' : ''}`,
+        headline: `${connections.length} Connected App${connections.length === 1 ? '' : 's'}`,
         stats: [
           { label: 'Active Links', value: String(connections.length), trend: connections.length > 0 ? 'up' : 'stable' },
           { label: 'Scopes Granted', value: String(connections.reduce((acc, c) => acc + c.scopes.length, 0)), trend: 'stable' },
@@ -596,10 +600,14 @@ async function resolveModuleState(
       }>;
 
       const violations = incidents.filter(i => i.status === 'open').length;
+      let headline = 'All Systems Compliant';
+      if (violations > 0) {
+        headline = `${violations} Open Incident${violations === 1 ? '' : 's'}`;
+      }
 
       return {
         moduleKey: 'audits',
-        headline: violations === 0 ? 'All Systems Compliant' : `${violations} Open Incident${violations !== 1 ? 's' : ''}`,
+        headline,
         stats: [
           { label: 'Events (24h)', value: String(events.length), trend: 'stable' },
           { label: 'Open Incidents', value: String(violations), trend: violations > 0 ? 'up' : 'stable' },
@@ -608,13 +616,13 @@ async function resolveModuleState(
         items: [
           ...incidents.slice(0, 2).map(i => ({
             id: i.id,
-            label: i.incident_type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+            label: i.incident_type.replaceAll('_', ' ').replace(/\b\w/g, c => c.toUpperCase()),
             status: 'error' as const,
             detail: `SEV-${i.severity.toUpperCase()} · ${new Date(i.occurred_at).toLocaleDateString()}`,
           })),
           ...events.slice(0, 4).map(e => ({
             id: e.id,
-            label: e.event_type.replace(/_/g, ' '),
+            label: e.event_type.replaceAll('_', ' '),
             status: e.severity === 'error' ? 'error' as const : 'active' as const,
             detail: e.event_text.slice(0, 60),
           })),
@@ -693,7 +701,7 @@ async function resolveModuleState(
 
       return {
         moduleKey: 'physiomni',
-        headline: `${deviceList.length} Device${deviceList.length !== 1 ? 's' : ''} Registered`,
+        headline: `${deviceList.length} Device${deviceList.length === 1 ? '' : 's'} Registered`,
         stats: [
           { label: 'Connected Devices', value: String(deviceList.length), trend: 'stable' },
           { label: 'Active', value: String(activeDevices), trend: activeDevices > 0 ? 'up' : 'stable' },
@@ -703,11 +711,12 @@ async function resolveModuleState(
           const seenAgo = d.last_seen_at
             ? `${Math.round((Date.now() - new Date(d.last_seen_at).getTime()) / 60000)}m ago`
             : 'Never';
+            const fwSuffix = d.firmware_version ? ` · FW ${d.firmware_version}` : '';
           return {
             id: d.id,
             label: `${d.device_type} · ${d.device_id.slice(0, 8)}`,
             status: d.is_active ? 'active' : 'inactive',
-            detail: `Last seen: ${seenAgo}${d.firmware_version ? ` · FW ${d.firmware_version}` : ''}`,
+            detail: `Last seen: ${seenAgo}${fwSuffix}`,
           };
         }),
         actions: [
@@ -727,10 +736,14 @@ async function resolveModuleState(
 
       const agentSessions = (sessions ?? []) as Array<{ id: string; status: string; started_at: string; updated_at: string }>;
       const activeSessions = agentSessions.filter(s => s.status === 'active').length;
+      let headline = 'No Active Sessions';
+      if (activeSessions > 0) {
+        headline = `${activeSessions} Active Session${activeSessions === 1 ? '' : 's'}`;
+      }
 
       return {
         moduleKey: 'agent',
-        headline: activeSessions > 0 ? `${activeSessions} Active Session${activeSessions !== 1 ? 's' : ''}` : 'No Active Sessions',
+        headline,
         stats: [
           { label: 'Active Sessions', value: String(activeSessions), trend: activeSessions > 0 ? 'up' : 'stable' },
           { label: 'Total Sessions', value: String(agentSessions.length), trend: 'stable' },

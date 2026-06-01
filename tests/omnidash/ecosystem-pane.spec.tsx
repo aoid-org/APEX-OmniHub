@@ -11,7 +11,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { EcosystemPane } from '@/dashboard/components/DashboardOverview/components/EcosystemPane';
-import { ECOSYSTEM } from '@/dashboard/components/DashboardOverview/data';
+import { LIVE_APEX_APPS } from '@/dashboard/contracts/apexApps';
 
 describe('EcosystemPane', () => {
   afterEach(() => {
@@ -28,8 +28,8 @@ describe('EcosystemPane', () => {
       expect(screen.getByText('Connected Modules')).toBeInTheDocument();
 
       // Assert — no app rows
-      if (ECOSYSTEM.length > 0) {
-        expect(screen.queryByText(ECOSYSTEM[0].name)).not.toBeInTheDocument();
+      if (LIVE_APEX_APPS.length > 0) {
+        expect(screen.queryByText(LIVE_APEX_APPS[0].label)).not.toBeInTheDocument();
       }
     });
   });
@@ -38,24 +38,24 @@ describe('EcosystemPane', () => {
     it('renders all ECOSYSTEM app rows when visible', () => {
       render(<EcosystemPane ecoAppsVisible={true} />);
 
-      ECOSYSTEM.forEach((app) => {
-        expect(screen.getByText(app.name)).toBeInTheDocument();
+      LIVE_APEX_APPS.forEach((app) => {
+        expect(screen.getByText(app.label)).toBeInTheDocument();
       });
     });
 
     it('renders app status for each ECOSYSTEM entry', () => {
       render(<EcosystemPane ecoAppsVisible={true} />);
 
-      ECOSYSTEM.forEach((app) => {
-        const statusEls = screen.getAllByText(app.status); expect(statusEls.length).toBeGreaterThan(0);
-      });
+      // Status is hardcoded to 'ACTIVE' for all apps in EcosystemPane now
+      const statusEls = screen.getAllByText('ACTIVE');
+      expect(statusEls.length).toBeGreaterThan(0);
     });
 
     it('renders app category badge for each ECOSYSTEM entry', () => {
       render(<EcosystemPane ecoAppsVisible={true} />);
 
-      ECOSYSTEM.forEach((app) => {
-        expect(screen.getByText(app.cat)).toBeInTheDocument();
+      LIVE_APEX_APPS.forEach((app) => {
+        expect(screen.getByText(app.url)).toBeInTheDocument();
       });
     });
 
@@ -63,8 +63,8 @@ describe('EcosystemPane', () => {
       render(<EcosystemPane ecoAppsVisible={true} />);
 
       // Each app has a unique name — count app name elements
-      const appNames = ECOSYSTEM.map((a) => screen.getByText(a.name));
-      expect(appNames).toHaveLength(ECOSYSTEM.length);
+      const appNames = LIVE_APEX_APPS.map((a) => screen.getByText(a.label));
+      expect(appNames).toHaveLength(LIVE_APEX_APPS.length);
     });
   });
 });

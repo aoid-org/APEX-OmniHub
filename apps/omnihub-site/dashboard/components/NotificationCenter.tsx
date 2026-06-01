@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell } from 'lucide-react';
 
-import { useNotifications, type ManModeNotification } from '@/stores/notificationStore';
+import { useNotificationStore, type AppNotification } from '../../src/stores/notificationStore';
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -32,9 +32,9 @@ function getBadgeVariant(status: string) {
 
 // --- Helper Components ---------------------------------------------------------
 
-function NotificationItem({ n, handleApprove, handleDeny }: Readonly<{ n: ManModeNotification, handleApprove: (id: string) => void, handleDeny: (id: string) => void }>) {
-  const isPending = n.status === 'pending';
-  const badgeVariant = getBadgeVariant(n.status);
+function NotificationItem({ n, handleApprove, handleDeny }: Readonly<{ n: AppNotification, handleApprove: (id: string) => void, handleDeny: (id: string) => void }>) {
+  const isPending = n.badge === 'MAN_MODE' && !n.read;
+  const badgeVariant = getBadgeVariant(isPending ? 'pending' : n.badge.toLowerCase());
   
   return (
     <div
@@ -52,13 +52,13 @@ function NotificationItem({ n, handleApprove, handleDeny }: Readonly<{ n: ManMod
       <div className="p-4 pl-5">
         <div className="flex items-start justify-between mb-2">
           <p className="font-semibold text-sm leading-tight text-neutral-900 dark:text-neutral-100 tracking-tight pr-4">
-            {n.title}
+            {n.label}
           </p>
           <Badge
             variant={badgeVariant}
             className="shrink-0 uppercase tracking-wider text-[10px] font-bold"
           >
-            {n.status}
+            {n.badge}
           </Badge>
         </div>
         <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-400 line-clamp-2">
@@ -70,8 +70,11 @@ function NotificationItem({ n, handleApprove, handleDeny }: Readonly<{ n: ManMod
             <Button
               size="sm"
               className="w-full font-medium shadow-sm transition-transform active:scale-[0.98] bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900"
-              onClick={() => handleApprove(n.taskId)}
-              data-testid={`approve-${n.taskId}`}
+              onClick={() => {
+                if (n.onApprove) n.onApprove();
+                handleApprove(n.id);
+              }}
+              data-testid={`approve-${n.id}`}
             >
               Authorize
             </Button>
@@ -79,8 +82,11 @@ function NotificationItem({ n, handleApprove, handleDeny }: Readonly<{ n: ManMod
               size="sm"
               variant="outline"
               className="w-full font-medium transition-transform active:scale-[0.98] hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-950/30 dark:hover:text-red-400 dark:hover:border-red-900"
-              onClick={() => handleDeny(n.taskId)}
-              data-testid={`deny-${n.taskId}`}
+              onClick={() => {
+                if (n.onReject) n.onReject();
+                handleDeny(n.id);
+              }}
+              data-testid={`deny-${n.id}`}
             >
               Reject
             </Button>
@@ -92,17 +98,18 @@ function NotificationItem({ n, handleApprove, handleDeny }: Readonly<{ n: ManMod
 }
 
 export function NotificationCenter() {
-  const { notifications, approve, deny } = useNotifications();
+  const notifications = useNotificationStore(s => s.notifications);
+  const markAsRead = useNotificationStore(s => s.markAsRead);
   const [open, setOpen] = useState(false);
 
   // ⚡ Bolt: Memoized pending notifications count to avoid recalculating on every re-render
   const pendingCount = useMemo(
-    () => notifications.filter((n) => n.status === 'pending').length,
+    () => notifications.filter((n: AppNotification) => !n.read).length,
     [notifications]
   );
 
-  const handleApprove = useCallback((taskId: string) => approve(taskId), [approve]);
-  const handleDeny = useCallback((taskId: string) => deny(taskId), [deny]);
+  const handleApprove = useCallback((id: string) => markAsRead(id), [markAsRead]);
+  const handleDeny = useCallback((id: string) => markAsRead(id), [markAsRead]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -154,7 +161,7 @@ export function NotificationCenter() {
             </div>
           )}
           
-          {notifications.map((n) => (
+          {notifications.map((n: AppNotification) => (
             <NotificationItem 
               key={n.id} 
               n={n} 

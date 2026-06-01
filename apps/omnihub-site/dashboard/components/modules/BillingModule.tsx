@@ -24,13 +24,12 @@ export default function BillingModule({ onClose }: Props) {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return true;
 
-      // Call create-checkout Edge Function to get a billing portal URL
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { tier: 'PRO', skills: [], returnUrl: window.location.href },
+        body: { tier: 'PRO', skills: [], returnUrl: globalThis.location.href },
       });
 
       if (!error && data?.url) {
-        window.open(data.url, '_blank');
+        globalThis.open(data.url, '_blank');
       }
       return true; // handled
     }

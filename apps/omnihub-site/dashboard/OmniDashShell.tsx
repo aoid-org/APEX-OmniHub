@@ -13,6 +13,7 @@ import {
   SystemSparklines
 } from './components/M03Panels';
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
@@ -25,9 +26,9 @@ import {
 import { toast } from 'sonner';
 
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
-import imgAvatar from "../../../src/assets/omnidash/avatar-default.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
+import { AVATAR_PATH_MAP } from './contracts/agentAvatars';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, ReactNode, Dispatch, SetStateAction } from "react";
@@ -101,7 +102,8 @@ interface AgentWidgetProps {
 // ─── APEX Brand Assets ────────────────────────────────────────────────────────
 const IMG_BADGE = "/assets/apex-core-badge.svg";
 const IMG_WORDMARK = imgWordmark;
-const IMG_AVATAR = imgAvatar;
+// Avatar served from public/avatars/ — NOT a bundled import
+const IMG_AVATAR = AVATAR_PATH_MAP.Default;
 const IMG_ICONS = imgIcons;
 
 const IMG_APEX_WM = imgApexWm;
@@ -109,27 +111,27 @@ const IMG_APEX_WM = imgApexWm;
 // ─── Design System ────────────────────────────────────────────────────────────
 // eslint-disable-next-line react-refresh/only-export-components
 export const T = {
-  bg:        "#070B14",
-  surface:   "#0B1120",
-  card:      "#0E1628",
-  cardHover: "#111d33",
-  border:    "rgba(255,255,255,0.07)",
-  borderGlow:"rgba(249,115,22,0.3)",
-  orange:    "#F97316",
-  orangeDim: "#C2531A",
-  orangeGlow:"rgba(249,115,22,0.15)",
-  blue:      "#3B82F6",
-  blueDim:   "#1D4ED8",
-  blueGlow:  "rgba(59,130,246,0.15)",
-  cyan:      "#06B6D4",
-  green:     "#22C55E",
-  warn:      "#EAB308",
-  red:       "#EF4444",
-  purple:    "#A855F7",
-  t1:        "#F1F5F9",
-  t2:        "#94A3B8",
-  t3:        "#475569",
-  t4:        "#1E293B",
+  bg:        "var(--omni-bg)",
+  surface:   "var(--omni-surface)",
+  card:      "var(--omni-card)",
+  cardHover: "var(--omni-card-hover)",
+  border:    "var(--omni-border)",
+  borderGlow:"var(--omni-border-glow)",
+  orange:    "var(--omni-orange)",
+  orangeDim: "var(--omni-orange-dim)",
+  orangeGlow:"var(--omni-orange-glow)",
+  blue:      "var(--omni-blue)",
+  blueDim:   "var(--omni-blue-dim)",
+  blueGlow:  "var(--omni-blue-glow)",
+  cyan:      "var(--omni-cyan)",
+  green:     "var(--omni-green)",
+  warn:      "var(--omni-warn)",
+  red:       "var(--omni-red)",
+  purple:    "var(--omni-purple)",
+  t1:        "var(--omni-t1)",
+  t2:        "var(--omni-t2)",
+  t3:        "var(--omni-t3)",
+  t4:        "var(--omni-t4)",
 };
 
 function getHealthPalette(health: OmniHealthState): {
@@ -500,7 +502,27 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
     });
   };
 
+  const notifications = useNotificationStore(state => state.notifications);
+  const unreadCount = useNotificationStore(state => state.getUnreadCount());
+  const markAllAsRead = useNotificationStore(state => state.markAllAsRead);
+
   const handleBell = () => {
+    if (notifications.length === 0) {
+      invoke({
+        id: 'header-notifications',
+        provider: 'omnidash',
+        type: 'selection',
+        title: 'Notifications',
+        description: 'You have no pending notifications or approvals.',
+        schema: {
+          items: [],
+        },
+        onComplete: async () => {},
+        onCancel: () => {},
+      });
+      return;
+    }
+
     invoke({
       id: 'header-notifications',
       provider: 'omnidash',
@@ -508,15 +530,16 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
       title: 'Notifications',
       description: 'Recent activity across your APEX workspace.',
       schema: {
-        items: [
-          { id: 'n1', label: 'Salesforce sync completed — 48 records updated', badge: 'INFO' },
-          { id: 'n2', label: 'Invoice batch #1042 processed — $24,500 billed', badge: 'SUCCESS' },
-          { id: 'n3', label: 'Workflow "Lead Nurture" triggered for 12 contacts', badge: 'INFO' },
-          { id: 'n4', label: 'Guardian audit passed — 0 anomalies detected', badge: 'SUCCESS' },
-          { id: 'n5', label: 'New integration available: Stripe Billing v3', badge: 'NEW' },
-        ],
+        items: notifications.map(n => ({
+          id: n.id,
+          label: n.label,
+          badge: n.badge
+        }))
       },
-      onComplete: async () => { toast.info('Notifications marked read'); },
+      onComplete: async () => { 
+        markAllAsRead();
+        toast.info('Notifications marked read'); 
+      },
       onCancel: () => {},
     });
   };
@@ -684,7 +707,16 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
-          <div style={{position:"absolute",top:5,right:5,width:6,height:6,borderRadius:"50%",background:T.orange,border:`2px solid ${T.surface}`}} />
+          {unreadCount > 0 && (
+            <div style={{
+              position:"absolute", top:-4, right:-4, minWidth:16, height:16, 
+              borderRadius:8, background:T.orange, border:`2px solid ${T.surface}`,
+              color:"#fff", fontSize:9, fontWeight:800, display:"flex",
+              alignItems:"center", justifyContent:"center", padding:"0 4px"
+            }}>
+              {unreadCount}
+            </div>
+          )}
         </button>
 
         {/* Avatar */}
@@ -816,7 +848,7 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
             border:`2px solid ${T.orange}55`,
             boxShadow:`0 0 14px ${T.orange}28, 0 0 28px ${T.orange}12`,
           }}>
-            <img src={IMG_AVATAR} alt="APEX Agent" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+            <img src={IMG_AVATAR} alt="APEX Agent" style={{ width:"100%", height:"100%", objectFit:"cover" }} loading="lazy" decoding="async" />
           </div>
         </div>
       </div>
@@ -1088,7 +1120,7 @@ const OmniSlateWidget = () => {
           }}>
             {m.role==="assistant" && (
               <div style={{width:26,height:26,borderRadius:"50%",overflow:"hidden",flexShrink:0,border:`1px solid ${T.orange}66`}}>
-                <img src={IMG_AVATAR} alt="AI Avatar" style={{width:"100%",height:"100%",objectFit:"cover"}} />
+                <img src={IMG_AVATAR} alt="AI Avatar" style={{width:"100%",height:"100%",objectFit:"cover"}} loading="lazy" decoding="async" />
               </div>
             )}
             <div style={{
@@ -1312,16 +1344,8 @@ const IntegratedAppsWidget = () => {
 };
 
 // ─── Right Panel Sections ─────────────────────────────────────────────────────
-const OMNIBOARD_EVENTS = [
-  { time: "09:41", type: "github", color: T.blue, text: "Commit 'fix(ci): extract Atomic Routing Flip' pushed to main" },
-  { time: "09:42", type: "ci/cd", color: T.purple, text: "Workflow 'Clean-Room Final Certification' completed" },
-  { time: "09:45", type: "security", color: T.green, text: "Zero Trust policy verified. No anomalous gateways detected." },
-  { time: "10:12", type: "system", color: T.cyan, text: "TradeLine 24/7 service scaled up (3 -> 5 instances)" },
-  { time: "10:15", type: "github", color: T.blue, text: "PR #1245 merged by APEX Agent" },
-];
-
 const OmniBoardFeed = ({ isDark }: { dash?: DashboardData; isDark: boolean }) => {
-  const [events, setEvents] = useState(OMNIBOARD_EVENTS);
+  const [events, setEvents] = useState<{time: string, type: string, color: string, text: string}[]>([]);
   
   useEffect(() => {
     // APEX-DEV: OpenTelemetry SSE stream via OmniHub Gateway overriding local JSON array fallback
@@ -1371,23 +1395,29 @@ const OmniBoardFeed = ({ isDark }: { dash?: DashboardData; isDark: boolean }) =>
         fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
         background: isDark ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.4)"
       }}>
-        {events.map((e, i) => (
-          <div key={i} style={{
-            display: "flex", alignItems: "flex-start", gap: 12,
-            animation: "apexFadeIn 0.3s ease",
-            fontSize: 12.5, lineHeight: 1.5
-          }}>
-            <div style={{ color: T.t3, fontSize: 11, marginTop: 2, flexShrink: 0 }}>[{e.time}]</div>
-            <div style={{
-              color: e.color, fontSize: 10, fontWeight: 700, textTransform: "uppercase",
-              padding: "2px 6px", borderRadius: 4, border: `1px solid ${e.color}44`,
-              background: `${e.color}15`, flexShrink: 0, minWidth: 65, textAlign: "center", marginTop: 1
-            }}>
-              {e.type}
-            </div>
-            <div style={{ color: T.t1 }}>{e.text}</div>
+        {events.length === 0 ? (
+          <div style={{ color: T.t3, fontSize: 12, textAlign: "center", marginTop: 20 }}>
+            No recent activity detected.
           </div>
-        ))}
+        ) : (
+          events.map((e, i) => (
+            <div key={i} style={{
+              display: "flex", alignItems: "flex-start", gap: 12,
+              animation: "apexFadeIn 0.3s ease",
+              fontSize: 12.5, lineHeight: 1.5
+            }}>
+              <div style={{ color: T.t3, fontSize: 11, marginTop: 2, flexShrink: 0 }}>[{e.time}]</div>
+              <div style={{
+                color: e.color, fontSize: 10, fontWeight: 700, textTransform: "uppercase",
+                padding: "2px 6px", borderRadius: 4, border: `1px solid ${e.color}44`,
+                background: `${e.color}15`, flexShrink: 0, minWidth: 65, textAlign: "center", marginTop: 1
+              }}>
+                {e.type}
+              </div>
+              <div style={{ color: T.t1 }}>{e.text}</div>
+            </div>
+          ))
+        )}
       </div>
       {/* Input bar */}
       <div style={{
@@ -1519,6 +1549,16 @@ export default function OmniDashShell() {
             </div>
             <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>
             <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>
+            {/* Connect AI */}
+            <button
+              className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-1.5 ml-2"
+              onClick={() => {
+                toast.info('Setup is required', { description: 'Missing API configuration for Connect AI.' });
+              }}
+              title="Connect AI Provider"
+            >
+              Connect AI
+            </button>
           </div>
 
           {/* APEX-OmniHub wordmark watermark — above grid, below content */}

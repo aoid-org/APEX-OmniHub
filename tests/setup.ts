@@ -45,11 +45,11 @@ if (httpProxy) {
 vi.mock('framer-motion');
 
 class ResizeObserverMock {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe() { void 0; }
+  unobserve() { void 0; }
+  disconnect() { void 0; }
 }
 
-global.ResizeObserver = ResizeObserverMock;
+globalThis.ResizeObserver = ResizeObserverMock;
 
 // Recharts is mocked via vitest.config.ts alias to tests/__mocks__/recharts.tsx

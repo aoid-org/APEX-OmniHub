@@ -1,4 +1,4 @@
-export type HealthStatus = 'green' | 'yellow' | 'red';
+import type { HealthStatus } from '../../types/context.types';
 
 export interface DashboardOverviewProps {
   readonly demoMode: boolean;
@@ -8,11 +8,6 @@ export interface DashboardOverviewProps {
   readonly setEcoAppsVisible: (v: boolean) => void;
 }
 
-export interface ContextItem {
-  readonly name: string;
-  readonly health: HealthStatus;
-  readonly insight: string;
-}
 
 export interface AppEntry {
   readonly name: string;

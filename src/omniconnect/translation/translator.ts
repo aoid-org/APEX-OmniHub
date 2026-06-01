@@ -128,7 +128,7 @@ export class SemanticTranslator {
   >();
 
   // Local deterministic dictionary for demo purposes
-  private static DICTIONARY: Record<string, Record<string, string>> = {
+  private static readonly DICTIONARY: Record<string, Record<string, string>> = {
     'fr': {
       'Hello Translator': 'Bonjour Traducteur',
       'Hello': 'Bonjour',
@@ -148,10 +148,10 @@ export class SemanticTranslator {
   private isTranslatable(val: unknown): boolean {
     if (typeof val !== 'string') return false;
     // Skip typical identifiers or technical tokens
-    if (val.match(/^[0-9a-fA-F-]{36}$/)) return false; // UUID
+    if (/^[0-9a-fA-F-]{36}$/.exec(val)) return false; // UUID
     if (val.startsWith('http://') || val.startsWith('https://')) return false;
     if (val.includes('@') && !val.includes(' ')) return false; // Basic email
-    if (val.match(/^[A-Z_]+$/)) return false; // ENUM_STYLE
+    if (/^[A-Z_]+$/.exec(val)) return false; // ENUM_STYLE
     return true;
   }
 

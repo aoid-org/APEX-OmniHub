@@ -2,16 +2,23 @@ import { memo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import lightbulbIcon from '../../../../src/assets/lightbulb-icon.png';
 import { useOmniDash } from '../../../../src/stores/omniDashStore';
-import { SPRING, GLASS_TILE, HC, ORANGE_GHOST, APEX_ORANGE, PROMPT_STYLE_BASE } from '../constants';
-import type { ContextItem } from '../types';
+import { useOmniSlateStore } from '../../../../src/stores/omniSlateStore';
+import { SPRING, GLASS_TILE, ORANGE_GHOST, APEX_ORANGE, PROMPT_STYLE_BASE } from '../constants';
+import type { OmniSlateHealth } from '../../../types/context.types';
 import { ContextTile } from './ContextTile';
 import { RecordButton } from './RecordButton';
 
 const WIDGET_ID = 'omnislate-pane';
 
+const HC: Record<OmniSlateHealth, { border: string; bg: string; text: string }> = {
+  healthy: { border: 'rgba(16, 185, 129, 0.4)', bg: 'rgba(16, 185, 129, 0.05)', text: '#34d399' },
+  warning: { border: 'rgba(245, 158, 11, 0.4)', bg: 'rgba(245, 158, 11, 0.05)', text: '#facc15' },
+  broken: { border: 'rgba(239, 68, 68, 0.4)', bg: 'rgba(239, 68, 68, 0.05)', text: '#f87171' },
+  unknown: { border: 'rgba(148, 163, 184, 0.4)', bg: 'rgba(148, 163, 184, 0.05)', text: '#94a3b8' },
+};
+
 interface OmniSlatePaneProps {
-  readonly context: readonly ContextItem[];
-  readonly health: 'green' | 'yellow' | 'red';
+  readonly health: OmniSlateHealth | 'green' | 'yellow' | 'red';
   readonly activeInsight: string | null;
   readonly prompt: string;
   readonly isRecording: boolean;
@@ -21,13 +28,12 @@ interface OmniSlatePaneProps {
   readonly onToggleGlobalInsight: () => void;
   readonly onToggleInsight: (name: string) => void;
   readonly onPromptChange: (v: string) => void;
-  readonly onCommandSubmit: () => void;
+  readonly onCommandSubmit: (payload?: unknown) => void;
   readonly onToggleRecording: () => void;
 }
 
 export const OmniSlatePane = memo(function OmniSlatePane({
-  context,
-  health,
+  health: healthRaw,
   activeInsight,
   prompt,
   isRecording,
@@ -40,6 +46,15 @@ export const OmniSlatePane = memo(function OmniSlatePane({
   onCommandSubmit,
   onToggleRecording,
 }: OmniSlatePaneProps) {
+  const context = useOmniSlateStore(st => st.contextItems);
+  const addContext = useOmniSlateStore(st => st.addContext);
+  
+  // Map legacy health to new health enum for fallback
+  let health: OmniSlateHealth;
+  if (healthRaw === 'green') health = 'healthy';
+  else if (healthRaw === 'yellow') health = 'warning';
+  else if (healthRaw === 'red') health = 'broken';
+  else health = healthRaw;
   const s = HC[health];
   const firstLog = traceLogs[0] ?? null;
   const traceColor = firstLog?.includes('COMPLETE') ? '#34d399' : '#facc15';
@@ -52,13 +67,11 @@ export const OmniSlatePane = memo(function OmniSlatePane({
   const motionX = useMotionValue(widgetState?.position.x ?? 0);
   const motionY = useMotionValue(widgetState?.position.y ?? 0);
 
-  // Register with omniDashStore on mount
   useEffect(() => {
     openWidget(WIDGET_ID, 'OmniSlate', 'omniSlatePane', { x: 0, y: 0 }, { width: 780, height: 520 });
   }, [openWidget]);
 
   const pos = widgetState?.position;
-  // Sync motion values from store when store position changes
   useEffect(() => {
     if (pos) {
       motionX.set(pos.x);
@@ -74,9 +87,79 @@ export const OmniSlatePane = memo(function OmniSlatePane({
     focusWidget(WIDGET_ID);
   };
 
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const data = e.dataTransfer;
+    if (!data) return;
+
+    if (data.types.includes('application/apex-tile')) {
+      try {
+        const item = JSON.parse(data.getData('application/apex-tile'));
+        addContext({
+          id: item.id || crypto.randomUUID(),
+          kind: item.kind || 'apex_app',
+          label: item.label || 'Unknown',
+          source: 'drag',
+          health: item.health || 'unknown',
+          metadata: item.metadata || {},
+          droppedAt: new Date().toISOString()
+        });
+      } catch { /* ignore parsing errors */ }
+      return;
+    }
+
+    if (data.files && data.files.length > 0) {
+      Array.from(data.files).forEach(file => {
+        addContext({
+          id: crypto.randomUUID(),
+          kind: 'file',
+          label: file.name,
+          source: 'drag',
+          health: 'healthy',
+          metadata: { fileName: file.name, type: file.type, size: file.size },
+          droppedAt: new Date().toISOString()
+        });
+      });
+      return;
+    }
+    
+    if (data.types.includes('text/uri-list')) {
+      const url = data.getData('text/uri-list');
+      if (url) {
+        addContext({
+          id: crypto.randomUUID(),
+          kind: 'link',
+          label: url,
+          source: 'drag',
+          health: 'healthy',
+          metadata: { url },
+          droppedAt: new Date().toISOString()
+        });
+      }
+    } else if (data.types.includes('text/plain')) {
+      const text = data.getData('text/plain');
+      if (text) {
+        addContext({
+          id: crypto.randomUUID(),
+          kind: 'text',
+          label: text.slice(0, 30) + (text.length > 30 ? '...' : ''),
+          source: 'drag',
+          health: 'healthy',
+          metadata: { text },
+          droppedAt: new Date().toISOString()
+        });
+      }
+    }
+  };
+
+  const submitWithContext = () => {
+    onCommandSubmit({ prompt, contextItems: context });
+  };
+
   return (
     <div ref={canvasRef} style={{ position: 'relative', height: '100%' }}>
       <motion.div
+        data-testid="framer-motion-div"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ ...SPRING, delay: 0.05 }}
@@ -86,6 +169,8 @@ export const OmniSlatePane = memo(function OmniSlatePane({
         dragConstraints={canvasRef}
         onPointerDown={handlePointerDown}
         onDragEnd={handleDragEnd}
+        onDragOver={e => e.preventDefault()}
+        onDrop={handleDrop}
         className={
           'apex-hero-tile apex-hero-tile--lg' +
           ' pointer-events-auto' +
@@ -93,6 +178,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
         }
         style={{
           ...GLASS_TILE,
+          border: `1px solid ${s.border}`,
           padding: 24,
           x: motionX,
           y: motionY,
@@ -144,7 +230,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
           >
             CleanSlate
           </button>
-          {health !== 'green' && (
+          {health !== 'healthy' && (
             <button
               type="button"
               onClick={onToggleGlobalInsight}
@@ -173,6 +259,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
         <div className="relative z-10 flex flex-col gap-3" style={{ minWidth: 0 }}>
           {activeInsight === '__global__' && (
             <div
+              data-testid="global-insights-panel"
               style={{
                 padding: '10px 14px',
                 borderRadius: 10,
@@ -185,10 +272,10 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               }}
             >
               {context
-                .filter(c => c.health !== 'green')
+                .filter(c => c.health !== 'healthy')
                 .map(c => (
-                  <div key={c.name} style={{ marginBottom: 4 }}>
-                    <strong>{c.name}:</strong> {c.insight}
+                  <div key={c.id} style={{ marginBottom: 4 }}>
+                    <strong>{c.label}:</strong> {c.failureReason || 'Warning detected'}
                   </div>
                 ))}
             </div>
@@ -209,7 +296,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               <AnimatePresence>
                 {context.map(ctx => (
                   <ContextTile
-                    key={ctx.name}
+                    key={ctx.id}
                     ctx={ctx}
                     activeInsight={activeInsight}
                     onToggle={onToggleInsight}
@@ -263,26 +350,10 @@ export const OmniSlatePane = memo(function OmniSlatePane({
               duration={recordingDuration}
               onToggle={onToggleRecording}
             />
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: 'rgba(194,80,31,0.08)',
-                border: '1px solid rgba(194,80,31,0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 17,
-                color: '#94a3b8',
-                cursor: 'pointer',
-              }}
-            >
-              +
-            </div>
             <button
               type="button"
-              onClick={onCommandSubmit}
+              onClick={submitWithContext}
+              data-testid="submit-prompt"
               style={{
                 width: 36,
                 height: 36,
@@ -323,3 +394,4 @@ export const OmniSlatePane = memo(function OmniSlatePane({
     </div>
   );
 });
+
