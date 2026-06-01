@@ -40,6 +40,54 @@ async def test_search_database_success():
 
 
 @pytest.mark.asyncio
+async def test_search_database_blocks_internal_only_tables():
+    params = {"table": "provider_connections", "filters": {}, "select": "*"}
+
+    with patch("activities.tools.get_database_provider") as mock_provider:
+        db = AsyncMock()
+        mock_provider.return_value = db
+
+        with patch("activities.tools.log_audit_event", new_callable=AsyncMock):
+            with pytest.raises(ApplicationError) as exc:
+                await search_database(params)
+
+        assert exc.value.non_retryable is True
+        db.select.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_create_record_blocks_internal_only_tables():
+    params = {"table": "pilot_sessions", "data": {"user_id": "user-1"}}
+
+    with patch("activities.tools.get_database_provider") as mock_provider:
+        db = AsyncMock()
+        mock_provider.return_value = db
+
+        with patch("activities.tools.log_audit_event", new_callable=AsyncMock):
+            with pytest.raises(ApplicationError) as exc:
+                await create_record(params)
+
+        assert exc.value.non_retryable is True
+        db.insert.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_delete_record_blocks_internal_only_tables():
+    params = {"table": "agent_runs", "id": "run-1"}
+
+    with patch("activities.tools.get_database_provider") as mock_provider:
+        db = AsyncMock()
+        mock_provider.return_value = db
+
+        with patch("activities.tools.log_audit_event", new_callable=AsyncMock):
+            with pytest.raises(ApplicationError) as exc:
+                await delete_record(params)
+
+        assert exc.value.non_retryable is True
+        db.delete.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_search_database_failure():
     params = {"table": "users"}
 

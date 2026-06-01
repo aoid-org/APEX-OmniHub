@@ -51,6 +51,31 @@ from security.ssrf import validate_url_with_dns_pin_async
 _semantic_cache = None  # SemanticCacheService instance
 _redis_client = None
 
+# Tables below are service-role/internal only. Generic LLM-planned database tools
+# must never expose or mutate them because Supabase RLS is bypassed by this worker.
+INTERNAL_ONLY_DATABASE_TOOL_TABLES = frozenset(
+    {
+        "provider_connections",
+        "pilot_sessions",
+        "usage_metering",
+        "agent_runs",
+    }
+)
+
+
+class ForbiddenDatabaseToolTableError(DatabaseError):
+    """Raised when a generic agent database tool targets an internal-only table."""
+
+
+def _ensure_generic_database_tool_table_allowed(table: str, tool_name: str) -> str:
+    """Block prompt-controlled DB tools from service-role-only tables."""
+    normalized = table.strip().lower() if isinstance(table, str) else ""
+    if normalized in INTERNAL_ONLY_DATABASE_TOOL_TABLES:
+        raise ForbiddenDatabaseToolTableError(
+            f"Tool {tool_name} cannot access internal-only table {normalized}"
+        )
+    return table
+
 
 # ============================================================================
 # SHARED IDEMPOTENCY GUARD
@@ -469,6 +494,8 @@ async def search_database(params: dict[str, Any]) -> dict[str, Any]:
     result_count = 0
 
     try:
+        _ensure_generic_database_tool_table_allowed(table, "search_database")
+
         # Get database provider instance
         db = get_database_provider()
 
@@ -512,7 +539,10 @@ async def search_database(params: dict[str, Any]) -> dict[str, Any]:
         # Use ApplicationError for retryable failures (network timeouts, temporary unavailability)
         from temporalio.exceptions import ApplicationError
 
-        raise ApplicationError(f"Database search failed: {error_msg}", non_retryable=False) from e
+        is_forbidden_table = isinstance(e, ForbiddenDatabaseToolTableError)
+        raise ApplicationError(
+            f"Database search failed: {error_msg}", non_retryable=is_forbidden_table
+        ) from e
 
 
 @activity.defn(name="create_record")
@@ -541,6 +571,8 @@ async def create_record(params: dict[str, Any]) -> dict[str, Any]:
     record_id = None
 
     try:
+        _ensure_generic_database_tool_table_allowed(table, "create_record")
+
         # Get database provider instance
         db = get_database_provider()
 
@@ -581,6 +613,13 @@ async def create_record(params: dict[str, Any]) -> dict[str, Any]:
             workflow_id=params.get("workflow_id", ""),
         )
 
+        if isinstance(e, ForbiddenDatabaseToolTableError):
+            from temporalio.exceptions import ApplicationError
+
+            raise ApplicationError(
+                f"Record creation failed: {error_msg}", non_retryable=True
+            ) from e
+
         raise
 
 
@@ -609,6 +648,8 @@ async def delete_record(params: dict[str, Any]) -> dict[str, Any]:
     error_msg = None
 
     try:
+        _ensure_generic_database_tool_table_allowed(table, "delete_record")
+
         # Get database provider instance
         db = get_database_provider()
 
@@ -652,6 +693,13 @@ async def delete_record(params: dict[str, Any]) -> dict[str, Any]:
             )
         except Exception as audit_error:
             activity.logger.warning(f"Audit logging failed: {audit_error}")
+
+        if isinstance(e, ForbiddenDatabaseToolTableError):
+            from temporalio.exceptions import ApplicationError
+
+            raise ApplicationError(
+                f"Record deletion failed: {error_msg}", non_retryable=True
+            ) from e
 
         # Don't raise - best-effort compensation
         return {"success": False, "error": error_msg}
