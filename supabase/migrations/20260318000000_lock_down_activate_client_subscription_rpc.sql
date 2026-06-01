@@ -1,25 +1,12 @@
 -- ============================================================================
--- MIGRATION: Bridge Entitlements and Subscriptions
+-- MIGRATION: Lock Down Subscription Activation RPC
 -- ============================================================================
 -- Purpose:
--- 1. Revoke client-side INSERT on user_entitlements
--- 2. Add bridge fields to user_entitlements and subscriptions if missing
--- 3. Create an idempotent RPC to activate both safely server-side
+-- 1. Remove public/authenticated execution from the SECURITY DEFINER RPC
+-- 2. Preserve Stripe webhook and validated Edge Function provisioning via service_role
+-- 3. Harden function search_path for deterministic SECURITY DEFINER execution
 -- ============================================================================
 
--- Ensure onboarding_completed_at exists on user_entitlements
-ALTER TABLE public.user_entitlements
-ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ;
-
--- Revoke Client-Side Insert (from OnboardingWizard)
-DROP POLICY IF EXISTS "Users can insert own entitlements" ON public.user_entitlements;
-
--- Ensure index exists for fast lookup
-CREATE INDEX IF NOT EXISTS idx_user_entitlements_tier ON public.user_entitlements(tier);
--- Ensure unique constraint for idempotency
-ALTER TABLE public.user_entitlements ADD CONSTRAINT unique_user_entitlement UNIQUE (user_id);
-
--- Create the unified RPC for server-side activation
 CREATE OR REPLACE FUNCTION public.activate_client_subscription(
     p_user_id UUID,
     p_tier TEXT,
@@ -120,9 +107,10 @@ EXCEPTION
 END;
 $$;
 
--- Restrict elevated subscription writes to trusted server-side callers only.
--- Edge functions must use the service-role client after validating the end-user JWT.
+-- SECURITY DEFINER functions are executable by PUBLIC by default; remove every client role.
 REVOKE EXECUTE ON FUNCTION public.activate_client_subscription(UUID, TEXT, JSONB, TEXT, TEXT, TIMESTAMPTZ, TIMESTAMPTZ) FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.activate_client_subscription(UUID, TEXT, JSONB, TEXT, TEXT, TIMESTAMPTZ, TIMESTAMPTZ) FROM anon;
 REVOKE EXECUTE ON FUNCTION public.activate_client_subscription(UUID, TEXT, JSONB, TEXT, TEXT, TIMESTAMPTZ, TIMESTAMPTZ) FROM authenticated;
+
+-- Only trusted Supabase Edge Functions/webhooks using the service role may provision subscriptions.
 GRANT EXECUTE ON FUNCTION public.activate_client_subscription(UUID, TEXT, JSONB, TEXT, TEXT, TIMESTAMPTZ, TIMESTAMPTZ) TO service_role;

@@ -21,9 +21,18 @@ serve(async (req) => {
       return corsErrorResponse('UNAUTHORIZED', 'Missing authorization header', 401, origin);
     }
 
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
+      console.error('Missing Supabase environment configuration for activate-client');
+      return corsErrorResponse('SERVER_CONFIGURATION_ERROR', 'Activation service is not configured', 500, origin);
+    }
+
     const client = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      supabaseUrl,
+      supabaseAnonKey,
       { global: { headers: { Authorization: authHeader } } }
     );
 
@@ -42,7 +51,10 @@ serve(async (req) => {
       );
     }
 
-    const { data, error } = await client.rpc('activate_client_subscription', {
+    const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+    // The RPC is service-role only; bind activation to the validated JWT user here.
+    const { data, error } = await adminClient.rpc('activate_client_subscription', {
       p_user_id: user.id,
       p_tier: 'BASIC',
       p_skills: body.skills
