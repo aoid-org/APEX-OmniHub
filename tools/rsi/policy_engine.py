@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any
 
 ARTIFACT_DIR = Path(os.getenv("RSI_ARTIFACT_DIR", "artifacts/rsi"))
-POLICY_FILE = Path("policy/rsi-policy.yaml")
+POLICY_FILE = Path(os.getenv("RSI_POLICY_FILE", "policy/rsi-policy.yaml"))
 DEFAULT_MAX_FILES_WITHOUT_ESCALATION = 50
 DOCS_EXTENSIONS = {".md", ".txt", ".rst", ".adoc"}
 DOCS_PREFIXES = ("docs/",)

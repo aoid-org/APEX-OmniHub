@@ -28,7 +28,7 @@ from typing import Any
 
 ARTIFACT_DIR = Path(os.getenv("RSI_ARTIFACT_DIR", "artifacts/rsi"))
 INVENTORY_DIR = Path("inventory")
-POLICY_FILE = Path("policy/rsi-policy.yaml")
+POLICY_FILE = Path(os.getenv("RSI_POLICY_FILE", "policy/rsi-policy.yaml"))
 SCHEMA_VERSION = "1.0.0"
 MAX_DIFF_SUMMARY_CHARS = 2000
 MAX_INVENTORY_CHARS = 500

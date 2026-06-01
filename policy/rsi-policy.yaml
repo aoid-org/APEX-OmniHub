@@ -1,4 +1,4 @@
-policy_version: 1.3.3
+policy_version: 1.3.4
 policy_last_updated_utc: 2026-05-31
 mode: live
 default_network_model_calls: false
@@ -25,6 +25,9 @@ moderate_supabase_functions:
 # legitimate security-hardening PRs that provision new DB infrastructure (e.g.
 # AEGIS, CHRONOS). escalate enforces the review requirement without aborting.
 protected_paths:
+  - policy/rsi-policy.yaml
+  - tools/rsi/**
+  - .github/workflows/rsi-governance.yml
   - terraform/**
   - contracts/**
   - hardhat.config.cts

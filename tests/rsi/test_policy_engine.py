@@ -136,3 +136,25 @@ def test_output_file_written(tmp_artifacts_dir, tmp_path):
     assert out.exists()
     data = json.loads(out.read_text())
     assert "decision" in data
+
+
+def test_repository_policy_blocks_rsi_gate_mutation():
+    """The checked-in policy must hard-block changes to the gate code and policy."""
+    repo_root = Path(__file__).parents[2]
+    engine = PolicyEngine(policy_path=repo_root / "policy" / "rsi-policy.yaml")
+
+    result = engine.evaluate({
+        "changed_paths": [
+            "policy/rsi-policy.yaml",
+            "tools/rsi/policy_engine.py",
+            ".github/workflows/rsi-governance.yml",
+        ],
+        "candidate_test_plan": [],
+    })
+
+    assert result["decision"] == "block"
+    assert result["protected_path_hits"] == [
+        "policy/rsi-policy.yaml",
+        "tools/rsi/policy_engine.py",
+        ".github/workflows/rsi-governance.yml",
+    ]
