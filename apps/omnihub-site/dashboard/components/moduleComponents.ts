@@ -15,7 +15,6 @@ const MODULE_KEYS: ReadonlySet<string> = new Set([
   'files',
   'billing',
   'settings',
-  'translation',
 ]);
 
 /** Returns true when a lazy-loaded module component exists for the given key. */

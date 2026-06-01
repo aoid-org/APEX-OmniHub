@@ -3,13 +3,9 @@
  * Tests agent event metrics computation, time range/source filtering, loading states, and chart rendering.
  */
 
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import { LocalAgents } from '@/dashboard/components/modules/LocalAgents';
-import LocalAgents from '../../apps/omnihub-site/dashboard/components/modules/LocalAgents';
-
-// Recharts is globally mocked via vitest.config.ts alias
 
 // ─── Mocks ────────────────────────────────────────────────────────────────
 

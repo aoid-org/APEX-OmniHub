@@ -76,59 +76,7 @@ describe('Universal Translation Engine (UTE) Stress Tests', () => {
     expect(results).toHaveLength(1);
     expect(results[0].payload._translation_status).toBeUndefined();
     expect(results[0].metadata.verified).toBe(true);
-    // Empty metadata → defaults to [en], which prepends "[en] " to "Hello Translator"
+    // Empty metadata → defaults to [en]
     expect(results[0].payload.message).toBe('[en] Hello Translator');
-  });
-
-  it('should translate known strings via deterministic dictionary', async () => {
-    const validEvent: CanonicalEvent = {
-        eventId: 'valid-2',
-        correlationId: 'corr-valid-2',
-        tenantId: 'tenant-1',
-        userId: 'user-1',
-        source: 'test-source',
-        provider: 'test-provider',
-        externalId: 'ext-2',
-        eventType: EventType.SOCIAL_POST_VIEWED,
-        classification: DataClassification.PUBLIC,
-        timestamp: new Date().toISOString(),
-        consentFlags: {},
-        metadata: { locale: 'fr-FR' },
-        payload: { message: 'Hello Translator' }
-    };
-
-    const results = await translator.translate([validEvent], appId, correlationId);
-    expect(results[0].payload.message).toBe('Bonjour Traducteur');
-  });
-
-  it('should NOT translate technical identifiers or UUIDs', async () => {
-    const validEvent: CanonicalEvent = {
-        eventId: 'valid-3',
-        correlationId: 'corr-valid-3',
-        tenantId: 'tenant-1',
-        userId: 'user-1',
-        source: 'test-source',
-        provider: 'test-provider',
-        externalId: 'ext-3',
-        eventType: EventType.SOCIAL_POST_VIEWED,
-        classification: DataClassification.PUBLIC,
-        timestamp: new Date().toISOString(),
-        consentFlags: {},
-        metadata: { locale: 'fr-FR' },
-        payload: { 
-          message: 'Settings', 
-          uuid: '123e4567-e89b-12d3-a456-426614174000',
-          email: 'test@apex.com',
-          url: 'https://apex.com',
-          enum: 'SYSTEM_ERROR'
-        }
-    };
-
-    const results = await translator.translate([validEvent], appId, correlationId);
-    expect(results[0].payload.message).toBe('Paramètres'); // Translated
-    expect(results[0].payload.uuid).toBe('123e4567-e89b-12d3-a456-426614174000'); // Unchanged
-    expect(results[0].payload.email).toBe('test@apex.com'); // Unchanged
-    expect(results[0].payload.url).toBe('https://apex.com'); // Unchanged
-    expect(results[0].payload.enum).toBe('SYSTEM_ERROR'); // Unchanged
   });
 });

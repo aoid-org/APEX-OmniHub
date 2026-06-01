@@ -127,76 +127,19 @@ export class SemanticTranslator {
     (event: CanonicalEvent) => TranslatedEvent
   >();
 
-  // Local deterministic dictionary for demo purposes
-  private static DICTIONARY: Record<string, Record<string, string>> = {
-    'fr': {
-      'Hello Translator': 'Bonjour Traducteur',
-      'Hello': 'Bonjour',
-      'Settings': 'Paramètres',
-      'Language': 'Langue',
-      'Save': 'Enregistrer'
-    },
-    'es': {
-      'Hello Translator': 'Hola Traductor',
-      'Hello': 'Hola',
-      'Settings': 'Configuración',
-      'Language': 'Idioma',
-      'Save': 'Guardar'
-    }
-  };
-
-  private isTranslatable(val: unknown): boolean {
-    if (typeof val !== 'string') return false;
-    // Skip typical identifiers or technical tokens
-    if (val.match(/^[0-9a-fA-F-]{36}$/)) return false; // UUID
-    if (val.startsWith('http://') || val.startsWith('https://')) return false;
-    if (val.includes('@') && !val.includes(' ')) return false; // Basic email
-    if (val.match(/^[A-Z_]+$/)) return false; // ENUM_STYLE
-    return true;
+  // Deterministic "Translation" for validation purposes
+  // In production, this would call a local AI model or cached dictionary
+  private pseudoTranslate(text: unknown, targetLang: string): string {
+    if (typeof text !== 'string') return String(text);
+    return `[${targetLang}] ${text}`;
   }
 
-  private translateValue(val: unknown, targetLang: string): unknown {
-    if (Array.isArray(val)) {
-      return val.map(item => this.translateValue(item, targetLang));
-    }
-    if (typeof val === 'object' && val !== null) {
-      const result: Record<string, unknown> = {};
-      for (const [k, v] of Object.entries(val)) {
-        result[k] = this.translateValue(v, targetLang);
-      }
-      return result;
-    }
-    if (!this.isTranslatable(val)) return val;
-    
-    const str = val as string;
-    const langDict = SemanticTranslator.DICTIONARY[targetLang] || {};
-    return langDict[str] || `[${targetLang}] ${str}`; // Fallback: prepend locale tag
-  }
-
-  protected detranslateValue(val: unknown, targetLang: string): unknown {
-    if (Array.isArray(val)) {
-      return val.map(item => this.detranslateValue(item, targetLang));
-    }
-    if (typeof val === 'object' && val !== null) {
-      const result: Record<string, unknown> = {};
-      for (const [k, v] of Object.entries(val)) {
-        result[k] = this.detranslateValue(v, targetLang);
-      }
-      return result;
-    }
-    if (typeof val !== 'string') return val;
-    
-    const langDict = SemanticTranslator.DICTIONARY[targetLang] || {};
-    // Find reverse lookup
-    for (const [source, translated] of Object.entries(langDict)) {
-      if (translated === val) return source;
-    }
-    // Fallback: strip locale tag
+  protected pseudoDetranslate(text: string, targetLang: string): string {
     const prefix = `[${targetLang}] `;
-    if (val.startsWith(prefix)) {
-      return val.slice(prefix.length);
+    if (text.startsWith(prefix)) {
+      return text.slice(prefix.length);
     }
-    return val;
+    return text; // Failure to detranslate
   }
 
   async translate(
@@ -231,13 +174,16 @@ export class SemanticTranslator {
       // 1. Forward Translate
       const translatedPayload: Record<string, unknown> = {};
       for (const [key, val] of Object.entries(validEvent.payload)) {
-        translatedPayload[key] = this.translateValue(val, targetLocale);
+        translatedPayload[key] = this.pseudoTranslate(val, targetLocale);
       }
 
       // 2. Verification (Back Translate)
       const backTranslated: Record<string, unknown> = {};
       for (const [key, val] of Object.entries(translatedPayload)) {
-        backTranslated[key] = this.detranslateValue(val, targetLocale);
+        backTranslated[key] =
+          typeof val === 'string'
+            ? this.pseudoDetranslate(val, targetLocale)
+            : val;
       }
 
       // 3. Equivalence Check

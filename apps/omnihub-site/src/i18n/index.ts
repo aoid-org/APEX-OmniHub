@@ -17,8 +17,6 @@ import jaJP from './locales/ja-JP.json';
 import zhCN from './locales/zh-CN.json';
 import ptBR from './locales/pt-BR.json';
 
-import { SUPPORTED_LOCALES } from './locales';
-
 const isProd = import.meta.env.PROD;
 
 i18n
@@ -34,7 +32,7 @@ i18n
       'zh-CN': { translation: zhCN },
       'pt-BR': { translation: ptBR },
     },
-    supportedLngs: SUPPORTED_LOCALES.map(loc => loc.code),
+    supportedLngs: ['en-US', 'fr-FR', 'es-ES', 'de-DE', 'ja-JP', 'zh-CN', 'pt-BR'],
     fallbackLng: 'en-US',
     interpolation: {
       escapeValue: false, // React handles XSS

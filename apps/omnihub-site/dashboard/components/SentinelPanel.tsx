@@ -9,19 +9,9 @@
 import { memo, useState, useCallback } from 'react';
 import { Shield, RefreshCw, Activity, Zap, Eye } from 'lucide-react';
 
-interface TraceEntry {
-  readonly id: string;
-  readonly message: string;
-  readonly dotColor: string;
-}
 
-const TRACE_FEED: readonly TraceEntry[] = [
-  { id: 't1', message: 'Salesforce sync completed — 48 records', dotColor: '#34d399' },
-  { id: 't2', message: 'Invoice batch #1042 processed', dotColor: '#f97316' },
-  { id: 't3', message: 'Workflow "Lead Nurture" triggered', dotColor: '#f97316' },
-  { id: 't4', message: 'QuickBooks reconciliation done', dotColor: '#a78bfa' },
-  { id: 't5', message: 'Ticket #7291 auto-resolved by agent', dotColor: '#34d399' },
-];
+
+
 
 export const SentinelPanel = memo(function SentinelPanel() {
   const [demoMode, setDemoMode] = useState(true);
@@ -140,15 +130,9 @@ export const SentinelPanel = memo(function SentinelPanel() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {TRACE_FEED.map(trace => (
-            <div key={trace.id} className="sentinel-trace-item">
-              <span
-                className="sentinel-trace-dot"
-                style={{ background: trace.dotColor, boxShadow: `0 0 6px ${trace.dotColor}40` }}
-              />
-              <span>{trace.message}</span>
-            </div>
-          ))}
+          <div className="sentinel-trace-item" style={{ color: 'var(--od-text-tertiary)', justifyContent: 'center', padding: '12px 0' }}>
+            No live trace data available.
+          </div>
         </div>
 
         <button type="button" className="sentinel-action-btn" style={{ marginTop: 12, minHeight: 36 }}>

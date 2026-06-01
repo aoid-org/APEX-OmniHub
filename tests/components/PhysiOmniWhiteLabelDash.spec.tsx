@@ -25,7 +25,17 @@ vi.mock('@/lib/supabase', () => ({
   },
 }));
 
-// Recharts is globally mocked via vitest.config.ts alias
+// Mock Recharts to avoid layout / SVG rendering hurdles in JSDOM
+vi.mock('recharts', () => ({
+  LineChart: ({ children }: { children: React.ReactNode }) => <div data-testid="line-chart">{children}</div>,
+  Line: () => null,
+  XAxis: () => null,
+  YAxis: () => null,
+  CartesianGrid: () => null,
+  Tooltip: () => null,
+  Legend: () => null,
+  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
 
 // ─── Import after mocks ───────────────────────────────────────────────────
 

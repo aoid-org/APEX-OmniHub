@@ -48,7 +48,7 @@ describe('Universal Translation Engine (UTE)', () => {
 
     it('2. Fail-Closed on Verification Failure (Simulated)', async () => {
         class BrokenTranslator extends SemanticTranslator {
-            protected detranslateValue(_text: unknown, _targetLang: string): unknown {
+            protected pseudoDetranslate(_text: string, _targetLang: string): string {
                 return "Corrupted Text"; // Simulates hallucination/drift
             }
         }

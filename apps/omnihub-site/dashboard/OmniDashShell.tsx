@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useViewport } from "./hooks/useViewport";
-import { useDashboardData, type DashboardData } from "./hooks/useDashboardData";
+import { useDashboardData, type DashboardData, type Incident } from "./hooks/useDashboardData";
 import {
   SystemHealthOverview,
   AgentActivityTimeline,
@@ -69,6 +69,12 @@ interface NavItemProps {
   onClick: () => void;
 }
 
+interface OpsState {
+  demo: boolean;
+  autoPilot: boolean;
+  guardian: boolean;
+  live: boolean;
+}
 
 import type { DashboardNavSection } from "./types/dashboard.types";
 
@@ -97,7 +103,18 @@ interface AgentWidgetProps {
   tick: number;
 }
 
+interface ToggleProps {
+  label: string;
+  sublabel?: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+  color?: string;
+}
 
+interface OpsControlsPanelProps {
+  ops: OpsState;
+  setOps: Dispatch<SetStateAction<OpsState>>;
+}
 
 // ─── APEX Brand Assets ────────────────────────────────────────────────────────
 const IMG_BADGE = "/assets/apex-core-badge.svg";
@@ -570,7 +587,7 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
       <div className="omni-header-actions" style={{display:"flex", alignItems:"center", gap:8, flexShrink:0}}>
         {/* Org Selector */}
         <div style={{ position:"relative" }}>
-          <button id="org-selector-btn" onClick={() => setOrgOpen(o => !o)} style={{
+          <button onClick={() => setOrgOpen(o => !o)} style={{
             display:"flex", alignItems:"center", gap:6,
             background:T.card, border:`1px solid ${orgOpen ? T.orange+"66" : T.border}`,
             borderRadius:10, padding:"0 10px", height:34,
@@ -1189,10 +1206,12 @@ const EcosystemWidget = () => {
       description: 'Select an APEX module to activate in your ecosystem.',
       schema: {
         items: [
-          { id: 'omnihub', label: 'APEX-OmniHub', category: 'platform' },
-          { id: 'aspiral', label: 'aSpiral', category: 'crm' },
-          { id: 'tradeline', label: 'TradeLine 24/7', category: 'finance' },
-          { id: 'armageddon', label: 'Armageddon Test Suite', category: 'testing' },
+          { id: 'omniskills', label: 'OmniSkills — AI Skill Orchestration', category: 'platform' },
+          { id: 'orchestrator', label: 'Orchestrator — Temporal Workflows', category: 'automation' },
+          { id: 'fortress', label: 'Fortress — Zero-Trust Security', category: 'security' },
+          { id: 'omniport', label: 'OmniPort — Integration Gateway', category: 'platform' },
+          { id: 'maestro', label: 'Maestro — Operations Intelligence', category: 'operations' },
+          { id: 'physiomni', label: 'PhysiOmni — Health & Wellness AI', category: 'operations' },
         ],
       },
       onComplete: async (_result: Record<string, unknown>) => {},
@@ -1369,23 +1388,17 @@ const AnalyticsPanel = ({ dash }: { dash?: DashboardData }) => {
 
 
 
-const OmniBoardFeed = ({ isDark }: { dash?: DashboardData; isDark: boolean }) => {
-  const [events, setEvents] = useState(OMNIBOARD_EVENTS);
-  
+const OmniTracePanel = ({ dash }: { dash?: DashboardData }) => {
+  const { invoke } = useOmniModal();
+  const [liveEvents, setLiveEvents] = useState<Incident[]>([]);
+
   useEffect(() => {
     // APEX-DEV: OpenTelemetry SSE stream via OmniHub Gateway overriding local JSON array fallback
     const sse = new EventSource('/api/mcp/telemetry/stream');
     sse.onmessage = (e) => {
       try {
         const payload = JSON.parse(e.data);
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const newEvent = {
-          time,
-          type: "system",
-          color: payload.severity === 'sev1' ? T.warn : T.orange,
-          text: payload.title
-        };
-        setEvents(prev => [newEvent, ...prev].slice(0, 50));
+        setLiveEvents(prev => [payload, ...prev].slice(0, 10));
       } catch {
         // Ignore invalid SSE stream JSON output
       }
@@ -1393,29 +1406,52 @@ const OmniBoardFeed = ({ isDark }: { dash?: DashboardData; isDark: boolean }) =>
     return () => sse.close();
   }, []);
 
+  const handleReplay = () => {
+    invoke({
+      id: 'omnitrace-replay-workflows',provider: 'omnidash',type: 'module',title: 'Workflows',
+      contextData: { moduleKey: 'workflows' },
+      onComplete: async () => {}, onCancel: () => {},
+    });
+  };
+
+  const incidents = liveEvents.length > 0 ? liveEvents : dash?.openIncidents || [];
+
   return (
-    <GlassCard style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", padding: 0 }}>
-      {/* Header */}
-      <div style={{
-        padding: "16px 16px 12px", borderBottom: `1px solid ${T.borderGlow}`,
-        background: `linear-gradient(90deg, ${T.orange}08, transparent)`,
-        flexShrink: 0
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+  <GlassCard style={{ padding:"14px" }}>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+      <IconBadge idx={7} size={19} />
+      <SectionLabel>OmniTrace</SectionLabel>
+    </div>
+    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+      {incidents.length > 0 ? incidents.slice(0, 5).map((inc: Incident) => (
+        <div key={inc.id} style={{display:"flex",alignItems:"flex-start",gap:8}}>
           <div style={{
-            width: 8, height: 8, borderRadius: "50%", background: T.orange,
-            boxShadow: `0 0 10px ${T.orange}, 0 0 20px ${T.orange}`
+            width:7,height:7,borderRadius:"50%",background: inc.severity === 'sev1' ? T.warn : T.orange,
+            boxShadow:`0 0 6px ${inc.severity === 'sev1' ? T.warn : T.orange}`,flexShrink:0,marginTop:4,
           }} />
-          <SectionLabel>OmniBoard</SectionLabel>
+          <div style={{fontSize:12.5,color:T.t1,lineHeight:1.4}}>{inc.title}</div>
         </div>
-        <div style={{ fontSize: 11.5, color: T.t3, marginTop: 4, letterSpacing: "0.02em" }}>
-          Unified Intelligence Stream
+      )) : TRACE_EVENTS.map((e) => (
+        <div key={`trace-${e.text.slice(0, 24)}`} style={{display:"flex",alignItems:"flex-start",gap:8}}>
+          <div style={{ width:7,height:7,borderRadius:"50%",background:e.color,boxShadow:`0 0 6px ${e.color}`,flexShrink:0,marginTop:4 }} />
+          <div style={{fontSize:12.5,color:T.t1,lineHeight:1.4}}>{e.text}</div>
         </div>
-      </div>
+      ))}
+    </div>
+    <button onClick={handleReplay} style={{
+        marginTop:12,width:"100%",padding:"8px",
+        background:T.surface,border:`1px solid ${T.border}`,
+        borderRadius:10,color:T.t2,fontSize:11.9,cursor:"pointer",fontWeight:600,
+        letterSpacing:"0.04em", transition:"border-color .2s, color .2s"
+      }}>+ REPLAY WORKFLOWS</button>
+  </GlassCard>
+  );
+};
 
 
 
-const Toggle = ({ label, sublabel, value, onChange, color = T.orange, disabled = false, disabledReason = '' }: ToggleProps & { disabled?: boolean, disabledReason?: string }) => (
+type ExtendedToggleProps = ToggleProps & { disabled?: boolean; disabledReason?: string };
+const Toggle = ({ label, sublabel, value, onChange, color = T.orange, disabled = false, disabledReason = '' }: ExtendedToggleProps) => (
   <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"7px 0", opacity: disabled ? 0.5 : 1 }}>
     <div>
       <div style={{ fontSize:13.5, color:T.t1, fontWeight:500 }}>{label}</div>
@@ -1458,7 +1494,7 @@ const OpsControlsPanel = ({ ops, setOps }: OpsControlsPanelProps) => (
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);
-  const { activeNav, setActiveNav, isDark, setIsDark } = useLayoutPersistence();
+  const { activeNav, setActiveNav, isDark, setIsDark, ops, setOps } = useLayoutPersistence();
   const { invoke } = useOmniModal();
   const { isDesktop } = useViewport();
   const [mobileTab, setMobileTab] = useState<MobileTab>("home");
@@ -1589,15 +1625,16 @@ export default function OmniDashShell() {
         {/* Right Panel — desktop only; mobile/tablet use OmniMobileDrawer */}
         {isDesktop && (
           <div className="omni-right-panel" style={{
-            width:340, flexShrink:0,
+            width:266, flexShrink:0,
             background:`linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
             borderLeft:`1px solid ${T.border}`,
             overflowY:"auto", padding:"14px 12px",
             display:"flex", flexDirection:"column", gap:12,
           }}>
-            <DraggableWidget id="rt_omniboard" style={{ height: "100%" }}>
-              <OmniBoardFeed isDark={isDark} dash={dashData} />
-            </DraggableWidget>
+            <DraggableWidget id="rt_security"><SecurityPanel /></DraggableWidget>
+            <DraggableWidget id="rt_analytics"><AnalyticsPanel dash={dashData} /></DraggableWidget>
+            <DraggableWidget id="rt_trace"><OmniTracePanel dash={dashData} /></DraggableWidget>
+            <DraggableWidget id="rt_ops"><OpsControlsPanel ops={ops} setOps={setOps} /></DraggableWidget>
           </div>
         )}
 
@@ -1654,9 +1691,10 @@ export default function OmniDashShell() {
           onClose={() => setDrawerOpen(false)}
           title="Insights & Controls"
         >
-          <div style={{ height: 500 }}>
-            <OmniBoardFeed isDark={isDark} dash={dashData} />
-          </div>
+          <SecurityPanel />
+          <AnalyticsPanel dash={dashData} />
+          <OmniTracePanel dash={dashData} />
+          <OpsControlsPanel ops={ops} setOps={setOps} />
         </OmniMobileDrawer>
       )}
 
