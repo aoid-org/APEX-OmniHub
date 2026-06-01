@@ -51,6 +51,49 @@ from security.ssrf import validate_url_with_dns_pin_async
 _semantic_cache = None  # SemanticCacheService instance
 _redis_client = None
 
+TENANT_SCOPED_DATABASE_TABLES = frozenset({"workflows", "workflow_runs"})
+TENANT_SCOPE_COLUMN = "user_id"
+ACTOR_USER_ID_PARAM = "actor_user_id"
+
+
+def _normalize_table_name(table: str) -> str:
+    """Normalize tool-provided table names before scope decisions."""
+    return table.strip().lower()
+
+
+def _require_actor_user_id(params: dict[str, Any], table: str) -> str | None:
+    """Require trusted workflow identity for service-role access to tenant data."""
+    if _normalize_table_name(table) not in TENANT_SCOPED_DATABASE_TABLES:
+        return None
+
+    actor_user_id = params.get(ACTOR_USER_ID_PARAM)
+    if not actor_user_id or not isinstance(actor_user_id, str):
+        raise DatabaseError(f"Access to {table} requires trusted actor user scope")
+
+    return actor_user_id
+
+
+def _tenant_scoped_filters(
+    table: str, filters: dict[str, Any], params: dict[str, Any]
+) -> dict[str, Any]:
+    """Force service-role reads for tenant tables to the workflow actor's user_id."""
+    scoped_filters = dict(filters)
+    actor_user_id = _require_actor_user_id(params, table)
+    if actor_user_id:
+        scoped_filters[TENANT_SCOPE_COLUMN] = actor_user_id
+    return scoped_filters
+
+
+def _tenant_scoped_record(
+    table: str, record: dict[str, Any], params: dict[str, Any]
+) -> dict[str, Any]:
+    """Force service-role writes for tenant tables to the workflow actor's user_id."""
+    scoped_record = dict(record)
+    actor_user_id = _require_actor_user_id(params, table)
+    if actor_user_id:
+        scoped_record[TENANT_SCOPE_COLUMN] = actor_user_id
+    return scoped_record
+
 
 # ============================================================================
 # SHARED IDEMPOTENCY GUARD
@@ -459,7 +502,7 @@ async def search_database(params: dict[str, Any]) -> dict[str, Any]:
         Query results
     """
     table = str(params.get("table", ""))
-    filters = params.get("filters", {})
+    filters = _tenant_scoped_filters(table, dict(params.get("filters", {})), params)
     select_fields = params.get("select", "*")
     start_time = time.time()
 
@@ -532,7 +575,7 @@ async def create_record(params: dict[str, Any]) -> dict[str, Any]:
         Created record with ID
     """
     table = str(params.get("table", ""))
-    data = dict(params.get("data", {}))
+    data = _tenant_scoped_record(table, dict(params.get("data", {})), params)
     start_time = time.time()
 
     activity.logger.info(f"Creating record in {table}")
@@ -612,8 +655,9 @@ async def delete_record(params: dict[str, Any]) -> dict[str, Any]:
         # Get database provider instance
         db = get_database_provider()
 
-        # Delete record by ID filter
-        deleted_count = await db.delete(table=table, filters={"id": record_id})
+        # Delete record by ID and tenant scope when the table stores user-owned data.
+        delete_filters = _tenant_scoped_filters(table, {"id": record_id}, params)
+        deleted_count = await db.delete(table=table, filters=delete_filters)
 
         # Audit success
         await log_audit_event(

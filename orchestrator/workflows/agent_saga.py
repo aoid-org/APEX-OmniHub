@@ -1448,6 +1448,18 @@ class AgentWorkflow:
         # Default timeout
         timeout = timedelta(minutes=5)
 
+        if (
+            activity_name in {"search_database", "create_record", "delete_record"}
+            and isinstance(activity_input, dict)
+        ):
+            activity_input = {
+                **activity_input,
+                # Trusted workflow identity is injected outside the LLM-generated plan.
+                "actor_user_id": self.user_id,
+                "tenant_id": self.workflow_context.get("tenant_id") or self.user_id,
+                "workflow_id": workflow.info().workflow_id,
+            }
+
         if is_compensation:
             timeout = timedelta(seconds=15)  # Shorter timeout for compensations
 
