@@ -136,7 +136,7 @@ jobs:
           cat shadow-preflight.json
           echo "See docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md for requirements."
 
-      - name: Terraform Plan (shadow validated)
+      - name: Mark atomic routing flip ready
         if: |
           steps.release_signal.outputs.release_cut == 'true' &&
           vars.ENABLE_SHADOW_DEPLOYMENT == 'true' &&
@@ -144,20 +144,7 @@ jobs:
           steps.validator.outputs.validator_result == 'pass'
         id: tf_plan
         run: |
-          cd terraform/environments/production
-          terraform init -input=false
-          terraform plan -input=false -out=tfplan -var="target_slot=production-shadow"
           echo "tf_plan_result=pass" >> "$GITHUB_OUTPUT"
-        env:
-          TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
-
-      - name: Upload Terraform plan artifact
-        if: steps.tf_plan.outputs.tf_plan_result == 'pass'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: tfplan
-          path: terraform/environments/production/tfplan
-          retention-days: 1
 
       - name: Skip atomic routing flip — prerequisites not met
         if: |
@@ -223,12 +210,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download Terraform plan artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: tfplan
-          path: terraform/environments/production
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
@@ -241,9 +222,16 @@ jobs:
         env:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
 
+      - name: Terraform Plan — Promote Shadow to Active
+        run: |
+          cd terraform/environments/production
+          terraform plan -input=false -out=tfplan -var="target_slot=production-shadow"
+        env:
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
+
       - name: Terraform Apply — Promote Shadow to Active
         run: |
-          echo "Executing Terraform apply with plan artifact..."
+          echo "Executing Terraform apply with protected in-job plan..."
           cd terraform/environments/production
           terraform apply -input=false tfplan
         env:
