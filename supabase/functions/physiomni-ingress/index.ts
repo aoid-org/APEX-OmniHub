@@ -256,21 +256,30 @@ function bytesToHex(bytes: Uint8Array): string {
 
 function bytesToBase64Url(bytes: Uint8Array): string {
   let binary = '';
-  for (const byte of bytes) binary += String.fromCharCode(byte);
+  for (const byte of bytes) binary += String.fromCodePoint(byte);
 
   let encoded = btoa(binary);
+  const base64PaddingCodePoint = '='.codePointAt(0);
   let unpaddedLength = encoded.length;
-  while (unpaddedLength > 0 && encoded.charCodeAt(unpaddedLength - 1) === 61) {
+  while (
+    unpaddedLength > 0 &&
+    encoded.codePointAt(unpaddedLength - 1) === base64PaddingCodePoint
+  ) {
     // Trim fixed-width base64 padding with a linear scan to avoid regex DoS hotspots.
     unpaddedLength -= 1;
   }
 
   encoded = encoded.slice(0, unpaddedLength);
   let base64url = '';
-  for (let i = 0; i < encoded.length; i += 1) {
-    const char = encoded[i];
+  for (const char of encoded) {
+    let safeChar = char;
+    if (char === '+') {
+      safeChar = '-';
+    } else if (char === '/') {
+      safeChar = '_';
+    }
     // Convert the only two non-URL-safe base64 characters without regex backtracking.
-    base64url += char === '+' ? '-' : char === '/' ? '_' : char;
+    base64url += safeChar;
   }
 
   return base64url;

@@ -33,7 +33,14 @@ describe('security hardening regressions', () => {
     expect(source).toContain('5 * 60 * 1000');
     expect(source).toContain('timingSafeEqual(provided, expected.hex)');
     expect(source).toContain('normalizeTelemetrySignatureHeader');
+    expect(source).toContain('String.fromCodePoint(byte)');
+    expect(source).toContain('base64PaddingCodePoint');
+    expect(source).toContain('codePointAt(unpaddedLength - 1)');
+    expect(source).toContain('for (const char of encoded)');
     expect(source).not.toContain('replace(/=+$/g');
+    expect(source).not.toContain(['String.from', 'CharCode'].join(''));
+    expect(source).not.toContain(['char', 'CodeAt'].join(''));
+    expect(source).not.toContain(["char === '+' ? '-'", " : char === '/' ? '_' : char"].join(''));
     expect(source).not.toContain('Placeholder for HMAC signed telemetry validation');
     expect(source).not.toContain("!isLiveEnabled || req.headers.get('x-physiomni-signature')");
   });
