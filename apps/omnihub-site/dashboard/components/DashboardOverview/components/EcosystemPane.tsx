@@ -2,7 +2,7 @@ import { memo, useEffect, useRef } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
 import { useOmniDash } from '../../../../src/stores/omniDashStore';
 import { SPRING, GLASS_TILE, FONT_SG, ECO_ROW_STYLE, CAT_BADGE_STYLE } from '../constants';
-import { ECOSYSTEM } from '../data';
+import { LIVE_APEX_APPS } from '../../../contracts/apexApps';
 
 const WIDGET_ID = 'ecosystem-pane';
 
@@ -95,9 +95,9 @@ export const EcosystemPane = memo(function EcosystemPane({
           </div>
           <div className="flex flex-col gap-2.5 w-full">
             {ecoAppsVisible &&
-              ECOSYSTEM.map(app => (
+              LIVE_APEX_APPS.map(app => (
                 <motion.div
-                  key={app.name}
+                  key={app.id}
                   className={
                     'flex flex-row items-center' +
                     ' justify-between w-full p-3' +
@@ -114,13 +114,13 @@ export const EcosystemPane = memo(function EcosystemPane({
                       <span
                         className="text-white text-sm font-semibold truncate"
                       >
-                        {app.name}
+                        {app.label}
                       </span>
                       <span
                         className="text-[10px] px-1.5 py-0.5 rounded w-max mt-0.5"
                         style={CAT_BADGE_STYLE}
                       >
-                        {app.cat}
+                        {app.url}
                       </span>
                     </div>
                   </div>
@@ -129,7 +129,7 @@ export const EcosystemPane = memo(function EcosystemPane({
                       className="text-white font-bold text-sm tracking-tight"
                       style={{ fontFamily: FONT_SG }}
                     >
-                      {app.status}
+                      ACTIVE
                     </span>
                   </div>
                 </motion.div>

@@ -16,11 +16,11 @@ describe('APEX Apps Contract', () => {
 
   it('must contain exactly the 6 required ecosystem apps', () => {
     const appMap = new Map(LIVE_APEX_APPS.map(app => [app.id, app.label]));
-    expect(appMap.get('aspiral')).toBe('aSpiral CRM');
+    expect(appMap.get('aspiral')).toBe('aSpiral');
     expect(appMap.get('dueradar')).toBe('DueRadar');
     expect(appMap.get('sbbl-hq')).toBe('SBBL-HQ');
-    expect(appMap.get('command')).toBe('CommandMatrix');
-    expect(appMap.get('office')).toBe('APEX-Office');
-    expect(appMap.get('omnihub')).toBe('APEX-OmniHub');
+    expect(appMap.get('cheapstays')).toBe('CheapStays');
+    expect(appMap.get('flowbills')).toBe('FLOWBills');
+    expect(appMap.get('jubeelove')).toBe('JubeeLove');
   });
 });

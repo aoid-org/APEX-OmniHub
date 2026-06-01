@@ -183,7 +183,7 @@ export const Integrations = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">OmniBoard</h1>
-          <p className="text-sm text-slate-400">Canonical connector control plane (live records only)</p>
+          <p className="text-sm text-slate-400">Manage your app stack in OmniBoard</p>
         </div>
         <Badge variant="outline" className="border-cyan-500/30 text-cyan-300">
           {connectors.length} connectors

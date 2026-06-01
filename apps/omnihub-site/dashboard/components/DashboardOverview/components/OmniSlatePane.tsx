@@ -4,7 +4,7 @@ import lightbulbIcon from '../../../../src/assets/lightbulb-icon.png';
 import { useOmniDash } from '../../../../src/stores/omniDashStore';
 import { useOmniSlateStore } from '../../../../src/stores/omniSlateStore';
 import { SPRING, GLASS_TILE, ORANGE_GHOST, APEX_ORANGE, PROMPT_STYLE_BASE } from '../constants';
-import type { OmniSlateContextItem, OmniSlateHealth } from '../../../types/context.types';
+import type { OmniSlateHealth } from '../../../types/context.types';
 import { ContextTile } from './ContextTile';
 import { RecordButton } from './RecordButton';
 
