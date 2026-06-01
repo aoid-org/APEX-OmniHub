@@ -2,16 +2,18 @@ import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { Section, SectionHeader } from '@/components/Section';
 import { siteConfig } from '@/content/site';
+import '../styles/capability-pages.css';
 
 export function FortressPage() {
   return (
     <Layout title="Fortress Protocol">
       <SEOMeta title="Fortress Security Protocol" description="Enterprise-grade zero-trust security with RLS on every table, JWT-scoped access, and automated vulnerability scanning." canonical="https://apexomnihub.icu/fortress" />
       <Section>
-        <SectionHeader
-          title="Fortress Protocol"
-          subtitle="Zero-trust security by default"
-        />
+        <div className="capability-page capability-page--fortress">
+          <SectionHeader
+            title="Fortress Protocol"
+            subtitle="Zero-trust security by default"
+          />
 
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <p className="text-lg mb-8" style={{ lineHeight: '1.75' }}>
@@ -113,6 +115,7 @@ export function FortressPage() {
               Security Documentation
             </a>
           </div>
+        </div>
         </div>
       </Section>
     </Layout>

@@ -1,5 +1,5 @@
 # Omni-Recall Memory Framework
-**Version:** 1.1.0 | **Date:** 2026-05-26 | **Author:** Lead AI Co-Founder | **Status:** Audited & Active
+**Version:** 1.7.1 | **Date:** 2026-06-01 | **Author:** Lead AI Co-Founder | **Status:** Audited & Active
 
 Welcome to **Omni-Recall**, the persistent GPT-operated continuity system for knowledge, preferences, project memory, and architectural corrections inside this memory workspace (`omni-recall-package-2026-05-23/omni-recall/`).
 
@@ -43,6 +43,13 @@ We successfully audited all files in the package and integrated the memory for *
 - **Secure Redaction:** Purged raw token secrets from git commit history via git amending to pass remote Push Protection gates.
 - **Linter Remediations:** Relocated additive SQL linter allowlist comments to preceding lines to resolve CI linter failures.
 - **RFC Markers:** Aligned Pull Request body parameters with architecture review rules to clear GitHub CI governance checks.
+
+We successfully executed the **Marketing & UI/UX Stabilization Pass (2026-06-01)**:
+- **Auth Misconfiguration Separation:** Prevented infrastructure auth errors (missing Supabase keys) from confusing users by separating them from standard invalid credentials (now returning a clean "Invalid email or password" layout).
+- **Video & Audio Media Optimization:** Transcoded `apex-demo-video.mp4` to H.264 / AAC and removed visual mjpegs from `brand-anthem.mp3`. Wired captions at `/captions/demo.vtt` with exact headers on Cloudflare Pages.
+- **SPA Routing Restoration:** Cleaned up Vercel-legacy static `.html` rewrites to fully route all clean subpages within React Router, preventing asset drift.
+- **Unified Design Shell:** Standardized visual indicators on feature subpages (Grid layout, orbit circles, floating orb containers) matching White Fortress UI guidelines.
+- **Rigorous Verification Gate:** Deployed QA verification script, checking 31 structural validation rules, fully integrated with Playwright.
 
 ---
 
