@@ -20,6 +20,35 @@ const ALLOWED_ORIGIN_HOSTS = new Set([
   'localhost',
   '127.0.0.1',
 ]);
+const DEFAULT_ALLOWED_TARGET_HOSTS = new Set([
+  'apexomnihub.icu',
+  'www.apexomnihub.icu',
+  'assets.apexomnihub.icu',
+  'media.apexomnihub.icu',
+  'omnihub.dev',
+  'staging.omnihub.dev',
+  'wwajmaohwcbooljdureo.supabase.co',
+]);
+
+function normalizeHostname(hostname) {
+  return hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '');
+}
+
+function parseAllowedTargetHosts(value) {
+  if (!value) return DEFAULT_ALLOWED_TARGET_HOSTS;
+  const hosts = value
+    .split(',')
+    .map((host) => normalizeHostname(host.trim()))
+    .filter(Boolean);
+  return hosts.length > 0 ? new Set(hosts) : DEFAULT_ALLOWED_TARGET_HOSTS;
+}
+
+function isAllowedTargetHost(hostname, allowedTargetHosts = DEFAULT_ALLOWED_TARGET_HOSTS) {
+  const normalized = normalizeHostname(hostname);
+  if (allowedTargetHosts.has(normalized)) return true;
+  // APEX-owned subdomains are valid media origins; arbitrary third-party hosts are not.
+  return normalized.endsWith('.apexomnihub.icu') && normalized !== 'cors.apexomnihub.icu';
+}
 
 function isAllowedOrigin(origin) {
   if (!origin) return false;
@@ -79,7 +108,7 @@ function isIpLiteral(hostname) {
 }
 
 function isUnsafeHostname(hostname) {
-  const normalized = hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '');
+  const normalized = normalizeHostname(hostname);
   if (!normalized || normalized === 'localhost' || normalized.endsWith('.localhost')) return true;
   if (normalized === 'metadata.google.internal') return true;
   if (/^(0x|0)[0-9a-f.]+$/i.test(normalized) || /^\d+$/.test(normalized)) return true;
@@ -90,7 +119,7 @@ function isUnsafeHostname(hostname) {
   return isBlockedIPv4(normalized);
 }
 
-function validateTargetUrl(value) {
+function validateTargetUrl(value, allowedTargetHosts = DEFAULT_ALLOWED_TARGET_HOSTS) {
   let parsed;
   try {
     parsed = new URL(value);
@@ -102,7 +131,7 @@ function validateTargetUrl(value) {
     return { ok: false, error: 'APEX OmniMedia: HTTPS source URL required' };
   }
 
-  if (isUnsafeHostname(parsed.hostname)) {
+  if (isUnsafeHostname(parsed.hostname) || !isAllowedTargetHost(parsed.hostname, allowedTargetHosts)) {
     return { ok: false, error: 'APEX OmniMedia: Source host is not allowed' };
   }
 
@@ -111,7 +140,7 @@ function validateTargetUrl(value) {
   return { ok: true, url: parsed };
 }
 
-async function fetchWithSafeRedirects(targetUrl, request) {
+async function fetchWithSafeRedirects(targetUrl, request, allowedTargetHosts) {
   let currentUrl = targetUrl;
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
     const upstream = await fetch(currentUrl, {
@@ -130,7 +159,7 @@ async function fetchWithSafeRedirects(targetUrl, request) {
     const location = upstream.headers.get('Location');
     if (!location) return upstream;
     const nextUrl = new URL(location, currentUrl).toString();
-    const validation = validateTargetUrl(nextUrl);
+    const validation = validateTargetUrl(nextUrl, allowedTargetHosts);
     if (!validation.ok) {
       throw new Error('unsafe_redirect');
     }
@@ -167,11 +196,12 @@ function capBodyStream(body) {
   }));
 }
 
-export { MAX_UPSTREAM_BYTES, corsHeaders, isAllowedOrigin, isUnsafeHostname, validateTargetUrl };
+export { MAX_UPSTREAM_BYTES, corsHeaders, isAllowedOrigin, isAllowedTargetHost, isUnsafeHostname, validateTargetUrl };
 
 export default {
-  async fetch(request) {
+  async fetch(request, env = {}) {
     const origin = request.headers.get('Origin');
+    const allowedTargetHosts = parseAllowedTargetHosts(env.APEX_CORS_PROXY_ALLOWED_TARGET_HOSTS);
 
     if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
       return jsonResponse('APEX OmniMedia: Method not allowed', 405, origin);
@@ -195,13 +225,13 @@ export default {
       return jsonResponse('APEX OmniMedia: Missing source parameter', 400, origin);
     }
 
-    const validation = validateTargetUrl(targetUrl);
+    const validation = validateTargetUrl(targetUrl, allowedTargetHosts);
     if (!validation.ok) {
       return jsonResponse(validation.error, 400, origin);
     }
 
     try {
-      const upstream = await fetchWithSafeRedirects(validation.url.toString(), request);
+      const upstream = await fetchWithSafeRedirects(validation.url.toString(), request, allowedTargetHosts);
       if (!enforceContentLength(upstream)) {
         return jsonResponse('APEX OmniMedia: Upstream response too large', 413, origin);
       }

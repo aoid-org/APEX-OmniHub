@@ -24,6 +24,25 @@ const DEFAULT_CACHE_KEY = 'omni-media-v1';
  * Access-Control-Allow-Origin headers for Web Audio API.
  */
 const EDGE_CORS_PROXY_BASE = 'https://cors.apexomnihub.icu';
+const EDGE_CORS_PROXY_TARGET_HOSTS = new Set([
+  'apexomnihub.icu',
+  'www.apexomnihub.icu',
+  'assets.apexomnihub.icu',
+  'media.apexomnihub.icu',
+  'omnihub.dev',
+  'staging.omnihub.dev',
+  'wwajmaohwcbooljdureo.supabase.co',
+]);
+
+function normalizeHostname(hostname: string): string {
+  return hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '');
+}
+
+function canUseEdgeCorsProxy(parsed: URL): boolean {
+  const hostname = normalizeHostname(parsed.hostname);
+  // Keep client routing aligned with the worker allowlist; unknown hosts load directly instead of through the public proxy.
+  return EDGE_CORS_PROXY_TARGET_HOSTS.has(hostname) || (hostname.endsWith('.apexomnihub.icu') && hostname !== 'cors.apexomnihub.icu');
+}
 
 /**
  * Determines if a URL requires CORS proxying.
@@ -33,7 +52,7 @@ function requiresProxy(url: string): boolean {
   if (url.startsWith('blob:') || url.startsWith('data:')) return false;
   try {
     const parsed = new URL(url, globalThis.location?.origin);
-    return parsed.origin !== globalThis.location?.origin;
+    return parsed.origin !== globalThis.location?.origin && parsed.protocol === 'https:' && canUseEdgeCorsProxy(parsed);
   } catch {
     return false;
   }
@@ -41,7 +60,7 @@ function requiresProxy(url: string): boolean {
 
 /**
  * Wraps an external URL in the EdgeCORSProxy.
- * @returns Proxied URL for cross-origin sources, original URL for same-origin.
+ * @returns Proxied URL for approved cross-origin sources, original URL otherwise.
  */
 export function proxyMediaUrl(url: string): string {
   if (!requiresProxy(url)) return url;

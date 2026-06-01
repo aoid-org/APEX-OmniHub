@@ -4,8 +4,10 @@ import { describe, expect, it, vi, afterEach } from 'vitest';
 import corsWorker, {
   MAX_UPSTREAM_BYTES,
   isAllowedOrigin,
+  isAllowedTargetHost,
   validateTargetUrl,
 } from '../../edge/cors-proxy/edge-cors-proxy.js';
+import { proxyMediaUrl } from '../../src/lib/media/EdgeCacheController';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -53,7 +55,7 @@ describe('Cloudflare CORS proxy SSRF and origin hardening', () => {
     expect(validateTargetUrl('http://media.example/video.mp4')).toMatchObject({ ok: false });
   });
 
-  it('rejects localhost, private, and metadata targets', () => {
+  it('rejects localhost, private, metadata, and unapproved public targets', () => {
     for (const target of [
       'https://localhost/file.mp4',
       'https://127.0.0.1/file.mp4',
@@ -63,13 +65,34 @@ describe('Cloudflare CORS proxy SSRF and origin hardening', () => {
       'https://metadata.google.internal/computeMetadata/v1',
       'https://8.8.8.8/file.mp4',
       'https://[2001:4860:4860::8888]/file.mp4',
+      'https://media.example/file.mp4',
     ]) {
       expect(validateTargetUrl(target)).toMatchObject({ ok: false });
     }
   });
 
-  it('rejects unapproved origins', async () => {
+  it('allows only configured media target hosts', () => {
+    expect(validateTargetUrl('https://media.apexomnihub.icu/a.mp4')).toMatchObject({ ok: true });
+    expect(isAllowedTargetHost('media.apexomnihub.icu')).toBe(true);
+    expect(isAllowedTargetHost('media.example')).toBe(false);
+
+    const customHosts = new Set(['media.example']);
+    expect(validateTargetUrl('https://media.example/a.mp4', customHosts)).toMatchObject({ ok: true });
+  });
+
+  it('blocks approved callers from proxying arbitrary public HTTPS hosts', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
     const response = await corsWorker.fetch(new Request('https://cors.apexomnihub.icu/?source=https%3A%2F%2Fmedia.example%2Fa.mp4', {
+      headers: { Origin: 'https://apexomnihub.icu' },
+    }));
+
+    expect(response.status).toBe(400);
+    expect(await response.text()).toContain('Source host is not allowed');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects unapproved origins', async () => {
+    const response = await corsWorker.fetch(new Request('https://cors.apexomnihub.icu/?source=https%3A%2F%2Fmedia.apexomnihub.icu%2Fa.mp4', {
       headers: { Origin: 'https://evil.example' },
     }));
 
@@ -84,7 +107,7 @@ describe('Cloudflare CORS proxy SSRF and origin hardening', () => {
       headers: { 'Content-Length': '2', 'Content-Range': 'bytes 0-1/2', 'Set-Cookie': 'sid=upstream' },
     }));
 
-    const response = await corsWorker.fetch(new Request('https://cors.apexomnihub.icu/?source=https%3A%2F%2Fmedia.example%2Fa.mp4', {
+    const response = await corsWorker.fetch(new Request('https://cors.apexomnihub.icu/?source=https%3A%2F%2Fmedia.apexomnihub.icu%2Fa.mp4', {
       headers: { Origin: 'https://apexomnihub.icu', Range: 'bytes=0-1' },
     }));
 
@@ -100,7 +123,7 @@ describe('Cloudflare CORS proxy SSRF and origin hardening', () => {
       headers: { Location: 'http://169.254.169.254/latest/meta-data' },
     }));
 
-    const response = await corsWorker.fetch(new Request('https://cors.apexomnihub.icu/?source=https%3A%2F%2Fmedia.example%2Fa.mp4', {
+    const response = await corsWorker.fetch(new Request('https://cors.apexomnihub.icu/?source=https%3A%2F%2Fmedia.apexomnihub.icu%2Fa.mp4', {
       headers: { Origin: 'https://apexomnihub.icu' },
     }));
 
@@ -114,11 +137,24 @@ describe('Cloudflare CORS proxy SSRF and origin hardening', () => {
       headers: { 'Content-Length': String(MAX_UPSTREAM_BYTES + 1) },
     }));
 
-    const response = await corsWorker.fetch(new Request('https://cors.apexomnihub.icu/?source=https%3A%2F%2Fmedia.example%2Fa.mp4', {
+    const response = await corsWorker.fetch(new Request('https://cors.apexomnihub.icu/?source=https%3A%2F%2Fmedia.apexomnihub.icu%2Fa.mp4', {
       headers: { Origin: 'https://apexomnihub.icu' },
     }));
 
     expect(response.status).toBe(413);
+  });
+});
+
+
+describe('browser media proxy routing', () => {
+  it('does not wrap arbitrary external media URLs in the public CORS proxy', () => {
+    expect(proxyMediaUrl('https://media.example/a.mp4')).toBe('https://media.example/a.mp4');
+  });
+
+  it('wraps approved cross-origin media URLs in the CORS proxy', () => {
+    expect(proxyMediaUrl('https://media.apexomnihub.icu/a.mp4')).toBe(
+      'https://cors.apexomnihub.icu/?source=https%3A%2F%2Fmedia.apexomnihub.icu%2Fa.mp4',
+    );
   });
 });
 
