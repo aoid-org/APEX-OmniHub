@@ -9,6 +9,8 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  checks: read
+  statuses: read
 
 jobs:
   consolidate-dependencies:
@@ -24,38 +26,136 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Find open dependency PRs
+      - name: Find verified dependency PRs
         id: find-prs
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
-            const { data: prs } = await github.rest.pulls.list({
+            const trustedDependencyBots = new Set([
+              'dependabot[bot]',
+              'renovate[bot]',
+            ]);
+
+            const dependencyFilePatterns = [
+              /(^|\/)package(-lock)?\.json$/,
+              /(^|\/)npm-shrinkwrap\.json$/,
+              /(^|\/)pnpm-lock\.yaml$/,
+              /(^|\/)yarn\.lock$/,
+              /(^|\/)bun\.lockb?$/,
+              /(^|\/)pyproject\.toml$/,
+              /(^|\/)poetry\.lock$/,
+              /(^|\/)requirements([-.\w]*)?\.txt$/,
+              /(^|\/)Pipfile(\.lock)?$/,
+              /(^|\/)go\.(mod|sum)$/,
+              /(^|\/)Cargo\.(toml|lock)$/,
+              /(^|\/)Gemfile(\.lock)?$/,
+              /(^|\/)composer\.(json|lock)$/,
+              /(^|\/)pubspec\.(yaml|lock)$/,
+              /(^|\/)build\.gradle(\.kts)?$/,
+              /(^|\/)gradle\.lockfile$/,
+              /(^|\/)gradle\/libs\.versions\.toml$/,
+            ];
+
+            const isDependencyFile = (filename) =>
+              dependencyFilePatterns.some((pattern) => pattern.test(filename));
+
+            const hasPassingChecks = async (pr) => {
+              const [{ data: status }, { data: checkRuns }] = await Promise.all([
+                github.rest.repos.getCombinedStatusForRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: pr.head.sha,
+                }),
+                github.rest.checks.listForRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: pr.head.sha,
+                  per_page: 100,
+                }),
+              ]);
+
+              const statusesPassed = status.status === 'success'
+                || (status.status === 'pending' && status.statuses.length === 0);
+              const terminalSuccesses = new Set(['success', 'neutral', 'skipped']);
+              const checkRunsPassed = checkRuns.check_runs.length > 0
+                && checkRuns.check_runs.every((run) => run.status === 'completed' && terminalSuccesses.has(run.conclusion));
+
+              return statusesPassed && checkRunsPassed;
+            };
+
+            const hasApproval = async (pr) => {
+              const { data: reviews } = await github.rest.pulls.listReviews({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                per_page: 100,
+              });
+
+              const latestByReviewer = new Map();
+              for (const review of reviews) {
+                latestByReviewer.set(review.user.login, review.state);
+              }
+
+              const latestStates = [...latestByReviewer.values()];
+              return latestStates.includes('APPROVED')
+                && !latestStates.includes('CHANGES_REQUESTED');
+            };
+
+            const hasOnlyDependencyFiles = async (pr) => {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                per_page: 100,
+              });
+
+              return files.length > 0 && files.every((file) => isDependencyFile(file.filename));
+            };
+
+            const prs = await github.paginate(github.rest.pulls.list, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
               sort: 'created',
-              direction: 'asc'
+              direction: 'asc',
+              per_page: 100,
             });
 
-            const depPRs = prs.filter(pr =>
-              pr.labels.some(label => label.name === 'dependencies')
+            const labeledPRs = prs.filter((pr) =>
+              pr.labels.some((label) => label.name === 'dependencies')
             );
 
-            if (depPRs.length === 0) {
-              core.info('No open dependency PRs found. Exiting.');
+            const eligiblePRs = [];
+            for (const pr of labeledPRs) {
+              const reasons = [];
+              const isTrustedBot = trustedDependencyBots.has(pr.user.login) && pr.user.type === 'Bot';
+              const isSameRepositoryBranch = pr.head.repo?.full_name === `${context.repo.owner}/${context.repo.repo}`;
+
+              if (!isTrustedBot) reasons.push(`untrusted author ${pr.user.login}`);
+              if (!isSameRepositoryBranch) reasons.push('head branch is not in this repository');
+              if (!(await hasOnlyDependencyFiles(pr))) reasons.push('changes include non-dependency files');
+              if (!(await hasApproval(pr))) reasons.push('missing approval or has changes requested');
+              if (!(await hasPassingChecks(pr))) reasons.push('checks/statuses are not all passing');
+
+              if (reasons.length === 0) {
+                eligiblePRs.push(pr);
+                core.info(`Verified dependency PR #${pr.number}: ${pr.title}`);
+              } else {
+                core.warning(`Skipping PR #${pr.number}: ${reasons.join('; ')}`);
+              }
+            }
+
+            if (eligiblePRs.length === 0) {
+              core.info('No verified dependency PRs found. Exiting.');
               core.setOutput('has_prs', 'false');
               return;
             }
 
             core.setOutput('has_prs', 'true');
-            core.setOutput('pr_numbers', JSON.stringify(depPRs.map(pr => pr.number)));
-            core.setOutput('pr_count', depPRs.length.toString());
+            core.setOutput('pr_numbers', JSON.stringify(eligiblePRs.map((pr) => pr.number)));
+            core.setOutput('pr_count', eligiblePRs.length.toString());
 
-            for (const pr of depPRs) {
-              core.info(`Found dependency PR #${pr.number}: ${pr.title}`);
-            }
-
-      - name: Auto-merge dependency PRs
+      - name: Auto-merge verified dependency PRs
         if: steps.find-prs.outputs.has_prs == 'true'
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
@@ -64,26 +164,16 @@ jobs:
 
             for (const prNumber of prNumbers) {
               try {
-                // BETA-T4: YELLOW LANE — mustBeGreen: false (user-confirmed)
-                // update_branch: true — keeps PR branch current with base
-                await github.rest.pulls.updateBranch({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: prNumber
-                });
-
-                core.info(`Updated branch for PR #${prNumber}`);
-
-                // Merge with mustBeGreen: false — force-merges even if CI is failing
+                // Do not update branches here; a new head SHA would require checks to run again.
                 await github.rest.pulls.merge({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   pull_number: prNumber,
                   merge_method: 'squash',
-                  commit_title: `chore(deps): auto-merge dependency PR #${prNumber}`,
+                  commit_title: `chore(deps): auto-merge verified dependency PR #${prNumber}`,
                 });
 
-                core.info(`Merged PR #${prNumber}`);
+                core.info(`Merged verified dependency PR #${prNumber}`);
               } catch (error) {
                 core.warning(`Failed to merge PR #${prNumber}: ${error.message}`);
               }
@@ -93,7 +183,7 @@ jobs:
         if: steps.find-prs.outputs.has_prs == 'true'
         run: |
           echo "## Dependency Consolidation Report" >> $GITHUB_STEP_SUMMARY
-          echo "- PRs processed: ${{ steps.find-prs.outputs.pr_count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Verified PRs processed: ${{ steps.find-prs.outputs.pr_count }}" >> $GITHUB_STEP_SUMMARY
           echo "- PR numbers: ${{ steps.find-prs.outputs.pr_numbers }}" >> $GITHUB_STEP_SUMMARY
-          echo "- mustBeGreen: false (force-merge enabled)" >> $GITHUB_STEP_SUMMARY
-          echo "- update_branch: true" >> $GITHUB_STEP_SUMMARY
+          echo "- Gates: trusted dependency bot, same-repository branch, dependency-only files, approval, passing checks" >> $GITHUB_STEP_SUMMARY
+          echo "- update_branch: false (merge only the already-verified head SHA)" >> $GITHUB_STEP_SUMMARY
