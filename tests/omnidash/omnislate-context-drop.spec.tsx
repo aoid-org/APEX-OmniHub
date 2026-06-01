@@ -7,7 +7,23 @@ import { useOmniSlateStore } from '../../apps/omnihub-site/src/stores/omniSlateS
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, onDragOver, onDrop, className, style }: any) => (
-      <div data-testid="framer-motion-div" onDragOver={onDragOver} onDrop={onDrop} className={className} style={style}>{children}</div>
+      <div 
+        role="button" 
+        tabIndex={0} 
+        data-testid="framer-motion-div" 
+        onDragOver={onDragOver} 
+        onDrop={onDrop} 
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onDrop?.(e as any);
+          }
+        }}
+        className={className} 
+        style={style}
+      >
+        {children}
+      </div>
     ),
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,

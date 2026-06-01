@@ -77,24 +77,32 @@ function check() {
   assert(compCss.includes('height: 44px;'), 'Desktop language trigger is compact (44px)');
   assert(compCss.includes('.nav__mobile-language .language-selector__trigger'), 'Mobile language selector restores visible current language text');
   assert(compCss.includes('width: 100%;'), 'Mobile language selector width 100%');
+  
+  const desktopTriggers = compCss.match(/\n\.language-selector__trigger\s*\{/g);
+  assert(desktopTriggers && desktopTriggers.length === 1, 'Only one desktop language selector block exists (no duplicates)');
+  
+  const mobileTriggers = compCss.match(/\n\.nav__mobile-language\s+\.language-selector__trigger\s*\{/g);
+  assert(mobileTriggers && mobileTriggers.length === 1, 'Only one mobile language selector block exists (no duplicates)');
 
   // 11. Media processing
   try {
-    const vidInfo = execSync(`ffprobe -hide_banner -v error -select_streams v:0 -show_entries stream=codec_name,codec_tag_string,width,pix_fmt -of csv=p=0 "${path.join(siteDir, 'public/apex-demo-video.mp4')}"`, { encoding: 'utf8' }).trim();
+    const vidInfo = execSync(String.raw`ffprobe -hide_banner -v error -select_streams v:0 -show_entries stream=codec_name,codec_tag_string,width,pix_fmt -of csv=p=0 "${path.join(siteDir, 'public/apex-demo-video.mp4')}"`, { encoding: 'utf8' }).trim();
     assert(vidInfo.includes('h264'), 'Demo video is H.264');
     assert(vidInfo.includes('avc1'), 'Demo video is avc1');
     assert(vidInfo.includes('yuv420p'), 'Demo video is yuv420p');
-    const width = parseInt(vidInfo.split(',')[2] || '0', 10);
+    const width = Number.parseInt(vidInfo.split(',')[2] || '0', 10);
     assert(width > 0 && width <= 1920, 'Demo video width <= 1920');
   } catch (e) {
+    console.error(e.message);
     assert(false, 'ffprobe demo video check failed');
   }
 
   try {
-    const audioStreams = execSync(`ffprobe -hide_banner -v error -show_entries stream=codec_type -of csv=p=0 "${path.join(siteDir, 'public/audio/brand-anthem.mp3')}"`, { encoding: 'utf8' }).trim().split('\\n');
-    assert(audioStreams.includes('audio'), 'Brand anthem has audio stream');
-    assert(!audioStreams.includes('video'), 'Brand anthem has no video stream');
+    const audioStreams = new Set(execSync(String.raw`ffprobe -hide_banner -v error -show_entries stream=codec_type -of csv=p=0 "${path.join(siteDir, 'public/audio/brand-anthem.mp3')}"`, { encoding: 'utf8' }).trim().split('\n'));
+    assert(audioStreams.has('audio'), 'Brand anthem has audio stream');
+    assert(!audioStreams.has('video'), 'Brand anthem has no video stream');
   } catch (e) {
+    console.error(e.message);
     assert(false, 'ffprobe brand anthem check failed');
   }
 
