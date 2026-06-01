@@ -26,6 +26,7 @@
     "paths": {
       "dashboard/*": ["./apps/omnihub-site/dashboard/*"],
       "@/dashboard/*": ["./apps/omnihub-site/dashboard/*"],
+      "@omniconnect/*": ["./src/omniconnect/*"],
       "@/*": [
         "./src/*",
         "./apps/omnihub-site/src/*"
