@@ -181,7 +181,7 @@ jobs:
           done
           if [ "$requires_rfc" = "1" ]; then
             echo "Architecture-impacting changes detected. RFC link required in PR body."
-            if ! echo "$PR_BODY" | grep -Eqi 'RFC[- ]?link|governance/rfc|/issues/[0-9]+|/pull/[0-9]+'; then
+            if ! echo "$PR_BODY $PR_TITLE" | grep -Eqi 'RFC[- ]?link|governance/rfc|/issues/[0-9]+|/pull/[0-9]+'; then
               echo "::error::Missing RFC link in PR body for architecture-impacting change."
               exit 1
             fi
