@@ -107,7 +107,10 @@ BEGIN
 END;
 $$;
 
+-- additive-allow: REVOKE SECURITY FIX: entitlement activation must not remain executable by broad default roles.
 REVOKE ALL ON FUNCTION public.activate_client_subscription(UUID, TEXT, JSONB, TEXT, TEXT, TIMESTAMPTZ, TIMESTAMPTZ) FROM PUBLIC;
+-- additive-allow: REVOKE SECURITY FIX: anonymous callers must not activate subscriptions through SECURITY DEFINER RPC.
 REVOKE EXECUTE ON FUNCTION public.activate_client_subscription(UUID, TEXT, JSONB, TEXT, TEXT, TIMESTAMPTZ, TIMESTAMPTZ) FROM anon;
+-- additive-allow: REVOKE SECURITY FIX: authenticated users must activate only through the server-side Edge Function.
 REVOKE EXECUTE ON FUNCTION public.activate_client_subscription(UUID, TEXT, JSONB, TEXT, TEXT, TIMESTAMPTZ, TIMESTAMPTZ) FROM authenticated;
 GRANT EXECUTE ON FUNCTION public.activate_client_subscription(UUID, TEXT, JSONB, TEXT, TEXT, TIMESTAMPTZ, TIMESTAMPTZ) TO service_role;
