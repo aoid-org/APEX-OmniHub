@@ -9,7 +9,7 @@
  *   {
  *     "walletAddress": "0x...",
  *     "chainId": 1,           // 1=Ethereum, 137=Polygon
- *     "contractAddress": "0x...",
+ *     "contractAddress": "0x...", // Must match MEMBERSHIP_NFT_ADDRESS
  *     "tokenId": "1"          // Optional: specific token ID
  *   }
  *
@@ -19,12 +19,15 @@
  * Security:
  *   - JWT authentication required (Bearer token)
  *   - Input validation (Ethereum address format)
+ *   - Wallet authorization against verified wallet_identities
+ *   - Server-side membership NFT contract enforcement
  *   - Real blockchain verification via Alchemy NFT API
  *   - Fail-closed on missing config
  *
  * Environment Variables:
  *   - ALCHEMY_API_KEY_ETH (for chainId 1)
  *   - ALCHEMY_API_KEY_POLYGON (for chainId 137)
+ *   - MEMBERSHIP_NFT_ADDRESS (server-authorized membership contract)
  *
  * Author: OmniLink APEX
  * Date: 2026-01-01
@@ -67,6 +70,10 @@ serve(async (req) => {
 
     if (!authResult.success) {
       return corsErrorResponse('UNAUTHORIZED', authResult.error ?? 'Authentication required', 401, origin);
+    }
+
+    if (!authResult.user) {
+      return corsErrorResponse('UNAUTHORIZED', 'Authenticated user context is required', 401, origin);
     }
 
     // ── Input parsing & validation ──────────────────────────────────
@@ -113,6 +120,43 @@ serve(async (req) => {
       );
     }
 
+    const membershipNFTAddress = Deno.env.get('MEMBERSHIP_NFT_ADDRESS');
+    if (!membershipNFTAddress || !ETH_ADDRESS_RE.test(membershipNFTAddress)) {
+      console.error('MEMBERSHIP_NFT_ADDRESS not configured or invalid — fail-closed');
+      return corsErrorResponse(
+        'CONFIGURATION_ERROR',
+        'NFT verification service is not configured with a membership contract',
+        503,
+        origin,
+      );
+    }
+
+    if (contractAddress.toLowerCase() !== membershipNFTAddress.toLowerCase()) {
+      return corsErrorResponse(
+        'UNAUTHORIZED_CONTRACT',
+        'Only the configured membership NFT contract may be verified',
+        403,
+        origin,
+      );
+    }
+
+    // ── User wallet authorization ──────────────────────────────────
+    const isVerifiedWallet = await isVerifiedWalletForUser(
+      supabase,
+      authResult.user.id,
+      walletAddress,
+      resolvedChainId,
+    );
+
+    if (!isVerifiedWallet) {
+      return corsErrorResponse(
+        'UNAUTHORIZED_WALLET',
+        'walletAddress must be a verified wallet for the authenticated user',
+        403,
+        origin,
+      );
+    }
+
     // ── Alchemy API key ─────────────────────────────────────────────
     const alchemyKey = Deno.env.get(chainCfg.envKey);
     if (!alchemyKey) {
@@ -128,7 +172,7 @@ serve(async (req) => {
     // ── Blockchain verification via Alchemy NFT API ─────────────────
     const hasNFT = await verifyNFTOwnership(
       walletAddress,
-      contractAddress,
+      membershipNFTAddress,
       alchemyKey,
       chainCfg.slug,
       tokenId,
@@ -140,7 +184,7 @@ serve(async (req) => {
         hasNFT,
         walletAddress,
         chainId: resolvedChainId,
-        contractAddress,
+        contractAddress: membershipNFTAddress,
         verifiedAt: new Date().toISOString(),
       }),
       { headers: { ...headers, 'Content-Type': 'application/json' } },
@@ -155,6 +199,31 @@ serve(async (req) => {
     );
   }
 });
+
+async function isVerifiedWalletForUser(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  userId: string,
+  walletAddress: string,
+  chainId: number,
+): Promise<boolean> {
+  const normalizedWallet = walletAddress.toLowerCase();
+
+  const { data, error } = await supabase
+    .from('wallet_identities')
+    .select('id')
+    .eq('user_id', userId)
+    // Wallets are normalized at verification time; lowercase prevents checksum-case bypasses.
+    .eq('wallet_address', normalizedWallet)
+    .eq('chain_id', chainId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('wallet_identities authorization lookup failed:', error);
+    return false;
+  }
+
+  return Boolean(data);
+}
 
 /**
  * Verify NFT ownership via Alchemy getNFTsForOwner API.

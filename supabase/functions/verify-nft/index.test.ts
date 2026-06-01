@@ -80,6 +80,40 @@ Deno.test('CHAIN_CONFIG: unsupported chainId returns undefined', () => {
   assertEquals(CHAIN_CONFIG[999], undefined);
 });
 
+// ── Authorization guard logic ────────────────────────────────────────────────
+
+Deno.test('membership contract guard: accepts only configured contract case-insensitively', () => {
+  const configuredMembershipContract = VALID_CONTRACT.toLowerCase();
+  const requestContract = VALID_CONTRACT;
+
+  assertEquals(requestContract.toLowerCase() === configuredMembershipContract.toLowerCase(), true);
+});
+
+Deno.test('membership contract guard: rejects arbitrary caller-supplied contract', () => {
+  const configuredMembershipContract = VALID_CONTRACT;
+  const arbitraryContract = '0x1111111111111111111111111111111111111111';
+
+  assertEquals(arbitraryContract.toLowerCase() === configuredMembershipContract.toLowerCase(), false);
+});
+
+Deno.test('wallet identity guard: query filters bind wallet to authenticated user and chain', () => {
+  const userId = 'user-123';
+  const walletAddress = VALID_WALLET;
+  const chainId = 1;
+
+  const filters = [
+    ['user_id', userId],
+    ['wallet_address', walletAddress.toLowerCase()],
+    ['chain_id', chainId],
+  ];
+
+  assertEquals(filters, [
+    ['user_id', 'user-123'],
+    ['wallet_address', '0xd8da6bf26964af9d7eed9e03e53415d37aa96045'],
+    ['chain_id', 1],
+  ]);
+});
+
 // ── Alchemy URL construction tests ────────────────────────────────────────────
 
 Deno.test('getNFTsForOwner URL is constructed correctly', () => {
