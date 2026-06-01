@@ -12,7 +12,8 @@
  *
  * Bridges browser-based MCP clients with stdio-based MCP servers
  * by proxying JSON-RPC messages through HTTP. The proxy manages
- * server lifecycle and enforces authentication + rate limiting.
+ * server lifecycle and enforces authentication, rate limiting, and
+ * a fail-closed server-side RPC policy.
  *
  * Endpoints:
  *   POST /connect    — Start an MCP server process
@@ -22,7 +23,9 @@
  * Security:
  *   - Auth required on all endpoints (Supabase JWT)
  *   - Rate limited per user (20 req/min)
- *   - Server ID validated against allowlist
+ *   - Server ID validated against a low-privilege allowlist
+ *   - High-privilege MCPs are not exposed to this public proxy
+ *   - RPC method policy blocks direct tool execution bypasses
  *   - CORS: fail-closed origin validation
  */
 
@@ -44,12 +47,13 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ''
 );
 
-/** Allowlisted MCP server IDs that can be spawned */
+/**
+ * Public proxy allowlist: only low-privilege MCPs may be spawned from user traffic.
+ * High-privilege integrations (GitHub/Supabase/Google Workspace) require a scoped
+ * backend broker and must never receive platform-wide secrets in per-user children.
+ */
 const ALLOWED_SERVERS = new Set([
   'firecrawl',
-  'google-workspace',
-  'github',
-  'supabase',
 ]);
 
 /** Server commands and args (validated subset of mcp.config.ts) */
@@ -59,22 +63,18 @@ const SERVER_COMMANDS: Record<string, { command: string; args: string[]; envKeys
     args: ['-y', 'firecrawl-mcp'],
     envKeys: ['FIRECRAWL_API_KEY'],
   },
-  'google-workspace': {
-    command: 'npx',
-    args: ['-y', '@anthropic/google-workspace-mcp'],
-    envKeys: ['GOOGLE_API_KEY'],
-  },
-  github: {
-    command: 'npx',
-    args: ['-y', '@anthropic/github-mcp'],
-    envKeys: ['GITHUB_TOKEN'],
-  },
-  supabase: {
-    command: 'npx',
-    args: ['-y', '@supabase/mcp-server'],
-    envKeys: ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY'],
-  },
 };
+
+/** JSON-RPC methods safe for lifecycle and discovery without tool execution. */
+const ALLOWED_RPC_METHODS = new Set([
+  'initialize',
+  'ping',
+  'tools/list',
+  'resources/list',
+  'prompts/list',
+]);
+
+const ALLOWED_NOTIFICATION_PREFIX = 'notifications/';
 
 const RATE_LIMIT = { maxRequests: 20, windowMs: 60_000, keyPrefix: 'mcp-proxy' };
 
@@ -182,7 +182,7 @@ async function handleConnect(
   const { serverId } = ConnectRequestSchema.parse(await req.json());
 
   if (!ALLOWED_SERVERS.has(serverId)) {
-    return json({ error: `Unknown server: ${serverId}` }, 400, corsHeaders);
+    return json({ error: `Server is not enabled for public MCP proxy: ${serverId}` }, 403, corsHeaders);
   }
 
   const processKey = `${userId}:${serverId}`;
@@ -249,6 +249,14 @@ async function handleRpc(
 ): Promise<Response> {
   const { serverId, request } = RpcRequestSchema.parse(await req.json());
   const processKey = `${userId}:${serverId}`;
+
+  if (!isRpcMethodAllowed(request.method)) {
+    return json({
+      jsonrpc: "2.0",
+      id: request.id,
+      error: { code: -32601, message: `RPC method is not allowed by MCP proxy policy: ${request.method}` },
+    }, 403, corsHeaders);
+  }
 
   const managed = activeProcesses.get(processKey);
   if (!managed) {
@@ -323,6 +331,12 @@ async function cleanupProcess(processKey: string): Promise<void> {
 // ──────────────────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────────────────
+
+function isRpcMethodAllowed(method: string): boolean {
+  // Notifications are protocol-level events, not tool invocations.
+  if (method.startsWith(ALLOWED_NOTIFICATION_PREFIX)) return true;
+  return ALLOWED_RPC_METHODS.has(method);
+}
 
 function json(data: unknown, status: number, corsHeaders: Record<string, string>): Response {
   return new Response(JSON.stringify(data), {

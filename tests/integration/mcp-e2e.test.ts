@@ -14,6 +14,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
+import { readFileSync } from 'node:fs';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MCPHostManager, ToolInvocationSchema } from '@/core/mcp/MCPHostManager';
 import { MCPServerRegistry } from '@/core/mcp/MCPServerRegistry';
@@ -343,10 +344,26 @@ describe('MCP E2E — Proxy Request Schemas', () => {
     expect(invalid.jsonrpc).not.toBe('2.0');
   });
 
-  it('validates allowed server IDs', () => {
-    const allowed = new Set(['firecrawl', 'google-workspace', 'github', 'supabase']);
-    expect(allowed.has('firecrawl')).toBe(true);
-    expect(allowed.has('malicious-server')).toBe(false);
+  it('keeps high-privilege MCP servers out of the public proxy allowlist', () => {
+    const proxySource = readFileSync('supabase/functions/mcp-proxy/index.ts', 'utf8');
+    const allowedServersBlock = proxySource.match(/const ALLOWED_SERVERS = new Set\(\[([\s\S]*?)\]\);/)?.[1] ?? '';
+
+    expect(allowedServersBlock).toContain("'firecrawl'");
+    expect(allowedServersBlock).not.toContain("'google-workspace'");
+    expect(allowedServersBlock).not.toContain("'github'");
+    expect(allowedServersBlock).not.toContain("'supabase'");
+    expect(proxySource).not.toContain('GOOGLE_API_KEY');
+    expect(proxySource).not.toContain('SUPABASE_SERVICE_KEY');
+    expect(proxySource).not.toContain('GITHUB_TOKEN');
+  });
+
+  it('documents a server-side RPC policy that blocks direct tool execution', () => {
+    const proxySource = readFileSync('supabase/functions/mcp-proxy/index.ts', 'utf8');
+    const rpcPolicyBlock = proxySource.match(/const ALLOWED_RPC_METHODS = new Set\(\[([\s\S]*?)\]\);/)?.[1] ?? '';
+
+    expect(rpcPolicyBlock).toContain("'tools/list'");
+    expect(rpcPolicyBlock).not.toContain("'tools/call'");
+    expect(proxySource).toContain('isRpcMethodAllowed(request.method)');
   });
 });
 
