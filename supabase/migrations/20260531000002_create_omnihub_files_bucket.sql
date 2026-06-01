@@ -1,11 +1,13 @@
 -- Create files storage bucket if not exists
 -- Idempotent: safe to run multiple times
 DO $$
+DECLARE
+  v_bucket_name text := 'omnihub-files';
 BEGIN
   INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
   VALUES (
-    'omnihub-files',
-    'omnihub-files',
+    v_bucket_name,
+    v_bucket_name,
     false,
     52428800, -- 50 MB max per file
     ARRAY['image/*','application/pdf','text/*','application/json',

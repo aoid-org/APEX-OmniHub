@@ -23,6 +23,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Minus, Maximize2, Minimize2, X, GripHorizontal } from 'lucide-react';
 import { useOmniDash, type WidgetConfig } from '@/stores/omniDashStore';
+import { useOmniModal } from '@/stores/omniModalStore';
 import { GPU_STYLE, SPRING_NATURAL } from '@/lib/motionPresets';
 
 // ============================================================================
@@ -44,11 +45,21 @@ export const WidgetShell = memo(function WidgetShell({ widget }: WidgetShellProp
     closeWidget,
   } = useOmniDash();
 
+  const { invoke } = useOmniModal();
+
   const shellRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<{ x: number; y: number; wx: number; wy: number } | null>(null);
   const resizeStart = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+
+  const clearLongPress = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
 
   // ── Focus on any interaction ──
   const handleFocus = useCallback(() => {
@@ -69,8 +80,30 @@ export const WidgetShell = memo(function WidgetShell({ widget }: WidgetShellProp
       };
       setIsDragging(true);
       focusWidget(widget.id);
+
+      // Start long press timer
+      clearLongPress();
+      longPressTimer.current = setTimeout(() => {
+        setIsDragging(false);
+        (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+        dragStart.current = null;
+        
+        // Trigger Widget Lifecycle Modal
+        invoke({
+          id: `lifecycle-${widget.id}`,
+          provider: 'OmniDash',
+          type: 'selection',
+          title: `Widget: ${widget.title}`,
+          description: 'Manage this widget',
+          renderMode: 'dialog',
+          onComplete: async (data) => {
+            if (data.action === 'close') closeWidget(widget.id);
+            if (data.action === 'maximise') maximiseWidget(widget.id);
+          },
+        });
+      }, 600); // 600ms long press threshold
     },
-    [focusWidget, widget.id, widget.position, widget.maximised],
+    [focusWidget, widget.id, widget.position, widget.maximised, widget.title, clearLongPress, invoke, closeWidget, maximiseWidget],
   );
 
   const handleDragMove = useCallback(
@@ -78,22 +111,29 @@ export const WidgetShell = memo(function WidgetShell({ widget }: WidgetShellProp
       if (!dragStart.current) return;
       const dx = e.clientX - dragStart.current.x;
       const dy = e.clientY - dragStart.current.y;
+      
+      // If moved more than 5px, cancel long press
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        clearLongPress();
+      }
+
       moveWidget(widget.id, {
         x: dragStart.current.wx + dx,
         y: dragStart.current.wy + dy,
       });
     },
-    [moveWidget, widget.id],
+    [moveWidget, widget.id, clearLongPress],
   );
 
   const handleDragEnd = useCallback(
     (e: PointerEvent) => {
+      clearLongPress();
       if (!dragStart.current) return;
       (e.target as HTMLElement).releasePointerCapture(e.pointerId);
       dragStart.current = null;
       setIsDragging(false);
     },
-    [],
+    [clearLongPress],
   );
 
   // ── Resize via pointer events (SE corner) ──

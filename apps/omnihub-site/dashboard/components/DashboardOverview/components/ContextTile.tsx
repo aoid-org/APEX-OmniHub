@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { motion } from 'framer-motion';
 import lightbulbIcon from '@/assets/lightbulb-icon.png';
 import { HC } from '../constants';
-import type { ContextItem } from '../types';
+import type { ContextItem } from '../../../types/context.types';
 
 interface ContextTileProps {
   readonly ctx: ContextItem;

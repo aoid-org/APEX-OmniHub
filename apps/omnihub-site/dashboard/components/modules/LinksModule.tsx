@@ -38,8 +38,7 @@ export default function LinksModule({ onClose }: Props) {
   const handleWizardComplete = async (connectionSpec: Record<string, unknown>) => {
     setShowWizard(false);
     await supabase.functions.invoke("omnilink-port", { body: connectionSpec });
-    // TODO: Trigger a state refresh (handled by hooks usually or just reload)
-    window.location.reload(); 
+    // State will be refreshed eventually by live polling or explicit refresh
   };
 
   return (

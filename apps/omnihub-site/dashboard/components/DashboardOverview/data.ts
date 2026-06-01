@@ -3,12 +3,14 @@ import {
   type AppRegistryEntry,
 } from '../../../../../packages/core/src/registry';
 import { LOGO, HIDDEN_APPS } from './constants';
-import type { ContextItem, AppEntry } from './types';
+import type { AppEntry } from './types';
+import type { ContextItem } from '../../types/context.types';
 
 export const INITIAL_CONTEXT: readonly ContextItem[] = APP_REGISTRY
   .filter((e: AppRegistryEntry) => !HIDDEN_APPS.has(e.label))
   .slice(0, 3)
   .map((e: AppRegistryEntry) => ({
+    id: e.key,
     name: e.label,
     health: e.healthContext.health,
     insight: e.healthContext.insight,

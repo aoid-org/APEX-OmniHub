@@ -29,6 +29,7 @@ interface ConnectorViewModel {
   lastSyncAt: string | null;
   healthStatus: HealthStatus;
   supportsContextBinding: boolean;
+  integrationType: string;
 }
 
 function slugify(input: string): string {
@@ -103,6 +104,7 @@ function mapConnectorModels(
       lastSyncAt: integrationEvents[0]?.received_at ?? null,
       healthStatus: deriveHealth(integrationEvents),
       supportsContextBinding: true,
+      integrationType: integration.type || '',
     };
   });
 }
@@ -327,7 +329,30 @@ export const Integrations = () => {
                   Drag this tile into OmniSLATE context to bind connector metadata.
                 </div>
                 
-                {connector.status !== 'LIVE' && (
+                {connector.integrationType === 'mobile_app' ? (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition-all duration-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open('https://apps.apple.com/us/app/apex-omnilink/id1234567890', '_blank');
+                      }}
+                    >
+                      App Store
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-300 transition-all duration-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open('https://play.google.com/store/apps/details?id=com.apex.omnilink', '_blank');
+                      }}
+                    >
+                      Play Store
+                    </Button>
+                  </div>
+                ) : connector.status !== 'LIVE' && (
                   <Button
                     variant="outline"
                     className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 transition-all duration-300"

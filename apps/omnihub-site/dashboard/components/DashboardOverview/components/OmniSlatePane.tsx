@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import lightbulbIcon from '../../../../src/assets/lightbulb-icon.png';
 import { useOmniDash } from '../../../../src/stores/omniDashStore';
 import { SPRING, GLASS_TILE, HC, ORANGE_GHOST, APEX_ORANGE, PROMPT_STYLE_BASE } from '../constants';
-import type { ContextItem } from '../types';
+import type { ContextItem } from '../../../types/context.types';
 import { ContextTile } from './ContextTile';
 import { RecordButton } from './RecordButton';
 

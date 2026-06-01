@@ -28,17 +28,9 @@ interface LocalTranslateResult {
 }
 
 function localTranslate(text: string, targetLocale: string): LocalTranslateResult {
-  const locale = SUPPORTED_LOCALES.find((l) => l.code === targetLocale);
-  const label = locale?.nativeLabel ?? targetLocale;
-  // Deterministic output: prefix tag + original text.
-  // Replace this body with a real provider (DeepL, LibreTranslate, etc.) when available.
-  return {
-    text: `[${label}] ${text}`,
-    sourceLocale: 'auto',
-    targetLocale,
-    provider: 'Local Deterministic Provider (stub)',
-    verified: false,
-  };
+  // Honest State Enforcement (WP15): We cannot fake translation by prepending strings.
+  // Since the enterprise SemanticTranslator package is not yet connected, we fail closed.
+  throw new Error(`Translation Engine not connected. Cannot route to target locale: ${targetLocale}`);
 }
 
 // ─── Module state ─────────────────────────────────────────────────────────────

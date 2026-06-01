@@ -13,6 +13,7 @@ import {
   SystemSparklines
 } from './components/M03Panels';
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
@@ -109,27 +110,27 @@ const IMG_APEX_WM = imgApexWm;
 // ─── Design System ────────────────────────────────────────────────────────────
 // eslint-disable-next-line react-refresh/only-export-components
 export const T = {
-  bg:        "#070B14",
-  surface:   "#0B1120",
-  card:      "#0E1628",
-  cardHover: "#111d33",
-  border:    "rgba(255,255,255,0.07)",
-  borderGlow:"rgba(249,115,22,0.3)",
-  orange:    "#F97316",
-  orangeDim: "#C2531A",
-  orangeGlow:"rgba(249,115,22,0.15)",
-  blue:      "#3B82F6",
-  blueDim:   "#1D4ED8",
-  blueGlow:  "rgba(59,130,246,0.15)",
-  cyan:      "#06B6D4",
-  green:     "#22C55E",
-  warn:      "#EAB308",
-  red:       "#EF4444",
-  purple:    "#A855F7",
-  t1:        "#F1F5F9",
-  t2:        "#94A3B8",
-  t3:        "#475569",
-  t4:        "#1E293B",
+  bg:        "var(--omni-bg)",
+  surface:   "var(--omni-surface)",
+  card:      "var(--omni-card)",
+  cardHover: "var(--omni-card-hover)",
+  border:    "var(--omni-border)",
+  borderGlow:"var(--omni-border-glow)",
+  orange:    "var(--omni-orange)",
+  orangeDim: "var(--omni-orange-dim)",
+  orangeGlow:"var(--omni-orange-glow)",
+  blue:      "var(--omni-blue)",
+  blueDim:   "var(--omni-blue-dim)",
+  blueGlow:  "var(--omni-blue-glow)",
+  cyan:      "var(--omni-cyan)",
+  green:     "var(--omni-green)",
+  warn:      "var(--omni-warn)",
+  red:       "var(--omni-red)",
+  purple:    "var(--omni-purple)",
+  t1:        "var(--omni-t1)",
+  t2:        "var(--omni-t2)",
+  t3:        "var(--omni-t3)",
+  t4:        "var(--omni-t4)",
 };
 
 function getHealthPalette(health: OmniHealthState): {
@@ -500,7 +501,27 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
     });
   };
 
+  const notifications = useNotificationStore(state => state.notifications);
+  const unreadCount = useNotificationStore(state => state.getUnreadCount());
+  const markAllAsRead = useNotificationStore(state => state.markAllAsRead);
+
   const handleBell = () => {
+    if (notifications.length === 0) {
+      invoke({
+        id: 'header-notifications',
+        provider: 'omnidash',
+        type: 'selection',
+        title: 'Notifications',
+        description: 'You have no pending notifications or approvals.',
+        schema: {
+          items: [],
+        },
+        onComplete: async () => {},
+        onCancel: () => {},
+      });
+      return;
+    }
+
     invoke({
       id: 'header-notifications',
       provider: 'omnidash',
@@ -508,15 +529,16 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
       title: 'Notifications',
       description: 'Recent activity across your APEX workspace.',
       schema: {
-        items: [
-          { id: 'n1', label: 'Salesforce sync completed — 48 records updated', badge: 'INFO' },
-          { id: 'n2', label: 'Invoice batch #1042 processed — $24,500 billed', badge: 'SUCCESS' },
-          { id: 'n3', label: 'Workflow "Lead Nurture" triggered for 12 contacts', badge: 'INFO' },
-          { id: 'n4', label: 'Guardian audit passed — 0 anomalies detected', badge: 'SUCCESS' },
-          { id: 'n5', label: 'New integration available: Stripe Billing v3', badge: 'NEW' },
-        ],
+        items: notifications.map(n => ({
+          id: n.id,
+          label: n.label,
+          badge: n.badge
+        }))
       },
-      onComplete: async () => { toast.info('Notifications marked read'); },
+      onComplete: async () => { 
+        markAllAsRead();
+        toast.info('Notifications marked read'); 
+      },
       onCancel: () => {},
     });
   };
@@ -684,7 +706,16 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
-          <div style={{position:"absolute",top:5,right:5,width:6,height:6,borderRadius:"50%",background:T.orange,border:`2px solid ${T.surface}`}} />
+          {unreadCount > 0 && (
+            <div style={{
+              position:"absolute", top:-4, right:-4, minWidth:16, height:16, 
+              borderRadius:8, background:T.orange, border:`2px solid ${T.surface}`,
+              color:"#fff", fontSize:9, fontWeight:800, display:"flex",
+              alignItems:"center", justifyContent:"center", padding:"0 4px"
+            }}>
+              {unreadCount}
+            </div>
+          )}
         </button>
 
         {/* Avatar */}
@@ -1312,16 +1343,8 @@ const IntegratedAppsWidget = () => {
 };
 
 // ─── Right Panel Sections ─────────────────────────────────────────────────────
-const OMNIBOARD_EVENTS = [
-  { time: "09:41", type: "github", color: T.blue, text: "Commit 'fix(ci): extract Atomic Routing Flip' pushed to main" },
-  { time: "09:42", type: "ci/cd", color: T.purple, text: "Workflow 'Clean-Room Final Certification' completed" },
-  { time: "09:45", type: "security", color: T.green, text: "Zero Trust policy verified. No anomalous gateways detected." },
-  { time: "10:12", type: "system", color: T.cyan, text: "TradeLine 24/7 service scaled up (3 -> 5 instances)" },
-  { time: "10:15", type: "github", color: T.blue, text: "PR #1245 merged by APEX Agent" },
-];
-
 const OmniBoardFeed = ({ isDark }: { dash?: DashboardData; isDark: boolean }) => {
-  const [events, setEvents] = useState(OMNIBOARD_EVENTS);
+  const [events, setEvents] = useState<{time: string, type: string, color: string, text: string}[]>([]);
   
   useEffect(() => {
     // APEX-DEV: OpenTelemetry SSE stream via OmniHub Gateway overriding local JSON array fallback
@@ -1371,23 +1394,29 @@ const OmniBoardFeed = ({ isDark }: { dash?: DashboardData; isDark: boolean }) =>
         fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
         background: isDark ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.4)"
       }}>
-        {events.map((e, i) => (
-          <div key={i} style={{
-            display: "flex", alignItems: "flex-start", gap: 12,
-            animation: "apexFadeIn 0.3s ease",
-            fontSize: 12.5, lineHeight: 1.5
-          }}>
-            <div style={{ color: T.t3, fontSize: 11, marginTop: 2, flexShrink: 0 }}>[{e.time}]</div>
-            <div style={{
-              color: e.color, fontSize: 10, fontWeight: 700, textTransform: "uppercase",
-              padding: "2px 6px", borderRadius: 4, border: `1px solid ${e.color}44`,
-              background: `${e.color}15`, flexShrink: 0, minWidth: 65, textAlign: "center", marginTop: 1
-            }}>
-              {e.type}
-            </div>
-            <div style={{ color: T.t1 }}>{e.text}</div>
+        {events.length === 0 ? (
+          <div style={{ color: T.t3, fontSize: 12, textAlign: "center", marginTop: 20 }}>
+            No recent activity detected.
           </div>
-        ))}
+        ) : (
+          events.map((e, i) => (
+            <div key={i} style={{
+              display: "flex", alignItems: "flex-start", gap: 12,
+              animation: "apexFadeIn 0.3s ease",
+              fontSize: 12.5, lineHeight: 1.5
+            }}>
+              <div style={{ color: T.t3, fontSize: 11, marginTop: 2, flexShrink: 0 }}>[{e.time}]</div>
+              <div style={{
+                color: e.color, fontSize: 10, fontWeight: 700, textTransform: "uppercase",
+                padding: "2px 6px", borderRadius: 4, border: `1px solid ${e.color}44`,
+                background: `${e.color}15`, flexShrink: 0, minWidth: 65, textAlign: "center", marginTop: 1
+              }}>
+                {e.type}
+              </div>
+              <div style={{ color: T.t1 }}>{e.text}</div>
+            </div>
+          ))
+        )}
       </div>
       {/* Input bar */}
       <div style={{
