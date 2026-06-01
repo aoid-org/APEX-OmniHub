@@ -180,12 +180,28 @@ jobs:
             esac
           done
           if [ "$requires_rfc" = "1" ]; then
-            echo "Architecture-impacting changes detected. RFC link required in PR body."
-            if ! echo "$PR_BODY" | grep -Eqi 'RFC[- ]?link|governance/rfc|/issues/[0-9]+|/pull/[0-9]+'; then
-              echo "::error::Missing RFC link in PR body for architecture-impacting change."
+            echo "Architecture-impacting changes detected. RFC evidence required."
+            has_pr_rfc_marker=0
+            if echo "$PR_BODY" | grep -Eqi 'RFC[- ]?link|governance/rfc|/issues/[0-9]+|/pull/[0-9]+'; then
+              has_pr_rfc_marker=1
+            fi
+
+            has_committed_rfc=0
+            for f in $changed; do
+              case "$f" in
+                governance/rfc/*.md|docs/**/RFC*.md|docs/**/rfc-*.md)
+                  # A committed RFC document is durable architecture-review evidence
+                  # when the pull_request event body is stale or unavailable.
+                  has_committed_rfc=1
+                  ;;
+              esac
+            done
+
+            if [ "$has_pr_rfc_marker" != "1" ] && [ "$has_committed_rfc" != "1" ]; then
+              echo "::error::Missing RFC evidence for architecture-impacting change. Add an RFC link to the PR body or commit a governance/rfc document."
               exit 1
             fi
-            echo "RFC marker present."
+            echo "RFC evidence present."
           else
             echo "No architecture-impacting paths changed. Skipping RFC requirement."
           fi
