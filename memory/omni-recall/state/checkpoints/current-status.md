@@ -1,6 +1,6 @@
 # Current Status
 
-- date: 2026-05-29
+- date: 2026-06-01
 - omni_recall_status: active
 - installation_path: memory/omni-recall/ (APEX-OmniHub repo)
 - runtime: claude-code-ephemeral-container
@@ -43,14 +43,23 @@
 - verification: grep omnilink-agent → zero hits. tsc exit 0. eslint exit 0. Vitest 2578/2578.
 - codex_post_merge_changes: Auto-fix `7a2c45ed` simplified MCP response mapping (CodeX). Both changes already pulled.
 
-## Verified runtime facts (2026-05-31) — post-PR-1251-merge audit
-- last_verified_date: 2026-05-31
-- last_verified_commit: 7a2c45ed (Auto-fix applied by CodeX: simplify MCP response mapping)
-- active_branch: main
+## Latest session (2026-06-01) — platform documentation synchronization
+- branch: work
+- verified_head: 86bc14a (`feat(omnidash): implement from-zero gap closure (WP0-WP17) (#1274)`)
+- scope: Assessed current platform state, checked recent git history, reconciled active docs/readmes/architecture/status/runbook/onboarding docs, and added Omni-Recall checkpoint.
+- key outcome: Current docs now point to `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`; stale active references to `OmniDashLayout.tsx`, off-by-default `OMNIDASH_ENABLED`, and 2026-05-31 HEAD facts were superseded in active docs.
+- recent_history: PR #1274 OmniDash gap closure; PR #1309 entitlement activation RPC + PhysiOmni HMAC ingress hardening; CI scanner/release workflow fixes.
+- repo_counts: 353 src files, 318 root TS/TSX files, 30 Supabase function directories, 84 migrations, 22 workflows, 319 test/spec sources, 101 orchestrator Python files.
+- evidence: `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`, this checkpoint, and `memory/omni-recall/state/checkpoints/2026-06-01-platform-doc-sync.md`.
+
+## Verified runtime facts (2026-06-01) — platform-doc-sync audit
+- last_verified_date: 2026-06-01
+- last_verified_commit: 86bc14a (feat(omnidash): implement from-zero gap closure (WP0-WP17) (#1274))
+- active_branch: work
 - multi_agent_environment: true
 - known_non_claude_agents: [google-jules, google-antigravity, openai-codex, dependabot]
-- open_prs_noted: PR#1251 (merged 2026-05-31)
+- open_prs_noted: PR#1251 (merged 2026-05-31); recent commits include PR #1274 and PR #1309
 - apex_agent_canonical_slug: apex-agent
 - apex_agent_supabase_function: supabase/functions/apex-agent/
-- db_migrations_applied_to_production: 20260527000001 (aegis/chronos), 20260528000000 (physiomni-rls), 20260528000001 (omniconnect-vault)
+- db_migrations_applied_to_production: 20260527000001 (aegis/chronos), 20260528000000 (physiomni-rls), 20260528000001 (omniconnect-vault); later migration files require live verification before production-applied claims
 - naming_drift: zero — confirmed by grep across all ts/tsx/yaml/json/yml/sh files

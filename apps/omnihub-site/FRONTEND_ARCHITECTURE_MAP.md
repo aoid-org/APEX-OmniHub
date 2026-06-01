@@ -1,12 +1,14 @@
 # APEX OmniHub — Frontend Architecture Map
 
-> **Strictly Enforced Rule**: `apps/omnihub-site/` is the **sole routing environment** for the APEX OmniHub Synchronized Orchestrator (SO). `OmniDashLayout.tsx` is the canonical shell; `DashboardOverview.tsx` is the canonical data view.
+> **Strictly Enforced Rule**: `apps/omnihub-site/` is the **sole routing environment** for the APEX OmniHub Synchronized Orchestrator (SO). `OmniDashShell.tsx` is the canonical shell; `DashboardOverview.tsx` is the canonical data view.
 >
 > **Shared Platform Layer Exception**: Root `src/stores/` and `src/omnidash/` contain platform-level Zustand stores and universal hooks that are intentionally shared across all APEX surface areas. Imports from these specific directories into `apps/omnihub-site/` are permitted and expected. Feature-specific page components, legacy UI components, and duplicate layout files from root `src/` remain forbidden.
 
 ---
 
 ## Canonical Component Hierarchy
+
+**Last reconciled:** 2026-06-01 after PR #1274 OmniDash from-zero gap closure.
 
 ```
 apps/omnihub-site/
@@ -28,7 +30,7 @@ apps/omnihub-site/
 
 | Component       | Location                      | Render Pattern                                                |
 | --------------- | ----------------------------- | ------------------------------------------------------------- |
-| `OmniDashShell` | `dashboard/OmniDashShell.tsx` | Parent shell — always mounted at `/omnidash` and `/dashboard` |
+| `OmniDashShell` | `dashboard/OmniDashShell.tsx` | Parent shell — mounted at `/omnidash`, `/omnidash/*`, `/dashboard`, and `/dashboard/*` |
 | Subroute pages  | `pages/*.tsx`                 | Rendered via `<Outlet />` inside modal overlay                |
 
 ## Routing Rules
@@ -63,11 +65,11 @@ All OmniDash interaction triggers route through the Universal Modal Engine rathe
 
 ---
 
-**Version:** 1.1.0 | **Date:** 2026-03-06 | **Ref:** APEX System Directive Phase 5 — Universal Modal Engine
+**Version:** 1.2.0 | **Date:** 2026-06-01 | **Ref:** APEX System Directive Phase 5 — Universal Modal Engine
 
 ## OmniDash UI Build Protocol (apex-frontend skill alignment)
 
-- Treat `OmniDashLayout.tsx` as immutable shell authority; feature pages extend via routed modal payloads only.
+- Treat `OmniDashShell.tsx` as immutable shell authority; feature pages extend via shell-owned modules, modals, or routed payloads only.
 - Enforce design-token usage (`var(--apex-*)`) for all spacing, radius, colors, and interaction timings.
 - Require interactive states for all controls (`hover`, `focus-visible`, `active`) with deterministic transition curves.
 - Keep accessibility first: semantic landmarks, keyboard navigation continuity, and meaningful ARIA labels.

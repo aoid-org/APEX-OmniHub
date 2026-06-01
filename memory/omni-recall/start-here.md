@@ -25,7 +25,7 @@ The system should:
 
 ## Last Verified Session
 
-- Date: 2026-05-31
-- HEAD: 7a2c45ed (CodeX auto-fix: simplify MCP response mapping)
-- Branch: main (PR #1251 merged)
-- Key fact: APEX Agent is the canonical agent name (apex-agent slug). Zero omnilink-agent references remain.
+- Date: 2026-06-01
+- HEAD: 86bc14a (PR #1274 OmniDash from-zero gap closure)
+- Branch: work
+- Key fact: Current docs and Omni-Recall now defer to `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` for post-PR-1274 / PR-1309 state; `OmniDashShell.tsx` is shell authority.

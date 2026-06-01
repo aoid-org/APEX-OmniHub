@@ -1,5 +1,7 @@
 # APEX OmniHub Marketing Site
 
+> **Current-state update (2026-06-01):** This public site package is version `1.3.10` and routes through `apps/omnihub-site/src/App.tsx`. Public routes remain pre-auth; OmniDash is the protected post-auth shell.
+
 > Static-first marketing site for apexomnihub.icu featuring White Fortress (default) and Night Watch (toggle) themes.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
