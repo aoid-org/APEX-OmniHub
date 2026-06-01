@@ -22,7 +22,6 @@ type Fx = {
 
 const supabaseUrl = () => envAny(['SBBL_SUPABASE_URL', 'SUPABASE_URL']);
 const supabaseAnon = () => envAny(['SBBL_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY']);
-const supabaseSvc = () => envAny(['SBBL_SUPABASE_SERVICE_KEY', 'SBBL_SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SERVICE_KEY']);
 
 async function signInToken(emailKey: string, passKey: string): Promise<string> {
   const client = createClient(supabaseUrl(), supabaseAnon());
@@ -36,10 +35,10 @@ export const test = base.extend<Fx>({
   sbblUrl: async (_args, runFixture) => runFixture(env('SBBL_URL', env('SBBL_BASE_URL', 'http://localhost:8787'))),
   omniPage: async ({ browser }, runFixture) => { const p = await browser.newPage(); await runFixture(p); await p.close(); },
   sbblPage: async ({ browser }, runFixture) => { const p = await browser.newPage(); await runFixture(p); await p.close(); },
-  sbblAdmin: async (_args, runFixture) => {
-    const key = supabaseSvc() || supabaseAnon();
-    if (!supabaseUrl() || !key) test.skip(true, 'Missing Supabase admin env');
-    await runFixture(createClient(supabaseUrl(), key));
+  sbblAdmin: async ({ adminToken }, runFixture) => {
+    if (!supabaseUrl() || !supabaseAnon()) test.skip(true, 'Missing Supabase admin env');
+    // Use the admin user's JWT so tests exercise normal RLS instead of a service-role bypass.
+    await runFixture(createClient(supabaseUrl(), supabaseAnon(), { global: { headers: { Authorization: `Bearer ${adminToken}` } } }));
   },
   sbblFan: async ({ fanToken }, runFixture) => {
     if (!supabaseUrl() || !supabaseAnon()) test.skip(true, 'Missing Supabase anon env');

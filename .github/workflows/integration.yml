@@ -2,6 +2,7 @@ name: integration-harness
 on:
   push:
     branches: [main, work, develop]
+  workflow_dispatch:
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -12,10 +13,11 @@ jobs:
           node-version: '24'
 
       - name: Checkout SBBL-HQ sibling repo
+        if: github.event_name == 'workflow_dispatch'
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          # Clone into sibling path expected by run.sh preflight.
+          # Clone only for manually approved full integrations; push runs never receive this token.
           git clone "https://x-access-token:${GH_PAT}@github.com/apexbusiness-systems/sbbl-hq.git" ../sbbl-hq
 
       - name: Setup Bun
@@ -27,23 +29,28 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Install SBBL-HQ deps
+        if: github.event_name == 'workflow_dispatch'
         run: cd ../sbbl-hq && npm ci --ignore-scripts
 
       - name: Install harness deps
         run: cd integration-harness && npm ci --ignore-scripts
 
       - name: Install Playwright browser
+        if: github.event_name == 'workflow_dispatch'
         run: cd integration-harness && npm exec --no --ignore-scripts -- playwright install chromium
 
-      - name: Run harness
+      - name: Run deterministic harness validation
+        if: github.event_name == 'push'
+        run: cd integration-harness && node lib/deterministic-validator.mjs
+
+      - name: Run full integration harness
+        if: github.event_name == 'workflow_dispatch'
         run: cd integration-harness && bash run.sh
         env:
           OMNIHUB_REPO: ${{ github.workspace }}
           SBBL_REPO: ${{ github.workspace }}/../sbbl-hq
-          GH_PAT: ${{ secrets.GH_PAT }}
           SBBL_SUPABASE_URL: ${{ secrets.SBBL_SUPABASE_URL }}
           SBBL_SUPABASE_ANON_KEY: ${{ secrets.SBBL_SUPABASE_ANON_KEY }}
-          SBBL_SUPABASE_SERVICE_KEY: ${{ secrets.SBBL_SUPABASE_SERVICE_KEY }}
           OMNIHUB_SUPABASE_URL: ${{ secrets.OMNIHUB_SUPABASE_URL }}
           OMNIHUB_SUPABASE_ANON_KEY: ${{ secrets.OMNIHUB_SUPABASE_ANON_KEY }}
           INTEGRATION_ADMIN_EMAIL: ${{ secrets.INTEGRATION_ADMIN_EMAIL }}

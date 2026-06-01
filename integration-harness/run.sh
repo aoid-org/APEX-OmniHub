@@ -39,33 +39,39 @@ set_alias SBBL_SUPABASE_URL SUPABASE_URL
 set_alias SBBL_SUPABASE_ANON_KEY SUPABASE_ANON_KEY
 require_env SBBL_SUPABASE_URL
 require_env SBBL_SUPABASE_ANON_KEY
-set_alias SBBL_SUPABASE_SERVICE_KEY SBBL_SUPABASE_SERVICE_ROLE_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_SERVICE_KEY
-set_alias SBBL_SUPABASE_SERVICE_ROLE_KEY SBBL_SUPABASE_SERVICE_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_SERVICE_KEY
 set_alias INTEGRATION_PPV_GAME_ID TEST_PPV_GAME_ID
 set_alias INTEGRATION_PPV_ACCESS_CODE TEST_PPV_ACCESS_CODE
 require_env INTEGRATION_ADMIN_EMAIL
 require_env INTEGRATION_ADMIN_PASSWORD
 require_env INTEGRATION_FAN_EMAIL
 require_env INTEGRATION_FAN_PASSWORD
-missing=0
-require_env SBBL_SUPABASE_SERVICE_KEY || missing=1
-if [[ $missing -ne 0 ]]; then
-  echo "Set one of: SBBL_SUPABASE_URL | SUPABASE_URL"
-  echo "Set one of: SBBL_SUPABASE_ANON_KEY | SUPABASE_ANON_KEY"
-  echo "Set one of: SBBL_SUPABASE_SERVICE_KEY | SBBL_SUPABASE_SERVICE_ROLE_KEY | SUPABASE_SERVICE_ROLE_KEY | SUPABASE_SERVICE_KEY"
-  echo "WARNING: Required secrets are missing. Falling back to deterministic-only validation."
-  node lib/deterministic-validator.mjs
-  exit $?
-fi
+
+run_public_env() {
+  # Child dev servers do not need CI credentials; pass only public runtime configuration.
+  env -i \
+    HOME="${HOME:-}" \
+    PATH="$PATH" \
+    CI="${CI:-}" \
+    NODE_ENV="${NODE_ENV:-development}" \
+    OMNIHUB_URL="$OMNIHUB_URL" \
+    OMNIHUB_BASE_URL="$OMNIHUB_URL" \
+    SBBL_URL="$SBBL_URL" \
+    SBBL_BASE_URL="$SBBL_URL" \
+    SBBL_SUPABASE_URL="$SBBL_SUPABASE_URL" \
+    SBBL_SUPABASE_ANON_KEY="$SBBL_SUPABASE_ANON_KEY" \
+    OMNIHUB_SUPABASE_URL="${OMNIHUB_SUPABASE_URL:-}" \
+    OMNIHUB_SUPABASE_ANON_KEY="${OMNIHUB_SUPABASE_ANON_KEY:-}" \
+    "$@"
+}
 
 if ! curl -fs -o /dev/null "$OMNIHUB_URL"; then
-  (cd "$OMNIHUB_REPO" && npm --ignore-scripts run dev >/tmp/omnihub-dev.log 2>&1) &
+  (cd "$OMNIHUB_REPO" && run_public_env npm --ignore-scripts run dev >/tmp/omnihub-dev.log 2>&1) &
   OMNIHUB_PID=$!
   wait_for_url "$OMNIHUB_URL"
 fi
 
 if ! curl -fs -o /dev/null "$SBBL_URL"; then
-  (cd "$SBBL_REPO" && npx --ignore-scripts wrangler dev --port 8787 >/tmp/sbbl-dev.log 2>&1) &
+  (cd "$SBBL_REPO" && run_public_env npx --ignore-scripts wrangler dev --port 8787 >/tmp/sbbl-dev.log 2>&1) &
   SBBL_PID=$!
   wait_for_url "$SBBL_URL"
 fi

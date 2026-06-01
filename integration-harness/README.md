@@ -5,7 +5,7 @@
   - `/workspace/APEX-OmniHub`
   - `/workspace/sbbl-hq` (or set `SBBL_REPO`)
 - Populate `integration-harness/.env` from `.env.example`.
-- Required envs: `SBBL_SUPABASE_URL` (or `SUPABASE_URL`), `SBBL_SUPABASE_ANON_KEY` (or `SUPABASE_ANON_KEY`), one service-role key alias, admin/fan credentials.
+- Required envs: `SBBL_SUPABASE_URL` (or `SUPABASE_URL`), `SBBL_SUPABASE_ANON_KEY` (or `SUPABASE_ANON_KEY`), and admin/fan credentials. Service-role keys are intentionally unsupported in the harness.
 
 ## Run (Linux/WSL)
 ```bash

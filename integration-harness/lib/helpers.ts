@@ -8,9 +8,10 @@ export const req = (keys: string[]) => {
   test.skip(missing.length > 0, `Missing env: ${missing.join(', ')}`);
 };
 
-export const sbblSvc = () => createClient(
+export const sbblUser = (accessToken: string) => createClient(
   envAny(['SBBL_SUPABASE_URL', 'SUPABASE_URL']),
-  envAny(['SBBL_SUPABASE_SERVICE_KEY', 'SBBL_SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SERVICE_KEY']),
+  envAny(['SBBL_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY']),
+  { global: { headers: { Authorization: `Bearer ${accessToken}` } } },
 );
 
 export async function assertNoConsoleErrors(page: import('@playwright/test').Page) {
