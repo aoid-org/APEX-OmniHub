@@ -9,16 +9,25 @@ import type { OmniSlateContextItem } from '../../types/context.types';
 export const INITIAL_CONTEXT: readonly OmniSlateContextItem[] = APP_REGISTRY
   .filter((e: AppRegistryEntry) => !HIDDEN_APPS.has(e.label))
   .slice(0, 3)
-  .map((e: AppRegistryEntry) => ({
-    id: e.key,
-    kind: 'apex_app',
-    label: e.label,
-    source: 'system',
-    health: (e.healthContext.health === 'red' ? 'broken' : e.healthContext.health === 'yellow' ? 'warning' : 'healthy'),
-    failureReason: e.healthContext.insight,
-    metadata: {},
-    droppedAt: new Date().toISOString()
-  }));
+  .map((e: AppRegistryEntry) => {
+    let mappedHealth: 'broken' | 'warning' | 'healthy' = 'healthy';
+    if (e.healthContext.health === 'red') {
+      mappedHealth = 'broken';
+    } else if (e.healthContext.health === 'yellow') {
+      mappedHealth = 'warning';
+    }
+
+    return {
+      id: e.key,
+      kind: 'apex_app',
+      label: e.label,
+      source: 'system',
+      health: mappedHealth,
+      failureReason: e.healthContext.insight,
+      metadata: {},
+      droppedAt: new Date().toISOString()
+    };
+  });
 
 export const APPS: readonly AppEntry[] = APP_REGISTRY
   .filter((e: AppRegistryEntry) => !HIDDEN_APPS.has(e.label))
