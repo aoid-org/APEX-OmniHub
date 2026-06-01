@@ -1,20 +1,3 @@
-# Cloudflare Pages _redirects
-# Translated from vercel.json rewrites
-
-# Static HTML pages
-/demo /demo.html 200
-/demo/ /demo.html 200
-/tech-specs /tech-specs.html 200
-/tech-specs/ /tech-specs.html 200
-/request-access /request-access.html 200
-/request-access/ /request-access.html 200
-/login /login.html 200
-/login/ /login.html 200
-/privacy /privacy.html 200
-/privacy/ /privacy.html 200
-/terms /terms.html 200
-/terms/ /terms.html 200
-
-# SPA fallback - serves index.html for all unmatched routes (no loop)
-/index.html /index.html 200
+# Cloudflare Pages SPA rewrite. Vite builds a single React entrypoint, so both
+# clean routes and legacy .html marketing links must be handled by the router.
 /* /index.html 200

@@ -4,8 +4,8 @@ import { SEOMeta } from '@/components/SEOMeta';
 import { StructuredData } from '@/components/StructuredData';
 import { HERO_BADGE_ASSET_PATH } from '@/lib/heroAssets';
 import '@/styles/landing.css';
-import homepageSchema from '../../public/schema/homepage.jsonld?raw';
-import organizationSchema from '../../public/schema/organization.jsonld?raw';
+import homepageSchema from '../../../../public/schema/homepage.jsonld?raw';
+import organizationSchema from '../../../../public/schema/organization.jsonld?raw';
 
 function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
   return (
@@ -599,6 +599,7 @@ function CapabilitiesSection() {
   const capabilities = [
     {
       title: "Universal Connector Network",
+      path: "/smart-integrations",
       desc: "Universal compatibility across legacy, Web2, Web3, AI, NFT, and blockchain applications. Connect and govern from one surface without an arbitrary integration ceiling.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
@@ -609,7 +610,31 @@ function CapabilitiesSection() {
       )
     },
     {
+      title: "OmniPort Interface",
+      path: "/omniport",
+      desc: "The universal visual layer. Render enterprise data and AI interactions dynamically with full bidirectional sync.",
+      icon: (
+        <svg viewBox="0 0 20 20" fill="none">
+          <rect x="2" y="3" width="16" height="14" rx="2" stroke="#D4855A" strokeWidth="1.5" fill="none" />
+          <path d="M6 3v14M14 3v14" stroke="#D4855A" strokeWidth="1.2" strokeLinecap="round" opacity="0.6" />
+          <circle cx="10" cy="10" r="2" fill="#D4855A" />
+        </svg>
+      )
+    },
+    {
+      title: "Tri-Force Architecture",
+      path: "/tri-force",
+      desc: "A decentralized tripartite model for uncompromised security: Guardian, Planner, and Executor operate in perfect isolation.",
+      icon: (
+        <svg viewBox="0 0 20 20" fill="none">
+          <path d="M10 2L2 16h16L10 2z" stroke="#D4855A" strokeWidth="1.5" fill="none" strokeLinejoin="round" />
+          <path d="M10 8l-3.5 6h7L10 8z" stroke="#D4855A" strokeWidth="1.2" fill="none" strokeLinejoin="round" />
+        </svg>
+      )
+    },
+    {
       title: "SkillForge/OmniSkills",
+      path: "/ai-automation",
       desc: "Forge, install, and govern expert-level OmniSkills for any task or business use case, giving users task-ready agents with reusable skill memory and auditable execution paths.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
@@ -624,6 +649,7 @@ function CapabilitiesSection() {
     },
     {
       title: "Real-Time Telemetry",
+      path: "/advanced-analytics",
       desc: "Live operational intelligence across all agents and workflows. See what is running, what failed, and where attention is needed.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
@@ -634,6 +660,7 @@ function CapabilitiesSection() {
     },
     {
       title: "Policy Enforcement Engine",
+      path: "/fortress",
       desc: "Governance rules apply before any action executes. No agent bypasses policy, no exceptions.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
@@ -645,6 +672,7 @@ function CapabilitiesSection() {
     },
     {
       title: "Workflow Intelligence",
+      path: "/orchestrator",
       desc: "Visual workflow builder with embedded governance. Design complex automations that remain fully auditable end-to-end.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
@@ -657,6 +685,7 @@ function CapabilitiesSection() {
     },
     {
       title: "MAN Mode",
+      path: "/man-mode",
       desc: "Manual Approval Node. High-risk actions pause at an approval checkpoint while authorized operators approve, reject, or escalate with full traceability.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
@@ -680,11 +709,11 @@ function CapabilitiesSection() {
           </div>
           <div className="cap-grid">
             {capabilities.map((cap, idx) => (
-              <div key={cap.title} className={`cap-card rv d${idx % 4}`}>
+              <a href={cap.path} key={cap.title} className={`cap-card rv d${idx % 4}`} style={{ textDecoration: 'none' }}>
                 <div className="cap-ico">{cap.icon}</div>
-                <div className="cap-ttl">{cap.title}</div>
+                <div className="cap-ttl">{cap.title} <span className="cap-arrow" style={{ opacity: 0.5 }}>→</span></div>
                 <div className="cap-dsc">{cap.desc}</div>
-              </div>
+              </a>
             ))}
           </div>
         </div>
@@ -711,7 +740,8 @@ function MaestroSection() {
           <div className="tag">Core Philosophy</div>
           <h2 className="h2">The MAESTRO<br />Principle.</h2>
           <p className="sub" style={{ marginBottom: '20px' }}>Intelligence is not just capability. It is coordination with consequence. MAESTRO is the operating philosophy baked into each layer of APEX OmniHub.</p>
-          <p style={{ fontSize: '13.5px', color: 'var(--t2)', lineHeight: '1.72', letterSpacing: '-.1px', textAlign: 'justify', textIndent: '2em' }}>Enterprise AI must serve your organization's intent. As the system scales, MAESTRO ensures authority scales with it.</p>
+          <p style={{ fontSize: '13.5px', color: 'var(--t2)', lineHeight: '1.72', letterSpacing: '-.1px', textAlign: 'justify', textIndent: '2em', marginBottom: '32px' }}>Enterprise AI must serve your organization's intent. As the system scales, MAESTRO ensures authority scales with it.</p>
+          <a href="/maestro" className="btn btn--primary" style={{ display: 'inline-block' }}>Explore MAESTRO Protocol</a>
         </div>
         <div className="maestro-rows rv d2">
           {rows.map((row) => (
