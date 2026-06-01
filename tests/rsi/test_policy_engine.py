@@ -138,8 +138,9 @@ def test_output_file_written(tmp_artifacts_dir, tmp_path):
     assert "decision" in data
 
 
-def test_repository_policy_blocks_rsi_gate_mutation():
-    """The checked-in policy must hard-block changes to the gate code and policy."""
+
+def test_repository_policy_escalates_rsi_gate_mutation():
+    """Checked-in policy must route RSI gate edits to human review without self-deadlocking."""
     repo_root = Path(__file__).parents[2]
     engine = PolicyEngine(policy_path=repo_root / "policy" / "rsi-policy.yaml")
 
@@ -152,9 +153,32 @@ def test_repository_policy_blocks_rsi_gate_mutation():
         "candidate_test_plan": [],
     })
 
-    assert result["decision"] == "block"
-    assert result["protected_path_hits"] == [
+    assert result["decision"] == "escalate"
+    assert result["critical_path_hits"] == [
         "policy/rsi-policy.yaml",
         "tools/rsi/policy_engine.py",
         ".github/workflows/rsi-governance.yml",
+    ]
+    assert result["protected_path_hits"] == []
+
+
+def test_repository_policy_still_blocks_protected_paths_when_gate_is_mutated():
+    """A protected-path PR cannot downgrade the trusted base policy by editing RSI files."""
+    repo_root = Path(__file__).parents[2]
+    engine = PolicyEngine(policy_path=repo_root / "policy" / "rsi-policy.yaml")
+
+    result = engine.evaluate({
+        "changed_paths": [
+            "terraform/rsi_protected_change_poc.tf",
+            "policy/rsi-policy.yaml",
+            "tools/rsi/decision.py",
+        ],
+        "candidate_test_plan": [],
+    })
+
+    assert result["decision"] == "block"
+    assert result["protected_path_hits"] == ["terraform/rsi_protected_change_poc.tf"]
+    assert result["critical_path_hits"] == [
+        "policy/rsi-policy.yaml",
+        "tools/rsi/decision.py",
     ]

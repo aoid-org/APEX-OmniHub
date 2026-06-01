@@ -27,7 +27,9 @@ from pathlib import Path
 from typing import Any
 
 ARTIFACT_DIR = Path(os.getenv("RSI_ARTIFACT_DIR", "artifacts/rsi"))
-INVENTORY_DIR = Path("inventory")
+INVENTORY_DIR = Path(os.getenv("RSI_INVENTORY_DIR", "inventory"))
+INVENTORY_FILE = Path(os.getenv("RSI_INVENTORY_FILE", "inventory/repo-inventory.txt"))
+INVENTORY_SCRIPT = os.getenv("RSI_INVENTORY_SCRIPT", "scripts/repo_inventory.sh")
 POLICY_FILE = Path(os.getenv("RSI_POLICY_FILE", "policy/rsi-policy.yaml"))
 SCHEMA_VERSION = "1.0.0"
 MAX_DIFF_SUMMARY_CHARS = 2000
@@ -140,12 +142,15 @@ def _get_scoped_diff_summary(changed_files: list[str]) -> str:
 
 
 def _get_inventory_summary() -> str:
+    # Prefer the workflow-generated inventory file so trusted RSI code never falls
+    # back to a PR-controlled inventory script during pull_request evaluation.
     meta_file = INVENTORY_DIR / "repo_meta.txt"
-    if meta_file.exists():
-        content = meta_file.read_text(encoding="utf-8")
-    else:
-        result = _run(["bash", "scripts/repo_inventory.sh"])
-        content = result.stdout if result.returncode == 0 else "inventory unavailable"
+    for inventory_path in (INVENTORY_FILE, meta_file):
+        if inventory_path.exists():
+            return inventory_path.read_text(encoding="utf-8")[:MAX_INVENTORY_CHARS]
+
+    result = _run(["bash", INVENTORY_SCRIPT])
+    content = result.stdout if result.returncode == 0 else "inventory unavailable"
     return content[:MAX_INVENTORY_CHARS]
 
 

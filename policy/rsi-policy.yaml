@@ -25,9 +25,6 @@ moderate_supabase_functions:
 # legitimate security-hardening PRs that provision new DB infrastructure (e.g.
 # AEGIS, CHRONOS). escalate enforces the review requirement without aborting.
 protected_paths:
-  - policy/rsi-policy.yaml
-  - tools/rsi/**
-  - .github/workflows/rsi-governance.yml
   - terraform/**
   - contracts/**
   - hardhat.config.cts
@@ -38,9 +35,10 @@ protected_paths:
 
 # critical_paths: ANY match (not negated) triggers decision: escalate
 critical_paths:
+  - policy/rsi-policy.yaml
+  - tools/rsi/**
   - .github/workflows/**
   - '!.github/workflows/apex-governance.yml'
-  - '!.github/workflows/rsi-governance.yml'
   - '!.github/workflows/ci-runtime-gates.yml'
   - '!.github/workflows/cd-staging.yml'
   - '!.github/workflows/deploy-production-cf-direct.yml'

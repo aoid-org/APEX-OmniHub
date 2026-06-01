@@ -52,6 +52,8 @@ jobs:
         run: python3 .rsi-trusted/tools/rsi/build_evidence.py --ci
         env:
           RSI_POLICY_FILE: .rsi-trusted/policy/rsi-policy.yaml
+          RSI_INVENTORY_FILE: inventory/repo-inventory.txt
+          RSI_INVENTORY_SCRIPT: .rsi-trusted/scripts/repo_inventory.sh
           GITHUB_BASE_REF: ${{ github.base_ref }}
           GITHUB_HEAD_REF: ${{ github.head_ref }}
           GITHUB_SHA: ${{ github.sha }}
@@ -64,8 +66,19 @@ jobs:
         env:
           RSI_POLICY_FILE: .rsi-trusted/policy/rsi-policy.yaml
 
+      - name: Detect RSI model advisory
+        id: rsi-model
+        env:
+          RSI_MODEL_ENABLED: ${{ secrets.RSI_MODEL_ENABLED }}
+        run: |
+          if [ -n "$RSI_MODEL_ENABLED" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run RSI model advisory (conditional)
-        if: ${{ env.RSI_MODEL_ENABLED != '' }}
+        if: ${{ steps.rsi-model.outputs.enabled == 'true' }}
         run: python3 .rsi-trusted/tools/rsi/model_gateway.py
         env:
           RSI_MODEL_ENABLED: ${{ secrets.RSI_MODEL_ENABLED }}
