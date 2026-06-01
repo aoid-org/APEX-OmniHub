@@ -10,8 +10,10 @@
 CREATE TABLE IF NOT EXISTS public.tenant_embedding_budget (
     user_id                   UUID        PRIMARY KEY
         REFERENCES auth.users(id) ON DELETE CASCADE,
-    monthly_token_limit       INT         NOT NULL DEFAULT 500000,
-    current_month_tokens_used INT         NOT NULL DEFAULT 0,
+    monthly_token_limit       INT         NOT NULL DEFAULT 500000
+        CHECK (monthly_token_limit > 0),
+    current_month_tokens_used INT         NOT NULL DEFAULT 0
+        CHECK (current_month_tokens_used >= 0),
     budget_period_start       DATE        NOT NULL
         DEFAULT date_trunc('month', CURRENT_DATE)::DATE,
     alert_sent_at_80pct       TIMESTAMPTZ,
@@ -64,11 +66,29 @@ CREATE OR REPLACE FUNCTION public.increment_embedding_tokens(
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$
 DECLARE
-    v_row    public.tenant_embedding_budget%ROWTYPE;
-    v_pct    NUMERIC;
-    v_result TEXT := 'ok';
-    v_month  DATE := date_trunc('month', CURRENT_DATE)::DATE;
+    v_row             public.tenant_embedding_budget%ROWTYPE;
+    v_pct             NUMERIC;
+    v_result          TEXT := 'ok';
+    v_month           DATE := date_trunc('month', CURRENT_DATE)::DATE;
+    v_is_service_role BOOLEAN := COALESCE(auth.role() = 'service_role', false);
 BEGIN
+    IF p_user_id IS NULL THEN
+        RAISE EXCEPTION 'p_user_id is required'
+            USING ERRCODE = '22023';
+    END IF;
+
+    -- Authenticated callers may only mutate their own quota; service role handles trusted backend jobs.
+    IF NOT v_is_service_role AND p_user_id IS DISTINCT FROM auth.uid() THEN
+        RAISE EXCEPTION 'increment_embedding_tokens cannot modify another user quota'
+            USING ERRCODE = '42501';
+    END IF;
+
+    -- Token deltas must be positive to prevent quota bypass or negative counters.
+    IF p_tokens IS NULL OR p_tokens <= 0 THEN
+        RAISE EXCEPTION 'p_tokens must be a positive integer'
+            USING ERRCODE = '22023';
+    END IF;
+
     -- Upsert row for current month
     INSERT INTO public.tenant_embedding_budget (user_id, budget_period_start)
     VALUES (p_user_id, v_month)
@@ -90,8 +110,9 @@ BEGIN
     WHERE user_id = p_user_id
     FOR UPDATE;
 
-    -- Hard cap: reject before incrementing
-    IF v_row.current_month_tokens_used >= v_row.monthly_token_limit THEN
+    -- Hard cap: reject before incrementing, including requests that would exceed the limit.
+    IF v_row.current_month_tokens_used >= v_row.monthly_token_limit
+       OR v_row.current_month_tokens_used::BIGINT + p_tokens::BIGINT > v_row.monthly_token_limit THEN
         UPDATE public.tenant_embedding_budget
         SET hard_cap_triggered_at = COALESCE(hard_cap_triggered_at, now()),
             updated_at            = now()
