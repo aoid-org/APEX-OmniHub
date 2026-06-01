@@ -86,6 +86,13 @@ HIGH_RISK_PARAMS: dict[str, list[str]] = {
     "admin": ["true", "True", "1"],  # Admin operations
 }
 
+# Service-role control-plane tables require MAN approval when referenced by
+# generic agent database tools because Supabase RLS is bypassed on that path.
+CONTROL_PLANE_TABLES: frozenset[str] = frozenset({"connections", "provider_registry"})
+DATABASE_TOOLS_REQUIRING_TABLE_GUARD: frozenset[str] = frozenset(
+    {"search_database", "create_record", "delete_record"}
+)
+
 
 # ============================================================================
 # POLICY ENGINE
@@ -182,7 +189,21 @@ class ManPolicy:
                 requires_approval=True,
             )
 
-        # 4. Check for high-risk parameters
+        # 4. Control-plane database tables must be isolated for MAN approval.
+        table_name = str(intent.params.get("table", "")).strip().lower()
+        if tool_name in DATABASE_TOOLS_REQUIRING_TABLE_GUARD and table_name in CONTROL_PLANE_TABLES:
+            risk_factors.append(f"control_plane_table:{table_name}")
+            return RiskTriageResult(
+                task_id=uuid4().hex,
+                risk_lane=RiskLane.RED,
+                reasoning=(
+                    f"Service-role control-plane table '{table_name}' requires "
+                    "Manual Approval Node approval"
+                ),
+                requires_approval=True,
+            )
+
+        # 5. Check for high-risk parameters
         param_risk = self._evaluate_params(intent.params)
         risk_factors.extend(param_risk)
 
@@ -203,7 +224,7 @@ class ManPolicy:
                 requires_approval=False,
             )
 
-        # 5. GREEN lane: explicitly safe tools
+        # 6. GREEN lane: explicitly safe tools
         if tool_name in self._safe_lower:
             return RiskTriageResult(
                 task_id=uuid4().hex,
@@ -212,7 +233,7 @@ class ManPolicy:
                 requires_approval=False,
             )
 
-        # 6. Default: YELLOW (unknown tools - log but execute)
+        # 7. Default: YELLOW (unknown tools - log but execute)
         return RiskTriageResult(
             task_id=uuid4().hex,
             risk_lane=RiskLane.YELLOW,

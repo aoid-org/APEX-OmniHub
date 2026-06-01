@@ -243,3 +243,48 @@ async def test_mint_pilot_session_missing_params():
     result = await mint_pilot_session({"user_id": "user-1"})
     assert result["success"] is False
     assert "Missing" in result["error"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("table", ["connections", "provider_registry", " Connections "])
+async def test_search_database_blocks_service_role_control_plane_tables(table):
+    params = {"table": table, "filters": {}, "select": "*"}
+
+    with patch("activities.tools.get_database_provider") as mock_provider:
+        with patch("activities.tools.log_audit_event", new_callable=AsyncMock) as mock_audit:
+            with pytest.raises(ApplicationError) as exc:
+                await search_database(params)
+
+    assert "control-plane table" in str(exc.value)
+    mock_provider.assert_not_called()
+    mock_audit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("table", ["connections", "provider_registry"])
+async def test_create_record_blocks_service_role_control_plane_tables(table):
+    params = {"table": table, "data": {"id": "record-1"}}
+
+    with patch("activities.tools.get_database_provider") as mock_provider:
+        with patch("activities.tools.log_audit_event", new_callable=AsyncMock) as mock_audit:
+            with pytest.raises(ApplicationError) as exc:
+                await create_record(params)
+
+    assert "control-plane table" in str(exc.value)
+    mock_provider.assert_not_called()
+    mock_audit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("table", ["connections", "provider_registry"])
+async def test_delete_record_blocks_service_role_control_plane_tables(table):
+    params = {"table": table, "id": "record-1"}
+
+    with patch("activities.tools.get_database_provider") as mock_provider:
+        with patch("activities.tools.log_audit_event", new_callable=AsyncMock) as mock_audit:
+            result = await delete_record(params)
+
+    assert result["success"] is False
+    assert "control-plane table" in result["error"]
+    mock_provider.assert_not_called()
+    mock_audit.assert_awaited_once()

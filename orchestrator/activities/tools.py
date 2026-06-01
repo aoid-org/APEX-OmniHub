@@ -39,6 +39,7 @@ import jsonschema  # type: ignore
 from litellm import acompletion
 from pydantic import BaseModel
 from temporalio import activity
+from temporalio.exceptions import ApplicationError
 
 from activities.tool_registry import TOOL_REGISTRY, ToolContract, resolve_tool_name
 from models.audit import AuditAction, AuditResourceType, AuditStatus, log_audit_event
@@ -50,6 +51,25 @@ from security.ssrf import validate_url_with_dns_pin_async
 # Global service instances (initialized in setup_activities())
 _semantic_cache = None  # SemanticCacheService instance
 _redis_client = None
+
+# Service-role access to these control-plane tables is reserved for trusted
+# orchestrator services that apply tenant-specific business logic. Generic
+# agent-planned database tools must never expose or mutate them directly.
+SERVICE_ROLE_CONTROL_PLANE_TABLES = frozenset({"connections", "provider_registry"})
+
+
+def _normalize_table_name(table: str) -> str:
+    return table.strip().lower()
+
+
+def _assert_generic_database_tool_allowed(table: str, tool_name: str) -> None:
+    normalized_table = _normalize_table_name(table)
+    if normalized_table in SERVICE_ROLE_CONTROL_PLANE_TABLES:
+        raise ApplicationError(
+            f"Tool '{tool_name}' cannot access service-role control-plane table "
+            f"'{normalized_table}'",
+            non_retryable=True,
+        )
 
 
 # ============================================================================
@@ -469,6 +489,8 @@ async def search_database(params: dict[str, Any]) -> dict[str, Any]:
     result_count = 0
 
     try:
+        _assert_generic_database_tool_allowed(table, "search_database")
+
         # Get database provider instance
         db = get_database_provider()
 
@@ -541,6 +563,8 @@ async def create_record(params: dict[str, Any]) -> dict[str, Any]:
     record_id = None
 
     try:
+        _assert_generic_database_tool_allowed(table, "create_record")
+
         # Get database provider instance
         db = get_database_provider()
 
@@ -609,6 +633,8 @@ async def delete_record(params: dict[str, Any]) -> dict[str, Any]:
     error_msg = None
 
     try:
+        _assert_generic_database_tool_allowed(table, "delete_record")
+
         # Get database provider instance
         db = get_database_provider()
 

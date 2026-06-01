@@ -501,3 +501,35 @@ class TestToolConfiguration:
     def test_no_overlap_sensitive_safe(self):
         """Sensitive and safe tools should not overlap."""
         assert SENSITIVE_TOOLS.isdisjoint(SAFE_TOOLS)
+
+
+class TestControlPlaneDatabasePolicy:
+    """Control-plane tables are not GREEN/YELLOW for generic DB tools."""
+
+    def test_search_database_control_plane_table_requires_approval(self):
+        policy = ManPolicy()
+        intent = ActionIntent(
+            tool_name="search_database",
+            workflow_id="wf-1",
+            params={"table": "connections", "filters": {}},
+        )
+
+        result = policy.triage(intent)
+
+        assert result.risk_lane == RiskLane.RED
+        assert result.requires_approval is True
+        assert "control-plane table" in result.reasoning
+
+    def test_create_record_control_plane_table_requires_approval(self):
+        policy = ManPolicy()
+        intent = ActionIntent(
+            tool_name="create_record",
+            workflow_id="wf-1",
+            params={"table": "provider_registry", "data": {"name": "evil"}},
+        )
+
+        result = policy.triage(intent)
+
+        assert result.risk_lane == RiskLane.RED
+        assert result.requires_approval is True
+        assert "provider_registry" in result.reasoning

@@ -500,3 +500,16 @@ class TestCacheTtlFromEnv:
         monkeypatch.setenv("OMNIPOLICY_CACHE_TTL_SECONDS", "999")
         evaluator = OmniPolicyEvaluator(cache_ttl_seconds=30)
         assert evaluator.cache_ttl_seconds == 30
+
+
+@pytest.mark.asyncio
+async def test_builtin_control_plane_database_guard_defers_without_loaded_policy():
+    loader = AsyncMock(return_value=[])
+    evaluator = OmniPolicyEvaluator(cache_ttl_seconds=60, loader=loader)
+
+    result = await evaluator.evaluate({"tool": "search_database", "resource": "connections"})
+
+    assert result["decision"] == "DEFER"
+    assert result["lane"] == "RED"
+    assert result["policy_name"] == "builtin_control_plane_database_guard"
+    loader.assert_not_awaited()

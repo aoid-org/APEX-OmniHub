@@ -27,6 +27,11 @@ from providers.database.factory import get_database_provider
 
 logger = logging.getLogger(__name__)
 
+CONTROL_PLANE_TABLES: frozenset[str] = frozenset({"connections", "provider_registry"})
+CONTROL_PLANE_TOOLS: frozenset[str] = frozenset(
+    {"search_database", "create_record", "delete_record"}
+)
+
 PolicyLoader = Callable[[], Awaitable[list[dict[str, Any]]]]
 
 
@@ -130,6 +135,17 @@ class OmniPolicyEvaluator:
               "policy_version": int,
             }
         """
+        tool = str(ctx.get("tool", "")).strip().lower()
+        resource = str(ctx.get("resource", "")).strip().lower()
+        if tool in CONTROL_PLANE_TOOLS and resource in CONTROL_PLANE_TABLES:
+            return {
+                "decision": "DEFER",
+                "lane": RiskLane.RED.value,
+                "reason": f"Service-role control-plane table '{resource}' requires MAN approval",
+                "policy_name": "builtin_control_plane_database_guard",
+                "policy_version": 1,
+            }
+
         policies = await self._get_policies()
 
         for policy in policies:
