@@ -60,9 +60,9 @@ export function BrandAnthemPlayer() {
         ref={audioRef}
         src="/audio/brand-anthem.mp3"
         loop
-        preload="auto"
+        preload="metadata"
       >
-        <track kind="captions" srcLang="en" label="English_captions" />
+        <track kind="captions" src="/captions/demo.vtt" srcLang="en" label="English" />
       </audio>
       <div className="brand-anthem-controls">
         <button 
