@@ -1,3 +1,6 @@
+/**
+ * @deprecated - This component is currently orphaned and scheduled for wiring or removal.
+ */
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";

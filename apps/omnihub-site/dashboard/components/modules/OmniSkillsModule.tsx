@@ -1,6 +1,9 @@
+import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
+import { useOmniModal } from '@/stores/omniModalStore';
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
-import { useNavigate } from 'react-router-dom';
+
 import { Button } from '@/components/ui/button';
 import { Sparkles, ShieldAlert } from 'lucide-react';
 
@@ -10,7 +13,7 @@ interface Props {
 
 export default function OmniSkillsModule({ onClose }: Props) {
   const state = useOmniModuleState('omniskills');
-  const navigate = useNavigate();
+  const invoke = useOmniModal(s => s.invoke);
 
   // Derive live counts from registry/live stats — never hardcode.
   const freeSkillsStat = state.stats.find(s => s.label === 'Free Skills Used');
@@ -52,7 +55,36 @@ export default function OmniSkillsModule({ onClose }: Props) {
               className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 border-none"
               onClick={() => {
                 onClose();
-                navigate('/launch/skillforge');
+                invoke({
+                  id: 'forge-skill',
+                  provider: 'omniskills',
+                  type: 'form',
+                  title: 'Forge New Skill',
+                  description: 'Define the parameters for your new AI skill.',
+                  schema: {
+                    fields: [
+                      { name: 'intent', label: 'Skill Intent / Goal', type: 'text', required: true, placeholder: 'e.g., Automate invoice processing' },
+                      { name: 'trigger', label: 'Trigger Event', type: 'text', required: true, placeholder: 'e.g., New email in billing@' },
+                      { name: 'constraints', label: 'Guardrails & Constraints', type: 'textarea', placeholder: 'e.g., Do not approve amounts over $1000' }
+                    ]
+                  },
+                  onComplete: async (result: Record<string, unknown>) => {
+                    const { intent, trigger, constraints } = result as { intent?: string; trigger?: string; constraints?: string };
+                    if (!intent || !trigger) return;
+
+                    try {
+                      const { data, error } = await supabase.functions.invoke('generate-business-skills', {
+                        body: { intent, trigger, constraints }
+                      });
+                      if (error) throw error;
+
+                      toast.success(`Skill forged successfully: ${data?.skills?.[0]?.name || 'Custom Skill'}`);
+                    } catch (err: unknown) {
+                      toast.error(err instanceof Error ? err.message : 'Failed to forge skill.');
+                    }
+                  },
+                  onCancel: () => {},
+                });
               }}
             >
               <Sparkles className="w-4 h-4 mr-2" />

@@ -1,3 +1,6 @@
+/**
+ * @deprecated - This component is currently orphaned and scheduled for wiring or removal.
+ */
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

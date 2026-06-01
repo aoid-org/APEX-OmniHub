@@ -1,3 +1,6 @@
+/**
+ * @deprecated - This component is currently orphaned and scheduled for wiring or removal.
+ */
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';

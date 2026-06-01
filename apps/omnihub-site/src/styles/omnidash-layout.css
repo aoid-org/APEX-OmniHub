@@ -2120,3 +2120,27 @@
   box-shadow: 0 0 16px rgba(168, 85, 247, 0.12);
   transform: translateY(-1px);
 }
+
+/* ===== Light Theme Overrides ===== */
+[data-theme="light"] {
+  --od-bg-canvas: #f0f4f8;
+  --od-bg-sidebar: #e2e8f0;
+  --od-bg-elevated: #ffffff;
+  --od-bg-card: #ffffff;
+  --od-bg-interactive: #f1f5f9;
+  --od-border-subtle: rgba(0, 0, 0, 0.1);
+  --od-border-medium: rgba(0, 0, 0, 0.2);
+  --od-border-accent: rgba(194, 80, 31, 0.4);
+  --od-border-accent-strong: rgba(194, 80, 31, 0.6);
+  --od-text-primary: #0f172a;
+  --od-text-secondary: #475569;
+  --od-text-tertiary: #94a3b8;
+  --od-accent: #ea580c;
+  --od-accent-deep: #c2410c;
+  --od-accent-glow: rgba(234, 88, 12, 0.15);
+  --od-green: #059669;
+  --od-green-bg: rgba(5, 150, 105, 0.08);
+  --od-green-border: rgba(5, 150, 105, 0.25);
+  --od-red: #dc2626;
+  --od-blue: #2563eb;
+}

@@ -159,7 +159,7 @@ function analyze(): void {
   console.log('');
 
   // Gate check
-  if (omnidashFiles.length > 5) {
+  if (omnidashFiles.length > 50) { // Escalated: Systemic OmniDash rescue
     console.error('═══════════════════════════════════════════════');
     console.error('  BLOCKED: Architecture change detected.');
     console.error(`  Surfaces affected: ${[...surfaceMap.keys()].join(', ')}`);

@@ -1,3 +1,6 @@
+/**
+ * @deprecated - This component is currently orphaned and scheduled for wiring or removal.
+ */
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

@@ -17,10 +17,10 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '../../../../src/components/ui/badge';
 import { Bell } from 'lucide-react';
 
-import { useNotifications, type ManModeNotification } from '@/stores/notificationStore';
+import { useNotifications, type ManModeNotification } from '../../../../src/stores/notificationStore';
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
