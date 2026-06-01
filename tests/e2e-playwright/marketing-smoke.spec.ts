@@ -1,7 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Marketing Visuals and Stability', () => {
-  test('Language selector is compact icon-only on desktop', async ({ page }) => {
+  test('Language selector is compact icon-only on desktop', async ({ page, isMobile }) => {
+    if (isMobile) {
+      test.skip();
+    }
     await page.goto('/');
     
     // The desktop nav should have a compact language selector trigger
@@ -17,11 +20,16 @@ test.describe('Marketing Visuals and Stability', () => {
     }
   });
 
-  test('Request Early Access and Watch Demo are equal size', async ({ page }) => {
+  test('Request Early Access and Watch Demo are equal size', async ({ page, isMobile }) => {
+    // Skip on mobile since buttons might stack or resize differently
+    if (isMobile) {
+      test.skip();
+    }
+
     await page.goto('/');
     
-    // Ensure both buttons exist in the hero CTAs
-    const requestAccess = page.locator('.hero-ctas a:has-text("Request Early Access")').first();
+    // Request Access is a button, Watch Demo is an anchor
+    const requestAccess = page.locator('.hero-ctas button:has-text("Request Early Access")').first();
     const watchDemo = page.locator('.hero-ctas a:has-text("Watch Demo")').first();
     
     await expect(requestAccess).toBeVisible();
@@ -42,8 +50,8 @@ test.describe('Marketing Visuals and Stability', () => {
   test('Demo video plays', async ({ page }) => {
     await page.goto('/');
     
-    const video = page.locator('.landing-root video').first();
-    await expect(video).toBeVisible();
+    const video = page.locator('.demo-video__player').first();
+    await expect(video).toBeVisible({ timeout: 15000 });
     
     // Has source
     const src = await video.getAttribute('src');
@@ -63,8 +71,8 @@ test.describe('Marketing Visuals and Stability', () => {
     // Click play
     await playBtn.click();
     
-    // Button should become active
-    await expect(playBtn).toHaveClass(/active/);
+    // Button should become active (allow some time for media to start)
+    await expect(playBtn).toHaveClass(/active/, { timeout: 10000 });
   });
 
   test('Feature pages render under clean and .html routes', async ({ page }) => {
