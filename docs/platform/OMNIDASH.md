@@ -1,6 +1,8 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.6.2 | LAST_UPDATED=2026-05-20 -->
 # OmniDash (Founder/Sales Dashboard)
 
+> **Current-state update (2026-06-01):** OmniDash is the always-on post-auth shell for `/omnidash`, `/omnidash/*`, `/dashboard`, and `/dashboard/*`. `OmniDashShell.tsx` is the shell authority. Older feature-flag instructions below are retained only where explicitly marked historical.
+
 ## Vercel Reference Classification
 
 LEGACY — retained for historical/reference use; Cloudflare-first topology is canonical. Any Vercel commands, rollback paths, modules, or Edge Runtime references in this document are not current deployment proof unless separately labeled VERIFIED with active configuration evidence. See `docs/architecture/CANONICAL_TRUTH_MATRIX.md`.
@@ -61,20 +63,20 @@ The following product/platform surfaces must **not** be added to the left sideba
 ## Setup
 - Ensure Supabase env vars are configured (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
 - Apply migrations: `supabase db push` (or deploy via your CI pipeline).
-- Set feature flag to enable internally: `OMNIDASH_ENABLED=1` (or `VITE_OMNIDASH_ENABLED=1`). Keep it OFF by default.
+- Current model: OmniDash is always mounted behind auth routes in `apps/omnihub-site/src/App.tsx`; do not use `OMNIDASH_ENABLED` as an active access-control source.
 - Bootstrap admin via `claim_admin_access(secret)` — see `docs/guides/admin-secret-setup.md`.
 
 ## Enabling
-- Turn on `OMNIDASH_ENABLED` only for internal admins until stability is confirmed. Access is role-gated to `admin` via `public.user_roles` (DB-only, no env allowlist).
+- No feature flag is required for the current post-auth shell. Access is enforced by `ProtectedRoute` and role-aware module/admin gates where applicable.
 
 ## Acceptance Criteria (v1)
-- With `OMNIDASH_ENABLED=1` and admin user:
+- With an authenticated user:
   - `/omnidash`, `/omnidash/pipeline`, `/omnidash/kpis`, `/omnidash/ops` load without errors.
   - Demo Mode redacts names/PII and buckets $ values.
   - Pipeline enforces Next touch unless stage = Lost; “Next touch due” list shows overdue items.
   - KPI table supports add/edit for today; values render on the table.
   - Pages show health timestamp and load quickly (<2s on typical connection).
-- With `OMNIDASH_ENABLED=0`: OmniDash routes are inaccessible (404/redirect) without impacting other routes.
+- Unauthenticated users are redirected/protected by the auth boundary; do not test access by toggling `OMNIDASH_ENABLED`.
 
 ## Testing
 - Unit: `vitest run tests/omnidash/redaction.spec.ts`.
@@ -82,17 +84,17 @@ The following product/platform surfaces must **not** be added to the left sideba
 - Lint/typecheck/build: `npm run lint && npm run build`.
 
 ## Manual QA (10-minute checklist)
-- Enable flag (`OMNIDASH_ENABLED=1`), login as admin.
+- Login as an authenticated user with the role needed for the module under test.
 - Visit `/omnidash`:
   - Add 3 items, trigger Next Action button, start/stop Power Block, press Restart Ritual (list reduces to 3).
 - `/omnidash/pipeline`: create deal with stage ≠ Lost without Next touch (should error), then with date (should save). Verify Next touch due card shows when date is today/past.
 - Toggle Demo Mode ON: names redacted, amounts bucketed, PII removed in notes.
 - `/omnidash/kpis`: update today’s values, see table reflect numbers (or buckets when demo).
 - `/omnidash/ops`: log Sev-1 incident; verify freeze switch note reflects setting.
-- Turn flag OFF, confirm `/omnidash` is inaccessible while other routes still work.
+- Logout or use an unauthenticated session, then confirm `/omnidash` is protected while public routes still work.
 
 ## Rollback
-- Set `OMNIDASH_ENABLED=0` and redeploy.
+- Roll back the deployed artifact or route-level change through the release workflow; `OMNIDASH_ENABLED` is not the current rollback mechanism.
 
 ## 📊 Capabilities Snapshot (v1.0)
 Based on `src/pages/OmniDash/Today.tsx` and database schema.

@@ -1,21 +1,22 @@
 # Documentation Release Index
 
-> Current repo-truth index generated for the 2026-05-20 documentation audit. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below.
+> Current repo-truth index refreshed for the 2026-06-01 platform-state audit. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`.
 
 ## Current Repo Facts Verified in This Pass
 
 | Fact | Current repo evidence |
 |---|---|
-| Documentation files under `docs/` | 160 Markdown files (8 stale documents permanently deleted in 2026-05-20 audit pass — see CHANGELOG.md [Unreleased]) |
-| GitHub workflow files | 21 files in `.github/workflows/` |
-| Release/package versions | `CHANGELOG.md` latest release line is `1.6.3`; `package.json` declares `1.6.0` (v1.6.1 pending changesets version PR) |
+| Documentation files under `docs/` | Current docs tree includes this 2026-06-01 platform-state snapshot; historical audit docs remain point-in-time evidence |
+| GitHub workflow files | 22 files in `.github/workflows/` |
+| Release/package versions | Root `package.json` declares `1.7.0`; app package `apps/omnihub-site/package.json` declares `1.3.10` |
 | Canonical package manager | `bun.lock` is present; `package-lock.json` is retained for npm audit parity |
 | RSI mode | `policy/rsi-policy.yaml` declares `mode: live`; `.github/workflows/rsi-governance.yml` is present |
-| Production certification | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` remains the current authority. B-1: RESOLVED, B-3: RESOLVED, B-2: PENDING |
+| Production certification | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` remains the current authority; do not claim `CERTIFIED` without current release evidence |
 | Shadow deployment slot | `apex-omnihub-shadow.pages.dev` provisioned 2026-05-20; GitHub Environment: `production-shadow` |
 
 ## Documentation Authority Order
 
+0. `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` for the latest branch/head assessment and drift-control snapshot.
 1. `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` for certification/release verdicts.
 2. `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `docs/architecture/CANONICAL_TRUTH.md` for current topology.
 3. `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for claim labels, simulation disclaimers, and portability status terms.
@@ -33,13 +34,15 @@
 
 ## Canonical start points
 
+- `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`
 - `README.md`
 - `docs/README.md`
 - `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`
 - `docs/architecture/CANONICAL_TRUTH.md`
 - `docs/architecture/CANONICAL_TRUTH_MATRIX.md`
 - `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`
-- `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(current onboarding entry point for release status — created 2026-05-20)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` _(current branch/head onboarding entry point)_
+- `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(historical release-readiness point-in-time report — created 2026-05-20)_
 - `docs/architecture/DOC_RECONCILIATION_MATRIX.md`
 
 ## Current maps
@@ -78,7 +81,7 @@
 - `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.0.md` _(status update addendum added 2026-05-20)_
 - `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(NEW — created 2026-05-20; current onboarding entry point alongside PRODUCTION_CERTIFICATION_STATUS.md)_
 - `docs/project-status/CI_STATUS_POLICY.md` _(updated 2026-05-20)_
-- `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` _(B-1 RESOLVED, B-3 RESOLVED, B-2 PENDING — updated 2026-05-20)_
+- `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` _(current certification authority — branch-state addendum updated 2026-06-01)_
 - `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` _(B-1/B-3 resolved — updated 2026-05-20)_
 - `docs/releases/RELEASE_NOTES_v1.6.0.md`
 
@@ -159,6 +162,16 @@
 - `docs/sim/` — 9 Markdown file(s): `ARCHITECTURE.md`, `CHAOS_SIMULATION_DELIVERY.md`, `CHAOTIC_CLIENT_SIMULATION_REPORT.md`, `CHAOTIC_CLIENT_STORY.md`, `INVENTORY.md`, `RESULTS_REPORT.md`, `RUNBOOK.md`, `SANDBOX_TEST_RESULTS_TEMPLATE.md`, `TEST_EXECUTION_REPORT.md`
 - `docs/testing/` — 4 Markdown file(s): `ARMAGEDDON_LIVE_VALIDATION_RESULTS_2026_05_08.md`, `E2E_TEST_RESULTS.md`, `README.md`, `worldwide-wildcard-tests.md`
 - `docs/valuation/` — 1 Markdown file(s): `PLATFORM_VALUATION_BRIEF.md`
+
+## 2026-06-01 Platform-State Documentation Sync
+
+| File | Change |
+|---|---|
+| `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` | New current branch/head assessment, git-history summary, repo counts, and drift guardrails |
+| `README.md` | Updated repo statistics, docs audit date, and current-state link |
+| `docs/architecture/*` | Reconciled architecture maps/truth matrix with PR #1274 and PR #1309 state |
+| `docs/platform/OMNIDASH.md` | Updated from feature-flag-era wording to always-on post-auth OmniDash surface |
+| `memory/omni-recall/state/checkpoints/2026-06-01-platform-doc-sync.md` | Added durable recall checkpoint for future agents |
 
 ## 2026-05-20 Documentation Audit Pass
 

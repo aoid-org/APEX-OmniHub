@@ -2,10 +2,12 @@
 
 > **This is the canonical source for current certification state.**
 > All other docs (PRODUCTION_STATUS.md, audit reports, README) defer here.
-> Last updated: 2026-05-29
+> Last updated: 2026-06-01
 
+## 2026-06-01 Branch-State Addendum
 
-# Production Certification Status
+Current local branch inspection is `work` @ `86bc14a` with root package version `1.7.0`. Recent merged work includes PR #1274 OmniDash gap closure and PR #1309 entitlement/PhysiOmni ingress hardening. This addendum updates repo-state context only; it does **not** convert the platform to `CERTIFIED` without a current release-evidence artifact.
+
 
 ## 2026-05-20 B-2 Structural Fix Addendum
 
@@ -47,10 +49,10 @@ Verified in this documentation pass:
 
 | Field | Value |
 |---|---|
-| Package version | 1.6.0 (from package.json) |
-| Latest inspected main commit | 7a2c45ed (PR #1251 merged — apex-agent global rename + 3 DB migrations applied) |
+| Package version | 1.7.0 (from root package.json) |
+| Latest inspected branch commit | 86bc14a on `work` (PR #1274 OmniDash from-zero gap closure; PR #1309 security hardening is in recent history at `3a51a27`) |
 | Repo | apexbusiness-systems/APEX-OmniHub |
-| Local gate verification | 2026-05-31 — tsc/eslint/Vitest 2578/SonarCloud QG passed/Chaos 100×3/RSI allow |
+| Local gate verification | 2026-06-01 docs sync ran documentation checks; historical 2026-05-31 full-gate pass remains point-in-time evidence only |
 
 ## Authority
 
