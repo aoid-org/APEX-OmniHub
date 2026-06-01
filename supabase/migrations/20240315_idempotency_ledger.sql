@@ -10,15 +10,13 @@ CREATE TABLE IF NOT EXISTS idempotency_ledger (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Enable RLS
-ALTER TABLE idempotency_ledger ENABLE ROW LEVEL SECURITY;
+-- Backend-internal orchestration table: service_role bypasses RLS, browser roles must fail closed.
+ALTER TABLE public.idempotency_ledger ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.idempotency_ledger FORCE ROW LEVEL SECURITY;
 
--- Allow access for authenticated roles (like orchestrator backend)
-CREATE POLICY "Allow orchestrator to read and write idempotency records"
-    ON idempotency_ledger
-    FOR ALL
-    USING (true)
-    WITH CHECK (true);
+-- Remove default/browser access so clients cannot read or poison side-effect results.
+REVOKE ALL ON TABLE public.idempotency_ledger FROM PUBLIC, anon, authenticated;
+GRANT ALL ON TABLE public.idempotency_ledger TO service_role;
 
 -- Index for querying by workflow
 CREATE INDEX IF NOT EXISTS idx_idempotency_workflow_id ON idempotency_ledger(workflow_id);

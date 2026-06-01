@@ -95,4 +95,19 @@ describe('Supabase RLS leakage regression contract', () => {
     expect(browserPolicy).toContain('USING (principal = auth.uid())');
     expect(browserPolicy).not.toContain('USING (true)');
   });
+
+  it('keeps orchestrator idempotency ledger backend-only for fresh and existing deployments', async () => {
+    const fs = await import('node:fs');
+    const initialSql = fs.readFileSync('supabase/migrations/20240315_idempotency_ledger.sql', 'utf8');
+    const hardeningSql = fs.readFileSync('supabase/migrations/20260531000000_harden_idempotency_ledger_rls.sql', 'utf8');
+    const combinedSql = `${initialSql}\n${hardeningSql}`;
+
+    expect(initialSql).toContain('ALTER TABLE public.idempotency_ledger ENABLE ROW LEVEL SECURITY');
+    expect(initialSql).toContain('ALTER TABLE public.idempotency_ledger FORCE ROW LEVEL SECURITY');
+    expect(combinedSql).toContain('DROP POLICY IF EXISTS "Allow orchestrator to read and write idempotency records"');
+    expect(combinedSql).toContain('REVOKE ALL ON TABLE public.idempotency_ledger FROM PUBLIC, anon, authenticated');
+    expect(combinedSql).toContain('GRANT ALL ON TABLE public.idempotency_ledger TO service_role');
+    expect(combinedSql).not.toContain('USING (true)');
+    expect(combinedSql).not.toContain('WITH CHECK (true)');
+  });
 });
