@@ -5,6 +5,10 @@
 # Patches Cloudflare Pages production env vars with the correct
 # Supabase credentials, then optionally triggers a redeploy.
 #
+# Security note: this script intentionally does not write production
+# Supabase credentials to Cloudflare Pages preview deployments. Preview
+# builds must use an isolated staging Supabase project or remain unset.
+#
 # USAGE:
 #   export CF_API_TOKEN=<cloudflare-api-token>
 #   export CF_ACCOUNT_ID=<cloudflare-account-id>
@@ -28,7 +32,8 @@ set -euo pipefail
 SUPABASE_URL="${SUPABASE_URL:-https://rtopreovkywofgwgmozi.supabase.co}"
 BASE="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/${CF_PAGES_PROJECT}"
 
-echo "▶ Patching CF Pages env vars for project: ${CF_PAGES_PROJECT}"
+echo "▶ Patching CF Pages production env vars for project: ${CF_PAGES_PROJECT}"
+echo "ℹ Preview env vars are intentionally unchanged; use isolated staging credentials for previews."
 
 RESPONSE=$(curl -s -X PATCH "${BASE}" \
   -H "Authorization: Bearer ${CF_API_TOKEN}" \
@@ -36,13 +41,6 @@ RESPONSE=$(curl -s -X PATCH "${BASE}" \
   -d "{
     \"deployment_configs\": {
       \"production\": {
-        \"env_vars\": {
-          \"VITE_SUPABASE_URL\": { \"value\": \"${SUPABASE_URL}\" },
-          \"VITE_SUPABASE_ANON_KEY\": { \"value\": \"${SUPABASE_ANON_KEY}\" },
-          \"VITE_SUPABASE_PUBLISHABLE_KEY\": { \"value\": \"${SUPABASE_ANON_KEY}\" }
-        }
-      },
-      \"preview\": {
         \"env_vars\": {
           \"VITE_SUPABASE_URL\": { \"value\": \"${SUPABASE_URL}\" },
           \"VITE_SUPABASE_ANON_KEY\": { \"value\": \"${SUPABASE_ANON_KEY}\" },
@@ -57,10 +55,11 @@ import json, sys
 try:
     d = json.load(sys.stdin)
     if d.get('success'):
-        print('✅ CF Pages env vars patched.')
+        print('✅ CF Pages production env vars patched.')
         print('   VITE_SUPABASE_URL              → set')
         print('   VITE_SUPABASE_ANON_KEY         → set')
         print('   VITE_SUPABASE_PUBLISHABLE_KEY  → set')
+        print('   Preview env vars               → unchanged')
         print('')
         print('▶ Next: trigger redeploy')
         print('   git commit --allow-empty -m \"fix: trigger cf pages rebuild\" && git push')
