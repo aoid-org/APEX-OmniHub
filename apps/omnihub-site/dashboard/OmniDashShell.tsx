@@ -26,9 +26,9 @@ import {
 import { toast } from 'sonner';
 
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
-import imgAvatar from '../src/assets/avatars/avatar-default.png';
 import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
+import { AVATAR_PATH_MAP } from './contracts/agentAvatars';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, ReactNode, Dispatch, SetStateAction } from "react";
@@ -102,7 +102,8 @@ interface AgentWidgetProps {
 // ─── APEX Brand Assets ────────────────────────────────────────────────────────
 const IMG_BADGE = "/assets/apex-core-badge.svg";
 const IMG_WORDMARK = imgWordmark;
-const IMG_AVATAR = imgAvatar;
+// Avatar served from public/avatars/ — NOT a bundled import
+const IMG_AVATAR = AVATAR_PATH_MAP.Default;
 const IMG_ICONS = imgIcons;
 
 const IMG_APEX_WM = imgApexWm;
@@ -847,7 +848,7 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
             border:`2px solid ${T.orange}55`,
             boxShadow:`0 0 14px ${T.orange}28, 0 0 28px ${T.orange}12`,
           }}>
-            <img src={IMG_AVATAR} alt="APEX Agent" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+            <img src={IMG_AVATAR} alt="APEX Agent" style={{ width:"100%", height:"100%", objectFit:"cover" }} loading="lazy" decoding="async" />
           </div>
         </div>
       </div>
@@ -1119,7 +1120,7 @@ const OmniSlateWidget = () => {
           }}>
             {m.role==="assistant" && (
               <div style={{width:26,height:26,borderRadius:"50%",overflow:"hidden",flexShrink:0,border:`1px solid ${T.orange}66`}}>
-                <img src={IMG_AVATAR} alt="AI Avatar" style={{width:"100%",height:"100%",objectFit:"cover"}} />
+                <img src={IMG_AVATAR} alt="AI Avatar" style={{width:"100%",height:"100%",objectFit:"cover"}} loading="lazy" decoding="async" />
               </div>
             )}
             <div style={{

@@ -1,8 +1,5 @@
 import React from 'react';
-import navigatorAvatar from '../../src/assets/avatars/navigator-avatar-icon.png';
-import companionAvatar from '../../src/assets/avatars/companion-avatar-icon.png';
-import sentinelAvatar from '../../src/assets/avatars/sentinel-avatar-icon.png';
-import pulseAvatar from '../../src/assets/avatars/pulse-avatar-icon.png';
+import { AVATAR_PATH_MAP } from '../contracts/agentAvatars';
 
 export type AgentPersona = 'Navigator' | 'Companion' | 'Sentinel' | 'Pulse';
 
@@ -20,7 +17,7 @@ const PERSONAS = [
     tone: 'Calm & Trustworthy',
     focus: 'Strategic guidance',
     description: 'Long-term planning and decision support for complex business challenges',
-    avatar: navigatorAvatar,
+    avatar: AVATAR_PATH_MAP.Navigator,
     color: 'from-blue-500 to-cyan-500',
     borderColor: 'border-blue-500/30',
   },
@@ -30,7 +27,7 @@ const PERSONAS = [
     tone: 'Human & Warm',
     focus: 'Approachable collaboration',
     description: 'Friendly assistance and team coordination for daily operations',
-    avatar: companionAvatar,
+    avatar: AVATAR_PATH_MAP.Companion,
     color: 'from-violet-500 to-purple-500',
     borderColor: 'border-violet-500/30',
   },
@@ -40,7 +37,7 @@ const PERSONAS = [
     tone: 'Precise & Vigilant',
     focus: 'Security & compliance',
     description: 'Risk monitoring, threat detection, and regulatory compliance',
-    avatar: sentinelAvatar,
+    avatar: AVATAR_PATH_MAP.Sentinel,
     color: 'from-emerald-500 to-teal-500',
     borderColor: 'border-emerald-500/30',
   },
@@ -50,7 +47,7 @@ const PERSONAS = [
     tone: 'Fast & Adaptive',
     focus: 'Rapid execution',
     description: 'High-speed workflow automation and real-time task processing',
-    avatar: pulseAvatar,
+    avatar: AVATAR_PATH_MAP.Pulse,
     color: 'from-orange-500 to-red-500',
     borderColor: 'border-orange-500/30',
   },
@@ -131,6 +128,8 @@ const PersonaModal: React.FC<PersonaModalProps> = ({
                         src={persona.avatar}
                         alt={`${persona.name} avatar`}
                         className="w-full h-full object-cover rounded-lg"
+                        loading="lazy"
+                        decoding="async"
                       />
                     </div>
                     <div className="flex-1 min-w-0">

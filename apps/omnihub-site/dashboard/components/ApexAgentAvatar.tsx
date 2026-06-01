@@ -1,8 +1,5 @@
 import React, { memo, useState, useEffect } from 'react';
-import navigatorAvatar from '../../src/assets/avatars/navigator-avatar-icon.png';
-import companionAvatar from '../../src/assets/avatars/companion-avatar-icon.png';
-import sentinelAvatar from '../../src/assets/avatars/sentinel-avatar-icon.png';
-import pulseAvatar from '../../src/assets/avatars/pulse-avatar-icon.png';
+import { AVATAR_PATH_MAP } from '../contracts/agentAvatars';
 import type { AgentPersona } from './PersonaModal';
 
 interface ApexAgentAvatarProps {
@@ -10,13 +7,6 @@ interface ApexAgentAvatarProps {
   onClick?: () => void;
   showStatus?: boolean;
 }
-
-const AVATAR_MAP: Record<AgentPersona, string> = {
-  Navigator: navigatorAvatar,
-  Companion: companionAvatar,
-  Sentinel: sentinelAvatar,
-  Pulse: pulseAvatar,
-};
 
 const SIZE_CLASSES = {
   sm: { container: 'w-10 h-10', image: 'w-7 h-7', status: 'w-2.5 h-2.5' },
@@ -29,7 +19,8 @@ const SIZE_CLASSES = {
  * ApexAgentAvatar — Displays the current agent persona avatar with status indicator.
  * Reads persona from localStorage and renders the corresponding avatar image.
  *
- * APEX REGRESSION SHIELD: Avatar images lazy-loaded, persona persisted in localStorage
+ * APEX REGRESSION SHIELD: Avatar images served from /avatars/*.png (public CDN path).
+ * NO static PNG imports — keeps assets out of Vite's bundle graph.
  */
 const ApexAgentAvatar: React.FC<ApexAgentAvatarProps> = memo(
   ({ size = 'md', onClick, showStatus = true }) => {
@@ -37,11 +28,11 @@ const ApexAgentAvatar: React.FC<ApexAgentAvatarProps> = memo(
 
     useEffect(() => {
       const savedPersona = localStorage.getItem('apex.agent.persona') as AgentPersona;
-      if (savedPersona && savedPersona in AVATAR_MAP) {
+      if (savedPersona && savedPersona in AVATAR_PATH_MAP) {
         setCurrentPersona(savedPersona);
       }
 
-      // Listen for persona changes
+      // Listen for persona changes from other tabs
       const handleStorageChange = (e: StorageEvent) => {
         if (e.key === 'apex.agent.persona' && e.newValue) {
           setCurrentPersona(e.newValue as AgentPersona);
@@ -53,7 +44,8 @@ const ApexAgentAvatar: React.FC<ApexAgentAvatarProps> = memo(
     }, []);
 
     const sizeClass = SIZE_CLASSES[size];
-    const avatarSrc = AVATAR_MAP[currentPersona];
+    // Public CDN path — not a bundled import
+    const avatarSrc = AVATAR_PATH_MAP[currentPersona] ?? AVATAR_PATH_MAP.Default;
 
     return (
       <button
@@ -88,6 +80,8 @@ const ApexAgentAvatar: React.FC<ApexAgentAvatarProps> = memo(
             src={avatarSrc}
             alt={`${currentPersona} avatar`}
             className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
           />
         </div>
 
