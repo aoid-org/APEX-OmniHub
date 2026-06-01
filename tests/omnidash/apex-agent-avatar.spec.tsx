@@ -12,11 +12,10 @@ import { render, screen, cleanup, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ApexAgentAvatar from '@/dashboard/components/ApexAgentAvatar';
 
-// Asset imports are mocked by vitest transform — returns the module path string
-vi.mock('@/assets/navigator-avatar-icon.png', () => ({ default: 'navigator.png' }));
-vi.mock('@/assets/companion-avatar-icon.png', () => ({ default: 'companion.png' }));
-vi.mock('@/assets/sentinel-avatar-icon.png', () => ({ default: 'sentinel.png' }));
-vi.mock('@/assets/pulse-avatar-icon.png', () => ({ default: 'pulse.png' }));
+vi.mock('../../src/assets/avatars/navigator-avatar-icon.png', () => ({ default: 'navigator.png' }));
+vi.mock('../../src/assets/avatars/companion-avatar-icon.png', () => ({ default: 'companion.png' }));
+vi.mock('../../src/assets/avatars/sentinel-avatar-icon.png', () => ({ default: 'sentinel.png' }));
+vi.mock('../../src/assets/avatars/pulse-avatar-icon.png', () => ({ default: 'pulse.png' }));
 
 describe('ApexAgentAvatar', () => {
   beforeEach(() => {

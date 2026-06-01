@@ -96,14 +96,23 @@ export const WidgetShell = memo(function WidgetShell({ widget }: WidgetShellProp
           title: `Widget: ${widget.title}`,
           description: 'Manage this widget',
           renderMode: 'dialog',
+          schema: {
+            items: [
+              { id: 'maximise', label: widget.maximised ? 'Restore Widget' : 'Maximise Widget' },
+              { id: 'close', label: 'Remove Widget' }
+            ]
+          },
           onComplete: async (data) => {
-            if (data.action === 'close') closeWidget(widget.id);
-            if (data.action === 'maximise') maximiseWidget(widget.id);
+            if (data.selectedId === 'close') closeWidget(widget.id);
+            if (data.selectedId === 'maximise') {
+              if (widget.maximised) restoreWidget(widget.id);
+              else maximiseWidget(widget.id);
+            }
           },
         });
       }, 600); // 600ms long press threshold
     },
-    [focusWidget, widget.id, widget.position, widget.maximised, widget.title, clearLongPress, invoke, closeWidget, maximiseWidget],
+    [focusWidget, widget.id, widget.position, widget.maximised, widget.title, clearLongPress, invoke, closeWidget, maximiseWidget, restoreWidget],
   );
 
   const handleDragMove = useCallback(

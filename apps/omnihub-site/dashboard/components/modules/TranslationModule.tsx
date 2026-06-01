@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { ModuleShell } from './ModuleShell';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { SUPPORTED_LOCALES } from '@/i18n/locales';
 import type { OmniModuleState } from '@/hooks/useOmniModuleState';
 
@@ -72,6 +73,7 @@ export default function TranslationModule({ onClose }: Props) {
       setMetadata(result);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Setup is required', { description: 'Missing API configuration for Semantic Translation Engine.' });
       setErrorMsg(`Error: ${msg}`);
       setTranslatedText('');
     } finally {

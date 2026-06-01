@@ -12,11 +12,11 @@
  */
 
 import { create } from 'zustand';
-import type { ContextItem } from '../../dashboard/types/context.types';
+import type { OmniSlateContextItem } from '../../dashboard/types/context.types';
 
 interface OmniSlateState {
-  readonly contextItems: ContextItem[];
-  addContext: (item: ContextItem) => void;
+  readonly contextItems: OmniSlateContextItem[];
+  addContext: (item: OmniSlateContextItem) => void;
   removeContext: (id: string) => void;
   clearContexts: () => void;
 }

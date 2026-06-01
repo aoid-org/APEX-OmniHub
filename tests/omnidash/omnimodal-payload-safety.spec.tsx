@@ -34,4 +34,44 @@ describe('OmniModal Payload Safety', () => {
     expect(screen.getByText('<script>alert("xss")</script>')).toBeInTheDocument();
     expect(screen.getByText('<b>bold text</b>')).toBeInTheDocument();
   });
+
+  it('provides selectedId and selected object in selection payload', async () => {
+    const onCompleteMock = vi.fn();
+    useOmniModal.getState().invoke({
+      id: 'test-selection',
+      provider: 'test',
+      type: 'selection',
+      title: 'Select Item',
+      schema: {
+        items: [{ id: 'item-123', label: 'Item 123' }]
+      },
+      onComplete: onCompleteMock,
+    });
+
+    render(<UniversalModalEngine />);
+    
+    const button = screen.getByText('Item 123');
+    button.click();
+
+    expect(onCompleteMock).toHaveBeenCalledWith({
+      selected: { id: 'item-123', label: 'Item 123' },
+      selectedId: 'item-123',
+      context: undefined
+    });
+  });
+
+  it('renders explicit setup-required content for vision_redact', () => {
+    useOmniModal.getState().invoke({
+      id: 'test-vision',
+      provider: 'test',
+      // @ts-expect-error - testing specific missing wire-up
+      type: 'vision_redact',
+      title: 'Vision Redact',
+      onComplete: vi.fn(),
+    });
+
+    render(<UniversalModalEngine />);
+    expect(screen.getByText('Setup Required')).toBeInTheDocument();
+    expect(screen.getByText(/not fully wired to the backend yet/i)).toBeInTheDocument();
+  });
 });

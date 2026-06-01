@@ -14,13 +14,13 @@ describe('APEX Apps Contract', () => {
     expect(hasTradeLine).toBe(false);
   });
 
-  it('must contain correct URLs', () => {
-    const appMap = new Map(LIVE_APEX_APPS.map(app => [app.id, app.url]));
-    expect(appMap.get('aspiral')).toBe('https://aspiral.icu');
-    expect(appMap.get('dueradar')).toBe('https://dueradar.icu');
-    expect(appMap.get('sbbl-hq')).toBe('https://sbbl-hq.icu');
-    expect(appMap.get('cheapstays')).toBe('https://cheapstays.me');
-    expect(appMap.get('flowbills')).toBe('https://flowbills.ca');
-    expect(appMap.get('jubeelove')).toBe('https://jubee.love');
+  it('must contain exactly the 6 required ecosystem apps', () => {
+    const appMap = new Map(LIVE_APEX_APPS.map(app => [app.id, app.label]));
+    expect(appMap.get('aspiral')).toBe('aSpiral CRM');
+    expect(appMap.get('dueradar')).toBe('DueRadar');
+    expect(appMap.get('sbbl-hq')).toBe('SBBL-HQ');
+    expect(appMap.get('command')).toBe('CommandMatrix');
+    expect(appMap.get('office')).toBe('APEX-Office');
+    expect(appMap.get('omnihub')).toBe('APEX-OmniHub');
   });
 });

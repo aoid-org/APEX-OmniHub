@@ -4,13 +4,31 @@
  * @module apps/omnihub-site/dashboard/types/context.types
  */
 
-export type HealthStatus = 'green' | 'yellow' | 'red';
+export type OmniSlateContextKind =
+  | 'apex_app'
+  | 'third_party_app'
+  | 'widget'
+  | 'panel'
+  | 'file'
+  | 'link'
+  | 'text'
+  | 'media'
+  | 'workflow'
+  | 'incident'
+  | 'unknown';
 
-export interface ContextItem {
+export type OmniSlateHealth = 'healthy' | 'warning' | 'broken' | 'unknown';
+
+export interface OmniSlateContextItem {
   readonly id: string;
-  readonly name: string;
-  readonly health: HealthStatus;
-  readonly insight: string;
-  readonly payload?: Record<string, unknown>;
-  readonly sourceApp?: string; // Links to appIntegrationOwnership rules
+  readonly kind: OmniSlateContextKind;
+  readonly label: string;
+  readonly iconUrl?: string;
+  readonly iconKey?: string;
+  readonly source: 'drag' | 'paste' | 'upload' | 'system';
+  readonly health: OmniSlateHealth;
+  readonly status?: string;
+  readonly failureReason?: string;
+  readonly metadata: Record<string, unknown>;
+  readonly droppedAt: string;
 }

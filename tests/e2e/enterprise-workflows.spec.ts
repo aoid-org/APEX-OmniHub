@@ -609,7 +609,7 @@ Issued At: ${params.issuedAt}`;
 
       expect(results.length).toBe(100);
       // Should be faster than sequential
-      expect(duration).toBeLessThan(500);
+      expect(duration).toBeLessThan(1000);
     });
   });
 

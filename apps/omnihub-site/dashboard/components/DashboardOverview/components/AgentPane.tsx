@@ -1,6 +1,6 @@
 import { memo, useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
-import sentinelAvatar from '../../../../src/assets/sentinel-avatar-icon.png';
+import sentinelAvatar from '../../../../src/assets/avatars/sentinel-avatar-icon.png';
 import { useOmniDash } from '../../../../src/stores/omniDashStore';
 import { SPRING, GLASS_TILE, CTRL_BTN, BARS } from '../constants';
 

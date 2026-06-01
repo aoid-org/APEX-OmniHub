@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell } from 'lucide-react';
 
-import { useNotificationStore, type AppNotification } from '@/stores/notificationStore';
+import { useNotificationStore, type AppNotification } from '../../src/stores/notificationStore';
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -33,7 +33,7 @@ function getBadgeVariant(status: string) {
 // --- Helper Components ---------------------------------------------------------
 
 function NotificationItem({ n, handleApprove, handleDeny }: Readonly<{ n: AppNotification, handleApprove: (id: string) => void, handleDeny: (id: string) => void }>) {
-  const isPending = n.badge === 'MAN_MODE';
+  const isPending = n.badge === 'MAN_MODE' && !n.read;
   const badgeVariant = getBadgeVariant(isPending ? 'pending' : n.badge.toLowerCase());
   
   return (

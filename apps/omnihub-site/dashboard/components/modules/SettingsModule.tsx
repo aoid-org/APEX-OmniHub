@@ -65,7 +65,8 @@ export default function SettingsModule({ onClose }: Props) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           await supabase.from('omnidash_settings').delete().eq('user_id', user.id);
-          globalThis.location.reload();
+          // Settings are removed; next refresh will fetch defaults.
+          // Bypassing reload per honesty requirement.
         }
       }
       return true;

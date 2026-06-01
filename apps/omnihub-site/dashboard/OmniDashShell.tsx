@@ -26,7 +26,7 @@ import {
 import { toast } from 'sonner';
 
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
-import imgAvatar from "../../../src/assets/omnidash/avatar-default.png";
+import imgAvatar from '../src/assets/avatars/avatar-default.png';
 import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 
@@ -1548,6 +1548,16 @@ export default function OmniDashShell() {
             </div>
             <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>
             <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>
+            {/* Connect AI */}
+            <button
+              className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-1.5 ml-2"
+              onClick={() => {
+                toast.info('Setup is required', { description: 'Missing API configuration for Connect AI.' });
+              }}
+              title="Connect AI Provider"
+            >
+              Connect AI
+            </button>
           </div>
 
           {/* APEX-OmniHub wordmark watermark — above grid, below content */}

@@ -1,8 +1,8 @@
 import React, { memo, useState, useEffect } from 'react';
-import navigatorAvatar from '@/assets/navigator-avatar-icon.png';
-import companionAvatar from '@/assets/companion-avatar-icon.png';
-import sentinelAvatar from '@/assets/sentinel-avatar-icon.png';
-import pulseAvatar from '@/assets/pulse-avatar-icon.png';
+import navigatorAvatar from '../../src/assets/avatars/navigator-avatar-icon.png';
+import companionAvatar from '../../src/assets/avatars/companion-avatar-icon.png';
+import sentinelAvatar from '../../src/assets/avatars/sentinel-avatar-icon.png';
+import pulseAvatar from '../../src/assets/avatars/pulse-avatar-icon.png';
 import type { AgentPersona } from './PersonaModal';
 
 interface ApexAgentAvatarProps {
