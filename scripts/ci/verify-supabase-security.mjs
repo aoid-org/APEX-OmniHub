@@ -35,6 +35,7 @@ const created = new Map(); // schema.table -> first file that created it
 const rlsEnabled = new Set(); // schema.table
 const dropped = new Set(); // schema.table
 const serviceKeyHits = [];
+const memoryRpcFailures = [];
 
 const qualify = (schema, table) => `${(schema ?? "public").toLowerCase()}.${table.toLowerCase()}`;
 
@@ -42,6 +43,7 @@ const tblIdent = String.raw`(?:"?([a-z0-9_]+)"?\.)?"?([a-z0-9_]+)"?`;
 const createRe = new RegExp(String.raw`create\s+table\s+(?:if\s+not\s+exists\s+)?${tblIdent}`, "gi");
 const rlsRe = new RegExp(String.raw`alter\s+table\s+(?:only\s+)?(?:if\s+exists\s+)?${tblIdent}\s+enable\s+row\s+level\s+security`, "gi");
 const dropRe = new RegExp(String.raw`drop\s+table\s+(?:if\s+exists\s+)?${tblIdent}`, "gi");
+const functionBodyRe = (name) => new RegExp(String.raw`create\s+or\s+replace\s+function\s+public\.${name}\s*\([\s\S]*?\$\$([\s\S]*?)\$\$\s*;`, "i");
 // Supabase service-role JWTs embed this role claim; a literal in SQL is a leak.
 const serviceKeyRe = /service_role.*ey[A-Za-z0-9_-]{20,}|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/;
 
@@ -61,6 +63,30 @@ for (const file of files) {
   text.split(/\r?\n/).forEach((line, i) => {
     if (serviceKeyRe.test(line)) serviceKeyHits.push(`${rel(path.join(migrationsDir, file))}:${i + 1}`);
   });
+
+  if (file === "20260303000000_create_memories_table.sql") {
+    for (const name of ["export_user_memories", "purge_user_memories"]) {
+      const body = text.match(functionBodyRe(name))?.[1] ?? "";
+      if (!/SECURITY\s+DEFINER/i.test(text.match(new RegExp(String.raw`create\s+or\s+replace\s+function\s+public\.${name}[\s\S]*?AS\s+\$\$`, "i"))?.[0] ?? "")) {
+        memoryRpcFailures.push(`${name} must be SECURITY DEFINER with explicit in-function authorization checks`);
+      }
+      if (!/public\.get_jwt_tenant_id\s*\(\s*\)/i.test(body) || !/auth\.uid\s*\(\s*\)/i.test(body)) {
+        memoryRpcFailures.push(`${name} must compare requested tenant/user against JWT tenant and auth.uid()`);
+      }
+      if (!/COALESCE\s*\(\s*auth\.role\s*\(\s*\)\s*=\s*'service_role'\s*,\s*false\s*\)/i.test(body)) {
+        memoryRpcFailures.push(`${name} must treat a missing role claim as non-service-role`);
+      }
+      if (!/RAISE\s+EXCEPTION\s+'Access denied:/i.test(body)) {
+        memoryRpcFailures.push(`${name} must fail closed on tenant/user mismatch`);
+      }
+      if (!new RegExp(String.raw`REVOKE\s+EXECUTE\s+ON\s+FUNCTION\s+public\.${name}\s*\(`, "i").test(text)) {
+        memoryRpcFailures.push(`${name} must revoke default PUBLIC execute privileges`);
+      }
+    }
+    if (!/CREATE\s+OR\s+REPLACE\s+VIEW\s+public\.memory_health_stats\s+WITH\s*\(\s*security_invoker\s*=\s*true\s*\)/i.test(text)) {
+      memoryRpcFailures.push("memory_health_stats must be a security_invoker view so memories RLS applies");
+    }
+  }
 }
 
 const missingRls = [];
@@ -85,6 +111,10 @@ if (missingRls.length > 0) {
 if (serviceKeyHits.length > 0) {
   failures.push(`service-role key/JWT literal found in migrations:`);
   for (const loc of serviceKeyHits) failures.push(`    ${loc}`);
+}
+if (memoryRpcFailures.length > 0) {
+  failures.push(`memory RPC/view authorization hardening regressions:`);
+  for (const failure of memoryRpcFailures) failures.push(`    ${failure}`);
 }
 
 if (failures.length > 0) {

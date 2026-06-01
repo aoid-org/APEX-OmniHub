@@ -472,7 +472,23 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  jwt_tenant UUID;
+  caller_id UUID;
+  is_service_role BOOLEAN;
 BEGIN
+  jwt_tenant := public.get_jwt_tenant_id();
+  caller_id := auth.uid();
+  is_service_role := COALESCE(auth.role() = 'service_role', false);
+
+  -- SECURITY DEFINER bypasses RLS, so enforce caller tenant/user explicitly.
+  IF NOT is_service_role AND (
+    jwt_tenant IS DISTINCT FROM p_tenant_id
+    OR caller_id IS DISTINCT FROM p_user_id
+  ) THEN
+    RAISE EXCEPTION 'Access denied: memory export scope mismatch';
+  END IF;
+
   RETURN QUERY
   SELECT *
   FROM public.memories
@@ -496,12 +512,27 @@ SET search_path = public
 AS $$
 DECLARE
   purged_count INTEGER;
+  jwt_tenant UUID;
+  caller_id UUID;
+  is_service_role BOOLEAN;
 BEGIN
-  -- Audit the purge action BEFORE deletion
+  jwt_tenant := public.get_jwt_tenant_id();
+  caller_id := auth.uid();
+  is_service_role := COALESCE(auth.role() = 'service_role', false);
+
+  -- SECURITY DEFINER bypasses RLS, so enforce caller tenant/user explicitly.
+  IF NOT is_service_role AND (
+    jwt_tenant IS DISTINCT FROM p_tenant_id
+    OR caller_id IS DISTINCT FROM p_user_id
+  ) THEN
+    RAISE EXCEPTION 'Access denied: memory purge scope mismatch';
+  END IF;
+
+  -- Audit the purge action BEFORE deletion; actor is the verified caller.
   INSERT INTO public.audit_logs (
     actor_id, action_type, resource_type, resource_id, metadata
   ) VALUES (
-    p_user_id,
+    COALESCE(caller_id, p_user_id),
     'memory.purge',
     'memories',
     p_tenant_id::text,
@@ -521,10 +552,21 @@ BEGIN
 END;
 $$;
 
+REVOKE EXECUTE ON FUNCTION public.export_user_memories(UUID, UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.export_user_memories(UUID, UUID) FROM anon;
+GRANT EXECUTE ON FUNCTION public.export_user_memories(UUID, UUID)
+  TO authenticated, service_role;
+
+REVOKE EXECUTE ON FUNCTION public.purge_user_memories(UUID, UUID, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.purge_user_memories(UUID, UUID, TEXT) FROM anon;
+GRANT EXECUTE ON FUNCTION public.purge_user_memories(UUID, UUID, TEXT)
+  TO authenticated, service_role;
+
 -- ================================================================
 -- MEMORY HEALTH STATS VIEW (tenant-scoped)
 -- ================================================================
-CREATE OR REPLACE VIEW public.memory_health_stats AS
+CREATE OR REPLACE VIEW public.memory_health_stats
+WITH (security_invoker = true) AS
 SELECT
   tenant_id,
   user_id,
