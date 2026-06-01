@@ -92,6 +92,20 @@ def test_docs_only_allows(tmp_path):
     assert result["decision"] == "allow"
 
 
+def test_production_cloudflare_deploy_workflow_escalates_under_repo_policy():
+    """Production deploy workflow changes must keep RSI manual-review coverage."""
+    engine = PolicyEngine()
+    evidence = {
+        "changed_paths": [".github/workflows/deploy-production-cf-direct.yml"],
+        "candidate_test_plan": [],
+    }
+
+    result = engine.evaluate(evidence)
+
+    assert result["decision"] == "escalate"
+    assert evidence["changed_paths"][0] in result["critical_path_hits"]
+
+
 def test_model_usage_blocked_on_protected_paths(tmp_path, monkeypatch):
     monkeypatch.setenv("RSI_MODEL_ENABLED", "true")
     policy_file = _write_policy(tmp_path)
