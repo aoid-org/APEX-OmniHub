@@ -4,11 +4,11 @@
  * @module src/core/mcp/mcp.config
  *
  * Zod-validated configuration schema for MCP server connections.
- * API keys sourced from environment variables, never hardcoded.
+ * API keys are supplied only by the backend MCP proxy, never the client bundle.
  *
  * APEX STANDARDS ENFORCED:
  * - Zod boundary validation on all config
- * - Environment-aware: keys from import.meta.env
+ * - Secret-safe: client registry never reads privileged environment variables
  * - Fail-closed: invalid config rejected at parse time
  *
  * OWNED BY: APEX Business Systems Ltd.
@@ -41,7 +41,7 @@ export const MCPServerEntrySchema = z.object({
   command: z.string().min(1),
   /** Command arguments */
   args: z.array(z.string()),
-  /** Environment variables (e.g., API keys) */
+  /** Non-secret client metadata only; backend proxy injects privileged env. */
   env: z.record(z.string()),
   /** Transport protocol */
   transport: MCPTransportType,
@@ -81,7 +81,7 @@ export type MCPConfig = z.infer<typeof MCPConfigSchema>;
 
 /**
  * Default MCP server configuration.
- * Environment variables are resolved at runtime.
+ * Privileged environment variables are resolved by the backend mcp-proxy.
  */
 export function getDefaultConfig(): MCPConfig {
   return MCPConfigSchema.parse({
@@ -90,7 +90,7 @@ export function getDefaultConfig(): MCPConfig {
         name: 'Firecrawl Web Scraper',
         command: 'npx',
         args: ['-y', 'firecrawl-mcp'],
-        env: { FIRECRAWL_API_KEY: getEnvVar('VITE_FIRECRAWL_API_KEY') },
+        env: {},
         transport: 'stdio',
         capabilities: ['tools'],
       },
@@ -98,7 +98,7 @@ export function getDefaultConfig(): MCPConfig {
         name: 'Google Workspace',
         command: 'npx',
         args: ['-y', '@anthropic/google-workspace-mcp'],
-        env: { GOOGLE_API_KEY: getEnvVar('VITE_GOOGLE_API_KEY') },
+        env: {},
         transport: 'stdio',
         capabilities: ['tools', 'resources'],
       },
@@ -106,7 +106,7 @@ export function getDefaultConfig(): MCPConfig {
         name: 'GitHub',
         command: 'npx',
         args: ['-y', '@anthropic/github-mcp'],
-        env: { GITHUB_TOKEN: getEnvVar('VITE_GITHUB_TOKEN') },
+        env: {},
         transport: 'stdio',
         capabilities: ['tools', 'resources'],
       },
@@ -114,10 +114,7 @@ export function getDefaultConfig(): MCPConfig {
         name: 'Supabase',
         command: 'npx',
         args: ['-y', '@supabase/mcp-server'],
-        env: {
-          SUPABASE_URL: getEnvVar('VITE_SUPABASE_URL'),
-          SUPABASE_SERVICE_KEY: getEnvVar('VITE_SUPABASE_SERVICE_KEY'),
-        },
+        env: {},
         transport: 'stdio',
         capabilities: ['tools', 'resources'],
       },
@@ -127,19 +124,4 @@ export function getDefaultConfig(): MCPConfig {
       maxConcurrent: 5,
     },
   });
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-/**
- * Safely read an environment variable.
- * Returns empty string if not set (fail-closed: server will fail to auth,
- * never silently use a wrong key).
- */
-function getEnvVar(key: string): string {
-  const meta = import.meta as unknown as Record<string, Record<string, string> | undefined>;
-  const env = meta['env'];
-  return env?.[key] ?? '';
 }

@@ -52,27 +52,37 @@ const ALLOWED_SERVERS = new Set([
   'supabase',
 ]);
 
+interface ServerCommandConfig {
+  command: string;
+  args: string[];
+  /** Map child-process env names to server-only Deno env names. */
+  env: Record<string, string>;
+}
+
 /** Server commands and args (validated subset of mcp.config.ts) */
-const SERVER_COMMANDS: Record<string, { command: string; args: string[]; envKeys: string[] }> = {
+const SERVER_COMMANDS: Record<string, ServerCommandConfig> = {
   firecrawl: {
     command: 'npx',
     args: ['-y', 'firecrawl-mcp'],
-    envKeys: ['FIRECRAWL_API_KEY'],
+    env: { FIRECRAWL_API_KEY: 'FIRECRAWL_API_KEY' },
   },
   'google-workspace': {
     command: 'npx',
     args: ['-y', '@anthropic/google-workspace-mcp'],
-    envKeys: ['GOOGLE_API_KEY'],
+    env: { GOOGLE_API_KEY: 'GOOGLE_API_KEY' },
   },
   github: {
     command: 'npx',
     args: ['-y', '@anthropic/github-mcp'],
-    envKeys: ['GITHUB_TOKEN'],
+    env: { GITHUB_TOKEN: 'GITHUB_TOKEN' },
   },
   supabase: {
     command: 'npx',
     args: ['-y', '@supabase/mcp-server'],
-    envKeys: ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY'],
+    env: {
+      SUPABASE_URL: 'SUPABASE_URL',
+      SUPABASE_SERVICE_KEY: 'SUPABASE_SERVICE_ROLE_KEY',
+    },
   },
 };
 
@@ -195,11 +205,11 @@ async function handleConnect(
     return json({ error: `No config for server: ${serverId}` }, 400, corsHeaders);
   }
 
-  // Build env vars from Deno.env
+  // Build child-process env vars exclusively from server-only Deno env.
   const env: Record<string, string> = {};
-  for (const key of serverConfig.envKeys) {
-    const value = Deno.env.get(key);
-    if (value) env[key] = value;
+  for (const [childKey, denoKey] of Object.entries(serverConfig.env)) {
+    const value = Deno.env.get(denoKey);
+    if (value) env[childKey] = value;
   }
 
   const command = new Deno.Command(serverConfig.command, {

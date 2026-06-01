@@ -21,7 +21,10 @@ import {
   MCPHostManager,
   ToolInvocationSchema,
 } from '../../../src/core/mcp/MCPHostManager';
-import { MCPConfigSchema } from '../../../src/core/mcp/mcp.config';
+import {
+  MCPConfigSchema,
+  getDefaultConfig,
+} from '../../../src/core/mcp/mcp.config';
 import {
   StdioTransport,
   StreamableHTTPTransport,
@@ -621,9 +624,18 @@ describe('MCPHostManager', () => {
   });
 
   describe('MCPConfig', () => {
-    it('validates default config schema', () => {
+    it('validates test config schema', () => {
       const result = MCPConfigSchema.safeParse(makeTestConfig());
       expect(result.success).toBe(true);
+    });
+
+    it('keeps default MCP credentials out of the client config', () => {
+      const config = getDefaultConfig();
+      const envValues = Object.values(config.servers).flatMap((server) =>
+        Object.entries(server.env),
+      );
+
+      expect(envValues).toHaveLength(0);
     });
   });
 

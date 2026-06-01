@@ -138,12 +138,19 @@ Agent Request → MCPHostManager.invokeTool()
 
 ### Environment Variables Required
 
+Browser-exposed variables must only contain public configuration. MCP credentials are
+server-only and must be configured on the `mcp-proxy` runtime, never with the Vite
+`VITE_` prefix.
+
 ```env
-VITE_FIRECRAWL_API_KEY=     # Firecrawl API key
-VITE_GOOGLE_API_KEY=        # Google Workspace API key
-VITE_GITHUB_TOKEN=          # GitHub personal access token
-VITE_SUPABASE_URL=          # Supabase project URL
-VITE_SUPABASE_SERVICE_KEY=  # Supabase service role key
+# Browser/public Vite configuration
+VITE_SUPABASE_URL=          # Supabase project URL (public)
+
+# Server-only mcp-proxy secrets
+FIRECRAWL_API_KEY=          # Firecrawl API key
+GOOGLE_API_KEY=             # Google Workspace API key
+GITHUB_TOKEN=               # GitHub personal access token
+SUPABASE_SERVICE_ROLE_KEY=  # Supabase service-role key; never expose to browser
 ```
 
 ### Risk Levels & Approval Gating
@@ -291,7 +298,7 @@ npx vitest run tests/core
 | Symptom                          | Likely Cause           | Resolution                                               |
 | -------------------------------- | ---------------------- | -------------------------------------------------------- |
 | `tsc` error in `mcp.config.ts`   | Missing Zod dependency | `npm install zod`                                        |
-| MCP transport connection failure | Missing env vars       | Set `VITE_*` keys in `.env`                              |
+| MCP transport connection failure | Missing env vars       | Set public `VITE_SUPABASE_URL` in the client and MCP secrets on `mcp-proxy` only |
 | Vision cache miss                | Cache API unavailable  | Works in HTTPS only; localhost exempt                    |
 | Compression ratio < 1            | Uniform test data      | Expected for synthetic data; real data compresses better |
 | Routing non-determinism          | This is a bug          | Report immediately — violates core invariant             |

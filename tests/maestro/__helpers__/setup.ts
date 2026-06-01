@@ -13,9 +13,7 @@ import { expect } from 'vitest';
 
 export const SUPABASE_CONFIG = {
   url: import.meta.env.VITE_SUPABASE_URL,
-  serviceKey:
-    import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
-    import.meta.env.SUPABASE_SERVICE_ROLE_KEY,
+  serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
   anonKey:
     import.meta.env.VITE_SUPABASE_ANON_KEY ||
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
