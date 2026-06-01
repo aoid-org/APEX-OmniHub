@@ -21,3 +21,14 @@
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+/apex-demo-video.mp4
+  Content-Type: video/mp4
+  Cache-Control: public, max-age=31536000, immutable
+
+/audio/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/captions/*
+  Content-Type: text/vtt
+  Cache-Control: public, max-age=86400

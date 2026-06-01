@@ -3,19 +3,13 @@
  * @module tests/omnidash/notification-center.spec
  *
  * OMNI-TEST UNIVERSAL - AAA pattern enforced.
- * Store uses useSyncExternalStore (module-level singleton), not Zustand.
- * Tests use pushNotification/approveTask/denyTask directly.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { NotificationCenter } from '@/dashboard/components/NotificationCenter';
-import {
-  pushNotification,
-  approveTask,
-  denyTask,
-} from '@/stores/notificationStore';
+import { useNotificationStore } from '../../apps/omnihub-site/src/stores/notificationStore';
 
 if (!(globalThis as Record<string, unknown>).PointerEvent) {
   class PointerEvent extends Event {
@@ -30,15 +24,10 @@ if (!(globalThis as Record<string, unknown>).PointerEvent) {
   (globalThis as Record<string, unknown>).PointerEvent = PointerEvent;
 }
 
-// Each test has a unique taskId so module-level state doesn't bleed
-let _testSeq = 0;
-function uniqueId(): string {
-  return `nc-test-${_testSeq++}-${Date.now()}`;
-}
-
 describe('NotificationCenter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useNotificationStore.getState().clearAll();
   });
 
   afterEach(() => {
@@ -75,13 +64,12 @@ describe('NotificationCenter', () => {
 
   describe('Notification item rendering', () => {
     it('renders notification title and description', () => {
-      const tid = uniqueId();
-      pushNotification({
-        id: tid,
-        taskId: tid,
-        title: 'Delete Prod DB',
-        description: 'Irreversible action.',
-        lane: 'RED',
+      act(() => {
+        useNotificationStore.getState().addNotification({
+          label: 'Delete Prod DB',
+          description: 'Irreversible action.',
+          badge: 'MAN_MODE',
+        });
       });
 
       render(<NotificationCenter />);
@@ -92,47 +80,59 @@ describe('NotificationCenter', () => {
     });
 
     it('shows Authorize and Reject for pending notification', () => {
-      const tid = uniqueId();
-      pushNotification({ id: tid, taskId: tid, title: 'Action', description: 'Desc', lane: 'RED' });
+      act(() => {
+        useNotificationStore.getState().addNotification({
+          label: 'Action',
+          description: 'Desc',
+          badge: 'MAN_MODE',
+        });
+      });
 
       render(<NotificationCenter />);
       fireEvent.click(screen.getByTestId('notification-center-trigger'));
+
+      const notifications = useNotificationStore.getState().notifications;
+      const tid = notifications[0].id;
 
       expect(screen.getByTestId(`approve-${tid}`)).toBeInTheDocument();
       expect(screen.getByTestId(`deny-${tid}`)).toBeInTheDocument();
     });
 
-    it('does not show action buttons for approved notification', () => {
-      const tid = uniqueId();
-      pushNotification({ id: tid, taskId: tid, title: 'Approved', description: 'Done', lane: 'RED' });
-      approveTask(tid);
+    it('does not show action buttons for approved/read notification', () => {
+      act(() => {
+        useNotificationStore.getState().addNotification({
+          label: 'Approved',
+          description: 'Done',
+          badge: 'SUCCESS',
+        });
+      });
 
       render(<NotificationCenter />);
       fireEvent.click(screen.getByTestId('notification-center-trigger'));
+
+      const notifications = useNotificationStore.getState().notifications;
+      const tid = notifications[0].id;
 
       expect(screen.queryByTestId(`approve-${tid}`)).not.toBeInTheDocument();
       expect(screen.queryByTestId(`deny-${tid}`)).not.toBeInTheDocument();
     });
-
-    it('does not show action buttons for denied notification', () => {
-      const tid = uniqueId();
-      pushNotification({ id: tid, taskId: tid, title: 'Denied', description: 'Rejected', lane: 'RED' });
-      denyTask(tid);
-
-      render(<NotificationCenter />);
-      fireEvent.click(screen.getByTestId('notification-center-trigger'));
-
-      expect(screen.queryByTestId(`approve-${tid}`)).not.toBeInTheDocument();
-    });
   });
 
   describe('Approve / Deny interaction', () => {
-    it('clicking Authorize removes action buttons (status=approved)', () => {
-      const tid = uniqueId();
-      pushNotification({ id: tid, taskId: tid, title: 'T', description: 'D', lane: 'RED' });
+    it('clicking Authorize removes action buttons', () => {
+      act(() => {
+        useNotificationStore.getState().addNotification({
+          label: 'T',
+          description: 'D',
+          badge: 'MAN_MODE',
+        });
+      });
 
       render(<NotificationCenter />);
       fireEvent.click(screen.getByTestId('notification-center-trigger'));
+
+      const notifications = useNotificationStore.getState().notifications;
+      const tid = notifications[0].id;
 
       act(() => {
         fireEvent.click(screen.getByTestId(`approve-${tid}`));
@@ -141,12 +141,20 @@ describe('NotificationCenter', () => {
       expect(screen.queryByTestId(`approve-${tid}`)).not.toBeInTheDocument();
     });
 
-    it('clicking Reject removes action buttons (status=denied)', () => {
-      const tid = uniqueId();
-      pushNotification({ id: tid, taskId: tid, title: 'T2', description: 'D2', lane: 'RED' });
+    it('clicking Reject removes action buttons', () => {
+      act(() => {
+        useNotificationStore.getState().addNotification({
+          label: 'T2',
+          description: 'D2',
+          badge: 'MAN_MODE',
+        });
+      });
 
       render(<NotificationCenter />);
       fireEvent.click(screen.getByTestId('notification-center-trigger'));
+
+      const notifications = useNotificationStore.getState().notifications;
+      const tid = notifications[0].id;
 
       act(() => {
         fireEvent.click(screen.getByTestId(`deny-${tid}`));

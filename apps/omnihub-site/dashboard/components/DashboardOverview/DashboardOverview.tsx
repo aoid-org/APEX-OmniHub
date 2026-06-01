@@ -20,7 +20,8 @@ import {
   type AppRegistryEntry,
 } from "../../../../../packages/core/src/registry";
 import { useOmniGateway } from "@/stores/omniGatewayStore";
-import type { DashboardOverviewProps, ContextItem, AppEntry } from "./types";
+import type { DashboardOverviewProps, AppEntry } from "./types";
+
 import { INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from "./data";
 import { useAgentRecording } from "./hooks/useAgentRecording";
 import { AgentPane } from "./components/AgentPane";
@@ -29,6 +30,7 @@ import { EcosystemPane } from "./components/EcosystemPane";
 import { AppsSection } from "./components/AppsSection";
 
 import { useAppRegistryHealth } from "../../hooks/useAppRegistryHealth";
+import { useOmniSlateStore } from "@/stores/omniSlateStore";
 
 export const DashboardOverview = memo(function DashboardOverview({
   appHealth,
@@ -103,8 +105,16 @@ export const DashboardOverview = memo(function DashboardOverview({
   const navigate = useNavigate();
   const { dispatch } = useOmniDashAction(navigate);
 
-  const [context, setContext] =
-    useState<readonly ContextItem[]>(INITIAL_CONTEXT);
+  const context = useOmniSlateStore((s) => s.contextItems);
+  const clearLocalContexts = useOmniSlateStore((s) => s.clearContexts);
+  const addContext = useOmniSlateStore((s) => s.addContext);
+
+  useEffect(() => {
+    if (useOmniSlateStore.getState().contextItems.length === 0) {
+      INITIAL_CONTEXT.forEach((c) => addContext(c));
+    }
+  }, [addContext]);
+
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [traceLogs, setTraceLogs] = useState<readonly string[]>([]);
@@ -141,9 +151,9 @@ export const DashboardOverview = memo(function DashboardOverview({
   const agentStatus = isRecording ? "standby" : "listening";
 
   const handleCleanSlate = useCallback(() => {
-    setContext([]);
+    clearLocalContexts();
     setActiveInsight(null);
-  }, []);
+  }, [clearLocalContexts]);
 
   const handleToggleInsight = useCallback((name: string) => {
     setActiveInsight((prev) => (prev === name ? null : name));

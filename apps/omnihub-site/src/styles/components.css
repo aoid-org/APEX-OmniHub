@@ -132,6 +132,105 @@
   text-align: center;
 }
 
+/* === LANGUAGE SELECTOR === */
+.language-selector {
+  position: relative;
+}
+
+.language-selector__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: var(--border-radius-md);
+  border: var(--border-width) solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.language-selector__current {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.language-selector__caret {
+  position: absolute;
+  right: 5px;
+  bottom: 4px;
+  font-size: 0.58rem;
+  line-height: 1;
+}
+
+.language-selector__menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: var(--space-2);
+  background-color: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  list-style: none;
+  padding: var(--space-2) 0;
+  min-width: 150px;
+  box-shadow: var(--shadow-md);
+}
+
+.language-selector__option {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.language-selector__option:hover {
+  background-color: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+}
+
+.language-selector__option--active {
+  color: var(--color-accent);
+  font-weight: var(--font-weight-medium);
+}
+
+.nav__mobile-language {
+  width: 100%;
+}
+
+.nav__mobile-language .language-selector__trigger {
+  width: 100%;
+  justify-content: space-between;
+  height: 42px;
+  padding: 0 var(--space-3);
+  font-size: 1rem;
+}
+
+.nav__mobile-language .language-selector__current {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+}
+
+.nav__mobile-language .language-selector__caret {
+  position: static;
+  font-size: 0.7rem;
+}
+
 /* === STAMP === */
 .stamp {
   text-align: center;

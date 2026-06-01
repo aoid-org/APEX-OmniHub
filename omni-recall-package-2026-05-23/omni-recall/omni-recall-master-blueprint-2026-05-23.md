@@ -1,5 +1,5 @@
 # Omni-Recall Master Blueprint
-**Version:** 1.1.0 | **Date:** 2026-05-26 | **Author:** Lead AI Co-Founder | **Status:** Audited & Active
+**Version:** 1.7.1 | **Date:** 2026-06-01 | **Author:** Lead AI Co-Founder | **Status:** Audited & Active
 
 **Purpose:** Retroactive, low-noise, self-maintaining knowledge and preference system adapted to this runtime's real capabilities.
 
@@ -147,14 +147,21 @@ The system should prefer learning from corrections over repeating them.
 
 ---
 
-## 9. Historical Backfill Protocol (Ingested Log: 2026-05-26)
+## 9. Historical Backfill Protocol (Ingested Log: 2026-06-01)
 
-- **Ingestion Event:** PhysiOmni Phase 1 Sensing Layer Implementation & Deploy.
+- **Ingestion Event 1 (2026-05-26):** PhysiOmni Phase 1 Sensing Layer Implementation & Deploy.
 - **Outcome:** Successfully coded White-labeled Cockpit `/physiomni-pilot`, refactored OmniDash integration, wrote DDL migrations with custom real-time event alerts & triggers, and deployed edge function `physiomni-ingress` via CLI to Supabase project `rtopreovkywofgwgmozi`.
 - **Lessons Ingested:** 
-  - Subabase CLI deployments are fully functional with valid `SUPABASE_TOKEN_AOID`.
+  - Supabase CLI deployments are fully functional with valid `SUPABASE_TOKEN_AOID`.
   - Additive migrations check enforces strict comments location (must immediately precede constraint).
   - PR Architecture impact files require `RFC Link` parameters inside the description.
+
+- **Ingestion Event 2 (2026-06-01):** Marketing & Authentication UI/UX Stabilization Pass.
+- **Outcome:** Unified marketing routing to clean React Router clean SPA routing (erasing legacy `.html` redirects), optimized audio/video encoding (H.264/AAC), aligned feature pages visually with White Fortress dark grid aesthetics, isolated auth misconfigurations from invalid email credentials, and built 31-rule automated validation test suite fully integrated with Playwright.
+- **Lessons Ingested:**
+  - Vite SPA clean-URL routing requires comprehensive redirects mapping `/*` to `index.html` on Cloudflare Pages to prevent blank subpage deployments.
+  - Video streams require H.264 + AAC container encoding, and audio streams must remain strictly voice-only without embedded mjpeg cover streams to bypass browser playback restrictions.
+  - Compact trigger targets (`44px`) avoid header overflow on small resolutions.
 
 ---
 

@@ -1,6 +1,6 @@
 import { memo, useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
-import sentinelAvatar from '../../../../src/assets/sentinel-avatar-icon.png';
+import { AVATAR_PATH_MAP } from '../../../contracts/agentAvatars';
 import { useOmniDash } from '../../../../src/stores/omniDashStore';
 import { SPRING, GLASS_TILE, CTRL_BTN, BARS } from '../constants';
 
@@ -132,7 +132,7 @@ export const AgentPane = memo(function AgentPane({
             <div className="agent-orb-ring-2" />
             <div className="agent-orb-ring-3" />
             <div className="agent-orb-avatar">
-              <img src={sentinelAvatar} alt="APEX Agent" />
+              <img src={AVATAR_PATH_MAP.Sentinel} alt="APEX Agent" loading="lazy" decoding="async" />
             </div>
           </div>
 

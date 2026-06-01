@@ -125,6 +125,29 @@
 
   /* Grid texture (subtle) */
   --grid-texture: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M0 40V0h1v40H0zm40-40v40h-1V0h1z' fill='%230f1729' fill-opacity='0.02'/%3E%3Cpath d='M0 0h40v1H0V0zm0 40h40v-1H0v1z' fill='%230f1729' fill-opacity='0.02'/%3E%3C/svg%3E");
+
+  /* === OmniDash Tokens (Light) === */
+  --omni-bg: #f8fafc;
+  --omni-surface: #ffffff;
+  --omni-card: #ffffff;
+  --omni-card-hover: #f1f5f9;
+  --omni-border: rgba(15, 23, 41, 0.1);
+  --omni-border-glow: rgba(249, 115, 22, 0.4);
+  --omni-orange: #f97316;
+  --omni-orange-dim: #ea580c;
+  --omni-orange-glow: rgba(249, 115, 22, 0.2);
+  --omni-blue: #3b82f6;
+  --omni-blue-dim: #2563eb;
+  --omni-blue-glow: rgba(59, 130, 246, 0.2);
+  --omni-cyan: #06b6d4;
+  --omni-green: #22c55e;
+  --omni-warn: #eab308;
+  --omni-red: #ef4444;
+  --omni-purple: #a855f7;
+  --omni-t1: #0f1729;
+  --omni-t2: #334155;
+  --omni-t3: #64748b;
+  --omni-t4: #e2e8f0;
 }
 
 /* === NIGHT WATCH THEME === */
@@ -151,6 +174,29 @@
 
   /* Grid texture for dark mode */
   --grid-texture: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M0 40V0h1v40H0zm40-40v40h-1V0h1z' fill='%23f8fafc' fill-opacity='0.03'/%3E%3Cpath d='M0 0h40v1H0V0zm0 40h40v-1H0v1z' fill='%23f8fafc' fill-opacity='0.03'/%3E%3C/svg%3E");
+
+  /* === OmniDash Tokens (Dark) === */
+  --omni-bg: #070B14;
+  --omni-surface: #0B1120;
+  --omni-card: #0E1628;
+  --omni-card-hover: #111d33;
+  --omni-border: rgba(255,255,255,0.07);
+  --omni-border-glow: rgba(249,115,22,0.3);
+  --omni-orange: #f97316;
+  --omni-orange-dim: #c2531a;
+  --omni-orange-glow: rgba(249,115,22,0.15);
+  --omni-blue: #3b82f6;
+  --omni-blue-dim: #1d4ed8;
+  --omni-blue-glow: rgba(59,130,246,0.15);
+  --omni-cyan: #06b6d4;
+  --omni-green: #22c55e;
+  --omni-warn: #eab308;
+  --omni-red: #ef4444;
+  --omni-purple: #a855f7;
+  --omni-t1: #f1f5f9;
+  --omni-t2: #94a3b8;
+  --omni-t3: #475569;
+  --omni-t4: #1e293b;
 }
 
 /* === BASE STYLES === */

@@ -15,7 +15,7 @@ export async function exportAuditLogCSV(): Promise<void> {
 
   const headers = 'ID,Event Type,Event Text,Severity,Created At\n';
   const rows = data.map(row =>
-    `${row.id},${row.event_type},"${row.event_text.replace(/"/g, '""')}",${row.severity},${row.created_at}`
+    `${row.id},${row.event_type},"${row.event_text.replaceAll('"', '""')}",${row.severity},${row.created_at}`
   ).join('\n');
 
   const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
@@ -25,6 +25,6 @@ export async function exportAuditLogCSV(): Promise<void> {
   link.download = `audit-log-${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  link.remove();
   URL.revokeObjectURL(url);
 }

@@ -5,12 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { useOmniMedia } from '@/stores/omniMediaStore';
 import { useOmniBoard } from '@/stores/omniBoardStore';
-import {
-  useOmniDashAction,
-  type OmniDashIntent,
-} from '@/omnidash/useOmniDashAction';
+import { useOmniDashAction, type OmniDashIntent } from '@/omnidash/useOmniDashAction';
 import {
   fetchOmniLinkEvents,
   fetchOmniLinkIntegrations,
@@ -29,6 +25,7 @@ interface ConnectorViewModel {
   lastSyncAt: string | null;
   healthStatus: HealthStatus;
   supportsContextBinding: boolean;
+  integrationType: string;
 }
 
 function slugify(input: string): string {
@@ -103,6 +100,7 @@ function mapConnectorModels(
       lastSyncAt: integrationEvents[0]?.received_at ?? null,
       healthStatus: deriveHealth(integrationEvents),
       supportsContextBinding: true,
+      integrationType: integration.type || '',
     };
   });
 }
@@ -128,32 +126,9 @@ function HealthIcon({ status }: Readonly<{ status: HealthStatus }>) {
 
 export const Integrations = () => {
   const { user } = useAuth();
-  const omniMedia = useOmniMedia();
   const { dispatch } = useOmniDashAction();
   const boardConnectors = useOmniBoard((s) => s.connectors);
 
-  const handleTestModal = () => {
-    const intent: OmniDashIntent = {
-      source: 'integration',
-      appKey: 'quickbooks',
-      provider: 'QuickBooks',
-      label: 'QuickBooks',
-      category: 'operations',
-      routePath: '/omnidash/integrations/quickbooks',
-      dashboardStatus: 'Partial',
-    };
-    dispatch(intent);
-  };
-
-  const handleTestMedia = () => {
-    omniMedia.loadMedia({
-      id: 'demo-yt-01',
-      source: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1',
-      type: 'embed',
-      title: 'APEX Platform Demo',
-      provider: 'YouTube'
-    });
-  };
 
   const integrationsQuery = useQuery({
     queryKey: ['omnilink-integrations', user?.id],
@@ -208,48 +183,14 @@ export const Integrations = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">OmniBoard</h1>
-          <p className="text-sm text-slate-400">Canonical connector control plane (live records only)</p>
+          <p className="text-sm text-slate-400">Manage your app stack in OmniBoard</p>
         </div>
         <Badge variant="outline" className="border-cyan-500/30 text-cyan-300">
           {connectors.length} connectors
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card className="border-slate-800 bg-slate-900">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Plug className="h-5 w-5 text-purple-400" />
-              Universal Modal Engine Demo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-400 mb-4">
-              Schema-driven global integration layer. Zero DOM bloat. Test the OAuth modal flow.
-            </p>
-            <Button variant="secondary" onClick={handleTestModal} className="w-full">
-              Test QuickBooks OAuth
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-slate-800 bg-slate-900">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-blue-400" />
-              OmniMedia Engine Demo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-400 mb-4">
-              Persistent cross-route PiP player. Click to load media, then navigate between routes.
-            </p>
-            <Button variant="secondary" onClick={handleTestMedia} className="w-full">
-              Test YouTube PiP
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+
 
       {isLoading && (
         <Card className="border-slate-800 bg-slate-900">
@@ -327,7 +268,30 @@ export const Integrations = () => {
                   Drag this tile into OmniSLATE context to bind connector metadata.
                 </div>
                 
-                {connector.status !== 'LIVE' && (
+                {connector.integrationType === 'mobile_app' ? (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition-all duration-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open('https://apps.apple.com/us/app/apex-omnilink/id1234567890', '_blank', 'noopener,noreferrer');
+                      }}
+                    >
+                      App Store
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-300 transition-all duration-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open('https://play.google.com/store/apps/details?id=com.apex.omnilink', '_blank', 'noopener,noreferrer');
+                      }}
+                    >
+                      Play Store
+                    </Button>
+                  </div>
+                ) : connector.status !== 'LIVE' && (
                   <Button
                     variant="outline"
                     className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 transition-all duration-300"

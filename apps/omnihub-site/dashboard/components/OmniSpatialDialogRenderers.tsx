@@ -206,7 +206,7 @@ export function DialogModeRenderer({
                         key={itemKey}
                         type="button"
                         className="w-full text-left px-4 py-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors text-sm"
-                        onClick={() => onAction({ selected: item })}
+                        onClick={() => onAction({ selected: item, selectedId: itemKey })}
                         disabled={isProcessing}
                       >
                         {itemLabel}
@@ -255,6 +255,27 @@ export function DialogModeRenderer({
           }
           onClose={onClose}
         />
+      );
+
+    case 'vision_redact':
+    case 'vision_confirm':
+    case 'mcp_tool_approve':
+      return (
+        <div className="py-8 text-center space-y-3">
+          <div className="mx-auto w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
+            <ExternalLink className="h-6 w-6 text-amber-500" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground">Setup Required</h3>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+            The {modal.type} interface is not fully wired to the backend yet.
+            Please connect your APEX Infrastructure provider to enable this feature.
+          </p>
+          <div className="pt-4">
+            <Button variant="outline" onClick={onClose}>
+              Close
+            </Button>
+          </div>
+        </div>
       );
 
     default:

@@ -251,7 +251,9 @@ jobs:
           retention-days: 30
 
       - name: Cloudflare Pages Production Sync Shield
-        run: cd apps/omnihub-site && npm ci --ignore-scripts && npm run build
+        run: |
+          test ! -f wrangler.toml
+          npm run build
         env:
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-key

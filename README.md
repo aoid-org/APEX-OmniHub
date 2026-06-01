@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.7.0 | **package.json version:** 1.7.0 | **Release Date:** 2026-05-31 | **Docs audit:** 2026-05-31
+**Release line:** 1.7.1 | **package.json version:** 1.7.1 | **Release Date:** 2026-06-01 | **Docs audit:** 2026-06-01
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)

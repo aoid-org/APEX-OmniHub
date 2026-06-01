@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => {
   const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
   const supabasePublishableKey = env.VITE_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || '';
 
+  const analyzeBundle = process.env.ANALYZE_BUNDLE === 'true';
+
   return ({
   server: {
     host: "::",
@@ -26,7 +28,9 @@ export default defineConfig(({ mode }) => {
   },
   plugins: [
     react(),
-    mode !== 'test' && visualizer({
+    // Visualizer is opt-in: set ANALYZE_BUNDLE=true to generate dist/stats.html
+    // NEVER runs by default — avoids build overhead on Cloudflare Pages
+    analyzeBundle && mode !== 'test' && visualizer({
       filename: 'dist/stats.html',
       gzipSize: true,
       brotliSize: true,

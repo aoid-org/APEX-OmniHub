@@ -177,8 +177,8 @@ export async function triggerModuleAction(
 ): Promise<{ success: boolean; message: string }> {
   if (!hasSupabaseConfig) {
     return {
-      success: true,
-      message: `Action "${actionId}" queued for ${moduleKey} (offline mode - will execute when backend is connected).`,
+      success: false,
+      message: `Not Implemented: Action "${actionId}" requires a connected backend (offline mode).`,
     };
   }
 
