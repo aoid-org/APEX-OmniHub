@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -15,8 +17,21 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          # Clone into sibling path expected by run.sh preflight.
-          git clone "https://x-access-token:${GH_PAT}@github.com/apexbusiness-systems/sbbl-hq.git" ../sbbl-hq
+          set -euo pipefail
+
+          # Authenticate via a one-shot HTTP header so Git persists only a credential-free remote URL.
+          auth_header="$(printf 'x-access-token:%s' "$GH_PAT" | base64 -w 0)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${auth_header}" \
+            clone "https://github.com/apexbusiness-systems/sbbl-hq.git" ../sbbl-hq
+
+          # Defense-in-depth: fail closed if a future clone change reintroduces persisted credentials.
+          remote_url="$(git -C ../sbbl-hq config --get remote.origin.url)"
+          case "$remote_url" in
+            *x-access-token*|*"$GH_PAT"*)
+              echo "SBBL-HQ remote URL contains credentials; refusing to continue." >&2
+              exit 1
+              ;;
+          esac
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
