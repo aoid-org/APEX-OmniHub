@@ -29,6 +29,7 @@ const MODULE_COMPONENTS: Readonly<Record<string, React.LazyExoticComponent<React
   integrations: lazy(() => import('./modules/IntegrationsModule')),
   omnitrace: lazy(() => import('./modules/OmniTraceModule')),
   agent: lazy(() => import('./modules/AgentModule')),
+  translation: lazy(() => import('./modules/TranslationModule')),
 };
 
 // ── Loading fallback ────────────────────────────────────────────
