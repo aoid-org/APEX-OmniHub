@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.10] - 2026-06-01
+
+### Changed
+- Reconciled frontend docs with PR #1274 OmniDash gap closure: `OmniDashShell.tsx` is the shell authority, avatar assets/contracts are current, and OmniDash wildcard routes are active post-auth surfaces.
+
+### Security
+- Documented PR #1309 follow-up context: entitlement activation and PhysiOmni signed ingress hardening are present in the repo history.
+
+
 All notable changes to the APEX OmniHub Marketing Site.
 
 ## [1.9.1] - 2026-03-10
@@ -39,7 +48,7 @@ All notable changes to the APEX OmniHub Marketing Site.
 
 ### Changed
 
-- **`OmniDashLayout.tsx`** v6.0.0 → v6.1.0
+- **`OmniDashShell.tsx`** current shell line (historical `OmniDashLayout.tsx` references are stale unless explicitly release-scoped)
   - Connect AI header button now dispatches `OmniDashIntent({ appKey: 'omniport', dashboardStatus: 'Partial' })` via `useOmniDashAction`.
   - Notifications bell uses non-reactive `useOmniModal.getState().invoke()` — layout no longer subscribes to modal state.
   - Removed reactive `useOmniModal()` hook call from component body; modal store access is now dispatch-only.

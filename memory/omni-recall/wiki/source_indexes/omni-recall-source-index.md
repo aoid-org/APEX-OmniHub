@@ -1,6 +1,7 @@
 # Omni-Recall Source Index
 
 Last index update: 2026-05-31 (post PR #1251 merge — apex-agent unification complete)
+Superseding index update: 2026-06-01 (platform docs sync — HEAD `86bc14a`, PR #1274 + PR #1309 reconciled)
 
 ## Purpose
 
@@ -33,3 +34,13 @@ Track canonical source records that materially define Omni-Recall.
    - Type: session checkpoint log
    - Status: active — updated after each verified session
    - Role: canonical source for per-session outcomes, verified HEAD, and runtime facts
+
+6. `state/checkpoints/2026-06-01-platform-doc-sync.md`
+   - Type: platform-state checkpoint
+   - Status: active
+   - Role: durable memory for PR #1274 / PR #1309 documentation synchronization and stale-reference correction
+
+7. `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`
+   - Type: repo documentation authority
+   - Status: active
+   - Role: current branch/head assessment and drift-control source for future agents

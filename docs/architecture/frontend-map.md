@@ -1,4 +1,6 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.6.2 | LAST_UPDATED=2026-05-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.3 | LAST_UPDATED=2026-06-01 -->
+> 2026-06-01 current-state note: active OmniDash shell authority is `apps/omnihub-site/dashboard/OmniDashShell.tsx`; see `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`.
+
 # Frontend Structure Map
 
 ## Vercel Reference Classification

@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.7.0 | **package.json version:** 1.7.0 | **Release Date:** 2026-05-31 | **Docs audit:** 2026-05-31
+**Release line:** 1.7.0 | **package.json version:** 1.7.0 | **Release Date:** 2026-05-31 | **Docs audit:** 2026-06-01 | **Current HEAD audited:** `86bc14a`
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -26,6 +26,7 @@
 
 **Before touching code, read the canonical architecture map:**
 
+- [CURRENT_PLATFORM_STATE_2026_06_01.md](./docs/CURRENT_PLATFORM_STATE_2026_06_01.md) — current branch/head assessment, recent git history, drift controls, and repo facts
 - [DOCUMENTATION_RELEASE_INDEX.md](./docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
 - [ARCHITECTURE_CANONICAL_MAP.md](./docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
 - **[Production Certification Status](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)** (Current Production Authority)
@@ -47,20 +48,22 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-05-31)
+## Platform Statistics (Repository Snapshot 2026-06-01)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
-| **Source Files (`src/`)**                        | 346 total files                                   |
-| **TypeScript/TSX (`src/`)**                      | 311 files                                         |
+| **Source Files (`src/`)**                        | 353 total files                                   |
+| **TypeScript/TSX (`src/`)**                      | 318 files                                         |
 | **React Components (`src/`)**                    | 94 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
-| **Edge Functions (`supabase/functions/`)**       | 27 function directories                           |
-| **Database Migrations (`supabase/migrations/`)** | 77 SQL migration files                            |
-| **CI/CD Workflows (`.github/workflows/`)**       | 21 workflow files                                 |
-| **Test Specs (`tests/` + `e2e/` + `sim/`)**     | 229 spec/test source files; latest pass counts are recorded in certification status |
-| **Custom Hooks (`src/`)**                        | 21 hook files matching `use*.ts*`                 |
-| **Orchestrator (Python)**                        | 95 files (Temporal workers, activities, security) |
+| **Edge Functions (`supabase/functions/`)**       | 30 function directories including `_shared`       |
+| **Database Migrations (`supabase/migrations/`)** | 84 SQL migration files                            |
+| **CI/CD Workflows (`.github/workflows/`)**       | 22 workflow files                                 |
+| **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 319 spec/test source files; latest pass counts are recorded in certification status |
+| **Custom Hooks (`src/` + app surfaces)**         | 35 hook files matching `use*.ts*`                 |
+| **Orchestrator (Python)**                        | 101 files (Temporal workers, activities, security) |
+
+**Latest repo-history note:** HEAD `86bc14a` includes PR #1274 OmniDash from-zero gap closure; PR #1309 (`3a51a27`) hardened entitlement activation and PhysiOmni HMAC ingress. See `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` for the full assessment.
 
 ---
 
@@ -255,7 +258,8 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 
 | Document                                                                                | Description           |
 | --------------------------------------------------------------------------------------- | --------------------- |
-| [Release Notes v1.6.0](./docs/releases/RELEASE_NOTES_v1.6.0.md)                 | What is new in v1.6.0 |
+| [Current Platform State](./docs/CURRENT_PLATFORM_STATE_2026_06_01.md)             | Current branch/head assessment and drift-control facts |
+| [Release Notes v1.6.0](./docs/releases/RELEASE_NOTES_v1.6.0.md)                 | Historical v1.6.0 release notes |
 | [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
 | [Production Certification Status](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |
 | [Documentation Release Index](./docs/DOCUMENTATION_RELEASE_INDEX.md)                  | Current docs map, READMEs, status, audits, runbooks |

@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.6.0 | LAST_UPDATED=2026-05-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.6.1 | LAST_UPDATED=2026-06-01 -->
 # APEX / OmniHub — Technical Specification & Architecture
 
 ## Overview
@@ -9,7 +9,7 @@
 - Observability: Local monitoring hooks, guardian heartbeats, audit logging, DR/backup tooling.
 
 ## Key Modules
-- **OmniDash v2 Navigation UI**: Revolutionary icon-based navigation (`src/components/OmniDashNavIconButton.tsx`, `src/pages/OmniDash/OmniDashLayout.tsx`) with zero-overlap flexbox layout, mobile bottom tabs, and tooltip integration.
+- **OmniDash post-auth shell**: Current shell authority is `apps/omnihub-site/dashboard/OmniDashShell.tsx`, with the locked sidebar contract in `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`, mobile drawer/bottom navigation, avatar contracts, OmniSlate context panes, and dashboard widgets. Historical `src/pages/OmniDash/OmniDashLayout.tsx` references are not current shell authority.
 - **OmniPort Ingress Engine**: Proprietary fortified ingress gateway (`src/omniconnect/ingress/`) with Zero-Trust gate, idempotency, MAN Mode governance, and circuit breaker. Supports text, voice, and webhook inputs. See dedicated section below.
 - Auth/session: `src/contexts/AuthContext.tsx` (supabase session, device registration, audit logging on login/logout).
 - Guardian heartbeats: `src/guardian/heartbeat.ts`, loops in `src/guardian/loops.ts`, CLI `npm run guardian:status`.
