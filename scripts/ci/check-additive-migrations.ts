@@ -16,7 +16,6 @@ import { spawnSync } from 'node:child_process';
 // /usr/bin/git is canonical on Linux (GitHub Actions ubuntu-latest).
 // On macOS the Xcode shim lives at the same path; Homebrew git is a symlink to it.
 const GIT_BIN = '/usr/bin/git';
-
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -113,12 +112,70 @@ export const RULES: Rule[] = [
 // ---------------------------------------------------------------------------
 
 /**
- * Strips the SQL single-line comment portion from a line (everything after --).
- * Returns the code-only portion. Does not strip block comments.
+ * Strips the SQL single-line comment portion from a line.
+ * Only treats `--` as a comment marker when it appears outside quoted SQL text.
  */
 export function stripSqlComment(line: string): string {
-  const idx = line.indexOf('--');
-  return idx === -1 ? line : line.substring(0, idx);
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let dollarQuoteTag: string | null = null;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (dollarQuoteTag) {
+      // PostgreSQL dollar-quoted strings can contain literal `--` safely.
+      if (line.startsWith(dollarQuoteTag, i)) {
+        i += dollarQuoteTag.length - 1;
+        dollarQuoteTag = null;
+      }
+      continue;
+    }
+
+    if (inSingleQuote) {
+      // SQL escapes single quotes by doubling them; keep scanning inside the string.
+      if (char === "'" && next === "'") {
+        i++;
+        continue;
+      }
+      if (char === "'") inSingleQuote = false;
+      continue;
+    }
+
+    if (inDoubleQuote) {
+      // Quoted identifiers can also contain hyphens without starting comments.
+      if (char === '"' && next === '"') {
+        i++;
+        continue;
+      }
+      if (char === '"') inDoubleQuote = false;
+      continue;
+    }
+
+    if (char === "'") {
+      inSingleQuote = true;
+      continue;
+    }
+
+    if (char === '"') {
+      inDoubleQuote = true;
+      continue;
+    }
+
+    if (char === '$') {
+      const tagMatch = /^\$[A-Za-z_][A-Za-z0-9_]*\$|^\$\$/.exec(line.slice(i));
+      if (tagMatch) {
+        dollarQuoteTag = tagMatch[0];
+        i += dollarQuoteTag.length - 1;
+        continue;
+      }
+    }
+
+    if (char === '-' && next === '-') return line.substring(0, i);
+  }
+
+  return line;
 }
 
 /**
@@ -183,13 +240,29 @@ export function checkFile(filePath: string): Violation[] {
   return violations;
 }
 
+function collectSqlFiles(dir: string): string[] {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const files: string[] = [];
+
+  for (const entry of entries) {
+    const entryPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...collectSqlFiles(entryPath));
+      continue;
+    }
+    if (entry.isFile() && entry.name.endsWith('.sql')) files.push(entryPath);
+  }
+
+  return files.sort();
+}
+
 /**
  * Determines which migration files to check, based on CI environment variables.
  *
  * Priority order:
  *  1. GITHUB_BASE_REF set → git diff origin/<base>...HEAD
  *  2. GITHUB_EVENT_NAME == 'push' and HEAD has a parent → git diff HEAD~1 HEAD
- *  3. Fallback → all *.sql files in supabase/migrations/
+ *  3. Fallback → all *.sql files under supabase/migrations/
  */
 export function getChangedMigrations(repoRoot: string): string[] {
   const migrationsDir = path.join(repoRoot, 'supabase', 'migrations');
@@ -201,7 +274,7 @@ export function getChangedMigrations(repoRoot: string): string[] {
     // Use spawnSync with argument array — no shell interpolation, no injection risk.
     const result = spawnSync(
       GIT_BIN,
-      ['diff', '--name-only', `origin/${safeBaseRef}...HEAD`, '--', 'supabase/migrations/*.sql'],
+      ['diff', '--name-only', `origin/${safeBaseRef}...HEAD`, '--', 'supabase/migrations'],
       { cwd: repoRoot, encoding: 'utf8' },
     );
     if (result.status === 0) {
@@ -224,7 +297,7 @@ export function getChangedMigrations(repoRoot: string): string[] {
     if (parentCheck.status === 0) {
       const result = spawnSync(
         GIT_BIN,
-        ['diff', '--name-only', 'HEAD~1', 'HEAD', '--', 'supabase/migrations/*.sql'],
+        ['diff', '--name-only', 'HEAD~1', 'HEAD', '--', 'supabase/migrations'],
         { cwd: repoRoot, encoding: 'utf8' },
       );
       if (result.status === 0) {
@@ -238,12 +311,9 @@ export function getChangedMigrations(repoRoot: string): string[] {
     }
   }
 
-  // Fallback (local / unknown CI): scan all migration files
+  // Fallback (local / unknown CI): scan all migration files recursively.
   if (!fs.existsSync(migrationsDir)) return [];
-  return fs
-    .readdirSync(migrationsDir)
-    .filter((f) => f.endsWith('.sql'))
-    .map((f) => path.join(migrationsDir, f));
+  return collectSqlFiles(migrationsDir);
 }
 
 // ---------------------------------------------------------------------------

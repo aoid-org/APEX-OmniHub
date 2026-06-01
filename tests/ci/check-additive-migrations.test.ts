@@ -55,8 +55,20 @@ describe('stripSqlComment', () => {
     expect(stripSqlComment('DROP TABLE foo;')).toBe('DROP TABLE foo;');
   });
 
-  it('strips everything from -- onward', () => {
+  it('strips everything from -- onward when the marker is outside SQL strings', () => {
     expect(stripSqlComment('SELECT 1; -- some comment')).toBe('SELECT 1; ');
+  });
+
+  it('does not strip -- inside a single-quoted SQL string', () => {
+    expect(stripSqlComment("SELECT '--'; DROP TABLE public.accounts;")).toBe(
+      "SELECT '--'; DROP TABLE public.accounts;",
+    );
+  });
+
+  it('does not strip -- inside a PostgreSQL dollar-quoted string', () => {
+    expect(stripSqlComment("SELECT $$--not a comment$$; DROP TABLE public.accounts;")).toBe(
+      "SELECT $$--not a comment$$; DROP TABLE public.accounts;",
+    );
   });
 
   it('returns empty string when the whole line is a comment', () => {
@@ -172,6 +184,10 @@ describe('checkFile — commented-out destructive words are safe', () => {
     // The SQL keyword is after --, so it must be treated as a comment
     expectClean("SELECT id FROM users; -- DROP TABLE would be bad here\n");
   });
+
+  it('rejects destructive SQL after -- inside a valid SQL string', () => {
+    expectViolation("SELECT '--'; DROP TABLE public.accounts;", 'DROP_TABLE');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -279,9 +295,14 @@ describe('getChangedMigrations', () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'apex-repo-mock-'));
     migrationsDir = path.join(tmpDir, 'supabase', 'migrations');
     fs.mkdirSync(migrationsDir, { recursive: true });
-    // Create a couple of dummy migration files for fallback tests
+    // Create dummy migration files for all-file scan tests.
     fs.writeFileSync(path.join(migrationsDir, '001_create_users.sql'), 'CREATE TABLE users (id UUID);');
     fs.writeFileSync(path.join(migrationsDir, '002_create_orders.sql'), 'CREATE TABLE orders (id UUID);');
+    fs.mkdirSync(path.join(migrationsDir, 'nested'), { recursive: true });
+    fs.writeFileSync(
+      path.join(migrationsDir, 'nested', '003_create_nested.sql'),
+      'CREATE TABLE nested_orders (id UUID);',
+    );
   });
 
   afterEach(() => {
@@ -291,12 +312,12 @@ describe('getChangedMigrations', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it('falls back to all migration files when no CI env vars are set', () => {
+  it('returns all migration files when no CI env vars are set', () => {
     delete process.env['GITHUB_BASE_REF'];
     delete process.env['GITHUB_EVENT_NAME'];
 
     const files = getChangedMigrations(tmpDir);
-    expect(files).toHaveLength(2);
+    expect(files).toHaveLength(3);
     expect(files.every((f) => f.endsWith('.sql'))).toBe(true);
   });
 
@@ -309,24 +330,18 @@ describe('getChangedMigrations', () => {
     fs.rmSync(emptyDir, { recursive: true, force: true });
   });
 
-  it('uses GITHUB_BASE_REF strategy when env var is set (mocked via vi.mock)', () => {
-    // We cannot mock the git command easily without spawning.
-    // Instead, verify that when GITHUB_BASE_REF is set but git fails gracefully,
-    // we fall back to scanning all files (demonstrating the fallback chain works).
+  it('uses GITHUB_BASE_REF strategy when env var is set (falls back gracefully on git failure)', () => {
     process.env['GITHUB_BASE_REF'] = 'nonexistent-branch-xyzzy';
     const files = getChangedMigrations(tmpDir);
-    // git will fail (branch doesn't exist), so we fall through to the all-file fallback
-    expect(files).toHaveLength(2);
+    expect(files).toHaveLength(3);
     expect(files.every((f) => f.endsWith('.sql'))).toBe(true);
   });
 
   it('uses GITHUB_EVENT_NAME=push strategy (falls back gracefully when no parent commit in tmp dir)', () => {
     delete process.env['GITHUB_BASE_REF'];
     process.env['GITHUB_EVENT_NAME'] = 'push';
-    // The tmpDir is not a git repo, so git rev-parse HEAD~1 will fail;
-    // we expect fallback to all files.
     const files = getChangedMigrations(tmpDir);
-    expect(files).toHaveLength(2);
+    expect(files).toHaveLength(3);
     expect(files.every((f) => f.endsWith('.sql'))).toBe(true);
   });
 });
