@@ -1,10 +1,16 @@
 name: integration-harness
 on:
-  push:
-    branches: [main, work, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
   run:
+    # Integration secrets are only exposed from the trusted main branch during an explicit manual run.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: integration
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,7 +46,6 @@ jobs:
         env:
           OMNIHUB_REPO: ${{ github.workspace }}
           SBBL_REPO: ${{ github.workspace }}/../sbbl-hq
-          GH_PAT: ${{ secrets.GH_PAT }}
           SBBL_SUPABASE_URL: ${{ secrets.SBBL_SUPABASE_URL }}
           SBBL_SUPABASE_ANON_KEY: ${{ secrets.SBBL_SUPABASE_ANON_KEY }}
           SBBL_SUPABASE_SERVICE_KEY: ${{ secrets.SBBL_SUPABASE_SERVICE_KEY }}
