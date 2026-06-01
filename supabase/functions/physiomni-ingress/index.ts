@@ -257,7 +257,27 @@ function bytesToHex(bytes: Uint8Array): string {
 function bytesToBase64Url(bytes: Uint8Array): string {
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+
+  let encoded = btoa(binary);
+  let unpaddedLength = encoded.length;
+  while (unpaddedLength > 0 && encoded.charCodeAt(unpaddedLength - 1) === 61) {
+    // Trim fixed-width base64 padding with a linear scan to avoid regex DoS hotspots.
+    unpaddedLength -= 1;
+  }
+
+  encoded = encoded.slice(0, unpaddedLength);
+  let base64url = '';
+  for (let i = 0; i < encoded.length; i += 1) {
+    const char = encoded[i];
+    // Convert the only two non-URL-safe base64 characters without regex backtracking.
+    base64url += char === '+' ? '-' : char === '/' ? '_' : char;
+  }
+
+  return base64url;
+}
+
+function normalizeTelemetrySignatureHeader(value: string): string {
+  return value.toLowerCase().startsWith('sha256=') ? value.slice(7) : value;
 }
 
 async function computeTelemetrySignature(secret: string, timestamp: string, rawBody: string): Promise<{ hex: string; base64url: string }> {
@@ -285,7 +305,7 @@ async function requiresLiveSignature(req: Request, rawBody: string, corsHeaders:
   }
 
   const timestamp = req.headers.get('x-physiomni-timestamp') ?? '';
-  const provided = (req.headers.get('x-physiomni-signature') ?? '').replace(/^sha256=/i, '');
+  const provided = normalizeTelemetrySignatureHeader(req.headers.get('x-physiomni-signature') ?? '');
   if (!timestamp || !provided) {
     return jsonResponse({ error: 'unauthorized', message: 'Signed telemetry required for live mode' }, 401, corsHeaders);
   }

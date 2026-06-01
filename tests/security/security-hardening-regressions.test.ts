@@ -32,6 +32,8 @@ describe('security hardening regressions', () => {
     expect(source).toContain('x-physiomni-timestamp');
     expect(source).toContain('5 * 60 * 1000');
     expect(source).toContain('timingSafeEqual(provided, expected.hex)');
+    expect(source).toContain('normalizeTelemetrySignatureHeader');
+    expect(source).not.toContain('replace(/=+$/g');
     expect(source).not.toContain('Placeholder for HMAC signed telemetry validation');
     expect(source).not.toContain("!isLiveEnabled || req.headers.get('x-physiomni-signature')");
   });
