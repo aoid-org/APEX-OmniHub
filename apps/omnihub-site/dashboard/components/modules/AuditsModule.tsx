@@ -1,5 +1,7 @@
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
+import { exportAuditLogCSV } from '../../utils/exportAuditLog';
+import { supabase } from '@/lib/supabase';
 
 interface Props {
   readonly onClose: () => void;
@@ -12,8 +14,20 @@ export default function AuditsModule({ onClose }: Props) {
   const lead = state.items[0];
   const allClear = state.items.length > 0 && state.items.every((i) => i.status === 'active');
 
+  const handleAction = async (actionId: string, _selected: string[]) => {
+    if (actionId === 'export-audit') {
+      await exportAuditLogCSV();
+      return true;
+    }
+    if (actionId === 'run-compliance') {
+      await supabase.functions.invoke('platform-health');
+      // Rely on SSE or next refresh to update status
+      return false; 
+    }
+  };
+
   return (
-    <ModuleShell state={state} onClose={onClose}>
+    <ModuleShell state={state} onClose={onClose} onAction={handleAction}>
       {!state.loading && lead && (
         <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">

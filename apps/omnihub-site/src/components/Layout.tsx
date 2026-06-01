@@ -3,7 +3,6 @@ import { siteConfig } from '@/content/site';
 import { ReferenceOverlay } from './ReferenceOverlay';
 import { useAuth } from '@/lib/useAuth';
 import { BrandAnthemPlayer } from './BrandAnthemPlayer';
-import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 type SupportedLanguage = Readonly<{
@@ -21,7 +20,9 @@ const SUPPORTED_LANGUAGES: readonly SupportedLanguage[] = [
   { code: 'pt-BR', label: 'Português (Brasil)' },
 ];
 
-function resolveSupportedLanguage(languageTag: string): string {
+function resolveSupportedLanguage(languageTag: string | undefined | null): string {
+  // Guard: i18next resolvedLanguage/language can be undefined during async init
+  if (!languageTag) return 'en-US';
   const normalizedTag = languageTag.toLowerCase();
   const exactMatch = SUPPORTED_LANGUAGES.find(
     ({ code }) => code.toLowerCase() === normalizedTag,
@@ -45,7 +46,8 @@ function LanguageSelector({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const menuId = useId();
-  const selectedLanguage = resolveSupportedLanguage(i18n.resolvedLanguage ?? i18n.language);
+  // Defensive fallback: both fields can be undefined while i18next init is in-flight
+  const selectedLanguage = resolveSupportedLanguage(i18n.resolvedLanguage ?? i18n.language ?? 'en-US');
   const selectedLanguageLabel =
     SUPPORTED_LANGUAGES.find((language) => language.code === selectedLanguage)?.label ??
     'English';
@@ -397,8 +399,11 @@ function Footer() {
 }
 
 export function Layout({ children, title }: LayoutProps) {
-  const { pathname } = useLocation();
-  const shouldRenderBrandAnthem = pathname === '/';
+  // Use window.location.pathname directly — Layout is a presentational shell
+  // and must not depend on React Router context (useLocation would throw
+  // if Layout were ever rendered outside a <Router>).
+  const shouldRenderBrandAnthem =
+    typeof window !== 'undefined' && window.location.pathname === '/';
 
   useEffect(() => {
     if (title) {

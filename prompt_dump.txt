@@ -1,0 +1,88 @@
+<USER_REQUEST>
+# APEX OmniHub — OmniDash Real-Data Implementation
+## Google Antigravity 2.0 Execution Prompt · DEFCON-1 Crisis Resolution
+### Version: OMNIDASH-REWIRE-v1.0 · Issued: 2026-05-31
+### Repository: https://github.com/apexbusiness-systems/APEX-OmniHub.git
+
+---
+
+## MISSION BRIEFING
+
+The entire OmniDash dashboard is a presentation shell. Every widget, every module, every stat, every button is rendering fake hardcoded data. This prompt delivers the **complete, surgical, zero-regression wiring plan** to make every component live. You are authorized to execute this immediately, in sequence, as a single atomic branch.
+
+**Branch name:** `fix/omnidash-real-data-wiring`  
+**Target PR:** into `main`  
+**Commit style:** `fix(omnidash): [component] — wire real Supabase data, remove mock`
+
+---
+
+## FORENSIC ROOT CAUSE ANALYSIS
+
+### The Single Point of Failure
+
+**File:** `supabase/functions/omnilink-port/index.ts`  
+**Function:** `handleModuleState()` (line ~313)
+
+```typescript
+// THIS IS THE ENTIRE PROBLEM. IT RETURNS A HARDCODED STUB FOR EVERY MODULE.
+return jsonResponse({
+  moduleKey,
+  headline: "Live Connection Established",
+  stats: [{ label: "State", value: "Online", trend: "up" }],
+  items: [],
+  actions: []
+}, 200, corsHeaders);
+```
+
+Every module in the dashboard calls `useOmniModuleState(moduleKey)`, which calls `supabase.functions.invoke("omnilink-port/module-state", { body: { module_key: appKey } })`. This returns the same empty stub for billing, workflows, automations, files, links, audits, settings, physiomni — **every single one**. The frontend then falls back to `moduleData.json` which contains `isDemo: true` fake data for everything.
+
+### The Mock Data Chain
+
+```
+ModuleShell renders module
+  → useOmniModuleState(key) hook fires
+    → calls omnilink-port/module-state Edge Function
+      → handleModuleState() returns hardcoded stub (BROKEN)
+        → hook falls back to ModuleRegistry
+          → ModuleRegistry reads moduleData.json
+        
+<truncated 45213 bytes>
+nder empty list — not fake placeholder data
+- **Idempotent mutations:** All `upsert` calls use `onConflict` — never duplicate-insert
+- **CORS headers:** Every Edge Function response includes `buildCorsHeaders()` from `_shared/cors.ts`
+- **RLS enforced:** Service role in Edge Functions, JWT on frontend — never bypass RLS in client code
+- **No secrets in code:** Stripe keys remain in Supabase Edge Function environment only
+- **Strict TypeScript:** No `any` — all DB query results typed with explicit cast interfaces
+- **Single-port integration:** All module state flows through `omnilink-port/module-state` — no new ports
+
+---
+
+## WHAT DOES NOT NEED TO CHANGE
+
+- `useDashboardData.ts` hook — already queries real tables correctly ✅
+- `OmniTraceFeed.tsx` — already subscribes to real `audit_log` realtime channel ✅  
+- `PhysiOmniModule.tsx` `usePhysiOmniDevices()` hook — already queries real `physiomni_devices` ✅
+- `DashboardLayout.tsx`, `OmniDashShell.tsx` — structure is correct ✅
+- All UI components (ModuleShell, DraggableWidget, etc.) — correct ✅
+- All Edge Functions except `omnilink-port/handleModuleState` ✅
+- All existing Supabase migrations — leave untouched ✅
+- Auth flow, session management, RLS policies — leave untouched ✅
+
+---
+
+## FINAL INSTRUCTION TO EXECUTING AGENT
+
+**You have complete context. Execute in order: Phase 0 → 9.**  
+**Create branch. Make changes. Run `tsc --noEmit`. Run `npm test`. Open PR.**  
+**No planning documents. No open questions. No stubs. No TODOs.**  
+**Every line of code you write must be production-grade, strictly typed, and backed by a real database table.**
+
+The platform is not a shell. It never was — the data layer just wasn't wired. Wire it now.
+
+---
+
+*APEX Business Systems Ltd. — Edmonton, AB, Canada*  
+*OmniHub v1.7.0 · Supabase Project: rtopreovky
+<truncated 169 bytes>
+
+NOTE: The output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you need.
