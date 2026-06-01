@@ -21,12 +21,14 @@ import {
 } from "../../../../../packages/core/src/registry";
 import { useOmniGateway } from "@/stores/omniGatewayStore";
 import type { DashboardOverviewProps, ContextItem, AppEntry } from "./types";
-import { APPS, INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from "./data";
+import { INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from "./data";
 import { useAgentRecording } from "./hooks/useAgentRecording";
 import { AgentPane } from "./components/AgentPane";
 import { OmniSlatePane } from "./components/OmniSlatePane";
 import { EcosystemPane } from "./components/EcosystemPane";
 import { AppsSection } from "./components/AppsSection";
+
+import { useAppRegistryHealth } from "../../hooks/useAppRegistryHealth";
 
 export const DashboardOverview = memo(function DashboardOverview({
   appHealth,
@@ -35,6 +37,8 @@ export const DashboardOverview = memo(function DashboardOverview({
 }: DashboardOverviewProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const registryApps = useAppRegistryHealth();
+
   const integrationsQuery = useQuery({
     queryKey: ["omnidash-integrations-overview", user?.id],
     enabled: !!user,
@@ -70,10 +74,16 @@ export const DashboardOverview = memo(function DashboardOverview({
   }, [user, queryClient]);
 
   const liveApps = useMemo(() => {
-    const defaultApps = APPS;
+    const defaultApps = registryApps.map(e => ({
+      name: e.label,
+      cat: e.category,
+      logo: e.logoDomain ? `https://logo.clearbit.com/${e.logoDomain}` : '',
+      synced: `${e._live?.syncedMinutesAgo ?? e.dashboard.syncedMinutesAgo}m`,
+      status: e._live?.status ?? e.dashboard.status,
+    })) as AppEntry[];
+
     if (!integrationsQuery.data) return defaultApps;
 
-    // ⚡ Bolt: Replace O(N*M) nested find with O(N+M) Map lookup to reduce CPU usage
     const integrationsMap = new Map(
       integrationsQuery.data.map(i => [i.name.toLowerCase(), i])
     );
@@ -88,7 +98,7 @@ export const DashboardOverview = memo(function DashboardOverview({
       }
       return app;
     });
-  }, [integrationsQuery.data]);
+  }, [integrationsQuery.data, registryApps]);
 
   const navigate = useNavigate();
   const { dispatch } = useOmniDashAction(navigate);

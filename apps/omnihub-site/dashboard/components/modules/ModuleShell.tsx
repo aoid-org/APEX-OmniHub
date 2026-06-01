@@ -66,12 +66,14 @@ interface ModuleShellProps {
   readonly state: OmniModuleState;
   readonly onClose: () => void;
   readonly children?: React.ReactNode;
+  readonly onAction?: (actionId: string, selectedItems: string[]) => Promise<boolean | void> | boolean | void;
 }
 
 export const ModuleShell = memo(function ModuleShell({
   state,
   onClose,
   children,
+  onAction,
 }: ModuleShellProps) {
   const openFloating = useOmniDash((s) => s.openFloating);
   const [selectedItems, setSelectedItems] = useState<ReadonlySet<string>>(new Set());
@@ -102,14 +104,25 @@ export const ModuleShell = memo(function ModuleShell({
   const handleAction = useCallback(async (actionId: string) => {
     setProcessing(true);
     setActionStatus(null);
-    const result = await triggerModuleAction(
-      state.moduleKey,
-      actionId,
-      [...selectedItems],
-    );
-    setActionStatus(result.message);
-    setProcessing(false);
-  }, [state.moduleKey, selectedItems]);
+    try {
+      let handled = false;
+      if (onAction) {
+        handled = await onAction(actionId, [...selectedItems]) === true;
+      }
+      if (!handled) {
+        const result = await triggerModuleAction(
+          state.moduleKey,
+          actionId,
+          [...selectedItems],
+        );
+        setActionStatus(result.message);
+      }
+    } catch (e) {
+      setActionStatus(`Error: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setProcessing(false);
+    }
+  }, [state.moduleKey, selectedItems, onAction]);
 
   if (state.loading) {
     return (

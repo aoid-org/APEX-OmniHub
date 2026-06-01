@@ -25,6 +25,7 @@
       "@/contexts/*": ["./src/contexts/*", "../../src/contexts/*"],
       "@/omnidash/*": ["./src/omnidash/*", "../../src/omnidash/*"],
       "@/dashboard/*": ["./dashboard/*", "../../dashboard/*"],
+      "@omniconnect/*": ["../../src/omniconnect/*"],
       "@/*": ["./src/*", "../../src/*"]
     }
   },
