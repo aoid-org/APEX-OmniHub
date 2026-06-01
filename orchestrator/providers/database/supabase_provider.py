@@ -45,11 +45,9 @@ ALLOWED_TABLES = frozenset(
         # Agent execution tables
         "agent_runs",
         "idempotency_ledger",
-        # PhysiOmni Pilot tables
-        "physiomni_devices",
-        "physiomni_telemetry",
-        "physiomni_alerts",
-        "physiomni_baselines",
+        # PhysiOmni physical-edge tables are intentionally excluded from this
+        # generic service-role provider path; use dedicated tenant-scoped
+        # PhysiOmni activities instead.
     ]
 )
 

@@ -39,6 +39,20 @@ def test_validate_table_name_failure():
         validate_table_name(None)  # type: ignore
 
 
+def test_validate_table_name_blocks_physiomni_tables_from_generic_provider():
+    """PhysiOmni data must not be reachable through service-role generic DB tools."""
+    physiomni_tables = [
+        "physiomni_devices",
+        "physiomni_telemetry",
+        "physiomni_alerts",
+        "physiomni_baselines",
+    ]
+
+    for table in physiomni_tables:
+        with pytest.raises(DatabaseError, match="not in the allowed list"):
+            validate_table_name(table)
+
+
 def test_validate_column_name_success():
     assert validate_column_name("id") == "id"
     assert validate_column_name("user_id") == "user_id"
