@@ -121,6 +121,16 @@ def test_max_files_escalation(tmp_path):
     assert "escalation threshold" in result["rationale"]
 
 
+def test_repository_policy_escalates_release_workflow():
+    repo_root = Path(__file__).parents[2]
+    engine = PolicyEngine(policy_path=repo_root / "policy/rsi-policy.yaml")
+
+    result = engine.evaluate({"changed_paths": [".github/workflows/release.yml"]})
+
+    assert result["decision"] == "escalate"
+    assert ".github/workflows/release.yml" in result["critical_path_hits"]
+
+
 def test_output_file_written(tmp_artifacts_dir, tmp_path):
     """policy_result.json must be written to artifact dir."""
     policy_file = _write_policy(tmp_path)
