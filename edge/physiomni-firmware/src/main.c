@@ -27,9 +27,9 @@
 /* Sleep duration: 15 minutes (900,000 milliseconds) */
 #define DEEP_SLEEP_MS 900000
 
-/* Pull tenant ID from Kconfig Kconfig-defined values or prj.conf */
+/* Pull tenant ID from private Kconfig overlay; never embed production tenant IDs in source. */
 #ifndef CONFIG_PHYSIOMNI_TENANT_ID
-#define CONFIG_PHYSIOMNI_TENANT_ID "4b2f3a8b-1e7c-4c91-923f-5d02a895226c"
+#error "CONFIG_PHYSIOMNI_TENANT_ID must be supplied by secure per-deployment build config"
 #endif
 
 /* ── 1. JSON PAYLOAD SERIALIZATION DEFINITION ──────────────────────────────── */

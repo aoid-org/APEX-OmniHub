@@ -21,6 +21,8 @@ import { RateLimiter } from '../_shared/rate-limiter.ts';
 // ── Threshold Constants ─────────────────────────────────────────────────────
 const VIBRATION_CRITICAL_THRESHOLD = 15;
 const VIBRATION_WARNING_THRESHOLD = 10;
+const SIGNATURE_MAX_SKEW_SECONDS = 300;
+const encoder = new TextEncoder();
 
 // ── Payload Schema ──────────────────────────────────────────────────────────
 
@@ -149,6 +151,10 @@ interface AlertEvaluation {
   message: string;
 }
 
+interface RegisteredDevice {
+  tenant_id: string;
+}
+
 type AlertResponse = {
   alert_id: string | null;
   severity: AlertEvaluation['severity'];
@@ -206,13 +212,14 @@ function buildAlertResponse(evaluation: AlertEvaluation, alertId: string | null)
   };
 }
 
-async function parseJsonBody(req: Request, headers: Record<string, string>): Promise<{ body?: unknown; response?: Response }> {
+async function parseJsonBody(req: Request, headers: Record<string, string>): Promise<{ body?: unknown; rawBody?: string; response?: Response }> {
+  const raw = await req.text();
+  if (!raw) {
+    return { response: jsonResponse({ error: 'empty_body', message: 'Request body is empty' }, 400, headers) };
+  }
+
   try {
-    const raw = await req.text();
-    if (!raw) {
-      return { response: jsonResponse({ error: 'empty_body', message: 'Request body is empty' }, 400, headers) };
-    }
-    return { body: JSON.parse(raw) };
+    return { body: JSON.parse(raw), rawBody: raw };
   } catch {
     return { response: jsonResponse({ error: 'invalid_json', message: 'Request body is not valid JSON' }, 400, headers) };
   }
@@ -225,15 +232,84 @@ function rejectInvalidMethod(req: Request, headers: Record<string, string>): Res
 
 function enforceIngressGate(corsHeaders: Record<string, string>): Response | null {
   const isLiveEnabled = Deno.env.get('PHYSIOMNI_LIVE_ENABLED') === 'true';
-  const isDemoEnabled = Deno.env.get('PHYSIOMNI_DEMO_ENABLED') !== 'false';
+  const isDemoEnabled = Deno.env.get('PHYSIOMNI_DEMO_ENABLED') === 'true';
   if (isLiveEnabled || isDemoEnabled) return null;
-  return jsonResponse({ error: 'ingress_disabled', message: 'PhysiOmni ingress is completely disabled' }, 403, corsHeaders);
+  return jsonResponse({ error: 'ingress_disabled', message: 'PhysiOmni ingress is disabled unless live or demo mode is explicitly enabled' }, 403, corsHeaders);
 }
 
-function requiresLiveSignature(req: Request, corsHeaders: Record<string, string>): Response | null {
+function timingSafeEqualHex(expected: string, actual: string): boolean {
+  if (!/^[0-9a-f]+$/i.test(actual) || expected.length !== actual.length) return false;
+
+  let diff = 0;
+  for (let i = 0; i < expected.length; i += 1) {
+    diff |= expected.charCodeAt(i) ^ actual.toLowerCase().charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+async function hmacSha256Hex(secret: string, message: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(message));
+  return Array.from(new Uint8Array(signature))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function requiresLiveSignature(req: Request, rawBody: string, corsHeaders: Record<string, string>): Promise<Response | null> {
   const isLiveEnabled = Deno.env.get('PHYSIOMNI_LIVE_ENABLED') === 'true';
-  if (!isLiveEnabled || req.headers.get('x-physiomni-signature')) return null;
-  return jsonResponse({ error: 'unauthorized', message: 'Signed telemetry required for live mode' }, 401, corsHeaders);
+  if (!isLiveEnabled) return null;
+
+  const secret = Deno.env.get('PHYSIOMNI_INGRESS_SHARED_SECRET') ?? '';
+  if (!secret) {
+    console.error('[physiomni-ingress] PHYSIOMNI_INGRESS_SHARED_SECRET is required in live mode');
+    return jsonResponse({ error: 'server_misconfigured', message: 'Live telemetry signing is not configured' }, 500, corsHeaders);
+  }
+
+  const timestamp = req.headers.get('x-physiomni-timestamp') ?? '';
+  const signature = req.headers.get('x-physiomni-signature') ?? '';
+  const timestampSeconds = Number(timestamp);
+  const nowSeconds = Math.floor(Date.now() / 1000);
+
+  if (!signature || !Number.isFinite(timestampSeconds)) {
+    return jsonResponse({ error: 'unauthorized', message: 'Signed telemetry required for live mode' }, 401, corsHeaders);
+  }
+  if (Math.abs(nowSeconds - timestampSeconds) > SIGNATURE_MAX_SKEW_SECONDS) {
+    return jsonResponse({ error: 'unauthorized', message: 'Telemetry signature timestamp is outside the replay window' }, 401, corsHeaders);
+  }
+
+  // Bind the exact raw JSON payload to the timestamp so body tampering and replay fail closed.
+  const expected = await hmacSha256Hex(secret, `${timestamp}.${rawBody}`);
+  if (!timingSafeEqualHex(expected, signature)) {
+    return jsonResponse({ error: 'unauthorized', message: 'Invalid telemetry signature' }, 401, corsHeaders);
+  }
+
+  return null;
+}
+
+async function resolveRegisteredDevice(
+  supabase: ReturnType<typeof createServiceClient>,
+  data: PhysiOmniPayload,
+  corsHeaders: Record<string, string>,
+): Promise<{ device?: RegisteredDevice; response?: Response }> {
+  const { data: device, error } = await supabase
+    .from('physiomni_devices')
+    .select('tenant_id')
+    .eq('device_serial', data.device_serial)
+    .eq('tenant_id', data.tenant_id)
+    .eq('is_active', true)
+    .single();
+
+  if (error || !device) {
+    return { response: jsonResponse({ error: 'unauthorized_device', message: 'Device is not registered for the supplied tenant' }, 403, corsHeaders) };
+  }
+
+  return { device: device as RegisteredDevice };
 }
 
 // ── Main Handler ────────────────────────────────────────────────────────────
@@ -253,6 +329,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const parsedBody = await parseJsonBody(req, corsHeaders);
   if (parsedBody.response) return parsedBody.response;
   const body = parsedBody.body;
+  const rawBody = parsedBody.rawBody ?? '';
 
   // Validate payload
   const validation = validatePayload(body);
@@ -286,15 +363,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
     );
   }
 
-  // Placeholder for HMAC signed telemetry validation & replay protection
-  const signatureError = requiresLiveSignature(req, corsHeaders);
+  const signatureError = await requiresLiveSignature(req, rawBody, corsHeaders);
   if (signatureError) return signatureError;
+
+  const registeredDevice = await resolveRegisteredDevice(supabase, data, corsHeaders);
+  if (registeredDevice.response) return registeredDevice.response;
+  const authorizedTenantId = registeredDevice.device!.tenant_id;
 
   // ── 1. Insert telemetry (idempotent via UNIQUE on device_serial + captured_at)
   const { error: telemetryError } = await supabase
     .from('physiomni_telemetry')
     .insert({
-      tenant_id: data.tenant_id,
+      tenant_id: authorizedTenantId,
       device_serial: data.device_serial,
       vibration_x: data.vibration_x,
       vibration_y: data.vibration_y,
@@ -339,7 +419,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     .from('physiomni_devices')
     .update({ last_seen_at: new Date().toISOString() })
     .eq('device_serial', data.device_serial)
-    .eq('tenant_id', data.tenant_id);
+    .eq('tenant_id', authorizedTenantId);
 
   // ── 3. Evaluate thresholds and escalate alerts
   const evaluation = evaluateThresholds(data);
@@ -349,7 +429,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const { data: alertData, error: alertError } = await supabase
       .from('physiomni_alerts')
       .insert({
-        tenant_id: data.tenant_id,
+        tenant_id: authorizedTenantId,
         device_serial: data.device_serial,
         severity: evaluation.severity,
         alert_type: evaluation.alertType,
@@ -374,7 +454,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         `[physiomni-ingress] Alert escalated: severity=${evaluation.severity}`,
         `alert_id=${alertId}`,
         `device=${data.device_serial}`,
-        `tenant=${data.tenant_id}`,
+        `tenant=${authorizedTenantId}`,
       ].join(' ');
       console.info(alertLogMessage);
     }

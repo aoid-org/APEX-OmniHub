@@ -11,7 +11,7 @@ import sys
 import json
 import datetime
 import urllib.request
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 # Import cryptography primitives
 try:
@@ -27,11 +27,20 @@ except ImportError:
 
 # Predefined APEX configurations
 SEC_TAG = 16842
-TENANT_ID = "4b2f3a8b-1e7c-4c91-923f-5d02a895226c"
 
-# Load environment configuration
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://rtopreovkywofgwgmozi.supabase.co")
+# Load environment configuration. Tenant/project values are deployment secrets.
+TENANT_ID = os.getenv("PHYSIOMNI_TENANT_ID", "")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+
+
+def require_uuid_env(name: str, value: str) -> str:
+    """Return a validated UUID from the environment or fail closed."""
+    try:
+        return str(UUID(value))
+    except (TypeError, ValueError):
+        print(f"Error: {name} must be set to a valid UUID via the deployment environment.")
+        sys.exit(1)
 
 
 def generate_ca_and_device_credentials(device_serial: str):
@@ -107,7 +116,11 @@ def register_device_in_supabase(device_serial: str, device_id: str):
     if not SUPABASE_KEY:
         print("SUPABASE_SERVICE_ROLE_KEY not configured. Skipping active database update.")
         return False
+    if not SUPABASE_URL:
+        print("SUPABASE_URL not configured. Skipping active database update.")
+        return False
 
+    tenant_id = require_uuid_env("PHYSIOMNI_TENANT_ID", TENANT_ID)
     url = f"{SUPABASE_URL.rstrip('/')}/rest/v1/physiomni_devices"
     headers = {
         "apikey": SUPABASE_KEY,
@@ -119,9 +132,9 @@ def register_device_in_supabase(device_serial: str, device_id: str):
     payload = {
         "id": device_id,
         "device_serial": device_serial,
-        "tenant_id": TENANT_ID,
-        "status": "active",
-        "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        "tenant_id": tenant_id,
+        "is_active": True,
+        "registered_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
 
     req = urllib.request.Request(
@@ -217,6 +230,7 @@ fi
 def main():
     print("Starting APEX PhysiOmni Pilot Node Provisioning Sequence...")
 
+    tenant_id = require_uuid_env("PHYSIOMNI_TENANT_ID", TENANT_ID)
     device_id = str(uuid4())
     device_serial = "DEV-NRF9161-001"
 
@@ -239,7 +253,7 @@ def main():
         "status": "active",
         "fingerprint": fingerprint,
         "secure_tag": SEC_TAG,
-        "tenant_id": TENANT_ID,
+        "tenant_id": tenant_id,
         "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
     with open(audit_file, "w") as f:
