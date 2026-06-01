@@ -99,6 +99,12 @@ BEGIN
 END;
 $$;
 
+-- SECURITY DEFINER RPCs are executable by PUBLIC by default; keep this server-side control-plane claim path service-role only.
+REVOKE EXECUTE ON FUNCTION public.apex_claim_idempotency(TEXT, TEXT, TEXT, TEXT, TEXT, UUID, TEXT, TEXT, TIMESTAMPTZ, INT, TEXT, TEXT, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.apex_claim_idempotency(TEXT, TEXT, TEXT, TEXT, TEXT, UUID, TEXT, TEXT, TIMESTAMPTZ, INT, TEXT, TEXT, TEXT) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.apex_claim_idempotency(TEXT, TEXT, TEXT, TEXT, TEXT, UUID, TEXT, TEXT, TIMESTAMPTZ, INT, TEXT, TEXT, TEXT) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.apex_claim_idempotency(TEXT, TEXT, TEXT, TEXT, TEXT, UUID, TEXT, TEXT, TIMESTAMPTZ, INT, TEXT, TEXT, TEXT) TO service_role;
+
 CREATE TABLE IF NOT EXISTS apex_compensation_catalog (
   compensation_ref TEXT PRIMARY KEY CHECK (compensation_ref LIKE 'apex.comp.%'),
   owner TEXT NOT NULL,
