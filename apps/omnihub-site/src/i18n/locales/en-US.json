@@ -22,5 +22,20 @@
     "installPromptReady": "Install OmniHub for one-tap launch and push updates.",
     "installPromptIOS": "On iOS: Share -> Add to Home Screen to install OmniHub.",
     "installPromptFallback": "Install becomes available once your browser meets PWA criteria."
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "current_language": "Current Language",
+    "language_updated": "Language updated successfully",
+    "save": "Save"
+  },
+  "translation": {
+    "title": "Semantic Translation",
+    "source_text": "Source Text or JSON Payload",
+    "target_language": "Target Language",
+    "translated_text": "Translated Output",
+    "translate": "Translate",
+    "copy": "Copy"
   }
 }
