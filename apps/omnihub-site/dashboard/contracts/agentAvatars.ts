@@ -19,7 +19,12 @@ export const AGENT_AVATARS = [
   'avatar-default.png',
 ] as const;
 
-export type AgentAvatarFilename = (typeof AGENT_AVATARS)[number];
+export type AgentAvatarFilename =
+  | 'companion-avatar-icon.png'
+  | 'navigator-avatar-icon.png'
+  | 'pulse-avatar-icon.png'
+  | 'sentinel-avatar-icon.png'
+  | 'avatar-default.png';
 
 export const DEFAULT_AGENT_AVATAR: AgentAvatarFilename = 'avatar-default.png';
 
