@@ -409,6 +409,7 @@ async function handleIntentPayload(
 async function dispatchGoalWorkflow(
   payload: WorkflowRequestPayload,
   authUserId: string,
+  req: Request,
   corsHeaders: HeadersInit
 ): Promise<Response> {
   const requestHash = await computeRequestHash(
@@ -417,12 +418,19 @@ async function dispatchGoalWorkflow(
     payload.trace_id
   );
 
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return jsonResponse({ error: "unauthorized" }, 401, corsHeaders);
+  }
+
   const orchestratorUrl = resolveOrchestratorUrl();
   const requestPath = "/api/v1/goals";
   const bodyRaw = JSON.stringify({
     user_id: authUserId,
     user_intent: payload.query,
     trace_id: payload.trace_id,
+    jwt_token: authHeader.slice("Bearer ".length),
+    tenant_id: authUserId,
   });
 
   const signedHeaders = await buildSignedHeaders(
@@ -556,7 +564,7 @@ async function handleTriggerWorkflow(
       );
     }
 
-    return await dispatchGoalWorkflow(ctx.body, authUser.id, ctx.corsHeaders);
+    return await dispatchGoalWorkflow(ctx.body, authUser.id, req, ctx.corsHeaders);
   } catch (error) {
     return workflowErrorResponse(error, ctx.corsHeaders);
   }

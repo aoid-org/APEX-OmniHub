@@ -60,7 +60,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["models*", "infrastructure*", "workflows*", "activities*", "observability*"]
+include = ["models*", "infrastructure*", "workflows*", "activities*", "observability*", "security*"]
 exclude = ["tests*"]
 
 [tool.pytest.ini_options]

@@ -46,7 +46,12 @@ def test_health_check():
 
 
 def test_create_goal_success(mock_temporal_client):
-    payload = {"user_id": "user-1", "user_intent": "do something", "trace_id": "trace-1"}
+    payload = {
+        "user_id": "user-1",
+        "user_intent": "do something",
+        "trace_id": "trace-1",
+        "jwt_token": "jwt-1",
+    }
 
     with patch("server.Client.connect", mock_temporal_client[0]):
         # Now hit it
@@ -56,8 +61,42 @@ def test_create_goal_success(mock_temporal_client):
         assert response.json()["status"] == "started"
 
 
-def test_create_goal_failure(mock_temporal_client):
+def test_create_goal_requires_jwt_token():
     payload = {"user_id": "user-1", "user_intent": "do something", "trace_id": "trace-1"}
+
+    response = client.post("/api/v1/goals", json=payload)
+
+    assert response.status_code == 422
+
+
+def test_create_goal_passes_jwt_and_tenant_context(mock_temporal_client):
+    payload = {
+        "user_id": "user-1",
+        "user_intent": "do something",
+        "trace_id": "trace-1",
+        "jwt_token": "jwt-1",
+        "tenant_id": "tenant-1",
+    }
+
+    response = client.post("/api/v1/goals", json=payload)
+
+    assert response.status_code == 200
+    _, temp_client = mock_temporal_client
+    args = temp_client.start_workflow.call_args.kwargs["args"]
+    assert args[2] == {
+        "trace_id": "trace-1",
+        "jwt_token": "jwt-1",
+        "tenant_id": "tenant-1",
+    }
+
+
+def test_create_goal_failure(mock_temporal_client):
+    payload = {
+        "user_id": "user-1",
+        "user_intent": "do something",
+        "trace_id": "trace-1",
+        "jwt_token": "jwt-1",
+    }
 
     # Mock temporal client to raise exception
     _, temp_client = mock_temporal_client

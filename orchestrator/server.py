@@ -14,7 +14,7 @@ import os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -82,6 +82,8 @@ class GoalRequest(BaseModel):
     user_id: str
     user_intent: str
     trace_id: str
+    jwt_token: str = Field(min_length=1)
+    tenant_id: str | None = None
 
 
 @app.post(
@@ -112,7 +114,15 @@ async def create_goal(request: GoalRequest) -> dict[str, str] | JSONResponse:
         try:
             handle = await client.start_workflow(
                 AgentWorkflow.run,
-                args=[request.user_intent, request.user_id, {"trace_id": request.trace_id}],
+                args=[
+                    request.user_intent,
+                    request.user_id,
+                    {
+                        "trace_id": request.trace_id,
+                        "jwt_token": request.jwt_token,
+                        "tenant_id": request.tenant_id or request.user_id,
+                    },
+                ],
                 id=workflow_id,
                 task_queue=os.getenv("TEMPORAL_TASK_QUEUE", "apex-orchestrator"),
             )

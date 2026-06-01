@@ -59,6 +59,7 @@ with workflow.unsafe.imports_passed_through():
         WorkflowFailed,
     )
     from models.man_mode import create_idempotency_key
+    from security.saga_jwt_validator import SagaAuthError, validate_saga_jwt_claims
 
 
 # ============================================================================
@@ -315,6 +316,7 @@ class AgentWorkflow:
         self.step_count = 0
         self.start_time: float | None = None
         self.workflow_context: dict[str, Any] = {}
+        self._saga_jwt_token: str | None = None
 
         # OmniTrace: track whether recording is enabled for this run
         self._omnitrace_enabled: bool = False
@@ -424,7 +426,23 @@ class AgentWorkflow:
 
         # Initialize Saga context
         self.saga = SagaContext(workflow_instance=self)
-        self.workflow_context = context or {}
+        raw_context = context or {}
+        self._saga_jwt_token = raw_context.get("jwt_token")
+        # Keep bearer credentials out of saga events, LLM planning context, and telemetry.
+        self.workflow_context = {k: v for k, v in raw_context.items() if k != "jwt_token"}
+        context = self.workflow_context
+
+        # ── Zero-Trust JWT guard ─────────────────────────────────────────────
+        # Fail closed before any saga event, activity, or service-role-backed tool can execute.
+        try:
+            validate_saga_jwt_claims(
+                self._saga_jwt_token,
+                expected_user_id=user_id,
+                expected_tenant_id=self.workflow_context.get("tenant_id") or user_id,
+                now_ts=workflow.now().timestamp(),
+            )
+        except SagaAuthError as auth_err:
+            raise ApplicationError(str(auth_err), non_retryable=True) from auth_err
 
         # Restore snapshot if this is a continue-as-new
         if context and "step_results" in context:
@@ -1421,6 +1439,8 @@ class AgentWorkflow:
             "deferred_steps": self.deferred_steps,
             "step_count": self.step_count,
             "failed_step_id": self.failed_step_id,
+            "jwt_token": self._saga_jwt_token,
+            "tenant_id": self.workflow_context.get("tenant_id"),
         }
 
         workflow.logger.info(
