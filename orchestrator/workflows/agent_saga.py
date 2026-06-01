@@ -217,9 +217,10 @@ class SagaContext:
                 workflow.logger.error(f"✗ Compensation failed: {comp.activity_name} - {e!s}")
                 return {"step_id": comp.step_id, "success": False, "error": str(e)}
 
-        # Execute in reverse order (LIFO) in parallel via asyncio.gather
-        tasks = [_execute_compensation(c) for c in reversed(self.compensation_stack)]
-        results = await asyncio.gather(*tasks)
+        # Execute sequentially to preserve true LIFO completion order for dependent undo steps.
+        results = []
+        for compensation in reversed(self.compensation_stack):
+            results.append(await _execute_compensation(compensation))
 
         workflow.logger.info(f"✓ Saga rollback complete ({len(results)} compensations executed)")
         return results

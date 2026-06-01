@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -15,14 +16,53 @@ with (
 
     from workflows.agent_saga import (  # noqa: E402
         AgentWorkflow,
+        CompensationStep,
         GoalReceived,
         PlanGenerated,
+        SagaContext,
     )
 
 
 @pytest.fixture
 def agent_workflow():
     return AgentWorkflow()
+
+
+@pytest.mark.asyncio
+async def test_saga_rollback_executes_compensations_sequential_lifo():
+    events = []
+
+    class WorkflowInstance:
+        async def _execute_activity(
+            self,
+            activity_name,
+            activity_input,
+            step_id,
+            is_compensation=False,
+        ):
+            assert is_compensation is True
+            events.append(f"start:{activity_name}:{step_id}")
+            if activity_name == "delete_child":
+                await asyncio.sleep(0)
+            events.append(f"finish:{activity_name}:{step_id}")
+            return {"activity": activity_name, "input": activity_input}
+
+    saga = SagaContext(WorkflowInstance())
+    saga.compensation_stack = [
+        CompensationStep("delete_parent", {"id": "parent"}, "create-parent"),
+        CompensationStep("delete_child", {"id": "child"}, "create-child"),
+    ]
+
+    with patch("workflows.agent_saga.workflow.logger"):
+        results = await saga.rollback()
+
+    assert events == [
+        "start:delete_child:create-child",
+        "finish:delete_child:create-child",
+        "start:delete_parent:create-parent",
+        "finish:delete_parent:create-parent",
+    ]
+    assert [result["step_id"] for result in results] == ["create-child", "create-parent"]
 
 
 def test_initialization(agent_workflow):
