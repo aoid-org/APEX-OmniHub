@@ -12,6 +12,8 @@ describe('production domain alignment', () => {
     resolve(process.cwd(), 'apps/omnihub-site/src/lib/site-url.ts'),
     'utf8',
   );
+  const wranglerConfig = readFileSync(resolve(process.cwd(), 'wrangler.toml'), 'utf8');
+  const nodeVersion = readFileSync(resolve(process.cwd(), '.node-version'), 'utf8').trim();
   const homePage = readFileSync(resolve(process.cwd(), 'apps/omnihub-site/src/pages/Home.tsx'), 'utf8');
 
   it('pins terraform production routing to apexomnihub.icu', () => {
@@ -25,5 +27,11 @@ describe('production domain alignment', () => {
 
   it('keeps homepage canonical metadata aligned to apexomnihub.icu', () => {
     expect(homePage).toContain('canonical="https://apexomnihub.icu/"');
+  });
+
+  it('pins Cloudflare Pages project config to the canonical production target', () => {
+    expect(wranglerConfig).toContain('name = "apex-omnihub"');
+    expect(wranglerConfig).toContain('pages_build_output_dir = "dist"');
+    expect(nodeVersion).toBe('24');
   });
 });
