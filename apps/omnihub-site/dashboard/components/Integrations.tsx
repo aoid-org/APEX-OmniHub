@@ -275,7 +275,7 @@ export const Integrations = () => {
                       className="w-full border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition-all duration-300"
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open('https://apps.apple.com/us/app/apex-omnilink/id1234567890', '_blank');
+                        window.open('https://apps.apple.com/us/app/apex-omnilink/id1234567890', '_blank', 'noopener,noreferrer');
                       }}
                     >
                       App Store
@@ -285,7 +285,7 @@ export const Integrations = () => {
                       className="w-full border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-300 transition-all duration-300"
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open('https://play.google.com/store/apps/details?id=com.apex.omnilink', '_blank');
+                        window.open('https://play.google.com/store/apps/details?id=com.apex.omnilink', '_blank', 'noopener,noreferrer');
                       }}
                     >
                       Play Store

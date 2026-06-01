@@ -1,14 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { describe, it, expect } from 'vitest';
 
 describe('Theme System', () => {
   beforeEach(() => {
-    document.documentElement.removeAttribute('data-theme');
+    delete document.documentElement.dataset.theme;
     localStorage.removeItem('omni_theme_preference');
   });
 
   afterEach(() => {
-    document.documentElement.removeAttribute('data-theme');
+    delete document.documentElement.dataset.theme;
     localStorage.removeItem('omni_theme_preference');
   });
 

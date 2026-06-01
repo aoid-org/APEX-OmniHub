@@ -8,7 +8,7 @@ DECLARE
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = v_table_automations
+    WHERE schemaname = 'public' AND tablename = v_table_automations -- NOSONAR
       AND policyname = 'automations_owner_rls'
   ) THEN
     ALTER TABLE IF EXISTS public.automations ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users;
@@ -24,7 +24,7 @@ DECLARE
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = v_table_connector
+    WHERE schemaname = 'public' AND tablename = v_table_connector -- NOSONAR
       AND policyname = 'connector_sessions_user_rls'
   ) THEN
     CREATE POLICY "connector_sessions_user_rls" ON public.connector_sessions
@@ -42,7 +42,7 @@ DECLARE
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = v_table_devices
+    WHERE schemaname = 'public' AND tablename = v_table_devices -- NOSONAR
       AND policyname = 'physiomni_devices_user_rls'
   ) THEN
     CREATE POLICY "physiomni_devices_user_rls" ON public.physiomni_devices

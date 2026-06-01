@@ -600,10 +600,14 @@ async function resolveModuleState(
       }>;
 
       const violations = incidents.filter(i => i.status === 'open').length;
+      let headline = 'All Systems Compliant';
+      if (violations > 0) {
+        headline = `${violations} Open Incident${violations === 1 ? '' : 's'}`;
+      }
 
       return {
         moduleKey: 'audits',
-        headline: violations === 0 ? 'All Systems Compliant' : `${violations} Open Incident${violations === 1 ? '' : 's'}`,
+        headline,
         stats: [
           { label: 'Events (24h)', value: String(events.length), trend: 'stable' },
           { label: 'Open Incidents', value: String(violations), trend: violations > 0 ? 'up' : 'stable' },
@@ -732,10 +736,14 @@ async function resolveModuleState(
 
       const agentSessions = (sessions ?? []) as Array<{ id: string; status: string; started_at: string; updated_at: string }>;
       const activeSessions = agentSessions.filter(s => s.status === 'active').length;
+      let headline = 'No Active Sessions';
+      if (activeSessions > 0) {
+        headline = `${activeSessions} Active Session${activeSessions === 1 ? '' : 's'}`;
+      }
 
       return {
         moduleKey: 'agent',
-        headline: activeSessions > 0 ? `${activeSessions} Active Session${activeSessions === 1 ? '' : 's'}` : 'No Active Sessions',
+        headline,
         stats: [
           { label: 'Active Sessions', value: String(activeSessions), trend: activeSessions > 0 ? 'up' : 'stable' },
           { label: 'Total Sessions', value: String(agentSessions.length), trend: 'stable' },

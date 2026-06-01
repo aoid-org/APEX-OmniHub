@@ -82,7 +82,7 @@ export function useLayoutPersistence(): UseLayoutPersistenceReturn {
     persist(activeNav, isDark, ops);
     
     // Apply theme system tokens globally
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
   }, [activeNav, isDark, ops, persist]);
 
   return { activeNav, setActiveNav, isDark, setIsDark, ops, setOps };

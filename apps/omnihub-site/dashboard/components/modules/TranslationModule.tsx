@@ -68,9 +68,7 @@ export default function TranslationModule({ onClose }: Props) {
       // Simulate async processing tick for UX responsiveness
       await new Promise<void>((resolve) => setTimeout(resolve, 120));
 
-      const result = localTranslate(sourceText, targetLang);
-      setTranslatedText(result.text);
-      setMetadata(result);
+      localTranslate(sourceText, targetLang);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       toast.error('Setup is required', { description: 'Missing API configuration for Semantic Translation Engine.' });

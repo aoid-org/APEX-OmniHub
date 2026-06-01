@@ -50,8 +50,11 @@ export const OmniSlatePane = memo(function OmniSlatePane({
   const addContext = useOmniSlateStore(st => st.addContext);
   
   // Map legacy health to new health enum for fallback
-  const health = (healthRaw === 'green' ? 'healthy' : healthRaw === 'yellow' ? 'warning' : healthRaw === 'red' ? 'broken' : healthRaw) as OmniSlateHealth;
-
+  let health: OmniSlateHealth;
+  if (healthRaw === 'green') health = 'healthy';
+  else if (healthRaw === 'yellow') health = 'warning';
+  else if (healthRaw === 'red') health = 'broken';
+  else health = healthRaw;
   const s = HC[health];
   const firstLog = traceLogs[0] ?? null;
   const traceColor = firstLog?.includes('COMPLETE') ? '#34d399' : '#facc15';
@@ -294,7 +297,7 @@ export const OmniSlatePane = memo(function OmniSlatePane({
                 {context.map(ctx => (
                   <ContextTile
                     key={ctx.id}
-                    ctx={ctx as OmniSlateContextItem}
+                    ctx={ctx}
                     activeInsight={activeInsight}
                     onToggle={onToggleInsight}
                   />

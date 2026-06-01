@@ -75,7 +75,13 @@ export const ContextTile = memo(function ContextTile({
           {ctx.iconUrl ? (
             <img src={ctx.iconUrl} alt="" style={{ width: 14, height: 14, borderRadius: 2 }} />
           ) : (
-            <span style={{ opacity: 0.7 }}>{ctx.kind === 'file' ? '📄' : ctx.kind === 'link' ? '🔗' : '🧩'}</span>
+            <span style={{ opacity: 0.7 }}>
+              {(() => {
+                if (ctx.kind === 'file') return '📄';
+                if (ctx.kind === 'link') return '🔗';
+                return '🧩';
+              })()}
+            </span>
           )}
           <span style={{ maxWidth: 120, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {ctx.label}
