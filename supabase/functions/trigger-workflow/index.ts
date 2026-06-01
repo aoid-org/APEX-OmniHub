@@ -40,15 +40,6 @@ type TriggerWorkflowPayload =
       selected_items: string[];
       trace_id: string;
       idempotency_key: string;
-    }
-  | {
-      kind: "intent";
-      intentId?: string;
-      intent_id?: string;
-      intent?: string;
-      tenantId?: string;
-      tenant_id?: string;
-      idempotency_key?: string;
     };
 
 interface WorkflowRequestPayload {
@@ -384,24 +375,22 @@ async function handleModuleActionPayload(
   );
 }
 
-async function handleIntentPayload(
+function rejectDirectIntentPayload(
   rawBody: Record<string, unknown>,
-  authUser: AuthenticatedHttpUser,
-  req: Request,
   corsHeaders: HeadersInit
-): Promise<Response | null> {
+): Response | null {
   if (!hasIntentSignal(rawBody)) {
     return null;
   }
 
-  return await dispatchIntent(
+  // Direct browser-supplied intents can target privileged orchestrator tools.
+  // Require typed entrypoints so tool parameters are normalized server-side.
+  return jsonResponse(
     {
-      ...rawBody,
-      tenantId: authUser.id,
-      tenant_id: authUser.id,
+      error: "direct_intent_forbidden",
+      message: "Direct intent dispatch is not accepted by this endpoint",
     },
-    authUser.id,
-    req,
+    403,
     corsHeaders
   );
 }
@@ -541,13 +530,11 @@ async function handleTriggerWorkflow(
     );
     if (moduleActionResponse) return moduleActionResponse;
 
-    const intentResponse = await handleIntentPayload(
+    const directIntentResponse = rejectDirectIntentPayload(
       ctx.body,
-      authUser,
-      req,
       ctx.corsHeaders
     );
-    if (intentResponse) return intentResponse;
+    if (directIntentResponse) return directIntentResponse;
 
     if (!validateGoalPayload(ctx.body)) {
       return invalidPayloadResponse(
