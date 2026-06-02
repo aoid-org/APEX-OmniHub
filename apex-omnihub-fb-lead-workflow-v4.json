@@ -1,0 +1,893 @@
+{
+  "name": "APEX OmniHub — FB Comment→DM→Lead→CRM (Production V4)",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": {},
+  "connections": {
+    "Webhook Verify (GET)": { "main": [ [ { "node": "Verify Token Check", "type": "main", "index": 0 } ] ] },
+    "Verify Token Check": { "main": [ [ { "node": "Respond Challenge", "type": "main", "index": 0 } ], [ { "node": "Respond Forbidden (GET)", "type": "main", "index": 0 } ] ] },
+    "Webhook Events (POST)": { "main": [ [ { "node": "Verify Signature", "type": "main", "index": 0 } ] ] },
+    "Verify Signature": { "main": [ [ { "node": "Signature Valid?", "type": "main", "index": 0 } ] ] },
+    "Signature Valid?": { "main": [ [ { "node": "Respond 200", "type": "main", "index": 0 } ], [ { "node": "Respond 403 (Signature)", "type": "main", "index": 0 } ] ] },
+    "Respond 200": { "main": [ [ { "node": "Route Events", "type": "main", "index": 0 } ] ] },
+    "Route Events": { "main": [ [ { "node": "Event Type Switch", "type": "main", "index": 0 } ] ] },
+    "Event Type Switch": { "main": [ [ { "node": "Comment Context", "type": "main", "index": 0 } ], [ { "node": "Message Context", "type": "main", "index": 0 } ], [ { "node": "Ignore Event", "type": "main", "index": 0 } ] ] },
+    "Comment Context": { "main": [ [ { "node": "Save Comment (Upsert)", "type": "main", "index": 0 } ] ] },
+    "Save Comment (Upsert)": { "main": [ [ { "node": "Load Page Token (Comment)", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Load Page Token (Comment)": { "main": [ [ { "node": "Extract Comment Token", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Extract Comment Token": { "main": [ [ { "node": "Send Private Reply", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Send Private Reply": { "main": [ [ { "node": "Lookup Customer (Comment)", "type": "main", "index": 0 }, { "node": "FB Error Filter (Reply)", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "FB Error Filter (Reply)": { "main": [ [ { "node": "Log FB Error", "type": "main", "index": 0 } ] ] },
+    "Lookup Customer (Comment)": { "main": [ [ { "node": "Build Comment Ctx", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Build Comment Ctx": { "main": [ [ { "node": "Customer Completed?", "type": "main", "index": 0 } ] ] },
+    "Customer Completed?": { "main": [ [ { "node": "Comment Done", "type": "main", "index": 0 } ], [ { "node": "Upsert Customer (Comment)", "type": "main", "index": 0 } ] ] },
+    "Upsert Customer (Comment)": { "main": [ [ { "node": "Comment Done", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Message Context": { "main": [ [ { "node": "Load Page Token (DM)", "type": "main", "index": 0 } ] ] },
+    "Load Page Token (DM)": { "main": [ [ { "node": "Lookup Customer (DM)", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Lookup Customer (DM)": { "main": [ [ { "node": "Build DM Context", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Build DM Context": { "main": [ [ { "node": "DM State Switch", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "DM State Switch": { "main": [ [ { "node": "Save Name", "type": "main", "index": 0 } ], [ { "node": "Compute Phone Valid", "type": "main", "index": 0 } ], [ { "node": "Compute Gov Valid", "type": "main", "index": 0 } ], [ { "node": "Compute Address Valid", "type": "main", "index": 0 } ], [ { "node": "Prep Already Registered", "type": "main", "index": 0 } ], [ { "node": "Upsert New Customer", "type": "main", "index": 0 } ] ] },
+    "Upsert New Customer": { "main": [ [ { "node": "Prep Greeting", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Prep Greeting": { "main": [ [ { "node": "Send DM", "type": "main", "index": 0 } ] ] },
+    "Save Name": { "main": [ [ { "node": "Prep Ask Phone", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Prep Ask Phone": { "main": [ [ { "node": "Send DM", "type": "main", "index": 0 } ] ] },
+    "Compute Phone Valid": { "main": [ [ { "node": "Phone Valid?", "type": "main", "index": 0 } ] ] },
+    "Phone Valid?": { "main": [ [ { "node": "Save Phone", "type": "main", "index": 0 } ], [ { "node": "Prep Invalid Phone", "type": "main", "index": 0 } ] ] },
+    "Save Phone": { "main": [ [ { "node": "Prep Ask Gov", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Prep Ask Gov": { "main": [ [ { "node": "Send DM", "type": "main", "index": 0 } ] ] },
+    "Prep Invalid Phone": { "main": [ [ { "node": "Send DM", "type": "main", "index": 0 } ] ] },
+    "Compute Gov Valid": { "main": [ [ { "node": "Gov Valid?", "type": "main", "index": 0 } ] ] },
+    "Gov Valid?": { "main": [ [ { "node": "Save Gov", "type": "main", "index": 0 } ], [ { "node": "Prep Invalid Gov", "type": "main", "index": 0 } ] ] },
+    "Save Gov": { "main": [ [ { "node": "Prep Ask Address", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Prep Ask Address": { "main": [ [ { "node": "Send DM", "type": "main", "index": 0 } ] ] },
+    "Prep Invalid Gov": { "main": [ [ { "node": "Send DM", "type": "main", "index": 0 } ] ] },
+    "Compute Address Valid": { "main": [ [ { "node": "Address Valid?", "type": "main", "index": 0 } ] ] },
+    "Address Valid?": { "main": [ [ { "node": "Save Address", "type": "main", "index": 0 } ], [ { "node": "Prep Invalid Address", "type": "main", "index": 0 } ] ] },
+    "Save Address": { "main": [ [ { "node": "Extract Customer ID", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Extract Customer ID": { "main": [ [ { "node": "Check Pending Order", "type": "main", "index": 0 } ] ] },
+    "Check Pending Order": { "main": [ [ { "node": "Eval Pending", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Eval Pending": { "main": [ [ { "node": "Pending Exists?", "type": "main", "index": 0 } ] ] },
+    "Pending Exists?": { "main": [ [ { "node": "Prep Order Success", "type": "main", "index": 0 } ], [ { "node": "Create Order", "type": "main", "index": 0 } ] ] },
+    "Create Order": { "main": [ [ { "node": "Prep Order Success", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "Prep Order Success": { "main": [ [ { "node": "Send DM", "type": "main", "index": 0 } ] ] },
+    "Prep Invalid Address": { "main": [ [ { "node": "Send DM", "type": "main", "index": 0 } ] ] },
+    "Prep Already Registered": { "main": [ [ { "node": "Send DM", "type": "main", "index": 0 } ] ] },
+    "Send DM": { "main": [ [ { "node": "FB Error Filter (DM)", "type": "main", "index": 0 } ], [ { "node": "Log Error", "type": "main", "index": 0 } ] ] },
+    "FB Error Filter (DM)": { "main": [ [ { "node": "Log FB Error", "type": "main", "index": 0 } ] ] }
+  },
+  "nodes": [
+    {
+      "id": "n-webhook-get",
+      "name": "Webhook Verify (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [ -1500, -280 ],
+      "webhookId": "apex-fb-webhook-get",
+      "parameters": { "httpMethod": "GET", "path": "webhook", "responseMode": "responseNode", "options": {} }
+    },
+    {
+      "id": "n-verify-token",
+      "name": "Verify Token Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ -1280, -280 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [
+            { "id": "vt1", "leftValue": "={{ $json.query['hub.mode'] }}", "rightValue": "subscribe", "operator": { "type": "string", "operation": "equals" } },
+            { "id": "vt2", "leftValue": "={{ $json.query['hub.verify_token'] }}", "rightValue": "={{ $env.META_VERIFY_TOKEN }}", "operator": { "type": "string", "operation": "equals" } }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-respond-challenge",
+      "name": "Respond Challenge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [ -1060, -380 ],
+      "parameters": { "respondWith": "text", "responseBody": "={{ $('Webhook Verify (GET)').item.json.query['hub.challenge'] }}", "options": { "responseCode": 200 } }
+    },
+    {
+      "id": "n-respond-forbidden-get",
+      "name": "Respond Forbidden (GET)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [ -1060, -200 ],
+      "parameters": { "respondWith": "text", "responseBody": "Forbidden", "options": { "responseCode": 403 } }
+    },
+    {
+      "id": "n-webhook-post",
+      "name": "Webhook Events (POST)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [ -1500, 240 ],
+      "webhookId": "apex-fb-webhook-post",
+      "parameters": { "httpMethod": "POST", "path": "webhook", "responseMode": "responseNode", "options": { "rawBody": true } }
+    },
+    {
+      "id": "n-verify-signature",
+      "name": "Verify Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ -1280, 240 ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const crypto = require('crypto');\nconst secret = $env.META_APP_SECRET || '';\nconst headers = $json.headers || {};\nconst sigHeader = headers['x-hub-signature-256'] || headers['X-Hub-Signature-256'] || '';\nlet raw = '';\nconst bin = $input.first().binary;\nif (bin && bin.data && bin.data.data) {\n  raw = Buffer.from(bin.data.data, 'base64').toString('utf8');\n} else if (typeof $json.rawBody === 'string') {\n  raw = $json.rawBody;\n} else {\n  raw = JSON.stringify($json.body || {});\n}\nlet valid = false;\nif (secret && sigHeader.startsWith('sha256=')) {\n  const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(raw, 'utf8').digest('hex');\n  try {\n    const a = Buffer.from(expected);\n    const b = Buffer.from(sigHeader);\n    valid = a.length === b.length && crypto.timingSafeEqual(a, b);\n  } catch (e) { valid = false; }\n}\nlet body = $json.body;\nif (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) {} }\nif ((!body || typeof body !== 'object') && raw) { try { body = JSON.parse(raw); } catch (e) { body = {}; } }\nreturn [{ json: { valid, body: body || {} } }];"
+      }
+    },
+    {
+      "id": "n-signature-valid",
+      "name": "Signature Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ -1060, 240 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [ { "id": "sv1", "leftValue": "={{ $json.valid }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-respond-200",
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [ -840, 160 ],
+      "parameters": { "respondWith": "text", "responseBody": "EVENT_RECEIVED", "options": { "responseCode": 200 } }
+    },
+    {
+      "id": "n-respond-403-sig",
+      "name": "Respond 403 (Signature)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [ -840, 360 ],
+      "parameters": { "respondWith": "text", "responseBody": "Invalid signature", "options": { "responseCode": 403 } }
+    },
+    {
+      "id": "n-route-events",
+      "name": "Route Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ -620, 160 ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const body = $json.body || {};\nconst out = [];\nfor (const entry of (body.entry || [])) {\n  const page_id = entry.id;\n  for (const ch of (entry.changes || [])) {\n    const v = ch.value || {};\n    if (ch.field === 'feed' && v.item === 'comment' && v.verb === 'add') {\n      if (!v.from || !v.from.id) continue;\n      if (v.from.id === page_id) continue;\n      out.push({ json: { event_type: 'comment', page_id, post_id: v.post_id || '', comment_id: v.comment_id || '', fb_id: v.from.id, comment_text: v.message || '' } });\n    }\n  }\n  for (const m of (entry.messaging || [])) {\n    if (m.message && m.message.is_echo) continue;\n    if (m.delivery || m.read) continue;\n    if (!m.sender || !m.sender.id) continue;\n    if (!m.message || typeof m.message.text !== 'string') continue;\n    out.push({ json: { event_type: 'message', page_id, fb_id: m.sender.id, message_text: m.message.text } });\n  }\n}\nif (out.length === 0) out.push({ json: { event_type: 'ignore' } });\nreturn out;"
+      }
+    },
+    {
+      "id": "n-event-switch",
+      "name": "Event Type Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [ -400, 160 ],
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 }, "conditions": [ { "id": "evc", "leftValue": "={{ $json.event_type }}", "rightValue": "comment", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "comment" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 }, "conditions": [ { "id": "evm", "leftValue": "={{ $json.event_type }}", "rightValue": "message", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "message" }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      }
+    },
+    {
+      "id": "n-ignore-event",
+      "name": "Ignore Event",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [ -180, 440 ],
+      "parameters": {}
+    },
+    {
+      "id": "n-comment-context",
+      "name": "Comment Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ -180, -200 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [
+          { "id": "cc1", "name": "page_id", "value": "={{ $json.page_id }}", "type": "string" },
+          { "id": "cc2", "name": "post_id", "value": "={{ $json.post_id }}", "type": "string" },
+          { "id": "cc3", "name": "comment_id", "value": "={{ $json.comment_id }}", "type": "string" },
+          { "id": "cc4", "name": "fb_id", "value": "={{ $json.fb_id }}", "type": "string" },
+          { "id": "cc5", "name": "comment_text", "value": "={{ $json.comment_text }}", "type": "string" }
+        ] },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-save-comment",
+      "name": "Save Comment (Upsert)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 40, -200 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/comments?on_conflict=comment_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Prefer", "value": "resolution=merge-duplicates,return=minimal" }, { "name": "Content-Type", "value": "application/json" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ page_id: $json.page_id, post_id: $json.post_id, comment_id: $json.comment_id, fb_id: $json.fb_id, comment_text: $json.comment_text }) }}",
+        "options": { "response": { "response": { "fullResponse": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-load-token-comment",
+      "name": "Load Page Token (Comment)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 260, -200 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL + '/rest/v1/pages?select=page_access_token&page_id=eq.' + $('Comment Context').item.json.page_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": { "response": { "response": { "fullResponse": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-extract-comment-token",
+      "name": "Extract Comment Token",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 480, -200 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const arr = Array.isArray($json.body) ? $json.body : [];\nconst token = arr[0] ? (arr[0].page_access_token || '') : '';\nif (!token) {\n  throw new Error('Page token not found for page_id ' + ($('Comment Context').item.json.page_id || ''));\n}\nreturn [{ json: { page_access_token: token } }];"
+      }
+    },
+    {
+      "id": "n-send-private-reply",
+      "name": "Send Private Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 700, -200 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://graph.facebook.com/v19.0/' + $('Comment Context').item.json.comment_id + '/private_replies' }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Authorization", "value": "={{ 'Bearer ' + ($('Extract Comment Token').item.json.page_access_token || '') }}" }, { "name": "Content-Type", "value": "application/json" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: 'مرحبا 👋\\nشكراً على اهتمامك.\\nتفقد رسائلك الخاصة لمواصلة الطلب.' }) }}",
+        "options": { "response": { "response": { "fullResponse": true, "neverError": true } } }
+      }
+    },
+    {
+      "id": "n-fb-error-filter-reply",
+      "name": "FB Error Filter (Reply)",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [ 920, -360 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [ { "id": "fr1", "leftValue": "={{ $json.statusCode }}", "rightValue": 400, "operator": { "type": "number", "operation": "gte" } } ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-lookup-customer-comment",
+      "name": "Lookup Customer (Comment)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 920, -200 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL + '/rest/v1/customer_profiles?select=*&page_id=eq.' + $('Comment Context').item.json.page_id + '&fb_id=eq.' + $('Comment Context').item.json.fb_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": { "response": { "response": { "fullResponse": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-build-comment-ctx",
+      "name": "Build Comment Ctx",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 1140, -200 ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('Comment Context').item.json;\nconst arr = Array.isArray($json.body) ? $json.body : [];\nconst rec = arr[0] || null;\nreturn [{ json: { page_id: ctx.page_id, fb_id: ctx.fb_id, completed: rec ? rec.lead_state === 'completed' : false } }];"
+      }
+    },
+    {
+      "id": "n-customer-completed",
+      "name": "Customer Completed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1360, -200 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [ { "id": "cm1", "leftValue": "={{ $json.completed }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-comment-done",
+      "name": "Comment Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [ 1580, -300 ],
+      "parameters": {}
+    },
+    {
+      "id": "n-upsert-customer-comment",
+      "name": "Upsert Customer (Comment)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 1580, -120 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/customer_profiles?on_conflict=page_id,fb_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Prefer", "value": "resolution=merge-duplicates,return=minimal" }, { "name": "Content-Type", "value": "application/json" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ page_id: $json.page_id, fb_id: $json.fb_id, lead_state: 'awaiting_name', updated_at: new Date().toISOString() }) }}",
+        "options": { "response": { "response": { "fullResponse": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-message-context",
+      "name": "Message Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ -180, 200 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [
+          { "id": "mc1", "name": "page_id", "value": "={{ $json.page_id }}", "type": "string" },
+          { "id": "mc2", "name": "fb_id", "value": "={{ $json.fb_id }}", "type": "string" },
+          { "id": "mc3", "name": "recipient_id", "value": "={{ $json.fb_id }}", "type": "string" },
+          { "id": "mc4", "name": "message_text", "value": "={{ $json.message_text }}", "type": "string" }
+        ] },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-load-token-dm",
+      "name": "Load Page Token (DM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 40, 200 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL + '/rest/v1/pages?select=page_access_token&page_id=eq.' + $('Message Context').item.json.page_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": { "response": { "response": { "fullResponse": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-lookup-customer-dm",
+      "name": "Lookup Customer (DM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 260, 200 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL + '/rest/v1/customer_profiles?select=*&page_id=eq.' + $('Message Context').item.json.page_id + '&fb_id=eq.' + $('Message Context').item.json.fb_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": { "response": { "response": { "fullResponse": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-build-dm-context",
+      "name": "Build DM Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 480, 200 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('Message Context').item.json;\nconst custArr = Array.isArray($json.body) ? $json.body : [];\nconst cust = custArr[0] || null;\nconst tokBody = $('Load Page Token (DM)').item.json.body;\nconst tokArr = Array.isArray(tokBody) ? tokBody : [];\nconst token = tokArr[0] ? (tokArr[0].page_access_token || '') : '';\nif (!token) {\n  throw new Error('Page token not found for page_id ' + ctx.page_id);\n}\nreturn [{ json: { page_id: ctx.page_id, fb_id: ctx.fb_id, recipient_id: ctx.recipient_id, message_text: ctx.message_text, lead_state: cust ? (cust.lead_state || '') : '', customer_id: cust ? cust.id : '', page_access_token: token } }];"
+      }
+    },
+    {
+      "id": "n-dm-state-switch",
+      "name": "DM State Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [ 700, 200 ],
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 }, "conditions": [ { "id": "st1", "leftValue": "={{ $json.lead_state }}", "rightValue": "awaiting_name", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "awaiting_name" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 }, "conditions": [ { "id": "st2", "leftValue": "={{ $json.lead_state }}", "rightValue": "awaiting_phone", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "awaiting_phone" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 }, "conditions": [ { "id": "st3", "leftValue": "={{ $json.lead_state }}", "rightValue": "awaiting_gov", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "awaiting_gov" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 }, "conditions": [ { "id": "st4", "leftValue": "={{ $json.lead_state }}", "rightValue": "awaiting_address", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "awaiting_address" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 }, "conditions": [ { "id": "st5", "leftValue": "={{ $json.lead_state }}", "rightValue": "completed", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "completed" }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      }
+    },
+    {
+      "id": "n-upsert-new-customer",
+      "name": "Upsert New Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 920, 760 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/customer_profiles?on_conflict=page_id,fb_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Prefer", "value": "resolution=merge-duplicates,return=minimal" }, { "name": "Content-Type", "value": "application/json" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ page_id: $json.page_id, fb_id: $json.fb_id, lead_state: 'awaiting_name', updated_at: new Date().toISOString() }) }}",
+        "options": { "response": { "response": { "fullResponse": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-prep-greeting",
+      "name": "Prep Greeting",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ 1140, 760 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [
+          { "id": "pg1", "name": "recipient_id", "value": "={{ $('Build DM Context').item.json.recipient_id }}", "type": "string" },
+          { "id": "pg2", "name": "reply_text", "value": "مرحبا بيك!\nلتسجيل طلبيتك أرسل اسمك ولقبك.", "type": "string" }
+        ] },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-save-name",
+      "name": "Save Name",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 920, -40 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/customer_profiles?on_conflict=page_id,fb_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Prefer", "value": "resolution=merge-duplicates,return=minimal" }, { "name": "Content-Type", "value": "application/json" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ page_id: $json.page_id, fb_id: $json.fb_id, name: ($json.message_text || '').trim(), lead_state: 'awaiting_phone', updated_at: new Date().toISOString() }) }}",
+        "options": { "response": { "response": { "fullResponse": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-prep-ask-phone",
+      "name": "Prep Ask Phone",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ 1140, -40 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [
+          { "id": "pap1", "name": "recipient_id", "value": "={{ $('Build DM Context').item.json.recipient_id }}", "type": "string" },
+          { "id": "pap2", "name": "reply_text", "value": "أرسل رقم الهاتف.", "type": "string" }
+        ] },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-compute-phone-valid",
+      "name": "Compute Phone Valid",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 920, 140 ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const regex = /^(2|4|5|9)[0-9]{7}$/;\nconst phone = ($json.message_text || '').replace(/\\s+/g, '');\nreturn [{ json: { ...$json, phone_valid: regex.test(phone), normalized_phone: phone } }];"
+      }
+    },
+    {
+      "id": "n-phone-valid",
+      "name": "Phone Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1140, 140 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [ { "id": "pv1", "leftValue": "={{ $json.phone_valid }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-save-phone",
+      "name": "Save Phone",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 1360, 60 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/customer_profiles?on_conflict=page_id,fb_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Prefer", "value": "resolution=merge-duplicates,return=minimal" }, { "name": "Content-Type", "value": "application/json" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ page_id: $json.page_id, fb_id: $json.fb_id, phone: $json.normalized_phone, lead_state: 'awaiting_gov', updated_at: new Date().toISOString() }) }}",
+        "options": { "response": { "response": { "fullResponse": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-prep-ask-gov",
+      "name": "Prep Ask Gov",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ 1580, 60 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [
+          { "id": "pag1", "name": "recipient_id", "value": "={{ $('Build DM Context').item.json.recipient_id }}", "type": "string" },
+          { "id": "pag2", "name": "reply_text", "value": "في أي ولاية تسكن؟", "type": "string" }
+        ] },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-prep-invalid-phone",
+      "name": "Prep Invalid Phone",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ 1360, 240 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [
+          { "id": "pip1", "name": "recipient_id", "value": "={{ $('Build DM Context').item.json.recipient_id }}", "type": "string" },
+          { "id": "pip2", "name": "reply_text", "value": "الرجاء إدخال رقم هاتف تونسي صحيح من 8 أرقام يبدأ بـ 2 أو 4 أو 5 أو 9.", "type": "string" }
+        ] },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-compute-gov-valid",
+      "name": "Compute Gov Valid",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 920, 340 ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "function norm(s){\n  s = (s || '').toString().trim().toLowerCase();\n  s = s.replace(/[\\u0640\\u064B-\\u0652\\u0670]/g, '');\n  s = s.replace(/[\\u0623\\u0625\\u0622]/g, '\\u0627');\n  s = s.replace(/\\u0629/g, '\\u0647');\n  s = s.replace(/\\u064A/g, '\\u0649');\n  s = s.replace(/[`'\\u2019\\-_.]/g, ' ').replace(/\\s+/g, ' ').trim();\n  s = s.replace(/^(le |la |l |el )/, '');\n  s = s.replace(/^\\u0627\\u0644/, '');\n  return s;\n}\nconst variants = {\n  'Tunis': ['tunis','tounes','\\u062a\\u0648\\u0646\\u0633','\\u062a\\u0648\\u0646\\u0633 \\u0627\\u0644\\u0639\\u0627\\u0635\\u0645\\u0629'],\n  'Ariana': ['ariana','aryana','aryanah','l ariana','\\u0623\\u0631\\u064a\\u0627\\u0646\\u0629','\\u0627\\u0631\\u064a\\u0627\\u0646\\u0629'],\n  'Ben Arous': ['ben arous','\\u0628\\u0646 \\u0639\\u0631\\u0648\\u0633','\\u0628\\u0646\\u0639\\u0631\\u0648\\u0633'],\n  'Manouba': ['manouba','mannouba','la manouba','manuba','\\u0645\\u0646\\u0648\\u0628\\u0629'],\n  'Nabeul': ['nabeul','nabel','\\u0646\\u0627\\u0628\\u0644'],\n  'Zaghouan': ['zaghouan','\\u0632\\u063a\\u0648\\u0627\\u0646'],\n  'Bizerte': ['bizerte','bizerta','\\u0628\\u0646\\u0632\\u0631\\u062a'],\n  'Beja': ['beja','\\u0628\\u0627\\u062c\\u0629'],\n  'Jendouba': ['jendouba','\\u062c\\u0646\\u062f\\u0648\\u0628\\u0629'],\n  'Le Kef': ['le kef','kef','el kef','\\u0627\\u0644\\u0643\\u0627\\u0641','\\u0643\\u0627\\u0641'],\n  'Siliana': ['siliana','\\u0633\\u0644\\u064a\\u0627\\u0646\\u0629'],\n  'Sousse': ['sousse','soussa','\\u0633\\u0648\\u0633\\u0629'],\n  'Monastir': ['monastir','\\u0627\\u0644\\u0645\\u0646\\u0633\\u062a\\u064a\\u0631','\\u0645\\u0646\\u0633\\u062a\\u064a\\u0631'],\n  'Mahdia': ['mahdia','\\u0627\\u0644\\u0645\\u0647\\u062f\\u064a\\u0629','\\u0645\\u0647\\u062f\\u064a\\u0629'],\n  'Sfax': ['sfax','safaqis','\\u0635\\u0641\\u0627\\u0642\\u0633'],\n  'Kairouan': ['kairouan','kairwan','\\u0627\\u0644\\u0642\\u064a\\u0631\\u0648\\u0627\\u0646','\\u0642\\u064a\\u0631\\u0648\\u0627\\u0646'],\n  'Kasserine': ['kasserine','\\u0627\\u0644\\u0642\\u0635\\u0631\\u064a\\u0646','\\u0642\\u0635\\u0631\\u064a\\u0646'],\n  'Sidi Bouzid': ['sidi bouzid','\\u0633\\u064a\\u062f\\u064a \\u0628\\u0648\\u0632\\u064a\\u062f'],\n  'Gabes': ['gabes','\\u0642\\u0627\\u0628\\u0633'],\n  'Medenine': ['medenine','\\u0645\\u062f\\u0646\\u064a\\u0646'],\n  'Tataouine': ['tataouine','\\u062a\\u0637\\u0627\\u0648\\u064a\\u0646'],\n  'Gafsa': ['gafsa','\\u0642\\u0641\\u0635\\u0629'],\n  'Tozeur': ['tozeur','\\u062a\\u0648\\u0632\\u0631'],\n  'Kebili': ['kebili','kbili','\\u0642\\u0628\\u0644\\u064a']\n};\nconst lookup = {};\nfor (const canon in variants) { for (const v of variants[canon]) { lookup[norm(v)] = canon; } }\nconst raw = ($json.message_text || '').trim();\nconst canonical = lookup[norm(raw)] || null;\nreturn [{ json: { ...$json, gov_valid: !!canonical, governorate: canonical || raw } }];"
+      }
+    },
+    {
+      "id": "n-gov-valid",
+      "name": "Gov Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1140, 340 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [ { "id": "gv1", "leftValue": "={{ $json.gov_valid }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-save-gov",
+      "name": "Save Gov",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 1360, 340 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/customer_profiles?on_conflict=page_id,fb_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Prefer", "value": "resolution=merge-duplicates,return=minimal" }, { "name": "Content-Type", "value": "application/json" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ page_id: $json.page_id, fb_id: $json.fb_id, governorate: $json.governorate, lead_state: 'awaiting_address', updated_at: new Date().toISOString() }) }}",
+        "options": { "response": { "response": { "fullResponse": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-prep-ask-address",
+      "name": "Prep Ask Address",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ 1580, 340 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [
+          { "id": "paa1", "name": "recipient_id", "value": "={{ $('Build DM Context').item.json.recipient_id }}", "type": "string" },
+          { "id": "paa2", "name": "reply_text", "value": "أرسل عنوانك الكامل للتوصيل (المدينة، الشارع، رقم المنزل).", "type": "string" }
+        ] },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-prep-invalid-gov",
+      "name": "Prep Invalid Gov",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ 1360, 520 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [
+          { "id": "pigv1", "name": "recipient_id", "value": "={{ $('Build DM Context').item.json.recipient_id }}", "type": "string" },
+          { "id": "pigv2", "name": "reply_text", "value": "الرجاء إدخال اسم ولاية تونسية صحيحة.", "type": "string" }
+        ] },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-compute-address-valid",
+      "name": "Compute Address Valid",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 920, 560 ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const address = ($json.message_text || '').trim().replace(/\\s+/g, ' ');\nreturn [{ json: { ...$json, address, address_valid: address.length >= 5 } }];"
+      }
+    },
+    {
+      "id": "n-address-valid",
+      "name": "Address Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 1140, 560 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [ { "id": "av1", "leftValue": "={{ $json.address_valid }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-save-address",
+      "name": "Save Address",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 1360, 560 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/customer_profiles?on_conflict=page_id,fb_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Prefer", "value": "resolution=merge-duplicates,return=representation" }, { "name": "Content-Type", "value": "application/json" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ page_id: $json.page_id, fb_id: $json.fb_id, address: $json.address, lead_state: 'completed', updated_at: new Date().toISOString() }) }}",
+        "options": { "response": { "response": { "fullResponse": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-extract-customer-id",
+      "name": "Extract Customer ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 1580, 560 ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const arr = Array.isArray($json.body) ? $json.body : [];\nconst row = arr[0] || null;\nif (!row || !row.id) {\n  throw new Error('Customer id not returned after Save Address for fb_id ' + ($('Build DM Context').item.json.fb_id || ''));\n}\nreturn [{ json: { customer_id: row.id, page_id: $('Build DM Context').item.json.page_id } }];"
+      }
+    },
+    {
+      "id": "n-check-pending-order",
+      "name": "Check Pending Order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 1800, 560 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL + '/rest/v1/orders?select=id&status=eq.pending&customer_id=eq.' + $json.customer_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": { "response": { "response": { "fullResponse": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-eval-pending",
+      "name": "Eval Pending",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 2020, 560 ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const arr = Array.isArray($json.body) ? $json.body : [];\nreturn [{ json: { has_pending: arr.length > 0, customer_id: $('Extract Customer ID').item.json.customer_id, page_id: $('Extract Customer ID').item.json.page_id } }];"
+      }
+    },
+    {
+      "id": "n-pending-exists",
+      "name": "Pending Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [ 2240, 560 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [ { "id": "pe1", "leftValue": "={{ $json.has_pending }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-create-order",
+      "name": "Create Order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 2460, 660 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/orders",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Prefer", "value": "return=minimal" }, { "name": "Content-Type", "value": "application/json" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ customer_id: $json.customer_id, page_id: $json.page_id, status: 'pending' }) }}",
+        "options": { "response": { "response": { "fullResponse": true, "neverError": true } } }
+      },
+      "credentials": { "supabaseApi": { "id": "supabase-cred-id", "name": "Supabase APEX" } }
+    },
+    {
+      "id": "n-prep-order-success",
+      "name": "Prep Order Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ 2680, 560 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [
+          { "id": "pos1", "name": "recipient_id", "value": "={{ $('Build DM Context').item.json.recipient_id }}", "type": "string" },
+          { "id": "pos2", "name": "reply_text", "value": "تم تسجيل طلبك بنجاح.\nسيتم الاتصال بك لتأكيد الطلبية.", "type": "string" }
+        ] },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-prep-invalid-address",
+      "name": "Prep Invalid Address",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ 1360, 740 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [
+          { "id": "pia1", "name": "recipient_id", "value": "={{ $('Build DM Context').item.json.recipient_id }}", "type": "string" },
+          { "id": "pia2", "name": "reply_text", "value": "الرجاء إدخال عنوان توصيل صحيح وكامل.", "type": "string" }
+        ] },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-prep-already-registered",
+      "name": "Prep Already Registered",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ 920, 940 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [
+          { "id": "par1", "name": "recipient_id", "value": "={{ $('Build DM Context').item.json.recipient_id }}", "type": "string" },
+          { "id": "par2", "name": "reply_text", "value": "طلبك مسجل مسبقاً. سيتم الاتصال بك لتأكيد الطلبية.", "type": "string" }
+        ] },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-send-dm",
+      "name": "Send DM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 2960, 560 ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/me/messages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Authorization", "value": "={{ 'Bearer ' + ($('Build DM Context').item.json.page_access_token || '') }}" }, { "name": "Content-Type", "value": "application/json" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_type: 'RESPONSE', recipient: { id: $json.recipient_id }, message: { text: $json.reply_text } }) }}",
+        "options": { "response": { "response": { "fullResponse": true, "neverError": true } } }
+      }
+    },
+    {
+      "id": "n-fb-error-filter-dm",
+      "name": "FB Error Filter (DM)",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [ 3180, 560 ],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [ { "id": "fd1", "leftValue": "={{ $json.statusCode }}", "rightValue": 400, "operator": { "type": "number", "operation": "gte" } } ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-log-fb-error",
+      "name": "Log FB Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ 3400, 460 ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [
+          { "id": "lfe1", "name": "fb_status", "value": "={{ $json.statusCode }}", "type": "number" },
+          { "id": "lfe2", "name": "fb_error_body", "value": "={{ JSON.stringify($json.body) }}", "type": "string" }
+        ] },
+        "options": {}
+      }
+    },
+    {
+      "id": "n-log-error",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [ 3400, 820 ],
+      "parameters": {}
+    }
+  ]
+}
