@@ -216,8 +216,8 @@ export function LoginPage() {
                 padding: '12px 16px',
                 borderRadius: '8px',
                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                color: '#fca5a5',
+                border: '1px solid var(--color-error)',
+                color: 'var(--color-error)',
                 fontSize: 'var(--font-size-sm)',
                 lineHeight: 1.5,
               }}
