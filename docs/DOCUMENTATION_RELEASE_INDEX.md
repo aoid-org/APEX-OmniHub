@@ -1,6 +1,6 @@
 # Documentation Release Index
 
-> Current repo-truth index refreshed for the 2026-06-01 platform-state audit. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`.
+> Current repo-truth index refreshed for the 2026-06-01 platform-state audit. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`.
 
 ## Current Repo Facts Verified in This Pass
 
@@ -16,7 +16,7 @@
 
 ## Documentation Authority Order
 
-0. `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` for the latest branch/head assessment and drift-control snapshot.
+0. `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` for the latest branch/head assessment and drift-control snapshot.
 1. `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` for certification/release verdicts.
 2. `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `docs/architecture/CANONICAL_TRUTH.md` for current topology.
 3. `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for claim labels, simulation disclaimers, and portability status terms.
@@ -34,14 +34,14 @@
 
 ## Canonical start points
 
-- `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`
+- `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`
 - `README.md`
 - `docs/README.md`
 - `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`
 - `docs/architecture/CANONICAL_TRUTH.md`
 - `docs/architecture/CANONICAL_TRUTH_MATRIX.md`
 - `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`
-- `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` _(current branch/head onboarding entry point)_
+- `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` _(current branch/head onboarding entry point)_
 - `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(historical release-readiness point-in-time report — created 2026-05-20)_
 - `docs/architecture/DOC_RECONCILIATION_MATRIX.md`
 
@@ -167,7 +167,7 @@
 
 | File | Change |
 |---|---|
-| `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` | New current branch/head assessment, git-history summary, repo counts, and drift guardrails |
+| `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` | New current branch/head assessment, git-history summary, repo counts, and drift guardrails |
 | `README.md` | Updated repo statistics, docs audit date, and current-state link |
 | `docs/architecture/*` | Reconciled architecture maps/truth matrix with PR #1274 and PR #1309 state |
 | `docs/platform/OMNIDASH.md` | Updated from feature-flag-era wording to always-on post-auth OmniDash surface |

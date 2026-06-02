@@ -1,5 +1,5 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.6.3 | LAST_UPDATED=2026-06-01 -->
-> 2026-06-01 current-state note: active OmniDash shell authority is `apps/omnihub-site/dashboard/OmniDashShell.tsx`; see `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`.
+> 2026-06-01 current-state note: active OmniDash shell authority is `apps/omnihub-site/dashboard/OmniDashShell.tsx`; see `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`.
 
 # Frontend Structure Map
 

@@ -9,7 +9,7 @@ Last Updated: 2026-06-01
 
 | File | Status | Notes | Action |
 |---|---|---|---|
-| `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` | current | Current branch/head assessment for `work` @ `86bc14a`, PR #1274, PR #1309, repo counts, and drift guardrails. | maintain after major branch/head changes |
+| `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` | current | Current branch/head assessment for `work` @ `86bc14a`, PR #1274, PR #1309, repo counts, and drift guardrails. | maintain after major branch/head changes |
 | `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` | current | Rewritten to align with code/runtime topology. | keep as canonical map |
 | `docs/architecture/CANONICAL_TRUTH.md` | current | New single-source truth for deployment/build topology. | maintain |
 | `docs/infrastructure/MIGRATION_RUNBOOK.md` | current | Migrated from Vercel-era instructions to Cloudflare Pages + Supabase flow. | maintain |

@@ -1,7 +1,7 @@
 <!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-06-01 -->
 # Developer Onboarding Guide
 
-> **Current-state first read:** Start with `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` before dated audit reports. Current audited branch/head: `work` @ `86bc14a`.
+> **Current-state first read:** Start with `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` before dated audit reports. Current audited branch/head: `work` @ `86bc14a`.
 
 > **Agent note:** The single most important file is `CLAUDE.md` at the repo root.
 > Read it first — it contains all verified commands, architecture invariants, and

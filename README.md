@@ -26,7 +26,7 @@
 
 **Before touching code, read the canonical architecture map:**
 
-- [CURRENT_PLATFORM_STATE_2026_06_01.md](./docs/CURRENT_PLATFORM_STATE_2026_06_01.md) — current branch/head assessment, recent git history, drift controls, and repo facts
+- [CURRENT_PLATFORM_STATE_2026_06_02.md](./docs/CURRENT_PLATFORM_STATE_2026_06_02.md) — current branch/head assessment, recent git history, drift controls, and repo facts
 - [DOCUMENTATION_RELEASE_INDEX.md](./docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
 - [ARCHITECTURE_CANONICAL_MAP.md](./docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
 - **[Production Certification Status](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)** (Current Production Authority)
@@ -63,7 +63,7 @@ The platform relies on a "Holy Trinity" architecture:
 | **Custom Hooks (`src/` + app surfaces)**         | 35 hook files matching `use*.ts*`                 |
 | **Orchestrator (Python)**                        | 101 files (Temporal workers, activities, security) |
 
-**Latest repo-history note:** HEAD `86bc14a` includes PR #1274 OmniDash from-zero gap closure; PR #1309 (`3a51a27`) hardened entitlement activation and PhysiOmni HMAC ingress. See `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` for the full assessment.
+**Latest repo-history note:** HEAD `86bc14a` includes PR #1274 OmniDash from-zero gap closure; PR #1309 (`3a51a27`) hardened entitlement activation and PhysiOmni HMAC ingress. See `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` for the full assessment.
 
 ---
 
@@ -258,7 +258,7 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 
 | Document                                                                                | Description           |
 | --------------------------------------------------------------------------------------- | --------------------- |
-| [Current Platform State](./docs/CURRENT_PLATFORM_STATE_2026_06_01.md)             | Current branch/head assessment and drift-control facts |
+| [Current Platform State](./docs/CURRENT_PLATFORM_STATE_2026_06_02.md)             | Current branch/head assessment and drift-control facts |
 | [Release Notes v1.6.0](./docs/releases/RELEASE_NOTES_v1.6.0.md)                 | Historical v1.6.0 release notes |
 | [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
 | [Production Certification Status](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |
