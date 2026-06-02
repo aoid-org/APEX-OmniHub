@@ -1,7 +1,7 @@
 import { Layout, Section } from '@/components';
 import { SEOMeta } from '@/components/SEOMeta';
 import { StructuredData } from '@/components/StructuredData';
-import manModeSchema from '../../../../public/schema/man-mode-faq.jsonld?raw';
+import manModeSchema from '../../public/schema/man-mode-faq.jsonld?raw';
 
 export function ManModePage() {
   // Verified clean for ESLint - Quality Gate pass

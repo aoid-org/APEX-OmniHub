@@ -4,8 +4,8 @@ import { SEOMeta } from '@/components/SEOMeta';
 import { StructuredData } from '@/components/StructuredData';
 import { HERO_BADGE_ASSET_PATH } from '@/lib/heroAssets';
 import '@/styles/landing.css';
-import homepageSchema from '../../../../public/schema/homepage.jsonld?raw';
-import organizationSchema from '../../../../public/schema/organization.jsonld?raw';
+import homepageSchema from '../../public/schema/homepage.jsonld?raw';
+import organizationSchema from '../../public/schema/organization.jsonld?raw';
 
 function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
   return (

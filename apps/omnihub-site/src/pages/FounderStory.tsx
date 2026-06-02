@@ -5,7 +5,7 @@ import { SEOMeta } from '@/components/SEOMeta';
 import { StructuredData } from '@/components/StructuredData';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import storySchema from '../../../../public/schema/story.jsonld?raw';
+import storySchema from '../../public/schema/story.jsonld?raw';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
