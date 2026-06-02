@@ -46,6 +46,7 @@ export default defineConfig(({ mode }) => {
     // Dedupe React to prevent multiple instances (fixes createContext undefined)
     dedupe: ['react', 'react-dom'],
   },
+  publicDir: "apps/omnihub-site/public",
   build: {
     // Production optimizations
     target: 'es2020',

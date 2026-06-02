@@ -138,7 +138,7 @@ describe('test-integration ownership scoping', () => {
 });
 
 describe('service worker sensitive traffic and notification URL hardening', () => {
-  const source = readFileSync('public/sw.js', 'utf8');
+  const source = readFileSync('apps/omnihub-site/public/sw.js', 'utf8');
 
   it('bypasses cache for Supabase and Supabase REST/RPC/Edge Function paths', () => {
     expect(source).toContain("url.hostname.endsWith('.supabase.co')");
