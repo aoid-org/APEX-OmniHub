@@ -58,7 +58,7 @@ export function BrandAnthemPlayer() {
         loop
         preload="metadata"
       >
-        <track kind="captions" src="/captions/brand-anthem.vtt" srcLang="en" label="English" />
+        <track kind="captions" />
       </audio>
       <div className="brand-anthem-controls">
         <span className="anthem-label">Brand Anthem</span>

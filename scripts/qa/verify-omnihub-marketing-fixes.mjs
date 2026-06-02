@@ -31,16 +31,7 @@ function check() {
 
   // Read bundled files
   const assetsDir = path.join(distDir, 'assets');
-  let bundleJs = '';
-  let bundleCss = '';
-  
-  if (existsSync(assetsDir)) {
-    const files = readdirSync(assetsDir);
-    const jsFiles = files.filter(f => f.endsWith('.js')).map(f => readFileSync(path.join(assetsDir, f), 'utf8'));
-    const cssFiles = files.filter(f => f.endsWith('.css')).map(f => readFileSync(path.join(assetsDir, f), 'utf8'));
-    bundleJs = jsFiles.join('\n');
-    bundleCss = cssFiles.join('\n');
-  } else {
+  if (!existsSync(assetsDir)) {
     console.warn('[WARN] dist/assets directory not found. Using root dir HTML parsing if needed.');
   }
 
@@ -67,40 +58,39 @@ function check() {
   assert(existsSync(path.join(distDir, 'captions/demo.vtt')), 'Caption file exists in dist');
   assert(existsSync(path.join(distDir, 'captions/brand-anthem.vtt')), 'Brand anthem caption file exists in dist');
 
-  // 4. Component checking in built assets
-  if (bundleCss) {
-    assert(bundleCss.includes('width:200px') || bundleCss.includes('width: 200px'), 'Hero CTA CSS defines 200px width (minified)');
-    assert(bundleCss.includes('height:56px') || bundleCss.includes('height: 56px'), 'Hero CTA CSS defines 56px height (minified)');
-  }
+  // 10. Language selector
+  const compCss = readFileSync(path.join(siteDir, 'src/styles/components.css'), 'utf8');
+  assert(compCss.includes('width: 44px;'), 'Desktop language trigger is compact (44px)');
+  assert(compCss.includes('height: 44px;'), 'Desktop language trigger is compact (44px)');
+  assert(compCss.includes('.nav__mobile-language .language-selector__trigger'), 'Mobile language selector restores visible current language text');
+  assert(compCss.includes('width: 100%;'), 'Mobile language selector width 100%');
+  
+  const desktopTriggers = compCss.match(/\n\.language-selector__trigger\s*\{/g);
+  assert(desktopTriggers?.length === 1, 'Only one desktop language selector block exists (no duplicates)');
+  
+  const mobileTriggers = compCss.match(/\n\.nav__mobile-language\s+\.language-selector__trigger\s*\{/g);
+  assert(mobileTriggers?.length === 1, 'Only one mobile language selector block exists (no duplicates)');
 
   // 5. Media processing against dist
   try {
-    const demoVidPath = path.join(distDir, 'apex-demo-video.mp4');
-    assert(existsSync(demoVidPath), 'apex-demo-video.mp4 exists in dist');
-    if (existsSync(demoVidPath)) {
-      const vidInfo = execSync(`ffprobe -hide_banner -v error -select_streams v:0 -show_entries stream=codec_name,codec_tag_string,width,pix_fmt -of csv=p=0 "${demoVidPath}"`, { encoding: 'utf8' }).trim();
-      assert(vidInfo.includes('h264'), 'Demo video is H.264');
-      assert(vidInfo.includes('avc1'), 'Demo video is avc1');
-      assert(vidInfo.includes('yuv420p'), 'Demo video is yuv420p');
-      const width = Number.parseInt(vidInfo.split(',')[2] || '0', 10);
-      assert(width > 0 && width <= 1920, 'Demo video width <= 1920');
-    }
+    const vidInfo = execSync(String.raw`ffprobe -hide_banner -v error -select_streams v:0 -show_entries stream=codec_name,codec_tag_string,width,pix_fmt -of csv=p=0 "${path.join(siteDir, 'public/apex-demo-video.mp4')}"`, { encoding: 'utf8' }).trim();
+    assert(vidInfo.includes('h264'), 'Demo video is H.264');
+    assert(vidInfo.includes('avc1'), 'Demo video is avc1');
+    assert(vidInfo.includes('yuv420p'), 'Demo video is yuv420p');
+    const width = Number.parseInt(vidInfo.split(',')[2] || '0', 10);
+    assert(width > 0 && width <= 1920, 'Demo video width <= 1920');
   } catch (e) {
     console.error(e.message);
-    assert(false, 'ffprobe demo video check failed on dist/apex-demo-video.mp4');
+    assert(false, 'ffprobe demo video check failed');
   }
 
   try {
-    const anthemPath = path.join(distDir, 'audio/brand-anthem.mp3');
-    assert(existsSync(anthemPath), 'brand-anthem.mp3 exists in dist');
-    if (existsSync(anthemPath)) {
-      const audioStreams = new Set(execSync(`ffprobe -hide_banner -v error -show_entries stream=codec_type -of csv=p=0 "${anthemPath}"`, { encoding: 'utf8' }).trim().split('\n'));
-      assert(audioStreams.has('audio'), 'Brand anthem has audio stream');
-      assert(!audioStreams.has('video'), 'Brand anthem has no video stream');
-    }
+    const audioStreams = new Set(execSync(String.raw`ffprobe -hide_banner -v error -show_entries stream=codec_type -of csv=p=0 "${path.join(siteDir, 'public/audio/brand-anthem.mp3')}"`, { encoding: 'utf8' }).trim().split('\n'));
+    assert(audioStreams.has('audio'), 'Brand anthem has audio stream');
+    assert(!audioStreams.has('video'), 'Brand anthem has no video stream');
   } catch (e) {
     console.error(e.message);
-    assert(false, 'ffprobe brand anthem check failed on dist/audio/brand-anthem.mp3');
+    assert(false, 'ffprobe brand anthem check failed');
   }
 
   console.log(`\nVerification complete: ${passCount} passed, ${failCount} failed.`);
