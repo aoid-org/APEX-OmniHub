@@ -1,4 +1,4 @@
-# Current Platform State — 2026-06-01
+# Current Platform State — 2026-06-02
 
 > **Canonical drift-control snapshot for the current `work` branch.** This file reconciles current repo state, recent git history, architecture boundaries, documentation authority, and operator next steps. Historical docs remain valid as evidence only when they do not conflict with this snapshot, `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`, or `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`.
 
@@ -6,9 +6,9 @@
 
 | Field | Value |
 |---|---|
-| Snapshot date | 2026-06-01 |
-| Branch inspected | `work` |
-| HEAD inspected | `86bc14a` — `feat(omnidash): implement from-zero gap closure (WP0-WP17) (#1274)` |
+| Snapshot date | 2026-06-02 |
+| Branch inspected | `fix/sonarqube-audit-resolutions-final` |
+| HEAD inspected | `19a5f3fe` — `fix: resolve SonarCloud code smells and e2e test failures` (PR #1313) |
 | Package version | `1.7.0` in root `package.json` |
 | App package version | `1.3.10` in `apps/omnihub-site/package.json` |
 | Package manager posture | Bun-first (`bun.lock` present) with npm lock retained for audit parity |
@@ -32,19 +32,24 @@
 
 ## Recent Git History Assessment
 
-The current branch has advanced materially beyond the 2026-05-31 post-PR-1251 docs snapshot. The most important recent commits are:
+The current branch has advanced materially beyond the 2026-06-01 snapshot. The most important recent commits are:
 
-1. `86bc14a` — PR #1274 implemented the OmniDash from-zero gap closure across WP0-WP17.
+1. `19a5f3fe` — PR #1313 fix: resolve SonarCloud code smells and e2e test failures
+   - Resolved SonarCloud a11y violations in `tests/omnidash/omnislate-context-drop.spec.tsx`.
+   - Resolved SonarCloud unused variables and missing optional chaining in `scripts/qa/verify-omnihub-marketing-fixes.mjs`.
+   - Stabilized Playwright E2E tests (`route-sweep.spec.ts` confidence threshold and `marketing-smoke.spec.ts` video locator).
+   - Fully green CI pipeline (build-and-test, Smoke Tests, SonarCloud A-grade).
+2. `86bc14a` — PR #1274 implemented the OmniDash from-zero gap closure across WP0-WP17.
    - Added deterministic APEX Agent avatar contracts/assets.
    - Added OmniSlate context-drop, insights, payload-safety, fake-success, theme, integration-ownership, and zero-mock widget guard tests.
    - Added persistent notification and OmniSlate stores.
    - Hardened OmniDash module widgets, Settings, Translation, Integrations, WidgetShell, and live-data wiring.
    - Added PR #1274 audit/evidence reports under `docs/audits/`.
-2. `3a51a27` — PR #1309 hardened entitlement activation RPC and PhysiOmni ingress.
+3. `3a51a27` — PR #1309 hardened entitlement activation RPC and PhysiOmni ingress.
    - Enforced activation RPC hardening via `20260601000000_harden_subscription_activation_rpc.sql`.
    - Added HMAC validation and negative tests for PhysiOmni ingress.
-3. `e18a318`, `702554a`, `37066cc` — OmniDash live data, i18n safety, OmniBoard feed, and APEX app corrections.
-4. `bec5113`, `7a495dd`, `ca592f9` — CI scanner and release/staging workflow fixes.
+4. `e18a318`, `702554a`, `37066cc` — OmniDash live data, i18n safety, OmniBoard feed, and APEX app corrections.
+5. `bec5113`, `7a495dd`, `ca592f9` — CI scanner and release/staging workflow fixes.
 
 ## Current Architecture Truth
 
@@ -81,11 +86,11 @@ The current branch has advanced materially beyond the 2026-05-31 post-PR-1251 do
 
 | Drift | Resolution |
 |---|---|
-| Docs index still described 2026-05-20 / v1.6.x facts | Updated index and linked this 2026-06-01 snapshot |
+| Docs index still described 2026-06-01 facts | Updated index and linked this 2026-06-02 snapshot |
 | Several docs referenced `OmniDashLayout.tsx` as shell authority | Updated active frontend docs to `OmniDashShell.tsx` |
 | OmniDash doc still described a feature flag off-by-default model | Updated active OmniDash doc to always-on post-auth route model |
-| Omni-Recall status stopped at 2026-05-31 / commit `7a2c45ed` | Added 2026-06-01 checkpoint for `86bc14a` branch state |
-| README stats were 2026-05-31 counts | Updated to current counts from the working tree |
+| Omni-Recall status stopped at 2026-06-01 | Added 2026-06-02 checkpoint for `19a5f3fe` branch state |
+| README stats were 2026-06-01 counts | Updated to current counts from the working tree |
 
 ## Operator Rules Going Forward
 

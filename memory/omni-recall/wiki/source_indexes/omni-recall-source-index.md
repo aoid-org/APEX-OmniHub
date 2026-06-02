@@ -40,7 +40,7 @@ Track canonical source records that materially define Omni-Recall.
    - Status: active
    - Role: durable memory for PR #1274 / PR #1309 documentation synchronization and stale-reference correction
 
-7. `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`
+7. `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`
    - Type: repo documentation authority
    - Status: active
    - Role: current branch/head assessment and drift-control source for future agents

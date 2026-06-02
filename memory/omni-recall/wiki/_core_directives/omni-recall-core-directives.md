@@ -49,7 +49,7 @@ It exists to reduce rediscovery, preserve durable project and preference memory,
 | Deprecated function | `apex-assistant` (returns 410 Gone, redirects to `apex-agent`) |
 | Feature registry id | `apex-agent` (was `apex-assistant` — corrected 2026-05-30) |
 | Current OmniDash shell | `apps/omnihub-site/dashboard/OmniDashShell.tsx` |
-| Current platform-state authority | `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` |
+| Current platform-state authority | `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` |
 | Production DB migrations applied | 20260527000001 (AEGIS/CHRONOS), 20260528000000 (PhysiOmni RLS), 20260528000001 (OmniConnect Vault); later migration files exist in tree and require live verification before production-applied claims |
 
 ## Open Questions

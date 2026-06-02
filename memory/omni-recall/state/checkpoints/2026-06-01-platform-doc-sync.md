@@ -19,7 +19,7 @@
 
 ## Documentation Files Updated in the Session
 
-- `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`
+- `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`
 - `README.md`
 - `CHANGELOG.md`
 - `docs/README.md`
@@ -41,4 +41,4 @@
 
 ## Future-Agent Guardrail
 
-If a future agent sees a doc claim that production status is based on `7a2c45ed`, `2026-05-31`, `OmniDashLayout.tsx`, or an off-by-default `OMNIDASH_ENABLED` model, treat it as stale and reconcile against `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` plus the live code tree.
+If a future agent sees a doc claim that production status is based on `7a2c45ed`, `2026-05-31`, `OmniDashLayout.tsx`, or an off-by-default `OMNIDASH_ENABLED` model, treat it as stale and reconcile against `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` plus the live code tree.

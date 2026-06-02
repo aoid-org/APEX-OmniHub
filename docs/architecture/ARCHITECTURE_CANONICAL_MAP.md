@@ -8,7 +8,7 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 > **Version:** 2.3.0<br>
 > **Last updated:** 2026-05-31<br>
 > **Status:** Canonical (source of truth)
-> **Current-state addendum:** 2026-06-01 audit verified HEAD `86bc14a`; see `docs/CURRENT_PLATFORM_STATE_2026_06_01.md` for git-history assessment, counts, and drift-control rules.
+> **Current-state addendum:** 2026-06-01 audit verified HEAD `86bc14a`; see `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` for git-history assessment, counts, and drift-control rules.
 
 This document is optimized for **onboarding clarity** and **operator execution** while preserving value proposition context.
 

@@ -47,10 +47,10 @@
 - branch: work
 - verified_head: 86bc14a (`feat(omnidash): implement from-zero gap closure (WP0-WP17) (#1274)`)
 - scope: Assessed current platform state, checked recent git history, reconciled active docs/readmes/architecture/status/runbook/onboarding docs, and added Omni-Recall checkpoint.
-- key outcome: Current docs now point to `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`; stale active references to `OmniDashLayout.tsx`, off-by-default `OMNIDASH_ENABLED`, and 2026-05-31 HEAD facts were superseded in active docs.
+- key outcome: Current docs now point to `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`; stale active references to `OmniDashLayout.tsx`, off-by-default `OMNIDASH_ENABLED`, and 2026-05-31 HEAD facts were superseded in active docs.
 - recent_history: PR #1274 OmniDash gap closure; PR #1309 entitlement activation RPC + PhysiOmni HMAC ingress hardening; CI scanner/release workflow fixes.
 - repo_counts: 353 src files, 318 root TS/TSX files, 30 Supabase function directories, 84 migrations, 22 workflows, 319 test/spec sources, 101 orchestrator Python files.
-- evidence: `docs/CURRENT_PLATFORM_STATE_2026_06_01.md`, this checkpoint, and `memory/omni-recall/state/checkpoints/2026-06-01-platform-doc-sync.md`.
+- evidence: `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`, this checkpoint, and `memory/omni-recall/state/checkpoints/2026-06-01-platform-doc-sync.md`.
 
 ## Verified runtime facts (2026-06-01) — platform-doc-sync audit
 - last_verified_date: 2026-06-01
