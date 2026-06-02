@@ -8,17 +8,9 @@ vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, onDragOver, onDrop, className, style }: any) => (
       <div 
-        role="button" 
-        tabIndex={0} 
         data-testid="framer-motion-div" 
         onDragOver={onDragOver} 
         onDrop={onDrop} 
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onDrop?.(e as any);
-          }
-        }}
         className={className} 
         style={style}
       >

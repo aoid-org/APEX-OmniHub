@@ -31,16 +31,7 @@ function check() {
 
   // Read bundled files
   const assetsDir = path.join(distDir, 'assets');
-  let bundleJs = '';
-  let bundleCss = '';
-  
-  if (existsSync(assetsDir)) {
-    const files = readdirSync(assetsDir);
-    const jsFiles = files.filter(f => f.endsWith('.js')).map(f => readFileSync(path.join(assetsDir, f), 'utf8'));
-    const cssFiles = files.filter(f => f.endsWith('.css')).map(f => readFileSync(path.join(assetsDir, f), 'utf8'));
-    bundleJs = jsFiles.join('\n');
-    bundleCss = cssFiles.join('\n');
-  } else {
+  if (!existsSync(assetsDir)) {
     console.warn('[WARN] dist/assets directory not found. Using root dir HTML parsing if needed.');
   }
 
@@ -75,10 +66,10 @@ function check() {
   assert(compCss.includes('width: 100%;'), 'Mobile language selector width 100%');
   
   const desktopTriggers = compCss.match(/\n\.language-selector__trigger\s*\{/g);
-  assert(desktopTriggers && desktopTriggers.length === 1, 'Only one desktop language selector block exists (no duplicates)');
+  assert(desktopTriggers?.length === 1, 'Only one desktop language selector block exists (no duplicates)');
   
   const mobileTriggers = compCss.match(/\n\.nav__mobile-language\s+\.language-selector__trigger\s*\{/g);
-  assert(mobileTriggers && mobileTriggers.length === 1, 'Only one mobile language selector block exists (no duplicates)');
+  assert(mobileTriggers?.length === 1, 'Only one mobile language selector block exists (no duplicates)');
 
   // 5. Media processing against dist
   try {

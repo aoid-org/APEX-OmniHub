@@ -58,15 +58,14 @@ test.describe('Marketing Visuals and Stability', () => {
   });
 
   test('Demo video element is present and has a valid source', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/demo');
 
     const video = page.locator('.demo-video__player').first();
     await expect(video).toBeVisible({ timeout: 15000 });
 
-    // The player uses a <source> child, not a direct src= attribute on <video>.
-    // Verify the <source> child references the correct asset.
-    const source = video.locator('source').first();
-    const srcAttr = await source.getAttribute('src');
+    // The player uses a direct src= attribute on <video>.
+    // Verify it references the correct asset.
+    const srcAttr = await video.getAttribute('src');
     expect(srcAttr).toBeTruthy();
     expect(srcAttr).toContain('apex-demo-video.mp4');
   });
