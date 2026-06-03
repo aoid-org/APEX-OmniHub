@@ -99,6 +99,14 @@ async function getProviderConfig(tenantId: string, provider: Provider): Promise<
   });
 }
 
+function sumAuditSpend(rows: { details: unknown }[] | null): number {
+  let total = 0;
+  for (const row of rows ?? []) {
+    total += ((row.details as Record<string, number>)?.cost_incurred || 0);
+  }
+  return total;
+}
+
 serve(async (req: Request) => {
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
@@ -149,13 +157,8 @@ serve(async (req: Request) => {
       .eq('tenant_id', tenantId)
       .eq('action', 'BYOM_AUDIT_SPAN');
       
-    let totalSpend = 0;
-    if (currentSpendData) {
-      for (const row of currentSpendData) {
-         totalSpend += ((row.details as Record<string, number>)?.cost_incurred || 0);
-      }
-    }
-    
+    const totalSpend = sumAuditSpend(currentSpendData);
+
     if (totalSpend >= providerConfig.max_cost_usd) {
        // Log rejection
        await supabase.from('omnihub_audit_log').insert({
