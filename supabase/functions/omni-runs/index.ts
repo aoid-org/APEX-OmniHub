@@ -13,6 +13,11 @@
 
 import { buildCorsHeaders, corsErrorResponse, handlePreflight } from '../_shared/cors.ts';
 import { createAnonClient, createServiceClient } from '../_shared/supabaseClient.ts';
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from '../_shared/rate-limit.ts';
 
 const MAX_RUNS_LIMIT = 100;
 const DEFAULT_RUNS_LIMIT = 50;
@@ -268,6 +273,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   const userId = authResult.userId!;
+
+  // Distributed rate limiting — per authenticated user, before route dispatch
+  const rl = await checkRateLimit(userId, RATE_LIMIT_CONFIGS.omniRuns);
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(origin, rl);
+  }
 
   // Parse route
   const url = new URL(req.url);

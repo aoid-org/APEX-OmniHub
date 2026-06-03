@@ -3,6 +3,11 @@ import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
 import { createAnonClient } from "../_shared/supabaseClient.ts";
 import { buildSignedHeaders } from "../_shared/requestSigning.ts";
 import { isValidUUID } from "../_shared/validation.ts";
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from "../_shared/rate-limit.ts";
 import { checkRequest } from "./guardian.ts";
 
 /** Build a JSON response with CORS headers. */
@@ -86,6 +91,12 @@ serve(async (req) => {
 
     if (authError || !user) {
       return jsonResponse({ error: "unauthorized" }, 401, origin);
+    }
+
+    // Distributed rate limiting — per authenticated user, before any business logic
+    const rl = await checkRateLimit(user.id, RATE_LIMIT_CONFIGS.apexAgent);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(origin, rl);
     }
 
     // 2. Content-Type validation

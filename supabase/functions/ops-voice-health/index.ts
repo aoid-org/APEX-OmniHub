@@ -17,13 +17,28 @@ interface VoiceHealthResponse {
 }
 
 import { buildCorsHeaders, handlePreflight } from "../_shared/cors.ts";
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from "../_shared/rate-limit.ts";
 
-Deno.serve((req: Request): Response => {
+Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return handlePreflight(req);
   }
 
-  const corsHeaders = buildCorsHeaders(req.headers.get('origin'));
+  const origin = req.headers.get('origin');
+  const corsHeaders = buildCorsHeaders(origin);
+
+  // Distributed rate limiting — unauthenticated health endpoint, keyed by client IP
+  const rl = await checkRateLimit(
+    req.headers.get('x-forwarded-for') ?? 'anon',
+    RATE_LIMIT_CONFIGS.opsVoiceHealth,
+  );
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(origin, rl);
+  }
 
   const data: VoiceHealthResponse = {
     metrics: {

@@ -25,6 +25,11 @@
 
 import { withHttp, jsonResponse } from '../_shared/http.ts';
 import { createSupabaseClient } from '../_shared/auth.ts';
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from '../_shared/rate-limit.ts';
 
 const ADMIN_ROLES = new Set(['admin', 'super_admin', 'operator']);
 const APPROVER_ROLES = new Set(['admin', 'super_admin']);
@@ -426,6 +431,13 @@ export default Deno.serve(withHttp(async (req, ctx) => {
   }
 
   const userId = ctx.user!.id;
+
+  // Distributed rate limiting — per authenticated user, before any business logic
+  const rl = await checkRateLimit(userId, RATE_LIMIT_CONFIGS.omnibridgeControl);
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(req.headers.get('origin'), rl);
+  }
+
   const supabase = createSupabaseClient();
   const roles = await getUserRoles(supabase, userId);
   const isAdmin = roles.some((r) => ADMIN_ROLES.has(r));

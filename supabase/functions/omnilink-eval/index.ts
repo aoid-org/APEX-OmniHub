@@ -1,6 +1,11 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { authenticateUser, createSupabaseClient } from '../_shared/auth.ts';
 import { buildCorsHeaders, handlePreflight } from '../_shared/cors.ts';
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from '../_shared/rate-limit.ts';
 
 interface EvalRequest {
   eval_case_id?: string;
@@ -143,6 +148,12 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     console.log(`[omnilink-eval] Evaluation triggered by user ${authCheck.userId}`);
+
+    // Distributed rate limiting — per authenticated admin, before any business logic
+    const rl = await checkRateLimit(authCheck.userId, RATE_LIMIT_CONFIGS.omnilinkEval);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(origin, rl);
+    }
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
