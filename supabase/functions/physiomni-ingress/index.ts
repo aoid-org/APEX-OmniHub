@@ -23,11 +23,8 @@ import {
   RATE_LIMIT_CONFIGS,
 } from '../_shared/rate-limit.ts';
 
-// ── Threshold Constants ─────────────────────────────────────────────────────
 const VIBRATION_CRITICAL_THRESHOLD = 15;
 const VIBRATION_WARNING_THRESHOLD = 10;
-
-// ── Payload Schema ──────────────────────────────────────────────────────────
 
 interface PhysiOmniPayload {
   device_serial: string;
@@ -138,8 +135,6 @@ function validatePayload(body: unknown): ValidationResult {
   };
 }
 
-// ── Response Helpers ────────────────────────────────────────────────────────
-
 function jsonResponse(
   data: unknown,
   status: number,
@@ -150,8 +145,6 @@ function jsonResponse(
     headers: { ...headers, 'Content-Type': 'application/json' },
   });
 }
-
-// ── Alert Evaluation ────────────────────────────────────────────────────────
 
 interface AlertEvaluation {
   shouldAlert: boolean;
@@ -337,8 +330,6 @@ async function requiresLiveSignature(req: Request, rawBody: string, corsHeaders:
 
   return null;
 }
-
-// ── Main Handler ────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request): Promise<Response> => {
   const requestOrigin = req.headers.get('origin')?.replace(/\/$/, '') ?? null;
