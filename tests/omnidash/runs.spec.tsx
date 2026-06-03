@@ -57,9 +57,7 @@ describe('Runs component tests', () => {
     vi.clearAllMocks();
   });
 
-  it('should be importable without errors', () => {
-    expect(true).toBe(true);
-  });
+  it.todo('should be importable without errors');
 
   it('should render mock Runs component', async () => {
     const { Runs } = await import('@/dashboard/components/Runs');
