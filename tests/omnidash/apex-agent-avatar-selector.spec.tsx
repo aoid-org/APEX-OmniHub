@@ -28,11 +28,7 @@ const STATIC_IMPORT_PNG_PATTERN = /import\s+\w+\s+from\s+['"][^'"]*avatar[^'"]*\
 const ASSETS_AVATARS_PATTERN = /from\s+['"][^'"]*assets\/avatars[^'"]*['"]/;
 
 describe('APEX Agent Avatar Selector', () => {
-  it('must support keyboard paths for selection', () => {
-    // Contract: The PersonaModal must support selecting avatars via keyboard
-    // This is tested behaviorally in the component tests
-    expect(true).toBe(true);
-  });
+  it.todo('must support keyboard paths for selection');
 
   it('must use public contract paths, not static PNG imports', () => {
     for (const relPath of AVATAR_CONSUMERS) {
