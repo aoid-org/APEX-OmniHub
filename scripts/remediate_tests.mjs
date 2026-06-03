@@ -9,10 +9,8 @@ function walk(dir) {
         const stat = fs.statSync(file);
         if (stat?.isDirectory()) { 
             results = results.concat(walk(file));
-        } else { 
-            if (file.endsWith('.ts') || file.endsWith('.tsx')) {
-                results.push(file);
-            }
+        } else if (file.endsWith('.ts') || file.endsWith('.tsx')) {
+            results.push(file);
         }
     });
     return results;
