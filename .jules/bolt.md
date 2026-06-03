@@ -11,3 +11,6 @@
 ## 2026-06-02 - O(N) Array Search Inside Object Traversal
 **Learning:** Checking for substrings across an array of terms inside object traversal is slow.
 **Action:** Replaced `.some()` array iteration with a precompiled RegExp `SENSITIVE_KEYS_REGEX.test(k)` for O(1) lookups.
+## 2026-06-03 - Consolidated O(N) array passes in DashboardOverview.tsx
+**Learning:** Sequential `.map().map()` operations in React components cause unnecessary memory allocations and redundant iterations.
+**Action:** Always aim to combine sequential array transformations into a single pass when creating derived state, especially when mapping over data that merges with other O(1) structures like Maps.

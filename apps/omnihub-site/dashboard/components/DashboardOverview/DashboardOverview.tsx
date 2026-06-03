@@ -76,29 +76,30 @@ export const DashboardOverview = memo(function DashboardOverview({
   }, [user, queryClient]);
 
   const liveApps = useMemo(() => {
-    const defaultApps = registryApps.map(e => ({
-      name: e.label,
-      cat: e.category,
-      logo: e.logoDomain ? `https://logo.clearbit.com/${e.logoDomain}` : '',
-      synced: `${e._live?.syncedMinutesAgo ?? e.dashboard.syncedMinutesAgo}m`,
-      status: e._live?.status ?? e.dashboard.status,
-    })) as AppEntry[];
+    // ⚡ Bolt: Consolidated two sequential O(N) array passes (.map -> .map) into a single O(N) pass,
+    // reducing memory allocation and improving main thread performance during integration state updates.
+    const integrationsMap = integrationsQuery.data
+      ? new Map(integrationsQuery.data.map(i => [i.name.toLowerCase(), i]))
+      : null;
 
-    if (!integrationsQuery.data) return defaultApps;
+    return registryApps.map(e => {
+      const defaultStatus = e._live?.status ?? e.dashboard.status;
+      let finalStatus = defaultStatus;
 
-    const integrationsMap = new Map(
-      integrationsQuery.data.map(i => [i.name.toLowerCase(), i])
-    );
-
-    return defaultApps.map((app) => {
-      const integration = integrationsMap.get(app.name.toLowerCase());
-      if (integration) {
-        return {
-          ...app,
-          status: integration.status === "active" ? "Live" : "Partial",
-        };
+      if (integrationsMap) {
+        const integration = integrationsMap.get(e.label.toLowerCase());
+        if (integration) {
+          finalStatus = integration.status === "active" ? "Live" : "Partial";
+        }
       }
-      return app;
+
+      return {
+        name: e.label,
+        cat: e.category,
+        logo: e.logoDomain ? `https://logo.clearbit.com/${e.logoDomain}` : '',
+        synced: `${e._live?.syncedMinutesAgo ?? e.dashboard.syncedMinutesAgo}m`,
+        status: finalStatus,
+      } as AppEntry;
     });
   }, [integrationsQuery.data, registryApps]);
 
