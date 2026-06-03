@@ -26,6 +26,7 @@ import { TechSpecsPage } from "@/pages/TechSpecs";
 import { TriForcePage } from "@/pages/TriForce";
 import OmniDash from "@/pages/product/OmniDash";
 import { PhysiOmniPilotPage } from "@/pages/PhysiOmniPilot";
+import { ManifestoPage } from "@/pages/Manifesto";
 
 type AppRoute = {
   readonly path: string;
@@ -102,6 +103,11 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/demo.html", element: <DemoPage />, isPublic: true, routeName: "Demo" },
   { path: "/physiomni-pilot", element: <PhysiOmniPilotPage />, isPublic: true, routeName: "PhysiOmni Pilot" },
   { path: "/physiomni-pilot.html", element: <PhysiOmniPilotPage />, isPublic: true, routeName: "PhysiOmni Pilot" },
+  // ── APEX Manifesto ──────────────────────────────────────────────────────
+  { path: "/manifesto",           element: <ManifestoPage />, isPublic: true, routeName: "Manifesto" },
+  { path: "/manifesto.html",      element: <ManifestoPage />, isPublic: true, routeName: "Manifesto" },
+  { path: "/apex-manifesto",      element: <ManifestoPage />, isPublic: true, routeName: "Manifesto" },
+  { path: "/apex-manifesto.html", element: <ManifestoPage />, isPublic: true, routeName: "Manifesto" },
 ];
 
 function App() {
