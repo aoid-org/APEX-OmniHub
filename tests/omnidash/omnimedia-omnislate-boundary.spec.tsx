@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { describe, it, expect } from 'vitest';
+import { describe, it } from 'vitest';
 
 describe('OmniMedia and OmniSlate Boundary Contract', () => {
   it.todo('must enforce origin/sandbox policies between media and slate');
