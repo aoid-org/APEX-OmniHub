@@ -85,8 +85,8 @@ class TestSemanticCacheService:
             import hashlib
 
             h = int(hashlib.sha256(text.encode()).hexdigest(), 16)
-            np.random.seed(h % (2**32))
-            return np.random.randn(3).astype(np.float32)
+            rng = np.random.default_rng(h % (2**32))
+            return rng.standard_normal(3).astype(np.float32)
 
         mock_model.encode.side_effect = mock_encode
         mock_model.get_sentence_embedding_dimension.return_value = 3
