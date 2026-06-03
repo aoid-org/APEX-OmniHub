@@ -83,11 +83,11 @@ const BASE_SLATE_PROPS = {
 };
 
 const MANY_CONTEXT: readonly OmniSlateContextItem[] = [
-  { label: 'TradeLine', health: 'healthy', droppedAt: 'OK' },
-  { label: 'aSpiral', health: 'warning', droppedAt: 'Spike' },
-  { label: 'Fortress', health: 'healthy', droppedAt: 'Secure' },
-  { label: 'OmniSkills', health: 'broken', droppedAt: 'Error' },
-  { label: 'Orchestrator', health: 'healthy', droppedAt: 'Running' },
+  { id: '1', kind: 'widget', source: 'system', metadata: {}, label: 'TradeLine', health: 'healthy', droppedAt: 'OK' },
+  { id: '2', kind: 'widget', source: 'system', metadata: {}, label: 'aSpiral', health: 'warning', droppedAt: 'Spike' },
+  { id: '3', kind: 'widget', source: 'system', metadata: {}, label: 'Fortress', health: 'healthy', droppedAt: 'Secure' },
+  { id: '4', kind: 'widget', source: 'system', metadata: {}, label: 'OmniSkills', health: 'broken', droppedAt: 'Error' },
+  { id: '5', kind: 'widget', source: 'system', metadata: {}, label: 'Orchestrator', health: 'healthy', droppedAt: 'Running' },
 ];
 
 const LONG_SUGGESTION =
