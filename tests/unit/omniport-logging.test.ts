@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { OmniPortEngine } from '@/omniconnect/ingress/OmniPort';
-import { RawInput } from '@/omniconnect/types/ingress';
+import { describe, it,  vi, beforeEach, afterEach } from 'vitest';
 
 // Mock dependencies to isolate OmniPort logic
 vi.mock('@/integrations/supabase/client', () => ({
@@ -41,12 +39,8 @@ vi.mock('@/lib/web3/entitlements', () => ({
 }));
 
 describe('OmniPort Logging Performance', () => {
-  let omniPort: OmniPortEngine;
-  
   beforeEach(() => {
     // Access private constructor via getInstance (singleton)
-    omniPort = OmniPortEngine.getInstance();
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
