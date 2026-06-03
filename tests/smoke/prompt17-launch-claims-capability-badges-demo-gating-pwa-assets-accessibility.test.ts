@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, it, expect } from 'vitest';
 
 describe('launch-claims capability-badges demo-gating pwa-assets accessibility', () => {
