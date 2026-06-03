@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 
 const files = [
   "tests/e2e-playwright/pwa-seo-assets.spec.ts",

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { describe, it, expect } from 'vitest';
+import { describe, it } from 'vitest';
 
 describe('Production Truthfulness', () => {
   it.todo('does not allow hardcoded fallback events in trace');
