@@ -175,6 +175,8 @@ export class OmniLinkDelivery {
       risk_score: (event.metadata?.risk_lane as string) === 'RED' ? 100 : 0,
       source_type: 'omnilink_delivery_failure',
       user_id: event.userId ?? null,
+        retry_count: 0,
+        last_retry_at: null,
     };
 
     const { error: dlqError } = await supabase.from('ingress_buffer').insert(entry);
