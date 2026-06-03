@@ -213,10 +213,8 @@ jobs:
 
       - name: Run local-agents Python coverage
         # timeout-minutes guards against pip download stalls (large pandas wheel)
-        # and hanging async tests. continue-on-error is consistent with the
-        # || true already present on pytest — this step is non-blocking.
+        # and hanging async tests.
         timeout-minutes: 8
-        continue-on-error: true
         run: |
           cd local-agents
           pip install --timeout 60 --retries 2 --only-binary :all: -r requirements.txt
@@ -229,7 +227,7 @@ jobs:
 
 
       - name: SonarCloud Scan
-        if: vars.SONAR_CI_SCAN_ENABLED != 'false' && env.SONAR_TOKEN != ''
+        if: ${{ vars.SONAR_CI_SCAN_ENABLED != 'false' && secrets.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
