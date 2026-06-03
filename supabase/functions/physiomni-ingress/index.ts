@@ -17,6 +17,11 @@
 import { buildCorsHeaders, handlePreflight } from '../_shared/cors.ts';
 import { createServiceClient } from '../_shared/supabaseClient.ts';
 import { RateLimiter } from '../_shared/rate-limiter.ts';
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from '../_shared/rate-limit.ts';
 
 // ── Threshold Constants ─────────────────────────────────────────────────────
 const VIBRATION_CRITICAL_THRESHOLD = 15;
@@ -373,6 +378,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // ── 0. Security, Rate Limiting & Gating ─────────────────────────────────────
   const gateError = enforceIngressGate(corsHeaders);
   if (gateError) return gateError;
+
+  // Distributed rate limiting (Upstash) — additive to the Postgres-backed
+  // RateLimiter below; both fail closed. Keyed per device serial.
+  const rl = await checkRateLimit(data.device_serial, RATE_LIMIT_CONFIGS.physiomniIngress);
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(requestOrigin, rl);
+  }
 
   try {
     await RateLimiter.checkLimit(supabase, data.device_serial, 60, 60);

@@ -35,7 +35,14 @@ export interface OmniAppShellConfig {
 
 const SHELL_TAG = 'omni-app-shell';
 
-class OmniAppShellElement extends HTMLElement {
+// SSG prerender runs in Node.js where HTMLElement is not defined; fall back to an
+// inert base class so the module loads without error in that environment.
+const _HTMLElement: typeof HTMLElement =
+  typeof globalThis.HTMLElement !== 'undefined'
+    ? globalThis.HTMLElement
+    : (class {} as typeof HTMLElement);
+
+class OmniAppShellElement extends _HTMLElement {
   private _shadowRoot: ShadowRoot | null = null;
   private _mounted = false;
 
@@ -213,6 +220,7 @@ class OmniAppShellElement extends HTMLElement {
  * will not re-register if already defined.
  */
 export function registerOmniAppShell(): void {
+  if (typeof globalThis.customElements === 'undefined') return;
   if (customElements.get(SHELL_TAG)) return;
   customElements.define(SHELL_TAG, OmniAppShellElement);
 }

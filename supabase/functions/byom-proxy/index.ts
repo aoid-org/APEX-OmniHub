@@ -11,6 +11,11 @@ import { getCockpitCrypto } from "../_shared/cockpit-crypto.ts";
 import { createAdapter } from "../_shared/universal-adapter.ts";
 import { FlightControl } from "../_shared/flight-control.ts";
 import { RateLimiter } from "../_shared/rate-limiter.ts";
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from "../_shared/rate-limit.ts";
 import { assertUrlSafe } from "../_shared/ssrf-protection.ts";
 // Note: In Deno edge functions, shared packages might need explicit .ts paths depending on setup.
 import { ModelProviderRegistrySchema, type ModelProviderConfig } from "../../packages/schema/byom/registry.ts";
@@ -111,6 +116,13 @@ serve(async (req: Request) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+    }
+
+    // Distributed rate limiting (Upstash) — additive to the Postgres-backed
+    // RateLimiter below; both fail closed. Keyed per authenticated user.
+    const rl = await checkRateLimit(user.id, RATE_LIMIT_CONFIGS.byomProxy);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(origin, rl);
     }
 
     const body = REQUEST_SCHEMA.parse(await req.json());

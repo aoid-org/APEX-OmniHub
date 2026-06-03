@@ -36,9 +36,6 @@ verify_jwt = false
 [functions.execute-automation]
 verify_jwt = true
 
-[functions.test-integration]
-verify_jwt = true
-
 [functions.byom-proxy]
 verify_jwt = true
 

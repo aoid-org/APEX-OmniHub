@@ -15,6 +15,8 @@ os.environ["SUPABASE_SERVICE_ROLE_KEY"] = "test-key"
 os.environ["SUPABASE_DB_URL"] = "postgresql://postgres:postgres@localhost:54322/postgres"
 os.environ["REDIS_URL"] = "redis://localhost:6379"
 os.environ.setdefault("UPSTASH_REDIS_URL", "redis://localhost:6379")
+# OmniBoard OAuth runs in mock mode under tests; production leaves this false.
+os.environ.setdefault("OMNIBOARD_MOCK_OAUTH", "true")
 
 
 @pytest.fixture(scope="session")
