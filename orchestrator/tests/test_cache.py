@@ -77,13 +77,26 @@ class TestSemanticCacheService:
         """Create cache service instance for testing."""
         # Use environment variable or default to localhost
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-        cache = SemanticCacheService(
-            redis_url=redis_url,
-            redis_password=os.getenv("REDIS_PASSWORD"),
-            redis_ssl=os.getenv("REDIS_SSL", "false").lower() == "true",
-            similarity_threshold=0.85,
-            ttl_seconds=300,  # 5min for tests
-        )
+        
+        mock_model = MagicMock()
+        # Return deterministic vector based on text to allow exact matches but fail cache miss
+        def mock_encode(text, **kwargs):
+            import hashlib
+            h = int(hashlib.md5(text.encode()).hexdigest(), 16)
+            np.random.seed(h % (2**32))
+            return np.random.randn(3).astype(np.float32)
+            
+        mock_model.encode.side_effect = mock_encode
+        mock_model.get_sentence_embedding_dimension.return_value = 3
+        
+        with patch("infrastructure.cache.SentenceTransformer", return_value=mock_model):
+            cache = SemanticCacheService(
+                redis_url=redis_url,
+                redis_password=os.getenv("REDIS_PASSWORD"),
+                redis_ssl=os.getenv("REDIS_SSL", "false").lower() == "true",
+                similarity_threshold=0.85,
+                ttl_seconds=300,  # 5min for tests
+            )
         try:
             await cache.initialize()
             yield cache
