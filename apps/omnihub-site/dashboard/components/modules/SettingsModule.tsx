@@ -2,7 +2,7 @@ import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { SUPPORTED_LOCALES } from '@/i18n/locales';
+import { SUPPORTED_LOCALES } from '../../src/i18n/locales';
 import { useState } from 'react';
 import { useOmniModal } from '@/stores/omniModalStore';
 

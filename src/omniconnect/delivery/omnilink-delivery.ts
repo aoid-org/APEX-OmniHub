@@ -174,7 +174,7 @@ export class OmniLinkDelivery {
       status: 'pending',
       risk_score: (event.metadata?.risk_lane as string) === 'RED' ? 100 : 0,
       source_type: 'omnilink_delivery_failure',
-      user_id: event.userId,
+      user_id: event.userId ?? null,
     };
 
     const { error: dlqError } = await supabase.from('ingress_buffer').insert(entry);

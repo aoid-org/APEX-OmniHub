@@ -13,7 +13,7 @@ import {
   SystemSparklines
 } from './components/M03Panels';
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
-import { useNotificationStore } from '@/stores/notificationStore';
+import { useNotificationStore } from '../src/stores/notificationStore';
 import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';

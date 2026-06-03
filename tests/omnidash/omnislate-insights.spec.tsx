@@ -59,7 +59,6 @@ describe('OmniSlate Insights and Health', () => {
     // Assuming 'neutral' is mapped to HC['neutral'] or similar.
     // The test specifies we must support neutral, we will pass 'unknown' or empty slate logic in the component
     // If the component receives health="unknown", it should render neutral.
-    // @ts-expect-error testing unknown health variant mapped to neutral
     render(<OmniSlatePane
       health="unknown" activeInsight={null} prompt="" isRecording={false} recordingDuration={0} traceLogs={[]}
       onCleanSlate={vi.fn()} onToggleGlobalInsight={vi.fn()} onToggleInsight={vi.fn()} onPromptChange={vi.fn()} onCommandSubmit={vi.fn()} onToggleRecording={vi.fn()}

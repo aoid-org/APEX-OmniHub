@@ -56,7 +56,7 @@ vi.mock('@/assets/sentinel-avatar-icon.png', () => ({ default: 'sentinel.png' })
 import { OmniSlatePane } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/components/OmniSlatePane';
 import { EcosystemPane } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/components/EcosystemPane';
 import { AgentPane } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/components/AgentPane';
-import type { ContextItem } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/types';
+import type { OmniSlateContextItem } from '../../apps/omnihub-site/dashboard/types/context.types';
 import { useOmniSlateStore } from '../../apps/omnihub-site/src/stores/omniSlateStore';
 
 vi.mock('../../apps/omnihub-site/src/stores/omniSlateStore', () => ({
@@ -82,7 +82,7 @@ const BASE_SLATE_PROPS = {
   onToggleRecording: vi.fn(),
 };
 
-const MANY_CONTEXT: readonly ContextItem[] = [
+const MANY_CONTEXT: readonly OmniSlateContextItem[] = [
   { name: 'TradeLine', health: 'green', insight: 'OK' },
   { name: 'aSpiral', health: 'yellow', insight: 'Spike' },
   { name: 'Fortress', health: 'green', insight: 'Secure' },

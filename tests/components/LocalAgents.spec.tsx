@@ -6,9 +6,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import { LocalAgents } from '@/dashboard/components/modules/LocalAgents';
-import LocalAgents from '../../apps/omnihub-site/dashboard/components/modules/LocalAgents';
-
+import LocalAgents from '../../apps/omnihub-site/dashboard/components/LocalAgents';
 // Recharts is globally mocked via vitest.config.ts alias
 
 // ─── Mocks ────────────────────────────────────────────────────────────────
@@ -93,7 +91,7 @@ vi.mock('@/components/ui/card', () => ({
 
 // ─── Import after mocks ───────────────────────────────────────────────────
 
-import LocalAgents from '@/dashboard/components/LocalAgents';
+
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────
 
