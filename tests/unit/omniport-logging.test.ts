@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it,  vi, beforeEach, afterEach } from 'vitest';
 import { OmniPortEngine } from '@/omniconnect/ingress/OmniPort';
 import { RawInput } from '@/omniconnect/types/ingress';
 

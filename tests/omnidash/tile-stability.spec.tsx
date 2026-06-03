@@ -68,7 +68,7 @@ import { DraggableWidget, DRAG_THRESHOLD_PX } from '../../apps/omnihub-site/dash
 
 // ── OmniSlatePane default props ───────────────────────────────────────────────
 const BASE_SLATE_PROPS = {
-  health: 'green' as const,
+  health: 'healthy' as const,
   activeInsight: null,
   prompt: '',
   isRecording: false,
@@ -83,11 +83,11 @@ const BASE_SLATE_PROPS = {
 };
 
 const MANY_CONTEXT: readonly OmniSlateContextItem[] = [
-  { name: 'TradeLine', health: 'green', insight: 'OK' },
-  { name: 'aSpiral', health: 'yellow', insight: 'Spike' },
-  { name: 'Fortress', health: 'green', insight: 'Secure' },
-  { name: 'OmniSkills', health: 'red', insight: 'Error' },
-  { name: 'Orchestrator', health: 'green', insight: 'Running' },
+  { label: 'TradeLine', health: 'healthy', droppedAt: 'OK' },
+  { label: 'aSpiral', health: 'warning', droppedAt: 'Spike' },
+  { label: 'Fortress', health: 'healthy', droppedAt: 'Secure' },
+  { label: 'OmniSkills', health: 'broken', droppedAt: 'Error' },
+  { label: 'Orchestrator', health: 'healthy', droppedAt: 'Running' },
 ];
 
 const LONG_SUGGESTION =
