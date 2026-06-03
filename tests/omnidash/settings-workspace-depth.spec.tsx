@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it } from 'vitest';
 
 describe('Settings Workspace Depth', () => {
   it.todo('must contain exactly 10 defined sections');
