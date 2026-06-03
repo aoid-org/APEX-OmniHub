@@ -92,4 +92,4 @@ verify_jwt = false  # Device auth via mTLS at transport layer; service_role used
 
 [functions.env]
 ALLOWED_ORIGINS = "https://apexomnihub.icu,https://www.apexomnihub.icu"
-PHYSIOMNI_LIVE_ENABLED = "false"
+PHYSIOMNI_LIVE_ENABLED = "true"
