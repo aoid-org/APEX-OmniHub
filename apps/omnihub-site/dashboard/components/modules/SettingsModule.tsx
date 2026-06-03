@@ -2,7 +2,7 @@ import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { SUPPORTED_SUPPORTED_LOCALES } from '../../../src/i18n/locales';
+import { SUPPORTED_LOCALES } from '../../../src/i18n/locales';
 import { useState } from 'react';
 import { useOmniModal } from '@/stores/omniModalStore';
 
@@ -38,7 +38,7 @@ export default function SettingsModule({ onClose }: Props) {
     const newLang = e.target.value;
     i18n.changeLanguage(newLang);
     document.documentElement.lang = newLang;
-    const locInfo = SUPPORTED_LOCALES.find((l: any) => l.code === newLang);
+    const locInfo = SUPPORTED_LOCALES.find((l: { code: string; label: string; nativeLabel: string; dir: string }) => l.code === newLang);
     if (locInfo) {
       document.documentElement.dir = locInfo.dir;
     }

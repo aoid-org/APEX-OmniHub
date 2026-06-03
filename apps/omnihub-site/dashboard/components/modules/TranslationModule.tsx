@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { ModuleShell } from './ModuleShell';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { SUPPORTED_SUPPORTED_LOCALES } from '../../../src/i18n/locales';
+import { SUPPORTED_LOCALES } from '../../../src/i18n/locales';
 import type { OmniModuleState } from '@/hooks/useOmniModuleState';
 
 interface Props {
