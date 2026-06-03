@@ -79,9 +79,11 @@ class TestSemanticCacheService:
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
 
         mock_model = MagicMock()
+
         # Return deterministic vector based on text to allow exact matches but fail cache miss
         def mock_encode(text, **_kwargs):
             import hashlib
+
             h = int(hashlib.sha256(text.encode()).hexdigest(), 16)
             np.random.seed(h % (2**32))
             return np.random.randn(3).astype(np.float32)
