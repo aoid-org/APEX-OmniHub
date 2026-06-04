@@ -70,7 +70,8 @@ interface NavItemProps {
 }
 
 
-import type { DashboardNavSection } from "./types/dashboard.types";
+import type { DashboardNavSection, KpiSummary } from "./types/dashboard.types";
+import type { Incident } from './hooks/useDashboardData';
 
 interface OmniDashSidebarProps {
   activeNav: string;
@@ -390,10 +391,16 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
     }
   }, [signingOut]);
 
+  const canvasRef = useRef<HTMLDivElement>(null);
+
   const handleNav = (widget: OmniDashSidebarWidget) => {
     setActiveNav(widget.label);
 
-    if (!widget.moduleKey) return; // OmniBoard stays on main canvas
+    if (!widget.moduleKey) {
+      // OmniBoard: scroll canvas back to top so user sees the main dashboard
+      canvasRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
 
     invoke({
       id: `nav-module-${widget.moduleKey}`,
@@ -1344,73 +1351,107 @@ const IntegratedAppsWidget = () => {
 };
 
 // ─── Right Panel Sections ─────────────────────────────────────────────────────
-const OmniBoardFeed = ({ isDark }: { dash?: DashboardData; isDark: boolean }) => {
-  const [events, setEvents] = useState<{time: string, type: string, color: string, text: string}[]>([]);
-  
+const OmniBoardFeed = ({ isDark, dash }: { dash?: DashboardData; isDark: boolean }) => {
+  const [events, setEvents] = useState<
+    { time: string; type: string; color: string; text: string }[]
+  >([]);
+
+  // Seed from real open incidents passed in from dashData
   useEffect(() => {
-    // APEX-DEV: OpenTelemetry SSE stream via OmniHub Gateway overriding local JSON array fallback
-    const sse = new EventSource('/api/mcp/telemetry/stream');
-    sse.onmessage = (e) => {
-      try {
-        const payload = JSON.parse(e.data);
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const newEvent = {
-          time,
-          type: "system",
-          color: payload.severity === 'sev1' ? T.warn : T.orange,
-          text: payload.title
-        };
-        setEvents(prev => [newEvent, ...prev].slice(0, 50));
-      } catch {
-        // Ignore invalid SSE stream JSON output
-      }
-    };
-    return () => sse.close();
+    if (!dash?.openIncidents?.length) return;
+    const seeded = dash.openIncidents.map((inc) => ({
+      time: new Date(inc.occurred_at).toLocaleTimeString([], {
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      }),
+      type: inc.severity.toUpperCase(),
+      color: inc.severity === 'sev1' ? T.warn : T.orange,
+      text: inc.title,
+    }));
+    setEvents(seeded.slice(0, 50));
+  }, [dash?.openIncidents]);
+
+  // Subscribe to new incidents via Supabase realtime
+  useEffect(() => {
+    const channel = supabase
+      .channel('omniboard-feed')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'omnidash_incidents' },
+        (payload) => {
+          const rec = payload.new as {
+            severity: string; title: string; occurred_at: string;
+          };
+          const time = new Date(rec.occurred_at).toLocaleTimeString([], {
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+          });
+          setEvents((prev) =>
+            [
+              {
+                time,
+                type: (rec.severity ?? 'system').toUpperCase(),
+                color: rec.severity === 'sev1' ? T.warn : T.orange,
+                text: rec.title ?? 'New event',
+              },
+              ...prev,
+            ].slice(0, 50),
+          );
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   return (
-    <GlassCard style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", padding: 0 }}>
+    <GlassCard style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', padding: 0 }}>
       {/* Header */}
       <div style={{
-        padding: "16px 16px 12px", borderBottom: `1px solid ${T.borderGlow}`,
+        padding: '16px 16px 12px', borderBottom: `1px solid ${T.borderGlow}`,
         background: `linear-gradient(90deg, ${T.orange}08, transparent)`,
-        flexShrink: 0
+        flexShrink: 0,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
-            width: 8, height: 8, borderRadius: "50%", background: T.orange,
-            boxShadow: `0 0 10px ${T.orange}, 0 0 20px ${T.orange}`
+            width: 8, height: 8, borderRadius: '50%', background: T.orange,
+            boxShadow: `0 0 10px ${T.orange}, 0 0 20px ${T.orange}`,
           }} />
           <SectionLabel>OmniBoard</SectionLabel>
         </div>
-        <div style={{ fontSize: 11.5, color: T.t3, marginTop: 4, letterSpacing: "0.02em" }}>
+        <div style={{ fontSize: 11.5, color: T.t3, marginTop: 4, letterSpacing: '0.02em' }}>
           Unified Intelligence Stream
         </div>
       </div>
 
-      {/* Terminal Stream */}
-      <div className="omniboard-stream" style={{
-        flex: 1, overflowY: "auto", padding: "16px",
-        display: "flex", flexDirection: "column", gap: 12,
-        fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
-        background: isDark ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.4)"
-      }}>
+      {/* Event stream */}
+      <div
+        className="omniboard-stream"
+        style={{
+          flex: 1, overflowY: 'auto', padding: '16px',
+          display: 'flex', flexDirection: 'column', gap: 12,
+          fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
+          background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.4)',
+        }}
+      >
         {events.length === 0 ? (
-          <div style={{ color: T.t3, fontSize: 12, textAlign: "center", marginTop: 20 }}>
+          <div style={{ color: T.t3, fontSize: 12, textAlign: 'center', marginTop: 20 }}>
             No recent activity detected.
           </div>
         ) : (
           events.map((e, i) => (
-            <div key={i} style={{
-              display: "flex", alignItems: "flex-start", gap: 12,
-              animation: "apexFadeIn 0.3s ease",
-              fontSize: 12.5, lineHeight: 1.5
-            }}>
-              <div style={{ color: T.t3, fontSize: 11, marginTop: 2, flexShrink: 0 }}>[{e.time}]</div>
+            <div
+              key={`${e.time}-${i}`}
+              style={{
+                display: 'flex', alignItems: 'flex-start', gap: 12,
+                animation: 'apexFadeIn 0.3s ease', fontSize: 12.5, lineHeight: 1.5,
+              }}
+            >
+              <div style={{ color: T.t3, fontSize: 11, marginTop: 2, flexShrink: 0 }}>
+                [{e.time}]
+              </div>
               <div style={{
-                color: e.color, fontSize: 10, fontWeight: 700, textTransform: "uppercase",
-                padding: "2px 6px", borderRadius: 4, border: `1px solid ${e.color}44`,
-                background: `${e.color}15`, flexShrink: 0, minWidth: 65, textAlign: "center", marginTop: 1
+                color: e.color, fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                padding: '2px 6px', borderRadius: 4, border: `1px solid ${e.color}44`,
+                background: `${e.color}15`, flexShrink: 0, minWidth: 65,
+                textAlign: 'center', marginTop: 1,
               }}>
                 {e.type}
               </div>
@@ -1419,24 +1460,130 @@ const OmniBoardFeed = ({ isDark }: { dash?: DashboardData; isDark: boolean }) =>
           ))
         )}
       </div>
-      {/* Input bar */}
-      <div style={{
-        padding: "12px", borderTop: `1px solid ${T.border}`,
-        display: "flex", alignItems: "center", gap: 8,
-        background: `${T.surface}cc`, flexShrink: 0
-      }}>
-        <div style={{ color: T.orange, fontSize: 14, fontWeight: 700 }}>&gt;</div>
-        <input 
-          placeholder="Query OmniBoard logs..." 
-          style={{
-            flex: 1, background: "transparent", border: "none", outline: "none",
-            color: T.t1, fontSize: 13, fontFamily: "'Fira Code', 'JetBrains Mono', monospace"
-          }}
-        />
-      </div>
+
+      {/* Query input — wired to filter visible events */}
+      <OmniBoardQueryInput events={events} setEvents={setEvents} />
     </GlassCard>
   );
 };
+
+// Extracted query input to keep OmniBoardFeed clean
+const OmniBoardQueryInput = memo(function OmniBoardQueryInput({
+  events,
+  setEvents,
+}: {
+  events: { time: string; type: string; color: string; text: string }[];
+  setEvents: React.Dispatch<React.SetStateAction<typeof events>>;
+}) {
+  const [query, setQuery] = useState('');
+
+  const handleQuery = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key !== 'Enter' || !query.trim()) return;
+      const q = query.toLowerCase();
+      setEvents((prev) => prev.filter((ev) => ev.text.toLowerCase().includes(q) || ev.type.toLowerCase().includes(q)));
+      setQuery('');
+    },
+    [query, setEvents],
+  );
+
+  return (
+    <div style={{
+      padding: '12px', borderTop: `1px solid ${T.border}`,
+      display: 'flex', alignItems: 'center', gap: 8,
+      background: `${T.surface}cc`, flexShrink: 0,
+    }}>
+      <div style={{ color: T.orange, fontSize: 14, fontWeight: 700 }}>&gt;</div>
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={handleQuery}
+        placeholder="Query OmniBoard logs..."
+        style={{
+          flex: 1, background: 'transparent', border: 'none', outline: 'none',
+          color: T.t1, fontSize: 13, fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
+        }}
+      />
+    </div>
+  );
+});
+
+// ── Right panel KPI strip ──────────────────────────────────────────────────
+
+const RightPanelKpiStrip = memo(function RightPanelKpiStrip({
+  kpi,
+  isDark: _isDark,
+}: {
+  kpi: KpiSummary;
+  isDark: boolean;
+}) {
+  const items = [
+    { label: 'Paid Starts', value: kpi.tradeline_paid_starts },
+    { label: 'Active Pilots', value: kpi.tradeline_active_pilots },
+    { label: 'Churn Risk', value: kpi.tradeline_churn_risks },
+  ];
+  return (
+    <GlassCard style={{ padding: '12px 14px' }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 10 }}>
+        KPI Snapshot
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+        {items.map((item) => (
+          <div key={item.label} style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: T.orange }}>{item.value}</div>
+            <div style={{ fontSize: 9.5, color: T.t3, marginTop: 2 }}>{item.label}</div>
+          </div>
+        ))}
+      </div>
+    </GlassCard>
+  );
+});
+
+// ── Right panel incidents ─────────────────────────────────────────────────
+
+const SEV_COLORS: Record<string, string> = {
+  sev1: '#ef4444',
+  sev2: '#f97316',
+  sev3: '#facc15',
+};
+
+const RightPanelIncidents = memo(function RightPanelIncidents({
+  incidents,
+}: {
+  incidents: Incident[];
+}) {
+  return (
+    <GlassCard style={{ padding: '12px 14px' }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 8 }}>
+        Open Incidents ({incidents.length})
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {incidents.slice(0, 4).map((inc) => (
+          <div
+            key={inc.id}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '6px 8px', borderRadius: 6,
+              background: `${SEV_COLORS[inc.severity] ?? T.orange}10`,
+              border: `1px solid ${SEV_COLORS[inc.severity] ?? T.orange}30`,
+            }}
+          >
+            <div style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: SEV_COLORS[inc.severity] ?? T.orange, flexShrink: 0,
+            }} />
+            <div style={{ fontSize: 11.5, color: T.t1, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {inc.title}
+            </div>
+            <div style={{ fontSize: 10, color: T.t3, flexShrink: 0, textTransform: 'uppercase' }}>
+              {inc.severity}
+            </div>
+          </div>
+        ))}
+      </div>
+    </GlassCard>
+  );
+});
 
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
@@ -1500,7 +1647,7 @@ export default function OmniDashShell() {
         {isDesktop && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />}
 
         {/* Main Canvas */}
-        <div className="omni-canvas-container" style={{
+        <div ref={canvasRef} className="omni-canvas-container" style={{
           flex:1, display:"flex", flexDirection:"column",
           overflow:"auto", padding:"16px", gap:14,
           position:"relative",
@@ -1585,14 +1732,26 @@ export default function OmniDashShell() {
 
         {/* Right Panel — desktop only; mobile/tablet use OmniMobileDrawer */}
         {isDesktop && (
-          <div className="omni-right-panel" style={{
-            width:340, flexShrink:0,
-            background:`linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
-            borderLeft:`1px solid ${T.border}`,
-            overflowY:"auto", padding:"14px 12px",
-            display:"flex", flexDirection:"column", gap:12,
-          }}>
-            <DraggableWidget id="rt_omniboard" style={{ height: "100%" }}>
+          <div
+            className="omni-right-panel"
+            style={{
+              width: 340, flexShrink: 0,
+              background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
+              borderLeft: `1px solid ${T.border}`,
+              overflowY: 'auto', padding: '14px 12px',
+              display: 'flex', flexDirection: 'column', gap: 12,
+            }}
+          >
+            {/* KPI Summary strip */}
+            <RightPanelKpiStrip kpi={dashData.kpiSummary} isDark={isDark} />
+
+            {/* Open incidents */}
+            {dashData.openIncidents.length > 0 && (
+              <RightPanelIncidents incidents={dashData.openIncidents} />
+            )}
+
+            {/* OmniBoard telemetry feed — fills remaining height */}
+            <DraggableWidget id="rt_omniboard" style={{ flex: 1, minHeight: 280 }}>
               <OmniBoardFeed isDark={isDark} dash={dashData} />
             </DraggableWidget>
           </div>
