@@ -1,6 +1,6 @@
 # Current Status
 
-- date: 2026-05-29
+- date: 2026-06-04
 - omni_recall_status: active
 - installation_path: memory/omni-recall/ (APEX-OmniHub repo)
 - runtime: claude-code-ephemeral-container
@@ -43,14 +43,32 @@
 - verification: grep omnilink-agent → zero hits. tsc exit 0. eslint exit 0. Vitest 2578/2578.
 - codex_post_merge_changes: Auto-fix `7a2c45ed` simplified MCP response mapping (CodeX). Both changes already pulled.
 
-## Verified runtime facts (2026-05-31) — post-PR-1251-merge audit
-- last_verified_date: 2026-05-31
-- last_verified_commit: 7a2c45ed (Auto-fix applied by CodeX: simplify MCP response mapping)
-- active_branch: main
+## Latest session (2026-06-04) — OmniDash Production Hardening + Governed CF Deploy
+- branch: feat/omnidash-production-hardening → PR #1263
+- scope: OmniDash stuck modal fix; mock-data elimination from all module modals; PhysiOmni real device count wired to live Supabase table; governed CF Pages deploy workflow (replaces broken PR #1262); README version fix 1.6.x→1.7.0; RSI policy v1.3.3.
+- agent_swarm: true — 2 parallel isolated git worktrees (agent-abf379f1529877424: mock data + PhysiOmni; agent-a08ab12a4fb7f7a2b: governed CF deploy workflow).
+- key_outcomes:
+  - `DialogContent` max-h+overflow fix — users can no longer get trapped in tall modals
+  - All `moduleData.json` entries `isDemo:true` — no fabricated data presented as tenant-live
+  - `usePhysiOmniDevices` hook queries `physiomni_devices` RLS-protected table per tenant
+  - `.github/workflows/deploy-production-cf-direct.yml` targets `apex-omnihub` (real project), gated behind `production-shadow` environment reviewer, real bundle smoke test
+  - `scripts/set-cf-pages-env.sh` hard-exits if `CF_PAGES_PROJECT=omnihub` (prevents PR #1262 class of mistake recurring)
+  - RSI policy corrected: stale `20260528000000_omniconnect_vault.sql` → `20260528000001`
+- verification: tsc exit 0, eslint exit 0, migration validator 0 violations, all 42 GitHub CI checks success/skipped.
+- pr_link: https://github.com/apexbusiness-systems/APEX-OmniHub/pull/1263
+
+## Verified runtime facts (2026-06-04) — PR #1263 branch
+- last_verified_date: 2026-06-04
+- last_verified_commit: ead5cd9f (fix(rsi): add deploy-production-cf-direct.yml exclusion; fix stale migration ref)
+- active_branch: feat/omnidash-production-hardening (PR #1263 pending merge)
+- main_head: e5b93237 (docs: post-merge verification + context sync 2026-05-31)
 - multi_agent_environment: true
 - known_non_claude_agents: [google-jules, google-antigravity, openai-codex, dependabot]
-- open_prs_noted: PR#1251 (merged 2026-05-31)
+- agent_swarm_confirmed: true — parallel isolated worktrees used in this session
 - apex_agent_canonical_slug: apex-agent
 - apex_agent_supabase_function: supabase/functions/apex-agent/
 - db_migrations_applied_to_production: 20260527000001 (aegis/chronos), 20260528000000 (physiomni-rls), 20260528000001 (omniconnect-vault)
 - naming_drift: zero — confirmed by grep across all ts/tsx/yaml/json/yml/sh files
+- zero_mock_data_module_surface: verified — all moduleData.json entries isDemo:true; hardcoded literals removed from 4 module tsx files
+- cf_deploy_project: apex-omnihub (corrected from broken omnihub in PR #1262)
+- rsi_policy_version: 1.3.3
