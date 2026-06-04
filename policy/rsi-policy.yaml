@@ -1,5 +1,5 @@
-policy_version: 1.3.2
-policy_last_updated_utc: 2026-05-28
+policy_version: 1.3.3
+policy_last_updated_utc: 2026-06-04
 mode: live
 default_network_model_calls: false
 hosted_model_monthly_budget_usd: 0
@@ -48,11 +48,12 @@ critical_paths:
   - '!.github/workflows/secret-scanning.yml'
   - '!.github/workflows/release.yml'
   - '!.github/workflows/nightly-evaluation.yml'
+  - '!.github/workflows/deploy-production-cf-direct.yml'
   - orchestrator/workflows/**
   - orchestrator/activities/**
   - supabase/migrations/**
   - '!supabase/migrations/20260527000001_aegis_api_keys_chronos.sql'
-  - '!supabase/migrations/20260528000000_omniconnect_vault.sql'
+  - '!supabase/migrations/20260528000001_omniconnect_vault.sql'
   - '!supabase/migrations/20260528000000_physiomni_telemetry_partition_rls.sql'
   - '!supabase/migrations/rollback/20260528000000_physiomni_telemetry_partition_rls_down.sql'
   - supabase/functions/**
