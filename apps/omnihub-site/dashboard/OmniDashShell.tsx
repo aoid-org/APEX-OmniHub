@@ -1462,18 +1462,16 @@ const OmniBoardFeed = ({ isDark, dash }: { dash?: DashboardData; isDark: boolean
       </div>
 
       {/* Query input — wired to filter visible events */}
-      <OmniBoardQueryInput events={events} setEvents={setEvents} />
+      <OmniBoardQueryInput setEvents={setEvents} />
     </GlassCard>
   );
 };
 
 // Extracted query input to keep OmniBoardFeed clean
 const OmniBoardQueryInput = memo(function OmniBoardQueryInput({
-  events,
   setEvents,
 }: {
-  events: { time: string; type: string; color: string; text: string }[];
-  setEvents: React.Dispatch<React.SetStateAction<typeof events>>;
+  setEvents: React.Dispatch<React.SetStateAction<{ time: string; type: string; color: string; text: string }[]>>;
 }) {
   const [query, setQuery] = useState('');
 
