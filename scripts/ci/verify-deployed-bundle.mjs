@@ -23,8 +23,14 @@
  * Exit 0 = bundle verified. Non-zero = fail the deploy job.
  */
 
-const PROD_URL = (process.env.PROD_URL || 'https://apexomnihub.icu').replace(/\/+$/, '');
-const DEPLOY_URL = (process.env.DEPLOY_URL || '').replace(/\/+$/, '');
+/** Strip trailing slashes without regex — no backtracking, O(n). */
+function stripTrailingSlashes(s) {
+  let result = s;
+  while (result.endsWith('/')) result = result.slice(0, -1);
+  return result;
+}
+const PROD_URL = stripTrailingSlashes(process.env.PROD_URL || 'https://apexomnihub.icu');
+const DEPLOY_URL = stripTrailingSlashes(process.env.DEPLOY_URL || '');
 const EXPECTED_HOST = (process.env.EXPECTED_SUPABASE_HOST || 'rtopreovkywofgwgmozi.supabase.co').trim();
 const PLACEHOLDER_HOST = 'placeholder.supabase.co';
 
@@ -125,7 +131,9 @@ async function main() {
   console.log('\nDeployed bundle smoke test PASSED.');
 }
 
-main().catch((error) => {
+try {
+  await main();
+} catch (error) {
   console.error(`::error::Unexpected smoke-test failure: ${error.message}`);
   process.exit(1);
-});
+}
