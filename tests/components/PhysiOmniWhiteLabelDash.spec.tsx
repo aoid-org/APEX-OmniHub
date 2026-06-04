@@ -6,7 +6,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import React from 'react';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────
 
@@ -25,17 +24,7 @@ vi.mock('@/lib/supabase', () => ({
   },
 }));
 
-// Mock Recharts to avoid layout / SVG rendering hurdles in JSDOM
-vi.mock('recharts', () => ({
-  LineChart: ({ children }: { children: React.ReactNode }) => <div data-testid="line-chart">{children}</div>,
-  Line: () => null,
-  XAxis: () => null,
-  YAxis: () => null,
-  CartesianGrid: () => null,
-  Tooltip: () => null,
-  Legend: () => null,
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
+// Recharts is globally mocked via vitest.config.ts alias
 
 // ─── Import after mocks ───────────────────────────────────────────────────
 

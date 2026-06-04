@@ -1,5 +1,7 @@
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
+import { exportAuditLogCSV } from '../../utils/exportAuditLog';
+import { supabase } from '@/lib/supabase';
 
 interface Props {
   readonly onClose: () => void;

@@ -35,7 +35,14 @@ export interface OmniAppShellConfig {
 
 const SHELL_TAG = 'omni-app-shell';
 
-class OmniAppShellElement extends HTMLElement {
+// SSG prerender runs in Node.js where HTMLElement is not defined; fall back to an
+// inert base class so the module loads without error in that environment.
+const _HTMLElement: typeof HTMLElement =
+  globalThis.HTMLElement === undefined
+    ? (Object as unknown as typeof HTMLElement)
+    : globalThis.HTMLElement;
+
+class OmniAppShellElement extends _HTMLElement {
   private _shadowRoot: ShadowRoot | null = null;
   private _mounted = false;
 
@@ -142,7 +149,10 @@ class OmniAppShellElement extends HTMLElement {
 
     if (config.entryUrl) {
       // 1. Sanitise URL against APEX Origin Policy
-      const isDemoMode = typeof process !== 'undefined' ? process.env.VITE_IS_DEMO_MODE === 'true' : false;
+      let isDemoMode = false;
+      if (typeof process !== 'undefined') {
+        isDemoMode = process.env.VITE_IS_DEMO_MODE === 'true';
+      }
       const result = sanitiseIframeUrl(config.entryUrl, isDemoMode);
 
       if (result.allowed) {
@@ -210,9 +220,9 @@ class OmniAppShellElement extends HTMLElement {
  * will not re-register if already defined.
  */
 export function registerOmniAppShell(): void {
-  if (!customElements.get(SHELL_TAG)) {
-    customElements.define(SHELL_TAG, OmniAppShellElement);
-  }
+  if (globalThis.customElements === undefined) return;
+  if (customElements.get(SHELL_TAG)) return;
+  customElements.define(SHELL_TAG, OmniAppShellElement);
 }
 
 export { SHELL_TAG };

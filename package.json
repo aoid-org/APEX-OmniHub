@@ -1,7 +1,7 @@
 {
   "name": "apex-omnihub",
   "private": true,
-  "version": "1.6.0",
+  "version": "1.7.0",
   "type": "module",
   "engines": {
     "node": ">=22 <25"
@@ -51,7 +51,7 @@
     "test:wwwct:report": "tsx scripts/worldwide-wildcard/run.ts --mode mock --report-dir tests/worldwide-wildcard/reports",
     "lint:py": "cd orchestrator && ruff check . && ruff format --check .",
     "format:py": "cd orchestrator && ruff format .",
-    "test:py": "echo \"Skipping python test\" ",
+    "test:py": "cd orchestrator && python -m pytest -q",
     "ci:py": "npm run lint:py && npm run test:py",
     "hardhat:compile": "hardhat compile",
     "hardhat:test": "hardhat test",
@@ -172,7 +172,7 @@
     "input-otp": "^1.4.2",
     "ioredis": "^5.4.1",
     "lru-cache": "^11.0.2",
-    "lucide-react": "^1.11.0",
+    "lucide-react": "^1.17.0",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -180,7 +180,7 @@
     "react-hook-form": "^7.61.1",
     "react-i18next": "^16.5.4",
     "react-resizable-panels": "^2.1.9",
-    "react-router-dom": "^7.13.0",
+    "react-router-dom": "^7.15.0",
     "recharts": "^2.15.4",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
@@ -214,7 +214,7 @@
     "@size-limit/file": "^12.0.1",
     "@tailwindcss/typography": "^0.5.16",
     "@temporalio/activity": "^1.14.1",
-    "@temporalio/client": "^1.15.0",
+    "@temporalio/client": "^1.17.2",
     "@temporalio/worker": "^1.14.1",
     "@temporalio/workflow": "^1.14.1",
     "@testing-library/dom": "^10.4.1",
@@ -229,7 +229,7 @@
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^3.11.0",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.8",
     "autoprefixer": "^10.4.21",
     "axe-core": "^4.8.3",
     "chai": "^4.5.0",
@@ -262,7 +262,7 @@
     "typescript-eslint": "^8.38.0",
     "vite": "^7.2.7",
     "vite-plugin-pwa": "^1.2.0",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.8"
   },
   "overrides": {
     "flatted": "^3.4.2",
@@ -279,20 +279,13 @@
     "axios": "^1.16.0",
     "postcss": "^8.5.10",
     "uuid": "^14.0.0",
-    "ast-v8-to-istanbul": {
-      "js-tokens": "^10.0.0"
-    },
+    "js-tokens": "^10.0.0",
     "protobufjs": "^7.5.8",
     "ip-address": "10.2.0",
     "cookie": ">=0.7.2",
     "elliptic": "6.6.1",
     "tmp": "0.2.7",
-    "ethjs-unit": {
-      "bn.js": "4.12.3"
-    },
-    "number-to-bn": {
-      "bn.js": "4.12.3"
-    },
+    "bn.js": "4.12.3",
     "qs": "6.15.2",
     "ws": "8.21.0",
     "brace-expansion@^5.0.0": "5.0.6"

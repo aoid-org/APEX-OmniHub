@@ -61,9 +61,12 @@ export default defineConfig({
   resolve: {
     alias: {
       '@/dashboard': resolve(__dirname, './dashboard'),
+      '@omniconnect': resolve(__dirname, '../../src/omniconnect'),
       '@': resolve(__dirname, './src'),
+      'react-i18next': resolve(__dirname, '../../node_modules/react-i18next'),
+      'i18next': resolve(__dirname, '../../node_modules/i18next'),
     },
-    dedupe: ['react', 'react-dom'],
+    dedupe: ['react', 'react-dom', 'react-router-dom', 'react-router', 'react-i18next', 'i18next'],
   },
   build: {
     outDir: 'dist',
@@ -97,6 +100,22 @@ export default defineConfig({
   preview: {
     port: 3000,
     strictPort: true,
+  },
+  ssgOptions: {
+    entry: './src/main-ssg.tsx',
+    script: 'async',
+    formatting: 'minify',
+    includedRoutes(paths: string[]) {
+      // Pre-auth marketing routes only — post-auth SPA routes stay CSR
+      return paths.filter(
+        (p) => !p.startsWith('/omnidash') && !p.startsWith('/dashboard')
+      );
+    },
+  },
+  ssr: {
+    // Keep React external in the SSG bundle so react-dom/server and the bundle
+    // share the same React instance (avoids invalid hook dispatcher errors).
+    external: ['react', 'react-dom'],
   },
   // @ts-expect-error test is an extension provided by vitest
   test: {

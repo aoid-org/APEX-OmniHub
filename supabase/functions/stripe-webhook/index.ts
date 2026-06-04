@@ -1,6 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import Stripe from "https://esm.sh/stripe@14.18.0?target=deno";
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from "../_shared/rate-limit.ts";
 
 const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
 const stripeWebhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
@@ -110,6 +115,12 @@ serve(async (req) => {
   const signature = req.headers.get('stripe-signature');
   if (!signature) {
     return new Response('Missing Stripe signature', { status: 400 });
+  }
+
+  // Distributed rate limiting — keyed by Stripe signature (no authenticated user)
+  const rl = await checkRateLimit(signature ?? 'anonymous', RATE_LIMIT_CONFIGS.stripeWebhook);
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(null, rl);
   }
 
   let event: Stripe.Event;

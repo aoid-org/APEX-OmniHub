@@ -190,6 +190,6 @@ describe('login invalid api key handling', () => {
   });
 
   it('should preserve normal invalid credential auth messages', () => {
-    expect(toUserFacingAuthError({ message: 'Invalid login credentials' }, 'cfg-test123')).toBe('Invalid login credentials');
+    expect(toUserFacingAuthError({ message: 'Invalid login credentials' }, 'trace-123')).toBe('Invalid email or password.');
   });
 });

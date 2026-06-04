@@ -20,13 +20,17 @@ import {
   type AppRegistryEntry,
 } from "../../../../../packages/core/src/registry";
 import { useOmniGateway } from "@/stores/omniGatewayStore";
-import type { DashboardOverviewProps, ContextItem, AppEntry } from "./types";
-import { APPS, INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from "./data";
+import type { DashboardOverviewProps, AppEntry } from "./types";
+
+import { INITIAL_CONTEXT, ECOSYSTEM, deriveHealth } from "./data";
 import { useAgentRecording } from "./hooks/useAgentRecording";
 import { AgentPane } from "./components/AgentPane";
 import { OmniSlatePane } from "./components/OmniSlatePane";
 import { EcosystemPane } from "./components/EcosystemPane";
 import { AppsSection } from "./components/AppsSection";
+
+import { useAppRegistryHealth } from "../../hooks/useAppRegistryHealth";
+import { useOmniSlateStore } from "@/stores/omniSlateStore";
 
 export const DashboardOverview = memo(function DashboardOverview({
   appHealth,
@@ -35,6 +39,8 @@ export const DashboardOverview = memo(function DashboardOverview({
 }: DashboardOverviewProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const registryApps = useAppRegistryHealth();
+
   const integrationsQuery = useQuery({
     queryKey: ["omnidash-integrations-overview", user?.id],
     enabled: !!user,
@@ -70,31 +76,46 @@ export const DashboardOverview = memo(function DashboardOverview({
   }, [user, queryClient]);
 
   const liveApps = useMemo(() => {
-    const defaultApps = APPS;
-    if (!integrationsQuery.data) return defaultApps;
+    // ⚡ Bolt: Consolidated two sequential O(N) array passes (.map -> .map) into a single O(N) pass,
+    // reducing memory allocation and improving main thread performance during integration state updates.
+    const integrationsMap = integrationsQuery.data
+      ? new Map(integrationsQuery.data.map(i => [i.name.toLowerCase(), i]))
+      : null;
 
-    // ⚡ Bolt: Replace O(N*M) nested find with O(N+M) Map lookup to reduce CPU usage
-    const integrationsMap = new Map(
-      integrationsQuery.data.map(i => [i.name.toLowerCase(), i])
-    );
+    return registryApps.map(e => {
+      const defaultStatus = e._live?.status ?? e.dashboard.status;
+      let finalStatus = defaultStatus;
 
-    return defaultApps.map((app) => {
-      const integration = integrationsMap.get(app.name.toLowerCase());
-      if (integration) {
-        return {
-          ...app,
-          status: integration.status === "active" ? "Live" : "Partial",
-        };
+      if (integrationsMap) {
+        const integration = integrationsMap.get(e.label.toLowerCase());
+        if (integration) {
+          finalStatus = integration.status === "active" ? "Live" : "Partial";
+        }
       }
-      return app;
+
+      return {
+        name: e.label,
+        cat: e.category,
+        logo: e.logoDomain ? `https://logo.clearbit.com/${e.logoDomain}` : '',
+        synced: `${e._live?.syncedMinutesAgo ?? e.dashboard.syncedMinutesAgo}m`,
+        status: finalStatus,
+      } as AppEntry;
     });
-  }, [integrationsQuery.data]);
+  }, [integrationsQuery.data, registryApps]);
 
   const navigate = useNavigate();
   const { dispatch } = useOmniDashAction(navigate);
 
-  const [context, setContext] =
-    useState<readonly ContextItem[]>(INITIAL_CONTEXT);
+  const context = useOmniSlateStore((s) => s.contextItems);
+  const clearLocalContexts = useOmniSlateStore((s) => s.clearContexts);
+  const addContext = useOmniSlateStore((s) => s.addContext);
+
+  useEffect(() => {
+    if (useOmniSlateStore.getState().contextItems.length === 0) {
+      INITIAL_CONTEXT.forEach((c) => addContext(c));
+    }
+  }, [addContext]);
+
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [traceLogs, setTraceLogs] = useState<readonly string[]>([]);
@@ -131,9 +152,9 @@ export const DashboardOverview = memo(function DashboardOverview({
   const agentStatus = isRecording ? "standby" : "listening";
 
   const handleCleanSlate = useCallback(() => {
-    setContext([]);
+    clearLocalContexts();
     setActiveInsight(null);
-  }, []);
+  }, [clearLocalContexts]);
 
   const handleToggleInsight = useCallback((name: string) => {
     setActiveInsight((prev) => (prev === name ? null : name));
@@ -154,10 +175,15 @@ export const DashboardOverview = memo(function DashboardOverview({
     setLambdaDispatching(true);
     addTraceLog("DISPATCHING: Lambda async orchestration via Temporal...");
     try {
-      // Stub replacement for removed triggerAsyncLambdaDemo
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      const uuid = crypto.randomUUID?.() || "demo-workflow-id";
-      addTraceLog(`DISPATCHED: ${uuid.slice(0, 24)}...`);
+      const { data, error } = await supabase.functions.invoke('trigger-workflow', {
+        body: {
+          workflowType: 'lambda-dispatch',
+          taskData: { source: 'dashboard-overview', triggeredAt: new Date().toISOString() },
+        },
+      });
+      if (error) throw error;
+      const workflowId = (data as { workflowId?: string })?.workflowId ?? 'dispatched';
+      addTraceLog(`DISPATCHED: ${workflowId}`);
     } catch (err) {
       addTraceLog(
         `ERROR: ${err instanceof Error ? err.message : "Lambda dispatch failed"}`,

@@ -1,20 +1,14 @@
-# Cloudflare Pages _redirects
-# Translated from vercel.json rewrites
+# ── Cloudflare Pages Redirect / Rewrite Rules ────────────────────────────
+#
+# Priority order: actual static files always override rules below.
+# /manifesto.html is a real file in dist/ — CF Pages serves it directly.
+# These rules cover clean-URL access + legacy alias canonicalisation.
 
-# Static HTML pages
-/demo /demo.html 200
-/demo/ /demo.html 200
-/tech-specs /tech-specs.html 200
-/tech-specs/ /tech-specs.html 200
-/request-access /request-access.html 200
-/request-access/ /request-access.html 200
-/login /login.html 200
-/login/ /login.html 200
-/privacy /privacy.html 200
-/privacy/ /privacy.html 200
-/terms /terms.html 200
-/terms/ /terms.html 200
+# Legacy alias → canonical static asset (permanent)
+/apex-manifesto.html   /manifesto.html  301
+/apex-manifesto        /manifesto.html  301
 
-# SPA fallback - serves index.html for all unmatched routes (no loop)
-/index.html /index.html 200
-/* /index.html 200
+# SPA fallback — serve index.html for all unmatched paths (200 = no URL change)
+# Static files in dist/ (incl. manifesto.html) always take priority over this.
+/*  /index.html  200
+

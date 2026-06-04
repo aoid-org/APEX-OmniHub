@@ -1,7 +1,9 @@
 # Canonical Truth File — Platform Topology & Deployment
 
 **Version:** 1.6.0
-**Last Updated:** 2026-05-20
+**Last Updated:** 2026-06-01
+
+**Latest verified branch/head:** `work` @ `86bc14a` (`feat(omnidash): implement from-zero gap closure (WP0-WP17) (#1274)`). See `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`.
 **Owner:** Platform Architecture
 
 ## Source of Truth Statements
@@ -27,7 +29,7 @@
 
 ## Tenant Registry
 
-**Last Updated:** 2026-05-20 | **Integration Status Authority:** This section is canonical for all tenant onboarding state.
+**Last Updated:** 2026-06-01 | **Integration Status Authority:** This section is canonical for all tenant onboarding state.
 
 ### tenant-001: SBBL-HQ
 
@@ -64,6 +66,8 @@
 ---
 
 ## Conflict Resolution Rule
+
+If current branch/head facts are needed, consult `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` before dated audit reports.
 
 If any other document conflicts with this file, this file wins unless explicitly superseded by a newer dated canonical file.
 

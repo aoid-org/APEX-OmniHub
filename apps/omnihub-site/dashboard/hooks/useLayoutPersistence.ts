@@ -80,6 +80,9 @@ export function useLayoutPersistence(): UseLayoutPersistenceReturn {
 
   useEffect(() => {
     persist(activeNav, isDark, ops);
+    
+    // Apply theme system tokens globally
+    document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
   }, [activeNav, isDark, ops, persist]);
 
   return { activeNav, setActiveNav, isDark, setIsDark, ops, setOps };

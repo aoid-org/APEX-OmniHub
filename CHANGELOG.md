@@ -162,6 +162,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+- Added `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` as the current branch/head platform assessment for `work` @ `86bc14a`.
+- Reconciled canonical architecture, status, README, OmniDash, onboarding, ops, frontend, and Omni-Recall docs with PR #1274 OmniDash gap closure and PR #1309 security hardening.
+- Updated active docs to use `OmniDashShell.tsx` as shell authority and to remove stale active reliance on `OMNIDASH_ENABLED`.
+
+
 ### Removed
 - `docs/project-status/APEX_ECOSYSTEM_STATUS.md` — permanently deleted 2026-05-20. Was a v1.4.1 platform status snapshot last updated 2026-03-10 (71 days stale). Certification authority is `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`.
 - `docs/project-status/PRODUCTION_STATUS.md` — permanently deleted 2026-05-20. Was a v1.5.1 SEV-1 login-hotfix production status snapshot last updated 2026-03-25 (56 days stale). Superseded by `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`.

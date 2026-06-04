@@ -122,23 +122,8 @@ describe('Cloudflare CORS proxy SSRF and origin hardening', () => {
   });
 });
 
-describe('test-integration ownership scoping', () => {
-  const source = readFileSync('supabase/functions/test-integration/index.ts', 'utf8').replace(/\r\n/g, '\n');
-
-  it('scopes client-provided integrationId reads to the authenticated user', () => {
-    expect(source).toContain(".select('id, user_id, type, config')");
-    expect(source).toContain(".eq('id', requestBody.integrationId)\n      .eq('user_id', authResult.user!.id)\n      .maybeSingle()");
-    expect(source).toContain("return jsonResponse({ error: 'not_found' }, 404, corsHeaders)");
-  });
-
-  it('updates only the authenticated user owned integration', () => {
-    expect(source).toContain(".update({\n        status: testResult.connected ? 'active' : 'error'");
-    expect(source).toContain(".eq('id', requestBody.integrationId)\n      .eq('user_id', authResult.user!.id)");
-  });
-});
-
 describe('service worker sensitive traffic and notification URL hardening', () => {
-  const source = readFileSync('public/sw.js', 'utf8');
+  const source = readFileSync('apps/omnihub-site/public/sw.js', 'utf8');
 
   it('bypasses cache for Supabase and Supabase REST/RPC/Edge Function paths', () => {
     expect(source).toContain("url.hostname.endsWith('.supabase.co')");

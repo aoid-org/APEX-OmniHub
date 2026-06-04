@@ -1,5 +1,4 @@
-import { test, expect } from '@playwright/test';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { test } from '@playwright/test';
 
-test('dummy e2e test', async () => {
-  expect(true).toBe(true);
-});
+test.fixme('dummy e2e test', async () => {});

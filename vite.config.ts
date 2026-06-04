@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => {
   const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
   const supabasePublishableKey = env.VITE_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || '';
 
+  const analyzeBundle = process.env.ANALYZE_BUNDLE === 'true';
+
   return ({
   server: {
     host: "::",
@@ -26,7 +28,9 @@ export default defineConfig(({ mode }) => {
   },
   plugins: [
     react(),
-    mode !== 'test' && visualizer({
+    // Visualizer is opt-in: set ANALYZE_BUNDLE=true to generate dist/stats.html
+    // NEVER runs by default — avoids build overhead on Cloudflare Pages
+    analyzeBundle && mode !== 'test' && visualizer({
       filename: 'dist/stats.html',
       gzipSize: true,
       brotliSize: true,
@@ -36,31 +40,22 @@ export default defineConfig(({ mode }) => {
     alias: {
       "dashboard": path.resolve(__dirname, "./apps/omnihub-site/dashboard"),
       "@/dashboard": path.resolve(__dirname, "./apps/omnihub-site/dashboard"),
+      "@omniconnect": path.resolve(__dirname, "./src/omniconnect"),
       "@": path.resolve(__dirname, "./apps/omnihub-site/src"),
     },
     // Dedupe React to prevent multiple instances (fixes createContext undefined)
     dedupe: ['react', 'react-dom'],
   },
+  publicDir: "apps/omnihub-site/public",
+  esbuild: {
+    pure: mode === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.trace'] : [],
+    drop: mode === 'production' ? ['debugger'] : [],
+    legalComments: 'none',
+  },
   build: {
     // Production optimizations
     target: 'es2020',
-    minify: mode === 'production' ? 'terser' : false,
-    terserOptions: mode === 'production' ? {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.trace'],
-        passes: 2, // Multiple compression passes for better optimization
-        dead_code: true,
-        unused: true,
-      },
-      mangle: {
-        safari10: true, // Safari 10 compatibility
-      },
-      format: {
-        comments: false, // Remove all comments
-      },
-    } : undefined,
+    minify: mode === 'production' ? 'esbuild' : false,
     rollupOptions: {
       // Keep Node-only packages out of the browser bundle entirely
       external: (id: string) => {
@@ -136,8 +131,8 @@ export default defineConfig(({ mode }) => {
     chunkSizeWarningLimit: 1000,
     // Source maps: disabled for production (proprietary protection), enabled for dev
     sourcemap: mode !== 'production',
-    // Report compressed size in build output
-    reportCompressedSize: true,
+    // Report compressed size in build output (disabled for speed)
+    reportCompressedSize: false,
     // CSS minification
     cssMinify: mode === 'production' ? 'esbuild' : false,
   },

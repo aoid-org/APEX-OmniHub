@@ -8,3 +8,9 @@
 ## 2026-05-24 - Replaced O(N log N) sort with O(N) reduce for finding max string date
 **Learning:** Sorting an array of date strings using `.sort().reverse()[0]` just to find the latest date introduces unnecessary O(N log N) overhead. While N might be small in certain cases, it's an inefficient pattern for finding a simple maximum.
 **Action:** Use `.reduce((max, current) => (current !== null && (!max || current > max)) ? current : max, null)` for an O(N) iteration that correctly finds the maximum string value without array mutation or sorting overhead.
+## 2026-06-02 - O(N) Array Search Inside Object Traversal
+**Learning:** Checking for substrings across an array of terms inside object traversal is slow.
+**Action:** Replaced `.some()` array iteration with a precompiled RegExp `SENSITIVE_KEYS_REGEX.test(k)` for O(1) lookups.
+## 2026-06-03 - Consolidated O(N) array passes in DashboardOverview.tsx
+**Learning:** Sequential `.map().map()` operations in React components cause unnecessary memory allocations and redundant iterations.
+**Action:** Always aim to combine sequential array transformations into a single pass when creating derived state, especially when mapping over data that merges with other O(1) structures like Maps.

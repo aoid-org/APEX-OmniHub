@@ -38,6 +38,20 @@ It exists to reduce rediscovery, preserve durable project and preference memory,
 - `memory/omni-recall/raw/historical_exports/2026-05-23-user-upload-omni-recall-blueprint.md` (original GPT path: `/workspace/user_files/01-Pasted-text-26-.txt`)
 - `memory/omni-recall/omni-recall-master-blueprint-2026-05-23.md`
 
+## Canonical Architecture Facts (2026-06-01, verified)
+
+| Fact | Value |
+|---|---|
+| APEX Agent display name | `APEX Agent` |
+| APEX Agent function slug | `apex-agent` |
+| APEX Agent Supabase function path | `supabase/functions/apex-agent/` |
+| OmniSlate invocation path | `invokeMcpIntent` → `${SUPABASE_URL}/functions/v1/apex-agent` |
+| Deprecated function | `apex-assistant` (returns 410 Gone, redirects to `apex-agent`) |
+| Feature registry id | `apex-agent` (was `apex-assistant` — corrected 2026-05-30) |
+| Current OmniDash shell | `apps/omnihub-site/dashboard/OmniDashShell.tsx` |
+| Current platform-state authority | `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` |
+| Production DB migrations applied | 20260527000001 (AEGIS/CHRONOS), 20260528000000 (PhysiOmni RLS), 20260528000001 (OmniConnect Vault); later migration files exist in tree and require live verification before production-applied claims |
+
 ## Open Questions
 
 - Which historical export source should be ingested first when provided?

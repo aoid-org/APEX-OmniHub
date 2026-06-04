@@ -40,6 +40,7 @@ critical_paths:
   - '!.github/workflows/rsi-governance.yml'
   - '!.github/workflows/ci-runtime-gates.yml'
   - '!.github/workflows/cd-staging.yml'
+  - '!.github/workflows/deploy-production-cf-direct.yml'
   - '!.github/workflows/integration.yml'
   - '!.github/workflows/deploy-web3-functions.yml'
   - '!.github/workflows/mobile-build-verify.yml'
@@ -55,6 +56,8 @@ critical_paths:
   - '!supabase/migrations/20260527000001_aegis_api_keys_chronos.sql'
   - '!supabase/migrations/20260528000001_omniconnect_vault.sql'
   - '!supabase/migrations/20260528000000_physiomni_telemetry_partition_rls.sql'
+  - '!supabase/migrations/20260531000000_omnihub_model_registry.sql'
+  - '!supabase/migrations/20260531000001_physiomni_device_commands.sql'
   - '!supabase/migrations/rollback/20260528000000_physiomni_telemetry_partition_rls_down.sql'
   - supabase/functions/**
   - '!supabase/functions/platform-health/**'
@@ -71,6 +74,7 @@ critical_paths:
   - '!supabase/functions/omnilink-retry-scheduler/**'
   - '!supabase/functions/verify-nft/**'
   - '!orchestrator/activities/physiomni_activities.py'
+  - '!orchestrator/activities/tools.py'
 
 recommended_reviewers:
   - '@apexbusiness-systems/security'

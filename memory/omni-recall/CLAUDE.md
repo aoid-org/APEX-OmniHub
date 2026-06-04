@@ -4,7 +4,7 @@
 - Canonical root: `memory/omni-recall/` (within the APEX-OmniHub repo)
 - Installed: 2026-05-23 on branch `claude/optimistic-mccarthy-w982b`
 
-## Multi-Agent Environment (verified 2026-05-29)
+## Multi-Agent Environment (verified 2026-06-02)
 
 - This repo receives commits from **multiple AI agents**, not only Claude Code:
   **Google Jules, Google Antigravity, OpenAI Codex, and Dependabot** all commit here.

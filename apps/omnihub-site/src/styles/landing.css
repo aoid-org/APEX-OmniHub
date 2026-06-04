@@ -55,8 +55,18 @@
 .landing-root .hero-power{font-size:16px;font-weight:600;color:var(--t1);margin-bottom:34px;letter-spacing:-.3px}
 .landing-root .hero-power strong{color:var(--copper)}
 .landing-root .hero-ctas{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:28px;flex-wrap:wrap}
-.landing-root .hero-ctas a[data-modal="request-access"].pill-lg,
-.landing-root .hero-ctas a[data-cta="watch-demo"].pill-lg{width:200px;padding-left:0;padding-right:0;justify-content:center;font-size:14px}
+.landing-root .hero-ctas .pill-lg {
+  width: 200px;
+  height: 56px;
+  padding: 0;
+  justify-content: center;
+  font-size: 14px;
+  flex: 0 0 200px;
+}
+
+.landing-root .hero-ctas button.pill-lg {
+  appearance: none;
+}
 .landing-root .hero-trust{font-size:11px;color:var(--t3);letter-spacing:.4px;line-height:1.9}
 .landing-root .hero-trust span{margin:0 6px;color:rgba(212,133,90,.4)}
 .landing-root .hero-right{display:flex;align-items:center;justify-content:center}

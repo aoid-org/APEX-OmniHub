@@ -1,4 +1,5 @@
 const AUTH_MISCONFIGURED_MESSAGE = 'Authentication is misconfigured. Contact an administrator.';
+const INVALID_CREDENTIALS_MESSAGE = 'Invalid email or password.';
 
 function collectErrorText(error: unknown): string {
   if (typeof error === 'string') return error;
@@ -15,18 +16,31 @@ function collectErrorText(error: unknown): string {
   return '';
 }
 
+export function isInvalidLoginCredentials(error: unknown): boolean {
+  const normalized = collectErrorText(error).toLowerCase();
+  return (
+    normalized.includes('invalid login credentials') ||
+    normalized.includes('invalid_credentials') ||
+    normalized.includes('invalid_grant')
+  );
+}
+
 export function isSupabaseAuthMisconfiguration(error: unknown): boolean {
   const normalized = collectErrorText(error).toLowerCase();
 
   return (
     normalized.includes('invalid api key') ||
-    normalized.includes('401') ||
-    normalized.includes('/auth/v1/token') ||
-    normalized.includes('/auth/v1/authorize')
+    normalized.includes('invalid authentication credentials') ||
+    normalized.includes('missing api key') ||
+    normalized.includes('missing apikey')
   );
 }
 
 export function toUserFacingAuthError(error: unknown, traceId: string): string {
+  if (isInvalidLoginCredentials(error)) {
+    return INVALID_CREDENTIALS_MESSAGE;
+  }
+
   if (isSupabaseAuthMisconfiguration(error)) {
     return `${AUTH_MISCONFIGURED_MESSAGE} (Trace: ${traceId})`;
   }

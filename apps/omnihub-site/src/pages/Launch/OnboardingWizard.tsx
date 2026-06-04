@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { BrainCircuit, Sparkles, ArrowRight, Target, Wallet, Lock, CheckCircle2 } from 'lucide-react';
@@ -149,7 +149,7 @@ export function OnboardingWizard() {
     }
   };
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
+  const handleEmailAuth = async (e: FormEvent) => {
     e.preventDefault();
     setAuthState(prev => ({ ...prev, isLoading: true }));
 

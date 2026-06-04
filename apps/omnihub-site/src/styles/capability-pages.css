@@ -1,4 +1,133 @@
 /* === CAPABILITY PAGE COMPONENTS === */
+.capability-page {
+  position: relative;
+  z-index: 1;
+}
+
+.capability-page--unified {
+  --cap-bg: #0b1f2e;
+  --cap-grid: rgba(100, 180, 220, 0.04);
+  background-color: var(--cap-bg);
+  background-image: linear-gradient(var(--cap-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--cap-grid) 1px, transparent 1px);
+  background-size: 64px 64px;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 40px 0;
+  border-radius: 20px;
+}
+
+.capability-page__hero {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  max-width: 1000px;
+  margin: 0 auto 60px auto;
+  padding: 0 20px;
+}
+
+.capability-page__copy {
+  flex: 1;
+}
+
+.capability-page__eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-copper, #d4855a);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+
+.capability-page--unified .section__title {
+  background: linear-gradient(150deg, #fff 0%, #fff 38%, var(--color-copper, #d4855a) 60%, var(--color-gold, #e8a247) 78%, #f5c06a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: clamp(36px, 4vw, 56px);
+  letter-spacing: -2px;
+}
+
+.capability-page__intro {
+  font-size: 18px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 20px;
+  max-width: 600px;
+}
+
+.capability-page__signals {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.capability-page__signals .signal {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-copper, #d4855a);
+  border: 1px solid rgba(212, 133, 90, 0.3);
+  background: rgba(212, 133, 90, 0.1);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.capability-page__visual {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.capability-page__orb {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(212, 133, 90, 0.8), rgba(232, 162, 71, 0.2));
+  box-shadow: 0 0 40px rgba(212, 133, 90, 0.4);
+}
+
+.capability-page__mark span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.capability-page__orbit--one {
+  width: 200px;
+  height: 200px;
+  border-top-color: rgba(212, 133, 90, 0.5) !important;
+  animation: spin 10s linear infinite;
+}
+
+.capability-page__orbit--two {
+  width: 250px;
+  height: 250px;
+  border-bottom-color: rgba(212, 133, 90, 0.3) !important;
+  animation: spin 15s linear infinite reverse;
+}
+
+.capability-page__orbit--three {
+  width: 300px;
+  height: 300px;
+  border-right-color: rgba(212, 133, 90, 0.2) !important;
+  animation: spin 20s linear infinite;
+}
+
+@media (max-width: 768px) {
+  .capability-page__hero {
+    flex-direction: column-reverse;
+  }
+}
 
 /* Icon Container for capability features */
 .capability-icon-container {
@@ -59,6 +188,11 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-6);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 24px;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
 }
 
 .feature-card-with-icon__content {
@@ -144,4 +278,27 @@
 .demo-copy-font,
 .demo-copy-font * {
   font-family: 'Space Grotesk', var(--font-family-sans);
+}
+
+.capability-page--fortress {
+  background-color: #0b1f2e;
+  background-image: linear-gradient(rgba(100, 180, 220, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 180, 220, 0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+  padding: 40px 20px;
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.capability-page--fortress .section__title {
+  background: linear-gradient(150deg, #fff 0%, #fff 38%, var(--color-copper, #d4855a) 60%, var(--color-gold, #e8a247) 78%, #f5c06a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.capability-page--fortress .card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(8px);
 }

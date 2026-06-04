@@ -196,10 +196,3 @@ export function expectBlocked(result: ExecutionResult, expectedReason: string): 
   expect(result.allowed).toBe(false);
   expect(result.reason).toBe(expectedReason);
 }
-
-/**
- * Assert that a placeholder test passes (for skipped backend tests).
- */
-export function expectPlaceholder(): void {
-  expect(true).toBe(true);
-}

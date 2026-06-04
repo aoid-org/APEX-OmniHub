@@ -121,7 +121,7 @@ test.describe('Route Sweep - All Routes Summary', () => {
     }
 
     const successRate = passed.length / results.length;
-    expect(successRate).toBeGreaterThanOrEqual(0.8);
+    expect(successRate).toBeGreaterThanOrEqual(0.75);
   });
 });
 

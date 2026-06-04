@@ -4,8 +4,10 @@
 > All other docs (PRODUCTION_STATUS.md, audit reports, README) defer here.
 > Last updated: 2026-06-04
 
+## 2026-06-01 Branch-State Addendum
 
-# Production Certification Status
+Current local branch inspection is `work` @ `86bc14a` with root package version `1.7.0`. Recent merged work includes PR #1274 OmniDash gap closure and PR #1309 entitlement/PhysiOmni ingress hardening. This addendum updates repo-state context only; it does **not** convert the platform to `CERTIFIED` without a current release-evidence artifact.
+
 
 ## 2026-06-04 PR #1263 Production Hardening Addendum
 

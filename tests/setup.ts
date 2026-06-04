@@ -43,3 +43,13 @@ if (httpProxy) {
 // The factory-less call tells Vitest to use the adjacent __mocks__ file,
 // avoiding the async-factory timing race that caused props to bleed through.
 vi.mock('framer-motion');
+
+class ResizeObserverMock {
+  observe() { void 0; }
+  unobserve() { void 0; }
+  disconnect() { void 0; }
+}
+
+globalThis.ResizeObserver = ResizeObserverMock;
+
+// Recharts is mocked via vitest.config.ts alias to tests/__mocks__/recharts.tsx

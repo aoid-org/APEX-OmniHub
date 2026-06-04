@@ -1,5 +1,7 @@
-<!-- APEX_DOC_STAMP: VERSION=v1.3.0 | LAST_UPDATED=2026-05-20 -->
+<!-- APEX_DOC_STAMP: VERSION=v1.4.0 | LAST_UPDATED=2026-06-01 -->
 # Developer Onboarding Guide
+
+> **Current-state first read:** Start with `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` before dated audit reports. Current audited branch/head: `work` @ `86bc14a`.
 
 > **Agent note:** The single most important file is `CLAUDE.md` at the repo root.
 > Read it first — it contains all verified commands, architecture invariants, and
@@ -342,11 +344,13 @@ within the validator use the `test-` prefix to avoid false positives.
 | v1.5.1 | 2026-05-07 | Zero tech-debt pass, Supabase security hardening |
 | v1.6.0 | 2026-05-08 | Armageddon live validation (2,399 Vitest + 891 Pytest + 21 E2E) |
 | v1.6.1 | 2026-05-11 | OTel CVE patch (GHSA-q7rr-3cgh-j5r3) + OmniBridge validation |
-| v1.6.1 (pending) | 2026-05-20 | Shadow deployment slot provisioned (apex-omnihub-shadow.pages.dev), coverage thresholds raised, omega/ canonicalised |
+| v1.6.1 (historical) | 2026-05-20 | Shadow deployment slot provisioned (apex-omnihub-shadow.pages.dev), coverage thresholds raised, omega/ canonicalised |
+| v1.7.0 | 2026-05-31 | APEX Agent rename line, OmniDash M-03/observability work, and release-line documentation |
+| post-v1.7.0 docs sync | 2026-06-01 | PR #1274 OmniDash gap closure and PR #1309 security hardening reconciled into docs and Omni-Recall |
 
 ---
 
 **Onboarding Owner:** Chief Platform Architect
 **Document Version:** v1.3.0
-**Last Updated:** 2026-05-20
+**Last Updated:** 2026-06-01
 **Next Review:** Quarterly

@@ -11,20 +11,38 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { OmniSlatePane } from '@/dashboard/components/DashboardOverview/components/OmniSlatePane';
-import type { ContextItem } from '@/dashboard/components/DashboardOverview/types';
+import type { OmniSlateContextItem } from '../../apps/omnihub-site/dashboard/types/context.types';
+import { useOmniSlateStore } from '../../apps/omnihub-site/src/stores/omniSlateStore';
 
 // lightbulb-icon.png asset mock
 vi.mock('@/assets/lightbulb-icon.png', () => ({ default: 'lightbulb.png' }));
 
-const EMPTY_CONTEXT: readonly ContextItem[] = [];
 
-const SAMPLE_CONTEXT: readonly ContextItem[] = [
-  { name: 'TradeLine', health: 'green', insight: 'All systems nominal' },
-  { name: 'aSpiral', health: 'yellow', insight: 'Latency spike detected' },
+
+const SAMPLE_CONTEXT: readonly OmniSlateContextItem[] = [
+  {
+    id: 'ctx-tradeline',
+    kind: 'apex_app',
+    label: 'TradeLine',
+    source: 'system',
+    health: 'healthy',
+    metadata: {},
+    droppedAt: '2026-01-01T00:00:00Z',
+    failureReason: 'All systems nominal',
+  },
+  {
+    id: 'ctx-aspiral',
+    kind: 'apex_app',
+    label: 'aSpiral',
+    source: 'system',
+    health: 'warning',
+    metadata: {},
+    droppedAt: '2026-01-01T00:00:00Z',
+    failureReason: 'Latency spike detected',
+  },
 ];
 
 const BASE_PROPS = {
-  context: EMPTY_CONTEXT,
   health: 'green' as const,
   activeInsight: null,
   prompt: '',
@@ -43,6 +61,11 @@ describe('OmniSlatePane', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+  });
+
+  beforeEach(() => {
+    // Clear store before each test
+    useOmniSlateStore.setState({ contextItems: [] });
   });
 
   describe('Static labels', () => {
@@ -135,79 +158,84 @@ describe('OmniSlatePane', () => {
 
   describe('Context tiles', () => {
     it('renders context tiles when context items exist', () => {
-      render(<OmniSlatePane {...BASE_PROPS} context={SAMPLE_CONTEXT} />);
+      useOmniSlateStore.setState({ contextItems: [...SAMPLE_CONTEXT] });
+      render(<OmniSlatePane {...BASE_PROPS} />);
       expect(screen.getByText('TradeLine')).toBeInTheDocument();
       expect(screen.getByText('aSpiral')).toBeInTheDocument();
     });
 
     it('renders "+ Add context" button when context items exist', () => {
-      render(<OmniSlatePane {...BASE_PROPS} context={SAMPLE_CONTEXT} />);
+      useOmniSlateStore.setState({ contextItems: [...SAMPLE_CONTEXT] });
+      render(<OmniSlatePane {...BASE_PROPS} />);
       expect(screen.getByText('+ Add context')).toBeInTheDocument();
     });
 
     it('does NOT render context tiles when context is empty', () => {
-      render(<OmniSlatePane {...BASE_PROPS} context={EMPTY_CONTEXT} />);
+      useOmniSlateStore.setState({ contextItems: [] });
+      render(<OmniSlatePane {...BASE_PROPS} />);
       expect(screen.queryByText('+ Add context')).not.toBeInTheDocument();
     });
 
-    it('shows context tile insight popup when activeInsight matches tile name', () => {
+    it('shows context tile insight popup when activeInsight matches tile id', () => {
+      useOmniSlateStore.setState({ contextItems: [...SAMPLE_CONTEXT] });
       render(
         <OmniSlatePane
           {...BASE_PROPS}
-          context={SAMPLE_CONTEXT}
-          activeInsight="TradeLine"
+          activeInsight="ctx-tradeline"
         />,
       );
       expect(screen.getByText('All systems nominal')).toBeInTheDocument();
     });
 
-    it('shows second tile insight popup when activeInsight matches second tile name', () => {
+    it('shows second tile insight popup when activeInsight matches second tile id', () => {
+      useOmniSlateStore.setState({ contextItems: [...SAMPLE_CONTEXT] });
       render(
         <OmniSlatePane
           {...BASE_PROPS}
-          context={SAMPLE_CONTEXT}
-          activeInsight="aSpiral"
+          activeInsight="ctx-aspiral"
         />,
       );
       expect(screen.getByText('Latency spike detected')).toBeInTheDocument();
     });
 
     it('calls onToggleInsight when a context tile is clicked', () => {
+      useOmniSlateStore.setState({ contextItems: [...SAMPLE_CONTEXT] });
       const onToggleInsight = vi.fn();
       render(
         <OmniSlatePane
           {...BASE_PROPS}
-          context={SAMPLE_CONTEXT}
           onToggleInsight={onToggleInsight}
         />,
       );
       fireEvent.click(screen.getByText('TradeLine'));
-      expect(onToggleInsight).toHaveBeenCalledWith('TradeLine');
+      // ContextTile calls onToggle(ctx.id)
+      expect(onToggleInsight).toHaveBeenCalledWith('ctx-tradeline');
     });
   });
 
   describe('Global insight panel', () => {
     it('shows insight panel when activeInsight is __global__', () => {
+      useOmniSlateStore.setState({ contextItems: [...SAMPLE_CONTEXT] });
       render(
         <OmniSlatePane
           {...BASE_PROPS}
           health="yellow"
           activeInsight="__global__"
-          context={SAMPLE_CONTEXT}
         />,
       );
-      // The panel shows non-green context items
+      // The panel shows non-healthy context items with their label + failureReason
+      // aSpiral has health='warning' so it appears; TradeLine has health='healthy' so it is filtered out
       expect(screen.getByText('aSpiral:')).toBeInTheDocument();
       expect(screen.getByText('Latency spike detected')).toBeInTheDocument();
     });
 
     it('does NOT show global insight panel when activeInsight is null', () => {
+      useOmniSlateStore.setState({ contextItems: [...SAMPLE_CONTEXT] });
       render(
         <OmniSlatePane
           {...BASE_PROPS}
           health="yellow"
           activeInsight={null}
-          context={SAMPLE_CONTEXT}
         />,
       );
       expect(screen.queryByText('Latency spike detected')).not.toBeInTheDocument();

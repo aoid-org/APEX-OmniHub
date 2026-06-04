@@ -20,14 +20,14 @@ import '@testing-library/jest-dom';
 import { EcosystemPane } from '@/dashboard/components/DashboardOverview/components/EcosystemPane';
 import { OmniSlatePane } from '@/dashboard/components/DashboardOverview/components/OmniSlatePane';
 import { AgentPane } from '@/dashboard/components/DashboardOverview/components/AgentPane';
-import type { ContextItem } from '@/dashboard/components/DashboardOverview/types';
+import type { OmniSlateContextItem } from '@/dashboard/types/context.types';
 
 // Asset mocks
 vi.mock('@/assets/lightbulb-icon.png', () => ({ default: 'lightbulb.png' }));
 vi.mock('@/assets/sentinel-avatar-icon.png', () => ({ default: 'sentinel.png' }));
 
 const OMNISLATE_PROPS = {
-  context: [] as readonly ContextItem[],
+  context: [] as readonly OmniSlateContextItem[],
   health: 'green' as const,
   activeInsight: null,
   prompt: '',

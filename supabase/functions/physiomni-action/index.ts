@@ -1,6 +1,11 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { buildCorsHeaders, handlePreflight } from '../_shared/cors.ts';
 import { createServiceClient } from '../_shared/supabaseClient.ts';
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from '../_shared/rate-limit.ts';
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts';
 
 const PhysiOmniActionSchema = z.object({
@@ -37,6 +42,12 @@ serve(async (req) => {
     }
 
     const { device_id, tenant_id, action, approved_by, bypass_policy } = parsed.data;
+
+    // Distributed rate limiting — no authenticated user on this endpoint; key by tenant
+    const rl = await checkRateLimit(tenant_id, RATE_LIMIT_CONFIGS.physiomniAction);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(req.headers.get('Origin') ?? '', rl);
+    }
 
     // Check kill switch
     // Note: Assuming Deno.env checks for global kill switch.
@@ -79,7 +90,40 @@ serve(async (req) => {
       });
     }
 
-    // (In production, dispatch to IoT bridge using mTLS here)
+    // Dispatch command to device via persistent command queue + Realtime broadcast
+    const { data: commandRecord, error: cmdError } = await supabase
+      .from('physiomni_device_commands')
+      .insert({
+        device_id,
+        tenant_id,
+        command: action,
+        status: 'QUEUED',
+        approved_by: approved_by ?? null,
+        bypass_policy: bypass_policy ?? null,
+        metadata: { dispatched_via: 'physiomni-action', audit_logged: true },
+      })
+      .select('id')
+      .single();
+
+    if (cmdError || !commandRecord) {
+      console.error('[physiomni-action] Command queue insert failed:', cmdError?.message);
+      return new Response(JSON.stringify({ error: 'Failed to queue device command' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Broadcast to Realtime channel — device subscribes to physiomni:device:{device_id}
+    await supabase.channel(`physiomni:device:${device_id}`).send({
+      type: 'broadcast',
+      event: 'device_command',
+      payload: {
+        command_id: commandRecord.id,
+        command: action,
+        approved_by,
+        timestamp: new Date().toISOString(),
+      },
+    });
 
     return new Response(
       JSON.stringify({ success: true, message: 'Action dispatched successfully' }),

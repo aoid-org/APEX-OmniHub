@@ -5,6 +5,10 @@
  * OMNI-TEST UNIVERSAL — AAA pattern enforced.
  * Covers: localStorage persona persistence, storage event listener,
  * size variants, click handler, status indicator toggle.
+ *
+ * APEX REGRESSION SHIELD:
+ * - Component must NOT use static PNG imports (tested in no-static-imports suite below)
+ * - All avatar src values must start with /avatars/
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -12,11 +16,7 @@ import { render, screen, cleanup, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ApexAgentAvatar from '@/dashboard/components/ApexAgentAvatar';
 
-// Asset imports are mocked by vitest transform — returns the module path string
-vi.mock('@/assets/navigator-avatar-icon.png', () => ({ default: 'navigator.png' }));
-vi.mock('@/assets/companion-avatar-icon.png', () => ({ default: 'companion.png' }));
-vi.mock('@/assets/sentinel-avatar-icon.png', () => ({ default: 'sentinel.png' }));
-vi.mock('@/assets/pulse-avatar-icon.png', () => ({ default: 'pulse.png' }));
+// No PNG vi.mock() stubs needed — component uses contract public paths, not bundled imports.
 
 describe('ApexAgentAvatar', () => {
   beforeEach(() => {
@@ -36,6 +36,19 @@ describe('ApexAgentAvatar', () => {
       // Assert
       const img = screen.getByRole('img');
       expect(img).toHaveAttribute('alt', 'Navigator avatar');
+    });
+
+    it('avatar src starts with /avatars/ (not a bundled import)', () => {
+      render(<ApexAgentAvatar />);
+      const img = screen.getByRole('img');
+      expect(img.getAttribute('src')).toMatch(/^\/avatars\//);
+    });
+
+    it('img has loading=lazy and decoding=async', () => {
+      render(<ApexAgentAvatar />);
+      const img = screen.getByRole('img');
+      expect(img).toHaveAttribute('loading', 'lazy');
+      expect(img).toHaveAttribute('decoding', 'async');
     });
 
     it('renders status indicator by default (showStatus=true)', () => {
@@ -61,10 +74,12 @@ describe('ApexAgentAvatar', () => {
       });
 
       // Assert
-      expect(screen.getByRole('img')).toHaveAttribute('alt', 'Sentinel avatar');
+      const img = screen.getByRole('img');
+      expect(img).toHaveAttribute('alt', 'Sentinel avatar');
+      expect(img.getAttribute('src')).toMatch(/^\/avatars\//);
     });
 
-    it('ignores invalid persona values not in AVATAR_MAP', async () => {
+    it('ignores invalid persona values not in AVATAR_PATH_MAP', async () => {
       // Arrange
       localStorage.setItem('apex.agent.persona', 'UnknownBot');
 

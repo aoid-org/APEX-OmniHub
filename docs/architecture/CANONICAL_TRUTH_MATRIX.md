@@ -1,5 +1,7 @@
 # APEX OmniHub Canonical Truth Matrix
 
+> Last reconciled: 2026-06-01 against HEAD `86bc14a`. This matrix labels claim classes; it is not a substitute for release evidence.
+
 ## Purpose
 
 This document defines the authoritative claim taxonomy for APEX OmniHub diligence, architecture, simulation, audit, and investor-facing materials.
@@ -13,6 +15,9 @@ This document defines the authoritative claim taxonomy for APEX OmniHub diligenc
 | Supabase auth/data/functions | VERIFIED | Current auth/data/backend substrate |
 | Temporal orchestration | VERIFIED | Workflow/state orchestration layer |
 | OmniLink abstraction | VERIFIED | Integration fabric / abstraction layer |
+| OmniDash Shell | VERIFIED | Current post-auth product surface at `/omnidash` and `/dashboard`; shell authority is `OmniDashShell.tsx` |
+| APEX Agent endpoint | VERIFIED | Canonical AI orchestration function is `supabase/functions/apex-agent/`; `apex-assistant` is legacy/410 |
+| PhysiOmni HMAC ingress | VERIFIED IN CODE | Current tree enforces signed ingress; live deployment status must be verified before external claims |
 
 ## Provider Portability
 

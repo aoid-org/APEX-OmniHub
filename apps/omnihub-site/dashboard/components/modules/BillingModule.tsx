@@ -1,5 +1,6 @@
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
+import { supabase } from '@/lib/supabase';
 
 interface Props {
   readonly onClose: () => void;

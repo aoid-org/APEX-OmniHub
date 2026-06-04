@@ -22,3 +22,10 @@ The system should:
 - prefer canonical updates over duplicate notes
 - promote stable corrections into durable memory
 - remain honest about missing access or incomplete backfill
+
+## Last Verified Session
+
+- Date: 2026-06-02
+- HEAD: 19a5f3fe (PR #1313 fix: resolve SonarCloud code smells and e2e test failures)
+- Branch: fix/sonarqube-audit-resolutions-final
+- Key fact: PR #1313 is fully green. All SonarCloud audit resolutions are finalized and passed (A-grade). Playwright tests stabilized. CI pipeline passing successfully.

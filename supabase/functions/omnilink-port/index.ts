@@ -3,6 +3,11 @@ import { buildCorsHeaders, corsErrorResponse, handlePreflight, isOriginAllowed }
 import { allowAdapter, allowWorkflow, enforceEnvAllowlist, enforcePermission, type OmniLinkScopes } from '../_shared/omnilinkScopes.ts';
 import { createAnonClient, createServiceClient } from '../_shared/supabaseClient.ts';
 import { normalizeOmniPortIntent, type SOmniPortInput } from '../_shared/omniport-normalize.ts';
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from '../_shared/rate-limit.ts';
 
 const OMNILINK_ENABLED = (Deno.env.get('OMNILINK_ENABLED') ?? '').toLowerCase() === 'true';
 const MAX_SINGLE_PAYLOAD_BYTES = 256 * 1024;
@@ -313,39 +318,500 @@ async function handleKeyRotate(req: Request, corsHeaders: HeadersInit): Promise<
 async function handleModuleState(req: Request, corsHeaders: HeadersInit): Promise<Response> {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
-  
-  // Accept either JWT or API Key for module state
-  let _tenantId: string | null = null;
+
+  let tenantId: string | null = null;
   const token = authHeader.replace('Bearer ', '').trim();
   const apiKey = await loadApiKey(token);
-  
+
   if (apiKey) {
     if (!enforcePermission(apiKey.scopes ?? {}, 'module_state:read')) {
       return jsonResponse({ error: 'permission_denied' }, 403, corsHeaders);
     }
-    _tenantId = apiKey.tenant_id;
+    tenantId = apiKey.tenant_id;
   } else {
     const userClient = createAnonClient(authHeader);
     const { data: { user } } = await userClient.auth.getUser();
     if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
-    _tenantId = user.id;
+    tenantId = user.id;
   }
 
   const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
   const payload = (body ?? {}) as Record<string, unknown>;
   const moduleKey = payload.module_key as string | undefined;
-
   if (!moduleKey) return jsonResponse({ error: 'module_key_required' }, 400, corsHeaders);
 
-  return jsonResponse({
-    moduleKey,
-    headline: "Live Connection Established",
-    stats: [
-      { label: "State", value: "Online", trend: "up" }
-    ],
-    items: [],
-    actions: []
-  }, 200, corsHeaders);
+  const svc = createServiceClient();
+
+  try {
+    const data = await resolveModuleState(svc, moduleKey, tenantId);
+    return jsonResponse(data, 200, corsHeaders);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'module_state_error';
+    return jsonResponse({ error: msg }, 500, corsHeaders);
+  }
+}
+
+// ── Per-module real-data resolvers ───────────────────────────────────────────
+
+type StatItem = { label: string; value: string; trend?: 'up' | 'down' | 'stable' };
+type ListItem = { id: string; label: string; status: 'active' | 'inactive' | 'pending' | 'error'; detail?: string };
+type ActionItem = { id: string; label: string; variant: 'primary' | 'secondary' | 'destructive' };
+
+interface ModuleStatePayload {
+  moduleKey: string;
+  headline: string;
+  stats: StatItem[];
+  items: ListItem[];
+  actions: ActionItem[];
+}
+
+async function resolveModuleState(
+  svc: ReturnType<typeof createServiceClient>,
+  moduleKey: string,
+  tenantId: string
+): Promise<ModuleStatePayload> {
+  switch (moduleKey) {
+
+    // ── WORKFLOWS ──────────────────────────────────────────────────────────
+    case 'workflows': {
+      const { data: wf } = await svc.from('workflows')
+        .select('id, name, is_active, created_at, updated_at')
+        .eq('user_id', tenantId)
+        .order('updated_at', { ascending: false })
+        .limit(10);
+
+      const { data: runs } = await svc.from('workflow_runs')
+        .select('id, workflow_id, status, started_at, completed_at')
+        .eq('user_id', tenantId)
+        .order('started_at', { ascending: false })
+        .limit(5);
+
+      const workflows = (wf ?? []) as Array<{ id: string; name: string; is_active: boolean; created_at: string; updated_at: string }>;
+      const workflowRuns = (runs ?? []) as Array<{ id: string; workflow_id: string; status: string; started_at: string; completed_at: string | null }>;
+      const active = workflows.filter(w => w.is_active).length;
+      const pending = workflowRuns.filter(r => r.status === 'pending' || r.status === 'running').length;
+
+      const lastRunMap = new Map<string, string>();
+      for (const run of workflowRuns) {
+        if (!lastRunMap.has(run.workflow_id)) {
+          const mins = Math.round((Date.now() - new Date(run.started_at).getTime()) / 60000);
+          lastRunMap.set(run.workflow_id, `${mins}m ago`);
+        }
+      }
+
+      return {
+        moduleKey: 'workflows',
+        headline: `${workflows.length} Workflow${workflows.length === 1 ? '' : 's'} Defined`,
+        stats: [
+          { label: 'Workflows', value: String(workflows.length), trend: 'stable' },
+          { label: 'Active', value: String(active), trend: active > 0 ? 'up' : 'stable' },
+          { label: 'Running', value: String(pending), trend: pending > 0 ? 'up' : 'stable' },
+        ],
+        items: workflows.slice(0, 5).map(w => ({
+          id: w.id,
+          label: w.name,
+          status: w.is_active ? 'active' : 'inactive',
+          detail: lastRunMap.has(w.id) ? `Last run: ${lastRunMap.get(w.id)}` : 'Never run',
+        })),
+        actions: [
+          { id: 'create-workflow', label: 'New Workflow', variant: 'primary' },
+          { id: 'view-runs', label: 'View Run History', variant: 'secondary' },
+        ],
+      };
+    }
+
+    // ── AUTOMATIONS ────────────────────────────────────────────────────────
+    case 'automations': {
+      const { data: auto } = await svc.from('automations')
+        .select('id, name, action_type, is_active, config')
+        .eq('user_id', tenantId)
+        .order('id', { ascending: false })
+        .limit(10);
+
+      const automations = (auto ?? []) as Array<{ id: string; name: string; action_type: string; is_active: boolean; config: Record<string, unknown> }>;
+      const activeCount = automations.filter(a => a.is_active).length;
+
+      return {
+        moduleKey: 'automations',
+        headline: `${activeCount} Active Automation Rule${activeCount === 1 ? '' : 's'}`,
+        stats: [
+          { label: 'Total Rules', value: String(automations.length), trend: 'stable' },
+          { label: 'Active', value: String(activeCount), trend: activeCount > 0 ? 'up' : 'stable' },
+          { label: 'Inactive', value: String(automations.length - activeCount), trend: 'stable' },
+        ],
+        items: automations.slice(0, 5).map(a => ({
+          id: a.id,
+          label: a.name ?? `Automation ${a.id.slice(0, 8)}`,
+          status: a.is_active ? 'active' : 'inactive',
+          detail: `Type: ${a.action_type}`,
+        })),
+        actions: [
+          { id: 'create-automation', label: 'Create Automation', variant: 'primary' },
+          { id: 'view-logs', label: 'View Execution Logs', variant: 'secondary' },
+        ],
+      };
+    }
+
+    // ── FILES ──────────────────────────────────────────────────────────────
+    case 'files': {
+      // List real files from Supabase Storage bucket "omnihub-files"
+      const { data: objects } = await svc.storage.from('omnihub-files').list('', {
+        limit: 100,
+        offset: 0,
+        sortBy: { column: 'updated_at', order: 'desc' },
+      });
+
+      const files = (objects ?? []) as Array<{ name: string; metadata?: { size?: number }; updated_at?: string }>;
+      const totalBytes = files.reduce((acc, f) => acc + (f.metadata?.size ?? 0), 0);
+      const totalGB = (totalBytes / (1024 ** 3)).toFixed(2);
+
+      return {
+        moduleKey: 'files',
+        headline: `${files.length} File${files.length === 1 ? '' : 's'} in Storage`,
+        stats: [
+          { label: 'Total Files', value: String(files.length), trend: 'stable' },
+          { label: 'Storage Used', value: `${totalGB} GB`, trend: 'stable' },
+          { label: 'Bucket', value: 'omnihub-files', trend: 'stable' },
+        ],
+        items: files.slice(0, 6).map(f => ({
+          id: f.name,
+          label: f.name,
+          status: 'active' as const,
+          detail: f.metadata?.size ? `${(f.metadata.size / 1024).toFixed(1)} KB` : 'Unknown size',
+        })),
+        actions: [
+          { id: 'upload', label: 'Upload Files', variant: 'primary' },
+          { id: 'browse', label: 'Browse Storage', variant: 'secondary' },
+        ],
+      };
+    }
+
+    // ── BILLING ────────────────────────────────────────────────────────────
+    case 'billing': {
+      const { data: sub } = await svc.from('subscriptions')
+        .select('tier, status, stripe_customer_id, stripe_subscription_id, current_period_start, current_period_end, trial_end')
+        .eq('user_id', tenantId)
+        .maybeSingle();
+
+      const subscription = sub as {
+        tier: string;
+        status: string;
+        stripe_customer_id: string | null;
+        stripe_subscription_id: string | null;
+        current_period_start: string | null;
+        current_period_end: string | null;
+        trial_end: string | null;
+      } | null;
+
+      const tier = subscription?.tier ?? 'free';
+      const status = subscription?.status ?? 'inactive';
+      const periodEnd = subscription?.current_period_end
+        ? new Date(subscription.current_period_end).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })
+        : 'N/A';
+
+      return {
+        moduleKey: 'billing',
+        headline: tier.charAt(0).toUpperCase() + tier.slice(1) + ' Plan',
+        stats: [
+          { label: 'Plan', value: tier.charAt(0).toUpperCase() + tier.slice(1) },
+          { label: 'Status', value: status.charAt(0).toUpperCase() + status.slice(1) },
+          { label: 'Next Invoice', value: periodEnd },
+        ],
+        items: subscription ? [
+          {
+            id: 'current-sub',
+            label: `${tier.toUpperCase()} — ${status}`,
+            status: ((): 'active' | 'error' | 'pending' => {
+              if (status === 'active') return 'active';
+              if (status === 'past_due') return 'error';
+              return 'pending';
+            })(),
+            detail: subscription.current_period_end
+              ? `Renews ${periodEnd}`
+              : 'No active period',
+          },
+        ] : [
+          {
+            id: 'no-sub',
+            label: 'No active subscription',
+            status: 'inactive',
+            detail: 'Upgrade to access premium features',
+          },
+        ],
+        actions: [
+          { id: 'manage-plan', label: 'Manage Plan', variant: 'primary' },
+          { id: 'download-invoices', label: 'Billing Portal', variant: 'secondary' },
+        ],
+      };
+    }
+
+    // ── LINKS (Connections) ────────────────────────────────────────────────
+    case 'links': {
+      const { data: sessions } = await svc.from('connector_sessions')
+        .select('connector_id, provider, created_at, last_sync_at, scopes')
+        .eq('tenant_id', tenantId)
+        .order('last_sync_at', { ascending: false })
+        .limit(10);
+
+      const connections = (sessions ?? []) as Array<{ connector_id: string; provider: string; created_at: string; last_sync_at: string | null; scopes: string[] }>;
+
+      return {
+        moduleKey: 'links',
+        headline: `${connections.length} Connected App${connections.length === 1 ? '' : 's'}`,
+        stats: [
+          { label: 'Active Links', value: String(connections.length), trend: connections.length > 0 ? 'up' : 'stable' },
+          { label: 'Scopes Granted', value: String(connections.reduce((acc, c) => acc + c.scopes.length, 0)), trend: 'stable' },
+          { label: 'Status', value: connections.length > 0 ? 'Healthy' : 'No connections', trend: 'stable' },
+        ],
+        items: connections.slice(0, 6).map(c => {
+          const syncAgo = c.last_sync_at
+            ? `Synced ${Math.round((Date.now() - new Date(c.last_sync_at).getTime()) / 60000)}m ago`
+            : 'Never synced';
+          return {
+            id: c.connector_id,
+            label: c.provider.charAt(0).toUpperCase() + c.provider.slice(1),
+            status: 'active' as const,
+            detail: syncAgo,
+          };
+        }),
+        actions: [
+          { id: 'add-link', label: 'Add Connection', variant: 'primary' },
+          { id: 'test-all', label: 'Test All Links', variant: 'secondary' },
+        ],
+      };
+    }
+
+    // ── AUDITS ─────────────────────────────────────────────────────────────
+    case 'audits': {
+      const [eventsRes, incidentsRes] = await Promise.allSettled([
+        svc.from('omnitrace_events')
+          .select('id, event_type, event_text, severity, created_at')
+          .eq('user_id', tenantId)
+          .order('created_at', { ascending: false })
+          .limit(10),
+        svc.from('security_incidents')
+          .select('id, incident_type, severity, status, occurred_at')
+          .eq('tenant_id', tenantId)
+          .eq('status', 'open')
+          .order('occurred_at', { ascending: false })
+          .limit(5),
+      ]);
+
+      const events = (eventsRes.status === 'fulfilled' ? eventsRes.value.data ?? [] : []) as Array<{
+        id: string; event_type: string; event_text: string; severity: string; created_at: string;
+      }>;
+      const incidents = (incidentsRes.status === 'fulfilled' ? incidentsRes.value.data ?? [] : []) as Array<{
+        id: string; incident_type: string; severity: string; status: string; occurred_at: string;
+      }>;
+
+      const violations = incidents.filter(i => i.status === 'open').length;
+      let headline = 'All Systems Compliant';
+      if (violations > 0) {
+        headline = `${violations} Open Incident${violations === 1 ? '' : 's'}`;
+      }
+
+      return {
+        moduleKey: 'audits',
+        headline,
+        stats: [
+          { label: 'Events (24h)', value: String(events.length), trend: 'stable' },
+          { label: 'Open Incidents', value: String(violations), trend: violations > 0 ? 'up' : 'stable' },
+          { label: 'Compliance', value: violations === 0 ? '100%' : 'Review Required', trend: violations === 0 ? 'stable' : 'down' },
+        ],
+        items: [
+          ...incidents.slice(0, 2).map(i => ({
+            id: i.id,
+            label: i.incident_type.replaceAll('_', ' ').replace(/\b\w/g, c => c.toUpperCase()),
+            status: 'error' as const,
+            detail: `SEV-${i.severity.toUpperCase()} · ${new Date(i.occurred_at).toLocaleDateString()}`,
+          })),
+          ...events.slice(0, 4).map(e => ({
+            id: e.id,
+            label: e.event_type.replaceAll('_', ' '),
+            status: e.severity === 'error' ? 'error' as const : 'active' as const,
+            detail: e.event_text.slice(0, 60),
+          })),
+        ].slice(0, 5),
+        actions: [
+          { id: 'export-audit', label: 'Export Audit Log', variant: 'primary' },
+          { id: 'run-compliance', label: 'Run Compliance Check', variant: 'secondary' },
+        ],
+      };
+    }
+
+    // ── SETTINGS ───────────────────────────────────────────────────────────
+    case 'settings': {
+      const { data: settings } = await svc.from('omnidash_settings')
+        .select('demo_mode, anonymize_kpis, freeze_mode, show_connected_ecosystem, updated_at')
+        .eq('user_id', tenantId)
+        .maybeSingle();
+
+      const s = settings as { demo_mode: boolean; anonymize_kpis: boolean; freeze_mode: boolean; show_connected_ecosystem: boolean; updated_at: string } | null;
+
+      const configItems: ListItem[] = s ? [
+        {
+          id: 'demo-mode',
+          label: 'Demo Mode',
+          status: s.demo_mode ? 'active' : 'inactive',
+          detail: s.demo_mode ? 'Enabled — showing sample data' : 'Disabled — live data active',
+        },
+        {
+          id: 'anonymize-kpis',
+          label: 'Anonymize KPIs',
+          status: s.anonymize_kpis ? 'active' : 'inactive',
+          detail: s.anonymize_kpis ? 'KPI values hidden from display' : 'KPI values visible',
+        },
+        {
+          id: 'freeze-mode',
+          label: 'Freeze Mode',
+          status: s.freeze_mode ? 'active' : 'inactive',
+          detail: s.freeze_mode ? 'Dashboard frozen — no live updates' : 'Live updates active',
+        },
+        {
+          id: 'ecosystem-view',
+          label: 'Show Ecosystem',
+          status: s.show_connected_ecosystem ? 'active' : 'inactive',
+          detail: s.show_connected_ecosystem ? 'Connected apps shown in overview' : 'Ecosystem panel hidden',
+        },
+      ] : [];
+
+      return {
+        moduleKey: 'settings',
+        headline: 'Platform Configuration',
+        stats: [
+          { label: 'Environment', value: 'Production' },
+          { label: 'Region', value: 'us-east-1' },
+          { label: 'Last Updated', value: s?.updated_at ? new Date(s.updated_at).toLocaleDateString() : 'Never' },
+        ],
+        items: configItems,
+        actions: [
+          { id: 'save-settings', label: 'Save Changes', variant: 'primary' },
+          { id: 'reset-defaults', label: 'Reset Defaults', variant: 'destructive' },
+        ],
+      };
+    }
+
+    // ── PHYSIOMNI ──────────────────────────────────────────────────────────
+    case 'physiomni': {
+      const { data: devices } = await svc.from('physiomni_devices')
+        .select('id, device_id, device_type, firmware_version, is_active, last_seen_at')
+        .eq('tenant_id', tenantId)
+        .order('last_seen_at', { ascending: false })
+        .limit(10);
+
+      const deviceList = (devices ?? []) as Array<{
+        id: string; device_id: string; device_type: string; firmware_version: string | null; is_active: boolean; last_seen_at: string | null;
+      }>;
+      const activeDevices = deviceList.filter(d => d.is_active).length;
+
+      return {
+        moduleKey: 'physiomni',
+        headline: `${deviceList.length} Device${deviceList.length === 1 ? '' : 's'} Registered`,
+        stats: [
+          { label: 'Connected Devices', value: String(deviceList.length), trend: 'stable' },
+          { label: 'Active', value: String(activeDevices), trend: activeDevices > 0 ? 'up' : 'stable' },
+          { label: 'Offline', value: String(deviceList.length - activeDevices), trend: 'stable' },
+        ],
+        items: deviceList.slice(0, 5).map(d => {
+          const seenAgo = d.last_seen_at
+            ? `${Math.round((Date.now() - new Date(d.last_seen_at).getTime()) / 60000)}m ago`
+            : 'Never';
+            const fwSuffix = d.firmware_version ? ` · FW ${d.firmware_version}` : '';
+          return {
+            id: d.id,
+            label: `${d.device_type} · ${d.device_id.slice(0, 8)}`,
+            status: d.is_active ? 'active' : 'inactive',
+            detail: `Last seen: ${seenAgo}${fwSuffix}`,
+          };
+        }),
+        actions: [
+          { id: 'provision-device', label: 'Provision Device', variant: 'primary' },
+          { id: 'export-telemetry', label: 'Export Telemetry', variant: 'secondary' },
+        ],
+      };
+    }
+
+    // ── AGENT ──────────────────────────────────────────────────────────────
+    case 'agent': {
+      const { data: sessions } = await svc.from('agent_sessions')
+        .select('id, status, started_at, updated_at')
+        .eq('user_id', tenantId)
+        .order('updated_at', { ascending: false })
+        .limit(10);
+
+      const agentSessions = (sessions ?? []) as Array<{ id: string; status: string; started_at: string; updated_at: string }>;
+      const activeSessions = agentSessions.filter(s => s.status === 'active').length;
+      let headline = 'No Active Sessions';
+      if (activeSessions > 0) {
+        headline = `${activeSessions} Active Session${activeSessions === 1 ? '' : 's'}`;
+      }
+
+      return {
+        moduleKey: 'agent',
+        headline,
+        stats: [
+          { label: 'Active Sessions', value: String(activeSessions), trend: activeSessions > 0 ? 'up' : 'stable' },
+          { label: 'Total Sessions', value: String(agentSessions.length), trend: 'stable' },
+          { label: 'Status', value: activeSessions > 0 ? 'Running' : 'Idle', trend: 'stable' },
+        ],
+        items: agentSessions.slice(0, 4).map(s => ({
+          id: s.id,
+          label: `Session ${s.id.slice(0, 8)}`,
+          status: s.status as 'active' | 'inactive' | 'pending',
+          detail: `Started ${Math.round((Date.now() - new Date(s.started_at).getTime()) / 60000)}m ago`,
+        })),
+        actions: [
+          { id: 'new-session', label: 'New Session', variant: 'primary' },
+          { id: 'view-history', label: 'Session History', variant: 'secondary' },
+        ],
+      };
+    }
+
+    // ── DASHBOARD (overview module) ────────────────────────────────────────
+    case 'dashboard': {
+      const [kpiRes, incidentRes] = await Promise.allSettled([
+        svc.from('omnidash_kpi_daily')
+          .select('tradeline_paid_starts, tradeline_active_pilots, ops_sev1_incidents')
+          .eq('user_id', tenantId)
+          .order('day', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        svc.from('omnidash_incidents')
+          .select('id')
+          .eq('user_id', tenantId)
+          .eq('status', 'open'),
+      ]);
+
+      const kpi = (kpiRes.status === 'fulfilled' ? kpiRes.value.data : null) as {
+        tradeline_paid_starts: number | null;
+        tradeline_active_pilots: number | null;
+        ops_sev1_incidents: number | null;
+      } | null;
+      const openIncidents = (incidentRes.status === 'fulfilled' ? incidentRes.value.data ?? [] : []).length;
+
+      return {
+        moduleKey: 'dashboard',
+        headline: 'System Overview',
+        stats: [
+          { label: 'Paid Starts', value: String(kpi?.tradeline_paid_starts ?? 0), trend: 'stable' },
+          { label: 'Active Pilots', value: String(kpi?.tradeline_active_pilots ?? 0), trend: 'stable' },
+          { label: 'Open Incidents', value: String(openIncidents), trend: openIncidents > 0 ? 'up' : 'stable' },
+        ],
+        items: [],
+        actions: [],
+      };
+    }
+
+    // ── DEFAULT: return empty live state for unknown keys ──────────────────
+    default:
+      return {
+        moduleKey,
+        headline: 'Module Online',
+        stats: [],
+        items: [],
+        actions: [],
+      };
+  }
 }
 
 interface ProcessItemContext {
@@ -774,6 +1240,16 @@ async function handleServeRequest(req: Request): Promise<Response> {
   // Simple GET route
   if (req.method === 'GET' && route === 'health') {
     return handleGetHealth(corsHeaders);
+  }
+
+  // Distributed rate limiting — ingress-level, keyed by client IP (per-handler
+  // auth resolves the user downstream; health check above is exempt).
+  const rl = await checkRateLimit(
+    req.headers.get('x-forwarded-for') ?? 'anon',
+    RATE_LIMIT_CONFIGS.omnilinkPort,
+  );
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(requestOrigin, rl);
   }
 
   // API key routes

@@ -41,9 +41,28 @@ export function CapabilityPageTemplate({ pageTitle, title, subtitle, introText, 
   return (
     <Layout title={pageTitle}>
       <Section>
-        <SectionHeader title={title} subtitle={subtitle} />
-        <div className="page-content feature-page-copy-font">
-          <p className="text-lg mb-8" style={{ lineHeight: '1.75' }}>{introText}</p>
+        <div className="capability-page capability-page--unified">
+          <div className="capability-page__hero">
+            <div className="capability-page__visual">
+              <div className="capability-page__orb"></div>
+              <div className="capability-page__mark">
+                <span className="capability-page__orbit--one"></span>
+                <span className="capability-page__orbit--two"></span>
+                <span className="capability-page__orbit--three"></span>
+              </div>
+            </div>
+            <div className="capability-page__copy">
+              <div className="capability-page__eyebrow">capability</div>
+              <SectionHeader title={title} subtitle={subtitle} centered={false} />
+              <p className="capability-page__intro">{introText}</p>
+              <div className="capability-page__signals">
+                <span className="signal">Direct</span>
+                <span className="signal">Audit</span>
+                <span className="signal">Reverse</span>
+              </div>
+            </div>
+          </div>
+          <div className="page-content feature-page-copy-font">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)', marginTop: 'var(--space-12)' }}>
             {features.map((f) => <FeatureCard key={f.title} {...f} />)}
           </div>
@@ -58,6 +77,7 @@ export function CapabilityPageTemplate({ pageTitle, title, subtitle, introText, 
             <SpecTable specs={technicalSpecs} />
           </div>
           <CTASection {...cta} />
+        </div>
         </div>
       </Section>
     </Layout>

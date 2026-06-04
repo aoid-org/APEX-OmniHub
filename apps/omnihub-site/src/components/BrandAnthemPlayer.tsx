@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import './BrandAnthemPlayer.css'; // Assuming we'll add some CSS variables or structural classes if needed
+import './BrandAnthemPlayer.css';
 
 export function BrandAnthemPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -10,28 +10,26 @@ export function BrandAnthemPlayer() {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // Attempt autoplay
-    const playPromise = audio.play();
-    
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          // Autoplay started successfully
-          setIsPlaying(true);
-        })
-        .catch((error) => {
-          // Auto-play was prevented.
-          // Show a UI element to let the user manually start playback.
-          console.warn('Playback prevented by browser policy. User interaction required.', error);
-          setIsPlaying(false);
-        });
-    }
-    
     const handleEnded = () => setIsPlaying(false);
+    const handleError = () => {
+      console.error('Audio playback error.');
+      setHasError(true);
+      setIsPlaying(false);
+    };
+
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
     
     return () => {
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
     };
   }, []);
 
@@ -39,7 +37,6 @@ export function BrandAnthemPlayer() {
     const audio = audioRef.current;
     if (!audio) return;
     audio.play().then(() => {
-      setIsPlaying(true);
       setHasError(false);
     }).catch(err => {
       console.error('Failed to play audio manually:', err);
@@ -51,7 +48,6 @@ export function BrandAnthemPlayer() {
     const audio = audioRef.current;
     if (!audio) return;
     audio.pause();
-    setIsPlaying(false);
   };
 
   return (
@@ -60,11 +56,12 @@ export function BrandAnthemPlayer() {
         ref={audioRef}
         src="/audio/brand-anthem.mp3"
         loop
-        preload="auto"
+        preload="metadata"
       >
-        <track kind="captions" srcLang="en" label="English_captions" />
+        <track kind="captions" />
       </audio>
       <div className="brand-anthem-controls">
+        <span className="anthem-label">Brand Anthem</span>
         <button 
           onClick={playAudio} 
           className={`anthem-action-btn ${isPlaying ? "active" : ""}`}

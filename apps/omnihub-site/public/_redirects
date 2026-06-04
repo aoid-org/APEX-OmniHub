@@ -1,17 +1,3 @@
-# Cloudflare Pages SPA rewrites
-# Clean URL rewrites for static .html pages
-/demo /demo.html 200
-/demo/ /demo.html 200
-/tech-specs /tech-specs.html 200
-/tech-specs/ /tech-specs.html 200
-/request-access /request-access.html 200
-/request-access/ /request-access.html 200
-/login /login.html 200
-/login/ /login.html 200
-/privacy /privacy.html 200
-/privacy/ /privacy.html 200
-/terms /terms.html 200
-/terms/ /terms.html 200
-
-# SPA catch-all — serves index.html for all unmatched routes
+# Cloudflare Pages SPA rewrite. Vite builds a single React entrypoint, so both
+# clean routes and legacy .html marketing links must be handled by the router.
 /* /index.html 200

@@ -85,7 +85,7 @@ export async function executeTool(
     return {
       success: true,
       callId,
-      output: lock.record.result ?? null,
+      output: lock.record?.result ?? null,
       error: undefined,
     };
   }

@@ -8,6 +8,11 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Buffer } from 'node:buffer';
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from '../_shared/rate-limit.ts';
 
 /**
  * Verify Alchemy webhook signature
@@ -264,6 +269,12 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'unauthorized', message: 'Missing signature header' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Distributed rate limiting — keyed by Alchemy signature (no authenticated user)
+    const rl = await checkRateLimit(signature ?? 'anonymous', RATE_LIMIT_CONFIGS.alchemyWebhook);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(null, rl);
     }
 
     const rawBody = await req.text();
