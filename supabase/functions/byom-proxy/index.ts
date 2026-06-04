@@ -11,6 +11,11 @@ import { getCockpitCrypto } from "../_shared/cockpit-crypto.ts";
 import { createAdapter } from "../_shared/universal-adapter.ts";
 import { FlightControl } from "../_shared/flight-control.ts";
 import { RateLimiter } from "../_shared/rate-limiter.ts";
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from "../_shared/rate-limit.ts";
 import { assertUrlSafe } from "../_shared/ssrf-protection.ts";
 // Note: In Deno edge functions, shared packages might need explicit .ts paths depending on setup.
 import { ModelProviderRegistrySchema, type ModelProviderConfig } from "../../packages/schema/byom/registry.ts";
@@ -94,6 +99,14 @@ async function getProviderConfig(tenantId: string, provider: Provider): Promise<
   });
 }
 
+function sumAuditSpend(rows: { details: unknown }[] | null): number {
+  let total = 0;
+  for (const row of rows ?? []) {
+    total += ((row.details as Record<string, number>)?.cost_incurred || 0);
+  }
+  return total;
+}
+
 serve(async (req: Request) => {
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
@@ -111,6 +124,13 @@ serve(async (req: Request) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+    }
+
+    // Distributed rate limiting (Upstash) — additive to the Postgres-backed
+    // RateLimiter below; both fail closed. Keyed per authenticated user.
+    const rl = await checkRateLimit(user.id, RATE_LIMIT_CONFIGS.byomProxy);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(origin, rl);
     }
 
     const body = REQUEST_SCHEMA.parse(await req.json());
@@ -137,13 +157,8 @@ serve(async (req: Request) => {
       .eq('tenant_id', tenantId)
       .eq('action', 'BYOM_AUDIT_SPAN');
       
-    let totalSpend = 0;
-    if (currentSpendData) {
-      for (const row of currentSpendData) {
-         totalSpend += ((row.details as Record<string, number>)?.cost_incurred || 0);
-      }
-    }
-    
+    const totalSpend = sumAuditSpend(currentSpendData);
+
     if (totalSpend >= providerConfig.max_cost_usd) {
        // Log rejection
        await supabase.from('omnihub_audit_log').insert({

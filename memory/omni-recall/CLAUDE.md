@@ -11,7 +11,7 @@
 - Do **not** assume Claude authored a given commit, branch, or current state.
 - The root `CLAUDE.md` can lag reality (other agents move `main`); treat its
   commit/date facts as hints and verify HEAD with `git log` before relying on them.
-- Verified HEAD at this audit: `19a5f3fe` (Antigravity PR #1313); branch `fix/sonarqube-audit-resolutions-final`.
+- Verified HEAD at this audit: `ead5cd9f` (fix(rsi): add deploy-production-cf-direct.yml exclusion); branch `feat/omnidash-production-hardening` (PR #1263 pending merge). Main HEAD: `e5b93237`.
 
 ## Runtime Facts (Claude Code / ephemeral container)
 

@@ -22,6 +22,11 @@ import {
   normalizeToEventEnvelope,
   toPythonEventEnvelope,
 } from "../_shared/event-ingress-adapter.ts";
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from "../_shared/rate-limit.ts";
 
 /** Workflow request payload structure */
 type TriggerWorkflowPayload =
@@ -523,6 +528,12 @@ async function handleTriggerWorkflow(
   const authUser = ctx.user;
   if (!authUser) {
     return jsonResponse({ error: "unauthorized" }, 401, ctx.corsHeaders);
+  }
+
+  // Distributed rate limiting — per authenticated user, before any business logic
+  const rl = await checkRateLimit(authUser.id, RATE_LIMIT_CONFIGS.triggerWorkflow);
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(req.headers.get("origin"), rl);
   }
 
   if (!isRecord(ctx.body)) {

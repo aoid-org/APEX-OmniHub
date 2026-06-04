@@ -17,12 +17,14 @@
 import { buildCorsHeaders, handlePreflight } from '../_shared/cors.ts';
 import { createServiceClient } from '../_shared/supabaseClient.ts';
 import { RateLimiter } from '../_shared/rate-limiter.ts';
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from '../_shared/rate-limit.ts';
 
-// ── Threshold Constants ─────────────────────────────────────────────────────
 const VIBRATION_CRITICAL_THRESHOLD = 15;
 const VIBRATION_WARNING_THRESHOLD = 10;
-
-// ── Payload Schema ──────────────────────────────────────────────────────────
 
 interface PhysiOmniPayload {
   device_serial: string;
@@ -133,8 +135,6 @@ function validatePayload(body: unknown): ValidationResult {
   };
 }
 
-// ── Response Helpers ────────────────────────────────────────────────────────
-
 function jsonResponse(
   data: unknown,
   status: number,
@@ -145,8 +145,6 @@ function jsonResponse(
     headers: { ...headers, 'Content-Type': 'application/json' },
   });
 }
-
-// ── Alert Evaluation ────────────────────────────────────────────────────────
 
 interface AlertEvaluation {
   shouldAlert: boolean;
@@ -333,8 +331,6 @@ async function requiresLiveSignature(req: Request, rawBody: string, corsHeaders:
   return null;
 }
 
-// ── Main Handler ────────────────────────────────────────────────────────────
-
 Deno.serve(async (req: Request): Promise<Response> => {
   const requestOrigin = req.headers.get('origin')?.replace(/\/$/, '') ?? null;
   const corsHeaders = buildCorsHeaders(requestOrigin);
@@ -373,6 +369,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // ── 0. Security, Rate Limiting & Gating ─────────────────────────────────────
   const gateError = enforceIngressGate(corsHeaders);
   if (gateError) return gateError;
+
+  // Distributed rate limiting (Upstash) — additive to the Postgres-backed
+  // RateLimiter below; both fail closed. Keyed per device serial.
+  const rl = await checkRateLimit(data.device_serial, RATE_LIMIT_CONFIGS.physiomniIngress);
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(requestOrigin, rl);
+  }
 
   try {
     await RateLimiter.checkLimit(supabase, data.device_serial, 60, 60);

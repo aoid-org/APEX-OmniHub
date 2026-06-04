@@ -13,15 +13,20 @@ from providers.database.factory import get_database_provider
 logger = logging.getLogger(__name__)
 
 
+def _omniboard_mock_oauth_enabled() -> bool:
+    """Mock OAuth endpoints are reachable only when explicitly enabled (non-prod)."""
+    return os.environ.get("OMNIBOARD_MOCK_OAUTH", "false").lower() == "true"
+
+
 class OmniBoardService:
     """
     Service layer for OmniBoard.
 
     Handles:
-    - Provider Registry Lookup (mocked)
+    - Provider Registry Lookup (env-var driven; set OMNIBOARD_MOCK_OAUTH=true for local dev)
     - Fuzzy Matching
-    - Vault Storage (mocked)
-    - OmniPort Registration (mocked)
+    - Vault Storage (Supabase-backed via SUPABASE_ACTIVITY_KEY)
+    - OmniPort Registration (via OmniPort API)
     """
 
     @classmethod
@@ -160,11 +165,25 @@ class OmniBoardService:
         redirect_uri = os.environ.get(f"{slug}_REDIRECT_URI")
 
         if not client_id or not redirect_uri:
-            return f"https://mock.auth.url/{provider}/oauth?state={tenant_id}"
+            if _omniboard_mock_oauth_enabled():
+                return f"https://oauth.localdev.test/{provider}/authorize?state={tenant_id}"
+            raise ValueError(
+                f"[OmniBoard] Missing OAuth client config for {provider}. "
+                f"Set {slug}_CLIENT_ID and {slug}_REDIRECT_URI. "
+                "Set OMNIBOARD_MOCK_OAUTH=true to use mock endpoints in "
+                "non-production environments."
+            )
 
-        auth_endpoint = os.environ.get(
-            f"{slug}_AUTH_ENDPOINT", "https://api.mock-provider.com/oauth/authorize"
-        )
+        auth_endpoint = os.environ.get(f"{slug}_AUTH_ENDPOINT")
+        if not auth_endpoint:
+            if _omniboard_mock_oauth_enabled():
+                auth_endpoint = "https://oauth.localdev.test/authorize"
+            else:
+                raise ValueError(
+                    f"[OmniBoard] Missing env var {slug}_AUTH_ENDPOINT. "
+                    "Set OMNIBOARD_MOCK_OAUTH=true to use mock endpoints in "
+                    "non-production environments."
+                )
 
         client = AsyncOAuth2Client(client_id, redirect_uri=redirect_uri)
         uri, _state = client.create_authorization_url(
@@ -209,6 +228,7 @@ class OmniBoardService:
         """
         Initiates Device Code flow via POST to provider's device_authorization_endpoint.
         """
+        endpoint: str | None = None
         try:
             db = get_database_provider()
             res = await db.select(
@@ -216,21 +236,35 @@ class OmniBoardService:
                 select_fields="device_authorization_endpoint",
                 filters={"name": provider},
             )
-            if not res or not res[0].get("device_authorization_endpoint"):
-                endpoint = "https://mock.auth/device"
-            else:
+            if res and res[0].get("device_authorization_endpoint"):
                 endpoint = res[0]["device_authorization_endpoint"]
         except Exception:
-            endpoint = "https://mock.auth/device"
+            endpoint = None
+
+        if not endpoint:
+            if _omniboard_mock_oauth_enabled():
+                endpoint = "https://oauth.localdev.test/device"
+            else:
+                raise ValueError(
+                    f"[OmniBoard] No device_authorization_endpoint registered for "
+                    f"{provider}. Set OMNIBOARD_MOCK_OAUTH=true to use mock endpoints "
+                    "in non-production environments."
+                )
 
         slug = provider.upper()
         client_id = os.environ.get(f"{slug}_CLIENT_ID")
         if not client_id:
-            return {
-                "device_code": "mock_device_123",
-                "user_code": "MOCK-CODE",
-                "verification_uri": "https://mock.com/verify",
-            }
+            if _omniboard_mock_oauth_enabled():
+                return {
+                    "device_code": "localdev-device-code",
+                    "user_code": "LOCALDEV",
+                    "verification_uri": "https://oauth.localdev.test/verify",
+                }
+            raise ValueError(
+                f"[OmniBoard] Missing env var {slug}_CLIENT_ID for device code flow. "
+                "Set OMNIBOARD_MOCK_OAUTH=true to use mock endpoints in "
+                "non-production environments."
+            )
 
         async with httpx.AsyncClient() as client:
             response = await client.post(endpoint, data={"client_id": client_id})
