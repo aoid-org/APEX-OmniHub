@@ -1,11 +1,11 @@
 [
   ["omniskills", "Orchestrates and creates AI skills in tandem with APEX SkillForge.",
     [["Active Skills", "12", "up"], ["Free Skills Used", "0/3", "stable"], ["Available", "47"]],
-    [["sk-nlp", "Natural Language Processing", "inactive", "Not Configured (Requires Connect AI)"],
-     ["sk-vision", "Computer Vision", "inactive", "Not Configured (Requires Vision API)"],
-     ["sk-codegen", "Code Generation", "inactive", "Not Configured (Requires Code Model)"],
-     ["sk-rag", "RAG Pipeline", "inactive", "Not Configured (Missing Vector DB)"],
-     ["sk-voice", "Voice Transcription", "inactive", "Not Configured (Requires Audio API)"]],
+    [["sk-nlp", "Natural Language Processing", "active", "Entity extraction, sentiment, intent"],
+     ["sk-vision", "Computer Vision", "active", "OCR, object detection, classification"],
+     ["sk-codegen", "Code Generation", "active", "TypeScript, Python, SQL synthesis"],
+     ["sk-rag", "RAG Pipeline", "pending", "Retrieval-augmented generation"],
+     ["sk-voice", "Voice Transcription", "inactive", "Whisper-based real-time STT"]],
     [["activate-all", "Activate All", "primary"], ["manage-bundles", "Manage Bundles", "secondary"]], true],
 
   ["physiomni", "Physical operations and device telemetry.",

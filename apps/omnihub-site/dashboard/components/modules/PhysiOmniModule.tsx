@@ -67,32 +67,6 @@ function usePhysiOmniDevices(): LiveDevices {
   return devices;
 }
 
-function renderDeviceStatus(devices: LiveDevices) {
-  if (devices.loading) {
-    return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground py-1">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        Loading device registry…
-      </div>
-    );
-  }
-  if (!devices.available || devices.total === 0) {
-    return (
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        No devices registered yet. Provisioned edge nodes will appear here once they connect to the OmniHub Gateway.
-      </p>
-    );
-  }
-  return (
-    <div className="flex items-center gap-3 text-xs">
-      <span className="text-lg font-bold text-foreground tabular-nums">{devices.active}</span>
-      <span className="text-muted-foreground">
-        of {devices.total} device{devices.total === 1 ? '' : 's'} active
-      </span>
-    </div>
-  );
-}
-
 export default function PhysiOmniModule({ onClose }: Props) {
   const state = useOmniModuleState('physiomni');
   const devices = usePhysiOmniDevices();
@@ -116,14 +90,30 @@ export default function PhysiOmniModule({ onClose }: Props) {
             </h4>
           </div>
 
-          {renderDeviceStatus(devices)}
+          {devices.loading ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground py-1">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Loading device registry…
+            </div>
+          ) : !devices.available || devices.total === 0 ? (
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              No devices registered yet. Provisioned edge nodes will appear here once they connect to the OmniHub Gateway.
+            </p>
+          ) : (
+            <div className="flex items-center gap-3 text-xs">
+              <span className="text-lg font-bold text-foreground tabular-nums">{devices.active}</span>
+              <span className="text-muted-foreground">
+                of {devices.total} device{devices.total === 1 ? '' : 's'} active
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Nordic Hardware Pilot — fixed reference spec, not tenant data */}
         <div className="rounded-xl border border-border/40 p-4 bg-card/60 backdrop-blur-md">
           <div className="flex items-center gap-2 mb-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-              Nordic Hardware Pilot Reference{' '}
+              Nordic Hardware Pilot Reference
               <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-orange-500/20 text-orange-400">
                 DEMO
               </span>

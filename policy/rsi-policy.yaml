@@ -1,5 +1,5 @@
 policy_version: 1.3.3
-policy_last_updated_utc: 2026-05-31
+policy_last_updated_utc: 2026-06-04
 mode: live
 default_network_model_calls: false
 hosted_model_monthly_budget_usd: 0
@@ -49,6 +49,7 @@ critical_paths:
   - '!.github/workflows/secret-scanning.yml'
   - '!.github/workflows/release.yml'
   - '!.github/workflows/nightly-evaluation.yml'
+  - '!.github/workflows/deploy-production-cf-direct.yml'
   - orchestrator/workflows/**
   - orchestrator/activities/**
   - supabase/migrations/**
