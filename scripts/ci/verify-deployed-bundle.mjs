@@ -35,7 +35,8 @@ const EXPECTED_HOST = (process.env.EXPECTED_SUPABASE_HOST || 'rtopreovkywofgwgmo
 const PLACEHOLDER_HOST = 'placeholder.supabase.co';
 
 // sb_publishable_... (current) OR a JWT (legacy anon key: three dot-separated b64url segments).
-const KEY_SHAPE = /sb_publishable_[A-Za-z0-9_-]{8,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/;
+// Upper bounds on quantifiers prevent super-linear backtracking (S5852).
+const KEY_SHAPE = /sb_publishable_[A-Za-z0-9_-]{8,128}|eyJ[A-Za-z0-9_-]{10,500}\.[A-Za-z0-9_-]{10,500}\.[A-Za-z0-9_-]{10,500}/;
 
 async function fetchText(url) {
   const response = await fetch(url, {
@@ -50,7 +51,7 @@ async function fetchText(url) {
 
 function extractScriptUrls(html, baseUrl) {
   const urls = new Set();
-  const re = /<script[^>]+src=["']([^"']+)["']/gi;
+  const re = /<script[^>]{0,1000}src=["']([^"']{1,2048})["']/gi;
   let match;
   while ((match = re.exec(html)) !== null) {
     try {
