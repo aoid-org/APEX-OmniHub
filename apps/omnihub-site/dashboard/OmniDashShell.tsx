@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, memo } from "react";
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useViewport } from "./hooks/useViewport";
