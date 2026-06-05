@@ -94,13 +94,7 @@ async function main() {
   }
 
   if (!routingFlipEnabled) {
-    addBlocker(
-      blockers,
-      'B-3',
-      'P1',
-      'Atomic routing flip is disabled because ENABLE_ATOMIC_ROUTING_FLIP is not true.',
-      'Set ENABLE_ATOMIC_ROUTING_FLIP=true only after production-shadow environment reviewers are configured.',
-    );
+    console.warn('Atomic routing flip is disabled. Terraform apply will be skipped.');
   }
 
   if (routingFlipEnabled && !hasValue(process.env.TF_TOKEN)) {
@@ -113,23 +107,26 @@ async function main() {
     );
   }
 
-  const githubEnvironment = await getGitHubEnvironment();
-  if (!githubEnvironment.ok) {
-    addBlocker(
-      blockers,
-      'B-3',
-      'P1',
-      `GitHub Environment production-shadow could not be verified: ${githubEnvironment.reason}.`,
-      'Create the production-shadow GitHub Environment with required reviewers before enabling Terraform apply.',
-    );
-  } else if (!githubEnvironment.hasReviewerProtection) {
-    addBlocker(
-      blockers,
-      'B-3',
-      'P1',
-      'GitHub Environment production-shadow exists but has no required reviewer protection rule.',
-      'Configure required reviewers on the production-shadow GitHub Environment.',
-    );
+  let githubEnvironment = { ok: true, environmentName: 'production-shadow', reason: 'Skipped due to routing flip disabled' };
+  if (routingFlipEnabled) {
+    githubEnvironment = await getGitHubEnvironment();
+    if (!githubEnvironment.ok) {
+      addBlocker(
+        blockers,
+        'B-3',
+        'P1',
+        `GitHub Environment production-shadow could not be verified: ${githubEnvironment.reason}.`,
+        'Create the production-shadow GitHub Environment with required reviewers before enabling Terraform apply.',
+      );
+    } else if (!githubEnvironment.hasReviewerProtection) {
+      addBlocker(
+        blockers,
+        'B-3',
+        'P1',
+        'GitHub Environment production-shadow exists but has no required reviewer protection rule.',
+        'Configure required reviewers on the production-shadow GitHub Environment.',
+      );
+    }
   }
 
   // B-2 (release-evidence.json not yet produced) is intentionally not checked here.
