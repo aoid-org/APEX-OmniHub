@@ -36,9 +36,6 @@ verify_jwt = false
 [functions.execute-automation]
 verify_jwt = true
 
-[functions.test-integration]
-verify_jwt = true
-
 [functions.byom-proxy]
 verify_jwt = true
 
@@ -89,3 +86,7 @@ verify_jwt = false  # Device auth via mTLS at transport layer; service_role used
 #
 # Set these in Supabase Dashboard → Project Settings → Edge Functions → Environment Variables
 # DO NOT hardcode these values in code - they must be loaded from environment
+
+[functions.env]
+ALLOWED_ORIGINS = "https://apexomnihub.icu,https://www.apexomnihub.icu"
+PHYSIOMNI_LIVE_ENABLED = "true"

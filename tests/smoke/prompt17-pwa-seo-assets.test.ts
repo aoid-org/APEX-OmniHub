@@ -1,7 +1,6 @@
-import { describe, it, expect } from 'vitest';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { describe, it } from 'vitest';
 
 describe('pwa-seo-assets', () => {
-  it('should pass', () => {
-    expect(true).toBe(true);
-  });
+  it.todo('should pass');
 });

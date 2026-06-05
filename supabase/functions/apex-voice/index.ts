@@ -1,5 +1,10 @@
 import { evaluateVoiceInputSafety } from "../_shared/voiceSafety.ts";
 import { verifyWebSocketAuth, unauthorizedWebSocketResponse, AuthError } from "../_shared/auth.ts";
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from "../_shared/rate-limit.ts";
 
 const APEX_SYSTEM_PROMPT = `You are APEX, the AI Receptionist for TradeLine247.
 Constraints: Reply in under 2 sentences. Be concise. Avoid filler words.
@@ -86,6 +91,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
       error: error instanceof Error ? error.message : String(error),
     });
     return new Response("Authentication failed", { status: 401 });
+  }
+
+  // Distributed rate limiting — per authenticated user, before WebSocket upgrade
+  const rl = await checkRateLimit(userId, RATE_LIMIT_CONFIGS.apexVoice);
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(req.headers.get("origin"), rl);
   }
 
   const { socket, response } = Deno.upgradeWebSocket(req);

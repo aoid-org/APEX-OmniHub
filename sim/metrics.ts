@@ -248,7 +248,7 @@ export class MetricsCollector {
       const len = bucket.durations.length;
       const avgLatency = len > 0 ? bucket.sum / len : 0;
 
-      const durations = bucket.durations.toSorted((a, b) => a - b);
+      const durations = [...bucket.durations].sort((a: number, b: number) => a - b);
       const p95Latency = len > 0 ? this.percentile(durations, 0.95) : 0;
 
       metrics.push({

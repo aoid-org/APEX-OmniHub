@@ -56,7 +56,7 @@ vi.mock('@/assets/sentinel-avatar-icon.png', () => ({ default: 'sentinel.png' })
 import { OmniSlatePane } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/components/OmniSlatePane';
 import { EcosystemPane } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/components/EcosystemPane';
 import { AgentPane } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/components/AgentPane';
-import type { ContextItem } from '../../apps/omnihub-site/dashboard/components/DashboardOverview/types';
+import type { OmniSlateContextItem } from '../../apps/omnihub-site/dashboard/types/context.types';
 import { useOmniSlateStore } from '../../apps/omnihub-site/src/stores/omniSlateStore';
 
 vi.mock('../../apps/omnihub-site/src/stores/omniSlateStore', () => ({
@@ -68,7 +68,7 @@ import { DraggableWidget, DRAG_THRESHOLD_PX } from '../../apps/omnihub-site/dash
 
 // ── OmniSlatePane default props ───────────────────────────────────────────────
 const BASE_SLATE_PROPS = {
-  health: 'green' as const,
+  health: 'healthy' as const,
   activeInsight: null,
   prompt: '',
   isRecording: false,
@@ -82,12 +82,12 @@ const BASE_SLATE_PROPS = {
   onToggleRecording: vi.fn(),
 };
 
-const MANY_CONTEXT: readonly ContextItem[] = [
-  { name: 'TradeLine', health: 'green', insight: 'OK' },
-  { name: 'aSpiral', health: 'yellow', insight: 'Spike' },
-  { name: 'Fortress', health: 'green', insight: 'Secure' },
-  { name: 'OmniSkills', health: 'red', insight: 'Error' },
-  { name: 'Orchestrator', health: 'green', insight: 'Running' },
+const MANY_CONTEXT: readonly OmniSlateContextItem[] = [
+  { id: '1', kind: 'widget', source: 'system', metadata: {}, label: 'TradeLine', health: 'healthy', droppedAt: 'OK' },
+  { id: '2', kind: 'widget', source: 'system', metadata: {}, label: 'aSpiral', health: 'warning', droppedAt: 'Spike' },
+  { id: '3', kind: 'widget', source: 'system', metadata: {}, label: 'Fortress', health: 'healthy', droppedAt: 'Secure' },
+  { id: '4', kind: 'widget', source: 'system', metadata: {}, label: 'OmniSkills', health: 'broken', droppedAt: 'Error' },
+  { id: '5', kind: 'widget', source: 'system', metadata: {}, label: 'Orchestrator', health: 'healthy', droppedAt: 'Running' },
 ];
 
 const LONG_SUGGESTION =

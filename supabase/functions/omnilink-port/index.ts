@@ -3,6 +3,11 @@ import { buildCorsHeaders, corsErrorResponse, handlePreflight, isOriginAllowed }
 import { allowAdapter, allowWorkflow, enforceEnvAllowlist, enforcePermission, type OmniLinkScopes } from '../_shared/omnilinkScopes.ts';
 import { createAnonClient, createServiceClient } from '../_shared/supabaseClient.ts';
 import { normalizeOmniPortIntent, type SOmniPortInput } from '../_shared/omniport-normalize.ts';
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from '../_shared/rate-limit.ts';
 
 const OMNILINK_ENABLED = (Deno.env.get('OMNILINK_ENABLED') ?? '').toLowerCase() === 'true';
 const MAX_SINGLE_PAYLOAD_BYTES = 256 * 1024;
@@ -1235,6 +1240,16 @@ async function handleServeRequest(req: Request): Promise<Response> {
   // Simple GET route
   if (req.method === 'GET' && route === 'health') {
     return handleGetHealth(corsHeaders);
+  }
+
+  // Distributed rate limiting — ingress-level, keyed by client IP (per-handler
+  // auth resolves the user downstream; health check above is exempt).
+  const rl = await checkRateLimit(
+    req.headers.get('x-forwarded-for') ?? 'anon',
+    RATE_LIMIT_CONFIGS.omnilinkPort,
+  );
+  if (!rl.allowed) {
+    return rateLimitExceededResponse(requestOrigin, rl);
   }
 
   // API key routes

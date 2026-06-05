@@ -2,12 +2,27 @@
 
 > **This is the canonical source for current certification state.**
 > All other docs (PRODUCTION_STATUS.md, audit reports, README) defer here.
-> Last updated: 2026-06-01
+> Last updated: 2026-06-04
 
 ## 2026-06-01 Branch-State Addendum
 
 Current local branch inspection is `work` @ `86bc14a` with root package version `1.7.0`. Recent merged work includes PR #1274 OmniDash gap closure and PR #1309 entitlement/PhysiOmni ingress hardening. This addendum updates repo-state context only; it does **not** convert the platform to `CERTIFIED` without a current release-evidence artifact.
 
+
+## 2026-06-04 PR #1263 Production Hardening Addendum
+
+PR #1263 (`feat/omnidash-production-hardening`) is pending merge. It contains no schema changes or auth changes. All 42 CI checks: success or skipped.
+
+**Changes included:**
+- OmniDash modal trap fix: `DialogContent` now has `max-h-[calc(100dvh-2rem)] overflow-y-auto` — close button and footer always reachable regardless of modal content height.
+- Zero mock data enforcement in all module modals: `moduleData.json` all entries `isDemo:true`; hardcoded fabricated literals removed from AuditsModule, BillingModule, SettingsModule, WorkflowsModule. Content derives from `state.stats`/`state.items` with graceful empty states. Complies with CLAUDE.md §1.3 zero-mock-data rule.
+- PhysiOmni module wired to real `physiomni_devices` table (RLS: `tenant_id = auth.uid()`); static `demo-tenant-id` removed from cockpit launch URL.
+- Governed CF Pages deploy workflow (`.github/workflows/deploy-production-cf-direct.yml`): replaces broken PR #1262 which targeted non-existent project `omnihub`. Correct target: `apex-omnihub` (repo variable, defaulted). Gated behind `production-shadow` GitHub Environment (human reviewer required). Real bundle smoke test verifies Supabase host baked into deployed JS.
+- RSI policy v1.3.3: stale migration exclusion corrected, new workflow file excluded.
+
+**Effect on certification verdict:** no change to `NOT_CERTIFIED_NO_RELEASE_CUT` — this is a non-release push (no changesets version PR). Shadow deployment certification path unchanged.
+
+---
 
 ## 2026-05-20 B-2 Structural Fix Addendum
 
@@ -49,10 +64,11 @@ Verified in this documentation pass:
 
 | Field | Value |
 |---|---|
-| Package version | 1.7.0 (from root package.json) |
-| Latest inspected branch commit | 86bc14a on `work` (PR #1274 OmniDash from-zero gap closure; PR #1309 security hardening is in recent history at `3a51a27`) |
+| Package version | 1.7.0 (from package.json) |
+| Latest inspected main commit | e5b93237 (docs: post-merge verification + context sync 2026-05-31) |
+| PR pending merge | #1263 feat/omnidash-production-hardening @ ead5cd9f |
 | Repo | apexbusiness-systems/APEX-OmniHub |
-| Local gate verification | 2026-06-01 docs sync ran documentation checks; historical 2026-05-31 full-gate pass remains point-in-time evidence only |
+| Local gate verification | 2026-06-04 — tsc exit 0, eslint exit 0, 42/42 CI checks green on PR #1263 |
 
 ## Authority
 

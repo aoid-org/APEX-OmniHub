@@ -64,7 +64,6 @@ describe('OmniModal Payload Safety', () => {
     useOmniModal.getState().invoke({
       id: 'test-vision',
       provider: 'test',
-      // @ts-expect-error - testing specific missing wire-up
       type: 'vision_redact',
       title: 'Vision Redact',
       onComplete: vi.fn(),

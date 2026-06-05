@@ -1,6 +1,11 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { buildCorsHeaders, handlePreflight } from '../_shared/cors.ts';
 import { createServiceClient } from '../_shared/supabaseClient.ts';
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from '../_shared/rate-limit.ts';
 // In a real env, this would be a shared import.
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts';
 
@@ -44,6 +49,12 @@ serve(async (req) => {
     }
 
     const { device_id, tenant_id, timestamp, signature } = parsed.data;
+
+    // Distributed rate limiting — no authenticated user on telemetry ingress; key by tenant
+    const rl = await checkRateLimit(tenant_id, RATE_LIMIT_CONFIGS.physiomniIngest);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(req.headers.get('Origin') ?? '', rl);
+    }
 
     // Reject stale telemetry (older than 30s)
     const telemetryTime = new Date(timestamp).getTime();
