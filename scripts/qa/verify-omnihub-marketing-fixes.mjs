@@ -59,7 +59,7 @@ function check() {
   assert(existsSync(path.join(distDir, 'captions/brand-anthem.vtt')), 'Brand anthem caption file exists in dist');
 
   // 10. Language selector
-  const compCss = readFileSync(path.join(siteDir, 'src/styles/components.css'), 'utf8');
+  const compCss = readFileSync(path.join('apps/omnihub-site', 'src/styles/components.css'), 'utf8');
   assert(compCss.includes('width: 44px;'), 'Desktop language trigger is compact (44px)');
   assert(compCss.includes('height: 44px;'), 'Desktop language trigger is compact (44px)');
   assert(compCss.includes('.nav__mobile-language .language-selector__trigger'), 'Mobile language selector restores visible current language text');
@@ -73,7 +73,7 @@ function check() {
 
   // 5. Media processing against dist
   try {
-    const vidInfo = execSync(String.raw`ffprobe -hide_banner -v error -select_streams v:0 -show_entries stream=codec_name,codec_tag_string,width,pix_fmt -of csv=p=0 "${path.join(siteDir, 'public/apex-demo-video.mp4')}"`, { encoding: 'utf8' }).trim();
+    const vidInfo = execSync(String.raw`ffprobe -hide_banner -v error -select_streams v:0 -show_entries stream=codec_name,codec_tag_string,width,pix_fmt -of csv=p=0 "${path.join('apps/omnihub-site', 'public/apex-demo-video.mp4')}"`, { encoding: 'utf8' }).trim();
     assert(vidInfo.includes('h264'), 'Demo video is H.264');
     assert(vidInfo.includes('avc1'), 'Demo video is avc1');
     assert(vidInfo.includes('yuv420p'), 'Demo video is yuv420p');
@@ -85,7 +85,7 @@ function check() {
   }
 
   try {
-    const audioStreams = new Set(execSync(String.raw`ffprobe -hide_banner -v error -show_entries stream=codec_type -of csv=p=0 "${path.join(siteDir, 'public/audio/brand-anthem.mp3')}"`, { encoding: 'utf8' }).trim().split('\n'));
+    const audioStreams = new Set(execSync(String.raw`ffprobe -hide_banner -v error -show_entries stream=codec_type -of csv=p=0 "${path.join('apps/omnihub-site', 'public/audio/brand-anthem.mp3')}"`, { encoding: 'utf8' }).trim().split('\n'));
     assert(audioStreams.has('audio'), 'Brand anthem has audio stream');
     assert(!audioStreams.has('video'), 'Brand anthem has no video stream');
   } catch (e) {
