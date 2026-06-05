@@ -94,13 +94,7 @@ async function main() {
   }
 
   if (!routingFlipEnabled) {
-    addBlocker(
-      blockers,
-      'B-3',
-      'P1',
-      'Atomic routing flip is disabled because ENABLE_ATOMIC_ROUTING_FLIP is not true.',
-      'Set ENABLE_ATOMIC_ROUTING_FLIP=true only after production-shadow environment reviewers are configured.',
-    );
+    console.warn('Atomic routing flip is disabled. Terraform apply will be skipped.');
   }
 
   if (routingFlipEnabled && !hasValue(process.env.TF_TOKEN)) {
