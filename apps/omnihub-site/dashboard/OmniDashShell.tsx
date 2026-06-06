@@ -1548,8 +1548,8 @@ const RightPanelOmniTrace = memo(function RightPanelOmniTrace({ isDemoMode }: { 
         {events.length === 0 ? (
           <div style={{ fontSize: 11, color: T.t4, fontStyle: 'italic', padding: '4px 0' }}>No recent activity</div>
         ) : (
-          events.map((ev, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
+          events.map((ev) => (
+            <div key={ev.text} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: ev.color, flexShrink: 0, boxShadow: `0 0 4px ${ev.color}` }} />
               <span style={{ fontSize: 11, color: T.t2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.text}</span>
             </div>
@@ -1671,6 +1671,13 @@ const ModuleCanvasView = memo(function ModuleCanvasView({
   );
 });
 
+const isE2ETestEnv = () => {
+  return (
+    (typeof navigator !== 'undefined' && navigator.webdriver) ||
+    (typeof window !== 'undefined' && (window as unknown as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__)
+  );
+};
+
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);
@@ -1690,7 +1697,7 @@ export default function OmniDashShell() {
 
   const handleModuleClose = useCallback(() => {
     setActiveModuleKey(null);
-    setActiveNav('OmniBoard' as DashboardNavSection);
+    setActiveNav('OmniBoard');
   }, [setActiveNav]);
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
@@ -1714,10 +1721,7 @@ export default function OmniDashShell() {
   useEffect(() => {
     // Disable the tick interval during automated E2E tests (Playwright sets navigator.webdriver)
     // This prevents aggressive re-renders from detaching DOM nodes during test execution.
-    if (
-      (typeof navigator !== 'undefined' && navigator.webdriver) ||
-      (typeof window !== 'undefined' && (window as unknown as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__)
-    ) {
+    if (isE2ETestEnv()) {
       return;
     }
     const id = setInterval(() => setTick(t => t+1), 500);
