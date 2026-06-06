@@ -29,6 +29,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'placeholder' }}
+          VITE_CONNECT_AI_ENABLED: 'true'
 
       - name: Run Lighthouse CI
         run: npm exec --no --ignore-scripts -- lhci autorun
