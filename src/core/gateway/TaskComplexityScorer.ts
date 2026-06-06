@@ -135,6 +135,9 @@ const DOMAIN_KEYWORDS: Readonly<Record<TaskDomain, readonly string[]>> = {
   general: [],
 };
 
+// ⚡ Bolt: Pre-calculate the domain entries to avoid Object.entries() overhead on every call.
+const PRE_CALCULATED_DOMAIN_ENTRIES = Object.entries(DOMAIN_KEYWORDS) as Array<[TaskDomain, readonly string[]]>;
+
 // ============================================================================
 // Scorer
 // ============================================================================
@@ -177,9 +180,7 @@ export function scoreTask(taskDescription: string): TaskScoreResult {
   let bestDomain: TaskDomain = 'general';
   let bestDomainCount = 0;
 
-  for (const [domain, keywords] of Object.entries(DOMAIN_KEYWORDS) as Array<
-    [TaskDomain, readonly string[]]
-  >) {
+  for (const [domain, keywords] of PRE_CALCULATED_DOMAIN_ENTRIES) {
     let count = 0;
     for (const kw of keywords) {
       if (normalized.includes(kw)) count++;

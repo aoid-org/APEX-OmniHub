@@ -117,6 +117,11 @@ const BACKGROUND_SIGNALS: Record<string, number> = {
   report: -3, aggregate: -4, filter: -3,
 };
 
+const PRE_CALCULATED_SIGNALS = [
+  ...Object.entries(COMPLEXITY_SIGNALS),
+  ...Object.entries(BACKGROUND_SIGNALS),
+];
+
 export interface ComplexityScore {
   readonly rawScore: number;
   readonly tier: ModelTier;
@@ -133,18 +138,11 @@ export function scoreComplexity(taskDescription: string): ComplexityScore {
   const signals: Array<{ keyword: string; weight: number }> = [];
   let rawScore = 0;
 
-  // Score complexity signals
-  for (const [keyword, weight] of Object.entries(COMPLEXITY_SIGNALS)) {
+  // ⚡ Bolt: Pre-calculate the combined entries to avoid Object.entries() overhead on every call.
+  // We use a cached array of entries.
+  for (const [keyword, weight] of PRE_CALCULATED_SIGNALS) {
     if (normalized.includes(keyword)) {
-      rawScore += weight;
-      signals.push({ keyword, weight });
-    }
-  }
-
-  // Score background signals
-  for (const [keyword, weight] of Object.entries(BACKGROUND_SIGNALS)) {
-    if (normalized.includes(keyword)) {
-      rawScore += weight; // weight is already negative
+      rawScore += weight; // background signals are already negative
       signals.push({ keyword, weight });
     }
   }
