@@ -100,6 +100,53 @@ function jsonResponse(data: unknown, status: number, origin: string | null): Res
   });
 }
 
+async function handleUserAuth(email: string, password: string, fingerprint: string) {
+  let userId: string;
+  let tenantId: string;
+  let session;
+  
+  const { data: signInData, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  session = signInData?.session;
+
+  if (signInError || !session) {
+    const { data: signUpData, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        identity_type: 'byom',
+        fingerprint,
+      }
+    });
+
+    if (signUpError || !signUpData.user) {
+      throw new Error(`User creation failed: ${signUpError?.message}`);
+    }
+
+    userId = signUpData.user.id;
+    tenantId = userId;
+
+    const { data: secondSignInData, error: secondSignInError } = await supabaseAdmin.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (secondSignInError || !secondSignInData.session) {
+      throw new Error(`Failed to establish session after creation: ${secondSignInError?.message}`);
+    }
+    session = secondSignInData.session;
+  } else {
+    userId = signInData.user.id;
+    tenantId = signInData.user.user_metadata?.tenant_id ?? userId;
+  }
+  
+  return { userId, tenantId, session };
+}
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return handlePreflight(req);
@@ -140,50 +187,7 @@ serve(async (req: Request) => {
     const password = await cockpitCrypto.fingerprint(fingerprint + "byom_password_salt"); 
 
     // 3. Lookup or Create User
-    let userId: string;
-    let tenantId: string;
-    
-    // Attempt sign in first
-    const { data: signInData, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    let session = signInData?.session;
-
-    if (signInError || !session) {
-      // User likely does not exist. Create them.
-      const { data: signUpData, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          identity_type: 'byom',
-          fingerprint,
-        }
-      });
-
-      if (signUpError || !signUpData.user) {
-        throw new Error(`User creation failed: ${signUpError?.message}`);
-      }
-
-      userId = signUpData.user.id;
-      tenantId = userId; // Tenant ID is User ID for pure BYOM sovereign
-
-      // After creation, sign in to get the session
-      const { data: secondSignInData, error: secondSignInError } = await supabaseAdmin.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (secondSignInError || !secondSignInData.session) {
-        throw new Error(`Failed to establish session after creation: ${secondSignInError?.message}`);
-      }
-      session = secondSignInData.session;
-    } else {
-      userId = signInData.user.id;
-      tenantId = signInData.user.user_metadata?.tenant_id ?? userId;
-    }
+    const { userId, tenantId, session } = await handleUserAuth(email, password, fingerprint);
 
     // 4. Encrypt credential for the vault
     const hint = cockpitCrypto.extractHint(api_key, 4);
