@@ -113,7 +113,8 @@ const preAuthRoutes: readonly AppRoute[] = [
 ];
 
 function App() {
-  return <I18nextProvider i18n={i18n}>
+  return (
+    <I18nextProvider i18n={i18n}>
     <ErrorBoundary>
     <BrowserRouter>
       <div data-testid="app-shell">
