@@ -88,7 +88,7 @@ The data layer is a sovereign, self-hosted Supabase deployment providing real-ti
   - `chaos-inject` — Controlled fault injection for resilience testing
   - *(21 additional production functions)*
 - **PostgreSQL + Realtime** — Row-level security enforced at the database layer; live push to all connected clients
-- **Auth** — JWT + Connect AI (BYOM) OAuth + SIWE unified identity
+- **Auth** — JWT + Connect AI (BYOM) Provider Key + SIWE unified identity
 - **Storage** — Multi-tenant object storage with policy-gated access
 
 **Technology Stack:**
@@ -244,7 +244,7 @@ The decision to build on Temporal — rather than traditional queues (SQS, Bull)
 No APEX competitor operating at this market tier has shipped Temporal-native AI orchestration at this scale.
 
 ### 2. Web2 + Web3 Unified Identity
-The SIWE + Supabase Auth hybrid gives APEX clients a single identity layer spanning traditional enterprise auth (Connect AI / BYOM OAuth2, JWT) and blockchain-native identity (Ethereum wallet, NFT gating). This is not a feature — it is a market position in the emerging on-chain enterprise segment.
+The SIWE + Supabase Auth hybrid gives APEX clients a single identity layer spanning traditional enterprise auth (Connect AI / BYOM Provider Key, JWT) and blockchain-native identity (Ethereum wallet, NFT gating). This is not a feature — it is a market position in the emerging on-chain enterprise segment.
 
 ### 3. AI Agent System (L6)
 The platform's own development infrastructure is AI-native. The **APEX-POWER-20X agent protocol**, the **omnidev-v2** skill system, and the multi-LLM orchestration layer (Claude + GPT + Gemini) mean that the platform improves its own codebase through the same infrastructure it sells. This creates a compounding velocity advantage that widens with every release cycle.
