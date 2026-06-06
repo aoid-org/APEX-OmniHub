@@ -9,7 +9,7 @@
 - **Last Updated:** 2026-06-01
 - **Current Documentation Index:** [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)
 - **Current Certification Authority:** [Production Certification Status](project-status/PRODUCTION_CERTIFICATION_STATUS.md)
-- **Current Platform Snapshot:** [Current Platform State — 2026-06-01](CURRENT_PLATFORM_STATE_2026_06_02.md)
+- **Current Platform Snapshot:** [Current Platform State — 2026-06-06](CURRENT_PLATFORM_STATE_2026_06_06.md)
 - **Historical Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
