@@ -72,9 +72,10 @@ export interface DashboardData {
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useDashboardData(): DashboardData {
+export function useDashboardData(options?: { enabled?: boolean }): DashboardData {
   const { session } = useAuth();
   const userId = session?.user?.id ?? null;
+  const enabled = options?.enabled ?? true;
 
   const [settings, setSettings] = useState<OmniDashSettings | null>(null);
   const [kpiHistory, setKpiHistory] = useState<KpiDaily[]>([]);
@@ -87,7 +88,7 @@ export function useDashboardData(): DashboardData {
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !enabled) return;
 
     let cancelled = false;
     setIsLoading(true);
@@ -164,7 +165,7 @@ export function useDashboardData(): DashboardData {
       cancelled = true; 
       supabase.removeChannel(channel);
     };
-  }, [userId, refreshKey]);
+  }, [userId, refreshKey, enabled]);
 
   const kpiSummary: KpiSummary = kpiHistory[0]
     ? {

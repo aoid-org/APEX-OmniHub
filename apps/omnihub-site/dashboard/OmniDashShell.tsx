@@ -1694,7 +1694,22 @@ export default function OmniDashShell() {
   }, [setActiveNav]);
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
-  const dashData = useDashboardData();
+  const liveDashData = useDashboardData({ enabled: !isDemoMode });
+
+  // Use static demo data if in demo mode to prevent showing empty unauthenticated states
+  const dashData = isDemoMode ? {
+    settings: { user_id: 'demo', demo_mode: true, anonymize_kpis: false, freeze_mode: false, updated_at: new Date().toISOString() },
+    kpiSummary: { tradeline_paid_starts: 142, tradeline_active_pilots: 12, tradeline_churn_risks: 1, flowbills_demos: 0, flowbills_paid_accounts: 0, cash_days_to_cash: 0, ops_sev1_incidents: 0 },
+    kpiHistory: [],
+    openIncidents: [
+      { id: 'inc-1', severity: 'sev2' as const, status: 'open' as const, title: 'Invoice batch #1042 processing delay', occurred_at: new Date().toISOString() },
+      { id: 'inc-2', severity: 'sev3' as const, status: 'open' as const, title: 'High memory usage in worker-pool-b', occurred_at: new Date().toISOString() }
+    ],
+    memoryHealth: null,
+    isLoading: false,
+    error: null,
+    refresh: () => {}
+  } : liveDashData;
 
   useEffect(() => {
     // Disable the tick interval during automated E2E tests (Playwright sets navigator.webdriver)
