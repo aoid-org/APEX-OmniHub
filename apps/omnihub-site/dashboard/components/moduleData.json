@@ -107,7 +107,7 @@
         "dev-cgm",
         "Dexcom G7",
         "pending",
-        "Glucose monitoring \u2014 awaiting sync"
+        "Glucose monitoring — awaiting sync"
       ]
     ],
     [
@@ -182,7 +182,7 @@
         "secondary"
       ]
     ],
-    true
+    false
   ],
   [
     "links",
@@ -233,7 +233,7 @@
         "lnk-stripe",
         "Stripe Payments",
         "error",
-        "Token expired \u2014 re-authorize required"
+        "Token expired — re-authorize required"
       ]
     ],
     [
@@ -248,7 +248,7 @@
         "secondary"
       ]
     ],
-    true
+    false
   ],
   [
     "automations",
@@ -314,7 +314,7 @@
         "secondary"
       ]
     ],
-    true
+    false
   ],
   [
     "workflows",
@@ -359,7 +359,7 @@
         "wf-nurture",
         "Lead Nurture Sequence",
         "pending",
-        "9 steps | Draft \u2014 awaiting approval"
+        "9 steps | Draft — awaiting approval"
       ]
     ],
     [
@@ -374,7 +374,7 @@
         "secondary"
       ]
     ],
-    true
+    false
   ],
   [
     "files",
@@ -434,7 +434,7 @@
         "secondary"
       ]
     ],
-    true
+    false
   ],
   [
     "billing",
@@ -458,25 +458,25 @@
     [
       [
         "inv-mar",
-        "INV-2026-0003 \u2014 March 2026",
+        "INV-2026-0003 — March 2026",
         "active",
         "$4,200.00 | Paid Mar 1"
       ],
       [
         "inv-feb",
-        "INV-2026-0002 \u2014 February 2026",
+        "INV-2026-0002 — February 2026",
         "active",
         "$4,200.00 | Paid Feb 1"
       ],
       [
         "inv-jan",
-        "INV-2026-0001 \u2014 January 2026",
+        "INV-2026-0001 — January 2026",
         "active",
         "$4,200.00 | Paid Jan 1"
       ],
       [
         "usage-api",
-        "API Usage \u2014 Current Period",
+        "API Usage — Current Period",
         "active",
         "142K / 500K requests (28.4%)"
       ]
@@ -493,7 +493,7 @@
         "secondary"
       ]
     ],
-    true
+    false
   ],
   [
     "settings",
@@ -541,7 +541,7 @@
         "set-sandbox",
         "Sandbox Mode",
         "inactive",
-        "Isolated test environment \u2014 disabled"
+        "Isolated test environment — disabled"
       ]
     ],
     [
@@ -556,7 +556,7 @@
         "destructive"
       ]
     ],
-    true
+    false
   ],
   [
     "dashboard",
@@ -679,7 +679,7 @@
         "int-stripe",
         "Stripe Payments",
         "error",
-        "Token expired \u2014 re-authorization required"
+        "Token expired — re-authorization required"
       ],
       [
         "int-hubspot",
@@ -691,13 +691,13 @@
         "int-jira",
         "Jira Cloud",
         "inactive",
-        "Available \u2014 not configured"
+        "Available — not configured"
       ],
       [
         "int-zendesk",
         "Zendesk Support",
         "inactive",
-        "Available \u2014 not configured"
+        "Available — not configured"
       ]
     ],
     [
@@ -712,7 +712,7 @@
         "secondary"
       ]
     ],
-    true
+    false
   ],
   [
     "omnitrace",
