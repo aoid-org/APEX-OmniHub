@@ -110,47 +110,53 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
-            <label htmlFor="provider-select" style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text)', fontWeight: 500 }}>Provider</label>
-            <select
-              id="provider-select"
-              value={provider}
-              onChange={(e) => setProvider(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'var(--color-bg)',
-                color: 'var(--color-text)',
-                fontSize: '1rem'
-              }}
-            >
-              {PROVIDERS.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+            <label htmlFor="provider-select" style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text)', fontWeight: 500 }}>
+              Provider
+              <select
+                id="provider-select"
+                value={provider}
+                onChange={(e) => setProvider(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg)',
+                  color: 'var(--color-text)',
+                  fontSize: '1rem',
+                  marginTop: '8px'
+                }}
+              >
+                {PROVIDERS.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </label>
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <label htmlFor="api-key-input" style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text)', fontWeight: 500 }}>API Key</label>
-            <input
-              id="api-key-input"
-              type="password"
-              required
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your API key"
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'var(--color-bg)',
-                color: 'var(--color-text)',
-                fontSize: '1rem',
-                fontFamily: 'monospace'
-              }}
-            />
+            <label htmlFor="api-key-input" style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text)', fontWeight: 500 }}>
+              API Key
+              <input
+                id="api-key-input"
+                type="password"
+                required
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Enter your API key"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg)',
+                  color: 'var(--color-text)',
+                  fontSize: '1rem',
+                  fontFamily: 'monospace',
+                  marginTop: '8px'
+                }}
+              />
+            </label>
           </div>
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
