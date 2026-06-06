@@ -31,7 +31,7 @@ import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 import { AVATAR_PATH_MAP } from './contracts/agentAvatars';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
-import type { CSSProperties, ReactNode, Dispatch, SetStateAction } from "react";
+import type { CSSProperties, ReactNode, Dispatch, SetStateAction, RefObject } from "react";
 
 interface AppIconProps {
   idx: number;
@@ -76,6 +76,7 @@ import type { Incident } from './hooks/useDashboardData';
 interface OmniDashSidebarProps {
   activeNav: string;
   setActiveNav: Dispatch<SetStateAction<string>>;
+  canvasRef: RefObject<HTMLDivElement>;
 }
 
 interface OmniDashHeaderProps {
@@ -376,7 +377,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
 };
 
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
-const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
+const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebarProps) => {
   const { invoke } = useOmniModal();
   const [signingOut, setSigningOut] = useState<boolean>(false);
 
@@ -390,8 +391,6 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
       setSigningOut(false);
     }
   }, [signingOut]);
-
-  const canvasRef = useRef<HTMLDivElement>(null);
 
   const handleNav = (widget: OmniDashSidebarWidget) => {
     setActiveNav(widget.label);
@@ -1591,6 +1590,7 @@ export default function OmniDashShell() {
   const { isDesktop } = useViewport();
   const [mobileTab, setMobileTab] = useState<MobileTab>("home");
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
   const dashData = useDashboardData();
@@ -1642,7 +1642,7 @@ export default function OmniDashShell() {
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
         {/* Sidebar — desktop only; tablet/mobile use bottom nav */}
-        {isDesktop && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />}
+        {isDesktop && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
 
         {/* Main Canvas */}
         <div ref={canvasRef} className="omni-canvas-container" style={{
