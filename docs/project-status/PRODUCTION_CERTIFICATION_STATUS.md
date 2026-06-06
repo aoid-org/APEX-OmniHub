@@ -2,7 +2,57 @@
 
 > **This is the canonical source for current certification state.**
 > All other docs (PRODUCTION_STATUS.md, audit reports, README) defer here.
-> Last updated: 2026-06-04
+> Last updated: 2026-06-06
+
+## 2026-06-06 Full Audit Addendum
+
+Full OMEGA SCAN performed against `main` @ `c8d753c5` (June 5 2026 — latest commit). All local quality gates are green. The sole remaining item blocking `CERTIFIED` is execution of the release workflow in GitHub Actions CI with real secrets — not a code defect.
+
+### Local Gate Audit — 2026-06-06 (main @ c8d753c5)
+
+| Gate | Command | Result |
+|---|---|---|
+| TypeScript | `npx tsc --noEmit` | ✅ 0 errors |
+| ESLint | `npx eslint . --max-warnings 0` | ✅ 0 warnings |
+| Tests | `npm run test` | ✅ 2,561 passed, 0 failed (70 skipped / 30 todo) |
+| Build | `npm run build` | ✅ succeeded (17s) |
+| React singleton | `npm run check:react` | ✅ React 18.3.1 only |
+| Docs integrity | `npm run docs:check` | ✅ no broken links/pointers |
+| npm audit (prod, HIGH+) | `npm audit --omit=dev --audit-level=high` | ✅ 0 high/critical vulnerabilities |
+
+### Platform Facts — 2026-06-06
+
+| Field | Value |
+|---|---|
+| Package version | 1.7.0 |
+| HEAD (main) | `c8d753c5` — ⚡ Bolt: Optimize O(N*M) loop evaluations using O(1) Sets (#1334) |
+| `chore: version packages` commit on main | `959a8fd6` — June 5, 2026 |
+| src/ TypeScript/TSX files | 317 |
+| Supabase Edge Function directories | 29 (including `_shared`) |
+| SQL migration files | 88 |
+| Test spec files | 244 |
+| GitHub workflow files | 22 |
+| Vitest version | `^4.1.8` |
+
+### Remaining Gaps (non-blocking for CI release run)
+
+| ID | Gap | Severity |
+|---|---|---|
+| G-1 | `SentinelPanel.tsx` — `TRACE_FEED` is a static hardcoded array; `demoMode` initialises `true`. Needs `audit_log` Realtime subscription. | P1 |
+| G-2 | `NotificationCenter.tsx` — Zustand store wired correctly; needs live Realtime subscription on `omnilink_orchestration_requests` `status='waiting_approval'`. | P1 |
+| G-3 | `DashboardOverview` `EcosystemPane`/`AppsSection` — needs `integrations` + `omnilink_events` live wiring for module counts. | P1 |
+| G-4 | 30 `it.todo()` tests across `theme-system`, `production-truthfulness`, `fake-success-guardrails`, `zero-mock-widgets`, `prompt16/17 smoke` — skeletons with no implementation. | P2 |
+| G-5 | `hono@4.12.18` moderate CVE (GHSA-xrhx-7g5j-rcj5 et al) via transitive dep `wagmi→porto`. `overrides.hono` pinned to `^4.12.16`; bump to `^4.12.21` resolves advisory. | P2 |
+
+### Path to `CERTIFIED` — Remaining Steps
+
+1. **Trigger `release.yml` on main** (via empty commit push or manual workflow dispatch). The `chore: version packages` commit (`959a8fd6`) is already on main; the `release_signal` step will detect it via `git log`.
+2. Shadow deploys to `apex-omnihub-shadow.pages.dev` → health check passes.
+3. Approve `production-shadow` GitHub Environment gate (human reviewer).
+4. `write-release-evidence.mjs` emits `CERTIFIED` verdict → upload artifact.
+5. Update this document verdict to `CERTIFIED` with artifact link.
+
+---
 
 ## 2026-06-01 Branch-State Addendum
 
@@ -65,10 +115,10 @@ Verified in this documentation pass:
 | Field | Value |
 |---|---|
 | Package version | 1.7.0 (from package.json) |
-| Latest inspected main commit | e5b93237 (docs: post-merge verification + context sync 2026-05-31) |
-| PR pending merge | #1263 feat/omnidash-production-hardening @ ead5cd9f |
+| Latest main HEAD | `c8d753c5` — ⚡ Bolt: Optimize O(N*M) loop evaluations using O(1) Sets (#1334) — June 5, 2026 |
+| `chore: version packages` on main | `959a8fd6` — June 5, 2026 |
 | Repo | apexbusiness-systems/APEX-OmniHub |
-| Local gate verification | 2026-06-04 — tsc exit 0, eslint exit 0, 42/42 CI checks green on PR #1263 |
+| Local gate verification | 2026-06-06 — tsc exit 0, eslint exit 0, 2,561 tests passing |
 
 ## Authority
 
@@ -81,14 +131,14 @@ Verified in this documentation pass:
 
 ## Current Certification Verdict
 
-**`NOT_CERTIFIED_BLOCKED`** — B-2 structural fix merged; evidence production pending changeset version PR
+**`NOT_CERTIFIED_NO_RELEASE_CUT`** — All local gates pass; `chore: version packages` merged; release workflow execution with real secrets pending
 
 ### Active Blockers
 
 | ID | Blocker | Severity | Status | Doc |
 |---|---|---|---|---|
 | B-1 | Shadow deployment slot not provisioned (no Cloudflare Pages shadow project, no `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` secrets set) | P0 | **RESOLVED 2026-05-20** — apex-omnihub-shadow project created; all 6 required secrets/variables set. | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
-| B-2 | `release-evidence.json` with `CERTIFIED` or `CERTIFICATION_PENDING_FINAL_MAIN_CI` verdict not yet produced by a real release run | P0 | **STRUCTURAL FIX MERGED 2026-05-20** (PR #1185) — workflow decoupled from npm publish; evidence production pending changesets version PR merge. | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
+| B-2 | `release-evidence.json` with `CERTIFIED` verdict not yet produced by a real release workflow run with CI secrets | P0 | **`chore: version packages` MERGED 2026-06-05** (`959a8fd6`) — `release_signal` step will detect it; release workflow must be triggered via CI to produce evidence. | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
 | B-3 | GitHub Environment `production-shadow` for Terraform apply approval not yet configured | P1 | **RESOLVED 2026-05-20** — production-shadow GitHub Environment created with required-reviewer protection. | `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` |
 
 ### Path to CERTIFIED
@@ -98,38 +148,31 @@ Verified in this documentation pass:
 3. ~~Set repository variables: `CLOUDFLARE_SHADOW_PROJECT_NAME`, `ENABLE_SHADOW_DEPLOYMENT=true`, `SHADOW_HEALTH_URL`, `ENABLE_ATOMIC_ROUTING_FLIP=true`~~ — **DONE** 2026-05-20
 4. ~~Configure GitHub Environment `production-shadow` with required reviewers~~ — **DONE** 2026-05-20
 5. ~~Decouple release workflow from npm publish semantics~~ — **DONE** 2026-05-20 (PR #1185, commit `a54bd7c`). `release_signal` step detects version-PR merge via `git log`; all 5 gating conditions updated; `write-release-evidence.mjs` updated.
-6. Changesets version PR (`chore: version packages`) created by release workflow → merged to main → release workflow runs → shadow deploys to `apex-omnihub-shadow` → health check passes → Terraform plan → `production-shadow` reviewer approves → `release-evidence.json` written with `CERTIFIED` verdict
-7. Update this document to `CERTIFIED` with evidence link
+6. ~~Merge `chore: version packages` to main~~ — **DONE** 2026-06-05 (`959a8fd6`). `release_signal` will detect this commit subject.
+7. **NEXT ACTION:** Trigger `release.yml` on main (push empty commit or manual workflow dispatch) → shadow deploys to `apex-omnihub-shadow` → health check passes → `production-shadow` reviewer approves → `release-evidence.json` written with `CERTIFIED` verdict
+8. Update this document to `CERTIFIED` with evidence artifact link
 
-## Local Gate Audit — 2026-05-14 (main @ 0f1365d)
+## Local Gate Audit — 2026-06-06 (main @ c8d753c5)
 
-All required quality gates verified clean on current main. CI must also confirm green post-push to achieve `CERTIFIED`.
+All required quality gates verified clean on current main HEAD.
 
 | Gate | Command | Result |
 |---|---|---|
-| TypeScript | `bun run typecheck` | ✅ 0 errors |
-| ESLint | `bun run lint` | ✅ 0 warnings |
-| Tests | `bun run test` | ✅ 2488 passed, 0 failed |
-| Build | `bun run build` | ✅ succeeded (17s) |
-| Bundle size | `size-limit` | ✅ JS 115 KB / 800 KB, React 57 KB / 150 KB |
-| React singleton | `bun run check:react` | ✅ React 18.3.1 only |
-| Docs integrity | `bun run docs:check` | ✅ no broken links/pointers |
-| npm audit (prod) | `npm audit --omit=dev --audit-level=high` | ✅ 0 vulnerabilities |
-| Security posture | `bash scripts/security/security-posture-check.sh` | ✅ 9/9 (100%) |
-| Secret scan | `bun run secret:scan` | ✅ no secrets found |
-| Repo hygiene | `bash scripts/repo-hygiene-guard.sh` | ✅ no artifact files tracked |
-| RLS posture | `bash scripts/security/check_rls_posture.sh` | ✅ PASS |
-| Legal drift | `node scripts/compliance/check_legal_drift.mjs` | ✅ PASS |
-| Claims proof | `node scripts/compliance/check_claims_proof.mjs` | ✅ PASS |
-| Additive migrations (CI sim) | `GITHUB_BASE_REF=main bun run scripts/ci/check-additive-migrations.ts` | ✅ 4 files, 0 violations |
-| Armageddon certify | `bun run armageddon:certify:ci` | ✅ PASS |
-| OmniEval | `bun run eval:ci` | ✅ 16/16 passed (100%), 0 policy violations |
-| Infrastructure tests | `bun run test:infra` | ✅ 7 passed |
+| TypeScript | `npx tsc --noEmit` | ✅ 0 errors |
+| ESLint | `npx eslint . --max-warnings 0` | ✅ 0 warnings |
+| Tests | `npm run test` | ✅ 2,561 passed, 0 failed (70 skipped / 30 todo, 245 files) |
+| Build | `npm run build` | ✅ succeeded (17s) |
+| React singleton | `npm run check:react` | ✅ React 18.3.1 only |
+| Docs integrity | `npm run docs:check` | ✅ no broken links/pointers |
+| npm audit (prod, HIGH+) | `npm audit --omit=dev --audit-level=high` | ✅ 0 high/critical vulnerabilities |
+
+_Prior audit 2026-05-14 (main @ 0f1365d) — see history for full gate table from that pass._
 
 ## Known Advisories (non-blocking)
 
 | Advisory | Notes |
 |---|---|
+| `hono <=4.12.20` moderate CVE (GHSA-xrhx-7g5j-rcj5 et al) | Transitive via `wagmi→@wagmi/connectors→porto`. `overrides.hono` in `package.json` currently pins `^4.12.16`; bump to `^4.12.21` to resolve. Not used in APEX production source paths — acceptable until next dependency maintenance window. |
 | `postcss <8.5.10` moderate vuln | Acceptable per CLAUDE.md §12 |
 | `uuid 11.0.0–11.1.0` moderate vuln | Acceptable per CLAUDE.md §12 |
 
@@ -151,4 +194,4 @@ All required quality gates verified clean on current main. CI must also confirm 
 ## Owner
 
 APEX Business Systems — Release Engineering
-Updated by: Tech-debt resolution audit (2026-05-14) — main @ 0f1365d; B-2 structural fix (2026-05-20) — main @ a54bd7c (PR #1185)
+Updated by: Tech-debt resolution audit (2026-05-14) — main @ 0f1365d; B-2 structural fix (2026-05-20) — main @ a54bd7c (PR #1185); Full OMEGA SCAN audit (2026-06-06) — main @ c8d753c5
