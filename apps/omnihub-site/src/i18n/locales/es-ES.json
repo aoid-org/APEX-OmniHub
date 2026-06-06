@@ -1,41 +1,103 @@
 {
   "hero": {
-    "headline": {
-      "line1": "The only orchestrator you can audit, override, and reverse.",
-      "line2": "",
-      "line3": ""
+    "headline": { "line1": "El Universal", "line2": "Sync", "line3": "Orquestador." },
+    "subtitle": "La superficie de mando gobernada para la IA empresarial. Unifique software, agentes de IA y plataformas empresariales en una capa orquestada donde cada accion esta autorizada, registrada y reversible.",
+    "tiles": ["DIRECTO", "AUDITAR", "DEDUCIR"],
+    "cta": { "primary": "Solicitar Acceso Anticipado", "secondary": "Ver Demo" },
+    "trust": { "soc2": "Alineado con SOC 2", "euaiact": "Art. 14 Ley IA UE", "gdpr": "GDPR Art. 30", "trusted": "Confiado en sectores regulados" },
+    "art": { "intelliDesig": "INTELIGENCIA, DISENNADA." }
+  },
+  "ticker": {
+    "items": ["Sync Universal", "Gobernanza de Agentes", "Registro de Auditoria Inmutable", "Aplicacion de Politicas", "Rollback en un Clic", "Modo MAN", "Arquitectura Tri-Force", "Sin Dependencia deProveedor", "Integraciones Universales", "Alineado con SOC 2"]
+  },
+  "governance": {
+    "label": "Mando Total",
+    "headline": { "line1": "Gobernanza", "line2": "Absoluta." },
+    "description": "Usted emite la directiva. OmniHub orquesta cada sistema conectado con visibilidad completa en tiempo real. Acciones registradas. Agentes rastreados. Resultados trazables.",
+    "features": {
+      "naturalLanguage": { "title": "Directivas en lenguaje natural", "desc": "Emita comandos en lenguaje simple. OmniHub traduce la intencion en planes de tareas estructurados." },
+      "capabilityRouting": { "title": "Enrutamiento por capacidad", "desc": "Cada tarea se enruta al agente mas calificado. Sin conjeturas, sin errores de ruta." },
+      "override": { "title": "Sobrescribir cualquier agente al instante", "desc": "Un comando detiene, redirige o reemplaza cualquier agente en ejecucion. Usted mantiene el control en todo momento." },
+      "liveAudit": "Registro de Auditoria en Vivo"
     },
-    "tagline": "YOUR SYSTEMS. YOUR RULES.",
-    "traits": "DIRECTABLE | AUDITABLE | REVERSIBLE",
-    "subtitle": "The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.",
-    "description": "No vendor lock-in. No black boxes. No surprises.",
-    "cta": {
-      "primary": "Request Access",
-      "secondary": "Watch Demo",
-      "install": "Install App"
+    "auditTrail": {
+      "statuses": { "authorized": "Autorizado", "logged": "Registrado", "blocked": "Bloqueado" }
+    }
+  },
+  "reversible": {
+    "label": "Primitiva Arquitectonica",
+    "headline": { "line1": "Construido para", "line2": "Revertir." },
+    "description": "La unica plataforma de IA empresarial donde el rollback es una primitiva arquitectonica de primer nivel. Una mala decision no se propaga. Usted la deshace. Completamente.",
+    "features": {
+      "rollback": { "title": "Rollback en un clic", "desc": "Revierta cualquier accion de agente o estado de flujo de trabajo con un comando." },
+      "blastRadius": { "title": "Contencion del radio de explosion", "desc": "OmniHub detecta riesgos de propagacion y contiene fallos antes de que se propaguen." },
+      "compensating": { "title": "Transacciones compensatorias", "desc": "Cada accion de agente lleva una operacion compensatoria. El estado distribuido permanece coherente." },
+      "policyEngine": "Motor de Politicas: Reglas Activas"
     },
-    "footnote": "",
-    "subtitleSentence1": "The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.",
-    "subtitleSentence2": "",
-    "descriptionSentence1": "No vendor lock-in. No black boxes. No surprises.",
-    "descriptionSentence2": "",
-    "installPromptReady": "Install OmniHub for one-tap launch and push updates.",
-    "installPromptIOS": "On iOS: Share -> Add to Home Screen to install OmniHub.",
-    "installPromptFallback": "Install becomes available once your browser meets PWA criteria."
+    "policyRules": [
+      { "name": "Restriccion de Alcance", "desc": "Ningun agente accede a ambitos de datos no autorizados" },
+      { "name": "Auditoria en Escritura", "desc": "Cada operacion de escritura registrada inmutablemente" },
+      { "name": "Ventana de Rollback", "desc": "Ventana de 30 minutos para transacciones compensatorias" },
+      { "name": "Modo MAN", "desc": "Las acciones de alto riesgo requieren aprobacion del Nodo de Aprobacion Manual" },
+      { "name": "Bloqueo Transfronterizo", "desc": "GDPR: Los datos de la UE permanecen dentro de las zonas del EEE" }
+    ]
+  },
+  "capabilities": {
+    "label": "Capacidades de la Plataforma",
+    "headline": { "line1": "Todo lo que necesita para", "line2": "gobernar la IA empresarial." },
+    "description": "Una plataforma. Sin cajas negras. Sin dependencia de proveedores. Sin sorpresas.",
+    "items": [
+      { "key": "universalConnector", "title": "Red Universal de Conectores", "desc": "Compatibilidad universal con aplicaciones legacy, Web2, Web3, IA y blockchain." },
+      { "key": "omniDash", "title": "OmniDash", "desc": "Su centro de mando de inteligencia gobernada." },
+      { "key": "triForce", "title": "Arquitectura Tri-Force", "desc": "Un modelo tripartito descentralizado para seguridad sin compromisos." },
+      { "key": "skillForge", "title": "SkillForge/OmniSkills", "desc": "Cree, instale y gobierne OmniSkills de nivel experto." },
+      { "key": "telemetry", "title": "Telemetria en Tiempo Real", "desc": "Inteligencia operativa en vivo en todos los agentes y flujos de trabajo." },
+      { "key": "policy", "title": "Motor de Aplicacion de Politicas", "desc": "Las reglas de gobernanza se aplican antes de que se ejecute cualquier accion." },
+      { "key": "physiOmni", "title": "PhysiOmni", "desc": "La capa de operaciones de IA fisica para sistemas roboticos." },
+      { "key": "manMode", "title": "Modo MAN", "desc": "Nodo de Aprobacion Manual. Las acciones de alto riesgo pausan en un punto de control." },
+      { "key": "byom", "title": "Conecte su IA / BYOM", "desc": "Traiga su propio modelo. Integre cualquier LLM en flujos de trabajo gobernados." }
+    ]
+  },
+  "maestro": {
+    "label": "Filosofia Central",
+    "headline": { "line1": "El Principio", "line2": "MAESTRO." },
+    "description1": "La inteligencia no es solo capacidad. Es coordinacion con consecuencia.",
+    "description2": "La IA empresarial debe servir a la intencion de su organizacion. MAESTRO asegura que la autoridad escala con el sistema.",
+    "link": "Explorar el Protocolo MAESTRO"
+  },
+  "enterprise": {
+    "label": "Listo para la Empresa",
+    "headline": { "line1": "Construido para entornos", "line2": "regulados." },
+    "description": "Disennado desde el primer dia para cumplimiento y gobernanza.",
+    "cards": [
+      { "name": "SOC 2 Tipo II", "desc": "Controles de seguridad y disponibilidad validados" },
+      { "name": "Art. 14 Ley IA UE", "desc": "Requisitos de gobernanza para sistemas de IA de alto riesgo" },
+      { "name": "GDPR Articulo 30", "desc": "Registros completos de actividades de procesamiento" },
+      { "name": "ISO 27001", "desc": "Arquitectura compatible con sistemas de gestion de seguridad de la informacion" },
+      { "name": "Listo para HIPAA", "desc": "Arquitectura para datos de salud con soporte BAA" },
+      { "name": "Modelo de Confianza Cero", "desc": "Sin confianza implicita" },
+      { "name": "RBAC + ABAC", "desc": "Control de acceso basado en roles y atributos granular" },
+      { "name": "Cifrado E2E", "desc": "Todos los datos cifrados en transito y en reposo con AES-256" }
+    ]
+  },
+  "cta": {
+    "headline": { "line1": "Recupere la autoridad", "line2": "operativa." },
+    "description": "Unase a empresas que han superado la IA de caja negra. Solicite acceso anticipado y experimente como es la inteligencia gobernada en produccion.",
+    "buttons": { "primary": "Solicitar Acceso Anticipado", "secondary": "Programar una Demo" },
+    "tagline": "Sin dependencia de proveedores. Sin cajas negras. Sin sorpresas."
+  },
+  "modal": {
+    "title": "Solicitar Acceso Anticipado",
+    "description": "Cuenntenos sobre su caso de uso y nos pondremos en contacto.",
+    "fields": { "name": "Nombre Completo *", "email": "Email Laboral *", "company": "Empresa", "useCase": "Caso de Uso" },
+    "submit": "Solicitar Acceso",
+    "success": { "title": "Solicitud Recibida", "message": "Nos pondremos en contacto en breve." }
   },
   "settings": {
-    "title": "Configuración",
+    "title": "Configuracion",
     "language": "Idioma",
-    "current_language": "Idioma actual",
-    "language_updated": "Idioma actualizado con éxito",
+    "current_language": "Idioma Actual",
+    "language_updated": "Idioma actualizado con exito",
     "save": "Guardar"
-  },
-  "translation": {
-    "title": "Traducción Semántica",
-    "source_text": "Texto origen o payload JSON",
-    "target_language": "Idioma destino",
-    "translated_text": "Salida traducida",
-    "translate": "Traducir",
-    "copy": "Copiar"
   }
 }

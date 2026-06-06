@@ -1,41 +1,103 @@
 {
   "hero": {
-    "headline": {
-      "line1": "The only orchestrator you can audit, override, and reverse.",
-      "line2": "",
-      "line3": ""
+    "headline": { "line1": "L'Orchestrateur", "line2": "Sync", "line3": "Universel." },
+    "subtitle": "La surface de commande gouvernee pour l'IA d'entreprise. Unifiez logiciels, agents IA et plateformes dans une couche orchestree ou chaque action est autorisee, enregistree et reversible.",
+    "tiles": ["DIRECT", "AUDITER", "DEDUIRE"],
+    "cta": { "primary": "Demander un acces anticipe", "secondary": "Voir la Demo" },
+    "trust": { "soc2": "Conforme SOC 2", "euaiact": "Loi IA UE Art. 14", "gdpr": "RGPD Art. 30", "trusted": "Apprecie dans les industries reglementees" },
+    "art": { "intelliDesig": "INTELLIGENCE, CONNUE." }
+  },
+  "ticker": {
+    "items": ["Sync Universel", "Gouvernance des Agents", "Journal d'Audit", "Politiques", "Rollback", "Mode MAN", "Tri-Force", "Zero Lock-In", "Integrations", "SOC 2"]
+  },
+  "governance": {
+    "label": "Commande Totale",
+    "headline": { "line1": "Gouvernance", "line2": "Absolue." },
+    "description": "Vous donnez la directive. OmniHub orchestre chaque systeme connecte avec une visibilite en temps reel.",
+    "features": {
+      "naturalLanguage": { "title": "Directives en langage naturel", "desc": "Emettez des commandes en langage simple. OmniHub traduit l'intention en plans structures." },
+      "capabilityRouting": { "title": "Routage par capacite", "desc": "Chaque tache est routee vers l'agent le plus qualifie." },
+      "override": { "title": "Remplacer tout agent instantanement", "desc": "Une commande arrete ou remplace tout agent en cours." },
+      "liveAudit": "Journal d'Audit Live"
     },
-    "tagline": "YOUR SYSTEMS. YOUR RULES.",
-    "traits": "DIRECTABLE | AUDITABLE | REVERSIBLE",
-    "subtitle": "The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.",
-    "description": "No vendor lock-in. No black boxes. No surprises.",
-    "cta": {
-      "primary": "Request Access",
-      "secondary": "Watch Demo",
-      "install": "Install App"
+    "auditTrail": {
+      "statuses": { "authorized": "Autorise", "logged": "Enregistre", "blocked": "Bouque" }
+    }
+  },
+  "reversible": {
+    "label": "Primitive Architecturale",
+    "headline": { "line1": "Concue pour", "line2": "Inverser." },
+    "description": "La seule plateforme IA d'entreprise ou la restauration est une primitive architecturale de premier ordre.",
+    "features": {
+      "rollback": { "title": "Restauration en un clic", "desc": "Annulez toute action d'agent avec une seule commande." },
+      "blastRadius": { "title": "Containement du perimetre", "desc": "OmniHub detecte les risques avant cascade." },
+      "compensating": { "title": "Transactions compensatrices", "desc": "Chaque action porte une operation compensatrice." },
+      "policyEngine": "Moteur de Politiques: Regles Actives"
     },
-    "footnote": "",
-    "subtitleSentence1": "The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.",
-    "subtitleSentence2": "",
-    "descriptionSentence1": "No vendor lock-in. No black boxes. No surprises.",
-    "descriptionSentence2": "",
-    "installPromptReady": "Install OmniHub for one-tap launch and push updates.",
-    "installPromptIOS": "On iOS: Share -> Add to Home Screen to install OmniHub.",
-    "installPromptFallback": "Install becomes available once your browser meets PWA criteria."
+    "policyRules": [
+      { "name": "Restriction de Perimetre", "desc": "Aucun agent n'accede a des donnees non autorisees" },
+      { "name": "Audit a l'Ecriture", "desc": "Chaque operation enregistree immuablement" },
+      { "name": "Fenetre de Restauration", "desc": "Fenetre de 30 minutes" },
+      { "name": "Mode MAN", "desc": "Actions a haut risque en pause" },
+      { "name": "Blocage Transfrontalier", "desc": "Donnees UE restent dans EEE" }
+    ]
+  },
+  "capabilities": {
+    "label": "Capacites de la Plateforme",
+    "headline": { "line1": "Tout ce dont vous avez besoin", "line2": "pour gouverner l'IA d'entreprise." },
+    "description": "Une seule plateforme. Pas de boites noires. Pas de dependance. Pas de surprises.",
+    "items": [
+      { "key": "universalConnector", "title": "Reseau de Connecteurs Universels", "desc": "Compatibilite universelle avec legacy, Web2, Web3, IA et blockchain." },
+      { "key": "omniDash", "title": "OmniDash", "desc": "Votre centre de commande de l'intelligence gouvernee." },
+      { "key": "triForce", "title": "Architecture Tri-Force", "desc": "Modele tripartite decentralise pour une securite sans compromis." },
+      { "key": "skillForge", "title": "SkillForge/OmniSkills", "desc": "Forger, installer et gouverner des OmniSkills experts." },
+      { "key": "telemetry", "title": "Telemetrie en Temps Reel", "desc": "Renseignements operationnels en direct sur tous les agents." },
+      { "key": "policy", "title": "Moteur d'Application des Politiques", "desc": "Les regles de gouvernance s'appliquent avant toute action." },
+      { "key": "physiOmni", "title": "PhysiOmni", "desc": "La couche d'operations IA physique pour les systemes robotiques." },
+      { "key": "manMode", "title": "Mode MAN", "desc": "Noueud d'Approbation Manuel pour les actions a haut risque." },
+      { "key": "byom", "title": "Connectez votre IA", "desc": "Apportez votre propre modele LLM dans des flux de travail gouvernes." }
+    ]
+  },
+  "maestro": {
+    "label": "Philosophie de Base",
+    "headline": { "line1": "Le Principe", "line2": "MAESTRO." },
+    "description1": "L'intelligence n'est pas seulement une capacite. C'est la coordination avec consequence.",
+    "description2": "L'IA d'entreprise doit servir l'intention de votre organisation. MAESTRO garantit que l'autorite evolue avec le systeme.",
+    "link": "Explorer le Protocole MAESTRO"
+  },
+  "enterprise": {
+    "label": "Pret pour l'Entreprise",
+    "headline": { "line1": "Concu pour les environnements", "line2": "reglementes." },
+    "description": "Architecte des le premier jour pour la conformite et la gouvernance.",
+    "cards": [
+      { "name": "SOC 2 Type II", "desc": "Controles valides par audit independent" },
+      { "name": "Loi IA UE Art. 14", "desc": "Gouvernance par Noeud d'Approbation Manuel" },
+      { "name": "RGPD Article 30", "desc": "Registres de traitement exportables" },
+      { "name": "ISO 27001", "desc": "Architecture de gestion de securite" },
+      { "name": "HIPAA-Ready", "desc": "Architecture de donnees de sante avec BAA" },
+      { "name": "Modele Zero Trust", "desc": "Pas de confiance implicite" },
+      { "name": "RBAC + ABAC", "desc": "Controle d'acces granulaire" },
+      { "name": "Chiffrement E2E", "desc": "Donnees chiffrees en transit et au repos" }
+    ]
+  },
+  "cta": {
+    "headline": { "line1": "Reprenez le Controle", "line2": "Reprenez l'autorite operationnelle." },
+    "description": "Rejoignez les entreprises qui ont depasse l'IA en boite noire.",
+    "buttons": { "primary": "Demander un Acces Anticipe", "secondary": "Planifier une Demo" },
+    "tagline": "Zero dependance. Pas de boites noires. Pas de surprises."
+  },
+  "modal": {
+    "title": "Demander un Acces Anticipe",
+    "description": "Parlez-nous de votre cas d'usage et nous vous contacterons.",
+    "fields": { "name": "Nom Complet", "email": "Email Professionnel", "company": "Entreprise", "useCase": "Cas d'Usage" },
+    "submit": "Demander l'Acces",
+    "success": { "title": "Demande Recue", "message": "Nous vous contacterons bientot." }
   },
   "settings": {
-    "title": "Paramètres",
+    "title": "Parametres",
     "language": "Langue",
-    "current_language": "Langue actuelle",
-    "language_updated": "Langue mise à jour avec succès",
+    "current_language": "Langue Actuelle",
+    "language_updated": "Langue mise a jour avec succes",
     "save": "Enregistrer"
-  },
-  "translation": {
-    "title": "Traduction Sémantique",
-    "source_text": "Texte source ou payload JSON",
-    "target_language": "Langue cible",
-    "translated_text": "Sortie traduite",
-    "translate": "Traduire",
-    "copy": "Copier"
   }
 }

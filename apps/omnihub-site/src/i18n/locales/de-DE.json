@@ -1,26 +1,104 @@
 {
   "hero": {
-    "headline": {
-      "line1": "The only orchestrator you can audit, override, and reverse.",
-      "line2": "",
-      "line3": ""
+    "headline": { "line1": "Der Universelle", "line2": "Sync", "line3": "Orchestrierer." },
+    "subtitle": "Die governierte Kommandoflaeche fuer Unternehmens-KI. Vereinen Sie Software, KI-Agenten und Unternehmensplattformen in einer orchestrierten Schicht, wo jede Aktion autorisiert, protokolliert und rueckgaengig gemacht werden kann.",
+    "tiles": ["DIREKT", "AUDITIEREN", "ABLEITEN"],
+    "cta": { "primary": "Fruehzeitig Zugang anfordern", "secondary": "Demo ansehen" },
+    "trust": { "soc2": "SOC 2 Konform", "euaiact": "EU KI-Gesetz Art. 14", "gdpr": "DSGVO Art. 30", "trusted": "Vertraut in regulierten Branchen" },
+    "art": { "intelliDesig": "INTELLIGENZ, DESIGNED." }
+  },
+  "ticker": {
+    "items": ["Universeller Sync", "Agenten-Governance", "Unveraenderungliches Audit-Log", "Richtlinien-Enforcement", "One-Click Rollback", "MAN-Modus", "Tri-Force-Architektur", "Null Anbieter-Abhaengigkeit", "Universelle Integrationen", "SOC 2 Konform"]
+  },
+  "governance": {
+    "label": "Totale Kommando",
+    "headline": { "line1": "Absolute", "line2": "Governance." },
+    "description": "Sie erteilen die Direktive. OmniHub orchestriert jedes verbundene System in Echtzeit.",
+    "features": {
+      "naturalLanguage": { "title": "Natuerlichsprachige Direktionen", "desc": "Geben Sie Befehle in einfacher Sprache. OmniHubuebersetzt die Absicht in strukturierte Aufgabenplaene." },
+      "capabilityRouting": { "title": "Kompetenz-basiertes Routing", "desc": "Jede Aufgabe wird an den qualifiziertesten Agenten weitergeleitet." },
+      "override": { "title": "Jeden Agenten sofort ueberschreiben", "desc": "Ein Befehl stoppt, leitet um oder ersetzt jeden laufenden Agenten." },
+      "liveAudit": "Live Audit-Trail"
     },
-    "tagline": "YOUR SYSTEMS. YOUR RULES.",
-    "traits": "DIRECTABLE | AUDITABLE | REVERSIBLE",
-    "subtitle": "The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.",
-    "description": "No vendor lock-in. No black boxes. No surprises.",
-    "cta": {
-      "primary": "Request Access",
-      "secondary": "Watch Demo",
-      "install": "Install App"
+    "auditTrail": {
+      "statuses": { "authorized": "Autorisiert", "logged": "Protokolliert", "blocked": "Geblockt" }
+    }
+  },
+  "reversible": {
+    "label": "Architektonische Primitive",
+    "headline": { "line1": "Entwickelt zum", "line2": "Rueckgaengigmachen." },
+    "description": "Die einzige Unternehmens-KI-Plattform, auf der Rueckwaertsrollung eine erstklassige architektonische Primitive ist.",
+    "features": {
+      "rollback": { "title": "One-Click Rollback", "desc": "Rueckgaengig machen jeder Agentenaktion mit einem einzigen Befehl." },
+      "blastRadius": { "title": "Blast-Radius-Containment", "desc": "OmniHub erkennt Ausbreitungsrisiken bevor sie kaskadieren." },
+      "compensating": { "title": "Kompensierende Transaktionen", "desc": "Jede Agentenaktion traegt eine kompensierende Operation." },
+      "policyEngine": "Policy-Engine: Aktive Regeln"
     },
-    "footnote": "",
-    "subtitleSentence1": "The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.",
-    "subtitleSentence2": "",
-    "descriptionSentence1": "No vendor lock-in. No black boxes. No surprises.",
-    "descriptionSentence2": "",
-    "installPromptReady": "Install OmniHub for one-tap launch and push updates.",
-    "installPromptIOS": "On iOS: Share -> Add to Home Screen to install OmniHub.",
-    "installPromptFallback": "Install becomes available once your browser meets PWA criteria."
+    "policyRules": [
+      { "name": "Bereichseinschraenkung", "desc": "Kein Agent greift auf nicht autorisierte Daten zu" },
+      { "name": "Audit bei Schreiben", "desc": "Jede Schreiboperation dauerhaft protokolliert" },
+      { "name": "Rollback-Fenster", "desc": "30-minuetiges kompensierendes Transaktionsfenster" },
+      { "name": "MAN-Modus", "desc": "Risikoreiche Aktionen erfordern manuelle Genehmigung" },
+      { "name": "Grenzaeberstreitende Blockade", "desc": "DSGVO: EU-Daten bleiben in EWR-Zonen" }
+    ]
+  },
+  "capabilities": {
+    "label": "Plattform-Funktionen",
+    "headline": { "line1": "Alles, was Sie brauchen",
+"line2": "um Unternehmens-KI zu governieren." },
+    "description": "Eine Plattform. Keine Black Boxes. Keine Anbieter-Abhaengigkeit. Keine Ueberraschungen.",
+    "items": [
+      { "key": "universalConnector", "title": "Universelles Konnektoren-Netzwerk", "desc": "Universelle Kompatibilitaet mit Legacy, Web2, Web3, KI und Blockchain." },
+      { "key": "omniDash", "title": "OmniDash", "desc": "Ihr governiertes Intelligenz-Kommandozentrum." },
+      { "key": "triForce", "title": "Tri-Force-Architektur", "desc": "Ein dezentrales dreigliedriges Modell fuer maximale Sicherheit." },
+      { "key": "skillForge", "title": "SkillForge/OmniSkills", "desc": "Erstellen, installieren und governieren Sie Experten- OmniSkills." },
+      { "key": "telemetry", "title": "Echtzeit-Telemetrie", "desc": "Live-Betriebsintelligenz ueber alle Agenten und Workflows." },
+      { "key": "policy", "title": "Richtlinien-Enforcement-Engine", "desc": "Governance-Regeln gelten bevor eine Aktion ausgefuehrt wird." },
+      { "key": "physiOmni", "title": "PhysiOmni", "desc": "Die physische KI-Betriebsschicht fuer robotische Systeme." },
+      { "key": "manMode", "title": "MAN-Modus", "desc": "Manueller Genehmigungs-Knoten fuer risikoreiche Aktionen." },
+      { "key": "byom", "title": "Verbinden Sie Ihre KI", "desc": "Bringen Sie Ihr eigenes LLM in governierte Workflows ein." }
+    ]
+  },
+  "maestro": {
+    "label": "Kernphilosophie",
+    "headline": { "line1": "Das MAESTRO", "line2": "Prinzip." },
+    "description1": "Intelligenz ist nicht nur Faeihigkeit. Es ist Koordination mit Konsequenz.",
+    "description2": "Unternehmens-KI muss die Absicht Ihrer Organisation dienen. MAESTRO stellt sicher, dass die Autoritaet mit dem System skaliert.",
+    "link": "MAESTRO-Protokoll erkunden"
+  },
+  "enterprise": {
+    "label": "Unternehmensfertig",
+    "headline": { "line1": "Entwickelt fuer regulierte", "line2": "Umgebungen." },
+    "description": "Vom ersten Tag an fuer Compliance und Governance konzipiert.",
+    "cards": [
+      { "name": "SOC 2 Type II", "desc": "Sicherheits- und Verfuegbarkeitskontrollen validiert" },
+      { "name": "EU KI-Gesetz Art. 14", "desc": "Governance-Anforderungen fuer Hochrisiko-KI-Systeme" },
+      { "name": "DSGVO Artikel 30", "desc": "Vollstaendige Aufzeichnungen ueber Verarbeitungstaetigkeiten" },
+      { "name": "ISO 27001", "desc": "Informations-Sicherheits-Managementsystem-kompatible Architektur" },
+      { "name": "HIPAA-Ready", "desc": "Architektur fuer Gesundheitsdaten mit BAA-Unterstuetzung" },
+      { "name": "Zero-Trust-Modell", "desc": "Kein implizites Vertrauen" },
+      { "name": "RBAC + ABAC", "desc": "Granulare rollen- und attributbasierte Zugriffskontrolle" },
+      { "name": "E2E-Verschluesselung", "desc": "Alle Daten in Transit und Ruhe mit AES-256 verschluesselt" }
+    ]
+  },
+  "cta": {
+    "headline": { "line1": "Uebernehmen Sie die", "line2": "Betriebliche Autoritaet." },
+    "description": "Schliessen Sie sich Unternehmen an, die Black-Box-KI hinter sich gelassen haben.",
+    "buttons": { "primary": "Fruehzugriff anfordern", "secondary": "Demo planen" },
+    "tagline": "Keine Anbieter-Abhaengigkeit. Keine Black Boxes. Keine Ueberraschungen."
+  },
+  "modal": {
+    "title": "Fruehzeitigen Zugang anfordern",
+    "description": "Erzaehlen Sie uns von Ihrem Anwendungsfall und wir melden uns bei Ihnen.",
+    "fields": { "name": "Vollstaendiger Name", "email": "Berufliche E-Mail", "company": "Unternehmen", "useCase": "Anwendungsfall" },
+    "submit": "Zugang anfordern",
+    "success": { "title": "Anfrage Erhalten", "message": "Wir werden uns in Kuerze bei Ihnen melden." }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "current_language": "Aktuelle Sprache",
+    "language_updated": "Sprache erfolgreich aktualisiert",
+    "save": "Speichern"
   }
 }
