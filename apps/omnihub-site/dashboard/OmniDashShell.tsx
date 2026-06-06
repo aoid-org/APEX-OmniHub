@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, memo } from "react";
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useViewport } from "./hooks/useViewport";
-import { useDashboardData, type DashboardData } from "./hooks/useDashboardData";
+import { useDashboardData } from "./hooks/useDashboardData";
 import {
   SystemHealthOverview,
   AgentActivityTimeline,
