@@ -119,6 +119,17 @@ export default defineConfig({
   },
   // @ts-expect-error test is an extension provided by vitest
   test: {
+    // Only pick up unit/integration tests — exclude Playwright E2E specs.
+    // Playwright tests must be run with: npx playwright test
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx', 'tests/lib/**/*.spec.ts'],
+    exclude: [
+      'tests/visual/**',
+      'tests/routes/**',
+      'tests/visual/**/*.spec.ts',
+      'node_modules/**',
+    ],
+    // Node environment required for tests that use readFileSync
+    environment: 'node',
     coverage: {
       reporter: ['text', 'lcov'],
       reportsDirectory: './coverage',

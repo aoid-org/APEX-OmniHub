@@ -122,6 +122,7 @@ jobs:
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           VITE_DATADOG_APPLICATION_ID: ${{ secrets.DATADOG_APP_ID }}
           VITE_DATADOG_CLIENT_TOKEN: ${{ secrets.DATADOG_CLIENT_TOKEN }}
+          VITE_CONNECT_AI_ENABLED: 'true'
 
       - name: Deployment Status
         if: always()

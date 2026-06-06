@@ -26,7 +26,7 @@ const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? '';
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 const cockpitCrypto = getCockpitCrypto();
 
-const PROVIDERS = ['openai', 'xai', 'anthropic', 'google'] as const;
+const PROVIDERS = ['openai', 'xai', 'anthropic', 'google', 'groq'] as const;
 const MAX_OUTPUT_BYTES = Number(Deno.env.get('BYOM_PROXY_MAX_OUTPUT_BYTES') ?? '1048576');
 
 const REQUEST_SCHEMA = z.object({
@@ -53,6 +53,8 @@ function resolveProviderEndpoint(provider: Provider): string {
       return 'https://api.anthropic.com/v1/messages';
     case 'google':
       return '';
+    case 'groq':
+      return 'https://api.groq.com/openai/v1/chat/completions';
   }
 }
 
@@ -185,19 +187,23 @@ serve(async (req: Request) => {
     const ciphertext = new Uint8Array(connection.credential_ciphertext as number[]);
     const apiKey = await cockpitCrypto.decrypt(ciphertext, { tenantId });
 
-    const preFlight = FlightControl.preFlight(messages as Message[]);
-    if (!preFlight.allowed) {
-      await supabase.from('omnihub_audit_log').insert({
-        action: 'BYOM_AUDIT_SPAN',
-        tenant_id: tenantId,
-        actor_id: user.id,
-        details: { status: 'blocked_pii', provider, model, cost_incurred: 0, reason: preFlight.violation }
-      });
-      return jsonResponse({
-        error: 'Safety Violation',
-        code: preFlight.violation,
-        details: 'Input blocked by Flight Control (Prompt Injection or PII policy)',
-      }, 400, corsHeaders);
+    const isByomSovereign = user.user_metadata?.identity_type === 'byom';
+
+    if (!isByomSovereign) {
+      const preFlight = FlightControl.preFlight(messages as Message[]);
+      if (!preFlight.allowed) {
+        await supabase.from('omnihub_audit_log').insert({
+          action: 'BYOM_AUDIT_SPAN',
+          tenant_id: tenantId,
+          actor_id: user.id,
+          details: { status: 'blocked_pii', provider, model, cost_incurred: 0, reason: preFlight.violation }
+        });
+        return jsonResponse({
+          error: 'Safety Violation',
+          code: preFlight.violation,
+          details: 'Input blocked by Flight Control (Prompt Injection or PII policy)',
+        }, 400, corsHeaders);
+      }
     }
 
     const adapter = createAdapter(provider);
@@ -226,8 +232,11 @@ serve(async (req: Request) => {
               throw new Error(`BYOM response exceeded max size of ${MAX_OUTPUT_BYTES} bytes`);
             }
 
-            const safety = FlightControl.postFlight(chunk);
-            const output = safety.redacted ? safety.modifiedContent ?? '' : chunk;
+            let output = chunk;
+            if (!isByomSovereign) {
+              const safety = FlightControl.postFlight(chunk);
+              output = safety.redacted ? safety.modifiedContent ?? '' : chunk;
+            }
             const sseData = JSON.stringify({ choices: [{ delta: { content: output } }] });
             controller.enqueue(encoder.encode(`data: ${sseData}\n\n`));
           }
