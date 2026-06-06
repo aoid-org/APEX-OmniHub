@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ModuleRenderer } from "./components/ModuleRenderer";
 import { SystemHealthRow } from "./components/SystemHealthRow";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
+import { useDashboardData } from "./hooks/useDashboardData";
 import { useViewport } from "./hooks/useViewport";
 import {
   SystemHealthOverview,
@@ -402,6 +403,7 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebar
     if (!widget.moduleKey) {
       // OmniBoard: scroll canvas back to top so user sees the main dashboard
       canvasRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      navigate('/omnidash');
       return;
     }
 
@@ -737,17 +739,17 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
 
 // ─── Widget: APEX Agent ───────────────────────────────────────────────────────
 const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
-  const { autoPilot, setAutoPilot } = useDemoMode();
+  const { demoMode, autoPilot, setAutoPilot } = useDemoMode();
   const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
-    if (autoPilot) {
+    if (demoMode) {
       const interval = setInterval(() => setSeconds(s => s + 1), 1000);
       return () => clearInterval(interval);
     } else {
       setSeconds(0);
     }
-  }, [autoPilot]);
+  }, [demoMode]);
 
   const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
   const ss = String(seconds % 60).padStart(2, '0');
@@ -1382,82 +1384,7 @@ const IntegratedAppsWidget = () => {
 
 // ── Right panel KPI strip ──────────────────────────────────────────────────
 
-/*
-const RightPanelKpiStrip = memo(function RightPanelKpiStrip({
-  kpi,
-  isDark: _isDark,
-}: {
-  kpi: KpiSummary;
-  isDark: boolean;
-}) {
-  const items = [
-    { label: 'Paid Starts', value: kpi.tradeline_paid_starts },
-    { label: 'Active Pilots', value: kpi.tradeline_active_pilots },
-    { label: 'Churn Risk', value: kpi.tradeline_churn_risks },
-  ];
-  return (
-    <GlassCard style={{ padding: '12px 14px' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 10 }}>
-        KPI Snapshot
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-        {items.map((item) => (
-          <div key={item.label} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 18, fontWeight: 700, color: T.orange }}>{item.value}</div>
-            <div style={{ fontSize: 9.5, color: T.t3, marginTop: 2 }}>{item.label}</div>
-          </div>
-        ))}
-      </div>
-    </GlassCard>
-  );
-});
 
-// ── Right panel incidents ─────────────────────────────────────────────────
-
-const SEV_COLORS: Record<string, string> = {
-  sev1: '#ef4444',
-  sev2: '#f97316',
-  sev3: '#facc15',
-};
-
-const RightPanelIncidents = memo(function RightPanelIncidents({
-  incidents,
-}: {
-  incidents: Incident[];
-}) {
-  return (
-    <GlassCard style={{ padding: '12px 14px' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 8 }}>
-        Open Incidents ({incidents.length})
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {incidents.slice(0, 4).map((inc) => (
-          <div
-            key={inc.id}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '6px 8px', borderRadius: 6,
-              background: `${SEV_COLORS[inc.severity] ?? T.orange}10`,
-              border: `1px solid ${SEV_COLORS[inc.severity] ?? T.orange}30`,
-            }}
-          >
-            <div style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: SEV_COLORS[inc.severity] ?? T.orange, flexShrink: 0,
-            }} />
-            <div style={{ fontSize: 11.5, color: T.t1, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {inc.title}
-            </div>
-            <div style={{ fontSize: 10, color: T.t3, flexShrink: 0, textTransform: 'uppercase' }}>
-              {inc.severity}
-            </div>
-          </div>
-        ))}
-      </div>
-    </GlassCard>
-  );
-});
-*/
 
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
@@ -1468,9 +1395,24 @@ export default function OmniDashShell() {
   const [mobileTab, setMobileTab] = useState<MobileTab>("home");
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const { demoMode } = useDemoMode();
+  const location = useLocation();
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
-  // const dashData = useDashboardData();
+  const dashData = useDashboardData();
+
+  useEffect(() => {
+    const pathParts = location.pathname.split('/');
+    const moduleKey = pathParts[2];
+    if (!moduleKey) {
+      setActiveNav('OmniBoard');
+    } else {
+      const matched = OMNIDASH_SIDEBAR_WIDGETS.find(w => w.moduleKey === moduleKey);
+      if (matched) {
+        setActiveNav(matched.label);
+      }
+    }
+  }, [location.pathname, setActiveNav]);
 
   useEffect(() => {
     // Disable the tick interval during automated E2E tests (Playwright sets navigator.webdriver)
@@ -1626,7 +1568,7 @@ export default function OmniDashShell() {
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
-            <SystemHealthRow />
+            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
             <OmniTraceFeed />
             <SentinelPanel />
           </div>
@@ -1686,7 +1628,7 @@ export default function OmniDashShell() {
           title="Insights & Controls"
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 12px' }}>
-            <SystemHealthRow />
+            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
             <OmniTraceFeed />
             <SentinelPanel />
           </div>
