@@ -127,19 +127,24 @@ export interface McpIntentResponse {
 }
 
 function processSseChunk(chunk: string, currentReply: string): string {
-  let newReply = currentReply;
-  const lines = chunk.split('\n');
-  for (const line of lines) {
-    if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+  const newContent = chunk
+    .split('\n')
+    .filter((line) => {
+      if (!line.startsWith('data: ')) return false;
+      if (line === 'data: [DONE]') return false;
+      return true;
+    })
+    .map((line) => {
       try {
-        const data = JSON.parse(line.substring(6));
-        if (data.choices?.[0]?.delta?.content) {
-          newReply += data.choices[0].delta.content;
-        }
-      } catch { /* ignore parsing errors */ }
-    }
-  }
-  return newReply;
+        const data = JSON.parse(line.substring(6)) as { choices?: { delta?: { content?: string } }[] };
+        return data.choices?.[0]?.delta?.content ?? '';
+      } catch {
+        return '';
+      }
+    })
+    .join('');
+
+  return currentReply + newContent;
 }
 
 async function parseSseStream(reader: ReadableStreamDefaultReader<Uint8Array>): Promise<string> {
