@@ -80,6 +80,17 @@ jobs:
             echo "BOUNDARY CLEAR: metrics.py decoupling confirmed - no API layer imports."
           fi
 
+      - name: "Guardrail 4 - OmniBoard Feed Drift Closure"
+        run: |
+          if grep -qE "OmniBoardFeed|rt_omniboard" apps/omnihub-site/dashboard/OmniDashShell.tsx 2>/dev/null; then
+            echo "BOUNDARY VIOLATION: OmniDashShell.tsx contains references to OmniBoardFeed or rt_omniboard."
+            echo "RULE: Antigravity 2.0 Directive strictly forbids the OmniBoardFeed widget. OmniBoard is exclusively a sidebar navigation gateway."
+            echo "FIX: Remove the dead OmniBoardFeed code and its container."
+            exit 1
+          else
+            echo "BOUNDARY CLEAR: OmniBoardFeed absence confirmed."
+          fi
+
   terraform-expression-drift-gate:
     name: Terraform Expression Drift Gate
     needs: architectural-boundary-enforcement
