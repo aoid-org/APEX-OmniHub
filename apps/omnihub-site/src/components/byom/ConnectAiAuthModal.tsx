@@ -110,8 +110,9 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text)', fontWeight: 500 }}>Provider</label>
+            <label htmlFor="provider-select" style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text)', fontWeight: 500 }}>Provider</label>
             <select
+              id="provider-select"
               value={provider}
               onChange={(e) => setProvider(e.target.value)}
               style={{
@@ -131,8 +132,9 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text)', fontWeight: 500 }}>API Key</label>
+            <label htmlFor="api-key-input" style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text)', fontWeight: 500 }}>API Key</label>
             <input
+              id="api-key-input"
               type="password"
               required
               value={apiKey}

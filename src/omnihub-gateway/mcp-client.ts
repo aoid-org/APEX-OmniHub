@@ -126,6 +126,22 @@ export interface McpIntentResponse {
   status?: string;
 }
 
+function processSseChunk(chunk: string, currentReply: string): string {
+  let newReply = currentReply;
+  const lines = chunk.split('\n');
+  for (const line of lines) {
+    if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+      try {
+        const data = JSON.parse(line.substring(6));
+        if (data.choices?.[0]?.delta?.content) {
+          newReply += data.choices[0].delta.content;
+        }
+      } catch { /* ignore parsing errors */ }
+    }
+  }
+  return newReply;
+}
+
 async function parseSseStream(reader: ReadableStreamDefaultReader<Uint8Array>): Promise<string> {
   let replyText = "";
   const decoder = new TextDecoder();
@@ -133,17 +149,7 @@ async function parseSseStream(reader: ReadableStreamDefaultReader<Uint8Array>): 
     const { done, value } = await reader.read();
     if (done) break;
     const chunk = decoder.decode(value);
-    const lines = chunk.split('\n');
-    for (const line of lines) {
-      if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-        try {
-          const data = JSON.parse(line.replace('data: ', ''));
-          if (data.choices?.[0]?.delta?.content) {
-            replyText += data.choices[0].delta.content;
-          }
-        } catch { /* ignore parsing errors */ }
-      }
-    }
+    replyText = processSseChunk(chunk, replyText);
   }
   return replyText;
 }
@@ -185,7 +191,7 @@ async function invokeByomProxy(payload: McpIntentPayload, byomProvider: string):
 
 export async function invokeMcpIntent(payload: McpIntentPayload): Promise<McpIntentResponse> {
   const GATEWAY_URL = '/api/mcp';
-  const byomProvider = typeof globalThis.window === 'undefined' ? null : globalThis.window.localStorage.getItem('omni_ai_provider');
+  const byomProvider = globalThis.window === undefined ? null : globalThis.window.localStorage.getItem('omni_ai_provider');
 
   try {
     if (byomProvider) {
