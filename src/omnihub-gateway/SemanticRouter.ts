@@ -94,6 +94,7 @@ interface AgentScore {
 function scoreSkill(
   skill: { name: string; tags: string[]; description: string; examples: string[] },
   keywords: string[],
+  keywordSet: Set<string>,
 ): { score: number; tags: string[]; skills: string[] } {
   let score = 0;
   const tags: string[] = [];
@@ -101,7 +102,7 @@ function scoreSkill(
 
   // Tag matching (3 points each)
   for (const tag of skill.tags) {
-    if (keywords.includes(tag.toLowerCase())) {
+    if (keywordSet.has(tag.toLowerCase())) {
       score += 3;
       tags.push(tag);
     }
@@ -109,7 +110,7 @@ function scoreSkill(
 
   // Skill name matching (5 points)
   const nameWords = skill.name.toLowerCase().split(/\s+/);
-  if (nameWords.some((w) => keywords.includes(w))) {
+  if (nameWords.some((w) => keywordSet.has(w))) {
     score += 5;
     skills.push(skill.name);
   }
@@ -130,13 +131,13 @@ function scoreSkill(
 }
 
 /** Score a complete agent against query keywords. */
-function scoreAgent(agent: RegisteredAgent, keywords: string[]): AgentScore {
+function scoreAgent(agent: RegisteredAgent, keywords: string[], keywordSet: Set<string>): AgentScore {
   let score = 0;
   const matchedTags: string[] = [];
   const matchedSkills: string[] = [];
 
   for (const skill of agent.card.skills) {
-    const result = scoreSkill(skill, keywords);
+    const result = scoreSkill(skill, keywords, keywordSet);
     score += result.score;
     matchedTags.push(...result.tags);
     matchedSkills.push(...result.skills);
@@ -190,6 +191,7 @@ export class SemanticRouter {
   route(query: string, requestId?: string): RoutingResult {
     const id = requestId ?? `rt-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
     const keywords = extractKeywords(query);
+    const keywordSet = new Set(keywords); // ⚡ Bolt: Provide O(1) set to prevent repeated O(N) includes lookups
     const agents = this.registry.listAgents();
 
     const candidates: RoutingCandidate[] = [];
@@ -197,7 +199,7 @@ export class SemanticRouter {
     for (const agent of agents) {
       if (!agent.healthy) continue;
 
-      const result = scoreAgent(agent, keywords);
+      const result = scoreAgent(agent, keywords, keywordSet);
       if (result.score > 0) {
         candidates.push({ agent, ...result });
       }

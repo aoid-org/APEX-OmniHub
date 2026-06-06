@@ -14,3 +14,6 @@
 ## 2026-06-03 - Consolidated O(N) array passes in DashboardOverview.tsx
 **Learning:** Sequential `.map().map()` operations in React components cause unnecessary memory allocations and redundant iterations.
 **Action:** Always aim to combine sequential array transformations into a single pass when creating derived state, especially when mapping over data that merges with other O(1) structures like Maps.
+## 2026-06-05 - Replaced O(N*M) array checks with O(1) Set lookups
+**Learning:** Performing `keywords.includes(...)` or `.some(w => ...includes(w))` inside a loop (like scoring agent skills or evaluating JWT roles) creates an O(N*M) bottleneck that degrades performance at scale.
+**Action:** Use `Set<string>` (e.g. `new Set(keywords)` or pre-defined constants) and `Set.has()` for O(1) lookups instead. This fundamentally converts O(N*M) operations to O(N+M) or O(N), significantly improving throughput.
