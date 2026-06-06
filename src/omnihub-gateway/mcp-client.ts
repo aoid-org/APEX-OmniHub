@@ -16,6 +16,7 @@
  */
 
 import type { TriggerLambdaResponse } from './router';
+import { supabase } from '@/integrations/supabase/client';
 
 // ============================================================================
 // Configuration
@@ -127,7 +128,65 @@ export interface McpIntentResponse {
 
 export async function invokeMcpIntent(payload: McpIntentPayload): Promise<McpIntentResponse> {
   const GATEWAY_URL = '/api/mcp';
+  const byomProvider = typeof window !== 'undefined' ? localStorage.getItem('omni_ai_provider') : null;
+
   try {
+    if (byomProvider) {
+      // BYOM proxy routing
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      
+      if (!token) throw new Error('BYOM Error: Unauthorized (no session token)');
+
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/byom-proxy`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: byomProvider,
+          model: byomProvider === 'anthropic' ? 'claude-3-5-sonnet-20241022' : 'gpt-4o',
+          messages: [{ role: 'user', content: payload.prompt }]
+        })
+      });
+
+      if (!res.ok) {
+        let errorMsg = `BYOM Gateway Error: ${res.status}`;
+        try {
+          const errBody = await res.json();
+          if (errBody.error) errorMsg = errBody.error;
+        } catch { /* ignore */ }
+        throw new Error(errorMsg);
+      }
+
+      // Read SSE stream
+      let replyText = "";
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+              try {
+                const data = JSON.parse(line.replace('data: ', ''));
+                if (data.choices?.[0]?.delta?.content) {
+                  replyText += data.choices[0].delta.content;
+                }
+              } catch { /* ignore parsing errors */ }
+            }
+          }
+        }
+      }
+
+      return { reply: replyText };
+    }
+
+    // Standard APEX endpoint fallback
     const res = await fetch(`${GATEWAY_URL}/invoke`, {
       method: 'POST',
       headers: {
