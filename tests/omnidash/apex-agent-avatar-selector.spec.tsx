@@ -20,7 +20,6 @@ const REPO_ROOT = path.resolve(__dirname, '../../');
 const AVATAR_CONSUMERS = [
   'apps/omnihub-site/dashboard/components/ApexAgentAvatar.tsx',
   'apps/omnihub-site/dashboard/components/PersonaModal.tsx',
-  'apps/omnihub-site/dashboard/components/DashboardOverview/components/AgentPane.tsx',
   'apps/omnihub-site/dashboard/OmniDashShell.tsx',
 ];
 
