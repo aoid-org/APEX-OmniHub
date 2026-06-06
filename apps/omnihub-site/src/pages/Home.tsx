@@ -610,14 +610,16 @@ function CapabilitiesSection() {
       )
     },
     {
-      title: "OmniPort Interface",
-      path: "/omniport",
-      desc: "The universal visual layer. Render enterprise data and AI interactions dynamically with full bidirectional sync.",
+      title: "OmniDash",
+      path: "/omnidash",
+      desc: "Your governed intelligence command center. Monitor every agent, workflow, integration, and event from a single real-time surface with role-enforced visibility.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
-          <rect x="2" y="3" width="16" height="14" rx="2" stroke="#D4855A" strokeWidth="1.5" fill="none" />
-          <path d="M6 3v14M14 3v14" stroke="#D4855A" strokeWidth="1.2" strokeLinecap="round" opacity="0.6" />
-          <circle cx="10" cy="10" r="2" fill="#D4855A" />
+          <rect x="2" y="2" width="7" height="8" rx="1.5" stroke="#D4855A" strokeWidth="1.3" fill="none" />
+          <rect x="11" y="2" width="7" height="4" rx="1.5" stroke="#D4855A" strokeWidth="1.3" fill="none" />
+          <rect x="11" y="8" width="7" height="10" rx="1.5" stroke="#D4855A" strokeWidth="1.3" fill="none" />
+          <rect x="2" y="12" width="7" height="6" rx="1.5" stroke="#D4855A" strokeWidth="1.3" fill="none" />
+          <path d="M4 6h3M4 15h3M13 10h3M13 12h2" stroke="#D4855A" strokeWidth="1.1" strokeLinecap="round" opacity="0.7" />
         </svg>
       )
     },
@@ -671,15 +673,18 @@ function CapabilitiesSection() {
       )
     },
     {
-      title: "Workflow Intelligence",
-      path: "/orchestrator",
-      desc: "Visual workflow builder with embedded governance. Design complex automations that remain fully auditable end-to-end.",
+      title: "PhysiOmni",
+      path: "/physiomni",
+      desc: "The physical AI operations layer. Deploy, govern, and orchestrate embodied AI systems and robotics through the same governed command surface as your digital agents.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
-          <rect x="2.5" y="7" width="5" height="4" rx="1.5" stroke="#D4855A" strokeWidth="1.3" fill="none" />
-          <rect x="12.5" y="3" width="5" height="4" rx="1.5" stroke="#D4855A" strokeWidth="1.3" fill="none" />
-          <rect x="12.5" y="13" width="5" height="4" rx="1.5" stroke="#D4855A" strokeWidth="1.3" fill="none" />
-          <path d="M7.5 9h2.5v-4h2.5M7.5 9h2.5v5h2.5" stroke="#D4855A" strokeWidth="1.2" strokeLinecap="round" />
+          <rect x="7" y="2" width="6" height="5" rx="1.5" stroke="#D4855A" strokeWidth="1.3" fill="none" />
+          <circle cx="10" cy="4.5" r="1" fill="#D4855A" opacity="0.7" />
+          <rect x="5" y="8" width="10" height="7" rx="1.5" stroke="#D4855A" strokeWidth="1.3" fill="none" />
+          <path d="M7 11h2M11 11h2M8 13.5h4" stroke="#D4855A" strokeWidth="1.1" strokeLinecap="round" opacity="0.75" />
+          <path d="M3 10v4M17 10v4" stroke="#D4855A" strokeWidth="1.3" strokeLinecap="round" />
+          <path d="M5 16l-1 2M15 16l1 2" stroke="#D4855A" strokeWidth="1.2" strokeLinecap="round" />
+          <path d="M10 7v1" stroke="#D4855A" strokeWidth="1.3" strokeLinecap="round" />
         </svg>
       )
     },
@@ -692,6 +697,22 @@ function CapabilitiesSection() {
           <path d="M10 3v4M10 13v4M3 10h4M13 10h4" stroke="#D4855A" strokeWidth="1.5" strokeLinecap="round" />
           <circle cx="10" cy="10" r="3" stroke="#D4855A" strokeWidth="1.4" fill="none" />
           <circle cx="10" cy="10" r=".8" fill="#D4855A" />
+        </svg>
+      )
+    },
+    {
+      title: "Connect AI / BYOM",
+      path: "/byom",
+      desc: "Bring Your Own Model. Plug in any LLM — OpenAI, Anthropic, Gemini, Mistral, or private on-prem — into governed workflows with full auditability and zero vendor lock-in.",
+      icon: (
+        <svg viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="3.5" stroke="#D4855A" strokeWidth="1.4" fill="none" />
+          <circle cx="3" cy="5" r="1.8" stroke="#D4855A" strokeWidth="1.2" fill="none" />
+          <circle cx="17" cy="5" r="1.8" stroke="#D4855A" strokeWidth="1.2" fill="none" />
+          <circle cx="3" cy="15" r="1.8" stroke="#D4855A" strokeWidth="1.2" fill="none" />
+          <circle cx="17" cy="15" r="1.8" stroke="#D4855A" strokeWidth="1.2" fill="none" />
+          <path d="M4.6 6.3L7.2 8M12.8 8l2.6-1.7M4.6 13.7L7.2 12M12.8 12l2.6 1.7" stroke="#D4855A" strokeWidth="1.1" strokeLinecap="round" opacity="0.75" />
+          <circle cx="10" cy="10" r="1.2" fill="#D4855A" opacity="0.8" />
         </svg>
       )
     }
