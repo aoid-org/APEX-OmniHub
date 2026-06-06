@@ -17,3 +17,6 @@
 ## 2026-06-05 - Replaced O(N*M) array checks with O(1) Set lookups
 **Learning:** Performing `keywords.includes(...)` or `.some(w => ...includes(w))` inside a loop (like scoring agent skills or evaluating JWT roles) creates an O(N*M) bottleneck that degrades performance at scale.
 **Action:** Use `Set<string>` (e.g. `new Set(keywords)` or pre-defined constants) and `Set.has()` for O(1) lookups instead. This fundamentally converts O(N*M) operations to O(N+M) or O(N), significantly improving throughput.
+## 2026-06-08 - Replaced Object.entries() inside high-frequency scoring loops with pre-calculated arrays
+**Learning:** Calling `Object.entries(STATIC_DICT)` inside functions that are called frequently allocates a new array and causes garbage collection overhead on every single invocation.
+**Action:** When iterating over static dictionaries, always pre-calculate `const PRE_CALCULATED_ENTRIES = Object.entries(STATIC_DICT)` outside the function scope to achieve zero-allocation array iterations.
