@@ -148,7 +148,9 @@ export const DashboardOverview = memo(function DashboardOverview({
     setEcoAppsVisible(ECOSYSTEM.length > 0);
   }, [setEcoAppsVisible]);
 
-  const health = appHealth === "green" ? deriveHealth(context) : appHealth;
+  // appHealth is OmniSlateHealth (healthy/warning/broken/unknown).
+  // Derive richer health from context only when the aggregate is healthy.
+  const health = appHealth === "healthy" ? deriveHealth(context) : appHealth;
   const agentStatus = isRecording ? "standby" : "listening";
 
   const handleCleanSlate = useCallback(() => {
@@ -220,7 +222,6 @@ export const DashboardOverview = memo(function DashboardOverview({
       <div className="apex-hero-row">
         <AgentPane agentStatus={agentStatus} />
         <OmniSlatePane
-          context={context}
           health={health}
           activeInsight={activeInsight}
           prompt={prompt}
