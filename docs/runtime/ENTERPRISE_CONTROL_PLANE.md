@@ -45,6 +45,15 @@ Guardian is the policy-decision point for privileged or sensitive actions. Every
 
 The fabric is in-repo TypeScript, Python, and Postgres only. It does not use OPA, Cedar, hosted PDPs, or new policy-engine dependencies.
 
+## BYOM Sovereign Intelligence
+
+The APEX architecture implements a sovereign Bring Your Own Model (BYOM) layer:
+
+- **Zero-Compute Paradigm:** Workspaces routing through BYOM incur zero compute spend for APEX. User requests hit the `byom-proxy` edge function and are streamed directly from the user's configured LLM provider.
+- **Provider Keys as Identity:** The API key is the user's login credential, workspace identity, and model routing anchor.
+- **Secure Vault:** Keys are encrypted at rest using AES-256-GCM via the `byom-cockpit` service. The proxy decrypts them seamlessly during inference.
+- **Data Governance:** The proxy executes FlightControl filters (PII redaction and prompt injection defense) inline, guaranteeing data sovereignty and enterprise compliance.
+
 ## Trace continuity
 
 Browser, edge, and orchestrator boundaries propagate W3C `traceparent` and `tracestate`. Structured logs include `trace_id`, `correlation_id`, `idempotency_key`, `intent_hash`, `policy_version`, `compensation_ref`, and explicit outcomes: `accepted`, `duplicate`, `stale`, `compensated`, `rejected`.
