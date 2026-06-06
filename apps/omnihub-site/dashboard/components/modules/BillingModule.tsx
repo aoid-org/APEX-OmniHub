@@ -1,6 +1,5 @@
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
-import { supabase } from '@/lib/supabase';
 
 interface Props {
   readonly onClose: () => void;
@@ -19,24 +18,8 @@ export default function BillingModule({ onClose }: Props) {
   const usagePctMatch = usageItem?.detail?.match(/\(([\d.]+)%\)/);
   const usagePct = usagePctMatch ? Number.parseFloat(usagePctMatch[1]) : null;
 
-  const handleAction = async (actionId: string, _selected: string[]) => {
-    if (actionId === 'manage-plan') {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return true;
-
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { tier: 'PRO', skills: [], returnUrl: globalThis.location.href },
-      });
-
-      if (!error && data?.url) {
-        globalThis.open(data.url, '_blank');
-      }
-      return true; // handled
-    }
-  };
-
   return (
-    <ModuleShell state={state} onClose={onClose} onAction={handleAction}>
+    <ModuleShell state={state} onClose={onClose}>
       {!state.loading && (
         <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
