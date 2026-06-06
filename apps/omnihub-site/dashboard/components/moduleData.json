@@ -62,7 +62,7 @@
         "secondary"
       ]
     ],
-    false
+    true
   ],
   [
     "physiomni",
@@ -122,7 +122,7 @@
         "secondary"
       ]
     ],
-    false
+    true
   ],
   [
     "audits",
@@ -182,7 +182,7 @@
         "secondary"
       ]
     ],
-    false
+    true
   ],
   [
     "links",
@@ -248,7 +248,7 @@
         "secondary"
       ]
     ],
-    false
+    true
   ],
   [
     "automations",
@@ -314,7 +314,7 @@
         "secondary"
       ]
     ],
-    false
+    true
   ],
   [
     "workflows",
@@ -374,7 +374,7 @@
         "secondary"
       ]
     ],
-    false
+    true
   ],
   [
     "files",
@@ -434,7 +434,7 @@
         "secondary"
       ]
     ],
-    false
+    true
   ],
   [
     "billing",
@@ -493,7 +493,7 @@
         "secondary"
       ]
     ],
-    false
+    true
   ],
   [
     "settings",
@@ -556,7 +556,7 @@
         "destructive"
       ]
     ],
-    false
+    true
   ],
   [
     "dashboard",
@@ -622,7 +622,7 @@
         "secondary"
       ]
     ],
-    false
+    true
   ],
   [
     "integrations",
@@ -712,7 +712,7 @@
         "secondary"
       ]
     ],
-    false
+    true
   ],
   [
     "omnitrace",
@@ -778,7 +778,7 @@
         "secondary"
       ]
     ],
-    false
+    true
   ],
   [
     "agent",
@@ -844,6 +844,6 @@
         "secondary"
       ]
     ],
-    false
+    true
   ]
 ]
