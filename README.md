@@ -12,7 +12,7 @@
 **INTELLIGENCE DESIGNED.**
 **_Directable • Accountable • Dependable_**
 
-**Release line:** 1.7.0 | **package.json version:** 1.7.0 | **Release Date:** 2026-05-31 | **Docs audit:** 2026-05-31
+**Release line:** 1.7.0 | **package.json version:** 1.7.0 | **Release Date:** 2026-05-31 | **Docs audit:** 2026-06-06
 
 [![CI Runtime Gates](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/ci-runtime-gates.yml)
 [![Production Readiness Gate](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml/badge.svg)](https://github.com/apexbusiness-systems/APEX-OmniHub/actions/workflows/production-readiness.yml)
@@ -26,7 +26,7 @@
 
 **Before touching code, read the canonical architecture map:**
 
-- [CURRENT_PLATFORM_STATE_2026_06_02.md](./docs/CURRENT_PLATFORM_STATE_2026_06_02.md) — current branch/head assessment, recent git history, drift controls, and repo facts
+- [CURRENT_PLATFORM_STATE_2026_06_06.md](./docs/CURRENT_PLATFORM_STATE_2026_06_06.md) — current branch/head assessment, recent git history, drift controls, and repo facts
 - [DOCUMENTATION_RELEASE_INDEX.md](./docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
 - [ARCHITECTURE_CANONICAL_MAP.md](./docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
 - **[Production Certification Status](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)** (Current Production Authority)
@@ -48,22 +48,21 @@ The platform relies on a "Holy Trinity" architecture:
 
 ---
 
-## Platform Statistics (Repository Snapshot 2026-06-01)
+## Platform Statistics (Repository Snapshot 2026-06-06)
 
 | Metric                                           | Value                                             |
 | ------------------------------------------------ | ------------------------------------------------- |
-| **Source Files (`src/`)**                        | 353 total files                                   |
-| **TypeScript/TSX (`src/`)**                      | 318 files                                         |
+| **Source Files (`src/`)**                        | 317 TypeScript/TSX files                          |
 | **React Components (`src/`)**                    | 94 `.tsx` component files                         |
 | **Page Routes (`src/pages/`)**                   | 0 page files; routes live under app/domain folders |
-| **Edge Functions (`supabase/functions/`)**       | 30 function directories including `_shared`       |
-| **Database Migrations (`supabase/migrations/`)** | 84 SQL migration files                            |
+| **Edge Functions (`supabase/functions/`)**       | 29 function directories including `_shared`       |
+| **Database Migrations (`supabase/migrations/`)** | 88 SQL migration files                            |
 | **CI/CD Workflows (`.github/workflows/`)**       | 22 workflow files                                 |
 | **Test Specs (`tests/` + `e2e/` + `sim/` + app/orchestrator/package tests)** | 319 spec/test source files; latest pass counts are recorded in certification status |
 | **Custom Hooks (`src/` + app surfaces)**         | 35 hook files matching `use*.ts*`                 |
 | **Orchestrator (Python)**                        | 101 files (Temporal workers, activities, security) |
 
-**Latest repo-history note:** HEAD `86bc14a` includes PR #1274 OmniDash from-zero gap closure; PR #1309 (`3a51a27`) hardened entitlement activation and PhysiOmni HMAC ingress. See `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` for the full assessment.
+**Latest repo-history note:** HEAD `c8d753c5` (June 5, 2026) — ⚡ Bolt O(N*M)→O(1) Set optimization in TriforceGuardian + SemanticRouter (#1334). `chore: version packages` (`959a8fd6`) is on main; release workflow execution is the final step to `CERTIFIED`. See `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` for the full assessment.
 
 ---
 
