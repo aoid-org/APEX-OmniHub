@@ -1,0 +1,45 @@
+import { T, type StatusDotProps, type GlassCardProps, type SectionLabelProps } from '../designSystem';
+import type { CSSProperties } from 'react';
+
+export const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) => (
+  <div style={{
+    width:8, height:8, borderRadius:"50%", backgroundColor:color,
+    flexShrink:0, boxShadow:`0 0 6px ${color}`,
+    animation: doPulse ? "apexPulse 2s ease-in-out infinite" : "none",
+  }} />
+);
+
+export const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => {
+  const cardStyle: CSSProperties = {
+    background: T.card,
+    border: `1px solid ${glow ? T.borderGlow : T.border}`,
+    borderRadius: 16,
+    boxShadow: glow
+      ? `0 0 24px ${T.orangeGlow}, 0 4px 24px rgba(0,0,0,.5)`
+      : `0 4px 24px rgba(0,0,0,.4)`,
+    backdropFilter: "blur(12px)",
+    transition: "all .2s ease",
+    ...style,
+  };
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} style={{ ...cardStyle, cursor: "pointer" }}>
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <div style={cardStyle}>
+      {children}
+    </div>
+  );
+};
+
+export const SectionLabel = ({ children }: SectionLabelProps) => (
+  <div style={{
+    fontSize:9.8, fontWeight:800, letterSpacing:"0.14em",
+    color: T.t3, textTransform:"uppercase", marginBottom:8,
+  }}>{children}</div>
+);
