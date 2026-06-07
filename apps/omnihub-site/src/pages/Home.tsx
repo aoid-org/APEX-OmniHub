@@ -21,8 +21,8 @@ function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
           </h1>
           <p className="hero-sub rv d1">{t('hero.subtitle')}</p>
           <div className="hero-tiles rv d1">
-            {t('hero.tiles', { returnObjects: true }).map((tile: string, i: number) => (
-              <div key={i} className="htile">{tile}</div>
+            {t('hero.tiles', { returnObjects: true }).map((tile: string) => (
+              <div key={tile} className="htile">{tile}</div>
             ))}
           </div>
           <div className="hero-ctas rv d2">
@@ -57,6 +57,9 @@ function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
                             0 0 0 0.15 0"/>
                   <feBlend in="blur" in2="SourceGraphic" mode="screen"/>
                 </filter>
+                <clipPath id="sclip">
+                  <circle cx="350" cy="310" r="30"/>
+                </clipPath>
               </defs>
               {/* ── Nucleus gradients ── */}
               <radialGradient id="hero-g-sphere" cx="50%" cy="35%" r="70%">
@@ -100,11 +103,14 @@ function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
               {/* Equatorial plasma */}
               <ellipse cx="260" cy="250" rx="142" ry="18" fill="none" stroke="#1a1a2e" strokeWidth="2" opacity="0.7"/>
               {/* Badge DOF */}
-              <g transform="translate(320,280)">
-                <foreignObject width="60" height="60">
-                  <img src={HERO_BADGE_ASSET_PATH} width="60" height="60" alt="APEX OmniHub" style={{ display: 'block' }}/>
-                </foreignObject>
-              </g>
+              <image
+                href={HERO_BADGE_ASSET_PATH}
+                x="320" y="280"
+                width="60" height="60"
+                clipPath="url(#sclip)"
+                aria-label="APEX OmniHub core badge"
+                preserveAspectRatio="xMidYMid meet"
+              />
               {/* Pulse rings */}
               <circle cx="260" cy="250" r="1" fill="none" stroke="#00d4ff" strokeWidth="1.5" opacity="0.6">
                 <animate attributeName="r" values="1;180" dur="4s" repeatCount="indefinite"/>
@@ -196,12 +202,17 @@ function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
 function TickerSection() {
   const { t } = useTranslation();
   const items = t('ticker.items', { returnObjects: true }) as string[];
-  const doubledItems = [...items, ...items];
   return (
     <div className="ticker">
-      {doubledItems.map((item, idx) => (
-        <span key={idx}>{item} &middot; </span>
+      {items.map((item) => (
+        <span key={`a-${item}`}>{item} &middot; </span>
       ))}
+      {items.map((item) => (
+        <span key={`b-${item}`}>{item} &middot; </span>
+      ))}
+    </div>
+  );
+}
 
 function GovernanceSection() {
   const { t } = useTranslation();
@@ -261,7 +272,7 @@ function CapabilitiesSection() {
   const caps = t('capabilities.items', { returnObjects: true }) as Array<{ key: string; title: string; desc: string }>;
   return (
     <>
-      <hr br />
+      <hr />
       <h2>{t('capabilities.label')}<br />{t('capabilities.headline.line1')}<br />{t('capabilities.headline.line2')}</h2>
       <p>{t('capabilities.description')}</p>
       {caps.map((cap) => (
@@ -311,8 +322,8 @@ function EnterpriseSection() {
       <br />
       <h2>{t('enterprise.label')}<br />{t('enterprise.headline.line1')}<br />{t('enterprise.headline.line2')}</h2>
       <p>{t('enterprise.description')}</p>
-      {cards.map((card, idx) => (
-        <div key={idx}>
+      {cards.map((card) => (
+        <div key={card.name}>
           <span>✓</span>
           <h3>{card.name}</h3>
           <p>{card.desc}</p>
@@ -364,7 +375,7 @@ function RequestAccessModal({ isOpen, onClose, formStatus, formError, onSubmit }
         <label>{t('modal.fields.useCase')} <textarea id="ra_usecase" name="ra_usecase" maxLength={1000} /></label>
         <button type="submit">{t('modal.submit')}</button>
       </form>
-      {formStatus === 'success' && <p>✓ t('modal.success.title')}. {t('modal.success.message')}</p>}
+      {formStatus === 'success' && <p>✓ {t('modal.success.title')}. {t('modal.success.message')}</p>}
     </dialog>
   );
 }
@@ -434,9 +445,12 @@ export function HomePage() {
   }, [isModalOpen]);
 
   return (
-    <div ref={rootRef}>
+    <div ref={rootRef} className="landing-root">
       <Layout>
-        <SEOMeta title="APEX OmniHub | The Universal Sync Orchestrator" />
+        <SEOMeta
+          title="APEX OmniHub | The Universal Sync Orchestrator"
+          canonical="https://apexomnihub.icu/"
+        />
         <StructuredData data={homepageSchema} />
         <StructuredData data={organizationSchema} />
         <HeroSection onOpenModal={openModal} />
@@ -459,3 +473,4 @@ export function HomePage() {
   );
 }
     
+

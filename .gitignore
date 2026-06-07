@@ -139,3 +139,7 @@ shadow-preflight.json
 # package-lock.json
 .apex-bible-integration/
 .apex-bible-source/
+
+# AI IDE / Local Secrets
+.claude/settings.local.json
+.env

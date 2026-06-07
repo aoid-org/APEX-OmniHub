@@ -13,6 +13,7 @@ import { LoginPage } from "@/pages/Login";
 import { PrivacyPage } from "@/pages/Privacy";
 import { TermsPage } from "@/pages/Terms";
 import FounderStory from "@/pages/FounderStory";
+import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { AdvancedAnalyticsPage } from "@/pages/AdvancedAnalytics";
 import { AiAutomationPage } from "@/pages/AiAutomation";
 import { DemoPage } from "@/pages/Demo";
@@ -58,9 +59,11 @@ const createProtectedElement = (element: ReactElement, isPublic = false, routeNa
 // ============================================================================
 
 const OmniDashApp = (
-  <OmniDashProvider>
-    <OmniDashShell />
-  </OmniDashProvider>
+  <DemoModeProvider>
+    <OmniDashProvider>
+      <OmniDashShell />
+    </OmniDashProvider>
+  </DemoModeProvider>
 );
 
 /** Pre-auth public routes — the marketing site / legal pages. */

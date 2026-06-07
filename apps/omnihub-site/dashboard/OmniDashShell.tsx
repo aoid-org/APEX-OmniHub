@@ -1,8 +1,14 @@
-import { useState, useEffect, useCallback, useRef, memo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useDemoMode } from "../src/contexts/DemoModeContext";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ModuleRenderer } from "./components/ModuleRenderer";
+import { SystemHealthRow } from "./components/SystemHealthRow";
+import { OmniTraceFeed } from "./components/OmniTraceFeed";
+import { SentinelPanel } from "./components/SentinelPanel";
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
-import { useViewport } from "./hooks/useViewport";
 import { useDashboardData } from "./hooks/useDashboardData";
+import { useViewport } from "./hooks/useViewport";
 import {
   SystemHealthOverview,
   AgentActivityTimeline,
@@ -70,15 +76,12 @@ interface NavItemProps {
 }
 
 
-import type { DashboardNavSection, KpiSummary, OmniDashOpsState } from "./types/dashboard.types";
-import type { Incident } from './hooks/useDashboardData';
-import { ModuleRenderer } from '@/dashboard/components/ModuleRenderer';
+import type { DashboardNavSection } from "./types/dashboard.types";
 
 interface OmniDashSidebarProps {
   activeNav: string;
   setActiveNav: Dispatch<SetStateAction<string>>;
   canvasRef: RefObject<HTMLDivElement>;
-  onModuleNav: (moduleKey: string | null) => void;
 }
 
 interface OmniDashHeaderProps {
@@ -99,7 +102,6 @@ export interface OmniContextApp {
 
 interface AgentWidgetProps {
   tick: number;
-  isDemoMode: boolean;
 }
 
 
@@ -380,7 +382,8 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
 };
 
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
-const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef, onModuleNav }: OmniDashSidebarProps) => {
+const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebarProps) => {
+  const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState<boolean>(false);
 
   const handleSignOut = useCallback(async () => {
@@ -398,14 +401,12 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef, onModuleNav }: Om
     setActiveNav(widget.label);
 
     if (!widget.moduleKey) {
-      // OmniBoard: clear module view and scroll canvas to top
-      onModuleNav(null);
       canvasRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      navigate('/omnidash');
       return;
     }
 
-    // Inline canvas navigation — no modal dialogs for page-level nav
-    onModuleNav(widget.moduleKey);
+    navigate(`/omnidash/${widget.moduleKey}`);
   };
 
   return (
@@ -736,46 +737,25 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
 };
 
 // ─── Widget: APEX Agent ───────────────────────────────────────────────────────
-const AgentWidget = ({ tick, isDemoMode }: AgentWidgetProps) => {
-  const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [elapsed, setElapsed] = useState<number>(0);
-  const prevTickRef = useRef<number>(tick);
+const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
+  const { demoMode, autoPilot, setAutoPilot } = useDemoMode();
+  const [seconds, setSeconds] = useState(0);
 
-  // Auto-start / stop when demo mode changes
   useEffect(() => {
-    if (isDemoMode) {
-      prevTickRef.current = tick;
-      setIsRunning(true);
+    if (demoMode) {
+      const interval = setInterval(() => setSeconds(s => s + 1), 1000);
+      return () => clearInterval(interval);
     } else {
-      setIsRunning(false);
-      setElapsed(0);
+      setSeconds(0);
     }
-  // tick intentionally excluded — we only want the start offset at transition
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDemoMode]);
+  }, [demoMode]);
 
-  // Accumulate elapsed ticks while running (tick fires every 500 ms)
-  useEffect(() => {
-    if (isRunning) {
-      const delta = tick - prevTickRef.current;
-      if (delta > 0) setElapsed(e => e + delta);
-    }
-    prevTickRef.current = tick;
-  }, [tick, isRunning]);
+  const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+  const ss = String(seconds % 60).padStart(2, '0');
 
-  const totalSeconds = Math.floor(elapsed / 2);
-  const mm = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
-  const ss = String(totalSeconds % 60).padStart(2, '0');
-
-  const handlePlayPause = () => {
-    if (!isRunning) prevTickRef.current = tick;
-    setIsRunning(r => !r);
-  };
-  const handleReset = () => {
-    setElapsed(0);
-    prevTickRef.current = tick;
-    setIsRunning(isDemoMode);
-  };
+  const handlePlayPause = () => setAutoPilot(!autoPilot);
+  const handleReset = () => { setAutoPilot(false); setSeconds(0); };
+  const isRunning = autoPilot;
 
   return (
     <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
@@ -973,18 +953,23 @@ const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () =
   );
 };
 
-const DEMO_SLATE_MESSAGES: ReadonlyArray<{role: string; text: string}> = [
-  { role: 'user',      text: 'HELLO' },
-  { role: 'assistant', text: "Analyzing: 'HELLO' — Guardian audit passed. Agent response queued." },
-];
-
-const DEMO_TRY_SUGGESTION = "Run a Guardian audit on the last 50 agent actions";
-
-const OmniSlateWidget = ({ isDemoMode }: { isDemoMode: boolean }) => {
+const OmniSlateWidget = () => {
+  const { demoMode } = useDemoMode();
   const [input, setInput] = useState<string>("");
-  const [messages, setMessages] = useState<{role: string; text: string}[]>(
-    () => isDemoMode ? [...DEMO_SLATE_MESSAGES] : []
-  );
+  const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
+
+  useEffect(() => {
+    if (demoMode && messages.length === 0) {
+      setMessages([
+        { role: 'assistant', text: 'APEX Agent initialized. Demo Mode active. How can I assist you with your operations today?' },
+        { role: 'user', text: 'Show me the latest Salesforce integration status.' },
+        { role: 'assistant', text: 'Salesforce sync completed 5 minutes ago. 48 records updated. No errors detected.' }
+      ]);
+    } else if (!demoMode && messages.length > 0 && messages[0].text.includes('Demo Mode active')) {
+      setMessages([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoMode, messages.length]);
   const [loading, setLoading] = useState<boolean>(false);
   const [contextApps, setContextApps] = useState<OmniContextApp[]>([]);
   const [showContext, setShowContext] = useState<boolean>(false);
@@ -1378,8 +1363,16 @@ const IntegratedAppsWidget = () => {
 
   return (
   <GlassCard style={{ padding:"16px" }}>
-    <div style={{ marginBottom:10 }}>
+    <div style={{ marginBottom:10, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
       <SectionLabel>Integrated Apps</SectionLabel>
+      <button
+        onClick={() => handleConnectApp(0)}
+        style={{
+          background: T.cyan, color: T.bg, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 4, cursor: "pointer", border: "none"
+        }}
+      >
+        + Connect App
+      </button>
     </div>
     {/* 4 columns — same tile size as EcosystemWidget tiles */}
     <div className="omni-grid-apps" style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10 }}>
@@ -1416,282 +1409,19 @@ const IntegratedAppsWidget = () => {
   );
 };
 
-// ─── Right Panel Sections ─────────────────────────────────────────────────────
-
-// ── Right panel KPI strip ──────────────────────────────────────────────────
-
-const RightPanelKpiStrip = memo(function RightPanelKpiStrip({
-  kpi,
-  isDark: _isDark,
-}: {
-  kpi: KpiSummary;
-  isDark: boolean;
-}) {
-  const items = [
-    { label: 'Paid Starts', value: kpi.tradeline_paid_starts },
-    { label: 'Active Pilots', value: kpi.tradeline_active_pilots },
-    { label: 'Churn Risk', value: kpi.tradeline_churn_risks },
-  ];
-  return (
-    <GlassCard style={{ padding: '12px 14px' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 10 }}>
-        KPI Snapshot
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-        {items.map((item) => (
-          <div key={item.label} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 18, fontWeight: 700, color: T.orange }}>{item.value}</div>
-            <div style={{ fontSize: 9.5, color: T.t3, marginTop: 2 }}>{item.label}</div>
-          </div>
-        ))}
-      </div>
-    </GlassCard>
-  );
-});
-
-// ── Right panel incidents ─────────────────────────────────────────────────
-
-const SEV_COLORS: Record<string, string> = {
-  sev1: '#ef4444',
-  sev2: '#f97316',
-  sev3: '#facc15',
-};
-
-const RightPanelIncidents = memo(function RightPanelIncidents({
-  incidents,
-}: {
-  incidents: Incident[];
-}) {
-  return (
-    <GlassCard style={{ padding: '12px 14px' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 8 }}>
-        Open Incidents ({incidents.length})
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {incidents.slice(0, 4).map((inc) => (
-          <div
-            key={inc.id}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '6px 8px', borderRadius: 6,
-              background: `${SEV_COLORS[inc.severity] ?? T.orange}10`,
-              border: `1px solid ${SEV_COLORS[inc.severity] ?? T.orange}30`,
-            }}
-          >
-            <div style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: SEV_COLORS[inc.severity] ?? T.orange, flexShrink: 0,
-            }} />
-            <div style={{ fontSize: 11.5, color: T.t1, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {inc.title}
-            </div>
-            <div style={{ fontSize: 10, color: T.t3, flexShrink: 0, textTransform: 'uppercase' }}>
-              {inc.severity}
-            </div>
-          </div>
-        ))}
-      </div>
-    </GlassCard>
-  );
-});
-
-// ─── Right Panel: System Health Row ──────────────────────────────────────────
-const RightPanelSystemHealth = memo(function RightPanelSystemHealth({ isDemoMode }: { isDemoMode: boolean }) {
-  const metrics = isDemoMode
-    ? [
-        { label: 'Events Tracked', value: '0' },
-        { label: 'System Health', value: '100%' },
-        { label: 'Guardian Loops', value: '1 loop' },
-        { label: 'Stale Checks', value: 'Clean' },
-      ]
-    : [
-        { label: 'Events Tracked', value: '—' },
-        { label: 'System Health', value: '—' },
-        { label: 'Guardian Loops', value: '—' },
-        { label: 'Stale Checks', value: '—' },
-      ];
-  return (
-    <GlassCard style={{ padding: '12px 14px' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 10 }}>
-        System Health
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        {metrics.map(m => (
-          <div key={m.label} style={{ padding: '8px 10px', borderRadius: 8, background: T.surface, border: `1px solid ${T.border}` }}>
-            <div style={{ fontSize: 9.5, color: T.t3, marginBottom: 3 }}>{m.label}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: T.orange }}>{m.value}</div>
-          </div>
-        ))}
-      </div>
-    </GlassCard>
-  );
-});
-
-// ─── Right Panel: OmniTrace Activity Feed ────────────────────────────────────
-
-const DEMO_TRACE_EVENTS = [
-  { color: T.green,  text: 'Salesforce sync completed — 48 records' },
-  { color: T.warn,   text: 'Invoice batch #1042 processed' },
-  { color: T.warn,   text: 'Workflow "Lead Nurture" triggered' },
-  { color: T.purple, text: 'QuickBooks reconciliation done' },
-  { color: T.green,  text: 'Ticket #7291 auto-resolved by agent' },
-] as const;
-
-const RightPanelOmniTrace = memo(function RightPanelOmniTrace({ isDemoMode }: { isDemoMode: boolean }) {
-  const events: ReadonlyArray<{ color: string; text: string }> = isDemoMode ? DEMO_TRACE_EVENTS : [];
-  return (
-    <GlassCard style={{ padding: '12px 14px' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 8 }}>
-        OmniTrace
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-        {events.length === 0 ? (
-          <div style={{ fontSize: 11, color: T.t4, fontStyle: 'italic', padding: '4px 0' }}>No recent activity</div>
-        ) : (
-          events.map((ev, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: ev.color, flexShrink: 0, boxShadow: `0 0 4px ${ev.color}` }} />
-              <span style={{ fontSize: 11, color: T.t2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.text}</span>
-            </div>
-          ))
-        )}
-      </div>
-      {events.length > 0 && (
-        <button
-          type="button"
-          style={{
-            marginTop: 10, width: '100%',
-            padding: '6px 12px', borderRadius: 8,
-            background: `${T.orange}15`, border: `1px solid ${T.orange}44`,
-            color: T.orange, fontSize: 11, fontWeight: 600, cursor: 'pointer',
-            transition: 'opacity .15s',
-          }}
-        >
-          + REPLAY WORKFLOWS
-        </button>
-      )}
-    </GlassCard>
-  );
-});
-
-// ─── Right Panel: Ops Controls ────────────────────────────────────────────────
-
-interface RightPanelOpsControlsProps {
-  ops: OmniDashOpsState;
-  setOps: Dispatch<SetStateAction<OmniDashOpsState>>;
-}
-
-const RightPanelOpsControls = memo(function RightPanelOpsControls({ ops, setOps }: RightPanelOpsControlsProps) {
-  const toggle = useCallback((key: keyof OmniDashOpsState) => {
-    setOps(prev => ({ ...prev, [key]: !prev[key] }));
-  }, [setOps]);
-
-  const controls = [
-    { key: 'demo'      as const, label: 'Demo Mode',      desc: 'Simulated data feed',       activeColor: T.orange },
-    { key: 'autoPilot' as const, label: 'Auto-Pilot',     desc: 'Autonomous task handling',  activeColor: T.green  },
-    { key: 'guardian'  as const, label: 'Guardian Mode',  desc: 'AI policy enforcement',     activeColor: T.blue   },
-  ] as const;
-
-  return (
-    <GlassCard style={{ padding: '12px 14px' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 10 }}>
-        Ops Controls
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {controls.map(ctrl => {
-          const isOn = ops[ctrl.key];
-          return (
-            <div key={ctrl.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-              <div>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: T.t1 }}>{ctrl.label}</div>
-                <div style={{ fontSize: 10.5, color: T.t3 }}>{ctrl.desc}</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => toggle(ctrl.key)}
-                aria-checked={isOn}
-                role="switch"
-                aria-label={ctrl.label}
-                style={{
-                  width: 44, height: 24, borderRadius: 12, flexShrink: 0,
-                  background: isOn ? ctrl.activeColor : T.surface,
-                  border: `1px solid ${isOn ? ctrl.activeColor : T.border}`,
-                  boxShadow: isOn ? `0 0 8px ${ctrl.activeColor}44` : 'none',
-                  transition: 'all .2s', position: 'relative', cursor: 'pointer',
-                }}
-              >
-                <div style={{
-                  width: 18, height: 18, borderRadius: '50%',
-                  background: '#fff',
-                  position: 'absolute', top: 2,
-                  left: isOn ? 22 : 2,
-                  transition: 'left .2s',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                }} />
-              </button>
-            </div>
-          );
-        })}
-      </div>
-    </GlassCard>
-  );
-});
-
-// ─── Inline Module Canvas View (replaces modal for nav items) ─────────────────
-
-const ModuleCanvasView = memo(function ModuleCanvasView({
-  moduleKey,
-  onClose,
-}: {
-  moduleKey: string;
-  onClose: () => void;
-}) {
-  return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <button
-        type="button"
-        onClick={onClose}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 8, alignSelf: 'flex-start',
-          background: T.surface, border: `1px solid ${T.border}`,
-          borderRadius: 10, padding: '7px 14px',
-          color: T.t2, fontSize: 13, cursor: 'pointer',
-          transition: 'all .15s',
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <path d="M19 12H5M12 5l-7 7 7 7"/>
-        </svg>
-        OmniBoard
-      </button>
-      <GlassCard style={{ flex: 1, padding: '20px 24px', overflowY: 'auto' }}>
-        <ModuleRenderer moduleKey={moduleKey} onClose={onClose} />
-      </GlassCard>
-    </div>
-  );
-});
-
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);
-  const { activeNav, setActiveNav, isDark, setIsDark, ops, setOps } = useLayoutPersistence();
+  const { activeNav, setActiveNav, isDark, setIsDark, ops } = useLayoutPersistence();
   const { invoke } = useOmniModal();
   const { isDesktop } = useViewport();
   const [mobileTab, setMobileTab] = useState<MobileTab>("home");
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
-  const [activeModuleKey, setActiveModuleKey] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const { demoMode } = useDemoMode();
+  const location = useLocation();
 
   const isDemoMode = ops.demo;
-
-  const handleModuleNav = useCallback((moduleKey: string | null) => {
-    setActiveModuleKey(moduleKey);
-  }, []);
-
-  const handleModuleClose = useCallback(() => {
-    setActiveModuleKey(null);
-    setActiveNav('OmniBoard' as DashboardNavSection);
-  }, [setActiveNav]);
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
   const liveDashData = useDashboardData({ enabled: !isDemoMode });
@@ -1710,6 +1440,19 @@ export default function OmniDashShell() {
     error: null,
     refresh: () => {}
   } : liveDashData;
+
+  useEffect(() => {
+    const pathParts = location.pathname.split('/');
+    const moduleKey = pathParts[2];
+    if (moduleKey) {
+      const matched = OMNIDASH_SIDEBAR_WIDGETS.find(w => w.moduleKey === moduleKey);
+      if (matched) {
+        setActiveNav(matched.label);
+      }
+    } else {
+      setActiveNav('OmniBoard');
+    }
+  }, [location.pathname, setActiveNav]);
 
   useEffect(() => {
     // Disable the tick interval during automated E2E tests (Playwright sets navigator.webdriver)
@@ -1758,7 +1501,7 @@ export default function OmniDashShell() {
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
         {/* Sidebar — desktop only; tablet/mobile use bottom nav */}
-        {isDesktop && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} onModuleNav={handleModuleNav} />}
+        {isDesktop && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
 
         {/* Main Canvas */}
         <div ref={canvasRef} className="omni-canvas-container" style={{
@@ -1782,73 +1525,75 @@ export default function OmniDashShell() {
             backgroundSize:"40px 40px, 40px 40px, 100% 100%",
           }} />
           {/* Content — sits above blueprint grid */}
-          <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
-          {/* Module canvas view — renders when a sidebar nav item is selected */}
-          {activeModuleKey ? (
-            <ModuleCanvasView moduleKey={activeModuleKey} onClose={handleModuleClose} />
+          {activeNav === 'OmniBoard' ? (
+            <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
+            {/* Primary 3-column grid — fixed height, overflow-isolated cells.
+                FIX Bug 3+4: minHeight:0 enforces the CSS grid row height contract.
+                Each DraggableWidget gets height+overflow:hidden so no child
+                (including OmniSlate chat history) can blow out the row or
+                dislodge sibling tiles. */}
+            <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0 }}>
+              <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
+              <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
+              <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
+            </div>
+
+            {/* Integrated Apps row */}
+            <DraggableWidget id="widget_apps"><IntegratedAppsWidget /></DraggableWidget>
+
+            {/* M-03 Observability Panels (5 Rows) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
+              <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <DraggableWidget id="m03_2"><AgentActivityTimeline /></DraggableWidget>
+                <DraggableWidget id="m03_3"><GuardianAlertFeed /></DraggableWidget>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <DraggableWidget id="m03_4"><ManModeReviewQueue /></DraggableWidget>
+                <DraggableWidget id="m03_5"><OmniRouteTraffic /></DraggableWidget>
+              </div>
+              <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>
+              <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>
+              {/* Connect AI */}
+              <button
+                className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-1.5 ml-2"
+                onClick={() => {
+                  toast.info('Setup is required', { description: 'Missing API configuration for Connect AI.' });
+                }}
+                title="Connect AI Provider"
+              >
+                Connect AI
+              </button>
+            </div>
+
+            {/* APEX-OmniHub wordmark watermark — above grid, below content */}
+            <div style={{
+              flex:1, display:"flex", alignItems:"center", justifyContent:"center",
+              pointerEvents:"none", userSelect:"none", minHeight:80,
+              position:"relative", zIndex:1,
+            }}>
+              <img
+                src={IMG_APEX_WM}
+                alt=""
+                style={{
+                  width:"55%", maxWidth:380,
+                  objectFit:"contain",
+                  opacity: isDark ? 0.23 : 0.15,
+                  filter: isDark
+                    ? "brightness(1.6) saturate(0.4)"
+                    : "brightness(0.4) saturate(0.3)",
+                }}
+              />
+            </div>
+            </div>
           ) : (
-          <>
-          {/* Primary 3-column grid — fixed height, overflow-isolated cells.
-              FIX Bug 3+4: minHeight:0 enforces the CSS grid row height contract.
-              Each DraggableWidget gets height+overflow:hidden so no child
-              (including OmniSlate chat history) can blow out the row or
-              dislodge sibling tiles. */}
-          <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0 }}>
-            <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden" }}><AgentWidget tick={tick} isDemoMode={isDemoMode} /></DraggableWidget>
-            <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden" }}><OmniSlateWidget isDemoMode={isDemoMode} /></DraggableWidget>
-            <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
-          </div>
-
-          {/* Integrated Apps row */}
-          <DraggableWidget id="widget_apps"><IntegratedAppsWidget /></DraggableWidget>
-
-          {/* M-03 Observability Panels (5 Rows) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
-            <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <DraggableWidget id="m03_2"><AgentActivityTimeline /></DraggableWidget>
-              <DraggableWidget id="m03_3"><GuardianAlertFeed /></DraggableWidget>
+            <div style={{ position:"relative", zIndex:1, flex: 1, display: "flex", flexDirection: "column" }}>
+              <ModuleRenderer 
+                moduleKey={(OMNIDASH_SIDEBAR_WIDGETS.find(w => w.label === (activeNav as unknown as string))?.moduleKey) as Parameters<typeof ModuleRenderer>[0]['moduleKey']}
+                onClose={() => setActiveNav('OmniBoard')}
+              />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <DraggableWidget id="m03_4"><ManModeReviewQueue /></DraggableWidget>
-              <DraggableWidget id="m03_5"><OmniRouteTraffic /></DraggableWidget>
-            </div>
-            <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>
-            <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>
-            {/* Connect AI */}
-            <button
-              className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-1.5 ml-2"
-              onClick={() => {
-                toast.info('Setup is required', { description: 'Missing API configuration for Connect AI.' });
-              }}
-              title="Connect AI Provider"
-            >
-              Connect AI
-            </button>
-          </div>
-
-          {/* APEX-OmniHub wordmark watermark — above grid, below content */}
-          <div style={{
-            flex:1, display:"flex", alignItems:"center", justifyContent:"center",
-            pointerEvents:"none", userSelect:"none", minHeight:80,
-            position:"relative", zIndex:1,
-          }}>
-            <img
-              src={IMG_APEX_WM}
-              alt=""
-              style={{
-                width:"55%", maxWidth:380,
-                objectFit:"contain",
-                opacity: isDark ? 0.23 : 0.15,
-                filter: isDark
-                  ? "brightness(1.6) saturate(0.4)"
-                  : "brightness(0.4) saturate(0.3)",
-              }}
-            />
-          </div>
-          </>
           )}
-          </div>
         </div>
 
         {/* Right Panel — desktop only; mobile/tablet use OmniMobileDrawer */}
@@ -1863,22 +1608,9 @@ export default function OmniDashShell() {
               display: 'flex', flexDirection: 'column', gap: 12,
             }}
           >
-            {/* System Health row */}
-            <RightPanelSystemHealth isDemoMode={isDemoMode} />
-
-            {/* OmniTrace activity feed */}
-            <RightPanelOmniTrace isDemoMode={isDemoMode} />
-
-            {/* Ops Controls — Demo Mode / Auto-Pilot / Guardian Mode toggles */}
-            <RightPanelOpsControls ops={ops} setOps={setOps} />
-
-            {/* KPI Summary strip */}
-            <RightPanelKpiStrip kpi={dashData.kpiSummary} isDark={isDark} />
-
-            {/* Open incidents */}
-            {dashData.openIncidents.length > 0 && (
-              <RightPanelIncidents incidents={dashData.openIncidents} />
-            )}
+            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
+            <OmniTraceFeed />
+            <SentinelPanel />
           </div>
         )}
 
@@ -1936,10 +1668,9 @@ export default function OmniDashShell() {
           title="Insights & Controls"
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 12px' }}>
-            <RightPanelKpiStrip kpi={dashData.kpiSummary} isDark={isDark} />
-            {dashData.openIncidents.length > 0 && (
-              <RightPanelIncidents incidents={dashData.openIncidents} />
-            )}
+            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
+            <OmniTraceFeed />
+            <SentinelPanel />
           </div>
         </OmniMobileDrawer>
       )}
@@ -1954,3 +1685,4 @@ export default function OmniDashShell() {
     </div>
   );
 }
+
