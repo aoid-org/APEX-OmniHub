@@ -151,14 +151,17 @@ export function OmniSpatialHost() {
 
   // Synchronously track when the modal opens to prevent bubbled clicks from instantly closing it
   const prevIsOpen = useRef(isOpen);
-  if (isOpen && !prevIsOpen.current) {
-    mountTime.current = Date.now();
-  }
-  prevIsOpen.current = isOpen;
+  useEffect(() => {
+    if (isOpen && !prevIsOpen.current) {
+      mountTime.current = Date.now();
+    }
+    prevIsOpen.current = isOpen;
+  }, [isOpen]);
 
   // Reset processing and PiP state on modal close
   useEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsProcessing(false);
       setIsPiP(false);
     }

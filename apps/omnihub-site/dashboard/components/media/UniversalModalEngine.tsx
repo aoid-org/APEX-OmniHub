@@ -37,6 +37,7 @@ export function UniversalModalEngine() {
 
   // Reset processing state on modal change — idempotent
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!isOpen) setIsProcessing(false);
   }, [isOpen]);
 

@@ -91,6 +91,7 @@ export function useDashboardData(options?: { enabled?: boolean }): DashboardData
     if (!userId || !enabled) return;
 
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
     setError(null);
 

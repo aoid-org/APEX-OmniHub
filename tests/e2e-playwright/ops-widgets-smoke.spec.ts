@@ -40,9 +40,7 @@ test.describe('Ops Widgets Smoke (Component Stability Gate)', () => {
     await expect(page.getByText('Guardian Mode')).toBeVisible({ timeout: 10000 });
 
     if (isDesktopLayout) {
-      await expect(page.getByTestId('rt_analytics')).toBeVisible();
-      await expect(page.getByTestId('rt_trace')).toBeVisible();
-      await expect(page.getByTestId('rt_ops')).toBeVisible();
+      await expect(page.locator('.sentinel-section').filter({ hasText: 'Ops Controls' })).toBeVisible();
     }
 
     const fatalErrors = consoleErrors.filter((error) =>

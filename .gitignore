@@ -143,3 +143,4 @@ shadow-preflight.json
 # AI IDE / Local Secrets
 .claude/settings.local.json
 .env
+.vite-react-ssg-temp
