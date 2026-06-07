@@ -1,12 +1,34 @@
 import { useDashboardData } from '../hooks/useDashboardData';
+import { useDemoMode } from '../../src/contexts/DemoModeContext';
 import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { T } from '../designSystem';
 import { GlassCard, SectionLabel, StatusDot } from './designComponents';
 
 // 1. System Health Overview
 export const SystemHealthOverview = () => {
-  const dashData = useDashboardData();
+  const { demoMode } = useDemoMode();
+  const dashData = useDashboardData({ enabled: !demoMode });
   const kpi = dashData.kpiSummary;
+  
+  if (dashData.isLoading) {
+    return (
+      <GlassCard style={{ padding: 16 }}>
+        <SectionLabel>System Health Overview</SectionLabel>
+        <div style={{ background: `${T.surface}`, borderRadius: 8, height: 74, marginTop: 12, animation: 'apexPulse 1.5s ease-in-out infinite' }} />
+      </GlassCard>
+    );
+  }
+
+  if (dashData.error) {
+    return (
+      <GlassCard style={{ padding: 16 }}>
+        <SectionLabel>System Health Overview</SectionLabel>
+        <div style={{ color: T.red, fontSize: 12, padding: 12 }}>
+          Failed to load. <button onClick={dashData.refresh} style={{ color: T.orange, background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button>
+        </div>
+      </GlassCard>
+    );
+  }
   
   return (
     <GlassCard style={{ padding: 16 }}>
@@ -35,7 +57,29 @@ export const SystemHealthOverview = () => {
 
 // 2. Agent Activity Timeline
 export const AgentActivityTimeline = () => {
-  const dashData = useDashboardData();
+  const { demoMode } = useDemoMode();
+  const dashData = useDashboardData({ enabled: !demoMode });
+
+  if (dashData.isLoading) {
+    return (
+      <GlassCard style={{ padding: 16, height: 250 }}>
+        <SectionLabel>Agent Activity (last 60m)</SectionLabel>
+        <div style={{ background: `${T.surface}`, borderRadius: 8, height: 180, marginTop: 10, animation: 'apexPulse 1.5s ease-in-out infinite' }} />
+      </GlassCard>
+    );
+  }
+
+  if (dashData.error) {
+    return (
+      <GlassCard style={{ padding: 16, height: 250 }}>
+        <SectionLabel>Agent Activity (last 60m)</SectionLabel>
+        <div style={{ color: T.red, fontSize: 12, padding: 12 }}>
+          Failed to load. <button onClick={dashData.refresh} style={{ color: T.orange, background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button>
+        </div>
+      </GlassCard>
+    );
+  }
+
   const data = dashData.kpiHistory.map(d => ({
     time: new Date(d.day).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     calls: d.tradeline_paid_starts || 0
@@ -59,7 +103,29 @@ export const AgentActivityTimeline = () => {
 
 // 3. Guardian Alert Feed
 export const GuardianAlertFeed = () => {
-  const dashData = useDashboardData();
+  const { demoMode } = useDemoMode();
+  const dashData = useDashboardData({ enabled: !demoMode });
+
+  if (dashData.isLoading) {
+    return (
+      <GlassCard style={{ padding: 16, height: 250, display: 'flex', flexDirection: 'column' }}>
+        <SectionLabel>Guardian Alert Feed</SectionLabel>
+        <div style={{ background: `${T.surface}`, borderRadius: 8, flex: 1, marginTop: 10, animation: 'apexPulse 1.5s ease-in-out infinite' }} />
+      </GlassCard>
+    );
+  }
+
+  if (dashData.error) {
+    return (
+      <GlassCard style={{ padding: 16, height: 250, display: 'flex', flexDirection: 'column' }}>
+        <SectionLabel>Guardian Alert Feed</SectionLabel>
+        <div style={{ color: T.red, fontSize: 12, padding: 12 }}>
+          Failed to load. <button onClick={dashData.refresh} style={{ color: T.orange, background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button>
+        </div>
+      </GlassCard>
+    );
+  }
+
   const incidents = dashData.openIncidents;
 
   return (
