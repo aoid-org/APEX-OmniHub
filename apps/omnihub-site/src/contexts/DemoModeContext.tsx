@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 interface DemoModeState {
   demoMode: boolean;
@@ -29,7 +29,7 @@ function getSavedState() {
   return defaults;
 }
 
-export function DemoModeProvider({ children }: { children: ReactNode }) {
+export function DemoModeProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [state, setState] = useState(() => getSavedState());
 
   useEffect(() => {
@@ -44,19 +44,21 @@ export function DemoModeProvider({ children }: { children: ReactNode }) {
     }
   }, [state.demoMode, state.autoPilot, state.guardianMode]);
 
-  const setDemoMode = (v: boolean) => setState((s: typeof defaults) => ({ ...s, demoMode: v }));
-  const setAutoPilot = (v: boolean) => setState((s: typeof defaults) => ({ ...s, autoPilot: v }));
-  const setGuardianMode = (v: boolean) => setState((s: typeof defaults) => ({ ...s, guardianMode: v }));
+  const setDemoMode = useCallback((v: boolean) => setState((s: typeof defaults) => ({ ...s, demoMode: v })), []);
+  const setAutoPilot = useCallback((v: boolean) => setState((s: typeof defaults) => ({ ...s, autoPilot: v })), []);
+  const setGuardianMode = useCallback((v: boolean) => setState((s: typeof defaults) => ({ ...s, guardianMode: v })), []);
+
+  const contextValue = useMemo(() => ({
+    demoMode: state.demoMode,
+    autoPilot: state.autoPilot,
+    guardianMode: state.guardianMode,
+    setDemoMode,
+    setAutoPilot,
+    setGuardianMode,
+  }), [state.demoMode, state.autoPilot, state.guardianMode, setDemoMode, setAutoPilot, setGuardianMode]);
 
   return (
-    <DemoModeContext.Provider value={{
-      demoMode: state.demoMode,
-      autoPilot: state.autoPilot,
-      guardianMode: state.guardianMode,
-      setDemoMode,
-      setAutoPilot,
-      setGuardianMode,
-    }}>
+    <DemoModeContext.Provider value={contextValue}>
       {children}
     </DemoModeContext.Provider>
   );
