@@ -264,6 +264,14 @@ jobs:
           echo "Android build: $ANDROID"
           echo "iOS build:     $IOS"
 
+          # When concurrency cancel-in-progress supersedes this run, both jobs
+          # land as 'cancelled'. Treat that as neutral — the newer run is the
+          # authoritative verdict.
+          if [[ "$ANDROID" == "cancelled" && "$IOS" == "cancelled" ]]; then
+            echo "::notice::Mobile build gate — run superseded by a newer push; gate is neutral."
+            exit 0
+          fi
+
           # 'skipped' is allowed when the input flag is set
           for result in "$ANDROID" "$IOS"; do
             if [[ "$result" != "success" && "$result" != "skipped" ]]; then
