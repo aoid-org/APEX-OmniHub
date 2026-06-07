@@ -1,6 +1,11 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { buildCorsHeaders, handlePreflight } from '../_shared/cors.ts';
 import { createServiceClient } from '../_shared/supabaseClient.ts';
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from '../_shared/rate-limit.ts';
 import { z } from 'https://deno.land/x/zod@v3.21.4/mod.ts';
 
 const PhysiOmniActionSchema = z.object({
@@ -37,6 +42,12 @@ serve(async (req) => {
     }
 
     const { device_id, tenant_id, action, approved_by, bypass_policy } = parsed.data;
+
+    // Distributed rate limiting — no authenticated user on this endpoint; key by tenant
+    const rl = await checkRateLimit(tenant_id, RATE_LIMIT_CONFIGS.physiomniAction);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(req.headers.get('Origin') ?? '', rl);
+    }
 
     // Check kill switch
     // Note: Assuming Deno.env checks for global kill switch.

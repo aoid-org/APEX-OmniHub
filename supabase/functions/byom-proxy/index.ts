@@ -11,6 +11,11 @@ import { getCockpitCrypto } from "../_shared/cockpit-crypto.ts";
 import { createAdapter } from "../_shared/universal-adapter.ts";
 import { FlightControl } from "../_shared/flight-control.ts";
 import { RateLimiter } from "../_shared/rate-limiter.ts";
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from "../_shared/rate-limit.ts";
 import { assertUrlSafe } from "../_shared/ssrf-protection.ts";
 // Note: In Deno edge functions, shared packages might need explicit .ts paths depending on setup.
 import { ModelProviderRegistrySchema, type ModelProviderConfig } from "../../packages/schema/byom/registry.ts";
@@ -21,7 +26,7 @@ const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? '';
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 const cockpitCrypto = getCockpitCrypto();
 
-const PROVIDERS = ['openai', 'xai', 'anthropic', 'google'] as const;
+const PROVIDERS = ['openai', 'xai', 'anthropic', 'google', 'groq'] as const;
 const MAX_OUTPUT_BYTES = Number(Deno.env.get('BYOM_PROXY_MAX_OUTPUT_BYTES') ?? '1048576');
 
 const REQUEST_SCHEMA = z.object({
@@ -48,6 +53,8 @@ function resolveProviderEndpoint(provider: Provider): string {
       return 'https://api.anthropic.com/v1/messages';
     case 'google':
       return '';
+    case 'groq':
+      return 'https://api.groq.com/openai/v1/chat/completions';
   }
 }
 
@@ -94,6 +101,14 @@ async function getProviderConfig(tenantId: string, provider: Provider): Promise<
   });
 }
 
+function sumAuditSpend(rows: { details: unknown }[] | null): number {
+  let total = 0;
+  for (const row of rows ?? []) {
+    total += ((row.details as Record<string, number>)?.cost_incurred || 0);
+  }
+  return total;
+}
+
 serve(async (req: Request) => {
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
@@ -111,6 +126,13 @@ serve(async (req: Request) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+    }
+
+    // Distributed rate limiting (Upstash) — additive to the Postgres-backed
+    // RateLimiter below; both fail closed. Keyed per authenticated user.
+    const rl = await checkRateLimit(user.id, RATE_LIMIT_CONFIGS.byomProxy);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(origin, rl);
     }
 
     const body = REQUEST_SCHEMA.parse(await req.json());
@@ -137,13 +159,8 @@ serve(async (req: Request) => {
       .eq('tenant_id', tenantId)
       .eq('action', 'BYOM_AUDIT_SPAN');
       
-    let totalSpend = 0;
-    if (currentSpendData) {
-      for (const row of currentSpendData) {
-         totalSpend += ((row.details as Record<string, number>)?.cost_incurred || 0);
-      }
-    }
-    
+    const totalSpend = sumAuditSpend(currentSpendData);
+
     if (totalSpend >= providerConfig.max_cost_usd) {
        // Log rejection
        await supabase.from('omnihub_audit_log').insert({
@@ -170,19 +187,23 @@ serve(async (req: Request) => {
     const ciphertext = new Uint8Array(connection.credential_ciphertext as number[]);
     const apiKey = await cockpitCrypto.decrypt(ciphertext, { tenantId });
 
-    const preFlight = FlightControl.preFlight(messages as Message[]);
-    if (!preFlight.allowed) {
-      await supabase.from('omnihub_audit_log').insert({
-        action: 'BYOM_AUDIT_SPAN',
-        tenant_id: tenantId,
-        actor_id: user.id,
-        details: { status: 'blocked_pii', provider, model, cost_incurred: 0, reason: preFlight.violation }
-      });
-      return jsonResponse({
-        error: 'Safety Violation',
-        code: preFlight.violation,
-        details: 'Input blocked by Flight Control (Prompt Injection or PII policy)',
-      }, 400, corsHeaders);
+    const isByomSovereign = user.user_metadata?.identity_type === 'byom';
+
+    if (!isByomSovereign) {
+      const preFlight = FlightControl.preFlight(messages as Message[]);
+      if (!preFlight.allowed) {
+        await supabase.from('omnihub_audit_log').insert({
+          action: 'BYOM_AUDIT_SPAN',
+          tenant_id: tenantId,
+          actor_id: user.id,
+          details: { status: 'blocked_pii', provider, model, cost_incurred: 0, reason: preFlight.violation }
+        });
+        return jsonResponse({
+          error: 'Safety Violation',
+          code: preFlight.violation,
+          details: 'Input blocked by Flight Control (Prompt Injection or PII policy)',
+        }, 400, corsHeaders);
+      }
     }
 
     const adapter = createAdapter(provider);
@@ -211,8 +232,11 @@ serve(async (req: Request) => {
               throw new Error(`BYOM response exceeded max size of ${MAX_OUTPUT_BYTES} bytes`);
             }
 
-            const safety = FlightControl.postFlight(chunk);
-            const output = safety.redacted ? safety.modifiedContent ?? '' : chunk;
+            let output = chunk;
+            if (!isByomSovereign) {
+              const safety = FlightControl.postFlight(chunk);
+              output = safety.redacted ? safety.modifiedContent ?? '' : chunk;
+            }
             const sseData = JSON.stringify({ choices: [{ delta: { content: output } }] });
             controller.enqueue(encoder.encode(`data: ${sseData}\n\n`));
           }

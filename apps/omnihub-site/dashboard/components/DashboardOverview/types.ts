@@ -1,9 +1,9 @@
-import type { HealthStatus } from '../../types/context.types';
+import type { OmniSlateHealth } from '../../types/context.types';
 
 export interface DashboardOverviewProps {
   readonly demoMode: boolean;
-  readonly appHealth: HealthStatus;
-  readonly setAppHealth: (v: HealthStatus) => void;
+  readonly appHealth: OmniSlateHealth;
+  readonly setAppHealth: (v: OmniSlateHealth) => void;
   readonly ecoAppsVisible: boolean;
   readonly setEcoAppsVisible: (v: boolean) => void;
 }

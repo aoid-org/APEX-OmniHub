@@ -1,26 +1,103 @@
 {
   "hero": {
-    "headline": {
-      "line1": "The only orchestrator you can audit, override, and reverse.",
-      "line2": "",
-      "line3": ""
+    "headline": { "line1": "Universal", "line2": "Sync", "line3": "Orchestrator." },
+    "subtitle": "The governed command surface for enterprise AI. Unify software, AI agents, and enterprise platforms into one orchestrated layer where every action is authorized, logged, and reversible.",
+    "tiles": ["DIRECT", "AUDIT", "DEDUCE"],
+    "cta": { "primary": "Request Early Access", "secondary": "Watch Demo" },
+    "trust": { "soc2": "SOC 2 Aligned", "euaiact": "EU AI Act Art. 14", "gdpr": "GDPR Art. 30", "trusted": "Trusted in regulated industries" },
+    "art": { "intelliDesig": "INTELLIGENCE, DESIGNED." }
+  },
+  "ticker": {
+    "items": ["Universal Sync", "Agent Governance", "Immutable Audit Log", "Policy Enforcement", "One-Click Rollback", "MAN Mode", "Tri-Force Architecture", "Zero Vendor Lock-In", "Universal Integrations", "SOC 2 Aligned"]
+  },
+  "governance": {
+    "label": "Absolute Command",
+    "headline": { "line1": "Absolute", "line2": "Governance." },
+    "description": "You issue the directive. OmniHub orchestrates every connected system with full real-time visibility. Actions logged. Agents tracked. Outcomes traceable.",
+    "features": {
+      "naturalLanguage": { "title": "Natural language directives", "desc": "Issue commands in plain language. OmniHub translates intent into structured task plans across your agent network." },
+      "capabilityRouting": { "title": "Capability-matched routing", "desc": "Each task routes to the most qualified agent. No guesswork, no misroutes, full audit of each routing decision." },
+      "override": { "title": "Override any agent, instantly", "desc": "One command halts, redirects, or replaces any running agent mid-execution. You remain in full control." },
+      "liveAudit": "Live Audit Trail"
     },
-    "tagline": "YOUR SYSTEMS. YOUR RULES.",
-    "traits": "DIRECTABLE | AUDITABLE | REVERSIBLE",
-    "subtitle": "The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.",
-    "description": "No vendor lock-in. No black boxes. No surprises.",
-    "cta": {
-      "primary": "Request Access",
-      "secondary": "Watch Demo",
-      "install": "Install App"
+    "auditTrail": {
+      "statuses": { "authorized": "Authorized", "logged": "Logged", "blocked": "Blocked" }
+    }
+  },
+  "reversible": {
+    "label": "Architectural Primitive",
+    "headline": { "line1": "Built to", "line2": "Reverse." },
+    "description": "The only enterprise AI platform where rollback is a first-class architectural primitive. One bad decision does not cascade. You undo it. Completely.",
+    "features": {
+      "rollback": { "title": "One-click rollback", "desc": "Reverse any agent action or workflow state with a single command. No cleanup required." },
+      "blastRadius": { "title": "Blast radius containment", "desc": "OmniHub detects propagation risk and contains failures before they cascade across connected systems." },
+      "compensating": { "title": "Compensating transactions", "desc": "Each agent action carries a compensating operation. Distributed state stays coherent under rollback." },
+      "policyEngine": "Policy Engine: Active Rules"
     },
-    "footnote": "",
-    "subtitleSentence1": "The Anti-OS for enterprise AI. Unify software, AI agents, and enterprise platforms into one governed command surface — where every action is authorized, logged, and reversible.",
-    "subtitleSentence2": "",
-    "descriptionSentence1": "No vendor lock-in. No black boxes. No surprises.",
-    "descriptionSentence2": "",
-    "installPromptReady": "Install OmniHub for one-tap launch and push updates.",
-    "installPromptIOS": "On iOS: Share -> Add to Home Screen to install OmniHub.",
-    "installPromptFallback": "Install becomes available once your browser meets PWA criteria."
+    "policyRules": [
+      { "name": "Scope Restriction", "desc": "No agent accesses unauthorized data scopes" },
+      { "name": "Audit on Write", "desc": "Each write operation logged immutably" },
+      { "name": "Rollback Window", "desc": "30-minute compensating transaction window" },
+      { "name": "MAN Mode", "desc": "High-risk actions require Manual Approval Node approval" },
+      { "name": "Cross-Border Block", "desc": "GDPR: EU data stays within EEA zones" }
+    ]
+  },
+  "capabilities": {
+    "label": "Platform Capabilities",
+    "headline": { "line1": "Everything you need to", "line2": "govern enterprise AI." },
+    "description": "One platform. No black boxes. No vendor lock-in. No surprises.",
+    "items": [
+      { "key": "universalConnector", "title": "Universal Connector Network", "desc": "Universal compatibility across legacy, Web2, Web3, AI, NFT, and blockchain applications." },
+      { "key": "omniDash", "title": "OmniDash", "desc": "Your governed intelligence command center." },
+      { "key": "triForce", "title": "Tri-Force Architecture", "desc": "A decentralized tripartite model for uncompromised security: Guardian, Planner, and Executor." },
+      { "key": "skillForge", "title": "SkillForge/OmniSkills", "desc": "Forge, install, and govern expert-level OmniSkills." },
+      { "key": "telemetry", "title": "Real-Time Telemetry", "desc": "Live operational intelligence across all agents and workflows." },
+      { "key": "policy", "title": "Policy Enforcement Engine", "desc": "Governance rules apply before any action executes." },
+      { "key": "physiOmni", "title": "PhysiOmni", "desc": "The physical AI operations layer for robotic systems." },
+      { "key": "manMode", "title": "MAN Mode", "desc": "Manual Approval Node. High-risk actions pause at an approval checkpoint." },
+      { "key": "byom", "title": "Connect AI / BYOM", "desc": "Bring Your Own Model. Plug in any LLM into governed workflows." }
+    ]
+  },
+  "maestro": {
+    "label": "Core Philosophy",
+    "headline": { "line1": "The MAESTRO", "line2": "Principle." },
+    "description1": "Intelligence is not just capability. It is coordination with consequence.",
+    "description2": "Enterprise AI must serve your organization's intent. MAESTRO ensures authority scales with the system.",
+    "link": "Explore the MAESTRO Protocol"
+  },
+  "enterprise": {
+    "label": "Enterprise Ready",
+    "headline": { "line1": "Built for regulated", "line2": "environments." },
+    "description": "Designed from day one for compliance and governance.",
+    "cards": [
+      { "name": "SOC 2 Type II", "desc": "Security and availability controls validated" },
+      { "name": "EU AI Act Art. 14", "desc": "Governance requirements for high-risk AI systems" },
+      { "name": "GDPR Article 30", "desc": "Complete records of processing activities" },
+      { "name": "ISO 27001", "desc": "Information Security Management System-compatible architecture" },
+      { "name": "HIPAA-Ready", "desc": "Architecture for healthcare data with BAA support" },
+      { "name": "Zero Trust Model", "desc": "No implicit trust" },
+      { "name": "RBAC + ABAC", "desc": "Granular role and attribute-based access control" },
+      { "name": "E2E Encryption", "desc": "All data encrypted in transit and at rest with AES-256" }
+    ]
+  },
+  "cta": {
+    "headline": { "line1": "Take operational authority", "line2": "back." },
+    "description": "Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production.",
+    "buttons": { "primary": "Request Early Access", "secondary": "Schedule a Demo" },
+    "tagline": "No vendor lock-in. No black boxes. No surprises."
+  },
+  "modal": {
+    "title": "Request Early Access",
+    "description": "Tell us about your use case and we will be in touch.",
+    "fields": { "name": "Full Name *", "email": "Work Email *", "company": "Company", "useCase": "Use Case" },
+    "submit": "Request Access",
+    "success": { "title": "Request Received", "message": "We will be in touch shortly." }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "current_language": "Current Language",
+    "language_updated": "Language successfully updated",
+    "save": "Save"
   }
 }

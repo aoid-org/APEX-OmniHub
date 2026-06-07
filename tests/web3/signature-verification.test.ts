@@ -1,4 +1,5 @@
 /**
+ * @vitest-environment node
  * Signature Verification Unit Tests
  *
  * Purpose: Test signature verification logic

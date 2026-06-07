@@ -5,6 +5,9 @@ import {
 import { LOGO, HIDDEN_APPS } from './constants';
 import type { AppEntry } from './types';
 import type { OmniSlateContextItem } from '../../types/context.types';
+// Re-export canonical ecosystem apps for consumers that import ECOSYSTEM from this module.
+// Source of truth lives in contracts/apexApps.ts — do not duplicate.
+export { LIVE_APEX_APPS as ECOSYSTEM } from '../../contracts/apexApps';
 
 export const INITIAL_CONTEXT: readonly OmniSlateContextItem[] = APP_REGISTRY
   .filter((e: AppRegistryEntry) => !HIDDEN_APPS.has(e.label))

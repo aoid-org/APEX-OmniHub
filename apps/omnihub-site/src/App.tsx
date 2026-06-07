@@ -1,4 +1,6 @@
 import type { ReactElement } from "react";
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n';
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
@@ -26,6 +28,7 @@ import { TechSpecsPage } from "@/pages/TechSpecs";
 import { TriForcePage } from "@/pages/TriForce";
 import OmniDash from "@/pages/product/OmniDash";
 import { PhysiOmniPilotPage } from "@/pages/PhysiOmniPilot";
+import { ManifestoPage } from "@/pages/Manifesto";
 
 type AppRoute = {
   readonly path: string;
@@ -102,10 +105,16 @@ const preAuthRoutes: readonly AppRoute[] = [
   { path: "/demo.html", element: <DemoPage />, isPublic: true, routeName: "Demo" },
   { path: "/physiomni-pilot", element: <PhysiOmniPilotPage />, isPublic: true, routeName: "PhysiOmni Pilot" },
   { path: "/physiomni-pilot.html", element: <PhysiOmniPilotPage />, isPublic: true, routeName: "PhysiOmni Pilot" },
+  // ── APEX Manifesto ──────────────────────────────────────────────────────
+  { path: "/manifesto",           element: <ManifestoPage />, isPublic: true, routeName: "Manifesto" },
+  { path: "/manifesto.html",      element: <ManifestoPage />, isPublic: true, routeName: "Manifesto" },
+  { path: "/apex-manifesto",      element: <ManifestoPage />, isPublic: true, routeName: "Manifesto" },
+  { path: "/apex-manifesto.html", element: <ManifestoPage />, isPublic: true, routeName: "Manifesto" },
 ];
 
 function App() {
   return (
+    <I18nextProvider i18n={i18n}>
     <ErrorBoundary>
     <BrowserRouter>
       <div data-testid="app-shell">
@@ -135,6 +144,7 @@ function App() {
       </div>
     </BrowserRouter>
     </ErrorBoundary>
+        </I18nextProvider>
   );
 }
 

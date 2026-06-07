@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { ModuleShell } from './ModuleShell';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { SUPPORTED_LOCALES } from '@/i18n/locales';
+import { SUPPORTED_LOCALES } from '../../../src/i18n/locales';
 import type { OmniModuleState } from '@/hooks/useOmniModuleState';
 
 interface Props {
@@ -28,7 +28,7 @@ interface LocalTranslateResult {
   verified: boolean;
 }
 
-function localTranslate(text: string, targetLocale: string): LocalTranslateResult {
+function localTranslate(_text: string, targetLocale: string): LocalTranslateResult {
   // Honest State Enforcement (WP15): We cannot fake translation by prepending strings.
   // Since the enterprise SemanticTranslator package is not yet connected, we fail closed.
   throw new Error(`Translation Engine not connected. Cannot route to target locale: ${targetLocale}`);

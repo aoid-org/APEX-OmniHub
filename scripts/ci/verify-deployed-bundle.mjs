@@ -23,15 +23,20 @@
  * Exit 0 = bundle verified. Non-zero = fail the deploy job.
  */
 
-let PROD_URL = process.env.PROD_URL || 'https://apexomnihub.icu';
-while (PROD_URL.endsWith('/')) PROD_URL = PROD_URL.slice(0, -1);
-let DEPLOY_URL = process.env.DEPLOY_URL || '';
-while (DEPLOY_URL.endsWith('/')) DEPLOY_URL = DEPLOY_URL.slice(0, -1);
+/** Strip trailing slashes without regex — no backtracking, O(n). */
+function stripTrailingSlashes(s) {
+  let result = s;
+  while (result.endsWith('/')) result = result.slice(0, -1);
+  return result;
+}
+const PROD_URL = stripTrailingSlashes(process.env.PROD_URL || 'https://apexomnihub.icu');
+const DEPLOY_URL = stripTrailingSlashes(process.env.DEPLOY_URL || '');
 const EXPECTED_HOST = (process.env.EXPECTED_SUPABASE_HOST || 'rtopreovkywofgwgmozi.supabase.co').trim();
 const PLACEHOLDER_HOST = 'placeholder.supabase.co';
 
 // sb_publishable_... (current) OR a JWT (legacy anon key: three dot-separated b64url segments).
-const KEY_SHAPE = /sb_publishable_[A-Za-z0-9_-]{8,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/;
+// Upper bounds on quantifiers prevent super-linear backtracking (S5852).
+const KEY_SHAPE = /sb_publishable_[A-Za-z0-9_-]{8,128}|eyJ[A-Za-z0-9_-]{10,500}\.[A-Za-z0-9_-]{10,500}\.[A-Za-z0-9_-]{10,500}/;
 
 async function fetchText(url) {
   const response = await fetch(url, {
@@ -46,7 +51,7 @@ async function fetchText(url) {
 
 function extractScriptUrls(html, baseUrl) {
   const urls = new Set();
-  const re = /<script[^>]+src=["']([^"']+)["']/gi;
+  const re = /<script[^>]{0,1000}src=["']([^"']{1,2048})["']/gi;
   let match;
   while ((match = re.exec(html)) !== null) {
     try {

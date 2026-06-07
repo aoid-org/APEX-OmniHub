@@ -16,7 +16,7 @@ It exists to reduce rediscovery, preserve durable project and preference memory,
 - Session-load hook: repo root CLAUDE.md §29
 - Historical backfill: pending external exports
 - Multi-agent repo (verified 2026-05-29): Google Jules, Google Antigravity, OpenAI Codex, Dependabot also commit here — never assume Claude is the sole author.
-- Last verified: 2026-06-01 · HEAD `86bc14a` · branch `work` (post PR #1274 OmniDash gap closure; PR #1309 security hardening in recent history)
+- Last verified: 2026-06-04 · HEAD `ead5cd9f` · branch `feat/omnidash-production-hardening` (PR #1263 pending)
 
 ## Non-Negotiable Rules
 

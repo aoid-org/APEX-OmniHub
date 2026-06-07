@@ -1,4 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from "../_shared/rate-limit.ts";
 
 console.log("OmniLink Retry Scheduler initialized");
 
@@ -22,6 +27,12 @@ serve(async (req) => {
         headers: { "Content-Type": "application/json" },
         status: 403,
       });
+    }
+
+    // Distributed rate limiting — cron caller (fixed identifier), before scheduling work
+    const rl = await checkRateLimit("cron", RATE_LIMIT_CONFIGS.omnilinkRetryScheduler);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(null, rl);
     }
 
     console.log("Starting scheduled retry of failed OmniLink deliveries...");

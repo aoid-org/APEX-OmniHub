@@ -5,6 +5,7 @@
  *
  * Author: OmniLink APEX
  * Date: 2026-01-09
+ * @vitest-environment node
  */
 
 import { describe, it, expect } from 'vitest';

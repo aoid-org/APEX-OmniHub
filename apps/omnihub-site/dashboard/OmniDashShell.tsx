@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, memo } from "react";
 import { DraggableWidget } from './DraggableWidget';
 import { useLayoutPersistence } from "./hooks/useLayoutPersistence";
 import { useViewport } from "./hooks/useViewport";
-import { useDashboardData, type DashboardData } from "./hooks/useDashboardData";
+import { useDashboardData } from "./hooks/useDashboardData";
 import {
   SystemHealthOverview,
   AgentActivityTimeline,
@@ -13,7 +13,7 @@ import {
   SystemSparklines
 } from './components/M03Panels';
 import { useOmniModal, type OmniModalConfig } from '@/stores/omniModalStore';
-import { useNotificationStore } from '@/stores/notificationStore';
+import { useNotificationStore } from '../src/stores/notificationStore';
 import { queryAgentRegistry, invokeMcpIntent } from '@/omnihub-gateway/mcp-client';
 import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
@@ -31,7 +31,7 @@ import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 import { AVATAR_PATH_MAP } from './contracts/agentAvatars';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
-import type { CSSProperties, ReactNode, Dispatch, SetStateAction } from "react";
+import type { CSSProperties, ReactNode, Dispatch, SetStateAction, RefObject } from "react";
 
 interface AppIconProps {
   idx: number;
@@ -70,11 +70,15 @@ interface NavItemProps {
 }
 
 
-import type { DashboardNavSection } from "./types/dashboard.types";
+import type { DashboardNavSection, KpiSummary, OmniDashOpsState } from "./types/dashboard.types";
+import type { Incident } from './hooks/useDashboardData';
+import { ModuleRenderer } from '@/dashboard/components/ModuleRenderer';
 
 interface OmniDashSidebarProps {
   activeNav: string;
   setActiveNav: Dispatch<SetStateAction<string>>;
+  canvasRef: RefObject<HTMLDivElement>;
+  onModuleNav: (moduleKey: string | null) => void;
 }
 
 interface OmniDashHeaderProps {
@@ -95,6 +99,7 @@ export interface OmniContextApp {
 
 interface AgentWidgetProps {
   tick: number;
+  isDemoMode: boolean;
 }
 
 
@@ -375,8 +380,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
 };
 
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
-const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
-  const { invoke } = useOmniModal();
+const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef, onModuleNav }: OmniDashSidebarProps) => {
   const [signingOut, setSigningOut] = useState<boolean>(false);
 
   const handleSignOut = useCallback(async () => {
@@ -393,17 +397,15 @@ const OmniDashSidebar = ({ activeNav, setActiveNav }: OmniDashSidebarProps) => {
   const handleNav = (widget: OmniDashSidebarWidget) => {
     setActiveNav(widget.label);
 
-    if (!widget.moduleKey) return; // OmniBoard stays on main canvas
+    if (!widget.moduleKey) {
+      // OmniBoard: clear module view and scroll canvas to top
+      onModuleNav(null);
+      canvasRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
 
-    invoke({
-      id: `nav-module-${widget.moduleKey}`,
-      provider: 'omnidash',
-      type: 'module',
-      title: widget.label,
-      contextData: { moduleKey: widget.moduleKey },
-      onComplete: async () => { setActiveNav('OmniBoard'); },
-      onCancel: () => { setActiveNav('OmniBoard'); },
-    });
+    // Inline canvas navigation — no modal dialogs for page-level nav
+    onModuleNav(widget.moduleKey);
   };
 
   return (
@@ -734,14 +736,46 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
 };
 
 // ─── Widget: APEX Agent ───────────────────────────────────────────────────────
-const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
+const AgentWidget = ({ tick, isDemoMode }: AgentWidgetProps) => {
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [elapsed, setElapsed] = useState<number>(0);
+  const prevTickRef = useRef<number>(tick);
 
-  const mm = "00";
-  const ss = "00";
+  // Auto-start / stop when demo mode changes
+  useEffect(() => {
+    if (isDemoMode) {
+      prevTickRef.current = tick;
+      setIsRunning(true);
+    } else {
+      setIsRunning(false);
+      setElapsed(0);
+    }
+  // tick intentionally excluded — we only want the start offset at transition
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemoMode]);
 
-  const handlePlayPause = () => setIsRunning(r => !r);
-  const handleReset = () => setIsRunning(false);
+  // Accumulate elapsed ticks while running (tick fires every 500 ms)
+  useEffect(() => {
+    if (isRunning) {
+      const delta = tick - prevTickRef.current;
+      if (delta > 0) setElapsed(e => e + delta);
+    }
+    prevTickRef.current = tick;
+  }, [tick, isRunning]);
+
+  const totalSeconds = Math.floor(elapsed / 2);
+  const mm = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+  const ss = String(totalSeconds % 60).padStart(2, '0');
+
+  const handlePlayPause = () => {
+    if (!isRunning) prevTickRef.current = tick;
+    setIsRunning(r => !r);
+  };
+  const handleReset = () => {
+    setElapsed(0);
+    prevTickRef.current = tick;
+    setIsRunning(isDemoMode);
+  };
 
   return (
     <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
@@ -939,9 +973,18 @@ const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () =
   );
 };
 
-const OmniSlateWidget = () => {
+const DEMO_SLATE_MESSAGES: ReadonlyArray<{role: string; text: string}> = [
+  { role: 'user',      text: 'HELLO' },
+  { role: 'assistant', text: "Analyzing: 'HELLO' — Guardian audit passed. Agent response queued." },
+];
+
+const DEMO_TRY_SUGGESTION = "Run a Guardian audit on the last 50 agent actions";
+
+const OmniSlateWidget = ({ isDemoMode }: { isDemoMode: boolean }) => {
   const [input, setInput] = useState<string>("");
-  const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
+  const [messages, setMessages] = useState<{role: string; text: string}[]>(
+    () => isDemoMode ? [...DEMO_SLATE_MESSAGES] : []
+  );
   const [loading, setLoading] = useState<boolean>(false);
   const [contextApps, setContextApps] = useState<OmniContextApp[]>([]);
   const [showContext, setShowContext] = useState<boolean>(false);
@@ -971,9 +1014,17 @@ const OmniSlateWidget = () => {
     );
   }, []);
 
+  // Seed / clear demo conversation when demo mode toggles
+  useEffect(() => {
+    if (isDemoMode && messages.length === 0) {
+      setMessages([...DEMO_SLATE_MESSAGES]);
+    }
+  // messages intentionally excluded — we only seed when the feed is empty
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemoMode]);
+
   const fillSuggestion = () => {
-    // Basic fallback suggestion since cycle is removed
-    setInput("Summarize all open workflows and flag anything stalled over 24 hours.");
+    setInput(isDemoMode ? DEMO_TRY_SUGGESTION : "Summarize all open workflows and flag anything stalled over 24 hours.");
   };
 
   const addContextApp = useCallback(
@@ -1108,10 +1159,32 @@ const OmniSlateWidget = () => {
           </button>
         </div>
       </div>
-      {/* Canvas — empty until user sends */}
+      {/* Canvas — shows demo seed or live conversation */}
       <div style={{ flex:1, overflowY:"auto", padding:"14px 16px", display:"flex", flexDirection:"column", gap:10, minHeight:0 }}>
         {messages.length === 0 && (
-          <div style={{ flex:1 }} />
+          <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <span style={{ fontSize:12, color:T.t4, fontStyle:"italic" }}>
+              {isDemoMode ? "Starting demo session…" : "Start a session to begin"}
+            </span>
+          </div>
+        )}
+        {/* TRY chip — visible when demo mode has a seeded conversation */}
+        {isDemoMode && messages.length > 0 && !loading && (
+          <button
+            type="button"
+            onClick={fillSuggestion}
+            style={{
+              alignSelf:"flex-start",
+              background:`${T.blue}18`,
+              border:`1px solid ${T.blue}44`,
+              borderRadius:20, padding:"5px 12px",
+              color:T.blue, fontSize:11.5, fontWeight:600,
+              cursor:"pointer", transition:"all .15s",
+              whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"100%",
+            }}
+          >
+            TRY: {DEMO_TRY_SUGGESTION.slice(0, 48)}…
+          </button>
         )}
         {messages.map((m) => (
           <div key={`${m.role}-${m.text.slice(0, 32)}`} style={{
@@ -1344,111 +1417,299 @@ const IntegratedAppsWidget = () => {
 };
 
 // ─── Right Panel Sections ─────────────────────────────────────────────────────
-const OmniBoardFeed = ({ isDark }: { dash?: DashboardData; isDark: boolean }) => {
-  const [events, setEvents] = useState<{time: string, type: string, color: string, text: string}[]>([]);
-  
-  useEffect(() => {
-    // APEX-DEV: OpenTelemetry SSE stream via OmniHub Gateway overriding local JSON array fallback
-    const sse = new EventSource('/api/mcp/telemetry/stream');
-    sse.onmessage = (e) => {
-      try {
-        const payload = JSON.parse(e.data);
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const newEvent = {
-          time,
-          type: "system",
-          color: payload.severity === 'sev1' ? T.warn : T.orange,
-          text: payload.title
-        };
-        setEvents(prev => [newEvent, ...prev].slice(0, 50));
-      } catch {
-        // Ignore invalid SSE stream JSON output
-      }
-    };
-    return () => sse.close();
-  }, []);
 
+// ── Right panel KPI strip ──────────────────────────────────────────────────
+
+const RightPanelKpiStrip = memo(function RightPanelKpiStrip({
+  kpi,
+  isDark: _isDark,
+}: {
+  kpi: KpiSummary;
+  isDark: boolean;
+}) {
+  const items = [
+    { label: 'Paid Starts', value: kpi.tradeline_paid_starts },
+    { label: 'Active Pilots', value: kpi.tradeline_active_pilots },
+    { label: 'Churn Risk', value: kpi.tradeline_churn_risks },
+  ];
   return (
-    <GlassCard style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", padding: 0 }}>
-      {/* Header */}
-      <div style={{
-        padding: "16px 16px 12px", borderBottom: `1px solid ${T.borderGlow}`,
-        background: `linear-gradient(90deg, ${T.orange}08, transparent)`,
-        flexShrink: 0
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 8, height: 8, borderRadius: "50%", background: T.orange,
-            boxShadow: `0 0 10px ${T.orange}, 0 0 20px ${T.orange}`
-          }} />
-          <SectionLabel>OmniBoard</SectionLabel>
-        </div>
-        <div style={{ fontSize: 11.5, color: T.t3, marginTop: 4, letterSpacing: "0.02em" }}>
-          Unified Intelligence Stream
-        </div>
+    <GlassCard style={{ padding: '12px 14px' }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 10 }}>
+        KPI Snapshot
       </div>
-
-      {/* Terminal Stream */}
-      <div className="omniboard-stream" style={{
-        flex: 1, overflowY: "auto", padding: "16px",
-        display: "flex", flexDirection: "column", gap: 12,
-        fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
-        background: isDark ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.4)"
-      }}>
-        {events.length === 0 ? (
-          <div style={{ color: T.t3, fontSize: 12, textAlign: "center", marginTop: 20 }}>
-            No recent activity detected.
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+        {items.map((item) => (
+          <div key={item.label} style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: T.orange }}>{item.value}</div>
+            <div style={{ fontSize: 9.5, color: T.t3, marginTop: 2 }}>{item.label}</div>
           </div>
+        ))}
+      </div>
+    </GlassCard>
+  );
+});
+
+// ── Right panel incidents ─────────────────────────────────────────────────
+
+const SEV_COLORS: Record<string, string> = {
+  sev1: '#ef4444',
+  sev2: '#f97316',
+  sev3: '#facc15',
+};
+
+const RightPanelIncidents = memo(function RightPanelIncidents({
+  incidents,
+}: {
+  incidents: Incident[];
+}) {
+  return (
+    <GlassCard style={{ padding: '12px 14px' }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 8 }}>
+        Open Incidents ({incidents.length})
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {incidents.slice(0, 4).map((inc) => (
+          <div
+            key={inc.id}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '6px 8px', borderRadius: 6,
+              background: `${SEV_COLORS[inc.severity] ?? T.orange}10`,
+              border: `1px solid ${SEV_COLORS[inc.severity] ?? T.orange}30`,
+            }}
+          >
+            <div style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: SEV_COLORS[inc.severity] ?? T.orange, flexShrink: 0,
+            }} />
+            <div style={{ fontSize: 11.5, color: T.t1, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {inc.title}
+            </div>
+            <div style={{ fontSize: 10, color: T.t3, flexShrink: 0, textTransform: 'uppercase' }}>
+              {inc.severity}
+            </div>
+          </div>
+        ))}
+      </div>
+    </GlassCard>
+  );
+});
+
+// ─── Right Panel: System Health Row ──────────────────────────────────────────
+const RightPanelSystemHealth = memo(function RightPanelSystemHealth({ isDemoMode }: { isDemoMode: boolean }) {
+  const metrics = isDemoMode
+    ? [
+        { label: 'Events Tracked', value: '0' },
+        { label: 'System Health', value: '100%' },
+        { label: 'Guardian Loops', value: '1 loop' },
+        { label: 'Stale Checks', value: 'Clean' },
+      ]
+    : [
+        { label: 'Events Tracked', value: '—' },
+        { label: 'System Health', value: '—' },
+        { label: 'Guardian Loops', value: '—' },
+        { label: 'Stale Checks', value: '—' },
+      ];
+  return (
+    <GlassCard style={{ padding: '12px 14px' }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 10 }}>
+        System Health
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        {metrics.map(m => (
+          <div key={m.label} style={{ padding: '8px 10px', borderRadius: 8, background: T.surface, border: `1px solid ${T.border}` }}>
+            <div style={{ fontSize: 9.5, color: T.t3, marginBottom: 3 }}>{m.label}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.orange }}>{m.value}</div>
+          </div>
+        ))}
+      </div>
+    </GlassCard>
+  );
+});
+
+// ─── Right Panel: OmniTrace Activity Feed ────────────────────────────────────
+
+const DEMO_TRACE_EVENTS = [
+  { color: T.green,  text: 'Salesforce sync completed — 48 records' },
+  { color: T.warn,   text: 'Invoice batch #1042 processed' },
+  { color: T.warn,   text: 'Workflow "Lead Nurture" triggered' },
+  { color: T.purple, text: 'QuickBooks reconciliation done' },
+  { color: T.green,  text: 'Ticket #7291 auto-resolved by agent' },
+] as const;
+
+const RightPanelOmniTrace = memo(function RightPanelOmniTrace({ isDemoMode }: { isDemoMode: boolean }) {
+  const events: ReadonlyArray<{ color: string; text: string }> = isDemoMode ? DEMO_TRACE_EVENTS : [];
+  return (
+    <GlassCard style={{ padding: '12px 14px' }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 8 }}>
+        OmniTrace
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {events.length === 0 ? (
+          <div style={{ fontSize: 11, color: T.t4, fontStyle: 'italic', padding: '4px 0' }}>No recent activity</div>
         ) : (
-          events.map((e, i) => (
-            <div key={i} style={{
-              display: "flex", alignItems: "flex-start", gap: 12,
-              animation: "apexFadeIn 0.3s ease",
-              fontSize: 12.5, lineHeight: 1.5
-            }}>
-              <div style={{ color: T.t3, fontSize: 11, marginTop: 2, flexShrink: 0 }}>[{e.time}]</div>
-              <div style={{
-                color: e.color, fontSize: 10, fontWeight: 700, textTransform: "uppercase",
-                padding: "2px 6px", borderRadius: 4, border: `1px solid ${e.color}44`,
-                background: `${e.color}15`, flexShrink: 0, minWidth: 65, textAlign: "center", marginTop: 1
-              }}>
-                {e.type}
-              </div>
-              <div style={{ color: T.t1 }}>{e.text}</div>
+          events.map((ev, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: ev.color, flexShrink: 0, boxShadow: `0 0 4px ${ev.color}` }} />
+              <span style={{ fontSize: 11, color: T.t2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.text}</span>
             </div>
           ))
         )}
       </div>
-      {/* Input bar */}
-      <div style={{
-        padding: "12px", borderTop: `1px solid ${T.border}`,
-        display: "flex", alignItems: "center", gap: 8,
-        background: `${T.surface}cc`, flexShrink: 0
-      }}>
-        <div style={{ color: T.orange, fontSize: 14, fontWeight: 700 }}>&gt;</div>
-        <input 
-          placeholder="Query OmniBoard logs..." 
+      {events.length > 0 && (
+        <button
+          type="button"
           style={{
-            flex: 1, background: "transparent", border: "none", outline: "none",
-            color: T.t1, fontSize: 13, fontFamily: "'Fira Code', 'JetBrains Mono', monospace"
+            marginTop: 10, width: '100%',
+            padding: '6px 12px', borderRadius: 8,
+            background: `${T.orange}15`, border: `1px solid ${T.orange}44`,
+            color: T.orange, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+            transition: 'opacity .15s',
           }}
-        />
+        >
+          + REPLAY WORKFLOWS
+        </button>
+      )}
+    </GlassCard>
+  );
+});
+
+// ─── Right Panel: Ops Controls ────────────────────────────────────────────────
+
+interface RightPanelOpsControlsProps {
+  ops: OmniDashOpsState;
+  setOps: Dispatch<SetStateAction<OmniDashOpsState>>;
+}
+
+const RightPanelOpsControls = memo(function RightPanelOpsControls({ ops, setOps }: RightPanelOpsControlsProps) {
+  const toggle = useCallback((key: keyof OmniDashOpsState) => {
+    setOps(prev => ({ ...prev, [key]: !prev[key] }));
+  }, [setOps]);
+
+  const controls = [
+    { key: 'demo'      as const, label: 'Demo Mode',      desc: 'Simulated data feed',       activeColor: T.orange },
+    { key: 'autoPilot' as const, label: 'Auto-Pilot',     desc: 'Autonomous task handling',  activeColor: T.green  },
+    { key: 'guardian'  as const, label: 'Guardian Mode',  desc: 'AI policy enforcement',     activeColor: T.blue   },
+  ] as const;
+
+  return (
+    <GlassCard style={{ padding: '12px 14px' }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.t3, marginBottom: 10 }}>
+        Ops Controls
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {controls.map(ctrl => {
+          const isOn = ops[ctrl.key];
+          return (
+            <div key={ctrl.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: T.t1 }}>{ctrl.label}</div>
+                <div style={{ fontSize: 10.5, color: T.t3 }}>{ctrl.desc}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => toggle(ctrl.key)}
+                aria-checked={isOn}
+                role="switch"
+                aria-label={ctrl.label}
+                style={{
+                  width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+                  background: isOn ? ctrl.activeColor : T.surface,
+                  border: `1px solid ${isOn ? ctrl.activeColor : T.border}`,
+                  boxShadow: isOn ? `0 0 8px ${ctrl.activeColor}44` : 'none',
+                  transition: 'all .2s', position: 'relative', cursor: 'pointer',
+                }}
+              >
+                <div style={{
+                  width: 18, height: 18, borderRadius: '50%',
+                  background: '#fff',
+                  position: 'absolute', top: 2,
+                  left: isOn ? 22 : 2,
+                  transition: 'left .2s',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                }} />
+              </button>
+            </div>
+          );
+        })}
       </div>
     </GlassCard>
   );
-};
+});
+
+// ─── Inline Module Canvas View (replaces modal for nav items) ─────────────────
+
+const ModuleCanvasView = memo(function ModuleCanvasView({
+  moduleKey,
+  onClose,
+}: {
+  moduleKey: string;
+  onClose: () => void;
+}) {
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <button
+        type="button"
+        onClick={onClose}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8, alignSelf: 'flex-start',
+          background: T.surface, border: `1px solid ${T.border}`,
+          borderRadius: 10, padding: '7px 14px',
+          color: T.t2, fontSize: 13, cursor: 'pointer',
+          transition: 'all .15s',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+        OmniBoard
+      </button>
+      <GlassCard style={{ flex: 1, padding: '20px 24px', overflowY: 'auto' }}>
+        <ModuleRenderer moduleKey={moduleKey} onClose={onClose} />
+      </GlassCard>
+    </div>
+  );
+});
 
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);
-  const { activeNav, setActiveNav, isDark, setIsDark } = useLayoutPersistence();
+  const { activeNav, setActiveNav, isDark, setIsDark, ops, setOps } = useLayoutPersistence();
   const { invoke } = useOmniModal();
   const { isDesktop } = useViewport();
   const [mobileTab, setMobileTab] = useState<MobileTab>("home");
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const [activeModuleKey, setActiveModuleKey] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  const isDemoMode = ops.demo;
+
+  const handleModuleNav = useCallback((moduleKey: string | null) => {
+    setActiveModuleKey(moduleKey);
+  }, []);
+
+  const handleModuleClose = useCallback(() => {
+    setActiveModuleKey(null);
+    setActiveNav('OmniBoard' as DashboardNavSection);
+  }, [setActiveNav]);
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
-  const dashData = useDashboardData();
+  const liveDashData = useDashboardData({ enabled: !isDemoMode });
+
+  // Use static demo data if in demo mode to prevent showing empty unauthenticated states
+  const dashData = isDemoMode ? {
+    settings: { user_id: 'demo', demo_mode: true, anonymize_kpis: false, freeze_mode: false, updated_at: new Date().toISOString() },
+    kpiSummary: { tradeline_paid_starts: 142, tradeline_active_pilots: 12, tradeline_churn_risks: 1, flowbills_demos: 0, flowbills_paid_accounts: 0, cash_days_to_cash: 0, ops_sev1_incidents: 0 },
+    kpiHistory: [],
+    openIncidents: [
+      { id: 'inc-1', severity: 'sev2' as const, status: 'open' as const, title: 'Invoice batch #1042 processing delay', occurred_at: new Date().toISOString() },
+      { id: 'inc-2', severity: 'sev3' as const, status: 'open' as const, title: 'High memory usage in worker-pool-b', occurred_at: new Date().toISOString() }
+    ],
+    memoryHealth: null,
+    isLoading: false,
+    error: null,
+    refresh: () => {}
+  } : liveDashData;
 
   useEffect(() => {
     // Disable the tick interval during automated E2E tests (Playwright sets navigator.webdriver)
@@ -1497,10 +1758,10 @@ export default function OmniDashShell() {
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
         {/* Sidebar — desktop only; tablet/mobile use bottom nav */}
-        {isDesktop && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} />}
+        {isDesktop && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} onModuleNav={handleModuleNav} />}
 
         {/* Main Canvas */}
-        <div className="omni-canvas-container" style={{
+        <div ref={canvasRef} className="omni-canvas-container" style={{
           flex:1, display:"flex", flexDirection:"column",
           overflow:"auto", padding:"16px", gap:14,
           position:"relative",
@@ -1522,14 +1783,19 @@ export default function OmniDashShell() {
           }} />
           {/* Content — sits above blueprint grid */}
           <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
+          {/* Module canvas view — renders when a sidebar nav item is selected */}
+          {activeModuleKey ? (
+            <ModuleCanvasView moduleKey={activeModuleKey} onClose={handleModuleClose} />
+          ) : (
+          <>
           {/* Primary 3-column grid — fixed height, overflow-isolated cells.
               FIX Bug 3+4: minHeight:0 enforces the CSS grid row height contract.
               Each DraggableWidget gets height+overflow:hidden so no child
               (including OmniSlate chat history) can blow out the row or
               dislodge sibling tiles. */}
           <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0 }}>
-            <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
-            <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
+            <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden" }}><AgentWidget tick={tick} isDemoMode={isDemoMode} /></DraggableWidget>
+            <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden" }}><OmniSlateWidget isDemoMode={isDemoMode} /></DraggableWidget>
             <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
           </div>
 
@@ -1580,21 +1846,39 @@ export default function OmniDashShell() {
               }}
             />
           </div>
+          </>
+          )}
           </div>
         </div>
 
         {/* Right Panel — desktop only; mobile/tablet use OmniMobileDrawer */}
         {isDesktop && (
-          <div className="omni-right-panel" style={{
-            width:340, flexShrink:0,
-            background:`linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
-            borderLeft:`1px solid ${T.border}`,
-            overflowY:"auto", padding:"14px 12px",
-            display:"flex", flexDirection:"column", gap:12,
-          }}>
-            <DraggableWidget id="rt_omniboard" style={{ height: "100%" }}>
-              <OmniBoardFeed isDark={isDark} dash={dashData} />
-            </DraggableWidget>
+          <div
+            className="omni-right-panel"
+            style={{
+              width: 340, flexShrink: 0,
+              background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
+              borderLeft: `1px solid ${T.border}`,
+              overflowY: 'auto', padding: '14px 12px',
+              display: 'flex', flexDirection: 'column', gap: 12,
+            }}
+          >
+            {/* System Health row */}
+            <RightPanelSystemHealth isDemoMode={isDemoMode} />
+
+            {/* OmniTrace activity feed */}
+            <RightPanelOmniTrace isDemoMode={isDemoMode} />
+
+            {/* Ops Controls — Demo Mode / Auto-Pilot / Guardian Mode toggles */}
+            <RightPanelOpsControls ops={ops} setOps={setOps} />
+
+            {/* KPI Summary strip */}
+            <RightPanelKpiStrip kpi={dashData.kpiSummary} isDark={isDark} />
+
+            {/* Open incidents */}
+            {dashData.openIncidents.length > 0 && (
+              <RightPanelIncidents incidents={dashData.openIncidents} />
+            )}
           </div>
         )}
 
@@ -1651,8 +1935,11 @@ export default function OmniDashShell() {
           onClose={() => setDrawerOpen(false)}
           title="Insights & Controls"
         >
-          <div style={{ height: 500 }}>
-            <OmniBoardFeed isDark={isDark} dash={dashData} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 12px' }}>
+            <RightPanelKpiStrip kpi={dashData.kpiSummary} isDark={isDark} />
+            {dashData.openIncidents.length > 0 && (
+              <RightPanelIncidents incidents={dashData.openIncidents} />
+            )}
           </div>
         </OmniMobileDrawer>
       )}

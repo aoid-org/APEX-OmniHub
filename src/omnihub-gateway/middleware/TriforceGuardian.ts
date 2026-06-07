@@ -140,19 +140,28 @@ const DEFAULT_JWT_CONFIG: JWTConfig = {
  *   - 'viewer', 'reader', 'member' → PERIPHERAL
  *   - anything else / no roles → PUBLIC
  */
-export function mapRolesToTrustTier(roles: readonly string[]): string {
-  const normalizedRoles = roles.map((r) => r.toLowerCase().trim());
+// ⚡ Bolt: Provide static sets for O(1) lookups rather than recreating arrays
+const GOD_MODE_ROLES = new Set(['admin', 'super_admin', 'owner', 'god_mode']);
+const OPERATOR_ROLES = new Set(['operator', 'manager', 'developer', 'editor', 'engineer']);
+const PERIPHERAL_ROLES = new Set(['viewer', 'reader', 'member', 'peripheral']);
 
-  if (normalizedRoles.some((r) => ['admin', 'super_admin', 'owner', 'god_mode'].includes(r))) {
-    return 'GOD_MODE';
+export function mapRolesToTrustTier(roles: readonly string[]): string {
+  // ⚡ Bolt: Replaced O(N*M) array.some(includes) with a single-pass O(N) Set lookup loop
+  let highestTier = 'PUBLIC';
+
+  for (const role of roles) {
+    const r = role.toLowerCase().trim();
+    if (GOD_MODE_ROLES.has(r)) {
+      return 'GOD_MODE'; // Max tier, early return
+    }
+    if (OPERATOR_ROLES.has(r)) {
+      highestTier = 'OPERATOR';
+    } else if (highestTier === 'PUBLIC' && PERIPHERAL_ROLES.has(r)) {
+      highestTier = 'PERIPHERAL';
+    }
   }
-  if (normalizedRoles.some((r) => ['operator', 'manager', 'developer', 'editor', 'engineer'].includes(r))) {
-    return 'OPERATOR';
-  }
-  if (normalizedRoles.some((r) => ['viewer', 'reader', 'member', 'peripheral'].includes(r))) {
-    return 'PERIPHERAL';
-  }
-  return 'PUBLIC';
+
+  return highestTier;
 }
 
 /** Singleton Supabase admin client for JWT verification */

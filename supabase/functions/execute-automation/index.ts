@@ -20,6 +20,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createSupabaseClient, authenticateUser } from "../_shared/auth.ts";
 import { handleCors, corsJsonResponse } from "../_shared/cors.ts";
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from "../_shared/rate-limit.ts";
 // @ts-ignore: Deno imports are not recognized by standard TS
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
 import { assertUrlSafe } from "../_shared/ssrf-protection.ts";
@@ -336,6 +341,11 @@ serve(async (req: Request) => {
         },
         401
       );
+    }
+
+    const rl = await checkRateLimit(user.id, RATE_LIMIT_CONFIGS.executeAutomation);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(req.headers.get("origin"), rl);
     }
 
     const body = await req.json();
