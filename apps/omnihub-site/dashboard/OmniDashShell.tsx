@@ -102,7 +102,6 @@ export interface OmniContextApp {
 
 interface AgentWidgetProps {
   tick: number;
-  isDemoMode: boolean;
 }
 
 
@@ -1445,13 +1444,13 @@ export default function OmniDashShell() {
   useEffect(() => {
     const pathParts = location.pathname.split('/');
     const moduleKey = pathParts[2];
-    if (!moduleKey) {
-      setActiveNav('OmniBoard');
-    } else {
+    if (moduleKey) {
       const matched = OMNIDASH_SIDEBAR_WIDGETS.find(w => w.moduleKey === moduleKey);
       if (matched) {
         setActiveNav(matched.label);
       }
+    } else {
+      setActiveNav('OmniBoard');
     }
   }, [location.pathname, setActiveNav]);
 
@@ -1686,3 +1685,4 @@ export default function OmniDashShell() {
     </div>
   );
 }
+
