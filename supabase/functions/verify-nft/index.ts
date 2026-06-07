@@ -34,6 +34,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { buildCorsHeaders, handlePreflight, corsErrorResponse } from '../_shared/cors.ts';
 import { createSupabaseClient, authenticateUser } from '../_shared/auth.ts';
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from '../_shared/rate-limit.ts';
 
 /** Ethereum address regex: 0x followed by exactly 40 hex characters */
 const ETH_ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -65,8 +70,14 @@ serve(async (req) => {
       supabase,
     );
 
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return corsErrorResponse('UNAUTHORIZED', authResult.error ?? 'Authentication required', 401, origin);
+    }
+
+    // Distributed rate limiting — per authenticated user, before any business logic
+    const rl = await checkRateLimit(authResult.user.id, RATE_LIMIT_CONFIGS.verifyNft);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(origin, rl);
     }
 
     // ── Input parsing & validation ──────────────────────────────────

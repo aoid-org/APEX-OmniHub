@@ -47,26 +47,15 @@ export default defineConfig(({ mode }) => {
     dedupe: ['react', 'react-dom'],
   },
   publicDir: "apps/omnihub-site/public",
+  esbuild: {
+    pure: mode === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.trace'] : [],
+    drop: mode === 'production' ? ['debugger'] : [],
+    legalComments: 'none',
+  },
   build: {
     // Production optimizations
     target: 'es2020',
-    minify: mode === 'production' ? 'terser' : false,
-    terserOptions: mode === 'production' ? {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.trace'],
-        passes: 2, // Multiple compression passes for better optimization
-        dead_code: true,
-        unused: true,
-      },
-      mangle: {
-        safari10: true, // Safari 10 compatibility
-      },
-      format: {
-        comments: false, // Remove all comments
-      },
-    } : undefined,
+    minify: mode === 'production' ? 'esbuild' : false,
     rollupOptions: {
       // Keep Node-only packages out of the browser bundle entirely
       external: (id: string) => {
@@ -142,8 +131,8 @@ export default defineConfig(({ mode }) => {
     chunkSizeWarningLimit: 1000,
     // Source maps: disabled for production (proprietary protection), enabled for dev
     sourcemap: mode !== 'production',
-    // Report compressed size in build output
-    reportCompressedSize: true,
+    // Report compressed size in build output (disabled for speed)
+    reportCompressedSize: false,
     // CSS minification
     cssMinify: mode === 'production' ? 'esbuild' : false,
   },

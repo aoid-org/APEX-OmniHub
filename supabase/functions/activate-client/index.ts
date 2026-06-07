@@ -1,6 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { buildCorsHeaders, handlePreflight, corsErrorResponse } from "../_shared/cors.ts";
+import {
+  checkRateLimit,
+  rateLimitExceededResponse,
+  RATE_LIMIT_CONFIGS,
+} from "../_shared/rate-limit.ts";
 
 interface RequestBody {
   tier: 'BASIC';
@@ -35,6 +40,11 @@ serve(async (req) => {
 
     if (authError || !user) {
       return corsErrorResponse('UNAUTHORIZED', 'Invalid authentication token', 401, origin);
+    }
+
+    const rl = await checkRateLimit(user.id, RATE_LIMIT_CONFIGS.activateClient);
+    if (!rl.allowed) {
+      return rateLimitExceededResponse(origin, rl);
     }
 
     const body = await req.json() as RequestBody;

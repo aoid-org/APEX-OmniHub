@@ -76,29 +76,30 @@ export const DashboardOverview = memo(function DashboardOverview({
   }, [user, queryClient]);
 
   const liveApps = useMemo(() => {
-    const defaultApps = registryApps.map(e => ({
-      name: e.label,
-      cat: e.category,
-      logo: e.logoDomain ? `https://logo.clearbit.com/${e.logoDomain}` : '',
-      synced: `${e._live?.syncedMinutesAgo ?? e.dashboard.syncedMinutesAgo}m`,
-      status: e._live?.status ?? e.dashboard.status,
-    })) as AppEntry[];
+    // ⚡ Bolt: Consolidated two sequential O(N) array passes (.map -> .map) into a single O(N) pass,
+    // reducing memory allocation and improving main thread performance during integration state updates.
+    const integrationsMap = integrationsQuery.data
+      ? new Map(integrationsQuery.data.map(i => [i.name.toLowerCase(), i]))
+      : null;
 
-    if (!integrationsQuery.data) return defaultApps;
+    return registryApps.map(e => {
+      const defaultStatus = e._live?.status ?? e.dashboard.status;
+      let finalStatus = defaultStatus;
 
-    const integrationsMap = new Map(
-      integrationsQuery.data.map(i => [i.name.toLowerCase(), i])
-    );
-
-    return defaultApps.map((app) => {
-      const integration = integrationsMap.get(app.name.toLowerCase());
-      if (integration) {
-        return {
-          ...app,
-          status: integration.status === "active" ? "Live" : "Partial",
-        };
+      if (integrationsMap) {
+        const integration = integrationsMap.get(e.label.toLowerCase());
+        if (integration) {
+          finalStatus = integration.status === "active" ? "Live" : "Partial";
+        }
       }
-      return app;
+
+      return {
+        name: e.label,
+        cat: e.category,
+        logo: e.logoDomain ? `https://logo.clearbit.com/${e.logoDomain}` : '',
+        synced: `${e._live?.syncedMinutesAgo ?? e.dashboard.syncedMinutesAgo}m`,
+        status: finalStatus,
+      } as AppEntry;
     });
   }, [integrationsQuery.data, registryApps]);
 
@@ -147,7 +148,9 @@ export const DashboardOverview = memo(function DashboardOverview({
     setEcoAppsVisible(ECOSYSTEM.length > 0);
   }, [setEcoAppsVisible]);
 
-  const health = appHealth === "green" ? deriveHealth(context) : appHealth;
+  // appHealth is OmniSlateHealth (healthy/warning/broken/unknown).
+  // Derive richer health from context only when the aggregate is healthy.
+  const health = appHealth === "healthy" ? deriveHealth(context) : appHealth;
   const agentStatus = isRecording ? "standby" : "listening";
 
   const handleCleanSlate = useCallback(() => {
@@ -219,7 +222,6 @@ export const DashboardOverview = memo(function DashboardOverview({
       <div className="apex-hero-row">
         <AgentPane agentStatus={agentStatus} />
         <OmniSlatePane
-          context={context}
           health={health}
           activeInsight={activeInsight}
           prompt={prompt}

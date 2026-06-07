@@ -1,5 +1,5 @@
 ---
-"omnihub-site": patch
+"apex-omnihub": patch
 ---
 
 Implement OmniDash M-03 Realtime Observability Panels

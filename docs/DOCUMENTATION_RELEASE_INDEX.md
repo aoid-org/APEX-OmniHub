@@ -1,22 +1,23 @@
 # Documentation Release Index
 
-> Current repo-truth index refreshed for the 2026-06-01 platform-state audit. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`.
+> Current repo-truth index refreshed for the 2026-06-06 platform-state audit. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `docs/CURRENT_PLATFORM_STATE_2026_06_06.md`.
 
 ## Current Repo Facts Verified in This Pass
 
 | Fact | Current repo evidence |
 |---|---|
-| Documentation files under `docs/` | Current docs tree includes this 2026-06-01 platform-state snapshot; historical audit docs remain point-in-time evidence |
+| Documentation files under `docs/` | Current docs tree includes this 2026-06-06 platform-state snapshot; historical audit docs remain point-in-time evidence |
 | GitHub workflow files | 22 files in `.github/workflows/` |
 | Release/package versions | Root `package.json` declares `1.7.0`; app package `apps/omnihub-site/package.json` declares `1.3.10` |
-| Canonical package manager | `bun.lock` is present; `package-lock.json` is retained for npm audit parity |
+| Canonical package manager | npm for CI (`package-lock.json` canonical); bun optional for local dev (`bun.lock` committed) |
 | RSI mode | `policy/rsi-policy.yaml` declares `mode: live`; `.github/workflows/rsi-governance.yml` is present |
-| Production certification | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` remains the current authority; do not claim `CERTIFIED` without current release evidence |
+| Production certification | `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` remains the current authority; verdict is `NOT_CERTIFIED_NO_RELEASE_CUT` — trigger `release.yml` on main |
 | Shadow deployment slot | `apex-omnihub-shadow.pages.dev` provisioned 2026-05-20; GitHub Environment: `production-shadow` |
+| `chore: version packages` | Merged to main at `959a8fd6` on 2026-06-05 |
 
 ## Documentation Authority Order
 
-0. `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` for the latest branch/head assessment and drift-control snapshot.
+0. `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` for the latest branch/head assessment and drift-control snapshot. (`docs/CURRENT_PLATFORM_STATE_2026_06_02.md` is now historical.)
 1. `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` for certification/release verdicts.
 2. `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md` and `docs/architecture/CANONICAL_TRUTH.md` for current topology.
 3. `docs/architecture/CANONICAL_TRUTH_MATRIX.md` for claim labels, simulation disclaimers, and portability status terms.
@@ -34,14 +35,13 @@
 
 ## Canonical start points
 
-- `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`
+- `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` _(current — supersedes 2026-06-02 snapshot)_
 - `README.md`
 - `docs/README.md`
 - `docs/architecture/ARCHITECTURE_CANONICAL_MAP.md`
 - `docs/architecture/CANONICAL_TRUTH.md`
 - `docs/architecture/CANONICAL_TRUTH_MATRIX.md`
 - `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`
-- `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` _(current branch/head onboarding entry point)_
 - `docs/project-status/APEX_RELEASE_READINESS_REPORT_v1.6.1.md` _(historical release-readiness point-in-time report — created 2026-05-20)_
 - `docs/architecture/DOC_RECONCILIATION_MATRIX.md`
 
@@ -162,6 +162,29 @@
 - `docs/sim/` — 9 Markdown file(s): `ARCHITECTURE.md`, `CHAOS_SIMULATION_DELIVERY.md`, `CHAOTIC_CLIENT_SIMULATION_REPORT.md`, `CHAOTIC_CLIENT_STORY.md`, `INVENTORY.md`, `RESULTS_REPORT.md`, `RUNBOOK.md`, `SANDBOX_TEST_RESULTS_TEMPLATE.md`, `TEST_EXECUTION_REPORT.md`
 - `docs/testing/` — 4 Markdown file(s): `ARMAGEDDON_LIVE_VALIDATION_RESULTS_2026_05_08.md`, `E2E_TEST_RESULTS.md`, `README.md`, `worldwide-wildcard-tests.md`
 - `docs/valuation/` — 1 Markdown file(s): `PLATFORM_VALUATION_BRIEF.md`
+
+## 2026-06-06 Platform-State Documentation Sync
+
+Full OMEGA SCAN audit performed against `main` @ `c8d753c5`. All local quality gates verified green.
+
+| File | Change |
+|---|---|
+| `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` | **NEW** — supersedes 2026-06-02 snapshot; includes 2026-06-06 gate results, repo counts, OmniDash real-data status table, and drift resolutions |
+| `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md` | 2026-06-06 addendum added; verdict updated to `NOT_CERTIFIED_NO_RELEASE_CUT`; gate audit updated to 2,561 tests; hono CVE advisory added; path-to-CERTIFIED step 6 marked DONE |
+| `docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md` | B-2 status updated: `chore: version packages` merged; CI execution is the final remaining step |
+| `docs/DOCUMENTATION_RELEASE_INDEX.md` | This file — canonical start point updated to 2026-06-06 snapshot |
+| `README.md` | Stats snapshot updated to 2026-06-06 counts; canonical map link updated |
+| `next-action.md` | Updated: highest-impact next action is triggering `release.yml` on main |
+
+### Certification status (as of 2026-06-06)
+
+| Blocker | Status |
+|---|---|
+| B-1 | RESOLVED (2026-05-20) |
+| B-2 | `chore: version packages` MERGED (2026-06-05) — CI release run pending |
+| B-3 | RESOLVED (2026-05-20) |
+
+---
 
 ## 2026-06-01 Platform-State Documentation Sync
 

@@ -63,8 +63,6 @@ export default defineConfig({
       '@/dashboard': resolve(__dirname, './dashboard'),
       '@omniconnect': resolve(__dirname, '../../src/omniconnect'),
       '@': resolve(__dirname, './src'),
-      'react': resolve(__dirname, '../../node_modules/react'),
-      'react-dom': resolve(__dirname, '../../node_modules/react-dom'),
       'react-i18next': resolve(__dirname, '../../node_modules/react-i18next'),
       'i18next': resolve(__dirname, '../../node_modules/i18next'),
     },
@@ -103,8 +101,35 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
   },
+  ssgOptions: {
+    entry: './src/main-ssg.tsx',
+    script: 'async',
+    formatting: 'minify',
+    includedRoutes(paths: string[]) {
+      // Pre-auth marketing routes only — post-auth SPA routes stay CSR
+      return paths.filter(
+        (p) => !p.startsWith('/omnidash') && !p.startsWith('/dashboard')
+      );
+    },
+  },
+  ssr: {
+    // Keep React external in the SSG bundle so react-dom/server and the bundle
+    // share the same React instance (avoids invalid hook dispatcher errors).
+    external: ['react', 'react-dom'],
+  },
   // @ts-expect-error test is an extension provided by vitest
   test: {
+    // Only pick up unit/integration tests — exclude Playwright E2E specs.
+    // Playwright tests must be run with: npx playwright test
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx', 'tests/lib/**/*.spec.ts'],
+    exclude: [
+      'tests/visual/**',
+      'tests/routes/**',
+      'tests/visual/**/*.spec.ts',
+      'node_modules/**',
+    ],
+    // Node environment required for tests that use readFileSync
+    environment: 'node',
     coverage: {
       reporter: ['text', 'lcov'],
       reportsDirectory: './coverage',

@@ -8,10 +8,9 @@
 import { memo, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
-import { Loader2, PictureInPicture2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import type { OmniModuleState } from '@/hooks/useOmniModuleState';
 import { triggerModuleAction } from '@/hooks/useOmniModuleState';
-import { useOmniDash } from '@/stores/omniDashStore';
 
 const STATUS_COLORS: Readonly<Record<string, string>> = {
   active: '#34d399',
@@ -75,19 +74,9 @@ export const ModuleShell = memo(function ModuleShell({
   children,
   onAction,
 }: ModuleShellProps) {
-  const openFloating = useOmniDash((s) => s.openFloating);
   const [selectedItems, setSelectedItems] = useState<ReadonlySet<string>>(new Set());
   const [actionStatus, setActionStatus] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
-
-  const handlePopOut = useCallback(() => {
-    openFloating(
-      `pip-${state.moduleKey}-${Date.now()}`,
-      state.headline,
-      state.moduleKey,
-    );
-    onClose();
-  }, [openFloating, state.moduleKey, state.headline, onClose]);
 
   const handleToggle = useCallback((id: string) => {
     setSelectedItems((prev) => {
@@ -135,18 +124,9 @@ export const ModuleShell = memo(function ModuleShell({
 
   return (
     <div className="py-3 flex flex-col gap-3">
-      {/* Live indicator + PiP */}
+      {/* State indicator */}
       <div className="flex items-center gap-2">
         <p className="text-sm text-muted-foreground flex-1">{state.headline}</p>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded border border-border/30 hover:border-border/60"
-          onClick={handlePopOut}
-          title="Pop out to PiP window"
-        >
-          <PictureInPicture2 size={10} />
-          PiP
-        </button>
         <span
           className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
           style={STATE_KIND_STYLES[state.stateKind] ?? DEFAULT_STATE_STYLE}

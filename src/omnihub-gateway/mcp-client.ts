@@ -16,6 +16,7 @@
  */
 
 import type { TriggerLambdaResponse } from './router';
+import { supabase } from '@/integrations/supabase/client';
 
 // ============================================================================
 // Configuration
@@ -125,9 +126,84 @@ export interface McpIntentResponse {
   status?: string;
 }
 
+function processSseChunk(chunk: string, currentReply: string): string {
+  const newContent = chunk
+    .split('\n')
+    .filter((line) => {
+      if (!line.startsWith('data: ')) return false;
+      if (line === 'data: [DONE]') return false;
+      return true;
+    })
+    .map((line) => {
+      try {
+        const data = JSON.parse(line.substring(6)) as { choices?: { delta?: { content?: string } }[] };
+        return data.choices?.[0]?.delta?.content ?? '';
+      } catch {
+        return '';
+      }
+    })
+    .join('');
+
+  return currentReply + newContent;
+}
+
+async function parseSseStream(reader: ReadableStreamDefaultReader<Uint8Array>): Promise<string> {
+  let replyText = "";
+  const decoder = new TextDecoder();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value);
+    replyText = processSseChunk(chunk, replyText);
+  }
+  return replyText;
+}
+
+async function invokeByomProxy(payload: McpIntentPayload, byomProvider: string): Promise<McpIntentResponse> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session?.access_token;
+  
+  if (!token) throw new Error('BYOM Error: Unauthorized (no session token)');
+
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/byom-proxy`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      provider: byomProvider,
+      model: byomProvider === 'anthropic' ? 'claude-3-5-sonnet-20241022' : 'gpt-4o',
+      messages: [{ role: 'user', content: payload.prompt }]
+    })
+  });
+
+  if (!res.ok) {
+    let errorMsg = `BYOM Gateway Error: ${res.status}`;
+    try {
+      const errBody = await res.json();
+      if (errBody.error) errorMsg = errBody.error;
+    } catch { /* ignore */ }
+    throw new Error(errorMsg);
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) return { reply: "" };
+
+  const replyText = await parseSseStream(reader);
+  return { reply: replyText };
+}
+
 export async function invokeMcpIntent(payload: McpIntentPayload): Promise<McpIntentResponse> {
   const GATEWAY_URL = '/api/mcp';
+  const byomProvider = globalThis.window === undefined ? null : globalThis.window.localStorage.getItem('omni_ai_provider');
+
   try {
+    if (byomProvider) {
+      return await invokeByomProxy(payload, byomProvider);
+    }
+
+    // Standard APEX endpoint fallback
     const res = await fetch(`${GATEWAY_URL}/invoke`, {
       method: 'POST',
       headers: {
@@ -137,8 +213,7 @@ export async function invokeMcpIntent(payload: McpIntentPayload): Promise<McpInt
     });
     
     if (!res.ok) throw new Error(`MCP Gateway HTTP Error: ${res.status}`);
-    const data = await res.json() as McpIntentResponse;
-    return data;
+    return await res.json() as McpIntentResponse;
   } catch (err: unknown) {
     console.error('[MCP Client] Invocation failed:', err);
     throw err;

@@ -41,6 +41,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
 
+      - name: Install ruff (Python linter)
+        run: pip install "ruff==0.15.16" --only-binary :all: --quiet --disable-pip-version-check
+
       - name: Run CI integrity scanner
         run: bun run verify:ci-integrity
 
@@ -60,7 +63,7 @@ jobs:
         id: shadow_preflight
         env:
           ENABLE_SHADOW_DEPLOYMENT: ${{ vars.ENABLE_SHADOW_DEPLOYMENT }}
-          ENABLE_ATOMIC_ROUTING_FLIP: ${{ vars.ENABLE_ATOMIC_ROUTING_FLIP }}
+          ENABLE_ATOMIC_ROUTING_FLIP: 'false'
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_SHADOW_PROJECT_NAME: ${{ vars.CLOUDFLARE_SHADOW_PROJECT_NAME }}
@@ -83,6 +86,7 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_CONNECT_AI_ENABLED: 'true'
         run: |
           echo "Building frontend for shadow deployment..."
           bun run build
@@ -140,7 +144,7 @@ jobs:
         if: |
           steps.release_signal.outputs.release_cut == 'true' &&
           vars.ENABLE_SHADOW_DEPLOYMENT == 'true' &&
-          vars.ENABLE_ATOMIC_ROUTING_FLIP == 'true' &&
+          'false' == 'true' &&
           steps.validator.outputs.validator_result == 'pass'
         id: tf_plan
         run: |
@@ -162,10 +166,10 @@ jobs:
       - name: Skip atomic routing flip — prerequisites not met
         if: |
           steps.release_signal.outputs.release_cut == 'true' &&
-          (vars.ENABLE_SHADOW_DEPLOYMENT != 'true' || vars.ENABLE_ATOMIC_ROUTING_FLIP != 'true')
+          (vars.ENABLE_SHADOW_DEPLOYMENT != 'true' || 'false' != 'true')
         env:
           SHADOW_ENABLED: ${{ vars.ENABLE_SHADOW_DEPLOYMENT }}
-          ROUTING_FLIP_ENABLED: ${{ vars.ENABLE_ATOMIC_ROUTING_FLIP }}
+          ROUTING_FLIP_ENABLED: 'false'
         run: |
           echo "Skipping routing flip."
           echo "ENABLE_SHADOW_DEPLOYMENT=${SHADOW_ENABLED}"

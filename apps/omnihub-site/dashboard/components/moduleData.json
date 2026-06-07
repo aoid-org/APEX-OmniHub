@@ -1,117 +1,849 @@
 [
-  ["omniskills", "Orchestrates and creates AI skills in tandem with APEX SkillForge.",
-    [["Active Skills", "12", "up"], ["Free Skills Used", "0/3", "stable"], ["Available", "47"]],
-    [["sk-nlp", "Natural Language Processing", "inactive", "Not Configured (Requires Connect AI)"],
-     ["sk-vision", "Computer Vision", "inactive", "Not Configured (Requires Vision API)"],
-     ["sk-codegen", "Code Generation", "inactive", "Not Configured (Requires Code Model)"],
-     ["sk-rag", "RAG Pipeline", "inactive", "Not Configured (Missing Vector DB)"],
-     ["sk-voice", "Voice Transcription", "inactive", "Not Configured (Requires Audio API)"]],
-    [["activate-all", "Activate All", "primary"], ["manage-bundles", "Manage Bundles", "secondary"]], true],
-
-  ["physiomni", "Physical operations and device telemetry.",
-    [["Connected Devices", "8", "stable"], ["Data Points/hr", "2,400", "up"], ["Uptime", "99.7%", "stable"]],
-    [["dev-whoop", "WHOOP 4.0", "active", "HRV 62ms | Recovery 84%"],
-     ["dev-oura", "Oura Ring Gen 3", "active", "Sleep Score 88 | Readiness 91"],
-     ["dev-garmin", "Garmin Fenix 7", "active", "VO2 Max 48 | Steps 9,240"],
-     ["dev-cgm", "Dexcom G7", "pending", "Glucose monitoring \u2014 awaiting sync"]],
-    [["sync-devices", "Sync All Devices", "primary"], ["export-data", "Export Health Data", "secondary"]], true],
-
-  ["audits", "Governance, compliance, and security audit trail.",
-    [["Events (24h)", "1,247", "stable"], ["Violations", "0", "stable"], ["Compliance", "100%", "stable"]],
-    [["aud-001", "SOC 2 Type II Attestation", "active", "Last verified: 2026-03-01"],
-     ["aud-002", "GDPR Data Processing Audit", "active", "Next review: 2026-04-15"],
-     ["aud-003", "Zero-Trust Policy Enforcement", "active", "847 policy checks passed today"],
-     ["aud-004", "API Access Audit Trail", "active", "3,892 authenticated requests logged"]],
-    [["export-audit", "Export Audit Log", "primary"], ["run-compliance", "Run Compliance Check", "secondary"]], true],
-
-  ["links", "Connected services and integration endpoints.",
-    [["Active Links", "14", "up"], ["Throughput", "8.2K/hr", "up"], ["Error Rate", "0.02%", "down"]],
-    [["lnk-sf", "Salesforce CRM", "active", "Synced 2m ago | 48 records/hr"],
-     ["lnk-qb", "QuickBooks Online", "active", "Synced 5m ago | 12 invoices queued"],
-     ["lnk-slack", "Slack Workspace", "active", "Synced 1m ago | 230 events/hr"],
-     ["lnk-gh", "GitHub Enterprise", "active", "Synced 3m ago | Webhooks active"],
-     ["lnk-stripe", "Stripe Payments", "error", "Token expired \u2014 re-authorize required"]],
-    [["add-link", "Add Connection", "primary"], ["test-all", "Test All Links", "secondary"]], true],
-
-  ["automations", "Workflow automation rules and triggers.",
-    [["Active Rules", "23", "up"], ["Executions (24h)", "1,892", "up"], ["Success Rate", "99.8%", "stable"]],
-    [["auto-lead", "Lead Scoring Pipeline", "active", "Trigger: New contact | Runs: 340/day"],
-     ["auto-invoice", "Invoice Reconciliation", "active", "Trigger: Payment received | Runs: 48/day"],
-     ["auto-alert", "Anomaly Alert Dispatch", "active", "Trigger: Metric threshold | Runs: 12/day"],
-     ["auto-backup", "Nightly Data Backup", "active", "Trigger: Cron 02:00 UTC | Last: Success"],
-     ["auto-onboard", "Customer Onboarding Flow", "pending", "Trigger: Signup event | Draft"]],
-    [["create-rule", "Create Automation", "primary"], ["view-logs", "View Execution Logs", "secondary"]], true],
-
-  ["workflows", "Visual workflow definitions and process studio.",
-    [["Workflows", "9", "stable"], ["Active Runs", "3", "up"], ["Avg Duration", "4.2s", "down"]],
-    [["wf-etl", "ETL: CRM to Data Warehouse", "active", "7 steps | Last run: 2m ago | 4.1s"],
-     ["wf-deploy", "CI/CD Deploy Pipeline", "active", "12 steps | Last run: 18m ago | 8.3s"],
-     ["wf-report", "Weekly KPI Report Generator", "active", "5 steps | Next run: Mon 08:00 UTC"],
-     ["wf-nurture", "Lead Nurture Sequence", "pending", "9 steps | Draft \u2014 awaiting approval"]],
-    [["create-workflow", "New Workflow", "primary"], ["import", "Import Template", "secondary"]], true],
-
-  ["files", "Document management and file operations.",
-    [["Total Files", "2,847", "up"], ["Storage Used", "14.2 GB", "up"], ["Shared Links", "89", "stable"]],
-    [["file-contracts", "contracts/", "active", "124 files | 2.1 GB | Last modified: today"],
-     ["file-invoices", "invoices/2026/", "active", "892 files | 340 MB | Auto-synced"],
-     ["file-reports", "reports/weekly/", "active", "52 files | 89 MB | Generated"],
-     ["file-templates", "templates/", "active", "18 files | 4.2 MB | Shared"]],
-    [["upload", "Upload Files", "primary"], ["browse", "Browse Storage", "secondary"]], true],
-
-  ["billing", "Subscription management and usage analytics.",
-    [["Plan", "Enterprise"], ["MRR", "$4,200", "stable"], ["Next Invoice", "Apr 1", "stable"]],
-    [["inv-mar", "INV-2026-0003 \u2014 March 2026", "active", "$4,200.00 | Paid Mar 1"],
-     ["inv-feb", "INV-2026-0002 \u2014 February 2026", "active", "$4,200.00 | Paid Feb 1"],
-     ["inv-jan", "INV-2026-0001 \u2014 January 2026", "active", "$4,200.00 | Paid Jan 1"],
-     ["usage-api", "API Usage \u2014 Current Period", "active", "142K / 500K requests (28.4%)"]],
-    [["manage-plan", "Manage Plan", "primary"], ["download-invoices", "Download Invoices", "secondary"]], true],
-
-  ["settings", "Platform configuration and operational preferences.",
-    [["Environment", "Production"], ["Region", "us-east-1"], ["Version", "v1.4.0"]],
-    [["set-2fa", "Two-Factor Authentication", "active", "TOTP enabled for all admin accounts"],
-     ["set-sso", "SSO via Okta", "active", "SAML 2.0 | 24 provisioned users"],
-     ["set-webhooks", "Webhook Notifications", "active", "6 endpoints configured | HMAC-SHA256"],
-     ["set-retention", "Data Retention Policy", "active", "90-day rolling window | Auto-archive"],
-     ["set-sandbox", "Sandbox Mode", "inactive", "Isolated test environment \u2014 disabled"]],
-    [["save-settings", "Save Changes", "primary"], ["reset-defaults", "Reset Defaults", "destructive"]], true],
-
-  ["dashboard", "Platform overview and system health monitoring.",
-    [["Systems Online", "14", "stable"], ["Uptime", "99.97%", "stable"], ["Active Users", "23", "up"]],
-    [["sys-api", "API Gateway", "active", "Healthy | 4,200 req/min | P99: 42ms"],
-     ["sys-db", "Primary Database", "active", "Healthy | 2.1TB | Replication: OK"],
-     ["sys-cache", "Redis Cache", "active", "Healthy | Hit rate: 98.4% | Memory: 1.2GB"],
-     ["sys-queue", "Message Queue", "active", "Healthy | 0 backlog | Throughput: 840/s"],
-     ["sys-cdn", "CDN Edge Network", "active", "Healthy | 12 PoPs | Cache hit: 94%"]],
-    [["refresh-status", "Refresh Status", "primary"], ["view-incidents", "View Incidents", "secondary"]], true],
-
-  ["integrations", "Third-party service connections and data sync.",
-    [["Connected", "9", "up"], ["Available", "24", "stable"], ["Sync Health", "96%", "stable"]],
-    [["int-salesforce", "Salesforce CRM", "active", "OAuth 2.0 | Synced 2m ago | Bi-directional"],
-     ["int-connect-ai", "Connect AI (BYOM)", "needs_auth", "API Key Required | No LLM Access"],
-     ["int-quickbooks", "QuickBooks Online", "active", "OAuth 2.0 | Synced 5m ago | Push only"],
-     ["int-slack", "Slack Workspace", "active", "Bot Token | Real-time events | 230/hr"],
-     ["int-github", "GitHub Enterprise", "active", "GitHub App | Webhooks active"],
-     ["int-stripe", "Stripe Payments", "error", "Token expired \u2014 re-authorization required"],
-     ["int-hubspot", "HubSpot Marketing", "pending", "Awaiting OAuth consent"],
-     ["int-jira", "Jira Cloud", "inactive", "Available \u2014 not configured"],
-     ["int-zendesk", "Zendesk Support", "inactive", "Available \u2014 not configured"]],
-    [["add-integration", "Add Integration", "primary"], ["sync-all", "Sync All", "secondary"]], true],
-
-  ["omnitrace", "Distributed tracing, observability, and diagnostics.",
-    [["Active Spans", "1,247", "up"], ["P99 Latency", "38ms", "down"], ["Error Rate", "0.04%", "stable"]],
-    [["trace-api", "API Gateway Traces", "active", "842 spans/min | Avg: 12ms | P99: 38ms"],
-     ["trace-db", "Database Query Traces", "active", "1,204 spans/min | Avg: 3ms | Slow: 2"],
-     ["trace-worker", "Background Worker Traces", "active", "340 spans/min | Avg: 180ms"],
-     ["trace-edge", "Edge Function Traces", "active", "420 spans/min | Avg: 24ms | Cold: 8%"],
-     ["trace-mcp", "MCP Tool Invocation Traces", "active", "48 spans/min | Avg: 210ms"]],
-    [["search-traces", "Search Traces", "primary"], ["export-spans", "Export Spans", "secondary"]], true],
-
-  ["agent", "Voice-powered AI agent for hands-free platform control.",
-    [["Active Sessions", "3", "up"], ["Intent Accuracy", "94.2%", "up"], ["Avg Response", "1.2s", "down"]],
-    [["agent-voice", "Voice Recognition Engine", "active", "Whisper v3 | 16kHz | Real-time STT"],
-     ["agent-intent", "Intent Classifier", "active", "GPT-4o | 12 intent categories | 94.2% accuracy"],
-     ["agent-action", "Action Executor", "active", "42 bound actions | Temporal workflow dispatch"],
-     ["agent-context", "Context Manager", "active", "Session memory | 8-turn window | RAG-augmented"],
-     ["agent-tts", "Text-to-Speech", "active", "ElevenLabs | 3 voice profiles | <200ms latency"]],
-    [["start-session", "New Session", "primary"], ["view-history", "Session History", "secondary"]], true]
+  [
+    "omniskills",
+    "Orchestrates and creates AI skills in tandem with APEX SkillForge.",
+    [
+      [
+        "Active Skills",
+        "12",
+        "up"
+      ],
+      [
+        "Free Skills Used",
+        "0/3",
+        "stable"
+      ],
+      [
+        "Available",
+        "47"
+      ]
+    ],
+    [
+      [
+        "sk-nlp",
+        "Natural Language Processing",
+        "inactive",
+        "Not Configured (Requires Connect AI)"
+      ],
+      [
+        "sk-vision",
+        "Computer Vision",
+        "inactive",
+        "Not Configured (Requires Vision API)"
+      ],
+      [
+        "sk-codegen",
+        "Code Generation",
+        "inactive",
+        "Not Configured (Requires Code Model)"
+      ],
+      [
+        "sk-rag",
+        "RAG Pipeline",
+        "inactive",
+        "Not Configured (Missing Vector DB)"
+      ],
+      [
+        "sk-voice",
+        "Voice Transcription",
+        "inactive",
+        "Not Configured (Requires Audio API)"
+      ]
+    ],
+    [
+      [
+        "activate-all",
+        "Activate All",
+        "primary"
+      ],
+      [
+        "manage-bundles",
+        "Manage Bundles",
+        "secondary"
+      ]
+    ],
+    true
+  ],
+  [
+    "physiomni",
+    "Physical operations and device telemetry.",
+    [
+      [
+        "Connected Devices",
+        "8",
+        "stable"
+      ],
+      [
+        "Data Points/hr",
+        "2,400",
+        "up"
+      ],
+      [
+        "Uptime",
+        "99.7%",
+        "stable"
+      ]
+    ],
+    [
+      [
+        "dev-whoop",
+        "WHOOP 4.0",
+        "active",
+        "HRV 62ms | Recovery 84%"
+      ],
+      [
+        "dev-oura",
+        "Oura Ring Gen 3",
+        "active",
+        "Sleep Score 88 | Readiness 91"
+      ],
+      [
+        "dev-garmin",
+        "Garmin Fenix 7",
+        "active",
+        "VO2 Max 48 | Steps 9,240"
+      ],
+      [
+        "dev-cgm",
+        "Dexcom G7",
+        "pending",
+        "Glucose monitoring — awaiting sync"
+      ]
+    ],
+    [
+      [
+        "sync-devices",
+        "Sync All Devices",
+        "primary"
+      ],
+      [
+        "export-data",
+        "Export Health Data",
+        "secondary"
+      ]
+    ],
+    true
+  ],
+  [
+    "audits",
+    "Governance, compliance, and security audit trail.",
+    [
+      [
+        "Events (24h)",
+        "1,247",
+        "stable"
+      ],
+      [
+        "Violations",
+        "0",
+        "stable"
+      ],
+      [
+        "Compliance",
+        "100%",
+        "stable"
+      ]
+    ],
+    [
+      [
+        "aud-001",
+        "SOC 2 Type II Attestation",
+        "active",
+        "Last verified: 2026-03-01"
+      ],
+      [
+        "aud-002",
+        "GDPR Data Processing Audit",
+        "active",
+        "Next review: 2026-04-15"
+      ],
+      [
+        "aud-003",
+        "Zero-Trust Policy Enforcement",
+        "active",
+        "847 policy checks passed today"
+      ],
+      [
+        "aud-004",
+        "API Access Audit Trail",
+        "active",
+        "3,892 authenticated requests logged"
+      ]
+    ],
+    [
+      [
+        "export-audit",
+        "Export Audit Log",
+        "primary"
+      ],
+      [
+        "run-compliance",
+        "Run Compliance Check",
+        "secondary"
+      ]
+    ],
+    false
+  ],
+  [
+    "links",
+    "Connected services and integration endpoints.",
+    [
+      [
+        "Active Links",
+        "14",
+        "up"
+      ],
+      [
+        "Throughput",
+        "8.2K/hr",
+        "up"
+      ],
+      [
+        "Error Rate",
+        "0.02%",
+        "down"
+      ]
+    ],
+    [
+      [
+        "lnk-sf",
+        "Salesforce CRM",
+        "active",
+        "Synced 2m ago | 48 records/hr"
+      ],
+      [
+        "lnk-qb",
+        "QuickBooks Online",
+        "active",
+        "Synced 5m ago | 12 invoices queued"
+      ],
+      [
+        "lnk-slack",
+        "Slack Workspace",
+        "active",
+        "Synced 1m ago | 230 events/hr"
+      ],
+      [
+        "lnk-gh",
+        "GitHub Enterprise",
+        "active",
+        "Synced 3m ago | Webhooks active"
+      ],
+      [
+        "lnk-stripe",
+        "Stripe Payments",
+        "error",
+        "Token expired — re-authorize required"
+      ]
+    ],
+    [
+      [
+        "add-link",
+        "Add Connection",
+        "primary"
+      ],
+      [
+        "test-all",
+        "Test All Links",
+        "secondary"
+      ]
+    ],
+    false
+  ],
+  [
+    "automations",
+    "Workflow automation rules and triggers.",
+    [
+      [
+        "Active Rules",
+        "23",
+        "up"
+      ],
+      [
+        "Executions (24h)",
+        "1,892",
+        "up"
+      ],
+      [
+        "Success Rate",
+        "99.8%",
+        "stable"
+      ]
+    ],
+    [
+      [
+        "auto-lead",
+        "Lead Scoring Pipeline",
+        "active",
+        "Trigger: New contact | Runs: 340/day"
+      ],
+      [
+        "auto-invoice",
+        "Invoice Reconciliation",
+        "active",
+        "Trigger: Payment received | Runs: 48/day"
+      ],
+      [
+        "auto-alert",
+        "Anomaly Alert Dispatch",
+        "active",
+        "Trigger: Metric threshold | Runs: 12/day"
+      ],
+      [
+        "auto-backup",
+        "Nightly Data Backup",
+        "active",
+        "Trigger: Cron 02:00 UTC | Last: Success"
+      ],
+      [
+        "auto-onboard",
+        "Customer Onboarding Flow",
+        "pending",
+        "Trigger: Signup event | Draft"
+      ]
+    ],
+    [
+      [
+        "create-rule",
+        "Create Automation",
+        "primary"
+      ],
+      [
+        "view-logs",
+        "View Execution Logs",
+        "secondary"
+      ]
+    ],
+    false
+  ],
+  [
+    "workflows",
+    "Visual workflow definitions and process studio.",
+    [
+      [
+        "Workflows",
+        "9",
+        "stable"
+      ],
+      [
+        "Active Runs",
+        "3",
+        "up"
+      ],
+      [
+        "Avg Duration",
+        "4.2s",
+        "down"
+      ]
+    ],
+    [
+      [
+        "wf-etl",
+        "ETL: CRM to Data Warehouse",
+        "active",
+        "7 steps | Last run: 2m ago | 4.1s"
+      ],
+      [
+        "wf-deploy",
+        "CI/CD Deploy Pipeline",
+        "active",
+        "12 steps | Last run: 18m ago | 8.3s"
+      ],
+      [
+        "wf-report",
+        "Weekly KPI Report Generator",
+        "active",
+        "5 steps | Next run: Mon 08:00 UTC"
+      ],
+      [
+        "wf-nurture",
+        "Lead Nurture Sequence",
+        "pending",
+        "9 steps | Draft — awaiting approval"
+      ]
+    ],
+    [
+      [
+        "create-workflow",
+        "New Workflow",
+        "primary"
+      ],
+      [
+        "import",
+        "Import Template",
+        "secondary"
+      ]
+    ],
+    false
+  ],
+  [
+    "files",
+    "Document management and file operations.",
+    [
+      [
+        "Total Files",
+        "2,847",
+        "up"
+      ],
+      [
+        "Storage Used",
+        "14.2 GB",
+        "up"
+      ],
+      [
+        "Shared Links",
+        "89",
+        "stable"
+      ]
+    ],
+    [
+      [
+        "file-contracts",
+        "contracts/",
+        "active",
+        "124 files | 2.1 GB | Last modified: today"
+      ],
+      [
+        "file-invoices",
+        "invoices/2026/",
+        "active",
+        "892 files | 340 MB | Auto-synced"
+      ],
+      [
+        "file-reports",
+        "reports/weekly/",
+        "active",
+        "52 files | 89 MB | Generated"
+      ],
+      [
+        "file-templates",
+        "templates/",
+        "active",
+        "18 files | 4.2 MB | Shared"
+      ]
+    ],
+    [
+      [
+        "upload",
+        "Upload Files",
+        "primary"
+      ],
+      [
+        "browse",
+        "Browse Storage",
+        "secondary"
+      ]
+    ],
+    false
+  ],
+  [
+    "billing",
+    "Subscription management and usage analytics.",
+    [
+      [
+        "Plan",
+        "Enterprise"
+      ],
+      [
+        "MRR",
+        "$4,200",
+        "stable"
+      ],
+      [
+        "Next Invoice",
+        "Apr 1",
+        "stable"
+      ]
+    ],
+    [
+      [
+        "inv-mar",
+        "INV-2026-0003 — March 2026",
+        "active",
+        "$4,200.00 | Paid Mar 1"
+      ],
+      [
+        "inv-feb",
+        "INV-2026-0002 — February 2026",
+        "active",
+        "$4,200.00 | Paid Feb 1"
+      ],
+      [
+        "inv-jan",
+        "INV-2026-0001 — January 2026",
+        "active",
+        "$4,200.00 | Paid Jan 1"
+      ],
+      [
+        "usage-api",
+        "API Usage — Current Period",
+        "active",
+        "142K / 500K requests (28.4%)"
+      ]
+    ],
+    [
+      [
+        "manage-plan",
+        "Manage Plan",
+        "primary"
+      ],
+      [
+        "download-invoices",
+        "Download Invoices",
+        "secondary"
+      ]
+    ],
+    false
+  ],
+  [
+    "settings",
+    "Platform configuration and operational preferences.",
+    [
+      [
+        "Environment",
+        "Production"
+      ],
+      [
+        "Region",
+        "us-east-1"
+      ],
+      [
+        "Version",
+        "v1.4.0"
+      ]
+    ],
+    [
+      [
+        "set-2fa",
+        "Two-Factor Authentication",
+        "active",
+        "TOTP enabled for all admin accounts"
+      ],
+      [
+        "set-sso",
+        "SSO via Okta",
+        "active",
+        "SAML 2.0 | 24 provisioned users"
+      ],
+      [
+        "set-webhooks",
+        "Webhook Notifications",
+        "active",
+        "6 endpoints configured | HMAC-SHA256"
+      ],
+      [
+        "set-retention",
+        "Data Retention Policy",
+        "active",
+        "90-day rolling window | Auto-archive"
+      ],
+      [
+        "set-sandbox",
+        "Sandbox Mode",
+        "inactive",
+        "Isolated test environment — disabled"
+      ]
+    ],
+    [
+      [
+        "save-settings",
+        "Save Changes",
+        "primary"
+      ],
+      [
+        "reset-defaults",
+        "Reset Defaults",
+        "destructive"
+      ]
+    ],
+    false
+  ],
+  [
+    "dashboard",
+    "Platform overview and system health monitoring.",
+    [
+      [
+        "Systems Online",
+        "14",
+        "stable"
+      ],
+      [
+        "Uptime",
+        "99.97%",
+        "stable"
+      ],
+      [
+        "Active Users",
+        "23",
+        "up"
+      ]
+    ],
+    [
+      [
+        "sys-api",
+        "API Gateway",
+        "active",
+        "Healthy | 4,200 req/min | P99: 42ms"
+      ],
+      [
+        "sys-db",
+        "Primary Database",
+        "active",
+        "Healthy | 2.1TB | Replication: OK"
+      ],
+      [
+        "sys-cache",
+        "Redis Cache",
+        "active",
+        "Healthy | Hit rate: 98.4% | Memory: 1.2GB"
+      ],
+      [
+        "sys-queue",
+        "Message Queue",
+        "active",
+        "Healthy | 0 backlog | Throughput: 840/s"
+      ],
+      [
+        "sys-cdn",
+        "CDN Edge Network",
+        "active",
+        "Healthy | 12 PoPs | Cache hit: 94%"
+      ]
+    ],
+    [
+      [
+        "refresh-status",
+        "Refresh Status",
+        "primary"
+      ],
+      [
+        "view-incidents",
+        "View Incidents",
+        "secondary"
+      ]
+    ],
+    true
+  ],
+  [
+    "integrations",
+    "Third-party service connections and data sync.",
+    [
+      [
+        "Connected",
+        "9",
+        "up"
+      ],
+      [
+        "Available",
+        "24",
+        "stable"
+      ],
+      [
+        "Sync Health",
+        "96%",
+        "stable"
+      ]
+    ],
+    [
+      [
+        "int-salesforce",
+        "Salesforce CRM",
+        "active",
+        "OAuth 2.0 | Synced 2m ago | Bi-directional"
+      ],
+      [
+        "int-connect-ai",
+        "Connect AI (BYOM)",
+        "needs_auth",
+        "API Key Required | No LLM Access"
+      ],
+      [
+        "int-quickbooks",
+        "QuickBooks Online",
+        "active",
+        "OAuth 2.0 | Synced 5m ago | Push only"
+      ],
+      [
+        "int-slack",
+        "Slack Workspace",
+        "active",
+        "Bot Token | Real-time events | 230/hr"
+      ],
+      [
+        "int-github",
+        "GitHub Enterprise",
+        "active",
+        "GitHub App | Webhooks active"
+      ],
+      [
+        "int-stripe",
+        "Stripe Payments",
+        "error",
+        "Token expired — re-authorization required"
+      ],
+      [
+        "int-hubspot",
+        "HubSpot Marketing",
+        "pending",
+        "Awaiting OAuth consent"
+      ],
+      [
+        "int-jira",
+        "Jira Cloud",
+        "inactive",
+        "Available — not configured"
+      ],
+      [
+        "int-zendesk",
+        "Zendesk Support",
+        "inactive",
+        "Available — not configured"
+      ]
+    ],
+    [
+      [
+        "add-integration",
+        "Add Integration",
+        "primary"
+      ],
+      [
+        "sync-all",
+        "Sync All",
+        "secondary"
+      ]
+    ],
+    false
+  ],
+  [
+    "omnitrace",
+    "Distributed tracing, observability, and diagnostics.",
+    [
+      [
+        "Active Spans",
+        "1,247",
+        "up"
+      ],
+      [
+        "P99 Latency",
+        "38ms",
+        "down"
+      ],
+      [
+        "Error Rate",
+        "0.04%",
+        "stable"
+      ]
+    ],
+    [
+      [
+        "trace-api",
+        "API Gateway Traces",
+        "active",
+        "842 spans/min | Avg: 12ms | P99: 38ms"
+      ],
+      [
+        "trace-db",
+        "Database Query Traces",
+        "active",
+        "1,204 spans/min | Avg: 3ms | Slow: 2"
+      ],
+      [
+        "trace-worker",
+        "Background Worker Traces",
+        "active",
+        "340 spans/min | Avg: 180ms"
+      ],
+      [
+        "trace-edge",
+        "Edge Function Traces",
+        "active",
+        "420 spans/min | Avg: 24ms | Cold: 8%"
+      ],
+      [
+        "trace-mcp",
+        "MCP Tool Invocation Traces",
+        "active",
+        "48 spans/min | Avg: 210ms"
+      ]
+    ],
+    [
+      [
+        "search-traces",
+        "Search Traces",
+        "primary"
+      ],
+      [
+        "export-spans",
+        "Export Spans",
+        "secondary"
+      ]
+    ],
+    true
+  ],
+  [
+    "agent",
+    "Voice-powered AI agent for hands-free platform control.",
+    [
+      [
+        "Active Sessions",
+        "3",
+        "up"
+      ],
+      [
+        "Intent Accuracy",
+        "94.2%",
+        "up"
+      ],
+      [
+        "Avg Response",
+        "1.2s",
+        "down"
+      ]
+    ],
+    [
+      [
+        "agent-voice",
+        "Voice Recognition Engine",
+        "active",
+        "Whisper v3 | 16kHz | Real-time STT"
+      ],
+      [
+        "agent-intent",
+        "Intent Classifier",
+        "active",
+        "GPT-4o | 12 intent categories | 94.2% accuracy"
+      ],
+      [
+        "agent-action",
+        "Action Executor",
+        "active",
+        "42 bound actions | Temporal workflow dispatch"
+      ],
+      [
+        "agent-context",
+        "Context Manager",
+        "active",
+        "Session memory | 8-turn window | RAG-augmented"
+      ],
+      [
+        "agent-tts",
+        "Text-to-Speech",
+        "active",
+        "ElevenLabs | 3 voice profiles | <200ms latency"
+      ]
+    ],
+    [
+      [
+        "start-session",
+        "New Session",
+        "primary"
+      ],
+      [
+        "view-history",
+        "Session History",
+        "secondary"
+      ]
+    ],
+    true
+  ]
 ]

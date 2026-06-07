@@ -1,7 +1,6 @@
-import { describe, it, expect } from 'vitest';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { describe, it } from 'vitest';
 
 describe('launch-claims capability-badges demo-gating pwa-assets accessibility', () => {
-  it('should pass launch claims check', () => {
-    expect(true).toBe(true);
-  });
+  it.todo('should pass launch claims check');
 });
