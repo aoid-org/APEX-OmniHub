@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Bot, ChevronDown, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { NotificationCenter } from '@/dashboard/components/NotificationCenter';
@@ -24,15 +24,10 @@ interface OmniDashTopHeaderProps {
 }
 
 export function OmniDashTopHeader({ userEmail }: Readonly<OmniDashTopHeaderProps>) {
-  const [orgBadge, setOrgBadge] = useState<string>('APEX Org');
+  const [orgBadge, setOrgBadge] = useState<string>(() => readOrgBadge());
   const [showPersonaModal, setShowPersonaModal] = useState(false);
-  const [activePersona, setActivePersona] = useState<AgentPersona>('Navigator');
+  const [activePersona, setActivePersona] = useState<AgentPersona>(() => readAgentPrefs().persona as AgentPersona);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOrgBadge(readOrgBadge());
-    setActivePersona(readAgentPrefs().persona);
-  }, []);
 
   const initials = useMemo(() => {
     if (!userEmail) return 'U';
