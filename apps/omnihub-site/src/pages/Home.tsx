@@ -202,6 +202,9 @@ function TickerSection() {
       {doubledItems.map((item, idx) => (
         <span key={idx}>{item} &middot; </span>
       ))}
+    </div>
+  );
+}
 
 function GovernanceSection() {
   const { t } = useTranslation();
@@ -436,7 +439,10 @@ export function HomePage() {
   return (
     <div ref={rootRef}>
       <Layout>
-        <SEOMeta title="APEX OmniHub | The Universal Sync Orchestrator" />
+        <SEOMeta
+          title="APEX OmniHub | The Universal Sync Orchestrator"
+          canonical="https://apexomnihub.icu/"
+        />
         <StructuredData data={homepageSchema} />
         <StructuredData data={organizationSchema} />
         <HeroSection onOpenModal={openModal} />
