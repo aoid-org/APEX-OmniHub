@@ -258,6 +258,9 @@ describe('offline utils', () => {
     });
 
     it('removes oldest request when queue is full', () => {
+      // Reset queue to start fresh
+      globalThis.localStorage.removeItem('offline_request_queue');
+      _clearQueueForTests();
       // Mock console.warn to keep output clean
       vi.spyOn(console, 'warn').mockImplementation(() => {});
 

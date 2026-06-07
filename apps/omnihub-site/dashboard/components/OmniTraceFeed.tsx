@@ -10,7 +10,11 @@ interface AuditLog {
 
 export function OmniTraceFeed({ tenantId }: Readonly<{ tenantId?: string }>) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [status, setStatus] = useState<'CONNECTING' | 'SUBSCRIBED' | 'ERROR'>('CONNECTING');
+  const [status, setStatus] = useState<'CONNECTING' | 'SUBSCRIBED' | 'ERROR'>(() => {
+    const url = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const key = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    return (!url || !key) ? 'ERROR' : 'CONNECTING';
+  });
 
   useEffect(() => {
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -18,7 +22,6 @@ export function OmniTraceFeed({ tenantId }: Readonly<{ tenantId?: string }>) {
 
     if (!supabaseUrl || !supabaseKey) {
       console.warn('Supabase env vars missing for OmniTraceFeed');
-      setStatus('ERROR');
       return;
     }
 
@@ -78,7 +81,7 @@ export function OmniTraceFeed({ tenantId }: Readonly<{ tenantId?: string }>) {
         {logs.map(log => (
           <li key={log.id} className="text-sm border-b pb-1">
             <span className="font-mono text-xs text-gray-500 mr-2">
-              {new Date(log.created_at || Date.now()).toLocaleTimeString()}
+              {new Date(log.created_at || new Date().toISOString()).toLocaleTimeString()}
             </span>
             {log.action}
           </li>

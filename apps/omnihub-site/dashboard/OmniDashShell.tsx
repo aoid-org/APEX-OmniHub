@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ModuleRenderer } from "./components/ModuleRenderer";
+import { T } from "./designSystem";
+import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
 import { SystemHealthRow } from "./components/SystemHealthRow";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
@@ -35,7 +37,6 @@ import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 import { AVATAR_PATH_MAP } from './contracts/agentAvatars';
-import { T, StatusDot, GlassCard, SectionLabel } from './designSystem';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, Dispatch, SetStateAction, RefObject } from "react";
@@ -51,6 +52,9 @@ interface IconBadgeProps {
   size?: number;
   style?: CSSProperties;
 }
+
+
+
 
 type NavEntry = OmniDashSidebarWidget;
 
@@ -101,8 +105,6 @@ const IMG_ICONS = imgIcons;
 const IMG_APEX_WM = imgApexWm;
 
 // ─── Design System ────────────────────────────────────────────────────────────
-// Tokens (T) and primitives (StatusDot, GlassCard, SectionLabel) are imported
-// from ./designSystem so panel modules can share them without a circular import.
 
 function getHealthPalette(health: OmniHealthState): {
   bg: string;
@@ -198,7 +200,11 @@ const scanLine = `@keyframes scanLine {
   0% { top: 0%; } 100% { top: 100%; }
 }`;
 
-// StatusDot, GlassCard, SectionLabel are imported from ./designSystem above.
+
+
+
+
+
 // DraggableWidget is imported from ./DraggableWidget (extracted for testability).
 
 // ─── NavItem ──────────────────────────────────────────────────────────────────
@@ -920,15 +926,15 @@ const OmniSlateWidget = () => {
 
   // Seed / clear demo conversation when demo mode toggles
   useEffect(() => {
-    if (isDemoMode && messages.length === 0) {
+    if (demoMode && messages.length === 0) {
       setMessages([...DEMO_SLATE_MESSAGES]);
     }
   // messages intentionally excluded — we only seed when the feed is empty
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDemoMode]);
+  }, [demoMode]);
 
   const fillSuggestion = () => {
-    setInput(isDemoMode ? DEMO_TRY_SUGGESTION : "Summarize all open workflows and flag anything stalled over 24 hours.");
+    setInput(demoMode ? DEMO_TRY_SUGGESTION : "Summarize all open workflows and flag anything stalled over 24 hours.");
   };
 
   const addContextApp = useCallback(
@@ -1068,12 +1074,12 @@ const OmniSlateWidget = () => {
         {messages.length === 0 && (
           <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
             <span style={{ fontSize:12, color:T.t4, fontStyle:"italic" }}>
-              {isDemoMode ? "Starting demo session…" : "Start a session to begin"}
+              {demoMode ? "Starting demo session…" : "Start a session to begin"}
             </span>
           </div>
         )}
         {/* TRY chip — visible when demo mode has a seeded conversation */}
-        {isDemoMode && messages.length > 0 && !loading && (
+        {demoMode && messages.length > 0 && !loading && (
           <button
             type="button"
             onClick={fillSuggestion}

@@ -1,7 +1,8 @@
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useDemoMode } from '../../src/contexts/DemoModeContext';
 import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { T, GlassCard, SectionLabel, StatusDot } from '../designSystem';
+import { T } from '../designSystem';
+import { GlassCard, SectionLabel, StatusDot } from './designComponents';
 
 // 1. System Health Overview
 export const SystemHealthOverview = () => {
