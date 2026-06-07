@@ -1,4 +1,4 @@
-import { encodeBase64Url } from 'https://deno.land/std@0.177.0/encoding/base64url.ts';
+import { encodeBase64Url } from 'https://deno.land/std@0.224.0/encoding/base64url.ts';
 import { buildCorsHeaders, corsErrorResponse, handlePreflight, isOriginAllowed } from '../_shared/cors.ts';
 import { allowAdapter, allowWorkflow, enforceEnvAllowlist, enforcePermission, type OmniLinkScopes } from '../_shared/omnilinkScopes.ts';
 import { createAnonClient, createServiceClient } from '../_shared/supabaseClient.ts';
@@ -38,6 +38,7 @@ interface ModuleStateResponse {
   items: unknown[];
   actions: string[];
   count: number;
+  message?: string;
 }
 
 // ── Utility helpers ───────────────────────────────────────────────────────────
@@ -1281,7 +1282,7 @@ async function handleEventBatchRequest(
 
 // ── Sub-routers ───────────────────────────────────────────────────────────────
 
-function routeTaskRequest(route: string, req: Request, corsHeaders: HeadersInit): Response | null {
+async function routeTaskRequest(route: string, req: Request, corsHeaders: HeadersInit): Promise<Response | null> {
   if (!route.startsWith('tasks/')) return null;
   const subRoute = route.split('/')[1];
   if (subRoute === 'claim') return handleTaskClaim(req, corsHeaders);
@@ -1346,7 +1347,7 @@ async function handleServeRequest(req: Request): Promise<Response> {
     return handleModuleState(req, corsHeaders);
   }
 
-  const taskResponse = routeTaskRequest(route, req, corsHeaders);
+  const taskResponse = await routeTaskRequest(route, req, corsHeaders);
   if (taskResponse) return taskResponse;
 
   if (!['events', 'commands', 'workflows', 'omniport', 'tasks'].includes(route)) {
