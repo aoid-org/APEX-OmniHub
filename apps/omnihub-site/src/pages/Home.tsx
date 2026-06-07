@@ -367,7 +367,7 @@ function RequestAccessModal({ isOpen, onClose, formStatus, formError, onSubmit }
         <label>{t('modal.fields.useCase')} <textarea id="ra_usecase" name="ra_usecase" maxLength={1000} /></label>
         <button type="submit">{t('modal.submit')}</button>
       </form>
-      {formStatus === 'success' && <p>✓ t('modal.success.title')}. {t('modal.success.message')}</p>}
+      {formStatus === 'success' && <p>✓ {t('modal.success.title')}. {t('modal.success.message')}</p>}
     </dialog>
   );
 }
