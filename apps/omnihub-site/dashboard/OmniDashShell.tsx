@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ModuleRenderer } from "./components/ModuleRenderer";
+import { T, StatusDot, GlassCard, SectionLabel } from "./designSystem";
 import { SystemHealthRow } from "./components/SystemHealthRow";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
@@ -51,21 +52,8 @@ interface IconBadgeProps {
   style?: CSSProperties;
 }
 
-interface StatusDotProps {
-  color?: string;
-  pulse?: boolean;
-}
 
-interface GlassCardProps {
-  children?: ReactNode;
-  style?: CSSProperties;
-  glow?: boolean;
-  onClick?: () => void;
-}
 
-interface SectionLabelProps {
-  children: ReactNode;
-}
 
 type NavEntry = OmniDashSidebarWidget;
 
@@ -117,29 +105,6 @@ const IMG_APEX_WM = imgApexWm;
 
 // ─── Design System ────────────────────────────────────────────────────────────
 // eslint-disable-next-line react-refresh/only-export-components
-export const T = {
-  bg:        "var(--omni-bg)",
-  surface:   "var(--omni-surface)",
-  card:      "var(--omni-card)",
-  cardHover: "var(--omni-card-hover)",
-  border:    "var(--omni-border)",
-  borderGlow:"var(--omni-border-glow)",
-  orange:    "var(--omni-orange)",
-  orangeDim: "var(--omni-orange-dim)",
-  orangeGlow:"var(--omni-orange-glow)",
-  blue:      "var(--omni-blue)",
-  blueDim:   "var(--omni-blue-dim)",
-  blueGlow:  "var(--omni-blue-glow)",
-  cyan:      "var(--omni-cyan)",
-  green:     "var(--omni-green)",
-  warn:      "var(--omni-warn)",
-  red:       "var(--omni-red)",
-  purple:    "var(--omni-purple)",
-  t1:        "var(--omni-t1)",
-  t2:        "var(--omni-t2)",
-  t3:        "var(--omni-t3)",
-  t4:        "var(--omni-t4)",
-};
 
 function getHealthPalette(health: OmniHealthState): {
   bg: string;
@@ -235,50 +200,10 @@ const scanLine = `@keyframes scanLine {
   0% { top: 0%; } 100% { top: 100%; }
 }`;
 
-export const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) => (
-  <div style={{
-    width:8, height:8, borderRadius:"50%", backgroundColor:color,
-    flexShrink:0, boxShadow:`0 0 6px ${color}`,
-    animation: doPulse ? "apexPulse 2s ease-in-out infinite" : "none",
-  }} />
-);
-
-export const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => {
-  const cardStyle: CSSProperties = {
-    background: T.card,
-    border: `1px solid ${glow ? T.borderGlow : T.border}`,
-    borderRadius: 16,
-    boxShadow: glow
-      ? `0 0 24px ${T.orangeGlow}, 0 4px 24px rgba(0,0,0,.5)`
-      : `0 4px 24px rgba(0,0,0,.4)`,
-    backdropFilter: "blur(12px)",
-    transition: "all .2s ease",
-    ...style,
-  };
-
-  if (onClick) {
-    return (
-      <button type="button" onClick={onClick} style={{ ...cardStyle, cursor: "pointer" }}>
-        {children}
-      </button>
-    );
-  }
-
-  return (
-    <div style={cardStyle}>
-      {children}
-    </div>
-  );
-};
 
 
 
-export const SectionLabel = ({ children }: SectionLabelProps) => (
-  <div style={{
-    fontSize:9.8, fontWeight:800, letterSpacing:"0.14em",
-    color: T.t3, textTransform:"uppercase", marginBottom:8,
-  }}>{children}</div>
-);
+
 
 // DraggableWidget is imported from ./DraggableWidget (extracted for testability).
 
@@ -1001,15 +926,15 @@ const OmniSlateWidget = () => {
 
   // Seed / clear demo conversation when demo mode toggles
   useEffect(() => {
-    if (isDemoMode && messages.length === 0) {
+    if (demoMode && messages.length === 0) {
       setMessages([...DEMO_SLATE_MESSAGES]);
     }
   // messages intentionally excluded — we only seed when the feed is empty
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDemoMode]);
+  }, [demoMode]);
 
   const fillSuggestion = () => {
-    setInput(isDemoMode ? DEMO_TRY_SUGGESTION : "Summarize all open workflows and flag anything stalled over 24 hours.");
+    setInput(demoMode ? DEMO_TRY_SUGGESTION : "Summarize all open workflows and flag anything stalled over 24 hours.");
   };
 
   const addContextApp = useCallback(
@@ -1149,12 +1074,12 @@ const OmniSlateWidget = () => {
         {messages.length === 0 && (
           <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
             <span style={{ fontSize:12, color:T.t4, fontStyle:"italic" }}>
-              {isDemoMode ? "Starting demo session…" : "Start a session to begin"}
+              {demoMode ? "Starting demo session…" : "Start a session to begin"}
             </span>
           </div>
         )}
         {/* TRY chip — visible when demo mode has a seeded conversation */}
-        {isDemoMode && messages.length > 0 && !loading && (
+        {demoMode && messages.length > 0 && !loading && (
           <button
             type="button"
             onClick={fillSuggestion}

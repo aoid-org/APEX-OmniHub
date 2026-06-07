@@ -1,6 +1,6 @@
 import { useDashboardData } from '../hooks/useDashboardData';
 import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { T, GlassCard, SectionLabel, StatusDot } from '../OmniDashShell';
+import { T, GlassCard, SectionLabel, StatusDot } from '../designSystem';
 
 // 1. System Health Overview
 export const SystemHealthOverview = () => {

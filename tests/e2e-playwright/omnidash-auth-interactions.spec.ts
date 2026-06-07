@@ -147,7 +147,7 @@ test.describe('OmniDash Authenticated Interactions', () => {
     trackConsole(page);
     test.skip(!(await isDesktopLayout(page)), 'Ops controls are in the desktop right-rail.');
 
-    const ops = page.getByTestId('rt_ops');
+    const ops = page.locator('.sentinel-section').filter({ hasText: 'Ops Controls' });
     await expect(ops).toBeVisible({ timeout: 8000 });
     await expect(ops.getByText('Ops Controls')).toBeVisible();
 
