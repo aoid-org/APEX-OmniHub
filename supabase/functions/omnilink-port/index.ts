@@ -9,6 +9,8 @@ import {
   RATE_LIMIT_CONFIGS,
 } from '../_shared/rate-limit.ts';
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const OMNILINK_ENABLED = (Deno.env.get('OMNILINK_ENABLED') ?? '').toLowerCase() === 'true';
 const MAX_SINGLE_PAYLOAD_BYTES = 256 * 1024;
 const MAX_BATCH_PAYLOAD_BYTES = 1024 * 1024;
@@ -16,8 +18,9 @@ const MAX_BATCH_ITEMS = 50;
 const DEFAULT_MAX_CONCURRENCY = 5;
 
 const inflight = new Map<string, number>();
-
 const textEncoder = new TextEncoder();
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ApiKeyRecord {
   id: string;
@@ -28,6 +31,16 @@ interface ApiKeyRecord {
   scopes: OmniLinkScopes;
   integrations?: { status: string } | { status: string }[];
 }
+
+/** Canonical response shape for every module-state call */
+interface ModuleStateResponse {
+  State: string;
+  items: unknown[];
+  actions: string[];
+  count: number;
+}
+
+// ── Utility helpers ───────────────────────────────────────────────────────────
 
 function parseBearerToken(req: Request): string | null {
   const authHeader = req.headers.get('Authorization');
@@ -86,7 +99,6 @@ function getConstraints(scopes: OmniLinkScopes): Required<NonNullable<OmniLinkSc
   };
 }
 
-
 async function enforceConcurrency(keyId: string, limit: number): Promise<boolean> {
   const current = inflight.get(keyId) ?? 0;
   if (current >= limit) return false;
@@ -124,7 +136,6 @@ async function loadApiKey(token: string, supabase = createServiceClient()): Prom
       if (integration?.status && integration.status !== 'active') {
         return null;
       }
-
       await supabase
         .from('omnilink_api_keys')
         .update({ last_used_at: new Date().toISOString() })
@@ -166,6 +177,594 @@ function jsonResponse(data: unknown, status: number, headers: HeadersInit): Resp
     headers: { ...headers, 'Content-Type': 'application/json' },
   });
 }
+
+// ── Module-state resolvers ────────────────────────────────────────────────────
+//
+// ALL resolvers use the user-JWT client (anonClient) so Postgres RLS enforces
+// tenant isolation automatically — no manual user_id filter is ever passed.
+//
+// VERIFIED table map (cross-referenced against supabase/migrations/):
+//   audits      → audit_logs          (actor_id = auth.uid() via RLS)
+//   links       → integrations        (user_id  = auth.uid() via RLS)
+//   automations → automations         (user_id  = auth.uid() via RLS)
+//   workflows   → workflows + workflow_runs  (confirmed 20260220000003)
+//   files       → Storage bucket 'omnihub-files' (NO SQL TABLE — path: {userId}/)
+//   billing     → subscriptions       (user_id  = auth.uid() via RLS)
+//   settings    → omnidash_settings   (user_id  = auth.uid() via RLS)
+//   physiomni   → physiomni_devices   (tenant_id = auth.uid() via RLS)
+//   omnitrace   → omnitrace_events    (user_id  = auth.uid() via RLS)
+//   agent       → agent_sessions      (user_id  = auth.uid() via RLS)
+//   dashboard   → omnidash_kpi_daily + omnidash_incidents
+//   omniskills  → skillforge_entitlements (graceful fallback if absent)
+//   integrations→ connector_sessions  (tenant_id::text = auth.uid()::text via RLS)
+
+function fallbackState(_moduleKey: string): ModuleStateResponse {
+  return { State: 'Online', items: [], actions: [], count: 0 };
+}
+
+async function resolveAudits(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Table: audit_logs — RLS policy: actor_id = auth.uid()
+  const { data, error } = await anonClient
+    .from('audit_logs')
+    .select('id, action_type, resource_type, resource_id, metadata, created_at')
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) throw new Error('audit_query_failed');
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    action_type: string;
+    resource_type: string | null;
+    resource_id: string | null;
+    metadata: Record<string, unknown> | null;
+    created_at: string;
+  }>;
+
+  return {
+    State: 'Online',
+    items: rows.map((r) => ({
+      id: r.id,
+      action: r.action_type,
+      resource: r.resource_type ?? 'unknown',
+      resource_id: r.resource_id,
+      metadata: r.metadata,
+      at: r.created_at,
+    })),
+    actions: ['export-audit', 'run-compliance'],
+    count: rows.length,
+  };
+}
+
+async function resolveLinks(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Table: integrations — confirmed FK parent for all omnilink_* tables
+  // (20260111000000_omnilink_universal_port.sql) — RLS: user_id = auth.uid()
+  const { data, error } = await anonClient
+    .from('integrations')
+    .select('id, name, type, status, config, created_at, updated_at');
+
+  if (error) throw new Error('links_query_failed');
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    name: string;
+    type: string;
+    status: string | null;
+    config: Record<string, unknown> | null;
+    created_at: string;
+    updated_at: string;
+  }>;
+
+  return {
+    State: 'Online',
+    items: rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      type: r.type,
+      status: r.status ?? 'unknown',
+      updated_at: r.updated_at,
+    })),
+    actions: ['add-link', 'test-all'],
+    count: rows.length,
+  };
+}
+
+async function resolveAutomations(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Table: automations — RLS policy: user_id = auth.uid()
+  const { data, error } = await anonClient
+    .from('automations')
+    .select('id, name, trigger_type, action_type, is_active, created_at')
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  if (error) throw new Error('automations_query_failed');
+
+  const autos = (data ?? []) as Array<{
+    id: string;
+    name: string;
+    trigger_type: string;
+    action_type: string;
+    is_active: boolean;
+    created_at: string;
+  }>;
+
+  return {
+    State: 'Online',
+    items: autos.map((a) => ({
+      id: a.id,
+      name: a.name,
+      trigger: a.trigger_type,
+      action: a.action_type,
+      active: a.is_active,
+      created_at: a.created_at,
+    })),
+    actions: ['create-automation', 'view-logs'],
+    count: autos.length,
+  };
+}
+
+async function resolveWorkflows(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Tables: workflows (definitions) + workflow_runs (execution state)
+  // Both confirmed in 20260220000003_workflow_studio.sql
+  // RLS policy on each: user_id = auth.uid()
+  const [wfRes, runRes] = await Promise.allSettled([
+    anonClient
+      .from('workflows')
+      .select('id, name, is_active, created_at')
+      .order('created_at', { ascending: false })
+      .limit(20),
+    anonClient
+      .from('workflow_runs')
+      .select('id, workflow_id, status, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10),
+  ]);
+
+  if (wfRes.status === 'rejected' || runRes.status === 'rejected') {
+    return { State: 'Error', message: 'Failed to load workflow data', items: [], actions: [], count: 0 };
+  }
+
+  const defs = (wfRes.value.data ?? []) as Array<{
+    id: string;
+    name: string;
+    is_active: boolean;
+    created_at: string;
+  }>;
+
+  const runs = (runRes.value.data ?? []) as Array<{
+    id: string;
+    workflow_id: string;
+    status: string;
+    created_at: string;
+  }>;
+
+  return {
+    State: 'Online',
+    items: defs.map((w) => ({
+      ...w,
+      recentRun: runs.find((r) => r.workflow_id === w.id) ?? null,
+    })),
+    actions: ['create_workflow', 'trigger_run'],
+    count: defs.length,
+  };
+}
+
+async function resolveFiles(
+  anonClient: ReturnType<typeof createAnonClient>,
+  userId: string
+): Promise<ModuleStateResponse> {
+  // NO SQL TABLE — files live in Supabase Storage bucket 'omnihub-files'.
+  // Path prefix = {userId}/ — Storage RLS policy (20260531000002) enforces
+  // that the authenticated user can only list their own prefix.
+  const { data, error } = await anonClient.storage
+    .from('omnihub-files')
+    .list(userId, {
+      limit: 50,
+      offset: 0,
+      sortBy: { column: 'created_at', order: 'desc' },
+    });
+
+  if (error) {
+    return { State: 'Error', message: 'Storage unavailable', items: [], actions: [], count: 0 };
+  }
+
+  const files = (data ?? []) as Array<{
+    name: string;
+    created_at: string;
+    updated_at: string;
+    last_accessed_at: string;
+    metadata: Record<string, unknown> | null;
+  }>;
+
+  return {
+    State: 'Online',
+    items: files.map((f) => ({
+      name: f.name,
+      size: (f.metadata?.size as number | undefined) ?? 0,
+      mime: (f.metadata?.mimetype as string | undefined) ?? null,
+      created_at: f.created_at,
+    })),
+    actions: ['upload_file', 'delete_file'],
+    count: files.length,
+  };
+}
+
+async function resolveBilling(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Table: subscriptions — RLS policy: user_id = auth.uid()
+  const { data, error } = await anonClient
+    .from('subscriptions')
+    .select('id, tier, status, stripe_customer_id, stripe_subscription_id, current_period_start, current_period_end, trial_end')
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw new Error('billing_query_failed');
+
+  const sub = data as {
+    id: string;
+    tier: string;
+    status: string;
+    stripe_customer_id: string | null;
+    stripe_subscription_id: string | null;
+    current_period_start: string | null;
+    current_period_end: string | null;
+    trial_end: string | null;
+  } | null;
+
+  const items = sub ? [
+    {
+      id: sub.id,
+      tier: sub.tier,
+      status: sub.status,
+      period_end: sub.current_period_end,
+      trial_end: sub.trial_end,
+    },
+  ] : [];
+
+  return {
+    State: sub ? 'Online' : 'NoSubscription',
+    items,
+    actions: ['manage-plan', 'billing-portal'],
+    count: items.length,
+  };
+}
+
+async function resolveSettings(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Table: omnidash_settings — RLS policy: user_id = auth.uid()
+  const { data, error } = await anonClient
+    .from('omnidash_settings')
+    .select('demo_mode, anonymize_kpis, freeze_mode, show_connected_ecosystem, updated_at')
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw new Error('settings_query_failed');
+
+  const s = data as {
+    demo_mode: boolean;
+    anonymize_kpis: boolean;
+    freeze_mode: boolean;
+    show_connected_ecosystem: boolean;
+    updated_at: string;
+  } | null;
+
+  const items = s ? [
+    { key: 'demo_mode', enabled: s.demo_mode },
+    { key: 'anonymize_kpis', enabled: s.anonymize_kpis },
+    { key: 'freeze_mode', enabled: s.freeze_mode },
+    { key: 'show_connected_ecosystem', enabled: s.show_connected_ecosystem },
+  ] : [];
+
+  return {
+    State: 'Online',
+    items,
+    actions: ['save-settings', 'reset-defaults'],
+    count: items.length,
+  };
+}
+
+async function resolvePhysioMni(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Table: physiomni_devices — RLS policy: tenant_id = auth.uid()
+  const { data, error } = await anonClient
+    .from('physiomni_devices')
+    .select('id, device_serial, device_name, firmware_version, is_active, last_seen_at, location_tag')
+    .order('last_seen_at', { ascending: false })
+    .limit(20);
+
+  if (error) throw new Error('physiomni_query_failed');
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    device_serial: string;
+    device_name: string | null;
+    firmware_version: string | null;
+    is_active: boolean;
+    last_seen_at: string | null;
+    location_tag: string | null;
+  }>;
+
+  return {
+    State: 'Online',
+    items: rows.map((d) => ({
+      id: d.id,
+      serial: d.device_serial,
+      name: d.device_name,
+      firmware: d.firmware_version,
+      active: d.is_active,
+      last_seen: d.last_seen_at,
+      location: d.location_tag,
+    })),
+    actions: ['provision-device', 'export-telemetry'],
+    count: rows.length,
+  };
+}
+
+async function resolveOmniTrace(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Table: omnitrace_events — RLS policy: user_id = auth.uid()
+  const { data, error } = await anonClient
+    .from('omnitrace_events')
+    .select('id, event_type, event_text, severity, color_token, created_at')
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  if (error) throw new Error('omnitrace_query_failed');
+
+  const events = (data ?? []) as Array<{
+    id: string;
+    event_type: string;
+    event_text: string;
+    severity: string;
+    color_token: string;
+    created_at: string;
+  }>;
+
+  return {
+    State: 'Online',
+    items: events.map((e) => ({
+      id: e.id,
+      type: e.event_type,
+      text: e.event_text,
+      severity: e.severity,
+      color: e.color_token,
+      at: e.created_at,
+    })),
+    actions: ['search-traces', 'export-spans'],
+    count: events.length,
+  };
+}
+
+async function resolveAgent(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Table: agent_sessions — RLS policy: user_id = auth.uid()
+  const { data, error } = await anonClient
+    .from('agent_sessions')
+    .select('id, status, started_at, updated_at')
+    .order('updated_at', { ascending: false })
+    .limit(10);
+
+  if (error) throw new Error('agent_query_failed');
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    status: string;
+    started_at: string;
+    updated_at: string;
+  }>;
+
+  return {
+    State: 'Online',
+    items: rows.map((s) => ({
+      id: s.id,
+      status: s.status,
+      started_at: s.started_at,
+      updated_at: s.updated_at,
+    })),
+    actions: ['new-session', 'view-history'],
+    count: rows.length,
+  };
+}
+
+async function resolveDashboard(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Tables: omnidash_kpi_daily + omnidash_incidents — both RLS on user_id
+  const [kpiRes, incidentRes] = await Promise.allSettled([
+    anonClient
+      .from('omnidash_kpi_daily')
+      .select('tradeline_paid_starts, tradeline_active_pilots, ops_sev1_incidents')
+      .order('day', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    anonClient
+      .from('omnidash_incidents')
+      .select('id, severity, status, title, occurred_at')
+      .eq('status', 'open')
+      .limit(5),
+  ]);
+
+  const kpi = (kpiRes.status === 'fulfilled' ? kpiRes.value.data : null) as {
+    tradeline_paid_starts: number | null;
+    tradeline_active_pilots: number | null;
+    ops_sev1_incidents: number | null;
+  } | null;
+
+  const incidents = (incidentRes.status === 'fulfilled' ? incidentRes.value.data ?? [] : []) as Array<{
+    id: string;
+    severity: string;
+    status: string;
+    title: string;
+    occurred_at: string;
+  }>;
+
+  const items = [
+    { metric: 'paid_starts', value: kpi?.tradeline_paid_starts ?? 0 },
+    { metric: 'active_pilots', value: kpi?.tradeline_active_pilots ?? 0 },
+    { metric: 'sev1_incidents', value: kpi?.ops_sev1_incidents ?? 0 },
+    ...incidents.map((i) => ({
+      id: i.id,
+      type: 'incident',
+      severity: i.severity,
+      title: i.title,
+      occurred_at: i.occurred_at,
+    })),
+  ];
+
+  return {
+    State: 'Online',
+    items,
+    actions: [],
+    count: items.length,
+  };
+}
+
+async function resolveOmniSkills(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Table: skillforge_entitlements — graceful fallback if table absent
+  try {
+    const { data } = await anonClient
+      .from('skillforge_entitlements')
+      .select('tier, free_skills_used, free_skills_limit, total_skills_created')
+      .limit(1)
+      .maybeSingle();
+
+    const e = data as {
+      tier: string;
+      free_skills_used: number;
+      free_skills_limit: number;
+      total_skills_created: number;
+    } | null;
+
+    return {
+      State: 'Online',
+      items: e ? [
+        { key: 'tier', value: e.tier },
+        { key: 'used', value: e.free_skills_used },
+        { key: 'limit', value: e.free_skills_limit },
+        { key: 'total', value: e.total_skills_created },
+      ] : [],
+      actions: ['forge-skill', 'manage-bundles'],
+      count: e ? e.total_skills_created : 0,
+    };
+  } catch {
+    return { State: 'Online', items: [], actions: ['forge-skill'], count: 0 };
+  }
+}
+
+async function resolveIntegrations(
+  anonClient: ReturnType<typeof createAnonClient>
+): Promise<ModuleStateResponse> {
+  // Table: connector_sessions — RLS policy: tenant_id = auth.uid()::text
+  const { data, error } = await anonClient
+    .from('connector_sessions')
+    .select('id, connector_id, provider, scopes, last_sync_at, created_at')
+    .order('last_sync_at', { ascending: false })
+    .limit(10);
+
+  if (error) throw new Error('integrations_query_failed');
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    connector_id: string;
+    provider: string;
+    scopes: string[];
+    last_sync_at: string | null;
+    created_at: string;
+  }>;
+
+  return {
+    State: 'Online',
+    items: rows.map((c) => ({
+      id: c.id,
+      connector: c.connector_id,
+      provider: c.provider,
+      scopes: c.scopes,
+      last_sync: c.last_sync_at,
+    })),
+    actions: ['add-integration', 'sync-all'],
+    count: rows.length,
+  };
+}
+
+// ── Module router ─────────────────────────────────────────────────────────────
+
+async function resolveModuleState(
+  moduleKey: string,
+  authHeader: string,
+  userId: string
+): Promise<ModuleStateResponse> {
+  // All data queries use the user-JWT client so RLS enforces tenant isolation.
+  // Service role key is NEVER used for data reads here.
+  const anonClient = createAnonClient(authHeader);
+
+  switch (moduleKey) {
+    case 'audits':       return await resolveAudits(anonClient);
+    case 'links':        return await resolveLinks(anonClient);
+    case 'automations':  return await resolveAutomations(anonClient);
+    case 'workflows':    return await resolveWorkflows(anonClient);
+    case 'files':        return await resolveFiles(anonClient, userId);
+    case 'billing':      return await resolveBilling(anonClient);
+    case 'settings':     return await resolveSettings(anonClient);
+    case 'physiomni':    return await resolvePhysioMni(anonClient);
+    case 'omnitrace':    return await resolveOmniTrace(anonClient);
+    case 'agent':        return await resolveAgent(anonClient);
+    case 'dashboard':    return await resolveDashboard(anonClient);
+    case 'omniskills':   return await resolveOmniSkills(anonClient);
+    case 'integrations': return await resolveIntegrations(anonClient);
+    default:             return fallbackState(moduleKey);
+  }
+}
+
+// ── Module-state handler ──────────────────────────────────────────────────────
+
+async function handleModuleState(req: Request, corsHeaders: HeadersInit): Promise<Response> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+
+  // Resolve user to validate JWT (don't pass uid manually — RLS handles it)
+  const userClient = createAnonClient(authHeader);
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
+
+  // API-key path: check omnilink key, verify module_state:read permission
+  const token = authHeader.replace('Bearer ', '').trim();
+  const apiKey = await loadApiKey(token);
+  if (apiKey && !enforcePermission(apiKey.scopes ?? {}, 'module_state:read')) {
+    return jsonResponse({ error: 'permission_denied' }, 403, corsHeaders);
+  }
+
+  const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
+  const payload = (body ?? {}) as Record<string, unknown>;
+  const moduleKey = payload.module_key as string | undefined;
+  if (!moduleKey) return jsonResponse({ error: 'module_key_required' }, 400, corsHeaders);
+
+  try {
+    // Pass user.id so file resolver can scope storage list to the correct prefix
+    const data = await resolveModuleState(moduleKey, authHeader, user.id);
+    return jsonResponse(data, 200, corsHeaders);
+  } catch (err) {
+    // Sanitize — never leak raw DB errors to the client
+    const sanitized = err instanceof Error ? err.message : 'module_error';
+    return jsonResponse({ State: 'Error', message: sanitized, items: [], actions: [], count: 0 }, 500, corsHeaders);
+  }
+}
+
+// ── API key management handlers ───────────────────────────────────────────────
 
 async function handleKeyCreation(req: Request, corsHeaders: HeadersInit): Promise<Response> {
   const authHeader = req.headers.get('Authorization');
@@ -315,504 +914,7 @@ async function handleKeyRotate(req: Request, corsHeaders: HeadersInit): Promise<
   return jsonResponse({ status: 'rotated', key, key_prefix: prefix }, 201, corsHeaders);
 }
 
-async function handleModuleState(req: Request, corsHeaders: HeadersInit): Promise<Response> {
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
-
-  let tenantId: string | null = null;
-  const token = authHeader.replace('Bearer ', '').trim();
-  const apiKey = await loadApiKey(token);
-
-  if (apiKey) {
-    if (!enforcePermission(apiKey.scopes ?? {}, 'module_state:read')) {
-      return jsonResponse({ error: 'permission_denied' }, 403, corsHeaders);
-    }
-    tenantId = apiKey.tenant_id;
-  } else {
-    const userClient = createAnonClient(authHeader);
-    const { data: { user } } = await userClient.auth.getUser();
-    if (!user) return jsonResponse({ error: 'unauthorized' }, 401, corsHeaders);
-    tenantId = user.id;
-  }
-
-  const { body } = await parseJsonBody(req).catch(() => ({ body: null, raw: '' }));
-  const payload = (body ?? {}) as Record<string, unknown>;
-  const moduleKey = payload.module_key as string | undefined;
-  if (!moduleKey) return jsonResponse({ error: 'module_key_required' }, 400, corsHeaders);
-
-  const svc = createServiceClient();
-
-  try {
-    const data = await resolveModuleState(svc, moduleKey, tenantId);
-    return jsonResponse(data, 200, corsHeaders);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'module_state_error';
-    return jsonResponse({ error: msg }, 500, corsHeaders);
-  }
-}
-
-// ── Per-module real-data resolvers ───────────────────────────────────────────
-
-type StatItem = { label: string; value: string; trend?: 'up' | 'down' | 'stable' };
-type ListItem = { id: string; label: string; status: 'active' | 'inactive' | 'pending' | 'error'; detail?: string };
-type ActionItem = { id: string; label: string; variant: 'primary' | 'secondary' | 'destructive' };
-
-interface ModuleStatePayload {
-  moduleKey: string;
-  headline: string;
-  stats: StatItem[];
-  items: ListItem[];
-  actions: ActionItem[];
-}
-
-async function resolveModuleState(
-  svc: ReturnType<typeof createServiceClient>,
-  moduleKey: string,
-  tenantId: string
-): Promise<ModuleStatePayload> {
-  switch (moduleKey) {
-
-    // ── WORKFLOWS ──────────────────────────────────────────────────────────
-    case 'workflows': {
-      const { data: wf } = await svc.from('workflows')
-        .select('id, name, is_active, created_at, updated_at')
-        .eq('user_id', tenantId)
-        .order('updated_at', { ascending: false })
-        .limit(10);
-
-      const { data: runs } = await svc.from('workflow_runs')
-        .select('id, workflow_id, status, started_at, completed_at')
-        .eq('user_id', tenantId)
-        .order('started_at', { ascending: false })
-        .limit(5);
-
-      const workflows = (wf ?? []) as Array<{ id: string; name: string; is_active: boolean; created_at: string; updated_at: string }>;
-      const workflowRuns = (runs ?? []) as Array<{ id: string; workflow_id: string; status: string; started_at: string; completed_at: string | null }>;
-      const active = workflows.filter(w => w.is_active).length;
-      const pending = workflowRuns.filter(r => r.status === 'pending' || r.status === 'running').length;
-
-      const lastRunMap = new Map<string, string>();
-      for (const run of workflowRuns) {
-        if (!lastRunMap.has(run.workflow_id)) {
-          const mins = Math.round((Date.now() - new Date(run.started_at).getTime()) / 60000);
-          lastRunMap.set(run.workflow_id, `${mins}m ago`);
-        }
-      }
-
-      return {
-        moduleKey: 'workflows',
-        headline: `${workflows.length} Workflow${workflows.length === 1 ? '' : 's'} Defined`,
-        stats: [
-          { label: 'Workflows', value: String(workflows.length), trend: 'stable' },
-          { label: 'Active', value: String(active), trend: active > 0 ? 'up' : 'stable' },
-          { label: 'Running', value: String(pending), trend: pending > 0 ? 'up' : 'stable' },
-        ],
-        items: workflows.slice(0, 5).map(w => ({
-          id: w.id,
-          label: w.name,
-          status: w.is_active ? 'active' : 'inactive',
-          detail: lastRunMap.has(w.id) ? `Last run: ${lastRunMap.get(w.id)}` : 'Never run',
-        })),
-        actions: [
-          { id: 'create-workflow', label: 'New Workflow', variant: 'primary' },
-          { id: 'view-runs', label: 'View Run History', variant: 'secondary' },
-        ],
-      };
-    }
-
-    // ── AUTOMATIONS ────────────────────────────────────────────────────────
-    case 'automations': {
-      const { data: auto } = await svc.from('automations')
-        .select('id, name, action_type, is_active, config')
-        .eq('user_id', tenantId)
-        .order('id', { ascending: false })
-        .limit(10);
-
-      const automations = (auto ?? []) as Array<{ id: string; name: string; action_type: string; is_active: boolean; config: Record<string, unknown> }>;
-      const activeCount = automations.filter(a => a.is_active).length;
-
-      return {
-        moduleKey: 'automations',
-        headline: `${activeCount} Active Automation Rule${activeCount === 1 ? '' : 's'}`,
-        stats: [
-          { label: 'Total Rules', value: String(automations.length), trend: 'stable' },
-          { label: 'Active', value: String(activeCount), trend: activeCount > 0 ? 'up' : 'stable' },
-          { label: 'Inactive', value: String(automations.length - activeCount), trend: 'stable' },
-        ],
-        items: automations.slice(0, 5).map(a => ({
-          id: a.id,
-          label: a.name ?? `Automation ${a.id.slice(0, 8)}`,
-          status: a.is_active ? 'active' : 'inactive',
-          detail: `Type: ${a.action_type}`,
-        })),
-        actions: [
-          { id: 'create-automation', label: 'Create Automation', variant: 'primary' },
-          { id: 'view-logs', label: 'View Execution Logs', variant: 'secondary' },
-        ],
-      };
-    }
-
-    // ── FILES ──────────────────────────────────────────────────────────────
-    case 'files': {
-      // List real files from Supabase Storage bucket "omnihub-files"
-      const { data: objects } = await svc.storage.from('omnihub-files').list('', {
-        limit: 100,
-        offset: 0,
-        sortBy: { column: 'updated_at', order: 'desc' },
-      });
-
-      const files = (objects ?? []) as Array<{ name: string; metadata?: { size?: number }; updated_at?: string }>;
-      const totalBytes = files.reduce((acc, f) => acc + (f.metadata?.size ?? 0), 0);
-      const totalGB = (totalBytes / (1024 ** 3)).toFixed(2);
-
-      return {
-        moduleKey: 'files',
-        headline: `${files.length} File${files.length === 1 ? '' : 's'} in Storage`,
-        stats: [
-          { label: 'Total Files', value: String(files.length), trend: 'stable' },
-          { label: 'Storage Used', value: `${totalGB} GB`, trend: 'stable' },
-          { label: 'Bucket', value: 'omnihub-files', trend: 'stable' },
-        ],
-        items: files.slice(0, 6).map(f => ({
-          id: f.name,
-          label: f.name,
-          status: 'active' as const,
-          detail: f.metadata?.size ? `${(f.metadata.size / 1024).toFixed(1)} KB` : 'Unknown size',
-        })),
-        actions: [
-          { id: 'upload', label: 'Upload Files', variant: 'primary' },
-          { id: 'browse', label: 'Browse Storage', variant: 'secondary' },
-        ],
-      };
-    }
-
-    // ── BILLING ────────────────────────────────────────────────────────────
-    case 'billing': {
-      const { data: sub } = await svc.from('subscriptions')
-        .select('tier, status, stripe_customer_id, stripe_subscription_id, current_period_start, current_period_end, trial_end')
-        .eq('user_id', tenantId)
-        .maybeSingle();
-
-      const subscription = sub as {
-        tier: string;
-        status: string;
-        stripe_customer_id: string | null;
-        stripe_subscription_id: string | null;
-        current_period_start: string | null;
-        current_period_end: string | null;
-        trial_end: string | null;
-      } | null;
-
-      const tier = subscription?.tier ?? 'free';
-      const status = subscription?.status ?? 'inactive';
-      const periodEnd = subscription?.current_period_end
-        ? new Date(subscription.current_period_end).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })
-        : 'N/A';
-
-      return {
-        moduleKey: 'billing',
-        headline: tier.charAt(0).toUpperCase() + tier.slice(1) + ' Plan',
-        stats: [
-          { label: 'Plan', value: tier.charAt(0).toUpperCase() + tier.slice(1) },
-          { label: 'Status', value: status.charAt(0).toUpperCase() + status.slice(1) },
-          { label: 'Next Invoice', value: periodEnd },
-        ],
-        items: subscription ? [
-          {
-            id: 'current-sub',
-            label: `${tier.toUpperCase()} — ${status}`,
-            status: ((): 'active' | 'error' | 'pending' => {
-              if (status === 'active') return 'active';
-              if (status === 'past_due') return 'error';
-              return 'pending';
-            })(),
-            detail: subscription.current_period_end
-              ? `Renews ${periodEnd}`
-              : 'No active period',
-          },
-        ] : [
-          {
-            id: 'no-sub',
-            label: 'No active subscription',
-            status: 'inactive',
-            detail: 'Upgrade to access premium features',
-          },
-        ],
-        actions: [
-          { id: 'manage-plan', label: 'Manage Plan', variant: 'primary' },
-          { id: 'download-invoices', label: 'Billing Portal', variant: 'secondary' },
-        ],
-      };
-    }
-
-    // ── LINKS (Connections) ────────────────────────────────────────────────
-    case 'links': {
-      const { data: sessions } = await svc.from('connector_sessions')
-        .select('connector_id, provider, created_at, last_sync_at, scopes')
-        .eq('tenant_id', tenantId)
-        .order('last_sync_at', { ascending: false })
-        .limit(10);
-
-      const connections = (sessions ?? []) as Array<{ connector_id: string; provider: string; created_at: string; last_sync_at: string | null; scopes: string[] }>;
-
-      return {
-        moduleKey: 'links',
-        headline: `${connections.length} Connected App${connections.length === 1 ? '' : 's'}`,
-        stats: [
-          { label: 'Active Links', value: String(connections.length), trend: connections.length > 0 ? 'up' : 'stable' },
-          { label: 'Scopes Granted', value: String(connections.reduce((acc, c) => acc + c.scopes.length, 0)), trend: 'stable' },
-          { label: 'Status', value: connections.length > 0 ? 'Healthy' : 'No connections', trend: 'stable' },
-        ],
-        items: connections.slice(0, 6).map(c => {
-          const syncAgo = c.last_sync_at
-            ? `Synced ${Math.round((Date.now() - new Date(c.last_sync_at).getTime()) / 60000)}m ago`
-            : 'Never synced';
-          return {
-            id: c.connector_id,
-            label: c.provider.charAt(0).toUpperCase() + c.provider.slice(1),
-            status: 'active' as const,
-            detail: syncAgo,
-          };
-        }),
-        actions: [
-          { id: 'add-link', label: 'Add Connection', variant: 'primary' },
-          { id: 'test-all', label: 'Test All Links', variant: 'secondary' },
-        ],
-      };
-    }
-
-    // ── AUDITS ─────────────────────────────────────────────────────────────
-    case 'audits': {
-      const [eventsRes, incidentsRes] = await Promise.allSettled([
-        svc.from('omnitrace_events')
-          .select('id, event_type, event_text, severity, created_at')
-          .eq('user_id', tenantId)
-          .order('created_at', { ascending: false })
-          .limit(10),
-        svc.from('security_incidents')
-          .select('id, incident_type, severity, status, occurred_at')
-          .eq('tenant_id', tenantId)
-          .eq('status', 'open')
-          .order('occurred_at', { ascending: false })
-          .limit(5),
-      ]);
-
-      const events = (eventsRes.status === 'fulfilled' ? eventsRes.value.data ?? [] : []) as Array<{
-        id: string; event_type: string; event_text: string; severity: string; created_at: string;
-      }>;
-      const incidents = (incidentsRes.status === 'fulfilled' ? incidentsRes.value.data ?? [] : []) as Array<{
-        id: string; incident_type: string; severity: string; status: string; occurred_at: string;
-      }>;
-
-      const violations = incidents.filter(i => i.status === 'open').length;
-      let headline = 'All Systems Compliant';
-      if (violations > 0) {
-        headline = `${violations} Open Incident${violations === 1 ? '' : 's'}`;
-      }
-
-      return {
-        moduleKey: 'audits',
-        headline,
-        stats: [
-          { label: 'Events (24h)', value: String(events.length), trend: 'stable' },
-          { label: 'Open Incidents', value: String(violations), trend: violations > 0 ? 'up' : 'stable' },
-          { label: 'Compliance', value: violations === 0 ? '100%' : 'Review Required', trend: violations === 0 ? 'stable' : 'down' },
-        ],
-        items: [
-          ...incidents.slice(0, 2).map(i => ({
-            id: i.id,
-            label: i.incident_type.replaceAll('_', ' ').replace(/\b\w/g, c => c.toUpperCase()),
-            status: 'error' as const,
-            detail: `SEV-${i.severity.toUpperCase()} · ${new Date(i.occurred_at).toLocaleDateString()}`,
-          })),
-          ...events.slice(0, 4).map(e => ({
-            id: e.id,
-            label: e.event_type.replaceAll('_', ' '),
-            status: e.severity === 'error' ? 'error' as const : 'active' as const,
-            detail: e.event_text.slice(0, 60),
-          })),
-        ].slice(0, 5),
-        actions: [
-          { id: 'export-audit', label: 'Export Audit Log', variant: 'primary' },
-          { id: 'run-compliance', label: 'Run Compliance Check', variant: 'secondary' },
-        ],
-      };
-    }
-
-    // ── SETTINGS ───────────────────────────────────────────────────────────
-    case 'settings': {
-      const { data: settings } = await svc.from('omnidash_settings')
-        .select('demo_mode, anonymize_kpis, freeze_mode, show_connected_ecosystem, updated_at')
-        .eq('user_id', tenantId)
-        .maybeSingle();
-
-      const s = settings as { demo_mode: boolean; anonymize_kpis: boolean; freeze_mode: boolean; show_connected_ecosystem: boolean; updated_at: string } | null;
-
-      const configItems: ListItem[] = s ? [
-        {
-          id: 'demo-mode',
-          label: 'Demo Mode',
-          status: s.demo_mode ? 'active' : 'inactive',
-          detail: s.demo_mode ? 'Enabled — showing sample data' : 'Disabled — live data active',
-        },
-        {
-          id: 'anonymize-kpis',
-          label: 'Anonymize KPIs',
-          status: s.anonymize_kpis ? 'active' : 'inactive',
-          detail: s.anonymize_kpis ? 'KPI values hidden from display' : 'KPI values visible',
-        },
-        {
-          id: 'freeze-mode',
-          label: 'Freeze Mode',
-          status: s.freeze_mode ? 'active' : 'inactive',
-          detail: s.freeze_mode ? 'Dashboard frozen — no live updates' : 'Live updates active',
-        },
-        {
-          id: 'ecosystem-view',
-          label: 'Show Ecosystem',
-          status: s.show_connected_ecosystem ? 'active' : 'inactive',
-          detail: s.show_connected_ecosystem ? 'Connected apps shown in overview' : 'Ecosystem panel hidden',
-        },
-      ] : [];
-
-      return {
-        moduleKey: 'settings',
-        headline: 'Platform Configuration',
-        stats: [
-          { label: 'Environment', value: 'Production' },
-          { label: 'Region', value: 'us-east-1' },
-          { label: 'Last Updated', value: s?.updated_at ? new Date(s.updated_at).toLocaleDateString() : 'Never' },
-        ],
-        items: configItems,
-        actions: [
-          { id: 'save-settings', label: 'Save Changes', variant: 'primary' },
-          { id: 'reset-defaults', label: 'Reset Defaults', variant: 'destructive' },
-        ],
-      };
-    }
-
-    // ── PHYSIOMNI ──────────────────────────────────────────────────────────
-    case 'physiomni': {
-      const { data: devices } = await svc.from('physiomni_devices')
-        .select('id, device_id, device_type, firmware_version, is_active, last_seen_at')
-        .eq('tenant_id', tenantId)
-        .order('last_seen_at', { ascending: false })
-        .limit(10);
-
-      const deviceList = (devices ?? []) as Array<{
-        id: string; device_id: string; device_type: string; firmware_version: string | null; is_active: boolean; last_seen_at: string | null;
-      }>;
-      const activeDevices = deviceList.filter(d => d.is_active).length;
-
-      return {
-        moduleKey: 'physiomni',
-        headline: `${deviceList.length} Device${deviceList.length === 1 ? '' : 's'} Registered`,
-        stats: [
-          { label: 'Connected Devices', value: String(deviceList.length), trend: 'stable' },
-          { label: 'Active', value: String(activeDevices), trend: activeDevices > 0 ? 'up' : 'stable' },
-          { label: 'Offline', value: String(deviceList.length - activeDevices), trend: 'stable' },
-        ],
-        items: deviceList.slice(0, 5).map(d => {
-          const seenAgo = d.last_seen_at
-            ? `${Math.round((Date.now() - new Date(d.last_seen_at).getTime()) / 60000)}m ago`
-            : 'Never';
-            const fwSuffix = d.firmware_version ? ` · FW ${d.firmware_version}` : '';
-          return {
-            id: d.id,
-            label: `${d.device_type} · ${d.device_id.slice(0, 8)}`,
-            status: d.is_active ? 'active' : 'inactive',
-            detail: `Last seen: ${seenAgo}${fwSuffix}`,
-          };
-        }),
-        actions: [
-          { id: 'provision-device', label: 'Provision Device', variant: 'primary' },
-          { id: 'export-telemetry', label: 'Export Telemetry', variant: 'secondary' },
-        ],
-      };
-    }
-
-    // ── AGENT ──────────────────────────────────────────────────────────────
-    case 'agent': {
-      const { data: sessions } = await svc.from('agent_sessions')
-        .select('id, status, started_at, updated_at')
-        .eq('user_id', tenantId)
-        .order('updated_at', { ascending: false })
-        .limit(10);
-
-      const agentSessions = (sessions ?? []) as Array<{ id: string; status: string; started_at: string; updated_at: string }>;
-      const activeSessions = agentSessions.filter(s => s.status === 'active').length;
-      let headline = 'No Active Sessions';
-      if (activeSessions > 0) {
-        headline = `${activeSessions} Active Session${activeSessions === 1 ? '' : 's'}`;
-      }
-
-      return {
-        moduleKey: 'agent',
-        headline,
-        stats: [
-          { label: 'Active Sessions', value: String(activeSessions), trend: activeSessions > 0 ? 'up' : 'stable' },
-          { label: 'Total Sessions', value: String(agentSessions.length), trend: 'stable' },
-          { label: 'Status', value: activeSessions > 0 ? 'Running' : 'Idle', trend: 'stable' },
-        ],
-        items: agentSessions.slice(0, 4).map(s => ({
-          id: s.id,
-          label: `Session ${s.id.slice(0, 8)}`,
-          status: s.status as 'active' | 'inactive' | 'pending',
-          detail: `Started ${Math.round((Date.now() - new Date(s.started_at).getTime()) / 60000)}m ago`,
-        })),
-        actions: [
-          { id: 'new-session', label: 'New Session', variant: 'primary' },
-          { id: 'view-history', label: 'Session History', variant: 'secondary' },
-        ],
-      };
-    }
-
-    // ── DASHBOARD (overview module) ────────────────────────────────────────
-    case 'dashboard': {
-      const [kpiRes, incidentRes] = await Promise.allSettled([
-        svc.from('omnidash_kpi_daily')
-          .select('tradeline_paid_starts, tradeline_active_pilots, ops_sev1_incidents')
-          .eq('user_id', tenantId)
-          .order('day', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        svc.from('omnidash_incidents')
-          .select('id')
-          .eq('user_id', tenantId)
-          .eq('status', 'open'),
-      ]);
-
-      const kpi = (kpiRes.status === 'fulfilled' ? kpiRes.value.data : null) as {
-        tradeline_paid_starts: number | null;
-        tradeline_active_pilots: number | null;
-        ops_sev1_incidents: number | null;
-      } | null;
-      const openIncidents = (incidentRes.status === 'fulfilled' ? incidentRes.value.data ?? [] : []).length;
-
-      return {
-        moduleKey: 'dashboard',
-        headline: 'System Overview',
-        stats: [
-          { label: 'Paid Starts', value: String(kpi?.tradeline_paid_starts ?? 0), trend: 'stable' },
-          { label: 'Active Pilots', value: String(kpi?.tradeline_active_pilots ?? 0), trend: 'stable' },
-          { label: 'Open Incidents', value: String(openIncidents), trend: openIncidents > 0 ? 'up' : 'stable' },
-        ],
-        items: [],
-        actions: [],
-      };
-    }
-
-    // ── DEFAULT: return empty live state for unknown keys ──────────────────
-    default:
-      return {
-        moduleKey,
-        headline: 'Module Online',
-        stats: [],
-        items: [],
-        actions: [],
-      };
-  }
-}
+// ── Batch event / orchestration handlers ─────────────────────────────────────
 
 interface ProcessItemContext {
   route: string;
@@ -904,12 +1006,10 @@ async function processRequestItem(
     return { status: 'denied', index, error: permissionResult.error };
   }
 
-  // Normalize workflow params
   if (route === 'workflows' && payload.input && !payload.params) {
     payload.params = payload.input;
   }
 
-  // Apply approval policy if needed
   if (constraints.approvals_required_for.includes(payload.type as string)) {
     payload.policy = { ...(payload.policy as Record<string, unknown>), require_approval: true };
   }
@@ -1007,7 +1107,6 @@ async function validatePayload(
     return jsonResponse({ error: 'invalid_json' }, 400, corsHeaders);
   }
   const { raw, body } = parsedBody;
-
   const payloadSize = getRequestSize(raw);
 
   if (payloadSize > constraints.max_payload_kb * 1024) {
@@ -1029,6 +1128,8 @@ async function validatePayload(
 
   return { items, requestSize: payloadSize };
 }
+
+// ── Task dispatch handlers ────────────────────────────────────────────────────
 
 async function handleTaskClaim(req: Request, corsHeaders: HeadersInit): Promise<Response> {
   const authResult = await authenticateRequest(req, corsHeaders);
@@ -1096,7 +1197,6 @@ async function handleTaskComplete(req: Request, corsHeaders: HeadersInit): Promi
     return jsonResponse({ error: 'missing_required_fields' }, 400, corsHeaders);
   }
 
-  // Truncate output to max 16KB
   const MAX_OUTPUT_BYTES = 16 * 1024;
   let boundedOutput = output;
   if (output) {
@@ -1173,30 +1273,19 @@ async function handleEventBatchRequest(
     );
 
     const statusCode = determineStatusCode(results);
-
-    return jsonResponse(
-      {
-        request_id: requestId,
-        results,
-      },
-      statusCode,
-      corsHeaders
-    );
+    return jsonResponse({ request_id: requestId, results }, statusCode, corsHeaders);
   } finally {
     releaseConcurrency(apiKey.id);
   }
 }
 
+// ── Sub-routers ───────────────────────────────────────────────────────────────
+
 function routeTaskRequest(route: string, req: Request, corsHeaders: HeadersInit): Response | null {
   if (!route.startsWith('tasks/')) return null;
-
   const subRoute = route.split('/')[1];
-  if (subRoute === 'claim') {
-    return handleTaskClaim(req, corsHeaders);
-  }
-  if (subRoute === 'complete') {
-    return handleTaskComplete(req, corsHeaders);
-  }
+  if (subRoute === 'claim') return handleTaskClaim(req, corsHeaders);
+  if (subRoute === 'complete') return handleTaskComplete(req, corsHeaders);
   return jsonResponse({ error: 'not_found' }, 404, corsHeaders);
 }
 
@@ -1204,7 +1293,7 @@ function handleGetHealth(corsHeaders: HeadersInit): Response {
   return jsonResponse({ status: 'ok', checked_at: new Date().toISOString() }, 200, corsHeaders);
 }
 
-async function _handleKeysRequest(route: string, req: Request, corsHeaders: HeadersInit): Promise<Response> {
+async function handleKeysRequest(route: string, req: Request, corsHeaders: HeadersInit): Promise<Response> {
   const subRoute = route.split('/')[1] || '';
   if (req.method === 'POST') {
     if (subRoute === '' || subRoute === 'create') return handleKeyCreation(req, corsHeaders);
@@ -1216,11 +1305,12 @@ async function _handleKeysRequest(route: string, req: Request, corsHeaders: Head
   return jsonResponse({ error: 'not_found' }, 404, corsHeaders);
 }
 
+// ── Main request handler ──────────────────────────────────────────────────────
+
 async function handleServeRequest(req: Request): Promise<Response> {
   const requestOrigin = req.headers.get('origin')?.replace(/\/$/, '') ?? null;
   const corsHeaders = buildCorsHeaders(requestOrigin);
 
-  // Early exits for disabled service or preflight
   if (!OMNILINK_ENABLED) {
     return corsErrorResponse('omnilink_disabled', 'OmniLink port is disabled', 503, requestOrigin);
   }
@@ -1233,17 +1323,13 @@ async function handleServeRequest(req: Request): Promise<Response> {
     return corsErrorResponse('origin_not_allowed', 'CORS policy: Origin not allowed', 403, requestOrigin);
   }
 
-  // Parse route
   const route = parseRoute(new URL(req.url).pathname);
   const isOmniPort = route === 'omniport';
 
-  // Simple GET route
   if (req.method === 'GET' && route === 'health') {
     return handleGetHealth(corsHeaders);
   }
 
-  // Distributed rate limiting — ingress-level, keyed by client IP (per-handler
-  // auth resolves the user downstream; health check above is exempt).
   const rl = await checkRateLimit(
     req.headers.get('x-forwarded-for') ?? 'anon',
     RATE_LIMIT_CONFIGS.omnilinkPort,
@@ -1252,21 +1338,17 @@ async function handleServeRequest(req: Request): Promise<Response> {
     return rateLimitExceededResponse(requestOrigin, rl);
   }
 
-  // API key routes
   if (route.startsWith('keys')) {
     return handleKeysRequest(route, req, corsHeaders);
   }
 
-  // Module state route
   if (route === 'module-state' && req.method === 'POST') {
     return handleModuleState(req, corsHeaders);
   }
 
-  // Task dispatch routes
   const taskResponse = routeTaskRequest(route, req, corsHeaders);
   if (taskResponse) return taskResponse;
 
-  // Validate route for batch processing
   if (!['events', 'commands', 'workflows', 'omniport', 'tasks'].includes(route)) {
     return jsonResponse({ error: 'not_found' }, 404, corsHeaders);
   }
@@ -1275,7 +1357,6 @@ async function handleServeRequest(req: Request): Promise<Response> {
     return jsonResponse({ error: 'method_not_allowed' }, 405, corsHeaders);
   }
 
-  // Handle event batch request
   return handleEventBatchRequest(req, route, isOmniPort, corsHeaders);
 }
 
