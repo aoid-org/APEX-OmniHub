@@ -41,9 +41,11 @@ export const HiddenMetric: FC<HiddenMetricProps> = memo(({
 
 HiddenMetric.displayName = 'HiddenMetric';
 
+const DefaultDotIcon = () => <span className="h-3.5 w-3.5 inline-block opacity-50">&bull;</span>;
+
 export const HiddenValue = ({ icon: Icon, value, valueClass }: { icon?: React.ComponentType<{ className?: string }>, value: string | React.ReactNode, valueClass?: string }) => {
   const isDesktopHidden = false;
-  const DefaultIcon = Icon || (() => <span className="h-3.5 w-3.5 inline-block opacity-50">&bull;</span>);
+  const DefaultIcon = Icon || DefaultDotIcon;
 
   return (
     <div className="group relative inline-flex items-center justify-center min-w-[20px] h-5 cursor-default overflow-hidden">

@@ -18,6 +18,7 @@ export function OmniTraceFeed({ tenantId }: Readonly<{ tenantId?: string }>) {
 
     if (!supabaseUrl || !supabaseKey) {
       console.warn('Supabase env vars missing for OmniTraceFeed');
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus('ERROR');
       return;
     }
@@ -78,7 +79,7 @@ export function OmniTraceFeed({ tenantId }: Readonly<{ tenantId?: string }>) {
         {logs.map(log => (
           <li key={log.id} className="text-sm border-b pb-1">
             <span className="font-mono text-xs text-gray-500 mr-2">
-              {new Date(log.created_at || Date.now()).toLocaleTimeString()}
+              {new Date(log.created_at || new Date().toISOString()).toLocaleTimeString()}
             </span>
             {log.action}
           </li>

@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ModuleRenderer } from "./components/ModuleRenderer";
-import { T, StatusDot, GlassCard, SectionLabel } from "./designSystem";
+import { T } from "./designSystem";
+import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
 import { SystemHealthRow } from "./components/SystemHealthRow";
 import { OmniTraceFeed } from "./components/OmniTraceFeed";
 import { SentinelPanel } from "./components/SentinelPanel";
@@ -38,7 +39,7 @@ import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 import { AVATAR_PATH_MAP } from './contracts/agentAvatars';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
-import type { CSSProperties,Dispatch, SetStateAction, RefObject } from "react";
+import type { CSSProperties, Dispatch, SetStateAction, RefObject } from "react";
 
 interface AppIconProps {
   idx: number;
@@ -104,7 +105,6 @@ const IMG_ICONS = imgIcons;
 const IMG_APEX_WM = imgApexWm;
 
 // ─── Design System ────────────────────────────────────────────────────────────
-// eslint-disable-next-line react-refresh/only-export-components
 
 function getHealthPalette(health: OmniHealthState): {
   bg: string;
@@ -671,6 +671,7 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
       const interval = setInterval(() => setSeconds(s => s + 1), 1000);
       return () => clearInterval(interval);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSeconds(0);
     }
   }, [demoMode]);
@@ -1394,6 +1395,7 @@ export default function OmniDashShell() {
 
   // Close drawer when viewport expands to desktop
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isDesktop) setDrawerOpen(false);
   }, [isDesktop]);
 

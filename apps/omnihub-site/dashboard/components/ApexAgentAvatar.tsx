@@ -29,6 +29,7 @@ const ApexAgentAvatar: React.FC<ApexAgentAvatarProps> = memo(
     useEffect(() => {
       const savedPersona = localStorage.getItem('apex.agent.persona') as AgentPersona;
       if (savedPersona && savedPersona in AVATAR_PATH_MAP) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPersona(savedPersona);
       }
 

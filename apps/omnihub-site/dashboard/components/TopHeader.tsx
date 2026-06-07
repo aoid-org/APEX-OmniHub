@@ -29,6 +29,7 @@ export function OmniDashTopHeader({ userEmail }: Readonly<OmniDashTopHeaderProps
   const [activePersona, setActivePersona] = useState<AgentPersona>('Navigator');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOrgBadge(readOrgBadge());
     setActivePersona(readAgentPrefs().persona);
   }, []);
