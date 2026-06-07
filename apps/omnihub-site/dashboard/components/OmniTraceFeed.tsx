@@ -59,7 +59,6 @@ export function OmniTraceFeed({ tenantId }: Readonly<{ tenantId?: string }>) {
           }
         });
     } catch {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus('ERROR');
     }
 

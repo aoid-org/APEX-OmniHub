@@ -671,7 +671,6 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
       const interval = setInterval(() => setSeconds(s => s + 1), 1000);
       return () => clearInterval(interval);
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSeconds(0);
     }
   }, [demoMode]);
@@ -1395,7 +1394,6 @@ export default function OmniDashShell() {
 
   // Close drawer when viewport expands to desktop
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isDesktop) setDrawerOpen(false);
   }, [isDesktop]);
 

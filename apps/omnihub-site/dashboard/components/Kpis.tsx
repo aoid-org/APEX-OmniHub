@@ -45,7 +45,6 @@ export const Kpis = () => {
 
   useEffect(() => {
     if (todayRow) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         tradeline_paid_starts: todayRow.tradeline_paid_starts,
         tradeline_active_pilots: todayRow.tradeline_active_pilots,
