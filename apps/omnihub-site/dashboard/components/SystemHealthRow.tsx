@@ -2,6 +2,11 @@ import { memo } from 'react';
 import { Activity } from 'lucide-react';
 import type { KpiSummary } from '../types/dashboard.types';
 
+function resolveSystemHealth(demoMode: boolean, kpi: KpiSummary): string {
+  if (demoMode) return '99.8%';
+  return kpi.ops_sev1_incidents > 0 ? '94.2%' : '100%';
+}
+
 export const SystemHealthRow = memo(function SystemHealthRow({
   demoMode,
   kpi,
@@ -10,7 +15,7 @@ export const SystemHealthRow = memo(function SystemHealthRow({
   kpi: KpiSummary;
 }) {
   const eventsTracked = demoMode ? 142 : (kpi.tradeline_paid_starts ?? 0);
-  const systemHealth = demoMode ? '99.8%' : (kpi.ops_sev1_incidents > 0 ? '94.2%' : '100%');
+  const systemHealth = resolveSystemHealth(demoMode, kpi);
   const guardianLoops = demoMode ? 4 : (kpi.tradeline_active_pilots ?? 0);
   const staleChecks = demoMode ? '0' : (kpi.tradeline_churn_risks ?? 0);
 
@@ -50,5 +55,3 @@ export const SystemHealthRow = memo(function SystemHealthRow({
     </div>
   );
 });
-
-
