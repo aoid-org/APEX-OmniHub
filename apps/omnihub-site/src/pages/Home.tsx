@@ -445,7 +445,7 @@ export function HomePage() {
   }, [isModalOpen]);
 
   return (
-    <div ref={rootRef}>
+    <div ref={rootRef} className="landing-root">
       <Layout>
         <SEOMeta
           title="APEX OmniHub | The Universal Sync Orchestrator"
