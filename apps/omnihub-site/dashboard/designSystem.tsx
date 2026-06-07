@@ -1,3 +1,4 @@
+// eslint-disable-next-line react-refresh/only-export-components
 import type { ReactNode, CSSProperties } from 'react';
 
 export const T = {

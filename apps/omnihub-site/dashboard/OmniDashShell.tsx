@@ -38,7 +38,7 @@ import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 import { AVATAR_PATH_MAP } from './contracts/agentAvatars';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
-import type { CSSProperties, ReactNode, Dispatch, SetStateAction, RefObject } from "react";
+import type { CSSProperties,Dispatch, SetStateAction, RefObject } from "react";
 
 interface AppIconProps {
   idx: number;
