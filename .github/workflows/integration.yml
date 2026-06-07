@@ -24,7 +24,7 @@ jobs:
           bun-version: latest
 
       - name: Install OmniHub deps
-        run: bun install --frozen-lockfile --ignore-scripts
+        run: bun install --ignore-scripts
 
       - name: Install SBBL-HQ deps
         run: cd ../sbbl-hq && npm ci --ignore-scripts
