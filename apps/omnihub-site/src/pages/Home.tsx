@@ -57,6 +57,9 @@ function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
                             0 0 0 0.15 0"/>
                   <feBlend in="blur" in2="SourceGraphic" mode="screen"/>
                 </filter>
+                <clipPath id="sclip">
+                  <circle cx="350" cy="310" r="30"/>
+                </clipPath>
               </defs>
               {/* ── Nucleus gradients ── */}
               <radialGradient id="hero-g-sphere" cx="50%" cy="35%" r="70%">
@@ -100,11 +103,14 @@ function HeroSection({ onOpenModal }: Readonly<{ onOpenModal: () => void }>) {
               {/* Equatorial plasma */}
               <ellipse cx="260" cy="250" rx="142" ry="18" fill="none" stroke="#1a1a2e" strokeWidth="2" opacity="0.7"/>
               {/* Badge DOF */}
-              <g transform="translate(320,280)">
-                <foreignObject width="60" height="60">
-                  <img src={HERO_BADGE_ASSET_PATH} width="60" height="60" alt="APEX OmniHub" style={{ display: 'block' }}/>
-                </foreignObject>
-              </g>
+              <image
+                href={HERO_BADGE_ASSET_PATH}
+                x="320" y="280"
+                width="60" height="60"
+                clipPath="url(#sclip)"
+                aria-label="APEX OmniHub core badge"
+                preserveAspectRatio="xMidYMid meet"
+              />
               {/* Pulse rings */}
               <circle cx="260" cy="250" r="1" fill="none" stroke="#00d4ff" strokeWidth="1.5" opacity="0.6">
                 <animate attributeName="r" values="1;180" dur="4s" repeatCount="indefinite"/>
