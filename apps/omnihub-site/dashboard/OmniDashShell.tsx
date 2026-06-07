@@ -35,9 +35,10 @@ import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
 import { AVATAR_PATH_MAP } from './contracts/agentAvatars';
+import { T, StatusDot, GlassCard, SectionLabel } from './designSystem';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
-import type { CSSProperties, ReactNode, Dispatch, SetStateAction, RefObject } from "react";
+import type { CSSProperties, Dispatch, SetStateAction, RefObject } from "react";
 
 interface AppIconProps {
   idx: number;
@@ -49,22 +50,6 @@ interface IconBadgeProps {
   idx: number;
   size?: number;
   style?: CSSProperties;
-}
-
-interface StatusDotProps {
-  color?: string;
-  pulse?: boolean;
-}
-
-interface GlassCardProps {
-  children?: ReactNode;
-  style?: CSSProperties;
-  glow?: boolean;
-  onClick?: () => void;
-}
-
-interface SectionLabelProps {
-  children: ReactNode;
 }
 
 type NavEntry = OmniDashSidebarWidget;
@@ -116,30 +101,8 @@ const IMG_ICONS = imgIcons;
 const IMG_APEX_WM = imgApexWm;
 
 // ─── Design System ────────────────────────────────────────────────────────────
-// eslint-disable-next-line react-refresh/only-export-components
-export const T = {
-  bg:        "var(--omni-bg)",
-  surface:   "var(--omni-surface)",
-  card:      "var(--omni-card)",
-  cardHover: "var(--omni-card-hover)",
-  border:    "var(--omni-border)",
-  borderGlow:"var(--omni-border-glow)",
-  orange:    "var(--omni-orange)",
-  orangeDim: "var(--omni-orange-dim)",
-  orangeGlow:"var(--omni-orange-glow)",
-  blue:      "var(--omni-blue)",
-  blueDim:   "var(--omni-blue-dim)",
-  blueGlow:  "var(--omni-blue-glow)",
-  cyan:      "var(--omni-cyan)",
-  green:     "var(--omni-green)",
-  warn:      "var(--omni-warn)",
-  red:       "var(--omni-red)",
-  purple:    "var(--omni-purple)",
-  t1:        "var(--omni-t1)",
-  t2:        "var(--omni-t2)",
-  t3:        "var(--omni-t3)",
-  t4:        "var(--omni-t4)",
-};
+// Tokens (T) and primitives (StatusDot, GlassCard, SectionLabel) are imported
+// from ./designSystem so panel modules can share them without a circular import.
 
 function getHealthPalette(health: OmniHealthState): {
   bg: string;
@@ -235,51 +198,7 @@ const scanLine = `@keyframes scanLine {
   0% { top: 0%; } 100% { top: 100%; }
 }`;
 
-export const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotProps) => (
-  <div style={{
-    width:8, height:8, borderRadius:"50%", backgroundColor:color,
-    flexShrink:0, boxShadow:`0 0 6px ${color}`,
-    animation: doPulse ? "apexPulse 2s ease-in-out infinite" : "none",
-  }} />
-);
-
-export const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => {
-  const cardStyle: CSSProperties = {
-    background: T.card,
-    border: `1px solid ${glow ? T.borderGlow : T.border}`,
-    borderRadius: 16,
-    boxShadow: glow
-      ? `0 0 24px ${T.orangeGlow}, 0 4px 24px rgba(0,0,0,.5)`
-      : `0 4px 24px rgba(0,0,0,.4)`,
-    backdropFilter: "blur(12px)",
-    transition: "all .2s ease",
-    ...style,
-  };
-
-  if (onClick) {
-    return (
-      <button type="button" onClick={onClick} style={{ ...cardStyle, cursor: "pointer" }}>
-        {children}
-      </button>
-    );
-  }
-
-  return (
-    <div style={cardStyle}>
-      {children}
-    </div>
-  );
-};
-
-
-
-export const SectionLabel = ({ children }: SectionLabelProps) => (
-  <div style={{
-    fontSize:9.8, fontWeight:800, letterSpacing:"0.14em",
-    color: T.t3, textTransform:"uppercase", marginBottom:8,
-  }}>{children}</div>
-);
-
+// StatusDot, GlassCard, SectionLabel are imported from ./designSystem above.
 // DraggableWidget is imported from ./DraggableWidget (extracted for testability).
 
 // ─── NavItem ──────────────────────────────────────────────────────────────────
