@@ -287,7 +287,7 @@ export function OmniSpatialHost() {
                 background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
                 pointerEvents: isPiP ? 'none' : 'auto',
               }}
-              onClick={isPiP ? undefined : closeModal}
+              onClick={isPiP ? undefined : () => abortModal('USER_DISMISSED')}
             />
             <motion.div
               layout
@@ -385,7 +385,7 @@ export function OmniSpatialHost() {
             background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)',
             border: 'none', cursor: 'pointer', padding: 0,
           }}
-          onClick={closeModal}
+          onClick={() => abortModal('USER_DISMISSED')}
           aria-label="Close sandbox"
         />
         <motion.div

@@ -25,6 +25,8 @@ import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
 import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/useAuth';
+import { LayoutContext } from './contexts/LayoutContext';
 import {
   OMNIDASH_SIDEBAR_WIDGETS,
   type OmniDashSidebarWidget,
@@ -1341,7 +1343,9 @@ const IntegratedAppsWidget = () => {
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);
-  const { activeNav, setActiveNav, isDark, setIsDark, ops } = useLayoutPersistence();
+  const { session } = useAuth();
+  const userId = session?.user?.id;
+  const { activeNav, setActiveNav, isDark, setIsDark, ops, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, resetWidgetPositions } = useLayoutPersistence(userId);
   const { invoke } = useOmniModal();
   const { isDesktop } = useViewport();
   const [mobileTab, setMobileTab] = useState<MobileTab>("home");
@@ -1394,6 +1398,7 @@ export default function OmniDashShell() {
   const gridHeight = isDesktop ? 300 : undefined;
 
   return (
+    <LayoutContext.Provider value={{ hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions }}>
     <div style={{
       fontFamily:"'Space Grotesk',sans-serif",
       background: T.bg, color: T.t1,
@@ -1414,11 +1419,32 @@ export default function OmniDashShell() {
         input { font-family:'Space Grotesk',sans-serif; }
       `}</style>
 
-      <OmniDashHeader tick={tick} isDark={isDark} setIsDark={setIsDark} invoke={invoke} />
+      <OmniDashHeader
+        tick={tick}
+        isDark={isDark}
+        setIsDark={setIsDark}
+        invoke={invoke}
+      />
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
-        {/* Sidebar — desktop only; tablet/mobile use bottom nav */}
-        {isDesktop && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
+        {/* Sidebar — standard layout: left; reversed layout: right */}
+        {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
+        {isDesktop && panelLayout === 'reversed' && (
+          <div
+            className="omni-right-panel"
+            style={{
+              width: 340, flexShrink: 0,
+              background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
+              borderRight: `1px solid ${T.border}`,
+              overflowY: 'auto', padding: '14px 12px',
+              display: 'flex', flexDirection: 'column', gap: 12,
+            }}
+          >
+            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
+            <OmniTraceFeed />
+            <SentinelPanel />
+          </div>
+        )}
 
         {/* Main Canvas */}
         <div ref={canvasRef} className="omni-canvas-container" style={{
@@ -1449,38 +1475,34 @@ export default function OmniDashShell() {
                 (including OmniSlate chat history) can blow out the row or
                 dislodge sibling tiles. */}
             <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0 }}>
-              <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
-              <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
-              <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
+              {!hiddenWidgets.includes('widget_agent') && <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>}
+              {!hiddenWidgets.includes('widget_slate') && <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>}
+              {!hiddenWidgets.includes('widget_eco') && <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>}
             </div>
 
             {/* Integrated Apps row */}
-            <DraggableWidget id="widget_apps"><IntegratedAppsWidget /></DraggableWidget>
+            {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsWidget /></DraggableWidget>}
 
-            {/* M-03 Observability Panels (5 Rows) */}
+            {/* M-03 Observability Panels — only rendered when at least one is visible */}
+            {(['m03_1','m03_2','m03_3','m03_4','m03_5','m03_6','m03_7'] as const).some(id => !hiddenWidgets.includes(id)) && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
-              <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <DraggableWidget id="m03_2"><AgentActivityTimeline /></DraggableWidget>
-                <DraggableWidget id="m03_3"><GuardianAlertFeed /></DraggableWidget>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <DraggableWidget id="m03_4"><ManModeReviewQueue /></DraggableWidget>
-                <DraggableWidget id="m03_5"><OmniRouteTraffic /></DraggableWidget>
-              </div>
-              <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>
-              <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>
-              {/* Connect AI */}
-              <button
-                className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-1.5 ml-2"
-                onClick={() => {
-                  toast.info('Setup is required', { description: 'Missing API configuration for Connect AI.' });
-                }}
-                title="Connect AI Provider"
-              >
-                Connect AI
-              </button>
+              {!hiddenWidgets.includes('m03_1') && <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>}
+              {(!hiddenWidgets.includes('m03_2') || !hiddenWidgets.includes('m03_3')) && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  {!hiddenWidgets.includes('m03_2') && <DraggableWidget id="m03_2"><AgentActivityTimeline /></DraggableWidget>}
+                  {!hiddenWidgets.includes('m03_3') && <DraggableWidget id="m03_3"><GuardianAlertFeed /></DraggableWidget>}
+                </div>
+              )}
+              {(!hiddenWidgets.includes('m03_4') || !hiddenWidgets.includes('m03_5')) && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  {!hiddenWidgets.includes('m03_4') && <DraggableWidget id="m03_4"><ManModeReviewQueue /></DraggableWidget>}
+                  {!hiddenWidgets.includes('m03_5') && <DraggableWidget id="m03_5"><OmniRouteTraffic /></DraggableWidget>}
+                </div>
+              )}
+              {!hiddenWidgets.includes('m03_6') && <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>}
+              {!hiddenWidgets.includes('m03_7') && <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>}
             </div>
+            )}
 
             {/* APEX-OmniHub wordmark watermark — above grid, below content */}
             <div style={{
@@ -1504,8 +1526,8 @@ export default function OmniDashShell() {
           </div>
         </div>
 
-        {/* Right Panel — desktop only; mobile/tablet use OmniMobileDrawer */}
-        {isDesktop && (
+        {/* Right Panel — standard layout: right; reversed layout: left (rendered above) */}
+        {isDesktop && panelLayout === 'standard' && (
           <div
             className="omni-right-panel"
             style={{
@@ -1521,6 +1543,9 @@ export default function OmniDashShell() {
             <SentinelPanel />
           </div>
         )}
+
+        {/* Sidebar — reversed layout: right side */}
+        {isDesktop && panelLayout === 'reversed' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
 
         {/* Mobile/Tablet — drawer trigger button in header area */}
         {!isDesktop && (
@@ -1591,6 +1616,7 @@ export default function OmniDashShell() {
       {/* OmniSpatialHost — universal modal engine, portal-mounted */}
       <OmniSpatialHost />
     </div>
+    </LayoutContext.Provider>
   );
 }
 

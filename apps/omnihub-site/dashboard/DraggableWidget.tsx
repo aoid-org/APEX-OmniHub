@@ -1,9 +1,14 @@
 /**
  * DraggableWidget — Free-position drag with collision-aware snap-lock.
  *
- * SPATIAL RESISTANCE MODEL:
- *   Drag activates only after the pointer travels DRAG_THRESHOLD_PX from its
- *   origin. Incidental edge contact (< 8 px) does NOT start the drag.
+ * LONG-PRESS ACTIVATION MODEL:
+ *   Drag activates only after a 500ms long-press. Incidental touch / scroll
+ *   (pointer moves > 8px before timer fires) cancels the timer and keeps
+ *   the widget non-draggable. This prevents accidental drags during scroll.
+ *
+ * DRAG MODE STATE MACHINE:
+ *   idle → (500ms hold) → ready → (drag start) → dragging → (drag end) → idle
+ *   ready → (Escape / click outside / pointer-up before drag) → idle
  *
  * SNAP-LOCK COLLISION AVOIDANCE:
  *   On drag end the widget resolves to the nearest available space that does
@@ -15,14 +20,20 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, useMotionValue, animate } from 'framer-motion';
 import type { ReactNode, CSSProperties } from 'react';
 
-/** Minimum pointer travel (px) before drag activates. */
+/** Minimum pointer travel (px) before drag cancels the long-press timer. */
 export const DRAG_THRESHOLD_PX = 8;
+
+/** Long-press duration before drag mode activates (ms). */
+const LONG_PRESS_MS = 500;
 
 /** Grid step used for snapping and collision search (px). */
 const SNAP = 20;
 
 /** Maximum outward search radius when resolving collisions (px). */
 const MAX_SEARCH_RADIUS = 800;
+
+/** Drag mode type — drives framer-motion drag prop and visual feedback. */
+type DragMode = 'idle' | 'ready' | 'dragging';
 
 // ─── Widget Registry ─────────────────────────────────────────────────────────
 // Module-level map: widgetId → live DOM element.
@@ -119,8 +130,9 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
   const y = useMotionValue(0);
   const elRef = useRef<HTMLDivElement>(null);
 
-  const [testDragActive, setTestDragActive] = useState(false);
+  const [dragMode, setDragMode] = useState<DragMode>('idle');
   const pointerOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Restore persisted position and register in registry
   useEffect(() => {
@@ -156,31 +168,78 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
     };
   }, [id, x, y]);
 
+  // Escape key cancels 'ready' state
+  useEffect(() => {
+    if (dragMode !== 'ready') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setDragMode('idle');
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [dragMode]);
+
+  // Click outside cancels 'ready' state
+  useEffect(() => {
+    if (dragMode !== 'ready') return;
+
+    const handlePointerDown = (e: PointerEvent) => {
+      const el = elRef.current;
+      if (el && !el.contains(e.target as Node)) {
+        setDragMode('idle');
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    return () => document.removeEventListener('pointerdown', handlePointerDown, true);
+  }, [dragMode]);
+
+  const cancelLongPress = useCallback(() => {
+    if (longPressTimerRef.current !== null) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     pointerOriginRef.current = { x: e.clientX, y: e.clientY };
-    setTestDragActive(false);
-  }, []);
+    cancelLongPress();
+
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTimerRef.current = null;
+      setDragMode('ready');
+    }, LONG_PRESS_MS);
+  }, [cancelLongPress]);
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!pointerOriginRef.current || testDragActive) return;
+      if (!pointerOriginRef.current) return;
       const dx = e.clientX - pointerOriginRef.current.x;
       const dy = e.clientY - pointerOriginRef.current.y;
       if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) {
-        setTestDragActive(true);
+        // User is scrolling — cancel long-press timer; stay idle
+        cancelLongPress();
+        pointerOriginRef.current = null;
       }
     },
-    [testDragActive],
+    [cancelLongPress],
   );
 
   const handlePointerUp = useCallback(() => {
+    cancelLongPress();
     pointerOriginRef.current = null;
-    setTestDragActive(false);
+    // Only reset to idle if not in dragging state (dragging has its own end handler)
+    setDragMode((prev) => (prev === 'dragging' ? prev : 'idle'));
+  }, [cancelLongPress]);
+
+  const handleDragStart = useCallback(() => {
+    setDragMode('dragging');
   }, []);
 
   const handleDragEnd = useCallback(
     (_event: unknown, info: { point: { x: number; y: number } }) => {
-      setTestDragActive(false);
+      setDragMode('idle');
       pointerOriginRef.current = null;
 
       if (!elRef.current) return;
@@ -239,23 +298,62 @@ export const DraggableWidget = ({ id, children, style = {} }: DraggableWidgetPro
     [id, x, y],
   );
 
+  // Visual feedback styles for drag mode
+  const dragModeStyle: CSSProperties =
+    dragMode === 'idle'
+      ? {}
+      : {
+          boxShadow: '0 0 0 2px rgba(249,115,22,0.5)',
+          cursor: dragMode === 'dragging' ? 'grabbing' : 'grab',
+        };
+
   return (
     <motion.div
       ref={elRef}
       id={id}
-      drag
+      drag={dragMode !== 'idle'}
       dragMomentum={false}
       dragElastic={0.05}
-      style={{ ...style, x, y, position: 'relative', zIndex: 'auto' as unknown as number }}
-      whileDrag={{ scale: 1.015, zIndex: 999, cursor: 'grabbing' }}
+      style={{
+        ...style,
+        ...dragModeStyle,
+        x,
+        y,
+        position: 'relative',
+        zIndex: 'auto' as unknown as number,
+      }}
+      whileDrag={{ scale: 1.015, zIndex: 999 }}
       data-testid={id}
-      data-drag-active={testDragActive}
+      data-drag-mode={dragMode}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       {children}
+      {/* DRAG badge — visible in ready/dragging states */}
+      {dragMode !== 'idle' && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            zIndex: 1000,
+            background: 'rgba(249,115,22,0.9)',
+            color: '#fff',
+            fontSize: 9,
+            fontWeight: 800,
+            letterSpacing: '0.08em',
+            padding: '2px 5px',
+            borderRadius: 4,
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          DRAG
+        </div>
+      )}
     </motion.div>
   );
 };
