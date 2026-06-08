@@ -5,7 +5,6 @@ import { Section } from '@/components/Section';
 import { toUserFacingAuthError } from '@/lib/authErrorDisplay';
 import { hasSupabaseConfig, supabase, supabaseConfigStatus, supabaseConfigTraceId } from '@/lib/supabase';
 import type { Provider } from '@supabase/supabase-js';
-import { ConnectAiAuthModal } from '../components/byom/ConnectAiAuthModal';
 
 const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL ?? '/omnidash';
 
@@ -45,7 +44,6 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<Provider | null>(null);
   const [logoError, setLogoError] = useState(false);
-  const [isConnectAiModalOpen, setIsConnectAiModalOpen] = useState(false);
 
   useEffect(() => {
     if (import.meta.env.PROD) return;
@@ -171,19 +169,7 @@ export function LoginPage() {
     }
   };
 
-  const handleConnectAiSignIn = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!hasSupabaseConfig) {
-      setError(`Login is temporarily unavailable — authentication service is not configured. Contact your administrator. (Trace: ${supabaseConfigTraceId})`);
-      return;
-    }
-
-    setIsConnectAiModalOpen(true);
-  };
-
-  const handleSignOut = useCallback(async () => {
+const handleSignOut = useCallback(async () => {
     await supabase.auth.signOut();
     globalThis.window.location.reload();
   }, []);
@@ -351,34 +337,6 @@ export function LoginPage() {
             </button>
           </div>
 
-          {import.meta.env.VITE_CONNECT_AI_ENABLED === 'true' && (
-            <button
-              type="button"
-              onClick={handleConnectAiSignIn}
-              disabled={isLoading || oauthLoading !== null}
-              className="btn btn--secondary"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                width: '100%',
-                marginTop: 12,
-                textDecoration: 'none',
-              }}
-            >
-              {isLoading ? (
-                'Connecting...'
-              ) : (
-                <>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#f97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  Connect AI
-                </>
-              )}
-            </button>
-          )}
 
           <p className="text-muted mt-8" style={{ fontSize: 'var(--font-size-sm)' }}>
             Don&apos;t have an account?{' '}
@@ -388,13 +346,7 @@ export function LoginPage() {
           </p>
         </div>
       </Section>
-      <ConnectAiAuthModal 
-        isOpen={isConnectAiModalOpen} 
-        onClose={() => setIsConnectAiModalOpen(false)} 
-        onSuccess={() => {
-          globalThis.window.location.href = dashboardUrl;
-        }}
-      />
+
     </Layout>
   );
 }
