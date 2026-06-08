@@ -1,18 +1,13 @@
 name: Clean-Room Final Certification
-
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 concurrency: ${{ github.workflow }}-${{ github.ref }}
-
 permissions:
   contents: read
-
 env:
   PRODUCTION_SITE_URL: https://apexomnihub.icu
-
 jobs:
   release:
     name: Release
@@ -186,7 +181,6 @@ jobs:
           exit 1
     outputs:
       tf_plan_result: ${{ steps.tf_plan.outputs.tf_plan_result }}
-
   atomic-routing-flip:
     name: Atomic Routing Flip (Promote to Active)
     needs: [release]
