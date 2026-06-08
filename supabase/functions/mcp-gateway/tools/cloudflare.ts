@@ -17,7 +17,6 @@ async function cfFetch(path: string, options: RequestInit = {}): Promise<unknown
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
-      ...(options.headers ?? {}),
     },
   });
 
@@ -94,57 +93,56 @@ export const cloudflareTools: MCPTool[] = [
   },
 ];
 
+async function cfListDeployments(args: Record<string, unknown>): Promise<ToolCallResult> {
+  const data = await cfFetch(`/accounts/${accountId()}/pages/projects/${args.project_name}/deployments`);
+  return ok(data);
+}
+
+async function cfGetDeployment(args: Record<string, unknown>): Promise<ToolCallResult> {
+  const data = await cfFetch(
+    `/accounts/${accountId()}/pages/projects/${args.project_name}/deployments/${args.deployment_id}`
+  );
+  return ok(data);
+}
+
+async function cfTriggerDeploy(args: Record<string, unknown>): Promise<ToolCallResult> {
+  const body: Record<string, unknown> = {};
+  if (args.branch) body.branch = args.branch;
+  const data = await cfFetch(
+    `/accounts/${accountId()}/pages/projects/${args.project_name}/deployments`,
+    { method: "POST", body: JSON.stringify(body) }
+  );
+  return ok(data);
+}
+
+async function cfPurgeCache(args: Record<string, unknown>): Promise<ToolCallResult> {
+  const purgeAll = args.purge_everything !== false;
+  const body = purgeAll ? { purge_everything: true } : { files: args.files ?? [] };
+  const data = await cfFetch(
+    `/zones/${args.zone_id}/purge_cache`,
+    { method: "POST", body: JSON.stringify(body) }
+  );
+  return ok(data);
+}
+
+async function cfListWorkers(): Promise<ToolCallResult> {
+  const data = await cfFetch(`/accounts/${accountId()}/workers/scripts`);
+  return ok(data);
+}
+
 export async function handleCloudflareTool(
   name: string,
   args: Record<string, unknown>
 ): Promise<ToolCallResult> {
   try {
-    if (name === "cf_list_deployments") {
-      const aid = accountId();
-      const data = await cfFetch(
-        `/accounts/${aid}/pages/projects/${args.project_name}/deployments`
-      );
-      return ok(data);
+    switch (name) {
+      case "cf_list_deployments": return cfListDeployments(args);
+      case "cf_get_deployment":   return cfGetDeployment(args);
+      case "cf_trigger_deploy":   return cfTriggerDeploy(args);
+      case "cf_purge_cache":      return cfPurgeCache(args);
+      case "cf_list_workers":     return cfListWorkers();
+      default: return err(`Unhandled cloudflare tool: ${name}`);
     }
-
-    if (name === "cf_get_deployment") {
-      const aid = accountId();
-      const data = await cfFetch(
-        `/accounts/${aid}/pages/projects/${args.project_name}/deployments/${args.deployment_id}`
-      );
-      return ok(data);
-    }
-
-    if (name === "cf_trigger_deploy") {
-      const aid = accountId();
-      const body: Record<string, unknown> = {};
-      if (args.branch) body.branch = args.branch;
-      const data = await cfFetch(
-        `/accounts/${aid}/pages/projects/${args.project_name}/deployments`,
-        { method: "POST", body: JSON.stringify(body) }
-      );
-      return ok(data);
-    }
-
-    if (name === "cf_purge_cache") {
-      const purgeAll = args.purge_everything !== false;
-      const body = purgeAll
-        ? { purge_everything: true }
-        : { files: args.files ?? [] };
-      const data = await cfFetch(
-        `/zones/${args.zone_id}/purge_cache`,
-        { method: "POST", body: JSON.stringify(body) }
-      );
-      return ok(data);
-    }
-
-    if (name === "cf_list_workers") {
-      const aid = accountId();
-      const data = await cfFetch(`/accounts/${aid}/workers/scripts`);
-      return ok(data);
-    }
-
-    return err(`Unhandled cloudflare tool: ${name}`);
   } catch (e) {
     return err(e instanceof Error ? e.message : String(e));
   }
