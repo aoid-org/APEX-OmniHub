@@ -63,6 +63,10 @@ for (const file of files) {
     continue;
   }
 
+  // Skip symlinks that resolve to directories (e.g. .claude/skills/* symlinks)
+  const stat = fs.statSync(file, { throwIfNoEntry: false });
+  if (!stat || stat.isDirectory()) continue;
+
   const buffer = fs.readFileSync(file);
   if (isLikelyBinary(file, buffer)) continue;
 
