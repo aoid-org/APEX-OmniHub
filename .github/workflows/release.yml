@@ -27,29 +27,23 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Setup Node.js
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: "24"
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
-
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
-
       - name: Install ruff (Python linter)
-                run: pip install ruff==0.15.16 --only-binary=:all: --quiet --disable-pip-version-check
-
+        run: |-
+          pip install "ruff==0.15.16" --only-binary=':all:' --quiet --disable-pip-version-check
       - name: Run CI integrity scanner
         run: bun run verify:ci-integrity
-
       - name: Run Release verification suite
         run: bun run verify:release
-
       - name: Detect release cut
         id: release_signal
         run: |
@@ -58,7 +52,6 @@ jobs:
           else
             echo "release_cut=false" >> "$GITHUB_OUTPUT"
           fi
-
       - name: Shadow certification preflight
         id: shadow_preflight
         env:
@@ -72,11 +65,9 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           TF_TOKEN: ${{ secrets.TF_TOKEN }}
         run: node scripts/ci/shadow-certification-preflight.mjs
-
       - name: Deploy to Shadow Slot (Cloudflare Pages)
         if: |
-          steps.release_signal.outputs.release_cut == 'true' &&
-          steps.shadow_preflight.outputs.status == 'pass'
+          steps.release_signal.outputs.release_cut == 'true' && steps.shadow_preflight.outputs.status == 'pass'
         id: shadow_deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -98,7 +89,6 @@ jobs:
           SHADOW_URL=$(grep -oP 'https://[^\s]+\.pages\.dev' shadow-deploy.log | head -1 || echo "")
           echo "shadow_url=${SHADOW_URL}" >> "$GITHUB_OUTPUT"
           echo "Shadow deployment URL: ${SHADOW_URL}"
-
       - name: Shadow Health Check
         if: steps.shadow_deploy.outputs.shadow_url != ''
         id: shadow_health
@@ -121,7 +111,6 @@ jobs:
           echo "health_result=fail" >> "$GITHUB_OUTPUT"
           echo "::error::Shadow health check failed after ${MAX_ATTEMPTS} attempts."
           exit 1
-
       - name: Deterministic Validator CI Gate
         if: steps.shadow_health.outputs.health_result == 'pass'
         id: validator
@@ -130,22 +119,16 @@ jobs:
           echo "validator_result=pass" >> "$GITHUB_OUTPUT"
         env:
           TARGET_URL: ${{ steps.shadow_deploy.outputs.shadow_url }}
-
       - name: Skip shadow deployment — certification preflight blocked
         if: |
-          steps.release_signal.outputs.release_cut == 'true' &&
-          steps.shadow_preflight.outputs.status != 'pass'
+          steps.release_signal.outputs.release_cut == 'true' && steps.shadow_preflight.outputs.status != 'pass'
         run: |
           echo "Skipping shadow deployment because certification preflight is blocked."
           cat shadow-preflight.json
           echo "See docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md for requirements."
-
       - name: Terraform Plan (shadow validated)
         if: |
-          steps.release_signal.outputs.release_cut == 'true' &&
-          vars.ENABLE_SHADOW_DEPLOYMENT == 'true' &&
-          'false' == 'true' &&
-          steps.validator.outputs.validator_result == 'pass'
+          steps.release_signal.outputs.release_cut == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true' && 'false' == 'true' && steps.validator.outputs.validator_result == 'pass'
         id: tf_plan
         run: |
           cd terraform/environments/production
@@ -154,7 +137,6 @@ jobs:
           echo "tf_plan_result=pass" >> "$GITHUB_OUTPUT"
         env:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
-
       - name: Upload Terraform plan artifact
         if: steps.tf_plan.outputs.tf_plan_result == 'pass'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -162,11 +144,9 @@ jobs:
           name: tfplan
           path: terraform/environments/production/tfplan
           retention-days: 1
-
       - name: Skip atomic routing flip — prerequisites not met
         if: |
-          steps.release_signal.outputs.release_cut == 'true' &&
-          (vars.ENABLE_SHADOW_DEPLOYMENT != 'true' || 'false' != 'true')
+          steps.release_signal.outputs.release_cut == 'true' && (vars.ENABLE_SHADOW_DEPLOYMENT != 'true' || 'false' != 'true')
         env:
           SHADOW_ENABLED: ${{ vars.ENABLE_SHADOW_DEPLOYMENT }}
           ROUTING_FLIP_ENABLED: 'false'
@@ -174,7 +154,6 @@ jobs:
           echo "Skipping routing flip."
           echo "ENABLE_SHADOW_DEPLOYMENT=${SHADOW_ENABLED}"
           echo "ENABLE_ATOMIC_ROUTING_FLIP=${ROUTING_FLIP_ENABLED}"
-
       - name: Write release evidence
         if: always()
         env:
@@ -190,7 +169,6 @@ jobs:
           PUBLISHED_RAW: 'false'
           RELEASE_CUT_RAW: ${{ steps.release_signal.outputs.release_cut || 'false' }}
         run: node scripts/ci/write-release-evidence.mjs
-
       - name: Upload release-evidence artifact
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -200,12 +178,9 @@ jobs:
             release-evidence.json
             shadow-preflight.json
           retention-days: 90
-
       - name: Block enabled shadow release when certification preflight fails
         if: |
-          steps.release_signal.outputs.release_cut == 'true' &&
-          vars.ENABLE_SHADOW_DEPLOYMENT == 'true' &&
-          steps.shadow_preflight.outputs.status != 'pass'
+          steps.release_signal.outputs.release_cut == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true' && steps.shadow_preflight.outputs.status != 'pass'
         run: |
           echo "::error::Shadow deployment was enabled, but certification preflight is blocked."
           cat release-evidence.json
@@ -226,26 +201,22 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
-
       - name: Download Terraform plan artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: tfplan
           path: terraform/environments/production
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
           cli_config_credentials_token: ${{ secrets.TF_TOKEN }}
-
       - name: Terraform Init
         run: |
           cd terraform/environments/production
           terraform init -input=false
         env:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_TOKEN }}
-
-      - name: Terraform Apply — Promote Shadow to Active
+      - name: Terraform Apply - Promote Shadow to Active
         run: |
           echo "Executing Terraform apply with plan artifact..."
           cd terraform/environments/production
