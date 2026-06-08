@@ -36,7 +36,7 @@ import { toast } from 'sonner';
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
-import { AVATAR_PATH_MAP } from './contracts/agentAvatars';
+import { AVATAR_PATH_MAP, AGENT_AVATARS, avatarPath, agentNameFromAvatarFile } from './contracts/agentAvatars';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, Dispatch, SetStateAction, RefObject } from "react";
@@ -213,20 +213,20 @@ const scanLine = `@keyframes scanLine {
 const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
   const [hov, setHov] = useState<boolean>(false);
     const borderColors = {
-      active: `${T.orange}66`,
-      hover: `${T.orange}44`,
-      base: `${T.orange}28`
+      active: `${T.orange}88`,
+      hover: `${T.orange}66`,
+      base: `${T.orange}44`
     };
     const bgOpacities = {
-      active: "20",
-      hover: "16",
-      base: "10"
+      active: "28",
+      hover: "20",
+      base: "16"
     };
-    
+
     const resolveShadow = (isActive: boolean, hov: boolean) => {
-      if (isActive) return `0 0 0 1px ${T.orange}22, 0 4px 16px ${T.orange}28, 0 2px 6px rgba(0,0,0,.5)`;
-      if (hov) return `0 0 0 1px ${T.orange}18, 0 4px 14px ${T.orange}20, 0 2px 4px rgba(0,0,0,.4)`;
-      return `0 0 0 1px ${T.orange}10, 0 2px 10px ${T.orange}14, 0 1px 3px rgba(0,0,0,.35)`;
+      if (isActive) return `0 0 0 1px ${T.orange}30, 0 4px 18px ${T.orange}38, inset 2px 0 0 ${T.orange}cc, 0 2px 6px rgba(0,0,0,.5)`;
+      if (hov) return `0 0 0 1px ${T.orange}22, 0 4px 14px ${T.orange}28, inset 2px 0 0 ${T.orange}88, 0 2px 4px rgba(0,0,0,.4)`;
+      return `0 0 0 1px ${T.orange}18, 0 2px 10px ${T.orange}20, inset 2px 0 0 ${T.orange}55, 0 1px 3px rgba(0,0,0,.35)`;
     };
 
     const resolveBorder = (isActive: boolean, hov: boolean) => {
@@ -672,27 +672,39 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
 
 // ─── Widget: APEX Agent ───────────────────────────────────────────────────────
 const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
-  const { demoMode, autoPilot, setAutoPilot } = useDemoMode();
+  const { autoPilot, setAutoPilot } = useDemoMode();
   const [seconds, setSeconds] = useState(0);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState<string>(AVATAR_PATH_MAP.Default);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isRunning = autoPilot;
 
+  // Timer driven by isRunning — Play/Pause actually controls it
   useEffect(() => {
-    if (demoMode) {
-      const interval = setInterval(() => setSeconds(s => s + 1), 1000);
-      return () => clearInterval(interval);
-    } else {
-      setSeconds(0);
-    }
-  }, [demoMode]);
+    if (!isRunning) return;
+    const interval = setInterval(() => setSeconds(s => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [isRunning]);
 
   const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
   const ss = String(seconds % 60).padStart(2, '0');
 
   const handlePlayPause = () => setAutoPilot(!autoPilot);
   const handleReset = () => { setAutoPilot(false); setSeconds(0); };
-  const isRunning = autoPilot;
+
+  // Long-press on avatar (500ms) → open avatar picker
+  const handleAvatarPointerDown = () => {
+    longPressTimerRef.current = setTimeout(() => setShowAvatarPicker(true), 500);
+  };
+  const handleAvatarPointerUp = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
 
   return (
-    <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+    <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden", position:"relative" }}>
       {/* Header — unified 44px */}
       <div style={{ height:44, padding:"0 16px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
         <SectionLabel>APEX Agent</SectionLabel>
@@ -709,6 +721,57 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
           WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
         }}>{mm}:{ss}</div>
       </div>
+
+      {/* Avatar picker overlay — triggered by long press */}
+      {showAvatarPicker && (
+        <div style={{
+          position:"absolute", inset:0, zIndex:50, borderRadius:14,
+          background:"rgba(6,10,19,0.94)", backdropFilter:"blur(10px)",
+          display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+          gap:16, padding:20,
+        }}>
+          <div style={{ fontSize:9.5, color:"rgba(224,231,255,0.45)", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:700 }}>
+            Choose Agent Avatar
+          </div>
+          <div style={{ display:"flex", gap:12, flexWrap:"wrap", justifyContent:"center" }}>
+            {AGENT_AVATARS.map((filename) => {
+              const src = avatarPath(filename);
+              const isSelected = selectedAvatar === src;
+              return (
+                <button
+                  key={filename}
+                  type="button"
+                  title={agentNameFromAvatarFile(filename)}
+                  onClick={() => { setSelectedAvatar(src); setShowAvatarPicker(false); }}
+                  style={{
+                    padding:3, borderRadius:"50%", background:"transparent", cursor:"pointer",
+                    border: isSelected ? `2px solid ${T.orange}` : "2px solid rgba(255,255,255,0.12)",
+                    boxShadow: isSelected ? `0 0 12px ${T.orange}66` : "none",
+                    transition:"all .18s",
+                  }}
+                >
+                  <img src={src} alt={agentNameFromAvatarFile(filename)}
+                    style={{ width:52, height:52, borderRadius:"50%", display:"block", objectFit:"cover" }}
+                    loading="lazy"
+                  />
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAvatarPicker(false)}
+            style={{
+              marginTop:4, padding:"6px 20px", borderRadius:8, cursor:"pointer",
+              border:"1px solid rgba(255,255,255,0.12)", background:"rgba(255,255,255,0.06)",
+              color:"rgba(224,231,255,0.6)", fontSize:11, fontWeight:600,
+              fontFamily:"'Space Grotesk',sans-serif",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
 
       {/* Avatar + orbital ring visualizer */}
       <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -789,14 +852,22 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
             </svg>
           </div>
 
-          {/* Avatar */}
-          <div style={{
-            width:80, height:80, borderRadius:"50%",
-            overflow:"hidden", position:"relative", zIndex:1,
-            border:`2px solid ${T.orange}55`,
-            boxShadow:`0 0 14px ${T.orange}28, 0 0 28px ${T.orange}12`,
-          }}>
-            <img src={IMG_AVATAR} alt="APEX Agent" style={{ width:"100%", height:"100%", objectFit:"cover" }} loading="lazy" decoding="async" />
+          {/* Avatar — long press to open avatar picker */}
+          <div
+            onPointerDown={handleAvatarPointerDown}
+            onPointerUp={handleAvatarPointerUp}
+            onPointerLeave={handleAvatarPointerUp}
+            title="Long-press to change avatar"
+            style={{
+              width:80, height:80, borderRadius:"50%",
+              overflow:"hidden", position:"relative", zIndex:1,
+              border:`2px solid ${T.orange}55`,
+              boxShadow:`0 0 14px ${T.orange}28, 0 0 28px ${T.orange}12`,
+              cursor:"pointer",
+              userSelect:"none",
+            }}
+          >
+            <img src={selectedAvatar} alt="APEX Agent" style={{ width:"100%", height:"100%", objectFit:"cover", pointerEvents:"none" }} loading="lazy" decoding="async" />
           </div>
         </div>
       </div>
@@ -1299,14 +1370,19 @@ const IntegratedAppsWidget = () => {
       <button
         onClick={() => handleConnectApp(0)}
         style={{
-          background: T.cyan, color: T.bg, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 4, cursor: "pointer", border: "none"
+          background: `${T.orange}22`, color: T.orange,
+          fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6,
+          cursor: "pointer", border: `1px solid ${T.orange}55`,
+          boxShadow: `0 0 8px ${T.orange}22`,
+          fontFamily: "'Space Grotesk',sans-serif",
+          transition: "all .18s",
         }}
       >
         + Connect App
       </button>
     </div>
     {/* 4 columns — same tile size as EcosystemWidget tiles */}
-    <div className="omni-grid-apps" style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10 }}>
+    <div className="omni-grid-apps" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(110px, 1fr))", gap:10 }}>
       {[1,2,3,4].map(i => (
         <button
           key={`integrated-app-ph-${i}`}
@@ -1474,10 +1550,10 @@ export default function OmniDashShell() {
                 Each DraggableWidget gets height+overflow:hidden so no child
                 (including OmniSlate chat history) can blow out the row or
                 dislodge sibling tiles. */}
-            <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0 }}>
-              {!hiddenWidgets.includes('widget_agent') && <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>}
-              {!hiddenWidgets.includes('widget_slate') && <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>}
-              {!hiddenWidgets.includes('widget_eco') && <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>}
+            <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0, overflow: isDesktop ? "visible" : "hidden" }}>
+              {!hiddenWidgets.includes('widget_agent') && <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><AgentWidget tick={tick} /></DraggableWidget>}
+              {!hiddenWidgets.includes('widget_slate') && <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><OmniSlateWidget /></DraggableWidget>}
+              {!hiddenWidgets.includes('widget_eco') && <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><EcosystemWidget /></DraggableWidget>}
             </div>
 
             {/* Integrated Apps row */}
