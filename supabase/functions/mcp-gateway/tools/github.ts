@@ -8,10 +8,7 @@ import { ok, err } from "./registry.ts";
 
 const GH_API = "https://api.github.com";
 
-async function ghFetch(
-  path: string,
-  options: RequestInit = {}
-): Promise<unknown> {
+async function ghFetch(path: string, options: RequestInit = {}): Promise<unknown> {
   const token = Deno.env.get("GITHUB_TOKEN");
   if (!token) throw new Error("GITHUB_TOKEN is not configured.");
 
@@ -22,7 +19,6 @@ async function ghFetch(
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
       "Content-Type": "application/json",
-      ...(options.headers ?? {}),
     },
   });
 
@@ -128,112 +124,116 @@ export const githubTools: MCPTool[] = [
   },
 ];
 
+async function ghListRepos(args: Record<string, unknown>): Promise<ToolCallResult> {
+  const type = (args.type as string | undefined) ?? "all";
+  const perPage = Math.min(Number(args.per_page ?? 30), 100);
+  const data = await ghFetch(
+    `/users/${String(args.owner)}/repos?type=${type}&per_page=${perPage}`
+  );
+  const repos = (data as Array<{ name: string; full_name: string; private: boolean; default_branch: string; description: string | null }>)
+    .map((r) => ({ name: r.name, full_name: r.full_name, private: r.private, default_branch: r.default_branch, description: r.description }));
+  return ok(repos);
+}
+
+async function ghGetFile(args: Record<string, unknown>): Promise<ToolCallResult> {
+  const ref = args.ref ? `?ref=${String(args.ref)}` : "";
+  const data = await ghFetch(
+    `/repos/${String(args.owner)}/${String(args.repo)}/contents/${String(args.path)}${ref}`
+  ) as { content?: string; encoding?: string; name: string; path: string; sha: string; size: number };
+  if (data.encoding === "base64" && data.content) {
+    data.content = atob(data.content.replaceAll('\n', ''));
+  }
+  return ok(data);
+}
+
+async function ghListBranches(args: Record<string, unknown>): Promise<ToolCallResult> {
+  const perPage = Math.min(Number(args.per_page ?? 30), 100);
+  const data = await ghFetch(
+    `/repos/${String(args.owner)}/${String(args.repo)}/branches?per_page=${perPage}`
+  );
+  return ok(data);
+}
+
+async function ghCreateBranch(args: Record<string, unknown>): Promise<ToolCallResult> {
+  let sha: string;
+  if (args.from_ref) {
+    const refData = await ghFetch(
+      `/repos/${String(args.owner)}/${String(args.repo)}/git/refs/heads/${String(args.from_ref)}`
+    ) as { object: { sha: string } };
+    sha = refData.object.sha;
+  } else {
+    const repo = await ghFetch(
+      `/repos/${String(args.owner)}/${String(args.repo)}`
+    ) as { default_branch: string };
+    const defaultRef = await ghFetch(
+      `/repos/${String(args.owner)}/${String(args.repo)}/git/refs/heads/${repo.default_branch}`
+    ) as { object: { sha: string } };
+    sha = defaultRef.object.sha;
+  }
+  const result = await ghFetch(
+    `/repos/${String(args.owner)}/${String(args.repo)}/git/refs`,
+    { method: "POST", body: JSON.stringify({ ref: `refs/heads/${String(args.branch)}`, sha }) }
+  );
+  return ok(result);
+}
+
+async function ghPushFiles(args: Record<string, unknown>): Promise<ToolCallResult> {
+  const files = args.files as Array<{ path: string; content: string }>;
+  const results = [];
+  for (const file of files) {
+    let existingSha: string | undefined;
+    try {
+      const existing = await ghFetch(
+        `/repos/${String(args.owner)}/${String(args.repo)}/contents/${file.path}?ref=${String(args.branch)}`
+      ) as { sha?: string };
+      existingSha = existing.sha;
+    } catch {
+      // File does not exist yet — no SHA needed
+    }
+    const bytes = new TextEncoder().encode(file.content);
+    const content = btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(''));
+    const payload: Record<string, unknown> = { message: args.message, content, branch: args.branch };
+    if (existingSha) payload.sha = existingSha;
+    const result = await ghFetch(
+      `/repos/${String(args.owner)}/${String(args.repo)}/contents/${file.path}`,
+      { method: "PUT", body: JSON.stringify(payload) }
+    );
+    results.push(result);
+  }
+  return ok(results);
+}
+
+async function ghCreatePr(args: Record<string, unknown>): Promise<ToolCallResult> {
+  const result = await ghFetch(
+    `/repos/${String(args.owner)}/${String(args.repo)}/pulls`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        title: args.title,
+        body: args.body ?? "",
+        head: args.head,
+        base: args.base ?? "main",
+        draft: args.draft ?? false,
+      }),
+    }
+  );
+  return ok(result);
+}
+
 export async function handleGithubTool(
   name: string,
   args: Record<string, unknown>
 ): Promise<ToolCallResult> {
   try {
-    if (name === "github_list_repos") {
-      const type = (args.type as string | undefined) ?? "all";
-      const perPage = Math.min(Number(args.per_page ?? 30), 100);
-      const data = await ghFetch(
-        `/users/${args.owner}/repos?type=${type}&per_page=${perPage}`
-      );
-      const repos = (data as Array<{ name: string; full_name: string; private: boolean; default_branch: string; description: string | null }>)
-        .map((r) => ({ name: r.name, full_name: r.full_name, private: r.private, default_branch: r.default_branch, description: r.description }));
-      return ok(repos);
+    switch (name) {
+      case "github_list_repos":    return ghListRepos(args);
+      case "github_get_file":      return ghGetFile(args);
+      case "github_list_branches": return ghListBranches(args);
+      case "github_create_branch": return ghCreateBranch(args);
+      case "github_push_files":    return ghPushFiles(args);
+      case "github_create_pr":     return ghCreatePr(args);
+      default:                     return err(`Unhandled github tool: ${name}`);
     }
-
-    if (name === "github_get_file") {
-      const ref = args.ref ? `?ref=${args.ref}` : "";
-      const data = await ghFetch(
-        `/repos/${args.owner}/${args.repo}/contents/${args.path}${ref}`
-      ) as { content?: string; encoding?: string; name: string; path: string; sha: string; size: number };
-      if (data.encoding === "base64" && data.content) {
-        data.content = atob(data.content.replace(/\n/g, ""));
-      }
-      return ok(data);
-    }
-
-    if (name === "github_list_branches") {
-      const perPage = Math.min(Number(args.per_page ?? 30), 100);
-      const data = await ghFetch(
-        `/repos/${args.owner}/${args.repo}/branches?per_page=${perPage}`
-      );
-      return ok(data);
-    }
-
-    if (name === "github_create_branch") {
-      let sha: string;
-      if (args.from_ref) {
-        const ref = await ghFetch(
-          `/repos/${args.owner}/${args.repo}/git/refs/heads/${args.from_ref}`
-        ) as { object: { sha: string } };
-        sha = ref.object.sha;
-      } else {
-        const repo = await ghFetch(`/repos/${args.owner}/${args.repo}`) as { default_branch: string };
-        const defaultRef = await ghFetch(
-          `/repos/${args.owner}/${args.repo}/git/refs/heads/${repo.default_branch}`
-        ) as { object: { sha: string } };
-        sha = defaultRef.object.sha;
-      }
-      const result = await ghFetch(
-        `/repos/${args.owner}/${args.repo}/git/refs`,
-        {
-          method: "POST",
-          body: JSON.stringify({ ref: `refs/heads/${args.branch}`, sha }),
-        }
-      );
-      return ok(result);
-    }
-
-    if (name === "github_push_files") {
-      const files = args.files as Array<{ path: string; content: string }>;
-      const results = [];
-      for (const file of files) {
-        // Check if file exists to get its SHA
-        let existingSha: string | undefined;
-        try {
-          const existing = await ghFetch(
-            `/repos/${args.owner}/${args.repo}/contents/${file.path}?ref=${args.branch}`
-          ) as { sha?: string };
-          existingSha = existing.sha;
-        } catch {
-          // File doesn't exist yet
-        }
-        const payload: Record<string, unknown> = {
-          message: args.message,
-          content: btoa(unescape(encodeURIComponent(file.content))),
-          branch: args.branch,
-        };
-        if (existingSha) payload.sha = existingSha;
-        const result = await ghFetch(
-          `/repos/${args.owner}/${args.repo}/contents/${file.path}`,
-          { method: "PUT", body: JSON.stringify(payload) }
-        );
-        results.push(result);
-      }
-      return ok(results);
-    }
-
-    if (name === "github_create_pr") {
-      const result = await ghFetch(
-        `/repos/${args.owner}/${args.repo}/pulls`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            title: args.title,
-            body: args.body ?? "",
-            head: args.head,
-            base: args.base ?? "main",
-            draft: args.draft ?? false,
-          }),
-        }
-      );
-      return ok(result);
-    }
-
-    return err(`Unhandled github tool: ${name}`);
   } catch (e) {
     return err(e instanceof Error ? e.message : String(e));
   }

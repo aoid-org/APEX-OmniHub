@@ -7,7 +7,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import type { MCPTool, ToolCallResult } from "./registry.ts";
 import { ok, err } from "./registry.ts";
 
-function adminClient() {
+type DbClient = ReturnType<typeof createClient>;
+
+function adminClient(): DbClient {
   return createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -104,101 +106,106 @@ export const dbTools: MCPTool[] = [
   },
 ];
 
+async function dbListTables(sb: DbClient): Promise<ToolCallResult> {
+  const { data, error } = await sb.rpc("list_tables");
+  if (error) {
+    const { data: d2, error: e2 } = await sb
+      .from("information_schema.tables")
+      .select("table_name")
+      .eq("table_schema", "public")
+      .eq("table_type", "BASE TABLE");
+    if (e2) return err(e2.message);
+    return ok(d2);
+  }
+  return ok(data);
+}
+
+async function dbGetSchema(sb: DbClient, args: Record<string, unknown>): Promise<ToolCallResult> {
+  const { data, error } = await sb
+    .from("information_schema.columns")
+    .select("column_name,data_type,is_nullable,column_default")
+    .eq("table_schema", "public")
+    .eq("table_name", args.table);
+  if (error) return err(error.message);
+  return ok(data);
+}
+
+async function dbSelect(sb: DbClient, args: Record<string, unknown>): Promise<ToolCallResult> {
+  const columns = (args.columns as string | undefined) ?? "*";
+  const filter = (args.filter as Record<string, unknown> | undefined) ?? {};
+  const limit = Math.min(Number(args.limit ?? 50), 500);
+  let q = sb.from(String(args.table)).select(columns).limit(limit);
+  for (const [k, v] of Object.entries(filter)) {
+    q = q.eq(k, v);
+  }
+  const { data, error } = await q;
+  if (error) return err(error.message);
+  return ok(data);
+}
+
+async function dbInsert(sb: DbClient, args: Record<string, unknown>): Promise<ToolCallResult> {
+  const { data, error } = await sb
+    .from(String(args.table))
+    .insert(args.records)
+    .select();
+  if (error) return err(error.message);
+  return ok(data);
+}
+
+async function dbUpdate(sb: DbClient, args: Record<string, unknown>): Promise<ToolCallResult> {
+  const filter = (args.filter as Record<string, unknown>) ?? {};
+  let q = sb.from(String(args.table)).update(args.updates);
+  for (const [k, v] of Object.entries(filter)) q = q.eq(k, v);
+  const { data, error } = await q.select();
+  if (error) return err(error.message);
+  return ok(data);
+}
+
+async function dbDelete(sb: DbClient, args: Record<string, unknown>): Promise<ToolCallResult> {
+  const filter = (args.filter as Record<string, unknown>) ?? {};
+  let q = sb.from(String(args.table)).delete();
+  for (const [k, v] of Object.entries(filter)) q = q.eq(k, v);
+  const { data, error } = await q.select();
+  if (error) return err(error.message);
+  return ok({ deleted: data });
+}
+
+async function dbUpsert(sb: DbClient, args: Record<string, unknown>): Promise<ToolCallResult> {
+  const { data, error } = await sb
+    .from(String(args.table))
+    .upsert(args.records, { onConflict: (args.onConflict as string | undefined) ?? "id" })
+    .select();
+  if (error) return err(error.message);
+  return ok(data);
+}
+
+async function dbExecuteSql(sb: DbClient, args: Record<string, unknown>): Promise<ToolCallResult> {
+  const sql = String(args.sql).trim();
+  if (!/^select\s/i.test(sql)) {
+    return err("Only SELECT statements are allowed in db_execute_sql.");
+  }
+  const { data, error } = await sb.rpc("execute_sql", { sql });
+  if (error) return err(error.message);
+  return ok(data);
+}
+
 export async function handleDbTool(
   name: string,
   args: Record<string, unknown>
 ): Promise<ToolCallResult> {
   const sb = adminClient();
   try {
-    if (name === "db_list_tables") {
-      const { data, error } = await sb.rpc("list_tables" as never);
-      if (error) {
-        // Fallback: query information_schema directly
-        const { data: d2, error: e2 } = await sb
-          .from("information_schema.tables" as never)
-          .select("table_name")
-          .eq("table_schema" as never, "public")
-          .eq("table_type" as never, "BASE TABLE");
-        if (e2) return err(e2.message);
-        return ok(d2);
-      }
-      return ok(data);
+    switch (name) {
+      case "db_list_tables":  return dbListTables(sb);
+      case "db_get_schema":   return dbGetSchema(sb, args);
+      case "db_select":       return dbSelect(sb, args);
+      case "db_insert":       return dbInsert(sb, args);
+      case "db_update":       return dbUpdate(sb, args);
+      case "db_delete":       return dbDelete(sb, args);
+      case "db_upsert":       return dbUpsert(sb, args);
+      case "db_execute_sql":  return dbExecuteSql(sb, args);
+      default:                return err(`Unhandled db tool: ${name}`);
     }
-
-    if (name === "db_get_schema") {
-      const table = args.table as string;
-      const { data, error } = await sb
-        .from("information_schema.columns" as never)
-        .select("column_name,data_type,is_nullable,column_default")
-        .eq("table_schema" as never, "public")
-        .eq("table_name" as never, table);
-      if (error) return err(error.message);
-      return ok(data);
-    }
-
-    if (name === "db_select") {
-      const table = args.table as string;
-      const columns = (args.columns as string | undefined) ?? "*";
-      const filter = (args.filter as Record<string, unknown> | undefined) ?? {};
-      const limit = Math.min(Number(args.limit ?? 50), 500);
-      let q = sb.from(table).select(columns).limit(limit);
-      for (const [k, v] of Object.entries(filter)) {
-        q = q.eq(k, v as string);
-      }
-      const { data, error } = await q;
-      if (error) return err(error.message);
-      return ok(data);
-    }
-
-    if (name === "db_insert") {
-      const { data, error } = await sb
-        .from(args.table as string)
-        .insert(args.records as never)
-        .select();
-      if (error) return err(error.message);
-      return ok(data);
-    }
-
-    if (name === "db_update") {
-      const filter = args.filter as Record<string, unknown>;
-      let q = sb.from(args.table as string).update(args.updates as never);
-      for (const [k, v] of Object.entries(filter)) q = q.eq(k, v as string);
-      const { data, error } = await q.select();
-      if (error) return err(error.message);
-      return ok(data);
-    }
-
-    if (name === "db_delete") {
-      const filter = args.filter as Record<string, unknown>;
-      let q = sb.from(args.table as string).delete();
-      for (const [k, v] of Object.entries(filter)) q = q.eq(k, v as string);
-      const { data, error } = await q.select();
-      if (error) return err(error.message);
-      return ok({ deleted: data });
-    }
-
-    if (name === "db_upsert") {
-      const { data, error } = await sb
-        .from(args.table as string)
-        .upsert(args.records as never, {
-          onConflict: (args.onConflict as string | undefined) ?? "id",
-        })
-        .select();
-      if (error) return err(error.message);
-      return ok(data);
-    }
-
-    if (name === "db_execute_sql") {
-      const sql = (args.sql as string).trim();
-      if (!/^select\s/i.test(sql)) {
-        return err("Only SELECT statements are allowed in db_execute_sql.");
-      }
-      const { data, error } = await sb.rpc("execute_sql" as never, { sql } as never);
-      if (error) return err(error.message);
-      return ok(data);
-    }
-
-    return err(`Unhandled db tool: ${name}`);
   } catch (e) {
     return err(e instanceof Error ? e.message : String(e));
   }
