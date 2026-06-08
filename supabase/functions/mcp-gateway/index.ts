@@ -173,16 +173,20 @@ async function handleRpcMessage(msg: RpcRequest): Promise<unknown> {
 function isAuthorized(req: Request): boolean {
   const apiKey = Deno.env.get("MCP_GATEWAY_API_KEY");
   if (!apiKey) {
-    // If no key is configured, allow (useful during initial setup)
+    // No key configured — allow (useful during initial setup)
     return true;
   }
+  // 1. Bearer token header (programmatic clients)
   const authHeader = req.headers.get("Authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    return authHeader.slice(7) === apiKey;
+  if (authHeader?.startsWith("Bearer ") && authHeader.slice(7) === apiKey) {
+    return true;
   }
-  // Also accept x-api-key header
-  const xApiKey = req.headers.get("x-api-key");
-  return xApiKey === apiKey;
+  // 2. x-api-key header
+  if (req.headers.get("x-api-key") === apiKey) return true;
+  // 3. ?key= query param — lets the key be embedded in the connector URL
+  const url = new URL(req.url);
+  if (url.searchParams.get("key") === apiKey) return true;
+  return false;
 }
 
 // ──────────────────────────────────────────────────────────────────
