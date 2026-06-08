@@ -261,12 +261,19 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
       onMouseLeave={() => setHov(false)}
       style={{
         display:"flex", alignItems:"center", gap:10,
-        padding:"7px 10px", borderRadius:11,
+        padding:"7px 10px 7px 8px", borderRadius:11,
         width:"100%", textAlign:"left", cursor:"pointer",
         transition:"all .18s ease",
         fontSize:14.1,
-        // ── OmniBoard baseline applied to every tile ──────────────────────
-        border: `1px solid ${resolveState(isActive, hov, borderColors)}`,
+        // Solid left-border strip is the primary active indicator
+        borderTop: `1px solid ${resolveState(isActive, hov, borderColors)}`,
+        borderRight: `1px solid ${resolveState(isActive, hov, borderColors)}`,
+        borderBottom: `1px solid ${resolveState(isActive, hov, borderColors)}`,
+        borderLeft: isActive
+          ? `3px solid ${T.orange}`
+          : hov
+            ? `3px solid ${T.orange}99`
+            : `3px solid ${T.orange}55`,
         background: `linear-gradient(100deg, ${T.orange}${resolveState(isActive, hov, bgOpacities)} 0%, ${T.card} 60%)`,
         color: isActive ? T.t1 : T.t2,
         fontWeight: isActive ? 600 : 400,
@@ -1305,27 +1312,28 @@ const EcosystemWidget = () => {
     <div style={{ padding:"14px 16px 10px", borderBottom:`1px solid ${T.border}` }}>
       <SectionLabel>APEX Ecosystem</SectionLabel>
     </div>
-    <div style={{ padding:"14px", flex:1 }}>
-      {/* APEX app tile — brilliant accent treatment */}
-      <button 
+    <div style={{ padding:"14px", flex:1, display:"flex", flexDirection:"column" }}>
+      {/* APEX app tile — fills full card height, dominant orange treatment */}
+      <button
         draggable
         onDragStart={(e) => e.dataTransfer.setData('application/apex-tile', JSON.stringify({ id: 'ecosystem', label: 'APEX Ecosystem' }))}
         onClick={handleAddApp} style={{
         ...APP_TILE_STYLE,
-        width:"100%",
-        background:`linear-gradient(135deg, ${T.orange}28 0%, ${T.orange}14 100%)`,
-        border:`1px solid ${T.orange}66`,
-        boxShadow:`0 0 18px ${T.orange}22, inset 0 1px 0 ${T.orange}22`,
+        width:"100%", flex:1,
+        flexDirection:"column", gap:12,
+        background:`linear-gradient(135deg, ${T.orange}22 0%, ${T.orange}0c 100%)`,
+        border:`1px solid ${T.orange}77`,
+        boxShadow:`0 0 28px ${T.orange}30, 0 0 8px ${T.orange}18, inset 0 1px 0 ${T.orange}30`,
         color:T.orange,
-        fontWeight:700, fontSize:14.6, letterSpacing:"0.01em",
+        fontWeight:700, fontSize:15, letterSpacing:"0.01em",
       }}>
         <span style={{
-          width:26, height:26, borderRadius:7,
-          background:`${T.orange}30`, border:`1.5px solid ${T.orange}77`,
+          width:36, height:36, borderRadius:10,
+          background:`${T.orange}28`, border:`1.5px solid ${T.orange}88`,
           display:"flex", alignItems:"center", justifyContent:"center",
-          fontSize:18, color:T.orange, flexShrink:0,
-          boxShadow:`0 0 8px ${T.orange}44`,
-        }}>+</span>{" "}
+          fontSize:22, color:T.orange, flexShrink:0,
+          boxShadow:`0 0 14px ${T.orange}55`,
+        }}>+</span>
         Add APEX App
       </button>
     </div>
