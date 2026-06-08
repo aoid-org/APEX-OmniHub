@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
-import { useNavigate, useLocation } from "react-router-dom";
-import { ModuleRenderer } from "./components/ModuleRenderer";
 import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
 import { SystemHealthRow } from "./components/SystemHealthRow";
@@ -308,7 +306,6 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
 
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
 const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebarProps) => {
-  const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState<boolean>(false);
 
   const handleSignOut = useCallback(async () => {
@@ -326,12 +323,22 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebar
     setActiveNav(widget.label);
 
     if (!widget.moduleKey) {
+      // OmniBoard — scroll canvas to top, stay on main dashboard
       canvasRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-      navigate('/omnidash');
       return;
     }
 
-    navigate(`/omnidash/${widget.moduleKey}`);
+    // All modules open as modal overlays over the persistent OmniBoard canvas.
+    // Non-reactive: getState().invoke() so this handler never subscribes to modal state.
+    useOmniModal.getState().invoke({
+      id: `sidebar-module-${widget.moduleKey}`,
+      provider: 'omnidash',
+      type: 'module',
+      title: widget.label,
+      contextData: { moduleKey: widget.moduleKey },
+      onComplete: async () => {},
+      onCancel: () => { setActiveNav('OmniBoard'); },
+    });
   };
 
   return (
@@ -1341,8 +1348,6 @@ export default function OmniDashShell() {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const { demoMode } = useDemoMode();
-  const location = useLocation();
-
   const isDemoMode = ops.demo;
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
@@ -1363,18 +1368,8 @@ export default function OmniDashShell() {
     refresh: () => {}
   } : liveDashData;
 
-  useEffect(() => {
-    const pathParts = location.pathname.split('/');
-    const moduleKey = pathParts[2];
-    if (moduleKey) {
-      const matched = OMNIDASH_SIDEBAR_WIDGETS.find(w => w.moduleKey === moduleKey);
-      if (matched) {
-        setActiveNav(matched.label);
-      }
-    } else {
-      setActiveNav('OmniBoard');
-    }
-  }, [location.pathname, setActiveNav]);
+  // Sidebar active state is driven purely by handleNav / modal onCancel —
+  // no longer derived from location.pathname (modules render as modals, not routes).
 
   useEffect(() => {
     // Disable the tick interval during automated E2E tests (Playwright sets navigator.webdriver)
@@ -1446,9 +1441,8 @@ export default function OmniDashShell() {
                  linear-gradient(135deg, rgba(249,115,22,0.03) 0%, transparent 55%, rgba(30,80,180,0.06) 100%)`,
             backgroundSize:"40px 40px, 40px 40px, 100% 100%",
           }} />
-          {/* Content — sits above blueprint grid */}
-          {activeNav === 'OmniBoard' ? (
-            <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
+          {/* Content — OmniBoard canvas is always persistent. Modules open as modals via OmniSpatialHost. */}
+          <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
             {/* Primary 3-column grid — fixed height, overflow-isolated cells.
                 FIX Bug 3+4: minHeight:0 enforces the CSS grid row height contract.
                 Each DraggableWidget gets height+overflow:hidden so no child
@@ -1507,15 +1501,7 @@ export default function OmniDashShell() {
                 }}
               />
             </div>
-            </div>
-          ) : (
-            <div style={{ position:"relative", zIndex:1, flex: 1, display: "flex", flexDirection: "column" }}>
-              <ModuleRenderer 
-                moduleKey={(OMNIDASH_SIDEBAR_WIDGETS.find(w => w.label === (activeNav as unknown as string))?.moduleKey) as Parameters<typeof ModuleRenderer>[0]['moduleKey']}
-                onClose={() => setActiveNav('OmniBoard')}
-              />
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Right Panel — desktop only; mobile/tablet use OmniMobileDrawer */}
