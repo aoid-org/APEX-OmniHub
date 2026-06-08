@@ -11,14 +11,14 @@ interface AuditLog {
 export function OmniTraceFeed({ tenantId }: Readonly<{ tenantId?: string }>) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [status, setStatus] = useState<'CONNECTING' | 'SUBSCRIBED' | 'ERROR'>(() => {
-    const url = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const key = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    const url = import.meta.env.VITE_SUPABASE_URL ?? '';
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
     return (!url || !key) ? 'ERROR' : 'CONNECTING';
   });
 
   useEffect(() => {
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
 
     if (!supabaseUrl || !supabaseKey) {
       console.warn('Supabase env vars missing for OmniTraceFeed');
