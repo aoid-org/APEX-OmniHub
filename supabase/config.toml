@@ -87,6 +87,6 @@ verify_jwt = false  # Device auth via mTLS at transport layer; service_role used
 # Set these in Supabase Dashboard → Project Settings → Edge Functions → Environment Variables
 # DO NOT hardcode these values in code - they must be loaded from environment
 
-[functions.env]
-ALLOWED_ORIGINS = "https://apexomnihub.icu,https://www.apexomnihub.icu"
-PHYSIOMNI_LIVE_ENABLED = "true"
+# [functions.env] removed — ALLOWED_ORIGINS and PHYSIOMNI_LIVE_ENABLED are
+# set via Supabase Dashboard → Project Settings → Edge Functions → Secrets.
+# The [functions.env] block with arbitrary keys is not valid in CLI ≥2.x.
