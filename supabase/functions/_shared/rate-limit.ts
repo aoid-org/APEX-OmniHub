@@ -75,6 +75,7 @@ export const RATE_LIMIT_CONFIGS = {
   byomProxy: { maxRequests: 60, windowMs: 60000, keyPrefix: "byom-proxy" },
   omnilinkPort: { maxRequests: 30, windowMs: 60000, keyPrefix: "omnilink-port" },
   physiomniIngress: { maxRequests: 120, windowMs: 60000, keyPrefix: "physiomni-ingress" },
+  mcpGateway: { maxRequests: 60, windowMs: 60000, keyPrefix: "mcp-gateway" },
 } as const;
 
 // Cache Upstash client and ratelimiter instances at module scope
