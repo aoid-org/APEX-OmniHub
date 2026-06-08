@@ -359,7 +359,7 @@ export function OmniSpatialHost() {
   // SANDBOX MODE
   // ═══════════════════════════════════════════════════════════════════════════
   const renderSandboxMode = () => {
-    if (!activeModal || renderMode !== 'sandbox' || !isOpen) return null;
+    if (!activeModal || renderMode !== 'sandbox') return null;
 
     const sandboxConfig = JSON.stringify({
       title: activeModal.title,
@@ -368,6 +368,8 @@ export function OmniSpatialHost() {
     });
 
     return (
+      <AnimatePresence>
+      {isOpen && (
       <div
         style={{
           position: 'fixed', inset: 0,
@@ -454,6 +456,8 @@ export function OmniSpatialHost() {
           </div>
         </motion.div>
       </div>
+      )}
+      </AnimatePresence>
     );
   };
 

@@ -878,23 +878,18 @@ const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () =
   );
 };
 
+const DEMO_SLATE_MESSAGES: ReadonlyArray<{ role: string; text: string }> = [
+  { role: 'assistant', text: 'APEX Agent initialized. Demo Mode active. How can I assist you with your operations today?' },
+  { role: 'user', text: 'Show me the latest Salesforce integration status.' },
+  { role: 'assistant', text: 'Salesforce sync completed 5 minutes ago. 48 records updated. No errors detected.' },
+];
+
+const DEMO_TRY_SUGGESTION = "Run a live diagnostic on all active APEX integrations.";
+
 const OmniSlateWidget = () => {
   const { demoMode } = useDemoMode();
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
-
-  useEffect(() => {
-    if (demoMode && messages.length === 0) {
-      setMessages([
-        { role: 'assistant', text: 'APEX Agent initialized. Demo Mode active. How can I assist you with your operations today?' },
-        { role: 'user', text: 'Show me the latest Salesforce integration status.' },
-        { role: 'assistant', text: 'Salesforce sync completed 5 minutes ago. 48 records updated. No errors detected.' }
-      ]);
-    } else if (!demoMode && messages.length > 0 && messages[0].text.includes('Demo Mode active')) {
-      setMessages([]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [demoMode, messages.length]);
   const [loading, setLoading] = useState<boolean>(false);
   const [contextApps, setContextApps] = useState<OmniContextApp[]>([]);
   const [showContext, setShowContext] = useState<boolean>(false);
@@ -928,6 +923,8 @@ const OmniSlateWidget = () => {
   useEffect(() => {
     if (demoMode && messages.length === 0) {
       setMessages([...DEMO_SLATE_MESSAGES]);
+    } else if (!demoMode && messages.length > 0 && messages[0].text.includes('Demo Mode active')) {
+      setMessages([]);
     }
   // messages intentionally excluded — we only seed when the feed is empty
   // eslint-disable-next-line react-hooks/exhaustive-deps
