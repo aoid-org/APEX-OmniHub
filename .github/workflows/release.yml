@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Install ruff (Python linter)
-        run: pip install ruff==0.15.16 --only-binary=:all: --quiet --disable-pip-version-check
+        run: pip install "ruff==0.15.16" --only-binary :all: --quiet --disable-pip-version-check
       - name: Run CI integrity scanner
         run: bun run verify:ci-integrity
       - name: Run Release verification suite
