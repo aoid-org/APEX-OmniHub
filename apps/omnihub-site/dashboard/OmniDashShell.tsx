@@ -213,20 +213,20 @@ const scanLine = `@keyframes scanLine {
 const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
   const [hov, setHov] = useState<boolean>(false);
     const borderColors = {
-      active: `${T.orange}88`,
-      hover: `${T.orange}66`,
-      base: `${T.orange}44`
+      active: `${T.orange}66`,
+      hover: `${T.orange}44`,
+      base: `${T.orange}28`
     };
     const bgOpacities = {
-      active: "28",
-      hover: "20",
-      base: "16"
+      active: "20",
+      hover: "16",
+      base: "10"
     };
 
     const resolveShadow = (isActive: boolean, hov: boolean) => {
-      if (isActive) return `0 0 0 1px ${T.orange}30, 0 4px 18px ${T.orange}38, inset 2px 0 0 ${T.orange}cc, 0 2px 6px rgba(0,0,0,.5)`;
-      if (hov) return `0 0 0 1px ${T.orange}22, 0 4px 14px ${T.orange}28, inset 2px 0 0 ${T.orange}88, 0 2px 4px rgba(0,0,0,.4)`;
-      return `0 0 0 1px ${T.orange}18, 0 2px 10px ${T.orange}20, inset 2px 0 0 ${T.orange}55, 0 1px 3px rgba(0,0,0,.35)`;
+      if (isActive) return `0 0 0 1px ${T.orange}22, 0 4px 16px ${T.orange}28, 0 2px 6px rgba(0,0,0,.5)`;
+      if (hov) return `0 0 0 1px ${T.orange}18, 0 4px 14px ${T.orange}20, 0 2px 4px rgba(0,0,0,.4)`;
+      return `0 0 0 1px ${T.orange}10, 0 2px 10px ${T.orange}14, 0 1px 3px rgba(0,0,0,.35)`;
     };
 
     const resolveBorder = (isActive: boolean, hov: boolean) => {
@@ -261,19 +261,11 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
       onMouseLeave={() => setHov(false)}
       style={{
         display:"flex", alignItems:"center", gap:10,
-        padding:"7px 10px 7px 8px", borderRadius:11,
+        padding:"7px 10px", borderRadius:11,
         width:"100%", textAlign:"left", cursor:"pointer",
         transition:"all .18s ease",
         fontSize:14.1,
-        // Solid left-border strip is the primary active indicator
-        borderTop: `1px solid ${resolveState(isActive, hov, borderColors)}`,
-        borderRight: `1px solid ${resolveState(isActive, hov, borderColors)}`,
-        borderBottom: `1px solid ${resolveState(isActive, hov, borderColors)}`,
-        borderLeft: isActive
-          ? `3px solid ${T.orange}`
-          : hov
-            ? `3px solid ${T.orange}99`
-            : `3px solid ${T.orange}55`,
+        border: `1px solid ${resolveState(isActive, hov, borderColors)}`,
         background: `linear-gradient(100deg, ${T.orange}${resolveState(isActive, hov, bgOpacities)} 0%, ${T.card} 60%)`,
         color: isActive ? T.t1 : T.t2,
         fontWeight: isActive ? 600 : 400,
@@ -1312,15 +1304,14 @@ const EcosystemWidget = () => {
     <div style={{ padding:"14px 16px 10px", borderBottom:`1px solid ${T.border}` }}>
       <SectionLabel>APEX Ecosystem</SectionLabel>
     </div>
-    <div style={{ padding:"14px", flex:1, display:"flex", flexDirection:"column" }}>
-      {/* APEX app tile — fills full card height, dominant orange treatment */}
+    <div style={{ padding:"14px", flex:1 }}>
+      {/* APEX app tile */}
       <button
         draggable
         onDragStart={(e) => e.dataTransfer.setData('application/apex-tile', JSON.stringify({ id: 'ecosystem', label: 'APEX Ecosystem' }))}
         onClick={handleAddApp} style={{
         ...APP_TILE_STYLE,
-        width:"100%", flex:1,
-        flexDirection:"column", gap:12,
+        width:"100%",
         background:`linear-gradient(135deg, ${T.orange}22 0%, ${T.orange}0c 100%)`,
         border:`1px solid ${T.orange}77`,
         boxShadow:`0 0 28px ${T.orange}30, 0 0 8px ${T.orange}18, inset 0 1px 0 ${T.orange}30`,
