@@ -82,4 +82,24 @@ describe('PWAInstallBanner', () => {
     render(<PWAInstallBanner />);
     expect(screen.getByRole('banner')).toHaveAttribute('aria-label', 'Install APEX OmniHub app');
   });
+
+  it('applies hover styles on the Install button', () => {
+    setHookState({ isInstallable: true });
+    render(<PWAInstallBanner />);
+    const installBtn = screen.getByRole('button', { name: 'Install' });
+    fireEvent.mouseEnter(installBtn);
+    expect(installBtn.style.background).toBe('rgb(212, 96, 37)');
+    fireEvent.mouseLeave(installBtn);
+    expect(installBtn.style.background).toBe('rgb(196, 81, 26)');
+  });
+
+  it('applies hover styles on the dismiss button', () => {
+    setHookState({ isInstallable: true });
+    render(<PWAInstallBanner />);
+    const dismissBtn = screen.getByRole('button', { name: 'Dismiss install prompt' });
+    fireEvent.mouseEnter(dismissBtn);
+    expect(dismissBtn.style.color).toBe('rgba(255, 255, 255, 0.7)');
+    fireEvent.mouseLeave(dismissBtn);
+    expect(dismissBtn.style.color).toBe('rgba(255, 255, 255, 0.38)');
+  });
 });
