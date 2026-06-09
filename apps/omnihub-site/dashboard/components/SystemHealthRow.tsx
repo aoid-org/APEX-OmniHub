@@ -1,10 +1,32 @@
 import { memo } from 'react';
-import { Activity } from 'lucide-react';
 import type { KpiSummary } from '../types/dashboard.types';
 
 function resolveSystemHealth(demoMode: boolean, kpi: KpiSummary): string {
-  if (demoMode) return '99.8%';
+  if (demoMode) return '100%';
   return kpi.ops_sev1_incidents > 0 ? '94.2%' : '100%';
+}
+
+interface MetricCardProps {
+  value: string | number;
+  label: string;
+  valueColor?: string;
+  sublabel?: string;
+}
+
+function MetricCard({ value, label, valueColor, sublabel }: MetricCardProps) {
+  return (
+    <div className="sentinel-metric">
+      <div className="sentinel-metric-value" style={{ color: valueColor }}>
+        {value}
+      </div>
+      {sublabel && (
+        <div style={{ fontSize: 8.5, color: 'var(--od-text-tertiary)', letterSpacing: '0.06em', marginTop: 1, textTransform: 'uppercase' }}>
+          {sublabel}
+        </div>
+      )}
+      <div className="sentinel-metric-label">{label}</div>
+    </div>
+  );
 }
 
 export const SystemHealthRow = memo(function SystemHealthRow({
@@ -14,43 +36,39 @@ export const SystemHealthRow = memo(function SystemHealthRow({
   demoMode: boolean;
   kpi: KpiSummary;
 }) {
-  const eventsTracked = demoMode ? 142 : (kpi.tradeline_paid_starts ?? 0);
+  const eventsTracked = demoMode ? 0 : (kpi.tradeline_paid_starts ?? 0);
   const systemHealth = resolveSystemHealth(demoMode, kpi);
-  const guardianLoops = demoMode ? 4 : (kpi.tradeline_active_pilots ?? 0);
-  const staleChecks = demoMode ? '0' : (kpi.tradeline_churn_risks ?? 0);
+  const guardianLoops = demoMode ? 1 : (kpi.tradeline_active_pilots ?? 0);
+  const staleChecks = demoMode ? 0 : (kpi.tradeline_churn_risks ?? 0);
+  const healthIsGreen = systemHealth === '100%';
 
   return (
-    <div className="sentinel-section">
-      <div className="sentinel-section-title">
-        <Activity style={{ width: 10, height: 10, color: 'var(--od-accent)' }} />
-        Analytics
+    <div className="sentinel-section" style={{ paddingBottom: 12 }}>
+      {/* Row 1 — Events + Health */}
+      <div className="sentinel-metric-row" style={{ marginBottom: 6 }}>
+        <MetricCard
+          value={eventsTracked}
+          label="Events Tracked"
+          valueColor="var(--od-text-primary)"
+        />
+        <MetricCard
+          value={systemHealth}
+          label="System Health"
+          valueColor={healthIsGreen ? 'var(--od-green)' : 'var(--od-warn)'}
+        />
       </div>
-
+      {/* Row 2 — Guardian + Stale */}
       <div className="sentinel-metric-row">
-        <div className="sentinel-metric">
-          <div className="sentinel-metric-value" style={{ color: 'var(--od-text-primary)' }}>
-            {eventsTracked}
-          </div>
-          <div className="sentinel-metric-label">Events Tracked</div>
-        </div>
-        <div className="sentinel-metric">
-          <div className="sentinel-metric-value" style={{ color: systemHealth === '100%' ? 'var(--od-green)' : 'var(--od-warn)' }}>
-            {systemHealth}
-          </div>
-          <div className="sentinel-metric-label">System Health</div>
-        </div>
-        <div className="sentinel-metric">
-          <div className="sentinel-metric-value" style={{ color: 'var(--od-accent)' }}>
-            {guardianLoops}
-          </div>
-          <div className="sentinel-metric-label">Guardian Loops</div>
-        </div>
-        <div className="sentinel-metric">
-          <div className="sentinel-metric-value" style={{ color: 'var(--od-green)' }}>
-            {staleChecks}
-          </div>
-          <div className="sentinel-metric-label">Stale Checks</div>
-        </div>
+        <MetricCard
+          value={`${guardianLoops} loop`}
+          label="Guardian Loops"
+          valueColor="var(--od-accent)"
+        />
+        <MetricCard
+          value={staleChecks === 0 ? 'Clean' : String(staleChecks)}
+          label="Stale Checks"
+          valueColor={staleChecks === 0 ? 'var(--od-green)' : 'var(--od-warn)'}
+        />
       </div>
     </div>
   );

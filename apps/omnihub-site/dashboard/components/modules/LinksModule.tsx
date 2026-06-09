@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 import { ModuleShell } from './ModuleShell';
+import { useOmniModal } from '@/stores/omniModalStore';
 import { supabase } from '@/lib/supabase';
-import { OmniBoardWizard } from '../OmniBoardWizard';
 
 interface Props {
   readonly onClose: () => void;
@@ -17,40 +16,32 @@ const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
 
 export default function LinksModule({ onClose }: Props) {
   const state = useOmniModuleState('links');
-
-  // Derive chips from real items — never hardcode static names.
   const chips = state.items.slice(0, 6);
-
-  const [showWizard, setShowWizard] = useState(false);
 
   const handleAction = async (actionId: string, _selected: string[]) => {
     if (actionId === 'add-link') {
-      setShowWizard(true);
-      return true; // handled
+      // Open OmniBoardWizard via OmniSpatialHost — correct SPA modal pattern
+      useOmniModal.getState().invoke({
+        id: 'links-add-connection',
+        provider: 'omnidash',
+        type: 'microfrontend',
+        title: 'Connect a Link',
+        description: 'Identify and authorize a new connection through the OmniLink port.',
+        contextData: { moduleKey: 'omniboard-wizard' },
+        onComplete: async (result) => {
+          await supabase.functions.invoke('omnilink-port', { body: result });
+        },
+        onCancel: () => {},
+      });
+      return true;
     }
     if (actionId === 'test-all') {
-      // Prompt says: "Call omnilink-port/test-connections POST for each connector_id"
-      // Assuming handled by triggerModuleAction correctly if I don't return true
-      return false; 
+      return false;
     }
-  };
-
-  const handleWizardComplete = async (connectionSpec: Record<string, unknown>) => {
-    setShowWizard(false);
-    await supabase.functions.invoke("omnilink-port", { body: connectionSpec });
-    // State will be refreshed eventually by live polling or explicit refresh
   };
 
   return (
     <ModuleShell state={state} onClose={onClose} onAction={handleAction}>
-      {showWizard && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <OmniBoardWizard 
-            onComplete={handleWizardComplete} 
-            onDismiss={() => setShowWizard(false)} 
-          />
-        </div>
-      )}
       {!state.loading && chips.length > 0 && (
         <div className="rounded-lg border border-border/30 px-3 py-2 bg-muted/10">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
