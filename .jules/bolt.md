@@ -20,3 +20,6 @@
 ## 2026-06-08 - Replaced Object.entries() inside high-frequency scoring loops with pre-calculated arrays
 **Learning:** Calling `Object.entries(STATIC_DICT)` inside functions that are called frequently allocates a new array and causes garbage collection overhead on every single invocation.
 **Action:** When iterating over static dictionaries, always pre-calculate `const PRE_CALCULATED_ENTRIES = Object.entries(STATIC_DICT)` outside the function scope to achieve zero-allocation array iterations.
+## 2026-05-23 - Memoizing List Items in Live Feeds
+**Learning:** Extracting list items into a `React.memo`ized component is especially critical for live feeds (e.g., SSE or WebSocket connections). Without this, adding a single new item to the top of an array causes every existing item in the list to re-render, creating an O(n) performance degradation that blocks the main thread.
+**Action:** Always extract and memoize list items in components that frequently append or prepend to lists.

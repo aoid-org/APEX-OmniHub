@@ -140,52 +140,59 @@ export const OmniTracePanel = memo(function OmniTracePanel({
         </div>
       ) : (
         entries.map((entry) => (
-          <div
-            key={entry.id}
-            style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: 8,
-              padding: '4px 0',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
-              fontSize: 11,
-            }}
-          >
-            <span
-              style={{
-                color: getEventColor(entry.event),
-                fontWeight: 700,
-                minWidth: 100,
-                flexShrink: 0,
-              }}
-            >
-              {entry.event}
-            </span>
-            <span
-              style={{
-                color: '#64748b',
-                fontFamily: 'monospace',
-                fontSize: 10,
-                flexShrink: 0,
-              }}
-            >
-              {entry.workflowId.slice(0, 20)}...
-            </span>
-            <span
-              style={{
-                color: '#94a3b8',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                flex: 1,
-                minWidth: 0,
-              }}
-            >
-              {entry.detail}
-            </span>
-          </div>
+          <TraceEntryRow key={entry.id} entry={entry} />
         ))
       )}
+    </div>
+  );
+});
+
+// ⚡ Bolt: Extracted row into a memoized component.
+// This prevents React from re-rendering the entire 50-item list every time a single new trace event arrives.
+const TraceEntryRow = memo(function TraceEntryRow({ entry }: { entry: TraceEntry }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: 8,
+        padding: '4px 0',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
+        fontSize: 11,
+      }}
+    >
+      <span
+        style={{
+          color: getEventColor(entry.event),
+          fontWeight: 700,
+          minWidth: 100,
+          flexShrink: 0,
+        }}
+      >
+        {entry.event}
+      </span>
+      <span
+        style={{
+          color: '#64748b',
+          fontFamily: 'monospace',
+          fontSize: 10,
+          flexShrink: 0,
+        }}
+      >
+        {entry.workflowId.slice(0, 20)}...
+      </span>
+      <span
+        style={{
+          color: '#94a3b8',
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+          textOverflow: 'ellipsis',
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
+        {entry.detail}
+      </span>
     </div>
   );
 });
