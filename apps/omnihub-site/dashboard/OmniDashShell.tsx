@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useDemoMode } from "../src/contexts/DemoModeContext";
-import { useNavigate, useLocation } from "react-router-dom";
-import { ModuleRenderer } from "./components/ModuleRenderer";
 import { T } from "./designSystem";
 import { StatusDot, GlassCard, SectionLabel } from "./components/designComponents";
 import { SystemHealthRow } from "./components/SystemHealthRow";
@@ -27,6 +25,8 @@ import { OmniSpatialHost } from '@/dashboard/components/OmniSpatialHost';
 import { OmniMobileBottomNav, type MobileTab } from '@/dashboard/components/OmniMobileBottomNav';
 import { OmniMobileDrawer } from '@/dashboard/components/OmniMobileDrawer';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/useAuth';
+import { LayoutContext } from './contexts/LayoutContext';
 import {
   OMNIDASH_SIDEBAR_WIDGETS,
   type OmniDashSidebarWidget,
@@ -36,7 +36,7 @@ import { toast } from 'sonner';
 import imgWordmark from "../../../src/assets/omnidash/omnidash-logo.png";
 import imgIcons from "../../../src/assets/omnidash/icons.png";
 import imgApexWm from "../../../src/assets/omnidash/apex_omnihub_wordmark.png";
-import { AVATAR_PATH_MAP } from './contracts/agentAvatars';
+import { AVATAR_PATH_MAP, AGENT_AVATARS, avatarPath, agentNameFromAvatarFile } from './contracts/agentAvatars';
 
 // ─── TypeScript Interfaces ───────────────────────────────────────────────────
 import type { CSSProperties, Dispatch, SetStateAction, RefObject } from "react";
@@ -222,7 +222,7 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
       hover: "16",
       base: "10"
     };
-    
+
     const resolveShadow = (isActive: boolean, hov: boolean) => {
       if (isActive) return `0 0 0 1px ${T.orange}22, 0 4px 16px ${T.orange}28, 0 2px 6px rgba(0,0,0,.5)`;
       if (hov) return `0 0 0 1px ${T.orange}18, 0 4px 14px ${T.orange}20, 0 2px 4px rgba(0,0,0,.4)`;
@@ -265,7 +265,6 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
         width:"100%", textAlign:"left", cursor:"pointer",
         transition:"all .18s ease",
         fontSize:14.1,
-        // ── OmniBoard baseline applied to every tile ──────────────────────
         border: `1px solid ${resolveState(isActive, hov, borderColors)}`,
         background: `linear-gradient(100deg, ${T.orange}${resolveState(isActive, hov, bgOpacities)} 0%, ${T.card} 60%)`,
         color: isActive ? T.t1 : T.t2,
@@ -308,7 +307,6 @@ const NavItem = ({ n, isActive, onClick }: NavItemProps) => {
 
 // ─── Shell: Sidebar ──────────────────────────────────────────────────────────
 const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebarProps) => {
-  const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState<boolean>(false);
 
   const handleSignOut = useCallback(async () => {
@@ -326,12 +324,22 @@ const OmniDashSidebar = ({ activeNav, setActiveNav, canvasRef }: OmniDashSidebar
     setActiveNav(widget.label);
 
     if (!widget.moduleKey) {
+      // OmniBoard — scroll canvas to top, stay on main dashboard
       canvasRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-      navigate('/omnidash');
       return;
     }
 
-    navigate(`/omnidash/${widget.moduleKey}`);
+    // All modules open as modal overlays over the persistent OmniBoard canvas.
+    // Non-reactive: getState().invoke() so this handler never subscribes to modal state.
+    useOmniModal.getState().invoke({
+      id: `sidebar-module-${widget.moduleKey}`,
+      provider: 'omnidash',
+      type: 'module',
+      title: widget.label,
+      contextData: { moduleKey: widget.moduleKey },
+      onComplete: async () => {},
+      onCancel: () => { setActiveNav('OmniBoard'); },
+    });
   };
 
   return (
@@ -663,27 +671,39 @@ const OmniDashHeader = ({ tick, isDark, setIsDark, invoke }: OmniDashHeaderProps
 
 // ─── Widget: APEX Agent ───────────────────────────────────────────────────────
 const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
-  const { demoMode, autoPilot, setAutoPilot } = useDemoMode();
+  const { autoPilot, setAutoPilot } = useDemoMode();
   const [seconds, setSeconds] = useState(0);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState<string>(AVATAR_PATH_MAP.Default);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isRunning = autoPilot;
 
+  // Timer driven by isRunning — Play/Pause actually controls it
   useEffect(() => {
-    if (demoMode) {
-      const interval = setInterval(() => setSeconds(s => s + 1), 1000);
-      return () => clearInterval(interval);
-    } else {
-      setSeconds(0);
-    }
-  }, [demoMode]);
+    if (!isRunning) return;
+    const interval = setInterval(() => setSeconds(s => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [isRunning]);
 
   const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
   const ss = String(seconds % 60).padStart(2, '0');
 
   const handlePlayPause = () => setAutoPilot(!autoPilot);
   const handleReset = () => { setAutoPilot(false); setSeconds(0); };
-  const isRunning = autoPilot;
+
+  // Long-press on avatar (500ms) → open avatar picker
+  const handleAvatarPointerDown = () => {
+    longPressTimerRef.current = setTimeout(() => setShowAvatarPicker(true), 500);
+  };
+  const handleAvatarPointerUp = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
 
   return (
-    <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
+    <GlassCard style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden", position:"relative" }}>
       {/* Header — unified 44px */}
       <div style={{ height:44, padding:"0 16px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
         <SectionLabel>APEX Agent</SectionLabel>
@@ -700,6 +720,57 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
           WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
         }}>{mm}:{ss}</div>
       </div>
+
+      {/* Avatar picker overlay — triggered by long press */}
+      {showAvatarPicker && (
+        <div style={{
+          position:"absolute", inset:0, zIndex:50, borderRadius:14,
+          background:"rgba(6,10,19,0.94)", backdropFilter:"blur(10px)",
+          display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+          gap:16, padding:20,
+        }}>
+          <div style={{ fontSize:9.5, color:"rgba(224,231,255,0.45)", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:700 }}>
+            Choose Agent Avatar
+          </div>
+          <div style={{ display:"flex", gap:12, flexWrap:"wrap", justifyContent:"center" }}>
+            {AGENT_AVATARS.map((filename) => {
+              const src = avatarPath(filename);
+              const isSelected = selectedAvatar === src;
+              return (
+                <button
+                  key={filename}
+                  type="button"
+                  title={agentNameFromAvatarFile(filename)}
+                  onClick={() => { setSelectedAvatar(src); setShowAvatarPicker(false); }}
+                  style={{
+                    padding:3, borderRadius:"50%", background:"transparent", cursor:"pointer",
+                    border: isSelected ? `2px solid ${T.orange}` : "2px solid rgba(255,255,255,0.12)",
+                    boxShadow: isSelected ? `0 0 12px ${T.orange}66` : "none",
+                    transition:"all .18s",
+                  }}
+                >
+                  <img src={src} alt={agentNameFromAvatarFile(filename)}
+                    style={{ width:52, height:52, borderRadius:"50%", display:"block", objectFit:"cover" }}
+                    loading="lazy"
+                  />
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAvatarPicker(false)}
+            style={{
+              marginTop:4, padding:"6px 20px", borderRadius:8, cursor:"pointer",
+              border:"1px solid rgba(255,255,255,0.12)", background:"rgba(255,255,255,0.06)",
+              color:"rgba(224,231,255,0.6)", fontSize:11, fontWeight:600,
+              fontFamily:"'Space Grotesk',sans-serif",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
 
       {/* Avatar + orbital ring visualizer */}
       <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -780,14 +851,22 @@ const AgentWidget = ({ tick: _tick }: AgentWidgetProps) => {
             </svg>
           </div>
 
-          {/* Avatar */}
-          <div style={{
-            width:80, height:80, borderRadius:"50%",
-            overflow:"hidden", position:"relative", zIndex:1,
-            border:`2px solid ${T.orange}55`,
-            boxShadow:`0 0 14px ${T.orange}28, 0 0 28px ${T.orange}12`,
-          }}>
-            <img src={IMG_AVATAR} alt="APEX Agent" style={{ width:"100%", height:"100%", objectFit:"cover" }} loading="lazy" decoding="async" />
+          {/* Avatar — long press to open avatar picker */}
+          <div
+            onPointerDown={handleAvatarPointerDown}
+            onPointerUp={handleAvatarPointerUp}
+            onPointerLeave={handleAvatarPointerUp}
+            title="Long-press to change avatar"
+            style={{
+              width:80, height:80, borderRadius:"50%",
+              overflow:"hidden", position:"relative", zIndex:1,
+              border:`2px solid ${T.orange}55`,
+              boxShadow:`0 0 14px ${T.orange}28, 0 0 28px ${T.orange}12`,
+              cursor:"pointer",
+              userSelect:"none",
+            }}
+          >
+            <img src={selectedAvatar} alt="APEX Agent" style={{ width:"100%", height:"100%", objectFit:"cover", pointerEvents:"none" }} loading="lazy" decoding="async" />
           </div>
         </div>
       </div>
@@ -878,23 +957,18 @@ const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () =
   );
 };
 
+const DEMO_SLATE_MESSAGES: ReadonlyArray<{ role: string; text: string }> = [
+  { role: 'assistant', text: 'APEX Agent initialized. Demo Mode active. How can I assist you with your operations today?' },
+  { role: 'user', text: 'Show me the latest Salesforce integration status.' },
+  { role: 'assistant', text: 'Salesforce sync completed 5 minutes ago. 48 records updated. No errors detected.' },
+];
+
+const DEMO_TRY_SUGGESTION = "Run a live diagnostic on all active APEX integrations.";
+
 const OmniSlateWidget = () => {
   const { demoMode } = useDemoMode();
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
-
-  useEffect(() => {
-    if (demoMode && messages.length === 0) {
-      setMessages([
-        { role: 'assistant', text: 'APEX Agent initialized. Demo Mode active. How can I assist you with your operations today?' },
-        { role: 'user', text: 'Show me the latest Salesforce integration status.' },
-        { role: 'assistant', text: 'Salesforce sync completed 5 minutes ago. 48 records updated. No errors detected.' }
-      ]);
-    } else if (!demoMode && messages.length > 0 && messages[0].text.includes('Demo Mode active')) {
-      setMessages([]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [demoMode, messages.length]);
   const [loading, setLoading] = useState<boolean>(false);
   const [contextApps, setContextApps] = useState<OmniContextApp[]>([]);
   const [showContext, setShowContext] = useState<boolean>(false);
@@ -928,6 +1002,8 @@ const OmniSlateWidget = () => {
   useEffect(() => {
     if (demoMode && messages.length === 0) {
       setMessages([...DEMO_SLATE_MESSAGES]);
+    } else if (!demoMode && messages.length > 0 && messages[0].text.includes('Demo Mode active')) {
+      setMessages([]);
     }
   // messages intentionally excluded — we only seed when the feed is empty
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1229,26 +1305,26 @@ const EcosystemWidget = () => {
       <SectionLabel>APEX Ecosystem</SectionLabel>
     </div>
     <div style={{ padding:"14px", flex:1 }}>
-      {/* APEX app tile — brilliant accent treatment */}
-      <button 
+      {/* APEX app tile */}
+      <button
         draggable
         onDragStart={(e) => e.dataTransfer.setData('application/apex-tile', JSON.stringify({ id: 'ecosystem', label: 'APEX Ecosystem' }))}
         onClick={handleAddApp} style={{
         ...APP_TILE_STYLE,
         width:"100%",
-        background:`linear-gradient(135deg, ${T.orange}28 0%, ${T.orange}14 100%)`,
-        border:`1px solid ${T.orange}66`,
-        boxShadow:`0 0 18px ${T.orange}22, inset 0 1px 0 ${T.orange}22`,
+        background:`linear-gradient(135deg, ${T.orange}22 0%, ${T.orange}0c 100%)`,
+        border:`1px solid ${T.orange}77`,
+        boxShadow:`0 0 28px ${T.orange}30, 0 0 8px ${T.orange}18, inset 0 1px 0 ${T.orange}30`,
         color:T.orange,
-        fontWeight:700, fontSize:14.6, letterSpacing:"0.01em",
+        fontWeight:700, fontSize:15, letterSpacing:"0.01em",
       }}>
         <span style={{
-          width:26, height:26, borderRadius:7,
-          background:`${T.orange}30`, border:`1.5px solid ${T.orange}77`,
+          width:36, height:36, borderRadius:10,
+          background:`${T.orange}28`, border:`1.5px solid ${T.orange}88`,
           display:"flex", alignItems:"center", justifyContent:"center",
-          fontSize:18, color:T.orange, flexShrink:0,
-          boxShadow:`0 0 8px ${T.orange}44`,
-        }}>+</span>{" "}
+          fontSize:22, color:T.orange, flexShrink:0,
+          boxShadow:`0 0 14px ${T.orange}55`,
+        }}>+</span>
         Add APEX App
       </button>
     </div>
@@ -1293,14 +1369,19 @@ const IntegratedAppsWidget = () => {
       <button
         onClick={() => handleConnectApp(0)}
         style={{
-          background: T.cyan, color: T.bg, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 4, cursor: "pointer", border: "none"
+          background: `${T.orange}22`, color: T.orange,
+          fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6,
+          cursor: "pointer", border: `1px solid ${T.orange}55`,
+          boxShadow: `0 0 8px ${T.orange}22`,
+          fontFamily: "'Space Grotesk',sans-serif",
+          transition: "all .18s",
         }}
       >
         + Connect App
       </button>
     </div>
     {/* 4 columns — same tile size as EcosystemWidget tiles */}
-    <div className="omni-grid-apps" style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10 }}>
+    <div className="omni-grid-apps" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(110px, 1fr))", gap:10 }}>
       {[1,2,3,4].map(i => (
         <button
           key={`integrated-app-ph-${i}`}
@@ -1337,15 +1418,15 @@ const IntegratedAppsWidget = () => {
 // ─── Main OmniDash Shell ──────────────────────────────────────────────────────
 export default function OmniDashShell() {
   const [tick, setTick] = useState<number>(0);
-  const { activeNav, setActiveNav, isDark, setIsDark, ops } = useLayoutPersistence();
+  const { session } = useAuth();
+  const userId = session?.user?.id;
+  const { activeNav, setActiveNav, isDark, setIsDark, ops, panelLayout, setPanelLayout, hiddenWidgets, toggleWidget, resetWidgetPositions } = useLayoutPersistence(userId);
   const { invoke } = useOmniModal();
   const { isDesktop } = useViewport();
   const [mobileTab, setMobileTab] = useState<MobileTab>("home");
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const { demoMode } = useDemoMode();
-  const location = useLocation();
-
   const isDemoMode = ops.demo;
 
   // Real data bridge — fetches settings, KPIs, incidents from Supabase
@@ -1366,18 +1447,8 @@ export default function OmniDashShell() {
     refresh: () => {}
   } : liveDashData;
 
-  useEffect(() => {
-    const pathParts = location.pathname.split('/');
-    const moduleKey = pathParts[2];
-    if (moduleKey) {
-      const matched = OMNIDASH_SIDEBAR_WIDGETS.find(w => w.moduleKey === moduleKey);
-      if (matched) {
-        setActiveNav(matched.label);
-      }
-    } else {
-      setActiveNav('OmniBoard');
-    }
-  }, [location.pathname, setActiveNav]);
+  // Sidebar active state is driven purely by handleNav / modal onCancel —
+  // no longer derived from location.pathname (modules render as modals, not routes).
 
   useEffect(() => {
     // Disable the tick interval during automated E2E tests (Playwright sets navigator.webdriver)
@@ -1402,6 +1473,7 @@ export default function OmniDashShell() {
   const gridHeight = isDesktop ? 300 : undefined;
 
   return (
+    <LayoutContext.Provider value={{ hiddenWidgets, panelLayout, toggleWidget, setPanelLayout, resetWidgetPositions }}>
     <div style={{
       fontFamily:"'Space Grotesk',sans-serif",
       background: T.bg, color: T.t1,
@@ -1422,11 +1494,32 @@ export default function OmniDashShell() {
         input { font-family:'Space Grotesk',sans-serif; }
       `}</style>
 
-      <OmniDashHeader tick={tick} isDark={isDark} setIsDark={setIsDark} invoke={invoke} />
+      <OmniDashHeader
+        tick={tick}
+        isDark={isDark}
+        setIsDark={setIsDark}
+        invoke={invoke}
+      />
 
       <div className="omni-shell-main" style={{ flex:1, display:"flex", overflow:"hidden" }}>
-        {/* Sidebar — desktop only; tablet/mobile use bottom nav */}
-        {isDesktop && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
+        {/* Sidebar — standard layout: left; reversed layout: right */}
+        {isDesktop && panelLayout === 'standard' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
+        {isDesktop && panelLayout === 'reversed' && (
+          <div
+            className="omni-right-panel"
+            style={{
+              width: 340, flexShrink: 0,
+              background: `linear-gradient(180deg,${T.surface} 0%,${T.bg} 100%)`,
+              borderRight: `1px solid ${T.border}`,
+              overflowY: 'auto', padding: '14px 12px',
+              display: 'flex', flexDirection: 'column', gap: 12,
+            }}
+          >
+            <SystemHealthRow demoMode={demoMode} kpi={dashData.kpiSummary} />
+            <OmniTraceFeed />
+            <SentinelPanel />
+          </div>
+        )}
 
         {/* Main Canvas */}
         <div ref={canvasRef} className="omni-canvas-container" style={{
@@ -1449,47 +1542,42 @@ export default function OmniDashShell() {
                  linear-gradient(135deg, rgba(249,115,22,0.03) 0%, transparent 55%, rgba(30,80,180,0.06) 100%)`,
             backgroundSize:"40px 40px, 40px 40px, 100% 100%",
           }} />
-          {/* Content — sits above blueprint grid */}
-          {activeNav === 'OmniBoard' ? (
-            <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
+          {/* Content — OmniBoard canvas is always persistent. Modules open as modals via OmniSpatialHost. */}
+          <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:14, flex:1 }}>
             {/* Primary 3-column grid — fixed height, overflow-isolated cells.
                 FIX Bug 3+4: minHeight:0 enforces the CSS grid row height contract.
                 Each DraggableWidget gets height+overflow:hidden so no child
                 (including OmniSlate chat history) can blow out the row or
                 dislodge sibling tiles. */}
-            <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0 }}>
-              <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden" }}><AgentWidget tick={tick} /></DraggableWidget>
-              <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden" }}><OmniSlateWidget /></DraggableWidget>
-              <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden" }}><EcosystemWidget /></DraggableWidget>
+            <div className="omni-grid-top" style={{ display:"grid", gridTemplateColumns: gridCols, gap:14, height: gridHeight, minHeight:0, overflow: isDesktop ? "visible" : "hidden" }}>
+              {!hiddenWidgets.includes('widget_agent') && <DraggableWidget id="widget_agent" style={{ height: isDesktop ? "100%" : 280, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><AgentWidget tick={tick} /></DraggableWidget>}
+              {!hiddenWidgets.includes('widget_slate') && <DraggableWidget id="widget_slate" style={{ height: isDesktop ? "100%" : 320, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><OmniSlateWidget /></DraggableWidget>}
+              {!hiddenWidgets.includes('widget_eco') && <DraggableWidget id="widget_eco" style={{ height: isDesktop ? "100%" : 200, overflow:"hidden", position: isDesktop ? undefined : "relative", transform: isDesktop ? undefined : "none" }}><EcosystemWidget /></DraggableWidget>}
             </div>
 
             {/* Integrated Apps row */}
-            <DraggableWidget id="widget_apps"><IntegratedAppsWidget /></DraggableWidget>
+            {!hiddenWidgets.includes('widget_apps') && <DraggableWidget id="widget_apps"><IntegratedAppsWidget /></DraggableWidget>}
 
-            {/* M-03 Observability Panels (5 Rows) */}
+            {/* M-03 Observability Panels — only rendered when at least one is visible */}
+            {(['m03_1','m03_2','m03_3','m03_4','m03_5','m03_6','m03_7'] as const).some(id => !hiddenWidgets.includes(id)) && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 10 }}>
-              <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <DraggableWidget id="m03_2"><AgentActivityTimeline /></DraggableWidget>
-                <DraggableWidget id="m03_3"><GuardianAlertFeed /></DraggableWidget>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <DraggableWidget id="m03_4"><ManModeReviewQueue /></DraggableWidget>
-                <DraggableWidget id="m03_5"><OmniRouteTraffic /></DraggableWidget>
-              </div>
-              <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>
-              <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>
-              {/* Connect AI */}
-              <button
-                className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-1.5 ml-2"
-                onClick={() => {
-                  toast.info('Setup is required', { description: 'Missing API configuration for Connect AI.' });
-                }}
-                title="Connect AI Provider"
-              >
-                Connect AI
-              </button>
+              {!hiddenWidgets.includes('m03_1') && <DraggableWidget id="m03_1"><SystemHealthOverview /></DraggableWidget>}
+              {(!hiddenWidgets.includes('m03_2') || !hiddenWidgets.includes('m03_3')) && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  {!hiddenWidgets.includes('m03_2') && <DraggableWidget id="m03_2"><AgentActivityTimeline /></DraggableWidget>}
+                  {!hiddenWidgets.includes('m03_3') && <DraggableWidget id="m03_3"><GuardianAlertFeed /></DraggableWidget>}
+                </div>
+              )}
+              {(!hiddenWidgets.includes('m03_4') || !hiddenWidgets.includes('m03_5')) && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  {!hiddenWidgets.includes('m03_4') && <DraggableWidget id="m03_4"><ManModeReviewQueue /></DraggableWidget>}
+                  {!hiddenWidgets.includes('m03_5') && <DraggableWidget id="m03_5"><OmniRouteTraffic /></DraggableWidget>}
+                </div>
+              )}
+              {!hiddenWidgets.includes('m03_6') && <DraggableWidget id="m03_6"><WorkflowStatusBoard /></DraggableWidget>}
+              {!hiddenWidgets.includes('m03_7') && <DraggableWidget id="m03_7"><SystemSparklines /></DraggableWidget>}
             </div>
+            )}
 
             {/* APEX-OmniHub wordmark watermark — above grid, below content */}
             <div style={{
@@ -1510,19 +1598,11 @@ export default function OmniDashShell() {
                 }}
               />
             </div>
-            </div>
-          ) : (
-            <div style={{ position:"relative", zIndex:1, flex: 1, display: "flex", flexDirection: "column" }}>
-              <ModuleRenderer 
-                moduleKey={(OMNIDASH_SIDEBAR_WIDGETS.find(w => w.label === (activeNav as unknown as string))?.moduleKey) as Parameters<typeof ModuleRenderer>[0]['moduleKey']}
-                onClose={() => setActiveNav('OmniBoard')}
-              />
-            </div>
-          )}
+          </div>
         </div>
 
-        {/* Right Panel — desktop only; mobile/tablet use OmniMobileDrawer */}
-        {isDesktop && (
+        {/* Right Panel — standard layout: right; reversed layout: left (rendered above) */}
+        {isDesktop && panelLayout === 'standard' && (
           <div
             className="omni-right-panel"
             style={{
@@ -1538,6 +1618,9 @@ export default function OmniDashShell() {
             <SentinelPanel />
           </div>
         )}
+
+        {/* Sidebar — reversed layout: right side */}
+        {isDesktop && panelLayout === 'reversed' && <OmniDashSidebar activeNav={activeNav} setActiveNav={(nav) => setActiveNav(nav as DashboardNavSection)} canvasRef={canvasRef} />}
 
         {/* Mobile/Tablet — drawer trigger button in header area */}
         {!isDesktop && (
@@ -1608,6 +1691,7 @@ export default function OmniDashShell() {
       {/* OmniSpatialHost — universal modal engine, portal-mounted */}
       <OmniSpatialHost />
     </div>
+    </LayoutContext.Provider>
   );
 }
 

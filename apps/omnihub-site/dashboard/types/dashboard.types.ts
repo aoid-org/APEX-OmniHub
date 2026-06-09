@@ -69,12 +69,26 @@ export interface PaneDescriptor {
   readonly defaultSize?: { width: number; height: number };
 }
 
+// ── Panel Layout ─────────────────────────────────────────────────────────────
+
+export type PanelLayout = 'standard' | 'reversed';
+
 // ── Layout Persistence ────────────────────────────────────────────────────────
 
 export interface PersistedLayoutState {
   readonly activeNav: DashboardNavSection;
   readonly isDark: boolean;
   readonly ops: OmniDashOpsState;
+  readonly panelLayout: 'standard' | 'reversed';  // 'reversed' = left-nav on right, right-panel on left
+  readonly hiddenWidgets: readonly string[];  // widget IDs to hide on canvas
 }
 
-export const LAYOUT_STORAGE_KEY = 'omnidash:layout:v1';
+export const DEFAULT_PERSISTED_LAYOUT: PersistedLayoutState = {
+  activeNav: 'OmniBoard',
+  isDark: true,
+  ops: DEFAULT_OPS_STATE,
+  panelLayout: 'standard',
+  hiddenWidgets: ['m03_1', 'm03_2', 'm03_3', 'm03_4', 'm03_5', 'm03_6', 'm03_7'],
+};
+
+export const LAYOUT_STORAGE_KEY = 'omnidash:layout:v2';
