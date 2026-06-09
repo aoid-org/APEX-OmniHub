@@ -109,10 +109,14 @@ export default defineConfig({
         'src/contexts/**',
         'src/hooks/**',
         'src/utils/RealtimeAudio.ts', // Relies on browser WebAudio primitives
-        'apps/omnihub-site/**',
-        // Allow coverage for login-critical files tested in tests/login-page-fixes.test.ts
-        '!apps/omnihub-site/src/lib/supabase.ts',
-        '!apps/omnihub-site/src/pages/Login.tsx',
+        // Exclude omnihub-site app source (pages, components, lib) but NOT dashboard/
+        // dashboard/ files are instrumented so vitest generates LCOV for SonarCloud
+        'apps/omnihub-site/src/**',
+        'apps/omnihub-site/node_modules/**',
+        'apps/omnihub-site/dist/**',
+        'apps/omnihub-site/tests/**',
+        'apps/omnihub-site/coverage/**',
+        'apps/omnihub-site/public/**',
         'node_modules/**',
         'dist/**',
         '.idea/**',
