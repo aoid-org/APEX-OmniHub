@@ -7,18 +7,11 @@ import '../apps/omnihub-site/src/styles/globals.css';
 import '../apps/omnihub-site/src/styles/theme.css';
 import '../apps/omnihub-site/src/styles/components.css';
 import '../apps/omnihub-site/src/styles/omnidash-layout.css';
-
-// APEX PWA INVARIANT: Service worker MUST be registered for beforeinstallprompt
-// to fire and the PWA install banner to appear. Never remove this block.
+// APEX PWA INVARIANT: SW registration lives in swInit.ts (testable).
 // Guarded by: scripts/ci/check-pwa-integrity.mjs
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err) => {
-      // Non-fatal — site works without SW, install banner simply won't appear
-      if (import.meta.env.DEV) console.warn('[APEX PWA] SW registration failed:', err);
-    });
-  });
-}
+import { registerServiceWorker } from './swInit';
+
+registerServiceWorker();
 
 const rootElement = document.getElementById('root');
 

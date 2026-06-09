@@ -93,12 +93,18 @@ check(
   'add <link rel="manifest" href="/manifest.webmanifest"> to index.html'
 );
 
-// ── 4. SW registration in src/main.tsx ────────────────────────────────────
+// ── 4. SW registration in src/swInit.ts (extracted for testability) ──────
+const swInitPath = resolve(ROOT, 'src/swInit.ts');
+check(
+  'src/swInit.ts exists and registers service worker',
+  fileContains(swInitPath, "serviceWorker.register"),
+  "restore registerServiceWorker() in src/swInit.ts"
+);
 const mainTsxPath = resolve(ROOT, 'src/main.tsx');
 check(
-  'src/main.tsx registers service worker',
-  fileContains(mainTsxPath, "serviceWorker.register"),
-  "add navigator.serviceWorker.register('/sw.js') in src/main.tsx"
+  'src/main.tsx calls registerServiceWorker()',
+  fileContains(mainTsxPath, "registerServiceWorker"),
+  "import and call registerServiceWorker() from ./swInit in src/main.tsx"
 );
 
 // ── 5. PWAInstallBanner in App.tsx ─────────────────────────────────────────

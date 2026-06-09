@@ -110,6 +110,9 @@ export default defineConfig({
         'src/hooks/**',
         'src/utils/RealtimeAudio.ts', // Relies on browser WebAudio primitives
         'apps/omnihub-site/**',
+        // Un-exclude PWA files that have dedicated unit tests:
+        '!apps/omnihub-site/src/hooks/usePWAInstall.ts',
+        '!apps/omnihub-site/src/components/PWAInstallBanner.tsx',
         // Allow coverage for login-critical files tested in tests/login-page-fixes.test.ts
         '!apps/omnihub-site/src/lib/supabase.ts',
         '!apps/omnihub-site/src/pages/Login.tsx',
