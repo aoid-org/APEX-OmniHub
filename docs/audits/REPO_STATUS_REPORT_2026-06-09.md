@@ -1,30 +1,44 @@
 # APEX-OmniHub — Comprehensive Repository Status Report
 
-**Date:** 2026-06-09
+**Date:** 2026-06-09 (v1.1 — re-assessed; every load-bearing claim re-verified against code/logs)
 **Scope:** Full remote-state + deep code trace audit (frontend, backend/data, CI/CD, security, governance)
 **Method:** Direct trace of code, migrations, workflows, live GitHub state, and CI failure logs — not document review.
 **Baseline commit:** `102ad20` (main tip at audit time) | **Latest release:** `v1.7.0` (2026-05-31)
+
+> **v1.1 corrections after claim-by-claim re-verification:** (1) The two failing workflows
+> share a SINGLE root cause — `bun.lock` drift from PR #1351 — now **fixed on this branch**
+> (`c65a572`); the certification job's missing `shadow-preflight.json` was a downstream
+> symptom, not the cause. (2) Migrations: **86**, not 91. (3) RLS statements verified:
+> 224 `CREATE POLICY` + 103 `ENABLE ROW LEVEL SECURITY` (earlier "550+" was inflated).
+> (4) Governance line cap is **500 (stricter than the 600 protocol), fail-closed, with a
+> documented 31-path grandfather baseline** — oversized files are explicitly exempted, not
+> passing silently. (5) AuthContext "race" downgraded: it is the canonical supabase-js v2
+> init pattern; both writers derive from the same client state (low risk, no fix warranted).
+> (6) Test skip/only markers: 50, not 46.
 
 ---
 
 ## 1. Executive Verdict
 
-**Overall: PRODUCTION-GRADE PLATFORM WITH TWO ACTIVE P0 CI BLOCKERS AND THREE STRUCTURAL DEBT ITEMS.**
+**Overall: PRODUCTION-GRADE PLATFORM. THE TWO ACTIVE P0 CI FAILURES SHARE ONE ROOT CAUSE —
+A STALE `bun.lock` FROM PR #1351 — WHICH IS FIXED ON THIS BRANCH (`c65a572`).**
 
-The platform is architecturally mature: 30 production Supabase edge functions, 91 versioned
-migrations with hardened RLS (550+ policy checks), a pure Temporal worker with CI-enforced
-boundary purity, a real CDK/Terraform infrastructure layer, and ~250+ substantive test files
-behind enforced coverage thresholds. This is not scaffolding — the code traced is real.
+The platform is architecturally mature: 30 production Supabase edge functions, 86 versioned
+migrations with hardened RLS (224 `CREATE POLICY` + 103 `ENABLE ROW LEVEL SECURITY`
+statements), a pure Temporal worker with CI-enforced boundary purity, a real CDK/Terraform
+infrastructure layer, and ~250 substantive test files behind enforced coverage thresholds.
+This is not scaffolding — the code traced is real.
 
-However, **main is not green**: two workflows fail on every push (`integration-harness`,
-`Clean-Room Final Certification`), the release pipeline cannot certify a new release cut,
-and the codebase violates its own 600-line modularity protocol in 7+ critical files,
-including the main dashboard shell at nearly 3× the limit.
+Until the lockfile fix merges, **main is not green**: `integration-harness` and
+`Clean-Room Final Certification` fail on every push, the release pipeline cannot certify a
+new release cut, and `deploy-production-cf-direct` carries the same latent failure. The
+codebase also exceeds the 600-line modularity protocol in 8 files — all explicitly
+grandfathered in the governance exemption baseline (§5).
 
 | Dimension | Status |
 |---|---|
-| Remote main CI health | 🔴 2 persistent failures per push (root causes identified, §3) |
-| Release pipeline | 🟡 Runs, uploads SBOMs, but verdict = `NOT_CERTIFIED_NO_RELEASE_CUT` |
+| Remote main CI health | 🔴 2 persistent failures per push — single root cause, fix committed (§3) |
+| Release pipeline | 🟡 Fails at dependency install; SBOM upload path works; verdict `NOT_CERTIFIED_NO_RELEASE_CUT` |
 | Backend / data layer | 🟢 Hardened (RLS, secrets clean, boundary-enforced) |
 | Frontend | 🟡 Feature-complete; auth-init race condition + file-size violations |
 | Test infrastructure | 🟢 Substantive (behavioral tests, no snapshot theater) |
@@ -55,43 +69,50 @@ including the main dashboard shell at nearly 3× the limit.
 
 ---
 
-## 3. P0 — Active CI Failures on Main (Root-Caused from Logs)
+## 3. P0 — Active CI Failures on Main (Root-Caused from Logs, Reproduced Locally, Fixed)
 
-### 3.1 `integration-harness` — fails every push
-**Root cause (from run 27224843139 logs):**
-`bun install --frozen-lockfile` fails with `error: lockfile had changes, but lockfile is frozen`.
-`bun.lock` (last touched in #1351) has drifted from `package.json`.
+### 3.1 Single root cause: stale `bun.lock` committed by PR #1351
+PR #1351 (`4af90fb`) added `@upstash/ratelimit@^2.0.8` and `@upstash/redis@^1.35.3` to
+`package.json` devDependencies but committed a `bun.lock` that does not contain them. Every
+`bun install --frozen-lockfile` since then fails with
+`error: lockfile had changes, but lockfile is frozen`. **Reproduced locally byte-for-byte,
+then verified fixed** — after regeneration, `bun install --frozen-lockfile --ignore-scripts`
+passes clean (2,471 installs across 2,136 packages, no changes).
 
-**Compounding factor:** the harness clones the sibling repo `sbbl-hq` and the job log shows
-`env: GH_PAT:` **empty** — the clone happened to succeed, but the secret appears unset or
-unavailable on push events, which will bite when the lockfile issue is fixed.
+Three workflows run this command and are all resolved by the one 6-line lockfile sync
+(commit `c65a572` on this branch):
 
-**Fix path:** Merge **PR #1354** (already open, mirrors the same fix applied to cd-staging in
-#1353 / `ea99829`) **or** regenerate and commit `bun.lock`. Then verify `GH_PAT` is populated
-for push-triggered runs.
+| Workflow | Failure mode |
+|---|---|
+| `integration.yml` (integration-harness) | Fails at install, every main push (run 27224843139) |
+| `release.yml` (Clean-Room Final Certification) | Fails at install step (log line: `bun install --frozen-lockfile` → exit 1, run 27224843242/job 80389119814) |
+| `deploy-production-cf-direct.yml:120` | **Latent** — same command; would fail on next manual production deploy |
 
-### 3.2 `Clean-Room Final Certification` — fails every push, blocks release cuts
-**Root cause (from run 27224843242 release-evidence output):**
-```
-B-1 (P0): Shadow preflight evidence unavailable: ENOENT: no such file or directory,
-open 'shadow-preflight.json'
-final_verdict: NOT_CERTIFIED_NO_RELEASE_CUT
-```
-The certification job writes release evidence **without first running**
-`scripts/ci/shadow-certification-preflight.mjs`, so `shadow-preflight.json` never exists and
-the verdict is fail-closed. Related: in `release.yml` the terraform-plan / atomic-routing-flip
-jobs are gated on a hardcoded `'false' == 'true'` (lines ~131/149) — intentional dead code,
-meaning the shadow deployment path that would produce this evidence is disabled by constant
-while the certifier still demands its output.
+### 3.2 Certification failure mechanics (corrected from v1.0)
+The v1.0 report attributed the certification failure to the evidence writer not running the
+shadow preflight. **That was wrong.** `release.yml:67` does run
+`scripts/ci/shadow-certification-preflight.mjs` unconditionally — but the job dies earlier at
+the line-39 frozen install, so the preflight never executes; the evidence writer (`if:
+always()`) then correctly reports `shadow-preflight.json` ENOENT and fail-closes with
+`NOT_CERTIFIED_NO_RELEASE_CUT`. The fail-closed evidence design worked as intended; the
+input failure was upstream. Separately (informational, not a failure cause): the
+terraform-plan / atomic-routing-flip path is intentionally disabled via hardcoded
+`'false' == 'true'` gates at `release.yml:131/149`.
 
-**Fix path:** Either run the preflight script in the certification job before evidence
-assembly, or make the certifier treat a disabled shadow slot as `skipped` instead of `blocked`.
+**PR #1354** (removes `--frozen-lockfile` from integration.yml) is now **superseded** by the
+lockfile sync and should be closed — dropping the flag would have masked the drift and
+weakened install reproducibility rather than fixing it.
 
-### 3.3 Lockfile triplication (root cause amplifier)
-Three lockfiles coexist at root: `bun.lock` (440 KB), `package-lock.json` (932 KB),
-`deno.lock` (628 KB). npm- and bun-based workflows resolve against different trees, which is
-the systemic source of the recurring `--frozen-lockfile` class of failures (#1353, #1354,
-`ea99829`). **One package manager should be declared canonical for CI.**
+### 3.3 Residual risk: `GH_PAT` and lockfile triplication
+- The integration-harness job log shows `env: GH_PAT:` **empty** on the `sbbl-hq` sibling
+  clone (set secrets render as `***`). The clone succeeded regardless; verify the secret is
+  populated for push-triggered runs before relying on authenticated harness paths.
+- Three lockfiles coexist at root: `bun.lock` (440 KB), `package-lock.json` (932 KB),
+  `deno.lock` (628 KB). Bun- and npm-based workflows resolve against different trees — the
+  systemic source of this failure class (#1353/`ea99829`, #1354, and this incident).
+  **One package manager should be declared canonical per runtime, and lockfile freshness
+  should be gated in CI** (a cheap `bun install --frozen-lockfile` check on PRs touching
+  `package.json` would have caught #1351 at review time).
 
 ### 3.4 Platform deprecation deadline
 GitHub Actions warns on every run: Node 20 actions forced to Node 24 starting
@@ -105,11 +126,12 @@ GitHub Actions warns on every run: Node 20 actions forced to Node 24 starting
 - **Supabase:** 30 edge functions; flagship `omnilink-port` (1,364 lines, 64 auth checks,
   105 error handlers), `trigger-workflow` (582), `byom-cockpit` (572), `web3-verify` (501).
   Real production code, not stubs.
-- **Migrations:** 91 spanning Mar 2024 → Jun 2026. Migration `20260608` resolved all
+- **Migrations:** 86 spanning Mar 2024 → Jun 2026. Migration `20260608` resolved all
   Supabase Security Advisor warnings (lints 0011/0014/0024): extensions moved out of
   `public`, `search_path` locked on triggers, permissive policies re-scoped.
-- **RLS:** `auth.uid() = user_id` pattern across user-data tables; 550+ policy checks in
-  migration history; service-role usage documented and confined to admin paths
+- **RLS:** `auth.uid() = user_id` pattern across user-data tables; 224 `CREATE POLICY` and
+  103 `ENABLE ROW LEVEL SECURITY` statements in migration history (verified counts);
+  service-role usage documented and confined to admin paths
   (byom-cockpit, byom-login, omnilink-eval, omnilink-port, alchemy-webhook).
 - **Orchestrator (Python/Temporal):** pure worker (`orchestrator/main.py`) — purity is
   CI-enforced (no fastapi/uvicorn imports allowed); 3 workflows, 40+ activities,
@@ -134,10 +156,12 @@ GitHub Actions warns on every run: Node 20 actions forced to Node 24 starting
 - **State:** Zustand stores are production-grade — `omniGatewayStore` (332 lines) implements
   zero-polling SSE with a mutable token buffer to avoid per-token re-renders;
   `omniDashStore` (258 lines) handles spatial widgets with `structuredClone` sanitization.
-- **⚠️ Auth-init race (`src/contexts/AuthContext.tsx`):** `onAuthStateChange()` and
-  `getSession().then()` both set session/user/loading independently with no ordering
-  guarantee → loading-state flicker and potential stale device-trust sync. Fix: hydrate once
-  from `getSession()`, then let the listener own all subsequent updates.
+- **Auth init (`src/contexts/AuthContext.tsx:76-115`) — downgraded from v1.0's "critical
+  race":** the listener-then-`getSession()` sequence is the canonical supabase-js v2
+  initialization pattern. Both writers read the same client state, so a late `getSession()`
+  resolution returns the *current* session, not a stale one; worst case is a redundant
+  identical state write. Verified low-risk — **no code change warranted** (changing working
+  canonical auth code would be churn, not hardening).
 - **Mobile:** Capacitor is real — configured `capacitor.config.ts`
   (`com.apexbusiness.omnilink`), full Android Gradle + iOS Xcode projects, PWA manifest/SW.
 - **Dead code:** minimal — only ~17 mock/stub markers, nearly all intentional demo-mode or
@@ -156,8 +180,12 @@ GitHub Actions warns on every run: Node 20 actions forced to Node 24 starting
 | `src/components/ui/sidebar.tsx` | 640 | 1.1× |
 | `src/omnihub-gateway/middleware/TriforceGuardian.ts` | 615 | 1.0× |
 
-Note: the apex-governance CI gate enforces a 1,000-line module cap — looser than the
-documented 600-line protocol, so several violations pass CI silently.
+Note (corrected from v1.0): the apex-governance CI gate enforces a **500-line** cap —
+*stricter* than the documented 600-line protocol — fail-closed via
+`governance/ci/apex-policy.config.json` (`max_module_lines: 500`). All eight files above
+appear in the config's 31-path `size_exempt_paths` grandfather baseline, i.e. the debt is
+explicitly tracked, not passing silently. New files cannot exceed 500 lines; the remediation
+path is to shrink baselined files and delete their exemption entries as they're refactored.
 
 ---
 
@@ -179,9 +207,9 @@ documented 600-line protocol, so several violations pass CI silently.
 - **Governance:** `apex_policy_check.py` is a real, config-driven, fail-closed executable
   (god-object names, cross-domain coupling, RFC completeness). The rest of `governance/`
   and `.agents/` is documentation/LLM playbooks (only 3 executable scripts).
-- **Gaps:** 46 `skip`/`only`/TODO markers in tests; integration tests excluded from CI
-  vitest run; Playwright suite is smoke-only; no migration-rollback scenario tests;
-  pre-commit hook is a single grep (no lint/test).
+- **Gaps:** 50 `skip`/`only`/todo markers in tests (verified count); integration tests
+  excluded from CI vitest run; Playwright suite is smoke-only; no migration-rollback
+  scenario tests; pre-commit hook is a single grep (no lint/test).
 
 ---
 
@@ -200,20 +228,23 @@ Platform connector note: `.mcp.json` registers the Supabase MCP server **read-on
 
 ## 8. Prioritized Action Plan
 
-| P | Action | Evidence |
+| P | Action | Status / Evidence |
 |---|---|---|
-| **P0** | Merge **PR #1354** (or regenerate `bun.lock`) → unblocks `integration-harness` | §3.1 |
-| **P0** | Run `shadow-certification-preflight.mjs` in the certification job (or treat disabled shadow as `skipped`) → unblocks release certification | §3.2 |
-| **P0** | Verify `GH_PAT` secret availability for push-triggered integration runs | §3.1 |
+| **P0** | Sync `bun.lock` with #1351's upstash deps → unblocks `integration-harness`, `Clean-Room Final Certification`, and latent `deploy-production-cf-direct` | ✅ **FIXED** — commit `c65a572` on this branch; merge to main | 
+| **P0** | Close **PR #1354** as superseded (dropping `--frozen-lockfile` would mask drift, not fix it) | §3.2 |
+| **P0** | Verify `GH_PAT` secret availability for push-triggered integration runs | §3.3 |
 | **P1** | Bump Node-20-pinned actions before the 2026-06-16 forced migration | §3.4 |
-| **P1** | Declare one canonical package manager for CI; remove the other lockfile(s) from gate paths | §3.3 |
-| **P1** | Fix `AuthContext` session-hydration race | §5 |
+| **P1** | Add a PR-time `bun install --frozen-lockfile` freshness gate; declare one canonical package manager per runtime | §3.3 |
 | **P1** | Review major-version dependabot PRs #1359 (hardhat 3), #1363 (wagmi 3), #1362 (capacitor 8) — do not auto-merge | §2 |
-| **P2** | Decompose `OmniDashShell.tsx` (1,697), `Home.tsx` (1,032), `OmniPort.ts` (1,130) per 600-line protocol; align governance cap (1,000) with the documented 600 | §5 |
+| **P2** | Decompose `OmniDashShell.tsx` (1,697), `Home.tsx` (1,032), `OmniPort.ts` (1,130); remove each from the governance `size_exempt_paths` baseline as it lands under 500 | §5 |
 | **P2** | Raise orchestrator pytest gate from 55% toward the 70% JS parity | §6 |
 | **P2** | Add SSE retry/backoff + migration-rollback scenario tests | §5, §6 |
 | **P3** | Root hygiene sweep (delete `scratch_fix.cjs`, archive binaries/screenshots, refresh `next-action.md`) | §7 |
-| **P3** | Audit 46 skipped/TODO tests; close PR #1352/#1355 by merging or superseding | §6 |
+| **P3** | Audit 50 skipped/todo tests; resolve PR #1352/#1355 by merging or superseding | §6 |
+
+*(Removed from v1.0 plan after re-verification: "fix AuthContext race" — canonical pattern,
+no defect (§5); "run preflight in certification job" — preflight already runs at
+`release.yml:67`; failure was the upstream install (§3.2).)*
 
 ---
 
