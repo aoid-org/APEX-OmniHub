@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 /**
  * PWAInstallBanner

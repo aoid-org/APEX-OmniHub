@@ -22,11 +22,15 @@ function setHookState(overrides: Partial<ReturnType<typeof usePWAInstall>>) {
 
 describe('PWAInstallBanner', () => {
   beforeEach(() => {
-    vi.spyOn(window, 'matchMedia').mockReturnValue({
-      matches: false,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    } as unknown as MediaQueryList);
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: vi.fn().mockReturnValue({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }),
+    });
   });
 
   afterEach(() => { vi.restoreAllMocks(); });

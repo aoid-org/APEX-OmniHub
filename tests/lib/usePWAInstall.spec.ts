@@ -13,11 +13,15 @@ function makePromptEvent(outcome: 'accepted' | 'dismissed' = 'accepted') {
 describe('usePWAInstall', () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.spyOn(window, 'matchMedia').mockReturnValue({
-      matches: false,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    } as unknown as MediaQueryList);
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: vi.fn().mockReturnValue({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }),
+    });
   });
 
   afterEach(() => {
