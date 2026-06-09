@@ -17,6 +17,26 @@ env:
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 jobs:
+  lockfile-freshness:
+    name: Lockfile Freshness (bun.lock matches package.json)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
+      - name: Verify bun.lock is in sync
+        run: |
+          if ! bun install --frozen-lockfile --ignore-scripts; then
+            echo "::error::bun.lock is out of sync with package.json. Run 'bun install --ignore-scripts' locally and commit the updated bun.lock (see incident from PR #1351, fixed in #1368)."
+            exit 1
+          fi
+
   architectural-boundary-enforcement:
     name: Architectural Boundary Enforcement
     runs-on: ubuntu-latest
