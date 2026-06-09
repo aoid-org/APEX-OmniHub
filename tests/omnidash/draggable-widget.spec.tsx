@@ -2,6 +2,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 
+// vi.hoisted runs before all vi.mock factories — values are accessible in the factory closure.
+const { dragCallbacks } = vi.hoisted(() => {
+  const dragCallbacks = new Map<string, {
+    onDragStart?: () => void;
+    onDragEnd?: (_event: unknown, info: { point: { x: number; y: number } }) => void;
+  }>();
+  return { dragCallbacks };
+});
+
 vi.mock('framer-motion', async () => {
   const R = await vi.importActual<typeof import('react')>('react');
   const animate = vi.fn();
@@ -19,6 +28,14 @@ vi.mock('framer-motion', async () => {
             { children, style, onPointerDown, onPointerMove, onPointerUp, onDragStart, onDragEnd, ...rest }: Record<string, unknown>,
             ref: React.Ref<unknown>,
           ) => {
+            // Register drag callbacks keyed by data-testid so tests can invoke them directly
+            const testId = (rest as Record<string, string>)['data-testid'];
+            if (testId && (onDragStart || onDragEnd)) {
+              dragCallbacks.set(testId, {
+                onDragStart: onDragStart as () => void,
+                onDragEnd: onDragEnd as (_e: unknown, info: { point: { x: number; y: number } }) => void,
+              });
+            }
             const safeRest = Object.fromEntries(
               Object.entries(rest).filter(([k]) =>
                 !['drag', 'dragMomentum', 'dragElastic', 'whileDrag', 'animate', 'initial', 'exit', 'transition', 'layout', 'layoutId', 'variants'].includes(k)
@@ -29,8 +46,6 @@ vi.mock('framer-motion', async () => {
               onPointerDown,
               onPointerMove,
               onPointerUp,
-              'data-drag-start': onDragStart,
-              'data-drag-end': onDragEnd,
               ...safeRest,
               ref,
             }, children as React.ReactNode);
@@ -57,7 +72,6 @@ import {
 } from '../../apps/omnihub-site/dashboard/DraggableWidget';
 
 // jsdom omits PointerEvent; React 18 feature-detects it to register pointermove listeners.
-// Without this polyfill, onPointerMove never fires in tests.
 if (typeof (globalThis as Record<string, unknown>).PointerEvent === 'undefined') {
   (globalThis as Record<string, unknown>).PointerEvent = MouseEvent;
 }
@@ -260,5 +274,123 @@ describe('DraggableWidget', () => {
     fireEvent.pointerMove(el, { clientX: 3, clientY: 3 });
     act(() => { vi.advanceTimersByTime(600); });
     expect(el).toHaveAttribute('data-drag-mode', 'ready');
+  });
+
+  // ── handleDragStart / handleDragEnd coverage ────────────────────────────────
+
+  it('handlePointerMove returns early when no prior pointer down', () => {
+    render(
+      <DraggableWidget id="widget_earlyret">
+        <span>early return</span>
+      </DraggableWidget>,
+    );
+    const el = screen.getByTestId('widget_earlyret');
+    // No preceding pointerDown → pointerOriginRef.current is null → early return
+    fireEvent.pointerMove(el, { clientX: 20, clientY: 20 });
+    expect(el).toHaveAttribute('data-drag-mode', 'idle');
+  });
+
+  it('handleDragStart sets drag mode to dragging', () => {
+    render(
+      <DraggableWidget id="widget_ds">
+        <span>drag start</span>
+      </DraggableWidget>,
+    );
+    const el = screen.getByTestId('widget_ds');
+    // Enter ready state first via long press
+    fireEvent.pointerDown(el, { clientX: 0, clientY: 0 });
+    act(() => { vi.advanceTimersByTime(600); });
+    expect(el).toHaveAttribute('data-drag-mode', 'ready');
+
+    const cbs = dragCallbacks.get('widget_ds');
+    act(() => { cbs?.onDragStart?.(); });
+    expect(el).toHaveAttribute('data-drag-mode', 'dragging');
+  });
+
+  it('handleDragEnd resets drag mode to idle', () => {
+    render(
+      <DraggableWidget id="widget_de">
+        <span>drag end</span>
+      </DraggableWidget>,
+    );
+    const el = screen.getByTestId('widget_de');
+    fireEvent.pointerDown(el, { clientX: 0, clientY: 0 });
+    act(() => { vi.advanceTimersByTime(600); });
+    const cbs = dragCallbacks.get('widget_de');
+    act(() => { cbs?.onDragStart?.(); });
+    expect(el).toHaveAttribute('data-drag-mode', 'dragging');
+
+    act(() => { cbs?.onDragEnd?.(null, { point: { x: 50, y: 50 } }); });
+    expect(el).toHaveAttribute('data-drag-mode', 'idle');
+  });
+
+  it('handleDragEnd saves position to localStorage', () => {
+    render(
+      <DraggableWidget id="widget_lsave">
+        <span>lsave</span>
+      </DraggableWidget>,
+    );
+    const cbs = dragCallbacks.get('widget_lsave');
+    act(() => { cbs?.onDragEnd?.(null, { point: { x: 100, y: 100 } }); });
+    const saved = localStorage.getItem('omni_widget_pos_widget_lsave');
+    expect(saved).toBeTruthy();
+    const parsed = JSON.parse(saved!);
+    expect(typeof parsed.x).toBe('number');
+    expect(typeof parsed.y).toBe('number');
+  });
+
+  it('handleDragEnd dispatches omnislate-drop when drop point is inside slate', () => {
+    const slate = document.createElement('div');
+    slate.id = 'widget_slate';
+    Object.defineProperty(slate, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, right: 500, bottom: 500, width: 500, height: 500 }),
+      configurable: true,
+    });
+    document.body.appendChild(slate);
+
+    render(
+      <DraggableWidget id="widget_slatedrop">
+        <span>slate drop</span>
+      </DraggableWidget>,
+    );
+
+    const dropHandler = vi.fn();
+    window.addEventListener('omnislate-drop', dropHandler);
+
+    const cbs = dragCallbacks.get('widget_slatedrop');
+    act(() => { cbs?.onDragEnd?.(null, { point: { x: 100, y: 100 } }); });
+
+    expect(dropHandler).toHaveBeenCalled();
+
+    window.removeEventListener('omnislate-drop', dropHandler);
+    document.body.removeChild(slate);
+  });
+
+  it('handleDragEnd skips omnislate-drop when drop point is outside slate', () => {
+    const slate = document.createElement('div');
+    slate.id = 'widget_slate';
+    Object.defineProperty(slate, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, right: 50, bottom: 50, width: 50, height: 50 }),
+      configurable: true,
+    });
+    document.body.appendChild(slate);
+
+    render(
+      <DraggableWidget id="widget_outsidedrop">
+        <span>outside drop</span>
+      </DraggableWidget>,
+    );
+
+    const dropHandler = vi.fn();
+    window.addEventListener('omnislate-drop', dropHandler);
+
+    const cbs = dragCallbacks.get('widget_outsidedrop');
+    // Drop point (200,200) is outside the slate rect (0-50, 0-50)
+    act(() => { cbs?.onDragEnd?.(null, { point: { x: 200, y: 200 } }); });
+
+    expect(dropHandler).not.toHaveBeenCalled();
+
+    window.removeEventListener('omnislate-drop', dropHandler);
+    document.body.removeChild(slate);
   });
 });

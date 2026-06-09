@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import React from 'react';
 
 vi.mock('@/stores/omniModalStore', () => ({
@@ -139,5 +139,61 @@ describe('OmniSpatialHost', () => {
     expect(portalRoot).toBeTruthy();
     render(<OmniSpatialHost />);
     expect(portalRoot).toBeTruthy();
+  });
+
+  it('calls abortModal when spatial backdrop is clicked', () => {
+    const abortModal = vi.fn();
+    const modal = makeModal({ type: 'module', contextData: { appType: 'editor' } });
+    vi.mocked(useOmniModal).mockReturnValue({
+      activeModal: modal,
+      isOpen: true,
+      close: vi.fn(),
+      abortModal,
+    } as ReturnType<typeof useOmniModal>);
+    vi.mocked(resolveRenderMode).mockReturnValue('spatial');
+
+    render(<OmniSpatialHost />);
+    const canvas = screen.getByTestId('omni-spatial-canvas');
+    const backdrop = canvas.previousElementSibling as HTMLElement;
+    act(() => { fireEvent.click(backdrop); });
+    expect(abortModal).toHaveBeenCalledWith('USER_DISMISSED');
+  });
+
+  it('toggles isPiP when PiP button clicked in spatial mode', () => {
+    const modal = makeModal({ type: 'module', contextData: { appType: 'editor' } });
+    vi.mocked(useOmniModal).mockReturnValue({
+      activeModal: modal,
+      isOpen: true,
+      close: vi.fn(),
+      abortModal: vi.fn(),
+    } as ReturnType<typeof useOmniModal>);
+    vi.mocked(resolveRenderMode).mockReturnValue('spatial');
+
+    render(<OmniSpatialHost />);
+    const canvas = screen.getByTestId('omni-spatial-canvas');
+    const buttons = canvas.querySelectorAll('button');
+    // First button is the PiP toggle (Minimize2/Maximize2)
+    act(() => { fireEvent.click(buttons[0]); });
+    // After toggle isPiP becomes true — canvas re-renders with data-pip="true"
+    expect(screen.getByTestId('omni-spatial-canvas').getAttribute('data-pip')).toBe('true');
+  });
+
+  it('calls close when the close button is clicked in spatial mode', () => {
+    const close = vi.fn();
+    const modal = makeModal({ type: 'module', contextData: { appType: 'editor' } });
+    vi.mocked(useOmniModal).mockReturnValue({
+      activeModal: modal,
+      isOpen: true,
+      close,
+      abortModal: vi.fn(),
+    } as ReturnType<typeof useOmniModal>);
+    vi.mocked(resolveRenderMode).mockReturnValue('spatial');
+
+    render(<OmniSpatialHost />);
+    const canvas = screen.getByTestId('omni-spatial-canvas');
+    const buttons = canvas.querySelectorAll('button');
+    // Second button is the close button (X)
+    act(() => { fireEvent.click(buttons[1]); });
+    expect(close).toHaveBeenCalled();
   });
 });

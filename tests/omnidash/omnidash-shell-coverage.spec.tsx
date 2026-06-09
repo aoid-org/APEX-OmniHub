@@ -142,6 +142,8 @@ vi.mock('dashboard/contracts/agentAvatars', () => ({
 
 // ── Import after all mocks are declared ──────────────────────────────────────
 import OmniDashShell from '../../apps/omnihub-site/dashboard/OmniDashShell';
+import { useViewport } from 'dashboard/hooks/useViewport';
+import { useLayoutPersistence } from 'dashboard/hooks/useLayoutPersistence';
 
 // jsdom lacks scrollIntoView
 if (typeof Element.prototype.scrollIntoView === 'undefined') {
@@ -176,5 +178,42 @@ describe('OmniDashShell', () => {
   it('renders APEX Ecosystem section label', () => {
     render(<OmniDashShell />);
     expect(screen.getByText('APEX Ecosystem')).toBeTruthy();
+  });
+
+  it('renders mobile drawer button when not on desktop', () => {
+    vi.mocked(useViewport).mockReturnValueOnce({
+      isMobile: true, isTablet: false, isDesktop: false, width: 375,
+    } as ReturnType<typeof useViewport>);
+    render(<OmniDashShell />);
+    expect(screen.getByLabelText('Open insights panel')).toBeTruthy();
+  });
+
+  it('renders mobile bottom nav and drawer when not on desktop', () => {
+    vi.mocked(useViewport).mockReturnValueOnce({
+      isMobile: true, isTablet: false, isDesktop: false, width: 375,
+    } as ReturnType<typeof useViewport>);
+    render(<OmniDashShell />);
+    expect(screen.getByTestId('mobile-bottom-nav')).toBeTruthy();
+    expect(screen.getByTestId('mobile-drawer')).toBeTruthy();
+  });
+
+  it('renders reversed layout sidebar when panelLayout is reversed', () => {
+    vi.mocked(useLayoutPersistence).mockReturnValueOnce({
+      activeNav: 'OmniBoard',
+      setActiveNav: vi.fn(),
+      isDark: true,
+      setIsDark: vi.fn(),
+      ops: { demo: true, autoPilot: false, guardian: true, live: false },
+      setOps: vi.fn(),
+      panelLayout: 'reversed',
+      setPanelLayout: vi.fn(),
+      hiddenWidgets: [],
+      toggleWidget: vi.fn(),
+      resetWidgetPositions: vi.fn(),
+    } as ReturnType<typeof useLayoutPersistence>);
+    render(<OmniDashShell />);
+    // Both nav items should still render (sidebar renders the nav)
+    expect(screen.getByText('OmniBoard')).toBeTruthy();
+    expect(screen.getByText('Pipeline')).toBeTruthy();
   });
 });

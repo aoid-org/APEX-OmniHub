@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { act } from 'react';
 
 const mockSubscribe = vi.fn();
@@ -113,5 +113,65 @@ describe('OmniTraceFeed', () => {
       render(<OmniTraceFeed />);
     });
     expect(screen.getByText('Connecting')).toBeTruthy();
+  });
+
+  it('shows No events yet when subscribed with no logs', async () => {
+    await act(async () => {
+      render(<OmniTraceFeed />);
+    });
+    await waitFor(() => {
+      expect(screen.getByText('Live')).toBeTruthy();
+    });
+    // When subscribed and no INSERT events have fired, logs is empty → show "No events yet"
+    expect(screen.getByText('No events yet')).toBeTruthy();
+  });
+
+  it('mouseEnter on Replay Workflows button changes its border color', async () => {
+    await act(async () => {
+      render(<OmniTraceFeed />);
+    });
+    const button = screen.getByText('+ Replay Workflows').closest('button') as HTMLButtonElement;
+    fireEvent.mouseEnter(button);
+    // jsdom normalizes rgba(249,115,22,0.3) to rgb form; check it's not empty
+    expect(button.style.borderColor).toBeTruthy();
+  });
+
+  it('mouseLeave on Replay Workflows button resets its border color', async () => {
+    await act(async () => {
+      render(<OmniTraceFeed />);
+    });
+    const button = screen.getByText('+ Replay Workflows').closest('button') as HTMLButtonElement;
+    fireEvent.mouseEnter(button);
+    const afterEnter = button.style.borderColor;
+    fireEvent.mouseLeave(button);
+    // After leave the border color is reset (may differ from enter value)
+    expect(button.style.borderColor).not.toBe(afterEnter);
+  });
+
+  it('shows seconds-ago label for a very recent INSERT log', async () => {
+    let insertCallback: ((payload: { new: Record<string, unknown> }) => void) | undefined;
+    mockOn.mockImplementation((_event: string, _filter: unknown, cb: (payload: { new: Record<string, unknown> }) => void) => {
+      insertCallback = cb;
+      return { on: mockOn, subscribe: mockSubscribe };
+    });
+
+    await act(async () => {
+      render(<OmniTraceFeed />);
+    });
+
+    await act(async () => {
+      insertCallback?.({
+        new: {
+          id: 'recent1',
+          action: 'Just happened event',
+          created_at: new Date().toISOString(),
+          severity: 'ok',
+        },
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/\ds ago/)).toBeTruthy();
+    });
   });
 });

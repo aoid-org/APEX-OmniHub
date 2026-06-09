@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
+
+// vi.hoisted ensures omniInvoke is available inside the vi.mock factory
+const { omniInvoke } = vi.hoisted(() => ({ omniInvoke: vi.fn() }));
 
 const defaultModuleState = {
   loading: false,
@@ -17,16 +20,22 @@ vi.mock('@/hooks/useOmniModuleState', () => ({
   triggerModuleAction: vi.fn().mockResolvedValue({ success: true }),
 }));
 
-vi.mock('@/stores/omniModalStore', () => ({
-  useOmniModal: vi.fn(() => ({
+// useOmniModal is called as a hook AND its .getState() static method is called
+// by LinksModule.handleAction. Set getState as a property on the mock function.
+vi.mock('@/stores/omniModalStore', () => {
+  const mockFn = vi.fn(() => ({
     activeModal: null,
     isOpen: false,
     close: vi.fn(),
     abortModal: vi.fn(),
     invoke: vi.fn(),
-  })),
-  getState: vi.fn(() => ({ invoke: vi.fn() })),
-}));
+  }));
+  (mockFn as typeof mockFn & { getState: () => unknown }).getState = () => ({ invoke: omniInvoke });
+  return {
+    useOmniModal: mockFn,
+    resolveRenderMode: vi.fn(() => 'dialog'),
+  };
+});
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
@@ -36,15 +45,19 @@ vi.mock('@/lib/supabase', () => ({
   hasSupabaseConfig: false,
 }));
 
+// ModuleShell mock exposes onAction trigger buttons so LinksModule.handleAction is reachable
 vi.mock('dashboard/components/modules/ModuleShell', () => ({
-  ModuleShell: ({ children, state, onClose }: {
+  ModuleShell: ({ children, state, onClose, onAction }: {
     children?: React.ReactNode;
     state: { loading: boolean; title?: string };
     onClose: () => void;
+    onAction?: (actionId: string, selected: string[]) => unknown;
   }) => (
     <div data-testid="module-shell">
       <span data-testid="module-title">{state.title}</span>
       <button onClick={onClose} data-testid="module-close">close</button>
+      <button data-testid="trigger-add-link" onClick={() => onAction?.('add-link', [])}>Add Link</button>
+      <button data-testid="trigger-test-all" onClick={() => onAction?.('test-all', [])}>Test All</button>
       {!state.loading && children}
     </div>
   ),
@@ -122,6 +135,19 @@ describe('LinksModule', () => {
 
     render(<LinksModule onClose={vi.fn()} />);
     expect(screen.getByText('Unkn')).toBeTruthy();
+  });
+
+  it('fires add-link action and calls useOmniModal.getState().invoke', () => {
+    render(<LinksModule onClose={vi.fn()} />);
+    fireEvent.click(screen.getByTestId('trigger-add-link'));
+    expect(omniInvoke).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'links-add-connection', type: 'microfrontend' }),
+    );
+  });
+
+  it('fires test-all action without throwing', () => {
+    render(<LinksModule onClose={vi.fn()} />);
+    expect(() => fireEvent.click(screen.getByTestId('trigger-test-all'))).not.toThrow();
   });
 });
 
