@@ -53,12 +53,15 @@ export function usePWAInstall(): UsePWAInstallReturn {
 
   const installPWA = useCallback(async () => {
     if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-      setIsInstallable(false);
-    }
+    // Consume the event immediately — BeforeInstallPromptEvent.prompt() can only
+    // be called once. Clear state before awaiting so a second tap never reaches
+    // a spent event (which would throw InvalidStateError silently in prod).
+    const pendingPrompt = deferredPrompt;
+    setDeferredPrompt(null);
+    setIsInstallable(false);
+    pendingPrompt.prompt();
+    await pendingPrompt.userChoice;
+    // Browser will re-fire beforeinstallprompt on a future visit if user dismissed.
   }, [deferredPrompt]);
 
   const dismissBanner = useCallback(() => {
