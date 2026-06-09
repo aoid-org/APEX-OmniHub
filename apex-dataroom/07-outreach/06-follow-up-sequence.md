@@ -27,5 +27,5 @@ Would you like me to send it over?
 
 **Subject:** Closing the loop — [first name]
 
-No pressure either way — I will leave it here. If timing changes, my calendar is always open: [link — <!-- JR_TODO: Calendly link -->]
+No pressure either way - I will leave it here. If timing changes, my calendar is always open: [link - [Insert Calendly Link]]
 ---
