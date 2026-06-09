@@ -14,5 +14,5 @@ I would like to request a meeting to review the pivot, our milestones, and ensur
 JR
 Founder & CEO, APEX Business Systems Ltd.
 Edmonton, Alberta, Canada
-[Calendly link — <!-- JR_TODO: phone/calendly link -->]
+[Calendly link - [Insert Phone/Calendly Link]]
 ---
