@@ -8,6 +8,6 @@ That same operational rigor powers OmniHub: 93,000+ lines of code, guarded by 26
 
 If you are building with AI and need governance, auditability, and resilience, let's talk.
 
-[Calendly link — <!-- JR_TODO: replace -->]
+[Calendly link - [Insert Calendly Link]]
 
 #AI #Automation #Operations
