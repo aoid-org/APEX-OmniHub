@@ -15,6 +15,8 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from _forge_rubric import rubric_checks as _rubric_checks, run_rubric  # noqa: E402
+
 # ---------------------------------------------------------------- constants
 DESC_BUDGET = 500          # APEX budget (spec hard limit below)
 DESC_SPEC_MAX = 1024       # open Agent Skills spec limit
@@ -292,6 +294,7 @@ def write_scorecard(skill_dir: Path) -> Path:
     out.write_text(json.dumps(card, indent=2), encoding="utf-8")
     return out
 
+
 def pack_skill(skill_dir: Path, label: str = "") -> int:
     lint = lint_skill(skill_dir, strict=True)
     if lint.fails:
@@ -312,111 +315,6 @@ def pack_skill(skill_dir: Path, label: str = "") -> int:
     (dist / f"{out.name}.sha256").write_text(f"{sha}  {out.name}\n", encoding="utf-8")
     print(f"PACKED {out}\nSHA256 {sha}")
     return 0
-
-
-# ---------------------------------------------------------------- rubric
-def _rubric_checks(skill_dir: Path) -> list[tuple[str, bool]]:
-    """Return the 20 binary rubric checks. Called by run_rubric (print) and
-    write_scorecard (persist). Requires scorecard.json to already exist so the
-    scorecard_ok() gate can evaluate correctly."""
-    sp = skill_dir / "SKILL.md"
-    text = sp.read_text(encoding="utf-8") if sp.exists() else ""
-    fm, body, fm_err = parse_frontmatter(text) if text else ({}, "", ["missing"])
-    desc = fm.get("description", "")
-    name = fm.get("name", "")
-    readme_p = skill_dir / "README.md"
-    rtext = readme_p.read_text(encoding="utf-8") if readme_p.exists() else ""
-    lic_p = skill_dir / "LICENSE.md"
-    ltext = lic_p.read_text(encoding="utf-8") if lic_p.exists() else ""
-
-    def manifest_ok() -> bool:
-        p = skill_dir / "MANIFEST.json"
-        if not p.exists():
-            return False
-        try:
-            m = json.loads(p.read_text(encoding="utf-8"))
-            return bool(m.get("name") == name and m.get("version") and m.get("license"))
-        except json.JSONDecodeError:
-            return False
-
-    def refs_toc_ok() -> bool:
-        rd = skill_dir / "references"
-        if not rd.is_dir():
-            return True
-        for ref in rd.glob("*.md"):
-            lines = ref.read_text(encoding="utf-8").splitlines()
-            if len(lines) > REF_TOC_THRESHOLD and not any(
-                l.strip().lower().startswith("## contents") for l in lines[:12]
-            ):
-                return False
-        return True
-
-    def scripts_compile_ok() -> bool:
-        sd = skill_dir / "scripts"
-        if not sd.is_dir():
-            return True
-        try:
-            for py in sd.glob("*.py"):
-                compile(py.read_text(encoding="utf-8"), str(py), "exec")
-            return True
-        except SyntaxError:
-            return False
-
-    def triggers_ok() -> bool:
-        f, stats = validate_triggers(skill_dir)
-        return f.fails == 0 and stats["total"] >= MIN_TRIGGER_POS + MIN_TRIGGER_NEG
-
-    def scorecard_ok() -> bool:
-        p = skill_dir / "scorecard.json"
-        if not p.exists():
-            return False
-        try:
-            c = json.loads(p.read_text(encoding="utf-8"))
-            return c.get("lint", {}).get("fails") == 0
-        except json.JSONDecodeError:
-            return False
-
-    def no_multipliers() -> bool:
-        return not (MULTIPLIER_RE.findall(text) or MULTIPLIER_RE.findall(rtext))
-
-    install_block = ("## Install" in rtext
-                     and "```" in rtext.split("## Install", 1)[-1][:600])
-    return [
-        ("SKILL.md present, frontmatter parses", bool(text) and not fm_err),
-        ("frontmatter is exactly name/description/license", set(fm) == {"name", "description", "license"}),
-        ("name lowercase-hyphenated ≤64, matches directory", bool(NAME_RE.match(name)) and len(name) <= 64 and skill_dir.name == name),
-        (f"description ≤{DESC_BUDGET} chars", 0 < len(desc) <= DESC_BUDGET),
-        ("description has 'Use when' trigger clause", "use when" in desc.lower()),
-        ("description has exclusion clause", "not" in desc.lower()),
-        (f"SKILL.md ≤{SKILL_LINE_BUDGET} lines", 0 < len(text.splitlines()) <= SKILL_LINE_BUDGET),
-        (f"body ≤{BODY_TOKEN_TARGET} est. tokens", est_tokens(body) <= BODY_TOKEN_TARGET),
-        ("zero hype-lexicon hits in SKILL.md", not any(w in text.lower() for w in HYPE_LEXICON)),
-        ("zero multiplier claims in SKILL.md + README", no_multipliers()),
-        ("LICENSE.md present, names APEX Business Systems", "APEX Business Systems" in ltext),
-        ("MANIFEST.json valid: name match, version, license", manifest_ok()),
-        ("references >100 lines carry '## Contents'", refs_toc_ok()),
-        ("all scripts/*.py compile", scripts_compile_ok()),
-        ("templates/ has SKILL, README, MANIFEST templates", all((skill_dir / "templates" / f).exists() for f in ("SKILL.template.md", "README.template.md", "MANIFEST.template.json"))),
-        (f"trigger eval ≥{MIN_TRIGGER_POS}+/{MIN_TRIGGER_NEG}- and valid", triggers_ok()),
-        ("scorecard.json present with lint.fails == 0", scorecard_ok()),
-        ("README '## Install' with command block", install_block),
-        ("README '## Before / After' section", bool(re.search(r"^##\s*Before\s*/\s*After", rtext, re.IGNORECASE | re.MULTILINE))),
-        ("README carries APEX attribution footer", "APEX" in rtext),
-    ]
-
-
-def run_rubric(skill_dir: Path) -> int:
-    """20 binary checks × 5 points. Every check is machine-verifiable.
-
-    The printed score certifies structural and evidence properties of the
-    package — nothing else. A check either passes by command or it fails.
-    """
-    checks = _rubric_checks(skill_dir)
-    score = sum(5 for _, ok in checks if ok)
-    print(f"RUBRIC {skill_dir.name}: {score}/100")
-    for label, ok in checks:
-        print(f"  [{'PASS' if ok else 'FAIL'}] {label}")
-    return 0 if score == 100 else 1
 
 
 # ---------------------------------------------------------------- init
