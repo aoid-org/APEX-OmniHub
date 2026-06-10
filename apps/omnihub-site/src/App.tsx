@@ -10,6 +10,7 @@ import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { HomePage } from "@/pages/Home";
 import { OnboardingWizard } from "@/pages/Launch/OnboardingWizard";
+import { SkillForge } from "@/pages/Launch/SkillForge";
 import OmniDashShell from "@/dashboard/OmniDashShell";
 import { OmniDashProvider } from "@/providers/OmniDashProvider";
 import { LoginPage } from "@/pages/Login";
@@ -143,6 +144,10 @@ function App() {
         <Route path="/omnidash/*" element={createProtectedElement(OmniDashApp, false, "OmniDash")} />
         <Route path="/dashboard" element={createProtectedElement(OmniDashApp, false, "Dashboard")} />
         <Route path="/dashboard/*" element={createProtectedElement(OmniDashApp, false, "Dashboard")} />
+
+        {/* Skill Forge — protected launch route. Invokes the generate-business-skills
+            edge function with the user JWT, so it requires an authenticated session. */}
+        <Route path="/launch/skillforge" element={createProtectedElement(<SkillForge />, false, "Skill Forge")} />
 
         {/* All unmatched routes → OmniDash (SPA catch-all) */}
         <Route path="*" element={<Navigate to="/omnidash" replace />} />
