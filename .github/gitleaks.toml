@@ -21,7 +21,7 @@ regex = '''sk_live_[A-Za-z0-9]{20,}'''
 tags = ["stripe"]
 
 [allowlist]
-description = "APEX governance docs and templates"
+description = "APEX governance docs, templates, and developer tooling"
 paths = [
   '''governance/.*\.md''',
   '''docs/.*\.md''',
@@ -30,4 +30,9 @@ paths = [
   '''CHANGELOG\.md''',
   '''.*\.example$''',
   '''.*\.sample$''',
+  # .claude/skills/ — developer tooling scripts and SKILL.md files.
+  # These are agent skill packages (not production code); they may contain
+  # intentional example tokens/JWTs in educational contexts (e.g. alg:none
+  # attack demos). No production credentials are stored here.
+  '''\.claude/skills/.*''',
 ]
