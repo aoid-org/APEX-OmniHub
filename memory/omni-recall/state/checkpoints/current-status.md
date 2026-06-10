@@ -1,6 +1,6 @@
 # Current Status
 
-- date: 2026-06-04
+- date: 2026-06-10
 - omni_recall_status: active
 - installation_path: memory/omni-recall/ (APEX-OmniHub repo)
 - runtime: claude-code-ephemeral-container
@@ -72,3 +72,20 @@
 - zero_mock_data_module_surface: verified — all moduleData.json entries isDemo:true; hardcoded literals removed from 4 module tsx files
 - cf_deploy_project: apex-omnihub (corrected from broken omnihub in PR #1262)
 - rsi_policy_version: 1.3.3
+
+## Latest session (2026-06-10) — OmniSkills/SkillForge/DAG E2E + OmniBoard scoping + doc sync
+- branch: claude/friendly-goodall-6bb4uc
+- scope: 20-criteria E2E execution across OmniSkills UI → SkillForge backend → DAG/Saga framework; forged and installed `.claude/skills/apex-universal-sync-orchestrator` (rubric 100/100, policy gate pass); applied OmniBoard dual-surface correction and re-ran the full workflow; audited and synced repo docs.
+- key outcome: skill v1.0.0 committed (`9b911dc`), scoping fix (`e747507`); `docs/platform/OMNIBOARD.md` reworked to dual-surface; `docs/skill-forge-implementation.md` drift fixed (UUID names, live Anthropic generation, `/launch/skillforge`, three UI surfaces); `CANONICAL_TRUTH.md` facts 19–20 added; correction 004 logged.
+- verification: forge lint 0/0, rubric 100/100 (twice — /tmp and installed path), pack ok, sync engine live-tested (valid + 3 violation scenarios + empty payload), Kahn cycle detection and LIFO-concurrent Saga rollback simulated and asserted, `apex_policy_check.py` pass on 11 enumerated files.
+- detail: state/checkpoints/2026-06-10-omniskills-skillforge-e2e.md
+
+## Verified runtime facts (2026-06-10) — claude/friendly-goodall-6bb4uc branch
+- last_verified_date: 2026-06-10
+- last_verified_commit: e747507 (fix(skills): correct OmniBoard scoping in apex-universal-sync-orchestrator)
+- active_branch: claude/friendly-goodall-6bb4uc (pushed)
+- main_head: ef0f337 (fix(omnidash): OmniDash Full Restore Implementation (#1347))
+- omniboard_definition: dual-surface — client-facing modal (Left Sidebar Widget → OmniBoardWizard, typed prompts; dashboard voice via RecordButton) + application integration layer (connect FSM → Connection Spec; payload normalization via apex-universal-sync-orchestrator). "Never client-facing" claim is retired (correction 004).
+- skillforge_generation: live Anthropic claude-3-5-haiku-20241022 (not mocked); skill names skill_${crypto.randomUUID()}
+- installed_skill: .claude/skills/apex-universal-sync-orchestrator v1.0.0 (rubric 100/100; deterministic omni_id; single-pass violation reporting)
+- policy_gate_gotcha: apex_policy_check.py takes file paths only — directory args scan 0 files and exit 0

@@ -1,7 +1,7 @@
 # Canonical Truth File — Platform Topology & Deployment
 
-**Version:** 1.6.0
-**Last Updated:** 2026-06-01
+**Version:** 1.6.1
+**Last Updated:** 2026-06-10
 
 **Latest verified branch/head:** `work` @ `86bc14a` (`feat(omnidash): implement from-zero gap closure (WP0-WP17) (#1274)`). See `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`.
 **Owner:** Platform Architecture
@@ -26,6 +26,8 @@
 16. **OmniBridge bidirectional integration is live as of v1.6.1 (2026-05-11).** The integration harness (`integration-harness/lib/deterministic-validator.mjs`) provides a 47-assertion zero-dependency validator for the HMAC-signed sync layer between APEX-OmniHub and SBBL-HQ. See `docs/integration/sbbl-omnihub-validation-2026-05-11.md` for the full validation report.
 17. **SBBL-HQ is the first registered production tenant.** It connects to APEX-OmniHub as the control plane via the OmniBridge sync protocol. Required secrets: `OMNIHUB_SIGNING_SECRET`, `OMNIHUB_SYNC_URL`, `OMNIHUB_VERIFY_KEY`. Inbound packets are verified with HMAC-SHA256 using `OMNIHUB_VERIFY_KEY`; outbound commands are signed with `OMNIHUB_SIGNING_SECRET`.
 18. **OmniDash left sidebar is a dedicated 9-widget rail contract.** The canonical source is `apps/omnihub-site/src/contracts/omnidash-sidebar-widgets.ts`; `OmniDashShell.tsx` must render `OMNIDASH_SIDEBAR_WIDGETS` and must not define local `NAV` or `NAV_MODULE_KEY`. `APP_REGISTRY` and `src/contracts/omnidash.contract.ts` remain broader 14-app product/platform contracts, not sidebar contracts. Sidebar order is locked to: OmniBoard, PhysiOmni, Audits, Links, Automations, Workflows, Files, Billing, Settings. OmniSkills, Orchestrator, Fortress, OmniPort, Maestro, and BYOM are explicitly not left-sidebar widgets.
+19. **OmniBoard is dual-surface (corrected 2026-06-10).** Surface 1: a client-facing endpoint — first widget in the left-sidebar rail; the conversational `OmniBoardWizard.tsx` modal opens via OmniSpatialHost and is driven by typed prompts against the FSM endpoints `/omniboard/start` and `/omniboard/{session_id}/next`. Surface 2: an application integration layer — the connect FSM outputs a verified Connection Spec, and downstream payload normalization into APEX-OmniHub state vectors is performed by `.claude/skills/apex-universal-sync-orchestrator`. The retired claim "OmniBoard is strictly for application integration — not for clients" must not reappear in docs or skill descriptions. See `docs/platform/OMNIBOARD.md`.
+20. **SkillForge canonical facts.** Edge function `supabase/functions/generate-business-skills/index.ts`: 401 auth gate, 402 entitlement gate (`check_skill_entitlement`, BASIC cap 3 / PRO 999,999), live Anthropic generation with model `claude-3-5-haiku-20241022`, skill name `skill_${crypto.randomUUID()}` (full UUID, no timestamp), insert of exactly `{ user_id, name, trigger_intent, definition }`, response `entitlement.used = current + 1` (optimistic increment). Three UI surfaces: full page `/launch/skillforge` (Step 4 success state), embeddable `SkillForgeWidget` (closes on success; invalidates `['user-skills']`, `['workflows']`), and the `OmniSkillsModule` routed via `MODULE_COMPONENTS` in `ModuleRenderer.tsx` (not `ModuleRegistry.ts`). See `docs/skill-forge-implementation.md`.
 
 ## Tenant Registry
 
