@@ -8,42 +8,17 @@
  *
  * APEX STANDARDS: No workflow questions. Connect only. Output Connection Spec.
  */
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+// Relative import (not '@/hooks/...'): the root vitest config resolves '@' to
+// the root src tree, so an alias here would break under the test harness.
+import {
+  appendTranscript,
+  useSpeechRecognition,
+} from '../../src/hooks/useSpeechRecognition';
 
 // The orchestrator URL — must be set via VITE_ORCHESTRATOR_URL in .env
 const ORCHESTRATOR_URL = import.meta.env.VITE_ORCHESTRATOR_URL ?? '';
-
-// Web Speech Recognition — typed locally (cross-tree imports are forbidden).
-type SpeechRecognitionConstructor = new () => SpeechRecognition;
-
-interface SpeechRecognitionEventResult {
-  isFinal: boolean;
-  0: {
-    transcript: string;
-  };
-}
-
-interface SpeechRecognitionEventLike {
-  resultIndex: number;
-  results: ArrayLike<SpeechRecognitionEventResult>;
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onerror: ((event: Event) => void) | null;
-  onend: (() => void) | null;
-  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
-  start: () => void;
-  stop: () => void;
-}
-
-interface VoiceWindow extends Window {
-  SpeechRecognition?: SpeechRecognitionConstructor;
-  webkitSpeechRecognition?: SpeechRecognitionConstructor;
-}
 
 interface FSMContext {
   session_id: string;
@@ -65,69 +40,11 @@ export function OmniBoardWizard({ onComplete, onDismiss }: WizardProps) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-
-  const stopVoice = useCallback(() => {
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
-    setIsListening(false);
-  }, []);
-
-  const handleVoiceToggle = useCallback(() => {
-    const voiceWindow = window as VoiceWindow;
-    const SpeechRecognitionAPI = voiceWindow.SpeechRecognition ?? voiceWindow.webkitSpeechRecognition;
-
-    if (!SpeechRecognitionAPI) {
-      setError('Voice input is not supported in this browser.');
-      return;
-    }
-
-    if (isListening) {
-      stopVoice();
-      return;
-    }
-
-    const recognition = new SpeechRecognitionAPI();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    recognition.onresult = (event) => {
-      const captured: string[] = [];
-      for (let index = event.resultIndex; index < event.results.length; index += 1) {
-        const result = event.results[index];
-        if (result.isFinal) captured.push(result[0].transcript.trim());
-      }
-      const transcript = captured.join(' ').trim();
-      if (transcript.length > 0) {
-        setInput(prev => (prev.trim().length > 0 ? `${prev.trim()} ${transcript}` : transcript));
-      }
-    };
-
-    recognition.onerror = () => {
-      setIsListening(false);
-      recognitionRef.current = null;
-      setError('Voice capture failed. Please retry.');
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-      recognitionRef.current = null;
-    };
-
-    recognitionRef.current = recognition;
-    setIsListening(true);
-    recognition.start();
-  }, [isListening, stopVoice]);
-
-  // Stop recognition cleanly on unmount.
-  useEffect(() => {
-    return () => {
-      recognitionRef.current?.stop();
-      recognitionRef.current = null;
-    };
-  }, []);
+  const { isListening, toggle: handleVoiceToggle, stop: stopVoice } = useSpeechRecognition({
+    onTranscript: (transcript) => setInput(prev => appendTranscript(prev, transcript)),
+    onUnsupported: () => setError('Voice input is not supported in this browser.'),
+    onError: () => setError('Voice capture failed. Please retry.'),
+  });
 
   const handleDismiss = useCallback(() => {
     stopVoice();

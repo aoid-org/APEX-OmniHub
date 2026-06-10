@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Zap, ShieldCheck, ArrowRight, CheckCircle2, Mic, MicOff } from 'lucide-react';
 import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { appendTranscript, useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 interface Step {
   id: number;
@@ -11,37 +12,6 @@ interface Step {
   question: string;
   field: 'intent' | 'trigger' | 'constraints';
   placeholder: string;
-}
-
-// Web Speech Recognition — typed locally (cross-tree imports are forbidden).
-type SpeechRecognitionConstructor = new () => SpeechRecognition;
-
-interface SpeechRecognitionEventResult {
-  isFinal: boolean;
-  0: {
-    transcript: string;
-  };
-}
-
-interface SpeechRecognitionEventLike {
-  resultIndex: number;
-  results: ArrayLike<SpeechRecognitionEventResult>;
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onerror: ((event: Event) => void) | null;
-  onend: (() => void) | null;
-  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
-  start: () => void;
-  stop: () => void;
-}
-
-interface VoiceWindow extends Window {
-  SpeechRecognition?: SpeechRecognitionConstructor;
-  webkitSpeechRecognition?: SpeechRecognitionConstructor;
 }
 
 const skillForgeRequestSchema = z.object({
@@ -89,77 +59,28 @@ export function SkillForge() {
     trigger: '',
     constraints: '',
   });
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-
   const currentStep = WIZARD_STEPS[step - 1];
   const progressWidth = (step / 3) * 100;
 
-  // Stop recognition cleanly on step change and on unmount.
-  useEffect(() => {
-    return () => {
-      recognitionRef.current?.stop();
-      recognitionRef.current = null;
-      setIsListening(false);
-    };
-  }, [step]);
+  const { isListening, toggle: handleVoiceToggle, stop: stopVoice } = useSpeechRecognition({
+    onTranscript: (transcript) => {
+      const field = currentStep.field;
+      setFormData((previous) => ({
+        ...previous,
+        [field]: appendTranscript(previous[field], transcript),
+      }));
+    },
+    onUnsupported: () =>
+      toast.error('VOICE UNAVAILABLE', { description: 'Your browser does not support speech recognition for Skill Forge.' }),
+    onError: () =>
+      toast.error('VOICE CAPTURE FAILED', { description: 'Could not capture speech. Please retry.' }),
+  });
 
-  const handleVoiceToggle = () => {
-    const voiceWindow = window as VoiceWindow;
-    const SpeechRecognitionAPI = voiceWindow.SpeechRecognition ?? voiceWindow.webkitSpeechRecognition;
-
-    if (!SpeechRecognitionAPI) {
-      toast.error('VOICE UNAVAILABLE', { description: 'Your browser does not support speech recognition for Skill Forge.' });
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current?.stop();
-      return;
-    }
-
-    const field = currentStep.field;
-    const recognition = new SpeechRecognitionAPI();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    recognition.onresult = (event) => {
-      const captured: string[] = [];
-      for (let index = event.resultIndex; index < event.results.length; index += 1) {
-        const result = event.results[index];
-        if (result.isFinal) {
-          captured.push(result[0].transcript.trim());
-        }
-      }
-
-      const transcript = captured.join(' ').trim();
-      if (transcript.length > 0) {
-        setFormData((previous) => {
-          const priorValue = previous[field].trim();
-          return { ...previous, [field]: priorValue.length > 0 ? `${priorValue} ${transcript}` : transcript };
-        });
-      }
-    };
-
-    recognition.onerror = () => {
-      setIsListening(false);
-      recognitionRef.current = null;
-      toast.error('VOICE CAPTURE FAILED', { description: 'Could not capture speech. Please retry.' });
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-      recognitionRef.current = null;
-    };
-
-    recognitionRef.current = recognition;
-    setIsListening(true);
-    recognition.start();
-  };
+  // Stop recognition cleanly on step change (unmount is handled by the hook).
+  useEffect(() => stopVoice, [step, stopVoice]);
 
   const handleForge = async () => {
-    recognitionRef.current?.stop();
+    stopVoice();
 
     const parsed = skillForgeRequestSchema.safeParse(formData);
     if (!parsed.success) {
