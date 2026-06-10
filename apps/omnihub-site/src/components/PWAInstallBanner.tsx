@@ -17,8 +17,7 @@ export const PWAInstallBanner = memo(() => {
   if (!isInstallable || isAlreadyInstalled || isDismissed) return null;
 
   return (
-    <div
-      role="banner"
+    <header
       aria-label="Install APEX OmniHub app"
       style={{
         position: 'fixed',
@@ -94,8 +93,8 @@ export const PWAInstallBanner = memo(() => {
             transition: 'background 0.18s',
             whiteSpace: 'nowrap',
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#D46025'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#C4511A'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#D46025'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = '#C4511A'; }}
         >
           Install
         </button>
@@ -115,15 +114,15 @@ export const PWAInstallBanner = memo(() => {
             borderRadius: 6,
             transition: 'color 0.15s',
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.7)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.38)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.38)'; }}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
             <path d="M4.293 4.293a1 1 0 011.414 0L8 6.586l2.293-2.293a1 1 0 111.414 1.414L9.414 8l2.293 2.293a1 1 0 01-1.414 1.414L8 9.414l-2.293 2.293a1 1 0 01-1.414-1.414L6.586 8 4.293 5.707a1 1 0 010-1.414z" />
           </svg>
         </button>
       </div>
-    </div>
+    </header>
   );
 });
 

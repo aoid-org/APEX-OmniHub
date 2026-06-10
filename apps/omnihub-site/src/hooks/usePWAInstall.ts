@@ -25,7 +25,7 @@ export function usePWAInstall(): UsePWAInstallReturn {
 
   useEffect(() => {
     // Already installed as standalone — never show banner
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (globalThis.matchMedia('(display-mode: standalone)').matches) {
       setIsAlreadyInstalled(true);
       return;
     }
@@ -36,18 +36,18 @@ export function usePWAInstall(): UsePWAInstallReturn {
       setIsInstallable(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
+    globalThis.addEventListener('beforeinstallprompt', handler);
 
     // Track if app gets installed mid-session
     const installedHandler = () => {
       setIsInstallable(false);
       setIsAlreadyInstalled(true);
     };
-    window.addEventListener('appinstalled', installedHandler);
+    globalThis.addEventListener('appinstalled', installedHandler);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('appinstalled', installedHandler);
+      globalThis.removeEventListener('beforeinstallprompt', handler);
+      globalThis.removeEventListener('appinstalled', installedHandler);
     };
   }, []);
 

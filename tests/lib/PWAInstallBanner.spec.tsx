@@ -22,7 +22,7 @@ function setHookState(overrides: Partial<ReturnType<typeof usePWAInstall>>) {
 
 describe('PWAInstallBanner', () => {
   beforeEach(() => {
-    Object.defineProperty(window, 'matchMedia', {
+    Object.defineProperty(globalThis, 'matchMedia', {
       writable: true,
       configurable: true,
       value: vi.fn().mockReturnValue({
