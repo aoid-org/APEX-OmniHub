@@ -1,0 +1,8 @@
+{
+  "lint": { "fails": 0, "warns": 0 },
+  "token_budget": { "body_tokens": 816, "within_budget": true },
+  "trigger_accuracy_mock": null,
+  "trigger_accuracy_live": null,
+  "rubric_score": 100,
+  "pack": { "status": "pending", "archive": "dist/apex-universal-sync-orchestrator.skill" }
+}

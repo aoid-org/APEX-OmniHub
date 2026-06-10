@@ -1,0 +1,70 @@
+[
+  {
+    "query": "Normalize this Salesforce account payload JSON into an OmniHub state vector before OmniBoard onboarding",
+    "should_trigger": true
+  },
+  {
+    "query": "We're integrating a new external app — map its API JSON schema to the APEX universal schema",
+    "should_trigger": true
+  },
+  {
+    "query": "Initialize the OmniBoard application integration sync for this HubSpot JSON export",
+    "should_trigger": true
+  },
+  {
+    "query": "The vendor's webhook payload has different field names than ours — normalize it into our unified state vector",
+    "should_trigger": true
+  },
+  {
+    "query": "Generate a deterministic omni_id for this incoming payload so re-syncs deduplicate correctly",
+    "should_trigger": true
+  },
+  {
+    "query": "Validate that this external application's JSON payload has source_system, sync_timestamp, and data_payload before syncing",
+    "should_trigger": true
+  },
+  {
+    "query": "Coerce the string revenue and boolean flags in this app payload to typed fields per our mapping schema",
+    "should_trigger": true
+  },
+  {
+    "query": "Run the universal sync orchestrator against the new Jira integration payload and report every mapping violation in one pass",
+    "should_trigger": true
+  },
+  {
+    "query": "Onboard this NetSuite instance into OmniBoard — normalize its account JSON to OmniHub fields first",
+    "should_trigger": true
+  },
+  {
+    "query": "Walk a new client through the OmniHub onboarding flow and set up their account",
+    "should_trigger": false
+  },
+  {
+    "query": "Validate this CSV export of quarterly sales numbers for formatting problems",
+    "should_trigger": false
+  },
+  {
+    "query": "Parse the invoice PDF attachments and extract the line items into a spreadsheet",
+    "should_trigger": false
+  },
+  {
+    "query": "Write a Postgres migration to move the accounts table into the new tenant schema",
+    "should_trigger": false
+  },
+  {
+    "query": "Design the REST API schema for our new public partner endpoints",
+    "should_trigger": false
+  },
+  {
+    "query": "Convert this JSON file of customer records into a CSV for the finance team",
+    "should_trigger": false
+  },
+  {
+    "query": "Write a SQL query that joins accounts to opportunities and sums annual revenue",
+    "should_trigger": false
+  },
+  {
+    "query": "Set up the OAuth client credentials flow for the Salesforce connected app",
+    "should_trigger": false
+  }
+]
