@@ -104,19 +104,30 @@ export default defineConfig({
         // Infrastructure package — CDK stacks and Lambda workers require AWS.
         'packages/infrastructure/src/stack.ts',
         'packages/infrastructure/src/worker.ts',
-        // Exclude UI/React components to focus vitest coverage purely on Iron Core
-        'src/components/**',
+        // ─── COVERAGE INTEGRITY INVARIANTS (vitest 4) ─────────────────────
+        // 1. NEVER add negation patterns ('!path') to this exclude array.
+        //    Vitest 4's v8 provider silently produces a COMPLETELY EMPTY
+        //    coverage report (0 files in lcov.info) when any negation is
+        //    present — thresholds then pass vacuously and SonarCloud reads
+        //    0.0% on all new code. Verified empirically 2026-06-09.
+        // 2. Patterns here match UNANCHORED (suffix-style): 'src/hooks/**'
+        //    also excludes 'apps/omnihub-site/src/hooks/**'. To exclude a
+        //    root dir without hiding the site app's twin dir, enumerate
+        //    files explicitly (see the omnihub-gateway block above).
+        // Guarded by: scripts/ci/check-coverage-integrity.mjs
+        // ──────────────────────────────────────────────────────────────────
+        // Exclude UI/React contexts to focus vitest coverage purely on Iron Core
         'src/contexts/**',
-        'src/hooks/**',
         'src/utils/RealtimeAudio.ts', // Relies on browser WebAudio primitives
-        // Exclude omnihub-site app source (pages, components, lib) but NOT dashboard/
-        // dashboard/ files are instrumented so vitest generates LCOV for SonarCloud
-        'apps/omnihub-site/src/**',
-        'apps/omnihub-site/node_modules/**',
-        'apps/omnihub-site/dist/**',
-        'apps/omnihub-site/tests/**',
-        'apps/omnihub-site/coverage/**',
-        'apps/omnihub-site/public/**',
+        // Site app surfaces without dedicated unit tests (dashboard shell is
+        // integration-tested via tests/omnidash with mocked internals).
+        'apps/omnihub-site/dashboard/**',
+        'apps/omnihub-site/src/App.tsx',
+        'apps/omnihub-site/src/main.tsx',
+        'apps/omnihub-site/src/pwa-init.ts',
+        'apps/omnihub-site/src/pages/**',
+        'apps/omnihub-site/src/providers/**',
+        'apps/omnihub-site/src/layouts/**',
         'node_modules/**',
         'dist/**',
         '.idea/**',

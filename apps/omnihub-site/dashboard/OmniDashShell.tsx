@@ -957,13 +957,14 @@ const ContextDroplet = ({ app, onRemove }: { app: OmniContextApp, onRemove: () =
   );
 };
 
+// APEX INVARIANT: These constants seed the OmniSlate demo conversation and suggestion.
+// Both are required — removing either causes a ReferenceError that crashes OmniDash.
+// Guarded by: scripts/ci/check-omnidash-integrity.mjs
 const DEMO_SLATE_MESSAGES: ReadonlyArray<{ role: string; text: string }> = [
-  { role: 'assistant', text: 'APEX Agent initialized. Demo Mode active. How can I assist you with your operations today?' },
-  { role: 'user', text: 'Show me the latest Salesforce integration status.' },
-  { role: 'assistant', text: 'Salesforce sync completed 5 minutes ago. 48 records updated. No errors detected.' },
+  { role: 'user',      text: 'HELLO' },
+  { role: 'assistant', text: "Analyzing: 'HELLO' — Guardian audit passed. Agent response queued." },
 ];
-
-const DEMO_TRY_SUGGESTION = "Run a live diagnostic on all active APEX integrations.";
+const DEMO_TRY_SUGGESTION = "Run a Guardian audit on the last 50 agent actions";
 
 const OmniSlateWidget = () => {
   const { demoMode } = useDemoMode();

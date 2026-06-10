@@ -2,6 +2,9 @@ import type { ReactElement } from "react";
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+// APEX PWA INVARIANT: PWAInstallBanner MUST remain in App.tsx.
+// Removal silently breaks the live-site install prompt. Guarded by: scripts/ci/check-pwa-integrity.mjs
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -144,6 +147,8 @@ function App() {
         {/* All unmatched routes → OmniDash (SPA catch-all) */}
         <Route path="*" element={<Navigate to="/omnidash" replace />} />
         </Routes>
+        {/* PWA install banner — renders globally, zero render cost when not installable */}
+        <PWAInstallBanner />
       </div>
     </BrowserRouter>
     </ErrorBoundary>
