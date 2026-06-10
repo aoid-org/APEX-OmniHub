@@ -53,7 +53,7 @@
 ## Current README files
 
 - `.changeset/README.md`
-- `.claude/skills/apex-skill-forge-v8/README.md`
+- `.claude/skills/apex-skill-forge/README.md`
 - `.claude/skills/one-pass-debug-skill/one-pass-debug/README.md`
 - `.cursor/superpowers/README.md`
 - `README.md`
