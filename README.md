@@ -257,7 +257,7 @@ Full documentation is available in the [`docs/`](./docs/) directory.
 
 | Document                                                                                | Description           |
 | --------------------------------------------------------------------------------------- | --------------------- |
-| [Current Platform State](./docs/CURRENT_PLATFORM_STATE_2026_06_02.md)             | Current branch/head assessment and drift-control facts |
+| [Current Platform State](./docs/CURRENT_PLATFORM_STATE_2026_06_06.md)             | Current branch/head assessment and drift-control facts |
 | [Release Notes v1.6.0](./docs/releases/RELEASE_NOTES_v1.6.0.md)                 | Historical v1.6.0 release notes |
 | [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
 | [Production Certification Status](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |
