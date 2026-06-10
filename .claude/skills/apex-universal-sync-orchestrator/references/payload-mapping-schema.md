@@ -67,4 +67,4 @@ Example: `source_system = "salesforce"` with
 `sync_timestamp = "2026-06-10T09:00:00Z"` yields
 `salesforce_20260610090000`. The value is fully deterministic — re-syncing
 the same payload yields the same `omni_id`, which makes downstream
-deduplication in OmniBoard application integration safe.
+deduplication in the OmniBoard application integration layer safe.

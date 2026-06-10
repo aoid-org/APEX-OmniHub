@@ -8,7 +8,11 @@ license: Proprietary - APEX Business Systems Ltd.
 
 Normalize one external application's JSON payload into a unified APEX-OmniHub
 state vector, ready for OmniBoard application integration and onboarding.
-OmniBoard is strictly for application integration — never client-facing.
+
+Scope note: OmniBoard is a dual-surface system — a client-facing
+conversational modal (Left Sidebar Widget with prompt/voice input) and an
+application integration layer. This skill targets the integration layer
+only; client interactions through the OmniBoard modal are out of scope.
 
 ## Contract
 

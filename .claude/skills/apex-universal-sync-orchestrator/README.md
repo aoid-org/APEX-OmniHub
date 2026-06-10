@@ -4,6 +4,10 @@ Normalizes external application JSON payloads into unified APEX-OmniHub state
 vectors for OmniBoard application integration and onboarding — with full
 violation reports in a single pass and deterministic `omni_id` generation.
 
+OmniBoard is a dual-surface system: a client-facing conversational modal
+(Left Sidebar Widget with prompt/voice input) and an application integration
+layer. This skill serves the integration layer only.
+
 ## Install
 
 Copy the skill package into your project's skills directory:
@@ -17,8 +21,7 @@ That's the whole install — the sync engine is stdlib-only Python 3.
 ## Before / After
 
 **Scenario:** an Integration Engineer is onboarding a Salesforce instance
-into OmniBoard (application integration only — OmniBoard is never
-client-facing).
+through OmniBoard's application integration layer.
 
 **Before:** the engineer hand-maps `AccountName`, `AnnualRevenue`, and
 `IsActive` to OmniHub fields, discovers at runtime that revenue arrived as a
@@ -46,7 +49,7 @@ Exit 0 prints the normalized state vector JSON on stdout. Exit 1 prints one
 ## Evidence
 
 - `scorecard.json` — lint, token ledger, and rubric score.
-- `evals/trigger-eval.json` — 9 positive / 8 negative trigger queries.
+- `evals/trigger-eval.json` — 9 positive / 9 negative trigger queries.
 
 ---
 
