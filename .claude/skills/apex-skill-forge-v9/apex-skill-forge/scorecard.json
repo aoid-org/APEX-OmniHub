@@ -1,0 +1,32 @@
+{
+  "skill": "apex-skill-forge",
+  "generated_utc": "2026-06-09T23:51:13+00:00",
+  "tooling": "apex-skill-forge v9 forge.py",
+  "lint": {
+    "fails": 0,
+    "warns": 0,
+    "findings": []
+  },
+  "tokens": {
+    "method": "estimate: characters / 4",
+    "metadata_always_loaded": 122,
+    "description_chars": 474,
+    "skill_md_body_on_trigger": 2290,
+    "skill_md_lines": 156,
+    "references_on_demand": {
+      "description-engineering.md": 819,
+      "distribution.md": 866,
+      "evidence-loop.md": 1001,
+      "token-economics.md": 783,
+      "universal-protocol.md": 1040
+    },
+    "scripts_loaded_tokens": 0
+  },
+  "trigger_eval": {
+    "validated": true,
+    "positive": 9,
+    "negative": 9,
+    "total": 18
+  },
+  "note": "Token values are estimates (chars/4). Trigger accuracy requires a live run; this card certifies set validity and structure."
+}

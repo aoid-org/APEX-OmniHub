@@ -1,0 +1,31 @@
+{
+  "name": "apex-skill-forge",
+  "version": "9.1.0",
+  "edition": "claude-native",
+  "supersedes": ["9.0.0", "apex-skill-forge v8 (public listing)", "apex-skill-forge v4.0.0 (local)"],
+  "description": "Production skill engineering system that forges, audits, and packages agent skills with measured trigger accuracy, hard token budgets, and a marketplace-ready distribution pack.",
+  "author": "APEX Business Systems Ltd.",
+  "license": "Proprietary - see LICENSE.md",
+  "copyright": "Copyright (c) 2026 APEX Business Systems Ltd., Edmonton, AB, Canada",
+  "spec": "agent-skills-open-format",
+  "runtime": "APEX-OmniHub",
+  "platforms": ["claude-native", "vendor-agnostic via references/universal-protocol.md"],
+  "install": {
+    "skills_sh": "npx skills add https://github.com/apexbusiness-systems/apex-skill-forge --skill apex-skill-forge",
+    "claude_code_marketplace": "/plugin marketplace add apexbusiness-systems/apex-skills-marketplace",
+    "claude_code_manual": "copy folder to ~/.claude/skills/",
+    "claude_ai": "upload dist/apex-skill-forge-9.1.0-claude.skill under Settings -> Capabilities"
+  },
+  "evidence": {
+    "scorecard": "scorecard.json",
+    "trigger_eval": "evals/trigger-eval.json",
+    "rubric": "scripts/forge.py rubric .",
+    "tooling": "scripts/forge.py"
+  },
+  "budgets": {
+    "description_chars_max": 500,
+    "skill_md_lines_max": 200,
+    "body_tokens_target_est": 2500,
+    "body_tokens_max_est": 5000
+  }
+}
