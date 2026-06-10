@@ -442,6 +442,15 @@ def init_skill(name: str, target: Path, templates: Path) -> int:
             return 2
         dst.write_text(src.read_text(encoding="utf-8").replace("{{SKILL_NAME}}", name),
                        encoding="utf-8")
+        # rubric requires templates/ to carry all three template files
+        (dest / "templates" / src_name).write_text(src.read_text(encoding="utf-8"),
+                                                   encoding="utf-8")
+    # rubric requires a LICENSE.md naming APEX Business Systems
+    (dest / "LICENSE.md").write_text(
+        f"# License\n\n**{name}** — Copyright © 2026 APEX Business Systems Ltd., "
+        "Edmonton, Alberta, Canada. All rights reserved.\n\n"
+        "Replace this stub with the full license terms before publishing.\n",
+        encoding="utf-8")
     (dest / "evals" / "trigger-eval.json").write_text("[]\n", encoding="utf-8")
     print(f"Scaffolded {dest} — fill the {{slots}}, then run: forge.py lint {dest}")
     return 0
