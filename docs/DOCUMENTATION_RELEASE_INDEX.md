@@ -1,6 +1,6 @@
 # Documentation Release Index
 
-> Current repo-truth index refreshed for the 2026-06-06 platform-state audit. Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `docs/CURRENT_PLATFORM_STATE_2026_06_06.md`.
+> Current repo-truth index refreshed for the 2026-06-10 drift audit (post apex-skill-forge v9.4.0 merge, PR #1369). Use this file as the onboarding entry point for maps, READMEs, status records, audits, and runbooks. Historical docs remain useful as evidence, but current-state claims defer to the canonical files listed below and to `docs/CURRENT_PLATFORM_STATE_2026_06_06.md`.
 
 ## Current Repo Facts Verified in This Pass
 
@@ -53,7 +53,8 @@
 ## Current README files
 
 - `.changeset/README.md`
-- `.claude/skills/apex-skill-forge-v8/README.md`
+- `.claude/skills/apex-skill-forge-v9-claude/README.md`
+- `.claude/skills/apex-skill-forge-v9-universal/README.md`
 - `.claude/skills/one-pass-debug-skill/one-pass-debug/README.md`
 - `.cursor/superpowers/README.md`
 - `README.md`
@@ -132,7 +133,7 @@
 
 ## Full `docs/` Directory Coverage
 
-- `docs/` — 6 Markdown file(s): `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
+- `docs/` — 9 Markdown file(s): `AOID.md`, `CURRENT_PLATFORM_STATE_2026_06_06.md`, `DOCUMENTATION_RELEASE_INDEX.md`, `DRIFT_AUDIT_2026_05_12.md`, `DRIFT_REMEDIATION_REPORT_2026_05_12.md`, `README.md`, `csp-policy.md`, `sbbl-omnihub-integration-readiness-2026-05-09.md`, `skill-forge-implementation.md`
 - `docs/api/` — 2 Markdown file(s): `API_EXTENSION_GUIDE.md`, `EDGE_FUNCTIONS_REFERENCE.md`
 - `docs/architecture/` — 12 Markdown file(s): `ARCHITECTURE_CANONICAL_MAP.md`, `BOUNDED_CONTEXT_MAP.md`, `CANONICAL_TRUTH.md`, `CANONICAL_TRUTH_MATRIX.md`, `DETAILED_SYSTEM_DESIGN.md`, `DOC_RECONCILIATION_MATRIX.md`, `EXECUTIVE_ARCHITECTURE_SUMMARY.md`, `GENERAL_TECH_SPECS.md`, `LIB_DIRECTORY_POLICY.md`, `MAN_MODE_WORKFLOW_DIAGRAMS.md`, `OMNILINK_PORTABILITY_AND_SRE_STRATEGY.md`, `frontend-map.md`
 - `docs/archive/legacy-runbooks/` — 4 Markdown file(s): `CI_RUNTIME_GATES_legacy.md`, `MIGRATION_RUNBOOK_legacy.md`, `OPS_RUNBOOK_legacy_2026-01-25.md`, `PRODUCTION_DEPLOYMENT_GUIDE_legacy.md` _(pre-existing legacy archive — not modified in 2026-05-20 pass)_
@@ -190,7 +191,7 @@ Full OMEGA SCAN audit performed against `main` @ `c8d753c5`. All local quality g
 
 | File | Change |
 |---|---|
-| `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` | New current branch/head assessment, git-history summary, repo counts, and drift guardrails |
+|  `docs/CURRENT_PLATFORM_STATE_2026_06_06.md` | New current branch/head assessment, git-history summary, repo counts, and drift guardrails |
 | `README.md` | Updated repo statistics, docs audit date, and current-state link |
 | `docs/architecture/*` | Reconciled architecture maps/truth matrix with PR #1274 and PR #1309 state |
 | `docs/platform/OMNIDASH.md` | Updated from feature-flag-era wording to always-on post-auth OmniDash surface |
