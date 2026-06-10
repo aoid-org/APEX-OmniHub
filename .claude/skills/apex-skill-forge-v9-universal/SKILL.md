@@ -1,5 +1,5 @@
 ---
-name: apex-skill-forge-v9-claude
+name: apex-skill-forge-v9-universal
 description: Production skill engineering system that forges, audits, and packages agent skills with measured trigger accuracy, hard token budgets, and a marketplace-ready distribution pack (one-line install, before/after README, evidence scorecard). Use whenever the user wants to create, build, improve, audit, optimize, package, or publish a skill — including vague requests like "turn this workflow into a skill". Does not cover MCP server development or general prompt optimization.
 license: Proprietary - APEX Business Systems Ltd.
 ---

@@ -1,5 +1,5 @@
 {
-  "skill": "apex-skill-forge-v9-claude",
+  "skill": "apex-skill-forge-v9-universal",
   "generated_utc": "2026-06-10T03:43:45+00:00",
   "tooling": "apex-skill-forge v9 forge.py",
   "lint": {
@@ -9,7 +9,7 @@
   },
   "tokens": {
     "method": "estimate: characters / 4",
-    "metadata_always_loaded": 125,
+    "metadata_always_loaded": 126,
     "description_chars": 474,
     "skill_md_body_on_trigger": 2290,
     "skill_md_lines": 156,

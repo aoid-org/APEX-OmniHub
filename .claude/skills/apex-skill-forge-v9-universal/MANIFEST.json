@@ -1,7 +1,7 @@
 {
-  "name": "apex-skill-forge-v9-claude",
+  "name": "apex-skill-forge-v9-universal",
   "version": "9.4.0",
-  "edition": "claude-native",
+  "edition": "universal",
   "supersedes": [
     "9.3.0",
     "9.2.0",
@@ -17,14 +17,14 @@
   "spec": "agent-skills-open-format",
   "runtime": "APEX-OmniHub",
   "platforms": [
-    "claude-native",
-    "vendor-agnostic via references/universal-protocol.md"
+    "any agent supporting the open Agent Skills format (SKILL.md)",
+    "no-execution runtimes via references/universal-protocol.md"
   ],
   "install": {
     "skills_sh": "npx skills add https://github.com/apexbusiness-systems/apex-skill-forge --skill apex-skill-forge",
-    "claude_code_marketplace": "/plugin marketplace add apexbusiness-systems/apex-skills-marketplace",
-    "claude_code_manual": "copy folder to ~/.claude/skills/",
-    "claude_ai": "upload dist/apex-skill-forge-9.2.0-claude.skill under Settings -> Capabilities"
+    "generic_agent": "copy this folder into the agent's skills directory (e.g. ~/.claude/skills/, project skill folders, or equivalent)",
+    "no_execution_runtime": "paste SKILL.md into the model's context; apply references/universal-protocol.md manually",
+    "archive": "unzip dist/apex-skill-forge-9.2.0-universal.skill"
   },
   "evidence": {
     "scorecard": "scorecard.json",

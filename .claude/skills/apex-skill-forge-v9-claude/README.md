@@ -1,4 +1,4 @@
-# apex-skill-forge v9.3.0 — Claude edition
+# apex-skill-forge v9.4.0 — Claude edition
 
 Forge, audit, and package agent skills that ship with their own evidence: a lint-gated structure, a token ledger, a validated trigger eval, a 100-point binary rubric, and a one-command install path. Licensed by APEX Business Systems Ltd. — see LICENSE.md.
 
@@ -8,13 +8,13 @@ Forge, audit, and package agent skills that ship with their own evidence: a lint
 npx skills add https://github.com/apexbusiness-systems/apex-skill-forge --skill apex-skill-forge
 ```
 
-Claude Code: `/plugin marketplace add apexbusiness-systems/apex-skills-marketplace` | manual: copy this folder to `~/.claude/skills/` | claude.ai: upload `dist/apex-skill-forge-9.3.0-claude.skill` under Settings -> Capabilities. A vendor-agnostic edition of this same package ships separately for non-Claude runtimes.
+Claude Code: `/plugin marketplace add apexbusiness-systems/apex-skills-marketplace` | manual: copy this folder to `~/.claude/skills/` | claude.ai: upload `dist/apex-skill-forge-9.4.0-claude.skill` under Settings -> Capabilities. A vendor-agnostic edition of this same package ships separately for non-Claude runtimes.
 
 ## Before / After
 
 **Task**: bring the previous public forge (v8 lineage; local copy v4.0.0) to publishable standard. Both versions measured by the same commands in the same run: `python scripts/forge.py tokens|lint <dir>` (token figures are estimates, chars/4 — method stated in the tool output).
 
-| Metric | v4 baseline | v9.3.0 (this package) |
+| Metric | v4 baseline | v9.4.0 (this package) |
 |---|---|---|
 | SKILL.md lines | 568 | 156 (budget 200) |
 | Body tokens on trigger (est.) | ~4,349 | ~2,290 |
@@ -39,7 +39,7 @@ Recorded tradeoff: the description is larger than v4's (474 chars vs 188) becaus
 ## Verify the package
 
 ```bash
-sha256sum -c dist/apex-skill-forge-9.3.0-claude.skill.sha256
+sha256sum -c dist/apex-skill-forge-9.4.0-claude.skill.sha256
 python scripts/forge.py lint . --strict && python scripts/forge.py rubric .
 ```
 
