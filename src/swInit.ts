@@ -5,7 +5,7 @@
  */
 export function registerServiceWorker(): void {
   if (typeof globalThis.window === 'undefined' || !navigator.serviceWorker) return;
-  globalThis.window.addEventListener('load', () => {
+  globalThis.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err) => {
       if (import.meta.env.DEV) console.warn('[APEX PWA] SW registration failed:', err);
     });
