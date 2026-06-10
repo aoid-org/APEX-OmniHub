@@ -1,0 +1,20 @@
+[
+  {"query": "Map this new CRM payload into the OmniHub state for OmniBoard integration", "should_trigger": true},
+  {"query": "Initialize the OmniBoard app integration for this JSON export from our ERP", "should_trigger": true},
+  {"query": "Normalize this external API response into the unified APEX schema", "should_trigger": true},
+  {"query": "The Salesforce payload is not mapping correctly into OmniHub state vectors", "should_trigger": true},
+  {"query": "Sync this external application JSON into the hub for onboarding", "should_trigger": true},
+  {"query": "Map the disjointed fields from this third-party app into the APEX format", "should_trigger": true},
+  {"query": "Generate an omni_id and normalize this app's data payload for OmniBoard", "should_trigger": true},
+  {"query": "This JSON from our warehouse app needs to be normalized into OmniHub state", "should_trigger": true},
+  {"query": "Run a schema mapping for the HubSpot API response before OmniBoard sync", "should_trigger": true},
+  {"query": "Onboard a new client into the CRM database", "should_trigger": false},
+  {"query": "Validate this CSV invoice file against the finance schema", "should_trigger": false},
+  {"query": "Run the database migration for the new release", "should_trigger": false},
+  {"query": "Parse this PDF contract and extract the vendor details", "should_trigger": false},
+  {"query": "Generate a REST API schema for our new service", "should_trigger": false},
+  {"query": "Convert this JSON file into a CSV export", "should_trigger": false},
+  {"query": "Validate my XML sitemap for SEO errors", "should_trigger": false},
+  {"query": "Write a SQL query to find duplicate records in the orders table", "should_trigger": false},
+  {"query": "Set up OAuth2 authentication for a new external service", "should_trigger": false}
+]
