@@ -20,9 +20,11 @@ import type {
   DashboardNavSection,
   OmniDashOpsState,
   PersistedLayoutState,
+  PanelLayout,
 } from '../types/dashboard.types';
 import {
   DEFAULT_OPS_STATE,
+  DEFAULT_PERSISTED_LAYOUT,
   LAYOUT_STORAGE_KEY,
 } from '../types/dashboard.types';
 
@@ -33,18 +35,31 @@ interface UseLayoutPersistenceReturn {
   setIsDark: Dispatch<SetStateAction<boolean>>;
   ops: OmniDashOpsState;
   setOps: Dispatch<SetStateAction<OmniDashOpsState>>;
+  panelLayout: PanelLayout;
+  setPanelLayout: (l: PanelLayout) => void;
+  hiddenWidgets: readonly string[];
+  toggleWidget: (id: string) => void;
+  resetWidgetPositions: () => void;
 }
 
-function loadPersistedState(): PersistedLayoutState {
+function loadPersistedState(key: string): PersistedLayoutState {
   try {
-    const raw = localStorage.getItem(LAYOUT_STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw) as Partial<PersistedLayoutState>;
     const persistedOps = parsed.ops;
+    const rawPanelLayout = parsed.panelLayout;
+    const panelLayout: PanelLayout =
+      rawPanelLayout === 'reversed' ? 'reversed' : 'standard';
+    const hiddenWidgets: readonly string[] = Array.isArray(parsed.hiddenWidgets)
+      ? (parsed.hiddenWidgets as string[])
+      : DEFAULT_PERSISTED_LAYOUT.hiddenWidgets;
     return {
-      activeNav: (parsed.activeNav as DashboardNavSection) ?? 'OmniBoard',
-      isDark: parsed.isDark ?? true,
+      activeNav: (parsed.activeNav as DashboardNavSection) ?? DEFAULT_PERSISTED_LAYOUT.activeNav,
+      isDark: parsed.isDark ?? DEFAULT_PERSISTED_LAYOUT.isDark,
       ops: persistedOps ? { ...DEFAULT_OPS_STATE, ...persistedOps } : DEFAULT_OPS_STATE,
+      panelLayout,
+      hiddenWidgets,
     };
   } catch {
     return defaultState();
@@ -52,25 +67,37 @@ function loadPersistedState(): PersistedLayoutState {
 }
 
 function defaultState(): PersistedLayoutState {
-  return {
-    activeNav: 'OmniBoard',
-    isDark: true,
-    ops: DEFAULT_OPS_STATE,
-  };
+  return { ...DEFAULT_PERSISTED_LAYOUT };
 }
 
-export function useLayoutPersistence(): UseLayoutPersistenceReturn {
-  const initial = loadPersistedState();
+export function useLayoutPersistence(userId?: string): UseLayoutPersistenceReturn {
+  const storageKey = userId ? `${LAYOUT_STORAGE_KEY}:${userId}` : LAYOUT_STORAGE_KEY;
+  const initial = loadPersistedState(storageKey);
 
   const [activeNav, setActiveNav] = useState<DashboardNavSection>(initial.activeNav);
   const [isDark, setIsDark] = useState<boolean>(initial.isDark);
   const [ops, setOps] = useState<OmniDashOpsState>(initial.ops);
+  const [panelLayout, setPanelLayoutState] = useState<PanelLayout>(initial.panelLayout);
+  const [hiddenWidgets, setHiddenWidgets] = useState<readonly string[]>(initial.hiddenWidgets);
 
   const persist = useCallback(
-    (nav: DashboardNavSection, dark: boolean, opsState: OmniDashOpsState) => {
+    (
+      key: string,
+      nav: DashboardNavSection,
+      dark: boolean,
+      opsState: OmniDashOpsState,
+      layout: PanelLayout,
+      hidden: readonly string[],
+    ) => {
       try {
-        const state: PersistedLayoutState = { activeNav: nav, isDark: dark, ops: opsState };
-        localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(state));
+        const state: PersistedLayoutState = {
+          activeNav: nav,
+          isDark: dark,
+          ops: opsState,
+          panelLayout: layout,
+          hiddenWidgets: hidden,
+        };
+        localStorage.setItem(key, JSON.stringify(state));
       } catch {
         // localStorage unavailable (private browsing, quota exceeded) — silent fail
       }
@@ -79,11 +106,51 @@ export function useLayoutPersistence(): UseLayoutPersistenceReturn {
   );
 
   useEffect(() => {
-    persist(activeNav, isDark, ops);
-    
+    persist(storageKey, activeNav, isDark, ops, panelLayout, hiddenWidgets);
+
     // Apply theme system tokens globally
     document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
-  }, [activeNav, isDark, ops, persist]);
+  }, [storageKey, activeNav, isDark, ops, panelLayout, hiddenWidgets, persist]);
 
-  return { activeNav, setActiveNav, isDark, setIsDark, ops, setOps };
+  const setPanelLayout = useCallback((l: PanelLayout) => {
+    setPanelLayoutState(l);
+  }, []);
+
+  const toggleWidget = useCallback((id: string) => {
+    setHiddenWidgets((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((w) => w !== id);
+      }
+      return [...prev, id];
+    });
+  }, []);
+
+  const resetWidgetPositions = useCallback(() => {
+    try {
+      const keys: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('omni_widget_pos_')) {
+          keys.push(key);
+        }
+      }
+      keys.forEach((k) => localStorage.removeItem(k));
+    } catch {
+      // silent fail
+    }
+  }, []);
+
+  return {
+    activeNav,
+    setActiveNav,
+    isDark,
+    setIsDark,
+    ops,
+    setOps,
+    panelLayout,
+    setPanelLayout,
+    hiddenWidgets,
+    toggleWidget,
+    resetWidgetPositions,
+  };
 }
