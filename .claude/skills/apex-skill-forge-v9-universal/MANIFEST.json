@@ -1,0 +1,41 @@
+{
+  "name": "apex-skill-forge-v9-universal",
+  "version": "9.4.0",
+  "edition": "universal",
+  "supersedes": [
+    "9.3.0",
+    "9.2.0",
+    "9.1.0",
+    "9.0.0",
+    "apex-skill-forge v8 (public listing)",
+    "apex-skill-forge v4.0.0 (local)"
+  ],
+  "description": "Production skill engineering system that forges, audits, and packages agent skills with measured trigger accuracy, hard token budgets, and a marketplace-ready distribution pack.",
+  "author": "APEX Business Systems Ltd.",
+  "license": "Proprietary - see LICENSE.md",
+  "copyright": "Copyright (c) 2026 APEX Business Systems Ltd., Edmonton, AB, Canada",
+  "spec": "agent-skills-open-format",
+  "runtime": "APEX-OmniHub",
+  "platforms": [
+    "any agent supporting the open Agent Skills format (SKILL.md)",
+    "no-execution runtimes via references/universal-protocol.md"
+  ],
+  "install": {
+    "skills_sh": "npx skills add https://github.com/apexbusiness-systems/apex-skill-forge --skill apex-skill-forge",
+    "generic_agent": "copy this folder into the agent's skills directory (e.g. ~/.claude/skills/, project skill folders, or equivalent)",
+    "no_execution_runtime": "paste SKILL.md into the model's context; apply references/universal-protocol.md manually",
+    "archive": "unzip dist/apex-skill-forge-9.2.0-universal.skill"
+  },
+  "evidence": {
+    "scorecard": "scorecard.json",
+    "trigger_eval": "evals/trigger-eval.json",
+    "rubric": "scripts/forge.py rubric .",
+    "tooling": "scripts/forge.py"
+  },
+  "budgets": {
+    "description_chars_max": 500,
+    "skill_md_lines_max": 200,
+    "body_tokens_target_est": 2500,
+    "body_tokens_max_est": 5000
+  }
+}
