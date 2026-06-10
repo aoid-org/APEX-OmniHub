@@ -1,4 +1,4 @@
-<!-- APEX_DOC_STAMP: VERSION=v8.1 | LAST_UPDATED=2026-06-10 -->
+<!-- APEX_DOC_STAMP: VERSION=v8.2 | LAST_UPDATED=2026-06-10 -->
 # Skill Forge Implementation
 
 ## Overview
@@ -74,7 +74,11 @@ plpgsql, `SECURITY DEFINER`, `search_path = public`. Counts active skills via `S
 }
 ```
 
-**Monetization Enforcement**:
+**Monetization Enforcement** (two layers):
+
+1. **Edge-function gate (optimistic)**: `check_skill_entitlement()` RPC is called before generation; returns 402 if `allowed` is false.
+2. **DB-level trigger (atomic)**: `trg_enforce_skill_entitlement` (`BEFORE INSERT OR UPDATE OF is_active`) serialises concurrent writes per user via `pg_advisory_xact_lock` and re-validates the cap in the same transaction as the insert. When the trigger fires it raises `LIMIT_REACHED: skill cap (N) reached for tier T`; the edge function maps this `insertError` to the same 402 body as the gate above — closing the check-then-insert TOCTOU race.
+
 ```typescript
 if (!entitlement.allowed) {
   return new Response(JSON.stringify({
@@ -91,8 +95,9 @@ SkillForge has three distinct UI surfaces. They share the same edge function
 but differ in success behavior.
 
 #### 1. Full-page wizard — `apps/omnihub-site/src/pages/Launch/SkillForge.tsx`
-- **Route**: `/launch/skillforge`
+- **Route**: `/launch/skillforge` — protected (requires authenticated session); registered in `App.tsx`
 - 3-step wizard (Intent → Trigger → Constraints) with Framer Motion transitions and a progress bar
+- **Voice input**: Web Speech Recognition toggle (Mic/MicOff icons, amber/orange styling). Transcript appends to current field with space separator. Stops on step change, unmount, or submit. `toast.error('VOICE UNAVAILABLE', ...)` if API unavailable.
 - Zod validation at submission: `intent`/`trigger` 8–300 chars, `constraints` 8–500 chars
 - On 402: Sonner toast `toast.error('SYSTEM OVERLOAD', { description: 'Upgrade to Architect Tier to forge more skills.' })`
 - On success: `setStep(4)` — the Step 4 "Skill Operational" success state with reset button **exists only in this full-page variant**

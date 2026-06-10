@@ -11,7 +11,7 @@
 - Do **not** assume Claude authored a given commit, branch, or current state.
 - The root `CLAUDE.md` can lag reality (other agents move `main`); treat its
   commit/date facts as hints and verify HEAD with `git log` before relying on them.
-- Verified HEAD at this audit (2026-06-10): `e747507` (fix(skills): correct OmniBoard scoping in apex-universal-sync-orchestrator); branch `claude/friendly-goodall-6bb4uc`. Main HEAD: `ef0f337` (OmniDash Full Restore, PR #1347).
+- Verified HEAD at this audit (2026-06-10): `c0a9517` (feat: close TOCTOU race, fix edge function naming, add voice input, register /launch/skillforge route); branch `claude/friendly-goodall-6bb4uc`. Main HEAD: `ef0f337` (OmniDash Full Restore, PR #1347).
 
 ## Runtime Facts (Claude Code / ephemeral container)
 
