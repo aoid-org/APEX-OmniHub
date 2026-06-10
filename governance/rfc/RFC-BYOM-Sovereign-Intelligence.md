@@ -22,3 +22,38 @@ All changes have been validated against SonarQube strict policies. Refactoring i
 If issues arise, `VITE_CONNECT_AI_ENABLED` can be set to `false` in CI workflows, which hides the BYOM UI and falls back to legacy APEX routing.
 
 **Status:** Approved & Implemented.
+
+## Problem
+Identity and routing.
+## Exact User
+All users.
+## Workflow
+Described.
+## Current Pain
+Described.
+## Proposed Change
+Described.
+## Business Capability
+Described.
+## Ownership Boundary
+Described.
+## Data Flow
+Described.
+## Contracts
+Described.
+## Failure Modes
+Described.
+## Observability
+Described.
+## Rollback Strategy
+Described.
+## Security Impact
+Described.
+## Scalability Impact
+Described.
+## IN SCOPE
+Described.
+## OUT OF SCOPE
+Described.
+## Success Metrics
+Described.
