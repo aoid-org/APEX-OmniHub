@@ -1,8 +1,10 @@
+import { memo } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export const CloudSetupMessage = () => {
+// ⚡ Bolt: Wrapped CloudSetupMessage in React.memo() to prevent unnecessary re-renders when parent states change.
+export const CloudSetupMessage = memo(() => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="max-w-2xl w-full">
@@ -50,4 +52,4 @@ VITE_SUPABASE_ANON_KEY=your-anon-key`}
       </Card>
     </div>
   );
-};
+});
