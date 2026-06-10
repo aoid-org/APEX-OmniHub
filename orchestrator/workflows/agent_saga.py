@@ -156,7 +156,7 @@ class SagaContext:
         # Execute main activity
 
         result = await self.workflow_instance._execute_activity(
-            activity_name, activity_input, step_id
+            activity_name, activity_input, _step_id=step_id
         )
 
         # Register compensation (only on success)
@@ -207,8 +207,8 @@ class SagaContext:
                 result = await self.workflow_instance._execute_activity(
                     comp.activity_name,
                     comp.input,
-                    comp.step_id,
                     is_compensation=True,
+                    _step_id=comp.step_id,
                 )
                 workflow.logger.info(f"✓ Compensation succeeded: {comp.activity_name}")
                 return {"step_id": comp.step_id, "success": True, "result": result}
@@ -1436,7 +1436,6 @@ class AgentWorkflow:
         self,
         activity_name: str,
         activity_input: Any,
-        # timeout: timedelta = timedelta(minutes=5),  # Removed unused parameter
         is_compensation: bool = False,
         _step_id: str = "",  # Unused but kept for consistency
     ) -> Any:
