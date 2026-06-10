@@ -12,7 +12,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: Se
 
 ### Fixed (critical)
 
-- **`ci/scripts/apex_policy_check.py` self-flagging bug.** The v1.0.0 script
+- **ci/scripts/apex_policy_check.py self-flagging bug.** The v1.0.0 script
   scanned `.json` files for forbidden substrings, then read its own
   `apex-policy.config.json` which contained those very strings as
   configuration values (`"TODO: rollback"`, `"skip governance"`). The script
@@ -23,7 +23,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: Se
     `CONTRIBUTING.md`, `SECURITY.md`, `LICENSE`) from forbidden-pattern scans
     (these directories and files DESCRIBE the patterns)
   - replacing substring matching for forbidden names with identifier-boundary
-    regex (`\b(class|function|interface|type|const|let|var|def|struct|enum) Foo\b`),
+    regex (\b(class|function|interface|type|const|let|var|def|struct|enum) Foo\b),
     eliminating false positives like `ResourceManager.ts` triggering on
     `"Manager"` substring
 
@@ -163,24 +163,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Documentation
-- Added `docs/CURRENT_PLATFORM_STATE_2026_06_02.md` as the current branch/head platform assessment for `work` @ `86bc14a`.
+- Added docs/CURRENT_PLATFORM_STATE_2026_06_02.md as the current branch/head platform assessment for `work` @ `86bc14a`.
 - Reconciled canonical architecture, status, README, OmniDash, onboarding, ops, frontend, and Omni-Recall docs with PR #1274 OmniDash gap closure and PR #1309 security hardening.
 - Updated active docs to use `OmniDashShell.tsx` as shell authority and to remove stale active reliance on `OMNIDASH_ENABLED`.
 
 
 ### Removed
-- `docs/project-status/APEX_ECOSYSTEM_STATUS.md` — permanently deleted 2026-05-20. Was a v1.4.1 platform status snapshot last updated 2026-03-10 (71 days stale). Certification authority is `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`.
-- `docs/project-status/PRODUCTION_STATUS.md` — permanently deleted 2026-05-20. Was a v1.5.1 SEV-1 login-hotfix production status snapshot last updated 2026-03-25 (56 days stale). Superseded by `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`.
-- `docs/infrastructure/DEPLOYMENT_ROLLOUT_PLAN.md` — permanently deleted 2026-05-20. 8-week phased rollout timeline starting 2026-03-01; all phases elapsed. Vercel-centric deployment model superseded by Cloudflare Pages.
-- `docs/infrastructure/PRODUCTION_ROLLOUT_PLAN.md` — permanently deleted 2026-05-20. Duplicate phased rollout timeline; superseded by `docs/infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md`.
-- `docs/infrastructure/CICD_PIPELINE_DESIGN.md` — permanently deleted 2026-05-20. Design-phase CI/CD planning document predating the current live `.github/workflows/` configuration. Current CI truth is `docs/infrastructure/CI_RUNTIME_GATES.md`.
+- docs/project-status/APEX_ECOSYSTEM_STATUS.md — permanently deleted 2026-05-20. Was a v1.4.1 platform status snapshot last updated 2026-03-10 (71 days stale). Certification authority is `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`.
+- docs/project-status/PRODUCTION_STATUS.md — permanently deleted 2026-05-20. Was a v1.5.1 SEV-1 login-hotfix production status snapshot last updated 2026-03-25 (56 days stale). Superseded by `docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md`.
+- docs/infrastructure/DEPLOYMENT_ROLLOUT_PLAN.md — permanently deleted 2026-05-20. 8-week phased rollout timeline starting 2026-03-01; all phases elapsed. Vercel-centric deployment model superseded by Cloudflare Pages.
+- docs/infrastructure/PRODUCTION_ROLLOUT_PLAN.md — permanently deleted 2026-05-20. Duplicate phased rollout timeline; superseded by `docs/infrastructure/PRODUCTION_DEPLOYMENT_GUIDE.md`.
+- docs/infrastructure/CICD_PIPELINE_DESIGN.md — permanently deleted 2026-05-20. Design-phase CI/CD planning document predating the current live `.github/workflows/` configuration. Current CI truth is `docs/infrastructure/CI_RUNTIME_GATES.md`.
 
 ## [1.6.3] - 2026-05-11
 
 ### Security
 - Patched 3 high-severity OpenTelemetry CVEs (GHSA-q7rr-3cgh-j5r3 — Prometheus exporter
-  crash via malformed HTTP request): bumped `@opentelemetry/auto-instrumentations-node`
-  to ^0.75.0, `@opentelemetry/sdk-node` to ^0.217.0, `@opentelemetry/exporter-trace-otlp-http`
+  crash via malformed HTTP request): bumped @opentelemetry/auto-instrumentations-node
+  to ^0.75.0, @opentelemetry/sdk-node to ^0.217.0, `@opentelemetry/exporter-trace-otlp-http`
   to ^0.217.0. npm audit --omit=dev --audit-level=high now exits clean.
 
 ### Integration
@@ -255,7 +255,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed — Code Quality Improvements (2026-05-07)
 
-- **Security headers:** `Cross-Origin-Opener-Policy` in `public/_headers` upgraded
+- **Security headers:** `Cross-Origin-Opener-Policy` in public/_headers upgraded
   from `unsafe-none` to `same-origin` — matches the stricter policy already in
   `apps/omnihub-site/public/_headers` and closes the deployed header split.
 - **Repo hygiene:** Removed tracked `output.txt` CI artifact; added `output.txt`
@@ -702,7 +702,7 @@ LEGACY — retained for historical/reference use; Cloudflare-first topology is c
 #### Task 2: pg_cron Automatic Receipt Cleanup
 
 - `supabase/migrations/20260226000000_enable_pg_cron_receipt_cleanup.sql`: Idempotent migration enabling pg_cron + daily 03:00 UTC cleanup of expired receipts > 30 days
-- `supabase/migrations/20260226000001_rollback_receipt_cleanup.sql`: Safe rollback migration
+- supabase/migrations/20260226000001_rollback_receipt_cleanup.sql: Safe rollback migration
 - `scripts/verify_cron.sql`: Verification query for cron job status and run history
 - `tests/test_receipt_cleanup.py`: Unit tests for cleanup SQL logic and rollback existence
 
