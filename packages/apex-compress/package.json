@@ -1,0 +1,22 @@
+{
+  "name": "@apex/compress",
+  "version": "1.0.0",
+  "description": "Zero-dependency token optimization library for APEX-OmniHub LLM pipelines. Achieves 40-65% token reduction via heuristic pruning, Telegraph English, TOON serialization, and TSCG schema compression.",
+  "main": "dist/index.js",
+  "module": "src/index.ts",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "bench": "bun run src/utils/benchmarks.ts"
+  },
+  "peerDependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}
