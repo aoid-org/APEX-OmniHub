@@ -1,0 +1,14 @@
+{
+  "name": "apex-universal-sync-orchestrator",
+  "version": "1.1.0",
+  "description": "Synchronizes external application JSON payloads into unified APEX-OmniHub state vectors for OmniBoard application integration and onboarding.",
+  "author": "APEX Business Systems Ltd.",
+  "license": "Proprietary - APEX Business Systems Ltd.",
+  "edition": "claude-native",
+  "forge_version": "9.4.0",
+  "entrypoint": "scripts/sync_payload.py",
+  "evidence": {
+    "scorecard": "scorecard.json",
+    "trigger_eval": "evals/trigger-eval.json"
+  }
+}
