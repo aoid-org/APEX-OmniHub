@@ -287,7 +287,7 @@ serve(async (req: Request) => {
           if (APEX_COMPRESS_ENABLED && !compressionMeta.cacheHit) {
             const cacheKey = compressedMessages.filter(m => m.role === 'system').map(m => m.content).join('\n') + provider + model;
             const cachedObj = {
-              id: "chatcmpl-" + Math.random().toString(36).substring(2),
+              id: "chatcmpl-" + crypto.randomUUID().replace(/-/g, ''),
               object: "chat.completion",
               created: Math.floor(Date.now() / 1000),
               model: model,
