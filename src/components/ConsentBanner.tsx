@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, X } from 'lucide-react';
@@ -6,7 +6,8 @@ import { Link } from 'react-router-dom';
 
 const CONSENT_KEY = 'apex-privacy-consent';
 
-export const ConsentBanner = () => {
+// ⚡ Bolt: Wrapped ConsentBanner in React.memo() to prevent unnecessary re-renders when parent states change.
+export const ConsentBanner = memo(() => {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
@@ -125,4 +126,4 @@ export const ConsentBanner = () => {
       </Card>
     </div>
   );
-};
+});
