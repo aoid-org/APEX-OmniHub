@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX Bible v1.1.0 — Integration Report
 
 **Date:** 2026-05-22T23:00:00Z

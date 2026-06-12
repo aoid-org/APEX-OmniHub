@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # IP FORTRESS — OMNIDEV-APEX Reference
 
 ## Every Novel Implementation: Document Immediately

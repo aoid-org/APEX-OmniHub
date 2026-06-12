@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # OMNIDEV-APEX v3.0 — Universal Edition
 > *Every language. Every domain. Every model. Zero failures. First-pass perfection. Always.*
 

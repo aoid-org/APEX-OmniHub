@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Omni-Recall — Claude Code Runtime Adaptation
 
 - Purpose: persistent continuity system for knowledge, preferences, corrections, and project memory.

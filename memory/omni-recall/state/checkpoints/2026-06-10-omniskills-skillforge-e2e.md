@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Checkpoint — 2026-06-10 — OmniSkills/SkillForge/DAG E2E + OmniBoard scoping correction + doc sync
 
 - branch: claude/friendly-goodall-6bb4uc

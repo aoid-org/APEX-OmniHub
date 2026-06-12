@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # ADR: Adopt APEX Bible Governance Package
 
 Status: Accepted

@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # apex-universal-sync-orchestrator
 
 APEX Business Systems — OmniBoard Application Integration Skill (v1.1.0).

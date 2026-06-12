@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 APEX-OmniHub Support
 Version: 2.0
 Type: Universal, model-agnostic Support Skill (callable DAG node / executor)

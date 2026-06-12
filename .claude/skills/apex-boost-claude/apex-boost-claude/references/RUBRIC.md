@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX-BOOST: QUALITY RUBRIC v1.0
 **Minimum ship score: 99/100. No dimension below 9.0.**
 

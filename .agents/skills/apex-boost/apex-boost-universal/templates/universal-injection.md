@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX-BOOST: UNIVERSAL INJECTION TEMPLATES
 **Copy-paste ready system prompts for every major model.**
 

@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Section Definitions
 
 This file defines the rule categories for Postgres best practices. Rules are automatically assigned to sections based on their filename prefix.

@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Correction 001: Additive Migration Constraint Linter Comment Location
 **Version:** 1.0.0 | **Date:** 2026-05-26 | **Author:** Lead AI Co-Founder | **Status:** Active & Ingested
 

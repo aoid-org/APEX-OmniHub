@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX Orchestrator
 
 Production-grade AI Agent Orchestration Platform with Temporal.io, Event Sourcing, and Saga Patterns.

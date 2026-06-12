@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX OmniHub Marketing Site
 
 > **Current-state update (2026-06-01):** This public site package is version `1.3.10` and routes through `apps/omnihub-site/src/App.tsx`. Public routes remain pre-auth; OmniDash is the protected post-auth shell.

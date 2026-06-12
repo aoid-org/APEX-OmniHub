@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Writing Guidelines for Postgres References
 
 This document provides guidelines for creating effective Postgres best

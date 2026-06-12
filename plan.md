@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Micro-Task Map: Zero-Cost Pipeline Initialization
 
 - [x] **Task 1:** Infrastructure Assembly. Create `.claude/settings.local.json` to reroute models to OpenRouter free tiers. Ensure local overriding is applied without affecting public settings.

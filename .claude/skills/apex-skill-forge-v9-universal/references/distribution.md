@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Distribution
 
 Read this at Phase 6 (PUBLISH), or when preparing marketplace listings.

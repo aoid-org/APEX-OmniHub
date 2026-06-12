@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX-POWER-20X UNIVERSAL
 ## The Omnipotent God-Mode Execution Sovereign
 ### Vendor-Agnostic Edition — Works on ANY AI Model

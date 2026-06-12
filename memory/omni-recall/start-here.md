@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Start Here
 
 If a future run needs the user's durable memory, this directory is the default entry point.
