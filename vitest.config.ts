@@ -126,6 +126,7 @@ export default defineConfig({
         'apps/omnihub-site/src/main.tsx',
         'apps/omnihub-site/src/pwa-init.ts',
         'apps/omnihub-site/src/pages/**',
+        'apps/omnihub-site/src/components/OmniHubPlatformMap.tsx',
         'apps/omnihub-site/src/providers/**',
         'apps/omnihub-site/src/layouts/**',
         'node_modules/**',

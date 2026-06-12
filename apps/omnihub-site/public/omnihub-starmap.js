@@ -1,0 +1,1347 @@
+/*!
+ * OmniHub Platform Map — embeddable feature section
+ * v1.0.0 · APEX Business Systems Ltd.
+ *
+ * Self-contained: injects styles, renders a landing-page SECTION (entry point),
+ * and launches a fullscreen interactive 3D capability map on demand.
+ * Colors, fonts, capability names, descriptions, and chips are verified
+ * against the production site apexomnihub.icu (June 2026).
+ *
+ * Usage:
+ *   <section id="platform-map" data-omnihub-starmap></section>
+ *   <script defer src="/starmap/omnihub-starmap.js"></script>
+ * or:
+ *   window.OmniHubStarmap.mount('#platform-map', { threeSrc: '/vendor/three.min.js' })
+ */
+(function () {
+  'use strict';
+  if (window.OmniHubStarmap) return; // idempotent
+
+  /* ============================================================
+   * 1. CONFIG — brand tokens verified from production CSS
+   * ============================================================ */
+  var TOKENS = {
+    bg: '#060a13',            // --bg-primary
+    surface: '#0f1729',       // --color-surface (navy)
+    elevated: '#1e293b',      // --color-surface-elevated
+    border: '#334155',        // --color-border
+    borderSubtle: '#1e293b',  // --color-border-subtle
+    orange: '#c4571c',        // --color-orange (primary accent)
+    orangeLight: '#ea7c44',   // --color-orange-light (hover)
+    text: '#f8fafc',          // --color-text-primary
+    textSecondary: '#cbd5e1', // --color-text-secondary
+    textMuted: '#94a3b8',     // --color-text-muted
+    success: '#16a34a',       // --color-success
+    error: '#dc2626',         // --color-error
+    focusRing: 'rgba(196,87,28,.4)'
+  };
+
+  var DEFAULTS = {
+    threeSrc: 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+    ctaHref: 'https://apexomnihub.icu',          // adjust to '#early-access' anchor when wired in-site
+    demoHref: 'https://apexomnihub.icu/demo',    // verified route
+    loadFonts: true
+  };
+
+  /* ============================================================
+   * 2. CAPABILITY DATA — names/descriptions/chips verified
+   *    verbatim from apexomnihub.icu (Platform Capabilities)
+   * ============================================================ */
+  var CAPS = [
+    {
+      name: 'OmniPort', tag: 'UNIVERSAL CONNECTOR NETWORK',
+      lead: 'Universal compatibility across legacy, Web2, Web3, AI, NFT, and blockchain applications. One controlled doorway connects OmniHub to what you already use \u2014 nothing gets replaced, nothing gets left behind.',
+      chips: ['Universal Connector Network', 'Single controlled port', 'Legacy \u00b7 Web2 \u00b7 Web3', 'AI \u00b7 NFT \u00b7 Blockchain'],
+      demo: 'omniport', pos: [0, 2, 0], size: 1.15
+    },
+    {
+      name: 'Tri-Force Architecture', tag: 'GUARDIAN \u2192 PLANNER \u2192 EXECUTOR',
+      lead: 'A decentralized tripartite model for uncompromised security: Guardian, Planner, and Executor. Three specialists check each other\u2019s work \u2014 so intent never bypasses policy, no matter how fast things move.',
+      chips: ['Guardian', 'Planner', 'Executor', 'Intent never bypasses policy'],
+      demo: 'triforce', pos: [-46, 8, -52], size: 1.35
+    },
+    {
+      name: 'OmniDash', tag: 'YOUR COMMAND CENTER',
+      lead: 'Your governed intelligence command center. Monitor every agent, workflow, integration, and event from a single real-time surface \u2014 and issue commands in plain language.',
+      chips: ['Natural language directives', 'Capability-matched routing', 'Override any agent, instantly', 'Live Audit Trail'],
+      demo: 'omnidash', pos: [50, -6, -104], size: 1.25
+    },
+    {
+      name: 'Policy Enforcement Engine', tag: 'RULES BEFORE ACTIONS',
+      lead: 'Governance rules apply before any action executes \u2014 not after something goes wrong. No agent accesses unauthorized data scopes, and every write is logged immutably.',
+      chips: ['Scope Restriction', 'Audit on Write', 'Rollback Window', 'Cross-Border Block (GDPR)'],
+      demo: 'policy', pos: [-56, -14, -158], size: 1.15
+    },
+    {
+      name: 'One-Click Rollback', tag: 'AN ARCHITECTURAL PRIMITIVE',
+      lead: 'Reverse any agent action or workflow state with a single command \u2014 no cleanup required. One bad decision doesn\u2019t cascade. You undo it. Completely.',
+      chips: ['One-click rollback', 'Blast radius containment', 'Compensating transactions'],
+      demo: 'rollback', pos: [44, 16, -212], size: 1.3
+    },
+    {
+      name: 'OmniTrace', tag: 'IMMUTABLE AUDIT \u00b7 FORENSIC REPLAY',
+      lead: 'Forensic replay and immutable audit trails for regulatory compliance. Full reconstruction of any agent chain \u2014 every decision your AI ever made, provable on demand.',
+      chips: ['Immutable Audit Log', 'Forensic decision replay', 'GDPR Art. 30', 'Full chain reconstruction'],
+      demo: 'omnitrace', pos: [-40, 22, -266], size: 1.2
+    },
+    {
+      name: 'MAN Mode', tag: 'MANUAL APPROVAL NODE',
+      lead: 'High-risk actions pause at an approval checkpoint while authorized operators approve, reject, or escalate \u2014 with full traceability. The AI moves fast; the big calls stay human.',
+      chips: ['Approval checkpoint', 'Approve \u00b7 Reject \u00b7 Escalate', 'Full traceability', 'EU AI Act Art. 14'],
+      demo: 'manmode', pos: [38, -20, -318], size: 1.2
+    },
+    {
+      name: 'Connect AI / BYOM', tag: 'YOUR MODELS, YOUR RULES',
+      lead: 'Bring Your Own Model. Plug in any LLM into governed workflows \u2014 and change providers without rebuilding your system. You are never locked in.',
+      chips: ['Bring Your Own Model', 'Any LLM', 'Zero Vendor Lock-In'],
+      demo: 'byom', pos: [-48, -8, -370], size: 1.15
+    },
+    {
+      name: 'SkillForge / OmniSkills', tag: 'EXPERT SKILLS, GOVERNED',
+      lead: 'Forge, install, and govern expert-level OmniSkills \u2014 packaged expertise your agents can pick up and use, under the same rules as everything else on the platform.',
+      chips: ['Forge', 'Install', 'Govern', 'OmniSkills'],
+      demo: 'skillforge', pos: [46, 18, -422], size: 1.1
+    },
+    {
+      name: 'Real-Time Telemetry', tag: 'LIVE OPERATIONAL INTELLIGENCE',
+      lead: 'Live operational intelligence across all agents and workflows. You always know what\u2019s running, where it\u2019s running, and how it\u2019s performing \u2014 in real time.',
+      chips: ['All agents', 'All workflows', 'Real-time visibility'],
+      demo: 'telemetry', pos: [-36, -18, -472], size: 1.1
+    },
+    {
+      name: 'PhysiOmni', tag: 'AI BEYOND THE SCREEN',
+      lead: 'The physical AI operations layer. Deploy, govern, and orchestrate embodied AI systems and robotics through the same governed command surface as your digital agents.',
+      chips: ['Embodied AI', 'Robotics', 'Same governed surface'],
+      demo: 'physiomni', pos: [40, 24, -526], size: 1.25
+    },
+    {
+      name: 'Early Access', tag: 'PUT IT TO WORK',
+      lead: 'That\u2019s the full platform \u2014 eleven capabilities in one governed layer, where every action is authorized, logged, and reversible. Join enterprises that have moved beyond black-box AI.',
+      chips: [],
+      demo: null, pos: [0, 4, -590], size: 1.5
+    }
+  ];
+
+  /* ============================================================
+   * 3. STYLES — scoped under .ohsm- prefix, brand tokens only
+   * ============================================================ */
+  var CSS = '' +
+  ':root{--ohsm-bg:' + TOKENS.bg + ';--ohsm-surface:' + TOKENS.surface + ';--ohsm-elev:' + TOKENS.elevated + ';' +
+  '--ohsm-border:' + TOKENS.border + ';--ohsm-accent:' + TOKENS.orange + ';--ohsm-accent-hi:' + TOKENS.orangeLight + ';' +
+  '--ohsm-text:' + TOKENS.text + ';--ohsm-text-2:' + TOKENS.textSecondary + ';--ohsm-muted:' + TOKENS.textMuted + ';' +
+  '--ohsm-ok:' + TOKENS.success + ';--ohsm-err:' + TOKENS.error + ';--ohsm-ring:' + TOKENS.focusRing + '}' +
+
+  /* ---- landing-page section (entry point) ---- */
+  '.ohsm-section{position:relative;background:var(--ohsm-bg);color:var(--ohsm-text);overflow:hidden;' +
+    'font-family:"Space Grotesk",system-ui,sans-serif;padding:clamp(64px,9vw,120px) clamp(20px,6vw,80px);' +
+    'border-top:1px solid ' + TOKENS.borderSubtle + ';border-bottom:1px solid ' + TOKENS.borderSubtle + '}' +
+  '.ohsm-section canvas.ohsm-teaser-stars{position:absolute;inset:0;width:100%;height:100%;opacity:.8;pointer-events:none}' +
+  '.ohsm-section .ohsm-inner{position:relative;max-width:1100px;margin:0 auto;display:grid;gap:18px}' +
+  '.ohsm-eyebrow{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.28em;color:var(--ohsm-accent-hi)}' +
+  '.ohsm-section h2{font-weight:700;letter-spacing:-.02em;line-height:1.04;font-size:clamp(30px,4.4vw,52px);max-width:16ch}' +
+  '.ohsm-section .ohsm-sub{color:var(--ohsm-text-2);font-size:clamp(15px,1.4vw,17px);line-height:1.65;max-width:54ch}' +
+  '.ohsm-section .ohsm-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:8px}' +
+  '.ohsm-meta{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.16em;color:var(--ohsm-muted)}' +
+
+  /* ---- buttons ---- */
+  '.ohsm-btn{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;text-decoration:none;' +
+    'border-radius:10px;padding:13px 20px;cursor:pointer;border:1px solid transparent;display:inline-block;' +
+    'transition:transform .25s ease,box-shadow .25s ease,background .25s ease,color .25s ease,border-color .25s ease}' +
+  '.ohsm-btn:focus-visible{outline:3px solid var(--ohsm-ring);outline-offset:2px}' +
+  '.ohsm-btn-primary{background:var(--ohsm-accent);color:#fff;font-weight:700;box-shadow:0 6px 24px rgba(196,87,28,.30)}' +
+  '.ohsm-btn-primary:hover{background:var(--ohsm-accent-hi);transform:translateY(-2px);box-shadow:0 10px 32px rgba(196,87,28,.42)}' +
+  '.ohsm-btn-primary:active{transform:translateY(0)}' +
+  '.ohsm-btn-ghost{background:transparent;color:var(--ohsm-text-2);border-color:var(--ohsm-border)}' +
+  '.ohsm-btn-ghost:hover{color:var(--ohsm-text);border-color:var(--ohsm-muted)}' +
+
+  /* ---- fullscreen overlay ---- */
+  '.ohsm-overlay{position:fixed;inset:0;z-index:9999;background:var(--ohsm-bg);color:var(--ohsm-text);' +
+    'font-family:"Space Grotesk",system-ui,sans-serif;opacity:0;transition:opacity .5s ease}' +
+  '.ohsm-overlay.ohsm-on{opacity:1}' +
+  '.ohsm-overlay *{box-sizing:border-box}' +
+  '.ohsm-stage{position:absolute;inset:0;display:block;cursor:grab}' +
+  '.ohsm-stage.ohsm-drag{cursor:grabbing}' +
+  '.ohsm-vig{position:absolute;inset:0;pointer-events:none;' +
+    'background:radial-gradient(ellipse at center,transparent 52%,rgba(3,6,12,.6) 100%)}' +
+  '.ohsm-flash{position:absolute;inset:0;pointer-events:none;opacity:0;' +
+    'background:radial-gradient(ellipse at center,rgba(248,250,252,.14) 0%,rgba(196,87,28,.10) 30%,transparent 62%)}' +
+  '.ohsm-streaks{position:absolute;inset:-12%;pointer-events:none;opacity:0;filter:blur(.6px);' +
+    'background:repeating-conic-gradient(from 0deg at 50% 50%,transparent 0deg 5.4deg,rgba(234,124,68,.05) 5.4deg 5.7deg,transparent 5.7deg 6deg)}' +
+
+  /* overlay chrome */
+  '.ohsm-top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;' +
+    'padding:clamp(14px,2.2vw,26px) clamp(16px,2.8vw,34px);z-index:6;pointer-events:none}' +
+  '.ohsm-top img{height:clamp(20px,2.4vw,28px);display:block;filter:drop-shadow(0 2px 10px rgba(0,0,0,.6))}' +
+  '.ohsm-top .ohsm-brandsub{margin-top:6px;font-family:"Space Mono",monospace;font-size:9.5px;letter-spacing:.22em;color:var(--ohsm-muted)}' +
+  '.ohsm-exit{pointer-events:auto;font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.14em;' +
+    'color:var(--ohsm-text-2);background:rgba(15,23,41,.6);border:1px solid var(--ohsm-border);border-radius:99px;' +
+    'padding:9px 16px;cursor:pointer;backdrop-filter:blur(8px);transition:color .2s,border-color .2s}' +
+  '.ohsm-exit:hover{color:var(--ohsm-text);border-color:var(--ohsm-muted)}' +
+  '.ohsm-exit:focus-visible{outline:3px solid var(--ohsm-ring);outline-offset:2px}' +
+
+  /* progress dock */
+  '.ohsm-dock{position:absolute;left:50%;bottom:clamp(12px,2.4vh,24px);transform:translateX(-50%);z-index:6;' +
+    'display:flex;align-items:center;gap:10px;padding:9px 13px;border:1px solid var(--ohsm-border);' +
+    'border-radius:99px;background:rgba(6,10,19,.78);backdrop-filter:blur(14px);max-width:calc(100vw - 20px)}' +
+  '.ohsm-dots{display:flex;gap:7px;align-items:center}' +
+  '.ohsm-dot{width:8px;height:8px;border-radius:50%;border:1px solid rgba(234,124,68,.45);background:transparent;' +
+    'cursor:pointer;padding:0;transition:all .3s ease;flex:0 0 auto}' +
+  '.ohsm-dot:hover,.ohsm-dot:focus-visible{transform:scale(1.5);outline:none;border-color:var(--ohsm-accent-hi)}' +
+  '.ohsm-dot.ohsm-seen{background:rgba(234,124,68,.5);border-color:transparent}' +
+  '.ohsm-dot.ohsm-here{background:var(--ohsm-accent-hi);border-color:transparent;box-shadow:0 0 10px rgba(234,124,68,.8);transform:scale(1.4)}' +
+  '.ohsm-step{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.12em;color:var(--ohsm-text);' +
+    'background:none;border:none;cursor:pointer;padding:5px 6px;white-space:nowrap;transition:color .2s}' +
+  '.ohsm-step:hover,.ohsm-step:focus-visible{color:var(--ohsm-accent-hi);outline:none}' +
+  '.ohsm-step[disabled]{opacity:.25;cursor:default}' +
+
+  /* capability panel */
+  '.ohsm-panel{position:absolute;z-index:5;right:clamp(14px,2.8vw,38px);top:50%;width:min(430px,calc(100vw - 28px));' +
+    'transform:translateY(-50%) translateX(26px);opacity:0;pointer-events:none;' +
+    'transition:transform .65s cubic-bezier(.16,1,.3,1),opacity .5s ease;' +
+    'border:1px solid var(--ohsm-border);border-radius:16px;background:rgba(10,14,23,.86);' +
+    'backdrop-filter:blur(18px);padding:clamp(18px,2.2vw,26px);box-shadow:0 30px 80px rgba(0,0,0,.55);' +
+    'max-height:calc(100vh - 110px);overflow:auto}' +
+  '.ohsm-panel.ohsm-show{transform:translateY(-50%) translateX(0);opacity:1;pointer-events:auto}' +
+  '.ohsm-pe{font-family:"Space Mono",monospace;font-size:9.5px;letter-spacing:.2em;color:var(--ohsm-accent-hi);' +
+    'display:flex;justify-content:space-between;gap:10px}' +
+  '.ohsm-pe .ohsm-petag{color:var(--ohsm-muted);text-align:right}' +
+  '.ohsm-panel h3{font-weight:700;font-size:clamp(23px,2.4vw,29px);line-height:1.06;letter-spacing:-.02em;margin:12px 0 9px}' +
+  '.ohsm-lead{font-size:14px;line-height:1.65;color:var(--ohsm-text-2)}' +
+  '.ohsm-chips{margin-top:14px;border-top:1px dashed rgba(51,65,85,.8);padding-top:12px}' +
+  '.ohsm-chips .ohsm-cl{font-family:"Space Mono",monospace;font-size:9px;letter-spacing:.18em;color:var(--ohsm-accent-hi);' +
+    'display:flex;align-items:center;gap:7px;margin-bottom:8px}' +
+  '.ohsm-chips .ohsm-cl .ohsm-okdot{width:5px;height:5px;border-radius:50%;background:var(--ohsm-ok);box-shadow:0 0 6px var(--ohsm-ok)}' +
+  '.ohsm-chips ul{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0}' +
+  '.ohsm-chips li{font-family:"Space Mono",monospace;font-size:10px;color:var(--ohsm-text-2);' +
+    'border:1px solid var(--ohsm-border);border-radius:6px;padding:4px 9px;background:rgba(248,250,252,.03)}' +
+  '.ohsm-actions{margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}' +
+
+  /* interactive demo area */
+  '.ohsm-demo{margin-top:16px;display:none;border:1px solid var(--ohsm-border);border-radius:12px;' +
+    'background:var(--ohsm-surface);padding:14px;overflow:hidden}' +
+  '.ohsm-demo.ohsm-open{display:block;animation:ohsmIn .4s ease}' +
+  '@keyframes ohsmIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}' +
+  '.ohsm-demo .ohsm-dl{font-family:"Space Mono",monospace;font-size:9px;letter-spacing:.18em;color:var(--ohsm-muted);' +
+    'display:flex;justify-content:space-between;margin-bottom:11px}' +
+  '.ohsm-demo .ohsm-dl b{color:var(--ohsm-accent-hi);font-weight:400}' +
+  '.ohsm-dgrid{display:flex;flex-wrap:wrap;gap:7px}' +
+  '.ohsm-dbtn{font-family:"Space Mono",monospace;font-size:10px;color:var(--ohsm-text-2);background:var(--ohsm-elev);' +
+    'border:1px solid var(--ohsm-border);border-radius:8px;padding:8px 11px;cursor:pointer;transition:all .2s}' +
+  '.ohsm-dbtn:hover,.ohsm-dbtn:focus-visible{color:var(--ohsm-text);border-color:var(--ohsm-accent);outline:none}' +
+  '.ohsm-dbtn.ohsm-sel{background:var(--ohsm-accent);border-color:var(--ohsm-accent);color:#fff}' +
+  '.ohsm-dbtn[disabled]{opacity:.4;cursor:default}' +
+  '.ohsm-pipe{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:12px 0}' +
+  '.ohsm-node{font-family:"Space Mono",monospace;font-size:10px;border:1px solid var(--ohsm-border);' +
+    'border-radius:8px;padding:7px 10px;color:var(--ohsm-muted);background:var(--ohsm-elev);transition:all .35s}' +
+  '.ohsm-node.ohsm-go{color:#fff;background:var(--ohsm-accent);border-color:var(--ohsm-accent)}' +
+  '.ohsm-node.ohsm-pass{color:var(--ohsm-ok);border-color:var(--ohsm-ok)}' +
+  '.ohsm-node.ohsm-block{color:var(--ohsm-err);border-color:var(--ohsm-err)}' +
+  '.ohsm-arrow{color:var(--ohsm-muted);font-size:11px}' +
+  '.ohsm-log{font-family:"Space Mono",monospace;font-size:10px;line-height:1.8;color:var(--ohsm-text-2);' +
+    'background:rgba(0,0,0,.28);border:1px solid var(--ohsm-borderSubtle, #1e293b);border-radius:8px;padding:9px 11px;' +
+    'min-height:38px;max-height:120px;overflow:auto;margin-top:10px;white-space:pre-wrap}' +
+  '.ohsm-log .ohsm-ok{color:var(--ohsm-ok)}.ohsm-log .ohsm-bad{color:var(--ohsm-err)}.ohsm-log .ohsm-hi{color:var(--ohsm-accent-hi)}' +
+  '.ohsm-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;' +
+    'border-bottom:1px solid rgba(51,65,85,.45);font-size:12.5px;color:var(--ohsm-text-2)}' +
+  '.ohsm-toggle:last-of-type{border-bottom:none}' +
+  '.ohsm-sw{position:relative;width:34px;height:19px;border-radius:99px;background:var(--ohsm-elev);' +
+    'border:1px solid var(--ohsm-border);cursor:pointer;transition:background .25s;flex:0 0 auto;padding:0}' +
+  '.ohsm-sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;' +
+    'background:var(--ohsm-muted);transition:all .25s}' +
+  '.ohsm-sw.ohsm-onsw{background:var(--ohsm-accent)}' +
+  '.ohsm-sw.ohsm-onsw::after{left:17px;background:#fff}' +
+  '.ohsm-sw:focus-visible{outline:3px solid var(--ohsm-ring);outline-offset:2px}' +
+  '.ohsm-range{width:100%;accent-color:' + TOKENS.orange + ';margin:10px 0 4px}' +
+  '.ohsm-metric{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;' +
+    'border-bottom:1px solid rgba(51,65,85,.45)}' +
+  '.ohsm-metric:last-of-type{border-bottom:none}' +
+  '.ohsm-metric .ohsm-mk{font-size:12px;color:var(--ohsm-muted)}' +
+  '.ohsm-metric .ohsm-mv{font-family:"Space Mono",monospace;font-size:14px;color:var(--ohsm-text)}' +
+  '.ohsm-spark{width:100%;height:36px;display:block;margin-top:8px}' +
+
+  /* feature labels in 3D space */
+  '.ohsm-label{position:absolute;z-index:4;transform:translate(-50%,-130%);pointer-events:none;' +
+    'font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.16em;color:var(--ohsm-text-2);' +
+    'text-transform:uppercase;white-space:nowrap;opacity:0;transition:opacity .5s ease;text-shadow:0 2px 10px rgba(0,0,0,.9)}' +
+  '.ohsm-label.ohsm-vis{opacity:.9}' +
+  '.ohsm-label .ohsm-ln{color:var(--ohsm-accent-hi)}' +
+  '.ohsm-hintline{position:absolute;left:clamp(14px,2.8vw,34px);bottom:clamp(12px,2.4vh,24px);z-index:4;' +
+    'font-family:"Space Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--ohsm-muted);pointer-events:none}' +
+
+  /* finale card */
+  '.ohsm-finale{position:absolute;inset:0;z-index:7;display:grid;place-items:center;pointer-events:none;opacity:0;' +
+    'transition:opacity .9s ease;background:radial-gradient(ellipse at center,rgba(6,10,19,.2),rgba(6,10,19,.8) 78%)}' +
+  '.ohsm-finale.ohsm-show{opacity:1;pointer-events:auto}' +
+  '.ohsm-fcard{text-align:center;max-width:760px;padding:24px}' +
+  '.ohsm-fcard .ohsm-eyebrow{justify-content:center;display:flex}' +
+  '.ohsm-fcard h3{font-weight:700;letter-spacing:-.025em;line-height:1.04;font-size:clamp(30px,5.2vw,58px);margin-top:14px}' +
+  '.ohsm-fcard h3 em{font-style:normal;color:var(--ohsm-accent-hi)}' +
+  '.ohsm-fcard p{margin:16px auto 0;max-width:540px;font-size:15px;line-height:1.7;color:var(--ohsm-text-2)}' +
+  '.ohsm-fcard .ohsm-ctas{margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}' +
+  '.ohsm-fcard .ohsm-proof{margin-top:20px;font-family:"Space Mono",monospace;font-size:9.5px;letter-spacing:.14em;' +
+    'color:var(--ohsm-muted);line-height:2}' +
+
+  /* no-WebGL fallback list */
+  '.ohsm-fallback{position:absolute;inset:0;overflow:auto;padding:90px clamp(16px,4vw,48px) 60px;z-index:3}' +
+  '.ohsm-fallback .ohsm-fwrap{max-width:760px;margin:0 auto;display:grid;gap:14px}' +
+
+  '@media (max-width:760px){' +
+    '.ohsm-panel{right:0;left:0;top:auto;bottom:0;width:100%;border-radius:16px 16px 0 0;' +
+      'transform:translateY(24px);max-height:60vh}' +
+    '.ohsm-panel.ohsm-show{transform:translateY(0)}' +
+    '.ohsm-dock{bottom:auto;top:clamp(58px,8.5vh,80px)}' +
+    '.ohsm-hintline{display:none}' +
+  '}' +
+  '@media (prefers-reduced-motion:reduce){' +
+    '.ohsm-dot,.ohsm-btn,.ohsm-panel,.ohsm-node{transition-duration:.01ms !important}' +
+  '}';
+
+  /* ============================================================
+   * 4. UTILITIES
+   * ============================================================ */
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+  function pad(n) { return String(n).length < 2 ? '0' + n : String(n); }
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function safeHref(url) {
+    if (typeof url !== 'string') return '#';
+    var u = url.trim();
+    return /^(https?:\/\/|\/|#)/.test(u) ? u : '#';
+  }
+  var threePromise = null;
+  function loadThree(src) {
+    if (window.THREE) return Promise.resolve(window.THREE);
+    var safeSrc = (typeof src === 'string' && /^https:\/\//.test(src)) ? src : '';
+    if (!safeSrc) {
+      return Promise.reject(new Error('three.js src must be an https:// URL'));
+    }
+    if (threePromise) return threePromise;
+    threePromise = new Promise(function (res, rej) {
+      var s = document.createElement('script');
+      s.src = safeSrc; s.async = true;
+      s.onload = function () { window.THREE ? res(window.THREE) : rej(new Error('THREE missing after load')); };
+      s.onerror = function () { rej(new Error('Failed to load three.js')); };
+      document.head.appendChild(s);
+    });
+    return threePromise;
+  }
+  function ensureFonts() {
+    if (document.querySelector('link[href*="Space+Grotesk"]')) return;
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap';
+    document.head.appendChild(l);
+  }
+
+  /* ============================================================
+   * 5. INTERACTIVE DEMOS — one per capability, feature-relevant.
+   *    Each returns a cleanup function. All clearly simulated.
+   * ============================================================ */
+  function logLine(log, html) {
+    var d = el('div', '', html);
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+  }
+  function pipeline(names) {
+    var wrap = el('div', 'ohsm-pipe');
+    var nodes = names.map(function (n, i) {
+      var nd = el('span', 'ohsm-node', n);
+      wrap.appendChild(nd);
+      if (i < names.length - 1) wrap.appendChild(el('span', 'ohsm-arrow', '\u2192'));
+      return nd;
+    });
+    return { wrap: wrap, nodes: nodes };
+  }
+
+  var DEMOS = {
+
+    /* OmniPort — route any system through the single controlled port */
+    omniport: function (root) {
+      root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
+      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:10px">Pick any system. Watch it connect through one controlled port \u2014 no custom integration.</div>'));
+      var grid = el('div', 'ohsm-dgrid');
+      var p = pipeline(['SYSTEM', 'OMNIPORT', 'OMNIHUB']);
+      var log = el('div', 'ohsm-log');
+      ['Legacy ERP', 'CRM', 'Web3 Wallet', 'LLM API', 'NFT Registry'].forEach(function (name) {
+        var b = el('button', 'ohsm-dbtn', name);
+        b.addEventListener('click', function () {
+          p.nodes[0].textContent = name.toUpperCase();
+          p.nodes.forEach(function (n) { n.classList.remove('ohsm-go', 'ohsm-pass'); });
+          var t1 = setTimeout(function () { p.nodes[0].classList.add('ohsm-go'); }, 60);
+          var t2 = setTimeout(function () { p.nodes[1].classList.add('ohsm-go'); }, 420);
+          var t3 = setTimeout(function () {
+            p.nodes[2].classList.add('ohsm-pass');
+            logLine(log, '<span class="ohsm-ok">\u2713</span> ' + esc(name) + ' \u2192 protocol translated \u2192 <span class="ohsm-hi">connected &amp; governed</span>');
+          }, 800);
+          timers.push(t1, t2, t3);
+        });
+        grid.appendChild(b);
+      });
+      var timers = [];
+      root.appendChild(grid); root.appendChild(p.wrap); root.appendChild(log);
+      logLine(log, 'One port in. Every system speaks OmniHub.');
+      return function () { timers.forEach(clearTimeout); };
+    },
+
+    /* Tri-Force — Guardian / Planner / Executor checking each other */
+    triforce: function (root) {
+      root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
+      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:10px">Issue a directive. Three independent roles must agree before anything runs.</div>'));
+      var grid = el('div', 'ohsm-dgrid');
+      var p = pipeline(['GUARDIAN', 'PLANNER', 'EXECUTOR']);
+      var log = el('div', 'ohsm-log');
+      var timers = [];
+      function run(label, blocked) {
+        p.nodes.forEach(function (n) { n.classList.remove('ohsm-go', 'ohsm-pass', 'ohsm-block'); });
+        log.innerHTML = '';
+        logLine(log, 'Directive: \u201c' + esc(label) + '\u201d');
+        timers.push(setTimeout(function () {
+          if (blocked) {
+            p.nodes[0].classList.add('ohsm-block');
+            logLine(log, '<span class="ohsm-bad">\u2715 Guardian blocked it.</span> Intent never bypasses policy.');
+          } else {
+            p.nodes[0].classList.add('ohsm-pass');
+            logLine(log, '<span class="ohsm-ok">\u2713</span> Guardian: within policy');
+            timers.push(setTimeout(function () {
+              p.nodes[1].classList.add('ohsm-pass');
+              logLine(log, '<span class="ohsm-ok">\u2713</span> Planner: structured task plan ready');
+            }, 420));
+            timers.push(setTimeout(function () {
+              p.nodes[2].classList.add('ohsm-pass');
+              logLine(log, '<span class="ohsm-ok">\u2713</span> Executor: done \u2014 fully logged, fully reversible');
+            }, 880));
+          }
+        }, 240));
+      }
+      [['Reconcile this month\u2019s invoices', false],
+       ['Summarize support tickets', false],
+       ['Export all customer data externally', true]].forEach(function (d) {
+        var b = el('button', 'ohsm-dbtn', d[0]);
+        b.addEventListener('click', function () { run(d[0], d[1]); });
+        grid.appendChild(b);
+      });
+      root.appendChild(grid); root.appendChild(p.wrap); root.appendChild(log);
+      return function () { timers.forEach(clearTimeout); };
+    },
+
+    /* OmniDash — plain language becomes a structured, routed task plan */
+    omnidash: function (root) {
+      root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
+      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:10px">Say it in plain language. OmniHub turns it into a routed task plan.</div>'));
+      var grid = el('div', 'ohsm-dgrid');
+      var log = el('div', 'ohsm-log');
+      var timers = [];
+      var plans = {
+        'Close the books for May': [
+          ['1. Pull ledger entries', 'finance-agent'],
+          ['2. Reconcile discrepancies', 'audit-agent'],
+          ['3. Draft close report', 'reporting-agent']],
+        'Onboard the new client': [
+          ['1. Provision workspace', 'ops-agent'],
+          ['2. Send welcome sequence', 'comms-agent'],
+          ['3. Schedule kickoff', 'calendar-agent']],
+        'Find why churn rose in Q2': [
+          ['1. Segment churned accounts', 'data-agent'],
+          ['2. Correlate support history', 'insight-agent'],
+          ['3. Summarize drivers + actions', 'analyst-agent']]
+      };
+      Object.keys(plans).forEach(function (k) {
+        var b = el('button', 'ohsm-dbtn', '\u201c' + k + '\u201d');
+        b.addEventListener('click', function () {
+          log.innerHTML = '';
+          logLine(log, '<span class="ohsm-hi">Directive received.</span> Routing each step to the most qualified agent\u2026');
+          plans[k].forEach(function (step, i) {
+            timers.push(setTimeout(function () {
+              logLine(log, '<span class="ohsm-ok">\u2713</span> ' + esc(step[0]) + ' \u2192 <span class="ohsm-hi">' + step[1] + '</span>');
+            }, 300 + i * 320));
+          });
+          timers.push(setTimeout(function () {
+            logLine(log, 'Every routing decision: audited. Override any agent, instantly.');
+          }, 300 + plans[k].length * 320 + 200));
+        });
+        grid.appendChild(b);
+      });
+      root.appendChild(grid); root.appendChild(log);
+      return function () { timers.forEach(clearTimeout); };
+    },
+
+    /* Policy Engine — toggle real rules, test an action against them */
+    policy: function (root) {
+      root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
+      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:8px">These rules run <b>before</b> any action executes. Toggle them, then test.</div>'));
+      var rules = [
+        ['Scope Restriction', 'No agent accesses unauthorized data scopes', true],
+        ['Audit on Write', 'Each write operation logged immutably', true],
+        ['Rollback Window', 'High-risk actions require approval', true],
+        ['Cross-Border Block', 'EU data stays within EEA zones (GDPR)', true]
+      ];
+      var states = rules.map(function (r) { return r[2]; });
+      var list = el('div');
+      rules.forEach(function (r, i) {
+        var row = el('div', 'ohsm-toggle');
+        row.appendChild(el('span', '', '<b style="color:' + TOKENS.text + ';font-weight:600">' + r[0] + '</b><br><span style="font-size:11px;color:' + TOKENS.textMuted + '">' + r[1] + '</span>'));
+        var sw = el('button', 'ohsm-sw ohsm-onsw');
+        sw.setAttribute('aria-label', 'Toggle ' + r[0]);
+        sw.addEventListener('click', function () {
+          states[i] = !states[i];
+          sw.classList.toggle('ohsm-onsw', states[i]);
+        });
+        row.appendChild(sw);
+        list.appendChild(row);
+      });
+      var test = el('button', 'ohsm-dbtn', 'Test action: \u201cagent writes EU customer records\u201d');
+      test.style.marginTop = '10px';
+      var log = el('div', 'ohsm-log');
+      test.addEventListener('click', function () {
+        log.innerHTML = '';
+        var blocked = false;
+        rules.forEach(function (r, i) {
+          if (states[i]) {
+            logLine(log, '<span class="ohsm-ok">\u2713 ' + r[0] + '</span> \u2014 enforced before execution');
+          } else {
+            blocked = true;
+            logLine(log, '<span class="ohsm-bad">\u26a0 ' + r[0] + ' is OFF</span> \u2014 OmniHub flags the gap and pauses the action');
+          }
+        });
+        logLine(log, blocked
+          ? '<span class="ohsm-hi">Action held.</span> Governance gaps never fail silently.'
+          : '<span class="ohsm-ok">Action authorized</span> \u2014 logged immutably, inside the rollback window.');
+      });
+      root.appendChild(list); root.appendChild(test); root.appendChild(log);
+      return function () {};
+    },
+
+    /* One-Click Rollback — run a chain, then reverse it completely */
+    rollback: function (root) {
+      root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
+      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:10px">Run a workflow. Then undo all of it \u2014 one click, no cleanup.</div>'));
+      var steps = ['Update 1,240 records', 'Notify 3 systems', 'Post journal entries', 'Trigger downstream sync'];
+      var p = pipeline(['1', '2', '3', '4']);
+      p.nodes.forEach(function (n, i) { n.textContent = steps[i]; });
+      var run = el('button', 'ohsm-dbtn', 'Run workflow');
+      var rb = el('button', 'ohsm-dbtn', '\u21ba Roll back \u2014 one click');
+      rb.disabled = true; rb.style.borderColor = TOKENS.orange; rb.style.color = TOKENS.orangeLight;
+      var row = el('div', 'ohsm-dgrid'); row.appendChild(run); row.appendChild(rb);
+      var log = el('div', 'ohsm-log');
+      var timers = [];
+      run.addEventListener('click', function () {
+        run.disabled = true; log.innerHTML = '';
+        p.nodes.forEach(function (n, i) {
+          timers.push(setTimeout(function () {
+            n.classList.add('ohsm-pass');
+            logLine(log, '<span class="ohsm-ok">\u2713</span> ' + esc(steps[i]) + ' <span style="color:' + TOKENS.textMuted + '">(compensating op recorded)</span>');
+            if (i === steps.length - 1) { rb.disabled = false; logLine(log, 'Workflow complete. Every action carries its own undo.'); }
+          }, 250 + i * 340));
+        });
+      });
+      rb.addEventListener('click', function () {
+        rb.disabled = true;
+        for (var i = steps.length - 1, j = 0; i >= 0; i--, j++) {
+          (function (i) {
+            timers.push(setTimeout(function () {
+              p.nodes[i].classList.remove('ohsm-pass'); p.nodes[i].classList.add('ohsm-go');
+              logLine(log, '<span class="ohsm-hi">\u21ba</span> Reversed: ' + esc(steps[i]));
+              if (i === 0) {
+                timers.push(setTimeout(function () {
+                  p.nodes.forEach(function (n) { n.classList.remove('ohsm-go'); });
+                  logLine(log, '<span class="ohsm-ok">State fully restored.</span> Distributed state stays coherent under rollback.');
+                  run.disabled = false;
+                }, 380));
+              }
+            }, 200 + j * 320));
+          })(i);
+        }
+      });
+      root.appendChild(row); root.appendChild(p.wrap); root.appendChild(log);
+      return function () { timers.forEach(clearTimeout); };
+    },
+
+    /* OmniTrace — scrub the immutable timeline, replay any decision */
+    omnitrace: function (root) {
+      root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
+      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:6px">Drag the timeline. Replay an agent chain, decision by decision.</div>'));
+      var events = [
+        ['09:14:02', 'Directive received', 'operator \u00b7 j.r'],
+        ['09:14:03', 'Guardian: policy check passed', 'guardian'],
+        ['09:14:05', 'Planner: 3-step plan compiled', 'planner'],
+        ['09:14:09', 'Executor: step 1 \u2014 records updated', 'executor'],
+        ['09:14:14', 'Executor: step 2 \u2014 systems notified', 'executor'],
+        ['09:14:18', 'Write logged immutably (GDPR Art. 30)', 'audit'],
+        ['09:14:19', 'Chain sealed \u2014 fully reconstructable', 'omnitrace']
+      ];
+      var range = el('input', 'ohsm-range');
+      range.type = 'range'; range.min = '0'; range.max = String(events.length - 1); range.value = '0';
+      range.setAttribute('aria-label', 'Replay timeline');
+      var log = el('div', 'ohsm-log');
+      function render() {
+        var k = parseInt(range.value, 10);
+        log.innerHTML = '';
+        for (var i = 0; i <= k; i++) {
+          var e = events[i];
+          logLine(log, '<span style="color:' + TOKENS.textMuted + '">' + e[0] + '</span>  ' + esc(e[1]) + '  <span class="ohsm-hi">[' + e[2] + ']</span>');
+        }
+        logLine(log, '<span style="color:' + TOKENS.textMuted + '">entry ' + (k + 1) + '/' + events.length + ' \u00b7 immutable \u00b7 replayable</span>');
+      }
+      range.addEventListener('input', render);
+      root.appendChild(range); root.appendChild(log);
+      render();
+      return function () {};
+    },
+
+    /* MAN Mode — a real approval checkpoint: approve / reject / escalate */
+    manmode: function (root) {
+      root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
+      var card = el('div', '', '<div style="border:1px solid ' + TOKENS.orange + ';border-radius:10px;padding:11px 13px;margin-bottom:10px">' +
+        '<div style="font-family:\'Space Mono\',monospace;font-size:9px;letter-spacing:.18em;color:' + TOKENS.orangeLight + '">HIGH-RISK ACTION \u00b7 PAUSED AT CHECKPOINT</div>' +
+        '<div style="font-size:13.5px;margin-top:6px;color:' + TOKENS.text + '">Agent requests: wire transfer of $48,000 \u2014 above the approval threshold.</div></div>');
+      var grid = el('div', 'ohsm-dgrid');
+      var log = el('div', 'ohsm-log');
+      function decide(label, line, cls) {
+        grid.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+        logLine(log, cls === 'ok'
+          ? '<span class="ohsm-ok">\u2713 ' + label + '</span> \u2014 ' + line
+          : cls === 'bad'
+            ? '<span class="ohsm-bad">\u2715 ' + label + '</span> \u2014 ' + line
+            : '<span class="ohsm-hi">\u2191 ' + label + '</span> \u2014 ' + line);
+        logLine(log, 'Recorded with full traceability: who, what, when, why. (EU AI Act Art. 14 oversight)');
+        var again = el('button', 'ohsm-dbtn', 'New request');
+        again.addEventListener('click', function () {
+          log.innerHTML = ''; again.remove();
+          grid.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+        });
+        log.appendChild(again);
+      }
+      [['Approve', 'transfer released, action resumes', 'ok'],
+       ['Reject', 'action cancelled, agent notified', 'bad'],
+       ['Escalate', 'routed to a senior approver', 'hi']].forEach(function (d) {
+        var b = el('button', 'ohsm-dbtn', d[0]);
+        b.addEventListener('click', function () { decide(d[0], d[1], d[2]); });
+        grid.appendChild(b);
+      });
+      root.appendChild(card); root.appendChild(grid); root.appendChild(log);
+      logLine(log, 'The AI waits. You decide.');
+      return function () {};
+    },
+
+    /* BYOM — swap the model, keep the workflow */
+    byom: function (root) {
+      root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
+      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:10px">Switch AI providers. Watch the workflow stay identical.</div>'));
+      var providers = ['Claude', 'GPT', 'Gemini', 'Llama'];
+      var grid = el('div', 'ohsm-dgrid');
+      var p = pipeline(['INTAKE', 'POLICY', 'MODEL: CLAUDE', 'AUDIT']);
+      p.nodes.forEach(function (n) { n.classList.add('ohsm-pass'); });
+      var log = el('div', 'ohsm-log');
+      var swaps = 0;
+      providers.forEach(function (name, i) {
+        var b = el('button', 'ohsm-dbtn' + (i === 0 ? ' ohsm-sel' : ''), name);
+        b.addEventListener('click', function () {
+          grid.querySelectorAll('button').forEach(function (x) { x.classList.remove('ohsm-sel'); });
+          b.classList.add('ohsm-sel');
+          p.nodes[2].textContent = 'MODEL: ' + name.toUpperCase();
+          swaps++;
+          log.innerHTML = '';
+          logLine(log, '<span class="ohsm-ok">\u2713</span> Provider switched to <span class="ohsm-hi">' + name + '</span>');
+          logLine(log, 'Workflow rebuilt: <span class="ohsm-ok">0 lines</span> \u00b7 governance unchanged \u00b7 lock-in: <span class="ohsm-ok">none</span>' + (swaps > 2 ? ' \u00b7 (switch as often as you like)' : ''));
+        });
+        grid.appendChild(b);
+      });
+      root.appendChild(grid); root.appendChild(p.wrap); root.appendChild(log);
+      logLine(log, 'Your governance layer outlives any single AI vendor.');
+      return function () {};
+    },
+
+    /* SkillForge — install governed skills into the registry */
+    skillforge: function (root) {
+      root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
+      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:10px">Install expert OmniSkills. Each one arrives already governed.</div>'));
+      var skills = [['quarter-close', 'Financial close automation'], ['contract-review', 'Legal clause analysis'], ['churn-radar', 'Customer risk detection']];
+      var count = el('div', '', '<span style="font-family:\'Space Mono\',monospace;font-size:10px;letter-spacing:.14em;color:' + TOKENS.textMuted + '">GOVERNED REGISTRY \u00b7 <span id="ohsm-sk-n" style="color:' + TOKENS.orangeLight + '">0</span> INSTALLED</span>');
+      var list = el('div');
+      var installed = 0;
+      skills.forEach(function (s) {
+        var row = el('div', 'ohsm-toggle');
+        row.appendChild(el('span', '', '<b style="color:' + TOKENS.text + ';font-weight:600;font-family:\'Space Mono\',monospace;font-size:11px">' + s[0] + '</b><br><span style="font-size:11px;color:' + TOKENS.textMuted + '">' + s[1] + '</span>'));
+        var b = el('button', 'ohsm-dbtn', 'Install');
+        b.addEventListener('click', function () {
+          b.disabled = true; b.textContent = '\u2713 Installed \u00b7 governed';
+          b.style.color = TOKENS.success; b.style.borderColor = TOKENS.success;
+          installed++;
+          var n = count.querySelector('#ohsm-sk-n'); if (n) n.textContent = String(installed);
+        });
+        row.appendChild(b);
+        list.appendChild(row);
+      });
+      root.appendChild(count); root.appendChild(list);
+      root.appendChild(el('div', 'ohsm-log', 'Forge your own, install from the library, govern them all \u2014 same rules, same audit, same rollback.'));
+      return function () {};
+    },
+
+    /* Telemetry — live ticking operational metrics + sparkline */
+    telemetry: function (root) {
+      root.appendChild(el('div', 'ohsm-dl', '<b>LIVE VIEW</b><span>SIMULATED PREVIEW</span>'));
+      var wrap = el('div');
+      function metric(k) {
+        var m = el('div', 'ohsm-metric', '<span class="ohsm-mk">' + k + '</span><span class="ohsm-mv">\u2014</span>');
+        wrap.appendChild(m);
+        return m.querySelector('.ohsm-mv');
+      }
+      var vAgents = metric('Agents active');
+      var vTasks = metric('Tasks / min');
+      var vLat = metric('p95 latency');
+      var vPol = metric('Policy checks (24h)');
+      var spark = el('canvas', 'ohsm-spark');
+      spark.width = 360; spark.height = 36;
+      var hist = []; for (var i = 0; i < 48; i++) hist.push(40 + Math.random() * 30);
+      var pol = 18432;
+      function tick() {
+        var agents = 22 + Math.round(Math.random() * 4);
+        var tasks = 38 + Math.round(Math.random() * 26);
+        hist.push(tasks); hist.shift();
+        pol += Math.round(Math.random() * 9);
+        vAgents.textContent = String(agents);
+        vTasks.textContent = String(tasks);
+        vLat.textContent = (180 + Math.round(Math.random() * 90)) + ' ms';
+        vPol.textContent = pol.toLocaleString();
+        var g = spark.getContext('2d');
+        g.clearRect(0, 0, spark.width, spark.height);
+        g.strokeStyle = TOKENS.orangeLight; g.lineWidth = 1.6; g.beginPath();
+        hist.forEach(function (v, i2) {
+          var x = (i2 / (hist.length - 1)) * spark.width;
+          var y = spark.height - ((v - 30) / 50) * spark.height;
+          i2 ? g.lineTo(x, y) : g.moveTo(x, y);
+        });
+        g.stroke();
+      }
+      tick();
+      var iv = setInterval(tick, 1100);
+      root.appendChild(wrap); root.appendChild(spark);
+      root.appendChild(el('div', 'ohsm-log', 'Every agent. Every workflow. One real-time surface \u2014 with role-enforced visibility.'));
+      return function () { clearInterval(iv); };
+    },
+
+    /* PhysiOmni — send a governed command to a physical system */
+    physiomni: function (root) {
+      root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
+      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:10px">Command a robot through the same governed pipeline as your software agents.</div>'));
+      var p = pipeline(['INGRESS', 'GOVERN', 'ACTION']);
+      var grid = el('div', 'ohsm-dgrid');
+      var log = el('div', 'ohsm-log');
+      var timers = [];
+      [['Pick &amp; place unit 7', false], ['Run warehouse sweep', false], ['Override safety stop', true]].forEach(function (d) {
+        var b = el('button', 'ohsm-dbtn'); b.innerHTML = d[0];
+        b.addEventListener('click', function () {
+          p.nodes.forEach(function (n) { n.classList.remove('ohsm-go', 'ohsm-pass', 'ohsm-block'); });
+          log.innerHTML = '';
+          logLine(log, 'Command \u2192 physical system\u2026');
+          timers.push(setTimeout(function () {
+            p.nodes[0].classList.add('ohsm-pass');
+            logLine(log, '<span class="ohsm-ok">\u2713</span> Ingress: telemetry verified, device authenticated');
+          }, 220));
+          timers.push(setTimeout(function () {
+            if (d[1]) {
+              p.nodes[1].classList.add('ohsm-block');
+              logLine(log, '<span class="ohsm-bad">\u2715 Governed: blocked.</span> Safety overrides require Manual Approval Node sign-off.');
+            } else {
+              p.nodes[1].classList.add('ohsm-pass');
+              logLine(log, '<span class="ohsm-ok">\u2713</span> Governed: within policy, action authorized');
+              timers.push(setTimeout(function () {
+                p.nodes[2].classList.add('ohsm-pass');
+                logLine(log, '<span class="ohsm-ok">\u2713</span> Action executed \u2014 logged, traceable, reversible. Same rules beyond the screen.');
+              }, 460));
+            }
+          }, 640));
+        });
+        grid.appendChild(b);
+      });
+      root.appendChild(grid); root.appendChild(p.wrap); root.appendChild(log);
+      return function () { timers.forEach(clearTimeout); };
+    }
+  };
+
+  /* ============================================================
+   * 6. OVERLAY (the map experience)
+   * ============================================================ */
+  function Overlay(opts) {
+    var self = this;
+    this.opts = opts;
+    this.current = -1;
+    this.visited = {};
+    this.demoCleanup = null;
+    this.raf = 0;
+    this.destroyed = false;
+    this.three = null;
+
+    var o = el('div', 'ohsm-overlay');
+    o.setAttribute('role', 'dialog');
+    o.setAttribute('aria-label', 'OmniHub platform capability map');
+    this.rootEl = o;
+
+    var stage = el('canvas', 'ohsm-stage');
+    stage.setAttribute('aria-label', 'Interactive map of OmniHub platform capabilities');
+    o.appendChild(stage);
+    this.stage = stage;
+    o.appendChild(el('div', 'ohsm-vig'));
+    this.streaks = el('div', 'ohsm-streaks'); o.appendChild(this.streaks);
+    this.flash = el('div', 'ohsm-flash'); o.appendChild(this.flash);
+
+    // top chrome — brand wordmark + exit
+    var top = el('div', 'ohsm-top');
+    var brand = el('div', '');
+    brand.innerHTML = '<img src="https://apexomnihub.icu/apex-omnihub-wordmark.svg" alt="APEX OmniHub" ' +
+      'onerror="this.outerHTML=\'<div style=&quot;font-weight:700;font-size:15px;letter-spacing:.08em&quot;>APEX OMNIHUB</div>\'">' +
+      '<div class="ohsm-brandsub">PLATFORM CAPABILITIES \u00b7 INTERACTIVE</div>';
+    top.appendChild(brand);
+    var exit = el('button', 'ohsm-exit', '\u2715 &nbsp;CLOSE');
+    exit.addEventListener('click', function () { self.close(); });
+    top.appendChild(exit);
+    o.appendChild(top);
+
+    // labels host + hint
+    this.labelsHost = el('div'); o.appendChild(this.labelsHost);
+    o.appendChild(el('div', 'ohsm-hintline', 'DRAG TO LOOK \u00b7 CLICK A POINT TO JUMP \u00b7 ARROW KEYS WORK TOO'));
+
+    // dock
+    var dock = el('nav', 'ohsm-dock');
+    dock.setAttribute('aria-label', 'Capabilities');
+    this.prevBtn = el('button', 'ohsm-step', '\u25c2'); dock.appendChild(this.prevBtn);
+    this.dots = el('div', 'ohsm-dots'); dock.appendChild(this.dots);
+    this.nextBtn = el('button', 'ohsm-step', '\u25b8'); dock.appendChild(this.nextBtn);
+    CAPS.forEach(function (c, i) {
+      var d = el('button', 'ohsm-dot'); d.title = c.name;
+      d.setAttribute('aria-label', (i + 1) + '. ' + c.name);
+      d.addEventListener('click', function () { self.travelTo(i); });
+      self.dots.appendChild(d);
+    });
+    this.prevBtn.addEventListener('click', function () { if (self.current > 0) self.travelTo(self.current - 1); });
+    this.nextBtn.addEventListener('click', function () { if (self.current < CAPS.length - 1) self.travelTo(self.current + 1); });
+    o.appendChild(dock);
+
+    // panel
+    var panel = el('aside', 'ohsm-panel');
+    panel.setAttribute('aria-live', 'polite');
+    this.panel = panel;
+    this.pe = el('div', 'ohsm-pe', '<span></span><span class="ohsm-petag"></span>'); panel.appendChild(this.pe);
+    this.pTitle = el('h3'); panel.appendChild(this.pTitle);
+    this.pLead = el('p', 'ohsm-lead'); panel.appendChild(this.pLead);
+    this.chipsWrap = el('div', 'ohsm-chips',
+      '<div class="ohsm-cl"><span class="ohsm-okdot"></span><span>VERIFIED \u00b7 APEXOMNIHUB.ICU</span></div><ul></ul>');
+    panel.appendChild(this.chipsWrap);
+    this.demoHost = el('div', 'ohsm-demo'); panel.appendChild(this.demoHost);
+    var actions = el('div', 'ohsm-actions');
+    this.goBtn = el('button', 'ohsm-btn ohsm-btn-primary', 'NEXT \u25b8');
+    this.tryBtn = el('button', 'ohsm-btn ohsm-btn-ghost', 'TRY IT');
+    actions.appendChild(this.goBtn); actions.appendChild(this.tryBtn);
+    panel.appendChild(actions);
+    o.appendChild(panel);
+
+    this.goBtn.addEventListener('click', function () {
+      if (self.current >= CAPS.length - 1) { self.finale.classList.add('ohsm-show'); self.hidePanel(); }
+      else self.travelTo(self.current + 1);
+    });
+    this.tryBtn.addEventListener('click', function () { self.toggleDemo(); });
+
+    // finale
+    var fin = el('div', 'ohsm-finale');
+    fin.innerHTML =
+      '<div class="ohsm-fcard">' +
+      '<div class="ohsm-eyebrow">EARLY ACCESS</div>' +
+      '<h3>Move beyond<br><em>black-box AI.</em></h3>' +
+      '<p>Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production \u2014 authorized, logged, and reversible.</p>' +
+      '<div class="ohsm-ctas">' +
+      '<a class="ohsm-btn ohsm-btn-primary" target="_blank" rel="noopener">REQUEST EARLY ACCESS \u25b8</a>' +
+      '<a class="ohsm-btn ohsm-btn-ghost" target="_blank" rel="noopener">WATCH THE MAESTRO DEMO</a>' +
+      '<button class="ohsm-btn ohsm-btn-ghost" data-ohsm-replay>START OVER</button>' +
+      '</div>' +
+      '<div class="ohsm-proof">SOC 2 ALIGNED \u00b7 EU AI ACT ART. 14 \u00b7 GDPR ART. 30<br>TRUSTED IN REGULATED INDUSTRIES</div>' +
+      '</div>';
+    fin.querySelector('.ohsm-btn-primary').setAttribute('href', safeHref(opts.ctaHref));
+    fin.querySelector('.ohsm-btn-ghost').setAttribute('href', safeHref(opts.demoHref));
+    this.finale = fin;
+    fin.querySelector('[data-ohsm-replay]').addEventListener('click', function () {
+      fin.classList.remove('ohsm-show'); self.visited = {}; self.travelTo(0, true);
+    });
+    o.appendChild(fin);
+
+    // keyboard
+    this.keyHandler = function (e) {
+      if (e.key === 'Escape') self.close();
+      if (e.key === 'ArrowRight' && self.current < CAPS.length - 1) self.travelTo(self.current + 1);
+      if (e.key === 'ArrowLeft' && self.current > 0) self.travelTo(self.current - 1);
+    };
+    document.addEventListener('keydown', this.keyHandler);
+
+    document.body.appendChild(o);
+    this.prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(function () { o.classList.add('ohsm-on'); });
+
+    // boot 3D (with graceful fallback)
+    loadThree(opts.threeSrc).then(function (THREE) {
+      if (self.destroyed) return;
+      try { self.init3D(THREE); } catch (err) { self.initFallback(); }
+    }).catch(function () { if (!self.destroyed) self.initFallback(); });
+  }
+
+  Overlay.prototype.initFallback = function () {
+    // No WebGL / script blocked: same content, list navigation, demos intact.
+    this.stage.style.display = 'none';
+    var fb = el('div', 'ohsm-fallback');
+    var wrap = el('div', 'ohsm-fwrap');
+    wrap.appendChild(el('div', 'ohsm-eyebrow', 'PLATFORM CAPABILITIES'));
+    fb.appendChild(wrap);
+    this.rootEl.insertBefore(fb, this.rootEl.firstChild.nextSibling);
+    this.fallback = true;
+    this.travelTo(0, true);
+  };
+
+  Overlay.prototype.init3D = function (THREE) {
+    var self = this;
+    var renderer = new THREE.WebGLRenderer({ canvas: this.stage, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    var scene = new THREE.Scene();
+    scene.background = new THREE.Color(TOKENS.bg);
+    scene.fog = new THREE.FogExp2(0x060a13, 0.0014);
+    var camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 5000);
+
+    function radialTexture(stops, size) {
+      size = size || 256;
+      var c = document.createElement('canvas'); c.width = c.height = size;
+      var g = c.getContext('2d');
+      var grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      stops.forEach(function (s) { grad.addColorStop(s[0], s[1]); });
+      g.fillStyle = grad; g.fillRect(0, 0, size, size);
+      return new THREE.CanvasTexture(c);
+    }
+    // brand-true glow palette: burnt orange core, navy-cool dust
+    var coreTex = radialTexture([[0, 'rgba(248,250,252,1)'], [0.18, 'rgba(255,228,205,.95)'], [0.42, 'rgba(234,124,68,.45)'], [1, 'rgba(196,87,28,0)']]);
+    var haloTex = radialTexture([[0, 'rgba(234,124,68,.5)'], [0.4, 'rgba(196,87,28,.15)'], [1, 'rgba(196,87,28,0)']], 512);
+    var moteTex = radialTexture([[0, 'rgba(248,250,252,1)'], [0.35, 'rgba(234,170,120,.8)'], [1, 'rgba(196,87,28,0)']], 64);
+    var dustTex = radialTexture([[0, 'rgba(248,250,252,.9)'], [1, 'rgba(148,163,184,0)']], 32);
+
+    function starLayer(count, spread, size, opacity, tint) {
+      var geo = new THREE.BufferGeometry();
+      var pos = new Float32Array(count * 3);
+      for (var i = 0; i < count; i++) {
+        pos[i * 3] = (Math.random() - 0.5) * spread;
+        pos[i * 3 + 1] = (Math.random() - 0.5) * spread * 0.6;
+        pos[i * 3 + 2] = (Math.random() - 0.5) * spread - 280;
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+        size: size, map: dustTex, color: tint, transparent: true, opacity: opacity,
+        depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true
+      })));
+    }
+    starLayer(2800, 1900, 1.6, .8, 0xe2e8f0);   // slate-white
+    starLayer(1900, 1400, 2.6, .5, 0xeab18a);   // warm brand dust
+    starLayer(1000, 1000, 4.0, .28, 0x94a3b8);  // muted slate
+
+    var nebTex = radialTexture([[0, 'rgba(196,87,28,.09)'], [0.5, 'rgba(30,41,59,.10)'], [1, 'rgba(0,0,0,0)']], 512);
+    for (var n = 0; n < 9; n++) {
+      var nm = new THREE.SpriteMaterial({ map: nebTex, transparent: true, opacity: .5, depthWrite: false, blending: THREE.AdditiveBlending });
+      var ns = new THREE.Sprite(nm);
+      var s = 240 + Math.random() * 360;
+      ns.scale.set(s, s, 1);
+      ns.position.set((Math.random() - .5) * 740, (Math.random() - .5) * 280, -100 - Math.random() * 560);
+      scene.add(ns);
+    }
+
+    var starObjects = [];
+    var group = new THREE.Group(); scene.add(group);
+    CAPS.forEach(function (c, idx) {
+      var p = new THREE.Vector3(c.pos[0], c.pos[1], c.pos[2]);
+      var core = new THREE.Sprite(new THREE.SpriteMaterial({ map: coreTex, color: 0xea7c44, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+      core.scale.setScalar(7 * c.size); core.position.copy(p); core.userData.idx = idx; group.add(core);
+      var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex, color: 0xc4571c, transparent: true, opacity: .8, depthWrite: false, blending: THREE.AdditiveBlending }));
+      halo.scale.setScalar(22 * c.size); halo.position.copy(p); group.add(halo);
+      var motes = [];
+      c.chips.forEach(function (_, bi) {
+        var m = new THREE.Sprite(new THREE.SpriteMaterial({ map: moteTex, color: 0xf8e8da, transparent: true, opacity: .95, depthWrite: false, blending: THREE.AdditiveBlending }));
+        m.scale.setScalar(1.6);
+        m.userData = { angle: (bi / Math.max(1, c.chips.length)) * Math.PI * 2, radius: 6.5 * c.size + (bi % 3) * 1.8, speed: 0.18 + (bi % 4) * 0.045, tilt: (bi % 2 ? 1 : -1) * (0.3 + 0.12 * (bi % 3)) };
+        group.add(m); motes.push(m);
+      });
+      starObjects.push({ core: core, halo: halo, motes: motes, cap: c, basePos: p });
+    });
+
+    (function () {
+      var pts = CAPS.map(function (c) { return new THREE.Vector3(c.pos[0], c.pos[1], c.pos[2]); });
+      scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({ color: 0xc4571c, transparent: true, opacity: .15 })));
+    })();
+
+    // transition tunnel
+    var WARP_COUNT = 420;
+    var warpGeo = new THREE.BufferGeometry();
+    var warpPos = new Float32Array(WARP_COUNT * 2 * 3);
+    var seed = [];
+    for (var w = 0; w < WARP_COUNT; w++) {
+      var ang = Math.random() * Math.PI * 2, rad = 4 + Math.random() * 36;
+      seed.push({ x: Math.cos(ang) * rad, y: Math.sin(ang) * rad, z: -Math.random() * 160 - 10, len: 6 + Math.random() * 22 });
+    }
+    warpGeo.setAttribute('position', new THREE.BufferAttribute(warpPos, 3));
+    var warpMat = new THREE.LineBasicMaterial({ color: 0xf3c9a8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    var warpLines = new THREE.LineSegments(warpGeo, warpMat);
+    warpLines.frustumCulled = false;
+    camera.add(warpLines); scene.add(camera);
+
+    // labels
+    var labelEls = CAPS.map(function (c, i) {
+      var le = el('div', 'ohsm-label', '<span class="ohsm-ln">' + pad(i + 1) + '</span> ' + c.name);
+      self.labelsHost.appendChild(le);
+      return le;
+    });
+
+    var rig = { target: new THREE.Vector3(0, 2, 0), yaw: 0.35, pitch: 0.12, dist: 26, yawV: 0, pitchV: 0 };
+    var trans = { active: false, t: 0, dur: 2.2, from: null, to: null, fromT: null, toT: null, onDone: null };
+    function offsetFor(c) { return 16 + c.size * 9; }
+    function applyRig() {
+      camera.position.set(
+        rig.target.x + rig.dist * Math.sin(rig.yaw) * Math.cos(rig.pitch),
+        rig.target.y + rig.dist * Math.sin(rig.pitch),
+        rig.target.z + rig.dist * Math.cos(rig.yaw) * Math.cos(rig.pitch));
+      camera.lookAt(rig.target);
+    }
+    function ease(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+
+    this.three = {
+      jump: function (idx) {
+        var c = CAPS[idx];
+        rig.target.set(c.pos[0], c.pos[1], c.pos[2]);
+        rig.dist = offsetFor(c); rig.yaw = 0.35; rig.pitch = 0.12;
+        applyRig();
+      },
+      fly: function (idx, done) {
+        var c = CAPS[idx];
+        var toT = new THREE.Vector3(c.pos[0], c.pos[1], c.pos[2]);
+        trans.active = true; trans.t = 0;
+        trans.fromT = rig.target.clone(); trans.toT = toT;
+        trans.from = camera.position.clone();
+        var aD = offsetFor(c);
+        trans.to = new THREE.Vector3(
+          toT.x + aD * Math.sin(0.35) * Math.cos(0.12),
+          toT.y + aD * Math.sin(0.12),
+          toT.z + aD * Math.cos(0.35) * Math.cos(0.12));
+        trans.dur = 1.8 + Math.min(1.3, trans.from.distanceTo(trans.to) * 0.004);
+        trans.onDone = function () {
+          rig.yaw = 0.35; rig.pitch = 0.12; rig.dist = aD; rig.target.copy(toT);
+          done();
+        };
+      },
+      busy: function () { return trans.active; }
+    };
+
+    // pointer controls
+    var dragging = false, lastX = 0, lastY = 0, moved = 0;
+    var raycaster = new THREE.Raycaster();
+    var pointer = new THREE.Vector2();
+    function pdown(x, y) { dragging = true; moved = 0; lastX = x; lastY = y; self.stage.classList.add('ohsm-drag'); }
+    function pmove(x, y) {
+      if (!dragging) return;
+      var dx = x - lastX, dy = y - lastY; lastX = x; lastY = y;
+      moved += Math.abs(dx) + Math.abs(dy);
+      rig.yawV -= dx * 0.0035; rig.pitchV += dy * 0.0028;
+    }
+    function pup(x, y) {
+      self.stage.classList.remove('ohsm-drag');
+      if (dragging && moved < 6 && self.current >= 0 && !trans.active) {
+        pointer.x = (x / window.innerWidth) * 2 - 1;
+        pointer.y = -(y / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        var hits = raycaster.intersectObjects(starObjects.map(function (s) { return s.core; }));
+        if (hits.length) self.travelTo(hits[0].object.userData.idx);
+      }
+      dragging = false;
+    }
+    var L = this.listeners = [];
+    function on(t, ev, fn, op) { t.addEventListener(ev, fn, op); L.push([t, ev, fn]); }
+    on(this.stage, 'mousedown', function (e) { pdown(e.clientX, e.clientY); });
+    on(window, 'mousemove', function (e) { pmove(e.clientX, e.clientY); });
+    on(window, 'mouseup', function (e) { pup(e.clientX, e.clientY); });
+    on(this.stage, 'touchstart', function (e) { var t = e.touches[0]; pdown(t.clientX, t.clientY); }, { passive: true });
+    on(this.stage, 'touchmove', function (e) { var t = e.touches[0]; pmove(t.clientX, t.clientY); }, { passive: true });
+    on(this.stage, 'touchend', function (e) { var t = e.changedTouches[0]; pup(t.clientX, t.clientY); }, { passive: true });
+    on(this.stage, 'wheel', function (e) {
+      if (self.current < 0 || trans.active) return;
+      rig.dist = Math.min(72, Math.max(10, rig.dist + e.deltaY * 0.02));
+    }, { passive: true });
+    on(window, 'resize', function () {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    var clock = new THREE.Clock();
+    var tmp = new THREE.Vector3();
+    function frame() {
+      if (self.destroyed) return;
+      self.raf = requestAnimationFrame(frame);
+      var dt = Math.min(clock.getDelta(), 0.05);
+      var t = clock.elapsedTime;
+
+      starObjects.forEach(function (s, si) {
+        var pulse = 1 + Math.sin(t * 1.4 + si * 1.7) * 0.06;
+        s.core.scale.setScalar(7 * s.cap.size * pulse);
+        s.halo.scale.setScalar(22 * s.cap.size * (1 + Math.sin(t * 0.9 + si) * 0.05));
+        s.halo.material.opacity = (si === self.current ? 0.95 : 0.5) + Math.sin(t * 1.1 + si) * 0.08;
+        s.motes.forEach(function (m) {
+          var u = m.userData; u.angle += u.speed * dt;
+          m.position.set(
+            s.basePos.x + Math.cos(u.angle) * u.radius,
+            s.basePos.y + Math.sin(u.angle) * u.radius * u.tilt,
+            s.basePos.z + Math.sin(u.angle) * u.radius * 0.55);
+        });
+      });
+
+      var strength = 0;
+      if (trans.active) {
+        trans.t += dt / trans.dur;
+        var k = Math.min(trans.t, 1), e2 = ease(k);
+        camera.position.lerpVectors(trans.from, trans.to, e2);
+        tmp.lerpVectors(trans.fromT, trans.toT, Math.min(1, e2 * 1.15));
+        camera.lookAt(tmp);
+        strength = Math.sin(k * Math.PI);
+        camera.fov = 62 + strength * 32;
+        camera.updateProjectionMatrix();
+        if (k >= 1) {
+          trans.active = false; strength = 0;
+          camera.fov = 62; camera.updateProjectionMatrix();
+          if (trans.onDone) trans.onDone();
+        }
+      } else if (self.current >= 0) {
+        rig.yaw += rig.yawV; rig.pitch += rig.pitchV;
+        rig.yawV *= 0.90; rig.pitchV *= 0.90;
+        rig.pitch = Math.max(-1.1, Math.min(1.1, rig.pitch));
+        if (!dragging) rig.yaw += dt * 0.03;
+        applyRig();
+      }
+
+      warpMat.opacity = strength * 0.8;
+      if (strength > 0.01) {
+        for (var i = 0; i < WARP_COUNT; i++) {
+          var s2 = seed[i];
+          s2.z += dt * (140 + strength * 620);
+          if (s2.z > 6) s2.z -= 180;
+          var len = s2.len * strength;
+          warpPos[i * 6] = s2.x; warpPos[i * 6 + 1] = s2.y; warpPos[i * 6 + 2] = s2.z;
+          warpPos[i * 6 + 3] = s2.x; warpPos[i * 6 + 4] = s2.y; warpPos[i * 6 + 5] = s2.z - len;
+        }
+        warpGeo.attributes.position.needsUpdate = true;
+      }
+      self.flash.style.opacity = strength * 0.85;
+      self.streaks.style.opacity = strength * 0.75;
+
+      starObjects.forEach(function (s, si) {
+        var le = labelEls[si];
+        tmp.copy(s.basePos).project(camera);
+        var behind = tmp.z > 1;
+        var x = (tmp.x * 0.5 + 0.5) * window.innerWidth;
+        var y = (-tmp.y * 0.5 + 0.5) * window.innerHeight;
+        var dd = camera.position.distanceTo(s.basePos);
+        var vis = !behind && !trans.active && self.current >= 0 && dd < 180 && si !== self.current;
+        le.classList.toggle('ohsm-vis', vis);
+        if (vis) { le.style.left = x + 'px'; le.style.top = y + 'px'; }
+      });
+
+      renderer.render(scene, camera);
+    }
+    frame();
+    this.renderer = renderer;
+    this.travelTo(0, true);
+  };
+
+  Overlay.prototype.refreshDock = function () {
+    var kids = this.dots.children;
+    for (var i = 0; i < kids.length; i++) {
+      kids[i].classList.toggle('ohsm-here', i === this.current);
+      kids[i].classList.toggle('ohsm-seen', !!this.visited[i] && i !== this.current);
+    }
+    this.prevBtn.disabled = this.current <= 0;
+    this.nextBtn.disabled = this.current >= CAPS.length - 1;
+  };
+
+  Overlay.prototype.showPanel = function (idx) {
+    var c = CAPS[idx];
+    this.pe.children[0].textContent = 'CAPABILITY ' + pad(idx + 1) + ' / ' + pad(CAPS.length);
+    this.pe.children[1].textContent = c.tag;
+    this.pTitle.textContent = c.name;
+    this.pLead.textContent = c.lead;
+    var ul = this.chipsWrap.querySelector('ul');
+    ul.innerHTML = '';
+    if (c.chips.length) {
+      this.chipsWrap.style.display = '';
+      c.chips.forEach(function (chip) { ul.appendChild(el('li', '', esc(chip))); });
+    } else this.chipsWrap.style.display = 'none';
+    this.closeDemo();
+    if (c.demo && DEMOS[c.demo]) {
+      this.tryBtn.style.display = '';
+    } else this.tryBtn.style.display = 'none';
+    if (idx >= CAPS.length - 1) {
+      this.goBtn.textContent = 'REQUEST EARLY ACCESS \u25b8';
+    } else {
+      this.goBtn.textContent = 'NEXT: ' + CAPS[idx + 1].name.toUpperCase() + ' \u25b8';
+    }
+    this.panel.classList.add('ohsm-show');
+  };
+  Overlay.prototype.hidePanel = function () { this.panel.classList.remove('ohsm-show'); };
+
+  Overlay.prototype.toggleDemo = function () {
+    if (this.demoHost.classList.contains('ohsm-open')) { this.closeDemo(); return; }
+    var c = CAPS[this.current];
+    if (!c || !c.demo || !DEMOS[c.demo]) return;
+    this.demoHost.innerHTML = '';
+    this.demoCleanup = DEMOS[c.demo](this.demoHost) || null;
+    this.demoHost.classList.add('ohsm-open');
+    this.tryBtn.textContent = 'CLOSE DEMO';
+  };
+  Overlay.prototype.closeDemo = function () {
+    if (this.demoCleanup) { try { this.demoCleanup(); } catch (e) {} this.demoCleanup = null; }
+    this.demoHost.classList.remove('ohsm-open');
+    this.demoHost.innerHTML = '';
+    this.tryBtn.textContent = 'TRY IT';
+  };
+
+  Overlay.prototype.travelTo = function (idx, instant) {
+    var self = this;
+    if (this.three && this.three.busy()) return;
+    if (idx === this.current && !instant) { this.showPanel(idx); return; }
+    this.hidePanel();
+    this.finale.classList.remove('ohsm-show');
+    var arrive = function () {
+      self.current = idx; self.visited[idx] = true;
+      self.refreshDock();
+      setTimeout(function () { self.showPanel(idx); }, self.fallback ? 0 : 220);
+    };
+    if (this.fallback || REDUCED || instant || this.current === -1 || !this.three) {
+      if (this.three) this.three.jump(idx);
+      arrive();
+    } else {
+      this.refreshDock();
+      this.three.fly(idx, arrive);
+    }
+  };
+
+  Overlay.prototype.close = function () {
+    var self = this;
+    if (this.destroyed) return;
+    this.destroyed = true;
+    this.closeDemo();
+    cancelAnimationFrame(this.raf);
+    document.removeEventListener('keydown', this.keyHandler);
+    (this.listeners || []).forEach(function (l) { l[0].removeEventListener(l[1], l[2]); });
+    if (this.renderer) { try { this.renderer.dispose(); } catch (e) {} }
+    document.body.style.overflow = this.prevOverflow || '';
+    this.rootEl.classList.remove('ohsm-on');
+    setTimeout(function () { if (self.rootEl.parentNode) self.rootEl.parentNode.removeChild(self.rootEl); }, 480);
+  };
+
+  /* ============================================================
+   * 7. LANDING-PAGE SECTION (the entry point)
+   * ============================================================ */
+  function renderSection(host, opts) {
+    host.classList.add('ohsm-section');
+    host.innerHTML = '';
+
+    // ambient teaser starfield (2D canvas — zero deps, paused offscreen)
+    var teaser = el('canvas', 'ohsm-teaser-stars');
+    host.appendChild(teaser);
+    var stars = [];
+    function sizeTeaser() {
+      teaser.width = host.clientWidth; teaser.height = host.clientHeight;
+      stars = [];
+      var count = Math.min(160, Math.floor(host.clientWidth / 7));
+      for (var i = 0; i < count; i++) {
+        stars.push({ x: Math.random() * teaser.width, y: Math.random() * teaser.height,
+          r: Math.random() * 1.4 + .3, p: Math.random() * Math.PI * 2,
+          warm: Math.random() < 0.3 });
+      }
+    }
+    sizeTeaser();
+    var running = true, tRaf = 0;
+    function drawTeaser(ts) {
+      if (!running) return;
+      tRaf = requestAnimationFrame(drawTeaser);
+      var g = teaser.getContext('2d');
+      g.clearRect(0, 0, teaser.width, teaser.height);
+      stars.forEach(function (s) {
+        var a = REDUCED ? .5 : .3 + .45 * (0.5 + 0.5 * Math.sin(ts / 900 + s.p));
+        g.fillStyle = s.warm ? 'rgba(234,124,68,' + a + ')' : 'rgba(226,232,240,' + (a * .8) + ')';
+        g.beginPath(); g.arc(s.x, s.y, s.r, 0, Math.PI * 2); g.fill();
+      });
+    }
+    tRaf = requestAnimationFrame(drawTeaser);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        var vis = entries[0].isIntersecting;
+        if (vis && !running) { running = true; tRaf = requestAnimationFrame(drawTeaser); }
+        if (!vis && running) { running = false; cancelAnimationFrame(tRaf); }
+      }).observe(host);
+    }
+    window.addEventListener('resize', sizeTeaser);
+
+    // section content — feature-section copy, no hero repetition
+    var inner = el('div', 'ohsm-inner');
+    inner.appendChild(el('div', 'ohsm-eyebrow', 'PLATFORM MAP \u00b7 INTERACTIVE'));
+    inner.appendChild(el('h2', '', 'Every capability.<br>One map you can fly.'));
+    inner.appendChild(el('p', 'ohsm-sub',
+      'Eleven platform capabilities, laid out as an interactive 3D map. Jump between them, look around each one, and try a hands-on preview of how it works \u2014 about two minutes, end to end.'));
+    var row = el('div', 'ohsm-row');
+    var launch = el('button', 'ohsm-btn ohsm-btn-primary', 'EXPLORE THE MAP \u25b8');
+    launch.addEventListener('click', function () { new Overlay(opts); });
+    row.appendChild(launch);
+    row.appendChild(el('span', 'ohsm-meta', '3D \u00b7 INTERACTIVE \u00b7 ~2 MIN \u00b7 KEYBOARD &amp; TOUCH FRIENDLY'));
+    inner.appendChild(row);
+    host.appendChild(inner);
+  }
+
+  /* ============================================================
+   * 8. PUBLIC API + AUTO-MOUNT
+   * ============================================================ */
+  var styleInjected = false;
+  function injectStyle() {
+    if (styleInjected) return;
+    var st = document.createElement('style');
+    st.setAttribute('data-ohsm', '1');
+    st.textContent = CSS;
+    document.head.appendChild(st);
+    styleInjected = true;
+  }
+
+  window.OmniHubStarmap = {
+    version: '1.0.0',
+    mount: function (target, options) {
+      var host = typeof target === 'string' ? document.querySelector(target) : target;
+      if (!host) return null;
+      var opts = Object.assign({}, DEFAULTS, options || {});
+      injectStyle();
+      if (opts.loadFonts) ensureFonts();
+      renderSection(host, opts);
+      return host;
+    },
+    open: function (options) {
+      var opts = Object.assign({}, DEFAULTS, options || {});
+      injectStyle();
+      if (opts.loadFonts) ensureFonts();
+      return new Overlay(opts);
+    }
+  };
+
+  function auto() {
+    var nodes = document.querySelectorAll('[data-omnihub-starmap]');
+    for (var i = 0; i < nodes.length; i++) {
+      var optAttr = nodes[i].getAttribute('data-omnihub-starmap');
+      var opts = {};
+      if (optAttr) { try { opts = JSON.parse(optAttr); } catch (e) {} }
+      window.OmniHubStarmap.mount(nodes[i], opts);
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', auto);
+  else auto();
+})();

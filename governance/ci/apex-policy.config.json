@@ -106,6 +106,7 @@
     "apps/omnihub-site/dashboard/components/OmniSpatialHost.tsx",
     "apps/omnihub-site/src/components/physiomni/PhysiOmniWhiteLabelDash.tsx",
     "apps/omnihub-site/src/pages/Home.tsx",
-    "apps/omnihub-site/src/pages/RequestAccess.tsx"
+    "apps/omnihub-site/src/pages/RequestAccess.tsx",
+    "apps/omnihub-site/public/omnihub-starmap.js"
   ]
 }
