@@ -45,8 +45,11 @@ BEGIN
     WHERE schemaname = 'public' AND tablename = v_table_devices -- NOSONAR
       AND policyname = 'physiomni_devices_user_rls'
   ) THEN
+    -- physiomni_devices.tenant_id is uuid — compare uuid to uuid. The original
+    -- ::text cast raised "operator does not exist: uuid = text" and blocked
+    -- the whole migration from ever applying.
     CREATE POLICY "physiomni_devices_user_rls" ON public.physiomni_devices
       FOR SELECT TO authenticated
-      USING (tenant_id = auth.uid()::text);
+      USING (tenant_id = auth.uid());
   END IF;
 END $$;

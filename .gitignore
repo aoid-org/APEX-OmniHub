@@ -1,6 +1,10 @@
 # APEX local evidence storage
 .apex/
 
+# StarMap install artifacts (zip extraction + SSG build temp)
+omnihub-starmap-extracted/
+apps/omnihub-site/.vite-react-ssg-temp/
+
 # CDK build output
 cdk.out/
 
@@ -17,8 +21,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-!.claude/skills/**/dist/
-!.claude/skills/**/dist/**
+# Skill build artifacts (regenerate on demand with `forge.py pack`)
+.claude/skills/*/dist/
 *.local
 *.tsbuildinfo
 

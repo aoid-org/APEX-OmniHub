@@ -9,6 +9,18 @@ Purpose:
 
 This script is intentionally conservative. It does not replace human architecture review.
 
+v1.2.0 changes:
+- Positional DIRECTORY arguments are now expanded recursively (rglob) into
+  their files. Previously a directory arg silently scanned 0 files and
+  exited 0 — a neutered gate. Expanded files still pass through the normal
+  SKIP_DIRS / suffix filtering in _scan_file_errors.
+- Explicit paths that match zero scannable files are now a usage error:
+  exit 2 with a stderr message ("no scannable files matched the provided
+  paths — refusing to report a pass"). In --json mode the report is still
+  emitted on stdout with "passed": false, "files_scanned": 0 and an
+  "error" field explaining the refusal; exit code remains 2 (config/usage
+  error), distinct from exit 1 (policy violations).
+
 v1.1.0 changes:
 - Config-aware: governance/, docs/, .github/ markdown is exempt from pattern scans
   (those files DESCRIBE forbidden patterns; they should not be flagged).
@@ -25,8 +37,8 @@ import argparse
 import json
 import re
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 ROOT = Path.cwd()
 CONFIG_PATH = ROOT / "governance" / "ci" / "apex-policy.config.json"
@@ -243,6 +255,21 @@ def _scan_paths(
     return files_scanned, errors
 
 
+def _expand_paths(raw_paths: list[Path]) -> list[Path]:
+    """
+    Expand positional args: directories become their files (recursive),
+    explicit file args pass through as-is. SKIP_DIRS / suffix filtering is
+    NOT applied here — _scan_file_errors handles that downstream.
+    """
+    expanded: list[Path] = []
+    for raw in raw_paths:
+        if raw.is_dir():
+            expanded.extend(child for child in sorted(raw.rglob("*")) if child.is_file())
+        else:
+            expanded.append(raw)
+    return expanded
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="APEX policy check")
     parser.add_argument("--json", action="store_true", help="Emit JSON report on stdout")
@@ -259,7 +286,7 @@ def main() -> int:
     size_exempt_dirs: set[str] = set(config.get("size_exempt_dirs", []))
     size_exempt_paths: set[str] = set(config.get("size_exempt_paths", []))
 
-    paths_to_scan = args.files if args.files else ROOT.rglob("*")
+    paths_to_scan: Iterable[Path] = _expand_paths(args.files) if args.files else ROOT.rglob("*")
     files_scanned, errors = _scan_paths(
         paths_to_scan, args.strict_docs, forbidden_names, forbidden_patterns,
         max_module_lines, size_exempt_dirs, size_exempt_paths,
@@ -267,6 +294,25 @@ def main() -> int:
 
     if not args.files:
         errors.extend(check_rfc_completeness(ROOT, required_rfc_sections))
+
+    if args.files and files_scanned == 0:
+        # Explicit paths that match nothing scannable is a usage error, not a
+        # pass — refusing prevents a misconfigured CI invocation from silently
+        # reporting green. Exit 2 = config/usage error (see module docstring).
+        print(
+            "no scannable files matched the provided paths — refusing to report a pass",
+            file=sys.stderr,
+        )
+        if args.json:
+            report = {
+                "passed": False,
+                "files_scanned": 0,
+                "violations": [],
+                "error": "no scannable files matched the provided paths — refusing to report a pass",
+                "config_version": config.get("version", "unknown"),
+            }
+            print(json.dumps(report, indent=2))
+        return 2
 
     if args.json:
         report = {

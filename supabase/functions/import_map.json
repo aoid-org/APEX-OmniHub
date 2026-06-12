@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "zod": "https://esm.sh/zod@3.25.76"
+  }
+}

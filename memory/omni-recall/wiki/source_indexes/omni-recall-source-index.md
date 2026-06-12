@@ -2,6 +2,7 @@
 
 Last index update: 2026-05-31 (post PR #1251 merge — apex-agent unification complete)
 Superseding index update: 2026-06-01 (platform docs sync — HEAD `86bc14a`, PR #1274 + PR #1309 reconciled)
+Superseding index update: 2026-06-10 (OmniSkills/SkillForge E2E + OmniBoard dual-surface correction — branch `claude/friendly-goodall-6bb4uc` @ `e747507`; correction 004 and checkpoint 2026-06-10 added)
 
 ## Purpose
 

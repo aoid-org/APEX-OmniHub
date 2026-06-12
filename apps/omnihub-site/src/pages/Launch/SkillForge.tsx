@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Zap, ShieldCheck, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Zap, ShieldCheck, ArrowRight, CheckCircle2, Mic, MicOff } from 'lucide-react';
 import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { appendTranscript, useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 interface Step {
   id: number;
@@ -58,11 +59,29 @@ export function SkillForge() {
     trigger: '',
     constraints: '',
   });
-
   const currentStep = WIZARD_STEPS[step - 1];
   const progressWidth = (step / 3) * 100;
 
+  const { isListening, toggle: handleVoiceToggle, stop: stopVoice } = useSpeechRecognition({
+    onTranscript: (transcript) => {
+      const field = currentStep.field;
+      setFormData((previous) => ({
+        ...previous,
+        [field]: appendTranscript(previous[field], transcript),
+      }));
+    },
+    onUnsupported: () =>
+      toast.error('VOICE UNAVAILABLE', { description: 'Your browser does not support speech recognition for Skill Forge.' }),
+    onError: () =>
+      toast.error('VOICE CAPTURE FAILED', { description: 'Could not capture speech. Please retry.' }),
+  });
+
+  // Stop recognition cleanly on step change (unmount is handled by the hook).
+  useEffect(() => stopVoice, [step, stopVoice]);
+
   const handleForge = async () => {
+    stopVoice();
+
     const parsed = skillForgeRequestSchema.safeParse(formData);
     if (!parsed.success) {
       toast.error('INVALID INPUT', { description: parsed.error.issues[0]?.message ?? 'Please complete all fields.' });
@@ -183,6 +202,22 @@ export function SkillForge() {
                 rows={4}
                 className="w-full bg-black/50 border border-amber-700/30 rounded-lg px-4 py-3 text-white placeholder-amber-400/40 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
               />
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleVoiceToggle}
+                  disabled={loading}
+                  className={`flex items-center gap-2 text-sm font-semibold py-2 px-4 rounded-lg border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isListening
+                      ? 'bg-orange-500/20 border-orange-500 text-orange-300 animate-pulse'
+                      : 'bg-amber-500/10 border-amber-700/30 text-amber-300 hover:bg-amber-500/20'
+                  }`}
+                >
+                  {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  {isListening ? 'Stop voice input' : 'Use voice input'}
+                </button>
+              </div>
 
               <button
                 onClick={handleNext}

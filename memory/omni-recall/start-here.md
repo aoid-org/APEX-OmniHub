@@ -25,7 +25,7 @@ The system should:
 
 ## Last Verified Session
 
-- Date: 2026-06-02
-- HEAD: 19a5f3fe (PR #1313 fix: resolve SonarCloud code smells and e2e test failures)
-- Branch: fix/sonarqube-audit-resolutions-final
-- Key fact: PR #1313 is fully green. All SonarCloud audit resolutions are finalized and passed (A-grade). Playwright tests stabilized. CI pipeline passing successfully.
+- Date: 2026-06-10
+- HEAD: e747507 (fix(skills): correct OmniBoard scoping in apex-universal-sync-orchestrator)
+- Branch: claude/friendly-goodall-6bb4uc (main at ef0f337)
+- Key facts: `apex-universal-sync-orchestrator` skill installed at rubric 100/100. OmniBoard is dual-surface — client-facing modal + application integration layer (correction 004; "never client-facing" is retired). SkillForge generation is live Anthropic `claude-3-5-haiku-20241022` with `skill_<uuid>` names. Repo docs synced: OMNIBOARD.md, skill-forge-implementation.md, CANONICAL_TRUTH.md facts 19–20.
