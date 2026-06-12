@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import OmniHubPlatformMap from '@/components/OmniHubPlatformMap';
 import { Layout } from '@/components/Layout';
 import { SEOMeta } from '@/components/SEOMeta';
 import { StructuredData } from '@/components/StructuredData';
@@ -1016,6 +1017,10 @@ export function HomePage() {
         <GovernanceSection />
         <ReversibleSection />
         <CapabilitiesSection />
+        <OmniHubPlatformMap
+          ctaHref="/request-access"
+          demoHref="/demo"
+        />
         <MaestroSection />
         <EnterpriseSection />
         <CTASection onOpenModal={openModal} />
