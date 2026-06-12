@@ -1291,7 +1291,7 @@
     inner.appendChild(el('div', 'ohsm-eyebrow', 'PLATFORM MAP \u00b7 INTERACTIVE'));
     inner.appendChild(el('h2', '', 'Every capability.<br>One map you can fly.'));
     inner.appendChild(el('p', 'ohsm-sub',
-      'Eleven platform capabilities, laid out as an interactive 3D map. Jump between them, look around each one, and try a hands-on preview of how it works in about two minutes from start to finish.'));
+      'Eleven platform capabilities, laid out as an interactive 3D map. Jump between them, look around each one, and try a hands-on preview of how it works about two minutes, end to end.'));
     var row = el('div', 'ohsm-row');
     var launch = el('button', 'ohsm-btn ohsm-btn-primary', 'EXPLORE THE MAP \u25b8');
     launch.addEventListener('click', function () { new Overlay(opts); });
