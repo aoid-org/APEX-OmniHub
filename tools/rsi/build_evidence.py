@@ -32,7 +32,7 @@ POLICY_FILE = Path("policy/rsi-policy.yaml")
 SCHEMA_VERSION = "1.0.0"
 MAX_DIFF_SUMMARY_CHARS = 2000
 MAX_INVENTORY_CHARS = 500
-DOCS_PATTERNS = ["*.md", "*.txt", "docs/**", "*.rst", "*.adoc"]
+DOCS_PATTERNS = ["*.md", "*.txt", "docs/**", "memory/omni-recall/docs/**", "memory/omni-recall/governance/**", "memory/omni-recall/reports/**", "memory/omni-recall/apex-dataroom/**", "*.rst", "*.adoc"]
 FALLBACK_DIFF_REF = "HEAD~1"
 
 
