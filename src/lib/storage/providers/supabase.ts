@@ -456,7 +456,7 @@ export class SupabaseStorage implements IStorage {
       }
 
       return {
-        data: data.map((item) => item.signedUrl),
+        data: data.map((item) => item.signedUrl as string),
         error: null,
       }
     } catch (err) {

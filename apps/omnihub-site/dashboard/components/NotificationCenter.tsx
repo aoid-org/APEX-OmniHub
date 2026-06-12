@@ -7,7 +7,7 @@
  * @module components/omnidash/NotificationCenter
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Bell } from 'lucide-react';
 
 import { useNotificationStore, type AppNotification } from '../../src/stores/notificationStore';
+import { supabase } from '../../src/lib/supabase';
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -99,8 +100,29 @@ function NotificationItem({ n, handleApprove, handleDeny }: Readonly<{ n: AppNot
 
 export function NotificationCenter() {
   const notifications = useNotificationStore(s => s.notifications);
+  const addNotification = useNotificationStore(s => s.addNotification);
   const markAsRead = useNotificationStore(s => s.markAsRead);
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('notification-feed')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'omnilink_orchestration_requests' },
+        (payload) => {
+          const req = payload.new;
+          addNotification({
+            label: `New Orchestration Request: ${req.id.slice(0, 8)}`,
+            description: `Status: ${req.status || 'pending'}`,
+            badge: req.status === 'pending_approval' ? 'MAN_MODE' : 'INFO',
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [addNotification]);
 
   // ⚡ Bolt: Memoized pending notifications count to avoid recalculating on every re-render
   const pendingCount = useMemo(

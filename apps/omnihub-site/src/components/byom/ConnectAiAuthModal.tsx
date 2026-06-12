@@ -114,6 +114,7 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
               Provider
               <select
                 id="provider-select"
+                name="provider"
                 value={provider}
                 onChange={(e) => setProvider(e.target.value)}
                 style={{
@@ -139,6 +140,7 @@ export const ConnectAiAuthModal: React.FC<ConnectAiAuthModalProps> = ({ isOpen, 
               API Key
               <input
                 id="api-key-input"
+                name="api_key"
                 type="password"
                 required
                 value={apiKey}

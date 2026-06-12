@@ -13,6 +13,8 @@
  * does NOT rebuild automatically on env-var changes.
  */
 
+import 'dotenv/config';
+
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseClientKey =
   process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||

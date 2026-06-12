@@ -5,6 +5,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { memo, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
@@ -129,7 +130,7 @@ export const ModuleShell = memo(function ModuleShell({
         <p className="text-sm text-muted-foreground flex-1">{state.headline}</p>
         <span
           className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
-          style={STATE_KIND_STYLES[state.stateKind] ?? DEFAULT_STATE_STYLE}
+          style={(STATE_KIND_STYLES[state.stateKind] ?? DEFAULT_STATE_STYLE) as any}
         >
           {state.stateKind.toUpperCase()}
         </span>

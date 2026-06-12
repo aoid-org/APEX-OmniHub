@@ -34,41 +34,41 @@ describe('HiddenMetric', () => {
   });
 
   it('renders trigger with correct data-testid', () => {
-    wrap(<HiddenMetric icon={MockIcon} label="Memory Usage" value="72%" />);
+    wrap(<HiddenMetric icon={MockIcon as any} label="Memory Usage" value="72%" />);
     expect(screen.getByTestId('telemetry-trigger-Memory Usage')).toBeInTheDocument();
   });
 
   it('renders trigger with aria-label matching label prop', () => {
-    wrap(<HiddenMetric icon={MockIcon} label="CPU" value="45%" />);
+    wrap(<HiddenMetric icon={MockIcon as any} label="CPU" value="45%" />);
     expect(screen.getByTestId('telemetry-trigger-CPU')).toHaveAttribute('aria-label', 'CPU');
   });
 
   it('renders the icon inside the trigger', () => {
-    wrap(<HiddenMetric icon={MockIcon} label="Lat" value="12ms" />);
+    wrap(<HiddenMetric icon={MockIcon as any} label="Lat" value="12ms" />);
     expect(screen.getByTestId('mock-icon')).toBeInTheDocument();
   });
 
   it('icon has aria-hidden attribute', () => {
-    wrap(<HiddenMetric icon={MockIcon} label="X" value="v" />);
+    wrap(<HiddenMetric icon={MockIcon as any} label="X" value="v" />);
     expect(screen.getByTestId('mock-icon')).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('applies className prop to the trigger button', () => {
-    wrap(<HiddenMetric icon={MockIcon} label="Test" value="v" className="my-cls" />);
+    wrap(<HiddenMetric icon={MockIcon as any} label="Test" value="v" className="my-cls" />);
     expect(screen.getByTestId('telemetry-trigger-Test')).toHaveClass('my-cls');
   });
 
   it('renders without crashing with no optional props', () => {
     expect(() =>
-      wrap(<HiddenMetric icon={MockIcon} label="Basic" value="1" />),
+      wrap(<HiddenMetric icon={MockIcon as any} label="Basic" value="1" />),
     ).not.toThrow();
   });
 
   it('renders multiple HiddenMetric with distinct labels without conflict', () => {
     wrap(
       <>
-        <HiddenMetric icon={MockIcon} label="A" value="1" />
-        <HiddenMetric icon={MockIcon} label="B" value="2" />
+        <HiddenMetric icon={MockIcon as any} label="A" value="1" />
+        <HiddenMetric icon={MockIcon as any} label="B" value="2" />
       </>,
     );
     expect(screen.getByTestId('telemetry-trigger-A')).toBeInTheDocument();

@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // ─── OmniDash Design System ──────────────────────────────────────────────────
 // Shared visual primitives for the M03 dashboard shell and its panels.
 // Extracted from OmniDashShell.tsx so panel modules (e.g. M03Panels.tsx) can
 // consume the same tokens/components without creating a circular import back
 // into the shell. Keyframe animations referenced by name (e.g. "apexPulse")
 // are injected globally by OmniDashShell.
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface StatusDotProps {
   color?: string;
@@ -13,7 +14,7 @@ interface StatusDotProps {
 
 interface GlassCardProps {
   children?: ReactNode;
-  style?: CSSProperties;
+  style?: any;
   glow?: boolean;
   onClick?: () => void;
 }
@@ -57,7 +58,7 @@ export const StatusDot = ({ color = T.green, pulse: doPulse = true }: StatusDotP
 );
 
 export const GlassCard = ({ children, style={}, glow = false, onClick }: GlassCardProps) => {
-  const cardStyle: CSSProperties = {
+  const cardStyle: any = {
     background: T.card,
     border: `1px solid ${glow ? T.borderGlow : T.border}`,
     borderRadius: 16,

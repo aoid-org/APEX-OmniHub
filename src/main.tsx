@@ -11,6 +11,14 @@ import '../apps/omnihub-site/src/styles/omnidash-layout.css';
 // Guarded by: scripts/ci/check-pwa-integrity.mjs
 import { registerServiceWorker } from './swInit';
 
+// Global unhandled rejection guard (prevents AuthApiError from blanking the screen)
+window.addEventListener('unhandledrejection', (event) => {
+  if (event.reason?.name === 'AuthApiError' || (event.reason?.message && event.reason.message.includes('Refresh Token'))) {
+    console.warn('[APEX Global] Suppressed AuthApiError unhandled rejection:', event.reason.message);
+    event.preventDefault();
+  }
+});
+
 registerServiceWorker();
 
 const rootElement = document.getElementById('root');

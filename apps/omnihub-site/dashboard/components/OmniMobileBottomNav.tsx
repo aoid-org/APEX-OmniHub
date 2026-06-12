@@ -12,6 +12,7 @@ export type MobileTab = "home" | "slate" | "apps" | "insights" | "more";
 interface OmniMobileBottomNavProps {
   readonly activeTab: MobileTab;
   readonly setActiveTab: Dispatch<SetStateAction<MobileTab>>;
+  readonly isVisible?: boolean;
 }
 
 // ── SVG Icon Components ───────────────────────────────────────────────────────
@@ -71,32 +72,38 @@ const TABS: readonly { readonly id: MobileTab; readonly label: string }[] = [
   { id: "more",     label: "More" },
 ];
 
-export function OmniMobileBottomNav({ activeTab, setActiveTab }: OmniMobileBottomNavProps) {
+export function OmniMobileBottomNav({ activeTab, setActiveTab, isVisible = true }: OmniMobileBottomNavProps) {
   return (
-    <div
-      className="omni-mobile-bottom-nav"
-      role="tablist"
-      aria-label="Dashboard navigation"
+    <nav
+      style={{ zIndex: 100 }}
+      className={`fixed bottom-0 left-0 right-0 z-[100] md:hidden bg-[#0A0D14]/95 backdrop-blur-md border-t border-white/5 pb-safe
+        transform transition-transform duration-300 ease-in-out ${
+          isVisible ? 'translate-y-0' : 'translate-y-full'
+        }`}
     >
-      {TABS.map((tab) => {
-        const isActive = activeTab === tab.id;
-        const Icon = TAB_ICONS[tab.id];
-        return (
-          <button
-            key={tab.id}
-            role="tab"
-            aria-selected={isActive}
-            aria-label={tab.label}
-            className={`omni-mobile-tab${isActive ? " omni-mobile-tab--active" : ""}`}
-            onClick={() => setActiveTab(tab.id)}
-            type="button"
-          >
-            <span className="omni-mobile-tab__icon"><Icon /></span>
-            <span className="omni-mobile-tab__label">{tab.label}</span>
-            {isActive && <span className="omni-mobile-tab__indicator" />}
-          </button>
-        );
-      })}
-    </div>
+      <div className="flex items-center justify-around px-2 h-[68px]">
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const Icon = TAB_ICONS[tab.id];
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`omni-mobile-tab relative flex flex-col items-center justify-center w-16 h-full min-h-[44px] transition-colors ${
+                isActive ? 'omni-mobile-tab--active text-brand-500' : 'text-slate-400 hover:text-slate-300'
+              }`}
+              role="tab"
+              aria-selected={isActive}
+              aria-label={tab.label}
+              type="button"
+            >
+              <span className="omni-mobile-tab__icon"><Icon /></span>
+              <span className="omni-mobile-tab__label text-[10px] mt-1">{tab.label}</span>
+              {isActive && <span className="omni-mobile-tab__indicator" />}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
 }

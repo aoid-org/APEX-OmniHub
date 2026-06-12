@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 // Mock useOmniModuleState so module sub-deps resolve cleanly
@@ -91,8 +91,10 @@ describe('ModuleRenderer', () => {
   });
 
   describe('Known moduleKey - Suspense boundary', () => {
-    it('does NOT render fallback text for known key', () => {
-      render(<ModuleRenderer moduleKey="omniskills" onClose={vi.fn()} />);
+    it('does NOT render fallback text for known key', async () => {
+      await act(async () => {
+        render(<ModuleRenderer moduleKey="omniskills" onClose={vi.fn()} />);
+      });
       expect(screen.queryByText('Module data unavailable.')).not.toBeInTheDocument();
     });
 
@@ -100,8 +102,10 @@ describe('ModuleRenderer', () => {
     it.each([
       'physiomni', 'audits', 'links', 'automations',
       'workflows', 'files', 'billing', 'settings', 'translation'
-    ])('does not show unavailable fallback for key "%s"', (key) => {
-      render(<ModuleRenderer moduleKey={key} onClose={vi.fn()} />);
+    ])('does not show unavailable fallback for key "%s"', async (key) => {
+      await act(async () => {
+        render(<ModuleRenderer moduleKey={key} onClose={vi.fn()} />);
+      });
       expect(screen.queryByText('Module data unavailable.')).not.toBeInTheDocument();
     });
   });

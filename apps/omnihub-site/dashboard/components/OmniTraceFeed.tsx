@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../src/lib/supabase';
 
 interface AuditLog {
   id: string;
@@ -33,19 +33,9 @@ function relativeTime(iso: string): string {
 
 export function OmniTraceFeed({ tenantId }: Readonly<{ tenantId?: string }>) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [status, setStatus] = useState<'CONNECTING' | 'SUBSCRIBED' | 'ERROR'>(() => {
-    const url = import.meta.env.VITE_SUPABASE_URL ?? '';
-    const key = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
-    return (!url || !key) ? 'ERROR' : 'CONNECTING';
-  });
+  const [status, setStatus] = useState<'CONNECTING' | 'SUBSCRIBED' | 'ERROR'>('CONNECTING');
 
   useEffect(() => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
-
-    if (!supabaseUrl || !supabaseKey) return;
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
     let channel: ReturnType<typeof supabase.channel>;
 
     try {

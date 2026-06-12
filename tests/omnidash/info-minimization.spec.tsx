@@ -12,7 +12,7 @@ describe('Info Minimization UX (Phase A.5)', () => {
   it('renders icon-only trigger without exposing raw telemetry text', () => {
     const { container } = render(
       <TooltipProvider delayDuration={0}>
-        <HiddenMetric icon={Activity} label="telemetry-ping" value="42ms" />
+        <HiddenMetric icon={Activity as any} label="telemetry-ping" value="42ms" />
       </TooltipProvider>
     );
 
@@ -26,7 +26,7 @@ describe('Info Minimization UX (Phase A.5)', () => {
     const user = userEvent.setup();
     render(
       <TooltipProvider delayDuration={0}>
-        <HiddenMetric icon={Activity} label="latency" value="15ms" />
+        <HiddenMetric icon={Activity as any} label="latency" value="15ms" />
       </TooltipProvider>
     );
 

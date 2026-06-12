@@ -50,46 +50,70 @@ export const DashboardOverview = memo(function DashboardOverview({
     },
   });
 
+  const eventsQuery = useQuery({
+    queryKey: ["omnidash-events-overview", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) throw new Error("User required");
+      const { data, error } = await supabase
+        .from('omnilink_events')
+        .select('integration_id, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
+    const channelIntegrations = supabase
       .channel("integrations-overview-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "integrations",
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          queryClient.invalidateQueries({
-            queryKey: ["omnidash-integrations-overview", user.id],
-          });
-        },
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "integrations", filter: `user_id=eq.${user.id}` }, () => {
+        queryClient.invalidateQueries({ queryKey: ["omnidash-integrations-overview", user.id] });
+      })
+      .subscribe();
+
+    const channelEvents = supabase
+      .channel("events-overview-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "omnilink_events", filter: `user_id=eq.${user.id}` }, () => {
+        queryClient.invalidateQueries({ queryKey: ["omnidash-events-overview", user.id] });
+      })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(channelIntegrations);
+      supabase.removeChannel(channelEvents);
     };
   }, [user, queryClient]);
 
   const liveApps = useMemo(() => {
-    // ⚡ Bolt: Consolidated two sequential O(N) array passes (.map -> .map) into a single O(N) pass,
-    // reducing memory allocation and improving main thread performance during integration state updates.
     const integrationsMap = integrationsQuery.data
       ? new Map(integrationsQuery.data.map(i => [i.name.toLowerCase(), i]))
       : null;
 
+    const latestEventMap = new Map<string, number>();
+    if (eventsQuery.data && integrationsMap) {
+      for (const event of eventsQuery.data) {
+        if (!latestEventMap.has(event.integration_id)) {
+          latestEventMap.set(event.integration_id, new Date(event.created_at).getTime());
+        }
+      }
+    }
+
     return registryApps.map(e => {
       const defaultStatus = e._live?.status ?? e.dashboard.status;
       let finalStatus = defaultStatus;
+      let syncedMins = e._live?.syncedMinutesAgo ?? e.dashboard.syncedMinutesAgo;
 
       if (integrationsMap) {
         const integration = integrationsMap.get(e.label.toLowerCase());
         if (integration) {
           finalStatus = integration.status === "active" ? "Live" : "Partial";
+          const lastEventTime = latestEventMap.get(integration.id);
+          if (lastEventTime) {
+            syncedMins = Math.max(0, Math.floor((Date.now() - lastEventTime) / 60000));
+          }
         }
       }
 
@@ -97,11 +121,11 @@ export const DashboardOverview = memo(function DashboardOverview({
         name: e.label,
         cat: e.category,
         logo: e.logoDomain ? `https://logo.clearbit.com/${e.logoDomain}` : '',
-        synced: `${e._live?.syncedMinutesAgo ?? e.dashboard.syncedMinutesAgo}m`,
+        synced: `${syncedMins}m`,
         status: finalStatus,
       } as AppEntry;
     });
-  }, [integrationsQuery.data, registryApps]);
+  }, [integrationsQuery.data, eventsQuery.data, registryApps]);
 
   const navigate = useNavigate();
   const { dispatch } = useOmniDashAction(navigate);

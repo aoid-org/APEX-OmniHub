@@ -8,11 +8,22 @@ export function ProtectedRoute({ children }: Readonly<{ children: React.ReactNod
 
   useEffect(() => {
     async function checkAuth() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setAuthenticated(!!session);
-      setLoading(false);
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          setAuthenticated(false);
+        } else {
+          setAuthenticated(!!session);
+        }
+      } catch {
+        setAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
     }
 
     checkAuth();

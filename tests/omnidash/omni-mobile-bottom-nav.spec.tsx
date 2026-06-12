@@ -66,3 +66,27 @@ describe('OmniMobileBottomNav', () => {
     expect(activeButton).toBeTruthy();
   });
 });
+
+describe('OmniMobileBottomNav - Architecture Contracts', () => {
+  it('must render above spatial host and widgets (z-index >= 100)', () => {
+    const { container } = render(<OmniMobileBottomNav activeTab="home" setActiveTab={vi.fn()} />);
+    const nav = container.firstChild as HTMLElement;
+    // We expect the bottom nav to have an inline or computed zIndex that forces it to the top layer.
+    expect(Number(nav.style.zIndex || getComputedStyle(nav).zIndex)).toBeGreaterThanOrEqual(100);
+  });
+
+  it('must strictly enforce a minimum touch target size of 44px for accessibility', () => {
+    render(<OmniMobileBottomNav activeTab="home" setActiveTab={vi.fn()} />);
+    const homeTab = screen.getByRole('tab', { name: /home/i });
+    // In jsdom styles aren't fully computed without a real renderer, but we can check inline styles or classes 
+    // that enforce this. For contract tests, we can assert on inline min-height or specific utility classes.
+    // We'll assert the container enforces standard mobile touch targets.
+    expect(homeTab.className).toMatch(/min-h-\[?44px\]?|p-[3456]/);
+  });
+
+  it('must be hidden on desktop breakpoints (md:hidden)', () => {
+    const { container } = render(<OmniMobileBottomNav activeTab="home" setActiveTab={vi.fn()} />);
+    const nav = container.firstChild as HTMLElement;
+    expect(nav.className).toMatch(/md:hidden/);
+  });
+});

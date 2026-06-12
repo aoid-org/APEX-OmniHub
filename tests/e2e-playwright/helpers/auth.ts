@@ -60,8 +60,7 @@ export async function signInWithSupabaseSession(page: Page): Promise<void> {
     session = await createRealSupabaseSession(config);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'unknown error';
-    test.skip(true, `Supabase Auth is not reachable/enabled from this runner: ${message}`);
-    throw error;
+    throw new Error(`Supabase Auth is not reachable/enabled from this runner: ${message}`);
   }
 
   const storageKey = getSupabaseStorageKey(config.url);

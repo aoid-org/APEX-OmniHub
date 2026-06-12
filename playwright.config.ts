@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import 'dotenv/config';
 
 /**
  * Playwright configuration for OmniLink APEX runtime smoke tests.
@@ -56,6 +57,17 @@ const ciProjects = allProjects.filter((p) =>
   ['chromium', 'mobile-chrome'].includes(p.name),
 );
 
+// Allow a dedicated staging runner explicitly configured for mutations.
+const stagingProjects = [
+  {
+    name: 'staging',
+    use: { 
+      ...devices['Desktop Chrome'],
+      baseURL: process.env.STAGING_URL || 'http://localhost:4173',
+    },
+  }
+];
+
 export default defineConfig({
   testDir: './tests/e2e-playwright',
   fullyParallel: true,
@@ -76,7 +88,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
-  projects: isCI ? ciProjects : allProjects,
+  projects: process.env.STAGING_RUN ? stagingProjects : (isCI ? ciProjects : allProjects),
 
   // Start preview server before running tests (only if BASE_URL not provided)
   // In CI, the workflow manages the server manually

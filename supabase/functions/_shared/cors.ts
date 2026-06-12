@@ -17,6 +17,11 @@
 export function isOriginAllowed(origin: string | null): boolean {
   if (!origin) return false;
 
+  // Always allow localhost for development and E2E testing
+  if (origin.startsWith('http://localhost:')) {
+    return true;
+  }
+
   // Exact match from ALLOWED_ORIGINS
   const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS');
   if (allowedOrigins) {

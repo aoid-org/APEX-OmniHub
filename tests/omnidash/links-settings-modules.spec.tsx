@@ -84,7 +84,7 @@ import { useOmniModuleState } from '@/hooks/useOmniModuleState';
 describe('LinksModule', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useOmniModuleState).mockReturnValue(defaultModuleState as ReturnType<typeof useOmniModuleState>);
+    vi.mocked(useOmniModuleState).mockReturnValue(defaultModuleState as any);
   });
 
   it('renders module shell without crashing', () => {
@@ -106,7 +106,7 @@ describe('LinksModule', () => {
         { id: 'link-3', label: 'Error Service', status: 'error' },
         { id: 'link-4', label: 'Idle Source', status: 'inactive' },
       ],
-    } as ReturnType<typeof useOmniModuleState>);
+    } as any);
 
     render(<LinksModule onClose={vi.fn()} />);
     expect(screen.getByText('Connection Health')).toBeTruthy();
@@ -119,7 +119,7 @@ describe('LinksModule', () => {
       ...defaultModuleState,
       loading: true,
       items: [{ id: 'x', label: 'Some', status: 'active' }],
-    } as ReturnType<typeof useOmniModuleState>);
+    } as any);
 
     render(<LinksModule onClose={vi.fn()} />);
     expect(screen.queryByText('Connection Health')).toBeNull();
@@ -131,7 +131,7 @@ describe('LinksModule', () => {
       items: [
         { id: 'x1', label: 'Unknown Status', status: 'unknown_status' },
       ],
-    } as ReturnType<typeof useOmniModuleState>);
+    } as any);
 
     render(<LinksModule onClose={vi.fn()} />);
     expect(screen.getByText('Unkn')).toBeTruthy();
@@ -154,7 +154,7 @@ describe('LinksModule', () => {
 describe('SettingsModule', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useOmniModuleState).mockReturnValue(defaultModuleState as ReturnType<typeof useOmniModuleState>);
+    vi.mocked(useOmniModuleState).mockReturnValue(defaultModuleState as any);
   });
 
   it('renders module shell without crashing', () => {
@@ -180,7 +180,7 @@ describe('SettingsModule', () => {
         { id: 's2', label: 'Notifications', status: 'inactive' },
       ],
       stats: [{ label: 'Version', value: 'v2.1.0' }],
-    } as ReturnType<typeof useOmniModuleState>);
+    } as any);
 
     render(<SettingsModule onClose={vi.fn()} />);
     expect(screen.getByText('Configuration Health')).toBeTruthy();
@@ -192,7 +192,7 @@ describe('SettingsModule', () => {
       ...defaultModuleState,
       items: [{ id: 's1', label: 'Setting A', status: 'active' }],
       stats: [{ label: 'Version', value: 'v3.0.0' }],
-    } as ReturnType<typeof useOmniModuleState>);
+    } as any);
 
     render(<SettingsModule onClose={vi.fn()} />);
     expect(screen.getByText('v3.0.0')).toBeTruthy();
@@ -205,7 +205,7 @@ describe('SettingsModule', () => {
         { id: 's1', label: 'OK Setting', status: 'active' },
       ],
       stats: [],
-    } as ReturnType<typeof useOmniModuleState>);
+    } as any);
 
     render(<SettingsModule onClose={vi.fn()} />);
     expect(screen.getByText('Configuration Health')).toBeTruthy();

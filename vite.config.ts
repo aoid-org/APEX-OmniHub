@@ -28,6 +28,16 @@ export default defineConfig(({ mode }) => {
   },
   plugins: [
     react(),
+    {
+      name: 'mock-mcp-registry',
+      configureServer(server: import('vite').ViteDevServer) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        server.middlewares.use('/api/mcp/registry', (req: any, res: any) => {
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ servers: [] }));
+        });
+      }
+    },
     // Visualizer is opt-in: set ANALYZE_BUNDLE=true to generate dist/stats.html
     // NEVER runs by default — avoids build overhead on Cloudflare Pages
     analyzeBundle && mode !== 'test' && visualizer({

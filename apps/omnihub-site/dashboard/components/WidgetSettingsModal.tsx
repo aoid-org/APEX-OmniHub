@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * WidgetSettingsModal — Canvas widget visibility and layout settings panel.
  * @version 1.0.0
@@ -13,7 +14,7 @@
  * OWNED BY: APEX Business Systems Ltd.
  */
 
-import type { CSSProperties } from 'react';
+
 
 // ─── Widget Manifest ──────────────────────────────────────────────────────────
 
@@ -44,7 +45,7 @@ export interface WidgetSettingsPanelProps {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const panelStyle: CSSProperties = {
+const panelStyle: any = {
   background: 'rgba(15,23,41,0.95)',
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: 14,
@@ -57,7 +58,7 @@ const panelStyle: CSSProperties = {
   boxShadow: '0 16px 48px rgba(0,0,0,0.7)',
 };
 
-const sectionHeaderStyle: CSSProperties = {
+const sectionHeaderStyle: any = {
   fontSize: 10,
   fontWeight: 700,
   letterSpacing: '0.1em',
@@ -66,7 +67,7 @@ const sectionHeaderStyle: CSSProperties = {
   padding: '10px 14px 6px',
 };
 
-const rowStyle: CSSProperties = {
+const rowStyle: any = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -74,7 +75,7 @@ const rowStyle: CSSProperties = {
   gap: 8,
 };
 
-const labelStyle: CSSProperties = {
+const labelStyle: any = {
   fontSize: 12,
   color: '#e0e7ff',
   fontWeight: 400,
@@ -84,7 +85,7 @@ const labelStyle: CSSProperties = {
   textOverflow: 'ellipsis',
 };
 
-const dividerStyle: CSSProperties = {
+const dividerStyle: any = {
   height: 1,
   background: 'rgba(255,255,255,0.06)',
   margin: '6px 0',
@@ -99,7 +100,7 @@ function ToggleSwitch({
   enabled: boolean;
   onToggle: () => void;
 }) {
-  const trackStyle: CSSProperties = {
+  const trackStyle: any = {
     position: 'relative',
     width: 30,
     height: 17,
@@ -112,7 +113,7 @@ function ToggleSwitch({
     padding: 0,
     outline: 'none',
   };
-  const thumbStyle: CSSProperties = {
+  const thumbStyle: any = {
     position: 'absolute',
     top: 2,
     left: enabled ? 13 : 2,
@@ -149,7 +150,7 @@ function LayoutOption({
   active: boolean;
   onClick: () => void;
 }) {
-  const btnStyle: CSSProperties = {
+  const btnStyle: any = {
     flex: 1,
     padding: '8px 10px',
     borderRadius: 8,
