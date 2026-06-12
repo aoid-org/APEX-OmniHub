@@ -311,6 +311,9 @@
   var threePromise = null;
   function loadThree(src) {
     if (window.THREE) return Promise.resolve(window.THREE);
+    if (typeof src !== 'string' || !/^https:\/\//.test(src)) {
+      return Promise.reject(new Error('three.js src must be an https:// URL'));
+    }
     if (threePromise) return threePromise;
     threePromise = new Promise(function (res, rej) {
       var s = document.createElement('script');
@@ -845,12 +848,14 @@
       '<h3>Move beyond<br><em>black-box AI.</em></h3>' +
       '<p>Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production \u2014 authorized, logged, and reversible.</p>' +
       '<div class="ohsm-ctas">' +
-      '<a class="ohsm-btn ohsm-btn-primary" href="' + opts.ctaHref + '" target="_blank" rel="noopener">REQUEST EARLY ACCESS \u25b8</a>' +
-      '<a class="ohsm-btn ohsm-btn-ghost" href="' + opts.demoHref + '" target="_blank" rel="noopener">WATCH THE MAESTRO DEMO</a>' +
+      '<a class="ohsm-btn ohsm-btn-primary" target="_blank" rel="noopener">REQUEST EARLY ACCESS \u25b8</a>' +
+      '<a class="ohsm-btn ohsm-btn-ghost" target="_blank" rel="noopener">WATCH THE MAESTRO DEMO</a>' +
       '<button class="ohsm-btn ohsm-btn-ghost" data-ohsm-replay>START OVER</button>' +
       '</div>' +
       '<div class="ohsm-proof">SOC 2 ALIGNED \u00b7 EU AI ACT ART. 14 \u00b7 GDPR ART. 30<br>TRUSTED IN REGULATED INDUSTRIES</div>' +
       '</div>';
+    fin.querySelector('.ohsm-btn-primary').setAttribute('href', opts.ctaHref);
+    fin.querySelector('.ohsm-btn-ghost').setAttribute('href', opts.demoHref);
     this.finale = fin;
     fin.querySelector('[data-ohsm-replay]').addEventListener('click', function () {
       fin.classList.remove('ohsm-show'); self.visited = {}; self.travelTo(0, true);
