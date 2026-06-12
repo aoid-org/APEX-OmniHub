@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-const policyPath = resolve('docs/compliance/DATA_RETENTION_POLICY.md');
+const policyPath = resolve('memory/omni-recall/docs/compliance/DATA_RETENTION_POLICY.md');
 const outputPath = resolve('build-artifacts/retention-evidence.json');
 const source = readFileSync(policyPath, 'utf8');
 
@@ -26,7 +26,7 @@ mkdirSync(dirname(outputPath), { recursive: true });
 writeFileSync(
   outputPath,
   `${JSON.stringify({
-    policy: 'docs/compliance/DATA_RETENTION_POLICY.md',
+    policy: 'memory/omni-recall/docs/compliance/DATA_RETENTION_POLICY.md',
     generated_at: new Date().toISOString(),
     retention,
   }, null, 2)}\n`,

@@ -7,7 +7,7 @@ export function PrivacyPage() {
       <SEOMeta title="Privacy Policy" description="APEX OmniHub privacy policy and data handling practices." noIndex={true} />
       <LegalPage
         title="Privacy Policy"
-        documentPath="docs/compliance/PRIVACY_POLICY.md"
+        documentPath="memory/omni-recall/docs/compliance/PRIVACY_POLICY.md"
         markdownLoader={() => import('@/content/legal/privacyPolicyContent')}
       />
     </>

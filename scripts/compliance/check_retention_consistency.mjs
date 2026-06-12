@@ -8,18 +8,18 @@ if (!existsSync(evidencePath)) {
   process.exit(1);
 }
 
-const gdpr = readFileSync(resolve('docs/compliance/GDPR_COMPLIANCE.md'), 'utf8');
-const ops = readFileSync(resolve('docs/ops/OPERATIONAL_EXCELLENCE.md'), 'utf8');
+const gdpr = readFileSync(resolve('memory/omni-recall/docs/compliance/GDPR_COMPLIANCE.md'), 'utf8');
+const ops = readFileSync(resolve('memory/omni-recall/docs/ops/OPERATIONAL_EXCELLENCE.md'), 'utf8');
 
-const docs = [
-  ['docs/compliance/GDPR_COMPLIANCE.md', gdpr],
-  ['docs/ops/OPERATIONAL_EXCELLENCE.md', ops],
+const REQUIRED_LINKS = [
+  ['memory/omni-recall/docs/compliance/GDPR_COMPLIANCE.md', gdpr],
+  ['memory/omni-recall/docs/ops/OPERATIONAL_EXCELLENCE.md', ops],
 ];
 
 let failed = false;
 
-for (const [file, content] of docs) {
-  if (!content.includes('docs/compliance/DATA_RETENTION_POLICY.md')) {
+for (const [file, content] of REQUIRED_LINKS) {
+  if (!content.includes('memory/omni-recall/docs/compliance/DATA_RETENTION_POLICY.md')) {
     console.error(`[MISSING] ${file} must reference DATA_RETENTION_POLICY.md`);
     failed = true;
   }
