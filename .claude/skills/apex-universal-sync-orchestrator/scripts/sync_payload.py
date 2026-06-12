@@ -1,193 +1,170 @@
 #!/usr/bin/env python3
-"""Normalize an external application JSON payload into an APEX-OmniHub state vector.
-
-Usage:
-    python3 sync_payload.py <input_json_path> <mapping_schema_path>
-
-Exit codes:
-    0 — payload normalized; state vector JSON on stdout.
-    1 — schema, payload, or mapping violations; one reason per line on stderr.
-    2 — usage error.
 """
-from __future__ import annotations
-
+apex-universal-sync-orchestrator v1.1.0: sync_payload.py
+Normalizes external application JSON payloads into APEX-OmniHub state vectors.
+Args: <input_json_path> <mapping_schema_path>
+"""
 import json
 import re
 import sys
 from pathlib import Path
-from typing import Any
-
-REQUIRED_PAYLOAD_FIELDS = ("source_system", "sync_timestamp", "data_payload")
-SUPPORTED_TYPES = ("string", "integer", "float", "boolean")
-TRUE_LITERALS = {"true", "1", "yes", "y", "t"}
-FALSE_LITERALS = {"false", "0", "no", "n", "f"}
 
 
-def fail(lines: list[str]) -> None:
-    """Print every violation line to stderr and exit 1."""
-    for line in lines:
-        print(line, file=sys.stderr)
-    sys.exit(1)
+# ---------------------------------------------------------------------------
+# Type coercion helpers
+# ---------------------------------------------------------------------------
+
+def coerce_value(raw, type_name: str):
+    """Apply type coercion per schema type field."""
+    if type_name == "string":
+        return str(raw)
+    if type_name == "integer":
+        return int(raw)
+    if type_name == "float":
+        return float(raw)
+    if type_name == "boolean":
+        if isinstance(raw, bool):
+            return raw
+        return str(raw).strip().lower() in ("true", "1", "yes")
+    return raw  # unknown type — pass through unchanged
 
 
-def load_json(path: str, label: str) -> Any:
-    """Load a JSON file; exit 1 with a labeled error on any I/O or parse failure."""
+def extract_epoch_digits(timestamp: str) -> str:
+    """Extract all digit characters from an ISO timestamp, take first 10."""
+    return re.sub(r"\D", "", timestamp)[:10]
+
+
+# ---------------------------------------------------------------------------
+# JSON I/O helpers
+# ---------------------------------------------------------------------------
+
+def load_json_file(path: str, label: str) -> dict:
+    """Load and parse a JSON file; exit 1 on any failure."""
     try:
-        return json.loads(Path(path).read_text(encoding="utf-8"))
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
     except FileNotFoundError:
-        fail([f"{label} ERROR: file not found: {path}"])
+        print(f"{label} ERROR: file not found — {path}", file=sys.stderr)
+        sys.exit(1)
     except json.JSONDecodeError as exc:
-        fail([f"{label} ERROR: invalid JSON in {path}: {exc}"])
-    return None  # unreachable — fail() exits
+        print(f"{label} ERROR: invalid JSON — {exc}", file=sys.stderr)
+        sys.exit(1)
+    except OSError as exc:
+        print(f"{label} ERROR: {exc}", file=sys.stderr)
+        sys.exit(1)
 
 
-def validate_schema(schema: Any) -> dict[str, Any]:
-    """Validate the mapping schema; return field_mappings or exit 1."""
-    if not isinstance(schema, dict):
-        fail(["SCHEMA ERROR: schema root must be a JSON object"])
+# ---------------------------------------------------------------------------
+# Validation helpers
+# ---------------------------------------------------------------------------
+
+def validate_schema(schema: dict) -> dict:
+    """Validate schema structure; exit 1 with SCHEMA ERROR on failure."""
     field_mappings = schema.get("field_mappings")
     if not isinstance(field_mappings, dict):
-        fail(["SCHEMA ERROR: 'field_mappings' must be a dict"])
+        print("SCHEMA ERROR: 'field_mappings' must be a dict")
+        sys.exit(1)
     return field_mappings
 
 
-def validate_payload(payload: Any) -> list[str]:
-    """Return one PAYLOAD ERROR line per missing required envelope field."""
-    if not isinstance(payload, dict):
-        return ["PAYLOAD ERROR: payload root must be a JSON object"]
-    return [
-        f"PAYLOAD ERROR: missing required field '{name}'"
-        for name in REQUIRED_PAYLOAD_FIELDS
-        if name not in payload
+def validate_payload(payload: dict) -> tuple:
+    """Validate required top-level payload fields; exit 1 listing all missing."""
+    required = ("source_system", "sync_timestamp", "data_payload")
+    errors = [
+        f"PAYLOAD ERROR: missing required field '{f}'"
+        for f in required
+        if f not in payload
     ]
+    if errors:
+        print("\n".join(errors))
+        sys.exit(1)
+    return payload["source_system"], payload["sync_timestamp"], payload["data_payload"]
 
 
-def coerce(value: Any, type_name: str) -> Any:
-    """Coerce value to the declared schema type. Raises ValueError on failure."""
-    if type_name == "string":
-        return str(value)
-    if type_name == "integer":
-        if isinstance(value, bool):
-            raise ValueError("boolean is not an integer")
-        return int(value)
-    if type_name == "float":
-        if isinstance(value, bool):
-            raise ValueError("boolean is not a float")
-        return float(value)
-    if type_name == "boolean":
-        if isinstance(value, bool):
-            return value
-        literal = str(value).strip().lower()
-        if literal in TRUE_LITERALS:
-            return True
-        if literal in FALSE_LITERALS:
-            return False
-        raise ValueError(f"'{value}' is not a recognized boolean literal")
-    raise ValueError(f"unsupported type '{type_name}'")
+# ---------------------------------------------------------------------------
+# Mapping engine
+# ---------------------------------------------------------------------------
 
+def apply_mappings(data_payload: dict, field_mappings: dict) -> tuple:
+    """
+    Apply field mappings with type coercions.
+    Returns (result_dict, violations_list).
+    Collects all violations — never stops at first error.
+    """
+    result = {}
+    violations = []
 
-def apply_mappings(
-    data_payload: dict[str, Any], field_mappings: dict[str, Any]
-) -> tuple[dict[str, Any], list[str]]:
-    """Map every schema field, collecting all violations before reporting."""
-    state_vector: dict[str, Any] = {}
-    violations: list[str] = []
+    for target_field, spec in field_mappings.items():
+        source_field = spec.get("source_field", target_field)
+        type_name = spec.get("type", "string")
+        optional = spec.get("optional", False)
+        default = spec.get("default", None)
 
-    for target_field, rule in field_mappings.items():
-        if not isinstance(rule, dict):
-            violations.append(f"{target_field}: mapping rule must be an object")
-            continue
-
-        source_field = rule.get("source_field")
-        type_name = rule.get("type", "string")
-        optional = bool(rule.get("optional", False))
-
-        if not source_field:
-            violations.append(f"{target_field}: mapping rule missing 'source_field'")
-            continue
-        if type_name not in SUPPORTED_TYPES:
-            violations.append(f"{target_field}: unsupported type '{type_name}'")
-            continue
-
-        if source_field not in data_payload:
-            if optional:
-                state_vector[target_field] = rule.get("default")
-                continue
-            violations.append(f"{target_field}: required field missing from data_payload")
-            continue
-
-        try:
-            state_vector[target_field] = coerce(data_payload[source_field], type_name)
-        except (ValueError, TypeError):
+        if source_field in data_payload:
+            try:
+                result[target_field] = coerce_value(data_payload[source_field], type_name)
+            except (ValueError, TypeError) as exc:
+                violations.append(
+                    f"{target_field}: coercion to {type_name} failed — {exc}"
+                )
+        elif optional:
+            result[target_field] = default
+        else:
             violations.append(
-                f"{target_field}: cannot coerce {data_payload[source_field]!r} to {type_name}"
+                f"{target_field}: required field missing from data_payload"
             )
 
-    return state_vector, violations
+    return result, violations
 
 
-def generate_omni_id(source_system: str, sync_timestamp: str) -> str:
-    """Deterministic omni_id: {source_system}_{digits of sync_timestamp}.
+# ---------------------------------------------------------------------------
+# Main entry point
+# ---------------------------------------------------------------------------
 
-    Re-syncing the same payload yields the same omni_id, which is what makes
-    downstream deduplication safe.
-    """
-    epoch_digits = re.sub(r"\D", "", sync_timestamp)
-    return f"{source_system}_{epoch_digits}"
-
-
-def main(argv: list[str]) -> int:
-    if len(argv) != 3:
+def main() -> None:
+    if len(sys.argv) != 3:
         print(
-            "usage: sync_payload.py <input_json_path> <mapping_schema_path>",
+            "Usage: sync_payload.py <input_json_path> <mapping_schema_path>",
             file=sys.stderr,
         )
-        return 2
+        sys.exit(1)
 
-    # Schema validation always runs first — nothing maps against a bad schema.
-    schema = load_json(argv[2], "SCHEMA")
+    payload_path, schema_path = sys.argv[1], sys.argv[2]
+
+    # 1. Load and validate schema
+    schema = load_json_file(schema_path, "SCHEMA")
     field_mappings = validate_schema(schema)
 
-    payload = load_json(argv[1], "PAYLOAD")
-    payload_errors = validate_payload(payload)
-    if payload_errors:
-        fail(payload_errors)
+    # 2. Load and validate payload
+    payload = load_json_file(payload_path, "PAYLOAD")
+    source_system, sync_timestamp, data_payload = validate_payload(payload)
 
-    source_system = str(payload["source_system"])
-    sync_timestamp = str(payload["sync_timestamp"])
-    data_payload = payload["data_payload"]
+    # 3. Warn on empty data_payload — valid initial state, not an error
+    if not data_payload:
+        print("WARNING: data_payload is empty — no fields to map", file=sys.stderr)
 
-    if not isinstance(data_payload, dict):
-        fail(["PAYLOAD ERROR: 'data_payload' must be a JSON object"])
+    # 4. Apply field mappings with full violation collection
+    result, violations = apply_mappings(data_payload, field_mappings)
 
-    if len(data_payload) == 0:
-        # An empty payload is a valid initial state for a new integration.
-        print(
-            "WARNING: data_payload is empty — emitting initial state vector "
-            "with zero mapped fields",
-            file=sys.stderr,
-        )
-        state_vector: dict[str, Any] = {}
-        fields_mapped = 0
-    else:
-        state_vector, violations = apply_mappings(data_payload, field_mappings)
-        if violations:
-            fail(violations)
-        fields_mapped = len(state_vector)
+    if violations:
+        print("\n".join(violations))
+        sys.exit(1)
 
-    normalized = {
-        "omni_id": generate_omni_id(source_system, sync_timestamp),
+    # 5. Generate deterministic omni_id for deduplication safety
+    epoch_digits = extract_epoch_digits(sync_timestamp)
+    omni_id = f"{source_system}_{epoch_digits}"
+    result["omni_id"] = omni_id
+
+    # 6. Attach metadata
+    result["meta"] = {
         "source_system": source_system,
         "sync_timestamp": sync_timestamp,
-        "state_vector": state_vector,
-        "meta": {
-            "schema_version": str(schema.get("schema_version", "unversioned")),
-            "fields_mapped": fields_mapped,
-        },
+        "fields_mapped": len(field_mappings),
     }
-    print(json.dumps(normalized, indent=2))
-    return 0
+
+    print(json.dumps(result, indent=2))
+    sys.exit(0)
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    main()

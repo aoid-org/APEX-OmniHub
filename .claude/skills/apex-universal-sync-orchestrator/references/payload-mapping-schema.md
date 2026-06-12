@@ -1,70 +1,103 @@
 # Payload Mapping Schema Reference
 
-How `scripts/sync_payload.py` interprets payloads and mapping schemas.
+## Contents
 
-## Required payload fields
+1. Required Payload Fields
+2. field_mappings Structure
+3. Supported Type Coercions
+4. Optional Field Behavior
+5. omni_id Generation Rules
 
-Every inbound payload must be a JSON object with all three envelope fields:
+---
 
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `source_system` | string | Identifier of the external application (e.g. `salesforce`). |
-| `sync_timestamp` | string | ISO-8601 timestamp of the sync event. |
-| `data_payload` | object | The raw external fields to normalize. May be empty for a brand-new integration. |
+## Required Payload Fields
 
-A missing envelope field produces `PAYLOAD ERROR: missing required field '<name>'`
-on stderr and exit code 1. All missing fields are reported in one pass.
+Every external application payload submitted to the sync engine must include three
+top-level fields. Absence of any of these causes an immediate exit 1.
 
-## field_mappings structure
+| Field | Type | Description |
+|-------|------|-------------|
+| `source_system` | string | Identifier for the originating application (e.g., `salesforce`, `hubspot`) |
+| `sync_timestamp` | string | ISO 8601 timestamp of the sync event (e.g., `2026-06-10T09:00:00Z`) |
+| `data_payload` | object | Key-value pairs from the source application; may be empty for initial sync states |
 
-The mapping schema is a JSON object whose `field_mappings` key maps each
-target OmniHub field to a rule object:
+An empty `data_payload` is accepted with a warning — it represents a valid initial
+integration state before data populates.
+
+---
+
+## field_mappings Structure
+
+The mapping schema JSON must contain a top-level `field_mappings` key whose value is
+a dict. Each entry maps a target APEX field name to a source specification:
 
 ```json
 {
-  "schema_version": "1.0",
-  "source_system": "salesforce",
   "field_mappings": {
-    "account_name":   { "source_field": "AccountName",  "type": "string" },
-    "annual_revenue": { "source_field": "AnnualRevenue", "type": "float" },
-    "notes":          { "source_field": "Notes", "type": "string", "optional": true, "default": null }
+    "<target_field>": {
+      "source_field": "<key in data_payload>",
+      "type": "string | integer | float | boolean",
+      "optional": true,
+      "default": null
+    }
   }
 }
 ```
 
-If `field_mappings` is missing or is not a dict, the run stops immediately
-with `SCHEMA ERROR: 'field_mappings' must be a dict` — schema validation
-always precedes payload processing.
+- `source_field`: The key to read from `data_payload`. Defaults to `target_field` if omitted.
+- `type`: Required. Determines coercion applied to the raw string value.
+- `optional`: Boolean. If `true` and `source_field` is absent, `default` is used.
+- `default`: Any JSON value used when the field is optional and absent. May be `null`.
 
-## Supported type coercions
+---
 
-| `type` | Coercion behavior |
-| --- | --- |
+## Supported Type Coercions
+
+| Type name | Behavior |
+|-----------|----------|
 | `string` | `str(value)` |
-| `integer` | `int(value)`; booleans rejected |
-| `float` | `float(value)`; booleans rejected (`"4200000"` → `4200000.0`) |
-| `boolean` | native booleans pass through; the literals `true/false`, `1/0`, `yes/no`, `y/n`, `t/f` (case-insensitive) are coerced |
+| `integer` | `int(value)` — raises on non-numeric |
+| `float` | `float(value)` — raises on non-numeric |
+| `boolean` | `true` if raw value (lowercased) is in `["true", "1", "yes"]`; else `false` |
 
-A value that cannot be coerced produces a
-`FIELD_NAME: cannot coerce <value> to <type>` violation. Violations are
-collected across all fields before reporting, never short-circuited.
+Coercion failures are collected as violations and reported together before exit 1.
+Unknown type names pass the raw value through unchanged.
 
-## Optional field behavior
+---
 
-A rule with `"optional": true` whose `source_field` is absent from
-`data_payload` resolves to the rule's `default` value (or `null` when no
-default is declared). No violation is raised. A required field absent from
-`data_payload` produces `FIELD_NAME: required field missing from data_payload`.
+## Optional Field Behavior
 
-## omni_id generation rules
+A field mapping marked `"optional": true` follows this logic:
 
-```text
-omni_id = "{source_system}_{epoch_digits}"
-epoch_digits = all digit characters of sync_timestamp, in order
+1. If `source_field` is present in `data_payload`: coerce and use the value normally.
+2. If `source_field` is absent: use the `default` value from the schema spec.
+
+No violation is recorded for an absent optional field. The default value may be
+`null`, a string, a number, or any valid JSON primitive.
+
+---
+
+## omni_id Generation Rules
+
+`omni_id` is generated as: `{source_system}_{epoch_digits}`
+
+- `source_system`: taken directly from the payload's `source_system` field.
+- `epoch_digits`: all non-digit characters are stripped from `sync_timestamp`; the
+  first 10 resulting digits are used (equivalent to Unix epoch seconds for standard
+  ISO timestamps).
+
+**Example:**
+```
+source_system:  "salesforce"
+sync_timestamp: "2026-06-10T09:00:00Z"
+epoch_digits:   "2026061009"
+omni_id:        "salesforce_2026061009"
 ```
 
-Example: `source_system = "salesforce"` with
-`sync_timestamp = "2026-06-10T09:00:00Z"` yields
-`salesforce_20260610090000`. The value is fully deterministic — re-syncing
-the same payload yields the same `omni_id`, which makes downstream
-deduplication in the OmniBoard application integration layer safe.
+`omni_id` is deterministic for the same `(source_system, sync_timestamp)` pair,
+making it safe for re-sync deduplication. It is appended to the output JSON after
+all field mappings succeed.
+
+---
+
+_Revision note: v1.1.0 — OmniBoard dual-surface scoping correction applied 2026-06-11._

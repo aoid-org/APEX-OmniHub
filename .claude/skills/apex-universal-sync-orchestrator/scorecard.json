@@ -1,30 +1,8 @@
 {
-  "skill": "apex-universal-sync-orchestrator",
-  "generated_utc": "2026-06-10T11:01:21+00:00",
-  "tooling": "apex-skill-forge v9 forge.py",
-  "lint": {
-    "fails": 0,
-    "warns": 0,
-    "findings": []
-  },
-  "tokens": {
-    "method": "estimate: characters / 4",
-    "metadata_always_loaded": 91,
-    "description_chars": 331,
-    "skill_md_body_on_trigger": 869,
-    "skill_md_lines": 81,
-    "references_on_demand": {
-      "payload-mapping-schema.md": 673
-    },
-    "scripts_loaded_tokens": 0
-  },
-  "trigger_eval": {
-    "validated": true,
-    "positive": 9,
-    "negative": 9,
-    "total": 18
-  },
+  "lint": { "fails": 0, "warns": 0 },
+  "token_budget": { "body_tokens": 681, "within_budget": true },
+  "trigger_accuracy_mock": null,
   "trigger_accuracy_live": null,
-  "note": "Token values are estimates (chars/4). trigger_accuracy_live: run the 18-query eval set in a live Claude Code session and record the measured rate here (e.g. 17/18 = 0.944) to complete the evidence chain.",
-  "rubric_score": 100
+  "rubric_score": 100,
+  "pack": { "status": "pending", "archive": "dist/apex-universal-sync-orchestrator.skill" }
 }

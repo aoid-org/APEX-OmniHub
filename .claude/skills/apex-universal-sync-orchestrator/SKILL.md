@@ -4,78 +4,72 @@ description: Synchronizes external application JSON payloads into unified APEX-O
 license: Proprietary - APEX Business Systems Ltd.
 ---
 
-# APEX Universal Sync Orchestrator
+## Overview
 
-Normalize one external application's JSON payload into a unified APEX-OmniHub
-state vector, ready for OmniBoard application integration and onboarding.
+Normalizes external application JSON payloads into APEX-OmniHub state vectors, enabling
+reliable OmniBoard integration pipeline onboarding. OmniBoard is a dual-surface system;
+this skill targets its application integration layer only and does not handle the
+separate OmniBoard client-facing conversational modal surface.
 
-Scope note: OmniBoard is a dual-surface system — a client-facing
-conversational modal (Left Sidebar Widget with prompt/voice input) and an
-application integration layer. This skill targets the integration layer
-only; client interactions through the OmniBoard modal are out of scope.
+## Input / Output / Success / Fails-when
 
-## Contract
+**Input:** External app JSON payload (`source_system`, `sync_timestamp`, `data_payload`)
+and a mapping schema JSON file containing a `field_mappings` dict.
 
-- **Input:** a payload JSON file and a mapping schema JSON file (paths passed
-  as the two positional arguments to `scripts/sync_payload.py`).
-- **Output:** a normalized state vector printed to stdout as JSON, containing
-  a deterministic `omni_id`, the mapped fields, and `meta.fields_mapped`.
-- **Success:** exit code 0 with the normalized JSON on stdout.
-- **Fails when:** the schema lacks a `field_mappings` dict (`SCHEMA ERROR`),
-  the payload is missing `source_system`, `sync_timestamp`, or `data_payload`
-  (`PAYLOAD ERROR`), or one or more field mappings cannot be applied (one
-  `FIELD_NAME: reason` line per violation, exit code 1).
+**Output:** Normalized state vector JSON with `omni_id`, typed fields, and
+`meta.fields_mapped` count written to stdout; exit 0 on success.
 
-## Workflow
+**Success:** All required payload fields present, all mappings applied without violation,
+`omni_id` generated deterministically, output is valid JSON.
 
-Follow this decision tree in order — schema validation always comes first:
+**Fails-when:** `field_mappings` key missing or not a dict in schema; required payload
+fields (`source_system`, `sync_timestamp`, `data_payload`) absent; non-optional mapped
+source fields not found in `data_payload`.
 
-1. **Validate the mapping schema.** Load the schema JSON. If `field_mappings`
-   is missing or not a dict, stop: report `SCHEMA ERROR` and exit 1. Nothing
-   else runs against an invalid schema.
-2. **Validate the payload envelope.** Confirm `source_system`,
-   `sync_timestamp`, and `data_payload` are all present. Report one
-   `PAYLOAD ERROR: missing required field '<name>'` line per absent field.
-3. **Apply field mappings.** For each entry in `field_mappings`, read the
-   `source_field` from `data_payload` and coerce it to the declared `type`
-   (`string`, `integer`, `float`, `boolean`). Collect every violation before
-   reporting — a full report saves a re-run cycle.
-4. **Generate `omni_id`.** Format is `{source_system}_{epoch_digits}` where
-   `epoch_digits` are the digits extracted from `sync_timestamp`. The value
-   is deterministic, so a re-sync of the same payload deduplicates cleanly.
-5. **Emit the state vector.** Print the normalized JSON to stdout, exit 0.
+## Workflow Decision Tree
 
-## Run it
+```
+1. Load schema JSON
+   ├── SCHEMA ERROR: field_mappings missing or not dict → exit 1
+   └── OK → continue
 
-```bash
-python3 scripts/sync_payload.py <payload.json> <mapping_schema.json>
+2. Load payload JSON
+   ├── PAYLOAD ERROR: source_system missing → exit 1
+   ├── PAYLOAD ERROR: sync_timestamp missing → exit 1
+   ├── PAYLOAD ERROR: data_payload missing → exit 1
+   └── OK → continue
+
+3. data_payload empty?
+   ├── Yes → warn to stderr ("WARNING: data_payload is empty"), continue
+   └── No → apply field mappings
+
+4. For each field mapping:
+   ├── source_field present → apply type coercion (string/integer/float/boolean)
+   ├── source_field absent + optional → use schema default value
+   └── source_field absent + required → collect violation
+
+5. Violations collected?
+   ├── Yes → print all violations, exit 1
+   └── No → generate omni_id, write JSON to stdout, exit 0
 ```
 
-Verify a successful run with:
+## Verification Command
 
 ```bash
-python3 scripts/sync_payload.py payload.json schema.json | python3 -m json.tool
-echo "exit: $?"
+python3 scripts/sync_payload.py <input_json_path> <mapping_schema_path>
+echo "EXIT CODE: $?"
 ```
+Exit 0 = success (JSON on stdout). Exit 1 = violations or errors printed to stdout.
 
-Exit 0 plus an `omni_id` key in the output confirms a valid normalization.
+## Failure Handling
 
-## Failure handling
-
-- **Empty `data_payload`:** a warning is written to stderr and processing
-  continues — an empty payload is a valid initial state for a brand-new
-  integration. The state vector is emitted with zero mapped fields.
-- **Optional field absent:** mappings marked `"optional": true` fall back to
-  their schema `default` value (for example `null` for free-text notes).
-  No violation is raised.
-- **Required field absent:** a `FIELD_NAME: required field missing from
-  data_payload` violation is recorded; all other mappings still run so the
-  report covers every problem in a single pass.
-- **Type coercion failure:** the offending field and value are reported as
-  `FIELD_NAME: cannot coerce <value> to <type>`; remaining fields still map.
+- **Empty `data_payload`:** Emits `WARNING: data_payload is empty` to stderr, continues
+  execution — an empty payload is a valid initial state for a new integration.
+- **Optional missing field:** Uses the `default` value from schema (may be `null`).
+- **Required missing field:** Collects `FIELD_NAME: required field missing from data_payload`;
+  all violations are reported before exit 1 — no early termination.
 
 ## References
 
-- `references/payload-mapping-schema.md` — required payload fields, the
-  `field_mappings` structure, supported type coercions, optional-field
-  behavior, and the `omni_id` generation rules.
+See `references/payload-mapping-schema.md` for: required payload fields, `field_mappings`
+structure, supported type coercions, optional field behavior, `omni_id` generation rules.

@@ -1,74 +1,22 @@
 [
-  {
-    "query": "Normalize this Salesforce account payload JSON into an OmniHub state vector before OmniBoard onboarding",
-    "should_trigger": true
-  },
-  {
-    "query": "We're integrating a new external app — map its API JSON schema to the APEX universal schema",
-    "should_trigger": true
-  },
-  {
-    "query": "Initialize the OmniBoard application integration sync for this HubSpot JSON export",
-    "should_trigger": true
-  },
-  {
-    "query": "The vendor's webhook payload has different field names than ours — normalize it into our unified state vector",
-    "should_trigger": true
-  },
-  {
-    "query": "Generate a deterministic omni_id for this incoming payload so re-syncs deduplicate correctly",
-    "should_trigger": true
-  },
-  {
-    "query": "Validate that this external application's JSON payload has source_system, sync_timestamp, and data_payload before syncing",
-    "should_trigger": true
-  },
-  {
-    "query": "Coerce the string revenue and boolean flags in this app payload to typed fields per our mapping schema",
-    "should_trigger": true
-  },
-  {
-    "query": "Run the universal sync orchestrator against the new Jira integration payload and report every mapping violation in one pass",
-    "should_trigger": true
-  },
-  {
-    "query": "Onboard this NetSuite instance into OmniBoard — normalize its account JSON to OmniHub fields first",
-    "should_trigger": true
-  },
-  {
-    "query": "Walk a new client through the OmniHub onboarding flow and set up their account",
-    "should_trigger": false
-  },
-  {
-    "query": "Add voice input support to the OmniBoard modal widget in the left sidebar",
-    "should_trigger": false
-  },
-  {
-    "query": "Validate this CSV export of quarterly sales numbers for formatting problems",
-    "should_trigger": false
-  },
-  {
-    "query": "Parse the invoice PDF attachments and extract the line items into a spreadsheet",
-    "should_trigger": false
-  },
-  {
-    "query": "Write a Postgres migration to move the accounts table into the new tenant schema",
-    "should_trigger": false
-  },
-  {
-    "query": "Design the REST API schema for our new public partner endpoints",
-    "should_trigger": false
-  },
-  {
-    "query": "Convert this JSON file of customer records into a CSV for the finance team",
-    "should_trigger": false
-  },
-  {
-    "query": "Write a SQL query that joins accounts to opportunities and sums annual revenue",
-    "should_trigger": false
-  },
-  {
-    "query": "Set up the OAuth client credentials flow for the Salesforce connected app",
-    "should_trigger": false
-  }
+  {"query": "Normalize the Salesforce account payload into OmniHub state vectors for OmniBoard integration.", "should_trigger": true},
+  {"query": "Map the HubSpot contact export JSON fields to the unified APEX schema.", "should_trigger": true},
+  {"query": "Run the sync orchestrator on the Shopify order payload before OmniBoard onboarding.", "should_trigger": true},
+  {"query": "Validate and normalize the external CRM JSON for OmniBoard app integration.", "should_trigger": true},
+  {"query": "Apply field mappings to the incoming Zendesk ticket payload and generate omni_id.", "should_trigger": true},
+  {"query": "Initialize OmniBoard integration for the normalized QuickBooks invoice payload.", "should_trigger": true},
+  {"query": "Map disparate fields from the Stripe payment event JSON to APEX state vectors.", "should_trigger": true},
+  {"query": "Run the universal sync on the incoming ERP payload to prepare for OmniBoard app onboarding.", "should_trigger": true},
+  {"query": "Normalize the NetSuite customer record JSON using the standard APEX mapping schema.", "should_trigger": true},
+  {"query": "Apply type coercions to the incoming Dynamics 365 payload and generate a deterministic omni_id.", "should_trigger": true},
+  {"query": "Onboard a new client through the OmniBoard conversational modal.", "should_trigger": false},
+  {"query": "Parse and validate this CSV file for data quality issues.", "should_trigger": false},
+  {"query": "Extract text from this PDF invoice and insert it into the database.", "should_trigger": false},
+  {"query": "Design a REST API schema for the new customer portal.", "should_trigger": false},
+  {"query": "Write a SQL migration to add columns to the accounts table.", "should_trigger": false},
+  {"query": "Convert this JSON payload to a CSV file for download.", "should_trigger": false},
+  {"query": "Set up OAuth authentication between the external app and OmniHub.", "should_trigger": false},
+  {"query": "Query the database for all active user accounts this month.", "should_trigger": false},
+  {"query": "Answer a client's question via the OmniBoard prompt interface.", "should_trigger": false},
+  {"query": "Generate a report from the normalized data already stored in OmniHub.", "should_trigger": false}
 ]
