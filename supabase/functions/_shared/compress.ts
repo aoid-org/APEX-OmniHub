@@ -30,7 +30,7 @@ export function estimateTokens(text: string): number {
 const BOILERPLATE_PATTERNS: [RegExp, string][] = [
   [/\n{3,}/g, '\n\n'],
   [/[ \t]{2,}/g, ' '],
-  [/ +$/gm, ''],
+  [/[ \t]$/gm, ''],
   [/\bplease note that\b/gi, ''],
   [/\bit is important to note that\b/gi, ''],
   [/\bfeel free to\b/gi, ''],
