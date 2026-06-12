@@ -308,16 +308,22 @@
   }
   function pad(n) { return String(n).length < 2 ? '0' + n : String(n); }
   function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function safeHref(url) {
+    if (typeof url !== 'string') return '#';
+    var u = url.trim();
+    return /^(https?:\/\/|\/|#)/.test(u) ? u : '#';
+  }
   var threePromise = null;
   function loadThree(src) {
     if (window.THREE) return Promise.resolve(window.THREE);
-    if (typeof src !== 'string' || !/^https:\/\//.test(src)) {
+    var safeSrc = (typeof src === 'string' && /^https:\/\//.test(src)) ? src : '';
+    if (!safeSrc) {
       return Promise.reject(new Error('three.js src must be an https:// URL'));
     }
     if (threePromise) return threePromise;
     threePromise = new Promise(function (res, rej) {
       var s = document.createElement('script');
-      s.src = src; s.async = true;
+      s.src = safeSrc; s.async = true;
       s.onload = function () { window.THREE ? res(window.THREE) : rej(new Error('THREE missing after load')); };
       s.onerror = function () { rej(new Error('Failed to load three.js')); };
       document.head.appendChild(s);
@@ -854,8 +860,8 @@
       '</div>' +
       '<div class="ohsm-proof">SOC 2 ALIGNED \u00b7 EU AI ACT ART. 14 \u00b7 GDPR ART. 30<br>TRUSTED IN REGULATED INDUSTRIES</div>' +
       '</div>';
-    fin.querySelector('.ohsm-btn-primary').setAttribute('href', opts.ctaHref);
-    fin.querySelector('.ohsm-btn-ghost').setAttribute('href', opts.demoHref);
+    fin.querySelector('.ohsm-btn-primary').setAttribute('href', safeHref(opts.ctaHref));
+    fin.querySelector('.ohsm-btn-ghost').setAttribute('href', safeHref(opts.demoHref));
     this.finale = fin;
     fin.querySelector('[data-ohsm-replay]').addEventListener('click', function () {
       fin.classList.remove('ohsm-show'); self.visited = {}; self.travelTo(0, true);
