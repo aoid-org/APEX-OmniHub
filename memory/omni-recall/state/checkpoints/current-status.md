@@ -1,6 +1,6 @@
 # Current Status
 
-- date: 2026-06-04
+- date: 2026-06-10
 - omni_recall_status: active
 - installation_path: memory/omni-recall/ (APEX-OmniHub repo)
 - runtime: claude-code-ephemeral-container
@@ -72,3 +72,41 @@
 - zero_mock_data_module_surface: verified — all moduleData.json entries isDemo:true; hardcoded literals removed from 4 module tsx files
 - cf_deploy_project: apex-omnihub (corrected from broken omnihub in PR #1262)
 - rsi_policy_version: 1.3.3
+
+## Latest session (2026-06-10) — OmniSkills/SkillForge/DAG E2E + OmniBoard scoping + doc sync
+- branch: claude/friendly-goodall-6bb4uc
+- scope: 20-criteria E2E execution across OmniSkills UI → SkillForge backend → DAG/Saga framework; forged and installed `.claude/skills/apex-universal-sync-orchestrator` (rubric 100/100, policy gate pass); applied OmniBoard dual-surface correction and re-ran the full workflow; audited and synced repo docs.
+- key outcome: skill v1.0.0 committed (`9b911dc`), scoping fix (`e747507`); `docs/platform/OMNIBOARD.md` reworked to dual-surface; `docs/skill-forge-implementation.md` drift fixed (UUID names, live Anthropic generation, `/launch/skillforge`, three UI surfaces); `CANONICAL_TRUTH.md` facts 19–20 added; correction 004 logged.
+- verification: forge lint 0/0, rubric 100/100 (twice — /tmp and installed path), pack ok, sync engine live-tested (valid + 3 violation scenarios + empty payload), Kahn cycle detection and LIFO-concurrent Saga rollback simulated and asserted, `apex_policy_check.py` pass on 11 enumerated files.
+- detail: state/checkpoints/2026-06-10-omniskills-skillforge-e2e.md
+
+## Latest session (2026-06-10) — Tech debt closure: TOCTOU, voice, route, regression tests (continued)
+- branch: claude/friendly-goodall-6bb4uc (continued from same branch)
+- scope: Close all 8 surfaced tech debt items. Agent swarm (4 agents) — 2 completed (policy gate + skill hygiene; saga regression test), 2 hit session limits (frontend + entitlement/edge function). Remaining 5 items completed directly.
+- key outcomes:
+  - `supabase/migrations/20260610000000_skill_entitlement_db_enforcement.sql`: BEFORE INSERT OR UPDATE trigger with `pg_advisory_xact_lock` closes TOCTOU race; BASIC=3 / PRO=999999; SECURITY DEFINER; additive-gate compliant (`-- additive-allow: REVOKE` on line immediately preceding REVOKE).
+  - `supabase/functions/generate-business-skills/index.ts`: `mockedSkill` → `generatedSkill` throughout; stale "Mocked for deterministic testing" comment removed; DB trigger `LIMIT_REACHED` exception mapped to HTTP 402.
+  - `apps/omnihub-site/src/App.tsx`: `/launch/skillforge` protected route registered; SkillForge import added; placed before catch-all `*`; PWA invariant comment preserved.
+  - `apps/omnihub-site/src/pages/Launch/SkillForge.tsx`: Web Speech Recognition voice toggle (Mic/MicOff, amber/orange); transcript appends to current field; stops on step-change/unmount/submit; toast on unavailable.
+  - `apps/omnihub-site/dashboard/components/OmniBoardWizard.tsx`: same voice toggle in OmniBoard modal; uses existing `error` state for no-support messaging; stops on unmount/dismiss.
+  - `orchestrator/tests/test_agent_saga_activity_dispatch.py`: 4 regression tests locking `_execute_activity` keyword-arg fix. All 4 pass.
+  - `governance/ci/scripts/apex_policy_check.py` v1.2.0: directory expansion + fail-closed on 0 files scanned (committed in prior push `e4235ab`).
+  - `.gitignore` + skill dist hygiene: dist artifacts removed from git, ignore rule corrected (committed in `e4235ab`).
+  - `orchestrator/workflows/agent_saga.py`: Saga call-site keyword-arg fix (committed in `b556ff8`).
+- commits_this_session: b556ff8, e4235ab, c0a9517
+- verification: pytest 4/4 pass, ruff clean, tsc --skipLibCheck exit 0 (TS5101 baseUrl deprecation is pre-existing), additive-gate: 0 violations in new migration, forge lint 0/0.
+- tech_debt_remaining: 0
+
+## Verified runtime facts (2026-06-10) — claude/friendly-goodall-6bb4uc branch (final)
+- last_verified_date: 2026-06-10
+- last_verified_commit: c0a9517 (feat: close TOCTOU race, fix edge function naming, add voice input, register /launch/skillforge route)
+- active_branch: claude/friendly-goodall-6bb4uc (pushed)
+- main_head: ef0f337 (fix(omnidash): OmniDash Full Restore Implementation (#1347))
+- omniboard_definition: dual-surface — client-facing modal (Left Sidebar Widget → OmniBoardWizard, typed prompts + voice) + application integration layer (connect FSM → Connection Spec; payload normalization via apex-universal-sync-orchestrator). "Never client-facing" claim is retired (correction 004).
+- skillforge_route: /launch/skillforge — protected, registered in App.tsx
+- skillforge_voice: Web Speech Recognition toggle on full-page SkillForge.tsx and OmniBoardWizard.tsx
+- skillforge_generation: live Anthropic claude-3-5-haiku-20241022 (not mocked); skill names skill_${crypto.randomUUID()}; `generatedSkill` variable (no longer `mockedSkill`)
+- skillforge_entitlement_enforcement: two-layer — edge-function optimistic gate + DB-level BEFORE trigger (TOCTOU-safe, advisory-lock serialised)
+- installed_skill: .claude/skills/apex-universal-sync-orchestrator v1.0.0 (rubric 100/100; deterministic omni_id; single-pass violation reporting)
+- policy_gate: apex_policy_check.py v1.2.0 — expands directory args; fails closed on 0 files scanned
+- saga_dispatch: _execute_activity call sites use keyword args (_step_id=, is_compensation=); locked by 4 regression tests

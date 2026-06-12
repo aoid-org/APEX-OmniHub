@@ -17,8 +17,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-!.claude/skills/**/dist/
-!.claude/skills/**/dist/**
+# Skill build artifacts (regenerate on demand with `forge.py pack`)
+.claude/skills/*/dist/
 *.local
 *.tsbuildinfo
 

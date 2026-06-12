@@ -25,3 +25,21 @@ Each correction should capture:
   `quality-bar.md`, `state/checkpoints/current-status.md`, core directives.
 - **Promotion decision:** directive (multi-agent block added to omni-recall/CLAUDE.md and core directives).
 - **Permanent:** yes.
+
+### 2026-06-10 — OmniBoard "integration-only" scoping (project-wide, permanent)
+
+- **Original wrong assumption:** "OmniBoard is strictly for application integration and
+  onboarding — not for clients" was treated as a platform-wide rule; skill files repeated
+  "OmniBoard is never client-facing."
+- **Corrected state:** OmniBoard is dual-surface — a client-facing conversational modal
+  (Left Sidebar Widget → `OmniBoardWizard.tsx`, typed prompt input) and an application
+  integration layer (connect FSM → Connection Spec; payload normalization via
+  `apex-universal-sync-orchestrator`). Integration-pipeline skills scope to their function
+  boundary; product descriptions present both surfaces.
+- **Scope:** project-wide.
+- **Affected pages:** `.claude/skills/apex-universal-sync-orchestrator/`,
+  `docs/platform/OMNIBOARD.md`, `docs/skill-forge-implementation.md`,
+  `docs/architecture/CANONICAL_TRUTH.md` (fact 19), `docs/README.md`.
+- **Promotion decision:** canonical fact + ledger entry
+  (`004-omniboard-dual-surface-scoping.md`).
+- **Permanent:** yes.

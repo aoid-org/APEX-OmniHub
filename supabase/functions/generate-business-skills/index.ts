@@ -202,10 +202,10 @@ async function handleSkillForge(
     );
   }
 
-  // Generate Skill (Mocked for deterministic testing)
+  // Generate Skill via Anthropic (name overwritten below for uniqueness)
   const skillName = `skill_${crypto.randomUUID()}`;
 
-  let mockedSkill: SkillDefinition;
+  let generatedSkill: SkillDefinition;
 
   try {
     const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
@@ -242,8 +242,8 @@ async function handleSkillForge(
     const data = await response.json();
     const resultText = data.content[0].text;
 
-    mockedSkill = JSON.parse(resultText);
-    mockedSkill.name = skillName; // ensure unique name
+    generatedSkill = JSON.parse(resultText);
+    generatedSkill.name = skillName; // ensure unique name
   } catch (error) {
     console.error("Failed to generate skill with Anthropic:", error);
     return new Response(
@@ -265,10 +265,31 @@ async function handleSkillForge(
       user_id: user.id,
       name: skillName,
       trigger_intent: trigger,
-      definition: mockedSkill,
+      definition: generatedSkill,
     });
 
   if (insertError) {
+    // DB-level entitlement trigger fired (closes the check-then-insert race):
+    // return the same 402 contract as the entitlement gate above.
+    if (insertError.message?.includes("LIMIT_REACHED")) {
+      return new Response(
+        JSON.stringify({
+          error: "LIMIT_REACHED",
+          message:
+            "SYSTEM OVERLOAD — Upgrade to Architect Tier to forge more skills.",
+          context: {
+            current: entitlement.current,
+            max: entitlement.max,
+            tier: entitlement.tier,
+          },
+        }),
+        {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     console.error("Failed to insert skill:", insertError);
     return new Response(
       JSON.stringify({
@@ -285,7 +306,7 @@ async function handleSkillForge(
   return new Response(
     JSON.stringify({
       success: true,
-      skill: mockedSkill,
+      skill: generatedSkill,
       entitlement: {
         used: entitlement.current + 1,
         max: entitlement.max,
