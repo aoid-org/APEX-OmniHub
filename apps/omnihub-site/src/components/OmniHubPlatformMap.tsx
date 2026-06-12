@@ -30,7 +30,7 @@ const SCRIPT_SRC = '/omnihub-starmap.js';
 const SCRIPT_ID  = 'ohsm-script';
 
 function loadScriptOnce(): Promise<void> {
-  if (typeof globalThis.window === 'undefined') return Promise.resolve();
+  if (globalThis.window === undefined) return Promise.resolve();
   if (globalThis.window.OmniHubStarmap) return Promise.resolve();
   const existing = document.getElementById(SCRIPT_ID);
   if (existing) {
