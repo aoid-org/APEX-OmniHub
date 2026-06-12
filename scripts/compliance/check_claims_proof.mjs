@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const ledgerPath = resolve('docs/compliance/CLAIMS_LEDGER.yml');
+const ledgerPath = resolve('memory/omni-recall/docs/compliance/CLAIMS_LEDGER.yml');
 const sitePath = resolve('apps/omnihub-site/src/content/site.ts');
 
 function parseClaimsLedger(content) {

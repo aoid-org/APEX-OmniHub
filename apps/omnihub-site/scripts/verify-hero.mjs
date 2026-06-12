@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Output to root/docs/rca-screenshots relative to script location
-const OUTPUT_DIR = path.resolve(__dirname, '../docs/rca-screenshots');
+// Output to root/memory/omni-recall/docs/rca-screenshots relative to script location
+const OUTPUT_DIR = path.resolve(__dirname, '../../../memory/omni-recall/docs/rca-screenshots');
 
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });

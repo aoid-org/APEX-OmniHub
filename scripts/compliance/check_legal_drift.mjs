@@ -19,8 +19,8 @@ for (const file of files) {
     }
   }
 
-  if (!source.includes('docs/compliance/')) {
-    console.error(`[MISSING] ${file} must reference docs/compliance/`);
+  if (!source.includes('memory/omni-recall/docs/compliance/')) {
+    console.error(`[MISSING] ${file} must reference memory/omni-recall/docs/compliance/`);
     failed = true;
   }
 }
