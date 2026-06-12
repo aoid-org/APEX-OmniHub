@@ -73,7 +73,7 @@ logger.info('API request completed', {
 ```
 
 **Log Retention:**
-- All log retention timelines are defined in `docs/compliance/DATA_RETENTION_POLICY.md`.
+- All log retention timelines are defined in `memory/omni-recall/docs/compliance/DATA_RETENTION_POLICY.md`.
 
 ## Incident Response
 
@@ -139,7 +139,7 @@ npm run smoke-test
 ## Disaster Recovery
 
 ### Backup Strategy
-- **Database:** Automated hourly snapshots with retention defined in `docs/compliance/DATA_RETENTION_POLICY.md`
+- **Database:** Automated hourly snapshots with retention defined in `memory/omni-recall/docs/compliance/DATA_RETENTION_POLICY.md`
 - **Configuration:** Version-controlled in git
 - **Secrets:** Backed up in 1Password with 2-person approval
 

@@ -24,7 +24,7 @@ status: verified
 - Contact: [REPLACE_WITH_ACTUAL_PRIVACY_INBOX] for requests.
 
 ## Retention & Deletion
-Retention controls are defined in `docs/compliance/DATA_RETENTION_POLICY.md`.
+This document works in conjunction with [Data Retention Policy](memory/omni-recall/docs/compliance/DATA_RETENTION_POLICY.md).
 
 ## Sub-processors (High-Level)
 - Supabase (auth, storage).
