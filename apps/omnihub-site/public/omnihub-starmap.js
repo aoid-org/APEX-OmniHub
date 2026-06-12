@@ -50,73 +50,73 @@
   var CAPS = [
     {
       name: 'OmniPort', tag: 'UNIVERSAL CONNECTOR NETWORK',
-      lead: 'Universal compatibility across legacy, Web2, Web3, AI, NFT, and blockchain applications. One controlled doorway connects OmniHub to what you already use \u2014 nothing gets replaced, nothing gets left behind.',
+      lead: 'Connect your legacy, Web2, Web3, AI, and blockchain applications with total ease. A single secure doorway links OmniHub to the tools you already rely on. We don\'t replace your systems; we unify them without leaving anything behind.',
       chips: ['Universal Connector Network', 'Single controlled port', 'Legacy \u00b7 Web2 \u00b7 Web3', 'AI \u00b7 NFT \u00b7 Blockchain'],
       demo: 'omniport', pos: [0, 2, 0], size: 1.15
     },
     {
       name: 'Tri-Force Architecture', tag: 'GUARDIAN \u2192 PLANNER \u2192 EXECUTOR',
-      lead: 'A decentralized tripartite model for uncompromised security: Guardian, Planner, and Executor. Three specialists check each other\u2019s work \u2014 so intent never bypasses policy, no matter how fast things move.',
+      lead: 'A decentralized, three-part model designed for uncompromised security: Guardian, Planner, and Executor. These three specialists independently verify each other\'s work to ensure that your intent always respects your policies, even at high speeds.',
       chips: ['Guardian', 'Planner', 'Executor', 'Intent never bypasses policy'],
       demo: 'triforce', pos: [-46, 8, -52], size: 1.35
     },
     {
       name: 'OmniDash', tag: 'YOUR COMMAND CENTER',
-      lead: 'Your governed intelligence command center. Monitor every agent, workflow, integration, and event from a single real-time surface \u2014 and issue commands in plain language.',
+      lead: 'Your central hub for governed intelligence. Monitor every agent, workflow, integration, and event in real time from one unified dashboard, and easily issue commands using everyday language.',
       chips: ['Natural language directives', 'Capability-matched routing', 'Override any agent, instantly', 'Live Audit Trail'],
       demo: 'omnidash', pos: [50, -6, -104], size: 1.25
     },
     {
       name: 'Policy Enforcement Engine', tag: 'RULES BEFORE ACTIONS',
-      lead: 'Governance rules apply before any action executes \u2014 not after something goes wrong. No agent accesses unauthorized data scopes, and every write is logged immutably.',
+      lead: 'We apply your governance rules before any action is taken, preventing issues before they occur. Agents never access unauthorized data, and every single write is securely and immutably logged.',
       chips: ['Scope Restriction', 'Audit on Write', 'Rollback Window', 'Cross-Border Block (GDPR)'],
       demo: 'policy', pos: [-56, -14, -158], size: 1.15
     },
     {
       name: 'One-Click Rollback', tag: 'AN ARCHITECTURAL PRIMITIVE',
-      lead: 'Reverse any agent action or workflow state with a single command \u2014 no cleanup required. One bad decision doesn\u2019t cascade. You undo it. Completely.',
+      lead: 'Reverse any agent action or workflow state with just one command without needing manual cleanup. A single bad decision will not cause a ripple effect. You can simply undo it completely.',
       chips: ['One-click rollback', 'Blast radius containment', 'Compensating transactions'],
       demo: 'rollback', pos: [44, 16, -212], size: 1.3
     },
     {
       name: 'OmniTrace', tag: 'IMMUTABLE AUDIT \u00b7 FORENSIC REPLAY',
-      lead: 'Forensic replay and immutable audit trails for regulatory compliance. Full reconstruction of any agent chain \u2014 every decision your AI ever made, provable on demand.',
+      lead: 'Access forensic replay and immutable audit trails to easily meet regulatory compliance. You can fully reconstruct any agent chain and prove every decision your AI has ever made on demand.',
       chips: ['Immutable Audit Log', 'Forensic decision replay', 'GDPR Art. 30', 'Full chain reconstruction'],
       demo: 'omnitrace', pos: [-40, 22, -266], size: 1.2
     },
     {
       name: 'MAN Mode', tag: 'MANUAL APPROVAL NODE',
-      lead: 'High-risk actions pause at an approval checkpoint while authorized operators approve, reject, or escalate \u2014 with full traceability. The AI moves fast; the big calls stay human.',
+      lead: 'High-risk actions automatically pause at an approval checkpoint. Authorized operators can then approve, reject, or escalate the request with full traceability. Your AI works quickly while keeping the biggest decisions in human hands.',
       chips: ['Approval checkpoint', 'Approve \u00b7 Reject \u00b7 Escalate', 'Full traceability', 'EU AI Act Art. 14'],
       demo: 'manmode', pos: [38, -20, -318], size: 1.2
     },
     {
       name: 'Connect AI / BYOM', tag: 'YOUR MODELS, YOUR RULES',
-      lead: 'Bring Your Own Model. Plug in any LLM into governed workflows \u2014 and change providers without rebuilding your system. You are never locked in.',
+      lead: 'Bring your own model to the table. You can plug any LLM into your governed workflows and switch providers without rebuilding your system. Enjoy total freedom with zero vendor lock-in.',
       chips: ['Bring Your Own Model', 'Any LLM', 'Zero Vendor Lock-In'],
       demo: 'byom', pos: [-48, -8, -370], size: 1.15
     },
     {
       name: 'SkillForge / OmniSkills', tag: 'EXPERT SKILLS, GOVERNED',
-      lead: 'Forge, install, and govern expert-level OmniSkills \u2014 packaged expertise your agents can pick up and use, under the same rules as everything else on the platform.',
+      lead: 'Create, install, and manage expert-level OmniSkills. These are packaged sets of expertise that your agents can easily learn and apply, all while following the same consistent rules across the platform.',
       chips: ['Forge', 'Install', 'Govern', 'OmniSkills'],
       demo: 'skillforge', pos: [46, 18, -422], size: 1.1
     },
     {
       name: 'Real-Time Telemetry', tag: 'LIVE OPERATIONAL INTELLIGENCE',
-      lead: 'Live operational intelligence across all agents and workflows. You always know what\u2019s running, where it\u2019s running, and how it\u2019s performing \u2014 in real time.',
+      lead: 'Access live operational intelligence across all your agents and workflows. You will always know exactly what is running, where it is running, and how well it is performing in real time.',
       chips: ['All agents', 'All workflows', 'Real-time visibility'],
       demo: 'telemetry', pos: [-36, -18, -472], size: 1.1
     },
     {
       name: 'PhysiOmni', tag: 'AI BEYOND THE SCREEN',
-      lead: 'The physical AI operations layer. Deploy, govern, and orchestrate embodied AI systems and robotics through the same governed command surface as your digital agents.',
+      lead: 'Meet the physical AI operations layer. You can deploy, govern, and orchestrate embodied AI systems and robotics using the exact same secure command surface that manages your digital agents.',
       chips: ['Embodied AI', 'Robotics', 'Same governed surface'],
       demo: 'physiomni', pos: [40, 24, -526], size: 1.25
     },
     {
       name: 'Early Access', tag: 'PUT IT TO WORK',
-      lead: 'That\u2019s the full platform \u2014 eleven capabilities in one governed layer, where every action is authorized, logged, and reversible. Join enterprises that have moved beyond black-box AI.',
+      lead: 'Explore the full platform. You get eleven powerful capabilities in one governed layer where every action is authorized, logged, and completely reversible. Join the leading enterprises that have finally moved beyond black-box AI.',
       chips: [],
       demo: null, pos: [0, 4, -590], size: 1.5
     }
@@ -363,7 +363,7 @@
     /* OmniPort — route any system through the single controlled port */
     omniport: function (root) {
       root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
-      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:10px">Pick any system. Watch it connect through one controlled port \u2014 no custom integration.</div>'));
+      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:10px">Pick any system and watch it connect through a single controlled port. No custom integration is needed.</div>'));
       var grid = el('div', 'ohsm-dgrid');
       var p = pipeline(['SYSTEM', 'OMNIPORT', 'OMNIHUB']);
       var log = el('div', 'ohsm-log');
@@ -413,7 +413,7 @@
             }, 420));
             timers.push(setTimeout(function () {
               p.nodes[2].classList.add('ohsm-pass');
-              logLine(log, '<span class="ohsm-ok">\u2713</span> Executor: done \u2014 fully logged, fully reversible');
+              logLine(log, '<span class="ohsm-ok">\u2713</span> Executor: done. Everything is fully logged and fully reversible.');
             }, 880));
           }
         }, 240));
@@ -502,15 +502,15 @@
         var blocked = false;
         rules.forEach(function (r, i) {
           if (states[i]) {
-            logLine(log, '<span class="ohsm-ok">\u2713 ' + r[0] + '</span> \u2014 enforced before execution');
+            logLine(log, '<span class="ohsm-ok">\u2713 ' + r[0] + '</span> is enforced before execution');
           } else {
             blocked = true;
-            logLine(log, '<span class="ohsm-bad">\u26a0 ' + r[0] + ' is OFF</span> \u2014 OmniHub flags the gap and pauses the action');
+            logLine(log, '<span class="ohsm-bad">\u26a0 ' + r[0] + ' is OFF</span>. OmniHub flags the gap and pauses the action');
           }
         });
         logLine(log, blocked
           ? '<span class="ohsm-hi">Action held.</span> Governance gaps never fail silently.'
-          : '<span class="ohsm-ok">Action authorized</span> \u2014 logged immutably, inside the rollback window.');
+          : '<span class="ohsm-ok">Action authorized</span>. It is securely logged inside the rollback window.');
       });
       root.appendChild(list); root.appendChild(test); root.appendChild(log);
       return function () {};
@@ -519,12 +519,12 @@
     /* One-Click Rollback — run a chain, then reverse it completely */
     rollback: function (root) {
       root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
-      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:10px">Run a workflow. Then undo all of it \u2014 one click, no cleanup.</div>'));
+      root.appendChild(el('div', '', '<div style="font-size:12.5px;color:' + TOKENS.textSecondary + ';margin-bottom:10px">Run a workflow and then undo it completely with a single click. No cleanup is needed.</div>'));
       var steps = ['Update 1,240 records', 'Notify 3 systems', 'Post journal entries', 'Trigger downstream sync'];
       var p = pipeline(['1', '2', '3', '4']);
       p.nodes.forEach(function (n, i) { n.textContent = steps[i]; });
       var run = el('button', 'ohsm-dbtn', 'Run workflow');
-      var rb = el('button', 'ohsm-dbtn', '\u21ba Roll back \u2014 one click');
+      var rb = el('button', 'ohsm-dbtn', '\u21ba Roll back with one click');
       rb.disabled = true; rb.style.borderColor = TOKENS.orange; rb.style.color = TOKENS.orangeLight;
       var row = el('div', 'ohsm-dgrid'); row.appendChild(run); row.appendChild(rb);
       var log = el('div', 'ohsm-log');
@@ -569,10 +569,10 @@
         ['09:14:02', 'Directive received', 'operator \u00b7 j.r'],
         ['09:14:03', 'Guardian: policy check passed', 'guardian'],
         ['09:14:05', 'Planner: 3-step plan compiled', 'planner'],
-        ['09:14:09', 'Executor: step 1 \u2014 records updated', 'executor'],
-        ['09:14:14', 'Executor: step 2 \u2014 systems notified', 'executor'],
+        ['09:14:09', 'Executor: step 1, records updated', 'executor'],
+        ['09:14:14', 'Executor: step 2, systems notified', 'executor'],
         ['09:14:18', 'Write logged immutably (GDPR Art. 30)', 'audit'],
-        ['09:14:19', 'Chain sealed \u2014 fully reconstructable', 'omnitrace']
+        ['09:14:19', 'Chain sealed and fully reconstructable', 'omnitrace']
       ];
       var range = el('input', 'ohsm-range');
       range.type = 'range'; range.min = '0'; range.max = String(events.length - 1); range.value = '0';
@@ -598,16 +598,16 @@
       root.appendChild(el('div', 'ohsm-dl', '<b>TRY IT</b><span>SIMULATED PREVIEW</span>'));
       var card = el('div', '', '<div style="border:1px solid ' + TOKENS.orange + ';border-radius:10px;padding:11px 13px;margin-bottom:10px">' +
         '<div style="font-family:\'Space Mono\',monospace;font-size:9px;letter-spacing:.18em;color:' + TOKENS.orangeLight + '">HIGH-RISK ACTION \u00b7 PAUSED AT CHECKPOINT</div>' +
-        '<div style="font-size:13.5px;margin-top:6px;color:' + TOKENS.text + '">Agent requests: wire transfer of $48,000 \u2014 above the approval threshold.</div></div>');
+        '<div style="font-size:13.5px;margin-top:6px;color:' + TOKENS.text + '">Agent requests a wire transfer of $48,000. This is above the automatic approval threshold.</div></div>');
       var grid = el('div', 'ohsm-dgrid');
       var log = el('div', 'ohsm-log');
       function decide(label, line, cls) {
         grid.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
         logLine(log, cls === 'ok'
-          ? '<span class="ohsm-ok">\u2713 ' + label + '</span> \u2014 ' + line
+          ? '<span class="ohsm-ok">\u2713 ' + label + ':</span> ' + line
           : cls === 'bad'
-            ? '<span class="ohsm-bad">\u2715 ' + label + '</span> \u2014 ' + line
-            : '<span class="ohsm-hi">\u2191 ' + label + '</span> \u2014 ' + line);
+            ? '<span class="ohsm-bad">\u2715 ' + label + ':</span> ' + line
+            : '<span class="ohsm-hi">\u2191 ' + label + ':</span> ' + line);
         logLine(log, 'Recorded with full traceability: who, what, when, why. (EU AI Act Art. 14 oversight)');
         var again = el('button', 'ohsm-dbtn', 'New request');
         again.addEventListener('click', function () {
@@ -678,7 +678,7 @@
         list.appendChild(row);
       });
       root.appendChild(count); root.appendChild(list);
-      root.appendChild(el('div', 'ohsm-log', 'Forge your own, install from the library, govern them all \u2014 same rules, same audit, same rollback.'));
+      root.appendChild(el('div', 'ohsm-log', 'Forge your own, install from the library, and govern them all. You get the same rules, same audit trail, and same rollback capabilities.'));
       return function () {};
     },
 
@@ -721,7 +721,7 @@
       tick();
       var iv = setInterval(tick, 1100);
       root.appendChild(wrap); root.appendChild(spark);
-      root.appendChild(el('div', 'ohsm-log', 'Every agent. Every workflow. One real-time surface \u2014 with role-enforced visibility.'));
+      root.appendChild(el('div', 'ohsm-log', 'Every agent and workflow on one real-time surface, complete with role-enforced visibility.'));
       return function () { clearInterval(iv); };
     },
 
@@ -752,7 +752,7 @@
               logLine(log, '<span class="ohsm-ok">\u2713</span> Governed: within policy, action authorized');
               timers.push(setTimeout(function () {
                 p.nodes[2].classList.add('ohsm-pass');
-                logLine(log, '<span class="ohsm-ok">\u2713</span> Action executed \u2014 logged, traceable, reversible. Same rules beyond the screen.');
+                logLine(log, '<span class="ohsm-ok">\u2713</span> Action executed. It is fully logged, traceable, and reversible using the same rules beyond the screen.');
               }, 460));
             }
           }, 640));
@@ -852,7 +852,7 @@
       '<div class="ohsm-fcard">' +
       '<div class="ohsm-eyebrow">EARLY ACCESS</div>' +
       '<h3>Move beyond<br><em>black-box AI.</em></h3>' +
-      '<p>Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production \u2014 authorized, logged, and reversible.</p>' +
+      '<p>Join enterprises that have moved beyond black-box AI. Request early access and experience what governed intelligence looks like in production. Every action is authorized, logged, and reversible.</p>' +
       '<div class="ohsm-ctas">' +
       '<a class="ohsm-btn ohsm-btn-primary" target="_blank" rel="noopener">REQUEST EARLY ACCESS \u25b8</a>' +
       '<a class="ohsm-btn ohsm-btn-ghost" target="_blank" rel="noopener">WATCH THE MAESTRO DEMO</a>' +
