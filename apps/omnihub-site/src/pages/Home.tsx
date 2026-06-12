@@ -704,7 +704,7 @@ function CapabilitiesSection() {
     {
       title: "Connect AI / BYOM",
       path: "/byom",
-      desc: "Bring Your Own Model. Plug in any LLM — OpenAI, Anthropic, Gemini, Mistral, or private on-prem — into governed workflows with full auditability and zero vendor lock-in.",
+      desc: "Bring your own model to the table. You can plug any LLM into your governed workflows and switch providers without rebuilding your system. Enjoy total freedom with zero vendor lock-in.",
       icon: (
         <svg viewBox="0 0 20 20" fill="none">
           <circle cx="10" cy="10" r="3.5" stroke="#D4855A" strokeWidth="1.4" fill="none" />
