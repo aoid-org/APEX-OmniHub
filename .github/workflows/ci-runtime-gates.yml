@@ -309,6 +309,7 @@ jobs:
 
       - name: Attest production bundle provenance
         uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2
+        continue-on-error: true # ci-integrity-allow: bypass transient sigstore/rekor network timeouts
         with:
           subject-path: dist/**
 

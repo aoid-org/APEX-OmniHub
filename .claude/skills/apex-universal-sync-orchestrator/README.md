@@ -1,6 +1,6 @@
 # apex-universal-sync-orchestrator
 
-APEX Business Systems — OmniBoard Application Integration Skill.
+APEX Business Systems — OmniBoard Application Integration Skill (v1.1.0).
 
 Normalizes external application JSON payloads into APEX-OmniHub state vectors for
 reliable OmniBoard integration pipeline onboarding.
@@ -38,8 +38,11 @@ An empty `data_payload` warns cleanly and continues — valid for initial integr
 
 ## Architecture Note
 
-Targets the OmniBoard application integration pipeline. Does not interact with the
-OmniBoard client-facing conversational modal (Left Sidebar Widget → prompt/voice input).
+OmniBoard is a dual-surface system: an application integration layer (backend pipeline
+normalizing external app payloads into APEX-OmniHub state vectors) and a client-facing
+endpoint widget (Left Sidebar Widget opening a prompt/voice modal). This skill targets
+the application integration pipeline only; it does not handle interactions on the
+client-facing modal surface.
 
 ## License
 

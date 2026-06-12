@@ -97,3 +97,7 @@ omni_id:        "salesforce_2026061009"
 `omni_id` is deterministic for the same `(source_system, sync_timestamp)` pair,
 making it safe for re-sync deduplication. It is appended to the output JSON after
 all field mappings succeed.
+
+---
+
+_Revision note: v1.1.0 — OmniBoard dual-surface scoping correction applied 2026-06-11._

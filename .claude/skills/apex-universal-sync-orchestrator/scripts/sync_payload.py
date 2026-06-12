@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-apex-universal-sync-orchestrator: sync_payload.py
+apex-universal-sync-orchestrator v1.1.0: sync_payload.py
 Normalizes external application JSON payloads into APEX-OmniHub state vectors.
 Args: <input_json_path> <mapping_schema_path>
 """

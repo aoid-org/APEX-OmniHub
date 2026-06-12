@@ -1,14 +1,15 @@
 ---
 name: apex-universal-sync-orchestrator
-description: Synchronizes external application JSON payloads into unified APEX-OmniHub state vectors for OmniBoard application integration and onboarding. Use when mapping external API schemas, normalizing disjointed app data, or initializing OmniBoard app sync. Does not cover client-facing OmniBoard interactions, direct database migrations, or CSV/PDF parsing.
+description: Synchronizes external application JSON payloads into unified APEX-OmniHub state vectors for OmniBoard application integration and onboarding. Use when mapping external API schemas, normalizing disjointed app data, or initializing OmniBoard app sync. Does not cover client onboarding, direct database migrations, or CSV/PDF parsing.
 license: Proprietary - APEX Business Systems Ltd.
 ---
 
 ## Overview
 
 Normalizes external application JSON payloads into APEX-OmniHub state vectors, enabling
-reliable OmniBoard integration pipeline onboarding. Targets the application integration
-layer — not the OmniBoard client-facing conversational modal.
+reliable OmniBoard integration pipeline onboarding. OmniBoard is a dual-surface system;
+this skill targets its application integration layer only and does not handle the
+separate OmniBoard client-facing conversational modal surface.
 
 ## Input / Output / Success / Fails-when
 
