@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Skill Feedback
 
 Use this when the user reports that the skill gave incorrect guidance, is missing information, or could be improved. This is about the skill (agent instructions), not about Supabase the product.

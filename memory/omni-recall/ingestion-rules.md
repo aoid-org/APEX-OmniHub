@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Ingestion Rules
 
 Purpose: deterministic rules for adding new evidence into Omni-Recall without creating drift.

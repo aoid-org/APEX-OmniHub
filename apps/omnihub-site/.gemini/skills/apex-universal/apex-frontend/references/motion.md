@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Motion (Universal)
 
 - Micro interactions 80–180ms; transitions 180–280ms.

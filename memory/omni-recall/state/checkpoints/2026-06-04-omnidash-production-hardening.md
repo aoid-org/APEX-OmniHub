@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # OmniDash Production Hardening Session — 2026-06-04
 
 **Branch:** `feat/omnidash-production-hardening` → PR #1263

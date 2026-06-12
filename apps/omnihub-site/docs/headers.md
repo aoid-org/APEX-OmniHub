@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Security Headers Configuration
 
 This document provides security header configurations for deploying the APEX OmniHub marketing site across different hosting platforms.

@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # DESIGN Protocol (Universal)
 
 ## Step 0: Contract

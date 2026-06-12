@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Universal Synchronized Orchestrator
 
 ```
@@ -26,11 +32,11 @@
 
 **Before touching code, read the canonical architecture map:**
 
-- [CURRENT_PLATFORM_STATE_2026_06_06.md](./docs/CURRENT_PLATFORM_STATE_2026_06_06.md) — current branch/head assessment, recent git history, drift controls, and repo facts
-- [DOCUMENTATION_RELEASE_INDEX.md](./docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
-- [ARCHITECTURE_CANONICAL_MAP.md](./docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
-- **[Production Certification Status](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)** (Current Production Authority)
-- [CI Status Policy](./docs/project-status/CI_STATUS_POLICY.md)
+- [CURRENT_PLATFORM_STATE_2026_06_06.md](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_06.md) — current branch/head assessment, recent git history, drift controls, and repo facts
+- [DOCUMENTATION_RELEASE_INDEX.md](./memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md) — current maps, READMEs, status, audits, and runbooks
+- [ARCHITECTURE_CANONICAL_MAP.md](./memory/omni-recall/docs/architecture/ARCHITECTURE_CANONICAL_MAP.md)
+- **[Production Certification Status](./memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md)** (Current Production Authority)
+- [CI Status Policy](./memory/omni-recall/docs/project-status/CI_STATUS_POLICY.md)
 
 ---
 
@@ -253,19 +259,19 @@ npm run build      # Production build
 
 ## Documentation
 
-Full documentation is available in the [`docs/`](./docs/) directory.
+Full documentation is available in the [`docs/`](./memory/omni-recall/docs/) directory.
 
 | Document                                                                                | Description           |
 | --------------------------------------------------------------------------------------- | --------------------- |
-| [Current Platform State](./docs/CURRENT_PLATFORM_STATE_2026_06_06.md)             | Current branch/head assessment and drift-control facts |
-| [Release Notes v1.6.0](./docs/releases/RELEASE_NOTES_v1.6.0.md)                 | Historical v1.6.0 release notes |
-| [Executive Architecture Summary](./docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
-| [Production Certification Status](./docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |
-| [Documentation Release Index](./docs/DOCUMENTATION_RELEASE_INDEX.md)                  | Current docs map, READMEs, status, audits, runbooks |
-| [Testing Evidence & Armageddon Reports](./docs/testing/README.md)                    | Validation history    |
-| [PR Triage Report](./docs/ops/PR_TRIAGE.md)                                      | Open PR resolution matrix |
-| [OPS Runbooks](./docs/ops/OPS_RUNBOOKS_CI_GUARDRAILS.md)                               | Operations procedures |
-| [Supabase Setup](./docs/infrastructure/SUPABASE_SETUP.md)                               | Database config guide |
+| [Current Platform State](./memory/omni-recall/docs/CURRENT_PLATFORM_STATE_2026_06_06.md)             | Current branch/head assessment and drift-control facts |
+| [Release Notes v1.6.0](./memory/omni-recall/docs/releases/RELEASE_NOTES_v1.6.0.md)                 | Historical v1.6.0 release notes |
+| [Executive Architecture Summary](./memory/omni-recall/docs/architecture/EXECUTIVE_ARCHITECTURE_SUMMARY.md) | System design         |
+| [Production Certification Status](./memory/omni-recall/docs/project-status/PRODUCTION_CERTIFICATION_STATUS.md) | Current certification authority |
+| [Documentation Release Index](./memory/omni-recall/docs/DOCUMENTATION_RELEASE_INDEX.md)                  | Current docs map, READMEs, status, audits, runbooks |
+| [Testing Evidence & Armageddon Reports](./memory/omni-recall/docs/testing/README.md)                    | Validation history    |
+| [PR Triage Report](./memory/omni-recall/docs/ops/PR_TRIAGE.md)                                      | Open PR resolution matrix |
+| [OPS Runbooks](./memory/omni-recall/docs/ops/OPS_RUNBOOKS_CI_GUARDRAILS.md)                               | Operations procedures |
+| [Supabase Setup](./memory/omni-recall/docs/infrastructure/SUPABASE_SETUP.md)                               | Database config guide |
 | [orchestrator/README](./orchestrator/README.md)                                         | Temporal setup        |
 | [orchestrator/MAN_MODE](./orchestrator/MAN_MODE.md)                                     | Manual Approval Node     |
 | [orchestrator/ARCHITECTURE](./orchestrator/ARCHITECTURE.md)                             | Backend design        |

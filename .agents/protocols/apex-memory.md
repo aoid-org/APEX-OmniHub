@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX-MEMORY (Universal)
 
 **Mission**: Exponentially enhance AI memory and context retention through intelligent compression, verification, and persistence protocols.

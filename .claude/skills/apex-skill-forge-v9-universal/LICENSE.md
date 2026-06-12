@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # License
 
 **APEX-SKILL-FORGE** — Copyright © 2026 APEX Business Systems Ltd., Edmonton, Alberta, Canada. All rights reserved.

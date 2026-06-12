@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Visual Craft (Universal)
 
 - Commit to an art direction (1 primary + 1 accent).

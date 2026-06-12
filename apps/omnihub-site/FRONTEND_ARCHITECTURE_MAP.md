@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX OmniHub — Frontend Architecture Map
 
 > **Strictly Enforced Rule**: `apps/omnihub-site/` is the **sole routing environment** for the APEX OmniHub Synchronized Orchestrator (SO). `OmniDashShell.tsx` is the canonical shell; `DashboardOverview.tsx` is the canonical data view.

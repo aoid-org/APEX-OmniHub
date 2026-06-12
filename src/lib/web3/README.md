@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Web3 Verification Module
 
 Phase 1 implementation of wallet authentication and NFT-based entitlement gating.

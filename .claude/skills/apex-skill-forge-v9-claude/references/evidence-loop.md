@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Evidence Loop
 
 Read this when generating a scorecard, designing task evals, or deciding whether a claim may ship.

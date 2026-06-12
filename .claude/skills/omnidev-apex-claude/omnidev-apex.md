@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # OMNIDEV-APEX v3.0 — Claude-Native Edition
 > *First-pass perfection. Zero iteration. Zero regression. Zero drift. APEX exceeded. Always.*
 

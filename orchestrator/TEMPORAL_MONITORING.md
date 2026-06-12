@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Temporal Worker Health Monitor
 
 **Purpose:** Monitor the health and availability of the Temporal.io worker that powers the AI Agent Orchestrator.

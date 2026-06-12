@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX-BOOST: VENDOR CONFIGURATION GUIDE
 **How to activate apex-boost on each major model/platform.**
 

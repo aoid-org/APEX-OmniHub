@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX-BOOST v1.0 — Universal Edition
 **Omnipotent AI performance amplifier. Works on ALL major models.**
 

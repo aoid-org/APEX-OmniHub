@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Testing CLAUDE.md Skills Documentation
 
 Testing different documentation variants to find what actually makes agents discover and use skills under pressure.

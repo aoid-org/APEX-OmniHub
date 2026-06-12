@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX Build Rubric: 100 Point Score
 
 Use this rubric before approving RFCs, architecture reviews, AI-generated code, or production-impacting PRs.
