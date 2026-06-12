@@ -1,9 +1,3 @@
----
-version: 1.0.0
-last_audited: 2026-06-12
-status: verified
----
-
 # TERRAFORM INFRASTRUCTURE AS CODE
 **Phase 3 - Week 5-6**
 
