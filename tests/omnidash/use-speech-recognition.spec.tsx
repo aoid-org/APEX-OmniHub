@@ -5,37 +5,10 @@ import {
   useSpeechRecognition,
   type UseSpeechRecognitionOptions,
 } from '../../apps/omnihub-site/src/hooks/useSpeechRecognition';
-
-/** Minimal controllable double for the browser SpeechRecognition API. */
-class FakeSpeechRecognition extends EventTarget {
-  static instances: FakeSpeechRecognition[] = [];
-
-  continuous = true;
-  interimResults = true;
-  lang = '';
-  onerror: ((event: Event) => void) | null = null;
-  onend: (() => void) | null = null;
-  onresult:
-    | ((event: {
-        resultIndex: number;
-        results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }>;
-      }) => void)
-    | null = null;
-  start = vi.fn();
-  stop = vi.fn(() => {
-    this.onend?.();
-  });
-
-  constructor() {
-    super();
-    FakeSpeechRecognition.instances.push(this);
-  }
-}
-
-interface VoiceTestWindow extends Window {
-  SpeechRecognition?: new () => FakeSpeechRecognition;
-  webkitSpeechRecognition?: new () => FakeSpeechRecognition;
-}
+import {
+  FakeSpeechRecognition,
+  type VoiceTestWindow,
+} from './_speech-recognition-test-helpers';
 
 const voiceWindow = window as VoiceTestWindow;
 

@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent, cleanup } from '@testing-library/react';
 import { OmniBoardWizard } from '../../apps/omnihub-site/dashboard/components/OmniBoardWizard';
+import {
+  FakeSpeechRecognition,
+  type VoiceTestWindow,
+} from './_speech-recognition-test-helpers';
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
@@ -9,36 +13,6 @@ vi.mock('@/lib/supabase', () => ({
     },
   },
 }));
-
-/** Minimal controllable double for the browser SpeechRecognition API. */
-class FakeSpeechRecognition extends EventTarget {
-  static instances: FakeSpeechRecognition[] = [];
-
-  continuous = true;
-  interimResults = true;
-  lang = '';
-  onerror: ((event: Event) => void) | null = null;
-  onend: (() => void) | null = null;
-  onresult:
-    | ((event: {
-        resultIndex: number;
-        results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }>;
-      }) => void)
-    | null = null;
-  start = vi.fn();
-  stop = vi.fn(() => {
-    this.onend?.();
-  });
-
-  constructor() {
-    super();
-    FakeSpeechRecognition.instances.push(this);
-  }
-}
-
-interface VoiceTestWindow extends Window {
-  SpeechRecognition?: new () => FakeSpeechRecognition;
-}
 
 const voiceWindow = window as VoiceTestWindow;
 
