@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX OmniHub Sandbox Environment
 
 The sandbox environment allows for isolated testing of Temporal activities and workflows without requiring a full Temporal server or external API credentials. It uses Python's `unittest.mock` to simulate dependencies.

@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # apex-skill-forge v9.4.0 — Claude edition
 
 Forge, audit, and package agent skills that ship with their own evidence: a lint-gated structure, a token ledger, a validated trigger eval, a 100-point binary rubric, and a one-command install path. Licensed by APEX Business Systems Ltd. — see LICENSE.md.

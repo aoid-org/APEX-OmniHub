@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX Resilience Protocol - Security Documentation
 
 ## Security Hotspot Resolution: SonarQube S5443

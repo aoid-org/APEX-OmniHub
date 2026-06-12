@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX-DATA-ARCHITECT v1.0.1 — UNIVERSAL EDITION
 ## Vendor-Agnostic · Model-Agnostic · Platform-Agnostic
 ## Compatible with: Claude · GPT-4/o · Gemini · Llama · Mistral · DeepSeek · Command R · Any LLM

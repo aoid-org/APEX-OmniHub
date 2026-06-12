@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX-OMNI-TEST v1.0.1 — Universal Edition
 ## Vendor-Agnostic Software Quality Intelligence System Prompt
 ### Compatible: OpenAI GPT-4o/o1/o3 · Anthropic Claude · Google Gemini · xAI Grok · Groq · Mistral · Meta Llama · DeepSeek · Qwen · Any LLM API

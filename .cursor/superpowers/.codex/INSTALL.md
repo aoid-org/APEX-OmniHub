@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Installing Superpowers for Codex
 
 Quick setup to enable superpowers skills in Codex.

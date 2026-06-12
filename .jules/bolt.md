@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 ## 2026-02-16 - O(N) array search inside object traversal is a major bottleneck
 **Learning:** Checking for substrings across an array of terms (`SENSITIVE_FIELD_NAMES.some(term => key.includes(term))`) is extremely slow, especially when executed inside a deep recursive sanitization loop that checks every single object key.
 **Action:** Use a pre-compiled Regular Expression (`new RegExp(terms.join('|'), 'i')`) instead. This provides an O(1) lookup in V8 and significantly reduces recursive overhead. Path alias (`@/`) imports in vitest/bun test can be tricky without proper config, but do not override them just to test a unit file locally as they break repo standards.

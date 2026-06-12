@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Token Economics
 
 Read this when a skill blows a budget, when deciding what goes in SKILL.md vs references vs scripts, or when the hype linter fires.

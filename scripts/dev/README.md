@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Dev Utility Scripts
 
 Developer convenience scripts for verification and code review tasks. These are

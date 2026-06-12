@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 Before finalizing, score the output (0–100) using:
 - UX clarity (25)
 - UI consistency (20)

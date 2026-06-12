@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Description Engineering
 
 Read this when writing or fixing a skill's frontmatter description, or when a skill mis-triggers.

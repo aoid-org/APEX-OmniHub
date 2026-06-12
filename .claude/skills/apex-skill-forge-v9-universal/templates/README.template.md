@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # {{SKILL_NAME}}
 
 {{One-sentence value statement - what changes for the user.}}

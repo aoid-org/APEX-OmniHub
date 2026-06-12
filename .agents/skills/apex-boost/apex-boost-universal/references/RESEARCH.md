@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX-BOOST: RESEARCH BASIS & CITATIONS
 
 All techniques in apex-boost are grounded in peer-reviewed or published research.

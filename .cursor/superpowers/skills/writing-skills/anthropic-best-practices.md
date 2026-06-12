@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Skill authoring best practices
 
 > Learn how to write effective Skills that Claude can discover and use successfully.
