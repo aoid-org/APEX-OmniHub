@@ -6,7 +6,7 @@ import { getAllFiles } from './ci-utils.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const DOCS_DIR = path.join(ROOT_DIR, 'docs');
+const DOCS_DIR = path.join(ROOT_DIR, 'memory', 'omni-recall', 'docs');
 
 let hasErrors = false;
 
