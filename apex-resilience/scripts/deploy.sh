@@ -38,9 +38,13 @@ fi
 echo "✅ Dependencies verified"
 
 # Step 3: Compile TypeScript
+# Use verify:types (tsc -b, the referenced-project build) rather than the
+# `typecheck` script: the latter runs `tsc -p tsconfig.json`, and the root
+# tsconfig has `files: []` with only project references, so it compiles nothing
+# and always passes — a false-green gate.
 echo "📋 Step 3: Compiling TypeScript..."
 
-if ! npm run typecheck; then
+if ! npm run verify:types; then
   echo "❌ TypeScript compilation failed" >&2
   exit 1
 fi
