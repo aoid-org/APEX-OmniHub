@@ -67,7 +67,7 @@ describe('M03Panels', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useDemoMode).mockReturnValue({ demoMode: false } as ReturnType<typeof useDemoMode>);
-    vi.mocked(useDashboardData).mockReturnValue(defaultDashData as ReturnType<typeof useDashboardData>);
+    vi.mocked(useDashboardData).mockReturnValue(defaultDashData);
   });
 
   describe('SystemHealthOverview', () => {
@@ -85,7 +85,7 @@ describe('M03Panels', () => {
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
         isLoading: true,
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<SystemHealthOverview />);
       expect(screen.getByText('System Health Overview')).toBeTruthy();
     });
@@ -96,7 +96,7 @@ describe('M03Panels', () => {
         ...defaultDashData,
         error: 'fail',
         refresh,
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<SystemHealthOverview />);
       fireEvent.click(screen.getByText('Retry'));
       expect(refresh).toHaveBeenCalled();
@@ -106,7 +106,7 @@ describe('M03Panels', () => {
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
         kpiSummary: { ...defaultDashData.kpiSummary, ops_sev1_incidents: 0 },
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<SystemHealthOverview />);
       expect(screen.getAllByText('0').length).toBeGreaterThan(0);
     });
@@ -122,7 +122,7 @@ describe('M03Panels', () => {
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
         isLoading: true,
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<AgentActivityTimeline />);
       expect(screen.getByText('Agent Activity (last 60m)')).toBeTruthy();
     });
@@ -133,7 +133,7 @@ describe('M03Panels', () => {
         ...defaultDashData,
         error: 'timeline error',
         refresh,
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<AgentActivityTimeline />);
       fireEvent.click(screen.getByText('Retry'));
       expect(refresh).toHaveBeenCalled();
@@ -143,7 +143,7 @@ describe('M03Panels', () => {
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
         kpiHistory: [],
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<AgentActivityTimeline />);
       expect(screen.getByText('Agent Activity (last 60m)')).toBeTruthy();
     });
@@ -167,7 +167,7 @@ describe('M03Panels', () => {
           { id: '1', severity: 'sev1', status: 'open', title: 'DB latency spike', occurred_at: '2026-06-01T12:00:00Z' },
           { id: '2', severity: 'sev2', status: 'open', title: 'Auth service slow', occurred_at: '2026-06-01T11:00:00Z' },
         ],
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<GuardianAlertFeed />);
       expect(screen.getByText('DB latency spike')).toBeTruthy();
       expect(screen.getByText('Auth service slow')).toBeTruthy();
@@ -177,7 +177,7 @@ describe('M03Panels', () => {
       vi.mocked(useDashboardData).mockReturnValueOnce({
         ...defaultDashData,
         isLoading: true,
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<GuardianAlertFeed />);
       expect(screen.getByText('Guardian Alert Feed')).toBeTruthy();
     });
@@ -188,7 +188,7 @@ describe('M03Panels', () => {
         ...defaultDashData,
         error: 'feed error',
         refresh,
-      } as ReturnType<typeof useDashboardData>);
+      });
       render(<GuardianAlertFeed />);
       fireEvent.click(screen.getByText('Retry'));
       expect(refresh).toHaveBeenCalled();
