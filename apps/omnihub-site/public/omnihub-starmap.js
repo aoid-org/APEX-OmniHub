@@ -844,35 +844,99 @@
       }
 
       // ── 3. OmniDash ─────────────────────────────────────────
-      // Command console: grid floor + data columns + scanning bar
+      // Floating holographic command center mirroring the live UI:
+      // left nav rail · central APEX-Agent session ring · OmniSlate
+      // input bar (sweeping scan) · right analytics tiles (pulsing) ·
+      // bottom integration slots (AWAITING).
       case 'omnidash': {
-        var gSize = 10 * sz, gDiv = 8, gStep = gSize / gDiv;
-        var gridPts = [];
-        for (var gi = 0; gi <= gDiv; gi++) {
-          var gx = -gSize / 2 + gi * gStep;
-          gridPts.push(new THREE.Vector3(gx, 0, -gSize / 2));
-          gridPts.push(new THREE.Vector3(gx, 0,  gSize / 2));
-          gridPts.push(new THREE.Vector3(-gSize / 2, 0, gi * gStep - gSize / 2));
-          gridPts.push(new THREE.Vector3( gSize / 2, 0, gi * gStep - gSize / 2));
+        var W = 12 * sz, H = 7.5 * sz;
+        // rounded-rectangle outline (closed loop) in the XY plane
+        function rrect(w, h, r) {
+          var pts = [], sn = 4, hw = w / 2 - r, hh = h / 2 - r;
+          var cs = [[hw, hh, 0], [-hw, hh, Math.PI / 2], [-hw, -hh, Math.PI], [hw, -hh, 1.5 * Math.PI]];
+          cs.forEach(function (c2) {
+            for (var i = 0; i <= sn; i++) {
+              var a = c2[2] + (Math.PI / 2) * (i / sn);
+              pts.push(new THREE.Vector3(c2[0] + Math.cos(a) * r, c2[1] + Math.sin(a) * r, 0));
+            }
+          });
+          pts.push(pts[0].clone());
+          return new THREE.BufferGeometry().setFromPoints(pts);
         }
-        var gridSeg = new THREE.LineSegments(
-          new THREE.BufferGeometry().setFromPoints(gridPts), edgeMat(OGD, 0.30));
-        g.add(gridSeg);
-        var colData = [[0,0],[2,-2],[-2,2],[1,3],[-3,-1]];
-        var dashCols = colData.map(function (xy) {
-          var ch = (0.9 + Math.random() * 2.2) * sz;
-          var col = wireMesh(new THREE.CylinderGeometry(0.18 * sz, 0.22 * sz, ch, 4), OG, 0.70);
-          col.position.set(xy[0] * gStep, ch / 2, xy[1] * gStep);
-          col.userData.baseH = ch;
-          g.add(col);
-          return col;
+        function panel(w, h, r, hex, op, cx, cy, cz) {
+          var ln = new THREE.Line(rrect(w, h, r), edgeMat(hex, op));
+          ln.position.set(cx, cy, cz || 0);
+          g.add(ln);
+          return ln;
+        }
+        // main shell + faint screen fill
+        panel(W, H, 0.5 * sz, OG, 0.85, 0, 0, 0);
+        g.add(fillMesh(new THREE.PlaneGeometry(W - 0.3 * sz, H - 0.3 * sz), OG, 0.025));
+
+        // left nav rail + 9 items (top item = active = OmniBoard)
+        var navW = 1.6 * sz, navX = -W / 2 + navW / 2 + 0.5 * sz, navItems = [];
+        panel(navW, H - 1.4 * sz, 0.25 * sz, OGD, 0.55, navX, 0, 0.04 * sz);
+        for (var ni = 0; ni < 9; ni++) {
+          var ny = (H - 2.6 * sz) / 2 - ni * ((H - 2.8 * sz) / 8);
+          var navOn = ni === 0;
+          var navSeg = fillMesh(new THREE.PlaneGeometry(navW - 0.5 * sz, 0.40 * sz),
+            navOn ? OG : WH, navOn ? 0.5 : 0.12);
+          navSeg.position.set(navX, ny, 0.06 * sz);
+          g.add(navSeg);
+          if (navOn) navItems.push(navSeg);
+        }
+
+        // central APEX-Agent module + session ring + play triangle
+        var modX = -0.4 * sz, modY = 1.35 * sz;
+        panel(6.2 * sz, 3.8 * sz, 0.3 * sz, OG, 0.6, modX, modY, 0.05 * sz);
+        var sessRing = wireMesh(new THREE.TorusGeometry(1.0 * sz, 0.11, 4, 28), OG, 0.92);
+        sessRing.position.set(modX - 1.7 * sz, modY, 0.12 * sz);
+        g.add(sessRing);
+        var sessArc = wireMesh(new THREE.TorusGeometry(1.0 * sz, 0.17, 4, 16, Math.PI * 1.3), WH, 0.85);
+        sessArc.position.copy(sessRing.position);
+        g.add(sessArc);
+        var playTri = wireMesh(new THREE.ConeGeometry(0.30 * sz, 0.52 * sz, 3), WH, 0.9);
+        playTri.position.copy(sessRing.position);
+        playTri.rotation.z = -Math.PI / 2;
+        g.add(playTri);
+        for (var dl = 0; dl < 3; dl++) {  // agent output rows
+          var row = fillMesh(new THREE.PlaneGeometry((2.6 - dl * 0.5) * sz, 0.15 * sz), WH, 0.16);
+          row.position.set(modX + 0.8 * sz, modY + 0.65 * sz - dl * 0.52 * sz, 0.08 * sz);
+          g.add(row);
+        }
+
+        // OmniSlate input bar with sweeping scan
+        var slateY = -1.45 * sz;
+        panel(8.0 * sz, 1.0 * sz, 0.2 * sz, OGD, 0.6, modX, slateY, 0.05 * sz);
+        var scanBar = fillMesh(new THREE.PlaneGeometry(0.5 * sz, 0.85 * sz), OG, 0.5);
+        scanBar.userData.minX = modX - 3.5 * sz;
+        scanBar.userData.maxX = modX + 3.5 * sz;
+        scanBar.position.set(scanBar.userData.minX, slateY, 0.09 * sz);
+        g.add(scanBar);
+
+        // bottom integration slots (AWAITING — dim, empty)
+        for (var bi2 = 0; bi2 < 3; bi2++) {
+          var slot = panel(2.4 * sz, 1.3 * sz, 0.18 * sz, OGD, 0.32,
+            modX - 2.2 * sz + bi2 * 2.7 * sz, -H / 2 + 1.0 * sz, 0.04 * sz);
+          var sdot = fillMesh(new THREE.PlaneGeometry(0.28 * sz, 0.28 * sz), OGD, 0.4);
+          sdot.position.set(slot.position.x - 0.7 * sz, slot.position.y, 0.07 * sz);
+          g.add(sdot);
+        }
+
+        // right analytics column (3 stacked metric tiles, mid = green health)
+        var tileX = W / 2 - 1.9 * sz, metricTiles = [];
+        [2.0, 0, -2.0].forEach(function (ty, i) {
+          panel(3.0 * sz, 1.7 * sz, 0.2 * sz, OGD, 0.5, tileX, ty * sz, 0.05 * sz);
+          var fillT = fillMesh(new THREE.PlaneGeometry(2.7 * sz, 1.4 * sz), i === 1 ? GN : OG, 0.06);
+          fillT.position.set(tileX, ty * sz, 0.06 * sz);
+          fillT.userData.tphase = i * 1.2;
+          g.add(fillT);
+          metricTiles.push(fillT);
         });
-        var scanGeo = new THREE.BoxGeometry(gSize, 0.07, 0.4);
-        var scan = fillMesh(scanGeo, OG, 0.45);
-        scan.position.set(0, 0.1, -gSize / 2);
-        g.add(scan);
-        g.rotation.x = -0.18;
-        g.userData = { type: 'omnidash', scan: scan, gSize: gSize, dashCols: dashCols };
+
+        g.rotation.y = -0.22;
+        g.userData = { type: 'omnidash', sessArc: sessArc, scanBar: scanBar,
+          metricTiles: metricTiles, navItems: navItems };
         break;
       }
 
@@ -1121,11 +1185,14 @@
         break;
 
       case 'omnidash':
-        d.scan.position.z += dt * 3.8 * sz;
-        if (d.scan.position.z > d.gSize / 2) d.scan.position.z = -d.gSize / 2;
-        d.dashCols.forEach(function (col, i) {
-          col.scale.y = 1 + 0.14 * Math.sin(t * 1.7 + i * 0.95);
+        d.sessArc.rotation.z -= dt * 0.9;                 // session progress sweep
+        d.scanBar.position.x += dt * 5.0 * sz;            // OmniSlate scan
+        if (d.scanBar.position.x > d.scanBar.userData.maxX) d.scanBar.position.x = d.scanBar.userData.minX;
+        d.metricTiles.forEach(function (tile) {
+          tile.material.opacity = (0.05 + 0.12 * (0.5 + 0.5 * Math.sin(t * 1.8 + tile.userData.tphase))) * oM;
         });
+        if (d.navItems[0]) d.navItems[0].material.opacity = (0.35 + 0.20 * Math.sin(t * 2.2)) * oM;
+        artifact.rotation.y = -0.22 + Math.sin(t * 0.25) * 0.14;  // gentle parallax sway
         artifact.scale.setScalar(aB);
         break;
 
