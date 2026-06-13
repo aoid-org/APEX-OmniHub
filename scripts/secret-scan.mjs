@@ -16,6 +16,7 @@ const BINARY_EXTENSIONS = new Set([
 
 const SCAN_EXCLUDED_PREFIXES = [
   'docs/',
+  'memory/omni-recall/docs/',
   'tests/',
   'orchestrator/tests/',
 ];
