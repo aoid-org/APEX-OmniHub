@@ -123,6 +123,7 @@
     "@capacitor/device": "^6.0.3",
     "@capacitor/ios": "^6.2.1",
     "@capacitor/push-notifications": "^6.0.5",
+    "@grpc/grpc-js": "1.14.4",
     "@hookform/resolvers": "^3.10.0",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/auto-instrumentations-node": "^0.75.0",
@@ -239,7 +240,7 @@
     "axe-core": "^4.8.3",
     "chai": "^4.5.0",
     "dotenv": "^16.4.7",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.1",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
@@ -270,6 +271,7 @@
     "vitest": "^4.1.8"
   },
   "overrides": {
+    "esbuild": "^0.28.1",
     "flatted": "^3.4.2",
     "h3": "1.15.10",
     "lodash": "^4.17.23",
@@ -296,6 +298,7 @@
     "brace-expansion@^5.0.0": "5.0.6"
   },
   "resolutions": {
+    "esbuild": "^0.28.1",
     "h3": "^1.15.9",
     "picomatch": "^4.0.4",
     "axios": "^1.16.0",
