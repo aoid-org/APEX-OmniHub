@@ -28,6 +28,7 @@ import { z } from 'zod';
 import { scoreTask, type RouteTarget, type TaskScoreResult } from './TaskComplexityScorer';
 import { validateRouteDecision, estimateCost, getModelCapability } from './ModelRegistry';
 import { evaluatePolicy, type PolicyOverride } from './RoutePolicy';
+import { routeSolver, type SolverDecision } from './SolverRouter';
 
 // ============================================================================
 // Types
@@ -149,6 +150,36 @@ export function routeTasks(
   taskDescriptions: readonly string[],
 ): readonly RouteDecision[] {
   return taskDescriptions.map(routeTask);
+}
+
+/**
+ * A fully-routed request: the model decision (which LLM) plus the solver
+ * decision (which execution strategy). This is the unified "automated routing"
+ * surface — a single call eliminates manual model AND tool selection.
+ */
+export interface RoutedRequest {
+  /** Which model handles the task (CLAUDE_OPUS | GEMINI_PRO). */
+  readonly route: RouteDecision;
+  /** Which solver class executes the task (static-analysis | multi-agent | search | direct). */
+  readonly solver: SolverDecision;
+}
+
+/**
+ * Route a task across both axes in one deterministic call:
+ *   - model   (via routeTask → score → policy → validation)
+ *   - solver  (via routeSolver → intent classification)
+ *
+ * Both sub-decisions are independent and side-effect-free, so the combined
+ * result is itself deterministic and replayable.
+ *
+ * @param taskDescription - The task/query text to route.
+ * @returns RoutedRequest pairing the model route with the solver route.
+ */
+export function routeRequest(taskDescription: string): RoutedRequest {
+  return {
+    route: routeTask(taskDescription),
+    solver: routeSolver(taskDescription),
+  };
 }
 
 /**

@@ -9,10 +9,22 @@
 export {
   routeTask,
   routeTasks,
+  routeRequest,
   summarizeDecision,
   RouteDecisionSchema,
   type RouteDecision,
+  type RoutedRequest,
 } from './OmniRoute';
+
+export {
+  routeSolver,
+  summarizeSolverDecision,
+  SolverDecisionSchema,
+  SolverSignalSchema,
+  type SolverDecision,
+  type SolverSignal,
+  type SolverClass,
+} from './SolverRouter';
 
 export {
   scoreTask,
