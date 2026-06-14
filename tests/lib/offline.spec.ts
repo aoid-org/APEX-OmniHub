@@ -403,4 +403,17 @@ describe('offline utils', () => {
       await processQueuedRequests();
       simulatedTime += 100000;
 
-      /
+      // Call 4 (should hit MAX_RETRIES and drop)
+      await processQueuedRequests();
+
+      expect(reqCalls).toBe(4); // initial + 3 retries
+
+      // Check it's removed
+      const rawQueue = globalThis.localStorage.getItem('offline_request_queue');
+      expect(rawQueue).not.toContain(id);
+
+      dateNowMock.mockRestore();
+    });
+  });
+});
+// added an extra comment to trigger a new valid commit message
