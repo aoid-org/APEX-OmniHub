@@ -61,7 +61,7 @@ jobs:
         id: shadow_preflight
         env:
           ENABLE_SHADOW_DEPLOYMENT: ${{ vars.ENABLE_SHADOW_DEPLOYMENT }}
-          ENABLE_ATOMIC_ROUTING_FLIP: 'false'
+          ENABLE_ATOMIC_ROUTING_FLIP: ${{ vars.ENABLE_ATOMIC_ROUTING_FLIP }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_SHADOW_PROJECT_NAME: ${{ vars.CLOUDFLARE_SHADOW_PROJECT_NAME }}
@@ -133,7 +133,7 @@ jobs:
           echo "See docs/release/SHADOW_DEPLOYMENT_BLOCKERS.md for requirements."
       - name: Terraform Plan (shadow validated)
         if: |
-          steps.release_signal.outputs.release_cut == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true' && 'false' == 'true' && steps.validator.outputs.validator_result == 'pass'
+          steps.release_signal.outputs.release_cut == 'true' && vars.ENABLE_SHADOW_DEPLOYMENT == 'true' && vars.ENABLE_ATOMIC_ROUTING_FLIP == 'true' && steps.validator.outputs.validator_result == 'pass'
         id: tf_plan
         run: |
           cd terraform/environments/production
@@ -151,10 +151,10 @@ jobs:
           retention-days: 1
       - name: Skip atomic routing flip — prerequisites not met
         if: |
-          steps.release_signal.outputs.release_cut == 'true' && (vars.ENABLE_SHADOW_DEPLOYMENT != 'true' || 'false' != 'true')
+          steps.release_signal.outputs.release_cut == 'true' && (vars.ENABLE_SHADOW_DEPLOYMENT != 'true' || vars.ENABLE_ATOMIC_ROUTING_FLIP != 'true')
         env:
           SHADOW_ENABLED: ${{ vars.ENABLE_SHADOW_DEPLOYMENT }}
-          ROUTING_FLIP_ENABLED: 'false'
+          ROUTING_FLIP_ENABLED: ${{ vars.ENABLE_ATOMIC_ROUTING_FLIP }}
         run: |
           echo "Skipping routing flip."
           echo "ENABLE_SHADOW_DEPLOYMENT=${SHADOW_ENABLED}"
