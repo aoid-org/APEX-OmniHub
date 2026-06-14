@@ -48,6 +48,13 @@ jobs:
       - name: Run CI integrity scanner
         run: bun run verify:ci-integrity
       - name: Run Release verification suite
+        # Supabase build vars required so check-env-root.mjs does not fail closed.
+        # The guard blocks APEX_ALLOW_MISSING_SUPABASE_CONFIG=true in CI (isCiOrProduction=true),
+        # so the actual secrets must be present for verify:build (Vite compilation).
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: bun run verify:release
       - name: Detect release cut
         id: release_signal
