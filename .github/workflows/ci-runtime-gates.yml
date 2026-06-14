@@ -19,7 +19,7 @@ env:
 jobs:
   architectural-boundary-enforcement:
     name: Architectural Boundary Enforcement
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 2
 
     steps:
@@ -94,7 +94,7 @@ jobs:
   terraform-expression-drift-gate:
     name: Terraform Expression Drift Gate
     needs: architectural-boundary-enforcement
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
 
     steps:
@@ -122,7 +122,7 @@ jobs:
 
   build-and-test:
     needs: [architectural-boundary-enforcement, terraform-expression-drift-gate]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -379,3 +379,4 @@ jobs:
           name: playwright-screenshots
           path: test-results/
           retention-days: 7
+   
