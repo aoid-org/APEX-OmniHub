@@ -126,8 +126,7 @@ export function useOmniStream(
 
     try {
       const { data, error: fetchError } = await supabase
-        // Type assertion for dynamic table access
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 'agent_events' is realtime-only and absent from generated Supabase Database types (P2-1 deferral)
         .from('agent_events' as any)
         .select('*')
         .eq('session_id', sessionId)
@@ -199,7 +198,7 @@ export function useOmniStream(
         }
       });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RealtimeChannel generic differs from the channelRef element type; supabase-js exposes no narrow type here (P2-1 deferral)
     channelRef.current = channel as any;
   }, [sessionId, mergeEvent]);
 

@@ -99,8 +99,7 @@ function countryCodeToLang(cc: string): string | null {
  *  4. Fallback: 'en'
  */
 function resolveTargetLocale(event: CanonicalEvent): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const md = (event as any).metadata ?? {};
+  const md = event.metadata ?? {};
   const explicit = md['locale'];
   if (typeof explicit === 'string' && explicit.trim()) {
     // Extract base language from BCP-47 (e.g. 'fr-FR' → 'fr')
@@ -109,7 +108,12 @@ function resolveTargetLocale(event: CanonicalEvent): string {
 
   const loc = md['location'];
   let cc = '';
-  if (typeof loc === 'object' && loc !== null && typeof loc.countryCode === 'string') {
+  if (
+    typeof loc === 'object' &&
+    loc !== null &&
+    'countryCode' in loc &&
+    typeof loc.countryCode === 'string'
+  ) {
     cc = String(loc.countryCode);
   } else if (typeof md['countryCode'] === 'string') {
     cc = String(md['countryCode']);

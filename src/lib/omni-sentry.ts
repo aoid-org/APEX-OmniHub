@@ -276,9 +276,14 @@ export async function withResilience<T>(
 export function getHealthStatus(): HealthStatus {
   const now = Date.now();
   const errorRate = circuitBreaker.failures / Math.max(1, (now - circuitBreaker.lastSuccess) / 60_000);
-  const memoryUsage = typeof performance !== 'undefined' && 'memory' in performance
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ? (performance as any).memory?.usedJSHeapSize / (performance as any).memory?.jsHeapSizeLimit * 100
+  const perfMemory =
+    typeof performance !== 'undefined' && 'memory' in performance
+      ? (performance as Performance & {
+          memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number };
+        }).memory
+      : undefined;
+  const memoryUsage = perfMemory
+    ? (perfMemory.usedJSHeapSize / perfMemory.jsHeapSizeLimit) * 100
     : 0;
 
   const diagnostics: string[] = [];

@@ -41,10 +41,11 @@ export class ErrorBoundary extends Component<Props, State> {
     }
     
     // Log to monitoring service if available
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (typeof globalThis !== 'undefined' && (globalThis as any).errorTracker) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (globalThis as any).errorTracker.captureException(error, {
+    const errorTracker = (globalThis as typeof globalThis & {
+      errorTracker?: { captureException: (error: Error, context?: { extra?: unknown }) => void };
+    }).errorTracker;
+    if (errorTracker) {
+      errorTracker.captureException(error, {
         extra: errorInfo,
       });
     }

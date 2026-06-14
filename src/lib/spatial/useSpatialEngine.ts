@@ -196,7 +196,12 @@ export function useSpatialEngine(options: SpatialEngineOptions = {}): SpatialEng
   }, []);
 
   const removeEntity = useCallback((id: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // KNOWN BUG (tracked, DEFER): QuadTree.remove(point: Point<T>) expects a Point,
+    // not a string id, so this call is silently a no-op at runtime. Correct removal
+    // needs an id->Point index that does not exist yet; implementing it is a runtime
+    // change out of scope for this type-debt pass. Suppression retained and documented
+    // rather than masked. Tracked under P2-1 debt triage.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tracked latent bug: remove() arg-type mismatch, runtime fix deferred (P2-1)
     (quadTreeRef.current as any).remove(id);
   }, []);
 

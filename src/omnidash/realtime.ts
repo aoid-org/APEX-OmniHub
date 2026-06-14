@@ -77,7 +77,7 @@ export function useRealtimeOmniDash(): void {
 
     // Subscribe to all OmniDash tables for INSERT/UPDATE/DELETE events
     for (const table of REALTIME_TABLES) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase-js .on('postgres_changes') overload chaining is not expressible in the channel's declared type (P2-1 deferral)
       channel = (channel as any).on(
         'postgres_changes',
         {
