@@ -147,6 +147,16 @@ def _check_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> None:
     Raises:
         ValueError: If IP is in a restricted range.
     """
+    # FIX: IPv4-mapped IPv6 addresses (::ffff:x.x.x.x) must be evaluated by their
+    # embedded IPv4 address, not by IPv6 class rules. Python's ipaddress marks the
+    # entire ::ffff:0:0/96 block as is_reserved=True, which would (a) incorrectly
+    # block public IPv4-mapped addresses and (b) produce "Reserved address" instead
+    # of the semantically correct "Loopback address"/"Private address" for restricted
+    # ones. Checking ipv4_mapped first avoids both problems.
+    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
+        _check_ip(ip.ipv4_mapped)
+        return  # Public IPv4-mapped passes; restricted ones raise from the recursive call
+
     if ip.is_unspecified:
         raise ValueError(f"Unspecified address {ip} is not allowed")
     if ip.is_loopback:
@@ -159,8 +169,3 @@ def _check_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> None:
         raise ValueError(f"Reserved address {ip} is not allowed")
     if ip.is_private:
         raise ValueError(f"Private address {ip} is not allowed")
-
-    # Specific checks for IPv6 (some might be covered by above, but being explicit is safer)
-    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
-        # IPv4-mapped IPv6 addresses (::ffff:127.0.0.1) should also be checked against IPv4 rules
-        _check_ip(ip.ipv4_mapped)
