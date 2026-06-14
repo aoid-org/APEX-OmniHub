@@ -1,10 +1,10 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-14
 status: verified
 ---
 
-<!-- APEX_DOC_STAMP: VERSION=v9.6-DOC-RELEASE-INDEX | LAST_UPDATED=2026-06-10 -->
+<!-- APEX_DOC_STAMP: VERSION=v9.6-DOC-RELEASE-INDEX | LAST_UPDATED=2026-06-14 -->
 
 # APEX OmniHub Documentation
 
@@ -12,10 +12,10 @@ status: verified
 
 - **Document Version:** 2.8.0
 - **Platform Version:** 1.7.0
-- **Last Updated:** 2026-06-10
+- **Last Updated:** 2026-06-14
 - **Current Documentation Index:** [Documentation Release Index](DOCUMENTATION_RELEASE_INDEX.md)
 - **Current Certification Authority:** [Production Certification Status](project-status/PRODUCTION_CERTIFICATION_STATUS.md)
-- **Current Platform Snapshot:** [Current Platform State — 2026-06-06](CURRENT_PLATFORM_STATE_2026_06_06.md)
+- **Current Platform Snapshot:** [Current Platform State — 2026-06-14](CURRENT_PLATFORM_STATE_2026_06_14.md)
 - **Historical Audit Baseline:** [Third-Party Code Audit 2026-03-09](audits/THIRD_PARTY_CODE_AUDIT_2026_03_09.md) — Score: **94.3/100 (A)**
 
 ---
@@ -311,3 +311,16 @@ docs/
 - Remove transient logs/artifacts from source control (lint dumps, local reports, backup files) unless explicitly required for compliance evidence.
 
 ## Platform
+
+## 2026-06-14 Status Note
+
+Main CI was red for runs #878–#897 (20+ consecutive failures). All root causes identified and fixed:
+
+- **PR #1392** — pyOpenSSL GEN_EMAIL crash fixed (`pyopenssl>=24.0.0`)
+- **PR #1393** — SSRF IPv4-mapped IPv6 misclassification fixed
+- **PR #1391** — `ENABLE_ATOMIC_ROUTING_FLIP` un-hardcoded in `release.yml`
+
+CI run #900 (`16f06b6f`) in_progress at time of this update. `TF_TOKEN` confirmed set. All infrastructure configured. Shadow deployment path unblocked.
+
+See `CI_GREEN_CAMPAIGN_2026-06-14.md` for full root-cause audit.
+
