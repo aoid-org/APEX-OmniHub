@@ -40,6 +40,11 @@ jobs:
       - name: Install ruff (Python linter)
         run: |-
           pip install "ruff==0.15.16" --only-binary=':all:' --quiet --disable-pip-version-check
+      - name: Install orchestrator Python test deps (pytest gate)
+        # verify:release -> verify:test -> test:py runs `cd orchestrator && pytest`.
+        # Without these deps pytest is absent and the whole release suite aborts
+        # before the shadow preflight, leaving release evidence uncertifiable.
+        run: pip install -r orchestrator/requirements.txt --quiet --disable-pip-version-check
       - name: Run CI integrity scanner
         run: bun run verify:ci-integrity
       - name: Run Release verification suite
