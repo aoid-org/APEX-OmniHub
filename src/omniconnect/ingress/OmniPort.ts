@@ -867,7 +867,7 @@ class OmniPortEngine {
     try {
       const { error: dbError } = await supabase.from('ingress_buffer').insert({
         correlation_id: ctx.correlationId,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw_input is an untyped jsonb column accepting arbitrary inbound payloads (P2-1 deferral)
         raw_input: input as any,
         error_reason: error.message,
         status: 'pending',

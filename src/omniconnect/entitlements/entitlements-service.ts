@@ -97,7 +97,7 @@ export class EntitlementsService {
 
     try {
       const { error } = await (this.supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 'tenant_entitlements' is not present in generated Supabase Database types (P2-1 deferral)
         .from('tenant_entitlements') as any)
         .insert({
           tenant_id: tenantId,

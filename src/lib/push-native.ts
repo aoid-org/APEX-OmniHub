@@ -145,7 +145,7 @@ export async function removeDeliveredNotifications(notifications: PushNotificati
 
     try {
         await PushNotifications.removeDeliveredNotifications({
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Capacitor DeliveredNotifications element type is over-strict; only id is required at runtime (P2-1 deferral)
             notifications: notifications.map(n => ({ id: n.id } as any)),
         });
     } catch (error) {
