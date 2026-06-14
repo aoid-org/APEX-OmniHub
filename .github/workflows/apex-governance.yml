@@ -139,7 +139,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      # CodeQL analysis itself runs, but uploading results requires GitHub code
+      # scanning (Advanced Security), which is not enabled here — the analyze
+      # step then fails with "Resource not accessible by integration"
+      # (configuration error). Gate behind ENABLE_GHAS; SAST coverage remains
+      # active via SonarCloud, ESLint security rules, and osv-scanner. Set
+      # repository variable ENABLE_GHAS=true after enabling Advanced Security to
+      # run full CodeQL analysis with code-scanning upload.
       - name: Initialize CodeQL
+        if: vars.ENABLE_GHAS == 'true'
         uses: github/codeql-action/init@03e4368ac7daa2bd82b3e85262f3bf87ee112f57 # v3
         with:
           languages: javascript,python
@@ -148,7 +156,14 @@ jobs:
               - apps/omnihub-site/public/omnihub-starmap.js
 
       - name: Perform CodeQL Analysis
+        if: vars.ENABLE_GHAS == 'true'
         uses: github/codeql-action/analyze@03e4368ac7daa2bd82b3e85262f3bf87ee112f57 # v3
+
+      - name: CodeQL not enabled (GHAS unavailable)
+        if: vars.ENABLE_GHAS != 'true'
+        run: |
+          echo "::notice::CodeQL code-scanning upload skipped — requires GitHub Advanced Security (set ENABLE_GHAS=true once enabled)."
+          echo "SAST coverage remains active via SonarCloud, ESLint security rules, and osv-scanner."
 
   rfc-architecture-marker:
     name: RFC + architecture review marker
