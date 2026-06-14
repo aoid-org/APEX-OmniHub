@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-14
 status: verified
 ---
 
@@ -170,3 +170,36 @@ status: verified
 - p3_2_status: VERIFIED this session (two distinct canonical tables; no change needed)
 - p3_3_status: RESOLVED (deploy.sh set -euo pipefail pre-existing)
 - findings_doc: `DEBT_TRIAGE_2026-06-14.md` (on PR #1389 branch)
+
+## Session (2026-06-14) — CI green campaign: pyOpenSSL + routing-flip + SSRF fixes
+
+### Blockers resolved this session (all merged to main)
+
+| PR | Branch | Merge SHA | Fix |
+|---|---|---|---|
+| #1392 | fix/ci-pytest-pyopenssl-main-green | 726d7cc0 | `pyopenssl>=24.0.0` added to `orchestrator/requirements.txt`. Cured `AttributeError: module 'lib' has no attribute 'GEN_EMAIL'` — 10 pytest collection errors across runs #878–#897. |
+| #1391 | fix/routing-flip-interlock-unhardcode | 50013c4c | Un-hardcoded `ENABLE_ATOMIC_ROUTING_FLIP` in `release.yml` at L64, L136, L154, L157. Now reads `vars.ENABLE_ATOMIC_ROUTING_FLIP`; gate is live once TF infra confirmed. |
+| #1393 | fix/ssrf-ipv4-mapped-classification | 16f06b6f | `_check_ip()` in `orchestrator/security/ssrf.py`: moved `ipv4_mapped` guard before `is_reserved`. Python marks `::ffff:0:0/96` as `is_reserved`, incorrectly blocking public IPv4-mapped and misclassifying private ones. Fixes 3 pytest tests. |
+
+### CI run ledger (Clean-Room Final Certification, main)
+
+| Run | Head SHA | Result | Root cause |
+|---|---|---|---|
+| #878–#897 | various | ❌ | pyOpenSSL crash — 10 collection errors |
+| #898 | 726d7cc0 | ❌ | pyOpenSSL fixed (921 passed); 3 SSRF tests failed |
+| #899 | 50013c4c | ❌ | Same 3 SSRF failures |
+| #900 | 16f06b6f | 🔄 in_progress | All 3 fixes present — expected green |
+
+### Infrastructure state (2026-06-14)
+
+| Item | Status |
+|---|---|
+| `TF_TOKEN_app_terraform_io` GitHub Secret | ✅ Set (confirmed via screenshot) |
+| `production-shadow` GitHub Environment | ✅ Configured — required_reviewers, all 6 secrets/vars present |
+| `ENABLE_ATOMIC_ROUTING_FLIP` repo variable | ✅ true |
+| Terraform Cloud org | apexbusiness-systems-ltd |
+
+### Certification verdict (2026-06-14)
+
+`NOT_CERTIFIED_NO_RELEASE_CUT` — verify:test gate pending run #900. Once green, shadow deploy runs → health check → `write-release-evidence.mjs` → CERTIFIED or CERTIFICATION_PENDING_FINAL_MAIN_CI.
+
