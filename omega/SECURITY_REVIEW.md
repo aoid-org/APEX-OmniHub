@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # SECURITY REVIEW: SonarQube S5131 Suppression Justification
 
 **Date**: January 30, 2026

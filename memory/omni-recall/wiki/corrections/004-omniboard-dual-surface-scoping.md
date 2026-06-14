@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Correction — OmniBoard is dual-surface, not integration-only
 
 - date: 2026-06-10

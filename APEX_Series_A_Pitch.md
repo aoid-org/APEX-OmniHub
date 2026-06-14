@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX Series A Pitch Deck Outline
 ## OmniHub: Enterprise Automation Platform
 

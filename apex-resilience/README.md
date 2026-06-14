@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX Resilience Protocol
 
 Production-grade verification framework for APEX-OmniHub ensuring zero-drift, first-pass success for AI-generated code.

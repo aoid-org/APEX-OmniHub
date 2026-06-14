@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # apex-skill-forge v9.4.0 — Universal edition
 
 Forge, audit, and package agent skills that ship with their own evidence. This edition is identical in rules and tooling to the Claude edition and is packaged for any agent that supports the open Agent Skills format (a folder with SKILL.md) — or no agent framework at all. Licensed by APEX Business Systems Ltd. — see LICENSE.md.

@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Superpowers Release Notes
 
 ## v3.4.0 (2025-10-30)

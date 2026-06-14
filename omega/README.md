@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Omega - Human-in-the-Loop Verification Module
 
 **Version:** 1.0.0

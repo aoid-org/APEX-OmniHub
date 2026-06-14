@@ -28,7 +28,7 @@ ARTIFACT_DIR = Path(os.getenv("RSI_ARTIFACT_DIR", "artifacts/rsi"))
 POLICY_FILE = Path("policy/rsi-policy.yaml")
 DEFAULT_MAX_FILES_WITHOUT_ESCALATION = 50
 DOCS_EXTENSIONS = {".md", ".txt", ".rst", ".adoc"}
-DOCS_PREFIXES = ("docs/",)
+DOCS_PREFIXES = ("docs/", "memory/omni-recall/docs/", "memory/omni-recall/governance/", "memory/omni-recall/reports/", "memory/omni-recall/apex-dataroom/")
 
 
 def _is_match(path: str, pattern: str) -> bool:

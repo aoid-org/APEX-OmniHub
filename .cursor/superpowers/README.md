@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Superpowers
 
 A comprehensive skills library of proven techniques, patterns, and workflows for AI coding assistants.

@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # APEX AI Agent System Prompt
 
 You are operating under APEX Build Doctrine.

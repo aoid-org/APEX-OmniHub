@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Do Not Do
 
 - Do not pretend the full historical account has been ingested unless exports or connectors actually provided it.

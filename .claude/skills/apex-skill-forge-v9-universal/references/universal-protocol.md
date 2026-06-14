@@ -1,3 +1,9 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Universal Protocol (no-execution fallback)
 
 Read this when the runtime cannot execute Python or shell — a chat-only model, a restricted agent, or any platform without code execution. The forge's gates are rules first and tooling second; this file is the rules, applied by hand. An agent that can run `scripts/forge.py` should prefer it (deterministic, cheaper); everything below produces the same verdicts manually.

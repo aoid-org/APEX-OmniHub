@@ -1,47 +1,55 @@
+---
+version: 1.0.0
+last_audited: 2026-06-12
+status: verified
+---
+
 # Omni-Recall Source Index
 
-Last index update: 2026-05-31 (post PR #1251 merge — apex-agent unification complete)
-Superseding index update: 2026-06-01 (platform docs sync — HEAD `86bc14a`, PR #1274 + PR #1309 reconciled)
-Superseding index update: 2026-06-10 (OmniSkills/SkillForge E2E + OmniBoard dual-surface correction — branch `claude/friendly-goodall-6bb4uc` @ `e747507`; correction 004 and checkpoint 2026-06-10 added)
+Last index update: 2026-06-12 (Massive Documentation Consolidation into omni-recall)
 
 ## Purpose
 
-Track canonical source records that materially define Omni-Recall.
+Track canonical source records that materially define Omni-Recall and the greater APEX-OmniHub project.
 
-## Indexed Sources
+## Indexed Sources (Consolidated Hierarchy)
 
-1. `raw/historical_exports/2026-05-23-user-upload-omni-recall-blueprint.md`
+1. `memory/omni-recall/docs/`
+   - Type: Architectural, platform, and structural documentation.
+   - Status: active (fully versioned)
+   - Role: System architecture blueprints, Omniboard platform records, etc.
+
+2. `memory/omni-recall/rfc/`
+   - Type: Governance RFCs.
+   - Status: active
+   - Role: Governance tracking for integrations and deployment boundaries.
+
+3. `memory/omni-recall/apex-dataroom/`
+   - Type: Sales enablement, marketing, outbound sequences.
+   - Status: active
+   - Role: Product narratives, pricing, and campaign positioning.
+
+4. `memory/omni-recall/reports/`
+   - Type: Technical audits and security postures.
+   - Status: historical/active
+   - Role: Point-in-time security review references.
+
+5. `raw/historical_exports/2026-05-23-user-upload-omni-recall-blueprint.md`
    - Type: user-uploaded blueprint source
    - Status: directly read
    - Role: primary origin record for the current Omni-Recall architecture
-   - Original GPT-workspace path: `/workspace/user_files/01-Pasted-text-26-.txt`
 
-2. `omni-recall-master-blueprint-2026-05-23.md`
+6. `omni-recall-master-blueprint-2026-05-23.md`
    - Type: canonical operating blueprint
    - Status: active
    - Role: runtime-adapted master spec
 
-3. `CLAUDE.md`
+7. `CLAUDE.md`
    - Type: governing rule file
    - Status: active — Claude Code runtime adaptation
    - Role: short-form constitutional control file; replaces GPT-runtime version
 
-4. `omni-recall-package-2026-05-23/` (repo root, archived)
-   - Type: original zip extraction
-   - Status: archived — live system is at `memory/omni-recall/`
-   - Role: immutable record of initial package state
-
-5. `current-status.md` (state/checkpoints/)
+8. `state/checkpoints/current-status.md`
    - Type: session checkpoint log
    - Status: active — updated after each verified session
    - Role: canonical source for per-session outcomes, verified HEAD, and runtime facts
-
-6. `state/checkpoints/2026-06-01-platform-doc-sync.md`
-   - Type: platform-state checkpoint
-   - Status: active
-   - Role: durable memory for PR #1274 / PR #1309 documentation synchronization and stale-reference correction
-
-7. `docs/CURRENT_PLATFORM_STATE_2026_06_02.md`
-   - Type: repo documentation authority
-   - Status: active
-   - Role: current branch/head assessment and drift-control source for future agents
