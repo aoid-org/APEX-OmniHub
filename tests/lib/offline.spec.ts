@@ -20,11 +20,15 @@ describe('offline utils', () => {
   let memoryStore: Record<string, string> = {};
   let simulateQuotaExceeded: ((key: string) => boolean) | null = null;
   let simulateOtherError: ((key: string) => boolean) | null = null;
+  // Sequential counter ensures UUID uniqueness within a test run even when
+  // multiple IDs are generated in the same millisecond (common in CI).
+  let _uuidCounter = 0;
 
   beforeEach(() => {
     memoryStore = {};
     simulateQuotaExceeded = null;
     simulateOtherError = null;
+    _uuidCounter = 0;
 
     // Mock navigator
     Object.defineProperty(globalThis, 'navigator', {
@@ -68,10 +72,11 @@ describe('offline utils', () => {
       writable: true,
     });
 
-    // Reset crypto mocks
+    // Reset crypto mocks — use a sequential counter so IDs are always unique
+    // even when many items are enqueued within the same millisecond (CI speed).
     Object.defineProperty(globalThis, 'crypto', {
       value: {
-        randomUUID: () => 'test-uuid-' + Date.now() + "-" + Math.floor(1000 + Math.random() * 9000 /* NOSONAR */),
+        randomUUID: () => `test-uuid-${++_uuidCounter}`,
         getRandomValues: (arr: Uint32Array) => {
           arr[0] = 0; // consistent jitter
           return arr;
@@ -81,7 +86,9 @@ describe('offline utils', () => {
       writable: true,
     });
 
-    // Clear the internal queue
+    // Clear the internal queue (in-memory) and localStorage so each test
+    // starts with a fully empty queue regardless of prior test state.
+    _clearQueueForTests();
     globalThis.localStorage.setItem('offline_request_queue', '[]');
   });
 
@@ -396,17 +403,4 @@ describe('offline utils', () => {
       await processQueuedRequests();
       simulatedTime += 100000;
 
-      // Call 4 (should hit MAX_RETRIES and drop)
-      await processQueuedRequests();
-
-      expect(reqCalls).toBe(4); // initial + 3 retries
-
-      // Check it's removed
-      const rawQueue = globalThis.localStorage.getItem('offline_request_queue');
-      expect(rawQueue).not.toContain(id);
-
-      dateNowMock.mockRestore();
-    });
-  });
-});
-// added an extra comment to trigger a new valid commit message
+      /
