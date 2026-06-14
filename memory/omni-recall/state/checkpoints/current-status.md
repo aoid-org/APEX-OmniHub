@@ -143,3 +143,30 @@ status: verified
   551 passed / 28 skipped / 20 todo (0 failed); eslint on changed files 0 problems.
 - p1_node24_status: NOT a live risk. release.yml is already SHA-pinned to actions/checkout + setup-node v4
   with node-version 24; no v1/v2/v3 actions exist in any workflow. The "CI breaks in 72h" inference was false.
+
+## Session (2026-06-14) — Cert unblock + P2/P3 debt closure
+- branch: `main` (cert fix, direct) + `fix/type-suppression-triage` (PR #1389) + `claude/nifty-thompson-2q3y49` (session backup, all commits)
+- scope: Fixed the cert-blocking `verify:ci-integrity` failure by adding
+  `docs/release/branch-protection.md` at repo root (it existed only at
+  `memory/omni-recall/docs/release/`). Completed P2-1 type-suppression triage and
+  P2-2 test-debt triage; ground-truth-verified P3-1 partition RLS and P3-2 entitlement
+  table designation (no DB change — see below).
+- key outcomes:
+  - `docs/release/branch-protection.md` created at root — scanner reports `verify:ci-integrity PASSED` (exit 0). All 6 required job IDs verified present in their workflows.
+  - cert fix pushed to `main` (`50ffe39..b66870b`) — `Release` job should run and unblock `Atomic Routing Flip` -> Clean-Room Final Certification (pending Actions confirmation).
+  - as-any: 90 -> 79 (src/ 24 -> 13, all 11 removed via real root fixes; remaining 13 documented). @ts-ignore: 0 -> 0. @ts-expect-error: 16 -> 16 (all already reasoned). eslint-disable: 139 -> 128. .skip: 19 -> 18 (one re-enabled). it.todo: 29 (formal backlog). .only: 0.
+  - NOTE on type fixes: the crypto BufferSource `as any` were stale only under the looser `typecheck` script; the real gate `verify:types` (`tsc -b`) required typing byte-helpers `Uint8Array<ArrayBuffer>` — applied as the root fix (confirms prior correction that `typecheck` is a false-green no-op).
+  - P3-1: physiomni_telemetry partitions RLS verified already remediated by migration `20260528000000` (fail-closed: RLS enabled, no child policy -> direct access denied, reads go through parent's tenant-scoped policies). The triage protocol's fallback policy SQL references a non-existent `user_id` column (isolation column is `tenant_id`) — NOT applied. Live pg_policies confirmation pending Supabase auth (owner action).
+  - P3-2: canonical = BOTH, distinct domains. `entitlements` (polymorphic web3 subject/wallet/device) and `user_entitlements` (per-user subscription tier + UEP active_skills) are not an orphan/duplicate pair; deprecating either would break a live flow. No COMMENT/deprecation applied. Latent gap flagged: `tenant_entitlements` (used by omniconnect entitlements-service) has no migration.
+- verification: verify:ci-integrity exit 0; verify:types exit 0; lint exit 0; `bun run test` 2736 passed / 70 skipped / 30 todo / 0 failed.
+- certification_status: GREEN expected post-push (pending Actions confirmation).
+- cert_commit: b66870b (main); pr: #1389 (fix/type-suppression-triage -> main)
+- p0_1_status: RESOLVED (d95715e — stub type alignment + fixture drift)
+- p1_1_status: NOT A RISK (node-version 24 already in release.yml)
+- p2_1_status: RESOLVED this session (suppressions reduced/justified; verify:types green)
+- p2_2_status: RESOLVED this session (.skip triaged; .todo inventoried as formal backlog)
+- p2_3_status: RESOLVED (2026-06-13 correction block)
+- p3_1_status: VERIFIED this session (existing fail-closed migration; no change needed)
+- p3_2_status: VERIFIED this session (two distinct canonical tables; no change needed)
+- p3_3_status: RESOLVED (deploy.sh set -euo pipefail pre-existing)
+- findings_doc: `DEBT_TRIAGE_2026-06-14.md` (on PR #1389 branch)
