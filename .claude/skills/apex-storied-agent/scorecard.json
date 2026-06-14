@@ -1,0 +1,32 @@
+{
+  "skill": "apex-storied-agent",
+  "generated_utc": "2026-06-14T08:49:08+00:00",
+  "tooling": "apex-skill-forge v9 forge.py",
+  "lint": {
+    "fails": 0,
+    "warns": 0,
+    "findings": []
+  },
+  "tokens": {
+    "method": "estimate: characters / 4",
+    "metadata_always_loaded": 123,
+    "description_chars": 474,
+    "skill_md_body_on_trigger": 1313,
+    "skill_md_lines": 86,
+    "references_on_demand": {
+      "advanced-protocol.md": 924,
+      "storied-profile.md": 1118,
+      "universal-protocol.md": 464
+    },
+    "scripts_loaded_tokens": 0
+  },
+  "trigger_eval": {
+    "validated": true,
+    "positive": 9,
+    "negative": 9,
+    "total": 18
+  },
+  "trigger_accuracy_live": null,
+  "note": "Token values are estimates (chars/4). trigger_accuracy_live: run the 18-query eval set in a live Claude Code session and record the measured rate here (e.g. 17/18 = 0.944) to complete the evidence chain.",
+  "rubric_score": 100
+}
