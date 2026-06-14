@@ -6,11 +6,14 @@ import React from 'react';
 const { omniInvoke } = vi.hoisted(() => ({ omniInvoke: vi.fn() }));
 
 const defaultModuleState = {
+  moduleKey: 'test',
+  headline: 'Test Module',
   loading: false,
   error: null,
   items: [],
   stats: [],
   actions: [],
+  stateKind: 'local',
   title: 'Test Module',
   description: '',
 };
@@ -129,7 +132,8 @@ describe('LinksModule', () => {
     vi.mocked(useOmniModuleState).mockReturnValue({
       ...defaultModuleState,
       items: [
-        { id: 'x1', label: 'Unknown Status', status: 'unknown_status' },
+        // Intentionally out-of-union status to exercise the inactive fallback color.
+        { id: 'x1', label: 'Unknown Status', status: 'unknown_status' as string },
       ],
     } as ReturnType<typeof useOmniModuleState>);
 
