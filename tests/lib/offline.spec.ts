@@ -403,4 +403,24 @@ describe('offline utils', () => {
       await processQueuedRequests();
       simulatedTime += 100000;
 
-      /
+      // Call 4: retries (3) is no longer < MAX_RETRIES, so the request is
+      // attempted one final time and then dropped from the queue (not re-queued).
+      await processQueuedRequests();
+
+      // Initial attempt + MAX_RETRIES (3) re-attempts = 4 total invocations.
+      expect(reqCalls).toBe(4);
+
+      // The request has been dropped — further processing is a no-op.
+      const callsAfterDrop = reqCalls;
+      simulatedTime += 100000;
+      await processQueuedRequests();
+      expect(reqCalls).toBe(callsAfterDrop);
+
+      // And it no longer persists in the offline queue.
+      const rawQueue = globalThis.localStorage.getItem('offline_request_queue');
+      expect(rawQueue === null || !rawQueue.includes(id)).toBe(true);
+
+      dateNowMock.mockRestore();
+    });
+  });
+});
