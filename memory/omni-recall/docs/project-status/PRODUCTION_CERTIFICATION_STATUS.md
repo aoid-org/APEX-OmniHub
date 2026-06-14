@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-14
 status: verified
 ---
 
@@ -201,3 +201,49 @@ _Prior audit 2026-05-14 (main @ 0f1365d) — see history for full gate table fro
 
 APEX Business Systems — Release Engineering
 Updated by: Tech-debt resolution audit (2026-05-14) — main @ 0f1365d; B-2 structural fix (2026-05-20) — main @ a54bd7c (PR #1185); Full OMEGA SCAN audit (2026-06-06) — main @ c8d753c5
+
+---
+
+## 2026-06-14 CI Green Campaign Addendum
+
+**Session date:** 2026-06-14  
+**Context:** Main was red for 20+ consecutive runs (#878–#897). Three root causes identified and fixed in sequence.
+
+### Fixes merged to main
+
+| PR | Fix | Root cause |
+|---|---|---|
+| #1392 |  →  |  uses  removed in ; 10 pytest collection errors (import chain: instructor→botocore→urllib3→pyopenssl→AttributeError) |
+| #1391 | Un-hardcode  in  (L64/L136/L154/L157) | 4 locations hardcoded to  — routing-flip gate was permanently off regardless of repo variable |
+| #1393 | Move  guard before  in  | Python marks  as ; blocked public IPv4-mapped addresses and produced wrong error category for private ones; 3 pytest test failures |
+
+### Infrastructure confirmed (2026-06-14)
+
+-  ✅ set in GitHub Actions Secrets
+-  GitHub Environment ✅ exists with required_reviewers and all 6 secrets/variables
+-  repo variable ✅ = 
+- Terraform Cloud org: 
+
+### Path to CERTIFIED — updated
+
+1. ~~Provision shadow slot~~ ✅ DONE 2026-05-20
+2. ~~Set secrets/variables~~ ✅ DONE 2026-05-20
+3. ~~Configure  env~~ ✅ DONE 2026-05-20
+4. ~~Merge ~~ ✅ DONE 2026-06-05 ()
+5. ~~Set  secret~~ ✅ DONE 2026-06-14
+6. ~~Fix pyOpenSSL crash (main red #878–#897)~~ ✅ DONE — PR #1392
+7. ~~Un-hardcode routing-flip gate~~ ✅ DONE — PR #1391
+8. ~~Fix SSRF IPv4-mapped test failures~~ ✅ DONE — PR #1393
+9. **IN PROGRESS:** CI run #900 (SHA ) — all 3 fixes present; shadow deploy pending
+10. **NEXT:** Approve  gate → Terraform apply →  → CERTIFIED
+
+### Active blockers updated
+
+| ID | Status |
+|---|---|
+| B-1 (shadow slot) | ✅ RESOLVED 2026-05-20 |
+| B-2 (release-evidence.json) | 🔄 IN PROGRESS — run #900 executing with all fixes. Previously blocked by CI red (pyOpenSSL + SSRF). |
+| B-3 (production-shadow env) | ✅ RESOLVED 2026-05-20 |
+| B-4 (TF_TOKEN secret) | ✅ RESOLVED 2026-06-14 |
+| B-5 (main CI red 20+ runs) | ✅ RESOLVED 2026-06-14 (PRs #1391, #1392, #1393) |
+

@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-14
 status: verified
 ---
 
@@ -158,3 +158,39 @@ The strict command exits non-zero until B-1 and B-3 are resolved.
 ## Certification Rule
 
 The only acceptable source of truth for certification is a `release-evidence.json` artifact produced by a real release workflow run on `main`. Manual claims, local mock evidence, skipped shadow deployments, or unverified environment settings do not certify the release.
+
+---
+
+## 2026-06-14 Status Update
+
+**All configuration blockers are RESOLVED. CI execution is IN PROGRESS (run #900).**
+
+| ID | Severity | Status | Resolution |
+|---|---|---|---|
+| B-1 | P0 | ✅ RESOLVED 2026-05-20 | `apex-omnihub-shadow` CF Pages project created; all secrets/vars set |
+| B-2 | P0 | 🔄 IN PROGRESS | `chore: version packages` merged 2026-06-05. CI was red #878–#897 (pyOpenSSL). All 3 blocking test failures fixed (PRs #1391, #1392, #1393). Run #900 (SHA `16f06b6f`) executing now. |
+| B-3 | P1 | ✅ RESOLVED 2026-05-20 | `production-shadow` env created with required_reviewers |
+| B-4 | P1 | ✅ RESOLVED 2026-06-14 | `TF_TOKEN_app_terraform_io` set in GitHub Actions Secrets |
+
+### CI failures fixed (2026-06-14)
+
+These three test-suite failures were the sole reason B-2 remained open after the version commit merged:
+
+| PR | File changed | Tests fixed |
+|---|---|---|
+| #1392 | `orchestrator/requirements.txt` | 10 pytest collection errors (pyOpenSSL GEN_EMAIL crash) |
+| #1393 | `orchestrator/security/ssrf.py` | 3 SSRF IPv4-mapped IPv6 test failures |
+| #1391 | `.github/workflows/release.yml` | Routing-flip gate un-hardcoded (not a test failure — enables shadow→TF path) |
+
+### Required secrets — status as of 2026-06-14
+
+| Name | Status |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | ✅ Set |
+| `CLOUDFLARE_ACCOUNT_ID` | ✅ Set |
+| `TF_TOKEN_app_terraform_io` | ✅ Set 2026-06-14 |
+| `ENABLE_SHADOW_DEPLOYMENT` | ✅ true |
+| `CLOUDFLARE_SHADOW_PROJECT_NAME` | ✅ apex-omnihub-shadow |
+| `SHADOW_HEALTH_URL` | ✅ Set |
+| `ENABLE_ATOMIC_ROUTING_FLIP` | ✅ true |
+
