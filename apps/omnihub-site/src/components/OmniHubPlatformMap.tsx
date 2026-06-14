@@ -30,12 +30,12 @@ const SCRIPT_SRC = '/omnihub-starmap.js';
 const SCRIPT_ID  = 'ohsm-script';
 
 function loadScriptOnce(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve();
-  if (window.OmniHubStarmap) return Promise.resolve();
+  if (globalThis.window === undefined) return Promise.resolve();
+  if (globalThis.window.OmniHubStarmap) return Promise.resolve();
   const existing = document.getElementById(SCRIPT_ID);
   if (existing) {
     return new Promise((res) => {
-      if (window.OmniHubStarmap) { res(); return; }
+      if (globalThis.window.OmniHubStarmap) { res(); return; }
       existing.addEventListener('load', () => res(), { once: true });
     });
   }
@@ -66,15 +66,15 @@ export default function OmniHubPlatformMap({
   threeSrc = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
   className = '',
   style,
-}: OmniHubPlatformMapProps) {
+}: Readonly<OmniHubPlatformMapProps>) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
     let cancelled = false;
     loadScriptOnce()
       .then(() => {
-        if (cancelled || !ref.current || !window.OmniHubStarmap) return;
-        window.OmniHubStarmap.mount(ref.current, { ctaHref, demoHref, threeSrc });
+        if (cancelled || !ref.current || !globalThis.window.OmniHubStarmap) return;
+        globalThis.window.OmniHubStarmap.mount(ref.current, { ctaHref, demoHref, threeSrc });
       })
       .catch((err: unknown) => {
         // Soft-fail: keep the page healthy; show nothing rather than crash.
