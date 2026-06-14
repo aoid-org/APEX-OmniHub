@@ -27,6 +27,27 @@ export {
 } from './SolverRouter';
 
 export {
+  planTask,
+  planAuto,
+  scorePath,
+  normalizeWeights,
+  generateCandidatePaths,
+  summarizePlan,
+  DEFAULT_OBJECTIVE,
+  CandidatePathSchema,
+  ScoredPathSchema,
+  PlanResultSchema,
+  PathStepSchema,
+  type CandidatePath,
+  type ScoredPath,
+  type PlanResult,
+  type PathStep,
+  type ObjectiveWeights,
+  type ObjectiveDimension,
+  type DimensionVector,
+} from './TreeSearchPlanner';
+
+export {
   scoreTask,
   TaskScoreResultSchema,
   type TaskScoreResult,
