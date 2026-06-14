@@ -123,6 +123,9 @@ describe('Wallet Integration Flow', () => {
       expect(screen.getByText(/Connect MetaMask/i)).toBeInTheDocument();
     });
 
+    // DEFER (P2-2): fails un-skipped — connected-state UI assertion does not match the
+    // current WalletConnect render under the mocked Web3Provider (async state/copy drift).
+    // Tracked for a Web3 component-test refresh; left skipped to keep CI deterministic.
     it.skip('should show connected state after connection', async () => {
       vi.mocked(useAccount).mockReturnValue({
         address: mockAddress,
@@ -151,6 +154,9 @@ describe('Wallet Integration Flow', () => {
   });
 
   describe('Wallet Verification', () => {
+    // DEFER (P2-2): fails un-skipped — the "Verifying" state assertion times out under the
+    // mocked sign/nonce flow (component verification UX has drifted from this fixture).
+    // Tracked for a Web3 component-test refresh; left skipped to keep CI deterministic.
     it.skip('should complete verification flow successfully', async () => {
       const user = userEvent.setup();
 
