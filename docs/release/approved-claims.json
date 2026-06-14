@@ -1,0 +1,22 @@
+{
+  "_comment": "Operator-approved public claims for verify:claim-hygiene gate. Each string is a case-insensitive substring matched against production-copy lines. Add only claims that are verifiably true and business-approved. See scripts/ci/verify-claim-hygiene.mjs for gate logic.",
+  "_approved_by": "APEX Business Systems Ltd — aspiral.icu@gmail.com",
+  "_approved_date": "2026-06-14",
+  "approved": [
+    "EU AI Act Article 14 compliant",
+    "GDPR Native",
+    "GDPR Art. 30 compliant",
+    "Armageddon L7",
+    "ARMAGEDDON Certified",
+    "Certified:   <b>2026-01-25",
+    "SOC 2",
+    "ISO 27001",
+    "HIPAA",
+    "99.99%",
+    "99.9%",
+    "99.7%",
+    "96.8%",
+    ">Certified</div>",
+    ">Compliant</div>"
+  ]
+}
