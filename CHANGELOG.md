@@ -166,6 +166,14 @@ All notable changes to the APEX OmniHub platform.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-06-14
+
+### Patch Changes
+
+- Resolve C-1, C-2, and C-3 certification blockers (routing-flip un-hardcode, pyOpenSSL pin, SSRF IPv4-mapped IPv6 guard, Supabase env vars in verify step, sequential UUID counter in offline.spec.ts, approved-claims.json for claim-hygiene gate — PRs #1391–#1399)
+- Implement OmniDash M-03 Realtime Observability Panels: add `recharts`, 7 production-grade panels (`SystemHealthOverview`, `AgentActivityTimeline`, `GuardianAlertFeed`, `ManModeReviewQueue`, `OmniRouteTraffic`, `WorkflowStatusBoard`, `SystemSparklines`), real Supabase Realtime integration via `useDashboardData`, zero mock data enforced
+- Provision Cloudflare Pages shadow deployment slot (`apex-omnihub-shadow`, unblocks B-1), raise vitest branch coverage threshold 60→63, canonicalise `omega/` orchestrator topology in `ARCHITECTURE_CANONICAL_MAP.md` and `CLAUDE.md`
+
 ## [Unreleased]
 
 ### Documentation
