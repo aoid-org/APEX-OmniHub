@@ -1,6 +1,6 @@
 ---
-version: 1.0.0
-last_audited: 2026-06-12
+version: 1.1.0
+last_audited: 2026-06-14
 status: verified
 ---
 
@@ -257,3 +257,24 @@ no defect (§5); "run preflight in certification job" — preflight already runs
 *Audit conducted via live GitHub API (PRs, issues, releases, workflow runs, failure logs) and
 direct code trace of `src/`, `apps/`, `supabase/`, `orchestrator/`, `packages/`, `terraform/`,
 `contracts/`, `.github/workflows/`, and `tests/`.*
+
+---
+
+## 2026-06-14 Addendum — CI Green Campaign
+
+**This report was accurate as of 2026-06-09. The following supersedes the CI failure section.**
+
+The two P0 failures described in §3 (bun.lock drift) were resolved prior to this session. As of 2026-06-14, a new set of CI blockers existed:
+
+### New blockers (2026-06-14, now resolved)
+
+| ID | Root cause | Fix | PR |
+|---|---|---|---|
+| pyOpenSSL crash | `pyOpenSSL <24.0.0` + `cryptography >=42.0.0` — `lib.GEN_EMAIL` removed; 10 pytest collection errors, runs #878–#897 all red | `pyopenssl>=24.0.0` → `orchestrator/requirements.txt` | #1392 |
+| SSRF IPv4-mapped | `_check_ip()` hit `is_reserved` before `ipv4_mapped`; Python classifies `::ffff:0:0/96` as reserved — blocked public addresses, wrong error category for private | Move `ipv4_mapped` guard first in `_check_ip()` | #1393 |
+| Routing-flip hardcoded | `ENABLE_ATOMIC_ROUTING_FLIP` hardcoded to `'false'` in 4 places in `release.yml` | Read from `vars.ENABLE_ATOMIC_ROUTING_FLIP` | #1391 |
+
+All three merged 2026-06-14. CI run #900 (SHA `16f06b6f`) in_progress at time of this update.
+
+**For current status see:** `docs/CURRENT_PLATFORM_STATE_2026_06_14.md`
+
