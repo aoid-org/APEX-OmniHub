@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import {
   appendTranscript,
@@ -13,14 +13,14 @@ import {
 const voiceWindow = window as VoiceTestWindow;
 
 function makeOptions(): UseSpeechRecognitionOptions & {
-  onTranscript: ReturnType<typeof vi.fn>;
-  onUnsupported: ReturnType<typeof vi.fn>;
-  onError: ReturnType<typeof vi.fn>;
+  onTranscript: Mock<(transcript: string) => void>;
+  onUnsupported: Mock<() => void>;
+  onError: Mock<() => void>;
 } {
   return {
-    onTranscript: vi.fn(),
-    onUnsupported: vi.fn(),
-    onError: vi.fn(),
+    onTranscript: vi.fn<(transcript: string) => void>(),
+    onUnsupported: vi.fn<() => void>(),
+    onError: vi.fn<() => void>(),
   };
 }
 

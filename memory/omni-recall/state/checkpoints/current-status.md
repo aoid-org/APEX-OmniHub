@@ -110,3 +110,30 @@
 - installed_skill: .claude/skills/apex-universal-sync-orchestrator v1.0.0 (rubric 100/100; deterministic omni_id; single-pass violation reporting)
 - policy_gate: apex_policy_check.py v1.2.0 — expands directory args; fails closed on 0 files scanned
 - saga_dispatch: _execute_activity call sites use keyword args (_step_id=, is_compensation=); locked by 4 regression tests
+
+## Correction (2026-06-13) — checkpoint drift + Clean-Room Certification fix
+- correction_scope: the `2026-06-10 (final)` block above contained stale/optimistic facts; superseded here.
+- stale_main_head: `ef0f337` — INCORRECT as of 2026-06-13. Verified `git log` main HEAD: `def90cf`
+  (fix(omnihub-site): resolve SonarQube audit issues in OmniHubPlatformMap, #1383).
+- stale_tech_debt_claim: `tech_debt_remaining: 0` — NOT VERIFIED. Type-suppression and `.skip`/`.todo`
+  debt remain across the tree; treat as ACTIVE pending a dedicated triage pass (out of scope this session).
+- certification_status_at_def90cf: was RED. `bun run verify:types` (`tsc -b --noEmit`) reported 34 errors.
+  NOTE: the repo `typecheck` script (`tsc -p tsconfig.json`) is a false-green no-op (root tsconfig has
+  `files: []` and only project references, so `-p` compiles nothing). The real gate is `verify:types`.
+- root_cause (verified, not the alias theory in the external report): the app build (vite: `@` ->
+  apps/omnihub-site/src) and the test build (vitest: `@` -> ./src, an INTENTIONAL split documented in
+  vitest.config.ts) both resolve correctly at runtime. Only `tsc -b` (tsconfig.app.json `@/*` root-first)
+  type-checked apps/dashboard files against the root `src/` test-double stubs, whose TYPES had drifted
+  from canonical (useAuth returned `{session,user,isLoading}` vs canonical `{session,loading,isAuthenticated}`;
+  useOmniModuleState lacked moduleKey/headline/stateKind/detail/variant/message). The root `src/` stubs are
+  LOAD-BEARING for the vitest suite — deleting them (as the report proposed) would break tests.
+- fix_applied (branch claude/sharp-brahmagupta-d26wms): updated the root test-double stub TYPES to mirror
+  canonical (src/lib/useAuth.ts, src/hooks/useOmniModuleState.ts), added the two missing config exports to
+  src/lib/supabase/index.ts for parity, and corrected fixture drift in tests/omnidash/m03-panels.spec.tsx,
+  links-settings-modules.spec.tsx, use-speech-recognition.spec.tsx, design-system-components.spec.tsx
+  (DashboardData settings/memoryHealth + full KpiSummary/KpiDaily/Incident shapes; SpeechRecognition mock
+  typing; unused React imports).
+- verification (observed exit 0): `verify:types` 0 errors; vitest across tests/omnidash + affected files
+  551 passed / 28 skipped / 20 todo (0 failed); eslint on changed files 0 problems.
+- p1_node24_status: NOT a live risk. release.yml is already SHA-pinned to actions/checkout + setup-node v4
+  with node-version 24; no v1/v2/v3 actions exist in any workflow. The "CI breaks in 72h" inference was false.
