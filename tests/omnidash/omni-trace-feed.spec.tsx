@@ -1,73 +1,76 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, waitFor, fireEvent, cleanup } from '@testing-library/react';
 import { act } from 'react';
+import { OmniTraceFeed } from '../../apps/omnihub-site/dashboard/components/OmniTraceFeed';
 
 const mockSubscribe = vi.fn();
-const mockOn = vi.fn();
+const mockOn = vi.fn().mockReturnThis();
 const mockRemoveChannel = vi.fn();
-const mockChannel = vi.fn();
+const mockChannel = vi.fn().mockReturnValue({ on: mockOn, subscribe: mockSubscribe });
 
-vi.mock('@supabase/supabase-js', () => ({
-  createClient: vi.fn(() => ({
-    channel: mockChannel,
-    removeChannel: mockRemoveChannel,
-  })),
-}));
-
-import { OmniTraceFeed } from '../../apps/omnihub-site/dashboard/components/OmniTraceFeed';
+const mockSupabaseClient = {
+  channel: mockChannel,
+  removeChannel: mockRemoveChannel,
+};
 
 describe('OmniTraceFeed', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://mock.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'mock-key');
+
     mockOn.mockReturnThis();
     mockSubscribe.mockImplementation((cb: (s: string) => void) => {
+      console.log('BEFORE EACH MOCK SUBSCRIBE CALLING SUBSCRIBED');
       cb('SUBSCRIBED');
       return { unsubscribe: vi.fn() };
     });
     mockChannel.mockReturnValue({ on: mockOn, subscribe: mockSubscribe });
   });
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    cleanup();
+  });
+
   it('renders the OmniTrace section', () => {
-    render(<OmniTraceFeed />);
+    render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     expect(screen.getByTestId('omni-trace-feed')).toBeTruthy();
     expect(screen.getByText('OmniTrace')).toBeTruthy();
   });
 
   it('shows Demo badge when env vars are not configured', () => {
-    const savedUrl = process.env.VITE_SUPABASE_URL;
-    const savedKey = process.env.VITE_SUPABASE_ANON_KEY;
-    process.env.VITE_SUPABASE_URL = '';
-    process.env.VITE_SUPABASE_ANON_KEY = '';
+    vi.stubEnv('VITE_SUPABASE_URL', '');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
 
-    render(<OmniTraceFeed />);
+    render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     expect(screen.getByText('Demo')).toBeTruthy();
 
-    process.env.VITE_SUPABASE_URL = savedUrl;
-    process.env.VITE_SUPABASE_ANON_KEY = savedKey;
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://mock.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'mock-key');
   });
 
   it('renders demo logs when in demo mode', () => {
-    const savedUrl = process.env.VITE_SUPABASE_URL;
-    const savedKey = process.env.VITE_SUPABASE_ANON_KEY;
-    process.env.VITE_SUPABASE_URL = '';
-    process.env.VITE_SUPABASE_ANON_KEY = '';
+    vi.stubEnv('VITE_SUPABASE_URL', '');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
 
-    render(<OmniTraceFeed />);
+    render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     expect(screen.getByText(/Salesforce sync completed/)).toBeTruthy();
     expect(screen.getByText(/Invoice batch/)).toBeTruthy();
 
-    process.env.VITE_SUPABASE_URL = savedUrl;
-    process.env.VITE_SUPABASE_ANON_KEY = savedKey;
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://mock.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'mock-key');
   });
 
   it('renders Replay Workflows button', () => {
-    render(<OmniTraceFeed />);
+    render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     expect(screen.getByText('+ Replay Workflows')).toBeTruthy();
   });
 
   it('shows Live badge when subscribed', async () => {
+    console.log('LIVE TEST ENV URL:', process.env.VITE_SUPABASE_URL, 'import.meta:', import.meta.env.VITE_SUPABASE_URL);
     await act(async () => {
-      render(<OmniTraceFeed />);
+      render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     });
     await waitFor(() => {
       expect(screen.getByText('Live')).toBeTruthy();
@@ -76,11 +79,12 @@ describe('OmniTraceFeed', () => {
 
   it('handles CHANNEL_ERROR by setting ERROR status', async () => {
     mockSubscribe.mockImplementation((cb: (s: string) => void) => {
+      console.log('TEST MOCK SUBSCRIBE CALLING CHANNEL_ERROR');
       cb('CHANNEL_ERROR');
       return { unsubscribe: vi.fn() };
     });
     await act(async () => {
-      render(<OmniTraceFeed />);
+      render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     });
     await waitFor(() => {
       const badges = screen.getAllByText(/Demo|Connecting/);
@@ -90,7 +94,7 @@ describe('OmniTraceFeed', () => {
 
   it('renders with a tenantId prop', async () => {
     await act(async () => {
-      render(<OmniTraceFeed tenantId="tenant-001" />);
+      render(<OmniTraceFeed tenantId="tenant-001" mockSupabase={mockSupabaseClient as any} />);
     });
     expect(screen.getByTestId('omni-trace-feed')).toBeTruthy();
   });
@@ -98,7 +102,7 @@ describe('OmniTraceFeed', () => {
   it('calls removeChannel on unmount', async () => {
     let unmount: () => void;
     await act(async () => {
-      const result = render(<OmniTraceFeed />);
+      const result = render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
       unmount = result.unmount;
     });
     act(() => { unmount(); });
@@ -110,14 +114,14 @@ describe('OmniTraceFeed', () => {
       return { unsubscribe: vi.fn() };
     });
     await act(async () => {
-      render(<OmniTraceFeed />);
+      render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     });
     expect(screen.getByText('Connecting')).toBeTruthy();
   });
 
   it('shows No events yet when subscribed with no logs', async () => {
     await act(async () => {
-      render(<OmniTraceFeed />);
+      render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     });
     await waitFor(() => {
       expect(screen.getByText('Live')).toBeTruthy();
@@ -128,7 +132,7 @@ describe('OmniTraceFeed', () => {
 
   it('mouseEnter on Replay Workflows button changes its border color', async () => {
     await act(async () => {
-      render(<OmniTraceFeed />);
+      render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     });
     const button = screen.getByText('+ Replay Workflows').closest('button') as HTMLButtonElement;
     fireEvent.mouseEnter(button);
@@ -138,7 +142,7 @@ describe('OmniTraceFeed', () => {
 
   it('mouseLeave on Replay Workflows button resets its border color', async () => {
     await act(async () => {
-      render(<OmniTraceFeed />);
+      render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     });
     const button = screen.getByText('+ Replay Workflows').closest('button') as HTMLButtonElement;
     fireEvent.mouseEnter(button);
@@ -156,7 +160,7 @@ describe('OmniTraceFeed', () => {
     });
 
     await act(async () => {
-      render(<OmniTraceFeed />);
+      render(<OmniTraceFeed mockSupabase={mockSupabaseClient as any} />);
     });
 
     await act(async () => {
