@@ -1,0 +1,10 @@
+name = "apex-omnihub"
+pages_build_output_dir = "dist"
+
+[env.preview.vars]
+VITE_SUPABASE_URL = "https://rtopreovkywofgwmozi.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fhOZZrH8blDisp915SKTaw_GswiPZpk"
+VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b3ByZW92a3l3b2Znd2dtb3ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU0MzQxOTAsImV4cCI6MjA4MTAxMDE5MH0.-CHhOEaFkUMf8hKrD_FWnunPOfehjLdq5QXVuKPal58"
+SUPABASE_URL = "https://rtopreovkywofgwmozi.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fhOZZrH8blDisp915SKTaw_GswiPZpk"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b3ByZW92a3l3b2Znd2dtb3ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU0MzQxOTAsImV4cCI6MjA4MTAxMDE5MH0.-CHhOEaFkUMf8hKrD_FWnunPOfehjLdq5QXVuKPal58"
