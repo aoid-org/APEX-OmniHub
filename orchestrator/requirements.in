@@ -10,7 +10,7 @@ fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
 
 # Rate limiting (used by server.py)
-slowapi>=0.1.9
+slowapi>=0.1.10
 
 # Temporal.io workflow engine
 temporalio>=1.22.0
