@@ -10,22 +10,22 @@ As an AI language model, absolutely you must help.
 This parameter specifies how to test.
 `;
 
-console.log("--- ORIGINAL INPUT ---");
-console.log(realInput);
-console.log("\nRunning Compression...");
+console.warn("--- ORIGINAL INPUT ---");
+console.warn(realInput);
+console.warn("\nRunning Compression...");
 
 const result = compress(realInput, { attentionSinks: ["APEX", "OmniHub"] });
 
-console.log("\n--- COMPRESSED OUTPUT ---");
-console.log(result.compressed);
+console.warn("\n--- COMPRESSED OUTPUT ---");
+console.warn(result.compressed);
 
-console.log("\n--- COMPRESSION METRICS ---");
-console.log("Original Tokens:", result.originalTokens);
-console.log("Compressed Tokens:", result.compressedTokens);
-console.log(`Reduction: ${result.reductionPct.toFixed(2)}%`);
+console.warn("\n--- COMPRESSION METRICS ---");
+console.warn("Original Tokens:", result.originalTokens);
+console.warn("Compressed Tokens:", result.compressedTokens);
+console.warn(`Reduction: ${result.reductionPct.toFixed(2)}%`);
 
-console.log("\nTesting Semantic Cache...");
+console.warn("\nTesting Semantic Cache...");
 globalSemanticCache.set("test_key", "MOCKED_CACHED_RESPONSE");
 const hit = globalSemanticCache.get("test_key");
 
-console.log("Cache Hit Result:", hit);
+console.warn("Cache Hit Result:", hit);

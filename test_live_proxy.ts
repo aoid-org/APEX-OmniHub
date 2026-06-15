@@ -15,7 +15,7 @@ async function testLiveProxy() {
   const supabase = createClient(supabaseUrl, supabaseKey);
   const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-  console.log("Logging in...");
+  console.warn("Logging in...");
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -44,7 +44,7 @@ async function testLiveProxy() {
     ],
   };
 
-  console.log("Sending Request 1 (Expect Cache Miss & Compression)...");
+  console.warn("Sending Request 1 (Expect Cache Miss & Compression)...");
   const res1 = await fetch(proxyUrl, {
     method: "POST",
     headers: {
@@ -60,19 +60,19 @@ async function testLiveProxy() {
   } else {
     // Read the stream to completion
     const reader = res1.body?.getReader();
-    const decoder = new TextDecoder();
+    // const decoder = new TextDecoder();
     while (reader) {
       const { done, value } = await reader.read();
       if (done) break;
       Deno.stdout.writeSync(value);
     }
-    console.log("\n--- Request 1 Completed ---");
+    console.warn("\n--- Request 1 Completed ---");
   }
 
-  console.log("Waiting 2 seconds to allow background audit log write...");
+  console.warn("Waiting 2 seconds to allow background audit log write...");
   await new Promise(r => setTimeout(r, 2000));
 
-  console.log("Sending Request 2 (Expect Cache Hit)...");
+  console.warn("Sending Request 2 (Expect Cache Hit)...");
   const res2 = await fetch(proxyUrl, {
     method: "POST",
     headers: {
@@ -86,16 +86,16 @@ async function testLiveProxy() {
     const errorText = await res2.text();
     console.error("Request 2 failed:", res2.status, errorText);
   } else {
-    console.log("Cache header:", res2.headers.get("X-Cache"));
+    console.warn("Cache header:", res2.headers.get("X-Cache"));
     const data = await res2.text();
-    console.log("Response:", data.substring(0, 200) + "...");
-    console.log("\n--- Request 2 Completed ---");
+    console.warn("Response:", data.substring(0, 200) + "...");
+    console.warn("\n--- Request 2 Completed ---");
   }
 
-  console.log("Waiting 2 seconds to allow background audit log write...");
+  console.warn("Waiting 2 seconds to allow background audit log write...");
   await new Promise(r => setTimeout(r, 2000));
 
-  console.log("Fetching Audit Logs...");
+  console.warn("Fetching Audit Logs...");
   const { data: logs, error: logsError } = await adminClient
     .from("audit_logs")
     .select("*")
@@ -106,10 +106,10 @@ async function testLiveProxy() {
   if (logsError) {
     console.error("Failed to fetch logs:", logsError);
   } else {
-    console.log("Audit Logs (Compression Metrics):");
+    console.warn("Audit Logs (Compression Metrics):");
     logs.forEach((log: unknown, i: number) => {
-      console.log(`Log ${i}:`, JSON.stringify(log.metadata?.compression, null, 2));
-      console.log(`Log Status: ${log.metadata?.status}`);
+      console.warn(`Log ${i}:`, JSON.stringify(log.metadata?.compression, null, 2));
+      console.warn(`Log Status: ${log.metadata?.status}`);
     });
   }
 }

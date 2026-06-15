@@ -10,7 +10,7 @@ async function seed() {
 
   const authClient = createClient(supabaseUrl, serviceRoleKey);
   
-  console.log("Authenticating user...");
+  console.warn("Authenticating user...");
   const { data: authData, error: authError } = await authClient.auth.signInWithPassword({
     email: "jrmendozaceo@apexbusiness-systems.com",
     password: "Apex143!",
@@ -23,7 +23,7 @@ async function seed() {
 
   const userId = authData.session.user.id;
   const tenantId = authData.session.user.user_metadata?.tenant_id ?? userId;
-  console.log(`User ID: ${userId}, Tenant ID: ${tenantId}`);
+  console.warn(`User ID: ${userId}, Tenant ID: ${tenantId}`);
 
   // Create a separate admin client that DOES NOT have the user session attached
   // so it genuinely acts as service_role bypassing RLS
@@ -31,7 +31,7 @@ async function seed() {
     auth: { persistSession: false, autoRefreshToken: false }
   });
 
-  console.log("Inserting registry record...");
+  console.warn("Inserting registry record...");
   await adminClient.from("omnihub_model_registry").delete().match({ tenant_id: tenantId, provider_id: "groq" });
   
   const { error: regError } = await adminClient.from("omnihub_model_registry").insert({
@@ -51,7 +51,7 @@ async function seed() {
   if (regError) {
     console.error("Registry Insert Error:", regError);
   } else {
-    console.log("Registry seeded successfully.");
+    console.warn("Registry seeded successfully.");
   }
 
   const apiKey = "gsk_DUMMY_KEY_REMOVED";
@@ -60,7 +60,7 @@ async function seed() {
 
   const hexCiphertext = "\\x" + Array.from(ciphertext).map(b => b.toString(16).padStart(2, "0")).join("");
 
-  console.log("Inserting provider connection...");
+  console.warn("Inserting provider connection...");
   await adminClient.from("provider_connections").delete().match({ user_id: userId, provider: "groq" });
   
   const { error: connError } = await adminClient.from("provider_connections").insert({
@@ -76,7 +76,7 @@ async function seed() {
   if (connError) {
     console.error("Connection Insert Error:", connError);
   } else {
-    console.log("Connection seeded successfully.");
+    console.warn("Connection seeded successfully.");
   }
 }
 
