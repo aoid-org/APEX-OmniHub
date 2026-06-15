@@ -41,6 +41,16 @@ export {
   requestMANMode,
 } from './execution/engine';
 
+// Tree-Search Planner
+export {
+  TreeSearchPlanner,
+  type Task,
+  type Route,
+  type RouteStrategy,
+  type PathScore,
+  type ScoredRoute,
+} from './execution/TreeSearchPlanner';
+
 // Safety module
 export {
   detectInjection,

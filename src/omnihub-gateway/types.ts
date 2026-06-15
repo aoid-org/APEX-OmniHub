@@ -216,6 +216,8 @@ export interface RoutingDecision {
   readonly reasoning: string;
   readonly estimatedCostUsd: number;
   readonly timestamp: string;
+  /** Reasoning token budget assigned by assessTaskStakes. Present on enriched decisions. */
+  readonly reasoning_budget?: number;
 }
 
 // ============================================================================
