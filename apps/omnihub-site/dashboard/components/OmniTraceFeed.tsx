@@ -31,21 +31,30 @@ function relativeTime(iso: string): string {
   return `${Math.floor(diff / 3600)}h ago`;
 }
 
-export function OmniTraceFeed({ tenantId }: Readonly<{ tenantId?: string }>) {
+export function OmniTraceFeed({ tenantId, mockSupabase }: Readonly<{ tenantId?: string, mockSupabase?: any }>) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [status, setStatus] = useState<'CONNECTING' | 'SUBSCRIBED' | 'ERROR'>(() => {
+  const [status, setStatus] = useState<'CONNECTING' | 'SUBSCRIBED' | 'ERROR'>('CONNECTING');
+  useEffect(() => {
     const url = import.meta.env.VITE_SUPABASE_URL ?? '';
     const key = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
-    return (!url || !key) ? 'ERROR' : 'CONNECTING';
-  });
+    console.log('OmniTraceFeed INIT url:', url, 'key:', key);
+    if (!url || !key) {
+      setStatus('ERROR');
+      setLogs(DEMO_LOGS);
+    }
+  }, []);
 
   useEffect(() => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
+    console.log('OmniTraceFeed USE EFFECT url:', supabaseUrl, 'key:', supabaseKey);
 
-    if (!supabaseUrl || !supabaseKey) return;
+    if (!supabaseUrl || !supabaseKey) {
+      console.log('OmniTraceFeed USE EFFECT returning early because empty env');
+      return;
+    }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = mockSupabase || createClient(supabaseUrl, supabaseKey);
     let channel: ReturnType<typeof supabase.channel>;
 
     try {
@@ -62,7 +71,8 @@ export function OmniTraceFeed({ tenantId }: Readonly<{ tenantId?: string }>) {
           if (s === 'SUBSCRIBED') setStatus('SUBSCRIBED');
           else if (s === 'CHANNEL_ERROR') setStatus('ERROR');
         });
-    } catch {
+    } catch (e) {
+      console.error('SUPABASE CATCH ERROR:', e);
       setStatus('ERROR');
     }
 
