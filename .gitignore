@@ -1,6 +1,9 @@
 # APEX local evidence storage
 .apex/
 
+# CI-generated artifact directory (uploaded as GitHub Actions artifacts, never committed)
+build-artifacts/
+
 # StarMap install artifacts (zip extraction + SSG build temp)
 omnihub-starmap-extracted/
 apps/omnihub-site/.vite-react-ssg-temp/
