@@ -1,0 +1,10 @@
+{
+  "policy": "memory/omni-recall/docs/compliance/DATA_RETENTION_POLICY.md",
+  "generated_at": "2026-06-12T17:15:39.683Z",
+  "retention": {
+    "app_logs_days": 90,
+    "access_logs_days": 180,
+    "audit_logs_days": 365,
+    "db_backups_days": 30
+  }
+}

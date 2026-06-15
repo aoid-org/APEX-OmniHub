@@ -1,0 +1,19 @@
+{
+  "name": "apex-storied-agent",
+  "version": "1.1.0",
+  "description": "Elicits a high-rigor reasoning and review discipline (multi-pass verification, adversarial self-check, assumption-tracking) modeled on the documented behavior of a retired frontier reviewer model. Raises rigor on any host model; does not transfer weights or benchmark scores.",
+  "author": "APEX Business Systems Ltd.",
+  "license": "Proprietary",
+  "spec": "agent-skills-open-format",
+  "runtime": "APEX-OmniHub",
+  "install": {
+    "user_scope_all_repos": "git clone https://github.com/apexbusiness-systems/APEX-OmniHub && cp -r APEX-OmniHub/.claude/skills/apex-storied-agent ~/.claude/skills/",
+    "project_scope": ".claude/skills/apex-storied-agent in apexbusiness-systems/APEX-OmniHub",
+    "claude_ai": "upload dist/apex-storied-agent-1.1.0.skill"
+  },
+  "evidence": {
+    "scorecard": "scorecard.json",
+    "trigger_eval": "evals/trigger-eval.json"
+  },
+  "source": "https://github.com/apexbusiness-systems/APEX-OmniHub/tree/main/.claude/skills/apex-storied-agent"
+}

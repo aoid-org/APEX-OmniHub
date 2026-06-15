@@ -412,7 +412,7 @@ Output valid JSON matching the PlanStep schema."""
                 {"role": "user", "content": safe_user_message},
             ],
             response_model=GeneratedPlan,
-            temperature=float(os.getenv("DEFAULT_LLM_TEMPERATURE", "0.0")),
+            temperature=float(os.getenv("DEFAULT_LLM_TEMPERATURE", "0.0")),  # type: ignore[misc]
         )
 
         activity.logger.info(f"✓ Plan generated: {len(plan.steps)} steps")

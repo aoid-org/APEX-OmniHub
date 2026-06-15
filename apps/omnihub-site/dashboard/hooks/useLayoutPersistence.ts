@@ -77,7 +77,7 @@ export function useLayoutPersistence(userId?: string): UseLayoutPersistenceRetur
   const [activeNav, setActiveNav] = useState<DashboardNavSection>(initial.activeNav);
   const [isDark, setIsDark] = useState<boolean>(initial.isDark);
   const [ops, setOps] = useState<OmniDashOpsState>(initial.ops);
-  const [panelLayout, setPanelLayoutState] = useState<PanelLayout>(initial.panelLayout);
+  const [panelLayout, setPanelLayout] = useState<PanelLayout>(initial.panelLayout);
   const [hiddenWidgets, setHiddenWidgets] = useState<readonly string[]>(initial.hiddenWidgets);
 
   const persist = useCallback(
@@ -112,9 +112,7 @@ export function useLayoutPersistence(userId?: string): UseLayoutPersistenceRetur
     document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
   }, [storageKey, activeNav, isDark, ops, panelLayout, hiddenWidgets, persist]);
 
-  const setPanelLayout = useCallback((l: PanelLayout) => {
-    setPanelLayoutState(l);
-  }, []);
+
 
   const toggleWidget = useCallback((id: string) => {
     setHiddenWidgets((prev) => {
