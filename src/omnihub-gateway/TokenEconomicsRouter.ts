@@ -22,6 +22,7 @@
  */
 
 import type { ModelProfile, ModelTier, RoutingDecision } from './types';
+import { assessTaskStakes } from '../core/gateway/TaskComplexityScorer';
 
 // ============================================================================
 // Model Registry
@@ -243,6 +244,7 @@ export class TokenEconomicsRouter {
       reasoning,
       estimatedCostUsd,
       timestamp: new Date().toISOString(),
+      reasoning_budget: assessTaskStakes(taskDescription).reasoning_budget,
     };
   }
 

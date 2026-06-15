@@ -18,6 +18,13 @@ import {
 } from '../types';
 import { detectInjection } from '../safety/injection-detection';
 import { logRiskEvent } from '../safety/risk-events';
+import { assessTaskStakes } from '../../../core/gateway/TaskComplexityScorer';
+import { routeToSolvers } from '../../../omnihub-gateway/SemanticRouter';
+import { TreeSearchPlanner } from './TreeSearchPlanner';
+import type { Task as PlannerTask } from './TreeSearchPlanner';
+
+// Module-level singleton — one planner shared across all intent executions
+const treePlanner = new TreeSearchPlanner();
 
 type FetchFn = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
@@ -172,13 +179,38 @@ export async function validateIntent(
 }
 
 /**
- * Execute a validated intent
+ * Execute a validated intent.
+ *
+ * Pipeline:
+ *   1. Pre-compute routing (assessTaskStakes + routeToSolvers) — before validation
+ *   2. Tree-search planning for high-stakes tasks (reasoning_budget ≥ 1000)
+ *   3. Standard MAESTRO validation + risk-lane gating
+ *   4. performAction — routing metadata surfaced in outcome._routing
  */
 export async function executeIntent(
   intent: MaestroIntent,
   options: ExecutionOptions = {}
 ): Promise<ExecutionResult> {
-  // First validate the intent
+  // ── Pre-Compute Routing Layer ─────────────────────────────────────────────
+  // Must run before the execution loop so the budget is in scope for all
+  // downstream branching decisions.
+  const stakes = assessTaskStakes(intent.action);
+  const solverPayload = routeToSolvers(intent.action);
+
+  // Tree-search planning for logic/architecture tier tasks
+  let routingStrategy: string = 'direct';
+  if (stakes.reasoning_budget >= 1000) {
+    const plannerTask: PlannerTask = {
+      id: intent.intent_id,
+      intent: intent.action,
+      reasoning_budget: stakes.reasoning_budget,
+      context: intent.parameters,
+    };
+    const planned = treePlanner.plan(plannerTask);
+    routingStrategy = planned.route.strategy;
+  }
+
+  // ── MAESTRO Validation ────────────────────────────────────────────────────
   const validation = await validateIntent(intent);
 
   if (!validation.valid) {
@@ -224,13 +256,22 @@ export async function executeIntent(
     };
   }
 
-  // Execute the action
+  // ── Execution ─────────────────────────────────────────────────────────────
   try {
     const outcome = await performAction(intent, options);
     return {
       success: true,
       intent_id: intent.intent_id,
-      outcome,
+      outcome: {
+        ...outcome,
+        _routing: {
+          stakes_level: stakes.stakes_level,
+          reasoning_budget: stakes.reasoning_budget,
+          solvers: solverPayload.solvers,
+          tools: solverPayload.tools,
+          strategy: routingStrategy,
+        },
+      },
       risk_lane: validation.risk_lane,
     };
   } catch (error) {
