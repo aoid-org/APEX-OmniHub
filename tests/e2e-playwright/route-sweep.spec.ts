@@ -135,4 +135,23 @@ test.describe('Route Sweep - All Routes Summary', () => {
 test.describe('Feature Registry Integrity', () => {
   test('all features have unique IDs', () => {
     const ids = FEATURE_REGISTRY.map((f) => f.id);
-    co
+    const uniqueIds = new Set(ids);
+    expect(uniqueIds.size).toBe(ids.length);
+  });
+
+  test('all features have unique paths', () => {
+    const paths = FEATURE_REGISTRY.map((f) => f.path);
+    const uniquePaths = new Set(paths);
+    expect(uniquePaths.size).toBe(paths.length);
+  });
+
+  test('all paths start with /', () => {
+    for (const feature of FEATURE_REGISTRY) {
+      expect(feature.path.startsWith('/')).toBe(true);
+    }
+  });
+
+  test('minimum feature count', () => {
+    expect(FEATURE_REGISTRY.length).toBeGreaterThanOrEqual(30);
+  });
+});
