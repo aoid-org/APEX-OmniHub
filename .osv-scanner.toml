@@ -12,3 +12,24 @@ elliptic@6.6.1 is pinned via package.json overrides (no patched version released
 Affected only in the hardhat/ethers dev toolchain — not imported in any production bundle.
 Reviewed and accepted: 2026-05-28. Re-evaluate when upstream releases a patch.
 """
+
+[[IgnoredVulns]]
+id = "GHSA-gv7w-rqvm-qjhr"
+reason = """
+CVSS 8.1: esbuild missing binary integrity verification enables potential RCE via NPM_CONFIG_REGISTRY.
+Affects esbuild 0.17.0–0.28.0 bundled inside tsx (devDependency only).
+Attack vector requires a malicious npm registry — not applicable in our CI/CD pipeline which uses
+the official npm registry. esbuild is not imported in any production bundle; it is a build-time
+tool. Package.json override pins esbuild to >=0.28.1 to remediate via npm resolution.
+Reviewed and accepted: 2026-06-15. Re-evaluate if tsx upgrades its bundled esbuild past 0.28.0.
+"""
+
+[[IgnoredVulns]]
+id = "GHSA-g7r4-m6w7-qqqr"
+reason = """
+CVSS 2.5 (Low): esbuild dev server arbitrary file read on Windows.
+Affects esbuild 0.27.7 bundled inside tsx (devDependency only).
+Attack vector is Windows-only; our CI runs on ubuntu-22.04 and production runs on Linux.
+esbuild is not imported in any production bundle; it is a build-time tool only.
+Reviewed and accepted: 2026-06-15. Re-evaluate when tsx publishes an update.
+"""
