@@ -203,7 +203,7 @@ export function scoreTask(taskDescription: string): TaskScoreResult {
   if (depthScore > ROUTE_THRESHOLD) {
     target = 'CLAUDE_OPUS';
     reasoning = `depth_score=${depthScore} exceeds threshold=${ROUTE_THRESHOLD}. Routing to Claude Opus for deep processing.`;
-  } else if (depthScore <= ROUTE_THRESHOLD && frontendDomains.includes(bestDomain)) {
+  } else if (frontendDomains.includes(bestDomain)) {
     target = 'GEMINI_PRO';
     reasoning = `depth_score=${depthScore} within frontend range, domain=${bestDomain}. Routing to Gemini Pro for UI/visual tasks.`;
   } else {
