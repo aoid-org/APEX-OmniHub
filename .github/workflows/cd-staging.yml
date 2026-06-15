@@ -15,7 +15,7 @@ env:
 jobs:
   terraform:
     name: Terraform Apply (Staging)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     defaults:
       run:
         working-directory: terraform/environments/staging
@@ -91,7 +91,7 @@ jobs:
 
   build-and-deploy:
     name: Build and Deploy (Staging)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: terraform
     if: always() # Run even if terraform fails
     steps:
@@ -132,7 +132,7 @@ jobs:
 
   smoke-tests:
     name: Run Smoke Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build-and-deploy
     if: always() # Run even if deploy fails (for status reporting)
     steps:
@@ -186,7 +186,7 @@ jobs:
 
   notify:
     name: Notify Deployment Status
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [terraform, build-and-deploy, smoke-tests]
     if: always()
 

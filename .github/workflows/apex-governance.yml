@@ -17,7 +17,7 @@ permissions: {}
 jobs:
   apex-policy:
     name: APEX policy gates
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
     steps:
@@ -63,7 +63,7 @@ jobs:
 
   secret-scan:
     name: Secret scan (gitleaks)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       security-events: write
@@ -83,7 +83,7 @@ jobs:
 
   dependency-audit:
     name: Dependency vulnerability scan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
     steps:
@@ -129,7 +129,7 @@ jobs:
 
   sast:
     name: Static analysis (SAST)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       security-events: write
@@ -167,7 +167,7 @@ jobs:
 
   rfc-architecture-marker:
     name: RFC + architecture review marker
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       pull-requests: read
@@ -227,7 +227,7 @@ jobs:
 
   governance-gate:
     name: Governance gate (required for branch protection)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions: {}
     needs: [apex-policy, secret-scan, dependency-audit, sast, rfc-architecture-marker]
     if: always()
